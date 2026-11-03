@@ -6,27 +6,27 @@
 --
 
 	WS-SW-ACL-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP			
-				FROM SNMPv2-CONF			
-			IpAddress, Integer32, Counter32, Counter64, OBJECT-TYPE, 
-			MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			DisplayString, RowStatus, PhysAddress, TruthValue			
-				FROM SNMPv2-TC			
-			wsSwAcl			
-				FROM WS-SW-SMI			
-			AbbrevRowStatus, DoActionNow			
+			OBJECT-GROUP
+				FROM SNMPv2-CONF
+			IpAddress, Integer32, Counter32, Counter64, OBJECT-TYPE,
+			MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			DisplayString, RowStatus, PhysAddress, TruthValue
+				FROM SNMPv2-TC
+			wsSwAcl
+				FROM WS-SW-SMI
+			AbbrevRowStatus, DoActionNow
 				FROM WS-TYPE-MIB;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.2.11.1
-		wsSwAclMibModule MODULE-IDENTITY 
+		wsSwAclMibModule MODULE-IDENTITY
 			LAST-UPDATED "200705101422Z"		-- May 10, 2007 at 14:22 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technologies, Inc."
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Symbol Technologies, Inc.
 				Customer Service
 				Postal:
@@ -36,73 +36,73 @@
 				Tel: +1. 631.738.6213
 				E-mail: support@symbol.com
 				Web: http://www.symbol.com/support"
-			DESCRIPTION 
+			DESCRIPTION
 				"MIB for Access-Control List (ACL) and NAT configuration."
 			REVISION "200705101422Z"		-- May 10, 2007 at 14:22 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"The following objects have been deprecated
-				
+
 				wsSwAclStdIpAclWlanIndex
-				
+
 				wsSwAclExtIpAclWlanIndex
-				
+
 				wsSwAclExtMacAclWlanIndex"
 			REVISION "200702271729Z"		-- February 27, 2007 at 17:29 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a14"
 			REVISION "200701051313Z"		-- January 05, 2007 at 13:13 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a13"
 			REVISION "200612121256Z"		-- December 12, 2006 at 12:56 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a12"
 			REVISION "200612081237Z"		-- December 08, 2006 at 12:37 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a11"
 			REVISION "200609282150Z"		-- September 28, 2006 at 21:50 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a10"
 			REVISION "200609131420Z"		-- September 13, 2006 at 14:20 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a09"
 			REVISION "200609051615Z"		-- September 05, 2006 at 16:15 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a08"
 			REVISION "200609011755Z"		-- September 01, 2006 at 17:55 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a07"
 			REVISION "200608281820Z"		-- August 28, 2006 at 18:20 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a06"
 			REVISION "200608231314Z"		-- August 23, 2006 at 13:14 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a05"
 			REVISION "200608221409Z"		-- August 22, 2006 at 14:09 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a04"
 			REVISION "200608030927Z"		-- August 03, 2006 at 09:27 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a03"
 			REVISION "200606191736Z"		-- June 19, 2006 at 17:36 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a02"
 			REVISION "200606081127Z"		-- June 08, 2006 at 11:27 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a01"
 			::= { wsSwAcl 1 }
 
-		
-	
-	
-	
+
+
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2
 		wsSwAclMIB OBJECT IDENTIFIER ::= { wsSwAclMibModule 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.1
 		wsSwAclTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclEntry
@@ -112,7 +112,7 @@
 				"Table for listing the ACLs configured on the switch."
 			::= { wsSwAclMIB 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.1.1
 		wsSwAclEntry OBJECT-TYPE
 			SYNTAX WsSwAclEntry
@@ -123,9 +123,9 @@
 			INDEX { wsSwAclId }
 			::= { wsSwAclTable 1 }
 
-		
+
 		WsSwAclEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclId
 					DisplayString,
 				wsSwAclType
@@ -143,7 +143,7 @@
 				"The identifier string for the ACL, usually a number."
 			::= { wsSwAclEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.1.1.2
 		wsSwAclType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -158,7 +158,7 @@
 				"The ACL type, whether standard IP or extended IP or extended MAC."
 			::= { wsSwAclEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.1.1.3
 		wsSwAclRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
@@ -168,7 +168,7 @@
 				"Row status for the ACL entry."
 			::= { wsSwAclEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.2
 		wsSwAclClearAllAcls OBJECT-TYPE
 			SYNTAX DoActionNow
@@ -178,7 +178,7 @@
 				"A scalar used to clear all the ACLs in the ACL table."
 			::= { wsSwAclMIB 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3
 		wsSwAclStdIpAclTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclStdIpAclEntry
@@ -188,7 +188,7 @@
 				"Table for standard IP ACLs."
 			::= { wsSwAclMIB 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3.1
 		wsSwAclStdIpAclEntry OBJECT-TYPE
 			SYNTAX WsSwAclStdIpAclEntry
@@ -199,9 +199,9 @@
 			INDEX { wsSwAclId, wsSwAclStdIpAclPrecedence }
 			::= { wsSwAclStdIpAclTable 1 }
 
-		
+
 		WsSwAclStdIpAclEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclStdIpAclPrecedence
 					INTEGER,
 				wsSwAclStdIpAclOpType
@@ -228,12 +228,12 @@
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The precedence number for the Access Control Entry 
-				(ACE). 1 is the highest precedence rule and 5000 is 
+				"The precedence number for the Access Control Entry
+				(ACE). 1 is the highest precedence rule and 5000 is
 				 the lowest precedence rule."
 			::= { wsSwAclStdIpAclEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3.1.2
 		wsSwAclStdIpAclOpType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -248,7 +248,7 @@
 				"The operation type (permit or deny) for this ACE."
 			::= { wsSwAclStdIpAclEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3.1.3
 		wsSwAclStdIpAclSrcIp OBJECT-TYPE
 			SYNTAX IpAddress
@@ -258,7 +258,7 @@
 				"The source IP address for this ACE."
 			::= { wsSwAclStdIpAclEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3.1.4
 		wsSwAclStdIpAclSrcIpMask OBJECT-TYPE
 			SYNTAX INTEGER (1..32)
@@ -269,7 +269,7 @@
 			DEFVAL { 0 }
 			::= { wsSwAclStdIpAclEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3.1.5
 		wsSwAclStdIpAclMark8021p OBJECT-TYPE
 			SYNTAX INTEGER (0..7)
@@ -280,7 +280,7 @@
 			DEFVAL { -1 }
 			::= { wsSwAclStdIpAclEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3.1.6
 		wsSwAclStdIpAclTos OBJECT-TYPE
 			SYNTAX INTEGER (0..255)
@@ -291,7 +291,7 @@
 			DEFVAL { -1 }
 			::= { wsSwAclStdIpAclEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3.1.7
 		wsSwAclStdIpAclWlanIndex OBJECT-TYPE
 			SYNTAX INTEGER (1..32)
@@ -299,12 +299,12 @@
 			STATUS deprecated
 			DESCRIPTION
 				"The WLAN index to be used with this standard IP ACL.
-				
+
 				Note: Use the wsSwAclWlanAclTable to set ACLs on WLANs."
 			DEFVAL { 0 }
 			::= { wsSwAclStdIpAclEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3.1.8
 		wsSwAclStdIpAclRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
@@ -314,7 +314,7 @@
 				"The row status for this ACE."
 			::= { wsSwAclStdIpAclEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.3.1.9
 		wsSwAclStdIpAclLog OBJECT-TYPE
 			SYNTAX TruthValue
@@ -325,7 +325,7 @@
 			DEFVAL { false }
 			::= { wsSwAclStdIpAclEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4
 		wsSwAclExtIpAclTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclExtIpAclEntry
@@ -335,7 +335,7 @@
 				"Table for extended IP ACLs."
 			::= { wsSwAclMIB 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1
 		wsSwAclExtIpAclEntry OBJECT-TYPE
 			SYNTAX WsSwAclExtIpAclEntry
@@ -346,9 +346,9 @@
 			INDEX { wsSwAclId, wsSwAclExtIpAclPrecedence }
 			::= { wsSwAclExtIpAclTable 1 }
 
-		
+
 		WsSwAclExtIpAclEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclExtIpAclPrecedence
 					INTEGER,
 				wsSwAclExtIpAclOpType
@@ -381,12 +381,12 @@
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The precedence number for the Access Control Entry 
-				(ACE). 1 is the highest precedence rule and 5000 is 
+				"The precedence number for the Access Control Entry
+				(ACE). 1 is the highest precedence rule and 5000 is
 				 the lowest precedence rule."
 			::= { wsSwAclExtIpAclEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.2
 		wsSwAclExtIpAclOpType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -401,7 +401,7 @@
 				"The operation type (permit or deny) for this ACE."
 			::= { wsSwAclExtIpAclEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.3
 		wsSwAclExtIpAclSrcIp OBJECT-TYPE
 			SYNTAX IpAddress
@@ -411,7 +411,7 @@
 				"The source IP address for this ACE."
 			::= { wsSwAclExtIpAclEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.4
 		wsSwAclExtIpAclSrcIpMask OBJECT-TYPE
 			SYNTAX INTEGER (1..32)
@@ -421,7 +421,7 @@
 				"The source IP address mask for this ACE."
 			::= { wsSwAclExtIpAclEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.5
 		wsSwAclExtIpAclDestIp OBJECT-TYPE
 			SYNTAX IpAddress
@@ -431,7 +431,7 @@
 				"The destination IP address for this ACE."
 			::= { wsSwAclExtIpAclEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.6
 		wsSwAclExtIpAclDestIpMask OBJECT-TYPE
 			SYNTAX INTEGER (1..32)
@@ -441,7 +441,7 @@
 				"The destination IP address mask for this ACE."
 			::= { wsSwAclExtIpAclEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.7
 		wsSwAclExtIpAclProtocolType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -457,7 +457,7 @@
 				"The protocol type (ICMP/IP/TCP/UDP) for this ACE."
 			::= { wsSwAclExtIpAclEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.8
 		wsSwAclExtIpAclMark8021p OBJECT-TYPE
 			SYNTAX INTEGER (0..7)
@@ -468,7 +468,7 @@
 			DEFVAL { -1 }
 			::= { wsSwAclExtIpAclEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.9
 		wsSwAclExtIpAclTos OBJECT-TYPE
 			SYNTAX INTEGER (0..255)
@@ -479,20 +479,20 @@
 			DEFVAL { -1 }
 			::= { wsSwAclExtIpAclEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.10
 		wsSwAclExtIpAclWlanIndex OBJECT-TYPE
 			SYNTAX INTEGER (1..32)
 			MAX-ACCESS read-create
 			STATUS deprecated
 			DESCRIPTION
-				"The WLAN index to be used with this extended IP ACL. 
-				
+				"The WLAN index to be used with this extended IP ACL.
+
 				Note: Use the wsSwAclWlanAclTable to set ACLs on WLANs."
 			DEFVAL { 0 }
 			::= { wsSwAclExtIpAclEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.11
 		wsSwAclExtIpAclRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
@@ -502,7 +502,7 @@
 				"The row status for this ACE."
 			::= { wsSwAclExtIpAclEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.4.1.12
 		wsSwAclExtIpAclLog OBJECT-TYPE
 			SYNTAX TruthValue
@@ -513,32 +513,32 @@
 			DEFVAL { false }
 			::= { wsSwAclExtIpAclEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.5
 		wsSwAclExtIpAclIcmpTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclExtIpAclIcmpEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"A table for Extended IP Acls ICMP Protocol 
+				"A table for Extended IP Acls ICMP Protocol
 				Parameters configuration"
 			::= { wsSwAclMIB 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.5.1
 		wsSwAclExtIpAclIcmpEntry OBJECT-TYPE
 			SYNTAX WsSwAclExtIpAclIcmpEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"An entry in the table for Extended IP Acls ICMP 
+				"An entry in the table for Extended IP Acls ICMP
 				Protocol Parameters configuration"
 			INDEX { wsSwAclId, wsSwAclExtIpAclPrecedence }
 			::= { wsSwAclExtIpAclIcmpTable 1 }
 
-		
+
 		WsSwAclExtIpAclIcmpEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclExtIpAclIcmpType
 					INTEGER,
 				wsSwAclExtIpAclIcmpCode
@@ -557,7 +557,7 @@
 			DEFVAL { -1 }
 			::= { wsSwAclExtIpAclIcmpEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.5.1.2
 		wsSwAclExtIpAclIcmpCode OBJECT-TYPE
 			SYNTAX INTEGER (0..255)
@@ -568,7 +568,7 @@
 			DEFVAL { -1 }
 			::= { wsSwAclExtIpAclIcmpEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.5.1.3
 		wsSwAclExtIpAclIcmpRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
@@ -578,32 +578,32 @@
 				"The row status for this entry in the wsSwAclExtIpAclIcmpTable."
 			::= { wsSwAclExtIpAclIcmpEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.6
 		wsSwAclExtIpAclTcpUdpTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclExtIpAclTcpUdpEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"A table for Extended IP Acls TCP/UDP Protocol 
+				"A table for Extended IP Acls TCP/UDP Protocol
 				Parameters configuration"
 			::= { wsSwAclMIB 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.6.1
 		wsSwAclExtIpAclTcpUdpEntry OBJECT-TYPE
 			SYNTAX WsSwAclExtIpAclTcpUdpEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"An entry in the table for Extended IP Acls TCP/UDP 
+				"An entry in the table for Extended IP Acls TCP/UDP
 				Protocol Parameters configuration"
 			INDEX { wsSwAclId, wsSwAclExtIpAclPrecedence }
 			::= { wsSwAclExtIpAclTcpUdpTable 1 }
 
-		
+
 		WsSwAclExtIpAclTcpUdpEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclExtIpAclTcpUdpSrcPortLow
 					INTEGER,
 				wsSwAclExtIpAclTcpUdpSrcPortHigh
@@ -622,48 +622,48 @@
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The low value in the range of TCP/UDP source port 
+				"The low value in the range of TCP/UDP source port
 				numbers permitted or denied for an ACE rule."
 			DEFVAL { 0 }
 			::= { wsSwAclExtIpAclTcpUdpEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.6.1.2
 		wsSwAclExtIpAclTcpUdpSrcPortHigh OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The high value in the range of TCP/UDP source port 
+				"The high value in the range of TCP/UDP source port
 				numbers permitted or denied for an ACE rule."
 			DEFVAL { 0 }
 			::= { wsSwAclExtIpAclTcpUdpEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.6.1.3
 		wsSwAclExtIpAclTcpUdpDestPortLow OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The low value in the range of TCP/UDP destination port 
+				"The low value in the range of TCP/UDP destination port
 				numbers permitted or denied for an ACE rule."
 			DEFVAL { 0 }
 			::= { wsSwAclExtIpAclTcpUdpEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.6.1.4
 		wsSwAclExtIpAclTcpUdpDestPortHigh OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The high value in the range of TCP/UDP destination port 
+				"The high value in the range of TCP/UDP destination port
 				numbers permitted or denied for an ACE rule."
 			DEFVAL { 0 }
 			::= { wsSwAclExtIpAclTcpUdpEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.6.1.5
 		wsSwAclExtIpAclTcpUdpRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
@@ -673,7 +673,7 @@
 				"The row status for this entry in the wsSwAclExtIpAclTcpUdpTable."
 			::= { wsSwAclExtIpAclTcpUdpEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7
 		wsSwAclExtMacAclTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclExtMacAclEntry
@@ -683,7 +683,7 @@
 				"A table for Extended MAC ACLs."
 			::= { wsSwAclMIB 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1
 		wsSwAclExtMacAclEntry OBJECT-TYPE
 			SYNTAX WsSwAclExtMacAclEntry
@@ -694,9 +694,9 @@
 			INDEX { wsSwAclId, wsSwAclExtMacAclPrecedence }
 			::= { wsSwAclExtMacAclTable 1 }
 
-		
+
 		WsSwAclExtMacAclEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclExtMacAclPrecedence
 					INTEGER,
 				wsSwAclExtMacAclOpType
@@ -731,12 +731,12 @@
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The precedence number for the Access Control Entry 
-				(ACE). 1 is the highest precedence rule and 5000 is 
+				"The precedence number for the Access Control Entry
+				(ACE). 1 is the highest precedence rule and 5000 is
 				 the lowest precedence rule."
 			::= { wsSwAclExtMacAclEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.2
 		wsSwAclExtMacAclOpType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -751,7 +751,7 @@
 				"The operation type (permit or deny) for this ACE."
 			::= { wsSwAclExtMacAclEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.3
 		wsSwAclExtMacAclSrcMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -761,7 +761,7 @@
 				"The source MAC address for this ACE."
 			::= { wsSwAclExtMacAclEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.4
 		wsSwAclExtMacAclSrcMacMask OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -771,7 +771,7 @@
 				"The source MAC address mask for this ACE."
 			::= { wsSwAclExtMacAclEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.5
 		wsSwAclExtMacAclDestMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -781,7 +781,7 @@
 				"The destination MAC address for this ACE."
 			::= { wsSwAclExtMacAclEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.6
 		wsSwAclExtMacAclDestMacMask OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -791,7 +791,7 @@
 				"The destination MAC address mask for this ACE."
 			::= { wsSwAclExtMacAclEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.7
 		wsSwAclExtMacAclVlanId OBJECT-TYPE
 			SYNTAX INTEGER (1..4096)
@@ -802,7 +802,7 @@
 			DEFVAL { 0 }
 			::= { wsSwAclExtMacAclEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.8
 		wsSwAclExtMacAclVlanUserPriority OBJECT-TYPE
 			SYNTAX INTEGER (0..7)
@@ -813,7 +813,7 @@
 			DEFVAL { -1 }
 			::= { wsSwAclExtMacAclEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.9
 		wsSwAclExtMacAclEtherType OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -824,7 +824,7 @@
 			DEFVAL { 0 }
 			::= { wsSwAclExtMacAclEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.10
 		wsSwAclExtMacAclMark8021p OBJECT-TYPE
 			SYNTAX INTEGER (0..7)
@@ -835,7 +835,7 @@
 			DEFVAL { -1 }
 			::= { wsSwAclExtMacAclEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.11
 		wsSwAclExtMacAclTos OBJECT-TYPE
 			SYNTAX INTEGER (0..255)
@@ -846,7 +846,7 @@
 			DEFVAL { -1 }
 			::= { wsSwAclExtMacAclEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.12
 		wsSwAclExtMacAclWlanIndex OBJECT-TYPE
 			SYNTAX INTEGER (1..32)
@@ -854,12 +854,12 @@
 			STATUS deprecated
 			DESCRIPTION
 				"The WLAN index to be used with this extended MAC ACL.
-				
+
 				Note: Use the wsSwAclWlanAclTable to set ACLs on WLANs in dataplane platforms."
 			DEFVAL { 0 }
 			::= { wsSwAclExtMacAclEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.7.1.13
 		wsSwAclExtMacAclRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
@@ -869,7 +869,7 @@
 				"The row status for this ACE."
 			::= { wsSwAclExtMacAclEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.8
 		wsSwAclInterfaceAclTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclInterfaceAclEntry
@@ -879,7 +879,7 @@
 				"A table for applying ACLs to an interface."
 			::= { wsSwAclMIB 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.8.1
 		wsSwAclInterfaceAclEntry OBJECT-TYPE
 			SYNTAX WsSwAclInterfaceAclEntry
@@ -890,9 +890,9 @@
 			INDEX { wsSwAclInterfaceAclIfName }
 			::= { wsSwAclInterfaceAclTable 1 }
 
-		
+
 		WsSwAclInterfaceAclEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclInterfaceAclIfName
 					DisplayString,
 				wsSwAclInterfaceAclInboundIpAclId
@@ -912,40 +912,40 @@
 				"The name of the interface to which ACL is applied."
 			::= { wsSwAclInterfaceAclEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.8.1.2
 		wsSwAclInterfaceAclInboundIpAclId OBJECT-TYPE
 			SYNTAX DisplayString
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The identifier of the inbound IP ACL applied to 
+				"The identifier of the inbound IP ACL applied to
 				the interface."
 			::= { wsSwAclInterfaceAclEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.8.1.3
 		wsSwAclInterfaceAclInboundMacAclId OBJECT-TYPE
 			SYNTAX DisplayString
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The identifier of the inbound MAC ACL applied to 
+				"The identifier of the inbound MAC ACL applied to
 				the interface."
 			::= { wsSwAclInterfaceAclEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.8.1.4
 		wsSwAclInterfaceAclRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The row status for this entry in the 
+				"The row status for this entry in the
 				wsSwAclInterfaceAclTable."
 			::= { wsSwAclInterfaceAclEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.9
 		wsSwAclCountAllAcls OBJECT-TYPE
 			SYNTAX INTEGER (0..500)
@@ -955,18 +955,18 @@
 				"Count of all the ACLs present in the wireless switch."
 			::= { wsSwAclMIB 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.10
 		wsSwAclNatIfTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclNatIfEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"A table for configuring the type of an interface 
+				"A table for configuring the type of an interface
 				for NAT."
 			::= { wsSwAclMIB 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.10.1
 		wsSwAclNatIfEntry OBJECT-TYPE
 			SYNTAX WsSwAclNatIfEntry
@@ -977,9 +977,9 @@
 			INDEX { wsSwAclNatIfName }
 			::= { wsSwAclNatIfTable 1 }
 
-		
+
 		WsSwAclNatIfEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclNatIfName
 					DisplayString,
 				wsSwAclNatIfType
@@ -997,7 +997,7 @@
 				"The name of the interface to be NATed."
 			::= { wsSwAclNatIfEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.10.1.2
 		wsSwAclNatIfType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1011,7 +1011,7 @@
 				"The interface type which is to be NAT'ed."
 			::= { wsSwAclNatIfEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.10.1.3
 		wsSwAclNatIfRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
@@ -1021,7 +1021,7 @@
 				"The row status for this entry in the wsSwAclNatIfTable."
 			::= { wsSwAclNatIfEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11
 		wsSwAclStaticNatTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclStaticNatEntry
@@ -1031,7 +1031,7 @@
 				"A table for configuring static NAT entries."
 			::= { wsSwAclMIB 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11.1
 		wsSwAclStaticNatEntry OBJECT-TYPE
 			SYNTAX WsSwAclStaticNatEntry
@@ -1042,9 +1042,9 @@
 			INDEX { wsSwAclStaticNatIndex }
 			::= { wsSwAclStaticNatTable 1 }
 
-		
+
 		WsSwAclStaticNatEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclStaticNatIndex
 					Integer32,
 				wsSwAclStaticNatLocalAddr
@@ -1074,7 +1074,7 @@
 				"The integer index for this entry in wsSwAclStaticNatTable."
 			::= { wsSwAclStaticNatEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11.1.2
 		wsSwAclStaticNatLocalAddr OBJECT-TYPE
 			SYNTAX IpAddress
@@ -1084,7 +1084,7 @@
 				"The local IP address for this static NAT entry."
 			::= { wsSwAclStaticNatEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11.1.3
 		wsSwAclStaticNatGlobalAddr OBJECT-TYPE
 			SYNTAX IpAddress
@@ -1094,7 +1094,7 @@
 				"The global IP address for this static NAT entry."
 			::= { wsSwAclStaticNatEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11.1.4
 		wsSwAclStaticNatIfType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1108,7 +1108,7 @@
 				"The type (inside/outside) of the interface to be NAT'ed for this static NAT entry."
 			::= { wsSwAclStaticNatEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11.1.5
 		wsSwAclStaticNatDirection OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1122,7 +1122,7 @@
 				"The direction of the interface (source or destination) in which NAT is to be applied for this static NAT mapping."
 			::= { wsSwAclStaticNatEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11.1.6
 		wsSwAclStaticNatLocalPort OBJECT-TYPE
 			SYNTAX Integer32 (1..65535)
@@ -1132,7 +1132,7 @@
 				"The local NAT port used for this entry."
 			::= { wsSwAclStaticNatEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11.1.7
 		wsSwAclStaticNatGlobalPort OBJECT-TYPE
 			SYNTAX Integer32 (1..65535)
@@ -1142,7 +1142,7 @@
 				"The global NAT port used for this entry."
 			::= { wsSwAclStaticNatEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11.1.8
 		wsSwAclStaticNatLocalProtocol OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1156,18 +1156,18 @@
 				"The local protocol for this static NAT entry."
 			::= { wsSwAclStaticNatEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.11.1.9
 		wsSwAclStaticNatRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The row status for this entry in the 
+				"The row status for this entry in the
 				wsSwAclStaticNatTable."
 			::= { wsSwAclStaticNatEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.12
 		wsSwAclDynamicNatTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclDynamicNatEntry
@@ -1177,7 +1177,7 @@
 				"A table for configuring dynamic NAT entries in the switch."
 			::= { wsSwAclMIB 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.12.1
 		wsSwAclDynamicNatEntry OBJECT-TYPE
 			SYNTAX WsSwAclDynamicNatEntry
@@ -1188,9 +1188,9 @@
 			INDEX { wsSwAclDynamicNatIndex }
 			::= { wsSwAclDynamicNatTable 1 }
 
-		
+
 		WsSwAclDynamicNatEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclDynamicNatIndex
 					INTEGER,
 				wsSwAclDynamicNatIfType
@@ -1214,7 +1214,7 @@
 				"The simple integer index for the wsSwAclDynamicNatTable."
 			::= { wsSwAclDynamicNatEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.12.1.2
 		wsSwAclDynamicNatIfType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1228,7 +1228,7 @@
 				"The type of the interface to be NAT'ed for this dynamic NAT entry."
 			::= { wsSwAclDynamicNatEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.12.1.3
 		wsSwAclDynamicNatDirection OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1242,7 +1242,7 @@
 				"The direction of the interface (source or destination) in which NAT is to be applied."
 			::= { wsSwAclDynamicNatEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.12.1.4
 		wsSwAclDynamicNatAclId OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1252,7 +1252,7 @@
 				"The ACL identifier to be used in configuring this dynamic NAT entry."
 			::= { wsSwAclDynamicNatEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.12.1.5
 		wsSwAclDynamicNatIfName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1262,7 +1262,7 @@
 				"The name of the interface to which this dynamic NAT rule is applied."
 			::= { wsSwAclDynamicNatEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.12.1.6
 		wsSwAclDynamicNatRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
@@ -1272,7 +1272,7 @@
 				"The row status for this entry in the wsSwAclDynamicNatTable."
 			::= { wsSwAclDynamicNatEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13
 		wsSwAclNatTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclNatEntry
@@ -1282,7 +1282,7 @@
 				"A table for showing the status of Network Address Translation entries."
 			::= { wsSwAclMIB 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13.1
 		wsSwAclNatEntry OBJECT-TYPE
 			SYNTAX WsSwAclNatEntry
@@ -1293,9 +1293,9 @@
 			INDEX { wsSwAclNatIndex }
 			::= { wsSwAclNatTable 1 }
 
-		
+
 		WsSwAclNatEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclNatIndex
 					Integer32,
 				wsSwAclNatInsideLocalAddress
@@ -1325,7 +1325,7 @@
 				"The integer index (NAT flow id) for this entry in wsSwAclNatTable."
 			::= { wsSwAclNatEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13.1.2
 		wsSwAclNatInsideLocalAddress OBJECT-TYPE
 			SYNTAX IpAddress
@@ -1335,7 +1335,7 @@
 				"The inside local IP address for this entry in wsSwAclNatTable."
 			::= { wsSwAclNatEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13.1.3
 		wsSwAclNatInsideLocalPort OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -1345,7 +1345,7 @@
 				"The inside local port for this entry in the wsSwAclNatTable."
 			::= { wsSwAclNatEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13.1.4
 		wsSwAclNatInsideGlobalAddress OBJECT-TYPE
 			SYNTAX IpAddress
@@ -1355,7 +1355,7 @@
 				"The inside global IP address for this entry in wsSwAclNatTable."
 			::= { wsSwAclNatEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13.1.5
 		wsSwAclNatInsideGlobalPort OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -1365,7 +1365,7 @@
 				"The inside global port for this entry in the wsSwAclNatTable."
 			::= { wsSwAclNatEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13.1.6
 		wsSwAclNatOutsideLocalAddress OBJECT-TYPE
 			SYNTAX IpAddress
@@ -1375,7 +1375,7 @@
 				"The outside local IP address for this entry in wsSwAclNatTable."
 			::= { wsSwAclNatEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13.1.7
 		wsSwAclNatOutsideLocalPort OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -1385,7 +1385,7 @@
 				"The outside local port for this entry in the wsSwAclNatTable."
 			::= { wsSwAclNatEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13.1.8
 		wsSwAclNatOutsideGlobalAddress OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1395,7 +1395,7 @@
 				"The outside global IP address for this entry in wsSwAclNatTable."
 			::= { wsSwAclNatEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.13.1.9
 		wsSwAclNatOutsideGlobalPort OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -1405,7 +1405,7 @@
 				"The outside global port for this entry in the wsSwAclNatTable."
 			::= { wsSwAclNatEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14
 		wsSwAclStatsTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclStatsEntry
@@ -1415,7 +1415,7 @@
 				"A table containing statistics per ACL rule/flow."
 			::= { wsSwAclMIB 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1
 		wsSwAclStatsEntry OBJECT-TYPE
 			SYNTAX WsSwAclStatsEntry
@@ -1426,9 +1426,9 @@
 			INDEX { wsSwAclStatsRuleId }
 			::= { wsSwAclStatsTable 1 }
 
-		
+
 		WsSwAclStatsEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclStatsRuleId
 					Integer32,
 				wsSwAclStatsAction
@@ -1476,7 +1476,7 @@
 				"The rule identifier for this ACL rule."
 			::= { wsSwAclStatsEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.2
 		wsSwAclStatsAction OBJECT-TYPE
 			SYNTAX INTEGER (1..6)
@@ -1486,7 +1486,7 @@
 				"The action for this ACL rule."
 			::= { wsSwAclStatsEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.3
 		wsSwAclStatsIfName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1496,7 +1496,7 @@
 				"The interface name to which this ACL rule is applied."
 			::= { wsSwAclStatsEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.4
 		wsSwAclStatsPrecedence OBJECT-TYPE
 			SYNTAX INTEGER (1..5000)
@@ -1506,7 +1506,7 @@
 				"The rule precedence for this ACL rule."
 			::= { wsSwAclStatsEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.5
 		wsSwAclStatsProtocol OBJECT-TYPE
 			SYNTAX INTEGER (1..255)
@@ -1516,7 +1516,7 @@
 				"The protocol (IP/ICMP/TCP/UDCP) for this ACL rule."
 			::= { wsSwAclStatsEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.6
 		wsSwAclStatsSrcIpLow OBJECT-TYPE
 			SYNTAX IpAddress
@@ -1526,7 +1526,7 @@
 				"The low end of the range of source IP addresses for this ACL rule."
 			::= { wsSwAclStatsEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.7
 		wsSwAclStatsSrcIpHigh OBJECT-TYPE
 			SYNTAX IpAddress
@@ -1536,7 +1536,7 @@
 				"The high end of the range of source IP addresses for this ACL rule."
 			::= { wsSwAclStatsEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.8
 		wsSwAclStatsSrcPortLow OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -1546,7 +1546,7 @@
 				"The low end of the range of source port values for this ACL rule."
 			::= { wsSwAclStatsEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.9
 		wsSwAclStatsSrcPortHigh OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -1556,7 +1556,7 @@
 				"The high end of the range of source port values for this ACL rule."
 			::= { wsSwAclStatsEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.10
 		wsSwAclStatsDestIpLow OBJECT-TYPE
 			SYNTAX IpAddress
@@ -1566,7 +1566,7 @@
 				"The low end of the range of destination IP addresses for this ACL rule."
 			::= { wsSwAclStatsEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.11
 		wsSwAclStatsDestIpHigh OBJECT-TYPE
 			SYNTAX IpAddress
@@ -1576,7 +1576,7 @@
 				"The high end of the range of destination IP addresses for this ACL rule."
 			::= { wsSwAclStatsEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.12
 		wsSwAclStatsDestPortLow OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -1586,7 +1586,7 @@
 				"The low end of the range of destination port values for this ACL rule."
 			::= { wsSwAclStatsEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.13
 		wsSwAclStatsDestPortHigh OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -1596,7 +1596,7 @@
 				"The high end of the range of destination port values for this ACL rule."
 			::= { wsSwAclStatsEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.14
 		wsSwAclStatsTimesUsed OBJECT-TYPE
 			SYNTAX Counter32
@@ -1606,7 +1606,7 @@
 				"Number of times this flow rule has been used (either hits or drops)."
 			::= { wsSwAclStatsEntry 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.15
 		wsSwAclStatsNumFlowsActive OBJECT-TYPE
 			SYNTAX Counter32
@@ -1616,7 +1616,7 @@
 				"The total number of active flows for this ACL rule."
 			::= { wsSwAclStatsEntry 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.16
 		wsSwAclStatsNumFlowsTotal OBJECT-TYPE
 			SYNTAX Counter32
@@ -1626,7 +1626,7 @@
 				"The total number of flows for this ACL rule."
 			::= { wsSwAclStatsEntry 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.17
 		wsSwAclStatsTotalInPkts OBJECT-TYPE
 			SYNTAX Counter64
@@ -1636,7 +1636,7 @@
 				"The total number of incoming packets for this ACL rule."
 			::= { wsSwAclStatsEntry 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.14.1.18
 		wsSwAclStatsTotalOutPkts OBJECT-TYPE
 			SYNTAX Counter64
@@ -1646,7 +1646,7 @@
 				"The total number of outgoing packets for this ACL rule."
 			::= { wsSwAclStatsEntry 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.15
 		wsSwAclSetErrorA OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1655,18 +1655,18 @@
 			DESCRIPTION
 				"The error message, if any, from the last set request to
 				any of the following tablular or scalar objects:
-				wsSwAclTable, 
-				wsSwAclClearAllAcls, 
+				wsSwAclTable,
+				wsSwAclClearAllAcls,
 				wsSwAclStdIpAclTable,
-				wsSwAclExtIpAclTable, 
+				wsSwAclExtIpAclTable,
 				wsSwAclExtIpAclIcmpTable,
 				wsSwAclExtIpAclTcpUdpTable,
 				wsSwAclExtMacAclTable.
-				
+
 				"
 			::= { wsSwAclMIB 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.16
 		wsSwAclSetErrorB OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1679,7 +1679,7 @@
 				"
 			::= { wsSwAclMIB 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.17
 		wsSwAclNatSetError OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1693,18 +1693,18 @@
 				wsSwAclDynamicNatTable."
 			::= { wsSwAclMIB 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.18
 		wsSwAclWlanAclTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwAclWlanAclEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"This table allows the user to configure the L2 ACLs on a per-WLAN basis 
+				"This table allows the user to configure the L2 ACLs on a per-WLAN basis
 				rather than on the physical interfaces."
 			::= { wsSwAclMIB 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.18.1
 		wsSwAclWlanAclEntry OBJECT-TYPE
 			SYNTAX WsSwAclWlanAclEntry
@@ -1715,9 +1715,9 @@
 			INDEX { wsSwAclWlanIndex, wsSwAclWlanAclDirection }
 			::= { wsSwAclWlanAclTable 1 }
 
-		
+
 		WsSwAclWlanAclEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwAclWlanIndex
 					INTEGER,
 				wsSwAclWlanAclDirection
@@ -1740,7 +1740,7 @@
 				This ranges from 1 to 256."
 			::= { wsSwAclWlanAclEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.18.1.2
 		wsSwAclWlanAclDirection OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1754,7 +1754,7 @@
 				"The direction in which the ACL to be applied on this WLAN port."
 			::= { wsSwAclWlanAclEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.18.1.3
 		wsSwAclWlanMacAclId OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1765,7 +1765,7 @@
 				 being applied on this WLAN."
 			::= { wsSwAclWlanAclEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.18.1.4
 		wsSwAclWlanIpAclId OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1776,7 +1776,7 @@
 				 being applied on this WLAN."
 			::= { wsSwAclWlanAclEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.18.1.5
 		wsSwAclWlanAclRowStatus OBJECT-TYPE
 			SYNTAX AbbrevRowStatus
@@ -1786,58 +1786,58 @@
 				"SNMP row status to create/configure this entry."
 			::= { wsSwAclWlanAclEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.100
 		wsSwAclConformance OBJECT IDENTIFIER ::= { wsSwAclMIB 100 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.100.1
 		wsSwAclGroups OBJECT IDENTIFIER ::= { wsSwAclConformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.100.1.1
 		wsSwAclGroup OBJECT-GROUP
-			OBJECTS { wsSwAclId, wsSwAclType, wsSwAclRowStatus, wsSwAclClearAllAcls, wsSwAclStdIpAclPrecedence, 
-				wsSwAclExtIpAclPrecedence, wsSwAclExtIpAclIcmpType, wsSwAclExtIpAclTcpUdpSrcPortLow, wsSwAclExtMacAclPrecedence, wsSwAclInterfaceAclIfName, 
-				wsSwAclExtIpAclOpType, wsSwAclExtIpAclSrcIp, wsSwAclExtIpAclSrcIpMask, wsSwAclExtIpAclDestIp, wsSwAclExtIpAclDestIpMask, 
-				wsSwAclExtIpAclProtocolType, wsSwAclExtIpAclRowStatus, wsSwAclExtIpAclIcmpCode, wsSwAclExtIpAclTcpUdpDestPortHigh, wsSwAclExtIpAclTcpUdpDestPortLow, 
-				wsSwAclExtIpAclTcpUdpSrcPortHigh, wsSwAclExtMacAclOpType, wsSwAclExtMacAclSrcMac, wsSwAclExtMacAclSrcMacMask, wsSwAclExtMacAclDestMac, 
-				wsSwAclExtMacAclDestMacMask, wsSwAclExtMacAclVlanId, wsSwAclExtMacAclVlanUserPriority, wsSwAclExtMacAclEtherType, wsSwAclExtMacAclRowStatus, 
-				wsSwAclInterfaceAclRowStatus, wsSwAclInterfaceAclInboundMacAclId, wsSwAclInterfaceAclInboundIpAclId, wsSwAclNatIfRowStatus, wsSwAclCountAllAcls, 
-				wsSwAclExtIpAclTcpUdpRowStatus, wsSwAclExtIpAclIcmpRowStatus, wsSwAclNatIndex, wsSwAclNatInsideGlobalAddress, wsSwAclNatInsideLocalAddress, 
-				wsSwAclNatOutsideGlobalAddress, wsSwAclNatOutsideLocalAddress, wsSwAclDynamicNatIfName, wsSwAclStdIpAclTos, wsSwAclExtIpAclTos, 
-				wsSwAclExtMacAclTos, wsSwAclExtIpAclMark8021p, wsSwAclExtMacAclMark8021p, wsSwAclStdIpAclOpType, wsSwAclStdIpAclSrcIp, 
-				wsSwAclStdIpAclSrcIpMask, wsSwAclStdIpAclRowStatus, wsSwAclNatIfName, wsSwAclNatIfType, wsSwAclStaticNatIndex, 
-				wsSwAclStaticNatLocalAddr, wsSwAclStaticNatGlobalAddr, wsSwAclStaticNatIfType, wsSwAclStaticNatDirection, wsSwAclDynamicNatIndex, 
-				wsSwAclDynamicNatIfType, wsSwAclDynamicNatDirection, wsSwAclDynamicNatAclId, wsSwAclStatsRuleId, wsSwAclStatsAction, 
-				wsSwAclStatsIfName, wsSwAclStatsPrecedence, wsSwAclStatsProtocol, wsSwAclStatsSrcIpLow, wsSwAclStatsSrcIpHigh, 
-				wsSwAclStatsSrcPortLow, wsSwAclStatsSrcPortHigh, wsSwAclStatsDestIpLow, wsSwAclStatsDestIpHigh, wsSwAclStatsDestPortLow, 
-				wsSwAclStatsDestPortHigh, wsSwAclStatsNumFlowsActive, wsSwAclStatsNumFlowsTotal, wsSwAclStatsTotalInPkts, wsSwAclStatsTotalOutPkts, 
-				wsSwAclStatsTimesUsed, wsSwAclDynamicNatRowStatus, wsSwAclStdIpAclMark8021p, wsSwAclNatInsideLocalPort, wsSwAclNatInsideGlobalPort, 
-				wsSwAclNatOutsideLocalPort, wsSwAclNatOutsideGlobalPort, wsSwAclStaticNatGlobalPort, wsSwAclStaticNatLocalPort, wsSwAclNatSetError, 
-				wsSwAclStaticNatRowStatus, wsSwAclStaticNatLocalProtocol, wsSwAclSetErrorB, wsSwAclWlanIndex, wsSwAclWlanMacAclId, 
-				wsSwAclWlanIpAclId, wsSwAclWlanAclDirection, wsSwAclWlanAclRowStatus, wsSwAclSetErrorA, wsSwAclStdIpAclLog, 
+			OBJECTS { wsSwAclId, wsSwAclType, wsSwAclRowStatus, wsSwAclClearAllAcls, wsSwAclStdIpAclPrecedence,
+				wsSwAclExtIpAclPrecedence, wsSwAclExtIpAclIcmpType, wsSwAclExtIpAclTcpUdpSrcPortLow, wsSwAclExtMacAclPrecedence, wsSwAclInterfaceAclIfName,
+				wsSwAclExtIpAclOpType, wsSwAclExtIpAclSrcIp, wsSwAclExtIpAclSrcIpMask, wsSwAclExtIpAclDestIp, wsSwAclExtIpAclDestIpMask,
+				wsSwAclExtIpAclProtocolType, wsSwAclExtIpAclRowStatus, wsSwAclExtIpAclIcmpCode, wsSwAclExtIpAclTcpUdpDestPortHigh, wsSwAclExtIpAclTcpUdpDestPortLow,
+				wsSwAclExtIpAclTcpUdpSrcPortHigh, wsSwAclExtMacAclOpType, wsSwAclExtMacAclSrcMac, wsSwAclExtMacAclSrcMacMask, wsSwAclExtMacAclDestMac,
+				wsSwAclExtMacAclDestMacMask, wsSwAclExtMacAclVlanId, wsSwAclExtMacAclVlanUserPriority, wsSwAclExtMacAclEtherType, wsSwAclExtMacAclRowStatus,
+				wsSwAclInterfaceAclRowStatus, wsSwAclInterfaceAclInboundMacAclId, wsSwAclInterfaceAclInboundIpAclId, wsSwAclNatIfRowStatus, wsSwAclCountAllAcls,
+				wsSwAclExtIpAclTcpUdpRowStatus, wsSwAclExtIpAclIcmpRowStatus, wsSwAclNatIndex, wsSwAclNatInsideGlobalAddress, wsSwAclNatInsideLocalAddress,
+				wsSwAclNatOutsideGlobalAddress, wsSwAclNatOutsideLocalAddress, wsSwAclDynamicNatIfName, wsSwAclStdIpAclTos, wsSwAclExtIpAclTos,
+				wsSwAclExtMacAclTos, wsSwAclExtIpAclMark8021p, wsSwAclExtMacAclMark8021p, wsSwAclStdIpAclOpType, wsSwAclStdIpAclSrcIp,
+				wsSwAclStdIpAclSrcIpMask, wsSwAclStdIpAclRowStatus, wsSwAclNatIfName, wsSwAclNatIfType, wsSwAclStaticNatIndex,
+				wsSwAclStaticNatLocalAddr, wsSwAclStaticNatGlobalAddr, wsSwAclStaticNatIfType, wsSwAclStaticNatDirection, wsSwAclDynamicNatIndex,
+				wsSwAclDynamicNatIfType, wsSwAclDynamicNatDirection, wsSwAclDynamicNatAclId, wsSwAclStatsRuleId, wsSwAclStatsAction,
+				wsSwAclStatsIfName, wsSwAclStatsPrecedence, wsSwAclStatsProtocol, wsSwAclStatsSrcIpLow, wsSwAclStatsSrcIpHigh,
+				wsSwAclStatsSrcPortLow, wsSwAclStatsSrcPortHigh, wsSwAclStatsDestIpLow, wsSwAclStatsDestIpHigh, wsSwAclStatsDestPortLow,
+				wsSwAclStatsDestPortHigh, wsSwAclStatsNumFlowsActive, wsSwAclStatsNumFlowsTotal, wsSwAclStatsTotalInPkts, wsSwAclStatsTotalOutPkts,
+				wsSwAclStatsTimesUsed, wsSwAclDynamicNatRowStatus, wsSwAclStdIpAclMark8021p, wsSwAclNatInsideLocalPort, wsSwAclNatInsideGlobalPort,
+				wsSwAclNatOutsideLocalPort, wsSwAclNatOutsideGlobalPort, wsSwAclStaticNatGlobalPort, wsSwAclStaticNatLocalPort, wsSwAclNatSetError,
+				wsSwAclStaticNatRowStatus, wsSwAclStaticNatLocalProtocol, wsSwAclSetErrorB, wsSwAclWlanIndex, wsSwAclWlanMacAclId,
+				wsSwAclWlanIpAclId, wsSwAclWlanAclDirection, wsSwAclWlanAclRowStatus, wsSwAclSetErrorA, wsSwAclStdIpAclLog,
 				wsSwAclExtIpAclLog }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Group of ACL and NAT objects"
 			::= { wsSwAclGroups 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.100.1.2
 		wsSwAclDeprecatedGroup OBJECT-GROUP
 			OBJECTS { wsSwAclStdIpAclWlanIndex, wsSwAclExtIpAclWlanIndex, wsSwAclExtMacAclWlanIndex }
 			STATUS deprecated
-			DESCRIPTION 
+			DESCRIPTION
 				"Group of deprecated objects."
 			::= { wsSwAclGroups 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.11.1.2.100.2
 		wsSwAclCompls OBJECT IDENTIFIER ::= { wsSwAclConformance 2 }
 
-		
-	
+
+
 	END
 
 --

@@ -19,7 +19,7 @@ IMPORTS
     dnOS                                                            FROM DELL-REF-MIB
     DisplayString                                                       FROM RFC1213-MIB
     ifIndex                                                             FROM IF-MIB;
-   
+
     fastPathUdld MODULE-IDENTITY
         LAST-UPDATED "200712030000Z" -- 03 December 2007 12:00:00 GMT
         ORGANIZATION "Dell, Inc."
@@ -49,18 +49,18 @@ agentUdldGlobalMode OBJECT-TYPE
      SYNTAX      INTEGER {
                           enable(1),
                           disable(2)
-                 } 
+                 }
      MAX-ACCESS  read-write
      STATUS      current
      DESCRIPTION
                 "Indicates the mode of UDLDP feature on the device.
-                 enable -- Unidirectional Link Detection Protocol is 
+                 enable -- Unidirectional Link Detection Protocol is
                            enabled on the device.
 
                  disable -- Unidirectional Link Detection Protocol is
                             disabled on the device."
         ::= { agentUdldGlobal 1 }
-        
+
 agentUdldMessageInterval OBJECT-TYPE
         SYNTAX      INTEGER  (7..90)
         UNITS       "seconds"
@@ -72,7 +72,7 @@ agentUdldMessageInterval OBJECT-TYPE
                      steady state when the link has been identified as
                      bidirectional."
         ::= { agentUdldGlobal 2 }
-        
+
 agentUdldTimeoutInterval OBJECT-TYPE
         SYNTAX      INTEGER  (5..60)
         UNITS       "seconds"
@@ -105,7 +105,7 @@ agentUdldInterfaceTable OBJECT-TYPE
         MAX-ACCESS  not-accessible
         STATUS      current
         DESCRIPTION
-                "The table containing the status 
+                "The table containing the status
                  of UDLDP on the device's interfaces."
         ::= { agentUdldInterface 1 }
 
@@ -114,7 +114,7 @@ agentUdldInterfaceEntry OBJECT-TYPE
         MAX-ACCESS  not-accessible
         STATUS      current
         DESCRIPTION
-                  " An entry exists for each interface that supports 
+                  " An entry exists for each interface that supports
                    UDLDP."
         INDEX { ifIndex }
         ::= { agentUdldInterfaceTable 1 }
@@ -127,9 +127,9 @@ UdldInterfaceEntry ::= SEQUENCE {
 
 agentUdldInterfaceOperStatus OBJECT-TYPE
         SYNTAX        INTEGER {
-                                shutdown(1), 
+                                shutdown(1),
                                 undetermined(2),
-                                biDirectional(3), 
+                                biDirectional(3),
                                 notApplicable(4),
                                 undetermined-LinkDown(5)
                               }
@@ -138,19 +138,19 @@ agentUdldInterfaceOperStatus OBJECT-TYPE
         DESCRIPTION
                " This mib object contains the following values,
                  which has the meaning as:
-                 'shutdown'      - An Unidirectional link  has been 
+                 'shutdown'      - An Unidirectional link  has been
                                    detected and the port has been disabled.
-                 'undetermined'  - Unidirectional Link Detection  
+                 'undetermined'  - Unidirectional Link Detection
                                    protocol has not collected enough
-                                   information to determine if the 
+                                   information to determine if the
                                    link is bidirectional or not.
-                 'biDirectional' - A bidirectional link has been 
+                 'biDirectional' - A bidirectional link has been
                                    detected.
-                 'notApplicable' - Unidirectional Link Detection 
-                                   Protocol is disabled. 
-                 'undetermined-LinkDown' - The port would transition into 
-                                   this state when the port link physically 
-                                   goes down due to any reasons other than 
+                 'notApplicable' - Unidirectional Link Detection
+                                   Protocol is disabled.
+                 'undetermined-LinkDown' - The port would transition into
+                                   this state when the port link physically
+                                   goes down due to any reasons other than
                                    the port been put into D-Disable mode
                                    by UDLD protocol on the switch.
                 "
@@ -164,11 +164,11 @@ agentUdldInterfaceAdminMode  OBJECT-TYPE
         MAX-ACCESS    read-write
         STATUS        current
         DESCRIPTION
-                "Indicates the Administrative mode of Unidirectional 
-                 Link Detection Protocol Feature configured on this 
+                "Indicates the Administrative mode of Unidirectional
+                 Link Detection Protocol Feature configured on this
                  interface.
-                 
-                 enable -- Unidirectional Link Detection Protocol is 
+
+                 enable -- Unidirectional Link Detection Protocol is
                            enabled on this interface.
 
                  disable -- Unidirectional Link Detection Protocol is
@@ -176,7 +176,7 @@ agentUdldInterfaceAdminMode  OBJECT-TYPE
         ::= { agentUdldInterfaceEntry 2}
 
 agentUdldInterfaceAggresiveMode OBJECT-TYPE
-     SYNTAX      TruthValue 
+     SYNTAX      TruthValue
      MAX-ACCESS  read-write
      STATUS      current
      DESCRIPTION

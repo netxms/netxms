@@ -111,7 +111,7 @@ s5AgInfoReBoot OBJECT-TYPE
                  scheduled time reaches zero; otherwise, the action
                  occurs immediately. The agent does best efforts to
                  return a response before the action occurs.
- 
+
                  If any of the combined download actions are
                  requested, neither action occurs until the
                  expiry of s5AgInfoScheduleBootTime, if set."
@@ -176,7 +176,7 @@ s5AgInfoMgmtProtocolCur OBJECT-TYPE
 		value is read-only:
 		  other(1)....unknown or some other protocol
 
-		The following value is read-write: 
+		The following value is read-write:
 		  ipOnly(2).....only IP
 		  ipxOnly(3)....only IPX
 		  ipAndIpx(4)...IP and IPX.
@@ -273,7 +273,7 @@ s5AgInfoCfgLoadMode OBJECT-TYPE
 		address, and if the network number of the IPX
 		address is equal to 0 the agent uses  SAP).
 
-		When net(3) is specified, the configuration 
+		When net(3) is specified, the configuration
 		information will be downloaded from the network
 		only. The configuration information will never
 		be loaded from local storage, even if downloading
@@ -472,10 +472,10 @@ s5AgInfoLoadProtocolNxtBoot OBJECT-TYPE
 	ACCESS	read-write
 	STATUS	mandatory
 	DESCRIPTION
-		"The transport protocol(s) over which the 
-		agent is to use to load the configuration 
-		information and the agent image at the 
-		next boot of the agent. The following 
+		"The transport protocol(s) over which the
+		agent is to use to load the configuration
+		information and the agent image at the
+		next boot of the agent. The following
 		value is read-only:
 		  other(1)....unknown or some other protocol
 
@@ -561,18 +561,18 @@ s5AgInfoScheduleBootTime OBJECT-TYPE
                  This value must be set in the same set request as
                  the value of s5AgInfoReBoot; otherwise, a badValue
                  error is returned.
- 
+
                  If this value has been set, the number returned will
                  count down to zero, and the time remaining in minutes
                  will be rounded up to the next whole minute.
- 
+
                  Actions set via s5AgInfoReBoot can be scheduled for
                  up to seven days in advance.
                  7 * 24 * 60 equals the maximum settable value of
-                 10080. If this attribute has not been set, a value of 
+                 10080. If this attribute has not been set, a value of
                  zero should be returned."
         ::= { s5AgentGbl 19 }
- 
+
 s5AgInfoScheduleBootCancel OBJECT-TYPE
         SYNTAX  INTEGER {
                 other(1),
@@ -586,14 +586,14 @@ s5AgInfoScheduleBootCancel OBJECT-TYPE
                   other(1)...not applicable or some other case
                      This is always the value that return when
                      read.
- 
+
                 The following values are read-write:
                   cancel(2)...cancel a scheduled boot.
- 
+
                 Setting this attribute to cancel(2) sets s5AgInfoReBoot
                 to running(2) and s5AgInfoScheduleBootTime to zero."
         ::= { s5AgentGbl 20 }
-  
+
 s5AgInfoNumBootBanks OBJECT-TYPE
         SYNTAX  INTEGER (0..255)
         ACCESS  read-only
@@ -602,12 +602,12 @@ s5AgInfoNumBootBanks OBJECT-TYPE
                 "The number of local storage locations (or flash
 		 memory banks) available on this device for
 		 operational code images.
- 
+
                  Devices without local image capability or not
 		 supporting this attribute shall return a value of 0."
         ::= { s5AgentGbl 21 }
- 
- 
+
+
 s5AgInfoNextBootBank OBJECT-TYPE
         SYNTAX  INTEGER (0..255)
         ACCESS  read-write
@@ -615,16 +615,16 @@ s5AgInfoNextBootBank OBJECT-TYPE
         DESCRIPTION
                 "The source of the image to be loaded upon the
 		 next  boot of the device.
- 
+
                  If a value is set larger than s5AgInfoNumBootBanks,
                  a badValue error should be returned.
- 
+
                  Devices without local image capability or not
 		 supporting this attribute shall return a value of 0."
         ::= { s5AgentGbl 22 }
 
- 
- 
+
+
 s5AgInfoDstLoadBank OBJECT-TYPE
         SYNTAX  INTEGER (0..255)
         ACCESS  read-write
@@ -632,8 +632,8 @@ s5AgInfoDstLoadBank OBJECT-TYPE
         DESCRIPTION
                 "The local storage bank where the next system image
                  image is downloaded to.
- 
-                 Devices without local image capability or not 
+
+                 Devices without local image capability or not
                  supporting this attribute shall return a value of 0."
         ::= { s5AgentGbl 23 }
 
@@ -689,7 +689,7 @@ s5AgInfoFileStatus OBJECT-TYPE
     DESCRIPTION
         "This object is used to get the status of the latest action as
         shown by s5AgInfoFileAction. The values that can be read are:
- 
+
             other(1) ......... if no action taken since the boot up
             inProgress (2) ... the operation is in progress
             success (3) ...... the operation succeeds.
@@ -759,7 +759,7 @@ S5AgMyIfEntry ::= SEQUENCE {
 
 
 s5AgMyIfIndx OBJECT-TYPE
-	SYNTAX	INTEGER 
+	SYNTAX	INTEGER
 	ACCESS	read-only
 	STATUS	mandatory
 	DESCRIPTION
@@ -857,7 +857,7 @@ s5AgMyIfNxtBootIpxAddr OBJECT-TYPE
 		the interface.  If the IPX protocol is not used,
 		then the value is 00000000:000000000000.
 
-		NOTE: The current IPX address for the 
+		NOTE: The current IPX address for the
 		      interface is found in table s5AgOthIfTable."
 	::= { s5AgMyIfEntry 8 }
 
@@ -937,7 +937,7 @@ s5AgOthIfComIndx OBJECT-TYPE
 	::= { s5AgOthIfEntry 2 }
 
 s5AgOthIfIndx OBJECT-TYPE
-	SYNTAX	INTEGER 
+	SYNTAX	INTEGER
 	ACCESS	read-only
 	STATUS	mandatory
 	DESCRIPTION
@@ -973,12 +973,12 @@ s5AgIpRtrDefaultTimeToLive OBJECT-TYPE
 	ACCESS	read-write
 	STATUS	mandatory
 	DESCRIPTION
-		"The lifetime of IP router entries in seconds. 
-		The maximum length of time that a IP router 
-		is to be considered alive in the absence of 
-		further positive advice. The default lifetime 
-		is used for routers learned through IP router 
-		protocols that do not specify a lifetime (e.g. 
+		"The lifetime of IP router entries in seconds.
+		The maximum length of time that a IP router
+		is to be considered alive in the absence of
+		further positive advice. The default lifetime
+		is used for routers learned through IP router
+		protocols that do not specify a lifetime (e.g.
 		statically  configured, ICMP redirects)."
 	DEFVAL { 540 }  -- 9 minutes
 	::= { s5AgentInfo 4 }
@@ -997,16 +997,16 @@ s5AgIpDefaultRtrSelectionMode OBJECT-TYPE
 		The following value is read-only:
 		  other(1).......not applicable or other case
 		The following values are read-write:
-		  config(2).....use configured primary default 
-				router. If no primary default router 
-				is specified, there will be no 
+		  config(2).....use configured primary default
+				router. If no primary default router
+				is specified, there will be no
 				default IP route.
-		  static(3).....A default router will be chose from 
-				the routers known to be up and that 
+		  static(3).....A default router will be chose from
+				the routers known to be up and that
 				have been configured.
-		  dynamic(4)....ICMP router discovery as per RFC 
-				1256 is performed and the router 
-				with the highest preference level is 
+		  dynamic(4)....ICMP router discovery as per RFC
+				1256 is performed and the router
+				with the highest preference level is
 				chosen as default router."
 	DEFVAL { dynamic }
 	::= { s5AgentInfo 5 }
@@ -1020,15 +1020,15 @@ s5AgIpRtrDiscoverySolicitMode OBJECT-TYPE
 	STATUS	mandatory
 	DESCRIPTION
 		"The router discovery solicitation mode to use
-		when the default router selection mode is 
-		dynamic. This solicitation mode determines 
-		the IP address for ICMP router solicitations 
+		when the default router selection mode is
+		dynamic. This solicitation mode determines
+		the IP address for ICMP router solicitations
 		(see RFC 1256):
-		  multicast(1)..router solicitations are sent to 
-				the all-routers multicast address 
+		  multicast(1)..router solicitations are sent to
+				the all-routers multicast address
 				(224.0.0.2)
-		  broadcast(2)..router solicitations are sent to 
-				the limited broadcast address 
+		  broadcast(2)..router solicitations are sent to
+				the limited broadcast address
 				(255.255.255.255)."
 	DEFVAL { broadcast}
 	::= { s5AgentInfo 6 }
@@ -1038,7 +1038,7 @@ s5AgIpRtrDiscoverySolicitMode OBJECT-TYPE
 -- Agent's Data Collection Table
 
 s5AgDataCollectTable OBJECT-TYPE
-	SYNTAX	SEQUENCE OF S5AgDataCollectEntry 
+	SYNTAX	SEQUENCE OF S5AgDataCollectEntry
 	ACCESS	not-accessible
 	STATUS	mandatory
 	DESCRIPTION
@@ -1048,7 +1048,7 @@ s5AgDataCollectTable OBJECT-TYPE
 	::= { s5AgentInfo 7 }
 
 s5AgDataCollectEntry OBJECT-TYPE
-	SYNTAX	S5AgDataCollectEntry 
+	SYNTAX	S5AgDataCollectEntry
 	ACCESS	not-accessible
 	STATUS	mandatory
 	DESCRIPTION
@@ -1072,9 +1072,9 @@ s5AgDataCollectIfIndex OBJECT-TYPE
 		"An integer value representing the source
 		that collects data from the network. A value
 		greater than zero is the index of the agent's
-		interface on the NMM. This is the same value 
+		interface on the NMM. This is the same value
 		as ifIndex for the interface. A value of zero
-		indicates data collection via best available 
+		indicates data collection via best available
 		efforts (other than NMM's interfaces)."
 	::= { s5AgDataCollectEntry 1 }
 
@@ -1098,7 +1098,7 @@ s5AgDataCollectNetworkAddrStatus OBJECT-TYPE
 	ACCESS	read-write
 	STATUS	mandatory
 	DESCRIPTION
-		"A switch to enable or disable the collecting of 
+		"A switch to enable or disable the collecting of
 		network layer addresses for the network address
 		mapping table (s5CmNetAddrTable ).
 		The following value is read-only:
@@ -1167,7 +1167,7 @@ s5AgTrapFilterTable OBJECT-TYPE
         DESCRIPTION
                 "Agent Trap filter configuration table."
         ::= { s5AgentInfo 11 }
- 
+
 s5AgTrapFilterEntry OBJECT-TYPE
         SYNTAX   S5AgTrapFilterEntry
         ACCESS   not-accessible
@@ -1198,7 +1198,7 @@ s5AgTrapFilterIndex OBJECT-TYPE
                 "An index that uniquely identifies an entry in the
                 s5AgTrapFilterTable."
         ::= { s5AgTrapFilterEntry 1 }
- 
+
 s5AgTrapFilterTrapOID OBJECT-TYPE
         SYNTAX  OBJECT IDENTIFIER
         ACCESS  read-write
@@ -1206,7 +1206,7 @@ s5AgTrapFilterTrapOID OBJECT-TYPE
         DESCRIPTION
                 "The OID of the trap.
 
-                This variable is requried for row creation."    
+                This variable is requried for row creation."
         ::= { s5AgTrapFilterEntry  2 }
 
 s5AgTrapFilterTrapInitiator1 OBJECT-TYPE
@@ -1214,16 +1214,16 @@ s5AgTrapFilterTrapInitiator1 OBJECT-TYPE
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                "A value that determines the first condition for 
-                filtering a trap.This entry is the value of the 
+                "A value that determines the first condition for
+                filtering a trap.This entry is the value of the
                 first varbind for a particular trap in most cases.
 
-                We need to specify every initiator that represents 
-                the corresponding trap variable for each trap. 
-                If the value of this initiator is 0 (wildcard or 
-                don't care), it means that it can represent all 
-                possible values for this initiator. The trap-filter 
-                design and functional spec. provides a more detailed 
+                We need to specify every initiator that represents
+                the corresponding trap variable for each trap.
+                If the value of this initiator is 0 (wildcard or
+                don't care), it means that it can represent all
+                possible values for this initiator. The trap-filter
+                design and functional spec. provides a more detailed
                 explanation on this subject."
         ::= { s5AgTrapFilterEntry 3 }
 
@@ -1232,12 +1232,12 @@ s5AgTrapFilterTrapInitiator2 OBJECT-TYPE
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                "A value that determines the second condition for 
-                filtering a trap. This entry is the value of the 
-                second varbind for most traps. If the value of 
-                this initiator is 0 (wildcard or don't care), 
-                it means that it can represent all possible values 
-                for this initiator. If a trap has only one varbind, 
+                "A value that determines the second condition for
+                filtering a trap. This entry is the value of the
+                second varbind for most traps. If the value of
+                this initiator is 0 (wildcard or don't care),
+                it means that it can represent all possible values
+                for this initiator. If a trap has only one varbind,
 	        this entry should be set to 0."
         ::= { s5AgTrapFilterEntry 4 }
 
@@ -1246,42 +1246,42 @@ s5AgTrapFilterTrapInitiator3 OBJECT-TYPE
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                "A value that determines the third condition for 
-                filtering a trap. This entry is the value of the 
-                third varbind for most traps. If the value of this 
-                initiator is 0(wildcard or don't care), it means 
-                that it can represent all possible values for this 
-                initiator. If a trap has only one or two varbinds, 
+                "A value that determines the third condition for
+                filtering a trap. This entry is the value of the
+                third varbind for most traps. If the value of this
+                initiator is 0(wildcard or don't care), it means
+                that it can represent all possible values for this
+                initiator. If a trap has only one or two varbinds,
                 this entry should be set to 0."
         ::= { s5AgTrapFilterEntry 5 }
- 
+
 s5AgTrapFilterStatus OBJECT-TYPE
         SYNTAX  INTEGER {
                 enabled(1),
                 disabled(2)
-                }    
+                }
         ACCESS  read-write
         STATUS      mandatory
         DESCRIPTION
-                "Indicates whether this trap is enabled or not. 
-                enabled(1) indicates that if this type of event 
-                occurs, a trap that is generated will be queued 
-                for transmit. disabled(2) indicates that if this 
-                trap if generated, it will not be queued for 
+                "Indicates whether this trap is enabled or not.
+                enabled(1) indicates that if this type of event
+                occurs, a trap that is generated will be queued
+                for transmit. disabled(2) indicates that if this
+                trap if generated, it will not be queued for
                 transmit and s5AgTrapFilterDelayTime is not valid."
         ::= { s5AgTrapFilterEntry  6 }
- 
- 
+
+
 s5AgTrapFilterDelayTime OBJECT-TYPE
         SYNTAX  INTEGER
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                "The time delay period required to be met, between 
-                each consecutive occurences of this event. Traps 
+                "The time delay period required to be met, between
+                each consecutive occurences of this event. Traps
                 recieved within this period will be dropped."
         ::= { s5AgTrapFilterEntry  7 }
- 
+
 s5AgTrapEntryStatus  OBJECT-TYPE
         SYNTAX  INTEGER {
                 valid(1),
@@ -1294,7 +1294,7 @@ s5AgTrapEntryStatus  OBJECT-TYPE
         DESCRIPTION
                 "A manager is restricted to change the state of an
                 entry  base on the following table:
-              
+
                                        create   under
                 To:             valid  Request  Creation  invalid
                 From:
@@ -1303,19 +1303,19 @@ s5AgTrapEntryStatus  OBJECT-TYPE
                 underCreation     OK       NO        OK       OK
                 invalid           NO       NO        NO       OK
                 nonExistent       NO       OK        NO       OK
-              
-                In the table above, it is not applicable to change 
+
+                In the table above, it is not applicable to change
                 the state from createRequest to any other states.
 
-                When the status of a table entry is set to the value 
-                of invalid(4), the entry will be removed from the table. 
-                If an entry has been in the underCreation(3) state for 
-                more than 10 minutes, it will be set to invalid(4) and 
-	        subsequently removed from the table. 
+                When the status of a table entry is set to the value
+                of invalid(4), the entry will be removed from the table.
+                If an entry has been in the underCreation(3) state for
+                more than 10 minutes, it will be set to invalid(4) and
+	        subsequently removed from the table.
 
-                This variable is requried for row creation."    
+                This variable is requried for row creation."
         ::= { s5AgTrapFilterEntry 8 }
- 
+
 
 -- change '_' to '-' for enum named label
 -- yyang 11/30/98
@@ -1329,20 +1329,20 @@ s5AgTrapFilterGlobalStatus    OBJECT-TYPE
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                "This value is the status of all the traps that 
+                "This value is the status of all the traps that
                 supported by this trap-filter system.
 
-                If the value is 1 (enable all) , all traps in the 
-                system are enabled. If the value is 2 (disable all), 
-                all traps in the system are disabled. If the value 
-                is 3 (enable-all-and-use-table) all traps are enabled 
-                except for traps that are disabled in the 
-                s5AgTrapFilterTable are disabled. If the value is 4 
-                (disable-all-and-use-table) all traps are disabled 
-                except for traps that are enabled in the 
+                If the value is 1 (enable all) , all traps in the
+                system are enabled. If the value is 2 (disable all),
+                all traps in the system are disabled. If the value
+                is 3 (enable-all-and-use-table) all traps are enabled
+                except for traps that are disabled in the
+                s5AgTrapFilterTable are disabled. If the value is 4
+                (disable-all-and-use-table) all traps are disabled
+                except for traps that are enabled in the
                 s5AgTrapFilterTable are enabled."
         ::= { s5AgentInfo 12 }
- 
+
 
 
 
@@ -1503,7 +1503,7 @@ s5AgTrpRcvrAgeTime OBJECT-TYPE
 	::= { s5AgTrpRcvrEntry 6 }
 
 
--- Last Remote Login Management 
+-- Last Remote Login Management
 
 s5AgRemoteLoginMgmt OBJECT IDENTIFIER ::= { s5AgentMgmt 5 }
 
@@ -1528,7 +1528,7 @@ s5AgRemoteLoginStatus OBJECT-TYPE
                excessiveLoginFail (9),
                accessPermissionOff (10),
 	       loginLogout (11)
-            } 
+            }
 	ACCESS	read-only
 	STATUS	mandatory
 	DESCRIPTION
@@ -1542,7 +1542,7 @@ s5AgSysAutoPvid OBJECT-TYPE
 	SYNTAX	INTEGER {
                      enabled (1),
                      disabled (2)
-                  } 
+                  }
 	ACCESS	read-write
 	STATUS	mandatory
 	DESCRIPTION "This value indicates whether adding a port as a member

@@ -63,7 +63,7 @@ ciscoVlanGroupMIBConform  OBJECT IDENTIFIER
 
 
 cvgConfigTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CvgConfigEntry 
+    SYNTAX          SEQUENCE OF CvgConfigEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -78,7 +78,7 @@ cvgConfigEntry OBJECT-TYPE
         "An entry containing VLAN mapping configuration for a particular
         VLAN group.  At least one VLAN must be associated with the group
         specified by cvgConfigGroupName when the entry is created."
-    INDEX           { cvgConfigGroupName } 
+    INDEX           { cvgConfigGroupName }
     ::= { cvgConfigTable 1 }
 
 CvgConfigEntry ::= SEQUENCE {
@@ -94,7 +94,7 @@ cvgConfigGroupName OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The name of the VLAN group." 
+        "The name of the VLAN group."
     ::= { cvgConfigEntry 1 }
 
 cvgConfigVlansFirst2K OBJECT-TYPE
@@ -103,7 +103,7 @@ cvgConfigVlansFirst2K OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "A string of octets containing one bit per VLAN for VLANs 0 to
-        2047." 
+        2047."
     ::= { cvgConfigEntry 2 }
 
 cvgConfigVlansSecond2K OBJECT-TYPE
@@ -112,7 +112,7 @@ cvgConfigVlansSecond2K OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "A string of octets containing one bit per VLAN for VLANs 2048
-        to 4095." 
+        to 4095."
     ::= { cvgConfigEntry 3 }
 
 cvgConfigStorageType OBJECT-TYPE
@@ -122,7 +122,7 @@ cvgConfigStorageType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the storage type for this conceptual row
         in ciscoVlanGroupTable."
-    DEFVAL          { volatile } 
+    DEFVAL          { volatile }
     ::= { cvgConfigEntry 4 }
 
 cvgConfigRowStatus OBJECT-TYPE
@@ -132,9 +132,9 @@ cvgConfigRowStatus OBJECT-TYPE
     DESCRIPTION
         "The status of this conceptual row.
 
-        All writable objects in this row may be modified at any time." 
+        All writable objects in this row may be modified at any time."
     ::= { cvgConfigEntry 5 }
- 
+
 
 
 cvgConfigTableSize OBJECT-TYPE
@@ -143,9 +143,9 @@ cvgConfigTableSize OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Indicates the maximum number of entries that can
-        be created in cvgConfigTable. A value of zero indicates 
+        be created in cvgConfigTable. A value of zero indicates
         no limit to the number of entries that can be created
-        in cvgConfigTable." 
+        in cvgConfigTable."
     ::= { ciscoVlanGroupMIBObjects 2 }
 ciscoVlanGroupMIBCompliances  OBJECT IDENTIFIER
     ::= { ciscoVlanGroupMIBConform 1 }
@@ -259,6 +259,3 @@ cvgConfigTableSizeGroup OBJECT-GROUP
     ::= { ciscoVlanGroupMIBGroups 2 }
 
 END
-
-
-

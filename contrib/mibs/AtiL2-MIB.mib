@@ -8,19 +8,19 @@
 -- History :
 --       *   04-13-99 - Created.
 --       *   04-03-02 (Praveen) - Renamed the MIB from fstswtch-mib to atil2-mib
---       *   04-17-02 (Praveen) - Added atiL2DeviceNumber. Extended atiL2deviceProductType 
+--       *   04-17-02 (Praveen) - Added atiL2DeviceNumber. Extended atiL2deviceProductType
 --                                with values for AT-8326GB, AT-9410GB and AT-8350GB
 --       *   04-18-02 (Praveen) - Added product OID entry for AT-8316F
 --       *   04-26-02 (Praveen) - Changed atiL2DevicePortSpeed from read-write to read-only
---       *   08-23-02 (Praveen) - Added a new product specific group atiL2QOSConfigGroup, 
+--       *   08-23-02 (Praveen) - Added a new product specific group atiL2QOSConfigGroup,
 --                                applicable only to AT-8326GB, AT-9410GB and AT-8350GB.
 --                                Changed range of atiL2DevicePortSTPCost from 0..65535 to
 --                                1..65535
 --       *   11-14-06 (Matthew N) Add the OIDs for 8000/16, 24, 24POE, 48, 48POE, 8POE, 9000/24, 9724Ts, 9748Ts/XP, 10408/XP
---       *   01-24-07 (HN)      - Changed company name to Allied Telesis Inc. and fixed a few minor issues in addressing MIB 
+--       *   01-24-07 (HN)      - Changed company name to Allied Telesis Inc. and fixed a few minor issues in addressing MIB
 --                                nodes.
---       *   09-03-07 (DNI Tina Lee)- Remove range limitation of atiL2DevicePortSTPCost 
---       *   01-25-08 (HN)      - Added AT-GS950/8PoE 
+--       *   09-03-07 (DNI Tina Lee)- Remove range limitation of atiL2DevicePortSTPCost
+--       *   01-25-08 (HN)      - Added AT-GS950/8PoE
 --       *   10-09-2009 (DNI Tina Lee)- Added AT-GS950/48 , AT-FS75024POE, AT-FS750/48
 --       *                              Remove range limitation of atiL2NwMgrIndex, atiL2BeVlanIndex,
 --       *                              atiL2BeVlanName, atiIfExtnIndex, atiIfExtnModuleId, atiIfExtnPort,
@@ -29,7 +29,7 @@
 
 
 AtiL2-MIB DEFINITIONS ::= BEGIN
-        
+
         IMPORTS
                 enterprises,Counter,IpAddress,TimeTicks
                         FROM RFC1155-SMI
@@ -47,8 +47,8 @@ AtiL2-MIB DEFINITIONS ::= BEGIN
 
         MacAddress ::= OCTET STRING (SIZE (6))    -- a 6 octet address
 
-        BridgeId   ::= OCTET STRING (SIZE (8))    -- the Bridge 
-                                                  -- Identifier as 
+        BridgeId   ::= OCTET STRING (SIZE (8))    -- the Bridge
+                                                  -- Identifier as
                                                   -- used in the
                                                   -- Spanning Tree
           -- Protocol to uniquely identify a bridge.  Its first two
@@ -123,18 +123,18 @@ AtiL2-MIB DEFINITIONS ::= BEGIN
         at-8000/8POE        OBJECT IDENTIFIER ::= { swhub 139 }
         at-9000/24          OBJECT IDENTIFIER ::= { swhub 140 }
         at-GS950/8PoE       OBJECT IDENTIFIER ::= { swhub 147 }
-        
+
         at-FS750/24POEV2    OBJECT IDENTIFIER ::= { swhub 162 }
         at-FS750/48V2       OBJECT IDENTIFIER ::= { swhub 163 }
         at-GS950/48V2       OBJECT IDENTIFIER ::= { swhub 164 }
-        
+
         swL3                OBJECT IDENTIFIER ::= { atiProduct 14 }
         at-9724Ts           OBJECT IDENTIFIER ::= { swL3 52 }
         at-9748Ts/XP        OBJECT IDENTIFIER ::= { swL3 54 }
         at-10408/XP         OBJECT IDENTIFIER ::= { swL3 66 }
 
-        mibObject           OBJECT IDENTIFIER ::= { alliedTelesis 8 }   
-        atiL2Mib            OBJECT IDENTIFIER 
+        mibObject           OBJECT IDENTIFIER ::= { alliedTelesis 8 }
+        atiL2Mib            OBJECT IDENTIFIER
         -- LAST-UPDATED        "070124000000Z"
         -- ORGANIZATION        "Allied Telesis Inc."
         -- CONTACT-INFO
@@ -147,8 +147,8 @@ AtiL2-MIB DEFINITIONS ::= BEGIN
         --          Email: support@alliedtelesis.com
         --
         -- DESCRIPTION
-        --         "Private MIB for ATI Gigabit Uplink and 10/100M 
-        --          Switches" 
+        --         "Private MIB for ATI Gigabit Uplink and 10/100M
+        --          Switches"
         ::= { mibObject 33}
 
 
@@ -199,17 +199,17 @@ atiL2SwProduct          OBJECT-TYPE
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-                "Identifies the software product the device is 
+                "Identifies the software product the device is
                 running."
         ::=    { atiL2GlobalGroup 1 }
 
-        
+
 atiL2SwVersion          OBJECT-TYPE
         SYNTAX  DisplayString (SIZE(0..255))
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-                " Identifies the version number of the present 
+                " Identifies the version number of the present
                 release."
         ::=    { atiL2GlobalGroup 2 }
 
@@ -227,70 +227,70 @@ atiL2Reset              OBJECT-TYPE
 
 
 atiL2MirroringSourceModule      OBJECT-TYPE
-        SYNTAX  INTEGER 
+        SYNTAX  INTEGER
         ACCESS  read-write
-        STATUS  mandatory        
+        STATUS  mandatory
         DESCRIPTION
-               " This is the mirror source module number. If the 
-               atiL2EthConfigMirrorState is Enabled then the mirror 
-               source module/port data gets routed to the mirror 
+               " This is the mirror source module number. If the
+               atiL2EthConfigMirrorState is Enabled then the mirror
+               source module/port data gets routed to the mirror
                destination module/port. Both transmitted and
                recieved source activity is mirrored to the destination.
-               This arrangement is to put an RMON Probe on the 
-               destination port to probe the traffic on the Source port. 
-               This object will return a '0' if the MirrorState is not 
-               enabled." 
+               This arrangement is to put an RMON Probe on the
+               destination port to probe the traffic on the Source port.
+               This object will return a '0' if the MirrorState is not
+               enabled."
         ::=    { atiL2GlobalGroup 4 }
 
 
 atiL2MirroringSourcePort        OBJECT-TYPE
-        SYNTAX  INTEGER 
+        SYNTAX  INTEGER
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-               " This is the Source port number for which there is 
-               another mirror port.If the atiL2EthConfigMirrorState is 
-               Enabled then the mirror portgets routed with all the 
-               packets going in and out of Source port. This 
-               arrangement is to put an RMON Probe on mirrored port to 
-               Probe the traffic on the Source port. One of the port is 
-               dedicated to this so that for any port as source port, 
-               this dedicated port can be a mirrored port. This object 
-               will return a '0' if the MirrorState is not enabled." 
+               " This is the Source port number for which there is
+               another mirror port.If the atiL2EthConfigMirrorState is
+               Enabled then the mirror portgets routed with all the
+               packets going in and out of Source port. This
+               arrangement is to put an RMON Probe on mirrored port to
+               Probe the traffic on the Source port. One of the port is
+               dedicated to this so that for any port as source port,
+               this dedicated port can be a mirrored port. This object
+               will return a '0' if the MirrorState is not enabled."
         ::=    { atiL2GlobalGroup 5 }
 
 
 atiL2MirroringDestinationModule OBJECT-TYPE
-        SYNTAX  INTEGER 
+        SYNTAX  INTEGER
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-               " This is the mirror destination module number. If the 
-               atiL2EthConfigMirrorState is Enabled then the mirror 
-               source module/port data gets routed to the mirror 
-               destination module/port. Both transmitted and recieved 
-               source activity is mirrored to the destination. This 
+               " This is the mirror destination module number. If the
+               atiL2EthConfigMirrorState is Enabled then the mirror
+               source module/port data gets routed to the mirror
+               destination module/port. Both transmitted and recieved
+               source activity is mirrored to the destination. This
                arrangement is to put an RMON Probe on the destination
-               port to probe the traffic on the Source port. This 
-               object will return a '0' if the MirrorState is not 
-               enabled." 
+               port to probe the traffic on the Source port. This
+               object will return a '0' if the MirrorState is not
+               enabled."
         ::=    { atiL2GlobalGroup 6 }
 
 
 atiL2MirroringDestinationPort   OBJECT-TYPE
-        SYNTAX  INTEGER 
+        SYNTAX  INTEGER
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                " This is the Destination port number for which there is 
-                another mirror port.If the atiL2EthConfigMirrorState is 
-                Enabled then,the mirror portgets routed with all the 
-                packets going in and out of Destination port. This 
-                arrangement is to put an RMON Probe on mirrored port to 
-                Probe the traffic on the Destination port. One of the 
-                port is dedicated to this so that for any port as 
+                " This is the Destination port number for which there is
+                another mirror port.If the atiL2EthConfigMirrorState is
+                Enabled then,the mirror portgets routed with all the
+                packets going in and out of Destination port. This
+                arrangement is to put an RMON Probe on mirrored port to
+                Probe the traffic on the Destination port. One of the
+                port is dedicated to this so that for any port as
                 destination port, this dedicated port can be a mirrored
-                port. This object will return a '0' if the MirrorState 
+                port. This object will return a '0' if the MirrorState
                 is not enabled."
         ::=    { atiL2GlobalGroup 7 }
 
@@ -303,9 +303,9 @@ atiL2MirrorState        OBJECT-TYPE
         STATUS  mandatory
         DESCRIPTION
                 " if the state of Mirroring is enabled by selecting one
-                 of the two values , then the Mirroring explained above 
-                 works. If disabled, port operation works normally. No 
-                 Traffic gets routed from MirroringSourcePort to 
+                 of the two values , then the Mirroring explained above
+                 works. If disabled, port operation works normally. No
+                 Traffic gets routed from MirroringSourcePort to
                  Destination Mirrored Port."
         ::=    { atiL2GlobalGroup 8 }
 
@@ -318,11 +318,11 @@ atiL2IGMPState      OBJECT-TYPE
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                 "This attribute allows an administrative request to 
+                 "This attribute allows an administrative request to
        configure IGMP"
         ::=    { atiL2GlobalGroup 9 }
 
-        
+
 atiL2DeviceNumber           OBJECT-TYPE
         SYNTAX    INTEGER
         ACCESS    read-only
@@ -335,8 +335,8 @@ atiL2DeviceNumber           OBJECT-TYPE
 --
 -- atiL2IpGroup
 --
--- The Ip Sys group contains  IP Address which is current and configured 
--- IP address which gets effective when reset. Also, subnet mask and 
+-- The Ip Sys group contains  IP Address which is current and configured
+-- IP address which gets effective when reset. Also, subnet mask and
 -- Default Gateway address.
 
 
@@ -345,9 +345,9 @@ atiL2CurrentIpAddress OBJECT-TYPE
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-                " The Current IP address is the one which is currently 
-                used and is obtained dynamically through one of the 
-                protocols interaction.( DHCP or Bootp.) This address 
+                " The Current IP address is the one which is currently
+                used and is obtained dynamically through one of the
+                protocols interaction.( DHCP or Bootp.) This address
                 is NULL if the Address is Statically configured."
         ::= { atiL2IpGroup 1 }
 
@@ -357,7 +357,7 @@ atiL2ConfiguredIpAddress OBJECT-TYPE
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                " The Configured IP address of the device. This is 
+                " The Configured IP address of the device. This is
                 the address configured through Network or Local Omega. "
         ::= { atiL2IpGroup      2 }
 
@@ -390,12 +390,12 @@ atiL2IPAddressStatus OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                " The IP Address can be obtained/configured by any of 
-                the above different ways. This object specifies how 
-                IP address currently on the switch Box, was 
-                configured/obtained."             
+                " The IP Address can be obtained/configured by any of
+                the above different ways. This object specifies how
+                IP address currently on the switch Box, was
+                configured/obtained."
         ::= { atiL2IpGroup      5 }
-         
+
 --
 --  atiL2NMGroup (SNMP NetManagemnt related MIB object)
 --
@@ -410,18 +410,18 @@ atiL2NwMgrTable OBJECT-TYPE
                 switchNwMgrTotal mib object."
                 ::= { atiL2NMGroup 1 }
 
- 
+
 atiL2NwMgrEntry OBJECT-TYPE
         SYNTAX  AtiL2NwMgrEntry
         ACCESS  not-accessible
         STATUS  mandatory
         DESCRIPTION
-                "Trap receipt Manager Entry containing ipaddress of 
+                "Trap receipt Manager Entry containing ipaddress of
                 the configured NMS's to which Traps are sent."
         INDEX { atiL2NwMgrIndex }
         ::= { atiL2NwMgrTable 1 }
 
- 
+
 AtiL2NwMgrEntry ::=
         SEQUENCE {
                 atiL2NwMgrIndex         INTEGER,
@@ -437,7 +437,7 @@ atiL2NwMgrIndex OBJECT-TYPE
                 "The  Index of the Managers Ip address."
         ::= { atiL2NwMgrEntry 1 }
 
- 
+
 atiL2NwMgrIpAddr OBJECT-TYPE
         SYNTAX  IpAddress
         ACCESS  read-write
@@ -460,10 +460,10 @@ atiL2DHCPTimerGroup     OBJECT IDENTIFIER ::= {atiL2DHCPGroup 2 }
 --         ACCESS       read-only
 --           STATUS     mandatory
 --         DESCRIPTION
---            "The IP address of the DHCP server selected by the end of 
---             DHCP Protocols 'REQUEST STATE' .DHCP client selects the 
---             server from the responses ( one or more ) in the 
---             SELECTSTATE and sends out a DHCPREQUEST to confirm the 
+--            "The IP address of the DHCP server selected by the end of
+--             DHCP Protocols 'REQUEST STATE' .DHCP client selects the
+--             server from the responses ( one or more ) in the
+--             SELECTSTATE and sends out a DHCPREQUEST to confirm the
 --             DHCP server selected."
 --        ::= {atiL2DHCPSysGroup        1}
 
@@ -473,25 +473,25 @@ atiL2DHCPCurrentDHCPClientAddress       OBJECT-TYPE
            ACCESS       read-only
            STATUS       mandatory
            DESCRIPTION
-            "Current IP address of the client. To start with,it might 
-            be null. This is filled by the server when sending a 
-            DHCPOFFER and the client uses the most comfortable offer 
-            from offers sent by different DHCP servers. A DHCPREQUEST 
-            packet is sent with the Client address agreed upon to the 
-            selected server ( Broadcast). Server Acks back this packet 
-            which is where Client/Server moves to the Bound state. Once 
-            reached into Bound state, the client address is made the 
+            "Current IP address of the client. To start with,it might
+            be null. This is filled by the server when sending a
+            DHCPOFFER and the client uses the most comfortable offer
+            from offers sent by different DHCP servers. A DHCPREQUEST
+            packet is sent with the Client address agreed upon to the
+            selected server ( Broadcast). Server Acks back this packet
+            which is where Client/Server moves to the Bound state. Once
+            reached into Bound state, the client address is made the
             official address on the client."
         ::= {atiL2DHCPSysGroup  1}
 
-            
+
 atiL2DHCPSubnetMask     OBJECT-TYPE
            SYNTAX       IpAddress
            ACCESS       read-only
            STATUS       mandatory
            DESCRIPTION
-            "When the client/server reaches the BOUND state, this is 
-             one of the parameters set by the server."        
+            "When the client/server reaches the BOUND state, this is
+             one of the parameters set by the server."
         ::= {atiL2DHCPSysGroup  2}
 
 
@@ -501,10 +501,10 @@ atiL2DHCPCurrentRelayAgentAddress       OBJECT-TYPE
            STATUS       mandatory
            DESCRIPTION
             "The IP address of the DHCP relay Agent on the same subnet.
-             Normally there will be no DHCP server on each of the 
-             subnet and this Relay Agent will act in sending server 
-             across the subnets. There might not be any relay agent. 
-             This depends on the network Toplogy like where is the 
+             Normally there will be no DHCP server on each of the
+             subnet and this Relay Agent will act in sending server
+             across the subnets. There might not be any relay agent.
+             This depends on the network Toplogy like where is the
              DHCP server and DHCP client."
         ::= {atiL2DHCPSysGroup  3}
 
@@ -514,8 +514,8 @@ atiL2DHCPNextDHCPServerAddress  OBJECT-TYPE
            ACCESS       read-only
            STATUS       mandatory
            DESCRIPTION
-            "The IP address of the next DHCP server to be used during 
-            bootstrap. This address is sent by the DHCP server in 
+            "The IP address of the next DHCP server to be used during
+            bootstrap. This address is sent by the DHCP server in
             the messages DHCPOFFER, DHCPACK,DHCPNACK."
         ::= {atiL2DHCPSysGroup  4}
 
@@ -525,11 +525,11 @@ atiL2DHCPLeaseTimer             OBJECT-TYPE
            ACCESS       read-only
            STATUS       mandatory
            DESCRIPTION
-            "When the client/server reaches the BOUND state, this is 
-             one of the parameters set by the server. The lease time 
-             period in seconds for the DHCP client for using IP address 
-             on lease from the server. At the end of 50% of this timer 
-             a renewal request is sent by the client . This is the next 
+            "When the client/server reaches the BOUND state, this is
+             one of the parameters set by the server. The lease time
+             period in seconds for the DHCP client for using IP address
+             on lease from the server. At the end of 50% of this timer
+             a renewal request is sent by the client . This is the next
              Object atiL2DHCPReacquisitionTimer."
         ::= {atiL2DHCPTimerGroup        1}
 
@@ -539,20 +539,20 @@ atiL2DHCPReacquisitionTimer             OBJECT-TYPE
            ACCESS       read-only
            STATUS       mandatory
            DESCRIPTION
-            "When the client/server reaches the BOUND state, this is 
+            "When the client/server reaches the BOUND state, this is
              one of the parameters set by the server.
 
-             Mentioned in RFC2131 4.4.5 as T1, this renewal time 
+             Mentioned in RFC2131 4.4.5 as T1, this renewal time
              period in secs for the DHCP client is for using IP address
-             on lease from the server Once the Reacquisition Timer 
-             period in secs after the lease period is reached, 
-             the client sends a DHCPREQUEST to the DHCP server 
-             requesting for renewal of the lease. Default would be 50% 
-             of the Lease timer which is represeneted by the above 
-             object.  The client  moves from BOUND to RENEW state once 
-             the DHCPREQUEST is sent after time T1 secs is passed from 
-             the start of to release time. T1 is always less than T2 
-             ( see below for 'T2') which is  less than the lease Timer 
+             on lease from the server Once the Reacquisition Timer
+             period in secs after the lease period is reached,
+             the client sends a DHCPREQUEST to the DHCP server
+             requesting for renewal of the lease. Default would be 50%
+             of the Lease timer which is represeneted by the above
+             object.  The client  moves from BOUND to RENEW state once
+             the DHCPREQUEST is sent after time T1 secs is passed from
+             the start of to release time. T1 is always less than T2
+             ( see below for 'T2') which is  less than the lease Timer
              period."
         ::= {atiL2DHCPTimerGroup        2}
 
@@ -562,28 +562,28 @@ atiL2DHCPExpirationTimer                OBJECT-TYPE
            ACCESS       read-only
            STATUS       mandatory
            DESCRIPTION
-            "When the client/server reaches the BOUND state, this is 
+            "When the client/server reaches the BOUND state, this is
              one of the parameters set by the server.
 
-             Mentioned in RFC2131 4.4.5 as T2,this Expiration time 
-             period in secs is the time period in secs during which 
-             DHCP has gone through the BOUND->RENEWAL state. After T1 
-             secs and when the state machine reaches T2 secs, 
-             ( T1 < T2 < lease period), DHCP client sends another 
+             Mentioned in RFC2131 4.4.5 as T2,this Expiration time
+             period in secs is the time period in secs during which
+             DHCP has gone through the BOUND->RENEWAL state. After T1
+             secs and when the state machine reaches T2 secs,
+             ( T1 < T2 < lease period), DHCP client sends another
              DHCPREQUEST to the server asking the server to renew the
-             lease for the IP parameters. By default it would be 87.5% 
-             of the Lease timer .If there is DHCPACK then the DHCP 
-             client moves from REBIND to BOUND. Else it moves to INIT 
-             state where it starts all over again sending a request for 
+             lease for the IP parameters. By default it would be 87.5%
+             of the Lease timer .If there is DHCPACK then the DHCP
+             client moves from REBIND to BOUND. Else it moves to INIT
+             state where it starts all over again sending a request for
              DHCPDISCOVER."
          ::= {atiL2DHCPTimerGroup 3 }
 
 --
 -- atiL2EthernetStatsGroup (Ethernet Monitor Group)
 --
--- The Monitor group contains statistics measured 
+-- The Monitor group contains statistics measured
 -- per module identified by the module Id.
--- These statistics take the form of free running counters that start 
+-- These statistics take the form of free running counters that start
 -- from zero.
 
 
@@ -595,7 +595,7 @@ atiL2EthMonStatsTable OBJECT-TYPE
         SYNTAX SEQUENCE OF AtiL2EthMonStatsEntry
         ACCESS not-accessible
         STATUS mandatory
-        DESCRIPTION 
+        DESCRIPTION
                 "A list of statistics entries."
         ::= { atiL2EthMonStatsGroup 1 }
 
@@ -604,13 +604,13 @@ atiL2EthMonStatsEntry OBJECT-TYPE
         SYNTAX AtiL2EthMonStatsEntry
         ACCESS not-accessible
         STATUS mandatory
-        DESCRIPTION 
+        DESCRIPTION
                 "A collection of statistics kept for a particular port."
         INDEX {atiL2EthMonModuleId }
         ::= { atiL2EthMonStatsTable 1 }
 
 
-AtiL2EthMonStatsEntry ::= 
+AtiL2EthMonStatsEntry ::=
         SEQUENCE {
                 atiL2EthMonModuleId
                 INTEGER,
@@ -626,9 +626,9 @@ AtiL2EthMonStatsEntry ::=
                 Counter,
                 atiL2EthMonTxBroadcastFrames
                 Counter,
-                atiL2EthMonTxMulticastFrames     
+                atiL2EthMonTxMulticastFrames
                 Counter,
-                atiL2EthMonRxOverruns   
+                atiL2EthMonRxOverruns
                 Counter
                 }
 
@@ -638,7 +638,7 @@ atiL2EthMonModuleId     OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "This Object Identifies the Module Id for which the 
+                "This Object Identifies the Module Id for which the
                 Statistics is collected."
         ::= { atiL2EthMonStatsEntry 1 }
 
@@ -647,8 +647,8 @@ atiL2EthMonRxGoodFrames OBJECT-TYPE
         SYNTAX Counter
         ACCESS read-only
         STATUS mandatory
-        DESCRIPTION 
-                "The total number of Good Frames received on this 
+        DESCRIPTION
+                "The total number of Good Frames received on this
                 module."
         ::= { atiL2EthMonStatsEntry 2 }
 
@@ -658,7 +658,7 @@ atiL2EthMonTxGoodFrames OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of Good Frames Transmitted by this 
+                "The total number of Good Frames Transmitted by this
                 module."
         ::= { atiL2EthMonStatsEntry 3 }
 
@@ -667,9 +667,9 @@ atiL2EthMonTxTotalBytes OBJECT-TYPE
         SYNTAX Counter
         ACCESS read-only
         STATUS mandatory
-        DESCRIPTION 
-                "The total number of Bytes transmitted from this 
-                module." 
+        DESCRIPTION
+                "The total number of Bytes transmitted from this
+                module."
         ::= { atiL2EthMonStatsEntry 4 }
 
 
@@ -678,7 +678,7 @@ atiL2EthMonTxDeferred OBJECT-TYPE
         ACCESS read-only
         STATUS deprecated
         DESCRIPTION
-                "This is the count of first time Transmission attempt 
+                "This is the count of first time Transmission attempt
                 which failed on an interface due to medium being busy."
         ::= { atiL2EthMonStatsEntry 5 }
 
@@ -688,7 +688,7 @@ atiL2EthMonTxCollisions OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of collisions while switching on an 
+                "The total number of collisions while switching on an
                 interface."
         ::= { atiL2EthMonStatsEntry 6 }
 
@@ -698,7 +698,7 @@ atiL2EthMonTxBroadcastFrames OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of Transmit Broadcast Frames while 
+                "The total number of Transmit Broadcast Frames while
                 switching on an interface."
         ::= { atiL2EthMonStatsEntry 7 }
 
@@ -708,7 +708,7 @@ atiL2EthMonTxMulticastFrames      OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of Transmit Multicast while switching 
+                "The total number of Transmit Multicast while switching
                 on an interface."
         ::= { atiL2EthMonStatsEntry 8 }
 
@@ -718,7 +718,7 @@ atiL2EthMonRxOverruns    OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of Recieved Overrun Frames while 
+                "The total number of Recieved Overrun Frames while
                 switching on an interface."
         ::= { atiL2EthMonStatsEntry 9 }
 
@@ -726,7 +726,7 @@ atiL2EthMonRxOverruns    OBJECT-TYPE
 -- The Following is a Per Port MonStats Table.
 --
 
-atiL2EthPortMonStatsTable  OBJECT-TYPE  
+atiL2EthPortMonStatsTable  OBJECT-TYPE
         SYNTAX SEQUENCE OF AtiL2EthPortMonStatsEntry
         ACCESS not-accessible
         STATUS mandatory
@@ -745,7 +745,7 @@ atiL2EthPortMonStatsEntry OBJECT-TYPE
         ::= { atiL2EthPortMonStatsTable 1 }
 
 
-AtiL2EthPortMonStatsEntry ::= 
+AtiL2EthPortMonStatsEntry ::=
         SEQUENCE {
                 atiL2EthPortMonModuleId
                 INTEGER,
@@ -760,12 +760,12 @@ AtiL2EthPortMonStatsEntry ::=
                 atiL2EthPortMonTxDeferred
                 Counter ,
                 atiL2EthPortMonTxCollisions
-                Counter, 
+                Counter,
                 atiL2EthPortMonTxBroadcastFrames
                 Counter,
-                atiL2EthPortMonTxMulticastFrames         
+                atiL2EthPortMonTxMulticastFrames
                 Counter,
-                atiL2EthPortMonRxOverruns       
+                atiL2EthPortMonRxOverruns
                 Counter
                 }
 
@@ -775,7 +775,7 @@ atiL2EthPortMonModuleId         OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "This Object Identifies the Module Id for which the 
+                "This Object Identifies the Module Id for which the
                 Statistics is collected."
         ::= { atiL2EthPortMonStatsEntry 1 }
 
@@ -785,8 +785,8 @@ atiL2EthPortMonPortId   OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "This Object Identifies the Port on the Module 
-                recognised by EthMonPortModuleId for which the 
+                "This Object Identifies the Port on the Module
+                recognised by EthMonPortModuleId for which the
                 Statistics is collected."
         ::= { atiL2EthPortMonStatsEntry 2 }
 
@@ -805,7 +805,7 @@ atiL2EthPortMonTxGoodFrames OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of Good Frames Transmitted by this 
+                "The total number of Good Frames Transmitted by this
                 module."
         ::= { atiL2EthPortMonStatsEntry 4 }
 
@@ -815,7 +815,7 @@ atiL2EthPortMonTxTotalBytes OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of Bytes transmitted from this module." 
+                "The total number of Bytes transmitted from this module."
         ::= { atiL2EthPortMonStatsEntry 5 }
 
 
@@ -824,7 +824,7 @@ atiL2EthPortMonTxDeferred OBJECT-TYPE
         ACCESS read-only
         STATUS deprecated
         DESCRIPTION
-                "This is the count of first time Transmission attempt 
+                "This is the count of first time Transmission attempt
                 which failed on an interface due to medium being busy."
         ::= { atiL2EthPortMonStatsEntry 6 }
 
@@ -834,7 +834,7 @@ atiL2EthPortMonTxCollisions OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of collisions while switching on an 
+                "The total number of collisions while switching on an
                 interface."
         ::= { atiL2EthPortMonStatsEntry 7 }
 
@@ -844,7 +844,7 @@ atiL2EthPortMonTxBroadcastFrames OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of Transmit Broadcast Frames  on this 
+                "The total number of Transmit Broadcast Frames  on this
                 port and Module while switching on an interface."
         ::= { atiL2EthPortMonStatsEntry 8 }
 
@@ -854,7 +854,7 @@ atiL2EthPortMonTxMulticastFrames          OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of Transmit Multicast  on this port 
+                "The total number of Transmit Multicast  on this port
                 and Module while switching on an interface."
         ::= { atiL2EthPortMonStatsEntry 9 }
 
@@ -864,7 +864,7 @@ atiL2EthPortMonRxOverruns        OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of Recieved Overrun Frames  on this 
+                "The total number of Recieved Overrun Frames  on this
                 port and Module while switching on an interface."
         ::= { atiL2EthPortMonStatsEntry 10 }
 
@@ -895,7 +895,7 @@ atiL2EthErrorStatsEntry OBJECT-TYPE
         ::= { atiL2EthErrStatsTable 1 }
 
 
-AtiL2EthErrStatsEntry ::= 
+AtiL2EthErrStatsEntry ::=
         SEQUENCE {
                 atiL2EthErrModuleId
                 INTEGER,
@@ -917,7 +917,7 @@ atiL2EthErrModuleId     OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "This Object Identifies the Module Id for which the 
+                "This Object Identifies the Module Id for which the
                 Statistics is collected."
         ::= { atiL2EthErrorStatsEntry 1 }
 
@@ -936,7 +936,7 @@ atiL2EthErrorAlignment OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of packets received that has alignment 
+                "The total number of packets received that has alignment
                 errors."
         ::= { atiL2EthErrorStatsEntry 3 }
 
@@ -946,7 +946,7 @@ atiL2EthErrorRxBadFrames OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The counter is incremented when a bad frame was 
+                "The counter is incremented when a bad frame was
                 received."
         ::= { atiL2EthErrorStatsEntry 4 }
 
@@ -956,7 +956,7 @@ atiL2EthErrorLateCollisions OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "This object counts the number of times the collison was 
+                "This object counts the number of times the collison was
                 detected in the port."
         ::= { atiL2EthErrorStatsEntry 5 }
 
@@ -992,7 +992,7 @@ atiL2EthPortErrorStatsEntry OBJECT-TYPE
         ::= { atiL2EthPortErrStatsTable 1 }
 
 
-AtiL2EthPortErrStatsEntry ::= 
+AtiL2EthPortErrStatsEntry ::=
         SEQUENCE {
                 atiL2EthPortErrModuleId
                 INTEGER,
@@ -1016,7 +1016,7 @@ atiL2EthPortErrModuleId         OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "This Object Identifies the Module Id for which the 
+                "This Object Identifies the Module Id for which the
                 Statistics is collected."
         ::= { atiL2EthPortErrorStatsEntry 1 }
 
@@ -1026,8 +1026,8 @@ atiL2EthPortErrPortId   OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "This Object Identifies the  Port on the Module 
-                recognised by the above Object for which the 
+                "This Object Identifies the  Port on the Module
+                recognised by the above Object for which the
                 Statistics is collected."
         ::= { atiL2EthPortErrorStatsEntry 2 }
 
@@ -1046,7 +1046,7 @@ atiL2EthPortErrorAlignment OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The total number of packets received that has alignment 
+                "The total number of packets received that has alignment
                 errors."
         ::= { atiL2EthPortErrorStatsEntry 4 }
 
@@ -1056,7 +1056,7 @@ atiL2EthPortErrorRxBadFrames OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "The counter is incremented when a bad frame was 
+                "The counter is incremented when a bad frame was
                 received."
         ::= { atiL2EthPortErrorStatsEntry 5 }
 
@@ -1066,7 +1066,7 @@ atiL2EthPortErrorLateCollisions OBJECT-TYPE
         ACCESS read-only
         STATUS mandatory
         DESCRIPTION
-                "This object counts the number of times the collison was 
+                "This object counts the number of times the collison was
                 detected in the port."
         ::= { atiL2EthPortErrorStatsEntry 6 }
 
@@ -1113,10 +1113,10 @@ AtiL2DevicePortEntry  ::=
               INTEGER,
        atiL2DevicePortLinkState
                INTEGER,
-       atiL2DevicePortDuplexStatus 
+       atiL2DevicePortDuplexStatus
                INTEGER ,
-       atiL2DevicePortSpeed 
-               INTEGER, 
+       atiL2DevicePortSpeed
+               INTEGER,
        atiL2DevicePortState
                INTEGER,
        atiL2DevicePortSTPConfig
@@ -1139,7 +1139,7 @@ atiL2DeviceId OBJECT-TYPE
        ACCESS    read-only
        STATUS    mandatory
        DESCRIPTION
-                 "This object identifies the Module  Id of the switch 
+                 "This object identifies the Module  Id of the switch
                  Stack."
        ::= { atiL2DevicePortEntry 1 }
 
@@ -1149,7 +1149,7 @@ atiL2DevicePortNumber OBJECT-TYPE
        ACCESS    read-only
        STATUS    mandatory
        DESCRIPTION
-                 "This object identifies the  Port on atiL2ModuleId of 
+                 "This object identifies the  Port on atiL2ModuleId of
                   the switch Stack."
        ::= { atiL2DevicePortEntry 2 }
 
@@ -1166,10 +1166,10 @@ atiL2DevicePortAutosenseOrHalfDuplex  OBJECT-TYPE
                  }
        ACCESS    read-write
        STATUS    mandatory
-       DESCRIPTION  
-                 "This attribute allows an administrative request to 
+       DESCRIPTION
+                 "This attribute allows an administrative request to
                   configure whether this port can Autosense or Force
-                  the Half Duplex or Full Duplex on different Port 
+                  the Half Duplex or Full Duplex on different Port
                   Speeds."
        ::= { atiL2DevicePortEntry 4 }
 
@@ -1181,7 +1181,7 @@ atiL2DevicePortLinkState  OBJECT-TYPE
                  }
        ACCESS    read-only
        STATUS    mandatory
-       DESCRIPTION  
+       DESCRIPTION
                  "This attribute allows an administrative request to
                   read the status of link state on this port."
        ::= { atiL2DevicePortEntry 5 }
@@ -1195,12 +1195,12 @@ atiL2DevicePortDuplexStatus  OBJECT-TYPE
                      }
        ACCESS    read-only
        STATUS    mandatory
-       DESCRIPTION  
+       DESCRIPTION
                  "This attribute allows an administrative request to
                   read the status of Duplex on this port."
        ::= { atiL2DevicePortEntry 6 }
 
-       
+
 atiL2DevicePortSpeed  OBJECT-TYPE
        SYNTAX    INTEGER {
                      tenMBits(1),
@@ -1210,11 +1210,11 @@ atiL2DevicePortSpeed  OBJECT-TYPE
                      }
        ACCESS    read-only
        STATUS    mandatory
-       DESCRIPTION  
+       DESCRIPTION
                    "This attribute allows an administrative request to
-                    read or write the speed of this port. This Object 
-                    is valid only for 10/100Mbits and gigaBits ports. 
-                    The only gigabit port that can be set is that of 
+                    read or write the speed of this port. This Object
+                    is valid only for 10/100Mbits and gigaBits ports.
+                    The only gigabit port that can be set is that of
                     AT-A14 and it's values can be either 2 or 3."
        ::= { atiL2DevicePortEntry 7 }
 
@@ -1229,9 +1229,9 @@ atiL2DevicePortState  OBJECT-TYPE
                      }
        ACCESS    read-write
        STATUS    mandatory
-       DESCRIPTION  
-                 "This attribute allows an administrative request to 
-       disable or enable communications on this port.It also 
+       DESCRIPTION
+                 "This attribute allows an administrative request to
+       disable or enable communications on this port.It also
        responds with the status of the port .Except enabled(1) and
        disabled(2), all values are read-only status."
        ::= { atiL2DevicePortEntry 8 }
@@ -1244,10 +1244,10 @@ atiL2DevicePortSTPConfig  OBJECT-TYPE
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                "This attribute allows a bridging Mode to be configured 
-                with either Spanning Tree enabled or disabled. When 
-                Spanning tree is enabled, make sure that this port is 
-                belonging to a valid Bridge_id. Spanning Tree is 
+                "This attribute allows a bridging Mode to be configured
+                with either Spanning Tree enabled or disabled. When
+                Spanning tree is enabled, make sure that this port is
+                belonging to a valid Bridge_id. Spanning Tree is
                 enabled only when a valid Bridge_id is set."
         ::= { atiL2DevicePortEntry 10}
 
@@ -1266,7 +1266,7 @@ atiL2DevicePortSTPCost      OBJECT-TYPE
         ACCESS        read-write
         STATUS        mandatory
         DESCRIPTION
-                "The Cost of the Spanning Tree Protocol.This object 
+                "The Cost of the Spanning Tree Protocol.This object
                 is valid only when STP is enabled."
         ::= { atiL2DevicePortEntry 12 }
 
@@ -1276,7 +1276,7 @@ atiL2DevicePortSTPPriority  OBJECT-TYPE
         ACCESS        read-write
         STATUS        mandatory
         DESCRIPTION
-                "  The Priority of the spanning Tree Protocol. 
+                "  The Priority of the spanning Tree Protocol.
                 This object is valid when STP is enabled."
         ::= { atiL2DevicePortEntry 13 }
 
@@ -1288,11 +1288,11 @@ atiL2DevicePortFlowControlEnable OBJECT-TYPE
                  }
        ACCESS    read-write
        STATUS    deprecated
-       DESCRIPTION 
-                 "This per-port attribute describes whether the port 
-                 identified has flow Control Enabled or not. Flow 
-                 Control on Full Duplex and Half Duplex is detected 
-                 and automatically, flow control accordingly is 
+       DESCRIPTION
+                 "This per-port attribute describes whether the port
+                 identified has flow Control Enabled or not. Flow
+                 Control on Full Duplex and Half Duplex is detected
+                 and automatically, flow control accordingly is
                  taken care of. By Default, Flow Control is Disabled."
            ::= { atiL2DevicePortEntry 14 }
 
@@ -1305,14 +1305,14 @@ atiL2DevicePortQOSPriorityConfig  OBJECT-TYPE
                  }
        ACCESS    read-write
        STATUS    deprecated
-       DESCRIPTION 
-                 "This per-port attribute is applicable only to 
-                 at-8324, at-8124XL-V2 and at-8316 and it allows for 
-                 the configuration of the Priority of the port to be 
-                 high or Low. In a switch environment, Ports with high 
-                 Priority and traffic from and to the ports get more 
-                 priority when compared with those with normal 
-                 priority. By Default, all ports have Normal Priority."           
+       DESCRIPTION
+                 "This per-port attribute is applicable only to
+                 at-8324, at-8124XL-V2 and at-8316 and it allows for
+                 the configuration of the Priority of the port to be
+                 high or Low. In a switch environment, Ports with high
+                 Priority and traffic from and to the ports get more
+                 priority when compared with those with normal
+                 priority. By Default, all ports have Normal Priority."
            ::= { atiL2DevicePortEntry 17 }
 
 --
@@ -1348,7 +1348,7 @@ AtiL2BasicVlanEntry  ::=
                         INTEGER,
                  atiL2BeVlanModule1UntaggedPorts
                         DisplayString,
-                 atiL2BeVlanModule1TaggedPorts       
+                 atiL2BeVlanModule1TaggedPorts
                         DisplayString,
                  atiL2BeVlanRowStatus
                         INTEGER
@@ -1368,16 +1368,16 @@ atiL2BeVlanName   OBJECT-TYPE
        SYNTAX    DisplayString
        ACCESS    read-write
        STATUS    mandatory
-       DESCRIPTION  
+       DESCRIPTION
                  "This attribute associates a user defined string with
-                 the Virtual LAN. To configure a new VLAN, do 'set' 
-                 operation on this object with the VLAN name. To delete 
-                 a VLAN, do 'set' operation with string '*<module_num>', 
-                 where <module_num> is the module number (1..8) from 
-                 which the delete request is being sent. If a vlan is 
-                 being created or modified, before configuring any of 
-                 the objects in this row, set atiL2VlanStatus to 
-                 'under-construction' and once configured with all the 
+                 the Virtual LAN. To configure a new VLAN, do 'set'
+                 operation on this object with the VLAN name. To delete
+                 a VLAN, do 'set' operation with string '*<module_num>',
+                 where <module_num> is the module number (1..8) from
+                 which the delete request is being sent. If a vlan is
+                 being created or modified, before configuring any of
+                 the objects in this row, set atiL2VlanStatus to
+                 'under-construction' and once configured with all the
                  information, set the same object to operational. This
                  step is not required when deleting a vlan."
        ::= { atiL2BasicVlanEntry 2 }
@@ -1391,9 +1391,9 @@ atiL2BeVlanTagId        OBJECT-TYPE
           "This object configures the VId in the Tag Information header
           in accordance with 802.1q spec.
 
-          Before configuring any of the objects in this row , set the 
-          atiL2VlanStatus to 'under-construction' and once configured 
-          with all the information, please set the same object to 
+          Before configuring any of the objects in this row , set the
+          atiL2VlanStatus to 'under-construction' and once configured
+          with all the information, please set the same object to
           operational."
           ::= { atiL2BasicVlanEntry 3 }
 
@@ -1403,34 +1403,34 @@ atiL2BeVlanModule1UntaggedPorts OBJECT-TYPE
           ACCESS         read-write
           STATUS         mandatory
           DESCRIPTION
-          "This Object builds the Output Ports on the Module that 
-          participate in the Vlan with the atiL2BeVlanName. The Format 
+          "This Object builds the Output Ports on the Module that
+          participate in the Vlan with the atiL2BeVlanName. The Format
           of the input string would be like '1,2,5,7,12..15,18-22,26'.
-      
-          Before configuring any of the objects in this row , set the 
-          atiL2VlanStatus to 'under-construction' and once configured 
-          with all the information, please set the same object to 
+
+          Before configuring any of the objects in this row , set the
+          atiL2VlanStatus to 'under-construction' and once configured
+          with all the information, please set the same object to
           operational."
           ::= { atiL2BasicVlanEntry 4 }
-                
+
 
 atiL2BeVlanModule1TaggedPorts      OBJECT-TYPE
           SYNTAX         DisplayString
           ACCESS         read-write
           STATUS         mandatory
           DESCRIPTION
-          "This Object builds the Output Ports on the Module 
-          atiL2BeVlanModuleId that participate in the Vlan with the 
-          atiL2BeVlanName. The Format of the input string would be 
+          "This Object builds the Output Ports on the Module
+          atiL2BeVlanModuleId that participate in the Vlan with the
+          atiL2BeVlanName. The Format of the input string would be
           like '1,2,5,7,12'.
-      
-          Please select the Module by setting the atiL2BeVlanModuleId 
-          with the Module Id and then set the port mask. If this is 
+
+          Please select the Module by setting the atiL2BeVlanModuleId
+          with the Module Id and then set the port mask. If this is
           not set, by default this will be set to 1.
-      
-          Before configuring any of the objects in this row , set the 
-          atiL2VlanStatus to 'under-construction' and once configured 
-          with all the information, please set the same object to 
+
+          Before configuring any of the objects in this row , set the
+          atiL2VlanStatus to 'under-construction' and once configured
+          with all the information, please set the same object to
           operational."
           ::= { atiL2BasicVlanEntry 5 }
 
@@ -1444,11 +1444,11 @@ atiL2BeVlanRowStatus OBJECT-TYPE
        ACCESS    read-write
        STATUS    mandatory
        DESCRIPTION
-       "This object is used to create or modify a vlan. The user 
-       should first set this object to under-construction. After 
+       "This object is used to create or modify a vlan. The user
+       should first set this object to under-construction. After
        the vlan name, the tag Id and the ports belonging to the vlan
-       are configured/modified, this object should be set to 
-       operational. If it is not set to operational, the whole row 
+       are configured/modified, this object should be set to
+       operational. If it is not set to operational, the whole row
        will be lost and the vlan will not be configured in the switch."
        ::= { atiL2BasicVlanEntry 20 }
 
@@ -1470,7 +1470,7 @@ atiL2Port2VlanEntry  OBJECT-TYPE
        ACCESS  not-accessible
        STATUS  mandatory
        DESCRIPTION
-               "An entry in the table, containing per port VLAN 
+               "An entry in the table, containing per port VLAN
                information."
        INDEX   {atiL2PvModuleId, atiL2PvPortNumber }
        ::= { atiL2Port2VlanTable 1 }
@@ -1492,7 +1492,7 @@ atiL2PvModuleId OBJECT-TYPE
        ACCESS    read-only
        STATUS    mandatory
        DESCRIPTION
-                 "This object identifies the Module Id on the switching 
+                 "This object identifies the Module Id on the switching
                  Stack."
        ::= { atiL2Port2VlanEntry 1 }
 
@@ -1502,7 +1502,7 @@ atiL2PvPortNumber OBJECT-TYPE
        ACCESS    read-only
        STATUS    mandatory
        DESCRIPTION
-                 "This object identifies the port on the  Module 
+                 "This object identifies the port on the  Module
                  atiL2PvModuleId ."
        ::= { atiL2Port2VlanEntry 2 }
 
@@ -1511,12 +1511,12 @@ atiL2PvVlanName OBJECT-TYPE
        SYNTAX    DisplayString
        ACCESS    read-write
        STATUS    mandatory
-       DESCRIPTION  
+       DESCRIPTION
                  "This attribute associates a user defined string with
        the Virtual LAN. This Object is the same as atiL2BeVlanName.
        Please make sure to give the same string as atiL2BeVlanName."
        ::= { atiL2Port2VlanEntry 3 }
-   
+
 
 --
 -- atiL2IfExt Group
@@ -1539,7 +1539,7 @@ atiIfExtnEntry OBJECT-TYPE
         ACCESS  not-accessible
         STATUS  mandatory
         DESCRIPTION
-                "An interface entry containing objects at the 
+                "An interface entry containing objects at the
                 subnetwork layer and below for a particular interface."
         INDEX   { atiIfExtnIndex }
         ::= { atiIfExtnTable 1 }
@@ -1549,7 +1549,7 @@ AtiIfExtnEntry ::= SEQUENCE {
         atiIfExtnIndex
                 INTEGER,
         atiIfExtnModuleId
-                INTEGER, 
+                INTEGER,
         atiIfExtnPort
                 INTEGER
 }
@@ -1570,7 +1570,7 @@ atiIfExtnModuleId OBJECT-TYPE
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-                "The unit number associated with this particular 
+                "The unit number associated with this particular
                 interface."
         ::= { atiIfExtnEntry 2 }
 
@@ -1613,11 +1613,11 @@ AtiL2BrBaseEntry  ::=
               SEQUENCE {
                   atiL2BrBaseLanId
                       INTEGER,
-                  atiL2BrBaseBridgeAddress 
+                  atiL2BrBaseBridgeAddress
                       MacAddress,
-                  atiL2BrBaseNumPorts 
+                  atiL2BrBaseNumPorts
                       INTEGER,
-                  atiL2BrBaseType 
+                  atiL2BrBaseType
                       INTEGER
               }
 
@@ -1660,7 +1660,7 @@ atiL2BrBaseNumPorts OBJECT-TYPE
               "IEEE 802.1D-1990: Section 6.4.1.1.3"
       ::= { atiL2BrBaseEntry 3 }
 
-          
+
 atiL2BrBaseType OBJECT-TYPE
       SYNTAX  INTEGER {
                   unknown(1),
@@ -1691,7 +1691,7 @@ atiL2BrBasePortTable OBJECT-TYPE
               included."
       ::= { atiL2BrBase 4 }
 
-          
+
 atiL2BrBasePortEntry OBJECT-TYPE
       SYNTAX  AtiL2BrBasePortEntry
       ACCESS  not-accessible
@@ -1826,11 +1826,11 @@ atiL2BrStpEntry  OBJECT-TYPE
 
 AtiL2BrStpEntry  ::=
       SEQUENCE {
-          atiL2BrStpLanId 
+          atiL2BrStpLanId
               INTEGER,
-          atiL2BrStpProtocolSpecification 
+          atiL2BrStpProtocolSpecification
               INTEGER,
-          atiL2BrStpPriority 
+          atiL2BrStpPriority
               INTEGER,
           atiL2BrStpTimeSinceTopologyChange
               TimeTicks,
@@ -1858,7 +1858,7 @@ AtiL2BrStpEntry  ::=
               Timeout
       }
 
-  
+
 atiL2BrStpLanId OBJECT-TYPE
       SYNTAX  INTEGER
       ACCESS  read-only
@@ -1942,7 +1942,7 @@ atiL2BrStpDesignatedRoot OBJECT-TYPE
               "IEEE 802.1D-1990: Section 4.5.3.1"
       ::= { atiL2BrStpEntry 6 }
 
-  
+
 atiL2BrStpRootCost OBJECT-TYPE
       SYNTAX  INTEGER
       ACCESS  read-only
@@ -2012,7 +2012,7 @@ atiL2BrStpHoldTime OBJECT-TYPE
               "IEEE 802.1D-1990: Section 4.5.3.14"
       ::= { atiL2BrStpEntry 11 }
 
-  
+
 atiL2BrStpForwardDelay OBJECT-TYPE
       SYNTAX  Timeout
       ACCESS  read-only
@@ -2094,7 +2094,7 @@ atiL2BrStpBridgeForwardDelay OBJECT-TYPE
 --
 -- The Spanning Tree Port Table
 --
-  
+
 atiL2BrStpPortTable OBJECT-TYPE
       SYNTAX  SEQUENCE OF AtiL2BrStpPortEntry
       ACCESS  not-accessible
@@ -2104,7 +2104,7 @@ atiL2BrStpPortTable OBJECT-TYPE
               for the Spanning Tree Protocol."
       ::= { atiL2BrStp 15 }
 
-  
+
 atiL2BrStpPortEntry OBJECT-TYPE
       SYNTAX  AtiL2BrStpPortEntry
       ACCESS  not-accessible
@@ -2445,9 +2445,9 @@ atiL2QOSStatus    OBJECT-TYPE
         ACCESS    read-write
         STATUS    mandatory
         DESCRIPTION
-                "If the QOS status is enabled, then QOS packets will 
-                be assigned to high or low priority queue. If it is 
-                disabled, packets works normally.(Applicable only to 
+                "If the QOS status is enabled, then QOS packets will
+                be assigned to high or low priority queue. If it is
+                disabled, packets works normally.(Applicable only to
                 at-8326GB, at-9410GB and at-8350GB)"
         ::=  { atiL2QOSConfigGroup 1 }
 
@@ -2457,8 +2457,8 @@ atiL2TrafficMappingTable OBJECT-TYPE
         ACCESS  not-accessible
         STATUS  mandatory
         DESCRIPTION
-                "It contains the mapping of all traffic classes and 
-                their priority assignments.(Applicable only to 
+                "It contains the mapping of all traffic classes and
+                their priority assignments.(Applicable only to
                 at-8326GB, at-9410GB and at-8350GB)"
         ::= { atiL2QOSConfigGroup 2 }
 
@@ -2468,8 +2468,8 @@ atiL2TrafficMappingEntry OBJECT-TYPE
         ACCESS  not-accessible
         STATUS  mandatory
         DESCRIPTION
-                "Each entry maps a traffic class to the priority queue 
-                to be used for it's packets. (Applicable only to 
+                "Each entry maps a traffic class to the priority queue
+                to be used for it's packets. (Applicable only to
                 at-8326GB, at-9410GB and at-8350GB)"
         INDEX { atiL2TrafficClassIndex }
         ::= { atiL2TrafficMappingTable 1 }
@@ -2490,7 +2490,7 @@ atiL2TrafficClassIndex  OBJECT-TYPE
         STATUS    mandatory
         DESCRIPTION
                   "The  Index of the traffic class. It is obtained
-                   from the packet format.(Applicable only to 
+                   from the packet format.(Applicable only to
                    at-8326GB, at-9410GB and at-8350GB)"
         ::=  { atiL2TrafficMappingEntry 1 }
 
@@ -2506,7 +2506,7 @@ atiL2PriorityQueue      OBJECT-TYPE
         STATUS    mandatory
         DESCRIPTION
                   "The priority queue to be used to forward packets.
-                  (Applicable only to at-8326GB, at-9410GB and 
+                  (Applicable only to at-8326GB, at-9410GB and
                   at-8350GB)"
         ::=  { atiL2TrafficMappingEntry 2 }
 

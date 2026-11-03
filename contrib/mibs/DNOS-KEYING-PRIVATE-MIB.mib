@@ -35,10 +35,10 @@ IMPORTS
            LAST-UPDATED "201101260000Z" -- 26 January 2011 12:00:00 GMT
            ORGANIZATION "Dell, Inc."
            CONTACT-INFO ""
- 
+
      DESCRIPTION
           "The Broadcom Private MIB for DNOS Keying Utility"
- 
+
       -- Revision history.
       REVISION
           "201101260000Z" -- 26 January 2011 12:00:00 GMT
@@ -53,7 +53,7 @@ IMPORTS
 
 
      --**************************************************************************************
-    -- agentFeatureKeyingGroup -> contains MIB objects displaying Key and associated Functionality 
+    -- agentFeatureKeyingGroup -> contains MIB objects displaying Key and associated Functionality
     --
     --**************************************************************************************
 
@@ -105,21 +105,21 @@ agentFeatureKeyingEntry OBJECT-TYPE
 		SYNTAX Unsigned32
 		MAX-ACCESS not-accessible
 		STATUS current
-		DESCRIPTION 
+		DESCRIPTION
 			"A value corresponding to a keyable feature.When this table is walked,
-		 	only values associated with keyable features are returned.This value 
+		 	only values associated with keyable features are returned.This value
 			must be equivalent to valid value of agentFeatureKeyingIndex."
 		::={ agentFeatureKeyingEntry 1 }
-	
+
 	agentFeatureKeyingName OBJECT-TYPE
                 SYNTAX DisplayString
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION
-			"The abbreviated name of this component.This is also equivalent to 
+			"The abbreviated name of this component.This is also equivalent to
 			agentFeatureKeyingName"
 		::={ agentFeatureKeyingEntry 2 }
-		
+
 	agentFeatureKeyingStatus OBJECT-TYPE
 		SYNTAX      INTEGER {
                     enable(1),

@@ -1,8 +1,8 @@
 
 RFC-1215 DEFINITIONS ::= BEGIN
 
--- This  module is a empty module.  It has been created solely for the 
--- purpose of allowing other modules to correctly import the TRAP-TYPE 
+-- This  module is a empty module.  It has been created solely for the
+-- purpose of allowing other modules to correctly import the TRAP-TYPE
 -- clause from RFC-1215 where it should be imported from.  It's a
 -- built in type in the UCD-SNMP code, and in fact RFC-1215 doesn't
 -- actually define a mib at all; it only defines macros.  However,
@@ -33,6 +33,6 @@ BEGIN
                "REFERENCE" value (reference DisplayString)
                | empty
 END
- 
+
 
 END

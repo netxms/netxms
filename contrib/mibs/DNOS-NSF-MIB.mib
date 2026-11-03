@@ -28,10 +28,10 @@ DNOS-NSF-MIB DEFINITIONS ::= BEGIN
         ORGANIZATION "Dell, Inc."
         CONTACT-INFO ""
         DESCRIPTION
-            "This MIB defines the objects used for FastPath to 
+            "This MIB defines the objects used for FastPath to
             configure and report information and status of NSF features."
-        
-        -- Revision history.	  
+
+        -- Revision history.
         REVISION
             "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
         DESCRIPTION
@@ -40,7 +40,7 @@ DNOS-NSF-MIB DEFINITIONS ::= BEGIN
             "200904230000Z" -- 23 Apr 2009 12:00:00 GMT
         DESCRIPTION
             "Initial version."
- 
+
         ::= { dnOS 46 }
 
 
@@ -65,7 +65,7 @@ DNOS-NSF-MIB DEFINITIONS ::= BEGIN
             "Each Instance corresponds with a different unit managed by this agent."
         AUGMENTS      { agentInventoryUnitEntry }
         ::= { agentNsfUnitTable 1 }
-         
+
     AgentNsfUnitEntry ::=
         SEQUENCE {
          agentNsfUnitSupport
@@ -122,19 +122,19 @@ DNOS-NSF-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "The type of activation that caused the software to start the last time. 
+            "The type of activation that caused the software to start the last time.
 
             unknown:             The switch rebooted for an unknown reason.
-            power-on:            The switch rebooted. This could have been caused by a power 
-                                 cycle or an administrative 'Reload' command. 
-            warm-admin-move:     The administrator issued a command for the stand-by manager to 
+            power-on:            The switch rebooted. This could have been caused by a power
+                                 cycle or an administrative 'Reload' command.
+            warm-admin-move:     The administrator issued a command for the stand-by manager to
                                  take over.
-            cold-admin-move:     The administrator issued a command for the stand-by manager to 
+            cold-admin-move:     The administrator issued a command for the stand-by manager to
                                  take over, but the system was not ready for a warm-failover.
-            warm-auto-restart:   The primary management card restarted due to a failure, and the 
-                                 system executed a nonstop forwarding failover. 
-            cold-auto-restart:   The system switched from the active manager to the backup manager 
-                                 and was unable to maintain user data traffic. This is usually 
+            warm-auto-restart:   The primary management card restarted due to a failure, and the
+                                 system executed a nonstop forwarding failover.
+            cold-auto-restart:   The system switched from the active manager to the backup manager
+                                 and was unable to maintain user data traffic. This is usually
                                  caused by multiple failures occurring close together"
 
         ::= { agentNsfGroup 3 }
@@ -153,7 +153,7 @@ DNOS-NSF-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "Whether a restart is in progress. A restart is not considered complete until all 
+            "Whether a restart is in progress. A restart is not considered complete until all
             hardware tables have been fully reconciled."
         ::= { agentNsfGroup 5 }
 
@@ -170,7 +170,7 @@ DNOS-NSF-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "Age of the configuration on the backup unit. The time since the running configuration 
+            "Age of the configuration on the backup unit. The time since the running configuration
             was last copied to the backup unit."
 
         ::= { agentNsfGroup 7 }
@@ -242,7 +242,7 @@ DNOS-NSF-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "Number of checkpoint messages received in the last interval defined by 
+            "Number of checkpoint messages received in the last interval defined by
              agentCheckpointMessageRateInterval."
         ::= { agentCheckpointStatsGroup 6 }
 
@@ -251,7 +251,7 @@ DNOS-NSF-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "Highest number of checkpoint messages received in an interval defined by 
+            "Highest number of checkpoint messages received in an interval defined by
              agentCheckpointMessageRateInterval."
         ::= { agentCheckpointStatsGroup 7 }
 

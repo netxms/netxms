@@ -48,9 +48,9 @@ IMPORTS
                         Counter,
                 vLANMibClearRouterStatistics
                         INTEGER
-                
-                 }       
-                        
+
+                 }
+
     vLANMibRouterPort       OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
@@ -59,7 +59,7 @@ IMPORTS
 	::= { vLANMibRoutertCountEntry 1 }
 
     vLANMibRouterPortPktDisc       OBJECT-TYPE
-	SYNTAX		Counter 
+	SYNTAX		Counter
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION	"Number of packets discarded."
@@ -67,7 +67,7 @@ IMPORTS
 
 
     vLANMibRouterPortPktTran     OBJECT-TYPE
-	SYNTAX		Counter 
+	SYNTAX		Counter
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION	"Number of packets transmitted."
@@ -76,7 +76,7 @@ IMPORTS
     vLANMibClearRouterStatistics     OBJECT-TYPE
 	SYNTAX		INTEGER{
 				clear(1)
-				} 
+				}
 	ACCESS		write-only
 	STATUS		mandatory
 	DESCRIPTION	" "
@@ -109,8 +109,8 @@ IMPORTS
                         Counter,
                 vLANMibClearVidStatistics
                         INTEGER
-                 }       
-                        
+                 }
+
     vLANMibRouterVID       OBJECT-TYPE
 	SYNTAX		INTEGER(1..4094)
 	ACCESS		read-only
@@ -119,7 +119,7 @@ IMPORTS
 	::= { vLANMibRoutertVlanCountEntry 1 }
 
     vLANMibRouterVlanPacketTran       OBJECT-TYPE
-	SYNTAX		Counter 
+	SYNTAX		Counter
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION	"Number of packets transmitted to vlan."
@@ -127,7 +127,7 @@ IMPORTS
 
 
     vLANMibRouterVlanPacketSent     OBJECT-TYPE
-	SYNTAX		Counter 
+	SYNTAX		Counter
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION	"Number of packets sent by vlan."
@@ -136,13 +136,13 @@ IMPORTS
     vLANMibClearVidStatistics     OBJECT-TYPE
 	SYNTAX		INTEGER{
 				clear(1)
-				} 
+				}
 	ACCESS		write-only
 	STATUS		mandatory
 	DESCRIPTION	" "
 	::= { vLANMibRoutertVlanCountEntry 4 }
 
-    
+
     vLANMibRouterMaxPkTable          OBJECT-TYPE
 	SYNTAX		SEQUENCE OF VLANMibRouterMaxPkEntry
 	ACCESS		not-accessible
@@ -164,8 +164,8 @@ IMPORTS
                         INTEGER,
                 vLANMibRouterMaxPktProcessCount
                         Unsigned32
-                 }       
-                        
+                 }
+
     vLANMIbVID       OBJECT-TYPE
 	SYNTAX		INTEGER(1..4094)
 	ACCESS		read-only
@@ -174,14 +174,14 @@ IMPORTS
 	::= { vLANMibRouterMaxPkEntry 1 }
 
     vLANMibRouterMaxPktProcessCount       OBJECT-TYPE
-	SYNTAX		Unsigned32 
+	SYNTAX		Unsigned32
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION	"Max packet processing count. If set to zero then router will process, default number of packets per second."
 	::= { vLANMibRouterMaxPkEntry 2 }
 
-   
-	
+
+
     vLANMibSubIfTable          OBJECT-TYPE
 	SYNTAX		SEQUENCE OF VLANMibSubIfEntry
 	ACCESS		not-accessible
@@ -205,8 +205,8 @@ IMPORTS
                         INTEGER,
                 vLANMibSubIfVID
                 	INTEGER
-                 }       
-                        
+                 }
+
     vLANMibSubIfPortIndex       OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
@@ -230,5 +230,5 @@ IMPORTS
 	STATUS		mandatory
 	DESCRIPTION	"Vlan id"
 	::= { vLANMibSubIfEntry 3 }
-	
+
 END

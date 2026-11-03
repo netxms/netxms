@@ -121,9 +121,9 @@ MLD-SNOOPING-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "The table controls the VLAN's MLD function. Its scale depends
-            on the current VLAN state (swL2VlanInfoStatus). If the VLAN is in 
-            disabled mode, there is only one entry in the table, with 
-            index 1. If the VLAN is in Port-Base or 802.1q mode, the number of 
+            on the current VLAN state (swL2VlanInfoStatus). If the VLAN is in
+            disabled mode, there is only one entry in the table, with
+            index 1. If the VLAN is in Port-Base or 802.1q mode, the number of
             entries can be up to 12, with an index range from 1 to 12."
         ::= { swMldSnpMgmt 2 }
 
@@ -165,7 +165,7 @@ MLD-SNOOPING-MIB DEFINITIONS ::= BEGIN
             swMldSnoopingFastDoneState
                 INTEGER,
             swMldSnoopingVersion
-            	INTEGER  
+            	INTEGER
         }
 
     swMldSnoopingCtrlVid OBJECT-TYPE
@@ -326,7 +326,7 @@ MLD-SNOOPING-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the MLD version of this entry.
-             If the MLD version is configured with a lower version, the higher 
+             If the MLD version is configured with a lower version, the higher
              version's MLD Report/Leave messages will be ignored.
             "
         ::= { swMldSnoopingCtrlEntry 13 }
@@ -354,7 +354,7 @@ MLD-SNOOPING-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS  obsolete
         DESCRIPTION
-            "Information about current MLD information which has been captured 
+            "Information about current MLD information which has been captured
 	    by this device, provided that swMldSnoopingGlobalState and
             swMldSnoopingCtrlState of the associated VLAN entries are all enabled."
         INDEX  { swMldSnoopingGroupInfoVid , swMldSnoopingGroupInfoIpAddr }
@@ -380,7 +380,7 @@ MLD-SNOOPING-MIB DEFINITIONS ::= BEGIN
         STATUS  obsolete
         DESCRIPTION
             "This object indicates the VID of an individual MLD table entry.
-            It shows the VID of MLD report information that has been captured 
+            It shows the VID of MLD report information that has been captured
 	    on the network."
         ::= { swMldSnoopingGroupInfoEntry 1 }
 
@@ -418,7 +418,7 @@ MLD-SNOOPING-MIB DEFINITIONS ::= BEGIN
             if its bit has a value of '0'(Note that the setting of the bit
             corresponding to the port from which a frame is received is
             irrelevant). The 4 octets represent one unit port according to
-            its logical port. If the unit has less than 32 ports, other 
+            its logical port. If the unit has less than 32 ports, other
             ports will be set to 0."
         ::= { swMldSnoopingGroupInfoEntry 4 }
 
@@ -500,7 +500,7 @@ MLD-SNOOPING-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Displays router ports that have been configured to be forbidden."
         ::= { swMldSnpRouterPortsEntry 4 }
-        
+
 -- -----------------------------------------------------------------------------
 -- swMldSnoopingGroupInfoTable          OBJECT IDENTIFIER ::= { swMldSnpMgmt 5 }
 -- -----------------------------------------------------------------------------

@@ -74,14 +74,14 @@ ciscoClusterMIB MODULE-IDENTITY
             user's guide."
     REVISION  "200511180000Z"
     DESCRIPTION
-            "Updated the imports such that Unsigned32 is imported from 
-            SNMPv2-SMI instead of CISCO-TC. Re-ordered the imports such 
-            that the SNMPv2 imports are imported first. Added a new 
+            "Updated the imports such that Unsigned32 is imported from
+            SNMPv2-SMI instead of CISCO-TC. Re-ordered the imports such
+            that the SNMPv2 imports are imported first. Added a new
             NOTIFICATION GROUP ciscoClusterNotificationGroup to include
-            the notification ccStatusMemberStatusChange. Also deprecated the 
+            the notification ccStatusMemberStatusChange. Also deprecated the
             old MODULE-COMPLIANCE ciscoClusterCompliance, and added a new
-            MODULE-COMPLIANCE ciscoClusterComplianceRev1 such that its 
-            MANDATORY-GROUPS include this new NOTIFICATION GROUP and all the 
+            MODULE-COMPLIANCE ciscoClusterComplianceRev1 such that its
+            MANDATORY-GROUPS include this new NOTIFICATION GROUP and all the
             MANDATORY-GROUPS of ciscoClusterCompliance."
     REVISION  "9907280000Z"
     DESCRIPTION
@@ -512,5 +512,3 @@ ciscoClusterNotificationGroup    NOTIFICATION-GROUP
     ::= { ciscoClusterMIBGroups 5 }
 
 END
-
- 

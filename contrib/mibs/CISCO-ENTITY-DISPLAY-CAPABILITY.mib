@@ -1,9 +1,9 @@
 -- *****************************************************************
 -- CISCO-ENTITY-DISPLAY-CAPABILITY.my:
 -- Cisco CISCO-ENTITY-DISPLAY-MIB AGENT-CAPABILITIES
---   
+--
 -- March 2004, Dipesh Gorashia
---   
+--
 -- Copyright (c) 2004, 2007, 2010 by Cisco Systems Inc.
 -- All rights reserved.
 -- ****************************************************************
@@ -99,6 +99,3 @@ cEntDisplayCapV12R0250SYPCat6k AGENT-CAPABILITIES
     ::= { ciscoEntityDisplayCapability 3 }
 
 END
-
-
-

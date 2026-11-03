@@ -43,10 +43,10 @@ ciscoC2900MIB  MODULE-IDENTITY
     REVISION    "200205300000Z"
     DESCRIPTION
             "Added the c2900PortAddrSecureAgingTime,
-             c2900PortAddrSecureAgingType and 
+             c2900PortAddrSecureAgingType and
              c2900PortAddrSecureAgingStatic
              MIB objects to port entry and port group;
-             Also added c2900NotificationsGroup and 
+             Also added c2900NotificationsGroup and
              c2900PortStatsGroupRev1 object."
 
     REVISION    "200107251345Z"
@@ -545,7 +545,7 @@ c2900PortUsageApplication OBJECT-TYPE
          switched port).
 
          The security(2) usage adds addressing security
-         to the port, whereby all learned addresses are 
+         to the port, whereby all learned addresses are
          secure address.
 
          The monitor(3) usage provides network diagnosis
@@ -581,8 +581,8 @@ c2900PortUsageApplication OBJECT-TYPE
 
          The protected(8) application does not forward any traffic to other
          protected ports. It does not forward all kinds of unicast, multicast
-         and broadcast traffic to any other protected port. The protected 
-         ports, however, forward traffic normally to non-protected ports and 
+         and broadcast traffic to any other protected port. The protected
+         ports, however, forward traffic normally to non-protected ports and
          vice versa."
     DEFVAL  { standard }
     ::= { c2900PortEntry 3}
@@ -813,7 +813,7 @@ c2900PortBroadcastStormAction OBJECT-TYPE
           other action is to stopBroadcastForwarding(1) frames
           until the broadcast reception rate falls to
           or below the falling threshold.
-          The port can also be shutdown in the event of a 
+          The port can also be shutdown in the event of a
           broadcast storm with the action disablePort(3)."
 
      DEFVAL { forwardBroadcast }
@@ -1148,15 +1148,15 @@ c2900PortAddrSecureAgingTime OBJECT-TYPE
     DESCRIPTION
        "The aging interval in minutes for each secure address
         entry on a given port. Depending on the type of aging
-        the secure address will age out after the expiration 
-        of the aging time and will be removed from the 
+        the secure address will age out after the expiration
+        of the aging time and will be removed from the
         secure address list.
 
         Any change in the value of this object will restart
         the aging for all the secure addresses on this port.
 
         If the value of this object is 0 for a given
-        port, the aging mechanism is disabled for this 
+        port, the aging mechanism is disabled for this
         port."
     DEFVAL { 0 }
     ::= { c2900PortEntry 38 }
@@ -1166,22 +1166,22 @@ c2900PortAddrSecureAgingType OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS current
     DESCRIPTION
-       "If the value of this object on a given port is 
+       "If the value of this object on a given port is
 
         absolute - all the secure addresses on this
             port will age out exactly after the aging
             time configured for this port.
 
-        inactivity - the secure addresses on this port 
+        inactivity - the secure addresses on this port
             will age out only if there is no data traffic
-            from the given secure source address for a 
+            from the given secure source address for a
             time period specified by aging time.
 
         Any change in the value of this object will restart
         the aging for all the secure addresses on this port.
 
-        The value of this object is not effective when the 
-        value of c2900PortAddrSecureAgingTime is 0." 
+        The value of this object is not effective when the
+        value of c2900PortAddrSecureAgingTime is 0."
     DEFVAL { absolute }
     ::= { c2900PortEntry 39 }
 
@@ -1192,15 +1192,15 @@ c2900PortAddrSecureAgingStatic OBJECT-TYPE
     DESCRIPTION
        "Set to true(1) to enable aging for statically
         configured secure addresses on one port. Disable
-        the aging for statically configured secure 
+        the aging for statically configured secure
         addresses if set to false(2).
 
         Any change in the value of this object will restart
         the aging for all the configured secure addresses on
         this port.
 
-        The value of this object is not effective when the 
-        value of c2900PortAddrSecureAgingTime is 0." 
+        The value of this object is not effective when the
+        value of c2900PortAddrSecureAgingTime is 0."
     DEFVAL { false }
     ::= { c2900PortEntry 40 }
 
@@ -1693,7 +1693,7 @@ c2900MIBComplianceWC4 MODULE-COMPLIANCE
                            c2900ModuleGroup,
                            c2900BandwidthUsageGroup,
                            c2900PortGroupWC4,
-                           c2900NotificationsGroup 
+                           c2900NotificationsGroup
                          }
         GROUP c2900PortStatsGroupRev1
         DESCRIPTION
@@ -1999,7 +1999,7 @@ c2900PortGroupWC2   OBJECT-GROUP
         STATUS deprecated
         DESCRIPTION
             "The collection of objects which are used to
-             provide port status and configuration, includes 
+             provide port status and configuration, includes
              voice vlan id."
         ::= {  c2900MIBGroups 11 }
 
@@ -2037,23 +2037,23 @@ c2900PortGroupWC4   OBJECT-GROUP
                   c2900PortNoMonitorDestinationPort,
                   c2900Portdot1dBasePort,
                   c2900PortSpantreeFastStart,
-                  c2900PortVoiceVlanId, 
-                  c2900PortAddrSecureAgingTime, 
-                  c2900PortAddrSecureAgingType, 
+                  c2900PortVoiceVlanId,
+                  c2900PortAddrSecureAgingTime,
+                  c2900PortAddrSecureAgingType,
                   c2900PortAddrSecureAgingStatic
                 }
         STATUS current
         DESCRIPTION
             "The collection of objects which are used to
-             provide port status and configuration, includes 
+             provide port status and configuration, includes
              voice vlan id and port-security aging."
         ::= {  c2900MIBGroups 12 }
 
 c2900NotificationsGroup NOTIFICATION-GROUP
     NOTIFICATIONS {
-                    c2900AddressViolation, 
-                    c2900BroadcastStorm, 
-                    c2900RpsFailed 
+                    c2900AddressViolation,
+                    c2900BroadcastStorm,
+                    c2900RpsFailed
                   }
     STATUS        current
     DESCRIPTION
@@ -2078,4 +2078,3 @@ c2900PortStatsGroupRev1   OBJECT-GROUP
         ::= {  c2900MIBGroups 14 }
 
 END
-

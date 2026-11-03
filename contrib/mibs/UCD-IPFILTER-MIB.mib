@@ -9,7 +9,7 @@ IMPORTS
 ucdIpFilter MODULE-IDENTITY
     LAST-UPDATED "9912150000Z"
     ORGANIZATION "University of California, Davis"
-    CONTACT-INFO    
+    CONTACT-INFO
 	"This mib is no longer being maintained by the University of
 	 California and is now in life-support-mode and being
 	 maintained by the net-snmp project.  The best place to write
@@ -23,8 +23,8 @@ ucdIpFilter MODULE-IDENTITY
          email:    net-snmp-coders@lists.sourceforge.net
         "
     DESCRIPTION
-	"This module defines MIB components for reading information 
-	 from the IP Filter. This would let you only read its rules 
+	"This module defines MIB components for reading information
+	 from the IP Filter. This would let you only read its rules
 	 and counters.
 
          IP Filter by Darren Reed <darrenr@pobox.com>
@@ -93,9 +93,9 @@ ipfOutTable OBJECT-TYPE
 	"A table with IP Filter outgoing rules and statistic."
     ::= { ucdIpFilter 2 }
 
-ipfOutEntry OBJECT-TYPE  
+ipfOutEntry OBJECT-TYPE
     SYNTAX	IpfOutEntry
-    MAX-ACCESS	not-accessible 
+    MAX-ACCESS	not-accessible
     STATUS	current
     DESCRIPTION
 	"IP Filter outgoing rules table entry."
@@ -253,4 +253,3 @@ ipfAccOutBytes OBJECT-TYPE
     ::= { ipfAccOutEntry 4 }
 
 END
-

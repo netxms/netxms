@@ -17,27 +17,27 @@
 CISCO-IETF-IP-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-        MODULE-IDENTITY, 
+        MODULE-IDENTITY,
         OBJECT-TYPE,
-        Integer32, 
+        Integer32,
         Unsigned32,
         Counter32
                 FROM SNMPv2-SMI
-        PhysAddress, 
-        TruthValue, 
-        TimeStamp, 
+        PhysAddress,
+        TruthValue,
+        TimeStamp,
         RowPointer,
         TEXTUAL-CONVENTION
                 FROM SNMPv2-TC
-        MODULE-COMPLIANCE, 
-        OBJECT-GROUP    
+        MODULE-COMPLIANCE,
+        OBJECT-GROUP
                 FROM SNMPv2-CONF
-        InetAddress, 
+        InetAddress,
         InetAddressType,
         InetAddressPrefixLength
                 FROM INET-ADDRESS-MIB
         InterfaceIndex,
-        InterfaceIndexOrZero, 
+        InterfaceIndexOrZero,
         ifIndex
                 FROM IF-MIB
         ciscoExperiment
@@ -215,7 +215,7 @@ cIpv6InterfaceIdentifier OBJECT-TYPE
             "The Interface Identifier for this interface that is (at
              least) unique on the link this interface is attached to.
              The Interface Identifier is combined with an address
-             prefix to form an interface address. 
+             prefix to form an interface address.
 
              By default, the Interface Identifier is autoconfigured
              according to the rules of the link type this interface is
@@ -541,7 +541,7 @@ cIpAddressStatus OBJECT-TYPE
 
 --
 -- the Internet Address Translation table
--- 
+--
 
 cInetNetToMediaTable OBJECT-TYPE
     SYNTAX     SEQUENCE OF CInetNetToMediaEntry
@@ -635,7 +635,7 @@ cInetNetToMediaType OBJECT-TYPE
              disassociates the interface identified with said entry
              from the mapping identified with said entry.  It is an
              implementation-specific matter as to whether the agent
-             removes an invalidated entry from the table. 
+             removes an invalidated entry from the table.
              Accordingly, management stations must be prepared to
              receive tabular information from agents that corresponds
              to entries not currently in use.  Proper interpretation
@@ -1040,7 +1040,7 @@ cInetIcmpMsgOutPkts OBJECT-TYPE
 ciscoIpMIBConformance OBJECT IDENTIFIER ::= { ciscoIetfIpMIB 2 }
 ciscoIpMIBCompliances OBJECT IDENTIFIER
     ::= { ciscoIpMIBConformance 1 }
-ciscoIpMIBGroups      OBJECT IDENTIFIER 
+ciscoIpMIBGroups      OBJECT IDENTIFIER
     ::= { ciscoIpMIBConformance 2 }
 
 --
@@ -1092,7 +1092,7 @@ ciscoIpAddressPfxGroup OBJECT-GROUP
 
 ciscoIpAddressGroup OBJECT-GROUP
     OBJECTS  { cIpAddressIfIndex, cIpAddressType,
-               cIpAddressPrefix, cIpAddressOrigin, 
+               cIpAddressPrefix, cIpAddressOrigin,
                cIpAddressStatus }
     STATUS   current
     DESCRIPTION

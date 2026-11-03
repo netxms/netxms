@@ -6,25 +6,25 @@
 --
 
 	WS-TYPE-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			Unsigned32			
+			Unsigned32
 				FROM SNMPv2-SMI
 		TEXTUAL-CONVENTION
 			FROM SNMPv2-TC;
-	
-	
+
+
 --
 -- Type definitions
 --
-	
+
 -- This datatype always means that the MIB variable is
--- a simple ENUM that when written to 'doActionRightNow', 
--- causes the described action to take place, (much like 
+-- a simple ENUM that when written to 'doActionRightNow',
+-- causes the described action to take place, (much like
 -- a button pressed in a UI).
--- 
+--
 -- Such a value does NOT remain in state 'doActionRightNow'
--- while the operation is in-process, but instead when read 
+-- while the operation is in-process, but instead when read
 -- always returns 'idleState'.
 		DoActionNow ::= INTEGER
 			{
@@ -36,11 +36,11 @@
 -- but when read, they return a 0-length string.
 		Password ::= OCTET STRING
 
--- In order to make the switch's implementation of 
+-- In order to make the switch's implementation of
 -- numerous tables simpler, tables using this datatype
 -- have a fixed number of entries with fixed indices.
--- In such tables, no entries may be added or deleted, 
--- but the pre-existing rows can be enabled or disabled 
+-- In such tables, no entries may be added or deleted,
+-- but the pre-existing rows can be enabled or disabled
 -- using the value declared with this datatype.
 		StaticRowEnable ::= INTEGER
 			{
@@ -51,29 +51,29 @@
 		PartsPer10k ::= Unsigned32 (0..10000)
 -- This datatype is used for all percentage values that have
 -- interesting tenths and hundreths, (such as 1.37%).  SNMP
--- cannot report decimals, only whole numbers.  Values of 
+-- cannot report decimals, only whole numbers.  Values of
 -- this datatype are expressed not as parts-per-100, (percent),
 -- but as parts-per-10000.
--- 
--- Said another way, values of this type are percent 
+--
+-- Said another way, values of this type are percent
 -- multiplied by 100.
--- 
+--
 -- For example, 1.37% would be reported as 137.
--- 
+--
 -- In order to make the switch's implementation of some
 -- dynamic tables simpler, tables using this datatype
 -- use an abbreviated form of RowStatus.
--- 
+--
 -- Only CreateAndGo and Destroy states are supported.
--- 
+--
 -- On row creation, a single SET-PDU must contain all
 -- the required values, including this value set to
 -- createAndGo.  (This greatly simplifies row validation
 -- for the switch).
--- 
+--
 -- Setting this value to Destroy causes the corresponding
 -- row to be deleted.
--- 
+--
 		AbbrevRowStatus ::= INTEGER
 			{
 			createAndGo(4),
@@ -81,17 +81,17 @@
 			}
 
 		ScaleBy100 ::= Unsigned32
--- This datatype is used for all values that have interesting 
--- tenths and hundreths, (such as 2.48).  SNMP cannot report 
--- decimals, only whole numbers.  Values of this datatype are 
+-- This datatype is used for all values that have interesting
+-- tenths and hundreths, (such as 2.48).  SNMP cannot report
+-- decimals, only whole numbers.  Values of this datatype are
 -- scaled (muliplied) by 100.
--- 
+--
 -- For example, 2.48 would be reported as 248.
 -- This datatype always means that the MIB variable is
--- a simple ENUM that when written to 'doActionRightNow', 
--- causes the described action to take place, (much like 
+-- a simple ENUM that when written to 'doActionRightNow',
+-- causes the described action to take place, (much like
 -- a button pressed in a UI).
--- 
+--
 -- Such a value DOES remain in state 'doActionRightNow'
 -- while the operation is in-process;  when the operation is
 -- completed, it will then return the value 'idleState'.
@@ -103,10 +103,10 @@
 
 -- Values of this type are keys, expressed in hexadecimal as
 -- a sequence of characters '0'..'9' plus 'A'..'F'.
--- 
+--
 -- Unless otherwise noted, the default value for variables of
 -- this type is all-0s.
--- 
+--
 -- Values of this type are passwords.  They can be written,
 -- but when read, they return a 0-length string.
 		HexPassword ::= OCTET STRING
@@ -137,8 +137,8 @@
 			radio802dot11FH(4)
 			}
 
---  
--- 
+--
+--
 		SinglePointer ::= INTEGER (0..255)
 
 		MultiPointer63 ::= BITS
@@ -1313,7 +1313,7 @@
 			referToEntry512(511)
 			}
 
-	
+
 	END
 
 --

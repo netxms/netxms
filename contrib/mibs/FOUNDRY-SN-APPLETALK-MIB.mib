@@ -1,7 +1,7 @@
 FOUNDRY-SN-APPLETALK-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-	MODULE-IDENTITY, OBJECT-TYPE,Counter32,Integer32 
+	MODULE-IDENTITY, OBJECT-TYPE,Counter32,Integer32
 		FROM SNMPv2-SMI
 	router
 		FROM FOUNDRY-SN-ROOT-MIB
@@ -28,11 +28,11 @@ snAppleTalk MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
-			operation, condition, or performance of the Specification.			
-			"        
+			operation, condition, or performance of the Specification.
+			"
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION
 			"convert from SMIv1 to SMIv2"
@@ -52,7 +52,7 @@ snAppleTalk MODULE-IDENTITY
 		OCTET STRING (SIZE (0..32))
 
 
--- SECTION 2: MIB 
+-- SECTION 2: MIB
 
 -- Router AppleTalk MIB
 -- This section contains AppleTalk specific router MIB object definitions.
@@ -494,7 +494,7 @@ snRtATPortArpAge               OBJECT-TYPE
 	STATUS  current
 	DESCRIPTION
 		"The time in minutes an ARP entry can
-		be valid without relearning. 
+		be valid without relearning.
 		0 - Don't age."
 	DEFVAL  { 10 }
 	::= { snRtATPortEntry 2 }

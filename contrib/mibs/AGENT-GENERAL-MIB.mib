@@ -93,7 +93,7 @@
 -- Version 2.02, 2007/06/11, Nic
 -- Description:
 --  [New Object]
--- 1. Add object agentBscFileSystemInterfaceName in agentBscFileSystemTable. 
+-- 1. Add object agentBscFileSystemInterfaceName in agentBscFileSystemTable.
 -- 2. Add object agentBscSwFileInterfaceName in agentBscSwFileTable.
 -- Notes: Requested by Nic for project DGS36xxR2
 --
@@ -148,9 +148,9 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 -- agentBasicInfo
 -- -----------------------------------------------------------------------------
     agentBasicInfo          OBJECT IDENTIFIER ::= { agentGeneralMgmt 1 }
-        
+
     agentMgmtProtocolCapability OBJECT-TYPE
-        SYNTAX  INTEGER {   
+        SYNTAX  INTEGER {
                     other(1),
                     snmp-ip(2),
                     snmp-ipx(3),
@@ -172,7 +172,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "A list of MIB capability entries supported by this agent."    
+            "A list of MIB capability entries supported by this agent."
         ::= { agentBasicInfo 2 }
 
     agentMibCapabilityEntry OBJECT-TYPE
@@ -185,7 +185,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         INDEX   { agentMibCapabilityIndex }
         ::= { agentMibCapabilityTable 1 }
 
-    AgentMibCapabilityEntry ::= 
+    AgentMibCapabilityEntry ::=
         SEQUENCE {
             agentMibCapabilityIndex
                 Integer32,
@@ -285,13 +285,13 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             "The status of the firmware download control. If the value is stated as 'other',
              the firmware has not been updated since the device was started."
-        ::= { agentBasicInfo 5 } 
- 
+        ::= { agentBasicInfo 5 }
+
 -- -----------------------------------------------------------------------------
 -- agentCPUutilizationTable
 -- -----------------------------------------------------------------------------
     agentCPUutilization          OBJECT IDENTIFIER ::= { agentBasicInfo 6 }
-    
+
 
     agentCPUutilizationIn5sec OBJECT-TYPE
         SYNTAX  Integer32
@@ -320,7 +320,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
             "The time scale is set at 5 minute intervals.
              The value will be between 0% (idle) and 100% (very busy)."
         ::= { agentCPUutilization 3 }
-        
+
    agentDualImageStatus OBJECT-TYPE
         SYNTAX  INTEGER {
                     not-supported(0) ,
@@ -330,8 +330,8 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         STATUS  current
         DESCRIPTION
             "The dual image status."
-        ::= { agentBasicInfo 7 }         
- 
+        ::= { agentBasicInfo 7 }
+
 -- -----------------------------------------------------------------------------
 -- agentPORTutilizationTable
 -- -----------------------------------------------------------------------------
@@ -548,11 +548,11 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             "A text string containing the serial number of this device."
         ::= { agentBasicInfo 12 }
-        
+
 -- -----------------------------------------------------------------------------
 -- agentBasicConfig
 -- -----------------------------------------------------------------------------
-    agentBasicConfig        OBJECT IDENTIFIER ::= { agentGeneralMgmt 2 }   
+    agentBasicConfig        OBJECT IDENTIFIER ::= { agentGeneralMgmt 2 }
 
     agentBscSwFileTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF AgentBscSwFileEntry
@@ -560,8 +560,8 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         STATUS  current
         DESCRIPTION
             "A list of MIB Basic Config entry support files updated by this agent."
-        ::= { agentBasicConfig 1 }    
-        
+        ::= { agentBasicConfig 1 }
+
     agentBscSwFileEntry OBJECT-TYPE
         SYNTAX  AgentBscSwFileEntry
         MAX-ACCESS  not-accessible
@@ -570,7 +570,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
             "A basic configuration entry containing objects that describe a particular MIB
              supported by this agent."
         INDEX   { agentBscSwFileIndex }
-        ::= { agentBscSwFileTable 1 }        
+        ::= { agentBscSwFileTable 1 }
 
     AgentBscSwFileEntry ::=
     	SEQUENCE {
@@ -623,7 +623,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 	     Note: For systems that do not support change of this object, setting a value for
 	     this object will cause the system to return bad-value error messages."
         ::= { agentBscSwFileEntry 2 }
-        
+
     agentBscSwFileAddr OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-write
@@ -632,7 +632,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
             "The IP address where the file that needs to be downloaded is located, or the IP address
             where the file will be uploaded to."
         ::= {  agentBscSwFileEntry 3 }
-            	
+
     agentBscSwFileTransferType OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -654,7 +654,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             "The name of the file to be downloaded from, or uploaded to, the TFTP server."
         ::= { agentBscSwFileEntry 5 }
-        
+
      agentBscSwFileLocateId OBJECT-TYPE
         SYNTAX  INTEGER (1..16)
         MAX-ACCESS  read-write
@@ -667,7 +667,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
              Note: For systems which do not support change of this object, setting a value for
              this object will cause the system to return bad-value error messages."
         ::= { agentBscSwFileEntry 6 }
-        
+
      agentBscSwFileLoadType OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -681,7 +681,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 		 Note: For systems which do not support a change of this object, setting a value to this object
 		 will cause the system to return bad-value error messages."
         ::= { agentBscSwFileEntry 7 }
-                                               
+
      agentBscSwFileCtrl OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -813,7 +813,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 -- 			 some of the selected items will be invalid. When the user selects an invalid entry,
 -- 			 the system will respond with a bad-value status."
 --                 ::= { agentBasicConfig 2 }
-				
+
     agentSystemReset OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -826,7 +826,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             "This object indicates the agent system reset state. Setting this
              object to no-reset(4) has no effect. Setting this object to
-             cold-start(2) will reset the agent. The agent 
+             cold-start(2) will reset the agent. The agent
              always returns no-reset(4) when this object is read."
         ::= { agentBasicConfig 3 }
 
@@ -895,7 +895,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             ""
         ::= { agentBasicConfig 7 }
-        
+
     swMultiImageInfoEntry OBJECT-TYPE
         SYNTAX  SwMultiImageInfoEntry
         MAX-ACCESS  not-accessible
@@ -904,8 +904,8 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
             "A list of information about multiple image management."
         INDEX  { swMultiImageInfoID }
         ::= { swMultiImageInfoTable 1 }
-      
-    SwMultiImageInfoEntry ::= 
+
+    SwMultiImageInfoEntry ::=
         SEQUENCE {
         	swMultiImageInfoID
         		INTEGER,
@@ -916,9 +916,9 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
             swMultiImageUpdateTime
                 DisplayString,
             swMultiImageFrom
-                DisplayString,               
+                DisplayString,
             swMultiImageSendUser
-                DisplayString                                                 
+                DisplayString
         }
     swMultiImageInfoID OBJECT-TYPE
         SYNTAX  INTEGER
@@ -928,7 +928,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
             "The stacking section ID of the firmware image.
              The stacking section ID = 256 * Unit ID + Image File ID."
         ::= { swMultiImageInfoEntry 1 }
-             
+
     swMultiImageVersion OBJECT-TYPE
         SYNTAX  DisplayString  (SIZE (0..32))
         MAX-ACCESS  read-only
@@ -936,7 +936,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             "The recorded downloaded firmware version."
         ::= { swMultiImageInfoEntry 2 }
-        
+
     swMultiImageSize OBJECT-TYPE
         SYNTAX  Integer32
         MAX-ACCESS  read-only
@@ -1135,11 +1135,11 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 -- -----------------------------------------------------------------------------
 -- Add common severity control management
 -- -----------------------------------------------------------------------------
-      
---   systemSeverityControlMgmt	OBJECT IDENTIFIER ::= { agentBasicConfig 9 }  	
+
+--   systemSeverityControlMgmt	OBJECT IDENTIFIER ::= { agentBasicConfig 9 }
 --
 --    systemSeverityTrapControl OBJECT-TYPE
---        SYNTAX  AgentNotifyLevel 
+--        SYNTAX  AgentNotifyLevel
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
@@ -1148,10 +1148,10 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --              are higher than the system severity control level, the trap works as defined. If the event
 --              severity is lower than the system severity control level, the event is ignored as if it
 --              did not occur."
---        ::= { systemSeverityControlMgmt 1 }                
---        
+--        ::= { systemSeverityControlMgmt 1 }
+--
 --    systemSeverityLogControl OBJECT-TYPE
---        SYNTAX  AgentNotifyLevel 
+--        SYNTAX  AgentNotifyLevel
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
@@ -1160,12 +1160,12 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --              higher than the system severity control level, the trap works as defined. If the event
 --              severity is lower than the system severity control level, the event is ignored as if
 --              it did not occur."
---        ::= { systemSeverityControlMgmt 2 }   
+--        ::= { systemSeverityControlMgmt 2 }
 
 -- -----------------------------------------------------------------------------
 -- agentTrustedHostMgmt
 -- -----------------------------------------------------------------------------
-    
+
     agentTrustedHostMgmt       OBJECT IDENTIFIER ::= { agentBasicConfig 10 }
 
     agentTrustedHostTable OBJECT-TYPE
@@ -1204,7 +1204,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --             agentTrustedHostForHTTP
 --                 INTEGER,
 --             agentTrustedHostForHTTPS
---                 INTEGER                
+--                 INTEGER
         }
 
     agentTrustedHostIndex OBJECT-TYPE
@@ -1239,7 +1239,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             "Specifies the IP subnet mask of the trusted host."
         ::= { agentTrustedHostEntry 4 }
-        
+
 --     agentTrustedHostForSNMP OBJECT-TYPE
 --         SYNTAX  INTEGER {
 --                     enabled(1),
@@ -1291,9 +1291,9 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --                 }
 --         MAX-ACCESS  read-create
 --         STATUS      current
---         DESCRIPTION 
+--         DESCRIPTION
 --             "Specifies the trusted host for HTTPS."
---         ::= { agentTrustedHostEntry 9 }        
+--         ::= { agentTrustedHostEntry 9 }
 -- -----------------------------------------------------------------------------
 -- agentTrustedHostDelAllState
 -- -----------------------------------------------------------------------------
@@ -1307,7 +1307,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             "Used to delete all trusted host entries."
         ::= { agentTrustedHostMgmt 2 }
-      
+
 -- -----------------------------------------------------------------------------
 -- agentFDBMgmt
 -- -----------------------------------------------------------------------------
@@ -2068,7 +2068,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --         MAX-ACCESS      read-only
 --         STATUS  current
 --         DESCRIPTION
---                 "The table index for the file entry. This object describes the file type 
+--                 "The table index for the file entry. This object describes the file type
 --                  runtime-code (1),
 --                  log-file (2),
 --                  cfg-file (3)"
@@ -2194,7 +2194,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 -- -----------------------------------------------------------------------------
 
 --     agentOutOfBandMgmt     OBJECT IDENTIFIER ::= { agentBasicConfig 23 }
---     
+--
 --     agentOutOfBandMgmtState OBJECT-TYPE
 --         SYNTAX  INTEGER {
 --                     enabled(1),
@@ -2247,7 +2247,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 -- -----------------------------------------------------------------------------
 
 --     agentInBandMgmt              OBJECT IDENTIFIER ::= { agentBasicConfig 24 }
---     
+--
 --     agentInBandMgmtSetDefPriority OBJECT-TYPE
 --         SYNTAX  INTEGER  {
 --                     other(1),
@@ -2286,7 +2286,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             "The IP address of the TFTP Server."
         ::= {  agentIpProtoConfig 2 }
-	
+
     agentIpGetIpFrom OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -2299,7 +2299,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         DESCRIPTION
             "This object indicates if the agent gets its system IP address
              from Bootp/DHCP server at start up."
-        ::= { agentIpProtoConfig 3 }	
+        ::= { agentIpProtoConfig 3 }
 
     agentIpAutoconfigTimeout OBJECT-TYPE
         SYNTAX  Integer32
@@ -2317,7 +2317,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 -- -----------------------------------------------------------------------------
 
 --	agentIpTrapManager	OBJECT IDENTIFIER ::= { agentGeneralMgmt 4 }
-	
+
 --    agentIpTrapManagerTable OBJECT-TYPE-
 --        SYNTAX  SEQUENCE OF AgentIpTrapManagerEntry
 --        MAX-ACCESS  not-accessible
@@ -2353,7 +2353,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --        INDEX   { agentTrapManagerIndex }
 --        ::= { agentTrapManagerTable 1 }
 --
---    AgentTrapManagerEntry ::= 
+--    AgentTrapManagerEntry ::=
 --        SEQUENCE {
 --				    agentTrapManagerIndex
 --				        INTEGER,
@@ -2374,7 +2374,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --	    DESCRIPTION
 --	        "A value that uniquely identifies this trapDestEntry."
 --	    ::= { agentTrapManagerEntry 1 }
---    
+--
 --    agentTrapManagerIpAddr OBJECT-TYPE
 --        SYNTAX  IpAddress
 --        MAX-ACCESS  read-write
@@ -2391,7 +2391,7 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --            "The community string used to encode SNMP trap packet to be sent to the trap
 --             manager."
 --        ::= { agentTrapManagerEntry 3 }
---        
+--
 --    agentTrapManagerMsgVer OBJECT-TYPE
 --        SYNTAX  INTEGER {
 --                    snmpAgentVersionDependent(1),
@@ -2403,12 +2403,12 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --        DESCRIPTION
 --            "This object indicates the version of trap packets to be sent to
 --             this trap manager. the default setting is SNMPAgentVersionDependent .
---             
+--
 --			 Note:
---			 Because these funiction will be limited by the system support. Some of the 
---			 select item will invalid. When one of the item user select,it will response with 
+--			 Because these funiction will be limited by the system support. Some of the
+--			 select item will invalid. When one of the item user select,it will response with
 --			 bad-value status.	             "
---        ::= { agentTrapManagerEntry 4 }               
+--        ::= { agentTrapManagerEntry 4 }
 --
 --    agentTrapManagerStatus OBJECT-TYPE
 --        SYNTAX  INTEGER {
@@ -2421,26 +2421,26 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 --        DESCRIPTION
 --            "This object indicates whether or not the trap should be sent to
 --             this trap manager."
---        ::= { agentTrapManagerEntry 5 }	          
---        
+--        ::= { agentTrapManagerEntry 5 }
+--
 --
 -- -----------------------------------------------------------------------------
 -- Add for Slip_Console mode swtich 11-9-2001 WindChen
 -- -----------------------------------------------------------------------------
       agentConsoleModeManager OBJECT IDENTIFIER ::= { agentGeneralMgmt 5 }
-	
-	
+
+
     agentConsoleModeManagerDataBits OBJECT-TYPE
         SYNTAX  INTEGER {
         		other(1),
         		bits-7(2),
         		bits-8(3)
-        	}        
-        MAX-ACCESS  read-only     
+        	}
+        MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
             "The DataBits for console mode, If the agentRs232PortConfig change to console mode
-            then the device will use this group to make a setup for console value and 
+            then the device will use this group to make a setup for console value and
             agentSlipModeManager group will deactive automatically. "
         ::= { agentConsoleModeManager 1 }
 
@@ -2449,8 +2449,8 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         		other(1),
         		stopbits-1(2),
         		stopbits-2(3)
-        	}        
-        MAX-ACCESS  read-only     
+        	}
+        MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
             "The Stop Bits for console mode "
@@ -2461,15 +2461,15 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         		none(1),
         		odd(2),
         		even(3)
-        	}        
-        MAX-ACCESS  read-only     
+        	}
+        MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
             "The Parity for console mode, If the agentRs232PortConfig change to console mode
-            then the device will use this group to make a setup for console value and  
+            then the device will use this group to make a setup for console value and
             agentSlipModeManager group will deactive automatically. "
         ::= { agentConsoleModeManager 3 }
-        
+
     agentConsoleModeManagerBaudRate OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -2479,20 +2479,20 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
                     baudRate-38400(5),
                     baudRate-57200(6),
                     baudRate-115200(7)
-                    
+
                 }
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
             "The transmit rate for console mode.
-            
+
 			 Note:
-			 Because these funiction will be limited by the system support. Some of the 
-			 select item will invalid. When one of the item user select,it will response with 
-			 bad-value status.	            
+			 Because these funiction will be limited by the system support. Some of the
+			 select item will invalid. When one of the item user select,it will response with
+			 bad-value status.
             "
         ::= { agentConsoleModeManager 4 }
-	
+
 	agentConsoleModeManagerLogoutTime OBJECT-TYPE
         SYNTAX  INTEGER {
         		never(1),
@@ -2500,13 +2500,13 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
         		five-minutes(3),
 				ten-minutes(4),
 				fifteen-minutes(5)
-        	}        
-        MAX-ACCESS  read-write     
+        	}
+        MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
             "The time period of auto logout."
         ::= { agentConsoleModeManager 5 }
-        
+
 -- -----------------------------------------------------------------------------
 -- Slip Mode Manager
 -- -----------------------------------------------------------------------------
@@ -2516,27 +2516,27 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 -- -----------------------------------------------------------------------------
 -- Add common trap management
 -- -----------------------------------------------------------------------------
-     
-        
-	agentNotify	OBJECT IDENTIFIER ::= { agentGeneralMgmt 7 }  
-	  
-	  
-	  
-	agentNotifMgmt      OBJECT IDENTIFIER ::= { agentNotify 1 }  
-	agentNotifFirmware   OBJECT IDENTIFIER ::= { agentNotify 2 }  
-	
-	
-	
-	agentNotifyPrefix OBJECT IDENTIFIER ::= { agentNotifFirmware 0 }  
 
-	
+
+	agentNotify	OBJECT IDENTIFIER ::= { agentGeneralMgmt 7 }
+
+
+
+	agentNotifMgmt      OBJECT IDENTIFIER ::= { agentNotify 1 }
+	agentNotifFirmware   OBJECT IDENTIFIER ::= { agentNotify 2 }
+
+
+
+	agentNotifyPrefix OBJECT IDENTIFIER ::= { agentNotifFirmware 0 }
+
+
 
 -- -----------------------------------------------------------------------------
 -- agentNotifMgmt
 -- -----------------------------------------------------------------------------
 
  systemSeverityControl OBJECT-TYPE
-     SYNTAX  AgentNotifyLevel 
+     SYNTAX  AgentNotifyLevel
      MAX-ACCESS  read-write
      STATUS  current
      DESCRIPTION
@@ -2547,8 +2547,8 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 	"
      ::= { agentNotifMgmt 1 }
 
-	notifFirmwareMgmt OBJECT IDENTIFIER ::= { agentNotifMgmt 2 }  
-     
+	notifFirmwareMgmt OBJECT IDENTIFIER ::= { agentNotifMgmt 2 }
+
 
 
 
@@ -2559,45 +2559,45 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 -- -----------------------------------------------------------------------------
 -- agentNotifFirmware
 -- -----------------------------------------------------------------------------
-	
+
    agentsystemRestart NOTIFICATION-TYPE
        OBJECTS {
              trapInfosystemRestart
        		}
-       STATUS  current        		
+       STATUS  current
        DESCRIPTION
            "This trap contains reboot information."
 
-		::= { agentNotifyPrefix 1 }          
-       
-		
+		::= { agentNotifyPrefix 1 }
+
+
    agentSaveToNVRAM NOTIFICATION-TYPE
        OBJECTS         { unitID
-                       }        
+                       }
        STATUS  current
        DESCRIPTION
            "This trap is sent whenever save all device configuration to NV-RAM has been processed."
-            
-       ::= { agentNotifyPrefix 2 }    
-       
+
+       ::= { agentNotifyPrefix 2 }
+
    agentFileTransferStatusChange NOTIFICATION-TYPE
-       OBJECTS         { 
+       OBJECTS         {
        					unitID,
                          agentStatusFileTransfer
                        }
        STATUS          current
        DESCRIPTION     "File transfer status change notification."
-       ::= { agentNotifyPrefix 3 }	
-       
+       ::= { agentNotifyPrefix 3 }
+
    agentSetToFactoryDefault NOTIFICATION-TYPE
        OBJECTS         { unitID
-                       }        
+                       }
        STATUS  current
        DESCRIPTION
            "This trap is sent whenever the 'set to factory default' setting has been processed. "
-            
-       ::= { agentNotifyPrefix 4 }           
-       
+
+       ::= { agentNotifyPrefix 4 }
+
     agentGratuitousARPTrap  NOTIFICATION-TYPE
         OBJECTS   {
 
@@ -2618,18 +2618,18 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
 -- -----------------------------------------------------------------------------
 -- notificationBidings
 -- -----------------------------------------------------------------------------
-	 
+
    notificationBidings OBJECT IDENTIFIER ::= { agentNotifFirmware 1 }
-                
+
    unitID OBJECT-TYPE
        SYNTAX     INTEGER
        MAX-ACCESS accessible-for-notify
        STATUS     current
        DESCRIPTION
            "The unit ID of the device which triggered the event."
-       ::= { notificationBidings 1 }                          
-       
-          	        
+       ::= { notificationBidings 1 }
+
+
    trapInfosystemRestart   OBJECT-TYPE
        SYNTAX  DisplayString (SIZE (0..64))
        MAX-ACCESS  read-only
@@ -2637,8 +2637,8 @@ UnitList                ::= OCTET STRING(SIZE (0..3))
        DESCRIPTION
            "This object indicates the last time the device rebooted.
            "
-       ::= { notificationBidings 2 }         
-	 
+       ::= { notificationBidings 2 }
+
     agentGratuitousARPIpAddr       OBJECT-TYPE
        SYNTAX      IpAddress
        MAX-ACCESS  accessible-for-notify

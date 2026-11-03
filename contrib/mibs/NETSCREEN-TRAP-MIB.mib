@@ -19,7 +19,7 @@ netscreenTrapMibModule MODULE-IDENTITY
     CONTACT-INFO
         "Customer Support
 
-         1194 North Mathilda Avenue 
+         1194 North Mathilda Avenue
          Sunnyvale, California 94089-1206
          USA
 
@@ -27,7 +27,7 @@ netscreenTrapMibModule MODULE-IDENTITY
          E-mail: customerservice@juniper.net
          HTTP://www.juniper.net"
     DESCRIPTION
-        "Added 4 new trap types - ipv6 ip conflicts(101), dip util raise(102) and clear(103), 
+        "Added 4 new trap types - ipv6 ip conflicts(101), dip util raise(102) and clear(103),
          ids-icmp-ping-id-zero(441)."
     REVISION      "200503030000Z" -- March 03, 2005
     DESCRIPTION
@@ -213,21 +213,21 @@ netscreenTrapType OBJECT-TYPE
         -- VPN replay detected
         vpn-replay-attack(42),
         -- VPN tunnel removed
-        vpn-l2tp-tunnel-remove(43),    
-        -- VPN tunnel removed and error detected 
-        vpn-l2tp-tunnel-remove-err(44), 
+        vpn-l2tp-tunnel-remove(43),
+        -- VPN tunnel removed and error detected
+        vpn-l2tp-tunnel-remove-err(44),
         -- VPN call removed
-        vpn-l2tp-call-remove(45), 
+        vpn-l2tp-call-remove(45),
         -- VPN call removed and error detected
-        vpn-l2tp-call-remove-err(46),   
+        vpn-l2tp-call-remove-err(46),
         -- Number of IAS exceeds configured maximum
    		vpn-ias-too-many(47),
         -- Number of IAS crossed configured upper threshold
-		vpn-ias-over-threshold(48),	
+		vpn-ias-over-threshold(48),
         -- Number of IAS crossed configured lower threshold
-		vpn-ias-under-threshold(49),	
+		vpn-ias-under-threshold(49),
         -- IKE error occured for the IAS session
-		vpn-ias-ike-error(50),	
+		vpn-ias-ike-error(50),
         -- allocated session exceed threshold
         allocated-session-threshold(51),
         -- NSRP rto self unit status change from up to down
@@ -285,21 +285,21 @@ netscreenTrapType OBJECT-TYPE
         device-connect-dc(89),
         -- NetScreen device dis-connected from Global PRO
         device-disconnect-dc(90),
-        -- No ppp IP pool configured 
-        ppp-no-ip-cfg(95),   
+        -- No ppp IP pool configured
+        ppp-no-ip-cfg(95),
         -- IP pool exhausted. No ip to assign
-        ppp-no-ip-in-pool(96), 
-        -- Interface IPv6 address conflict 
-       	ipv6-conflict(101),			
+        ppp-no-ip-in-pool(96),
+        -- Interface IPv6 address conflict
+       	ipv6-conflict(101),
         -- DIP utilization reaches raised threshold limit
-		dip-util-raise(102),		
+		dip-util-raise(102),
         -- DIP utilization reaches clear threshold limit
-		dip-util-clear(103),	
-	-- Errors in route module (exceed limit, malloc failure, add-perfix failure etc) 
+		dip-util-clear(103),
+	-- Errors in route module (exceed limit, malloc failure, add-perfix failure etc)
 	route-alarm(205),
-	-- LSA/Hello packets flood in OSPF, route redistribution exceed limit, 
+	-- LSA/Hello packets flood in OSPF, route redistribution exceed limit,
 	osfp-flood(206),
-	-- Update packet floods in RIP 
+	-- Update packet floods in RIP
 	rip-flood(207),
 	-- Peer forms adjacency completely
 	bgp-established(208),
@@ -394,7 +394,7 @@ netscreenTrapType OBJECT-TYPE
         -- ip fragment
         ids-ip-block-frag(440),
         -- icmp ping id 0
-        ids-icmp-ping-id-zero(441),    
+        ids-icmp-ping-id-zero(441),
         -- link state change
         link-statechange(1000)
     }
@@ -414,5 +414,3 @@ netscreenTrapDesc OBJECT-TYPE
     ::= { netscreenTrapInfo 3 }
 
 END
-
-

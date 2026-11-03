@@ -12,12 +12,12 @@
 -- Description:
 --  [New Object]
 --  [Modification]
--- Notes: (Requested by who and which project)    
---  
+-- Notes: (Requested by who and which project)
+--
 -- Version 1.14, 2010/03/01, Jessy Ji
 -- [New Object]
---   Add swLoopDetectLogState to control the LBD log state.  
--- Request by Jessy Ji for project DGS3120.	
+--   Add swLoopDetectLogState to control the LBD log state.
+-- Request by Jessy Ji for project DGS3120.
 --
 -- Version 1.13, 2008/10/06, Green Zhu
 -- [Modification]
@@ -25,7 +25,7 @@
 --
 -- Version 1.12, 2008/9/26, Green Zhu
 -- [Modification]
---   Rename all trap objects. 
+--   Rename all trap objects.
 --
 -- Version 1.11, 2008/9/16, Wesley Wang
 -- Request By Wesley Wang for project DGS3400
@@ -119,8 +119,8 @@
         STATUS      current
         DESCRIPTION
             "This object indicates the loopback detection trap mode for the system."
-        ::= { swLoopDetectCtrl 5 } 
-         
+        ::= { swLoopDetectCtrl 5 }
+
     swLoopDetectLogState OBJECT-TYPE
         SYNTAX      INTEGER {
                        enabled(1),
@@ -132,7 +132,7 @@
             "This object indicates the LBD log state."
 		DEFVAL {enabled}
         ::= { swLoopDetectCtrl 6 }
-        
+
 -- ----------------------------------------------------------------------------
     swLoopDetectPortTable OBJECT-TYPE
         SYNTAX      SEQUENCE OF SwLoopDetectPortEntry

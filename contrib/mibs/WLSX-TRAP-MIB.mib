@@ -104,8 +104,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object is used in the traps to indicate 
+			"
+            This object is used in the traps to indicate
             the wired MAC address of an access point, for which the trap is being raised.
         			"
 	::= {wlsxTrapObjectsGroup 1 }
@@ -115,8 +115,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object is used in the traps to indicate 
+			"
+            This object is used in the traps to indicate
             the IP address of an access point, for which the trap is being raised.
         			"
 	::= {wlsxTrapObjectsGroup 2 }
@@ -126,7 +126,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the BSSID of the
             access point, for which the trap is being raised.
         			"
@@ -137,7 +137,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the SSID of the
           access point, for which the trap is being raised.
         			"
@@ -148,7 +148,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the BSSID of the
             access point, for which we are raising the trap. If an
             Air Monitor is sending the trap then this will indicate
@@ -162,7 +162,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the SSID of the
           access point, for which the trap is being raised. If an
           Air Monitor is sending the trap then this will indicate
@@ -176,7 +176,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the channel of the
           access point, for which the trap is being raised. If an
           air monitor is sending the trap then this will indicate
@@ -190,7 +190,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           a node.
         			"
@@ -201,7 +201,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           the source.
         			"
@@ -212,7 +212,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           the receiver.
         			"
@@ -223,7 +223,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           the transmitter.
         			"
@@ -234,7 +234,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           the receiver.
         			"
@@ -245,7 +245,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Signal to Noise
           ratio.
         			"
@@ -256,7 +256,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Signature Name.
         			"
 	::= {wlsxTrapObjectsGroup 14 }
@@ -266,7 +266,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Frame Type
         			"
 	::= {wlsxTrapObjectsGroup 15 }
@@ -276,7 +276,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Address type.
         			"
 	::= {wlsxTrapObjectsGroup 16 }
@@ -286,7 +286,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Location of the AP.
         			"
 	::= {wlsxTrapObjectsGroup 17 }
@@ -296,7 +296,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Current Channel.
         			"
 	::= {wlsxTrapObjectsGroup 18 }
@@ -306,7 +306,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the AP Transmit Power.
         			"
 	::= {wlsxTrapObjectsGroup 19 }
@@ -316,7 +316,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the MAC address
         			"
 	::= {wlsxTrapObjectsGroup 20 }
@@ -326,7 +326,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the IP address
         			"
 	::= {wlsxTrapObjectsGroup 21 }
@@ -336,7 +336,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used to point to the WEBUI Rogue AP information URL.
         			"
 	::= {wlsxTrapObjectsGroup 22 }
@@ -346,7 +346,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the VLAN Id.
         			"
 	::= {wlsxTrapObjectsGroup 23 }
@@ -356,7 +356,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the admin status of
             VLAN.
         			"
@@ -367,7 +367,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the admin status of
             VLAN.
         			"
@@ -378,7 +378,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Authentication Server used for Authentication.
         			"
@@ -389,7 +389,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Authentication Server Timeout.
         			"
@@ -400,7 +400,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
            Slot in which this card is present.
         			"
@@ -411,7 +411,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Temperature Value.
         			"
@@ -422,7 +422,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Process name.
         			"
@@ -433,7 +433,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Fan Number.
         			"
@@ -444,7 +444,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             type of Voltage.
         			"
@@ -455,7 +455,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             voltage value in Float.
         			"
@@ -466,7 +466,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             The Reason for which a station is black listed.
             **NOTE: this trap is obsoleted and replaced by
             wlsxTrapStationDenyListReason
@@ -478,7 +478,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify a spoofed IP address.
         			"
 	::= {wlsxTrapObjectsGroup 35 }
@@ -488,7 +488,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify an old MAC address.
         			"
 	::= {wlsxTrapObjectsGroup 36 }
@@ -498,7 +498,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify a New MAC address.
         			"
 	::= {wlsxTrapObjectsGroup 37 }
@@ -508,7 +508,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify name of the database.
         			"
 	::= {wlsxTrapObjectsGroup 38 }
@@ -518,7 +518,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify name of the database user.
         			"
 	::= {wlsxTrapObjectsGroup 39 }
@@ -528,8 +528,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object is used in a trap to identify the IpAddress of the 
+			"
+            This object is used in a trap to identify the IpAddress of the
             Database.
         			"
 	::= {wlsxTrapObjectsGroup 40 }
@@ -539,7 +539,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify the port of the user.
         			"
 	::= {wlsxTrapObjectsGroup 41 }
@@ -549,7 +549,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object contains the Virtual Router Identifier.
         			"
 	::= {wlsxTrapObjectsGroup 42 }
@@ -559,7 +559,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object contains the Master IP address.
         			"
 	::= {wlsxTrapObjectsGroup 43 }
@@ -569,7 +569,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the VRRP Operational state.
         			"
 	::= {wlsxTrapObjectsGroup 44 }
@@ -579,7 +579,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the External Services Interface (ESI) Server
             Group name
         			"
@@ -590,7 +590,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the External Services Interface (ESI) Server
             Name
         			"
@@ -601,7 +601,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the External Services Interface (ESI) Server
             IP address
         			"
@@ -612,8 +612,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents number of the days remaining prior to a 
+			"
+            This object represents number of the days remaining prior to a
             license expiry.
         			"
 	::= {wlsxTrapObjectsGroup 48 }
@@ -623,8 +623,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents the controller IP address. 
+			"
+            This object represents the controller IP address.
         			"
 	::= {wlsxTrapObjectsGroup 49 }
 
@@ -633,8 +633,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents the Role of the controller. 
+			"
+            This object represents the Role of the controller.
         			"
 	::= {wlsxTrapObjectsGroup 50 }
 
@@ -643,7 +643,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents IP address of the User.
         			"
 	::= {wlsxTrapObjectsGroup 51 }
@@ -653,7 +653,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents MAC address of the User.
         			"
 	::= {wlsxTrapObjectsGroup 52 }
@@ -663,7 +663,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the user name.
         			"
 	::= {wlsxTrapObjectsGroup 53 }
@@ -673,7 +673,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Authentication method of the user.
         			"
 	::= {wlsxTrapObjectsGroup 54 }
@@ -683,7 +683,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Authentication method of the user.
         			"
 	::= {wlsxTrapObjectsGroup 55 }
@@ -693,7 +693,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the radio number.
         			"
 	::= {wlsxTrapObjectsGroup 56 }
@@ -703,8 +703,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-			This object is used to point to the WEBGUI Rogue AP information 
+			"
+			This object is used to point to the WEBGUI Rogue AP information
 			URL.
         			"
 	::= {wlsxTrapObjectsGroup 57 }
@@ -714,8 +714,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-			This object is used to point to the WEBGUI Rogue interfering 
+			"
+			This object is used to point to the WEBGUI Rogue interfering
 			AP information URL.
         			"
 	::= {wlsxTrapObjectsGroup 58 }
@@ -725,7 +725,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
            port number.
         			"
@@ -736,7 +736,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in all the enterprise traps to indicate the
            the time when the trap is generated on the controller.
         			"
@@ -747,8 +747,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents the Trap host. 
+			"
+            This object represents the Trap host.
         			"
 	::= {wlsxTrapObjectsGroup 61 }
 
@@ -757,8 +757,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents the Trap host port. 
+			"
+            This object represents the Trap host port.
         			"
 	::= {wlsxTrapObjectsGroup 62 }
 
@@ -767,7 +767,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the ID of the configuration, to be used in traps.
         			"
 	::= {wlsxTrapObjectsGroup 63 }
@@ -777,7 +777,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the URL from which the transfer should happen.
         			"
 	::= {wlsxTrapObjectsGroup 64 }
@@ -787,7 +787,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents  the transfer type, upload or download.
         			"
 	::= {wlsxTrapObjectsGroup 65 }
@@ -797,7 +797,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents state of the configuration transfer.
         			"
 	::= {wlsxTrapObjectsGroup 66 }
@@ -807,7 +807,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the reason for the update failure.
         			"
 	::= {wlsxTrapObjectsGroup 67 }
@@ -817,7 +817,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This variable represents the AMAPI object which is the reason for the the update failure.
         			"
 	::= {wlsxTrapObjectsGroup 68 }
@@ -827,8 +827,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents type of the configuration change. 
+			"
+            This object represents type of the configuration change.
         			"
 	::= {wlsxTrapObjectsGroup 69 }
 
@@ -837,7 +837,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This variable represents the AMAPI object corresponding to the global configuration change.
         			"
 	::= {wlsxTrapObjectsGroup 70 }
@@ -847,7 +847,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents generation number of a table. Used in the MMS, to keep track of the table content changes.
         			"
 	::= {wlsxTrapObjectsGroup 71 }
@@ -857,7 +857,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the license ID.
         			"
 	::= {wlsxTrapObjectsGroup 72 }
@@ -867,7 +867,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the Confidence Level as a percentage
         			"
 	::= {wlsxTrapObjectsGroup 73 }
@@ -877,7 +877,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This variable indicates any licenses that are not present during a configuration update
         			"
 	::= {wlsxTrapObjectsGroup 74 }
@@ -887,7 +887,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents  the number of CDRs in buffer.
         			"
 	::= {wlsxTrapObjectsGroup 75 }
@@ -897,7 +897,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the tunnel ID.
         			"
 	::= {wlsxTrapObjectsGroup 76 }
@@ -907,7 +907,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the tunnel Status.
         			"
 	::= {wlsxTrapObjectsGroup 77 }
@@ -917,7 +917,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the tunnel up reason.
         			"
 	::= {wlsxTrapObjectsGroup 78 }
@@ -927,7 +927,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the tunnel down reason.
         			"
 	::= {wlsxTrapObjectsGroup 79 }
@@ -937,7 +937,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object represents the AP Serial Number.
         			"
 	::= {wlsxTrapObjectsGroup 80 }
@@ -947,7 +947,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object represents the Time in String format.
         			"
 	::= {wlsxTrapObjectsGroup 81 }
@@ -957,8 +957,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
-            This object represents the master IP address. 
+			"
+            This object represents the master IP address.
         			"
 	::= {wlsxTrapObjectsGroup 82 }
 
@@ -967,7 +967,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             This object represents the Local IP address.
         			"
 	::= {wlsxTrapObjectsGroup 83 }
@@ -977,7 +977,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             This object represents the master controller name.
         			"
 	::= {wlsxTrapObjectsGroup 84 }
@@ -987,7 +987,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             This object represents the local controller name.
         			"
 	::= {wlsxTrapObjectsGroup 85 }
@@ -997,7 +997,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the IP address of the AP's primary controller.
         			"
 	::= {wlsxTrapObjectsGroup 86 }
@@ -1007,7 +1007,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the IP address of the AP's backup controller.
         			"
 	::= {wlsxTrapObjectsGroup 87 }
@@ -1017,7 +1017,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Spoofed Frame Type
         			"
 	::= {wlsxTrapObjectsGroup 88 }
@@ -1027,7 +1027,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the type of association
         			"
 	::= {wlsxTrapObjectsGroup 89 }
@@ -1037,7 +1037,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the IP address of a device seen by an AP.
         			"
 	::= {wlsxTrapObjectsGroup 90 }
@@ -1047,7 +1047,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object represents the MAC address of a device seen by an AP.
         			"
 	::= {wlsxTrapObjectsGroup 91 }
@@ -1057,7 +1057,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Ip Address of a Voice client.
         			"
 	::= {wlsxTrapObjectsGroup 92 }
@@ -1067,7 +1067,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the MAC address of a Voice client.
         			"
 	::= {wlsxTrapObjectsGroup 93 }
@@ -1077,7 +1077,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Name of the AP.
         			"
 	::= {wlsxTrapObjectsGroup 94 }
@@ -1087,7 +1087,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the AP Mode.
         			"
 	::= {wlsxTrapObjectsGroup 95 }
@@ -1097,7 +1097,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Previous Channel.
         			"
 	::= {wlsxTrapObjectsGroup 96 }
@@ -1107,7 +1107,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Previous Secondary Channel.
         			"
 	::= {wlsxTrapObjectsGroup 97 }
@@ -1117,7 +1117,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate previous AP Transmit Power.
         			"
 	::= {wlsxTrapObjectsGroup 98 }
@@ -1127,7 +1127,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the APs Current Mode.
         			"
 	::= {wlsxTrapObjectsGroup 99 }
@@ -1137,7 +1137,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the APs Previous Mode.
         			"
 	::= {wlsxTrapObjectsGroup 100 }
@@ -1147,7 +1147,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the APs Previous Mode.
         			"
 	::= {wlsxTrapObjectsGroup 101 }
@@ -1157,7 +1157,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Current Secondary Channel.
         			"
 	::= {wlsxTrapObjectsGroup 102 }
@@ -1167,8 +1167,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents type of the configuration change. 
+			"
+            This object represents type of the configuration change.
         			"
 	::= {wlsxTrapObjectsGroup 103 }
 
@@ -1177,7 +1177,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             IP address of the controller to which the AP is
             (or was most recently) registered.
         			"
@@ -1188,7 +1188,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             Status of the AP as seen by the master when the status changes.
             **NOTE: this object is obsoleted and replaced by
             wlsxTrapApConductorStatus
@@ -1200,7 +1200,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the name of the trustpoint.
         			"
 	::= {wlsxTrapObjectsGroup 106 }
@@ -1210,7 +1210,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the name of the crl.
         			"
 	::= {wlsxTrapObjectsGroup 107 }
@@ -1220,7 +1220,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the number of occurrence of this trap.
         			"
 	::= {wlsxTrapObjectsGroup 108 }
@@ -1230,7 +1230,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the power supply number.
         			"
 	::= {wlsxTrapObjectsGroup 109 }
@@ -1240,7 +1240,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Fan Tray number.
         			"
 	::= {wlsxTrapObjectsGroup 110 }
@@ -1250,7 +1250,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the classification of the client.
         			"
 	::= {wlsxTrapObjectsGroup 111 }
@@ -1260,7 +1260,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object represents the Threshold alert's Resource Type .
         			"
 	::= {wlsxTrapObjectsGroup 112 }
@@ -1270,7 +1270,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object represents the Threshold alert's Resource Name .
         			"
 	::= {wlsxTrapObjectsGroup 113 }
@@ -1280,7 +1280,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Threshold alert's set threshold value.
         			"
 	::= {wlsxTrapObjectsGroup 114 }
@@ -1290,7 +1290,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Threshold alert's actual value.
         			"
 	::= {wlsxTrapObjectsGroup 115 }
@@ -1300,7 +1300,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the slot number of this stack element prior
             to topology change in stack. A value of -1 indicates that this slot
             was not in Active state of stack prior to topology change.
@@ -1312,7 +1312,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the slot number of this stack element after
             the topology change in stack. A value of -1 indicates that this slot
             is not in Active state of stack after the topology change.
@@ -1324,7 +1324,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the state of this stack element prior to
             topology change in stack.
         			"
@@ -1335,7 +1335,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the state of this stack element
             after topology change in stack.
         			"
@@ -1346,7 +1346,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the event which caused change in topology in
             stack.
         			"
@@ -1357,7 +1357,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies whether an interface has joined the stacking
             topology or left the topology.
         			"
@@ -1368,7 +1368,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies mac-address of this stack element.
         			"
 	::= {wlsxTrapObjectsGroup 122 }
@@ -1378,7 +1378,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the slot number of this element in stack.
         			"
 	::= {wlsxTrapObjectsGroup 123 }
@@ -1388,7 +1388,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the interface name which is part of stacking
             link connected to other stacking element.
         			"
@@ -1399,8 +1399,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents number of the days remaining prior to expiry 
+			"
+            This object represents number of the days remaining prior to expiry
             of license limits sent by the server.
         			"
 	::= {wlsxTrapObjectsGroup 125 }
@@ -1410,8 +1410,8 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents number of the days remaining prior to expiry 
+			"
+            This object represents number of the days remaining prior to expiry
             of licenses contributed by a license client.
         			"
 	::= {wlsxTrapObjectsGroup 126 }
@@ -1421,7 +1421,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the ifIndex.
         			"
 	::= {wlsxTrapObjectsGroup 127 }
@@ -1431,7 +1431,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the state of an interface.
         			"
 	::= {wlsxTrapObjectsGroup 128 }
@@ -1441,7 +1441,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the reason for interface state change.
         			"
 	::= {wlsxTrapObjectsGroup 129 }
@@ -1451,7 +1451,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the up link type for an AP.
         			"
 	::= {wlsxTrapObjectsGroup 130 }
@@ -1461,7 +1461,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the up link type for an AP.
         			"
 	::= {wlsxTrapObjectsGroup 131 }
@@ -1471,7 +1471,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the up link type for an AP.
         			"
 	::= {wlsxTrapObjectsGroup 132 }
@@ -1481,7 +1481,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the up link change reason.
         			"
 	::= {wlsxTrapObjectsGroup 133 }
@@ -1491,7 +1491,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the name of the certificate that is expiring in less than 60 days.
         			"
 	::= {wlsxTrapObjectsGroup 134 }
@@ -1501,7 +1501,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the name of the certificate that has expired.
         			"
 	::= {wlsxTrapObjectsGroup 135 }
@@ -1511,7 +1511,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
                 This object represents HT Mode.
             			"
 	::= {wlsxTrapObjectsGroup 136 }
@@ -1521,7 +1521,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
                 This object represents Physical Type.
             			"
 	::= {wlsxTrapObjectsGroup 137 }
@@ -1531,7 +1531,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object indicates the error for the failure of config apply on IAP.
         			"
 	::= {wlsxTrapObjectsGroup 138 }
@@ -1541,7 +1541,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Authentication Server IP used for Authentication.
         			"
@@ -1552,7 +1552,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Captive Portal Server used for Authentication.
         			"
@@ -1563,7 +1563,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Captive Portal Server IP or host name used for Authentication.
         			"
@@ -1574,7 +1574,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object specifies the captive portal server down reason.
         			"
 	::= {wlsxTrapObjectsGroup 142 }
@@ -1584,7 +1584,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents license incompatibility with the given
             platform.
         			"
@@ -1595,7 +1595,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               This object is used in the traps to indicate the target's AP name.
           			"
 	::= {wlsxTrapObjectsGroup 144 }
@@ -1605,7 +1605,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               This object is used in the traps to indicate the target's MAC address.
           			"
 	::= {wlsxTrapObjectsGroup 145 }
@@ -1615,7 +1615,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents plug in or plug out status of an USB device.
         			"
 	::= {wlsxTrapObjectsGroup 146 }
@@ -1625,7 +1625,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents vendor ID or product ID of an USB device.
         			"
 	::= {wlsxTrapObjectsGroup 147 }
@@ -1635,7 +1635,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the controller IPv6 address.
         			"
 	::= {wlsxTrapObjectsGroup 148 }
@@ -1645,7 +1645,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             The Reason for which a station is black listed in details.
             **NOTE: this trap is obsoleted and replaced by
             wlsxTrapStationDenyListReasonStr
@@ -1657,7 +1657,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               This object is used in the traps to indicate the peer IP address of Cluster VLAN probe.
           			"
 	::= {wlsxTrapObjectsGroup 150 }
@@ -1667,7 +1667,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               This object is used in the traps to indicate the Connection status of Cluster VLAN probe.
           			"
 	::= {wlsxTrapObjectsGroup 151 }
@@ -1677,7 +1677,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               This object is used in the traps to indicate the failed VLAN id of cluster VLAN probe.
           			"
 	::= {wlsxTrapObjectsGroup 152 }
@@ -1687,7 +1687,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the IPv6 address
         			"
 	::= {wlsxTrapObjectsGroup 153 }
@@ -1697,7 +1697,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the IPv6 address of a device seen by an AP.
         			"
 	::= {wlsxTrapObjectsGroup 154 }
@@ -1707,7 +1707,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the reason for the authentication failure.
         			"
 	::= {wlsxTrapObjectsGroup 155 }
@@ -1717,7 +1717,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
                 This object represents Band Information.
             			"
 	::= {wlsxTrapObjectsGroup 156 }
@@ -1727,7 +1727,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
                 This object represents Secondary Channel.
             			"
 	::= {wlsxTrapObjectsGroup 157 }
@@ -1737,7 +1737,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
                 This object represents HT-Mode Information.
             			"
 	::= {wlsxTrapObjectsGroup 158 }
@@ -1747,7 +1747,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the radio band on which an AP operates on.
         			"
 	::= {wlsxTrapObjectsGroup 159 }
@@ -1757,7 +1757,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the radio band on which the target AP operates on.
         			"
 	::= {wlsxTrapObjectsGroup 160 }
@@ -1767,7 +1767,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             The Reason for which a station is added to denylist.
         			"
 	::= {wlsxTrapObjectsGroup 161 }
@@ -1777,7 +1777,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             The Reason for which a station is added to denylist in details.
         			"
 	::= {wlsxTrapObjectsGroup 162 }
@@ -1787,7 +1787,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             Status of the AP as seen by the conductor when the status changes.
         			"
 	::= {wlsxTrapObjectsGroup 163 }
@@ -1797,7 +1797,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents Prev Band Information.
         			"
 	::= {wlsxTrapObjectsGroup 164 }
@@ -1807,7 +1807,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents Previous HT-Mode Information.
         			"
 	::= {wlsxTrapObjectsGroup 165 }
@@ -1817,7 +1817,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the License Type.
         			"
 	::= {wlsxTrapObjectsGroup 166 }
@@ -1827,7 +1827,7 @@
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the pool name for a License.
         			"
 	::= {wlsxTrapObjectsGroup 167 }
@@ -1839,7 +1839,7 @@
 				wlsxTrapOperStatus}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a VLAN interface is up.
         	"
 	::= {wlsxTrapDefinitionsGroup 1000 }
@@ -1849,7 +1849,7 @@
 				wlsxTrapOperStatus}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a VLAN interface is down.
         	"
 	::= {wlsxTrapDefinitionsGroup 1001 }
@@ -1860,7 +1860,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a signature match was detected.
         	"
 	::= {wlsxTrapDefinitionsGroup 1002 }
@@ -1871,8 +1871,8 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that a node is exceeding the threshold set for 
+			"
+            This trap indicates that a node is exceeding the threshold set for
             the frame type.
         	"
 	::= {wlsxTrapDefinitionsGroup 1003 }
@@ -1881,8 +1881,8 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapTemperatureValue}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that the Temperature has returned to 
+			"
+            This trap indicates that the Temperature has returned to
             an acceptable range.
         	"
 	::= {wlsxTrapDefinitionsGroup 1004 }
@@ -1891,7 +1891,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapProcessName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the named process has been restarted.
         	"
 	::= {wlsxTrapDefinitionsGroup 1005 }
@@ -1900,8 +1900,8 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap which indicates that the system flash space is back 
+			"
+            This trap which indicates that the system flash space is back
             to a sufficient level.
         	"
 	::= {wlsxTrapDefinitionsGroup 1006 }
@@ -1910,8 +1910,8 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap which indicates that the free memory usage is back 
+			"
+            This trap which indicates that the free memory usage is back
             to a sufficient level.
         	"
 	::= {wlsxTrapDefinitionsGroup 1007 }
@@ -1920,7 +1920,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the system power supply condition have
             returned to normal operation status.
         	"
@@ -1930,7 +1930,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapFanNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the fan has returned to normal.
         	"
 	::= {wlsxTrapDefinitionsGroup 1009 }
@@ -1939,7 +1939,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapVoltageType,wlsxTrapVoltageValue}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the controller Voltage is back within range.
         	"
 	::= {wlsxTrapDefinitionsGroup 1010 }
@@ -1949,8 +1949,8 @@
 				wlsxTrapAPIpAddress,wlsxTrapNodeMac}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that a coverage hole at location 
+			"
+            This trap indicates that a coverage hole at location
             wlsxTrapAPLocation has been resolved.
         	"
 	::= {wlsxTrapDefinitionsGroup 1011 }
@@ -1959,7 +1959,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapSwitchIp}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the controller IP address has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1012 }
@@ -1968,8 +1968,8 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapSwitchRole}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that the role of the controller IP address has 
+			"
+            This trap indicates that the role of the controller IP address has
             changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1013 }
@@ -1978,7 +1978,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapUserIpAddress,wlsxTrapUserPhyAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a new user was created.
         	"
 	::= {wlsxTrapDefinitionsGroup 1014 }
@@ -1987,7 +1987,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapUserIpAddress,wlsxTrapUserPhyAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a user was deleted.
         	"
 	::= {wlsxTrapDefinitionsGroup 1015 }
@@ -1998,7 +1998,7 @@
 				wlsxTrapUserRole}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a user is Authenticated.
         	"
 	::= {wlsxTrapDefinitionsGroup 1016 }
@@ -2007,7 +2007,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapUserIpAddress,wlsxTrapUserPhyAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a user is Deauthenticated.
         	"
 	::= {wlsxTrapDefinitionsGroup 1017 }
@@ -2019,7 +2019,7 @@
 				wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a user authentication has failed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1018 }
@@ -2031,7 +2031,7 @@
 				wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the authentication server request timed out.
         	"
 	::= {wlsxTrapDefinitionsGroup 1019 }
@@ -2043,7 +2043,7 @@
 				wlsxTrapAPBSSID,wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the authentication server timed out.
         	"
 	::= {wlsxTrapDefinitionsGroup 1020 }
@@ -2052,7 +2052,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapAuthServerName,wlsxTrapAuthServerAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an authentication server is up.
         	"
 	::= {wlsxTrapDefinitionsGroup 1021 }
@@ -2061,8 +2061,8 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
-            A trap which indicates that the user entries table is full and 
+			"
+            A trap which indicates that the user entries table is full and
             cannot add any more entries.
         	"
 	::= {wlsxTrapDefinitionsGroup 1022 }
@@ -2071,8 +2071,8 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
-            A trap which indicates that the ACL Entries table is full and 
+			"
+            A trap which indicates that the ACL Entries table is full and
             cannot add any more entries.
         	"
 	::= {wlsxTrapDefinitionsGroup 1023 }
@@ -2081,9 +2081,9 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
-            A trap which indicates that the controller reached the maximum number 
-            of configurable Bandwidth contracts. 
+			"
+            A trap which indicates that the controller reached the maximum number
+            of configurable Bandwidth contracts.
         	"
 	::= {wlsxTrapDefinitionsGroup 1024 }
 
@@ -2091,7 +2091,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the power supply has failed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1025 }
@@ -2100,7 +2100,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapFanNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the fan has failed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1026 }
@@ -2109,7 +2109,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapVoltageType,wlsxTrapVoltageValue}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the controller voltage is out of range.
         	"
 	::= {wlsxTrapDefinitionsGroup 1027 }
@@ -2118,9 +2118,9 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapTemperatureValue}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the controller internal temperature is
-            out of range. 
+            out of range.
         	"
 	::= {wlsxTrapDefinitionsGroup 1028 }
 
@@ -2128,7 +2128,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapCardSlot}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that a line card is inserted.
         	"
 	::= {wlsxTrapDefinitionsGroup 1029 }
@@ -2137,7 +2137,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapCardSlot}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             a Trap which indicates that a supervisor card is inserted.
         	"
 	::= {wlsxTrapDefinitionsGroup 1030 }
@@ -2146,7 +2146,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that a GBIC is inserted in a Line Card.
         	"
 	::= {wlsxTrapDefinitionsGroup 1031 }
@@ -2155,7 +2155,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapProcessName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that a process has died.
         	"
 	::= {wlsxTrapDefinitionsGroup 1032 }
@@ -2164,7 +2164,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapProcessName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that a process is consuming Large
             amounts of memory.
         	"
@@ -2174,7 +2174,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that the controller is running low on flash space.
         	"
 	::= {wlsxTrapDefinitionsGroup 1034 }
@@ -2183,7 +2183,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that the system free memory is low.
         	"
 	::= {wlsxTrapDefinitionsGroup 1035 }
@@ -2192,7 +2192,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that a fan tray is removed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1036 }
@@ -2201,7 +2201,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that a fan tray is inserted.
         	"
 	::= {wlsxTrapDefinitionsGroup 1037 }
@@ -2210,7 +2210,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapCardSlot}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that a Line card is removed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1038 }
@@ -2219,7 +2219,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that the power supply is missing.
         	"
 	::= {wlsxTrapDefinitionsGroup 1039 }
@@ -2228,7 +2228,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapAPMacAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that an access point up.
         	"
 	::= {wlsxTrapDefinitionsGroup 1040 }
@@ -2237,7 +2237,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapAPMacAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that an access point down.
         	"
 	::= {wlsxTrapDefinitionsGroup 1041 }
@@ -2247,8 +2247,8 @@
 				wlsxTrapAPIpAddress,wlsxTrapNodeMac}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that an access point at Location 
+			"
+            This trap indicates that an access point at Location
             wlsxTrapAPLocation has detected a Coverage Hole.
         	"
 	::= {wlsxTrapDefinitionsGroup 1042 }
@@ -2258,8 +2258,8 @@
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that an access point at Location 
+			"
+            This trap indicates that an access point at Location
             wlsxTrapAPLocation has changed the channel.
         	"
 	::= {wlsxTrapDefinitionsGroup 1043 }
@@ -2269,8 +2269,8 @@
 				wlsxTrapStationBlackListReasonStr}
 		STATUS		obsolete
 		DESCRIPTION
-			"			
-            This trap indicates that the station is black listed. 
+			"
+            This trap indicates that the station is black listed.
             **NOTE: this trap is obsoleted and replaced by
             wlsxNStationAddedToDenyList
         	"
@@ -2280,8 +2280,8 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapNodeMac}
 		STATUS		obsolete
 		DESCRIPTION
-			"			
-            This trap indicates that the station is removed from the black list. 
+			"
+            This trap indicates that the station is removed from the black list.
             **NOTE: this trap is obsoleted and replaced by
             wlsxNStationRemovedFromDenyList
         	"
@@ -2292,8 +2292,8 @@
 				wlsxTrapSpoofedNewPhyAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
-            A trap indicating that the controller detected IP Spoofing. 
+			"
+            A trap indicating that the controller detected IP Spoofing.
         	"
 	::= {wlsxTrapDefinitionsGroup 1046 }
 
@@ -2302,8 +2302,8 @@
 				wlsxTrapDBIpAddress,wlsxTrapDBType}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that communication with Database failed. 
+			"
+            This trap indicates that communication with Database failed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1047 }
 
@@ -2312,8 +2312,8 @@
 				wlsxTrapVrrpOperState}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that VRRP state has changed on the controller. 
+			"
+            This trap indicates that VRRP state has changed on the controller.
         	"
 	::= {wlsxTrapDefinitionsGroup 1048 }
 
@@ -2324,8 +2324,8 @@
 				wlsxTrapAPPhyType,wlsxTrapAPHTMode}
 		STATUS		current
 		DESCRIPTION
-			"			
-            A Trap which indicates changes in the Radio attributes of an 
+			"
+            A Trap which indicates changes in the Radio attributes of an
             access point.
         	"
 	::= {wlsxTrapDefinitionsGroup 1049 }
@@ -2335,7 +2335,7 @@
 				wlsxTrapESIServerIpAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that a ESI server is up.
         	"
 	::= {wlsxTrapDefinitionsGroup 1050 }
@@ -2345,7 +2345,7 @@
 				wlsxTrapESIServerIpAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that a ESI server is down.
         	"
 	::= {wlsxTrapDefinitionsGroup 1051 }
@@ -2354,7 +2354,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapLicenseDaysRemaining}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that one or more licenses on the controller will expire in wlsxTrapLicenseDaysRemaining days.
         	"
 	::= {wlsxTrapDefinitionsGroup 1052 }
@@ -2378,7 +2378,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
                 This trap indicates that a previously detected access point, classified as Rogue,
                 is no longer present in the network.
 			"
@@ -2389,7 +2389,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM detected Station Impersonation.
 			"
 	::= {wlsxTrapDefinitionsGroup 1055 }
@@ -2400,7 +2400,7 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 				This trap indicates that an AM detected an access point
 				which is violating the Reserved Channel configuration.
 			"
@@ -2413,9 +2413,9 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP has detected an access point is violating 
-            Valid SSID configuration by using an SSID that is reserved for use by a valid AP only. 
+			"
+			This trap indicates that an AP has detected an access point is violating
+            Valid SSID configuration by using an SSID that is reserved for use by a valid AP only.
 			"
 	::= {wlsxTrapDefinitionsGroup 1057 }
 
@@ -2426,9 +2426,9 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected an access point that has a channel misconfiguration 
-            because it is using a channel that is not valid.   
+			"
+			This trap indicates that an AP detected an access point that has a channel misconfiguration
+            because it is using a channel that is not valid.
 			"
 	::= {wlsxTrapDefinitionsGroup 1058 }
 
@@ -2439,7 +2439,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an access point that has an OUI misconfiguration because
             it is using an OUI that is not valid.
 			"
@@ -2452,7 +2452,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an access point that has an SSID misconfiguration because it is using
             an SSID that is not valid.
 			"
@@ -2464,7 +2464,7 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an access point has bad Short preamble
 			configuration.
 			"
@@ -2477,7 +2477,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an access point that is misconfigured because it is not using WPA.
 			"
 	::= {wlsxTrapDefinitionsGroup 1062 }
@@ -2488,7 +2488,7 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected an Ad hoc
 			network.
 			"
@@ -2500,7 +2500,7 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that a previously detected Ad hoc Network is no
             longer present in the network.
 			"
@@ -2513,7 +2513,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that Protection was enforced because a valid station's association to a non-valid access point violated Valid Station policy.
 			"
 	::= {wlsxTrapDefinitionsGroup 1065 }
@@ -2525,7 +2525,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 		    This trap indicates that an AP detected that a valid access point is using the same WEP initialization vector in consecutive packets.
 			"
 	::= {wlsxTrapDefinitionsGroup 1066 }
@@ -2537,7 +2537,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that a valid access point is using a Weak WEP initialization vector.
 			"
 	::= {wlsxTrapDefinitionsGroup 1067 }
@@ -2547,7 +2547,7 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP has detected channel interference.
 			"
 	::= {wlsxTrapDefinitionsGroup 1068 }
@@ -2557,9 +2557,9 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that a previously detected channel interference
-            is no longer present. 
+            is no longer present.
 			"
 	::= {wlsxTrapDefinitionsGroup 1069 }
 
@@ -2570,7 +2570,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP has detected interference for an access point.
 			"
 	::= {wlsxTrapDefinitionsGroup 1070 }
@@ -2582,9 +2582,9 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that the previously detected interference for an access point
-            is no longer present. 
+            is no longer present.
 			"
 	::= {wlsxTrapDefinitionsGroup 1071 }
 
@@ -2595,7 +2595,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP has detected interference for a station.
 			"
 	::= {wlsxTrapDefinitionsGroup 1072 }
@@ -2607,9 +2607,9 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that the previously detected interference for a station
-            is no longer present. 
+            is no longer present.
 			"
 	::= {wlsxTrapDefinitionsGroup 1073 }
 
@@ -2620,7 +2620,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that an access point has exceeded the configured upper threshold for Frame Retry Rate.
 			"
 	::= {wlsxTrapDefinitionsGroup 1074 }
@@ -2632,7 +2632,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that an access point has exceeded the configured upper threshold for Frame Receive Error Rate.
 			"
 	::= {wlsxTrapDefinitionsGroup 1075 }
@@ -2644,7 +2644,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that an access point exceeded the configured upper threshold for Frame Fragmentation Rate.
 			"
 	::= {wlsxTrapDefinitionsGroup 1076 }
@@ -2656,8 +2656,8 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected that a station or access point has exceeded the configured upper threshold for Bandwidth rate. 
+			"
+			This trap indicates that an AP detected that a station or access point has exceeded the configured upper threshold for Bandwidth rate.
 			"
 	::= {wlsxTrapDefinitionsGroup 1077 }
 
@@ -2668,8 +2668,8 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected that a station has exceeded the configured upper threshold for Low speed rate. 
+			"
+			This trap indicates that an AP detected that a station has exceeded the configured upper threshold for Low speed rate.
 			"
 	::= {wlsxTrapDefinitionsGroup 1078 }
 
@@ -2680,8 +2680,8 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected that a station has exceeded the configured upper threshold for Non Unicast traffic rate. 
+			"
+			This trap indicates that an AP detected that a station has exceeded the configured upper threshold for Non Unicast traffic rate.
 			"
 	::= {wlsxTrapDefinitionsGroup 1079 }
 
@@ -2691,8 +2691,8 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM is reporting that an AP 
+			"
+			This trap indicates that an AM is reporting that an AP
 			has enabled Load balancing.
 			"
 	::= {wlsxTrapDefinitionsGroup 1080 }
@@ -2703,7 +2703,7 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM is reporting that an AP
 			has enabled Load balancing.
 			"
@@ -2715,8 +2715,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP has detected that the configured upper threshold for Frame Retry Rate was exceeded on a channel. 
+			"
+			This trap indicates that an AP has detected that the configured upper threshold for Frame Retry Rate was exceeded on a channel.
 			"
 	::= {wlsxTrapDefinitionsGroup 1082 }
 
@@ -2726,8 +2726,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP has detected that the configured upper threshold for Frame Fragmentation Rate was exceeded on a channel. 
+			"
+			This trap indicates that an AP has detected that the configured upper threshold for Frame Fragmentation Rate was exceeded on a channel.
 			"
 	::= {wlsxTrapDefinitionsGroup 1083 }
 
@@ -2737,8 +2737,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP has detected that the configured upper threshold for Frame Receive Error Rate was exceeded on a channel. 
+			"
+			This trap indicates that an AP has detected that the configured upper threshold for Frame Receive Error Rate was exceeded on a channel.
 			"
 	::= {wlsxTrapDefinitionsGroup 1084 }
 
@@ -2749,7 +2749,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match in a frame from an access point.
 			"
 	::= {wlsxTrapDefinitionsGroup 1085 }
@@ -2760,7 +2760,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match in a frame from a Station.
 			"
 	::= {wlsxTrapDefinitionsGroup 1086 }
@@ -2771,8 +2771,8 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected frames on a channel which 
+			"
+			This trap indicates that an AP detected frames on a channel which
             exceed the configured IDS rate threshold.
 			"
 	::= {wlsxTrapDefinitionsGroup 1087 }
@@ -2784,8 +2784,8 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected frames transmitted or received by an 
+			"
+			This trap indicates that an AP detected frames transmitted or received by an
             access point, which exceed the configured IDS rate threshold.
 			"
 	::= {wlsxTrapDefinitionsGroup 1088 }
@@ -2796,8 +2796,8 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected frames transmitted or received by a 
+			"
+			This trap indicates that an AP detected frames transmitted or received by a
             node, which exceed the configured IDS rate threshold.
 			"
 	::= {wlsxTrapDefinitionsGroup 1089 }
@@ -2808,8 +2808,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the rate of EAP Handshake packets 
+			"
+			This trap indicates that the rate of EAP Handshake packets
             received by an AP has exceeded the configured IDS EAP Handshake rate threshold.
 			"
 	::= {wlsxTrapDefinitionsGroup 1090 }
@@ -2819,7 +2819,7 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 		    This trap indicates that an AM detected a Signal Anomaly.
 			"
 	::= {wlsxTrapDefinitionsGroup 1091 }
@@ -2830,10 +2830,10 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM received packets from an AP
-			which exceeds the acceptable sequence number difference. 
-            The acceptable sequence number difference is an IDS configuration 
+			which exceeds the acceptable sequence number difference.
+            The acceptable sequence number difference is an IDS configuration
             object.
 			"
 	::= {wlsxTrapDefinitionsGroup 1092 }
@@ -2844,10 +2844,10 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM received packets from a Node
-			which exceeds the acceptable sequence number difference. 
-            The acceptable sequence number difference is an IDS configuration 
+			which exceeds the acceptable sequence number difference.
+            The acceptable sequence number difference is an IDS configuration
             object.
                 	"
 	::= {wlsxTrapDefinitionsGroup 1093 }
@@ -2858,8 +2858,8 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM detected a station Disconnect 
+			"
+			This trap indicates that an AM detected a station Disconnect
             attack.
 			"
 	::= {wlsxTrapDefinitionsGroup 1094 }
@@ -2869,8 +2869,8 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the number of potential fake APs detected by 
+			"
+			This trap indicates that the number of potential fake APs detected by
 			an AP has exceeded the configured IDS threshold. This is the total number of fake APs observed across all bands.
 			"
 	::= {wlsxTrapDefinitionsGroup 1095 }
@@ -2882,8 +2882,8 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM detected an Ad hoc 
+			"
+			This trap indicates that an AM detected an Ad hoc
 			Network. An Station is connected to an ad hoc AP.
 			"
 	::= {wlsxTrapDefinitionsGroup 1096 }
@@ -2894,7 +2894,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a Wireless Bridge when a WDS frame was seen between the transmitter and receiver addresses.
 			"
 	::= {wlsxTrapDefinitionsGroup 1097 }
@@ -2906,7 +2906,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an invalid MAC OUI in the BSSID of a frame.  An invalid MAC OUI suggests that the frame may be spoofed.
 			"
 	::= {wlsxTrapDefinitionsGroup 1098 }
@@ -2917,7 +2917,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an invalid MAC OUI in the SRC or DST address of a frame. An invalid MAC OUI suggests that the frame may be spoofed.
 			"
 	::= {wlsxTrapDefinitionsGroup 1099 }
@@ -2929,7 +2929,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an access point that is misconfigured because it does not have Privacy enabled.
 			"
 	::= {wlsxTrapDefinitionsGroup 1100 }
@@ -2941,7 +2941,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that a valid station is using the same WEP initialization vector in consecutive packets.
 			"
 	::= {wlsxTrapDefinitionsGroup 1101 }
@@ -2953,7 +2953,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that a valid station is using a Weak WEP initialization vector.
 			"
 	::= {wlsxTrapDefinitionsGroup 1102 }
@@ -2966,7 +2966,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM detected a client associated
 			with a Rogue access point.
 			"
@@ -2978,8 +2978,8 @@
 				wlsxTrapNodeMac}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that a previously detected rogue access point 
+			"
+			This trap indicates that a previously detected rogue access point
             association is no longer present.
 			"
 	::= {wlsxTrapDefinitionsGroup 1104 }
@@ -2991,7 +2991,7 @@
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected an Ad hoc
 			network that is bridging to a wired network
 			"
@@ -3004,9 +3004,9 @@
 				wlsxTrapInterferingAPInfoURL,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected an access point classified as Interfering. The access point 
-            is declared Interfering because it is neither authorized or classified as Rogue. 
+			"
+			This trap indicates that an AP detected an access point classified as Interfering. The access point
+            is declared Interfering because it is neither authorized or classified as Rogue.
 			"
 	::= {wlsxTrapDefinitionsGroup 1106 }
 
@@ -3015,7 +3015,7 @@
 				wlsxTrapAdminStatus,wlsxTrapOperStatus}
 		STATUS		deprecated
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a Physical port is up.
         	"
 	::= {wlsxTrapDefinitionsGroup 1107 }
@@ -3025,7 +3025,7 @@
 				wlsxTrapAdminStatus,wlsxTrapOperStatus}
 		STATUS		deprecated
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a Physical port is Down.
         	"
 	::= {wlsxTrapDefinitionsGroup 1108 }
@@ -3035,7 +3035,7 @@
 				wlsxTrapAPBSSID,wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that an access point BSSID is up.
         	"
 	::= {wlsxTrapDefinitionsGroup 1109 }
@@ -3045,7 +3045,7 @@
 				wlsxTrapAPBSSID,wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that an access point BSSID is down.
         	"
 	::= {wlsxTrapDefinitionsGroup 1110 }
@@ -3054,7 +3054,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             An enterprise version of cold start trap, which contains the controller time stamp.
         	"
 	::= {wlsxTrapDefinitionsGroup 1111 }
@@ -3063,7 +3063,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             An enterprise version of warm start trap, which contains the controller time stamp.
         	"
 	::= {wlsxTrapDefinitionsGroup 1112 }
@@ -3075,7 +3075,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected AP Impersonation because the number of beacons seen has exceeded the expected number by the configured percentage threshold.
             The expected number is calculated based on the Beacon Interval Field in the Beacon frame.
 			"
@@ -3085,7 +3085,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapHostIp,wlsxTrapHostPort}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an Inform queue overflow condition occurred.
 			"
 	::= {wlsxTrapDefinitionsGroup 1114 }
@@ -3094,7 +3094,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapAuthServerName,wlsxTrapAuthServerAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an authentication server is down.
         	"
 	::= {wlsxTrapDefinitionsGroup 1115 }
@@ -3103,7 +3103,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapCTSTransferType,wlsxTrapCTSURL}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates the status of the configuration transfer from the management station.
         	"
 	::= {wlsxTrapDefinitionsGroup 1116 }
@@ -3112,7 +3112,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapCTSTransferType,wlsxTrapCTSURL}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates the status of the configuration transfer from the management station.
         	"
 	::= {wlsxTrapDefinitionsGroup 1117 }
@@ -3122,7 +3122,7 @@
 				wlsxTrapUpdateFailedObj}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates the configuration update status.
         	"
 	::= {wlsxTrapDefinitionsGroup 1118 }
@@ -3131,7 +3131,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapConfigurationId}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates the configuration update status.
         	"
 	::= {wlsxTrapDefinitionsGroup 1119 }
@@ -3140,7 +3140,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapConfigurationId,wlsxTrapGlobalConfigObj}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that global configuration was modified on the controller.
         	"
 	::= {wlsxTrapDefinitionsGroup 1120 }
@@ -3150,7 +3150,7 @@
 				wlsxTrapUserPhyAddress,wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the user configuration has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1121 }
@@ -3161,7 +3161,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the BSSID configuration has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1122 }
@@ -3171,7 +3171,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the Radio configuration has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1123 }
@@ -3181,7 +3181,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the AP configuration has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1124 }
@@ -3191,7 +3191,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the controller list has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1125 }
@@ -3201,7 +3201,7 @@
 				wlsxTrapPortNumber,wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the port configuration has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1126 }
@@ -3211,7 +3211,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the VLAN configuration has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1127 }
@@ -3221,7 +3221,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the VLAN Interface configuration has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1128 }
@@ -3233,9 +3233,9 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected a station
-		        that is bridging from a wireless network 
+		        that is bridging from a wireless network
                         to a wired network
 			"
 	::= {wlsxTrapDefinitionsGroup 1129 }
@@ -3245,7 +3245,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the license table has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1130 }
@@ -3255,7 +3255,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the ESI server table has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1131 }
@@ -3266,7 +3266,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a monitored AP entry changed
         	"
 	::= {wlsxTrapDefinitionsGroup 1132 }
@@ -3277,7 +3277,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a monitored station entry changed
         	"
 	::= {wlsxTrapDefinitionsGroup 1133 }
@@ -3289,7 +3289,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Netstumbler from an access point.
 			"
 	::= {wlsxTrapDefinitionsGroup 1134 }
@@ -3300,7 +3300,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Netstumbler from a Station.
 			"
 	::= {wlsxTrapDefinitionsGroup 1135 }
@@ -3312,7 +3312,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for ASLEAP from an access point.
 			"
 	::= {wlsxTrapDefinitionsGroup 1136 }
@@ -3323,7 +3323,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for ASLEAP from a Station.
 			"
 	::= {wlsxTrapDefinitionsGroup 1137 }
@@ -3335,7 +3335,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for AirJack from an access point.
 			"
 	::= {wlsxTrapDefinitionsGroup 1138 }
@@ -3346,7 +3346,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for AirJack from a Station.
 			"
 	::= {wlsxTrapDefinitionsGroup 1139 }
@@ -3358,7 +3358,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Null-Probe-Response from an access point.
 			"
 	::= {wlsxTrapDefinitionsGroup 1140 }
@@ -3369,7 +3369,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Null-Probe-Response from a Station.
 			"
 	::= {wlsxTrapDefinitionsGroup 1141 }
@@ -3381,7 +3381,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Deauth-Broadcast from an access point.
 			"
 	::= {wlsxTrapDefinitionsGroup 1142 }
@@ -3392,7 +3392,7 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Deauth-Broadcast from a Station.
 			"
 	::= {wlsxTrapDefinitionsGroup 1143 }
@@ -3404,7 +3404,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP is detecting an access point that is bridging from a wireless network
             to a wired network.
 			"
@@ -3417,7 +3417,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP is detecting a station that is bridging from a wireless network
             to a wired network.
 			"
@@ -3429,7 +3429,7 @@
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected an Ad hoc
 			network that is bridging to a wired network
 			"
@@ -3442,7 +3442,7 @@
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected an Ad hoc
 			network that is bridging to a wired network
 			"
@@ -3455,8 +3455,8 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM detected a station disconnect 
+			"
+			This trap indicates that an AM detected a station disconnect
             attack.
 			"
 	::= {wlsxTrapDefinitionsGroup 1148 }
@@ -3467,8 +3467,8 @@
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM detected a station Disconnect 
+			"
+			This trap indicates that an AM detected a station Disconnect
             attack.
 			"
 	::= {wlsxTrapDefinitionsGroup 1149 }
@@ -3482,9 +3482,9 @@
 		STATUS		current
 		DESCRIPTION
 			"			This trap indicates that an access point, classified as Suspected Rogue, has been
-                detected by a Controller. The AP is suspected to be rogue, 
-                with the supplied confidence level, because it was matched to 
-                the wired MAC address. 
+                detected by a Controller. The AP is suspected to be rogue,
+                with the supplied confidence level, because it was matched to
+                the wired MAC address.
 			"
 	::= {wlsxTrapDefinitionsGroup 1150 }
 
@@ -3493,8 +3493,8 @@
 				wlsxTrapAPRadioNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
-		This trap indicates that a previously detected access point, classified Suspected 
+			"
+		This trap indicates that a previously detected access point, classified Suspected
                 Rogue, is either no longer present in the network or
                 has changed its state.
 			"
@@ -3504,7 +3504,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapConfigurationId,wlsxTrapMissingLicenses}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates the configuration update status in the case
             where some configuration could not be applied due to missing licenses.
         	"
@@ -3514,7 +3514,7 @@
 		OBJECTS {wlsxTrapTime, wlsxVoiceCurrentNumCdr}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the CDR buffer threshold has been reached
         	"
 	::= {wlsxTrapDefinitionsGroup 1153 }
@@ -3524,7 +3524,7 @@
 				wlsxTrapTunnelStatus}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a tunnel interface is up.
         	"
 	::= {wlsxTrapDefinitionsGroup 1154 }
@@ -3534,7 +3534,7 @@
 				wlsxTrapTunnelStatus}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a tunnel interface is down.
         	"
 	::= {wlsxTrapDefinitionsGroup 1155 }
@@ -3544,7 +3544,7 @@
 				wlsxTrapTableEntryChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the mesh node configuration has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1156 }
@@ -3556,7 +3556,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	    This trap indicates that an AP detected an access point that supports HT Greenfield mode.
 		"
 	::= {wlsxTrapDefinitionsGroup 1157 }
@@ -3568,7 +3568,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	    This trap indicates that an AP is detecting an access point with the HT 40MHz intolerance setting.
 		"
 	::= {wlsxTrapDefinitionsGroup 1158 }
@@ -3580,7 +3580,7 @@
 				wlsxTrapAPLocation,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 		This trap indicates that the system is detecting an HT 40MHz Intolerance setting from a Station.
 		"
 	::= {wlsxTrapDefinitionsGroup 1159 }
@@ -3589,7 +3589,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapESIServerGrpName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that all authentication servers is a server group are brought back in service.
         	"
 	::= {wlsxTrapDefinitionsGroup 1160 }
@@ -3602,8 +3602,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected an ad hoc 
+			"
+			This trap indicates that an AP detected an ad hoc
 			network where a station is connected to an ad hoc access point.
 			"
 	::= {wlsxTrapDefinitionsGroup 1161 }
@@ -3615,7 +3615,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an ad hoc
 			network that is bridging to a wired network.
 			"
@@ -3629,7 +3629,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an ad hoc
 			network that is bridging to a wired network.
 			"
@@ -3639,7 +3639,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the xSec user limit is reached.
         	"
 	::= {wlsxTrapDefinitionsGroup 1164 }
@@ -3648,7 +3648,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the VPN session limit is reached.
         	"
 	::= {wlsxTrapDefinitionsGroup 1165 }
@@ -3657,7 +3657,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapAPIpAddress,wlsxTrapApSerialNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the RAP is using the Expired PSK.
         	"
 	::= {wlsxTrapDefinitionsGroup 1166 }
@@ -3666,7 +3666,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapTimeStr}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the Cached IKE PSK for RAPs will expire soon.
         	"
 	::= {wlsxTrapDefinitionsGroup 1167 }
@@ -3677,7 +3677,7 @@
 				wlsxTrapTimeStr}
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that tcp connection between master controller and local controller has been lost.
         	"
 	::= {wlsxTrapDefinitionsGroup 1168 }
@@ -3687,7 +3687,7 @@
 				wlsxTrapPrimaryControllerIp}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the AP has registered with the backup controller.
         	"
 	::= {wlsxTrapDefinitionsGroup 1169 }
@@ -3697,8 +3697,8 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the number of potential fake clients detected by 
+			"
+			This trap indicates that the number of potential fake clients detected by
 			an AP has exceeded the configured IDS threshold. This is the total number of fake clients observed across all bands.
 			"
 	::= {wlsxTrapDefinitionsGroup 1170 }
@@ -3711,7 +3711,7 @@
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 		    This trap indicates that an AP detected an unencrypted data frame between a valid client and an access point.
 			"
 	::= {wlsxTrapDefinitionsGroup 1171 }
@@ -3723,7 +3723,7 @@
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an ad hoc network using a valid/protected SSID.
 			"
 	::= {wlsxTrapDefinitionsGroup 1172 }
@@ -3736,7 +3736,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that one of its virtual APs is being spoofed using MAC spoofing.
 			"
 	::= {wlsxTrapDefinitionsGroup 1173 }
@@ -3749,8 +3749,8 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected a client trying to associate to one of its BSSIDs on the wrong channel.  This can be a sign that the BSSID is 
+			"
+			This trap indicates that an AP detected a client trying to associate to one of its BSSIDs on the wrong channel.  This can be a sign that the BSSID is
             being spoofed in order to fool the client into thinking the AP is operating on another channel.
 			"
 	::= {wlsxTrapDefinitionsGroup 1174 }
@@ -3763,7 +3763,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP has determined that a client is under Disconnect Attack because the rate of Assoc/Reassoc Response packets
             received by that client exceeds the configured threshold.
 			"
@@ -3776,7 +3776,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP that had previously detected a client association to a Rogue access point is no longer detecting that association.
 			"
 	::= {wlsxTrapDefinitionsGroup 1176 }
@@ -3789,7 +3789,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an Omerta attack.
 			"
 	::= {wlsxTrapDefinitionsGroup 1177 }
@@ -3802,7 +3802,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a possible TKIP replay attack. If successful this could be the precursor to more
 			advanced attacks.
 			"
@@ -3816,7 +3816,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a ChopChop attack.
 			"
 	::= {wlsxTrapDefinitionsGroup 1179 }
@@ -3829,7 +3829,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a FATA-Jack attack.
 			"
 	::= {wlsxTrapDefinitionsGroup 1180 }
@@ -3841,7 +3841,7 @@
 				wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an invalid source and destination combination.
 			"
 	::= {wlsxTrapDefinitionsGroup 1181 }
@@ -3854,7 +3854,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a misassociation between a valid client and an unsafe AP.
 			"
 	::= {wlsxTrapDefinitionsGroup 1182 }
@@ -3867,8 +3867,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected a malformed HT Information Element. This can be the result of a misbehaving wireless driver or it may be an indication of a new wireless attack. 
+			"
+			This trap indicates that an AP detected a malformed HT Information Element. This can be the result of a misbehaving wireless driver or it may be an indication of a new wireless attack.
 			"
 	::= {wlsxTrapDefinitionsGroup 1183 }
 
@@ -3880,7 +3880,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a malformed association request with a NULL SSID.
 			"
 	::= {wlsxTrapDefinitionsGroup 1184 }
@@ -3893,8 +3893,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected a management frame with a malformed information element. The declared length of the element is larger than the entire frame containing the element. This may be used to corrupt or crash wireless drivers. 
+			"
+			This trap indicates that an AP detected a management frame with a malformed information element. The declared length of the element is larger than the entire frame containing the element. This may be used to corrupt or crash wireless drivers.
 			"
 	::= {wlsxTrapDefinitionsGroup 1185 }
 
@@ -3906,7 +3906,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a key in an EAPOL Key message with a specified length greater than the length of the entire message.
 			"
 	::= {wlsxTrapDefinitionsGroup 1186 }
@@ -3918,7 +3918,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an unusually large duration in a wireless frame. This may be an attempt to block other devices from transmitting.
 			"
 	::= {wlsxTrapDefinitionsGroup 1187 }
@@ -3932,7 +3932,7 @@
 				wlsxTrapTargetAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a beacon on one channel advertising another channel. This could be an attempt to lure clients away from a valid AP.
 			"
 	::= {wlsxTrapDefinitionsGroup 1188 }
@@ -3945,7 +3945,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an authentication frame with
             either a bad algorithm (similar to Fata-Jack) or a bad transaction.
 			"
@@ -3957,8 +3957,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the rate of CTS packets 
+			"
+			This trap indicates that the rate of CTS packets
             received by an AP exceeds the configured IDS threshold.
 			"
 	::= {wlsxTrapDefinitionsGroup 1190 }
@@ -3969,8 +3969,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the rate of RTS packets 
+			"
+			This trap indicates that the rate of RTS packets
             received by an AP exceeds the configured IDS threshold.
 			"
 	::= {wlsxTrapDefinitionsGroup 1191 }
@@ -3980,8 +3980,8 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-				This trap indicates that an unauthorized access point is connected to the wired network. The access point is 
+			"
+				This trap indicates that an unauthorized access point is connected to the wired network. The access point is
                 classified as Rogue by the system.
 			"
 	::= {wlsxTrapDefinitionsGroup 1192 }
@@ -3991,7 +3991,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
                 This trap indicates that a previously detected access point, classified as Rogue,
                 is either no longer present in the network or it changed its state.
 			"
@@ -4002,8 +4002,8 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an access point has been classified as a Neighbor by the system. 
+			"
+			This trap indicates that an access point has been classified as a Neighbor by the system.
 			"
 	::= {wlsxTrapDefinitionsGroup 1194 }
 
@@ -4012,9 +4012,9 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an access point has been classified as Interfering by the system. The access point 
-            is declared Interfering because it is not authorized, nor has it been classified as a Rogue. 
+			"
+			This trap indicates that an access point has been classified as Interfering by the system. The access point
+            is declared Interfering because it is not authorized, nor has it been classified as a Rogue.
 			"
 	::= {wlsxTrapDefinitionsGroup 1195 }
 
@@ -4024,10 +4024,10 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-		This trap indicates that an access point, classified as Suspected Rogue, is 
-                detected by the system. The AP is suspected to be rogue 
-                with the supplied confidence level. 
+			"
+		This trap indicates that an access point, classified as Suspected Rogue, is
+                detected by the system. The AP is suspected to be rogue
+                with the supplied confidence level.
 			"
 	::= {wlsxTrapDefinitionsGroup 1196 }
 
@@ -4036,8 +4036,8 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-		This trap indicates that a previously detected access point, classified as Suspected 
+			"
+		This trap indicates that a previously detected access point, classified as Suspected
                 Rogue, is either no longer present in the network or
                 has changed its state.
 			"
@@ -4051,7 +4051,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
         This trap indicates that an attempt has been made to deny service to
         the source address by spoofing a block ACK add request that sets a
         sequence number window outside the currently used window.
@@ -4066,7 +4066,7 @@
 				wlsxTrapTargetAPSSID,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
         This trap indicates that a new AP has appeared immediately following a client probe request.
         This is indicative of the Hotspotter tool or similar that attempts to trap clients with a fake
         hotspot or other wireless network.
@@ -4081,7 +4081,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match in a frame.
 			"
 	::= {wlsxTrapDefinitionsGroup 1200 }
@@ -4094,7 +4094,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Netstumbler in a frame.
 			"
 	::= {wlsxTrapDefinitionsGroup 1201 }
@@ -4107,7 +4107,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for ASLEAP in a frame.
 			"
 	::= {wlsxTrapDefinitionsGroup 1202 }
@@ -4120,7 +4120,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Airjack in a frame.
 			"
 	::= {wlsxTrapDefinitionsGroup 1203 }
@@ -4133,7 +4133,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Null-Probe-Response in a frame.
 			"
 	::= {wlsxTrapDefinitionsGroup 1204 }
@@ -4146,7 +4146,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Deauth-Broadcast in a frame.
 			"
 	::= {wlsxTrapDefinitionsGroup 1205 }
@@ -4159,7 +4159,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Disassoc-Broadcast in a frame.
 			"
 	::= {wlsxTrapDefinitionsGroup 1206 }
@@ -4172,7 +4172,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Wellenreiter in a frame.
 			"
 	::= {wlsxTrapDefinitionsGroup 1207 }
@@ -4184,7 +4184,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain an access point by disconnecting its client.
       	"
 	::= {wlsxTrapDefinitionsGroup 1208 }
@@ -4196,7 +4196,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain a client by disconnecting it from the AP that it is associated with.
       	"
 	::= {wlsxTrapDefinitionsGroup 1209 }
@@ -4208,7 +4208,7 @@
 				wlsxTrapAPLocation,wlsxTrapDeviceIpv6Address}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain an access point by disrupting traffic to its client on the wired interface.
       	"
 	::= {wlsxTrapDefinitionsGroup 1210 }
@@ -4220,7 +4220,7 @@
 				wlsxTrapAPLocation,wlsxTrapDeviceIpv6Address}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain a client by disrupting traffic to it on the wired interface.
       	"
 	::= {wlsxTrapDefinitionsGroup 1211 }
@@ -4233,7 +4233,7 @@
 				wlsxTrapDeviceIpv6Address}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain an access point by disrupting traffic to its client on the wired interface.
       	"
 	::= {wlsxTrapDefinitionsGroup 1212 }
@@ -4246,7 +4246,7 @@
 				wlsxTrapDeviceIpv6Address}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain a client by disrupting traffic to it on the wired interface.
       	"
 	::= {wlsxTrapDefinitionsGroup 1213 }
@@ -4259,7 +4259,7 @@
 				wlsxTrapAPBand,wlsxTrapTargetAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain an access point by moving a client that is attempting to associate to it to a tarpit.
       	"
 	::= {wlsxTrapDefinitionsGroup 1214 }
@@ -4271,7 +4271,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the location of voice client has been changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1215 }
@@ -4285,7 +4285,7 @@
 				wlsxTrapAPPrevHTMode,wlsxTrapAPPrevPhyType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an AP changed its channel.
       	"
 	::= {wlsxTrapDefinitionsGroup 1216 }
@@ -4296,7 +4296,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP changed its transmit power level.
       	"
 	::= {wlsxTrapDefinitionsGroup 1217 }
@@ -4307,7 +4307,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP changed its mode from AP to APMonitor or vice versa.
       	"
 	::= {wlsxTrapDefinitionsGroup 1218 }
@@ -4320,7 +4320,7 @@
 				wlsxTrapPhyType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the user entry attributes have changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1219 }
@@ -4333,7 +4333,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a Power Save DoS attack.
 			"
 	::= {wlsxTrapDefinitionsGroup 1220 }
@@ -4343,7 +4343,7 @@
 				wlsxTrapApMasterStatus}
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the status of the AP as seen by
             the master controller has changed.
             **NOTE: this notification is obsoleted and replaced by
@@ -4359,7 +4359,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an ad hoc network node using a valid/protected SSID.
 			"
 	::= {wlsxTrapDefinitionsGroup 1222 }
@@ -4368,7 +4368,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapCaName,wlsxTrapCrlName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the CRL associated with the particular Trustpoint is expired.
         	"
 	::= {wlsxTrapDefinitionsGroup 1223 }
@@ -4379,7 +4379,7 @@
 				wlsxTrapAuthServerAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a management user authentication has failed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1224 }
@@ -4390,7 +4390,7 @@
 				wlsxTrapTimeStr}
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that tcp connection between master controller and local controller is back.
         	"
 	::= {wlsxTrapDefinitionsGroup 1225 }
@@ -4400,7 +4400,7 @@
 				wlsxTrapCount}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates the number of upgrade failure of an access point.
         	"
 	::= {wlsxTrapDefinitionsGroup 1226 }
@@ -4410,7 +4410,7 @@
 				wlsxTrapAPIpAddress,wlsxTrapCount}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates the number of warm starts of an access point.
         	"
 	::= {wlsxTrapDefinitionsGroup 1227 }
@@ -4420,7 +4420,7 @@
 				wlsxTrapAPIpAddress,wlsxTrapCount}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates the number of cold starts of an access point.
         	"
 	::= {wlsxTrapDefinitionsGroup 1228 }
@@ -4430,7 +4430,7 @@
 				wlsxTrapAPIpAddress,wlsxTrapCount}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates the number of down alarms of an access point.
         	"
 	::= {wlsxTrapDefinitionsGroup 1229 }
@@ -4440,7 +4440,7 @@
 				wlsxTrapAPIpAddress,wlsxTrapCount}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates the number of radio down alarms of an access point.
         	"
 	::= {wlsxTrapDefinitionsGroup 1230 }
@@ -4449,7 +4449,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapCount}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates the total number of clock sync errors between the
             switch and access points.
         	"
@@ -4459,7 +4459,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapCount}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates the number of cold-starts of the switch.
         	"
 	::= {wlsxTrapDefinitionsGroup 1232 }
@@ -4468,7 +4468,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapCount}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates the number of warm-starts of the switch.
         	"
 	::= {wlsxTrapDefinitionsGroup 1233 }
@@ -4481,10 +4481,10 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an AP detected a wireless client that is
-            hosting a softAP. The softAP could be used to share the hosting 
-            client's  wired or wireless network connection with other wireless users. 
+            hosting a softAP. The softAP could be used to share the hosting
+            client's  wired or wireless network connection with other wireless users.
         	"
 	::= {wlsxTrapDefinitionsGroup 1234 }
 
@@ -4496,8 +4496,8 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that an AP detected that a wireless client associated 
+			"
+            This trap indicates that an AP detected that a wireless client associated
             to an access point that is hosted by another wireless client.
         	"
 	::= {wlsxTrapDefinitionsGroup 1235 }
@@ -4507,7 +4507,7 @@
 				wlsxThresholdValue,wlsxResourceValue}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap indicates a particular resource under monitoring has gone above the threshold specified.
         	"
 	::= {wlsxTrapDefinitionsGroup 1236 }
@@ -4517,7 +4517,7 @@
 				wlsxThresholdValue,wlsxResourceValue}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap indicates a particular resource under monitoring has come below the threshold specified.
         	"
 	::= {wlsxTrapDefinitionsGroup 1237 }
@@ -4530,7 +4530,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that containment is being enforced on a client associated to a hosted network.
         	"
 	::= {wlsxTrapDefinitionsGroup 1238 }
@@ -4543,7 +4543,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that containment is being enforced on a client that is hosting a wireless hosted network.
         	"
 	::= {wlsxTrapDefinitionsGroup 1239 }
@@ -4555,7 +4555,7 @@
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an AP has attempted to contain an adhoc node by disconnecting it from other members of the adhoc network.
         	"
 	::= {wlsxTrapDefinitionsGroup 1240 }
@@ -4564,7 +4564,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapPowerSupplyNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              This trap indicates that the system power supply condition have
              returned to normal operation status.
          	"
@@ -4574,7 +4574,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapPowerSupplyNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              A trap which indicates that the power supply has failed.
          	"
 	::= {wlsxTrapDefinitionsGroup 1242 }
@@ -4583,7 +4583,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapFanTrayNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              A Trap which indicates that a fan tray is removed.
          	"
 	::= {wlsxTrapDefinitionsGroup 1243 }
@@ -4592,7 +4592,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapFanTrayNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              A Trap which indicates that a fan tray is inserted.
          	"
 	::= {wlsxTrapDefinitionsGroup 1244 }
@@ -4601,7 +4601,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapPowerSupplyNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              A Trap which indicates that the power supply is missing.
          	"
 	::= {wlsxTrapDefinitionsGroup 1245 }
@@ -4612,7 +4612,7 @@
 				wlsxStackCurrentState,wlsxStackChangeEvent}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               When change happens in any topology of the stack element in the
               stack, then a notification is sent to the Management Entity.
           	"
@@ -4623,7 +4623,7 @@
 				wlsxStackIfName,wlsxStackProtoIfTopoJoined}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               When any stacking interface in any stack element joins or leaves
               stacking topology, then a notification is sent to the Management
               Entity with slot and interface information.
@@ -4634,8 +4634,8 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapLicenseServerDaysRemaining}
 		STATUS		current
 		DESCRIPTION
-			"			
-            A Trap which indicates that licenses sent from the license 
+			"
+            A Trap which indicates that licenses sent from the license
             server will expire in wlsxTrapLicenseServerDaysRemaining days.
         	"
 	::= {wlsxTrapDefinitionsGroup 1248 }
@@ -4644,8 +4644,8 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapLicenseClientDaysRemaining}
 		STATUS		current
 		DESCRIPTION
-			"			
-            A Trap which indicates that licenses contributed by a license 
+			"
+            A Trap which indicates that licenses contributed by a license
             client will expire in wlsxTrapLicenseClientDaysRemaining days.
         	"
 	::= {wlsxTrapDefinitionsGroup 1249 }
@@ -4655,7 +4655,7 @@
 				wlsxIfStateChangeReason}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               When the link state of an interface changes due to reason
               specified by wlsxIfStateChangeReason object, a notification is
               sent to the Management Entity with reason for this state change
@@ -4667,9 +4667,9 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
-              This trap indicates that current state in the WMS module shows that WMS is reaching capacity, and 
-              so it is recommended to enable WMS-Offload.  
+			"
+              This trap indicates that current state in the WMS module shows that WMS is reaching capacity, and
+              so it is recommended to enable WMS-Offload.
           	"
 	::= {wlsxTrapDefinitionsGroup 1251 }
 
@@ -4679,7 +4679,7 @@
 				wlsxTrapAPUplinkChangeReason}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               When the active uplink of an AP changes, a notification is
               sent to the Management Entity with the new uplink type
           	"
@@ -4689,7 +4689,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapExpiringCertName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               This trap indicates that a particular Certificate is going to expire in less than 60 days.
           	"
 	::= {wlsxTrapDefinitionsGroup 1253 }
@@ -4698,7 +4698,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapExpiredCertName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               This trap indicates that a particular Certificate has expired and is no longer valid.
           	"
 	::= {wlsxTrapDefinitionsGroup 1254 }
@@ -4707,7 +4707,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapAPMacAddress,wlsxTrapAPManagedModeConfigFailure}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that config apply has failed on the IAP.
           	"
 	::= {wlsxTrapDefinitionsGroup 1255 }
@@ -4719,7 +4719,7 @@
 				wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
          This trap indicates that the authentication server accounting timed out.
         	"
 	::= {wlsxTrapDefinitionsGroup 1256 }
@@ -4729,7 +4729,7 @@
 				wlsxTrapAPIpAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that AP is Up with AP name and IP address.
         	"
 	::= {wlsxTrapDefinitionsGroup 1257 }
@@ -4739,7 +4739,7 @@
 				wlsxTrapAPIpAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that AP is Down with AP name and IP address.
         	"
 	::= {wlsxTrapDefinitionsGroup 1258 }
@@ -4749,7 +4749,7 @@
 				wlsxTrapAPName,wlsxTrapPortalServerDownReason}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
          This trap indicates that the captive portal server is down.
         	"
 	::= {wlsxTrapDefinitionsGroup 1259 }
@@ -4759,7 +4759,7 @@
 				wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
          This trap indicates that the captive portal server is up.
         	"
 	::= {wlsxTrapDefinitionsGroup 1260 }
@@ -4772,7 +4772,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that containment is being enforced on an ad hoc wireless network node using a valid/protected SSID.
         	"
 	::= {wlsxTrapDefinitionsGroup 1261 }
@@ -4781,7 +4781,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapLicensePlatformMismatchKey}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that license to be installed is not compatible with the platform.
         	"
 	::= {wlsxTrapDefinitionsGroup 1262 }
@@ -4791,7 +4791,7 @@
 				wlsxTrapAPMacAddress,wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
            The trap represents a IAP voice client location update.
         	"
 	::= {wlsxTrapDefinitionsGroup 1263 }
@@ -4800,7 +4800,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the ACE Entries table has reached
             eighty percent of the maximum limit.
         	"
@@ -4810,7 +4810,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that web-cc license enforcement has been triggered.
         	"
 	::= {wlsxTrapDefinitionsGroup 1265 }
@@ -4819,7 +4819,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapFanNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A trap which indicates that the fan is absent.
         	"
 	::= {wlsxTrapDefinitionsGroup 1266 }
@@ -4831,7 +4831,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates there is a possible attack of the Fast BSS Transition causing a WPA key re-installation.
             This can be indicative of a security breach where an attacker can hijack a client's association and/or
             decrypt an otherwise secure connection.
@@ -4845,7 +4845,7 @@
 				wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an AP detected a possible channel-based Man in the Middle attack by someone using spoofed beacons with an invalid Channel Switch Announcement.
         	"
 	::= {wlsxTrapDefinitionsGroup 1268 }
@@ -4855,7 +4855,7 @@
 				wlsxTrapPortNumber,wlsxTrapOperStatus}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that AP's secure jack port is Up.
         	"
 	::= {wlsxTrapDefinitionsGroup 1269 }
@@ -4865,7 +4865,7 @@
 				wlsxTrapPortNumber,wlsxTrapOperStatus}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that AP's secure jack port is Down.
         	"
 	::= {wlsxTrapDefinitionsGroup 1270 }
@@ -4875,7 +4875,7 @@
 				wlsxTrapPortNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that loop is detected on AP's secure jack port.
         	"
 	::= {wlsxTrapDefinitionsGroup 1271 }
@@ -4885,7 +4885,7 @@
 				wlsxTrapPortNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that broadcast storm is detected on AP's secure jack port.
         	"
 	::= {wlsxTrapDefinitionsGroup 1272 }
@@ -4896,7 +4896,7 @@
 				wlsxTrapCount}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an IP conflict is detected on AP.
         	"
 	::= {wlsxTrapDefinitionsGroup 1273 }
@@ -4905,7 +4905,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapAuthServerName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that CLEARPASS server is not valid when using the CA to verity the server for download-role.
         	"
 	::= {wlsxTrapDefinitionsGroup 1274 }
@@ -4914,7 +4914,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that the controller is running low on flash1 space.
         	"
 	::= {wlsxTrapDefinitionsGroup 1275 }
@@ -4923,7 +4923,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap which indicates that the system flash1 space is back
             to a sufficient level.
         	"
@@ -4934,7 +4934,7 @@
 				wlsxTrapAPIpAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an AP is overheat and in shutdown mode.
         	"
 	::= {wlsxTrapDefinitionsGroup 1277 }
@@ -4946,7 +4946,7 @@
 				wlsxTrapTargetAPMac,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              This trap indicates that an AP detected a non-configured BSSID that should belong to one of our known valid APs.
          	"
 	::= {wlsxTrapDefinitionsGroup 1278 }
@@ -4957,7 +4957,7 @@
 				wlsxTrapAPUSBStatus}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an USB device is plugged in or out to an AP.
         	"
 	::= {wlsxTrapDefinitionsGroup 1279 }
@@ -4966,7 +4966,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapSwitchIpv6}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the controller IPv6 address has changed.
         	"
 	::= {wlsxTrapDefinitionsGroup 1280 }
@@ -4975,7 +4975,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              A Trap which indicates that the controller is running on high optimum limit.
          	"
 	::= {wlsxTrapDefinitionsGroup 1281 }
@@ -4984,7 +4984,7 @@
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              A Trap which indicates that the controller is running on full optimum limit.
          	"
 	::= {wlsxTrapDefinitionsGroup 1282 }
@@ -4994,7 +4994,7 @@
 				wlsxTrapFailedVlan}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
               This trap indicates the cluster VLAN probe status.
           	"
 	::= {wlsxTrapDefinitionsGroup 1283 }
@@ -5005,7 +5005,7 @@
 				wlsxTrapEssid}
 		STATUS		current
 		DESCRIPTION
-			"			 
+			"
               This trap indicates the client is rejected by the max client count.
           	"
 	::= {wlsxTrapDefinitionsGroup 1284 }
@@ -5016,8 +5016,8 @@
 				wlsxTrapAPName,wlsxTrapEssid}
 		STATUS		current
 		DESCRIPTION
-			"			 
-              This trap indicates the client PSK Authentication Failed. 
+			"
+              This trap indicates the client PSK Authentication Failed.
           	"
 	::= {wlsxTrapDefinitionsGroup 1285 }
 
@@ -5026,7 +5026,7 @@
 				wlsxTrapStationDenyListReasonStr}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the station is added to denylist.
         	"
 	::= {wlsxTrapDefinitionsGroup 1286 }
@@ -5035,7 +5035,7 @@
 		OBJECTS {wlsxTrapTime, wlsxTrapNodeMac}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the station is removed from denylist.
         	"
 	::= {wlsxTrapDefinitionsGroup 1287 }
@@ -5045,7 +5045,7 @@
 				wlsxTrapApConductorStatus}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the status of the AP as seen by
             the conductor controller has changed.
         	"
@@ -5056,7 +5056,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates there is a possible attack of the Ghost Tunnel.
             This can be airgap atttack only by beacon and probe request where an attacker can hijack a client.
         	"
@@ -5067,7 +5067,7 @@
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates there is a possible attack of the Ghost Tunnel.
             This can be airgap atttack only by beacon and probe request where an attacker can hijack a client.
         	"
@@ -5081,7 +5081,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              This trap indicates that an AP detected a wireless client associated to a WIFI-Direct Group Owner.
          	"
 	::= {wlsxTrapDefinitionsGroup 1291 }
@@ -5094,7 +5094,7 @@
 				wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              This trap indicates that containment is being enforced on a wireless client that is associated to a WIFI-Direct Group Owner.
          	"
 	::= {wlsxTrapDefinitionsGroup 1292 }
@@ -5103,7 +5103,7 @@
 		OBJECTS {wlsxTrapTime, wlsxLicensePoolName,wlsxLicenseType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
              A Trap which indicates that the Licenses are running on high optimum limit.
          	"
 	::= {wlsxTrapDefinitionsGroup 1293 }

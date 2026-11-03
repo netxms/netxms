@@ -9,8 +9,8 @@
 -- Management applications to identify devices and must match exactly an
 -- assigned ID. New product and trap IDs are registered by sending an
 -- email to: 3COM_PRODUCT_OID_REQUESTS@3com.com
--- 
--- SysObject and trap ID guidelines are fully documented in 3com-368. 
+--
+-- SysObject and trap ID guidelines are fully documented in 3com-368.
 -- Below is a brief explanation.
 --
 -- 3com-045 contains all 3Com product IDs except for Superstack products,
@@ -39,7 +39,7 @@
 --
 --
 -- **********************************************************************
--- 
+--
 --
 -- Comments:            This defines the structure of the 3Com branch.
 --
@@ -445,7 +445,7 @@
 -- gSHDSLRouterVoDSLPorts, gSHDSLRouterNoVoDSLPorts
 
 -- March 20th 2001 Paola Biti/Yuli Hou
--- added wLanAP to wireless branch. Renamed airConnect branch 
+-- added wLanAP to wireless branch. Renamed airConnect branch
 -- wirelessDevices
 
 -- March 26th 2001 Paola Biti/Davide Berti
@@ -665,7 +665,7 @@
 -- added nj225FXSC { networkJacks 5 }
 -- added nj225FXST { networkJacks 6 }
 
--- April 14th 2004 Peter Saunderson / Paola Biti 3Com 
+-- April 14th 2004 Peter Saunderson / Paola Biti 3Com
 -- changed the names of
 -- 4500 and 5500 ei to 4505 and 5505 and 5700 is the 5570
 
@@ -926,17 +926,17 @@
 --
 -- Oct 24th Chris Saxton/Bob Burrill
 -- wireless11gAdslFirewallRouter108A (SuperGerry)OBJECT IDENTIFIER ::= { xDSL 16 }
--- wireless11gAdslFirewallRouter108B (SuperGerry)OBJECT IDENTIFIER ::= { xDSL 17 }     
+-- wireless11gAdslFirewallRouter108B (SuperGerry)OBJECT IDENTIFIER ::= { xDSL 17 }
 --
 -- 13th December, 2006, Chris Saxton/Kevin Holohan
--- Renamed new switch2816SFPPLUS to smartswitch2916SFPPlus 
--- (Marketing name change pre-release) 
--- Renamed new switch2824SFPPLUS to smartswitch2924SFPPlus 
+-- Renamed new switch2816SFPPLUS to smartswitch2916SFPPlus
+-- (Marketing name change pre-release)
+-- Renamed new switch2824SFPPLUS to smartswitch2924SFPPlus
 -- (Marketing name change pre-release)
 --
--- smartswitch2948SFPPlus        OBJECT IDENTIFIER ::= { hub 62 } 
+-- smartswitch2948SFPPlus        OBJECT IDENTIFIER ::= { hub 62 }
 -- smartswitch2924PWRPlus        OBJECT IDENTIFIER ::= { hub 63 }
--- 
+--
 
 -- 8th January, 2007 Paola Biti/Martin Hopkins
 -- The following identifiers are assigned to non Tipping Point XSeries
@@ -944,11 +944,11 @@
 -- xSeries            OBJECT IDENTIFIER ::= { intranetAppliances 5 }
 -- x506		      OBJECT IDENTIFIER ::= { xSeries 1 }
 -- x525User           OBJECT IDENTIFIER ::= { xSeries 2 }
--- x5Unlimited        OBJECT IDENTIFIER ::= { xSeries 3 }   
+-- x5Unlimited        OBJECT IDENTIFIER ::= { xSeries 3 }
 
 -- 16th January, 2007, Chris Saxton/Kevin Holohan
 --
--- officeConnect-MngGigPoe     OBJECT IDENTIFIER ::= { hub 64 }    
+-- officeConnect-MngGigPoe     OBJECT IDENTIFIER ::= { hub 64 }
 
 -- 12 March 2007, Colin Currie
 -- Added a branch for the generic wireless AP configuration MIB, 3FC646
@@ -969,14 +969,14 @@
 -- 26th March 2007, Chris Saxton
 -- changed name of smartswitch2910PWRPlus to officeConnectMngGigPWR10
 
--- 30th March 2007, Chris Saxton  
+-- 30th March 2007, Chris Saxton
 -- Jasmine2
 -- wireless11gCableFirewallRouter54  OBJECT IDENTIFIER ::= { xDSL 18 }
--- wireless11gCableFirewallRouter108 OBJECT IDENTIFIER ::= { xDSL 19 }  
+-- wireless11gCableFirewallRouter108 OBJECT IDENTIFIER ::= { xDSL 19 }
 
 -- 3rd May 2007, Chris Saxton/Jeff Schwartz
---  Airprotect WLAN IPS system MIB 
--- a3airprotect            OBJECT IDENTIFIER ::= { a3Com 55 } 
+--  Airprotect WLAN IPS system MIB
+-- a3airprotect            OBJECT IDENTIFIER ::= { a3Com 55 }
 
 -- 9th May 2007, Paola Biti/Paola Biti
 -- jvSwitch4200G-24PWR             OBJECT IDENTIFIER ::= { jvSwitches 49 }
@@ -989,14 +989,14 @@
 -- jvSwitch7912          OBJECT IDENTIFIER ::= { jvSwitches 54 }
 
 -- 8th November 2007, Chris Saxton
--- wlanIPS6100           OBJECT IDENTIFIER ::= { wirelessDevices 28 }  
+-- wlanIPS6100           OBJECT IDENTIFIER ::= { wirelessDevices 28 }
 --
 -- 30th November 2007.  Chris Saxton/John Pacheco
 -- wlanWX5500-OSM       OBJECT IDENTIFIER ::= { wirelessDevices 29 }
--- 
--- 5th December, 2007.	Chris Saxton/Simon <zhang_haitao@h3c.com>-- 
+--
+-- 5th December, 2007.	Chris Saxton/Simon <zhang_haitao@h3c.com>--
 -- Pagoda H3C Wireless Switches and AP
--- wlanWLC5002			OBJECT IDENTIFIER ::= { wirelessDevices 30 }  
+-- wlanWLC5002			OBJECT IDENTIFIER ::= { wirelessDevices 30 }
 -- wlanWLC6100-Master	OBJECT IDENTIFIER ::= { wirelessDevices 31 }
 -- wlanWLC6100-Switch	OBJECT IDENTIFIER ::= { wirelessDevices 32 }
 
@@ -1008,7 +1008,7 @@
 -- jvSwitch5500G-VI-24-PWR     OBJECT IDENTIFIER ::= { jvSwitches 36 }
 -- jvSwitch5500G-VI-48-PWR     OBJECT IDENTIFIER ::= { jvSwitches 37 }
 -- jvSwitch5500G-VI-24-SFP     OBJECT IDENTIFIER ::= { jvSwitches 38 }
--- to: 
+-- to:
 -- jvSwitch4800G24Port         OBJECT IDENTIFIER ::= { jvSwitches 34 }
 -- jvSwitch4800G48Port         OBJECT IDENTIFIER ::= { jvSwitches 35 }
 -- jvSwitch4800GPWR24Port      OBJECT IDENTIFIER ::= { jvSwitches 36 }
@@ -1027,11 +1027,11 @@
 -- jvOsm64M-5800               OBJECT IDENTIFIER ::= { jvOsms 3 }
 
 -- 9th January 2008, Chris Saxton/John Pacheco
--- 3Com Baseline Managed Gigabit PoE Switch 3124 3CRBLMG24  
--- baselinePoESwitch3524		OBJECT IDENTIFIER ::= { hub 65 } 
+-- 3Com Baseline Managed Gigabit PoE Switch 3124 3CRBLMG24
+-- baselinePoESwitch3524		OBJECT IDENTIFIER ::= { hub 65 }
 
 -- 9th January 2008, Chris Saxton/Kevin Holohan
--- 3Com Baseline Switch 2226-SFP Plus	Voyager V  3CBLSF26		
+-- 3Com Baseline Switch 2226-SFP Plus	Voyager V  3CBLSF26
 -- baseline2226SFPPlus			OBJECT IDENTIFIER ::= { hub 66 }
 -- 3Com Baseline Switch 2426-PWR Plus	Polar III  3CBLSF26PWR
 -- baseline2426PWRPlus			OBJECT IDENTIFIER ::= { hub 67 }
@@ -1043,22 +1043,22 @@
 -- jvSwitch5800XG14PortFlex    OBJECT IDENTIFIER ::= { jvSwitches 56 }
 -- jvSwitch5800GTPWR24Port     OBJECT IDENTIFIER ::= { jvSwitches 57 }
 -- jvSwitch5800GTPWR48Port     OBJECT IDENTIFIER ::= { jvSwitches 58 }
--- jvSwitch5800GT24PortSFP     OBJECT IDENTIFIER ::= { jvSwitches 59 }   
-                     
+-- jvSwitch5800GT24PortSFP     OBJECT IDENTIFIER ::= { jvSwitches 59 }
+
 -- 21st January 2008 Chris Saxton/John Pacheco
 --  3Com IntelliJack NJ1000
 -- nj1000					OBJECT IDENTIFIER ::= { networkJacks 10 }
-        
+
 -- 23rd January 2008 Chris Saxton/John Pacheco
---  3Com Wireless 9550 Dual Radio 11n PoE Access Point 3CRWE955075     
+--  3Com Wireless 9550 Dual Radio 11n PoE Access Point 3CRWE955075
 --  3Com Wireless 9150 11n PoE Access Point 3CRWE915075
 --  wlanAP9550				OBJECT IDENTIFIER ::= { wirelessDevices 33 }
 --  wlanAP9150				OBJECT IDENTIFIER ::= { wirelessDevices 34 }
 
 -- 25th January 2008 Chris Saxton/Tom Kinahan/Kevin Holohan
--- 3CBLSF26-A		H3C Baseline Switch 2226-SFP Plus    
--- 3CBLSF26PWR	-A	H3C Baseline Switch 2426-PWR Plus 
--- 3CBLSF50-A		H3C Baseline Switch 2250-SFP Plus 
+-- 3CBLSF26-A		H3C Baseline Switch 2226-SFP Plus
+-- 3CBLSF26PWR	-A	H3C Baseline Switch 2426-PWR Plus
+-- 3CBLSF50-A		H3C Baseline Switch 2250-SFP Plus
 -- jvbaseline2226SFPPlus		OBJECT IDENTIFIER ::= { jvSwitches 60 }
 -- jvbaseline2426PWRPlus		OBJECT IDENTIFIER ::= { jvSwitches 61 }
 -- jvbaseline2250SFPPlus		OBJECT IDENTIFIER ::= { jvSwitches 62 }
@@ -1076,12 +1076,12 @@
 -- jvSwitch7906E          OBJECT IDENTIFIER ::= { jvSwitches 52 }
 -- jvSwitch7906EV         OBJECT IDENTIFIER ::= { jvSwitches 53 }
 -- jvSwitch7910E          OBJECT IDENTIFIER ::= { jvSwitches 54 }
-          
--- 3th March, 2008 Chris Saxton/Roshan Thekkekunnel/Kevin Holohan 
+
+-- 3th March, 2008 Chris Saxton/Roshan Thekkekunnel/Kevin Holohan
 -- Cromarty is OfficeConnect 8 port gig switch
--- IronBridge is OfficeConnect 8 port fast ethernet with PoE            
--- officeconnect-Gig8			OBJECT IDENTIFIER ::= { hub 69 }   
--- officeconnect-PWR8			OBJECT IDENTIFIER ::= { hub 70 } 
+-- IronBridge is OfficeConnect 8 port fast ethernet with PoE
+-- officeconnect-Gig8			OBJECT IDENTIFIER ::= { hub 69 }
+-- officeconnect-PWR8			OBJECT IDENTIFIER ::= { hub 70 }
 
 -- 28th March 2008, Paola Biti/Paola Biti
 -- jvSwitch9505E               OBJECT IDENTIFIER ::= { jvSwitches 63 }
@@ -1093,9 +1093,9 @@
 -- WLC5024  Wireless controller with separate wired and wireless engines
 -- wlanWLC5024-Wireless			OBJECT IDENTIFIER ::= { wirelessDevices 35 }
 -- wlanWLC5024-Wired			OBJECT IDENTIFIER ::= { wirelessDevices 36 }
--- wlan7900Blade				OBJECT IDENTIFIER ::= { wirelessDevices 37 }  
+-- wlan7900Blade				OBJECT IDENTIFIER ::= { wirelessDevices 37 }
 
--- 23rd April 2008 Chis Saxton 
+-- 23rd April 2008 Chis Saxton
 -- asteriskAppliance              OBJECT IDENTIFIER ::= { callProcessors 8 }
 
 -- 26th April 2008 Paola Biti/Julian Palmer
@@ -1105,10 +1105,10 @@
 -- jvOsnRouterOsnMIM           OBJECT IDENTIFIER ::= { jvOsns 4 }
 -- jvOsnRouterOsnFIC           OBJECT IDENTIFIER ::= { jvOsns 5 }
 -- jvOsn5500G                  OBJECT IDENTIFIER ::= { jvOsns 6 }
-   
+
 -- 30th April 2008 Chris Saxton/John Pacheco
 -- 3Com IntelliJack NJ2000
--- nj2000					OBJECT IDENTIFIER ::= { networkJacks 11 }    
+-- nj2000					OBJECT IDENTIFIER ::= { networkJacks 11 }
 
 
 -- 23rd May 2008 Chris Saxton/Kevin Holohan
@@ -1243,15 +1243,15 @@ a3ComTrpz-mib           OBJECT IDENTIFIER ::= { a3Com 50 }
 a3ComNetworkJack-mib    OBJECT IDENTIFIER ::= { a3Com 51 }
 a3Com549-mib  			OBJECT IDENTIFIER ::= { a3Com 52 }
 a3comNbxMIB             OBJECT IDENTIFIER ::= { a3Com 53 }
-wlan-mib2               OBJECT IDENTIFIER ::= { a3Com 54 }     
+wlan-mib2               OBJECT IDENTIFIER ::= { a3Com 54 }
 a3airprotect            OBJECT IDENTIFIER ::= { a3Com 55 }
-     
+
 --
 -- Start of wireless products defined under wlan-mib2
 --
 ap8760                  OBJECT IDENTIFIER ::= { wlan-mib2 1 }
 b2bBridgeAP             OBJECT IDENTIFIER ::= { wlan-mib2 2 }
-apConfigMib             OBJECT IDENTIFIER ::= { wlan-mib2 3 }   
+apConfigMib             OBJECT IDENTIFIER ::= { wlan-mib2 3 }
 
 
 --
@@ -2314,16 +2314,16 @@ switch2226Plus2             OBJECT IDENTIFIER ::= { hub 57 }
 switch2250Plus2             OBJECT IDENTIFIER ::= { hub 58 }
 switch2426PwrPlus           OBJECT IDENTIFIER ::= { hub 59 }
 smartswitch2916SFPPlus      OBJECT IDENTIFIER ::= { hub 60 }
-smartswitch2924SFPPlus      OBJECT IDENTIFIER ::= { hub 61 }  
-smartswitch2948SFPPlus      OBJECT IDENTIFIER ::= { hub 62 } 
+smartswitch2924SFPPlus      OBJECT IDENTIFIER ::= { hub 61 }
+smartswitch2948SFPPlus      OBJECT IDENTIFIER ::= { hub 62 }
 smartswitch2924PWRPlus      OBJECT IDENTIFIER ::= { hub 63 }
-officeConnectMngGigPWR10    OBJECT IDENTIFIER ::= { hub 64 }   
-baselinePoESwitch3124		OBJECT IDENTIFIER ::= { hub 65 }   
+officeConnectMngGigPWR10    OBJECT IDENTIFIER ::= { hub 64 }
+baselinePoESwitch3124		OBJECT IDENTIFIER ::= { hub 65 }
 baseline2226SFPPlus			OBJECT IDENTIFIER ::= { hub 66 }
 baseline2426PWRPlus			OBJECT IDENTIFIER ::= { hub 67 }
-baseline2250SFPPlus			OBJECT IDENTIFIER ::= { hub 68 }      
-officeconnect-Gig8			OBJECT IDENTIFIER ::= { hub 69 }   
-officeconnect-PWR8			OBJECT IDENTIFIER ::= { hub 70 }   
+baseline2250SFPPlus			OBJECT IDENTIFIER ::= { hub 68 }
+officeconnect-Gig8			OBJECT IDENTIFIER ::= { hub 69 }
+officeconnect-PWR8			OBJECT IDENTIFIER ::= { hub 70 }
 smartswitch2920SFPPlus      OBJECT IDENTIFIER ::= { hub 71 }
 smartswitch2928SFPPlus      OBJECT IDENTIFIER ::= { hub 72 }
 smartswitch2952SFPPlus      OBJECT IDENTIFIER ::= { hub 73 }
@@ -3115,7 +3115,7 @@ superStackNbxCallProcessor    OBJECT IDENTIFIER ::= { callProcessors 3 }
 officeConnectNbxCallProcessor OBJECT IDENTIFIER ::= { callProcessors 4 }
 nbxv3000                      OBJECT IDENTIFIER ::= { callProcessors 5 }
 nbxv3000Bri                   OBJECT IDENTIFIER ::= { callProcessors 6 }
-nbxv3001                      OBJECT IDENTIFIER ::= { callProcessors 7 }    
+nbxv3001                      OBJECT IDENTIFIER ::= { callProcessors 7 }
 asteriskAppliance             OBJECT IDENTIFIER ::= { callProcessors 8 }
 
 
@@ -3209,7 +3209,7 @@ wireless11gAdslRouter             OBJECT IDENTIFIER ::= { xDSL 13 }
 wireless11gAdslFirewallRouterA    OBJECT IDENTIFIER ::= { xDSL 14 }
 wireless11gAdslFirewallRouterB    OBJECT IDENTIFIER ::= { xDSL 15 }
 wireless11gAdslFirewallRouter108A OBJECT IDENTIFIER ::= { xDSL 16 }
-wireless11gAdslFirewallRouter108B OBJECT IDENTIFIER ::= { xDSL 17 }  
+wireless11gAdslFirewallRouter108B OBJECT IDENTIFIER ::= { xDSL 17 }
 wireless11gCableFirewallRouter54  OBJECT IDENTIFIER ::= { xDSL 18 }
 wireless11gCableFirewallRouter108 OBJECT IDENTIFIER ::= { xDSL 19 }
 officeconnectgigvpnfirewall		  OBJECT IDENTIFIER ::= { xDSL 20 }
@@ -3250,14 +3250,14 @@ wlanAP8760                      OBJECT IDENTIFIER ::= { wirelessDevices 23 }
 wlanUnifiedGigWirelessPoE24     OBJECT IDENTIFIER ::= { wirelessDevices 24 }
 wlanAP7760                      OBJECT IDENTIFIER ::= { wirelessDevices 25 }
 wlan11agOutdoorBtoBBridge       OBJECT IDENTIFIER ::= { wirelessDevices 26 }
-wlanUnifiedGigWirelessPoE8      OBJECT IDENTIFIER ::= { wirelessDevices 27 } 
+wlanUnifiedGigWirelessPoE8      OBJECT IDENTIFIER ::= { wirelessDevices 27 }
 wlanIPS6100                     OBJECT IDENTIFIER ::= { wirelessDevices 28 }
 wlanWX5500-OSM                  OBJECT IDENTIFIER ::= { wirelessDevices 29 }
 wlanWLC5002						OBJECT IDENTIFIER ::= { wirelessDevices 30 }
 wlanWLC6100-Master				OBJECT IDENTIFIER ::= { wirelessDevices 31 }
 wlanWLC6100-Switch				OBJECT IDENTIFIER ::= { wirelessDevices 32 }
 wlanAP9550                      OBJECT IDENTIFIER ::= { wirelessDevices 33 }
-wlanAP9150                      OBJECT IDENTIFIER ::= { wirelessDevices 34 }   
+wlanAP9150                      OBJECT IDENTIFIER ::= { wirelessDevices 34 }
 wx3024                          OBJECT IDENTIFIER ::= { wirelessDevices 35 }
 wx3024-LSW                      OBJECT IDENTIFIER ::= { wirelessDevices 36 }
 wlan7900Blade					OBJECT IDENTIFIER ::= { wirelessDevices 37 }
@@ -3287,9 +3287,9 @@ nj225FXSC   OBJECT IDENTIFIER ::= { networkJacks 5 }
 nj225FXST   OBJECT IDENTIFIER ::= { networkJacks 6 }
 nj240FXSC   OBJECT IDENTIFIER ::= { networkJacks 7 }
 nj240FXST   OBJECT IDENTIFIER ::= { networkJacks 8 }
-nj240FXLC   OBJECT IDENTIFIER ::= { networkJacks 9 } 
-nj1000		OBJECT IDENTIFIER ::= { networkJacks 10 }  
-nj2000		OBJECT IDENTIFIER ::= { networkJacks 11 } 
+nj240FXLC   OBJECT IDENTIFIER ::= { networkJacks 9 }
+nj1000		OBJECT IDENTIFIER ::= { networkJacks 10 }
+nj2000		OBJECT IDENTIFIER ::= { networkJacks 11 }
 
 
 

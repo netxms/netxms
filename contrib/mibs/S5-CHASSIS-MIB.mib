@@ -332,7 +332,7 @@ s5ChasGrpEncodeFactor OBJECT-TYPE
 		          module number in a unit starting from 1
 		          and increases in a left-to-right and
 		          bottom-to-top fashion.
-      
+
 		NonStackable platforms:
 		  These NMMs like 5310, 5510 will always return a
 		  value of 1 for this object.  Encoding/decoding

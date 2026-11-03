@@ -18,7 +18,7 @@ IMPORTS
     ifName
         FROM IF-MIB
     MODULE-COMPLIANCE, NOTIFICATION-GROUP, OBJECT-GROUP
-        FROM SNMPv2-CONF 	
+        FROM SNMPv2-CONF
     Gauge32, MODULE-IDENTITY, NOTIFICATION-TYPE, OBJECT-TYPE, IpAddress
         FROM SNMPv2-SMI
     DisplayString
@@ -28,29 +28,29 @@ IMPORTS
 
 fnFortiSwitchMib MODULE-IDENTITY
     LAST-UPDATED "202401050000Z"
-    ORGANIZATION 
+    ORGANIZATION
         "Fortinet Technologies, Inc."
-    CONTACT-INFO 
+    CONTACT-INFO
         "
          Technical Support
          email: support@fortinet.com
          http://www.fortinet.com"
-    DESCRIPTION 
+    DESCRIPTION
         "MIB module for Fortinet FortiSwitch devices."
     REVISION    "202204010000Z"
     DESCRIPTION
         "Updated version of FORTINET-FORTISWITCH-MIB."
     ::= { fortinet 106 }
 
---  
+--
 -- fsCoreMib.fsCommon
---  
+--
 
 fsCommon OBJECT IDENTIFIER ::= { fnFortiSwitchMib 1 }
 
---  
+--
 -- fsCoreMib.fsCommon.fsSystem
---  
+--
 fsSys OBJECT IDENTIFIER ::= { fsCommon 1 }
 
 fsSysSerial OBJECT-TYPE
@@ -72,14 +72,14 @@ fsTraps OBJECT IDENTIFIER
 fsTrapPrefix OBJECT IDENTIFIER
     ::= { fsTraps 0 }
 
-fsTrapObjects OBJECT IDENTIFIER 
+fsTrapObjects OBJECT IDENTIFIER
     ::= { fsTraps 1 }
 
 fsLlvTrapMsg OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Message associated with a learning limit violation."
     ::= { fsTrapObjects 1 }
 
@@ -87,7 +87,7 @@ fsLearningTrapVid OBJECT-TYPE
     SYNTAX      INTEGER
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "VLAN ID associated with a MAC learning event."
     ::= { fsTrapObjects 2 }
 
@@ -95,7 +95,7 @@ fsLearningTrapType OBJECT-TYPE
     SYNTAX      INTEGER { add(1), delete(2), movefrom(3), moveto(4) }
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Type associated with a MAC learning event (add/delete/movefrom/moveto)."
     ::= { fsTrapObjects 3 }
 
@@ -103,7 +103,7 @@ fsSensorName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Name of the sensor associated with a trap message."
     ::= { fsTrapObjects 4 }
 
@@ -111,7 +111,7 @@ fsSensorType OBJECT-TYPE
     SYNTAX      INTEGER { temperature(1), poe(2), cpu(3), memory(4), disk(6) }
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Type of sensor associated with a trap message (temperature/PoE/CPU/memory/disk)."
     ::= { fsTrapObjects 5 }
 
@@ -119,7 +119,7 @@ fsSensorIdx OBJECT-TYPE
     SYNTAX      INTEGER
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Index of the sensor associated with a trap message."
     ::= { fsTrapObjects 6 }
 
@@ -127,7 +127,7 @@ fsSensorFanEventType OBJECT-TYPE
     SYNTAX      INTEGER { detected(1), undetected(2), resumed(3), failure(4)}
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Type of event associated with the fan trap message (detected/undetected/resumed/failure)."
     ::= { fsTrapObjects 7 }
 
@@ -135,7 +135,7 @@ fsSensorPsuEventType OBJECT-TYPE
     SYNTAX      INTEGER { up(1), connected(2), good(3), down(4), disconnected(5), bad(6)}
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Type of event associated with the PSU trap message (up/connected/good/down/disconnected/bad)."
     ::= { fsTrapObjects 8 }
 
@@ -143,7 +143,7 @@ fsAlarmEventType OBJECT-TYPE
     SYNTAX      INTEGER { inrange(1), warning(2), outofrange(3), cleared(4) }
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Type of event associated with the alarm trap message (inrange/warning/outofrange/cleared)."
     ::= { fsTrapObjects 9 }
 
@@ -151,7 +151,7 @@ fsAlarmThresholdValue OBJECT-TYPE
     SYNTAX      INTEGER
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Threshold value."
     ::= { fsTrapObjects 10 }
 
@@ -159,7 +159,7 @@ fsAlarmThresholdUnits OBJECT-TYPE
     SYNTAX      INTEGER { celcius(1), watts(2), percentage(3), unknown(4) }
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Type of units associated with this threshold value (celcius/watts/percentage/unknown)."
     ::= { fsTrapObjects 11 }
 
@@ -167,7 +167,7 @@ fsIpAddress OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP address associated with a trap message (e.g. IP Conflict)."
     ::= { fsTrapObjects 12 }
 
@@ -175,7 +175,7 @@ fsJsonString OBJECT-TYPE
     SYNTAX      OCTET STRING (SIZE (0..1360))
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "JSON string associated with an automation-generated trap message."
     ::= { fsTrapObjects 13 }
 
@@ -198,63 +198,63 @@ fsTrunkMember OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..82))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trunk members of the device, including this trunk member's corresponding blade's serial number and its slot name"
     ::= { fsTrunkMemPrefix 1 }
 
 fsTrapMemberDown NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial,sysName,fsTrunkMember }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A trunk member has left this trunk."
     ::= { fsTrapPrefix 703 }
 
 fsTrapMemberUp NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial,sysName, fsTrunkMember}
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A trunk member has joined this trunk"
     ::= { fsTrapPrefix 704 }
 
-fsTrapLlvViolation NOTIFICATION-TYPE 
+fsTrapLlvViolation NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsLlvTrapMsg }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trap messages for learning limit violations."
     ::= { fsTrapPrefix 705 }
 
-fsTrapLearningEvent NOTIFICATION-TYPE 
+fsTrapLearningEvent NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, dot1dTpFdbAddress, fsLearningTrapVid, dot1dTpFdbPort, fsLearningTrapType }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A new MAC address learning event occurred (add/delete/move)."
     ::= { fsTrapPrefix 706 }
 
-fsTrapSensorFault NOTIFICATION-TYPE 
+fsTrapSensorFault NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsSensorName, fsSensorType }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trap message indicates that a faulty sensor was detected."
     ::= { fsTrapPrefix 707 }
 
-fsTrapSensorAlarm NOTIFICATION-TYPE 
+fsTrapSensorAlarm NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsSensorName, fsSensorType, fsAlarmEventType, fsAlarmThresholdValue, fsAlarmThresholdUnits }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trap messages for temperature, PoE, CPU, memory, and disk sensor alarms."
     ::= { fsTrapPrefix 708 }
 
-fsTrapFanDetect NOTIFICATION-TYPE 
+fsTrapFanDetect NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsSensorIdx, fsSensorFanEventType }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trap message associated with fan sensor detection."
     ::= { fsTrapPrefix 709 }
 
-fsTrapPsuStatus NOTIFICATION-TYPE 
+fsTrapPsuStatus NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsSensorIdx, fsSensorPsuEventType }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trap message associated with PSU status changes."
     ::= { fsTrapPrefix 710 }
 
@@ -268,49 +268,49 @@ fsTrapStormControl NOTIFICATION-TYPE
 fsTrapIpConflict NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsIpAddress, ifName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trap message associated with IP Conflict Detection."
     ::= { fsTrapPrefix 801 }
 
 fsTrapTrunkMemberHBOutOfSync NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, ifName, ifName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trap message indicates a trunk member HB is out of sync (trunk = ifName1, member = ifName2)."
     ::= { fsTrapPrefix 802 }
 
 fsTrapStitch1 NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsJsonString }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Custom SNMP trap triggerable from automation stitch."
     ::= { fsTrapPrefix 901 }
 
 fsTrapStitch2 NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsJsonString }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Custom SNMP trap triggerable from automation stitch."
     ::= { fsTrapPrefix 902 }
 
 fsTrapStitch3 NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsJsonString }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Custom SNMP trap triggerable from automation stitch."
     ::= { fsTrapPrefix 903 }
 
 fsTrapStitch4 NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsJsonString }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Custom SNMP trap triggerable from automation stitch."
     ::= { fsTrapPrefix 904 }
 
 fsTrapStitch5 NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fsJsonString }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Custom SNMP trap triggerable from automation stitch."
     ::= { fsTrapPrefix 905 }
 
@@ -328,7 +328,7 @@ fsSysVersion OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..128))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Firmware version of the device"
     ::= { fsSystemInfo 1 }
 
@@ -336,7 +336,7 @@ fsSysCpuUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current CPU usage (percentage)"
     ::= { fsSystemInfo 2 }
 
@@ -344,7 +344,7 @@ fsSysMemUsage OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current system memory usage (KB)"
     ::= { fsSystemInfo 3 }
 
@@ -352,7 +352,7 @@ fsSysMemCapacity OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Total physical memory (RAM) installed (KB)"
     ::= { fsSystemInfo 4 }
 
@@ -360,7 +360,7 @@ fsSysDiskUsage OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current hard disk usage (KB), if disk is present"
     ::= { fsSystemInfo 5 }
 
@@ -368,7 +368,7 @@ fsSysDiskCapacity OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Total hard disk capacity (KB), if disk is present"
     ::= { fsSystemInfo 6 }
 
@@ -464,7 +464,7 @@ fsMibConformance OBJECT IDENTIFIER
 fsNotificationGroup NOTIFICATION-GROUP
     NOTIFICATIONS { fsTrapMemberDown, fsTrapMemberUp }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Notifications that can be generated from a FortiSwitch device."
     ::= { fsMibConformance 1 }
 
@@ -486,15 +486,15 @@ fsTrunkObjectGroup OBJECT-GROUP
 
 fsMIBCompliance MODULE-COMPLIANCE
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The compliance statement for the application MIB."
 
     MODULE      -- this module
 
         GROUP   fsNotificationGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Notifications are feature dependant. See manual for feature information."
-	
+
 	GROUP   fsSystemObjectGroup
         DESCRIPTION
               "Model and feature specific."

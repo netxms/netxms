@@ -3,7 +3,7 @@
 WLSX-STATS-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
 
        MODULE-IDENTITY,
        OBJECT-TYPE,
@@ -32,7 +32,7 @@ WLSX-STATS-MIB DEFINITIONS ::= BEGIN
 		wlsxEnterpriseMibModules
 			FROM ARUBA-MIB;
 
-   wlsxStatsMIB MODULE-IDENTITY 
+   wlsxStatsMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -43,7 +43,7 @@ WLSX-STATS-MIB DEFINITIONS ::= BEGIN
             Fax:        408 752 0626"
        DESCRIPTION
            "This MIB module defines MIB objects which provide
-            information about the Statistics in the 
+            information about the Statistics in the
 			Aruba controller."
        REVISION        "202008141745Z"
        DESCRIPTION

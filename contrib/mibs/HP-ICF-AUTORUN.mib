@@ -6,7 +6,7 @@ HP-ICF-AUTORUN DEFINITIONS ::= BEGIN
       TruthValue
          FROM SNMPv2-TC
       SnmpAdminString
-         FROM SNMP-FRAMEWORK-MIB 
+         FROM SNMP-FRAMEWORK-MIB
       hpSwitch
          FROM HP-ICF-OID;
 
@@ -17,15 +17,15 @@ HP-ICF-AUTORUN DEFINITIONS ::= BEGIN
       CONTACT-INFO "Hewlett Packard Company
                     8000 Foothills Blvd.
                     Roseville, CA 95747"
-      DESCRIPTION "This MIB module manages Autorun configuration 
+      DESCRIPTION "This MIB module manages Autorun configuration
                    for devices in the HP Integrated Communication
-                   Facility product line." 
-      ::= { hpSwitch 42 }        
+                   Facility product line."
+      ::= { hpSwitch 42 }
 
 -- Autorun Configuration
 
    hpicfAutorunConfig    OBJECT IDENTIFIER ::= { hpicfAutorun 1 }
-   
+
    hpicfUsbAutorunEnable OBJECT-TYPE
       SYNTAX      TruthValue
       MAX-ACCESS  read-write
@@ -40,7 +40,7 @@ HP-ICF-AUTORUN DEFINITIONS ::= BEGIN
       SYNTAX      TruthValue
       MAX-ACCESS  read-write
       STATUS      current
-      DESCRIPTION "This MIB object identifies the admin status of the 
+      DESCRIPTION "This MIB object identifies the admin status of the
                    secure-mode for the USB Autorun feature
                    true(1)  - secure-mode for autorun Enabled.
                    false(2) - secure-mode for autorun Disabled."
@@ -50,7 +50,7 @@ HP-ICF-AUTORUN DEFINITIONS ::= BEGIN
       SYNTAX      SnmpAdminString (SIZE(0..32))
       MAX-ACCESS  read-write
       STATUS      current
-      DESCRIPTION "This MIB object identifies the configured encryption 
+      DESCRIPTION "This MIB object identifies the configured encryption
                    key string for USB Autorun feature"
       ::= { hpicfAutorunConfig 3 }
 
@@ -58,7 +58,7 @@ HP-ICF-AUTORUN DEFINITIONS ::= BEGIN
 
    hpicfAutorunConformance
       OBJECT IDENTIFIER ::= { hpicfAutorun 2 }
-   
+
    hpicfAutorunCompliances
      OBJECT IDENTIFIER ::= { hpicfAutorunConformance 1 }
    hpicfAutorunGroups
@@ -66,12 +66,12 @@ HP-ICF-AUTORUN DEFINITIONS ::= BEGIN
 
    hpicfAutorunCompliance MODULE-COMPLIANCE
       STATUS      current
-      DESCRIPTION "Compliance statement for HP ICP Autorun 
+      DESCRIPTION "Compliance statement for HP ICP Autorun
                    configuration"
       MODULE
          MANDATORY-GROUPS { hpicfAutorunConfigGroup }
       ::= { hpicfAutorunCompliances 1 }
-    
+
   hpicfAutorunConfigGroup OBJECT-GROUP
      OBJECTS     { hpicfUsbAutorunEnable,
                    hpicfUsbAutorunSecureMode,
@@ -79,6 +79,6 @@ HP-ICF-AUTORUN DEFINITIONS ::= BEGIN
                  }
      STATUS      current
      DESCRIPTION " "
-     ::= { hpicfAutorunGroups 1 }   
-      
+     ::= { hpicfAutorunGroups 1 }
+
 END

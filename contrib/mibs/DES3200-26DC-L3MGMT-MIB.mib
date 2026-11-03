@@ -12,7 +12,7 @@
 -- Description:
 --  [New Object]
 --  [Modification]
--- Notes: (Requested by who and which project)  
+-- Notes: (Requested by who and which project)
 --
 -- Version 2.11, 2010/06/02, Rock Zhang
 -- Description:
@@ -29,29 +29,29 @@
 -- Version 2.09, 2009/11/07,  Eli
 -- Description:
 -- [New Object]
--- Add swL3IpCtrlIpDhcpOption12State and swL3IpCtrlIpDhcpOption12HostName to 
+-- Add swL3IpCtrlIpDhcpOption12State and swL3IpCtrlIpDhcpOption12HostName to
 -- support DHCP option 12 host name function.
 --
 -- Version 2.08, 2009/11/02, Sammy Xiao
 -- Description:
 -- [New Object]
--- 1. Add swL3IpCtrlIpDirectedBroadcastState to support IP directed broadcast function.  
+-- 1. Add swL3IpCtrlIpDirectedBroadcastState to support IP directed broadcast function.
 -- Request by Sammy Xiao for DGS-36xx.
 --
 -- Version 2.07, 2009/09/19, Sammy Xiao
 -- Description:
 -- [New Object]
--- 1. Add swL3IpCtrlDhcpv6ClientState and swL3Ipv6AddressCtrlAddressType 
---    to support DHCPv6 Client.   
+-- 1. Add swL3IpCtrlDhcpv6ClientState and swL3Ipv6AddressCtrlAddressType
+--    to support DHCPv6 Client.
 --
 -- Version 2.06, 2009/09/09, Rock Zhang
 -- Description:
 -- [New Object]
--- 1. Add swL3RoutePreferenceDefault, swL3RoutePreferenceEBGP and swL3RoutePreferenceIBGP 
+-- 1. Add swL3RoutePreferenceDefault, swL3RoutePreferenceEBGP and swL3RoutePreferenceIBGP
 --    to support multiple route preference.
 -- 2. Add value list "bgp(6)" in swL3RouteRedistriSrcProtocol.
 -- 3. Add value list "bgp(4)" in swL3RouteRedistriDstProtocol.
--- 4. Add object swL3RouteRedistriRouteMapName in swL3RouteRedistriTable. 
+-- 4. Add object swL3RouteRedistriRouteMapName in swL3RouteRedistriTable.
 -- 5. Change the swL3RouteRedistriMetric object's SYNTAX from INTEGER to Unsigned32.
 --
 -- Version 2.05, 2009/04/07, King
@@ -62,19 +62,19 @@
 --
 -- Version 2.04 2008/09/22, King cao
 -- Description:
--- [Modification]             
+-- [Modification]
 -- 1.Add objects swL3IpCtrlProxyArp and swL3IpCtrlLocalProxyArp.
 -- 2.Synchronize from DHCPRelay.mib
 --   Add swL3DHCPRelayOption60 and swL3DHCPRelayOption61.
---  
+--
 -- Version 2.03 2008/09/09, King cao
 -- Description:
--- [Modification]             
+-- [Modification]
 -- 1.Modify the MAX-ACCESS status of swL3IpCtrlSecondary from read-write to read-create.
 --
 -- Version 2.02 2008/07/30, Jeffers
 -- Description:
--- [New Object]             
+-- [New Object]
 -- 1.add objects swL3OspfECMPIpDestination,swL3OspfECMPIpSource,swL3OspfECMPCrcLow
 -- swL3OspfECMPCrcHigh,swL3OspfECMPTCPorUDPport and swL3OspfECMPState.
 --
@@ -123,15 +123,15 @@ DES3200-26DC-L3MGMT-MIB DEFINITIONS ::= BEGIN
     swL3OspfECMPMgmt        OBJECT IDENTIFIER ::= { swL3MgmtMIB 15 }
     swL3LocalRouteMgmt      OBJECT IDENTIFIER ::= { swL3MgmtMIB 16 }
     swL3RIPTimerMgmt        OBJECT IDENTIFIER ::= { swL3MgmtMIB 17 }
-     
-    swL3IpCtrlMgmt          OBJECT IDENTIFIER ::= { swL3IpMgmt 1 } 
+
+    swL3IpCtrlMgmt          OBJECT IDENTIFIER ::= { swL3IpMgmt 1 }
     swL3IpFdbMgmt           OBJECT IDENTIFIER ::= { swL3IpMgmt 2 }
 --    swL3IpFilterMgmt        OBJECT IDENTIFIER ::= { swL3IpMgmt 3 }
 
     swL3RelayDhcpMgmt      OBJECT IDENTIFIER ::= { swL3RelayMgmt 1 }
     swL3RelayDnsMgmt        OBJECT IDENTIFIER ::= { swL3RelayMgmt 2 }
-    
-    
+
+
 -- -----------------------------------------------------------------------------
 -- Textual Conventions
 -- -----------------------------------------------------------------------------
@@ -144,7 +144,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 		This is a binary string of 16 octets in network
 		byte-order."
 	SYNTAX       OCTET STRING (SIZE (16))
-    
+
  VrId ::= TEXTUAL-CONVENTION
      STATUS       current
      DESCRIPTION
@@ -169,10 +169,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates Routing Information Protocol (RIP) 
+            "This object indicates Routing Information Protocol (RIP)
             version 2 function is enabled or disabled."
         ::= { swL3DevCtrl 1 }
-        
+
     swL3DevCtrlOSPFState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -184,7 +184,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "This object indicates OSPF protocol is enabled or disabled."
         ::= { swL3DevCtrl 2 }
-        
+
     swL3DevCtrlDVMRPState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -208,7 +208,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "This object indicates VRRP protocol is enabled or disabled."
         ::= { swL3DevCtrl 5 }
-        
+
     swL3DevCtrlVrrpPingState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -220,7 +220,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "This object indicates VRRP protocol  Ping is enabled or disabled."
         ::= { swL3DevCtrl 6 }
-        
+
      swL3DevCtrlDHCPAutoConfigState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -258,7 +258,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        DESCRIPTION
 --            "This object indicates the IPv6 function state of the device."
 --        ::= { swL3IpCtrlMgmt 2 }
-                
+
     swL3IpCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3IpCtrlEntry
         MAX-ACCESS  not-accessible
@@ -276,7 +276,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         INDEX  { swL3IpCtrlInterfaceName }
         ::= { swL3IpCtrlTable 1 }
 
-    SwL3IpCtrlEntry ::= 
+    SwL3IpCtrlEntry ::=
         SEQUENCE {
             swL3IpCtrlInterfaceName
                 DisplayString,
@@ -289,25 +289,25 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             swL3IpCtrlVlanName
                 DisplayString,
             swL3IpCtrlProxyArp
-                INTEGER, 
+                INTEGER,
             swL3IpCtrlSecondary
-                TruthValue,                   
+                TruthValue,
             swL3IpCtrlMode
                 INTEGER,
             swL3IpCtrlAdminState
-                INTEGER,    
+                INTEGER,
             swL3IpCtrlIpv4AdminState
                 INTEGER,
 --            swL3IpCtrlIpv4OperState
---                INTEGER,    
+--                INTEGER,
             swL3IpCtrlIpv6AdminState
                INTEGER,
 --            swL3IpCtrlIpv6OperState
---                INTEGER, 
+--                INTEGER,
             swL3IpCtrlIpv6LinkLocalAddress
             	Ipv6Address,
             swL3IpCtrlIpv6LinkLocalPrefixLen
-                INTEGER,                   
+                INTEGER,
             swL3IpCtrlState
                 RowStatus,
             swL3IpCtrlIpv6LinkLocalAutoState
@@ -315,7 +315,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             swL3IpCtrlLocalProxyArp
                 INTEGER,
             swL3IpCtrlDhcpv6ClientState
-            	INTEGER,       
+            	INTEGER,
             swL3IpCtrlIpDirectedBroadcastState
             	INTEGER,
             swL3IpCtrlIpDhcpOption12State
@@ -323,7 +323,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             swL3IpCtrlIpDhcpOption12HostName
             	DisplayString
         }
-        
+
     swL3IpCtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-only
@@ -340,7 +340,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             "This object uniquely identifies the IP interface number in the
             swL3IpCtrlTable."
         ::= { swL3IpCtrlEntry 2 }
-        
+
     swL3IpCtrlIpAddr OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-write
@@ -349,7 +349,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             "The IP address of the interface. This object only can take the
             value of the unicast IP address."
         ::= { swL3IpCtrlEntry 3 }
-        
+
     swL3IpCtrlIpSubnetMask OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-write
@@ -363,7 +363,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates the IP control entry's VLAN name. The 
+            "This object indicates the IP control entry's VLAN name. The
             VLAN name in each entry must be unique in the IP Control Table."
         ::= { swL3IpCtrlEntry 5 }
     swL3IpCtrlProxyArp OBJECT-TYPE
@@ -385,19 +385,19 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             "When this is true(1), the IP address is the secondary IP.  When
             false(2), the IP address is the primary IP."
         ::= { swL3IpCtrlEntry 7 }
-                
+
     swL3IpCtrlMode OBJECT-TYPE
         SYNTAX  INTEGER {
                 other(1),
                 bootp(3),
                 dhcp(4)
-                }                
+                }
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates the IP operation mode. 
+            "This object indicates the IP operation mode.
 
-            other(1) - This entry is currently in use but the conditions under 
+            other(1) - This entry is currently in use but the conditions under
                 which it will remain are determined by each of the following values.
             bootp(3) -  The IP address will be set automatically from a BOOTP
                 server.
@@ -424,13 +424,13 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "The IPv4 admin state of the IP interface. The default state is determined by project. 
+            "The IPv4 admin state of the IP interface. The default state is determined by project.
              This state will only be effective when the swL3IpCtrlAdminState is enabled."
         ::= { swL3IpCtrlEntry 10 }
 
 --    swL3IpCtrlIpv4OperState OBJECT-TYPE
 --        SYNTAX  INTEGER {
---               other(1),	
+--               other(1),
 --               disabled(2)
 --                }
 --        MAX-ACCESS  read-only
@@ -440,32 +440,32 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --             If the swL3IpCtrlIpv4State is disabled, disabled(2) will be displayed.
 --             Otherwise, it will be set as other(1)."
 --        ::= { swL3IpCtrlEntry 11 }
-        
+
     swL3IpCtrlIpv6AdminState OBJECT-TYPE
-        SYNTAX  INTEGER {	
+        SYNTAX  INTEGER {
                enabled(1),
                disabled(2)
                 }
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "The IPv6 admin state of the IP interface. The default state is determined by project. 
+            "The IPv6 admin state of the IP interface. The default state is determined by project.
              This state will only be effective when the swL3IpCtrlAdminState is enabled."
         ::= { swL3IpCtrlEntry 12 }
 
 --    swL3IpCtrlIpv6OperState OBJECT-TYPE
 --        SYNTAX  INTEGER {
---               other(1),	
+--               other(1),
 --               disabled(2)
 --                }
 --        MAX-ACCESS  read-only
 --        STATUS  current
 --        DESCRIPTION
---            "The current IPv6 operational state of the IP interface. 
+--            "The current IPv6 operational state of the IP interface.
 --          If the swL3IpCtrlIpv6State is disabled, disabled(2) will be displayed.
 --          Otherwise, it will be set as other(1)."
 --     ::= { swL3IpCtrlEntry 13 }
-        
+
     swL3IpCtrlIpv6LinkLocalAddress  OBJECT-TYPE
         SYNTAX  Ipv6Address
         MAX-ACCESS  read-only
@@ -481,17 +481,17 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The IPv6 prefix length for this IPv6 link local address."
         ::= { swL3IpCtrlEntry 15 }
-                
+
     swL3IpCtrlState OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "This variable displays the status of the entry. The status is used
-            for creating, modifying, and deleting instances of the objects 
+            for creating, modifying, and deleting instances of the objects
             in this table."
         ::= { swL3IpCtrlEntry 16 }
-        
+
     swL3IpCtrlIpv6LinkLocalAutoState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -502,8 +502,8 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "The state of the IPv6 link local auto."
-        ::= { swL3IpCtrlEntry 17 }    
-        	        
+        ::= { swL3IpCtrlEntry 17 }
+
     swL3IpCtrlLocalProxyArp OBJECT-TYPE
         SYNTAX  INTEGER {
                enabled(1),
@@ -543,7 +543,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Enable or disable insertion of option 12 in the DHCPDISCOVER and 
+            "Enable or disable insertion of option 12 in the DHCPDISCOVER and
              DHCPREQUEST message."
         ::= { swL3IpCtrlEntry 22 }
     swL3IpCtrlIpDhcpOption12HostName OBJECT-TYPE
@@ -551,12 +551,12 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Specify the host name to be inserted in the DHCPDISCOVER and 
-             DHCPREQUEST message. The specified host name must start with a 
-             letter, end with a letter or digit, and have only letters, digits, 
-             and hyphen as interior characters; the maximal length is 63. By 
+            "Specify the host name to be inserted in the DHCPDISCOVER and
+             DHCPREQUEST message. The specified host name must start with a
+             letter, end with a letter or digit, and have only letters, digits,
+             and hyphen as interior characters; the maximal length is 63. By
              default, the host name is empty.
-             When set an empty host name, means to clear the host name setting and 
+             When set an empty host name, means to clear the host name setting and
              use the default value to encode option 12."
         ::= { swL3IpCtrlEntry 23 }
     swL3Ipv6CtrlTable OBJECT-TYPE
@@ -576,36 +576,36 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         INDEX  { swL3Ipv6CtrlInterfaceName }
         ::= { swL3Ipv6CtrlTable 1 }
 
-    SwL3Ipv6CtrlEntry ::= 
+    SwL3Ipv6CtrlEntry ::=
         SEQUENCE {
             swL3Ipv6CtrlInterfaceName
                 DisplayString,
             swL3Ipv6CtrlMaxReassmblySize
-                INTEGER,   
+                INTEGER,
             swL3Ipv6CtrlNsRetransTimer
                 Unsigned32,
 --            swL3Ipv6CtrlRsState
 --                INTEGER,
             swL3Ipv6CtrlRaState
-                INTEGER, 
+                INTEGER,
             swL3Ipv6CtrlRaMinRtrAdvInterval
             	INTEGER,
             swL3Ipv6CtrlRaMaxRtrAdvInterval
-            	INTEGER,	                
-            swL3Ipv6CtrlRaLifeTime  
-                INTEGER, 
-            swL3Ipv6CtrlRaReachableTime   
-                INTEGER, 
-            swL3Ipv6CtrlRaRetransTime   
-                Unsigned32, 
+            	INTEGER,
+            swL3Ipv6CtrlRaLifeTime
+                INTEGER,
+            swL3Ipv6CtrlRaReachableTime
+                INTEGER,
+            swL3Ipv6CtrlRaRetransTime
+                Unsigned32,
             swL3Ipv6CtrlRaHopLimit
-            	INTEGER,  
+            	INTEGER,
             swL3Ipv6CtrlRaManagedFlag
             	INTEGER,
             swL3Ipv6CtrlRaOtherConfigFlag
-            	INTEGER		 
+            	INTEGER
         }
-        
+
     swL3Ipv6CtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-only
@@ -621,7 +621,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "Maximum Reassembly Size of the IP interface."
         ::= { swL3Ipv6CtrlEntry 2 }
-        
+
     swL3Ipv6CtrlNsRetransTimer  OBJECT-TYPE
         SYNTAX  Unsigned32 (0..4294967295)
         MAX-ACCESS  read-write
@@ -658,10 +658,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "The minimum time allowed between sending unsolicited multicast Router 
-             Advertisements from the interface. The unit is set in seconds.             
+            "The minimum time allowed between sending unsolicited multicast Router
+             Advertisements from the interface. The unit is set in seconds.
              It must be no less than 3 seconds and no greater than .75 * MaxRtrAdvInterval.
-             Default value: 0.33 * MaxRtrAdvInterval"     
+             Default value: 0.33 * MaxRtrAdvInterval"
         ::= { swL3Ipv6CtrlEntry 6 }
 
     swL3Ipv6CtrlRaMaxRtrAdvInterval  OBJECT-TYPE
@@ -669,11 +669,11 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "The maximum time allowed between sending unsolicited multicast Router 
+            "The maximum time allowed between sending unsolicited multicast Router
             Advertisements from the interface. The unit is set in seconds."
-        DEFVAL {600}    
+        DEFVAL {600}
         ::= { swL3Ipv6CtrlEntry 7 }
-        
+
     swL3Ipv6CtrlRaLifeTime  OBJECT-TYPE
         SYNTAX  INTEGER (0..9000)
         MAX-ACCESS  read-write
@@ -687,7 +687,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the amount of time that a node can consider a neighboring 
+            "Indicates the amount of time that a node can consider a neighboring
              node reachable after receiving a reachability confirmation."
         ::= { swL3Ipv6CtrlEntry 9 }
 
@@ -696,7 +696,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the amount of time between retransmissions of neighbor 
+            "Indicates the amount of time between retransmissions of neighbor
              solicited messages.
              The unit is set in millisecond."
         ::= { swL3Ipv6CtrlEntry 10 }
@@ -706,7 +706,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the default value of the hop limit field in the IPv6 header for 
+            "Indicates the default value of the hop limit field in the IPv6 header for
              packets sent by hosts that receive this RA message."
         ::= { swL3Ipv6CtrlEntry 11 }
 
@@ -718,11 +718,11 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "When enabled, it indicates that hosts receiving this RA must use a 
-             stateful address configuration protocol to obtain an address in the addition 
+            "When enabled, it indicates that hosts receiving this RA must use a
+             stateful address configuration protocol to obtain an address in the addition
              to the addresses derived from the stateless address configuration."
         ::= { swL3Ipv6CtrlEntry 12 }
- 
+
     swL3Ipv6CtrlRaOtherConfigFlag OBJECT-TYPE
         SYNTAX  INTEGER {
                enabled(1),
@@ -731,10 +731,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "When enabled, it indicates that hosts receiving this RA must use a stateful 
+            "When enabled, it indicates that hosts receiving this RA must use a stateful
              address configuration protocol to obtain an on-link address configuration information."
-        ::= { swL3Ipv6CtrlEntry 13 } 
-        
+        ::= { swL3Ipv6CtrlEntry 13 }
+
     swL3Ipv6AddressCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3Ipv6AddressCtrlEntry
         MAX-ACCESS  not-accessible
@@ -751,8 +751,8 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             "A list of information about a specific IPv6 address."
         INDEX  { swL3Ipv6AddressCtrlInterfaceName, swL3Ipv6Address, swL3Ipv6AddressCtrlPrefixLen }
         ::= { swL3Ipv6AddressCtrlTable 1 }
-        
-    SwL3Ipv6AddressCtrlEntry ::= 
+
+    SwL3Ipv6AddressCtrlEntry ::=
         SEQUENCE {
             swL3Ipv6AddressCtrlInterfaceName
             	DisplayString,
@@ -771,8 +771,8 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             swL3Ipv6AddressCtrlState
                 RowStatus,
             swL3Ipv6AddressCtrlAddressType
-            	INTEGER     
-            }        
+            	INTEGER
+            }
 
     swL3Ipv6AddressCtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
@@ -780,15 +780,15 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "This object indicates the name of the IP interface. "
-        ::= { swL3Ipv6AddressCtrlEntry 1 }   
-        
+        ::= { swL3Ipv6AddressCtrlEntry 1 }
+
     swL3Ipv6Address OBJECT-TYPE
         SYNTAX   Ipv6Address
         MAX-ACCESS read-only
         STATUS   current
         DESCRIPTION
            "Specify the IPv6 address."
-        ::= { swL3Ipv6AddressCtrlEntry 2 }  
+        ::= { swL3Ipv6AddressCtrlEntry 2 }
 
     swL3Ipv6AddressCtrlPrefixLen OBJECT-TYPE
         SYNTAX  INTEGER
@@ -796,27 +796,27 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "Indicates the prefix length of this IPv6 address."
-        ::= { swL3Ipv6AddressCtrlEntry 3 }  
-        
+        ::= { swL3Ipv6AddressCtrlEntry 3 }
+
     swL3Ipv6AddressCtrlPreferredLifeTime  OBJECT-TYPE
         SYNTAX  Unsigned32 (0..4294967294)
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the number of seconds that an address, based on the specified prefix, 
-             using the stateless address configuration, remains in preferred state.  
+            "Indicates the number of seconds that an address, based on the specified prefix,
+             using the stateless address configuration, remains in preferred state.
              For an infinite valid lifetime, the value can be set to 0xffffffff."
-        ::= { swL3Ipv6AddressCtrlEntry 4 }  
-        
+        ::= { swL3Ipv6AddressCtrlEntry 4 }
+
     swL3Ipv6AddressCtrlValidLifeTime  OBJECT-TYPE
         SYNTAX  Unsigned32 (0..4294967294)
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the number of seconds that an address, based on the specified prefix, 
-             using the stateless address configuration, remains valid.  
+            "Indicates the number of seconds that an address, based on the specified prefix,
+             using the stateless address configuration, remains valid.
              For an infinite valid lifetime, the value can be set to 0xffffffff."
-        ::= { swL3Ipv6AddressCtrlEntry 5 }             
+        ::= { swL3Ipv6AddressCtrlEntry 5 }
 
     swL3Ipv6AddressCtrlOnLinkFlag OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -826,9 +826,9 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "When enabled, the address implied by the specified prefix is available 
+            "When enabled, the address implied by the specified prefix is available
              on the link where the RA message is received."
-        ::= { swL3Ipv6AddressCtrlEntry 6 } 
+        ::= { swL3Ipv6AddressCtrlEntry 6 }
 
     swL3Ipv6AddressCtrlAutonomousFlag OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -839,7 +839,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "When enabled, the specified prefix will be used to create an autonomous address configuration."
-        ::= { swL3Ipv6AddressCtrlEntry 7 } 
+        ::= { swL3Ipv6AddressCtrlEntry 7 }
 
     swL3Ipv6AddressCtrlState OBJECT-TYPE
         SYNTAX  RowStatus
@@ -847,7 +847,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "This variable displays the status of the entry. The status is used
-            for creating, modifying, and deleting instances of the objects 
+            for creating, modifying, and deleting instances of the objects
             in this table."
         ::= { swL3Ipv6AddressCtrlEntry 8 }
     swL3Ipv6AddressCtrlAddressType OBJECT-TYPE
@@ -855,7 +855,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 			manual(1),
 			dhcpv6(2),
 			stateless(3)
-		}    
+		}
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
@@ -863,21 +863,21 @@ Ipv6Address ::= TEXTUAL-CONVENTION
  		 manual(1): the IPv6 address is configured by user.
 		 dhcpv6(2): the IPv6 address is assigned by DHCPv6 server.
 		 stateless(3): the IPv6 address is assigned by router advertisement."
-        ::= { swL3Ipv6AddressCtrlEntry 9 } 
-        
-     swL3IpCtrlAllIpIfState OBJECT-TYPE                                       
+        ::= { swL3Ipv6AddressCtrlEntry 9 }
+
+     swL3IpCtrlAllIpIfState OBJECT-TYPE
     	SYNTAX  INTEGER {
-    	   other(1),                                                 
-           enabled(2),                                                
-           disabled(3)                                                
-           }                                                          
-    	MAX-ACCESS  read-write                                            
-    	STATUS  current                                                   
-    	DESCRIPTION                                                       
+    	   other(1),
+           enabled(2),
+           disabled(3)
+           }
+    	MAX-ACCESS  read-write
+    	STATUS  current
+    	DESCRIPTION
         	"This object indicates all interface function state of the device.
         	(except the loopback interface)"
-    	::= { swL3IpCtrlMgmt 7 }       
-    	
+    	::= { swL3IpCtrlMgmt 7 }
+
     swL3LoopBackIpCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3LoopBackIpCtrlEntry
         MAX-ACCESS  not-accessible
@@ -895,7 +895,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         INDEX  { swL3LoopBackIpCtrlInterfaceName }
         ::= { swL3LoopBackIpCtrlTable 1 }
 
-    SwL3LoopBackIpCtrlEntry ::= 
+    SwL3LoopBackIpCtrlEntry ::=
         SEQUENCE {
             swL3LoopBackIpCtrlInterfaceName
                 DisplayString,
@@ -904,13 +904,13 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 	    swL3LoopBackIpCtrlIpAddr
                 IpAddress,
             swL3LoopBackIpCtrlIpSubnetMask
-                IpAddress,                  
+                IpAddress,
             swL3LoopBackIpCtrlAdminState
                 INTEGER,
             swL3LoopBackIpCtrlRowStatus
                 RowStatus
         }
-        
+
     swL3LoopBackIpCtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-only
@@ -927,7 +927,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             "This object uniquely identifies the loopback IP interface number in the
             swL3LoopBackIpCtrlTable."
         ::= { swL3LoopBackIpCtrlEntry 2 }
-        
+
     swL3LoopBackIpCtrlIpAddr OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-create
@@ -936,7 +936,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             "The IP address of the loopback interface. This object only can take the
             value of the unicast IP address."
         ::= { swL3LoopBackIpCtrlEntry 3 }
-        
+
     swL3LoopBackIpCtrlIpSubnetMask OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-create
@@ -962,10 +962,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "This variable displays the status of the entry. The status is used
-            for creating, modifying, and deleting instances of the objects 
+            for creating, modifying, and deleting instances of the objects
             in this table."
         ::= { swL3LoopBackIpCtrlEntry 6 }
-        
+
 -- -----------------------------------------------------------------------------
 --  swL3IpFdbMgmt           OBJECT IDENTIFIER ::= { swL3IpMgmt 2 }
 -- -----------------------------------------------------------------------------
@@ -985,12 +985,12 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "Information about a specific IP address for which the bridge 
+            "Information about a specific IP address for which the bridge
             has some forwarding and/or filtering information."
         INDEX  { swL3IpFdbInfoIpAddr }
         ::= { swL3IpFdbInfoTable 1 }
 
-    SwL3IpFdbInfoEntry ::= 
+    SwL3IpFdbInfoEntry ::=
         SEQUENCE {
 --            swL3IpFdbInfoRdIndex
 --                INTEGER,
@@ -1009,7 +1009,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-only
 --        STATUS  current
 --        DESCRIPTION
---            "The object indicates the IP routing domain index, and should 
+--            "The object indicates the IP routing domain index, and should
 --            be associated with one of swL3IpDomainStatsIndex."
 --        ::= { swL3IpFdbInfoEntry 1 }
 
@@ -1027,18 +1027,18 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "A IP net mask for this interface for which the switch has 
+            "A IP net mask for this interface for which the switch has
             forwarding and/or filtering information."
         ::= { swL3IpFdbInfoEntry 2 }
-        
+
     swL3IpFdbInfoPort OBJECT-TYPE
         SYNTAX  INTEGER(0..65535)
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
             "Either the value '0', or the port number of the port on which
-            packet having a IP address equal to the value of the 
-            corresponding instance of swL3IpFdbInfoIpAddr has been seen. A 
+            packet having a IP address equal to the value of the
+            corresponding instance of swL3IpFdbInfoIpAddr has been seen. A
             value of '0' indicates that the port number has not been learned
             but that switch does have some forwarding/filtering information
             about this address."
@@ -1053,7 +1053,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "The status of this entry."            
+            "The status of this entry."
         ::= { swL3IpFdbInfoEntry 4 }
 
 -- -----------------------------------------------------------------------------
@@ -1087,9 +1087,9 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        STATUS  current
 --        DESCRIPTION
 --            "This table defines information for the device to filter packets
---            with specific IP address (either as the DA and/or as the SA). 
---            The IP address can be an unicast address or multicast address. 
---            This table has higher priority than both static FDB table and 
+--            with specific IP address (either as the DA and/or as the SA).
+--            The IP address can be an unicast address or multicast address.
+--            This table has higher priority than both static FDB table and
 --            IGMP table. It means that if an IP address appears on this table
 --            it also appears on the static FDB table, the device will use the
 --            information provided by this table to process the packet."
@@ -1105,7 +1105,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        INDEX  { swL3IpFilterAddrIpAddr }
 --        ::= { swL3IpFilterAddrCtrlTable 1 }
 
---    SwL3IpFilterAddrCtrlEntry ::= 
+--    SwL3IpFilterAddrCtrlEntry ::=
 --        SEQUENCE {
 --            swL3IpFilterAddrIpAddr
 --                IpAddress,
@@ -1123,7 +1123,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        STATUS  current
 --        DESCRIPTION
 --            "This object indicates a unicast/multicast IP address for which
---            the switch has filtering information. But if the 
+--            the switch has filtering information. But if the
 --            swL3IpFilterAddrCtrlState = src-addr, then the object can not be
 --            a multicast IP address (Class D IP address)."
 --        ::= { swL3IpFilterAddrCtrlEntry 1 }
@@ -1157,18 +1157,18 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object indicates the status of this entry. 
+--            "This object indicates the status of this entry.
 
---            other(1) - this entry is currently in use but the conditions 
+--            other(1) - this entry is currently in use but the conditions
 --                under which it will remain so are different from each of the
 --                following values.
---            dst-addr(2) - recieved frames's destination address are 
---                currently used to be filtered as it meets with the IP 
+--            dst-addr(2) - recieved frames's destination address are
+--                currently used to be filtered as it meets with the IP
 --                address entry of the table.
---            src-addr(3) - recieved frames's source address are currently 
+--            src-addr(3) - recieved frames's source address are currently
 --                used to be filtered as it meets with the IP address entry of
 --                the table.
---            dst-src-addr(4) - recieved frames's destination address or 
+--            dst-src-addr(4) - recieved frames's destination address or
 --                source address are currently used to be filtered as it meets
 --                with the IP address entry of the table.
 --            invalid(5) - writing this value to the object, and then the
@@ -1187,8 +1187,8 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             "The timeout period in minutes for aging out dynamically learned
             ARP information."
         ::= { swL3IpMgmt 4 }
-        
-    
+
+
     swL3IpStaticRouteTable OBJECT-TYPE
         SYNTAX   SEQUENCE OF SwL3IpStaticRouteEntry
         MAX-ACCESS not-accessible
@@ -1203,7 +1203,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS   current
         DESCRIPTION
            "A particular route to  a  particular  destination, under a particular policy.
-           Once an entry is built,it shouldn't be modified.That is,it just supports 
+           Once an entry is built,it shouldn't be modified.That is,it just supports
            create and delete actions."
         INDEX {
             swL3IpStaticRouteDest,
@@ -1211,7 +1211,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             swL3IpStaticRouteNextHop
             }
         ::= { swL3IpStaticRouteTable 1 }
-    
+
     SwL3IpStaticRouteEntry ::=
         SEQUENCE {
             swL3IpStaticRouteDest
@@ -1233,24 +1233,24 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             swL3IpStaticRouteCost
                 INTEGER
         }
-    
+
     swL3IpStaticRouteDest OBJECT-TYPE
         SYNTAX   IpAddress
         MAX-ACCESS read-only
         STATUS   current
         DESCRIPTION
            "The destination IP address of this route.
-    
+
            This object may not take a Multicast (Class  D)
            address value.
-    
+
            Any assignment (implicit or  otherwise)  of  an
            instance  of  this  object to a value x must be
            rejected if the bitwise logical-AND of  x  with
            the  value of the corresponding instance of the
            swL3IpStaticRouteMask object is not equal to x."
         ::= { swL3IpStaticRouteEntry 1 }
-    
+
     swL3IpStaticRouteMask OBJECT-TYPE
         SYNTAX   IpAddress
         MAX-ACCESS read-only
@@ -1261,14 +1261,14 @@ Ipv6Address ::= TEXTUAL-CONVENTION
            the value  in  the  swL3IpStaticRouteDest  field.
            For those  systems  that  do  not support arbitrary
            subnet masks, an agent constructs the value  of
-           the  swL3IpStaticRouteMask  by  reference to the IP 
+           the  swL3IpStaticRouteMask  by  reference to the IP
            Address Class.
-    
+
            Any assignment (implicit or  otherwise)  of  an
            instance  of  this  object to a value x must be
            rejected if the bitwise logical-AND of  x  with
            the  value of the corresponding instance of the
-           swL3IpStaticRouteDest object is not equal to 
+           swL3IpStaticRouteDest object is not equal to
            swL3IpStaticRouteDest."
         ::= { swL3IpStaticRouteEntry 2 }
 
@@ -1284,17 +1284,17 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             "The routing state for this route.The value SHOULD be
             primary(1), backup(2) or none(3)."
         ::= { swL3IpStaticRouteEntry 3 }
-        
+
     swL3IpStaticRouteNextHop OBJECT-TYPE
         SYNTAX   IpAddress
         MAX-ACCESS read-only
         STATUS   current
         DESCRIPTION
            "Specifies the IP address for the next hop router.
-            An IP address of 255.255.255.255 denotes a Null interface 
+            An IP address of 255.255.255.255 denotes a Null interface
             as the next hop."
         ::= { swL3IpStaticRouteEntry 4 }
-    
+
     swL3IpStaticRouteMetric OBJECT-TYPE
         SYNTAX   INTEGER (1..65535)
         MAX-ACCESS read-create
@@ -1315,7 +1315,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "This object indicates the status of this entry.
- 
+
             other(1) - this entry is currently in use but the conditions
                 under which it will remain so are different from each of
                 the following values.
@@ -1325,8 +1325,8 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             active(4) - the nextHop of this entry exists in the ARP table.
             inActive(5) - the next hop of this entry does not exist in the
             	ARP table."
-        ::= { swL3IpStaticRouteEntry 6 } 
-        
+        ::= { swL3IpStaticRouteEntry 6 }
+
      swL3IpStaticRouteWeight OBJECT-TYPE
         SYNTAX   INTEGER (0..4)
         MAX-ACCESS read-create
@@ -1350,10 +1350,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
          DESCRIPTION
              "Specifies the cost of the Route Entry."
          ::={swL3IpStaticRouteEntry 9}
-        
+
 -- -----------------------------------------------------------------------------
 --  swL3RelayDhcpMgmt      OBJECT IDENTIFIER ::= { swL3RelayMgmt 1 }
--- -----------------------------------------------------------------------------  
+-- -----------------------------------------------------------------------------
 
     swL3RelayDhcpState OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -1364,29 +1364,29 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates if the DHCP Relay function is enabled or 
+            "This object indicates if the DHCP Relay function is enabled or
             disabled."
         ::= { swL3RelayDhcpMgmt 1 }
-        
+
     swL3RelayDhcpHopCount OBJECT-TYPE
         SYNTAX  INTEGER (1..16)
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates the maximum number of router hops that 
+            "This object indicates the maximum number of router hops that
             the BOOTP packets can cross."
         ::= { swL3RelayDhcpMgmt 2 }
-        
+
     swL3RelayDhcpTimeThreshold OBJECT-TYPE
         SYNTAX  INTEGER (0..65535)
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
             "This object indicates the minimum time in seconds within which
-            the switch must relay the DHCP request. If this time is 
+            the switch must relay the DHCP request. If this time is
             exceeded, the switch will drop the DHCP packet."
         ::= { swL3RelayDhcpMgmt 3 }
-    
+
     swL3RelayDhcpCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3RelayDhcpCtrlEntry
         MAX-ACCESS  not-accessible
@@ -1406,14 +1406,14 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         INDEX  { swL3RelayDhcpCtrlInterfaceName,  swL3RelayDhcpCtrlServer}
         ::= { swL3RelayDhcpCtrlTable 1 }
 
-    SwL3RelayDhcpCtrlEntry ::= 
+    SwL3RelayDhcpCtrlEntry ::=
         SEQUENCE {
             swL3RelayDhcpCtrlInterfaceName
                 DisplayString,
             swL3RelayDhcpCtrlServer
                 IpAddress,
             swL3RelayDhcpCtrlState
-                INTEGER    
+                INTEGER
         }
 
     swL3RelayDhcpCtrlInterfaceName OBJECT-TYPE
@@ -1423,7 +1423,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The name of the IP interface."
         ::= { swL3RelayDhcpCtrlEntry 1 }
-        
+
     swL3RelayDhcpCtrlServer OBJECT-TYPE
         SYNTAX IpAddress
         MAX-ACCESS  read-only
@@ -1442,7 +1442,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "This object indicates the status of this entry.
- 
+
             other(1) - this entry is currently in use but the conditions
                 under which it will remain so are different from each of
                 the following values.
@@ -1450,19 +1450,19 @@ Ipv6Address ::= TEXTUAL-CONVENTION
                 corresponding entry will be removed from the table.
             valid(3) - this entry is reside in the table."
         ::= { swL3RelayDhcpCtrlEntry 3 }
-        
+
      swL3RelayDhcpOption82State OBJECT-TYPE
-        SYNTAX  INTEGER {               
+        SYNTAX  INTEGER {
                disabled(0),
                enabled(1)
                }
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates DHCP Relay Option 82 function is enabled or 
+            "This object indicates DHCP Relay Option 82 function is enabled or
             disabled."
         ::= { swL3RelayDhcpMgmt 5 }
-      
+
      swL3RelayDhcpOption82CheckState OBJECT-TYPE
         SYNTAX  INTEGER {
                disabled(0),
@@ -1471,10 +1471,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates DHCP Relay Option 82 Check function is enabled or 
+            "This object indicates DHCP Relay Option 82 Check function is enabled or
             disabled."
         ::= { swL3RelayDhcpMgmt 6 }
-     
+
      swL3RelayDhcpOption82Policy OBJECT-TYPE
         SYNTAX  INTEGER {
                replace(0),
@@ -1491,7 +1491,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --  swL3DHCPRelayOption60  OBJECT IDENTIFIER ::= { swL3RelayDhcpMgmt 8 }
 -- -----------------------------------------------------------------------------
      swL3DHCPRelayOption60  OBJECT IDENTIFIER ::= { swL3RelayDhcpMgmt 8 }
-      
+
      swL3DHCPRelayOption60State OBJECT-TYPE
         SYNTAX  INTEGER {
                enabled(1),
@@ -1793,10 +1793,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates if the DNS Relay function is enabled or 
+            "This object indicates if the DNS Relay function is enabled or
             disabled."
         ::= { swL3RelayDnsMgmt 1 }
-        
+
     swL3RelayDnsPrimaryServer OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-write
@@ -1804,7 +1804,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "This object indicates the address of the primary DNS server."
         ::= { swL3RelayDnsMgmt 2 }
-        
+
     swL3RelayDnsSecondaryServer OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-write
@@ -1812,7 +1812,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "This object indicates the address of the secondary DNS server."
         ::= { swL3RelayDnsMgmt 3 }
-    
+
     swL3RelayDnsCacheState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -1822,10 +1822,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates DNS Relay cache is enabled or 
+            "This object indicates DNS Relay cache is enabled or
             disabled."
         ::= { swL3RelayDnsMgmt 4 }
-        
+
     swL3RelayDnsStaticTableState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -1835,10 +1835,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates DNS Relay static table is enabled or 
+            "This object indicates DNS Relay static table is enabled or
             disabled."
         ::= { swL3RelayDnsMgmt 5 }
-        
+
     swL3RelayDnsCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3RelayDnsCtrlEntry
         MAX-ACCESS  not-accessible
@@ -1852,19 +1852,19 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "A list of information display the current DNS relay static 
+            "A list of information display the current DNS relay static
             table."
         INDEX  { swL3RelayDnsCtrlDomainName,  swL3RelayDnsCtrlIpAddr}
         ::= { swL3RelayDnsCtrlTable 1 }
 
-    SwL3RelayDnsCtrlEntry ::= 
+    SwL3RelayDnsCtrlEntry ::=
         SEQUENCE {
             swL3RelayDnsCtrlDomainName
                 DisplayString,
             swL3RelayDnsCtrlIpAddr
                 IpAddress,
             swL3RelayDnsCtrlState
-                INTEGER    
+                INTEGER
         }
 
     swL3RelayDnsCtrlDomainName OBJECT-TYPE
@@ -1874,7 +1874,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The domain name of the entry."
         ::= { swL3RelayDnsCtrlEntry 1 }
-        
+
     swL3RelayDnsCtrlIpAddr OBJECT-TYPE
         SYNTAX IpAddress
         MAX-ACCESS  read-only
@@ -1893,7 +1893,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "This object indicates the status of this entry.
- 
+
             other(1) - this entry is currently in use but the conditions
                 under which it will remain so are different from each of
                 the following values.
@@ -1906,7 +1906,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 -- -----------------------------------------------------------------------------
 --  swL3Md5Table            OBJECT IDENTIFIER ::= { swL3MgmtMIB 4 }
 -- -----------------------------------------------------------------------------
-    
+
     swL3Md5Table OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3Md5Entry
         MAX-ACCESS  not-accessible
@@ -1924,14 +1924,14 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         INDEX  { swL3Md5KeyId}
         ::= { swL3Md5Table 1 }
 
-    SwL3Md5Entry ::= 
+    SwL3Md5Entry ::=
         SEQUENCE {
             swL3Md5KeyId
                 INTEGER,
             swL3Md5Key
                 DisplayString,
             swL3Md5RowStatus
-                RowStatus    
+                RowStatus
         }
 
     swL3Md5KeyId OBJECT-TYPE
@@ -1941,7 +1941,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The MD5 key ID."
         ::= { swL3Md5Entry 1 }
-        
+
     swL3Md5Key OBJECT-TYPE
         SYNTAX DisplayString (SIZE(1..16))
         MAX-ACCESS  read-create
@@ -1962,18 +1962,18 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 -- -----------------------------------------------------------------------------
 --  swL3RouteRedistriTable          OBJECT IDENTIFIER ::= { swL3MgmtMIB 5 }
 -- -----------------------------------------------------------------------------
-    
+
     swL3RouteRedistriTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3RouteRedistriEntry
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "Route redistribution allows routers on the network that are 
-            running different routing protocols to exchange routing 
+            "Route redistribution allows routers on the network that are
+            running different routing protocols to exchange routing
             information. This is accomplished by comparing the routes stored
             in the varios routers' routing tables and assigning appropriate
-            metrics. This information is then exchanged among the various 
-            routers according to the individual routers current routing 
+            metrics. This information is then exchanged among the various
+            routers according to the individual routers current routing
             protocol."
         ::= { swL3MgmtMIB 5 }
 
@@ -1986,7 +1986,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         INDEX  { swL3RouteRedistriSrcProtocol, swL3RouteRedistriDstProtocol}
         ::= { swL3RouteRedistriTable 1 }
 
-    SwL3RouteRedistriEntry ::= 
+    SwL3RouteRedistriEntry ::=
         SEQUENCE {
             swL3RouteRedistriSrcProtocol
                 INTEGER,
@@ -1999,7 +1999,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             swL3RouteRedistriRowStatus
                 RowStatus,
             swL3RouteRedistriRouteMapName
-            	DisplayString  
+            	DisplayString
         }
 
     swL3RouteRedistriSrcProtocol OBJECT-TYPE
@@ -2016,7 +2016,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "Allows the selection of the protocol of the source device."
         ::= { swL3RouteRedistriEntry 1 }
-        
+
     swL3RouteRedistriDstProtocol OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -2029,7 +2029,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "Allows the selection of the protocol of the destination device."
         ::= { swL3RouteRedistriEntry 2 }
-        
+
     swL3RouteRedistriType OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -2046,16 +2046,16 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
-            "Allows the selection of one of the methods for calculating 
+            "Allows the selection of one of the methods for calculating
             the metric value."
         ::= { swL3RouteRedistriEntry 3 }
-        
+
     swL3RouteRedistriMetric OBJECT-TYPE
         SYNTAX  Unsigned32
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
-            "Allows the entry of an OSPF interface cost. This is analogous 
+            "Allows the entry of an OSPF interface cost. This is analogous
             to a Hop Count in the RIP routing protocol. The value '0'
             indicates default value."
         ::= { swL3RouteRedistriEntry 4 }
@@ -2070,28 +2070,28 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 
      swL3RouteRedistriRouteMapName OBJECT-TYPE
      	SYNTAX	DisplayString (SIZE(0..16))
-     	MAX-ACCESS	read-create 
+     	MAX-ACCESS	read-create
      	STATUS current
      	DESCRIPTION
-     		"This Object just works when the destination protocol is BGP 
+     		"This Object just works when the destination protocol is BGP
      		and indicate the route-map working when redistribute the route
-     		to BGP."  
+     		to BGP."
      	::= { swL3RouteRedistriEntry 6 }
 
 
 -- -----------------------------------------------------------------------------
 --  swL3OspfHostTable          OBJECT IDENTIFIER ::= { swL3MgmtMIB 6 }
 -- -----------------------------------------------------------------------------
-    
+
     swL3OspfHostTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3OspfHostEntry
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "The list of Hosts, and their metrics, that the router will 
+            "The list of Hosts, and their metrics, that the router will
             advertise as host routes."
         ::= { swL3MgmtMIB 6 }
-        
+
     swL3OspfHostEntry OBJECT-TYPE
         SYNTAX   SwL3OspfHostEntry
         MAX-ACCESS   not-accessible
@@ -2145,10 +2145,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS   read-create
         STATUS   current
         DESCRIPTION
-           "The Area the Host Entry is to be found within. By default, the 
+           "The Area the Host Entry is to be found within. By default, the
            area that a subsuming OSPF interface is in, or 0.0.0.0"
         ::= { swL3OspfHostEntry 4 }
-        
+
     swL3OspfHostStatus OBJECT-TYPE
         SYNTAX   RowStatus
         MAX-ACCESS   read-create
@@ -2344,7 +2344,7 @@ SwL3OspfVirtIfEntry ::=
           Structure"
       DEFVAL   { '0000000000000000'H }    -- 0.0.0.0.0.0.0.0
       ::= { swL3ospfVirtIfEntry 10 }
-        
+
     swL3ospfVirtIfAuthKeyID OBJECT-TYPE
         SYNTAX   INTEGER (0..255)
         MAX-ACCESS   read-create
@@ -2352,7 +2352,7 @@ SwL3OspfVirtIfEntry ::=
         DESCRIPTION
            "The MD5 key ID."
        ::= { swL3ospfVirtIfEntry 11 }
-       
+
     swL3ospfVirtIfStatus OBJECT-TYPE
         SYNTAX   RowStatus
         MAX-ACCESS   read-create
@@ -2363,7 +2363,7 @@ SwL3OspfVirtIfEntry ::=
            rendering it inoperative.  The internal  effect
            (row removal) is implementation dependent."
        ::= { swL3ospfVirtIfEntry 12 }
-     
+
 --  OSPF Interface Table
 
 --      The OSPF Interface Table augments the ipAddrTable
@@ -2434,7 +2434,7 @@ SwL3OspfIfEntry ::=
         swL3ospfIfAuthKeyID
         	INTEGER,
         swL3ospfIfPassiveMode
-        	INTEGER,	
+        	INTEGER,
 --        swL3ospfIfStatus
 --            RowStatus
 	swL3ospfIfMetric
@@ -2708,7 +2708,7 @@ SwL3OspfIfEntry ::=
         DESCRIPTION
            "The MD5 key ID."
        ::= { swL3ospfIfEntry 20 }
-     
+
     swL3ospfIfPassiveMode OBJECT-TYPE
         SYNTAX   INTEGER{
         	other(1),
@@ -2720,7 +2720,7 @@ SwL3OspfIfEntry ::=
         DESCRIPTION
            "Assign the designated entry to be a passive interface."
        ::= { swL3ospfIfEntry 21 }
-    
+
 
 --    swL3ospfIfStatus OBJECT-TYPE
 --        SYNTAX   RowStatus
@@ -2740,10 +2740,10 @@ SwL3OspfIfEntry ::=
         DESCRIPTION
            "The Metric to be advertised."
         ::= { swL3ospfIfEntry 23 }
-       
--- -----------------------------------------------------------------------------      
+
+-- -----------------------------------------------------------------------------
 swL3RoutePreference	OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
-	
+
 	swL3RoutePreferenceRIP OBJECT-TYPE
         SYNTAX  INTEGER (1..999)
         MAX-ACCESS  read-write
@@ -2759,7 +2759,7 @@ swL3RoutePreference	OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
         DESCRIPTION
             "Used to configure the route preference of OSPF Intra."
         ::= { swL3RoutePreference 2 }
-       
+
 	swL3RoutePreferenceStatic OBJECT-TYPE
         SYNTAX  INTEGER (1..999)
         MAX-ACCESS  read-write
@@ -2767,14 +2767,14 @@ swL3RoutePreference	OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
         DESCRIPTION
             "Used to configure the route preference of Static."
         ::= { swL3RoutePreference 3 }
-        
+
     swL3RoutePreferenceLocal OBJECT-TYPE
         SYNTAX  INTEGER (0..999)
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
             "Used to read the route preference of Local."
-        ::= { swL3RoutePreference 4 }    
+        ::= { swL3RoutePreference 4 }
 
 	swL3RoutePreferenceOSPFInter OBJECT-TYPE
         SYNTAX  INTEGER (1..999)
@@ -2783,15 +2783,15 @@ swL3RoutePreference	OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
         DESCRIPTION
             "Used to configure the route preference of OSPF Inter."
         ::= { swL3RoutePreference 5 }
-    
+
     swL3RoutePreferenceOSPFExtT1 OBJECT-TYPE
         SYNTAX  INTEGER (1..999)
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
             "Used to configure the route preference of OSPFExtT1."
-        ::= { swL3RoutePreference 6 }   
-        
+        ::= { swL3RoutePreference 6 }
+
     swL3RoutePreferenceOSPFExtT2 OBJECT-TYPE
         SYNTAX  INTEGER (1..999)
         MAX-ACCESS  read-write
@@ -2799,7 +2799,7 @@ swL3RoutePreference	OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
         DESCRIPTION
             "Used to configure the route preference of OSPF ExtT2."
         ::= { swL3RoutePreference 7 }
-	
+
     swL3RoutePreferenceDefault OBJECT-TYPE
         SYNTAX  INTEGER (1..999)
         MAX-ACCESS  read-write
@@ -2807,7 +2807,7 @@ swL3RoutePreference	OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
         DESCRIPTION
             "Used to configure the route preference of Default route."
         ::= { swL3RoutePreference 8 }
-	
+
     swL3RoutePreferenceEBGP OBJECT-TYPE
         SYNTAX  INTEGER (1..999)
         MAX-ACCESS  read-write
@@ -2815,7 +2815,7 @@ swL3RoutePreference	OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
         DESCRIPTION
             "Used to configure the route preference of EBGP."
         ::= { swL3RoutePreference 9 }
-	
+
     swL3RoutePreferenceIBGP OBJECT-TYPE
         SYNTAX  INTEGER (1..999)
         MAX-ACCESS  read-write
@@ -2823,13 +2823,13 @@ swL3RoutePreference	OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
         DESCRIPTION
             "Used to configure the route preference of IBGP."
         ::= { swL3RoutePreference 10 }
-        
--- -----------------------------------------------------------------------------       
+
+-- -----------------------------------------------------------------------------
 --      The OSPF Area Data Structure contains information
 --      regarding the various areas. The interfaces and
 --      virtual links are configured as part of these areas.
 --      Area 0.0.0.0, by definition, is the Backbone Area
--- ----------------------------------------------------------------------------- 
+-- -----------------------------------------------------------------------------
 
     swL3ospfAreaTable OBJECT-TYPE
         SYNTAX   SEQUENCE OF SwL3ospfAreaEntry
@@ -2862,11 +2862,11 @@ SwL3ospfAreaEntry ::=
         swL3ospfAreaType
             INTEGER,
         swL3ospfAreaSummaryState
-            INTEGER,       
+            INTEGER,
         swL3ospfAreaMetric
             Integer32,
         swL3ospfAreaTranslateState
-            INTEGER, 
+            INTEGER,
         swL3ospfAreaStatus
             RowStatus
               }
@@ -2889,7 +2889,7 @@ SwL3ospfAreaEntry ::=
         MAX-ACCESS   read-create
         STATUS   obsolete
         DESCRIPTION
-           "The type specified for an area."       
+           "The type specified for an area."
       ::= { swL3ospfAreaEntry 2 }
 
     swL3ospfAreaSummaryState OBJECT-TYPE
@@ -2934,7 +2934,7 @@ SwL3ospfAreaEntry ::=
            rendering it inoperative.  The internal  effect
            (row removal) is implementation dependent."
        ::= { swL3ospfAreaEntry 6 }
-        
+
 -- -----------------------------------------------------------------------------
 -- The DVMRP Interface Table
 -- -----------------------------------------------------------------------------
@@ -2961,13 +2961,13 @@ swL3dvmrpInterfaceEntry OBJECT-TYPE
 
 SwL3dvmrpInterfaceEntry ::= SEQUENCE {
     swL3dvmrpInterfaceIfIndex            Integer32,
-    swL3dvmrpInterfaceLocalAddress       IpAddress,    
+    swL3dvmrpInterfaceLocalAddress       IpAddress,
     swL3dvmrpInterfaceMetric             Integer32,
     swL3dvmrpInterfaceProbe              Integer32,
-    swL3dvmrpInterfaceNbrTimeout         Integer32,   
+    swL3dvmrpInterfaceNbrTimeout         Integer32,
     swL3dvmrpInterfaceStatus             RowStatus,
     swL3dvmrpInterfaceRcvBadPkts         Counter32,
-    swL3dvmrpInterfaceRcvBadRoutes       Counter32    
+    swL3dvmrpInterfaceRcvBadRoutes       Counter32
 }
 
 swL3dvmrpInterfaceIfIndex OBJECT-TYPE
@@ -2999,7 +2999,7 @@ swL3dvmrpInterfaceMetric OBJECT-TYPE
             calculate distance vectors."
     DEFVAL     { 1 }
     ::= { swL3dvmrpInterfaceEntry 3 }
-    
+
 swL3dvmrpInterfaceProbe OBJECT-TYPE
     SYNTAX     Integer32 (1..65535)
     MAX-ACCESS read-create
@@ -3008,7 +3008,7 @@ swL3dvmrpInterfaceProbe OBJECT-TYPE
             "Probe distribution interval."
     DEFVAL     { 10 }
     ::= { swL3dvmrpInterfaceEntry 4 }
-    
+
 swL3dvmrpInterfaceNbrTimeout OBJECT-TYPE
     SYNTAX     Integer32 (1..65535)
     MAX-ACCESS read-create
@@ -3049,7 +3049,7 @@ swL3dvmrpInterfaceRcvBadRoutes OBJECT-TYPE
     ::= { swL3dvmrpInterfaceEntry 8 }
 
 -- -----------------------------------------------------------------------------
---swL3OspfLsdbMgmt            OBJECT IDENTIFIER ::= { swL3MgmtMIB 13 }    
+--swL3OspfLsdbMgmt            OBJECT IDENTIFIER ::= { swL3MgmtMIB 13 }
 -- -----------------------------------------------------------------------------
 
 --  OSPF Link State Database
@@ -3096,7 +3096,7 @@ SwL3OspfInternalLsdbEntry ::=
         swL3OspfInternalLsdbAge
             Unsigned32,
         swL3OspfInternalLsdbChecksum
-            Integer32        
+            Integer32
               }
 
     swL3OspfInternalLsdbAreaId OBJECT-TYPE
@@ -3149,7 +3149,7 @@ SwL3OspfInternalLsdbEntry ::=
            "The 32 bit number that uniquely identifies the
            originating router in the Autonomous System."
       ::= { swL3OspfInternalLsdbEntry 4 }
-      
+
     swL3OspfInternalLsdbMetric OBJECT-TYPE
         SYNTAX   Integer32(0..65535)
         MAX-ACCESS   read-only
@@ -3279,8 +3279,8 @@ SwL3OspfExternalLsdbEntry ::=
         DESCRIPTION
            "The 32 bit number that uniquely identifies the
            originating router in the Autonomous System."
-      ::= { swL3OspfExternalLsdbEntry 3 }   
-      
+      ::= { swL3OspfExternalLsdbEntry 3 }
+
     swL3OspfExternalLsdbMetric OBJECT-TYPE
         SYNTAX   Integer32(0..65535)
         MAX-ACCESS   read-only
@@ -3288,7 +3288,7 @@ SwL3OspfExternalLsdbEntry ::=
         DESCRIPTION
            "Enter the metric (1 - 65535; 0 for auto cost) of this area."
        ::= { swL3OspfExternalLsdbEntry 4 }
-    
+
     swL3OspfExternalLsdbMetricType OBJECT-TYPE
         SYNTAX   INTEGER {
         		unrecognized(0),
@@ -3337,7 +3337,7 @@ SwL3OspfExternalLsdbEntry ::=
            tionless datagrams; it is commonly referred to
            as the Fletcher checksum."
       ::= { swL3OspfExternalLsdbEntry 8 }
-      
+
     swL3OspfExternalLsdbForwardingAddress OBJECT-TYPE
         SYNTAX   IpAddress
         MAX-ACCESS   read-only
@@ -3345,7 +3345,7 @@ SwL3OspfExternalLsdbEntry ::=
         DESCRIPTION
            "This field is the forwarding address."
       ::= { swL3OspfExternalLsdbEntry 9 }
-    
+
     swL3OspfExternalLsdbRouteTag OBJECT-TYPE
         SYNTAX   OCTET STRING
         MAX-ACCESS   read-only
@@ -3354,7 +3354,7 @@ SwL3OspfExternalLsdbEntry ::=
            "This field is the route tag."
       ::= { swL3OspfExternalLsdbEntry 10 }
 
--- -----------------------------------------------------------------------------    
+-- -----------------------------------------------------------------------------
 -- swL3VrrpOperMgmt        OBJECT IDENTIFIER ::= { swL3MgmtMIB 14 }
 -- -----------------------------------------------------------------------------
 -- -----------------------------------------------------------------------------
@@ -3391,7 +3391,7 @@ SwL3OspfExternalLsdbEntry ::=
  SwL3VrrpOperEntry ::=
      SEQUENCE {
      	 swL3VrrpOperIfIndex
-     	     Integer32,	
+     	     Integer32,
          swL3VrrpOperVrId
              VrId,
          swL3VrrpOperVirtualMacAddr
@@ -3407,7 +3407,7 @@ SwL3OspfExternalLsdbEntry ::=
          swL3VrrpOperCriticalIpAddr
              IpAddress,
          swL3VrrpOperCheckCriticalIpState
-             INTEGER,             
+             INTEGER,
          swL3VrrpOperAuthType
              INTEGER,
          swL3VrrpOperAuthKey
@@ -3421,9 +3421,9 @@ SwL3OspfExternalLsdbEntry ::=
          swL3VrrpOperVirtualIpAddr
              IpAddress,
          swL3VrrpOperRowStatus
-             RowStatus   
+             RowStatus
  }
- 
+
  swL3VrrpOperIfIndex OBJECT-TYPE
     SYNTAX     Integer32
     MAX-ACCESS read-only
@@ -3549,7 +3549,7 @@ SwL3OspfExternalLsdbEntry ::=
          numerically lowest will be selected."
      DEFVAL       { '00000000'H } -- 0.0.0.0
      ::= { swL3VrrpOperEntry 8 }
-     
+
  swL3VrrpOperCheckCriticalIpState OBJECT-TYPE
      SYNTAX       INTEGER{
      			other(0),
@@ -3630,7 +3630,7 @@ SwL3OspfExternalLsdbEntry ::=
          virtual router (i.e., the `swL3VrrpOperState') transitioned
          out of `initialized'."
      ::= { swL3VrrpOperEntry 14 }
-     
+
  swL3VrrpOperVirtualIpAddr OBJECT-TYPE
          SYNTAX       IpAddress
          MAX-ACCESS   read-create
@@ -3669,7 +3669,7 @@ SwL3OspfExternalLsdbEntry ::=
          row in the `swL3VrrpAssoIpAddrTable' defining an associated
          IP address for the virtual router."
      ::= { swL3VrrpOperEntry 16 }
- 
+
  swL3OspfECMPIpDestination   OBJECT-TYPE
      SYNTAX        INTEGER {
                       enabled(1),
@@ -3681,7 +3681,7 @@ SwL3OspfExternalLsdbEntry ::=
           "If set to 'enabled (1)', the ECMP algorithm will include the destination IP."
       DEFVAL {enabled}
       ::={swL3OspfECMPMgmt 1}
-      
+
  swL3OspfECMPIpSource   OBJECT-TYPE
      SYNTAX        INTEGER {
                       enabled(1),
@@ -3695,7 +3695,7 @@ SwL3OspfExternalLsdbEntry ::=
           If set to 'enabled (1)', crc_low and crc_high will be excluded."
       DEFVAL {disabled}
       ::={swL3OspfECMPMgmt 2}
-      
+
  swL3OspfECMPCrcLow   OBJECT-TYPE
      SYNTAX        INTEGER {
                       enabled(1),
@@ -3704,12 +3704,12 @@ SwL3OspfExternalLsdbEntry ::=
       MAX-ACCESS    read-write
       STATUS       current
       DESCRIPTION
-            "If set to 'enabled (1)', the ECMP algorithm will include the lower 5 bits of the CRC. This 
+            "If set to 'enabled (1)', the ECMP algorithm will include the lower 5 bits of the CRC. This
             attribution is mutually exclusive with crc_high and ip_source.
             If set to 'enabled (1)', crc_high and ip_source will be excluded."
       DEFVAL {enabled}
       ::={swL3OspfECMPMgmt 3}
-      
+
 swL3OspfECMPCrcHigh   OBJECT-TYPE
      SYNTAX        INTEGER {
                       enabled(1),
@@ -3723,7 +3723,7 @@ swL3OspfECMPCrcHigh   OBJECT-TYPE
            If set to 'enabled (1)', crc_low and ip_source will be excluded."
       DEFVAL {disabled}
       ::={swL3OspfECMPMgmt 4}
-      
+
 swL3OspfECMPTCPorUDPport   OBJECT-TYPE
      SYNTAX        INTEGER {
                       enabled(1),
@@ -3735,7 +3735,7 @@ swL3OspfECMPTCPorUDPport   OBJECT-TYPE
            "If set to 'enabled (1)', the ECMP algorithm will include the TCP or UDP port."
       DEFVAL {disabled}
       ::={swL3OspfECMPMgmt 5}
-      
+
 swL3OspfECMPState      OBJECT-TYPE
         SYNTAX  INTEGER {
                          enabled(1),
@@ -3757,8 +3757,8 @@ swL3OspfECMPState      OBJECT-TYPE
 	    MAX-ACCESS  read-write
 	    STATUS  current
 	    DESCRIPTION
-	          "This object indicates the IPv4 local route state of the device."    
-	    DEFVAL { enabled }  
+	          "This object indicates the IPv4 local route state of the device."
+	    DEFVAL { enabled }
 	    ::= { swL3LocalRouteMgmt 1 }
 	swL3LocalRouteIPv6GlobalState OBJECT-TYPE
 	    SYNTAX  INTEGER {
@@ -3769,7 +3769,7 @@ swL3OspfECMPState      OBJECT-TYPE
 	    STATUS  current
 	    DESCRIPTION
 	          "This object indicates the IPv6 local route state of the device."
-	    DEFVAL { disabled }      
+	    DEFVAL { disabled }
 	    ::= { swL3LocalRouteMgmt 2 }
 
 -- -----------------------------------------------------------------------------
@@ -3787,14 +3787,14 @@ swL3OspfECMPState      OBJECT-TYPE
 
 	swL3RIPTimeOutTime   OBJECT-TYPE
 		SYNTAX	INTEGER (5..65535)
-	    	UNITS	"seconds"		
+	    	UNITS	"seconds"
 	    	MAX-ACCESS	read-write
 		STATUS	current
 
 	    	DESCRIPTION
 			"This object indicates the period for which a dynamic RIP route
 			will be kept in the IPv4 routing table without receiving any updates for the
-			route. 
+			route.
 			After this time interval, the route will be invalid and will be aged out."
 		DEFVAL {180}
       		::={swL3RIPTimerMgmt 2}
@@ -3803,7 +3803,7 @@ swL3OspfECMPState      OBJECT-TYPE
 		SYNTAX	INTEGER (5..65535)
 	    	UNITS	"seconds"
 	    	MAX-ACCESS	read-write
-		STATUS	current		
+		STATUS	current
 		DESCRIPTION
 			"This object indicates the period for a RIP route which
 			has aged out is retained in the IPv4 Routing Table. After
@@ -3812,4 +3812,3 @@ swL3OspfECMPState      OBJECT-TYPE
 		DEFVAL {120}
       		::={swL3RIPTimerMgmt 3}
 END
-

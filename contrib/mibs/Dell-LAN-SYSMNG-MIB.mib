@@ -25,7 +25,7 @@ IMPORTS
     dellLanCommon
         FROM Dell-Vendor-MIB
     TRAP-TYPE
-        FROM RFC-1215; 
+        FROM RFC-1215;
 
 dellLanSystemMng MODULE-IDENTITY
 	LAST-UPDATED "201304120000Z" -- 12 Apr 2013 12:00:00 GMT
@@ -46,14 +46,14 @@ dellLanSystemMng MODULE-IDENTITY
 
 -- The following groups are defined within this MIB:
 dellLanMngIfGroup   OBJECT IDENTIFIER ::= { dellLanSystemMng 1 }
-dellLanFileSysGroup OBJECT IDENTIFIER ::= { dellLanSystemMng 2 } 
-dellLanSysMngGroup  OBJECT IDENTIFIER ::= { dellLanSystemMng 3 } 
+dellLanFileSysGroup OBJECT IDENTIFIER ::= { dellLanSystemMng 2 }
+dellLanSysMngGroup  OBJECT IDENTIFIER ::= { dellLanSystemMng 3 }
 
 ---------------------------------------------------------------------------
 -- Management Interface Group:
 -- This group defines the set of objects required to define the
 -- access control for the various management interfaces supported
--- by the switch.  This includes control for the SNMP, CLI(via telnet/ssh) 
+-- by the switch.  This includes control for the SNMP, CLI(via telnet/ssh)
 -- and Web based (http/https) management interfaces.
 --
 -- Note that initially the SNMP management interface must be granted
@@ -75,9 +75,9 @@ dellLanSysMngGroup  OBJECT IDENTIFIER ::= { dellLanSystemMng 3 }
 -- * The rule may also be applied to a specific switch interface (e.g.
 --   only to a given VLAN or LAG or OOB interface).
 --
--- The user may define multiple management ACL rule set but only one may be 
+-- The user may define multiple management ACL rule set but only one may be
 -- active at any given point.  There is a limit to the number of ACL rules
--- and rule set which may be specified.  This limit is per switch type so 
+-- and rule set which may be specified.  This limit is per switch type so
 -- that the system will fail to create new rules or rule set when the system
 -- limit is reached.
 --
@@ -130,16 +130,16 @@ dellLanMngInfActiveListName OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "This parameter may be used to activate a particular management
-         ACL rule-set.  If no management ACL rule-set is specified (by 
-         setting this parameter to a NULL string) then the system assumes 
+         ACL rule-set.  If no management ACL rule-set is specified (by
+         setting this parameter to a NULL string) then the system assumes
          that management ACL is disabled.
 
          If the user attempts to set this parameter to the name of an
          invalid or non-existence ACL rule-set, the configuration will fail.
 
-         If the user deletes a management ACL rule-set to which this 
-         parameter references, the parameter will be set to a NULL 
-         string and the system will assume that management ACL checking 
+         If the user deletes a management ACL rule-set to which this
+         parameter references, the parameter will be set to a NULL
+         string and the system will assume that management ACL checking
          has been disabled."
     ::= { dellLanMngIfGroup 2 }
 
@@ -149,7 +149,7 @@ dellLanMngInfListTable OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "This table defines all management ACL rule-set as well as the rules
-         within the rule-set.  To activate a specific ACL rule-set, please 
+         within the rule-set.  To activate a specific ACL rule-set, please
          refer to the 'dellLanMngInfActiveListName' parameter above."
     ::= { dellLanMngIfGroup 3 }
 
@@ -186,7 +186,7 @@ dellLanMngInfListName OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
-        "The name of a given rule-set." 
+        "The name of a given rule-set."
     ::= { dellLanMngInfListEntry 1 }
 
 dellLanMngInfListPriority OBJECT-TYPE
@@ -205,7 +205,7 @@ dellLanMngInfListIfIndex OBJECT-TYPE
         "The IfIndex to which this rule applies.  By setting this to a
          specific ifIndex, the rule will only applies if the management
          access is coming over the given interface.  If the ifIndex is
-         set to 0, then this rule applies to all interfaces." 
+         set to 0, then this rule applies to all interfaces."
     ::= { dellLanMngInfListEntry 3 }
 
 dellLanMngInfListIpAddr OBJECT-TYPE
@@ -213,10 +213,10 @@ dellLanMngInfListIpAddr OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS current
     DESCRIPTION
-        "The IP address to which this rule applies. The IP address may be set 
+        "The IP address to which this rule applies. The IP address may be set
          to be 0, which means that the rule applies to all IP addresses.
          Otherwise, the rule applies to all management request which comes
-         from a given IP address." 
+         from a given IP address."
     ::= { dellLanMngInfListEntry 4 }
 
 dellLanMngInfListIpNetMask OBJECT-TYPE
@@ -224,8 +224,8 @@ dellLanMngInfListIpNetMask OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS current
     DESCRIPTION
-        "The subnet mask associated with the IP address of this entry. The 
-         value of the mask is an IP address with all the network bits set 
+        "The subnet mask associated with the IP address of this entry. The
+         value of the mask is an IP address with all the network bits set
          to 1 and all the hosts bits set to 0.  Using this in conjunction
          with the ipAddress given above, it is possible to make the rule
          applies to a subnet instead of a specific address (to force the
@@ -239,9 +239,9 @@ dellLanMngInfListService  OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "The type of services that this rule applies to. By setting this
-         to a specific service type, the rule will only apply if the 
+         to a specific service type, the rule will only apply if the
          request is coming to the switch using the particular protocol
-         type specified.  The Service type address can be configured to 
+         type specified.  The Service type address can be configured to
          be 0, which means any of the supported protocols or service
          such as Telnet, SNMP, HTTP, HTTPS, SSH are applicable."
     ::= { dellLanMngInfListEntry 6 }
@@ -274,13 +274,13 @@ dellLanMngInfListVlanId OBJECT-TYPE
          set to 0, then this rule applies to all interfaces."
     ::= { dellLanMngInfListEntry 9 }
 ---------------------------------------------------------------------------
--- File System Management: 
+-- File System Management:
 -- This group defines the controls for the file management system on the
 -- switch.  This includes the following features:
 -- * Copying files.
 -- * Displaying files on the switch.
 -- * Backing up files to remote systems.
--- * Copying files from remote systems. 
+-- * Copying files from remote systems.
 -- * Restoring images or configuration on the switch.
 ---------------------------------------------------------------------------
 
@@ -289,8 +289,8 @@ dellLanFSMaxSize OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
-        "The parameter returns the maximum number of bytes in the file 
-         system." 
+        "The parameter returns the maximum number of bytes in the file
+         system."
     ::= { dellLanFileSysGroup 1 }
 
 dellLanFSAvailableSize OBJECT-TYPE
@@ -299,7 +299,7 @@ dellLanFSAvailableSize OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "The parameter returns the number of bytes available or free in
-         the file system." 
+         the file system."
     ::= { dellLanFileSysGroup 2 }
 
 -- Table for viewing the files in the file system.
@@ -319,17 +319,17 @@ dellLanFileEntry  OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Each entry is a single file in the file system.  Each file has
-         particular access permission.  This table provides the mean to 
+         particular access permission.  This table provides the mean to
          view a files in the file system.  A file cannot be created or
-         deleted using this table. To create or remove a file please see 
+         deleted using this table. To create or remove a file please see
          the dellLanFileActionTable.  Note that a file can only be created
-         by coping an existing file on the file system such as the 
+         by coping an existing file on the file system such as the
          'startup-config' file or by copying a file from a remote tftp server
          to the flash file system.
 
          The file permission are defined as follows:
          - no-access  = these files are internal system files and are not
-           accessible. The files cannot be deleted, copied, nor overwritten. 
+           accessible. The files cannot be deleted, copied, nor overwritten.
          - read-only  = these files may be copied (read) but not overwritten
            nor deleted (e.g. system logs or alarm logs).
          - read-write = these files may be copied (read), overwritten and
@@ -349,7 +349,7 @@ dellLanFileEntry  OBJECT-TYPE
 
          A user description or note may also be attached to each file
          to provide additional information."
-           
+
     INDEX { dellLanFileName }
     ::= { dellLanFileTable  1 }
 
@@ -397,7 +397,7 @@ dellLanFilePriority OBJECT-TYPE
          system is loading and find that the designated active image is
          corrupted, the system will first look for the next image with the
          smallest priority number (priority number 1 is highest priority and
-         priority 255 is the lowest priority) to try to attempt to load next. 
+         priority 255 is the lowest priority) to try to attempt to load next.
          It will continue in this way until it finds a valid image to load.
 
          Note that you can even set the priority level of an image that is
@@ -419,7 +419,7 @@ dellLanFileSize OBJECT-TYPE
     ::=  { dellLanFileEntry 4 }
 
 dellLanFileType OBJECT-TYPE
-    SYNTAX      INTEGER 
+    SYNTAX      INTEGER
                 {
                   image(1),    -- A binary software image.
                   config(2),   -- A configuration file.
@@ -431,7 +431,7 @@ dellLanFileType OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-        "The type of file." 
+        "The type of file."
     ::=  { dellLanFileEntry 5 }
 
 dellLanFileModificationDate OBJECT-TYPE
@@ -490,14 +490,14 @@ dellLanFileActionTable OBJECT-TYPE
          until a valid result is returned.  When the system is working on
          an action this parameter will return 'statusPending'.  While the
          status is 'statusPending' the system will not honor any new
-         file system request.  If the user tries to send a file system 
+         file system request.  If the user tries to send a file system
          action request during this time, the SNMP SET to execute the
          action will return with an SNMP error and the status will remain
          'statusPending' until the last operation has completed.
 
          The correct usage for this table should be:
          - first query the 'dellLanFileActionResultCode' to see if the
-           system is free to execute a file action request.  If the 
+           system is free to execute a file action request.  If the
            query returns 'statusPending' then don't try the action yet.
            Keep polling until the result of this parameter is something
            other then 'statusPending'.
@@ -543,7 +543,7 @@ dellLanFileActionEntry  OBJECT-TYPE
                        also be a configuration file.  If the source is
                        an image file, then the destination must also be
                        an image file.  Note that you cannot copy on to
-                       the active image file.  
+                       the active image file.
                        The 'dellLanFileActionForceAction' may be set to
                        true to indicate that the copy function should try
                        to overwrite the destination file if it exists.  The
@@ -558,11 +558,11 @@ dellLanFileActionEntry  OBJECT-TYPE
          The following are possible error codes relating to each type of
          actions:
          - rename: fileNotFound; invalidCmd; unknownError.
-         - copy: fileNotFound; tftpServerConnectFailed; fileSystemFull; 
-                 overwriteNotRequested; overwriteFailed; permissionDenied; 
+         - copy: fileNotFound; tftpServerConnectFailed; fileSystemFull;
+                 overwriteNotRequested; overwriteFailed; permissionDenied;
                  invalidCmd; incompatFileType; invalidDest; unknownError.
          - delete: fileNotFound; permissionDenied; invalidCmd; unknownError."
-        
+
     INDEX { dellLanFileActionIndex }
     ::= { dellLanFileActionTable  1 }
 
@@ -591,9 +591,9 @@ dellLanFileActionSourceFile OBJECT-TYPE
     DESCRIPTION
         "The source file may be specified using a URL addressing scheme.
          The format of this address are as follows:
-         - flash://filename        => indicate a file on the flash 
+         - flash://filename        => indicate a file on the flash
                                       file system.
-         - filename                => indicates a file on the flash 
+         - filename                => indicates a file on the flash
                                       file system.
          - tftp://IPaddr/filename  => indicates a file on a remote tftp
                                       server at the host given by 'IPaddr'.
@@ -604,8 +604,8 @@ dellLanFileActionSourceFile OBJECT-TYPE
                                       this file CANNOT be renamed.
          - running-config          => a special file name indicating the
                                       running configuration.  NOTE that
-                                      this file CANNOT be renamed or 
-                                      deleted. 
+                                      this file CANNOT be renamed or
+                                      deleted.
          - image                   => a special file name indicating the
                                       current active image.  This allows
                                       you to copy the current active image
@@ -620,9 +620,9 @@ dellLanFileActionDestFile OBJECT-TYPE
     DESCRIPTION
         "The destination file may be specified using a URL addressing scheme.
          The format of this address are as follows:
-         - flash://filename        => indicate a file on the flash 
+         - flash://filename        => indicate a file on the flash
                                       file system.
-         - filename                => indicates a file on the flash 
+         - filename                => indicates a file on the flash
                                       file system.
          - tftp://IPaddr/filename  => indicates a file on a remote tftp
                                       server at the host given by 'IPaddr'.
@@ -633,10 +633,10 @@ dellLanFileActionDestFile OBJECT-TYPE
                                       this file CANNOT be renamed.
          - running-config          => a special file name indicating the
                                       running configuration.  NOTE that
-                                      this file CANNOT be renamed or 
+                                      this file CANNOT be renamed or
                                       deleted.
 
-         Note that 'image' (which is the active software image is not 
+         Note that 'image' (which is the active software image is not
          valid as a destination."
     ::=  { dellLanFileActionEntry 3 }
 
@@ -709,7 +709,7 @@ dellLanFileActionResultCode OBJECT-TYPE
 ---------------------------------------------------------------------------
 
 dellLanSysActionReload OBJECT-TYPE
-    SYNTAX Integer32 
+    SYNTAX Integer32
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
@@ -728,7 +728,7 @@ dellLanSysActionSetActiveImage OBJECT-TYPE
          the next reboot.  To change the active image, set this parameter
          to the name of the image to be made active.  Reading this parameter
          will return the name of the current active image (note that you can
-         also determine this by using the file system table above)." 
+         also determine this by using the file system table above)."
     ::= { dellLanSysMngGroup 2 }
 
 END

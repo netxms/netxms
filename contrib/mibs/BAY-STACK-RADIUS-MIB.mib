@@ -140,4 +140,3 @@ bsRadiusServerRowStatus OBJECT-TYPE
     ::= { bsRadiusServerEntry 8 }
 
 END
-

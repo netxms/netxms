@@ -5,8 +5,8 @@
 -- Date: 01-03-2013
 -- Revision : Medusa Phase 1
 -- Revision : Dimmer Switch II Changes
--- Revision : New Events added for Block HDD  
--- Revision : Added new PD State  
+-- Revision : New Events added for Block HDD
+-- Revision : Added new PD State
 -- Revision : For Battery Type Description
 -- Revision : For PRL and SRL description changes for RAID Level
 -- Revision : New Attributes added for Bad Block Management
@@ -15,17 +15,17 @@
 -- Revision : Added new attributes and traps for MegaRaid Encryption Solution.
 -- Revision : Added Support Drive Speed Down(Phase 1).
 -- Revision : Added Support for SSD Devices,link speed and device speed.
--- Revision : Replaced LSI Logic Corporation with LSI Corporation 
+-- Revision : Replaced LSI Logic Corporation with LSI Corporation
 -- Revision : Multipath support Feature added.
 -- Revision : CopyBack Feature,CopyBack is Enabled or Disabled added.
 -- Revision : Multipath Feature,Parther Device Id is added.
 -- Revision : Trap Section is modified to support Multipath and FRU Traps.
 -- Revision : FRU feature added bbuFRU ,revisionIdentifier
--- Revision : to support Increase VD added partitionsInDDF ,maxLdsPerArray    
+-- Revision : to support Increase VD added partitionsInDDF ,maxLdsPerArray
 -- Revision : abortCConError and abortCConErrorSupported added.
 -- Revision : Temperature unit added in the description of enclosureTemperature, and spareType description has been updated
 -- Revision : clusterSupported was previously clusterSupportedSupported
--- Revision : pdtInserted summary has been modified. 
+-- Revision : pdtInserted summary has been modified.
 -- Revision : Trap Section is modified to support HP-OV.
 -- Revision : compatibilityFlag, compatibilityInfo attribute added.
 -- Revision : Node description modified.
@@ -216,7 +216,7 @@ cacheFlushInterval                     OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Cache flush interval in seconds for this adapter."
     ::= { adapterPropertiesEntry 5 }
-    
+
 clusterState                     OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -272,7 +272,7 @@ spinupDriveCount                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Maximum number of drives to spin up at one time for this adapter."
     ::= { adapterPropertiesEntry 13 }
-    
+
 coercionMode                OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -353,7 +353,7 @@ compatibilityFlag                OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "To inform compatibilities between Applications and FW. 0->incompatible; 1->compatible"
-    ::= { adapterPropertiesEntry 26 } 
+    ::= { adapterPropertiesEntry 26 }
 compatibilityInfo                OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -366,7 +366,7 @@ abortCConError                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Abort CC on detecting error is enabled or disabled on this adapter.
     Values: No(0),Yes(1),NA(2)"
-    ::= { adapterPropertiesEntry 28 }  
+    ::= { adapterPropertiesEntry 28 }
 copyBackState                  OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -447,8 +447,8 @@ supportBreakMirror			OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "1=Support break mirror operation,0=Do not Support break mirror operation"
-    ::= { adapterPropertiesEntry 41 } 
-    
+    ::= { adapterPropertiesEntry 41 }
+
 temperatureROC			OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -461,8 +461,8 @@ temperatureCtrl			OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "temperature of controller in Celsius"
-    ::= { adapterPropertiesEntry 43 }   
-    
+    ::= { adapterPropertiesEntry 43 }
+
 preventPIImport			OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -504,7 +504,7 @@ supportShieldState		OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "1 =Support PD shield state ,0 = Not Support PD shield state"
     ::= { adapterPropertiesEntry 49 }
-    
+
 writeCacheCapable		OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -525,56 +525,56 @@ maximumCacheSize		OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "This field give the information about maxmium Size of SSC that can yet be configured,in GB"
     ::= { adapterPropertiesEntry 52 }
-     
+
 ctrlSasAddr		            OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "This field gives the controller SAS address"
-    ::= { adapterPropertiesEntry 53 }	
+    ::= { adapterPropertiesEntry 53 }
 
 domainId		OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "This field gives the Domain ID"
-    ::= { adapterPropertiesEntry 54 }	
-	
+    ::= { adapterPropertiesEntry 54 }
+
 peerControllerStatus		OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "This field gives the Peer controller Status"
     ::= { adapterPropertiesEntry 55 }
-	
+
 maximumControllerNodes           OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "This field gives the HA nodes this FW supports"
     ::= { adapterPropertiesEntry 56 }
-	
+
 incompatibilityDetails           OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "This field gives the Incompatibility Details"
-    ::= { adapterPropertiesEntry 57 }	
-	
+    ::= { adapterPropertiesEntry 57 }
+
 topologyType           OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "This field gives the Topology Type"
-    ::= { adapterPropertiesEntry 58 }	 
-      
+    ::= { adapterPropertiesEntry 58 }
+
 supportOnlineFWUpdate	OBJECT-TYPE
 	SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "1 = Online firmware update is supported, 0 = Online firmware update is not supported"
     ::= { adapterPropertiesEntry 59 }
-      
+
 --------------start adp info-------------------------------------
 adapterInfoTable                    OBJECT-TYPE
     SYNTAX                      SEQUENCE OF AdapterInfoEntry
@@ -705,7 +705,7 @@ firmwareVersion                 OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Firmware version Format->(Firmware Package Version:Version:Date:Time)"
     ::= { adapterInfoEntry 14 }
-    
+
 driverVersion                 OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -728,7 +728,7 @@ lockKeyBinding                 OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Type of lock key binding. lock key is not bound(0),lock key bound to FW secret key(1), lock key bound to user(2), lock key bound to a TPM(3)"
     ::= { adapterInfoEntry 17 }
-    
+
 maxDAPdCountSpinup60               OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -738,7 +738,7 @@ maxDAPdCountSpinup60               OBJECT-TYPE
 
 
 
-    
+
 
 
 --------------end adp info
@@ -773,7 +773,7 @@ adapterSupportInfoTable                    OBJECT-TYPE
 			partitionsInDDF       INTEGER,
 			allowSSDMixInLD INTEGER,
 			allowMixSSDHDDInLD INTEGER
-			
+
         }
 
 -- defines for each attribute in AdapterEntry
@@ -863,7 +863,7 @@ allowMixSSDHDDInLD              OBJECT-TYPE
     STATUS                      mandatory
     DESCRIPTION                 "allow SSD/HDD mix within an LD.allow(1), not allow(0)"
     ::= { adapterSupportInfoEntry 13 }
-    
+
 --------------end adp info
 --------------start adp operations support info
 adapterOperationsSupportInfoTable                    OBJECT-TYPE
@@ -901,7 +901,7 @@ adapterOperationsSupportInfoTable                    OBJECT-TYPE
 			abortCConErrorSupported		INTEGER,
                   securitySupported               INTEGER,
 			supportPIcontroller 	  INTEGER
-		
+
         }
 
 -- defines for each attribute in AdapterEntry
@@ -1002,7 +1002,7 @@ Values: false(0),true(1)"
     ::= { adapterOperationsSupportInfoEntry 15 }
 
 abortCConErrorSupported                 OBJECT-TYPE
-	SYNTAX						INTEGER 
+	SYNTAX						INTEGER
 	ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Abort CC on detecting error is supported on this adapter.
@@ -1014,14 +1014,14 @@ securitySupported                 OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Displays the security support. if supported (1) , not supported (0)"
-    ::= { adapterOperationsSupportInfoEntry 17 } 
+    ::= { adapterOperationsSupportInfoEntry 17 }
 
 supportPIcontroller                  OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Displays the support PI. 1=LD SAS PI Type 0, 0=LD Not SAS PI Type 0"
-    ::= { adapterOperationsSupportInfoEntry 18 } 
+    ::= { adapterOperationsSupportInfoEntry 18 }
 
 --------------end adp info
 -- BBU Information.
@@ -1134,22 +1134,22 @@ firmwareStatus                OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Condition of battery in following order:
-                                 packMissing(0/1)           
-                                 voltageLow(0/1)            
-                                 temperatureHigh(0/1)       
-                                 chargeActive(0/1)          
-                                 dischargeActive(0/1)       
-                                 learnCycleRequested(0/1)   
-                                 learnCycleActive(0/1)      
-                                 learnCycleFailed(0/1)      
-                                 learnCycleTimeout(0/1)     
+                                 packMissing(0/1)
+                                 voltageLow(0/1)
+                                 temperatureHigh(0/1)
+                                 chargeActive(0/1)
+                                 dischargeActive(0/1)
+                                 learnCycleRequested(0/1)
+                                 learnCycleActive(0/1)
+                                 learnCycleFailed(0/1)
+                                 learnCycleTimeout(0/1)
                                  i2cErrorsDetected(0/1)
 				 noSpace(0/1)
 				 predictiveFailure(0/1)
 				 premiumFeatureReqd(0/1)
 				 microcodeUpdateReqd(0/1)
-                                 Only enabled(1) values will be shown"     
-    
+                                 Only enabled(1) values will be shown"
+
     ::= { bbuEntry 8 }
 voltage                OBJECT-TYPE
     SYNTAX                      INTEGER
@@ -1280,7 +1280,7 @@ bbuState                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "This property gives the Information about BBU state. Operational = if BBU is working fine, Non-Operational = if BBU is not working fine"
     ::= { bbuEntry 29 }
-    
+
 memoryModuleFRU                OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -1321,7 +1321,7 @@ adapterStatusSupportInfoTable                    OBJECT-TYPE
             lockKeyFailed       INTEGER,
             lockKeyNotBackedup  INTEGER,
             biosNotDetected     INTEGER,
-            cacheIsPinned       INTEGER               
+            cacheIsPinned       INTEGER
 
      }
 
@@ -1363,22 +1363,22 @@ biosNotDetected                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "bios Not Detected support for this Adapter. Values: false(0),true(1)"
     ::= { adapterStatusSupportInfoEntry 5 }
-    
+
 cacheIsPinned                OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 " 1=controller cache is pinned for missing or offline LDs"
     ::= { adapterStatusSupportInfoEntry 6 }
-    
-    
+
+
     --cacheIsPinned
 
 
 -- ends adapterStatusSupportInfoTable
 
 
--- starts adapterLdOperationSupportInfoTable 
+-- starts adapterLdOperationSupportInfoTable
 
 
 adapterLdOperationSupportInfoTable                    OBJECT-TYPE
@@ -1399,8 +1399,8 @@ adapterLdOperationSupportInfoTable                    OBJECT-TYPE
     AdapterLdOperationSupportInfoEntry ::=
         SEQUENCE {
             adapterID-ALSIT           INTEGER,
-            allowCtrlEncryption     INTEGER   
-            
+            allowCtrlEncryption     INTEGER
+
 
      }
 
@@ -1419,8 +1419,8 @@ allowCtrlEncryption                       OBJECT-TYPE
     DESCRIPTION                 "if it is set (1) supports controller encryption"
     ::= { adapterLdOperationSupportInfoEntry 2 }
 
--- ends adapterLdOperationSupportInfoTable    
-                         
+-- ends adapterLdOperationSupportInfoTable
+
 
 device                          OBJECT IDENTIFIER ::= {megaRAID-SAS 2}
 
@@ -1522,8 +1522,8 @@ setPowerStateForCfg             OBJECT-TYPE
     STATUS                      mandatory
     DESCRIPTION                 "FW requires application to set power state before configuration changes. Required(1), Not Required(0)"
     ::= { commonDeviceInfoEntry 10 }
-    
-    
+
+
 
 --------------------------------------
 pdNumber                        OBJECT-TYPE
@@ -1553,7 +1553,7 @@ physicalDriveEntry                     OBJECT-TYPE
 		    pdIndex           INTEGER,
             physDevID           INTEGER,
 --            physDevSeq           INTEGER,
-            oemSupported       INTEGER,	    
+            oemSupported       INTEGER,
             scsiDevType            INTEGER,
             connectedAdapterPort       DisplayString,
             deviceSpeed                 INTEGER,
@@ -1781,10 +1781,10 @@ partnerDevId                    OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
-    DESCRIPTION                 "If drive is in an enclosure with dual paths,This is Partner Device ID.				 
+    DESCRIPTION                 "If drive is in an enclosure with dual paths,This is Partner Device ID.
                                  In all other cases INVALID(-1)"
     ::= { physicalDriveEntry 28 }
-    
+
 mediatype                    OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -1799,7 +1799,7 @@ powerState                    OBJECT-TYPE
     DESCRIPTION                 "Power condition of the device. Values are device is active(0),device is stopped(1),device is transitioning between power states(255)"
     ::= { physicalDriveEntry 30 }
 
-    
+
 secured                    OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -1834,14 +1834,14 @@ foreignImportNotAllowed        OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "1=Drive is not allowed foreignImport operation, 0=Drive is allowed foreignImport operation"
     ::= { physicalDriveEntry 35 }
-    
+
 pdTemperature                  OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Physical Drive temperature in Celsius"
     ::= { physicalDriveEntry 36 }
-    
+
 pdSerialNumber                 OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -1922,7 +1922,7 @@ ineligibleForLd                 OBJECT-TYPE
 
 --Virtual Devices
 virtualDevice                   OBJECT IDENTIFIER ::= {megaRAID-SAS 3}
-    
+
 commonVirtualDeviceInfoTable               OBJECT-TYPE
     SYNTAX                      SEQUENCE OF CommonVirtualDeviceInfoEntry
     ACCESS                      not-accessible
@@ -1948,7 +1948,7 @@ commonVirtualDeviceInfoTable               OBJECT-TYPE
         supportedAccessPolicy              INTEGER,
         supportedMinSize       INTEGER,
         supportedMaxSize            INTEGER,
-		ldbbm			INTEGER 
+		ldbbm			INTEGER
 
     }
 
@@ -1958,7 +1958,7 @@ adapterID-CVDIT                     OBJECT-TYPE
     STATUS                      mandatory
     DESCRIPTION                 "Unique adapter ID"
     ::= { commonVirtualDeviceInfoEntry 1 }
-    
+
 
 supportedReadPolicy                     OBJECT-TYPE
     SYNTAX                      INTEGER
@@ -2057,14 +2057,14 @@ virtualDriveEntry                     OBJECT-TYPE
             adapterID-VDT       INTEGER,
             encryptionType      INTEGER,
             vdOperationSupport    DisplayString,
-	      badBlocksExist	INTEGER, 
-	   
+	      badBlocksExist	INTEGER,
+
 	    defaultPSPolicy 	INTEGER,
 	    currentPSPolicy 	INTEGER,
 	    breakMirror 	INTEGER,
 	    joinMirror	 	INTEGER,
 	    mirrorPdInfo	DisplayString,
-	    vdPiType		INTEGER,	
+	    vdPiType		INTEGER,
 	    mirrorDataSize   INTEGER,
 	    cacheCadeType		INTEGER,
 	    currentWritePolicy		DisplayString,
@@ -2072,11 +2072,11 @@ virtualDriveEntry                     OBJECT-TYPE
             associatedVD		DisplayString,
 			hostAccessPolicy       DisplayString,
 			guid                DisplayString
-			
-          		
-	    		 
+
+
+
         }
-        
+
 -- defines for each attribute in PhysicaldriveEntry
 
 virtualDevID                       OBJECT-TYPE
@@ -2143,7 +2143,7 @@ prl                       OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
-    DESCRIPTION                 "Primay raid level. Values: 0(RAID-0), 1(RAID-1), 3(RAID-3), 4(RAID-4), 5(RAID-5), 6(RAID-6),15(Single Disk or JBOD), 
+    DESCRIPTION                 "Primay raid level. Values: 0(RAID-0), 1(RAID-1), 3(RAID-3), 4(RAID-4), 5(RAID-5), 6(RAID-6),15(Single Disk or JBOD),
 				17(RAID-1E), 21(RAID-5E), 31(Concatenation),37(RAID-5EEE)"
     ::= { virtualDriveEntry 11 }
 rLQ                       OBJECT-TYPE
@@ -2193,13 +2193,13 @@ currentCachePolicy                       OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Cache policy settings. Values:WriteBack, WriteThrough, ReadAdaptive, ReadAhead, ReadAheadNone, Cached, Direct, Write Cache OK if Bad BBU, No Write Cache if Bad BBU."
-    ::= { virtualDriveEntry 19 } 
+    ::= { virtualDriveEntry 19 }
 adapterID-VDT                       OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Adapter ID"
-    ::= { virtualDriveEntry 20 }     
+    ::= { virtualDriveEntry 20 }
 
 encryptionType                       OBJECT-TYPE
     SYNTAX                      INTEGER
@@ -2213,7 +2213,7 @@ vdOperationSupport                             OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "startFGI,stopFGI,startCC,stopCC,startRecon,deleteLD"
-    ::= { virtualDriveEntry 22 }    
+    ::= { virtualDriveEntry 22 }
 
 badBlocksExist                  OBJECT-TYPE
     SYNTAX                      INTEGER
@@ -2235,7 +2235,7 @@ currentPSPolicy                 OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Power Savings policy set for this LD.Values:controller default power saving policy=0, AUTO=1, MAX=2, MAX with no cache=6, NONE=255"
     ::= { virtualDriveEntry 25 }
-    
+
 breakMirror                 	OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -2248,7 +2248,7 @@ joinMirror                 	OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Join Mirror policy set for this LD.Values:1=join mirror is allowed, 0=join mirror not is allowed"
     ::= { virtualDriveEntry 27 }
-    
+
 mirrorPdInfo              	OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -2269,13 +2269,13 @@ mirrorDataSize                 	OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Total Space used for mirrorData or Parity information"
     ::= { virtualDriveEntry 30 }
-    
+
 cacheCadeType                 	OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "0= Non-CacheCade VD, 1= CacheCade Type is Read & Write, 2= CacheCade Type is Read only, 3= R1-EC"
-    ::= { virtualDriveEntry 31 } 
+    ::= { virtualDriveEntry 31 }
 
 currentWritePolicy              	OBJECT-TYPE
     SYNTAX                      DisplayString
@@ -2296,15 +2296,15 @@ associatedVD              	OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                  "This property gives the Information about VD is Cached or VD is not cached."
-    ::= { virtualDriveEntry 34 }  
-	
+    ::= { virtualDriveEntry 34 }
+
 hostAccessPolicy                   	OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "This property gives the Host Access Policy"
     ::= { virtualDriveEntry 35 }
-	
+
 guid                        	OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -2338,7 +2338,7 @@ vdSpanInfoEntry                     OBJECT-TYPE
             vdSpanArrayRef           INTEGER,
             adapterID-VSIT		   INTEGER
         }
-        
+
 spanID                       OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -2369,13 +2369,13 @@ vdSpanArrayRef                       OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Array reference (index)"
-    ::= { vdSpanInfoEntry 5 }  
+    ::= { vdSpanInfoEntry 5 }
 adapterID-VSIT                       OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Adapter ID"
-    ::= { vdSpanInfoEntry 6 }    
+    ::= { vdSpanInfoEntry 6 }
 ---------------
 arrayInfo                     OBJECT IDENTIFIER ::= {virtualDevice 4}
 
@@ -2513,13 +2513,13 @@ arrayIDs                       OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Comma separated array ids. e.g. 2,4,5 etc "
-    ::= { spareEntry 5 } 
+    ::= { spareEntry 5 }
 adapterID-ST                       OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Adapter ID."
-    ::= { spareEntry 6 }    
+    ::= { spareEntry 6 }
 
 
 -- Enclosure Information.
@@ -2648,20 +2648,20 @@ pdIds                OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Physical drive deviceIds space separated."
-    ::= { enclosureEntry 12 } 
+    ::= { enclosureEntry 12 }
 adapterID-ET                OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Adapter ID."
-    ::= { enclosureEntry 13 } 
-    
+    ::= { enclosureEntry 13 }
+
 pdCountSpinup60              OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Number of drives that can spun up in 60 sec."
-    ::= { enclosureEntry 14 } 
+    ::= { enclosureEntry 14 }
 
 enclosureType              OBJECT-TYPE
     SYNTAX                      INTEGER
@@ -2689,7 +2689,7 @@ vendorID                OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Enclosure Vendor ID"
-    ::= { enclosureEntry 18 } 
+    ::= { enclosureEntry 18 }
 
 productID                OBJECT-TYPE
     SYNTAX                      DisplayString
@@ -2717,15 +2717,15 @@ enclosureZoningMode             OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Enclosure IBM Zoning Mode"
-    ::= { enclosureEntry 22 }  
-	
+    ::= { enclosureEntry 22 }
+
 eSMFRUPartInfo                OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Information about IBM Enclosure ESM FRU Part"
     ::= { enclosureEntry 23 }
-    
+
 ----------------------
 enclosureFanTable                    OBJECT-TYPE
     SYNTAX                      SEQUENCE OF EnclosureFanEntry
@@ -2950,7 +2950,7 @@ enclosureTemperature                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Current temperature in degree Centigrade"
     ::= { enclosureTempSensorEntry 4 }
-    
+
 ----------------------
 enclosureAlarmTable                    OBJECT-TYPE
     SYNTAX                      SEQUENCE OF EnclosureAlarmEntry
@@ -3090,7 +3090,7 @@ atFlashImageName            OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Flash Image Name"
     ::= { adapterTraps 1004 }
-	
+
 atID            OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -3103,15 +3103,15 @@ clustCtrlpropReset            OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Resetting controller property"
-    ::= { adapterTraps 1006 }	
+    ::= { adapterTraps 1006 }
 
 -- Following are the trap definitions, which use variables defined
 -- within the object lsiRaidMib.
 
 adpAlarmStateEnabled TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Alarm has been enabled by user for Adapter $1"
@@ -3121,7 +3121,7 @@ adpAlarmStateEnabled TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL    
+	--#STATE OPERATIONAL
     ::= 8001
 
 adpBGIRateChanged TRAP-TYPE
@@ -3131,14 +3131,14 @@ adpBGIRateChanged TRAP-TYPE
         atRate,
         atAdpNumber
         }
-    DESCRIPTION "Background initialization rate changed to $1 for Adapter $2" 
+    DESCRIPTION "Background initialization rate changed to $1 for Adapter $2"
     --#TYPE "LSI SAS Trap: Background Initialization Rate Changed"
 	--#SUMMARY "Background Initialization Rate changed to %d for Adapter %d"
 	--#ARGUMENTS {0,1}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8002
 adpCacheDiscarded TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3153,7 +3153,7 @@ adpCacheDiscarded TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8003
 adpCacheRebootCantRecover TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3168,7 +3168,7 @@ adpCacheRebootCantRecover TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8004
 adpCacheRebootRecover TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3176,14 +3176,14 @@ adpCacheRebootRecover TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Cache data recovered successfully for Adapter $1" 
+    DESCRIPTION "Cache data recovered successfully for Adapter $1"
     --#TYPE "LSI SAS Trap:Cache Recovered"
 	--#SUMMARY "Cache Data Recovered for Adapter %d"
 	--#ARGUMENTS {0}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8005
 adpCacheVersionMismatch TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3198,7 +3198,7 @@ adpCacheVersionMismatch TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8006
 
 adpCCRateChanged TRAP-TYPE
@@ -3208,14 +3208,14 @@ adpCCRateChanged TRAP-TYPE
         atRate,
         atAdpNumber
         }
-    DESCRIPTION "Consistency Check rate changed to $1 for Adapter $2" 
+    DESCRIPTION "Consistency Check rate changed to $1 for Adapter $2"
     --#TYPE "LSI SAS Trap: Consistency Check Rate changed"
 	--#SUMMARY "Consistency Check Rate changed to %d for Adapter %d"
 	--#ARGUMENTS {0,1}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8007
 adpFlashBadImage TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3223,14 +3223,14 @@ adpFlashBadImage TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Flash downloaded image corrupted for Adapter $1" 
+    DESCRIPTION "Flash downloaded image corrupted for Adapter $1"
     --#TYPE "LSI SAS Trap: Flash Download Image corrupted"
 	--#SUMMARY "Flash download image corrupted for Adapter %d"
 	--#ARGUMENTS {0}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8008
 adpFlashEraseError TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3238,14 +3238,14 @@ adpFlashEraseError TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Flash erase error for Adapter $1" 
+    DESCRIPTION "Flash erase error for Adapter $1"
     --#TYPE "LSI SAS Trap: Flash Erase Error"
 	--#SUMMARY "Flash erase error for Adapter %d"
 	--#ARGUMENTS {0}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8009
 adpFlashEraseTimeout TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3260,7 +3260,7 @@ adpFlashEraseTimeout TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8010
 adpFlashGeneralError TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3275,7 +3275,7 @@ adpFlashGeneralError TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8011
 adpFlashImage TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3291,7 +3291,7 @@ adpFlashImage TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8012
 adpFlashOK TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3306,7 +3306,7 @@ adpFlashOK TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8013
 adpFlashProgramError TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3314,14 +3314,14 @@ adpFlashProgramError TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Flash programming error for Adapter $1" 
+    DESCRIPTION "Flash programming error for Adapter $1"
     --#TYPE "LSI SAS Trap: Flash programming Error"
 	--#SUMMARY "Flash programming error for Adapter %d"
 	--#ARGUMENTS {0}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8014
 adpFlashProgramTimeout TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3336,9 +3336,9 @@ adpFlashProgramTimeout TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8015
-    
+
 adpLogCleared TRAP-TYPE
     ENTERPRISE adapterTraps
     VARIABLES
@@ -3352,7 +3352,7 @@ adpLogCleared TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8016
 adpLogWrapped TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3367,9 +3367,9 @@ adpLogWrapped TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8017
-    
+
 adpPatrolReadComplete TRAP-TYPE
     ENTERPRISE adapterTraps
     VARIABLES
@@ -3383,7 +3383,7 @@ adpPatrolReadComplete TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8018
 adpPatrolReadPaused TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3398,7 +3398,7 @@ adpPatrolReadPaused TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8019
 adpPatrolReadResumed TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3413,7 +3413,7 @@ adpPatrolReadResumed TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8020
 adpPatrolReadStarted TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3421,14 +3421,14 @@ adpPatrolReadStarted TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Patrol Read started for Adapter $1" 
+    DESCRIPTION "Patrol Read started for Adapter $1"
     --#TYPE "LSI SAS Trap: Patrol Read Started"
 	--#SUMMARY "Patrol Read started for Adapter %d"
 	--#ARGUMENTS {0}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8021
 adpShutdown TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3443,7 +3443,7 @@ adpShutdown TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8022
 adpHibernate TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3458,7 +3458,7 @@ adpHibernate TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8023
 adpCrash TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3473,7 +3473,7 @@ adpCrash TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8024
 
 adpRRChanged TRAP-TYPE
@@ -3490,7 +3490,7 @@ adpRRChanged TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8025
  adpPRRateChanged TRAP-TYPE
     ENTERPRISE adapterTraps
@@ -3506,27 +3506,27 @@ adpRRChanged TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
      ::= 8026
 adpAlarmStateDisabled TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
-    DESCRIPTION "Alarm has been disabled by user for Adapter $1" 
+    DESCRIPTION "Alarm has been disabled by user for Adapter $1"
     --#TYPE "LSI SAS Trap: Alarm disabled"
 	--#SUMMARY "Alarm disabled by user for Adapter %d"
 	--#ARGUMENTS {0}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8027
 adpConfigCleared TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Configuration cleared for Adapter $1"
@@ -3552,12 +3552,12 @@ adpReconRateChanged TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 8029
 adpDefault TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Factory defaults restored for Adapter $1"
@@ -3573,8 +3573,8 @@ adpDefault TRAP-TYPE
 -- bbu trap----------
 bbuPresent TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery Present for Adapter $1"
@@ -3588,8 +3588,8 @@ bbuPresent TRAP-TYPE
     ::= 8031
 bbuNotPresent TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery Not Present for Adapter $1"
@@ -3600,11 +3600,11 @@ bbuNotPresent TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8032   
+    ::= 8032
 bbuNewBattery TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "New Battery Detected for Adapter $1"
@@ -3615,11 +3615,11 @@ bbuNewBattery TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8033   
+    ::= 8033
 bbuReplaced TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery has been replaced for Adapter $1"
@@ -3630,11 +3630,11 @@ bbuReplaced TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8034   
+    ::= 8034
 bbuTempHigh TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery temperature is high for Adapter $1"
@@ -3645,11 +3645,11 @@ bbuTempHigh TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8035   
+    ::= 8035
 bbuVoltageLow TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery voltage low for Adapter $1"
@@ -3660,11 +3660,11 @@ bbuVoltageLow TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8036   
+    ::= 8036
 bbuCharging TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery started charging for Adapter $1"
@@ -3675,11 +3675,11 @@ bbuCharging TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8037   
+    ::= 8037
 bbuDisCharging TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery is discharging for Adapter $1"
@@ -3690,11 +3690,11 @@ bbuDisCharging TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8038   
+    ::= 8038
 bbuTempNormal TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery temperature is normal for Adapter $1"
@@ -3705,11 +3705,11 @@ bbuTempNormal TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8039   
+    ::= 8039
 bbuReplace TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery needs replacement, SOH Bad for Adapter $1"
@@ -3720,11 +3720,11 @@ bbuReplace TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8040   
+    ::= 8040
 bbuRelearnStarted TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn started for Adapter $1"
@@ -3735,11 +3735,11 @@ bbuRelearnStarted TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8041   
+    ::= 8041
 bbuRelearnProgress TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn in progress for Adapter $1"
@@ -3750,11 +3750,11 @@ bbuRelearnProgress TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8042   
+    ::= 8042
 bbuRelearnComplete TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn completed for Adapter $1"
@@ -3765,11 +3765,11 @@ bbuRelearnComplete TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8043   
+    ::= 8043
 bbuRelearnTimeout TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn timed out for Adapter $1"
@@ -3780,11 +3780,11 @@ bbuRelearnTimeout TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8044   
+    ::= 8044
 bbuRelearnPending TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn pending: Battery is under charge for Adapter $1"
@@ -3795,11 +3795,11 @@ bbuRelearnPending TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8045  
+    ::= 8045
 bbuRelearnPostponed TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn postponed for Adapter $1"
@@ -3810,11 +3810,11 @@ bbuRelearnPostponed TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8046   
+    ::= 8046
 bbuRemoved TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery removed for Adapter $1"
@@ -3825,11 +3825,11 @@ bbuRemoved TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8047   
+    ::= 8047
 bbuCapacityLow TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Current capacity of the battery is below threshold for Adapter $1"
@@ -3840,11 +3840,11 @@ bbuCapacityLow TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8048   
+    ::= 8048
 bbuCapacityAbove TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Current capacity of the battery is above threshold for Adapter $1"
@@ -3855,12 +3855,12 @@ bbuCapacityAbove TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8049   
-   
+    ::= 8049
+
 bbuFRU TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Bbu FRU for Adapter $1 changed"
@@ -3871,13 +3871,13 @@ bbuFRU TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8050 
+    ::= 8050
 
 
 revisionIdentifier TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Revision Identifier for Adapter $1 changed"
@@ -3890,11 +3890,11 @@ revisionIdentifier TRAP-TYPE
 	--#STATE OPERATIONAL
     ::= 8051
 
-    
+
 adpLockKeyCreated TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Drive security key created for Adapter $1"
@@ -3906,11 +3906,11 @@ adpLockKeyCreated TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8052
-    
+
 adpLockKeyBackedup TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Drive security key backed up for Adapter $1"
@@ -3922,11 +3922,11 @@ adpLockKeyBackedup TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8053
-    
+
 adpLockKeyVerifiedEscrow TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Drive security key from escrow, verified for Adapter $1"
@@ -3941,8 +3941,8 @@ adpLockKeyVerifiedEscrow TRAP-TYPE
 
 adpLockKeyRekeyed TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Drive security key changed for Adapter $1"
@@ -3957,8 +3957,8 @@ adpLockKeyRekeyed TRAP-TYPE
 
 adpLockKeyRekeyFailed TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Drive security key, re-key operation failed for Adapter $1"
@@ -3973,8 +3973,8 @@ adpLockKeyRekeyFailed TRAP-TYPE
 
 adpLockKeyInvalid TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Drive security key is invalid for Adapter $1"
@@ -3989,8 +3989,8 @@ adpLockKeyInvalid TRAP-TYPE
 
 adpLockKeyDestroyed TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Drive security key destroyed for Adapter $1"
@@ -4002,11 +4002,11 @@ adpLockKeyDestroyed TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8058
-    
+
 adpEscrowKeyInvalid TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Drive security key from escrow is invalid for Adapter $1"
@@ -4018,11 +4018,11 @@ adpEscrowKeyInvalid TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8059
-    
+
 adpLockKeyFailed TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Drive security key failure, cannot access secured configuration for Adapter $1"
@@ -4037,8 +4037,8 @@ adpLockKeyFailed TRAP-TYPE
 
 bbuChargeDisabled TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery charging was suspended due to high battery temperature on Adapter $1"
@@ -4053,8 +4053,8 @@ bbuChargeDisabled TRAP-TYPE
 
 bbuMicrocodeUpdated TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery NVCache firmware update was successful on Adapter $1"
@@ -4069,8 +4069,8 @@ bbuMicrocodeUpdated TRAP-TYPE
 
 bbuMicrocodeUpdateFailed TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery NVCache firmware update failed on Adapter $1"
@@ -4096,59 +4096,59 @@ haNodeJoin TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8064
-	
+
 haNodeBreak TRAP-TYPE
     ENTERPRISE adapterTraps
     VARIABLES
         {atAdpNumber}
     DESCRIPTION "Peer controller exited HA Domain at Adapter -$1"
     --#TYPE "LSI SAS Trap: Peer controller has left HA domain"
-	--#SUMMARY "Peer controller exited HA Domain at Adapter -%d" 
+	--#SUMMARY "Peer controller exited HA Domain at Adapter -%d"
 	--#ARGUMENTS {0}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8065	
-	
+    ::= 8065
+
 haPeerIncompatible TRAP-TYPE
     ENTERPRISE adapterTraps
     DESCRIPTION "Peer controller settings are incompatible"
     --#TYPE "LSI SAS Trap: Peer controller is incompatible"
-	--#SUMMARY "Peer controller settings are incompatible" 
+	--#SUMMARY "Peer controller settings are incompatible"
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8066	
+    ::= 8066
 
 haCtrlpropIncompatible TRAP-TYPE
     ENTERPRISE adapterTraps
     DESCRIPTION "Controller property mismatch detected with Peer controller"
     --#TYPE "LSI SAS Trap: Controller properties are incompatible with peer's"
-	--#SUMMARY "Controller property mismatch detected with Peer controller" 
+	--#SUMMARY "Controller property mismatch detected with Peer controller"
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8067
-	
+
 haFWVersionMismatch TRAP-TYPE
     ENTERPRISE adapterTraps
    DESCRIPTION "FW version does not match Peer controller"
     --#TYPE "LSI SAS Trap: FW versions of the cluster nodes do not match"
-	--#SUMMARY "FW version does not match Peer controller" 
+	--#SUMMARY "FW version does not match Peer controller"
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8068	
-	
+    ::= 8068
+
 haCacheMirrorOnline TRAP-TYPE
     ENTERPRISE adapterTraps
     DESCRIPTION "Cache mirroring is online"
     --#TYPE "LSI SAS Trap: HA cache mirror is online"
-	--#SUMMARY "Cache mirroring is online" 
+	--#SUMMARY "Cache mirroring is online"
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
@@ -4159,17 +4159,17 @@ haCacheMirrorOffline TRAP-TYPE
     ENTERPRISE adapterTraps
     DESCRIPTION "Cache mirroring is offline"
     --#TYPE "LSI SAS Trap: HA cache mirror is offline"
-	--#SUMMARY "Cache mirroring is offline" 
+	--#SUMMARY "Cache mirroring is offline"
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8070  
-	
+    ::= 8070
+
 adpPropChanged TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Controller properties changed for Adapter $1"
@@ -4184,8 +4184,8 @@ adpPropChanged TRAP-TYPE
 
 adpResetNowStart TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Controller reset requested by host for Adapter $1"
@@ -4200,8 +4200,8 @@ adpResetNowStart TRAP-TYPE
 
 adpResetNowDone TRAP-TYPE
     ENTERPRISE adapterTraps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Controller reset requested by host, completed for Adapter $1"
@@ -4213,7 +4213,7 @@ adpResetNowDone TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8073
-	
+
 ---------------vd trap----------
 vdTraps                      OBJECT IDENTIFIER ::= {lsiRAIDServer 7}
 vdNumber                 OBJECT-TYPE
@@ -4253,14 +4253,14 @@ vdOldState            OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Virtual Drive state. Values are: offline(0),partially-degraded(1),degraded(2),optimal(3)"
     ::= { vdTraps 1106 }
-	
+
 isRemote                 OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "HA cluster locale: 0=local, 1=remote (at peer)"
     ::= { vdTraps 1107 }
-	
+
 
 
 -- Following are the trap definitions, which use variables defined
@@ -4539,7 +4539,7 @@ vdtDeleted TRAP-TYPE
     ENTERPRISE vdTraps
     VARIABLES
         {atAdpNumber,vdNumber,isRemote}
-    DESCRIPTION "A VD deleted on Adapter -$1  VD Target -$2 Remote VD -$3" 
+    DESCRIPTION "A VD deleted on Adapter -$1  VD Target -$2 Remote VD -$3"
     --#TYPE "LSI SAS Trap: VD deleted"
 	--#SUMMARY "A VD deleted on Adapter -%d  VD Target -%d Remote VD -%d"
 	--#ARGUMENTS {0,1,2}
@@ -4554,7 +4554,7 @@ vdtSecured TRAP-TYPE
     ENTERPRISE vdTraps
     VARIABLES
         {atAdpNumber,vdNumber,isRemote}
-    DESCRIPTION "VD is now secured. Adapter -$1 VD Targt -$2 Remote VD -$3" 
+    DESCRIPTION "VD is now secured. Adapter -$1 VD Targt -$2 Remote VD -$3"
     --#TYPE "LSI SAS Trap: VD is now secured"
 	--#SUMMARY "VD is now secured. Adapter -%d VD Target -%d Remote VD -%d"
 	--#ARGUMENTS {0,1,2}
@@ -4563,12 +4563,12 @@ vdtSecured TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8124
-    
+
 vdtPartiallySecured TRAP-TYPE
     ENTERPRISE vdTraps
     VARIABLES
         {atAdpNumber,vdNumber,isRemote}
-    DESCRIPTION "VD is partially secured. Adapter -$1 VD Targt -$2 Remote VD -$3" 
+    DESCRIPTION "VD is partially secured. Adapter -$1 VD Targt -$2 Remote VD -$3"
     --#TYPE "LSI SAS Trap: VD is partially secured"
 	--#SUMMARY "VD is partially secured. Adapter -%d VD Target -%d Remote VD -%d"
 	--#ARGUMENTS {0,1,2}
@@ -4582,8 +4582,8 @@ vdtPartiallySecured TRAP-TYPE
 vdtBbmLogCleared TRAP-TYPE
     ENTERPRISE vdTraps
     VARIABLES
-        {atAdpNumber,vdNumber,isRemote}	
-    DESCRIPTION "VD bad block table cleared on Adapter -$1 VD Targt -$2 Remote VD -$3" 
+        {atAdpNumber,vdNumber,isRemote}
+    DESCRIPTION "VD bad block table cleared on Adapter -$1 VD Targt -$2 Remote VD -$3"
     --#TYPE "LSI SAS Trap: VD bad block table is cleared"
 	--#SUMMARY "VD bad block table cleared on Adapter -%d VD Target -%d Remote VD -%d"
 	--#ARGUMENTS {0,1,2}
@@ -4709,7 +4709,7 @@ vdtACCESSBLOCKEDSSCOFFLINE TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8135
-	
+
 haLDIsRemote TRAP-TYPE
     ENTERPRISE vdTraps
     VARIABLES { atAdpNumber,vdNumber,isRemote}
@@ -4722,7 +4722,7 @@ haLDIsRemote TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8136
-	
+
 haLDIsLocal TRAP-TYPE
     ENTERPRISE vdTraps
     VARIABLES { atAdpNumber,vdNumber,isRemote}
@@ -4735,7 +4735,7 @@ haLDIsLocal TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8137
-	
+
 haLDTargetIDConflict TRAP-TYPE
     ENTERPRISE vdTraps
     VARIABLES { atAdpNumber,vdNumber,isRemote}
@@ -4748,7 +4748,7 @@ haLDTargetIDConflict TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8138
-	
+
 haLDAccessShared TRAP-TYPE
     ENTERPRISE vdTraps
     VARIABLES { atAdpNumber,vdNumber,isRemote}
@@ -4761,7 +4761,7 @@ haLDAccessShared TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8139
-	
+
 haLDAccessExclusive TRAP-TYPE
     ENTERPRISE vdTraps
     VARIABLES { atAdpNumber,vdNumber,isRemote}
@@ -4777,7 +4777,7 @@ haLDAccessExclusive TRAP-TYPE
 
 haLDIncompatible TRAP-TYPE
     ENTERPRISE vdTraps
-    VARIABLES { atAdpNumber,vdNumber,isRemote}  
+    VARIABLES { atAdpNumber,vdNumber,isRemote}
     DESCRIPTION "Adapter -$1 VD Target -$2 Remote VD -$3 is incompatible in the HA domain"
     --#TYPE "LSI SAS Trap: LD is incompatible in the HA domain"
 	--#SUMMARY "Adapter -%d  VD Target -%d Remote VD -%d is incompatible in the HA domain"
@@ -4787,10 +4787,10 @@ haLDIncompatible TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8141
-	
+
 vdAccessBlockedPeerUnavailable TRAP-TYPE
     ENTERPRISE vdTraps
-    VARIABLES { atAdpNumber,vdNumber,isRemote}  
+    VARIABLES { atAdpNumber,vdNumber,isRemote}
     DESCRIPTION "Cached data from peer controller is unavailable. LD on Adapter -$1 VD Target -$2 Remote VD -$3 access policy is set to Blocked"
     --#TYPE "LSI SAS Trap: LD access blocked as cached data from peer controller is unavailable"
 	--#SUMMARY "Cached data from peer controller is unavailable. LD on Adapter -%d  VD Target -%d Remote VD -%d access policy is set to Blocked"
@@ -4799,8 +4799,8 @@ vdAccessBlockedPeerUnavailable TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8142	
-	
+    ::= 8142
+
 ---------------vd trap----------
 pdTraps                      OBJECT IDENTIFIER ::= {lsiRAIDServer 8}
 
@@ -4834,27 +4834,27 @@ pdOldState            OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Physical Drive state. Values are: unconfigured-good(0),unconfigured-bad(1),hot-spare(2),offline(16),failed(17),rebuild(20),online(24),copyback(32),system(64)"
     ::= { pdTraps 1205 }
-pdEnclDeviceId	       OBJECT-TYPE                  
+pdEnclDeviceId	       OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Enclosure Device ID for which Trap is generated."
     ::= { pdTraps 1206 }
-pdSASAdd	               OBJECT-TYPE                 
+pdSASAdd	               OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Device SAS addresses. Comma separeted for multiple address."
     ::= { pdTraps 1207 }
 
-pdPath	               OBJECT-TYPE                     
+pdPath	               OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "PD path."
     ::= { pdTraps 1208 }
 
-pdFRU	               OBJECT-TYPE                 
+pdFRU	               OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
@@ -4949,7 +4949,7 @@ pdtFormatCompleted TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
-    DESCRIPTION " Physical Drive format completed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4" 
+    DESCRIPTION " Physical Drive format completed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
     --#TYPE "LSI SAS Trap: Physical Drive Format completed"
 	--#SUMMARY "Physical Drive Format completed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
 	--#ARGUMENTS {0,1,2,3}
@@ -4962,7 +4962,7 @@ pdtInserted TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
-    DESCRIPTION "PD inserted on Adapter -$1  Dev -$2  Enc -$3  Slot -$4" 
+    DESCRIPTION "PD inserted on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
     --#TYPE "LSI SAS Trap: Physical Drive inserted"
 	--#SUMMARY "PD inserted on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
 	--#ARGUMENTS {0,1,2,3}
@@ -5040,7 +5040,7 @@ pdtRblResumed TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
-    DESCRIPTION "Rebuild resumed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4" 
+    DESCRIPTION "Rebuild resumed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
     --#TYPE "LSI SAS Trap: Rebuild resumed"
 	--#SUMMARY "Rebuild resumed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
 	--#ARGUMENTS {0,1,2,3}
@@ -5049,7 +5049,7 @@ pdtRblResumed TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8214
-    
+
 pdtRblStartA TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
@@ -5088,9 +5088,9 @@ pdtStateChange TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8217  
-    
-pdtRedundantPathBroken TRAP-TYPE    
+    ::= 8217
+
+pdtRedundantPathBroken TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo,pdEnclDeviceId,pdSASAdd}
@@ -5104,7 +5104,7 @@ pdtRedundantPathBroken TRAP-TYPE
 	--#STATE OPERATIONAL
     ::= 8218
 
-pdtRedundantPathRestored TRAP-TYPE    
+pdtRedundantPathRestored TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo,pdEnclDeviceId,pdSASAdd}
@@ -5118,7 +5118,7 @@ pdtRedundantPathRestored TRAP-TYPE
 	--#STATE OPERATIONAL
     ::= 8219
 
-pdtRedundantEnclModuleInserted TRAP-TYPE    
+pdtRedundantEnclModuleInserted TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo,pdEnclDeviceId,pdSASAdd,pdPath}
@@ -5130,8 +5130,8 @@ pdtRedundantEnclModuleInserted TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8220 
-pdtRedundantEnclModuleRemoved TRAP-TYPE    
+    ::= 8220
+pdtRedundantEnclModuleRemoved TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo,pdEnclDeviceId,pdSASAdd,pdPath}
@@ -5143,9 +5143,9 @@ pdtRedundantEnclModuleRemoved TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8221 
+    ::= 8221
 
-pdtFRU TRAP-TYPE    
+pdtFRU TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo,pdEnclDeviceId,pdFRU}
@@ -5157,14 +5157,14 @@ pdtFRU TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8222 
+    ::= 8222
 
 
 pdtSecured TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
-    DESCRIPTION "PD security activated on Adapter -$1  Dev -$2  Enc -$3  Slot -$4" 
+    DESCRIPTION "PD security activated on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
     --#TYPE "LSI SAS Trap: PD security activated"
 	--#SUMMARY "PD security activated on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
 	--#ARGUMENTS {0,1,2,3}
@@ -5178,7 +5178,7 @@ pdtUnsecured TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
-    DESCRIPTION "PD security disabled on Adapter -$1  Dev -$2  Enc -$3  Slot -$4" 
+    DESCRIPTION "PD security disabled on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
     --#TYPE "LSI SAS Trap: PD security disabled"
 	--#SUMMARY "PD security disabled on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
 	--#ARGUMENTS {0,1,2,3}
@@ -5192,7 +5192,7 @@ pdtReprovisioned TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
-    DESCRIPTION "PD is reprovisioned on Adapter -$1  Dev -$2  Enc -$3  Slot -$4" 
+    DESCRIPTION "PD is reprovisioned on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
     --#TYPE "LSI SAS Trap: PD is reprovisioned"
 	--#SUMMARY "PD is reprovisioned on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
 	--#ARGUMENTS {0,1,2,3}
@@ -5206,7 +5206,7 @@ pdtLockKeyRekeyed TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
-    DESCRIPTION "PD security key changed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4" 
+    DESCRIPTION "PD security key changed on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
     --#TYPE "LSI SAS Trap: PD security key changed"
 	--#SUMMARY "PD security key changed on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
 	--#ARGUMENTS {0,1,2,3}
@@ -5220,7 +5220,7 @@ pdtSecurityFailure TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
         {atAdpNumber,pdID,pdEncIndex,pdSlotNo}
-    DESCRIPTION "Security subsystem problems detected on Adapter -$1  Dev -$2  Enc -$3  Slot -$4" 
+    DESCRIPTION "Security subsystem problems detected on Adapter -$1  Dev -$2  Enc -$3  Slot -$4"
     --#TYPE "LSI SAS Trap: Security subsystem problems detected for the PD"
 	--#SUMMARY "Security subsystem problems detected on Adapter -%d  Dev -%d  Enc -%d  Slot -%d"
 	--#ARGUMENTS {0,1,2,3}
@@ -5229,7 +5229,7 @@ pdtSecurityFailure TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8227
-    
+
 
 pdtPowerStateChange TRAP-TYPE
     ENTERPRISE pdTraps
@@ -5243,8 +5243,8 @@ pdtPowerStateChange TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8228 
-    
+    ::= 8228
+
 
 pdtNotSupported TRAP-TYPE
     ENTERPRISE pdTraps
@@ -5258,7 +5258,7 @@ pdtNotSupported TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8229 
+    ::= 8229
 
 pdtNotCertified TRAP-TYPE
     ENTERPRISE pdTraps
@@ -5272,7 +5272,7 @@ pdtNotCertified TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8230 
+    ::= 8230
 
 pdtERASEAborted TRAP-TYPE
     ENTERPRISE pdTraps
@@ -5315,7 +5315,7 @@ pdtERASEStarted TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8233
-    
+
 pdtERASEFailed TRAP-TYPE
     ENTERPRISE pdTraps
     VARIABLES
@@ -5356,9 +5356,9 @@ haPDIsLocal TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8236	
-	
-	
+    ::= 8236
+
+
 	---------------Enclosure trap----------
 enclTraps                      OBJECT IDENTIFIER ::= {lsiRAIDServer 9}
 atPort                 OBJECT-TYPE
@@ -5373,7 +5373,7 @@ onPHY                 OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "PHY no"
     ::= { enclTraps 1302 }
-	
+
 widePortLinkLost TRAP-TYPE
     ENTERPRISE enclTraps
     VARIABLES
@@ -5387,21 +5387,21 @@ widePortLinkLost TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8330
-	
+
 widePortLinkRestored TRAP-TYPE
     ENTERPRISE enclTraps
     VARIABLES
         {atAdpNumber,atPort,onPHY}
     DESCRIPTION "Link Restored on SAS wide port on Adapter -$1  port -$2  PHY -$3"
     --#TYPE "LSI SAS Trap: Link Restored on SAS wide port"
-	--#SUMMARY "Link Restored on SAS wide port on Adapter -%d  port -%d  PHY -%d" 
+	--#SUMMARY "Link Restored on SAS wide port on Adapter -%d  port -%d  PHY -%d"
 	--#ARGUMENTS {0,1,2}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 8331
-	
+
 	---------------PCI trap----------
 pciTraps                      OBJECT IDENTIFIER ::= {lsiRAIDServer 10}
 pciVendorId                     OBJECT-TYPE
@@ -5428,7 +5428,7 @@ pciSubDeviceId                 OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "PCI SubDeviceID"
     ::= { pciTraps 1504 }
-	
+
 haHwIncompatible TRAP-TYPE
     ENTERPRISE pciTraps
     DESCRIPTION "Peer Controller hardware is incompatible"
@@ -5438,8 +5438,8 @@ haHwIncompatible TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 8501	
-	
+    ::= 8501
+
 copyrightInfo                     OBJECT IDENTIFIER ::= {lsiRAIDServer 11}
 
 copyright                     OBJECT-TYPE
@@ -5450,5 +5450,3 @@ copyright                     OBJECT-TYPE
     ::= { copyrightInfo 1 }
 
 END
-
-

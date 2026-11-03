@@ -13,7 +13,7 @@
 --  [New Object]
 --  [Modification]
 -- Notes: (Requested by who and which project)
---    
+--
 -- Version 1.00, 2012/04/23, Jessy Ji
 -- This is the first formal version for universal MIB definition.
 -- -----------------------------------------------------------------------------
@@ -21,7 +21,7 @@
 SFTPServer-MIB DEFINITIONS ::= BEGIN
 
 
-IMPORTS	   
+IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE     FROM SNMPv2-SMI
     RowStatus,DisplayString          FROM SNMPv2-TC
     MODULE-COMPLIANCE, OBJECT-GROUP  FROM SNMPv2-CONF
@@ -59,7 +59,7 @@ IMPORTS
         STATUS  current
         DESCRIPTION
             "This object indicates if the SFTP server is enabled or disabled.
-			 
+
 			 NOTE: To make SFTP server run, SSH should be enabled.
 			"
         ::= { swSFTPServerMgmt 2}
@@ -70,10 +70,10 @@ IMPORTS
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object specifies the idle timer for SFTP server. 
-			If SFTP server detects no operation after duration of 
-			idle timer for a specific SFTP session, it will close 
-			this SFTP session actively. 
+            "This object specifies the idle timer for SFTP server.
+			If SFTP server detects no operation after duration of
+			idle timer for a specific SFTP session, it will close
+			this SFTP session actively.
 			Its default value is 120 seconds."
         ::= { swSFTPServerMgmt 3}
 

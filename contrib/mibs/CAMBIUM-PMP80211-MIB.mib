@@ -8616,7 +8616,7 @@ ulWLanHEMCS11S8Packets OBJECT-TYPE
 		"Aggregated number of uplink packet received for HE MCS11 8 Spatial Streams
 		Device Allocation: AP"
 	::= { ulWlanHEMCSPackets 96 }
-	
+
 ulWLanHEMCS12S1Packets OBJECT-TYPE
 	SYNTAX		Counter64
 	MAX-ACCESS read-only
@@ -14037,7 +14037,7 @@ wirelessPMPWDSUnknownMACFlood	OBJECT-TYPE
 	SYNTAX     Integer32 (0|1)
 	MAX-ACCESS read-write
 	STATUS	   current
-	DESCRIPTION 
+	DESCRIPTION
 		"Permit/prevent flooding of
 		unicast packets with unknown
 		MAC address
@@ -17714,7 +17714,7 @@ cambiumONVIFIndex OBJECT-TYPE
 		"Internal index of ONVIF-camera
 		Device Allocation: SM"
 	::= { cambiumONVIFEntry 1 }
-	
+
 cambiumONVIFMAC OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE(0|17))
 	MAX-ACCESS  read-only

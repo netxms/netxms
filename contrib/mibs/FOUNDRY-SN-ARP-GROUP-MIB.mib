@@ -3,7 +3,7 @@ FOUNDRY-SN-ARP-GROUP-MIB DEFINITIONS ::= BEGIN
 -- Revision 1 2/9/04
 -- Copyright 2003 Foundry Networks, Inc.
 -- All rights reserved.
--- This Foundry Networks SNMP Management Information Base 
+-- This Foundry Networks SNMP Management Information Base
 -- Specification embodies Foundry Networks' confidential and
 -- proprietary intellectual property. Foundry Networks retains all
 -- title and ownership in the Specification, including any
@@ -28,7 +28,7 @@ snArpInfo MODULE-IDENTITY
     ORGANIZATION "Foundry Network"
     CONTACT-INFO "support@foundrynet.com"
     DESCRIPTION  "The Enterprise MIB for ARP support in SNMP.
-               This Foundry Networks SNMP Management Information Base 
+               This Foundry Networks SNMP Management Information Base
                Specification embodies Foundry Networks' confidential and
                proprietary intellectual property. Foundry Networks retains all
                title and ownership in the Specification, including any
@@ -103,5 +103,5 @@ snArpStatsInvalidDestination OBJECT-TYPE
             destination protocol address."
               ::= { snArpStats 7 }
 
-		
-END		
+
+END

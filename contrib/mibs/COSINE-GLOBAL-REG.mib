@@ -1,13 +1,13 @@
    COSINE-GLOBAL-REG DEFINITIONS ::= BEGIN
 
    IMPORTS
-       MODULE-IDENTITY, OBJECT-IDENTITY, 
+       MODULE-IDENTITY, OBJECT-IDENTITY,
        enterprises                        FROM SNMPv2-SMI;
- 
+
    csRoot	OBJECT-IDENTITY
 	STATUS	current
-	DESCRIPTION	"The root of the OID sub-tree assigned to 
-	CoSine Commmunication by the Internet Assigned Numbers 
+	DESCRIPTION	"The root of the OID sub-tree assigned to
+	CoSine Commmunication by the Internet Assigned Numbers
 	Authority (IANA)."
 	::= { enterprises 3085 }
 

@@ -1,8 +1,8 @@
 -- *****************************************************************
 -- CISCO-FABRICPATH-TOPOLOGY-MIB
---   
+--
 -- August 2012,  Liwei Wang
---   
+--
 -- Copyright (c) 2012-2013 by Cisco Systems Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -65,7 +65,7 @@ ciscoFabricPathTopologyMIBConformance  OBJECT IDENTIFIER
 -- cfptTopologyTable
 
 cfptTopologyTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CfptTopologyEntry 
+    SYNTAX          SEQUENCE OF CfptTopologyEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -83,7 +83,7 @@ cfptTopologyEntry OBJECT-TYPE
 
         An entry is created for each FabricPath topology that is
         managed by the system."
-    INDEX           { cfptTopologyIndex } 
+    INDEX           { cfptTopologyIndex }
     ::= { cfptTopologyTable 1 }
 
 CfptTopologyEntry ::= SEQUENCE {
@@ -105,7 +105,7 @@ cfptTopologyIndex OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An identifier that uniquely identifies a FabricPath
-        topology." 
+        topology."
     ::= { cfptTopologyEntry 1 }
 
 cfptTopologyDescr OBJECT-TYPE
@@ -114,7 +114,7 @@ cfptTopologyDescr OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the description of the FabricPath
-        topology." 
+        topology."
     ::= { cfptTopologyEntry 2 }
 
 cfptTopologyState OBJECT-TYPE
@@ -130,7 +130,7 @@ cfptTopologyState OBJECT-TYPE
         topology.
            other       - none of the followings
            up          - topology is up
-           down        - topology is down" 
+           down        - topology is down"
     ::= { cfptTopologyEntry 3 }
 
 cfptTopologyStateChangeReason OBJECT-TYPE
@@ -139,7 +139,7 @@ cfptTopologyStateChangeReason OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the reason of the current
-        topology state that cfptTopologyState provides." 
+        topology state that cfptTopologyState provides."
     ::= { cfptTopologyEntry 4 }
 
 cfptTopologyVlansFirst2K OBJECT-TYPE
@@ -151,10 +151,10 @@ cfptTopologyVlansFirst2K OBJECT-TYPE
         VLANs 0 to 2047 that are configured for this FabricPath
         topology entry.
 
-        If the bit corresponding to a VLAN is set to '1', then 
+        If the bit corresponding to a VLAN is set to '1', then
         the VLAN is configured in this FabricPath topology. If
         the bit is set to '0', then the VLAN is not configured
-        in this FabricPath topology." 
+        in this FabricPath topology."
     ::= { cfptTopologyEntry 5 }
 
 cfptTopologyVlansSecond2K OBJECT-TYPE
@@ -166,10 +166,10 @@ cfptTopologyVlansSecond2K OBJECT-TYPE
         VLANs 2048 to 4095 that are configured for this FabricPath
         topology entry.
 
-        If the bit corresponding to a VLAN is set to '1', then 
+        If the bit corresponding to a VLAN is set to '1', then
         the VLAN is configured in this FabricPath topology. If
         the bit is set to '0', then the VLAN is not configured
-        in this FabricPath topology." 
+        in this FabricPath topology."
     ::= { cfptTopologyEntry 6 }
 
 cfptTopologyActiveVlansFirst2K OBJECT-TYPE
@@ -181,10 +181,10 @@ cfptTopologyActiveVlansFirst2K OBJECT-TYPE
         VLANs 0 to 2047 that are active in this FabricPath
         topology entry.
 
-        If the bit corresponding to a VLAN is set to '1', then 
+        If the bit corresponding to a VLAN is set to '1', then
         the VLAN is active in this FabricPath topology. If
         the bit is set to '0', then the VLAN is not configured
-        in this FabricPath topology." 
+        in this FabricPath topology."
     ::= { cfptTopologyEntry 7 }
 
 cfptTopologyActiveVlansSecond2K OBJECT-TYPE
@@ -197,9 +197,9 @@ cfptTopologyActiveVlansSecond2K OBJECT-TYPE
         topology entry.
 
         If the bit corresponding to a VLAN is set to '1', then
-        the VLAN is active in this FabricPath topology.  If the 
-        bit is set to '0', then the VLAN is not active in this 
-        FabricPath topology." 
+        the VLAN is active in this FabricPath topology.  If the
+        bit is set to '0', then the VLAN is not active in this
+        FabricPath topology."
     ::= { cfptTopologyEntry 8 }
 
 cfptTopologyStorageType OBJECT-TYPE
@@ -209,7 +209,7 @@ cfptTopologyStorageType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the storage type for this
         conceptual row."
-    DEFVAL          { volatile } 
+    DEFVAL          { volatile }
     ::= { cfptTopologyEntry 9 }
 
 cfptTopologyRowStatus OBJECT-TYPE
@@ -219,18 +219,18 @@ cfptTopologyRowStatus OBJECT-TYPE
     DESCRIPTION
         "The status of this conceptual row entry.
 
-        This object is used to manage creation and deletion of 
-        rows in this table. 
+        This object is used to manage creation and deletion of
+        rows in this table.
 
         When this object value is 'active', other
-        writable objects in the same row may be modified." 
+        writable objects in the same row may be modified."
     ::= { cfptTopologyEntry 10 }
- 
+
 
 -- cfptTopologyIfTable
 
 cfptTopologyIfTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CfptTopologyIfEntry 
+    SYNTAX          SEQUENCE OF CfptTopologyIfEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -251,7 +251,7 @@ cfptTopologyIfEntry OBJECT-TYPE
     INDEX           {
                         cfptTopologyIfTopoIndex,
                         ifIndex
-                    } 
+                    }
     ::= { cfptTopologyIfTable 1 }
 
 CfptTopologyIfEntry ::= SEQUENCE {
@@ -267,7 +267,7 @@ cfptTopologyIfTopoIndex OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An identifier that uniquely identifies a FabricPath
-        topology interface." 
+        topology interface."
     ::= { cfptTopologyIfEntry 1 }
 
 cfptTopologyIfState OBJECT-TYPE
@@ -283,7 +283,7 @@ cfptTopologyIfState OBJECT-TYPE
         FabricPath topology interface.
            other       - none of the followings
            up          - interface is up
-           down        - interface is down" 
+           down        - interface is down"
     ::= { cfptTopologyIfEntry 2 }
 
 cfptTopologyIfStorageType OBJECT-TYPE
@@ -293,7 +293,7 @@ cfptTopologyIfStorageType OBJECT-TYPE
     DESCRIPTION
         "The objects specifies the storage type for this conceptual
         row."
-    DEFVAL          { volatile } 
+    DEFVAL          { volatile }
     ::= { cfptTopologyIfEntry 3 }
 
 cfptTopologyIfRowStatus OBJECT-TYPE
@@ -303,15 +303,15 @@ cfptTopologyIfRowStatus OBJECT-TYPE
     DESCRIPTION
         "The status of this conceptual row entry.
 
-        This object is used to manage creation and deletion of 
-        rows in this table." 
+        This object is used to manage creation and deletion of
+        rows in this table."
     ::= { cfptTopologyIfEntry 4 }
- 
+
 
 -- cfptTopologyIfVlanTable
 
 cfptTopologyIfVlanTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CfptTopologyIfVlanEntry 
+    SYNTAX          SEQUENCE OF CfptTopologyIfVlanEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -329,7 +329,7 @@ cfptTopologyIfVlanEntry OBJECT-TYPE
 
         An entry is created for each FabricPath topology
         interface."
-    INDEX           { ifIndex } 
+    INDEX           { ifIndex }
     ::= { cfptTopologyIfVlanTable 1 }
 
 CfptTopologyIfVlanEntry ::= SEQUENCE {
@@ -350,7 +350,7 @@ cfptTopologyIfVlansFirst2K OBJECT-TYPE
 
         If the bit corresponding to a VLAN is set to '1', then
         the VLAN is configured for the interface, it is not
-        otherwise." 
+        otherwise."
     ::= { cfptTopologyIfVlanEntry 1 }
 
 cfptTopologyIfVlansSecond2K OBJECT-TYPE
@@ -364,7 +364,7 @@ cfptTopologyIfVlansSecond2K OBJECT-TYPE
 
         If the bit corresponding to a VLAN is set to '1', then
         the VLAN is configured for the interface, it is not
-        otherwise." 
+        otherwise."
     ::= { cfptTopologyIfVlanEntry 2 }
 
 cfptTopologyIfActiveVlansFirst2K OBJECT-TYPE
@@ -378,7 +378,7 @@ cfptTopologyIfActiveVlansFirst2K OBJECT-TYPE
 
         If the bit corresponding to a VLAN is set to '1', then
         the VLAN is active on the interface, it is not
-        otherwise." 
+        otherwise."
     ::= { cfptTopologyIfVlanEntry 3 }
 
 cfptTopologyIfActiveVlansSecond2K OBJECT-TYPE
@@ -392,14 +392,14 @@ cfptTopologyIfActiveVlansSecond2K OBJECT-TYPE
 
         If the bit corresponding to a VLAN is set to '1', then
         the VLAN is active on the interface, it is not
-        otherwise." 
+        otherwise."
     ::= { cfptTopologyIfVlanEntry 4 }
- 
+
 
 -- cfptTopologyTreeTable
 
 cfptTopologyTreeTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CfptTopologyTreeEntry 
+    SYNTAX          SEQUENCE OF CfptTopologyTreeEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -417,7 +417,7 @@ cfptTopologyTreeEntry OBJECT-TYPE
     INDEX           {
                         cfptTopologyIndex,
                         cfptTopologyTreeId
-                    } 
+                    }
     ::= { cfptTopologyTreeTable 1 }
 
 CfptTopologyTreeEntry ::= SEQUENCE {
@@ -433,7 +433,7 @@ cfptTopologyTreeId OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An index number that uniquely identifies forwarding
-        tree of a particular FabricPath topology." 
+        tree of a particular FabricPath topology."
     ::= { cfptTopologyTreeEntry 1 }
 
 cfptTopologyTreeFtag OBJECT-TYPE
@@ -441,7 +441,7 @@ cfptTopologyTreeFtag OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object indicates the tree's forwarding tag." 
+        "This object indicates the tree's forwarding tag."
     ::= { cfptTopologyTreeEntry 2 }
 
 cfptTopologyTreeState OBJECT-TYPE
@@ -455,8 +455,8 @@ cfptTopologyTreeState OBJECT-TYPE
     DESCRIPTION
         "This object indicates the state of the tree.
         other       - none of the followings
-        active      - the tree is active 
-        inactive    - the tree is inactive." 
+        active      - the tree is active
+        inactive    - the tree is inactive."
     ::= { cfptTopologyTreeEntry 3 }
 
 cfptTopologyTreeType OBJECT-TYPE
@@ -471,9 +471,9 @@ cfptTopologyTreeType OBJECT-TYPE
         "This object indicates the type of the tree.
         other        - none of the followings
         mixed        - unknown unicast, broadcast and multicast tree
-        multicast    - multicast tree" 
+        multicast    - multicast tree"
     ::= { cfptTopologyTreeEntry 4 }
- 
+
 
 -- Conformance
 
@@ -589,6 +589,3 @@ cfptTopologyTreeGroup OBJECT-GROUP
     ::= { cfptFabricPathTopologyMIBGroups 4 }
 
 END
-
-
-

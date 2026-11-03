@@ -267,5 +267,5 @@ TIMERANGE-MIB DEFINITIONS ::= BEGIN
                 with a time range, the access rule will be enabled all the
                 time."
            ::= { swTimeRangeCPUACLEntry 3 }
-           
+
 END

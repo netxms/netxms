@@ -112,7 +112,7 @@ HP-ICF-STACK DEFINITIONS ::= BEGIN
            INDEX      { entPhysicalIndex }
            ::= { hpicfStackAgentTable 1 }
 
-       HpicfStackAgentEntry ::= 
+       HpicfStackAgentEntry ::=
            SEQUENCE {
                hpicfStackAgentBoxId            OCTET STRING
            }

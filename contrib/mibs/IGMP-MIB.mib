@@ -5,7 +5,7 @@
 --
 -- Copyright (c) 1994-1997 by cisco Systems, Inc.
 -- All rights reserved.
--- 
+--
 -- *****************************************************************
 
 -- This mib was extracted from draft-ietf-idmr-igmp-mib-00.txt.
@@ -207,7 +207,7 @@ igmpMIB MODULE-IDENTITY
 		      interface within this timeout interval, the local router
 		      will take over the Querier on the IP subnet to which this
 		      interface is attached.  This object is now deprecated,
-		      since its value can be derived from 
+		      since its value can be derived from
 		      igmpInterfaceRobustness."
               DEFVAL     { 255 }
               ::= { igmpInterfaceEntry 7 }

@@ -16,7 +16,7 @@
 --
 -- Version 1.00, 2008/08/11, Turbo Rao
 -- This is the first formal version for universal MIB definition.
--- -----------------------------------------------------------------------------  
+-- -----------------------------------------------------------------------------
 
 PRIVATE-VLAN-MIB DEFINITIONS ::= BEGIN
 
@@ -27,7 +27,7 @@ PRIVATE-VLAN-MIB DEFINITIONS ::= BEGIN
 	        FROM SNMPv2-TC
 	    MODULE-COMPLIANCE, OBJECT-GROUP
 	        FROM SNMPv2-CONF
-	    dlink-common-mgmt	
+	    dlink-common-mgmt
 	        FROM DLINK-ID-REC-MIB
 	    VlanId, VlanIdOrNone, PortList
 	    	FROM Q-BRIDGE-MIB;
@@ -42,7 +42,7 @@ PRIVATE-VLAN-MIB DEFINITIONS ::= BEGIN
 	        "The Private VLAN module MIB for the proprietary enterprise.
 	         Other related VLAN parameters will reference to rfc2674q(rfc4363q).mib."
 	    ::= { dlink-common-mgmt 69}
-	    
+
 -- -------------------------------------------------------------
 -- Textual Conventions
 -- -------------------------------------------------------------
@@ -52,12 +52,12 @@ SecondaryVlanType ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "The type of secondary VLAN."
     SYNTAX      INTEGER { isolated(1), community(2) }
-    
-    
+
+
 	swPrivateVlanCtrl 		OBJECT IDENTIFIER ::= { swPrivateVLANMIB 1 }
         swPrivateVlanInfo 		OBJECT IDENTIFIER ::= { swPrivateVLANMIB 2 }
         swPrivateVlanMgmt 		OBJECT IDENTIFIER ::= { swPrivateVLANMIB 3 }
-        
+
 -- -----------------------------------------------------------------------------
 -- swPrivateVlanCtrl
 -- -----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ SecondaryVlanType ::= TEXTUAL-CONVENTION
 	        swPrivateVlanPromiscuousPorts
 	            	PortList,
 	        swPrivateVlanTrunkPorts
-	            	PortList,    				
+	            	PortList,
 		swPrivateVlanRowStatus
 			RowStatus
 	    }
@@ -108,10 +108,10 @@ SecondaryVlanType ::= TEXTUAL-CONVENTION
         	MAX-ACCESS  read-only
         	STATUS  current
         	DESCRIPTION
-            		"The VLAN-ID referring to the private VLAN of the private VLAN domain. 
-            		A private VLAN is the unique and common VLAN identifier of the whole 
-            		private VLAN domain. Every port in a private VLAN is a member of the 
-            		private VLAN. The IP subnet of the private VLAN shall be associated with the 
+            		"The VLAN-ID referring to the private VLAN of the private VLAN domain.
+            		A private VLAN is the unique and common VLAN identifier of the whole
+            		private VLAN domain. Every port in a private VLAN is a member of the
+            		private VLAN. The IP subnet of the private VLAN shall be associated with the
             		private VLAN. Only the private VLAN is visible outside of the domain."
         	::= { swPrivateVlanEntry 1 }
 
@@ -123,26 +123,26 @@ SecondaryVlanType ::= TEXTUAL-CONVENTION
             		"An administratively assigned string which may be used
 			to identify the private VLAN."
         	::= { swPrivateVlanEntry 2 }
-        	
+
         swPrivateVlanPromiscuousPorts OBJECT-TYPE
 	    	SYNTAX      PortList
 	    	MAX-ACCESS  read-write
 	    	STATUS      current
 	    	DESCRIPTION
-	        	"The promiscuous port has the ability to communicate with any 
+	        	"The promiscuous port has the ability to communicate with any
 	        	port within the private VLAN. A promiscuous port is
 	        	an untagged member of the private VLAN."
 	    	::= { swPrivateVlanEntry 3 }
-	    
+
         swPrivateVlanTrunkPorts OBJECT-TYPE
 	    	SYNTAX      PortList
 	    	MAX-ACCESS  read-write
 	    	STATUS      current
 	    	DESCRIPTION
-	        	"The trunk port, also known as the Inter-switch link, has the ability to 
+	        	"The trunk port, also known as the Inter-switch link, has the ability to
 	        	communicate with any port within the private VLAN. A trunk port is a
 	        	tagged member of the private VLAN."
-	    	::= { swPrivateVlanEntry 4 }	
+	    	::= { swPrivateVlanEntry 4 }
 
 	swPrivateVlanRowStatus	OBJECT-TYPE
 	    	SYNTAX      RowStatus
@@ -179,9 +179,9 @@ SecondaryVlanType ::= TEXTUAL-CONVENTION
 	    	swSecondaryVlanId
 			VlanId,
 		swSecondaryVlanType
-	            	SecondaryVlanType, 	
+	            	SecondaryVlanType,
 	        swSecondaryVlanPorts
-	            	PortList,  	           				
+	            	PortList,
 		swSecondaryVlanRowStatus
 			RowStatus
 	    }
@@ -193,35 +193,35 @@ SecondaryVlanType ::= TEXTUAL-CONVENTION
         	DESCRIPTION
             		"The VLAN-ID referring to this SwSecondaryVLANEntry."
         	::= { swSecondaryVlanEntry 1 }
-	    
+
         swSecondaryVlanType OBJECT-TYPE
 	    	SYNTAX      SecondaryVlanType
 	    	MAX-ACCESS  read-create
 	    	STATUS      current
 	    	DESCRIPTION
-	        	"An isolated VLAN is a secondary VLAN whose distinctive 
-	        	characteristic is that all hosts connected to its ports are isolated at Layer 2. 
-	        	A private VLAN has only one isolated VLAN. If the swPrivateVlanIsolatedVlanIndex 
+	        	"An isolated VLAN is a secondary VLAN whose distinctive
+	        	characteristic is that all hosts connected to its ports are isolated at Layer 2.
+	        	A private VLAN has only one isolated VLAN. If the swPrivateVlanIsolatedVlanIndex
 	        	has a value of zero, this indicates there are no associated isolated VLANs in the private
 	            	VLAN domain. Otherwise, it is the associated isolated VLAN ID.
-	            	
-	            	A community VLAN is a secondary VLAN that is associated with a 
+
+	            	A community VLAN is a secondary VLAN that is associated with a
 	            	group of ports that connects to a certain 'community' of end devices with mutual
-	        	trust relationships. There can be multiple distinct community VLANs in a 
+	        	trust relationships. There can be multiple distinct community VLANs in a
 	        	private VLAN domain."
-	    	::= { swSecondaryVlanEntry 2 }	
-	    		    
+	    	::= { swSecondaryVlanEntry 2 }
+
         swSecondaryVlanPorts OBJECT-TYPE
 	    	SYNTAX      PortList
 	    	MAX-ACCESS  read-write
 	    	STATUS      current
 	    	DESCRIPTION
-	        	"If swSecondaryVlanType is isolated, the ports in the isolated VLAN of the private VLAN have complete Layer 2 separation from other ports within the same private 
+	        	"If swSecondaryVlanType is isolated, the ports in the isolated VLAN of the private VLAN have complete Layer 2 separation from other ports within the same private
 	        	VLAN, except for the promiscuous and trunk ports.
-	        	
-	        	If swSecondaryVlanType is community, the ports can communicate with other ports 
+
+	        	If swSecondaryVlanType is community, the ports can communicate with other ports
 	        	in the same Secondary VLAN and with promiscuous ports."
-	    	::= { swSecondaryVlanEntry 3 }	
+	    	::= { swSecondaryVlanEntry 3 }
 
 	swSecondaryVlanRowStatus	OBJECT-TYPE
 	    	SYNTAX      RowStatus
@@ -230,5 +230,5 @@ SecondaryVlanType ::= TEXTUAL-CONVENTION
 	    	DESCRIPTION
 	        	"This object indicates the status of this entry."
 	    	::= { swSecondaryVlanEntry 4 }
-	    	    
+
 END

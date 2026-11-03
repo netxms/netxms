@@ -27,8 +27,8 @@ BPDU-TUNNELING-MIB DEFINITIONS ::= BEGIN
         MacAddress                      FROM SNMPv2-TC
         dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
 
-		
-    	
+
+
     swBPDUTunnelMIB MODULE-IDENTITY
           LAST-UPDATED "200802260000Z"
           ORGANIZATION "D-Link Corp."
@@ -75,7 +75,7 @@ BPDU-TUNNELING-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
         "This object indicates the MAC of the GVRP tunnel multicast address."
-        ::= { swBPDUTunnelInfo 2 }    	     	
+        ::= { swBPDUTunnelInfo 2 }
 -- -----------------------------------------------------------------------------
 -- swBPDUTunnelMgmt
 -- -----------------------------------------------------------------------------
@@ -128,7 +128,7 @@ BPDU-TUNNELING-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the type of the port."
     	::= { swBPDUTunnelEntry 2 }
-    	
+
     swBPDUTunnelSTPState OBJECT-TYPE
         SYNTAX INTEGER {
                enabled(1),
@@ -139,7 +139,7 @@ BPDU-TUNNELING-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the state of the STP tunnel."
     	::= { swBPDUTunnelEntry 3 }
-    	
+
     swBPDUTunnelGVRPState OBJECT-TYPE
         SYNTAX INTEGER {
                enabled(1),

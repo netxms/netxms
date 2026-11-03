@@ -16,24 +16,24 @@
 -- Version 2.05 2009/08/28, Dandelion Zhou
 -- Description:
 -- [New Object]
--- Add objects "swFilterDhcpServerTrapState" and "swFilterDhcpServerLogState" for 
+-- Add objects "swFilterDhcpServerTrapState" and "swFilterDhcpServerLogState" for
 -- trap and log state.
 --
 -- Version 2.04 2008/08/12, Richard Shi
 -- Description:
 -- [New Object]
--- Add swPktEgressFilterCtrlTable.   
+-- Add swPktEgressFilterCtrlTable.
 -- [Modification]
 -- Modify the description of swFilterMIB.
 --
 -- Version 2.03 2008/07/30, Jeffers
 -- [New Object]
--- Add objects swFilterDhcpServerIllegalSerLogSuppressDuration and 
+-- Add objects swFilterDhcpServerIllegalSerLogSuppressDuration and
 -- swFilterDhcpServerTrapLogState.
 -- [Modification]
--- Modify the description of objects swFilterDetectedTrap, swFilterDetectedIP and 
+-- Modify the description of objects swFilterDetectedTrap, swFilterDetectedIP and
 -- swFilterDetectedport.
---	
+--
 -- Version 2.02 2008/07/10, Mark Luo
 -- Description:
 --  [New Object]
@@ -187,8 +187,8 @@ FILTER-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DHCP filter status of this entry."
         ::= { swFilterDhcpPortEntry 2 }
-        
-    swFilterDhcpServerIllegalSerLogSuppressDuration  OBJECT-TYPE     
+
+    swFilterDhcpServerIllegalSerLogSuppressDuration  OBJECT-TYPE
         SYNTAX      INTEGER {
                        duration_1min(1),
                        duration_5min(2),
@@ -204,7 +204,7 @@ FILTER-MIB DEFINITIONS ::= BEGIN
                5 minutes."
         DEFVAL {duration_5min}
         ::={swFilterDhcp 3}
-        
+
     swFilterDhcpServerTrapLogState  OBJECT-TYPE
         SYNTAX      INTEGER {
                        enabled(1),
@@ -347,7 +347,7 @@ FILTER-MIB DEFINITIONS ::= BEGIN
 --      DESCRIPTION
 --            "The table specifies the CPU filter of the layer 3 control packet function of a port."
 --      ::= { swFilterCPU 1 }
---      
+--
 --  swFilterCPUL3CtrlPktEntry OBJECT-TYPE
 --      SYNTAX          SwFilterCPUL3CtrlPktEntry
 --      MAX-ACCESS      not-accessible
@@ -450,7 +450,7 @@ FILTER-MIB DEFINITIONS ::= BEGIN
 --      DESCRIPTION
 --          "This object indicates the IGMP query status of the layer 3 control packet."
 --      ::= { swFilterCPUL3CtrlPktEntry 7 }
-        
+
 
 -- -----------------------------------------------------------------------------
 -- swFilterEgress        OBJECT IDENTIFIER ::= { swFilterMIB 5 }
@@ -517,22 +517,22 @@ FILTER-MIB DEFINITIONS ::= BEGIN
 --      "This object indicates the egress filter state of unregistered multicast packets."
 --  ::= { swPktEgressFilterCtrlEntry 3 }
 
-        
+
 -- -----------------------------------------------------------------------------
 -- swFilterNotify        OBJECT IDENTIFIER ::= { swFilterMIB 100 }
 -- -----------------------------------------------------------------------------
 
   swFilterNotifyPrefix        OBJECT IDENTIFIER ::= { swFilterNotify 0 }
-  
+
   swFilterDetectedTrap NOTIFICATION-TYPE
     OBJECTS { swFilterDetectedIP,swFilterDetectedport}
     STATUS  current
     DESCRIPTION
-            "Send trap when illegal DHCP server is detected. 
-            The same illegal DHCP server IP address detected is just sent once 
+            "Send trap when illegal DHCP server is detected.
+            The same illegal DHCP server IP address detected is just sent once
             to the trap receivers within the log ceasing unauthorized duration."
     ::= { swFilterNotifyPrefix 1 }
-                                      
+
    swFilterNotificationBindings   OBJECT IDENTIFIER ::= { swFilterNotify 2 }
 
    swFilterDetectedIP OBJECT-TYPE
@@ -549,5 +549,5 @@ FILTER-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the port which detected the illegal DHCP server."
-        ::= { swFilterNotificationBindings 2 }        
+        ::= { swFilterNotificationBindings 2 }
 END

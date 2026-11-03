@@ -305,4 +305,3 @@ cmcIIIPduiCapsV102       AGENT-CAPABILITIES
 
     ::=                 { cmcIIICapability   31000 }
 END
-

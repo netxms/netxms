@@ -15,7 +15,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
     IMPORTS
         MODULE-IDENTITY, OBJECT-TYPE, Integer32, Counter32, Gauge32,
         Unsigned32, TimeTicks, NOTIFICATION-TYPE  FROM SNMPv2-SMI
-        TEXTUAL-CONVENTION, DisplayString, 
+        TEXTUAL-CONVENTION, DisplayString,
         DateAndTime, RowStatus                        FROM SNMPv2-TC
         fastPath                                      FROM EdgeSwitch-REF-MIB
         InetAddress, InetAddressType, InetPortNumber  FROM INET-ADDRESS-MIB
@@ -82,8 +82,8 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This MIB provides objects to configure and display events logged
             on this system."
-        
-        -- Revision history.	  
+
+        -- Revision history.
         REVISION
             "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
         DESCRIPTION
@@ -93,10 +93,10 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Ubiquiti branding related changes."
         REVISION
-            "200410261303Z" -- Tue Oct 23 13:03:07 2004 GMT 
+            "200410261303Z" -- Tue Oct 23 13:03:07 2004 GMT
         DESCRIPTION
             "Initial version."
- 
+
         ::= { fastPath 14 }
 
     --**************************************************************************************
@@ -124,7 +124,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
             "Administratively enable/disable the In Memory log."
         ::= { agentLogInMemoryConfigGroup 1 }
 
- 
+
     agentLogInMemoryBehavior OBJECT-TYPE
         SYNTAX      INTEGER {
                     wrap(1),
@@ -180,7 +180,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "For Enabling and Disabling logging to configured syslog hosts. Setting this to disable 
+            "For Enabling and Disabling logging to configured syslog hosts. Setting this to disable
              stops logging to all syslog hosts."
         ::= { agentLogSysLogConfigGroup 1 }
 
@@ -387,7 +387,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "The number of messages received by the log process. This includes messages that are 
+            "The number of messages received by the log process. This includes messages that are
              dropped or ignored."
         ::= { agentLogStatisticsGroup 1 }
 
@@ -404,7 +404,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "The number of messages forwarded by the syslog function to a syslog host. Messages forwarded 
+            "The number of messages forwarded by the syslog function to a syslog host. Messages forwarded
              to multiple hosts are counted once for each host."
         ::= { agentLogStatisticsGroup 3 }
 
@@ -413,7 +413,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      deprecated
         DESCRIPTION
-            "The number of messages that were not processed by the syslog process because the component name 
+            "The number of messages that were not processed by the syslog process because the component name
              or the priority level did not match any specification."
         ::= { agentLogStatisticsGroup 4 }
 
@@ -422,7 +422,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "The local time when a message was last received by the log subsystem specified as the number of 
+            "The local time when a message was last received by the log subsystem specified as the number of
              non-leap seconds since 00:00:00 UTC on January 1 1970."
         ::= { agentLogStatisticsGroup 5 }
 
@@ -431,7 +431,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "The local time when a message was last delivered to a syslog host specified as the number of non-leap 
+            "The local time when a message was last delivered to a syslog host specified as the number of non-leap
              seconds since 00:00:00 UTC on January 1 1970."
         ::= { agentLogStatisticsGroup 6 }
 
@@ -492,7 +492,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This is the severity level for Trap messages."
         ::= { agentLogEmailAlertConfigGroup 6 }
-        
+
 
 
 	agentLogEmailToAddrTable OBJECT-TYPE
@@ -520,7 +520,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
 
 	agentLogEmailToAddrMessageType OBJECT-TYPE
 	        SYNTAX      INTEGER { critical(1), non-critical(2) }
-	        MAX-ACCESS  not-accessible 
+	        MAX-ACCESS  not-accessible
 	        STATUS      current
 	        DESCRIPTION
 	            "Log message Type"
@@ -528,7 +528,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
 
         agentLogEmailToAddr OBJECT-TYPE
                 SYNTAX      DisplayString
-                MAX-ACCESS  not-accessible 
+                MAX-ACCESS  not-accessible
                 STATUS      current
                 DESCRIPTION
                     "Email Sender Address"
@@ -568,7 +568,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
 
         agentLogEmailSubjectMessageType OBJECT-TYPE
                 SYNTAX      INTEGER { critical(1), non-critical(2)}
-                MAX-ACCESS  not-accessible 
+                MAX-ACCESS  not-accessible
                 STATUS      current
                 DESCRIPTION
                     "Log message Type"
@@ -613,7 +613,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
 	agentLogEmailSmtpAddrType       InetAddressType,
 	agentLogEmailSmtpAddr           InetAddress,
 	agentLogEmailSmtpPort           InetPortNumber,
-	agentLogEmailSecurity   	      INTEGER,	
+	agentLogEmailSecurity   	      INTEGER,
 	agentLogEmailloginID            DisplayString,
 	agentLogEmailPassword   	      DisplayString,
 	agentLogEmailEntryStatus        RowStatus
@@ -622,7 +622,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
 
 	agentLogEmailSmtpAddrType OBJECT-TYPE
         SYNTAX      InetAddressType
-        MAX-ACCESS  not-accessible 
+        MAX-ACCESS  not-accessible
         STATUS      current
         DESCRIPTION
             "Email SMTP Address type"
@@ -630,7 +630,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
 
 	agentLogEmailSmtpAddr OBJECT-TYPE
         SYNTAX      InetAddress
-        MAX-ACCESS  not-accessible 
+        MAX-ACCESS  not-accessible
         STATUS      current
         DESCRIPTION
             "SMTP server Address"
@@ -641,10 +641,10 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "SMTP Port number. When this object is set to 0, it resets to 
+            "SMTP Port number. When this object is set to 0, it resets to
              factory default port number."
         ::= { agentLogEmailMailServerEntry 3 }
-	
+
         agentLogEmailSecurity OBJECT-TYPE
         SYNTAX      INTEGER { none(1), tlsv1(2) }
         MAX-ACCESS  read-write
@@ -680,7 +680,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This is to create or delete the entry"
         ::= { agentLogEmailMailServerEntry 7 }
-	        
+
 
 
    agentLogEmailAlertStatsGroup                    OBJECT IDENTIFIER ::= { agentLogStatisticsGroup 7}
@@ -703,7 +703,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         ::= { agentLogEmailAlertStatsGroup 2 }
 
    agentLogEmailStatsTimeSinceLastEmailSent OBJECT-TYPE
-        SYNTAX      Unsigned32 
+        SYNTAX      Unsigned32
         MAX-ACCESS read-only
         STATUS      current
         DESCRIPTION
@@ -733,7 +733,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "The count of valid entries in the in-memory log." 
+            "The count of valid entries in the in-memory log."
         ::= { agentLogInMemoryGroup 1 }
 
     --**************************************************************************************
@@ -757,7 +757,7 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
             "An individual message entry in in-memory log table."
         INDEX          { agentLogInMemoryMsgIndex }
         ::= { agentLogInMemoryTable 1 }
-         
+
     AgentLogInMemoryEntry ::=
         SEQUENCE {
          agentLogInMemoryMsgIndex
@@ -789,12 +789,12 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
 
     agentLogTrapsGroup                      OBJECT IDENTIFIER ::= { fastPathLogging 5 }
 
-    agentLogEmailAlertTrapsGroup            OBJECT IDENTIFIER ::= { agentLogTrapsGroup 1}        
+    agentLogEmailAlertTrapsGroup            OBJECT IDENTIFIER ::= { agentLogTrapsGroup 1}
 
     agentLogEmailSendFailed NOTIFICATION-TYPE
     OBJECTS {
        agentLogEmailStatsemailsFailureCount -- No of emails Failed
-       
+
     }
     STATUS             current
     DESCRIPTION
@@ -802,4 +802,3 @@ EdgeSwitch-LOGGING-MIB DEFINITIONS ::= BEGIN
     ::= { agentLogEmailAlertTrapsGroup 1 }
 
 END
-

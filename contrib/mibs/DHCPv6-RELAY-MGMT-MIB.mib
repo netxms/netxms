@@ -20,7 +20,7 @@
 -- [2]Added swDHCPv6RelayOption37RemoteIDType value vendor1.
 -- [3]Added swDHCPv6LocalRelayMIBObjects to support DHCPv6 Local Relay.
 -- Notes: requested by Mandy Fang for DGS3120.
--- 
+--
 -- Version 1.01, 2012/09/27, Mandy Fang
 -- [New Object]
 -- [1]Added swDHCPv6RelayOption37 to support DHCPv6 Relay Remote-ID Option.
@@ -40,7 +40,7 @@ DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 		dlink-common-mgmt	FROM DLINK-ID-REC-MIB
 		VlanId        		FROM Q-BRIDGE-MIB
 		InetAddressType,InetAddress	FROM INET-ADDRESS-MIB;
-        
+
     swDHCPv6RelayMIB MODULE-IDENTITY
           LAST-UPDATED "0909170000Z"
           ORGANIZATION "D-Link Corp."
@@ -62,10 +62,10 @@ DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
             "This object indicates the maximum number of router hops that
              the DHCPv6 packets can cross."
         ::= { swDHCPv6RelayMIBObjects 1 }
-        
+
     swDHCPv6RelayGlobalState  OBJECT-TYPE
         SYNTAX  INTEGER {
-	               enabled(1),   
+	               enabled(1),
 	               disabled(2)
                 }
         MAX-ACCESS  read-write
@@ -87,7 +87,7 @@ DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "A list of information display the current DHCPv6 relay static 
+            "A list of information display the current DHCPv6 relay static
             table."
         INDEX  { swDHCPv6RelayIfName }
         ::= { swDHCPv6RelayCtrlTable 1 }
@@ -110,7 +110,7 @@ DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 
     swDHCPv6RelayCtrlState OBJECT-TYPE
         SYNTAX  INTEGER {
-	               enabled(1),   
+	               enabled(1),
 	               disabled(2)
                 }
         MAX-ACCESS  read-write
@@ -118,7 +118,7 @@ DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DHCPv6 Relay state of the interface."
         ::= { swDHCPv6RelayCtrlEntry 2 }
-            
+
      swDHCPv6RelayServerTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwDHCPv6RelayServerEntry
         MAX-ACCESS  not-accessible
@@ -127,14 +127,14 @@ DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
             "This table indicates the IPv6 address as a destination to forward
              (relay) DHCPv6 packets to."
         ::= { swDHCPv6RelayMIBObjects 4 }
-                          
+
      swDHCPv6RelayServerEntry OBJECT-TYPE
         SYNTAX  SwDHCPv6RelayServerEntry
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
             "A list of information indicates the IPv6 address as a destination
-             to forward (relay) DHCPv6 packets to."                   
+             to forward (relay) DHCPv6 packets to."
         INDEX {
 	            swDHCPv6RelayIfName,
 	            swDHCPv6RelayServerAddrType,
@@ -142,34 +142,34 @@ DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
             }
         ::= { swDHCPv6RelayServerTable 1 }
 
-     SwDHCPv6RelayServerEntry ::= 
-        SEQUENCE {    
+     SwDHCPv6RelayServerEntry ::=
+        SEQUENCE {
             swDHCPv6RelayServerAddrType
-                InetAddressType, 
+                InetAddressType,
             swDHCPv6RelayServerAddr
                 InetAddress,
             swDHCPv6RelayServerRowStatus
                 RowStatus
-        }     
-        
+        }
+
      swDHCPv6RelayServerAddrType OBJECT-TYPE
         SYNTAX InetAddressType
         MAX-ACCESS  not-accessible
         STATUS current
         DESCRIPTION
-            "This object indicates the type of the DHCPv6 server IPv6 address or 
+            "This object indicates the type of the DHCPv6 server IPv6 address or
             next DHCPv6 relay IPv6 address."
         ::= { swDHCPv6RelayServerEntry 1 }
-           
+
     swDHCPv6RelayServerAddr OBJECT-TYPE
         SYNTAX InetAddress
         MAX-ACCESS  not-accessible
         STATUS current
         DESCRIPTION
-            "This object indicates the DHCPv6 server IPv6 address or 
+            "This object indicates the DHCPv6 server IPv6 address or
             next DHCPv6 relay IPv6 address."
         ::= { swDHCPv6RelayServerEntry 2 }
-                        
+
      swDHCPv6RelayServerRowStatus OBJECT-TYPE
         SYNTAX RowStatus
         MAX-ACCESS  read-create
@@ -311,7 +311,7 @@ DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
                  "This table is used to manage the DHCPv6 local relay status
                   for each VLAN."
 	    ::={ swDHCPv6LocalRelayMIBObjects 2}
-	
+
   swDHCPv6LocalRelayVlanEntry OBJECT-TYPE
 	    SYNTAX SwDHCPv6LocalRelayVlanEntry
 	    MAX-ACCESS not-accessible
@@ -327,7 +327,7 @@ DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 		swDHCPv6LocalRelayVlanID
      	    VlanId,
      	swDHCPv6LocalRelayState
-     	    INTEGER		
+     	    INTEGER
      }
 
   swDHCPv6LocalRelayVlanID OBJECT-TYPE

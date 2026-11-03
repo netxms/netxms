@@ -1,10 +1,10 @@
 -- *****************************************************************
 -- Cisco Extension to the IF MIB
---   
+--
 -- May 2002, Manik Raina
---   
+--
 -- Copyright (c) 2002-2013 by cisco Systems Inc.
---   
+--
 -- All rights reserved.
 -- *************************************************************
 
@@ -69,20 +69,20 @@ ciscoIfExtensionMIB MODULE-IDENTITY
 
         GLOSSARY :
 
-        Virtual Switch - A physical switch partitioned into 
+        Virtual Switch - A physical switch partitioned into
                 multiple logical switches.
 
-        Interface Sharing - An interface can be shared among 
+        Interface Sharing - An interface can be shared among
                 multiple virtual switches.
 
         Speed Group - An interface is capable of operating in any one of
         the speed range depending on the capability of the hardware.
 
-        Virtual Link (VL) - Virtual Link is a logical connectivity 
-            between two end points. A physical interface can 
+        Virtual Link (VL) - Virtual Link is a logical connectivity
+            between two end points. A physical interface can
             have multiple Virtual Links.
 
-        No Drop Virtual Link - According to 802.3 standard, 
+        No Drop Virtual Link - According to 802.3 standard,
             No drop specifies lossless service on a virtual link.
 
         Drop Virtual Link - According to 802.3 standard,
@@ -92,7 +92,7 @@ ciscoIfExtensionMIB MODULE-IDENTITY
         "Added new object cieIfTransceiverFrequencyConfig,
          cieIfFillPatternConfig, cieIfIgnoreBitErrorsConfig and
          cieIfIgnoreInterruptThresholdConfig to cieIfInterfaceTable.
-         - Added a new group 
+         - Added a new group
        	   ciscoIfExtensionTableIntfGroup3SupR02
          - Deprecated ciscoIfExtensionMIBCompliance13
          - Added ciscoIfExtensionMIBCompliance14."
@@ -109,8 +109,8 @@ ciscoIfExtensionMIB MODULE-IDENTITY
         "Added new object cieIfSharedConfig and
         cieIfSpeedGroupConfig to cieIfInterfaceTable.
         Add cieIfVlStatsTable.
-        - Added a new group 
-        ciscoIfExtensionTableIntfGroup3SupR01 and 
+        - Added a new group
+        ciscoIfExtensionTableIntfGroup3SupR01 and
         cieIfVlStatsGroup
         - Deprecated ciscoIfExtensionMIBCompliance12
         - Added ciscoIfExtensionMIBCompliance13."
@@ -125,7 +125,7 @@ ciscoIfExtensionMIB MODULE-IDENTITY
     DESCRIPTION
         "Added new object cieIfOwner to
         cieIfInterfaceTable.
-        - Added a new group 
+        - Added a new group
         ciscoIfExtensionTableIntfGroup3
         - Deprecated ciscoIfExtensionTableIntfGroup2
         - Deprecated ciscoIfExtensionMIBCompliance10
@@ -134,12 +134,12 @@ ciscoIfExtensionMIB MODULE-IDENTITY
     DESCRIPTION
         "Added a new textual Convention IfIndexPersistenceState.
         - Added scalar object cieIfIndexGlobalPersistence to
-          ciscoIfExtSystemConfig. 
+          ciscoIfExtSystemConfig.
         - Deprecated scalar object cieIfIndexPersistence to
           ciscoIfExtSystemConfig.
-        - Added a new object cieIfIndexPersistenceControl in 
+        - Added a new object cieIfIndexPersistenceControl in
           cieIfIndexPersistenceTable.
-        - Deprecated an object cieIfIndexPersistenceEnabled in 
+        - Deprecated an object cieIfIndexPersistenceEnabled in
           cieIfIndexPersistenceTable.
         - Added a new group cieIfIndexPersistenceControlGroup.
         - Deprecated the group cieIfIndexPersistenceGroup.
@@ -152,7 +152,7 @@ ciscoIfExtensionMIB MODULE-IDENTITY
     REVISION        "200807080000Z"
     DESCRIPTION
         "Added notification cieDelayedLinkUpDownNotif
-        - Added scalar objects cieDelayedLinkUpDownNotifEnable and 
+        - Added scalar objects cieDelayedLinkUpDownNotifEnable and
           cieDelayedLinkUpDownNotifDelay to ciscoIfExtSystemConfig.
         - Added the following groups:
                   cieDelayedLinkUpDownNotifNotifGroup
@@ -163,8 +163,8 @@ ciscoIfExtensionMIB MODULE-IDENTITY
     DESCRIPTION
         "Added scalar object cieIfIndexPersistence to
         ciscoIfExtSystemConfig.
-        - Added a new Table cieIfIndexPersistenceTable. 
-        - Added a new object cieIfIndexPersistenceEnabled in 
+        - Added a new Table cieIfIndexPersistenceTable.
+        - Added a new object cieIfIndexPersistenceEnabled in
         cieIfIndexPersistenceTable.
         - Added a new group cieIfIndexPersistenceGroup.
         - Deprecated ciscoIfExtensionMIBCompliance7
@@ -178,16 +178,16 @@ ciscoIfExtensionMIB MODULE-IDENTITY
     DESCRIPTION
         "Add support for asymetrical interfaces speeds.
 
-        - Added following objects in cieIfInterfaceTable 
-          cieIfSpeedReceive 
-          cieIfHighSpeedReceive 
-        - Added ciscoIfExtensionAsymmetricalSpeedGroup OBJECT-GROUP 
+        - Added following objects in cieIfInterfaceTable
+          cieIfSpeedReceive
+          cieIfHighSpeedReceive
+        - Added ciscoIfExtensionAsymmetricalSpeedGroup OBJECT-GROUP
         - Added ciscoIfExtensionMIBCompliance6 MODULE-COMPLIANCE"
     REVISION        "200504280000Z"
     DESCRIPTION
         "Added:
         - cieLinkUp & cieLinkDown notifications.
-        - object to control sending: only standard 
+        - object to control sending: only standard
           linkUp/linkDown OR only cieLinkUp/cieLinkDown
           OR both.
         - object to control sending only standard defined
@@ -352,31 +352,31 @@ InterfaceOwnershipList ::= TEXTUAL-CONVENTION
     STATUS          current
     DESCRIPTION
         "This textual convention defines the status for a set of
-        64 interfaces in a module regarding whether or not each 
-        interface is administratively assigned a name of the current 
+        64 interfaces in a module regarding whether or not each
+        interface is administratively assigned a name of the current
         owner of the interface resource as per the object cieIfOwner,
-        defined on that interface. 
+        defined on that interface.
 
-        Each 'bit' within the value of an object of this type, 
-        specifies whether the corresponding interface on the module 
+        Each 'bit' within the value of an object of this type,
+        specifies whether the corresponding interface on the module
         has been administratively assigned a name of the current
-        owner of the interface resource. In other words, each bit 
-        represents whether the corresponding interface is 'owned' 
-        or not. This bit is set to 1 if the interface is owned. 
+        owner of the interface resource. In other words, each bit
+        represents whether the corresponding interface is 'owned'
+        or not. This bit is set to 1 if the interface is owned.
         It is 0 otherwise.
 
-        The first bit (bit 1) in byte 1 represents whether the 
-        interface, whose 'ifIndex' is represented by the corresponding 
-        instance of 'cieInterfacesIndex' object in its first 4 bytes, 
+        The first bit (bit 1) in byte 1 represents whether the
+        interface, whose 'ifIndex' is represented by the corresponding
+        instance of 'cieInterfacesIndex' object in its first 4 bytes,
         is owned or not.
 
-        The second byte (byte 2) in byte 2 represents whether the 
-        interface, whose 'ifIndex' is represented by the corresponding 
-        instance of 'cieInterfacesIndex' object in its second 4 bytes, 
+        The second byte (byte 2) in byte 2 represents whether the
+        interface, whose 'ifIndex' is represented by the corresponding
+        instance of 'cieInterfacesIndex' object in its second 4 bytes,
         is owned or not.
 
-        If there are only 'n' interfaces in a set of 64 interfaces in 
-        the module, then bits after the 'n' bit in this object are 
+        If there are only 'n' interfaces in a set of 64 interfaces in
+        the module, then bits after the 'n' bit in this object are
         irrelevant and set to 0."
     SYNTAX          OCTET STRING (SIZE (0..8))
 
@@ -398,13 +398,13 @@ IfIndexPersistenceState ::= TEXTUAL-CONVENTION
 -- CISCO IF Extension Packet Stats Table
 
 cieIfPacketStatsTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CieIfPacketStatsEntry 
+    SYNTAX          SEQUENCE OF CieIfPacketStatsEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This  table contains interface packet
-        statistics which are not available in 
-        IF-MIB(RFC2863). 
+        statistics which are not available in
+        IF-MIB(RFC2863).
 
         As an example, some interfaces to which
         objects in this table are applicable are
@@ -417,7 +417,7 @@ cieIfPacketStatsTable OBJECT-TYPE
                 o Sonet
                 o GigabitEthernet
 
-        Some objects defined in this table may be 
+        Some objects defined in this table may be
         applicable to physical interfaces only.
         As a result, this table may be sparse for
         some logical interfaces."
@@ -429,7 +429,7 @@ cieIfPacketStatsEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An entry into the cieIfPacketStatsTable."
-    INDEX           { ifIndex } 
+    INDEX           { ifIndex }
     ::= { cieIfPacketStatsTable 1 }
 
 CieIfPacketStatsEntry ::= SEQUENCE {
@@ -457,14 +457,14 @@ cieIfLastInTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the elapsed time in
-        milliseconds since last protocol input 
+        milliseconds since last protocol input
         packet was received.
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 1 }
 
 cieIfLastOutTime OBJECT-TYPE
@@ -474,14 +474,14 @@ cieIfLastOutTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the elapsed time in
-        milliseconds since last protocol  output 
+        milliseconds since last protocol  output
         packet was transmitted.
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 2 }
 
 cieIfLastOutHangTime OBJECT-TYPE
@@ -496,9 +496,9 @@ cieIfLastOutHangTime OBJECT-TYPE
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 3 }
 
 cieIfInRuntsErrs OBJECT-TYPE
@@ -508,14 +508,14 @@ cieIfInRuntsErrs OBJECT-TYPE
     DESCRIPTION
         "The number of packets input on a particular
         physical interface which were dropped as
-        they were smaller than the minimum allowable 
+        they were smaller than the minimum allowable
         physical media limit.
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 4 }
 
 cieIfInGiantsErrs OBJECT-TYPE
@@ -524,16 +524,16 @@ cieIfInGiantsErrs OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The number of input packets on a particular
-        physical interface which were dropped as 
-        they were larger than the ifMtu (largest 
-        permitted  size of a packet which can be 
+        physical interface which were dropped as
+        they were larger than the ifMtu (largest
+        permitted  size of a packet which can be
         sent/received on an interface).
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 5 }
 
 cieIfInFramingErrs OBJECT-TYPE
@@ -543,15 +543,15 @@ cieIfInFramingErrs OBJECT-TYPE
     DESCRIPTION
         "The number of input packets on a physical
         interface which were misaligned or had
-        framing errors. This happens when the 
+        framing errors. This happens when the
         format of the incoming packet on a physical
         interface is incorrect.
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 6 }
 
 cieIfInOverrunErrs OBJECT-TYPE
@@ -560,15 +560,15 @@ cieIfInOverrunErrs OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The number of input packets which arrived
-        on a particular physical interface which 
+        on a particular physical interface which
         were too quick for the hardware to receive
         and hence the receiver ran out of buffers.
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 7 }
 
 cieIfInIgnored OBJECT-TYPE
@@ -577,7 +577,7 @@ cieIfInIgnored OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The number of input packets which were simply
-        ignored by this physical interface due to 
+        ignored by this physical interface due to
         insufficient resources to handle the incoming
         packets.
 
@@ -587,9 +587,9 @@ cieIfInIgnored OBJECT-TYPE
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 8 }
 
 cieIfInAbortErrs OBJECT-TYPE
@@ -606,9 +606,9 @@ cieIfInAbortErrs OBJECT-TYPE
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 9 }
 
 cieIfInputQueueDrops OBJECT-TYPE
@@ -619,18 +619,18 @@ cieIfInputQueueDrops OBJECT-TYPE
         "The number of input packets which were
         dropped.
 
-        Some reasons why this object could be 
+        Some reasons why this object could be
         incremented are:
 
         o  Input queue is full.
-        o  Errors at the receiver hardware 
+        o  Errors at the receiver hardware
            while receiving the packet.
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 10 }
 
 cieIfOutputQueueDrops OBJECT-TYPE
@@ -641,7 +641,7 @@ cieIfOutputQueueDrops OBJECT-TYPE
         "This object indicates the  number of output
         packets dropped by the interface even though
         no error had been detected to prevent them
-        being transmitted. 
+        being transmitted.
 
         The packet could be dropped for many reasons,
         which could range from the interface being
@@ -649,9 +649,9 @@ cieIfOutputQueueDrops OBJECT-TYPE
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfPacketDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfPacketDiscontinuityTime."
     ::= { cieIfPacketStatsEntry 11 }
 
 cieIfPacketDiscontinuityTime OBJECT-TYPE
@@ -661,24 +661,24 @@ cieIfPacketDiscontinuityTime OBJECT-TYPE
     DESCRIPTION
         "The value of sysUpTime on the most recent
         occasion at which this interface's  counters
-        suffered a discontinuity. 
+        suffered a discontinuity.
 
-        If no such discontinuities have occurred 
-        since the last re-initialization of the 
-        local management subsystem, then this 
-        object contains a value of zero." 
+        If no such discontinuities have occurred
+        since the last re-initialization of the
+        local management subsystem, then this
+        object contains a value of zero."
     ::= { cieIfPacketStatsEntry 12 }
- 
+
 
 -- Cisco IF Extension Interface Table
 
 cieIfInterfaceTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CieIfInterfaceEntry 
+    SYNTAX          SEQUENCE OF CieIfInterfaceEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This  table contains objects which provide
-        more information about interface  
+        more information about interface
         properties not available in IF-MIB
         (RFC 2863).
 
@@ -694,7 +694,7 @@ cieIfInterfaceEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An entry into the cieIfInterfaceTable."
-    INDEX           { ifIndex } 
+    INDEX           { ifIndex }
     ::= { cieIfInterfaceTable 1 }
 
 CieIfInterfaceEntry ::= SEQUENCE {
@@ -730,7 +730,7 @@ cieIfResetCount OBJECT-TYPE
         Some of the actions which can cause this
         counter to increment are :
 
-        o  Bringing an interface up using the 
+        o  Bringing an interface up using the
            interface CLI command.
 
         o  Clearing the interface with the exec
@@ -740,9 +740,9 @@ cieIfResetCount OBJECT-TYPE
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfInterfaceDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfInterfaceDiscontinuityTime."
     ::= { cieIfInterfaceEntry 1 }
 
 cieIfKeepAliveEnabled OBJECT-TYPE
@@ -751,7 +751,7 @@ cieIfKeepAliveEnabled OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "A keepalive is a small, layer-2 message
-        that is transmitted by a network device 
+        that is transmitted by a network device
         to let directly-connected network devices
         know of its presence.
 
@@ -760,8 +760,8 @@ cieIfKeepAliveEnabled OBJECT-TYPE
         are not enabled, 'false' is returned.
 
         Setting this object to TRUE or FALSE enables
-        or disables (respectively) keepalive on this 
-        interface." 
+        or disables (respectively) keepalive on this
+        interface."
     ::= { cieIfInterfaceEntry 2 }
 
 cieIfStateChangeReason OBJECT-TYPE
@@ -770,8 +770,8 @@ cieIfStateChangeReason OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object displays a human-readable
-        textual string which describes the 
-        cause of the last state change of the 
+        textual string which describes the
+        cause of the last state change of the
         interface.
 
         Examples of the values this object
@@ -780,7 +780,7 @@ cieIfStateChangeReason OBJECT-TYPE
         o  'Lost Carrier'
         o  'administratively down'
         o  'up'
-        o  'down'" 
+        o  'down'"
     ::= { cieIfInterfaceEntry 3 }
 
 cieIfCarrierTransitionCount OBJECT-TYPE
@@ -791,16 +791,16 @@ cieIfCarrierTransitionCount OBJECT-TYPE
         "Number of times interface saw the carrier
         signal transition.
 
-        For example, if a T1 line is unplugged, 
-        then framer will detect the loss of signal 
+        For example, if a T1 line is unplugged,
+        then framer will detect the loss of signal
         (LOS) on the line  and will count it as a
         transition.
 
         Discontinuities in the value of this variable
         can occur at re-initialization of the
-        management system, and at other times as 
-        indicated by the values of 
-        cieIfInterfaceDiscontinuityTime." 
+        management system, and at other times as
+        indicated by the values of
+        cieIfInterfaceDiscontinuityTime."
     ::= { cieIfInterfaceEntry 4 }
 
 cieIfInterfaceDiscontinuityTime OBJECT-TYPE
@@ -809,13 +809,13 @@ cieIfInterfaceDiscontinuityTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The value of sysUpTime on the most recent
-        occasion at which this interface's  counters 
-        suffered  a discontinuity. 
+        occasion at which this interface's  counters
+        suffered  a discontinuity.
 
-        If no such discontinuities have occurred 
-        since the last re-initialization of the 
-        local management subsystem, then this 
-        object contains a value of zero." 
+        If no such discontinuities have occurred
+        since the last re-initialization of the
+        local management subsystem, then this
+        object contains a value of zero."
     ::= { cieIfInterfaceEntry 5 }
 
 cieIfDhcpMode OBJECT-TYPE
@@ -827,18 +827,18 @@ cieIfDhcpMode OBJECT-TYPE
         administrator.
         If 'true' the DHCP is enabled. In which
         case an IP address is requested in DHCP.
-        This is in addition to any that are 
+        This is in addition to any that are
         configured by the administrator in
         'ciiIPAddressTable' or 'ciiIPIfAddressTable'
         in CISCO-IP-IF-MIB.
         If 'false' the DHCP is disabled. In which
         case all IP addresses are configured by the
-        administrator in 'ciiIPAddressTable' or 
+        administrator in 'ciiIPAddressTable' or
         'ciiIPIfAddressTable'.
         For interfaces, for which DHCP cannot be or
         is not supported, then this object has the
         value 'false'."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cieIfInterfaceEntry 6 }
 
 cieIfMtu OBJECT-TYPE
@@ -847,12 +847,12 @@ cieIfMtu OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The MTU configured by the administrator.
-        This object is exactly same as 'ifMtu' in 
+        This object is exactly same as 'ifMtu' in
         ifTable from IF-MIB for the same ifIndex
         value , except that it is configurable by the
         administrator. For more description of this
         object refer to 'ifMtu' in IF-MIB."
-    DEFVAL          { 1500 } 
+    DEFVAL          { 1500 }
     ::= { cieIfInterfaceEntry 7 }
 
 cieIfContextName OBJECT-TYPE
@@ -864,12 +864,12 @@ cieIfContextName OBJECT-TYPE
         'context' and is used to logically separate
         the MIB management.
         RFC 2571 and RFC 2737 describe this approach.
-        When the agent supports a different SNMP 
-        context, as detailed in RFC 2571 and 
+        When the agent supports a different SNMP
+        context, as detailed in RFC 2571 and
         RFC 2737, for different interfaces, then the
         value of this object specifies the context
         name used for this interface."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { cieIfInterfaceEntry 8 }
 
 cieIfOperStatusCause OBJECT-TYPE
@@ -878,32 +878,32 @@ cieIfOperStatusCause OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the detailed
-        operational cause reason for the current 
-        operational state of the interface. 
-        The current operational state of the interface 
-        is given by the 'ifOperStatus' defined 
-        in IF-MIB. 
+        operational cause reason for the current
+        operational state of the interface.
+        The current operational state of the interface
+        is given by the 'ifOperStatus' defined
+        in IF-MIB.
 
-        The corresponding instance of 
-        'cieIfOperStatusCauseDescr' must be used to 
-        get the information about the operational 
+        The corresponding instance of
+        'cieIfOperStatusCauseDescr' must be used to
+        get the information about the operational
         cause value mentioned in this object.
 
-        For interfaces whose 'ifOperStatus' is 'down' 
-        the objects 'cieIfOperStatusCause' and 
-        'cieIfOperStatusCauseDescr' together provides 
-        the information about the operational cause 
-        reason and the description of the cause. 
+        For interfaces whose 'ifOperStatus' is 'down'
+        the objects 'cieIfOperStatusCause' and
+        'cieIfOperStatusCauseDescr' together provides
+        the information about the operational cause
+        reason and the description of the cause.
 
         The value of this object will be 'none' for
-        all the 'ifOperStatus' values except for 
-        'down'. Its value will be one status cause 
-        defined in the 'IfOperStatusReason' textual 
-        convention if 'ifOperStatus' is 'down'. 
+        all the 'ifOperStatus' values except for
+        'down'. Its value will be one status cause
+        defined in the 'IfOperStatusReason' textual
+        convention if 'ifOperStatus' is 'down'.
 
-        The value of this object will be 'other' 
-        if the operational status cause is not one 
-        defined in 'IfOperStatusReason'." 
+        The value of this object will be 'other'
+        if the operational status cause is not one
+        defined in 'IfOperStatusReason'."
     ::= { cieIfInterfaceEntry 9 }
 
 cieIfOperStatusCauseDescr OBJECT-TYPE
@@ -912,12 +912,12 @@ cieIfOperStatusCauseDescr OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The description for the cause of current
-        operational state of the interface, given 
+        operational state of the interface, given
         by the object 'cieIfOperStatusCause'.
 
         For an interface whose 'ifOperStatus' is not
-        'down' the value of this object will be 
-        'none'." 
+        'down' the value of this object will be
+        'none'."
     ::= { cieIfInterfaceEntry 10 }
 
 cieIfSpeedReceive OBJECT-TYPE
@@ -935,7 +935,7 @@ cieIfSpeedReceive OBJECT-TYPE
         reportable by this object then this object should report its
         maximum value (4,294,967,295) and ifHighSpeed must be used to
         report the interace's speed.  For a sub-layer which has no
-        concept of bandwidth, this object should be zero." 
+        concept of bandwidth, this object should be zero."
     ::= { cieIfInterfaceEntry 11 }
 
 cieIfHighSpeedReceive OBJECT-TYPE
@@ -948,9 +948,9 @@ cieIfHighSpeedReceive OBJECT-TYPE
         value of `n' then the speed of the interface is somewhere in the
         range of `n-500,000' to `n+499,999'.  For interfaces which do
         not vary in bandwidth or for those where no accurate estimation
-        can be made, this object should contain the nominal bandwidth. 
+        can be made, this object should contain the nominal bandwidth.
         For a sub-layer which has no concept of bandwidth, this object
-        should be zero." 
+        should be zero."
     ::= { cieIfInterfaceEntry 12 }
 
 cieIfOwner OBJECT-TYPE
@@ -959,19 +959,19 @@ cieIfOwner OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This data type is used to model an administratively assigned
-        name of the current owner of the interface resource. This 
-        information is taken from the NVT ASCII character set.  It is 
-        suggested that this name contain one or more of the following: 
-        SnmpEngineID, IP address, management station name, network 
+        name of the current owner of the interface resource. This
+        information is taken from the NVT ASCII character set.  It is
+        suggested that this name contain one or more of the following:
+        SnmpEngineID, IP address, management station name, network
         manager's name, location, or phone number.
-        SNMP access control is articulated entirely in terms of the 
-        contents of MIB views; access to a particular SNMP object 
-        instance depends only upon its presence or absence in a 
-        particular MIB view and never upon its value or the value of 
+        SNMP access control is articulated entirely in terms of the
+        contents of MIB views; access to a particular SNMP object
+        instance depends only upon its presence or absence in a
+        particular MIB view and never upon its value or the value of
         related object instances.
-        Thus, this object affords resolution of resource contention 
+        Thus, this object affords resolution of resource contention
         only among cooperating managers; this object realizes no access
-        control function with respect to uncooperative parties." 
+        control function with respect to uncooperative parties."
     ::= { cieIfInterfaceEntry 13 }
 
 cieIfSharedConfig OBJECT-TYPE
@@ -987,14 +987,14 @@ cieIfSharedConfig OBJECT-TYPE
         "This object indicates the current configuration of
         interface sharing on the given interface.
 
-        'notApplicable' - the interface sharing configuration on 
-                    this interface is not applicable. 
+        'notApplicable' - the interface sharing configuration on
+                    this interface is not applicable.
         'ownerDedicated' - the interface is in the dedicated mode
                     to the binding physical interface.
         'ownerShared' - the interface is shared amongst virtual switches
-                 and this interface physically belongs to a its 
-                 virtual switch.  
-        'sharedOnly' - the interface is in purely shared mode." 
+                 and this interface physically belongs to a its
+                 virtual switch.
+        'sharedOnly' - the interface is in purely shared mode."
     ::= { cieIfInterfaceEntry 14 }
 
 cieIfSpeedGroupConfig OBJECT-TYPE
@@ -1011,14 +1011,14 @@ cieIfSpeedGroupConfig OBJECT-TYPE
         configuration on the given interface.
 
         'notApplicable' - the interface speed group configuration on
-                    this interface is not applicable. It is a 
+                    this interface is not applicable. It is a
                     read-only value.
         '10G' - the interface speed group configuration on
                     this interface as 10G.
-        '1G-2G-4G-8G' - the interface speed group configuration 
+        '1G-2G-4G-8G' - the interface speed group configuration
                     on this interface as 1G-2G-4G-8G.
-        '2G-4G-8G-16G' - the interface speed group configuration 
-                    on this interface as 2G-4G-8G-16G." 
+        '2G-4G-8G-16G' - the interface speed group configuration
+                    on this interface as 2G-4G-8G-16G."
     ::= { cieIfInterfaceEntry 15 }
 
 cieIfTransceiverFrequencyConfig OBJECT-TYPE
@@ -1033,11 +1033,11 @@ cieIfTransceiverFrequencyConfig OBJECT-TYPE
         "This object specifies the current transceiver frequency
         configuration on the given interface.
 
-        'notApplicable' - the interface transceiver frequency 
-        				  configuration on this interface 
+        'notApplicable' - the interface transceiver frequency
+        				  configuration on this interface
         				  is not applicable. It is a read-only value.
         'FibreChannel' - the interface transceiver frequency
-        				 configuration on this interface as 
+        				 configuration on this interface as
                          Fibre Channel.
         'Ethernet'	  -  the interface transceiver frequency on
         				 this interface as Ethernet."
@@ -1058,7 +1058,7 @@ cieIfFillPatternConfig OBJECT-TYPE
         'arbff8G' - the inter frame gap fill pattern is
         			ARBFF for 8G speed.
         'idle8G' - the inter frame gap fill pattern is
-        		   IDLE for 8G speed." 
+        		   IDLE for 8G speed."
     DEFVAL               { arbff8G }
     ::= { cieIfInterfaceEntry 17 }
 
@@ -1072,14 +1072,14 @@ cieIfIgnoreBitErrorsConfig OBJECT-TYPE
 
         If 'true(1)' the ignore bit errors is enabled.In which case
         the interface ignores bit errors.
-        If 'false(2)' the ignore bit errors is disabled. In which 
-        case the interface acts on the bit errors. 
-        For interfaces, for which bit errors 
+        If 'false(2)' the ignore bit errors is disabled. In which
+        case the interface acts on the bit errors.
+        For interfaces, for which bit errors
         is not supported, then this object has the
-        value 'true(1)'." 
+        value 'true(1)'."
     DEFVAL          { true }
     ::= { cieIfInterfaceEntry 18 }
- 
+
 cieIfIgnoreInterruptThresholdConfig OBJECT-TYPE
     SYNTAX          TruthValue
     MAX-ACCESS      read-write
@@ -1091,33 +1091,33 @@ cieIfIgnoreInterruptThresholdConfig OBJECT-TYPE
         'If 'true(1)' the ignore interrupt thresholds is enabled.
         In which case the interface ignores interrupt thresholds.
         If 'false(2)' the ignore interrupt thresholds is disabled.
-        In which case the interface acts on the interrupt 
-        thresholds. 
-        For interfaces, for which interrupt thresholds 
-        is not supported, then this object has the 
+        In which case the interface acts on the interrupt
+        thresholds.
+        For interfaces, for which interrupt thresholds
+        is not supported, then this object has the
         value 'true(1)'."
     DEFVAL          { true }
- 
+
     ::= { cieIfInterfaceEntry 19 }
 -- Cisco IF Extension Interface Status List Table
 
 cieIfStatusListTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CieIfStatusListEntry 
+    SYNTAX          SEQUENCE OF CieIfStatusListEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table contains objects for providing
-        the 'ifIndex', interface operational mode and 
-        interface operational cause for all the 
+        the 'ifIndex', interface operational mode and
+        interface operational cause for all the
         interfaces in the modules.
 
-        This table contains one entry for each 
+        This table contains one entry for each
         64 interfaces in an module.
 
-        This table provides efficient way of encoding 
+        This table provides efficient way of encoding
         'ifIndex', interface operational mode and
-        interface operational cause, from the point 
-        of retrieval, by combining the values a set 
+        interface operational cause, from the point
+        of retrieval, by combining the values a set
         of 64 interfaces in a single MIB object."
     ::= { ciscoIfExtensionStats 3 }
 
@@ -1127,13 +1127,13 @@ cieIfStatusListEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Each entry represents the 'ifIndex',
-        interface operational mode and interface 
-        operational cause for a set of 64 interfaces 
+        interface operational mode and interface
+        operational cause for a set of 64 interfaces
         in a module."
     INDEX           {
                         entPhysicalIndex,
                         cieIfStatusListIndex
-                    } 
+                    }
     ::= { cieIfStatusListTable 1 }
 
 CieIfStatusListEntry ::= SEQUENCE {
@@ -1151,7 +1151,7 @@ cieIfStatusListIndex OBJECT-TYPE
     DESCRIPTION
         "An arbitrary integer value, greater than
         zero, which identifies a list of 64 interfaces
-        within a module." 
+        within a module."
     ::= { cieIfStatusListEntry 1 }
 
 cieInterfacesIndex OBJECT-TYPE
@@ -1160,7 +1160,7 @@ cieInterfacesIndex OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the 'ifIndex' for a
-        set of 64 interfaces in the module." 
+        set of 64 interfaces in the module."
     ::= { cieIfStatusListEntry 2 }
 
 cieInterfacesOperMode OBJECT-TYPE
@@ -1169,7 +1169,7 @@ cieInterfacesOperMode OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the operational mode
-        for a set of 64 interfaces in the module." 
+        for a set of 64 interfaces in the module."
     ::= { cieIfStatusListEntry 3 }
 
 cieInterfacesOperCause OBJECT-TYPE
@@ -1178,8 +1178,8 @@ cieInterfacesOperCause OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the operational status
-        cause for a set of 64 interfaces in the 
-        module." 
+        cause for a set of 64 interfaces in the
+        module."
     ::= { cieIfStatusListEntry 4 }
 
 cieInterfaceOwnershipBitmap OBJECT-TYPE
@@ -1188,22 +1188,22 @@ cieInterfaceOwnershipBitmap OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the status for a set of 64 interfaces
-        in a module regarding whether or not each interface is 
-        administratively assigned a name of the current owner of the 
-        interface resource as per cieIfOwner." 
+        in a module regarding whether or not each interface is
+        administratively assigned a name of the current owner of the
+        interface resource as per cieIfOwner."
     ::= { cieIfStatusListEntry 5 }
- 
+
 
 
 cieIfVlStatsTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CieIfVlStatsEntry 
+    SYNTAX          SEQUENCE OF CieIfVlStatsEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table contains VL (Virtual Link) statistics
         for a capable interface.
 
-        Objects defined in this table may be 
+        Objects defined in this table may be
         applicable to physical interfaces only."
     ::= { ciscoIfExtensionStats 4 }
 
@@ -1213,9 +1213,9 @@ cieIfVlStatsEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Each row contains managed objects for
-        Virtual Link statistics on interface capable of 
+        Virtual Link statistics on interface capable of
         providing this information."
-    INDEX           { ifIndex } 
+    INDEX           { ifIndex }
     ::= { cieIfVlStatsTable 1 }
 
 CieIfVlStatsEntry ::= SEQUENCE {
@@ -1235,8 +1235,8 @@ cieIfNoDropVlInPkts OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the number of input
-        packets on all No-Drop Virtual Links belonged 
-        to this interface." 
+        packets on all No-Drop Virtual Links belonged
+        to this interface."
     ::= { cieIfVlStatsEntry 1 }
 
 cieIfNoDropVlInOctets OBJECT-TYPE
@@ -1245,8 +1245,8 @@ cieIfNoDropVlInOctets OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the number of input
-        octets on all No-Drop Virtual Links belonged 
-        to this interface." 
+        octets on all No-Drop Virtual Links belonged
+        to this interface."
     ::= { cieIfVlStatsEntry 2 }
 
 cieIfNoDropVlOutPkts OBJECT-TYPE
@@ -1255,8 +1255,8 @@ cieIfNoDropVlOutPkts OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the number of output
-        packets on all No-Drop Virtual Links belonged 
-        to this interface." 
+        packets on all No-Drop Virtual Links belonged
+        to this interface."
     ::= { cieIfVlStatsEntry 3 }
 
 cieIfNoDropVlOutOctets OBJECT-TYPE
@@ -1265,8 +1265,8 @@ cieIfNoDropVlOutOctets OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the number of output
-        octets on all No-Drop Virtual Links belonged 
-        to this interface." 
+        octets on all No-Drop Virtual Links belonged
+        to this interface."
     ::= { cieIfVlStatsEntry 4 }
 
 cieIfDropVlInPkts OBJECT-TYPE
@@ -1275,8 +1275,8 @@ cieIfDropVlInPkts OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the number of input
-        packets on all Drop Virtual Links belonged 
-        to this interface." 
+        packets on all Drop Virtual Links belonged
+        to this interface."
     ::= { cieIfVlStatsEntry 5 }
 
 cieIfDropVlInOctets OBJECT-TYPE
@@ -1285,8 +1285,8 @@ cieIfDropVlInOctets OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the number of input
-        octets on all Drop Virtual Links belonged 
-        to this interface." 
+        octets on all Drop Virtual Links belonged
+        to this interface."
     ::= { cieIfVlStatsEntry 6 }
 
 cieIfDropVlOutPkts OBJECT-TYPE
@@ -1295,8 +1295,8 @@ cieIfDropVlOutPkts OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the number of output
-        packets on all Drop Virtual Links belonged 
-        to this interface." 
+        packets on all Drop Virtual Links belonged
+        to this interface."
     ::= { cieIfVlStatsEntry 7 }
 
 cieIfDropVlOutOctets OBJECT-TYPE
@@ -1305,10 +1305,10 @@ cieIfDropVlOutOctets OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the number of output
-        octets on all Drop Virtual Links belonged 
-        to this interface." 
+        octets on all Drop Virtual Links belonged
+        to this interface."
     ::= { cieIfVlStatsEntry 8 }
- 
+
 
 
 -- Cisco IF Extension System Config
@@ -1324,7 +1324,7 @@ cieSystemMtu OBJECT-TYPE
         takes precedence for an interface, which means
         that the interface's MTU uses the value
         specified by cieIfMtu, if it is configured."
-    DEFVAL          { 1500 } 
+    DEFVAL          { 1500 }
     ::= { ciscoIfExtSystemConfig 1 }
 
 cieLinkUpDownEnable OBJECT-TYPE
@@ -1342,7 +1342,7 @@ cieLinkUpDownEnable OBJECT-TYPE
 
         'standard'  - only generate standard defined
                       mib-II linkUp/linkDown notification
-                      if 'ifLinkUpDownTrapEnable' for 
+                      if 'ifLinkUpDownTrapEnable' for
                       the interface is 'enabled'.
         'cisco'     - only generate cieLinkUp/cieLinkDown
                       notifications for an interface if
@@ -1350,10 +1350,10 @@ cieLinkUpDownEnable OBJECT-TYPE
                       interface is 'enabled'.
 
         If both bits are selected then linkUp/linkDown and
-        cieLinkUp/cieLinkDown are both generated for an 
+        cieLinkUp/cieLinkDown are both generated for an
         interface if the 'ifLinkUpDownTrapEnable' for the
         interface is 'enabled'."
-    DEFVAL          { { standard } } 
+    DEFVAL          { { standard } }
     ::= { ciscoIfExtSystemConfig 2 }
 
 cieStandardLinkUpDownVarbinds OBJECT-TYPE
@@ -1366,17 +1366,17 @@ cieStandardLinkUpDownVarbinds OBJECT-TYPE
     STATUS          deprecated
     DESCRIPTION
         "Indicates whether to send the extra
-        varbinds in addition to the varbinds defined 
+        varbinds in addition to the varbinds defined
         in linkUp/linkDown notifications.
 
         'standard'   - only send the varbinds defined in
                        the standard linkUp/linkDown
-                       notification.  
-        'additional' - send the extra varbinds in addition 
+                       notification.
+        'additional' - send the extra varbinds in addition
                        to the defined ones.
         'other'      - any other config not covered by the above.
                        This value is read-only."
-    DEFVAL          { additional } 
+    DEFVAL          { additional }
     ::= { ciscoIfExtSystemConfig 3 }
 
 cieIfIndexPersistence OBJECT-TYPE
@@ -1406,11 +1406,11 @@ cieIfIndexPersistence OBJECT-TYPE
 
         Due to change in syntax, this object is deprecated by
         cieIfIndexGlobalPersistence."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { ciscoIfExtSystemConfig 4 }
 
 cieIfIndexPersistenceTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CieIfIndexPersistenceEntry 
+    SYNTAX          SEQUENCE OF CieIfIndexPersistenceEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1434,7 +1434,7 @@ cieIfIndexPersistenceEntry OBJECT-TYPE
         created/destroyed respectively. Some of the interfaces may not
         support ifindex persistence, for example, a dynamic interface,
         such as a PPP connection or a IP subscriber interface."
-    INDEX           { ifIndex } 
+    INDEX           { ifIndex }
     ::= { cieIfIndexPersistenceTable 1 }
 
 CieIfIndexPersistenceEntry ::= SEQUENCE {
@@ -1452,7 +1452,7 @@ cieIfIndexPersistenceEnabled OBJECT-TYPE
 
         Due to change in syntax, this object is deprecated by
         cieIfIndexPersistenceControl."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { cieIfIndexPersistenceEntry 1 }
 
 cieIfIndexPersistenceControl OBJECT-TYPE
@@ -1464,9 +1464,9 @@ cieIfIndexPersistenceControl OBJECT-TYPE
         persist across reinitialization. In global state, the interface
         uses the global setting data for persistence i.e.
         cieIfIndexGlobalPersistence."
-    DEFVAL          { global } 
+    DEFVAL          { global }
     ::= { cieIfIndexPersistenceEntry 2 }
- 
+
 
 
 cieDelayedLinkUpDownNotifEnable OBJECT-TYPE
@@ -1476,7 +1476,7 @@ cieDelayedLinkUpDownNotifEnable OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether the system generates a
         cieDelayedLinkUpDownNotif notification."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { ciscoIfExtSystemConfig 6 }
 
 cieDelayedLinkUpDownNotifDelay OBJECT-TYPE
@@ -1488,7 +1488,7 @@ cieDelayedLinkUpDownNotifDelay OBJECT-TYPE
         "This object specifies the interval of time an interface's
         operational status must remain stable following a transition
         before the system will generate a cieDelayedLinkUpDownNotif."
-    DEFVAL          { 4 } 
+    DEFVAL          { 4 }
     ::= { ciscoIfExtSystemConfig 7 }
 
 cieIfIndexGlobalPersistence OBJECT-TYPE
@@ -1517,7 +1517,7 @@ cieIfIndexGlobalPersistence OBJECT-TYPE
 
         The allowed values for this object are either enable or disable.
         global value is not allowed."
-    DEFVAL          { disable } 
+    DEFVAL          { disable }
     ::= { ciscoIfExtSystemConfig 8 }
 
 cieLinkUpDownConfig OBJECT-TYPE
@@ -1538,21 +1538,21 @@ cieLinkUpDownConfig OBJECT-TYPE
         cieLinkUp/cieLinkDown notifications should be generated for
         the interfaces in the system.
 
-        'standardLinkUp'     - generate standard defined mib-II 
-                               linkUp notification if 
-                               'ifLinkUpDownTrapEnable' for the 
+        'standardLinkUp'     - generate standard defined mib-II
+                               linkUp notification if
+                               'ifLinkUpDownTrapEnable' for the
                                interface is 'enabled'.
-        'standardLinkDown'   - generate standard defined mib-II 
-                               linkDown notification if 
-                               'ifLinkUpDownTrapEnable' for the 
-                               interface is 'enabled'.  
+        'standardLinkDown'   - generate standard defined mib-II
+                               linkDown notification if
+                               'ifLinkUpDownTrapEnable' for the
+                               interface is 'enabled'.
         'additionalLinkUp'   - generate linkUp notification with
-                               additional varbinds if 
-                               'ifLinkUpDownTrapEnable' for the 
-                               interface is 'enabled'.  
+                               additional varbinds if
+                               'ifLinkUpDownTrapEnable' for the
+                               interface is 'enabled'.
         'additionalLinkDown' - generate linkDown notification with
-                               additional varbinds if 
-                               'ifLinkUpDownTrapEnable' for the 
+                               additional varbinds if
+                               'ifLinkUpDownTrapEnable' for the
                                interface is 'enabled'.
         'ciscoLinkUp'        - generate cieLinkUp notification
                                if the 'ifLinkUpDownTrapEnable' for the
@@ -1562,13 +1562,13 @@ cieLinkUpDownConfig OBJECT-TYPE
                                interface is 'enabled'.
 
         If multiple bits are set then multiple notifications will
-        be generated for an interface if the 'ifLinkUpDownTrapEnable' 
-        for the interface is 'enabled'." 
+        be generated for an interface if the 'ifLinkUpDownTrapEnable'
+        for the interface is 'enabled'."
     ::= { ciscoIfExtSystemConfig 9 }
 -- Cisco IF Extension Dot1q Custom EtherType Table
 
 cieIfDot1qCustomEtherTypeTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CieIfDot1qCustomEtherTypeEntry 
+    SYNTAX          SEQUENCE OF CieIfDot1qCustomEtherTypeEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1585,9 +1585,9 @@ cieIfDot1qCustomEtherTypeEntry OBJECT-TYPE
         information for the interface.
 
         Only interfaces with custom 802.1q
-        ethertype control are listed in the 
+        ethertype control are listed in the
         table."
-    INDEX           { ifIndex } 
+    INDEX           { ifIndex }
     ::= { cieIfDot1qCustomEtherTypeTable 1 }
 
 CieIfDot1qCustomEtherTypeEntry ::= SEQUENCE {
@@ -1602,14 +1602,14 @@ cieIfDot1qCustomAdminEtherType OBJECT-TYPE
     DESCRIPTION
         "The Dot1qEtherType allow administrator
         to select a non-standard (other than 0x8100)
-        2-byte ethertype for the interface to 
+        2-byte ethertype for the interface to
         interoperate with third party vendor's system
         that do not use the standard 0x8100 ethertype
         to identify 802.1q-tagged frames.
 
-        The current administrative value of the 
+        The current administrative value of the
         802.1q ethertype for the interface.  The
-        administrative 802.1q ethertype value may 
+        administrative 802.1q ethertype value may
         differ from the operational 802.1q ethertype
         value.  On some platforms, 802.1q ethertype
         may be assigned per group rather than per port.
@@ -1622,10 +1622,10 @@ cieIfDot1qCustomAdminEtherType OBJECT-TYPE
         is only recommended when the Cisco device
         is connected to any third party vendor device.
         Also be advised that the custom ethertype value
-        needs to be changed in the whole cloud of 
-        Cisco device with the same custom ethertype 
-        value if the third party device are separated 
-        by number of Cisco device in the middle." 
+        needs to be changed in the whole cloud of
+        Cisco device with the same custom ethertype
+        value if the third party device are separated
+        by number of Cisco device in the middle."
     ::= { cieIfDot1qCustomEtherTypeEntry 1 }
 
 cieIfDot1qCustomOperEtherType OBJECT-TYPE
@@ -1634,14 +1634,14 @@ cieIfDot1qCustomOperEtherType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The current operational value of the
-        802.1q ethertype for the interface." 
+        802.1q ethertype for the interface."
     ::= { cieIfDot1qCustomEtherTypeEntry 2 }
- 
+
 
 -- Interface Utlization Group
 
 cieIfUtilTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CieIfUtilEntry 
+    SYNTAX          SEQUENCE OF CieIfUtilEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1658,10 +1658,10 @@ cieIfUtilEntry OBJECT-TYPE
         "An entry containing utilization rates for the
         interface.
 
-        Every interface for which the  inbound and 
+        Every interface for which the  inbound and
         outbound traffic information is available
         has a corresponding entry in this table."
-    INDEX           { ifIndex } 
+    INDEX           { ifIndex }
     ::= { cieIfUtilTable 1 }
 
 CieIfUtilEntry ::= SEQUENCE {
@@ -1686,7 +1686,7 @@ cieIfInPktRate OBJECT-TYPE
         which specifies an interval different from
         5-minutes, then cieIfInPktRate is the
         exponentially-decayed moving average of inbound
-        packet rate over this different time interval." 
+        packet rate over this different time interval."
     ::= { cieIfUtilEntry 1 }
 
 cieIfInOctetRate OBJECT-TYPE
@@ -1703,7 +1703,7 @@ cieIfInOctetRate OBJECT-TYPE
         which specifies an interval different from
         5-minutes, then cieIfInOctetRate is the
         exponentially-decayed moving average of inbound
-        octet rate over this different time interval." 
+        octet rate over this different time interval."
     ::= { cieIfUtilEntry 2 }
 
 cieIfOutPktRate OBJECT-TYPE
@@ -1720,7 +1720,7 @@ cieIfOutPktRate OBJECT-TYPE
         which specifies an interval different from
         5-minutes, then cieIfOutPktRate is the
         exponentially-decayed moving average of outbound
-        packet rate over this different time interval." 
+        packet rate over this different time interval."
     ::= { cieIfUtilEntry 3 }
 
 cieIfOutOctetRate OBJECT-TYPE
@@ -1737,7 +1737,7 @@ cieIfOutOctetRate OBJECT-TYPE
         which specifies an interval different from
         5-minutes, then cieIfOutOctetRate is the
         exponentially-decayed moving average of outbound
-        octet rate over this different time interval." 
+        octet rate over this different time interval."
     ::= { cieIfUtilEntry 4 }
 
 cieIfInterval OBJECT-TYPE
@@ -1748,14 +1748,14 @@ cieIfInterval OBJECT-TYPE
     DESCRIPTION
         "This object specifies the time interval over which
         the inbound and outbound traffic rates are
-        calculated for this interface." 
+        calculated for this interface."
     ::= { cieIfUtilEntry 5 }
- 
+
 
 -- dot1BaseMapping Group
 
 cieIfDot1dBaseMappingTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CieIfDot1dBaseMappingEntry 
+    SYNTAX          SEQUENCE OF CieIfDot1dBaseMappingEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1778,7 +1778,7 @@ cieIfDot1dBaseMappingEntry OBJECT-TYPE
         a dot1dBasePort value by the system
         has a corresponding entry in this table."
     REFERENCE       "dot1dBasePort is defined in BRIDGE-MIB."
-    INDEX           { ifIndex } 
+    INDEX           { ifIndex }
     ::= { cieIfDot1dBaseMappingTable 1 }
 
 CieIfDot1dBaseMappingEntry ::= SEQUENCE {
@@ -1791,14 +1791,14 @@ cieIfDot1dBaseMappingPort OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The dot1dBasePort value for this interface."
-    REFERENCE       "dot1dBasePort is defined in BRIDGE-MIB." 
+    REFERENCE       "dot1dBasePort is defined in BRIDGE-MIB."
     ::= { cieIfDot1dBaseMappingEntry 1 }
- 
+
 
 -- Cisco IF Extension 'ifName' to 'ifIndex' Mapping Table
 
 cieIfNameMappingTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CieIfNameMappingEntry 
+    SYNTAX          SEQUENCE OF CieIfNameMappingEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1819,7 +1819,7 @@ cieIfNameMappingEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An entry into the cieIfNameMappingTable."
-    INDEX           { cieIfName } 
+    INDEX           { cieIfName }
     ::= { cieIfNameMappingTable 1 }
 
 CieIfNameMappingEntry ::= SEQUENCE {
@@ -1833,7 +1833,7 @@ cieIfName OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Represents an interface name mentioned
-        in the 'ifName' object of this system." 
+        in the 'ifName' object of this system."
     ::= { cieIfNameMappingEntry 1 }
 
 cieIfIndex OBJECT-TYPE
@@ -1844,13 +1844,13 @@ cieIfIndex OBJECT-TYPE
         "This object represents the 'ifIndex'
         corresponding to the interface name mentioned
         in the 'cieIfName' object of this instance.
-        If the 'ifName' mentioned in the 'cieIfName' 
+        If the 'ifName' mentioned in the 'cieIfName'
         object of this instance corresponds to multiple
         'ifIndex' values, then the value of this object
-        is the numerically smallest of those multiple 
-        'ifIndex' values." 
+        is the numerically smallest of those multiple
+        'ifIndex' values."
     ::= { cieIfNameMappingEntry 2 }
- 
+
 
 
 -- definition of cisco specific interface-related traps.
@@ -2198,7 +2198,7 @@ ciscoIfExtensionMIBCompliance5 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -2269,7 +2269,7 @@ ciscoIfExtensionMIBCompliance6 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -2336,7 +2336,7 @@ ciscoIfExtensionMIBCompliance7 MODULE-COMPLIANCE
     GROUP           ciscoIfExtUtilIntervalGroup
     DESCRIPTION
         "Implementation of this group is mandatory for those
-        platforms which provide the information of calculation 
+        platforms which provide the information of calculation
         interval for utilization rate on interfaces."
 
     OBJECT          cieIfDhcpMode
@@ -2346,7 +2346,7 @@ ciscoIfExtensionMIBCompliance7 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -2413,7 +2413,7 @@ ciscoIfExtensionMIBCompliance8 MODULE-COMPLIANCE
     GROUP           ciscoIfExtUtilIntervalGroup
     DESCRIPTION
         "Implementation of this group is mandatory for those
-        platforms which provide the information of calculation 
+        platforms which provide the information of calculation
         interval for utilization rate on interfaces."
 
     GROUP           cieIfIndexPersistenceGroup
@@ -2428,7 +2428,7 @@ ciscoIfExtensionMIBCompliance8 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -2495,7 +2495,7 @@ ciscoIfExtensionMIBCompliance9 MODULE-COMPLIANCE
     GROUP           ciscoIfExtUtilIntervalGroup
     DESCRIPTION
         "Implementation of this group is mandatory for those
-        platforms which provide the information of calculation 
+        platforms which provide the information of calculation
         interval for utilization rate on interfaces."
 
     GROUP           cieDelayedLinkUpDownNotifNotifGroup
@@ -2513,7 +2513,7 @@ ciscoIfExtensionMIBCompliance9 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -2580,7 +2580,7 @@ ciscoIfExtensionMIBCompliance10 MODULE-COMPLIANCE
     GROUP           ciscoIfExtUtilIntervalGroup
     DESCRIPTION
         "Implementation of this group is mandatory for those
-        platforms which provide the information of calculation 
+        platforms which provide the information of calculation
         interval for utilization rate on interfaces."
 
     GROUP           cieDelayedLinkUpDownNotifNotifGroup
@@ -2603,7 +2603,7 @@ ciscoIfExtensionMIBCompliance10 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -2666,7 +2666,7 @@ ciscoIfExtensionMIBCompliance11 MODULE-COMPLIANCE
     GROUP           ciscoIfExtUtilIntervalGroup
     DESCRIPTION
         "Implementation of this group is mandatory for those
-        platforms which provide the information of calculation 
+        platforms which provide the information of calculation
         interval for utilization rate on interfaces."
 
     GROUP           cieDelayedLinkUpDownNotifNotifGroup
@@ -2693,7 +2693,7 @@ ciscoIfExtensionMIBCompliance11 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -2752,7 +2752,7 @@ ciscoIfExtensionMIBCompliance12 MODULE-COMPLIANCE
     GROUP           ciscoIfExtUtilIntervalGroup
     DESCRIPTION
         "Implementation of this group is mandatory for those
-        platforms which provide the information of calculation 
+        platforms which provide the information of calculation
         interval for utilization rate on interfaces."
 
     GROUP           cieDelayedLinkUpDownNotifNotifGroup
@@ -2787,7 +2787,7 @@ ciscoIfExtensionMIBCompliance12 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -2846,7 +2846,7 @@ ciscoIfExtensionMIBCompliance13 MODULE-COMPLIANCE
     GROUP           ciscoIfExtUtilIntervalGroup
     DESCRIPTION
         "Implementation of this group is mandatory for those
-        platforms which provide the information of calculation 
+        platforms which provide the information of calculation
         interval for utilization rate on interfaces."
 
     GROUP           cieDelayedLinkUpDownNotifNotifGroup
@@ -2889,7 +2889,7 @@ ciscoIfExtensionMIBCompliance13 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -2950,7 +2950,7 @@ ciscoIfExtensionMIBCompliance14 MODULE-COMPLIANCE
     GROUP           ciscoIfExtUtilIntervalGroup
     DESCRIPTION
         "Implementation of this group is mandatory for those
-        platforms which provide the information of calculation 
+        platforms which provide the information of calculation
         interval for utilization rate on interfaces."
 
     GROUP           cieDelayedLinkUpDownNotifNotifGroup
@@ -2997,7 +2997,7 @@ ciscoIfExtensionMIBCompliance14 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -3058,7 +3058,7 @@ ciscoIfExtensionMIBCompliance15 MODULE-COMPLIANCE
     GROUP           ciscoIfExtUtilIntervalGroup
     DESCRIPTION
         "Implementation of this group is mandatory for those
-        platforms which provide the information of calculation 
+        platforms which provide the information of calculation
         interval for utilization rate on interfaces."
 
     GROUP           cieDelayedLinkUpDownNotifNotifGroup
@@ -3093,7 +3093,7 @@ ciscoIfExtensionMIBCompliance15 MODULE-COMPLIANCE
     GROUP           ciscoIfExtensionTableIntfGroup3SupR01
     DESCRIPTION
         "Implementation of this group is optional."
-        
+
     GROUP           ciscoIfExtensionTableIntfGroup3SupR02
     DESCRIPTION
         "Implementation of this group is optional."
@@ -3109,7 +3109,7 @@ ciscoIfExtensionMIBCompliance15 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "It is compliant to implement this object as
-        read-only. Support for 'true' is only 
+        read-only. Support for 'true' is only
         required on interfaces which support DHCP."
 
     OBJECT          cieIfMtu
@@ -3122,7 +3122,7 @@ ciscoIfExtensionMIBCompliance15 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "Write access is optional."
-        
+
     OBJECT          cieIfTransceiverFrequencyConfig
     MIN-ACCESS      read-only
     DESCRIPTION
@@ -3137,7 +3137,7 @@ ciscoIfExtensionMIBCompliance15 MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "Write access is optional."
-        
+
     OBJECT          cieIfIgnoreInterruptThresholdConfig
     MIN-ACCESS      read-only
     DESCRIPTION
@@ -3176,7 +3176,7 @@ ciscoIfExtensionTableIntfGroup OBJECT-GROUP
     STATUS          current
     DESCRIPTION
         "A collection of objects containing
-        information about properties of 
+        information about properties of
         interfaces."
     ::= { ciscoIfExtensionMIBGroups 2 }
 
@@ -3189,7 +3189,7 @@ ciscoIfExtensionTableIntfGroup1 OBJECT-GROUP
     STATUS          deprecated
     DESCRIPTION
         "A collection of objects containing
-        information about properties of 
+        information about properties of
         interfaces."
     ::= { ciscoIfExtensionMIBGroups 3 }
 
@@ -3210,8 +3210,8 @@ ciscoIfExtDot1qEtherTypeGroup OBJECT-GROUP
     STATUS          current
     DESCRIPTION
         "A collection of objects providing
-        the information about 802.1q 
-        custom EtherType on the 
+        the information about 802.1q
+        custom EtherType on the
         interface."
     ::= { ciscoIfExtensionMIBGroups 5 }
 
@@ -3235,7 +3235,7 @@ ciscoIfExtDot1dBaseMappingGroup OBJECT-GROUP
     DESCRIPTION
         "A collection of objects containing
         mapping information about the ifIndex values
-        of interfaces and their dot1dBasePort 
+        of interfaces and their dot1dBasePort
         values."
     ::= { ciscoIfExtensionMIBGroups 7 }
 
@@ -3258,7 +3258,7 @@ ciscoIfExtensionTableIntfGroup2 OBJECT-GROUP
     STATUS          deprecated
     DESCRIPTION
         "A collection of objects containing
-        information about properties of 
+        information about properties of
         interfaces."
     ::= { ciscoIfExtensionMIBGroups 9 }
 
@@ -3282,7 +3282,7 @@ cieLinkUpDownNotifEnableGroup OBJECT-GROUP
     STATUS          deprecated
     DESCRIPTION
         "A collection of objects to control
-        'cieLinkUp/cieLinkDown' and standard mib-II 
+        'cieLinkUp/cieLinkDown' and standard mib-II
         defined 'linkUp/linkDown' notifications."
     ::= { ciscoIfExtensionMIBGroups 11 }
 
@@ -3313,7 +3313,7 @@ ciscoIfExtUtilIntervalGroup OBJECT-GROUP
     STATUS          current
     DESCRIPTION
         "A collection of objects containing
-        information about calculation interval for 
+        information about calculation interval for
         utilization rate on interfaces."
     ::= { ciscoIfExtensionMIBGroups 14 }
 
@@ -3373,7 +3373,7 @@ ciscoIfExtensionTableIntfGroup3 OBJECT-GROUP
     STATUS          current
     DESCRIPTION
         "A collection of objects containing
-        information about properties of 
+        information about properties of
         interfaces."
     ::= { ciscoIfExtensionMIBGroups 19 }
 
@@ -3417,10 +3417,10 @@ cieLinkUpDownNotifConfigGroup OBJECT-GROUP
     STATUS          current
     DESCRIPTION
         "A collection of objects to control
-        'cieLinkUp/cieLinkDown' and standard mib-II 
+        'cieLinkUp/cieLinkDown' and standard mib-II
         defined 'linkUp/linkDown' notifications."
     ::= { ciscoIfExtensionMIBGroups 23 }
-    
+
 ciscoIfExtensionTableIntfGroup3SupR02 OBJECT-GROUP
     OBJECTS         {
                         cieIfTransceiverFrequencyConfig,
@@ -3434,25 +3434,3 @@ ciscoIfExtensionTableIntfGroup3SupR02 OBJECT-GROUP
     ::= { ciscoIfExtensionMIBGroups 24 }
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

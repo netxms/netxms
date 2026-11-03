@@ -2061,8 +2061,8 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
             sasDiskDrive-SasAttached(26),
             sataDiskDrive-SataAttached(27),
             usbController(28),
-	    sasControllerAdapter(29), 
-	    sataControllerAdapter(30), 
+	    sasControllerAdapter(29),
+	    sataControllerAdapter(30),
             systemDevice(31),
             fibreChannelHba(32),
             convergedNetworkAdapter(33),
@@ -2584,4 +2584,3 @@ CPQHOST-MIB DEFINITIONS ::= BEGIN
 
 
   END
-

@@ -6,26 +6,26 @@
 --
 
 	WS-INFRA-PM-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP, MODULE-COMPLIANCE			
-				FROM SNMPv2-CONF			
-			Integer32, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			DisplayString, TruthValue, DateAndTime			
-				FROM SNMPv2-TC			
-			wsInfraPM			
-				FROM WS-INFRA-SMI-MIB			
-			DoActionNow			
+			OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+			Integer32, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			DisplayString, TruthValue, DateAndTime
+				FROM SNMPv2-TC
+			wsInfraPM
+				FROM WS-INFRA-SMI-MIB
+			DoActionNow
 				FROM WS-TYPE-MIB;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.1.5.1
-		wsInfraProcessMonitor MODULE-IDENTITY 
+		wsInfraProcessMonitor MODULE-IDENTITY
 			LAST-UPDATED "200504191125Z"		-- April 19, 2005 at 11:25 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technologies"
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Symbol Technologies, Inc.
 				Customer Service
 				Postal:
@@ -35,49 +35,49 @@
 				Tel: +1. 631.738.6213
 				E-mail: support@symbol.com
 				Web: http://www.symbol.com/support"
-			DESCRIPTION 
+			DESCRIPTION
 				"process monitor module"
 			REVISION "200605241532Z"		-- May 24, 2006 at 15:32 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a06"
 			REVISION "200605121426Z"		-- May 12, 2006 at 14:26 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a05"
 			REVISION "200510271830Z"		-- October 27, 2005 at 18:30 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a04"
 			REVISION "200509021622Z"		-- September 02, 2005 at 16:22 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a03"
 			REVISION "200505191536Z"		-- May 19, 2005 at 15:36 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a02"
 			REVISION "200505181711Z"		-- May 18, 2005 at 17:11 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a01"
 			::= { wsInfraPM 1 }
 
-		
-	
-	
-	
+
+
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.1
 		wsInfraProcMonSystemRestart OBJECT-TYPE
 			SYNTAX TruthValue
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"If set to true(1), the Process Monitor will restart 
+				"If set to true(1), the Process Monitor will restart
 				the system if a failed process reached its max number of
-				restarts.  If false(2), the Process Monitor will not 
+				restarts.  If false(2), the Process Monitor will not
 				restart the system."
 			::= { wsInfraProcessMonitor 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.2
 		wsInfraProcMonMaxSystemRestarts OBJECT-TYPE
 			SYNTAX Unsigned32 (1..5)
@@ -88,7 +88,7 @@
 				the system because of failed processes."
 			::= { wsInfraProcessMonitor 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.3
 		wsInfraProcMonSystemRestartCnt OBJECT-TYPE
 			SYNTAX Integer32
@@ -98,7 +98,7 @@
 				"System restart count."
 			::= { wsInfraProcessMonitor 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.4
 		wsInfraProcMonSystemRestartCntClear OBJECT-TYPE
 			SYNTAX DoActionNow
@@ -108,7 +108,7 @@
 				"Clear the restart counter for the system."
 			::= { wsInfraProcessMonitor 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.5
 		wsInfraProcMonProcessTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsInfraProcMonProcessEntry
@@ -119,7 +119,7 @@
 				Monitor."
 			::= { wsInfraProcessMonitor 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.5.1
 		wsInfraProcMonProcessEntry OBJECT-TYPE
 			SYNTAX WsInfraProcMonProcessEntry
@@ -130,9 +130,9 @@
 			INDEX { wsInfraProcMonProcessIndex }
 			::= { wsInfraProcMonProcessTable 1 }
 
-		
+
 		WsInfraProcMonProcessEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsInfraProcMonProcessIndex
 					Integer32,
 				wsInfraProcMonProcessName
@@ -158,7 +158,7 @@
 				"Simple index."
 			::= { wsInfraProcMonProcessEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.5.1.2
 		wsInfraProcMonProcessName OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..20))
@@ -168,7 +168,7 @@
 				"Process name."
 			::= { wsInfraProcMonProcessEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.5.1.3
 		wsInfraProcMonProcessPid OBJECT-TYPE
 			SYNTAX Integer32
@@ -178,7 +178,7 @@
 				"Process ID."
 			::= { wsInfraProcMonProcessEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.5.1.4
 		wsInfraProcMonProcessMaxRestart OBJECT-TYPE
 			SYNTAX Integer32 (0..10)
@@ -189,7 +189,7 @@
 				to restart the process when it fails."
 			::= { wsInfraProcMonProcessEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.5.1.5
 		wsInfraProcMonProcessStartCount OBJECT-TYPE
 			SYNTAX Integer32
@@ -200,18 +200,18 @@
 				Monitor."
 			::= { wsInfraProcMonProcessEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.5.1.6
 		wsInfraProcMonProcessLastHeard OBJECT-TYPE
 			SYNTAX DateAndTime
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The last time Process Monitor received a heartbeat 
+				"The last time Process Monitor received a heartbeat
 				message from the process."
 			::= { wsInfraProcMonProcessEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.5.1.7
 		wsInfraProcMonProcessLastStarted OBJECT-TYPE
 			SYNTAX DateAndTime
@@ -221,7 +221,7 @@
 				"The last time the Process Monitor started the process."
 			::= { wsInfraProcMonProcessEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.6
 		wsInfraProcMonHistTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsInfraProcMonHistEntry
@@ -231,7 +231,7 @@
 				"List of history entries for monitored processes."
 			::= { wsInfraProcessMonitor 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.6.1
 		wsInfraProcMonHistEntry OBJECT-TYPE
 			SYNTAX WsInfraProcMonHistEntry
@@ -242,9 +242,9 @@
 			INDEX { wsInfraProcMonProcessIndex, wsInfraProcMonHistIndex }
 			::= { wsInfraProcMonHistTable 1 }
 
-		
+
 		WsInfraProcMonHistEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsInfraProcMonHistIndex
 					Integer32,
 				wsInfraProcMonHistTimestamp
@@ -264,7 +264,7 @@
 				"Simple index."
 			::= { wsInfraProcMonHistEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.6.1.2
 		wsInfraProcMonHistTimestamp OBJECT-TYPE
 			SYNTAX DateAndTime
@@ -274,7 +274,7 @@
 				"Time when the process changed its state."
 			::= { wsInfraProcMonHistEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.6.1.3
 		wsInfraProcMonHistEvent OBJECT-TYPE
 			SYNTAX INTEGER
@@ -294,7 +294,7 @@
 				"The event that caused the process to change its state."
 			::= { wsInfraProcMonHistEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.6.1.4
 		wsInfraProcMonHistState OBJECT-TYPE
 			SYNTAX INTEGER
@@ -315,42 +315,42 @@
 				"The new state the process moved to."
 			::= { wsInfraProcMonHistEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.100
 		wsInfraPMMIBConformance OBJECT IDENTIFIER ::= { wsInfraProcessMonitor 100 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.100.1
 		wsInfraPMMIBCompliances OBJECT IDENTIFIER ::= { wsInfraPMMIBConformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.100.1.1
 		wsInfraPMMIBCompliance MODULE-COMPLIANCE
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"PM mib compliance"
 			MODULE -- this module
 				MANDATORY-GROUPS { wsInfraMIBProcMonGroup }
 			::= { wsInfraPMMIBCompliances 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.100.2
 		wsInfraPMMIBGroups OBJECT IDENTIFIER ::= { wsInfraPMMIBConformance 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.5.1.100.2.1
 		wsInfraMIBProcMonGroup OBJECT-GROUP
-			OBJECTS { wsInfraProcMonProcessStartCount, wsInfraProcMonSystemRestartCntClear, wsInfraProcMonSystemRestartCnt, wsInfraProcMonProcessLastStarted, wsInfraProcMonSystemRestart, 
-				wsInfraProcMonMaxSystemRestarts, wsInfraProcMonProcessIndex, wsInfraProcMonProcessName, wsInfraProcMonProcessPid, wsInfraProcMonProcessMaxRestart, 
+			OBJECTS { wsInfraProcMonProcessStartCount, wsInfraProcMonSystemRestartCntClear, wsInfraProcMonSystemRestartCnt, wsInfraProcMonProcessLastStarted, wsInfraProcMonSystemRestart,
+				wsInfraProcMonMaxSystemRestarts, wsInfraProcMonProcessIndex, wsInfraProcMonProcessName, wsInfraProcMonProcessPid, wsInfraProcMonProcessMaxRestart,
 				wsInfraProcMonProcessLastHeard, wsInfraProcMonHistIndex, wsInfraProcMonHistTimestamp, wsInfraProcMonHistEvent, wsInfraProcMonHistState
 				 }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"proc mon mib group"
 			::= { wsInfraPMMIBGroups 1 }
 
-		
-	
+
+
 	END
 
 --

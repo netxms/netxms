@@ -23,9 +23,9 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	IMPORTS
 	    MODULE-IDENTITY, OBJECT-TYPE		FROM SNMPv2-SMI
 	    RowStatus,DisplayString,TruthValue	FROM SNMPv2-TC
-        swTimeRangeMgmtRangeName			FROM TIMERANGE-MIB   
-        dlink-common-mgmt					FROM DLINK-ID-REC-MIB;	      
-	      
+        swTimeRangeMgmtRangeName			FROM TIMERANGE-MIB
+        dlink-common-mgmt					FROM DLINK-ID-REC-MIB;
+
 	swSDCardMgmtMIB MODULE-IDENTITY
 	    LAST-UPDATED "201012220000Z"
 	    ORGANIZATION "D-Link Corp."
@@ -33,19 +33,19 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	        "http://support.dlink.com"
 	    DESCRIPTION
 	        "The structure of SD card management module MIB."
-	    ::= { dlink-common-mgmt 95 }  
-	              
+	    ::= { dlink-common-mgmt 95 }
+
 	swSDCardMgmtNotifications	OBJECT IDENTIFIER ::= { swSDCardMgmtMIB 0 }
 	swSDCardMgmtMIBObjects		OBJECT IDENTIFIER ::= { swSDCardMgmtMIB 1 }
 	swSDCardMgmtGeneralGroup	OBJECT IDENTIFIER ::= { swSDCardMgmtMIBObjects 1 }
-	                            
+
 -- -----------------------------------------------------------------------------
 -- SD card Mgmt Control
 -- -----------------------------------------------------------------------------
-	swSDCardMgmtBackupCtrl	OBJECT IDENTIFIER ::= { swSDCardMgmtMIBObjects 2}  
+	swSDCardMgmtBackupCtrl	OBJECT IDENTIFIER ::= { swSDCardMgmtMIBObjects 2}
 	swSDCardMgmtExecCtrl	OBJECT IDENTIFIER ::= { swSDCardMgmtMIBObjects 3}
-	swSDCardMgmtExecConfigCtrl     OBJECT IDENTIFIER ::= { swSDCardMgmtMIBObjects 4}	
-	
+	swSDCardMgmtExecConfigCtrl     OBJECT IDENTIFIER ::= { swSDCardMgmtMIBObjects 4}
+
 -- -----------------------------------------------------------------------------
 -- Backup Schedule control
 -- -----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    STATUS current
 	    DESCRIPTION
 	        "A table that contains information about SD card backup schedules."
-	    ::= { swSDCardMgmtBackupCtrl 1 } 
+	    ::= { swSDCardMgmtBackupCtrl 1 }
 
 	swSDCardMgmtBackupCtrlEntry OBJECT-TYPE
 	    SYNTAX SwSDCardMgmtBackupCtrlEntry
@@ -75,7 +75,7 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	        swSDCardMgmtBackupState
 	        	INTEGER,
 	        swSDCardMgmtBackupRowStatus
-	        	RowStatus	        
+	        	RowStatus
 	    }
 
 	swSDCardMgmtBackupType OBJECT-TYPE
@@ -87,8 +87,8 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    STATUS current
 	    DESCRIPTION
 	        "Indicates the SD card backup type."
-	    ::= { swSDCardMgmtBackupCtrlEntry 1 }  
-	    
+	    ::= { swSDCardMgmtBackupCtrlEntry 1 }
+
 	swSDCardMgmtBackupFilename OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..32))
 	    MAX-ACCESS not-accessible
@@ -96,7 +96,7 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Indicates the backup filename."
 	    ::= { swSDCardMgmtBackupCtrlEntry 2 }
-	    	    
+
 	swSDCardMgmtBackupState OBJECT-TYPE
 	    SYNTAX INTEGER {
                   enabled(1),
@@ -107,15 +107,15 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Indicates the backup schedule state."
 	    ::= { swSDCardMgmtBackupCtrlEntry 3 }
-	    
+
     	swSDCardMgmtBackupRowStatus OBJECT-TYPE
             SYNTAX  RowStatus
             MAX-ACCESS  read-create
             STATUS  current
             DESCRIPTION
                "Indicates the status of this entry."
-            ::= { swSDCardMgmtBackupCtrlEntry 100 }	
-	    	                                                        
+            ::= { swSDCardMgmtBackupCtrlEntry 100 }
+
 -- -----------------------------------------------------------------------------
 -- Execute Schedule control
 -- -----------------------------------------------------------------------------
@@ -145,7 +145,7 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 			swSDCardMgmtExecIncrement
 	            TruthValue,
 	        swSDCardMgmtExecRowStatus
-	            RowStatus	
+	            RowStatus
 	    }
 
 	swSDCardMgmtExecFilename OBJECT-TYPE
@@ -155,7 +155,7 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Indicate the filename of the script."
 	    ::= { swSDCardMgmtExecCtrlEntry 1 }
-	    	
+
 	swSDCardMgmtExecState OBJECT-TYPE
 	    SYNTAX INTEGER {
                   enabled(1),
@@ -165,7 +165,7 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    STATUS current
 	    DESCRIPTION
 	        "Indicates the schedules execute state."
-	    ::= { swSDCardMgmtExecCtrlEntry 2 }	
+	    ::= { swSDCardMgmtExecCtrlEntry 2 }
 
 	swSDCardMgmtExecIncrement OBJECT-TYPE
 	    SYNTAX TruthValue
@@ -174,19 +174,19 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Indicates whether the current configuration will
 	        remain valid or not before execute the script.
-	        
-	        true(1): the current configuration will not be reset before execute the script.	
+
+	        true(1): the current configuration will not be reset before execute the script.
 	        false(2): the current configuration will be reset before execute the script."
 	    ::= { swSDCardMgmtExecCtrlEntry 3 }
-            	
+
         swSDCardMgmtExecRowStatus OBJECT-TYPE
            SYNTAX  RowStatus
            MAX-ACCESS  read-create
            STATUS  current
            DESCRIPTION
               "Indicates the status of this entry."
-           ::= { swSDCardMgmtExecCtrlEntry 100 }	
-        
+           ::= { swSDCardMgmtExecCtrlEntry 100 }
+
 -- -----------------------------------------------------------------------------
 -- Execute script
 -- -----------------------------------------------------------------------------
@@ -197,7 +197,7 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Indicates the filename of the script which to be execute."
 	    ::= { swSDCardMgmtExecConfigCtrl 1 }
-	    
+
 	swSDCardMgmtExecConfigIncrement OBJECT-TYPE
 	    SYNTAX TruthValue
 	    MAX-ACCESS read-write
@@ -205,11 +205,11 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Indicates whether the current configuration will
 	        remain valid or not before execute the script.
-	        
-	        true(1): the current configuration will not be reset before execute the script.	
+
+	        true(1): the current configuration will not be reset before execute the script.
 	        false(2): the current configuration will be reset before execute the script."
-	    ::= { swSDCardMgmtExecConfigCtrl 2 }	   
-	     
+	    ::= { swSDCardMgmtExecConfigCtrl 2 }
+
 	swSDCardMgmtExecConfigAction OBJECT-TYPE
 	    SYNTAX INTEGER {
                   other(1),
@@ -219,6 +219,6 @@ SDCARDMGMT-MIB DEFINITIONS ::= BEGIN
 	    STATUS current
 	    DESCRIPTION
 	        "Indicates whether to execute script or not, which filename specified by swSDCardMgmtExecConfigFilename."
-	    ::= { swSDCardMgmtExecConfigCtrl 3 }	
-	
+	    ::= { swSDCardMgmtExecConfigCtrl 3 }
+
 END

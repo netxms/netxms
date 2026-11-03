@@ -29,7 +29,7 @@ dlb802dot11ExtMIB MODULE-IDENTITY
         "Added dlbDot11IfAssocNodeCount."
     REVISION    "200905150000Z"
     DESCRIPTION
-        "Added dlbDot11RemoteNodeStatsTable and dlbRemoteNodeConnected, 
+        "Added dlbDot11RemoteNodeStatsTable and dlbRemoteNodeConnected,
         dlbRemoteNodeDisconnected notifications."
     REVISION    "200812120000Z"
     DESCRIPTION
@@ -91,7 +91,7 @@ dlbDot11IfParentIndex OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Wireless interface's parent index, which corresponds to ifIndex in MIB-II interfaces table.
-         This is only applicable if the interface is virtual and it is created under some other interface, like 
+         This is only applicable if the interface is virtual and it is created under some other interface, like
         it is for Atheros cards when using MadWiFi driver, where parent interfaces are wifi0, wifi1, etc."
     ::= { dlbDot11IfConfEntry 1 }
 
@@ -227,7 +227,7 @@ dlbDot11IfAssocNodeCount OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-        "Number of associated nodes when working in access point mode. 
+        "Number of associated nodes when working in access point mode.
          1 - if associated to remote access point in client mode."
     ::= { dlbDot11IfConfEntry 16 }
 
@@ -263,7 +263,7 @@ dlbDot11IfRxInvalidNWID OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-        "Number of received packets with invalid NWID/ESSID. Increasing value usually means that there are 
+        "Number of received packets with invalid NWID/ESSID. Increasing value usually means that there are
         other stations transmitting on the same channel or adjacent channels."
     ::= { dlbDot11IfErrStatsEntry 1 }
 
@@ -313,7 +313,7 @@ dlbDot11RemoteNodeStatsTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS  current
     DESCRIPTION
-        "Remote node statistics table. This table shows statistics for associated or already disconnected clients 
+        "Remote node statistics table. This table shows statistics for associated or already disconnected clients
         on wireless interfaces which are operating in access point mode. For interfaces operating in client mode and
         associated to remote access point information about access point is shown."
     ::= { dlbDot11Stats 2 }
@@ -384,7 +384,7 @@ dlbDot11RmtNodeDisassocTime OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-        "UNIX timestamp of the disassociation (if remote node recently dissasociated). 
+        "UNIX timestamp of the disassociation (if remote node recently dissasociated).
         This object is optional."
     ::= { dlbDot11RemoteNodeStatsEntry 6 }
 

@@ -5,9 +5,9 @@ IMPORTS
   Integer32                            FROM SNMPv2-SMI
   DisplayString                        FROM RFC1213-MIB
   dnOS                             FROM DELL-REF-MIB;
-  
 
- fastPathTimeZonePrivate               MODULE-IDENTITY 
+
+ fastPathTimeZonePrivate               MODULE-IDENTITY
 
  LAST-UPDATED "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
  ORGANIZATION "Dell, Inc."
@@ -27,55 +27,55 @@ IMPORTS
 
                                   ::= { dnOS 32 }
 
-agentSystemTimeGroup             OBJECT IDENTIFIER      ::={   fastPathTimeZonePrivate  1 } 
+agentSystemTimeGroup             OBJECT IDENTIFIER      ::={   fastPathTimeZonePrivate  1 }
 
 agentTimeZoneGroup               OBJECT IDENTIFIER      ::={  fastPathTimeZonePrivate   2 }
 
 agentSummerTimeGroup             OBJECT IDENTIFIER      ::={  fastPathTimeZonePrivate   3 }
 
-agentSummerTimeRecurringGroup    OBJECT IDENTIFIER      ::={   agentSummerTimeGroup     2 }    
+agentSummerTimeRecurringGroup    OBJECT IDENTIFIER      ::={   agentSummerTimeGroup     2 }
 
 agentSummerTimeNonRecurringGroup OBJECT IDENTIFIER      ::={  agentSummerTimeGroup      3  }
 
-   
+
 --
 --   Agent system time mib object
--- 
+--
 
 
- agentSystemTime                       OBJECT-TYPE           
+ agentSystemTime                       OBJECT-TYPE
    SYNTAX                               DisplayString
    MAX-ACCESS                           read-write
    STATUS                               current
    DESCRIPTION                          "the current sytem time
                          (includes the TimeZone offset and  summertime Offset)
-                                        Only in the case of platforms supporting Real Time Clock, 
+                                        Only in the case of platforms supporting Real Time Clock,
                                         this object can be set"
                                        ::={     agentSystemTimeGroup  1}
 
- agentSystemDate                       OBJECT-TYPE           
+ agentSystemDate                       OBJECT-TYPE
    SYNTAX                               DisplayString
    MAX-ACCESS                           read-write
    STATUS                               current
-   DESCRIPTION                          "the current sytem date. 
+   DESCRIPTION                          "the current sytem date.
                                          Only in the case of platforms supporting Real Time Clock,
                                          this object can be set and range is Jan 01 2010 to Dec 31 2079"
                                        ::={    agentSystemTimeGroup  2}
 
- agentSystemTimeZoneAcronym            OBJECT-TYPE              
+ agentSystemTimeZoneAcronym            OBJECT-TYPE
    SYNTAX                               DisplayString
    MAX-ACCESS                           read-only
    STATUS                               current
    DESCRIPTION                          "the zone acronym of summertime when summertime is in effect
-                        If summer-time is not in effect or if there is no acronym for summer-time it defaults    
+                        If summer-time is not in effect or if there is no acronym for summer-time it defaults
                         To TimeZone acronym."
-            
+
                                        ::={     agentSystemTimeGroup  3}
 
 agentSystemTimeSource                  OBJECT-TYPE
    SYNTAX                               INTEGER { none(0), sntp(1) }
    MAX-ACCESS                           read-only
-   STATUS                               current 
+   STATUS                               current
    DESCRIPTION                          "the time source from which the time update is taken."
                                        ::={     agentSystemTimeGroup  4}
 
@@ -88,7 +88,7 @@ agentSystemSummerTimeState             OBJECT-TYPE
                                        ::={     agentSystemTimeGroup  5}
 
 
--- 
+--
 --    Agent timezone setting mib object
 --
 
@@ -114,11 +114,11 @@ agentTimeZoneAcronym                   OBJECT-TYPE
    MAX-ACCESS                           read-write
    STATUS                               current
    DESCRIPTION                          "the acronym associated with the zone."
-   
+
                                        ::={   agentTimeZoneGroup 3 }
 
 
--- 
+--
 --   Agent summertime Group mib objects
 
 --
@@ -131,7 +131,7 @@ agentSummerTimeMode                     OBJECT-TYPE
                                           recurringEu(2),
                                           recurringUsa(3),
                                           nonrecurring(4)
-                        
+
                                          }
    MAX-ACCESS                           read-write
    STATUS                               current
@@ -143,20 +143,20 @@ agentSummerTimeMode                     OBJECT-TYPE
                                        ::={  agentSummerTimeGroup 1 }
 
 
--- 
+--
 --   Agent summertime recurring mib objects
 
--- 
+--
 agentStRecurringStartingWeek           OBJECT-TYPE
    SYNTAX                               INTEGER
                                          {
-                                          none(0), 
+                                          none(0),
                                           first(1),
                                           second(2),
                                           third(3),
                                           fourth(4),
                                           last(5)
-                                         } 
+                                         }
    MAX-ACCESS                           read-write
    STATUS                               current
    DESCRIPTION                          "the  week of the month from which the summer-time should be effective."
@@ -166,7 +166,7 @@ agentStRecurringStartingWeek           OBJECT-TYPE
 agentStRecurringStartingDay            OBJECT-TYPE
    SYNTAX                               INTEGER
                                          {
-                                          none(0),  
+                                          none(0),
                                           sun(1),
                                           mon(2),
                                           tue(3),
@@ -174,13 +174,13 @@ agentStRecurringStartingDay            OBJECT-TYPE
                                           thu(5),
                                           fri(6),
                                           sat(7)
-                                         }   
-    
+                                         }
+
    MAX-ACCESS                           read-write
    STATUS                               current
-   DESCRIPTION                          "the day of the agentStRecurringStartingWeek  from 
+   DESCRIPTION                          "the day of the agentStRecurringStartingWeek  from
                                          which the summer-time should be effective."
-   DEFVAL                                { none } 
+   DEFVAL                                { none }
                                        ::={ agentSummerTimeRecurringGroup 2}
 
 
@@ -202,10 +202,10 @@ agentStRecurringStartingMonth          OBJECT-TYPE
                                           dec(12)
                                           }
 
-    
+
  MAX-ACCESS                             read-write
- STATUS                                 current 
- DESCRIPTION                            "the month of the year  from which the 
+ STATUS                                 current
+ DESCRIPTION                            "the month of the year  from which the
                                           summer-time should be effective."
   DEFVAL                                 { none }
                                        ::={ agentSummerTimeRecurringGroup 3}
@@ -213,10 +213,10 @@ agentStRecurringStartingMonth          OBJECT-TYPE
 
 agentStRecurringStartingTime           OBJECT-TYPE
    SYNTAX                               DisplayString (SIZE(0..5))
- 
+
    MAX-ACCESS                           read-write
    STATUS                               current
-   DESCRIPTION                          "the time in the hh:mm format  from 
+   DESCRIPTION                          "the time in the hh:mm format  from
                                          which the summer-time should be effective.
                                          range for hh: 0 to 23
                                          range for mm: 0 to 59 "
@@ -234,10 +234,10 @@ agentStRecurringEndingWeek             OBJECT-TYPE
                                           last(5)
                                          }
 
-  
+
    MAX-ACCESS                          read-write
    STATUS                               current
-   DESCRIPTION                         "the week of the Month in which the 
+   DESCRIPTION                         "the week of the Month in which the
                                          summer-time should end."
    DEFVAL                               { none }
                                       ::={ agentSummerTimeRecurringGroup 5}
@@ -256,19 +256,19 @@ agentStRecurringEndingDay            OBJECT-TYPE
                                           sat(7)
                                          }
 
-  
+
    MAX-ACCESS                         read-write
    STATUS                               current
-   DESCRIPTION                        "the day of the agentStRecurringStartingWeek  on which the 
+   DESCRIPTION                        "the day of the agentStRecurringStartingWeek  on which the
                                               summer-time should end."
    DEFVAL                              { none }
                                      ::={ agentSummerTimeRecurringGroup 6}
- 
+
 
 agentStRecurringEndingMonth          OBJECT-TYPE
    SYNTAX                              INTEGER
                                          {
-                                          none(0), 
+                                          none(0),
                                           jan(1),
                                           feb(2),
                                           mar(3),
@@ -283,7 +283,7 @@ agentStRecurringEndingMonth          OBJECT-TYPE
                                           dec(12)
                                           }
 
-   
+
    MAX-ACCESS                         read-write
    STATUS                               current
    DESCRIPTION                        "the month  of the year in which the summer-time should end."
@@ -293,51 +293,51 @@ agentStRecurringEndingMonth          OBJECT-TYPE
 
 agentStRecurringEndingTime           OBJECT-TYPE
    SYNTAX                             DisplayString (SIZE(0..5))
-  
+
    MAX-ACCESS                         read-write
    STATUS                               current
    DESCRIPTION                       "the time of the agentStRecurringEndingDay  in hh:mm format
                                       at which the summer-time should end.
                                       range for hh: 0 to 23
-                                         range for mm: 0 to 59" 
-   
+                                         range for mm: 0 to 59"
+
                                      ::={ agentSummerTimeRecurringGroup 8}
 
 
 agentStRecurringZoneAcronym          OBJECT-TYPE
    SYNTAX                             DisplayString (SIZE(0..4))
- 
+
    MAX-ACCESS                         read-write
    STATUS                               current
-   DESCRIPTION                        "the zone associated with the summer-time 
+   DESCRIPTION                        "the zone associated with the summer-time
                                         recurring configuration.
                                         the acronym maximum legth is 4 characters"
-  
+
                                      ::={ agentSummerTimeRecurringGroup 9}
 
 agentStRecurringZoneOffset           OBJECT-TYPE
    SYNTAX                             Integer32(0 | 1..1440)
-  
+
    MAX-ACCESS                         read-write
    STATUS                               current
-   DESCRIPTION                        "the zone offset in minutes which will be added to the UTC time 
+   DESCRIPTION                        "the zone offset in minutes which will be added to the UTC time
                                        during the  summer-time of every year."
    DEFVAL                              { 0 }
                                      ::={ agentSummerTimeRecurringGroup 10}
 
 
--- 
+--
 --   Agent summertime non-recurring mib objects
--- 
+--
 
 
 
 agentStNonRecurringStartingDay          OBJECT-TYPE
    SYNTAX                                Integer32(0 |1..31)
-   
+
    MAX-ACCESS                            read-write
    STATUS                               current
-   DESCRIPTION                           "the day of the agentStNonRecurringStartingMonth from 
+   DESCRIPTION                           "the day of the agentStNonRecurringStartingMonth from
                                            which the summer-time should be effective."
    DEFVAL                                 { 0 }
                                         ::={ agentSummerTimeNonRecurringGroup 1 }
@@ -360,17 +360,17 @@ agentStNonRecurringStartingMonth        OBJECT-TYPE
                                           dec(12)
                                           }
 
-    
+
    MAX-ACCESS                            read-write
    STATUS                               current
-   DESCRIPTION                           "the Month of the agentStNonRecurringStartingYear from 
+   DESCRIPTION                           "the Month of the agentStNonRecurringStartingYear from
                                            which the summer-time should be effective."
    DEFVAL                                 { none }
                                         ::={ agentSummerTimeNonRecurringGroup 2 }
 
 agentStNonRecurringStartingYear         OBJECT-TYPE
    SYNTAX                                Integer32(0 |2000..2097)
-   
+
    MAX-ACCESS                            read-write
    STATUS                               current
    DESCRIPTION                           "the year from which the summer-time should be effective."
@@ -381,27 +381,27 @@ agentStNonRecurringStartingTime         OBJECT-TYPE
    SYNTAX                                DisplayString (SIZE(0..5))
    MAX-ACCESS                            read-write
    STATUS                               current
-   DESCRIPTION                           "the time in the hh:mm format. The time of agentStNonRecurringStartingDay  
+   DESCRIPTION                           "the time in the hh:mm format. The time of agentStNonRecurringStartingDay
                                            from which the summer-time should be effective.
                                            range for hh: 0 to 23
                                            range for mm: 0 to 59"
-  
+
                                         ::={ agentSummerTimeNonRecurringGroup 4 }
 
 agentStNonRecurringEndingDay            OBJECT-TYPE
    SYNTAX                                Integer32(0 |1..31)
-  
+
    MAX-ACCESS                            read-write
    STATUS                               current
-   DESCRIPTION                           "the day of the agentStNonRecurringEndingMonth on 
+   DESCRIPTION                           "the day of the agentStNonRecurringEndingMonth on
                                           which the summer-time should end."
-   DEFVAL                                 { 0 } 
+   DEFVAL                                 { 0 }
                                         ::={ agentSummerTimeNonRecurringGroup 5}
 
 agentStNonRecurringEndingMonth         OBJECT-TYPE
    SYNTAX                               INTEGER
                                          {
-                                          none(0),     
+                                          none(0),
                                           jan(1),
                                           feb(2),
                                           mar(3),
@@ -414,43 +414,43 @@ agentStNonRecurringEndingMonth         OBJECT-TYPE
                                           oct(10),
                                           nov(11),
                                           dec(12)
-                                          }  
-  
+                                          }
+
    MAX-ACCESS                           read-write
    STATUS                               current
-   DESCRIPTION                          "the month of the agentStNonRecurringEndingYear in  which 
+   DESCRIPTION                          "the month of the agentStNonRecurringEndingYear in  which
                                          the summer-time should end."
    DEFVAL                                { none }
                                        ::={ agentSummerTimeNonRecurringGroup 6 }
 
 agentStNonRecurringEndingYear          OBJECT-TYPE
    SYNTAX                               Integer32(0 |2000..2097)
-   
+
    MAX-ACCESS                           read-write
-   STATUS                               current    
+   STATUS                               current
    DESCRIPTION                          "the year in which the summer-time should end."
    DEFVAL                                { 0 }
                                        ::={ agentSummerTimeNonRecurringGroup 7 }
 
-agentStNonRecurringEndingTime          OBJECT-TYPE  
+agentStNonRecurringEndingTime          OBJECT-TYPE
    SYNTAX                                DisplayString (SIZE(0..5))
-   
+
    MAX-ACCESS                            read-write
    STATUS                               current
    DESCRIPTION                           "the time on the agentStNonRecurringEndingDay  in hh:mm format
                                            at  which the summer-time should end.
                                           range for hh: 0 to 23
                                          range for mm: 0 to 59"
- 
-                                       ::={ agentSummerTimeNonRecurringGroup  8} 
+
+                                       ::={ agentSummerTimeNonRecurringGroup  8}
 
 
 agentStNonRecurringZoneOffset          OBJECT-TYPE
  SYNTAX                                 Integer32(0 |1..1440)
- 
+
  MAX-ACCESS                             read-write
- STATUS                               current 
- DESCRIPTION                            "the zone offset in minutes which will be added to 
+ STATUS                               current
+ DESCRIPTION                            "the zone offset in minutes which will be added to
                                          the UTC time during the summer-time."
  DEFVAL                                  { 0 }
                                        ::={ agentSummerTimeNonRecurringGroup 9 }
@@ -458,10 +458,10 @@ agentStNonRecurringZoneOffset          OBJECT-TYPE
 
 agentStNonRecurringZoneAcronym        OBJECT-TYPE
    SYNTAX                              DisplayString (SIZE(0..4))
-   
+
    MAX-ACCESS                          read-write
    STATUS                               current
-   DESCRIPTION                         "the zone associated with the summer-time 
+   DESCRIPTION                         "the zone associated with the summer-time
                                          non recurring configuration.
                                          the acronym maximum legth is 4 characters"
 

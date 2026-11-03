@@ -1,8 +1,8 @@
 HIRSCHMANN-MGMT-MIB   DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, 
-	OBJECT-IDENTITY, enterprises, 
+    MODULE-IDENTITY, OBJECT-TYPE,
+	OBJECT-IDENTITY, enterprises,
 	Integer32						FROM SNMPv2-SMI
     DisplayString, AutonomousType,
 	TestAndIncr						FROM SNMPv2-TC;
@@ -27,5 +27,3 @@ hmManagement MODULE-IDENTITY
 hirschmann					  OBJECT IDENTIFIER ::= { enterprises 248 }
 
 END
-
-

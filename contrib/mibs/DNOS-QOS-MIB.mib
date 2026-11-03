@@ -15,20 +15,20 @@ DNOS-QOS-MIB DEFINITIONS ::= BEGIN
 
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, Integer32, Gauge32        
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, Integer32, Gauge32
                                         FROM SNMPv2-SMI
     RowStatus                           FROM SNMPv2-TC
     dnOS                            FROM DELL-REF-MIB
     DisplayString                       FROM RFC1213-MIB;
-                
+
     fastPathQOS MODULE-IDENTITY
         LAST-UPDATED "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
         ORGANIZATION "Dell, Inc."
         CONTACT-INFO ""
         DESCRIPTION
           "The MIB definitaions for Quality of Service Flex package."
-          
-        -- Revision history.	  
+
+        -- Revision history.
         REVISION
           "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
         DESCRIPTION
@@ -45,7 +45,7 @@ IMPORTS
           "200201301544Z"
         DESCRIPTION
           "Initial revision."
-          
+
     ::= { dnOS 3 }
-      
+
 END

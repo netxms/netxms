@@ -1,13 +1,13 @@
-	DELL-NETWORKING-SMI DEFINITIONS ::= BEGIN 
-	--  This module provides authoritative 
+	DELL-NETWORKING-SMI DEFINITIONS ::= BEGIN
+	--  This module provides authoritative
 	--  definitions for Dell Networking OS MIB.
 	--
 	--  This module will be extended, as needed.
 	--
 	IMPORTS
 		MODULE-IDENTITY,enterprises,
-		OBJECT-IDENTITY 
-			FROM SNMPv2-SMI; 
+		OBJECT-IDENTITY
+			FROM SNMPv2-SMI;
 
 	dellNet  MODULE-IDENTITY
 
@@ -41,7 +41,7 @@
 	dellNetCommon OBJECT-IDENTITY
 		STATUS	current
 		DESCRIPTION
-			"All Dell Networking OS shared TEXTTUAL-CONVENTION 
+			"All Dell Networking OS shared TEXTTUAL-CONVENTION
 			 definitions"
 		::= { dellNet 2 }
 

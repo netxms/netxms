@@ -24,7 +24,7 @@ AIRESPACE-REF-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
      MODULE-IDENTITY,
-     enterprises                 
+     enterprises
          FROM SNMPv2-SMI;
 
 
@@ -48,5 +48,5 @@ airespace MODULE-IDENTITY
                    "Initial version of this MIB module."
 
         ::= { enterprises 14179 }  -- assigned by IANA
-    
+
 END

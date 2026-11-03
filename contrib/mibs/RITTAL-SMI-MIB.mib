@@ -21,7 +21,7 @@
 RITTAL-SMI-MIB DEFINITIONS ::= BEGIN
 
     IMPORTS
-        enterprises,     
+        enterprises,
         MODULE-IDENTITY
     FROM                    SNMPv2-SMI;
 
@@ -38,9 +38,9 @@ rittal  MODULE-IDENTITY
 
                             +49(0)2772 5050
                             info@rittal.de"
-        DESCRIPTION        "The Structure of Management Information Base for the Rittal enterprise."                              
-        REVISION           "201104010000Z"                                     
-        DESCRIPTION        "Initial version of this MIB module."                   
-        ::=                { enterprises 2606 }  -- assigned by IANA                     
+        DESCRIPTION        "The Structure of Management Information Base for the Rittal enterprise."
+        REVISION           "201104010000Z"
+        DESCRIPTION        "Initial version of this MIB module."
+        ::=                { enterprises 2606 }  -- assigned by IANA
 
 END

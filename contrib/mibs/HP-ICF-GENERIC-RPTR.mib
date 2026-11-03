@@ -22,12 +22,12 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
                      Roseville, CA 95747"
             DESCRIPTION
                     "This MIB module contains object definitions that
-                    are common to all repeater devices in the HP 
-                    Integrated Communication Facility product 
+                    are common to all repeater devices in the HP
+                    Integrated Communication Facility product
                     line."
 
             REVISION     "200306092237Z"  -- June 9, 2003
-            DESCRIPTION  "Added learnLimitedContinuous mode to 
+            DESCRIPTION  "Added learnLimitedContinuous mode to
                           hpSecPtLearnMode."
 
             REVISION     "200011030717Z"  -- November 3, 2000
@@ -571,7 +571,7 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
                            learnFirstNConditionally to a GET operation
                            after it has been set to this value.
                        learnFirstNConditionally.  This option will
-                           initiate learning of up to N new authorized  
+                           initiate learning of up to N new authorized
                            addresses only if the previous hpSecPtLearnMode
                            was not set to learnFirstN or learnFirstN-
                            Conditionally.  N is configured in
@@ -586,7 +586,7 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
                            those configured, constitutes an intrusion.
                            See hpSecPtAlarmEnable for possible responses.
                        learn8021xAuthorized.  The port will learn only MAC
-                           address of a client authorized by 802.1X 
+                           address of a client authorized by 802.1X
                            authenticator.
                        learnLimitedContinuous.  First N source MAC addresses
                            heard on this port become the authorized addresses.
@@ -598,7 +598,7 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
                            constitutes an intrusion.   See hpSecPtAlarmEnable
                            for possible responses.  The authorized addresses in
                            this mode will age out of the system, therefore the
-                           list of authorized addresses can be dynamic over 
+                           list of authorized addresses can be dynamic over
                            time."
            ::= { hpSecurePortEntry 4 }
 
@@ -746,13 +746,13 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
                    "Table containing the authorized addresses for
                    each port.  An authorized address is an address
                    learned while the hpSecPtLearnMode for the port
-                   is set to learnContinuous, learnFirstN, 
-                   learnLimitedContinuous, or learnFirstNConditionally;  
-                   or an address in the hpSecureCfgAddrTable when the 
+                   is set to learnContinuous, learnFirstN,
+                   learnLimitedContinuous, or learnFirstNConditionally;
+                   or an address in the hpSecureCfgAddrTable when the
                    hpSecPtLearnMode for the port is set to configureSpecific.
                    On a switch, for ports whose hpSecPtLearnMode
-                   is set to learnContinuous or learnLimitedContinuous, 
-                   this table may return MAC address information based 
+                   is set to learnContinuous or learnLimitedContinuous,
+                   this table may return MAC address information based
                    on the switch's 802.1d forwarding database."
            ::= { hubSecurity 5 }
 
@@ -1028,7 +1028,7 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
                    off).  A value of one is generally not recommended
                    and will cause the backup link to be enabled upon
                    the first failure."
-           DEFVAL     { 2 } 
+           DEFVAL     { 2 }
            ::= { hpicfBackupLinkEntry 8 }
 
        hpicfBackupLinkState OBJECT-TYPE
@@ -1049,7 +1049,7 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
                        usingPrimary - backup link is running and using
                                       the primary port
                        usingBackup  - backup link test has failed; the
-                                      primary port has been disabled 
+                                      primary port has been disabled
                                       and the backup port has been
                                       enabled"
            ::= { hpicfBackupLinkEntry 9 }
@@ -1095,7 +1095,7 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
 
        -- The generic repeater port mapping group
 
-       hpGRpPortMapping 
+       hpGRpPortMapping
            OBJECT IDENTIFIER ::= { hpicfGenericRepeater 3 }
 
        hpGRpPMSegmentTable OBJECT-TYPE
@@ -1658,7 +1658,7 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
                    "The hpicfIntrusionTrap signifies that a port
                    security violation has been detected on a port which
                    has the hubSecPtAlarmEnable flag set to 'enabled'.
-                   or hpSecPtrIntrusionResponse set to 'SendTrap' 
+                   or hpSecPtrIntrusionResponse set to 'SendTrap'
                    or 'SendTrapAndDisablePort'.
                    hubIntruderGroup identifies the group containing the
                    port on which this intrusion occurred.
@@ -1887,7 +1887,7 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
                GROUP      hpicfGenRptrInfoGroup
                DESCRIPTION
                        "This group should be implemented for devices
-                       that support multiple repeater segments 
+                       that support multiple repeater segments
                        running at the same speed."
 
                GROUP      hpicfGenRptrSecPtGroup
@@ -2175,4 +2175,3 @@ HP-ICF-GENERIC-RPTR DEFINITIONS ::= BEGIN
            ::= { hpicfGenRptrGroups 13 }
 
        END
-

@@ -1,9 +1,9 @@
 -- *****************************************************************
 -- CISCO-ENTITY-DIAG-CAPABILITY.my:
 -- Cisco CISCO-ENTITY-DIAG-MIB AGENT-CAPABILITIES
---   
+--
 -- January 2007, Jayakumar Kadirvelu
---   
+--
 -- Copyright (c) 2007-2010 by Cisco Systems Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -62,8 +62,8 @@ ciscoEntityDiagCapability MODULE-IDENTITY
 
 
 ceDiagCapCatOSV08R0601Cat6K AGENT-CAPABILITIES
-    PRODUCT-RELEASE "Cisco CatOS 8.6(1) on Catalyst 6000/6500 series 
-                     devices with Supervisor 720 or Supervisor 32 
+    PRODUCT-RELEASE "Cisco CatOS 8.6(1) on Catalyst 6000/6500 series
+                     devices with Supervisor 720 or Supervisor 32
                      present."
     STATUS          current
     DESCRIPTION
@@ -286,7 +286,7 @@ ceDiagCapV12R0233SXIPCat6K AGENT-CAPABILITIES
     ::= { ciscoEntityDiagCapability 3 }
 
 ceDiagCapV12R0252SGPCat4K AGENT-CAPABILITIES
-    PRODUCT-RELEASE "Cisco IOS 12.2(52)SG on CAT4K family 
+    PRODUCT-RELEASE "Cisco IOS 12.2(52)SG on CAT4K family
                     switches."
     STATUS          current
     DESCRIPTION
@@ -520,6 +520,3 @@ ceDiagCapV12R0250SYPCat6K AGENT-CAPABILITIES
     ::= { ciscoEntityDiagCapability 6 }
 
 END
-
-
-

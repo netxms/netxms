@@ -1,7 +1,7 @@
 SAVEPOWER-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, Unsigned32 
+    MODULE-IDENTITY, OBJECT-TYPE, Unsigned32
         FROM SNMPv2-SMI
 
     MODULE-COMPLIANCE, OBJECT-GROUP
@@ -33,11 +33,11 @@ hpicfSavepowerLEDScalars OBJECT IDENTIFIER ::= { hpicfSavepowerScalars 3 }
 --  SAVEPOWER MIB Textual Conventions
 -- ********************************************************************
 SavepowerBlockIndex ::= TEXTUAL-CONVENTION
-    DISPLAY-HINT "d"   
+    DISPLAY-HINT "d"
     STATUS       current
-    DESCRIPTION  "A unique value that serves as an index to identify the 
-                  Power block ID that controls power distribution to a 
-                  group of ports associated with the block-id." 
+    DESCRIPTION  "A unique value that serves as an index to identify the
+                  Power block ID that controls power distribution to a
+                  group of ports associated with the block-id."
     SYNTAX       Unsigned32
 
 SavepowerControl ::= TEXTUAL-CONVENTION
@@ -50,13 +50,13 @@ SavepowerControl ::= TEXTUAL-CONVENTION
        powerOn(1),
        powerOff(2)
     }
-      
+
 -- ********************************************************************
 -- Savepower Scalars
 -- ********************************************************************
-      
+
       hpicfSavepowerMaxBlocks   OBJECT-TYPE
-      SYNTAX        Unsigned32 
+      SYNTAX        Unsigned32
       MAX-ACCESS    read-only
       STATUS        current
       DESCRIPTION   "The maximum number of Power blocks in the switch which
@@ -66,12 +66,12 @@ SavepowerControl ::= TEXTUAL-CONVENTION
       ::= { hpicfSavepowerScalars 1 }
 
       hpicfSavepowerEnabledPorts   OBJECT-TYPE
-      SYNTAX        Unsigned32 
+      SYNTAX        Unsigned32
       MAX-ACCESS    read-only
       STATUS        current
       DESCRIPTION   "This indicates the total number of ports in the switch
                      that are powered off."
-      DEFVAL         { 0 } 
+      DEFVAL         { 0 }
       ::= { hpicfSavepowerScalars 2 }
 
       hpicfSavePowerLEDOffAlarmStartTime OBJECT-TYPE
@@ -101,7 +101,7 @@ SavepowerControl ::= TEXTUAL-CONVENTION
 
 
 -- ********************************************************************
--- SAVEPOWER TABLE entry 
+-- SAVEPOWER TABLE entry
 -- ********************************************************************
 
 hpicfEntitySavepower  OBJECT IDENTIFIER ::= { hpicfSavepowerMIB 2 }
@@ -124,7 +124,7 @@ hpicfSavepowerEntry   OBJECT-TYPE
 
 HpicfSavepowerEntry ::= SEQUENCE {
       hpicfSavepowerBlockID     SavepowerBlockIndex,
-      hpicfSavepowerControl     SavepowerControl, 
+      hpicfSavepowerControl     SavepowerControl,
       hpicfSavepowerBlockPorts  DisplayString
 }
 
@@ -137,7 +137,7 @@ hpicfSavepowerBlockID    OBJECT-TYPE
     ::= { hpicfSavepowerEntry 1 }
 
 hpicfSavepowerControl OBJECT-TYPE
-    SYNTAX       SavepowerControl 
+    SYNTAX       SavepowerControl
     MAX-ACCESS   read-write
     STATUS       current
     DESCRIPTION  "This indicates if the power to the block is powerOn (1)
@@ -148,7 +148,7 @@ hpicfSavepowerBlockPorts OBJECT-TYPE
     SYNTAX       DisplayString
     MAX-ACCESS   read-only
     STATUS       current
-    DESCRIPTION  "This indicates the port-range associated to the 
+    DESCRIPTION  "This indicates the port-range associated to the
                   hpisfSavepowerBlockID."
     ::= { hpicfSavepowerEntry 3 }
 
@@ -176,7 +176,7 @@ hpicfSavepowerGreenFeaturesEntry   OBJECT-TYPE
 HpicfSavepowerGreenFeaturesEntry ::= SEQUENCE {
       hpicfSavepowerEntityPowerAdminStatus	TruthValue,
       hpicfSavepowerEntityPowerOperStatus	SavepowerControl,
-      hpicfSavepowerEntityLEDAdminStatus	TruthValue,   
+      hpicfSavepowerEntityLEDAdminStatus	TruthValue,
       hpicfSavepowerEntityLEDOperStatus		SavepowerControl
       }
 
@@ -284,7 +284,7 @@ hpicfSavepowerPHYOperStatus OBJECT-TYPE
 -- ********************************************************************
    hpicfSavepowerComplianceInfo MODULE-COMPLIANCE
       STATUS       current
-      DESCRIPTION  "The compliance statement for entries which implement 
+      DESCRIPTION  "The compliance statement for entries which implement
                     the SAVEPOWER MIB."
       MODULE        -- This module
       MANDATORY-GROUPS
@@ -297,7 +297,7 @@ hpicfSavepowerPHYOperStatus OBJECT-TYPE
       }
       GROUP        hpicfSavepowerGroup
       DESCRIPTION  "Objects associated with switch entity SAVEPOWER."
-      ::= { hpicfSavepowerCompliance 1 } 
+      ::= { hpicfSavepowerCompliance 1 }
 
 --
 -- SAVEPOWER Groups

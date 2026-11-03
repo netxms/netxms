@@ -20,7 +20,7 @@
 --
 -- Version 1.01, 2008/12/16, Hans Song
 -- [Modification]
--- [1]Modify the swBpduProtectionTrapLogMode to swBpduProtectionTrapMode and swBpduProtectionLogMode . 
+-- [1]Modify the swBpduProtectionTrapLogMode to swBpduProtectionTrapMode and swBpduProtectionLogMode .
 --
 -- Version 1.00, 2008/12/03, Hans Song
 -- This is the first formal version for universal MIB definition.
@@ -31,7 +31,7 @@ BPDU-PROTECTION-MIB DEFINITIONS ::= BEGIN
      IMPORTS
          MODULE-IDENTITY, OBJECT-TYPE     FROM SNMPv2-SMI
          dlink-common-mgmt                FROM DLINK-ID-REC-MIB;
-         
+
     swBpduProtectionMIB MODULE-IDENTITY
 	    LAST-UPDATED "0812160000Z"
 	    ORGANIZATION "D-Link Corp."
@@ -46,7 +46,7 @@ BPDU-PROTECTION-MIB DEFINITIONS ::= BEGIN
 
 	swBpduProtectionCtrl           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 1 }
 	swBpduProtectionInfo           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 2 }
-  	swBpduProtectionMgmt           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 3 }   
+  	swBpduProtectionMgmt           OBJECT IDENTIFIER ::= { swBpduProtectionMIB 3 }
     	swBpduProtectionNotify         OBJECT IDENTIFIER ::= { swBpduProtectionMIB 4 }
 
 -- -----------------------------------------------------------------------------
@@ -184,15 +184,15 @@ BPDU-PROTECTION-MIB DEFINITIONS ::= BEGIN
 -- swBpduProtectionNotify        OBJECT IDENTIFIER ::= { swBpduProtectionMIB 4 }
 -- -----------------------------------------------------------------------------
 	swBpduProtectionNotifyPrefix   OBJECT IDENTIFIER ::= { swBpduProtectionNotify 0 }
-	
+
         swBpduProtectionUnderAttackingTrap NOTIFICATION-TYPE
         OBJECTS         {
-        			swBpduProtectionPortIndex,  
+        			swBpduProtectionPortIndex,
 				swBpduProtectionPortMode
 	        	}
         STATUS  current
         DESCRIPTION
-            "When the BPDU Protection trap is enabled, if the specific port changes from a 
+            "When the BPDU Protection trap is enabled, if the specific port changes from a
              normal state to an under attack state, a trap will be sent out."
         ::= { swBpduProtectionNotifyPrefix 1 }
 
@@ -203,11 +203,11 @@ BPDU-PROTECTION-MIB DEFINITIONS ::= BEGIN
                         }
         STATUS  current
         DESCRIPTION
-            "When the BPDU Protection trap is enabled, if the specific port changes from an 
+            "When the BPDU Protection trap is enabled, if the specific port changes from an
              under attack state to a normal state, a trap will be sent out."
         ::= { swBpduProtectionNotifyPrefix 2 }
-        
-        
+
+
 	swBpduProtectionNotificationBidings   OBJECT IDENTIFIER ::= { swBpduProtectionNotify 2 }
 
     	swBpduProtectionRecoveryMethod OBJECT-TYPE

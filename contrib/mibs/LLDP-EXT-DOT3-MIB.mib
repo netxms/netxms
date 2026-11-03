@@ -7,7 +7,7 @@ IMPORTS
         FROM SNMPv2-TC
     MODULE-COMPLIANCE, OBJECT-GROUP
         FROM SNMPv2-CONF
-    lldpExtensions, lldpLocPortNum, 
+    lldpExtensions, lldpLocPortNum,
     lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex,
     lldpPortConfigEntry
         FROM LLDP-MIB;
@@ -15,13 +15,13 @@ IMPORTS
 lldpXdot3MIB MODULE-IDENTITY
     LAST-UPDATED "200505060000Z" -- May 06, 2005
     ORGANIZATION "IEEE 802.1 Working Group"
-    CONTACT-INFO 
+    CONTACT-INFO
             "  WG-URL: http://grouper.ieee.org/groups/802/1/index.html
              WG-EMail: stds-802-1@ieee.org
 
               Contact: Paul Congdon
                Postal: Hewlett-Packard Company
-                       8000 Foothills Blvd. 
+                       8000 Foothills Blvd.
                        Roseville, CA 95747
                        USA
                   Tel: +1-916-785-5753
@@ -42,7 +42,7 @@ lldpXdot3MIB MODULE-IDENTITY
     DESCRIPTION
             "Published as part of IEEE Std 802.1AB-2005 initial version."
 -- OUI for IEEE 802.3 is 4623 (00-12-0F)
-   ::= { lldpExtensions 4623 } 
+   ::= { lldpExtensions 4623 }
 
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ LldpLinkAggStatusMap ::= TEXTUAL-CONVENTION
             "This TC describes the link aggregation status.
 
             The bit 'aggCapable(0)' indicates the link is capable of being
-            aggregated. 
+            aggregated.
 
             The bit 'aggEnabled(1)' indicates the link is currently in
             aggregation."
@@ -94,7 +94,7 @@ lldpXdot3PortConfigTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-            "A table that controls selection of LLDP TLVs to be transmitted 
+            "A table that controls selection of LLDP TLVs to be transmitted
             on individual ports."
     ::= { lldpXdot3Config 1 }
 
@@ -157,14 +157,14 @@ lldpXdot3PortConfigTLVsTxEnable  OBJECT-TYPE
 
             The value of this object must be restored from non-volatile
             storage after a re-initialization of the management system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 10.2.1.1"
     DEFVAL  { { } }
     ::= { lldpXdot3PortConfigEntry  1 }
 
 
 ------------------------------------------------------------------------------
--- IEEE 802.3 - Local Device Information 
+-- IEEE 802.3 - Local Device Information
 ------------------------------------------------------------------------------
 ---
 --- lldpXdot3LocPortTable: Ethernet Port AutoNeg/Speed/Duplex
@@ -195,7 +195,7 @@ LldpXdot3LocPortEntry ::= SEQUENCE {
               lldpXdot3LocPortAutoNegEnabled       TruthValue,
               lldpXdot3LocPortAutoNegAdvertisedCap OCTET STRING,
               lldpXdot3LocPortOperMauType          Integer32
-} 
+}
 
 lldpXdot3LocPortAutoNegSupported OBJECT-TYPE
     SYNTAX      TruthValue
@@ -204,7 +204,7 @@ lldpXdot3LocPortAutoNegSupported OBJECT-TYPE
     DESCRIPTION
             "The truth value used to indicate whether the given port
             (associated with the local system) supports Auto-negotiation."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.2.1"
     ::= { lldpXdot3LocPortEntry 1 }
 
@@ -216,7 +216,7 @@ lldpXdot3LocPortAutoNegEnabled  OBJECT-TYPE
             "The truth value used to indicate whether port
             Auto-negotiation is enabled on the given port associated
             with the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.2.1"
     ::= { lldpXdot3LocPortEntry 2 }
 
@@ -229,7 +229,7 @@ lldpXdot3LocPortAutoNegAdvertisedCap OBJECT-TYPE
             ifMauAutoNegCapAdvertisedBits object (defined in IETF RFC
             3636) which is associated with the given port on the
             local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.2.2"
     ::= { lldpXdot3LocPortEntry 3 }
 
@@ -242,16 +242,16 @@ lldpXdot3LocPortOperMauType  OBJECT-TYPE
             of the given port on the local system.
 
             This object contains the integer value derived from the
-            list position of the corresponding dot3MauType as listed 
+            list position of the corresponding dot3MauType as listed
             in IETF RFC 3636 (or subsequent revisions) and is equal
             to the last number in the respective dot3MauType OID.
-           
+
             For example, if the ifMauType object is dot3MauType1000BaseTHD
             which corresponds to {dot3MauType 29}, the numerical value of
             this field will be 29. For MAU types not listed in RFC 3636
             (or subsequent revisions), the value of this field shall be
             set to zero."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.2.3"
     ::= { lldpXdot3LocPortEntry 4 }
 
@@ -265,7 +265,7 @@ lldpXdot3LocPowerTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-            "This table contains one row per port of power ethernet 
+            "This table contains one row per port of power ethernet
             information (as a part of the LLDP 802.3 organizational
             extension) on the local system known to this agent."
     ::= { lldpXdot3LocalData 2 }
@@ -286,7 +286,7 @@ LldpXdot3LocPowerEntry ::= SEQUENCE {
               lldpXdot3LocPowerPairControlable     TruthValue,
               lldpXdot3LocPowerPairs               Integer32,
               lldpXdot3LocPowerClass               Integer32
-} 
+}
 
 lldpXdot3LocPowerPortClass  OBJECT-TYPE
     SYNTAX      LldpPowerPortClass
@@ -295,7 +295,7 @@ lldpXdot3LocPowerPortClass  OBJECT-TYPE
     DESCRIPTION
             "The value that identifies the port Class of the given port
             associated with the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.1"
     ::= { lldpXdot3LocPowerEntry 1 }
 
@@ -306,7 +306,7 @@ lldpXdot3LocPowerMDISupported  OBJECT-TYPE
     DESCRIPTION
             "The truth value used to indicate whether the MDI power is
             supported on the given port associated with the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.1"
     ::= { lldpXdot3LocPowerEntry 2 }
 
@@ -317,7 +317,7 @@ lldpXdot3LocPowerMDIEnabled  OBJECT-TYPE
     DESCRIPTION
             "The truth value used to identify whether MDI power is
             enabled on the given port associated with the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.1"
     ::= { lldpXdot3LocPowerEntry 3 }
 
@@ -331,7 +331,7 @@ lldpXdot3LocPowerPairControlable  OBJECT-TYPE
             RFC 3621) and is used to indicate whether the pair selection
             can be controlled on the given port associated with the
             local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.1"
     ::= { lldpXdot3LocPowerEntry 4 }
 
@@ -343,7 +343,7 @@ lldpXdot3LocPowerPairs  OBJECT-TYPE
             "This object contains the value of the pethPsePortPowerPairs
             object (defined in IETF RFC 3621) which is associated with
             the given port on the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.2"
     ::= { lldpXdot3LocPowerEntry 5 }
 
@@ -356,7 +356,7 @@ lldpXdot3LocPowerClass  OBJECT-TYPE
             pethPsePortPowerClassifications object (defined in IETF
             RFC 3621) which is associated with the given port on the
             local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.3"
     ::= { lldpXdot3LocPowerEntry 6 }
 
@@ -370,7 +370,7 @@ lldpXdot3LocLinkAggTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-            "This table contains one row per port of link aggregation 
+            "This table contains one row per port of link aggregation
             information (as a part of the LLDP 802.3 organizational
             extension) on the local system known to this agent."
     ::= { lldpXdot3LocalData 3 }
@@ -388,7 +388,7 @@ lldpXdot3LocLinkAggEntry OBJECT-TYPE
 LldpXdot3LocLinkAggEntry ::= SEQUENCE {
               lldpXdot3LocLinkAggStatus       LldpLinkAggStatusMap,
               lldpXdot3LocLinkAggPortId       Integer32
-} 
+}
 
 lldpXdot3LocLinkAggStatus OBJECT-TYPE
     SYNTAX      LldpLinkAggStatusMap
@@ -397,7 +397,7 @@ lldpXdot3LocLinkAggStatus OBJECT-TYPE
     DESCRIPTION
             "The bitmap value contains the link aggregation capabilities
             and the current aggregation status of the link."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.4.1"
     ::= { lldpXdot3LocLinkAggEntry 1 }
 
@@ -414,13 +414,13 @@ lldpXdot3LocLinkAggPortId OBJECT-TYPE
             If the port is not in link aggregation state and/or it
             does not support link aggregation, this value should be set
             to zero."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.4.2"
     ::= { lldpXdot3LocLinkAggEntry 2 }
 
 ---
 ---
---- lldpXdot3LocMaxFrameSizeTable: Maximum Frame Size information 
+--- lldpXdot3LocMaxFrameSizeTable: Maximum Frame Size information
 ---
 ---
 lldpXdot3LocMaxFrameSizeTable  OBJECT-TYPE
@@ -428,7 +428,7 @@ lldpXdot3LocMaxFrameSizeTable  OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-            "This table contains one row per port of maximum frame 
+            "This table contains one row per port of maximum frame
             size information (as a part of the LLDP 802.3 organizational
             extension) on the local system known to this agent."
     ::= { lldpXdot3LocalData 4 }
@@ -445,16 +445,16 @@ lldpXdot3LocMaxFrameSizeEntry OBJECT-TYPE
 
 LldpXdot3LocMaxFrameSizeEntry ::= SEQUENCE {
               lldpXdot3LocMaxFrameSize   Integer32
-} 
+}
 
 lldpXdot3LocMaxFrameSize OBJECT-TYPE
     SYNTAX      Integer32(0..65535)
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "An integer value indicating the maximum supported frame 
+            "An integer value indicating the maximum supported frame
              size in octets on the given port of the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.5.1"
     ::= { lldpXdot3LocMaxFrameSizeEntry 1 }
 
@@ -493,7 +493,7 @@ LldpXdot3RemPortEntry ::= SEQUENCE {
               lldpXdot3RemPortAutoNegEnabled       TruthValue,
               lldpXdot3RemPortAutoNegAdvertisedCap OCTET STRING,
               lldpXdot3RemPortOperMauType          Integer32
-} 
+}
 
 lldpXdot3RemPortAutoNegSupported OBJECT-TYPE
     SYNTAX      TruthValue
@@ -502,7 +502,7 @@ lldpXdot3RemPortAutoNegSupported OBJECT-TYPE
     DESCRIPTION
             "The truth value used to indicate whether the given port
             (associated with remote system) supports Auto-negotiation."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.2.1"
     ::= { lldpXdot3RemPortEntry 1 }
 
@@ -514,7 +514,7 @@ lldpXdot3RemPortAutoNegEnabled  OBJECT-TYPE
             "The truth value used to indicate whether port
             Auto-negotiation is enabled on the given port associated
             with the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.2.1"
     ::= { lldpXdot3RemPortEntry 2 }
 
@@ -527,7 +527,7 @@ lldpXdot3RemPortAutoNegAdvertisedCap  OBJECT-TYPE
             ifMauAutoNegCapAdvertisedBits object (defined in IETF RFC
             3636) which is associated with the given port on the
             remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.2.2"
     ::= { lldpXdot3RemPortEntry 3 }
 
@@ -543,13 +543,13 @@ lldpXdot3RemPortOperMauType OBJECT-TYPE
             list position of the corresponding dot3MauType as listed in
             in IETF RFC 3636 (or subsequent revisions) and is equal
             to the last number in the respective dot3MauType OID.
-           
+
             For example, if the ifMauType object is dot3MauType1000BaseTHD
             which corresponds to {dot3MauType 29}, the numerical value of
             this field will be 29. For MAU types not listed in RFC 3636
             (or subsequent revisions), the value of this field shall be
             set to zero."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.2.3"
     ::= { lldpXdot3RemPortEntry 4 }
 
@@ -586,7 +586,7 @@ LldpXdot3RemPowerEntry ::= SEQUENCE {
               lldpXdot3RemPowerPairControlable     TruthValue,
               lldpXdot3RemPowerPairs               Integer32,
               lldpXdot3RemPowerClass               Integer32
-} 
+}
 
 lldpXdot3RemPowerPortClass  OBJECT-TYPE
     SYNTAX      LldpPowerPortClass
@@ -595,7 +595,7 @@ lldpXdot3RemPowerPortClass  OBJECT-TYPE
     DESCRIPTION
             "The value that identifies the port Class of the given port
             associated with the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.1"
     ::= { lldpXdot3RemPowerEntry 1 }
 
@@ -607,7 +607,7 @@ lldpXdot3RemPowerMDISupported  OBJECT-TYPE
             "The truth value used to indicate whether the MDI power
             is supported on the given port associated with the remote
             system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.1"
     ::= { lldpXdot3RemPowerEntry 2 }
 
@@ -618,7 +618,7 @@ lldpXdot3RemPowerMDIEnabled  OBJECT-TYPE
     DESCRIPTION
             "The truth value used to identify whether MDI power is
             enabled on the given port associated with the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.1"
     ::= { lldpXdot3RemPowerEntry 3 }
 
@@ -632,7 +632,7 @@ lldpXdot3RemPowerPairControlable  OBJECT-TYPE
             RFC 3621) and is used to indicate whether the pair selection
             can be controlled on the given port associated with the
             remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.1"
     ::= { lldpXdot3RemPowerEntry 4 }
 
@@ -644,7 +644,7 @@ lldpXdot3RemPowerPairs  OBJECT-TYPE
             "This object contains the value of the pethPsePortPowerPairs
             object (defined in IETF RFC 3621) which is associated with
             the given port on the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.2"
     ::= { lldpXdot3RemPowerEntry 5 }
 
@@ -657,7 +657,7 @@ lldpXdot3RemPowerClass  OBJECT-TYPE
             pethPsePortPowerClassifications object (defined in IETF
             RFC 3621) which is associated with the given port on the
             remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.3.3"
     ::= { lldpXdot3RemPowerEntry 6 }
 
@@ -691,7 +691,7 @@ lldpXdot3RemLinkAggEntry OBJECT-TYPE
 LldpXdot3RemLinkAggEntry ::= SEQUENCE {
               lldpXdot3RemLinkAggStatus       LldpLinkAggStatusMap,
               lldpXdot3RemLinkAggPortId       Integer32
-} 
+}
 
 lldpXdot3RemLinkAggStatus OBJECT-TYPE
     SYNTAX      LldpLinkAggStatusMap
@@ -700,7 +700,7 @@ lldpXdot3RemLinkAggStatus OBJECT-TYPE
     DESCRIPTION
             "The bitmap value contains the link aggregation capabilities
             and the current aggregation status of the link."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.4.1"
     ::= { lldpXdot3RemLinkAggEntry 1 }
 
@@ -717,14 +717,14 @@ lldpXdot3RemLinkAggPortId OBJECT-TYPE
             If the remote port is not in link aggregation state and/or
             it does not support link aggregation, this value should be
             zero."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.4.2"
     ::= { lldpXdot3RemLinkAggEntry 2 }
 
 
 ---
 ---
---- lldpXdot3RemMaxFrameSizeTable: Maximum Frame Size information 
+--- lldpXdot3RemMaxFrameSizeTable: Maximum Frame Size information
 ---
 ---
 lldpXdot3RemMaxFrameSizeTable  OBJECT-TYPE
@@ -732,7 +732,7 @@ lldpXdot3RemMaxFrameSizeTable  OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-            "This table contains one row per port of maximum frame 
+            "This table contains one row per port of maximum frame
             size information (as a part of the LLDP 802.3 organizational
             extension) of the remote system."
     ::= { lldpXdot3RemoteData 4 }
@@ -751,17 +751,17 @@ lldpXdot3RemMaxFrameSizeEntry OBJECT-TYPE
 
 LldpXdot3RemMaxFrameSizeEntry ::= SEQUENCE {
               lldpXdot3RemMaxFrameSize   Integer32
-} 
+}
 
 lldpXdot3RemMaxFrameSize OBJECT-TYPE
     SYNTAX      Integer32(0..65535)
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "An integer value indicating the maximum supported frame 
-             size in octets on the port component associated with the 
+            "An integer value indicating the maximum supported frame
+             size in octets on the port component associated with the
              remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2005 G.5.1"
     ::= { lldpXdot3RemMaxFrameSizeEntry 1 }
 
@@ -781,7 +781,7 @@ lldpXdot3Compliance MODULE-COMPLIANCE
             "The compliance statement for SNMP entities which implement
             the LLDP 802.3 organizational extension MIB."
     MODULE  -- this module
-        MANDATORY-GROUPS { lldpXdot3ConfigGroup, 
+        MANDATORY-GROUPS { lldpXdot3ConfigGroup,
                            lldpXdot3LocSysGroup,
                            lldpXdot3RemSysGroup
         }
@@ -798,7 +798,7 @@ lldpXdot3ConfigGroup    OBJECT-GROUP
             "The collection of objects which are used to configure the
             LLDP 802.3 organizational extension implementation behavior.
 
-            This group is mandatory for agents which implement the 
+            This group is mandatory for agents which implement the
             LLDP 802.3 organizational extension."
     ::= { lldpXdot3Groups 1 }
 
@@ -822,8 +822,8 @@ lldpXdot3LocSysGroup  OBJECT-GROUP
     DESCRIPTION
             "The collection of objects which are used to represent LLDP
             802.3 organizational extension Local Device Information.
-            
-            This group is mandatory for agents which implement the 
+
+            This group is mandatory for agents which implement the
             LLDP 802.3 organizational extension in the TX mode."
     ::= { lldpXdot3Groups 2 }
 
@@ -847,8 +847,8 @@ lldpXdot3RemSysGroup  OBJECT-GROUP
     DESCRIPTION
             "The collection of objects which are used to represent LLDP
             802.3 organizational extension Local Device Information.
-            
-            This group is mandatory for agents which implement the 
+
+            This group is mandatory for agents which implement the
             LLDP 802.3 organizational extension in the RX mode."
     ::= { lldpXdot3Groups 3 }
 

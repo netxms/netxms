@@ -1,11 +1,11 @@
 -- *********************************************************************
 -- CISCO-ENTITY-DIAG-TC-MIB.my
 -- List of Textual Conventions used in the CISCO-ENTITY-DIAG-MIB
---   
+--
 -- September 2006, Jayakumar Kadirvelu
---   
+--
 -- Copyright (c) 2006-2009 by Cisco Systems, Inc.
---   
+--
 -- All rights reserved.
 -- ********************************************************************
 
@@ -133,7 +133,7 @@ CeDiagPortList ::= TEXTUAL-CONVENTION
         "The entPhysicalTable contains conceptual rows representing
         ports, each having a value that uniquely identifies the port
         relative to its parent physical entity (example: the value of
-        entPhysicalParentRelPos or external labeling of port).  This 
+        entPhysicalParentRelPos or external labeling of port).  This
         MIB definition assumes that these values are relatively
         small integers.
 
@@ -258,19 +258,19 @@ CeDiagJobSuite ::= TEXTUAL-CONVENTION
                              specified.
 
         'complete'         - indicates that this job will run the
-                             complete tests on the physical 
+                             complete tests on the physical
                              entity.
 
         'minimal'          - indicates that this job will run the
-                             minimal tests on the physical 
+                             minimal tests on the physical
                              entity.
 
         'nonDisruptive'    - indicates that this job will run the
-                             nonDisruptive tests on the physical 
+                             nonDisruptive tests on the physical
                              entity.
 
         'perPort'          - indicates that this job will run the
-                             perPort tests on the physical 
+                             perPort tests on the physical
                              entity."
     SYNTAX          INTEGER  {
                         none(1),
@@ -281,6 +281,3 @@ CeDiagJobSuite ::= TEXTUAL-CONVENTION
                     }
 
 END
-
-
-

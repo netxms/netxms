@@ -15,7 +15,7 @@ netscreenSmiMibModule MODULE-IDENTITY
     CONTACT-INFO
         "Customer Support
 
-         1194 North Mathilda Avenue 
+         1194 North Mathilda Avenue
          Sunnyvale, California 94089-1206
          USA
 
@@ -88,5 +88,3 @@ netscreenSettingMibModule OBJECT IDENTIFIER ::= { netscreenSetting 0 }
 netscreenVpnMibModule OBJECT IDENTIFIER ::= { netscreenVpn 0 }
 
 END
-
-

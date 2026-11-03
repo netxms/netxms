@@ -6,7 +6,7 @@ IMPORTS
 	router
 		FROM FOUNDRY-SN-ROOT-MIB
 		;
-		
+
 snIgmp MODULE-IDENTITY
 	LAST-UPDATED "200909300000Z" -- September 30, 2009
 	ORGANIZATION "Foundry Networks, Inc"
@@ -27,18 +27,18 @@ snIgmp MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
-			operation, condition, or performance of the Specification.			
-			"            
+			operation, condition, or performance of the Specification.
+			"
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION
 			""
    ::= { router 6}
 
 
--- SECTION 2: MIB 
+-- SECTION 2: MIB
 
 -- IGMP MIB
 
@@ -57,7 +57,7 @@ snIgmpQueryInterval OBJECT-TYPE
 			to 'querier' before this object is writen.
 			Value 0 cannot be used for SET operations. This value
 			is returned if IGMP is not configured within the system.
-			For FI platform the configurable range for this object is 
+			For FI platform the configurable range for this object is
 			10 .. 3600"
 	DEFVAL     { 60 }
 	::= { snIgmpMIBObjects 1 }
@@ -74,7 +74,7 @@ snIgmpGroupMembershipTime OBJECT-TYPE
 			this object is writen.
 			Value 0 cannot be used for SET operations. This value
 			is returned if IGMP is not configured within the system.
-			For FI platform the configurable range for this object is 
+			For FI platform the configurable range for this object is
 			20 .. 7200"
 	DEFVAL     { 140 }
 	::= { snIgmpMIBObjects 2 }

@@ -31,9 +31,9 @@ agentTacacsClientMIB MODULE-IDENTITY
         "200705230000Z" -- 23 May 2007 12:00:00 GMT
     DESCRIPTION
         "Dell branding related changes."
-    REVISION 
+    REVISION
         "200508170044Z"  -- Wed Aug 17 00:44 GMT 2005
-    DESCRIPTION 
+    DESCRIPTION
         "Initial version of this MIB module."
 
     ::= { dnOS 18 }
@@ -45,8 +45,8 @@ agentTacacsClientMIB MODULE-IDENTITY
     agentTacacsClientObjects   OBJECT IDENTIFIER ::= { agentTacacsClientMIB 1 }
 
     --***********************************************************************
-    -- agentTacacsGlobalConfigGroup -> objects in this group are GlobalConfig 
-    -- of the TACACS client. 
+    -- agentTacacsGlobalConfigGroup -> objects in this group are GlobalConfig
+    -- of the TACACS client.
     --***********************************************************************
     agentTacacsGlobalConfigGroup          OBJECT IDENTIFIER
                          ::= { agentTacacsClientObjects 1 }
@@ -56,7 +56,7 @@ agentTacacsClientMIB MODULE-IDENTITY
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-        "The time-out in seconds for communication 
+        "The time-out in seconds for communication
          with  TACACS servers ."
     DEFVAL { 5 }
     ::= { agentTacacsGlobalConfigGroup 1 }
@@ -66,7 +66,7 @@ agentTacacsClientMIB MODULE-IDENTITY
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-        "The Encryption and Authentication key used in 
+        "The Encryption and Authentication key used in
          communication with  TACACS servers ."
     ::= { agentTacacsGlobalConfigGroup 2 }
 
@@ -104,7 +104,7 @@ agentTacacsClientMIB MODULE-IDENTITY
            agentTacacsServerIpAddrType
                 InetAddressType
        }
-   
+
     agentTacacsServerIpAddress OBJECT-TYPE
        SYNTAX      InetAddress
        MAX-ACCESS  not-accessible
@@ -127,12 +127,12 @@ agentTacacsClientMIB MODULE-IDENTITY
        MAX-ACCESS  read-write
        STATUS      current
        DESCRIPTION
-               "The time out value for the TACACS server. 
+               "The time out value for the TACACS server.
                If not set the value of agentTacacsGlobalTimeout will be used"
        ::= { agentTacacsServerEntry 3 }
 
     agentTacacsKey OBJECT-TYPE
-       SYNTAX      OCTET STRING (SIZE(0..128)) 
+       SYNTAX      OCTET STRING (SIZE(0..128))
        MAX-ACCESS  read-write
        STATUS      current
        DESCRIPTION
@@ -140,7 +140,7 @@ agentTacacsClientMIB MODULE-IDENTITY
        ::= { agentTacacsServerEntry 4 }
 
     agentTacacsPriority OBJECT-TYPE
-       SYNTAX      Unsigned32(0..65535) 
+       SYNTAX      Unsigned32(0..65535)
        MAX-ACCESS  read-write
        STATUS      current
        DESCRIPTION
@@ -149,7 +149,7 @@ agentTacacsClientMIB MODULE-IDENTITY
        ::= { agentTacacsServerEntry 5 }
 
     agentTacacsServerStatus OBJECT-TYPE
-       SYNTAX      RowStatus 
+       SYNTAX      RowStatus
        MAX-ACCESS  read-create
        STATUS      current
        DESCRIPTION
@@ -165,7 +165,7 @@ agentTacacsClientMIB MODULE-IDENTITY
        MAX-ACCESS  read-create
        STATUS      current
        DESCRIPTION
-               "The type of address of the TACACS server. 
+               "The type of address of the TACACS server.
                 IPv4 and DNS types are supported currently"
        ::= { agentTacacsServerEntry 7 }
 

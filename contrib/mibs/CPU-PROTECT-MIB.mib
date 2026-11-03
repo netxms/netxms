@@ -31,7 +31,7 @@ CPU-PROTECT-MIB DEFINITIONS ::= BEGIN
 
 	          MODULE-IDENTITY, OBJECT-TYPE
         			FROM SNMPv2-SMI
-	          TruthValue, RowStatus,DisplayString 
+	          TruthValue, RowStatus,DisplayString
 					FROM SNMPv2-TC
 	          MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
 	                FROM SNMPv2-CONF
@@ -63,7 +63,7 @@ CPU-PROTECT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates the CPU Protect state of the switch.Only 
+            "This object indicates the CPU Protect state of the switch.Only
 			enabled the feature, the rate limit for packets will be effective."
         ::= { swCPUProtectGlobalMgmt 1 }
 
@@ -77,7 +77,7 @@ CPU-PROTECT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "A table that holds the CPU Protected rate limit settings of the device."
         ::= { swCPUProtectMIB 2}
-		
+
 	swCPUProtectProtocolEntry OBJECT-TYPE
         SYNTAX  SwCPUProtectProtocolEntry
         MAX-ACCESS  not-accessible
@@ -87,7 +87,7 @@ CPU-PROTECT-MIB DEFINITIONS ::= BEGIN
         INDEX   { swCPUProtectProtocolType }
         ::= { swCPUProtectProtocolTable 1 }
 
-	SwCPUProtectProtocolEntry ::= 
+	SwCPUProtectProtocolEntry ::=
         SEQUENCE {
             swCPUProtectProtocolType
                 INTEGER,
@@ -114,14 +114,14 @@ CPU-PROTECT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS current
         DESCRIPTION
-            "The range for configuring rate-limit in packet per second (pps). A value of -1 
-			means no-limit and all packets of specified type will not be controlled. the default 
-			value is no-limit. The rate values are 0 to N. When 0 is set on the specified type, 
-			all packets of the specified type will be dropped.The value N means the maximum rate 
-			which is project dependent.If the specific packet that sends to the CPU exceeds the 
+            "The range for configuring rate-limit in packet per second (pps). A value of -1
+			means no-limit and all packets of specified type will not be controlled. the default
+			value is no-limit. The rate values are 0 to N. When 0 is set on the specified type,
+			all packets of the specified type will be dropped.The value N means the maximum rate
+			which is project dependent.If the specific packet that sends to the CPU exceeds the
 			above rate,it will be dropped."
-    ::= { swCPUProtectProtocolEntry 2 }  
-	
+    ::= { swCPUProtectProtocolEntry 2 }
+
 
 
 END

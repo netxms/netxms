@@ -396,7 +396,7 @@ ioIndex OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "A unique value, greater than zero, for each session."
-    ::= { ioEntry 1 } 
+    ::= { ioEntry 1 }
 
 ioSystemName OBJECT-TYPE
     SYNTAX      DisplayString
@@ -404,7 +404,7 @@ ioSystemName OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "The name of the I/O."
-    ::= { ioEntry 2 } 
+    ::= { ioEntry 2 }
 
 ioName OBJECT-TYPE
     SYNTAX      DisplayString
@@ -412,7 +412,7 @@ ioName OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "The name of the I/O, as displayed in WebUI."
-    ::= { ioEntry 3 } 
+    ::= { ioEntry 3 }
 
 ioType OBJECT-TYPE
     SYNTAX      DisplayString
@@ -420,7 +420,7 @@ ioType OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "A description of I/O type."
-    ::= { ioEntry 4 } 
+    ::= { ioEntry 4 }
 
 ioBidirectional OBJECT-TYPE
     SYNTAX      INTEGER
@@ -428,7 +428,7 @@ ioBidirectional OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "Is I/O bidirectional?"
-    ::= { ioEntry 5 } 
+    ::= { ioEntry 5 }
 
 ioState OBJECT-TYPE
     SYNTAX      DisplayString
@@ -436,7 +436,7 @@ ioState OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "State of I/O."
-    ::= { ioEntry 6 } 
+    ::= { ioEntry 6 }
 
 ioInput OBJECT-TYPE
     SYNTAX      INTEGER
@@ -444,7 +444,7 @@ ioInput OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "Is I/O an input?"
-    ::= { ioEntry 7 } 
+    ::= { ioEntry 7 }
 
 ioInverted OBJECT-TYPE
     SYNTAX      INTEGER
@@ -452,7 +452,7 @@ ioInverted OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "Is value of I/O inverted?"
-    ::= { ioEntry 8 } 
+    ::= { ioEntry 8 }
 
 ioCurrent OBJECT-TYPE
     SYNTAX      DisplayString
@@ -460,7 +460,7 @@ ioCurrent OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "Current amount flowing though ACL."
-    ::= { ioEntry 9 } 
+    ::= { ioEntry 9 }
 
 ioPercentage OBJECT-TYPE
     SYNTAX      DisplayString
@@ -468,7 +468,7 @@ ioPercentage OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "Percentage of ACL."
-    ::= { ioEntry 10 } 
+    ::= { ioEntry 10 }
 
 --
 -- Traps
@@ -499,4 +499,3 @@ digitalOutputNotification NOTIFICATION-TYPE
     ::= { ioNotifications 2 }
 
 END
-

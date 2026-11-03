@@ -360,7 +360,7 @@ MCAST-FILTER-MIB DEFINITIONS ::= BEGIN
         ::= { swMcastFilterPortMaxGroupEntry 1 }
 
     swMcastFilterPortMaxGroup OBJECT-TYPE
-        SYNTAX      INTEGER 
+        SYNTAX      INTEGER
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
@@ -388,7 +388,7 @@ swMcastFilterPortMaxGroupAction  OBJECT-TYPE
 		DESCRIPTION
 	      "The action for the group number is up to the max group."
 		::= { swMcastFilterPortMaxGroupEntry 4 }
-        
+
 -- -----------------------------------------------------------------------------
 -- swMcastFilterVLANGroupTable      OBJECT-TYPE ::= { swMcastFilterMgmt 6 }
 -- -----------------------------------------------------------------------------
@@ -444,7 +444,7 @@ swMcastFilterPortMaxGroupAction  OBJECT-TYPE
               "This object indicates the status of this entry."
         ::= { swMcastFilterVLANGroupEntry 3 }
 
-	
+
 
 -- -----------------------------------------------------------------------------
 -- swMcastFilterVLANAccessTable     OBJECT-TYPE ::= { swMcastFilterMgmt 7 }
@@ -523,7 +523,7 @@ swMcastFilterPortMaxGroupAction  OBJECT-TYPE
           swMcastFilterVLANCurrentCount
               INTEGER,
           swMcastFilterVLANMaxGroupAction
-              INTEGER 
+              INTEGER
         }
 
     swMcastFilterVLANMaxGroupVLANIndex OBJECT-TYPE
@@ -535,7 +535,7 @@ swMcastFilterPortMaxGroupAction  OBJECT-TYPE
         ::= { swMcastFilterVLANMaxGroupEntry 1 }
 
     swMcastFilterVLANMaxGroup OBJECT-TYPE
-        SYNTAX      INTEGER 
+        SYNTAX      INTEGER
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
@@ -552,7 +552,7 @@ swMcastFilterPortMaxGroupAction  OBJECT-TYPE
         DESCRIPTION
               "This object indicates the counter of registered groups
                within this VLAN."
-        ::= { swMcastFilterVLANMaxGroupEntry 3 }        
+        ::= { swMcastFilterVLANMaxGroupEntry 3 }
 
 	swMcastFilterVLANMaxGroupAction  OBJECT-TYPE
 		SYNTAX	INTEGER {
@@ -817,7 +817,7 @@ swMcastFilterPortMaxGroupAction  OBJECT-TYPE
               INTEGER,
           swMcastFilterIpv6PortCurrentCount
               INTEGER,
-		  swMcastFilterIpv6PortMaxGroupAction  
+		  swMcastFilterIpv6PortMaxGroupAction
 			  INTEGER
         }
 
@@ -830,7 +830,7 @@ swMcastFilterPortMaxGroupAction  OBJECT-TYPE
         ::= { swMcastFilterIpv6PortMaxGroupEntry 1 }
 
     swMcastFilterIpv6PortMaxGroup OBJECT-TYPE
-        SYNTAX      INTEGER 
+        SYNTAX      INTEGER
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
@@ -848,7 +848,7 @@ swMcastFilterPortMaxGroupAction  OBJECT-TYPE
               "This object indicates the counter of registered groups
                for this port."
         ::= { swMcastFilterIpv6PortMaxGroupEntry 3 }
- 
+
 swMcastFilterIpv6PortMaxGroupAction  OBJECT-TYPE
 		SYNTAX	INTEGER {
                drop(1),
@@ -992,7 +992,7 @@ swMcastFilterIpv6PortMaxGroupAction  OBJECT-TYPE
               INTEGER,
           swMcastFilterIpv6VLANCurrentCount
               INTEGER,
-swMcastFilterIpv6VLANMaxGroupAction  
+swMcastFilterIpv6VLANMaxGroupAction
 INTEGER
         }
 
@@ -1005,7 +1005,7 @@ INTEGER
         ::= { swMcastFilterIpv6VLANMaxGroupEntry 1 }
 
     swMcastFilterIpv6VLANMaxGroup OBJECT-TYPE
-        SYNTAX      INTEGER 
+        SYNTAX      INTEGER
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION

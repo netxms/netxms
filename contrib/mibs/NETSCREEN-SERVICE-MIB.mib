@@ -1,5 +1,5 @@
 -- This module defines enterprise MIBs for Services
--- 
+--
 -- Copyright (c) 1999-2004, Juniper Networks, Inc.
 -- All rights reserved.
 
@@ -21,7 +21,7 @@ netscreenServiceMibModule MODULE-IDENTITY
     CONTACT-INFO
         "Customer Support
 
-         1194 North Mathilda Avenue 
+         1194 North Mathilda Avenue
          Sunnyvale, California 94089-1206
          USA
 
@@ -311,5 +311,3 @@ nsServiceGroupMemberVsys OBJECT-TYPE
     ::= { nsServiceGrpMemberEntry 4 }
 
 END
-
-

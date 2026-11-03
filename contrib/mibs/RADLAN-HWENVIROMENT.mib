@@ -201,4 +201,3 @@ rlEnvMonSupplySource OBJECT-TYPE
         ::= { rlEnvMonSupplyStatusEntry 4 }
 
 END
-

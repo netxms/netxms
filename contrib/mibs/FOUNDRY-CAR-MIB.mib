@@ -31,52 +31,52 @@ snCAR MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
-			operation, condition, or performance of the Specification.			
-			"        
+			operation, condition, or performance of the Specification.
+			"
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION
 			"convert from SMIv1 to SMIv2"
-   ::= { snSwitch 16}	
+   ::= { snSwitch 16}
 snPortCARs	OBJECT IDENTIFIER ::= { snCAR 1 }
 
 	--  Textual Conventions
 
-	PacketSource::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
-		"
-		"
-	SYNTAX  INTEGER { 
-		input(0), --for inbound traffic
-		output(1) --for outbound traffic
-	}
-	
-
-	RateLimitType::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
-		"
-		"
-	SYNTAX   INTEGER{ 
-		all(3), 		--	all traffic.                             
-		quickAcc(2), 	--	traffic matches rate-limit's access list.
-		standardAcc(1) 	--	traffic matches standard access list.    
-	}
-
-	RateLimitAction::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	PacketSource::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"
 		"
 	SYNTAX  INTEGER {
-		continue(1), 
-		drop(2), 
+		input(0), --for inbound traffic
+		output(1) --for outbound traffic
+	}
+
+
+	RateLimitType::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
+		"
+		"
+	SYNTAX   INTEGER{
+		all(3), 		--	all traffic.
+		quickAcc(2), 	--	traffic matches rate-limit's access list.
+		standardAcc(1) 	--	traffic matches standard access list.
+	}
+
+	RateLimitAction::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
+		"
+		"
+	SYNTAX  INTEGER {
+		continue(1),
+		drop(2),
 		precedCont(3),
-		precedXmit(4), 
-		xmit(5) 
+		precedXmit(4),
+		xmit(5)
 	}
 
 
@@ -97,7 +97,7 @@ snPortCAREntry OBJECT-TYPE
 		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
-			"A collection of rate-limit configuration objects on this 
+			"A collection of rate-limit configuration objects on this
 		interface."
 		INDEX { snPortCARifIndex, snPortCARDirection, snPortCARRowIndex }
 		::= { snPortCARTable 1 }
@@ -136,7 +136,7 @@ SnPortCAREntry ::=
 						Gauge32
 	}
 snPortCARifIndex OBJECT-TYPE
-	SYNTAX     InterfaceIndex 
+	SYNTAX     InterfaceIndex
 	MAX-ACCESS     read-only
 	STATUS     current
 	DESCRIPTION
@@ -148,7 +148,7 @@ snPortCARDirection OBJECT-TYPE
 		MAX-ACCESS  read-only
 		STATUS  current
 		DESCRIPTION
-			"The input or output transmission direction for the 
+			"The input or output transmission direction for the
 				Rate Limit object.
 				input (0), --for inbound traffic
 				output(1) --for outbound traffic "
@@ -191,7 +191,7 @@ snPortCARRate OBJECT-TYPE
 		DESCRIPTION
 		"The comitted access rate. This determines the long term
 		average transmission rate. Traffic that falls under this
-		rate always conforms. This is average rate in bits per 
+		rate always conforms. This is average rate in bits per
 		second."
 
 	::= { snPortCAREntry 6 }
@@ -244,7 +244,7 @@ snPortCARExceedAction OBJECT-TYPE
 	STATUS	current
 	DESCRIPTION
 		"Action to be taken when the traffic exceeds
-		the Rate Limit.drop		
+		the Rate Limit.drop
 		drop the packet.
 		xmit		transmit the packet.
 		continue	continue to evaluate to the subsequent

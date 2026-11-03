@@ -23,10 +23,10 @@ IMPORTS
                                         FROM SNMPv2-TC
     fastPath,AgentPortMask              FROM EdgeSwitch-REF-MIB
     DisplayString,PhysAddress           FROM RFC1213-MIB
-    VlanId,VlanIndex,dot1qVlanIndex,dot1qFdbId 
+    VlanId,VlanIndex,dot1qVlanIndex,dot1qFdbId
                                         FROM Q-BRIDGE-MIB
     IANAifType                          FROM IANAifType-MIB
-    InterfaceIndex, ifIndex, InterfaceIndexOrZero             
+    InterfaceIndex, ifIndex, InterfaceIndexOrZero
                                         FROM IF-MIB
     InetAddressType, InetAddress        FROM INET-ADDRESS-MIB
     AgentLogSeverity                    FROM EdgeSwitch-LOGGING-MIB;
@@ -74,7 +74,7 @@ IMPORTS
           "201301070000Z" -- 07 Jan 2013 12:00:00 GMT
         DESCRIPTION
           "Added agentTransferDownloadDigitalSignatureVerifySelect in agentTransferDownloadGroup
-           Updated agentTransferDownloadDataType and added agentDigitalSignatureConfigGroup to 
+           Updated agentTransferDownloadDataType and added agentDigitalSignatureConfigGroup to
            configure image and script digital signature validation"
         REVISION
           "201301040000Z" -- 04 Jan 2013 12:00:00 GMT
@@ -411,7 +411,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
           agentTrapLogIndex
               Integer32,
           agentTrapLogSystemTime
-              DisplayString, 
+              DisplayString,
           agentTrapLogTrap
               DisplayString
           }
@@ -528,11 +528,11 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
       MAX-ACCESS    read-write
       STATUS        current
       DESCRIPTION
-                    "The CPU Rising utilization threshold in percentage. A zero percent 
-                    threshold indicates CPU Utilization Notification feature is disabled. 
-                    A notification is triggered when the total CPU utilization exceeds this 
-                    threshold over the configured Rising threshold interval. 
-                    If the Rising threshold is configured to be less than the Falling threshold, 
+                    "The CPU Rising utilization threshold in percentage. A zero percent
+                    threshold indicates CPU Utilization Notification feature is disabled.
+                    A notification is triggered when the total CPU utilization exceeds this
+                    threshold over the configured Rising threshold interval.
+                    If the Rising threshold is configured to be less than the Falling threshold,
                     the Falling threshold is set equal to the Rising threshold."
       DEFVAL { 0 }
       ::= { agentSwitchCpuProcessGroup 3 }
@@ -542,8 +542,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
       MAX-ACCESS    read-write
       STATUS        current
       DESCRIPTION
-                    "The CPU Rising threshold interval in seconds. 
-                    The time interval is configured in multiples of 5 seconds. 
+                    "The CPU Rising threshold interval in seconds.
+                    The time interval is configured in multiples of 5 seconds.
                     A zero Rising interval indicates CPU Utilization Notification feature is disabled."
       ::= { agentSwitchCpuProcessGroup 4 }
 
@@ -552,13 +552,13 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
       MAX-ACCESS    read-write
       STATUS        current
       DESCRIPTION
-                    "The CPU Falling utilization threshold in percentage. Configuration of this 
-                    object value is optional. Value '0' is not allowed for configuration, 
-                    if the Rising threshold is non-zero. If the Falling threshold is configured 
-                    to be greater than the Rising threshold, the Rising threshold is set equal 
-                    to the Falling threshold. If the Falling threshold is not configured, 
-                    it takes the same value as the Rising threshold. 
-                    A notification is triggered when the total CPU utilization 
+                    "The CPU Falling utilization threshold in percentage. Configuration of this
+                    object value is optional. Value '0' is not allowed for configuration,
+                    if the Rising threshold is non-zero. If the Falling threshold is configured
+                    to be greater than the Rising threshold, the Rising threshold is set equal
+                    to the Falling threshold. If the Falling threshold is not configured,
+                    it takes the same value as the Rising threshold.
+                    A notification is triggered when the total CPU utilization
                     falls below this threshold over the configured Falling threshold interval."
       DEFVAL { 0 }
       ::= { agentSwitchCpuProcessGroup 5 }
@@ -568,10 +568,10 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
       MAX-ACCESS    read-write
       STATUS        current
       DESCRIPTION
-                    "The CPU Falling threshold interval in seconds. Configuration of this object 
-                    value is optional. Value '0' is not allowed for configuration, 
-                    if the Rising interval is non-zero. If the Falling interval 
-                    is not configured, it takes the same value as the Rising interval. 
+                    "The CPU Falling threshold interval in seconds. Configuration of this object
+                    value is optional. Value '0' is not allowed for configuration,
+                    if the Rising interval is non-zero. If the Falling interval
+                    is not configured, it takes the same value as the Rising interval.
                     The time interval is configured in multiples of 5 seconds."
       ::= { agentSwitchCpuProcessGroup 6 }
 
@@ -580,9 +580,9 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
       MAX-ACCESS    read-write
       STATUS        current
       DESCRIPTION
-                    "The CPU Free Memory threshold in kilobytes. A zero threshold value 
-                    indicates the CPU Free Memory Notification feature is disabled. 
-                    Notifications are triggered when the CPU Free Memory falls below the 
+                    "The CPU Free Memory threshold in kilobytes. A zero threshold value
+                    indicates the CPU Free Memory Notification feature is disabled.
+                    Notifications are triggered when the CPU Free Memory falls below the
                     configured threshold and when it rises to 10% above the configured threshold."
       DEFVAL { 0 }
       ::= { agentSwitchCpuProcessGroup 7 }
@@ -643,7 +643,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "CPU utilization per task in Percentage over a period of 5, 60, 300 seconds, 
+                     "CPU utilization per task in Percentage over a period of 5, 60, 300 seconds,
                      and the Rising threshold period also in seconds, if configured."
          ::= { agentSwitchCpuProcessEntry 3 }
 
@@ -664,7 +664,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                    "Total CPU utilization over a period of 5, 60, 300 seconds, 
+                    "Total CPU utilization over a period of 5, 60, 300 seconds,
                     and the Rising threshold period also in seconds, if configured."
          ::= { agentSwitchCpuProcessGroup 9 }
 
@@ -678,7 +678,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
 
     --**********************************************************
     -- agentSwitchCpuCosQDropTable
-    -- 
+    --
     --**********************************************************
 
     agentSwitchCpuCosQDropTable OBJECT-TYPE
@@ -722,7 +722,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Number of packets dropped at this CPU CoS queue because 
+                     "Number of packets dropped at this CPU CoS queue because
                      the queue was full."
          ::= { agentSwitchCpuCosQDropEntry 2 }
 
@@ -734,7 +734,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
 
     --**********************************************************
     -- agentSwitchMbufTable
-    -- 
+    --
     --**********************************************************
 
     agentSwitchMbufsTotal OBJECT-TYPE
@@ -784,7 +784,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
           agentSwitchMbufPrio
               Unsigned32,
           agentSwitchMbufClassName
-              DisplayString, 
+              DisplayString,
           agentSwitchMbufAllocAttempts
               Counter32,
           agentSwitchMbufAllocFails
@@ -792,7 +792,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
           }
 
     agentSwitchMbufPrio OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -800,7 +800,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          ::= { agentSwitchMbufEntry 1 }
 
     agentSwitchMbufClassName OBJECT-TYPE
-         SYNTAX      DisplayString 
+         SYNTAX      DisplayString
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -812,7 +812,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Number of times the system tried to allocate a message 
+                     "Number of times the system tried to allocate a message
                      buffer allocation of this class."
          ::= { agentSwitchMbufEntry 3 }
 
@@ -821,7 +821,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Number of message buffer allocation failures for this 
+                     "Number of message buffer allocation failures for this
                      class of message buffer."
          ::= { agentSwitchMbufEntry 4 }
 
@@ -1023,7 +1023,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                      value for this object is 23.
 
                      Note that existing telnet login sessions are not affected by a change in value of
-                     this object, although establishment of any new telnet sessions must use the new 
+                     this object, although establishment of any new telnet sessions must use the new
                      port number."
          ::= { agentTelnetConfigGroup 4 }
 
@@ -1123,7 +1123,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                      suspended(3)
                   }
          MAX-ACCESS  read-write
-         STATUS      deprecated 
+         STATUS      deprecated
          DESCRIPTION
                      "Agent User Access Mode.
                       This object is deprecated in favor of agentUserAccessLevel."
@@ -1208,7 +1208,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
     agentUserAccessLevel OBJECT-TYPE
          SYNTAX      INTEGER (0..15)
          MAX-ACCESS  read-write
-         STATUS      current 
+         STATUS      current
          DESCRIPTION
                      "Agent User Access Level. Supported values are 0, 1 and 15."
          ::= { agentUserConfigEntry 11 }
@@ -1359,8 +1359,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          SYNTAX      Integer32 (0..16)
          MAX-ACCESS  read-write
          STATUS      current
-         DESCRIPTION "The number of minimum allowable uppercase letters in a 
-                      password. Minimum of 0 means no restriction on that set 
+         DESCRIPTION "The number of minimum allowable uppercase letters in a
+                      password. Minimum of 0 means no restriction on that set
                       of characters."
          ::= { agentPasswordManagementConfigGroup 6}
 
@@ -1369,8 +1369,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The number of minimum allowable lowercase letters in a 
-                      password. Minimum of 0 means no restriction on that set 
+                     "The number of minimum allowable lowercase letters in a
+                      password. Minimum of 0 means no restriction on that set
                       of characters."
 
          ::= { agentPasswordManagementConfigGroup 7}
@@ -1380,8 +1380,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The number of minimum allowable numeric numbers in a 
-                      password. Minimum of 0 means no restriction on that set 
+                     "The number of minimum allowable numeric numbers in a
+                      password. Minimum of 0 means no restriction on that set
                       of characters."
          ::= { agentPasswordManagementConfigGroup 8}
 
@@ -1390,8 +1390,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The number of minimum allowable special characters in a 
-                      password. Minimum of 0 means no restriction on that set 
+                     "The number of minimum allowable special characters in a
+                      password. Minimum of 0 means no restriction on that set
                       of characters."
          ::= { agentPasswordManagementConfigGroup 9}
 
@@ -1400,8 +1400,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The number of maximum consecutive characters can be 
-                      present in a password. Maximum of 0 means disabling the 
+                     "The number of maximum consecutive characters can be
+                      present in a password. Maximum of 0 means disabling the
                       restriction."
          ::= { agentPasswordManagementConfigGroup 10}
 
@@ -1410,8 +1410,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The number of maximum repeated characters can be present 
-                      in a password. Maximum of 0 means disabling the 
+                     "The number of maximum repeated characters can be present
+                      in a password. Maximum of 0 means disabling the
                       restriction."
 
          ::= { agentPasswordManagementConfigGroup 11}
@@ -1421,8 +1421,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          SYNTAX      Integer32 (0..4)
          MAX-ACCESS  read-write
          STATUS      current
-         DESCRIPTION "The number of minimum allowable character classes in a 
-                      password. Minimum of 0 means no restriction on that set 
+         DESCRIPTION "The number of minimum allowable character classes in a
+                      password. Minimum of 0 means no restriction on that set
                       of characters."
          ::= { agentPasswordManagementConfigGroup 12}
 
@@ -1441,7 +1441,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          STATUS      current
          DESCRIPTION "Represents Password strength restricted keywords from the configurable password."
          ::= { agentPasswordManagementConfigGroup 15}
-                                
+
     agentPasswordManagementStrengthExcludeKeywordEntry OBJECT-TYPE
          SYNTAX      AgentPasswordManagementStrengthExcludeKeywordEntry
          MAX-ACCESS  not-accessible
@@ -1449,7 +1449,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          DESCRIPTION "Represents Password strength restricted keywords from the configurable password."
          INDEX       { agentPasswordMgmtStrengthExcludeKeyword }
          ::= { agentPasswordManagementStrengthExcludeKeywordTable 1 }
- 
+
     AgentPasswordManagementStrengthExcludeKeywordEntry ::= SEQUENCE {
          agentPasswordMgmtStrengthExcludeKeyword        DisplayString,
          agentPasswordMgmtStrengthExcludeKeywordStatus  RowStatus
@@ -1560,7 +1560,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
         MAX-ACCESS        read-write
         STATUS            current
         DESCRIPTION
-                    "Banner message string.  To enter the banner message 
+                    "Banner message string.  To enter the banner message
                      in multiple lines, separate each line by '\r\n'.
                      The maximum printable characters is limited to 2000 characters."
         ::= { agentCLIBannerMsgConfigGroup 1 }
@@ -2846,7 +2846,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
            agentSnmpTrapReceiverAddressType
                INTEGER,
            agentSnmpTrapReceiverAddress
-               DisplayString, 
+               DisplayString,
            agentSnmpTrapReceiverIPAddress
                IpAddress,
            agentSnmpTrapReceiverStatus
@@ -2888,12 +2888,12 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          DESCRIPTION
                      "The type of the snmptrap reciever address.
 
-                     The agentSnmpTrapReceiverAddress object is intepreted within the 
+                     The agentSnmpTrapReceiverAddress object is intepreted within the
                      context of agentSnmpTrapReceiverAddressType"
          ::= { agentSnmpTrapReceiverConfigEntry 7 }
 
     agentSnmpTrapReceiverAddress OBJECT-TYPE
-         SYNTAX      DisplayString 
+         SYNTAX      DisplayString
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
@@ -2903,10 +2903,10 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                      agentSnmpTrapReceiverAddressType object.
                      The values for agentSnmpTrapReceiverAddressType and
                      agentSnmpTrapReceiverAddress must be consistent."
-         ::= { agentSnmpTrapReceiverConfigEntry 8 } 
+         ::= { agentSnmpTrapReceiverConfigEntry 8 }
 
     agentSnmpTrapReceiverIPAddress OBJECT-TYPE
-         SYNTAX      IpAddress 
+         SYNTAX      IpAddress
          MAX-ACCESS  read-write
          STATUS      obsolete
          DESCRIPTION
@@ -2962,7 +2962,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
     agentSnmpTrapReceiverIpv6Address OBJECT-TYPE
       SYNTAX      Ipv6AddressPrefix
       MAX-ACCESS  read-write
-        STATUS     obsolete 
+        STATUS     obsolete
         DESCRIPTION
                    "IPv6 Address  for SNMP receiver."
        ::= { agentSnmpTrapReceiverConfigEntry 6 }
@@ -3049,13 +3049,13 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
     --
     --**************************************************************************************
   agentSnmpTrapSourceInterface OBJECT-TYPE
-         SYNTAX      InterfaceIndexOrZero 
+         SYNTAX      InterfaceIndexOrZero
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-             "A source-interface selection on an Interface Index (like vlan based 
-              routing interface, port based routing interface, loopback interface, 
-              tunnel interface). A non-zero value indicates ifIndex for the 
+             "A source-interface selection on an Interface Index (like vlan based
+              routing interface, port based routing interface, loopback interface,
+              tunnel interface). A non-zero value indicates ifIndex for the
               corresponding interface entry in the ifTable is selected.
               A zero value indicates the source-interface un-selection."
          ::= { agentSnmpConfigGroup 6 }
@@ -3076,7 +3076,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                      value for this object is 161.
 
                      Note that changing the value of this object may cause existing SNMP transactions
-                     to cease communicating with the device until the client applications are 
+                     to cease communicating with the device until the client applications are
                      reconfigured to use the new port number."
          ::= { agentSnmpConfigGroup 7 }
 
@@ -3095,7 +3095,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  read-write
          STATUS      obsolete
          DESCRIPTION
-                     "The switch's Spanning Tree Switch Status. This functionality is now 
+                     "The switch's Spanning Tree Switch Status. This functionality is now
                      handled by agentStpAdminMode"
          ::= { agentSpanningTreeConfigGroup 1 }
 
@@ -3114,7 +3114,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          DESCRIPTION
                      "The address aging timeout.
 
-                      Specifies aging time in seconds (10 - 1000000) before a dynamic MAC address 
+                      Specifies aging time in seconds (10 - 1000000) before a dynamic MAC address
                       is erased from the Filtering Database. The default value is 300 seconds."
          DEFVAL { 300 }
          ::= { agentSwitchConfigGroup 3 }
@@ -3123,7 +3123,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  not-accessible
          STATUS      deprecated
          DESCRIPTION
-                     "The switch's address aging timeout table. This functionality is now 
+                     "The switch's address aging timeout table. This functionality is now
                       handled by agentSwitchFdbAddressAgingTimeout."
          ::= { agentSwitchConfigGroup 4 }
 
@@ -3375,7 +3375,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          STATUS        current
          DESCRIPTION
                        "An entry (conceptual row) in the agentSwitchSnoopSSMSrcListTable."
-         INDEX         { agentSwitchSnoopSSMSrcListAddressType, 
+         INDEX         { agentSwitchSnoopSSMSrcListAddressType,
                          agentSwitchSnoopSSMSrcListIfIndex, agentSwitchSnoopSSMSrcListVlanId,
                          agentSwitchSnoopSSMSrcListHostAddress, agentSwitchSnoopSSMSrcListAddress }
          ::= { agentSwitchSnoopSSMSrcListTable 1 }
@@ -4314,15 +4314,15 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
 
     agentSwitchDVlanTagGroup                      OBJECT IDENTIFIER ::= {    agentSwitchConfigGroup 11 }
 
-    agentSwitchDVlanTagEthertype OBJECT-TYPE         
-         SYNTAX      Integer32 (1..65535) -- 0x0001..0xFFFF         
-         MAX-ACCESS  read-write         
-         STATUS      current         
-         DESCRIPTION                     
+    agentSwitchDVlanTagEthertype OBJECT-TYPE
+         SYNTAX      Integer32 (1..65535) -- 0x0001..0xFFFF
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
          "Configures the Double Vlan Tag Ethertype for the switch.
-          If this object is supported, ethertype cannot be configured per port.                      
-          Commonly used are the Ethertypes for vman tags (34984, or 0x88A8)                      
-          and dot1q tags (33024, or 0x8100)."         
+          If this object is supported, ethertype cannot be configured per port.
+          Commonly used are the Ethertypes for vman tags (34984, or 0x88A8)
+          and dot1q tags (33024, or 0x8100)."
           ::= { agentSwitchDVlanTagGroup 1 }
 
     agentSwitchDVlanTagTable OBJECT-TYPE
@@ -4340,7 +4340,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          STATUS      current
          DESCRIPTION
          "A table entry specifying the ethertype (TPID) values.
-          Commonly used are the Ethertypes for vman tags (34984, or 0x88A8)                      
+          Commonly used are the Ethertypes for vman tags (34984, or 0x88A8)
           and dot1q tags (33024, or 0x8100)."
          INDEX        { agentSwitchDVlanTagTPid }
          ::= { agentSwitchDVlanTagTable 1 }
@@ -4369,13 +4369,13 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          STATUS      current
          DESCRIPTION
          "Specifies if this TPID is primary TPID for the switch or not.
-          As the system needs one TPID to be active all the time, setting 
+          As the system needs one TPID to be active all the time, setting
           the object to false doesn't modify/remove the entry. Adding another
           entry and setting it to true overwrites the previous primary TPID."
          ::= { agentSwitchDVlanTagEntry 2}
 
      agentSwitchDVlanTagRowStatus OBJECT-TYPE
-         SYNTAX      RowStatus 
+         SYNTAX      RowStatus
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
@@ -4400,7 +4400,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                         agentSwitchPortDVlanTagTPid
                       }
          ::= { agentSwitchPortDVlanTagTable 1 }
-        
+
     AgentSwitchPortDVlanTagEntry ::=
          SEQUENCE {
           agentSwitchPortDVlanTagInterfaceIfIndex     Integer32,
@@ -4446,7 +4446,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          ::= { agentSwitchPortDVlanTagEntry 4 }
 
      agentSwitchPortDVlanTagRowStatus OBJECT-TYPE
-         SYNTAX      RowStatus 
+         SYNTAX      RowStatus
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
@@ -4843,7 +4843,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                       a particular group in the interface participating in the vlan. This
                       object is valid only when agentSwitchSnoopingQuerierOperVersion object
                       is valid.
-                      (-1) - indicates that parameter is not available; 
+                      (-1) - indicates that parameter is not available;
                       ( 0) - indicates that response time is less then 1 second."
          ::= { agentSwitchSnoopingQuerierVlanEntry  6 }
 
@@ -5121,7 +5121,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          DESCRIPTION
                      "Transfer download mode configures the mode to use when downloading
                      to the switch. The mode is either X/Y/ZMODEM, TFTP, FTP, SFTP or SCP.
-                     X/Y/ZMODEM is valid only when the file transfer is initiated by 
+                     X/Y/ZMODEM is valid only when the file transfer is initiated by
                      the serial EIA 232 port.  SFTP and SCP
                      are only allowed if the SSH feature is present.
                      Download from USB is only allowed if the USB feature is present.
@@ -5221,8 +5221,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                      backup-config      - Backup Config File
                      factory-default-config   - Factory Default Config File
                      config-script      - Config Script File
-                     publickey-image    - Public key for image digital signature validation 
-                     publickey-script   - Public key for script digital signature validation 
+                     publickey-image    - Public key for image digital signature validation
+                     publickey-script   - Public key for script digital signature validation
 
                      Note: SSH Key files can only be downloaded if SSH Server is administratively
                      disabled, and there are no active SSH sessions.
@@ -5552,7 +5552,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          DESCRIPTION
                      "The VLAN that forwards the network traffic to the destination switch.
 
-                     NOTE: In order to set value for the object, need to set values for 
+                     NOTE: In order to set value for the object, need to set values for
                      agentPortMirrorRemoteDestinationVlan and agentPortMirrorReflectorPort
                      objects simultaneously."
          ::= { agentPortMirrorEntry 7 }
@@ -5564,7 +5564,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          DESCRIPTION
                      "The port which traffic from the mirrored ports will be sent to in case of destination being remote VLAN.
 
-                     NOTE: In order to set value for the object, need to set values for 
+                     NOTE: In order to set value for the object, need to set values for
                      agentPortMirrorRemoteDestinationVlan and agentPortMirrorReflectorPort
                      objects simultaneously."
          ::= { agentPortMirrorEntry 8 }
@@ -5634,7 +5634,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                      txrx(3)  - The data that is transmitted/received from/on the source port"
          DEFVAL { txrx }
          ::= { agentPortMirrorTypeEntry 2 }
-         
+
        agentPortMirrorRemoteVlan OBJECT-TYPE
          SYNTAX      Unsigned32
          MAX-ACCESS  read-write
@@ -5687,8 +5687,8 @@ agentPortMirrorTypeTable OBJECT-TYPE
                  "The status of this entry.
 
                  active(1)        - the VLAN is configured as a remote-span VLAN
-                 createAndGo(4)   - add the VLAN as a remote-span VLAN 
-                 destroy(6)       - remove the VLAN from the list of Remote-span VLAN. 
+                 createAndGo(4)   - add the VLAN as a remote-span VLAN
+                 destroy(6)       - remove the VLAN from the list of Remote-span VLAN.
 		                  RSPAN VLAN cannot be removed or changed while it is used with a Monitor session."
          ::= { agentPortMirrorRemoteVlanEntry 2 }
 
@@ -5754,7 +5754,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          DESCRIPTION
                      ""
          ::= { agentSwitchConfigGroup 37 }
-   
+
     agentSwitchportConfigEntry OBJECT-TYPE
          SYNTAX      AgentSwitchportConfigEntry
          MAX-ACCESS  not-accessible
@@ -5772,7 +5772,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
              agentSwitchportAccessVlanID
               VlanIndex,
              agentSwitchportTrunkNativeVlanID
-              VlanIndex, 
+              VlanIndex,
              agentSwitchportTrunkNativeVlanTagging
               INTEGER,
              agentSwitchportTrunkAllowedVlanList
@@ -5831,7 +5831,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Describes the Native VLAN tagging for the interface. 
+                     "Describes the Native VLAN tagging for the interface.
                       'disable' mean that packets marked with Native VLAN are transmitted untagged from Trunk port. "
          ::= { agentSwitchportConfigEntry 5 }
 
@@ -5842,7 +5842,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          STATUS      current
          DESCRIPTION
                      "Configures the allowed VLAN list of Trunk switch interface."
-         ::= { agentSwitchportConfigEntry 6 } 
+         ::= { agentSwitchportConfigEntry 6 }
 
     agentSwitchportGeneralUntaggedVlanList OBJECT-TYPE
          SYNTAX      VlanList
@@ -5859,7 +5859,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          DESCRIPTION
                      " Shows the allowed tagged VLAN list of general switch interface."
          ::= { agentSwitchportConfigEntry 8 }
-		 
+
     agentSwitchportGeneralForbiddenVlanList OBJECT-TYPE
          SYNTAX      VlanList
          MAX-ACCESS  read-only
@@ -5867,7 +5867,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          DESCRIPTION
                      "Shows the Forbidden VLAN list of general switch interface."
          ::= { agentSwitchportConfigEntry 9 }
-		 
+
     agentSwitchportGeneralDynamicallyAddedVlanList OBJECT-TYPE
          SYNTAX      VlanList
          MAX-ACCESS  read-only
@@ -5876,7 +5876,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                      "Shows the list of dynamically added VLANs for general switch interface."
          ::= { agentSwitchportConfigEntry 10 }
 
-    
+
     --**************************************************************************************
     -- agentPortConfigTable
     --
@@ -6031,7 +6031,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                       disabled(5)
                      }
          MAX-ACCESS  read-only
-         STATUS      obsolete 
+         STATUS      obsolete
          DESCRIPTION
                      "The switch's Port Spanning Tree Protocol State.
                       This object is only supported when the Dot1d Protocol is enabled."
@@ -6580,7 +6580,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                     disable(2)
                  }
          MAX-ACCESS  read-write
-         STATUS  obsolete 
+         STATUS  obsolete
          DESCRIPTION
                  "The status of the IP protocol association with the Protocol-based VLAN entry."
          ::= { agentProtocolGroupEntry 4 }
@@ -6698,12 +6698,12 @@ agentPortMirrorTypeTable OBJECT-TYPE
 
     agentProtocolGroupProtocolID OBJECT-TYPE
          SYNTAX  Integer32  (1536..65535)
-         MAX-ACCESS not-accessible 
+         MAX-ACCESS not-accessible
          STATUS  current
          DESCRIPTION
                  "The protocol ID of this instance. The value for IP is 2048 (0x0800), ARP is 2054 (0x0806) and IPX is 33079 (0x8137).
                   Other protocol Ids in the range 1536 to 65535 can also be configured."
-                  
+
          ::= { agentProtocolGroupProtocolEntry 1 }
 
     agentProtocolGroupProtocolStatus OBJECT-TYPE
@@ -7766,7 +7766,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          SYNTAX      INTEGER {
                      undefined(0),
                      enable(1),
-                     line(2),                   
+                     line(2),
                      local(3),
                      none(4),
                      radius(5),
@@ -7786,7 +7786,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          SYNTAX      INTEGER {
                      undefined(0),
                      enable(1),
-                     line(2),                   
+                     line(2),
                      local(3),
                      none(4),
                      radius(5),
@@ -7806,7 +7806,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          SYNTAX      INTEGER {
                      undefined(0),
                      enable(1),
-                     line(2),                   
+                     line(2),
                      local(3),
                      none(4),
                      radius(5),
@@ -7838,7 +7838,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          SYNTAX      INTEGER {
                      undefined(0),
                      enable(1),
-                     line(2),                   
+                     line(2),
                      local(3),
                      none(4),
                      radius(5),
@@ -8318,8 +8318,8 @@ agentPortMirrorTypeTable OBJECT-TYPE
                      port number is not currently being used by any other service. The default
                      value for this object is 80.
 
-                     Note that existing HTTP login sessions are closed whenever this object value 
-                     is changed. All new HTTP sessions must be established using the new 
+                     Note that existing HTTP login sessions are closed whenever this object value
+                     is changed. All new HTTP sessions must be established using the new
                      port number."
          ::= { agentHTTPConfigGroup 6 }
 
@@ -8395,7 +8395,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
 
 
 --**************************************************************************************
--- agentCmdsAuthorizationGroup -> Contains MIB objects to configure command authorization 
+-- agentCmdsAuthorizationGroup -> Contains MIB objects to configure command authorization
 --                                method lists
 --
 --**************************************************************************************
@@ -8411,7 +8411,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                        Command Authorization List for configuration.
                        List name must contain Alphanumeric characters including
                        '-', '_', ' '."
-                             
+
 
           ::= { agentCmdsAuthorizationGroup 1 }
 
@@ -8466,7 +8466,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          STATUS      current
          DESCRIPTION
                      " Command Authorization List Name
-                     Unique name used to identify the Command Authorization 
+                     Unique name used to identify the Command Authorization
                      List from other tables."
          ::= { agentCmdsAuthorizationListEntry 2 }
 
@@ -8494,7 +8494,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          STATUS      current
          DESCRIPTION
                      "Command Authorization List Method1
-                      Configures the Command Authorization method to use when 
+                      Configures the Command Authorization method to use when
                       this list is specified."
 
          ::= { agentCmdsAuthorizationListEntry 4 }
@@ -8514,7 +8514,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                       Configures the Command Authorization method to use when
                       this list is specified."
 
-         ::= { agentCmdsAuthorizationListEntry 5 } 
+         ::= { agentCmdsAuthorizationListEntry 5 }
 
     agentCmdsAuthorizationListMethod3 OBJECT-TYPE
          SYNTAX      INTEGER {
@@ -8531,11 +8531,11 @@ agentPortMirrorTypeTable OBJECT-TYPE
                       Configures the Command Authorization method to use when
                       this list is specified."
 
-         ::= { agentCmdsAuthorizationListEntry 6 } 
+         ::= { agentCmdsAuthorizationListEntry 6 }
 
 
 --**************************************************************************************
--- agentExecAuthorizationGroup -> Contains MIB objects to configure exec authorization 
+-- agentExecAuthorizationGroup -> Contains MIB objects to configure exec authorization
 --                                method lists
 --
 --**************************************************************************************
@@ -8607,7 +8607,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          STATUS      current
          DESCRIPTION
                      " Exec Authorization List Name
-                     Unique name used to identify the Exec Authorization 
+                     Unique name used to identify the Exec Authorization
                      List from other tables."
          ::= { agentExecAuthorizationListEntry 2 }
 
@@ -8635,7 +8635,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
          STATUS      current
          DESCRIPTION
                      "Exec Authorization List Method1
-                      Configures the Exec Authorization method to use when 
+                      Configures the Exec Authorization method to use when
                       this list is specified."
 
          ::= { agentExecAuthorizationListEntry 4 }
@@ -8655,7 +8655,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                       Configures the Exec Authorization method to use when
                       this list is specified."
 
-         ::= { agentExecAuthorizationListEntry 5 } 
+         ::= { agentExecAuthorizationListEntry 5 }
 
     agentExecAuthorizationListMethod3 OBJECT-TYPE
          SYNTAX      INTEGER {
@@ -8672,7 +8672,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                       Configures the Exec Authorization method to use when
                       this list is specified."
 
-         ::= { agentExecAuthorizationListEntry 6 } 
+         ::= { agentExecAuthorizationListEntry 6 }
 
     agentExecAuthorizationListMethod4 OBJECT-TYPE
          SYNTAX      INTEGER {
@@ -8689,16 +8689,16 @@ agentPortMirrorTypeTable OBJECT-TYPE
                       Configures the Exec Authorization method to use when
                       this list is specified."
 
-         ::= { agentExecAuthorizationListEntry 7 } 
+         ::= { agentExecAuthorizationListEntry 7 }
 
    --**********************************************************
-   -- agentSwitchMbufConfigGroup 
+   -- agentSwitchMbufConfigGroup
    --**********************************************************
 
     agentSwitchMbufConfigGroup                 OBJECT IDENTIFIER ::= { agentConfigGroup 25 }
 
     --**********************************************************
-    --agentSwitchMbufConfigGroup 
+    --agentSwitchMbufConfigGroup
     --Allows user to configure rising threshold, falling threshold
     --and LOG notification severity.
     --**********************************************************
@@ -8724,8 +8724,8 @@ agentPortMirrorTypeTable OBJECT-TYPE
       MAX-ACCESS    read-write
       STATUS        current
       DESCRIPTION
-                    "The Mbuf utilization falling threshold in percentage. 
-                    A single notification (falling event) is generated when 
+                    "The Mbuf utilization falling threshold in percentage.
+                    A single notification (falling event) is generated when
                     the total Mbuf utilization falls below this threshold.
 
                     After a falling event is generated, another such event
@@ -8762,13 +8762,13 @@ agentDigitalSignatureConfigGroup                 OBJECT IDENTIFIER ::= { agentCo
          DESCRIPTION
                      "To configure the digital signature verify option for the downloading
                      image and config files. The selected option is stored in config data.
-                      The following options are supported: 
-                      
-                      noverify - no digital signature verification of image or config script file  
-                      image    - digital signature verification of image only 
-                      config   - digital signature verification of config script only 
-                      all      - digital signature verification of image and config script file" 
-  
+                      The following options are supported:
+
+                      noverify - no digital signature verification of image or config script file
+                      image    - digital signature verification of image only
+                      config   - digital signature verification of config script only
+                      all      - digital signature verification of image and config script file"
+
           ::= { agentDigitalSignatureConfigGroup 1 }
 
 
@@ -9702,12 +9702,12 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-        "This object indicates whether IP packets received on this interface 
+        "This object indicates whether IP packets received on this interface
         are filtered based on whether IP Source Guard considers the source MAC address
         to be a valid client address. The port security option cannot be enabled
         unless agentIpsgIfVerifySource is also enabled. That is, MAC address filtering
         cannot be done without also doing IP address filtering. But IP address filtering
-        can be done without MAC address filtering. Once the port security 
+        can be done without MAC address filtering. Once the port security
         option is enabled, it can only be disabled by disabling agentIpsgIfVerifySource."
 
     DEFVAL      { false }
@@ -10424,7 +10424,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
         MAX-ACCESS   read-only
         STATUS       current
         DESCRIPTION
-                     "The MAC address of the host corresponding to the reported 
+                     "The MAC address of the host corresponding to the reported
                      conflicting IP address on the switch since the last reset of
                      the conflict detection status or the last conflict detection run."
         ::= { agentSwitchAddressConflictGroup 4 }
@@ -10657,7 +10657,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
                 }
         STATUS      current
         DESCRIPTION
-                    "Trap is sent when the total CPU utilization exceeds CPU Rising 
+                    "Trap is sent when the total CPU utilization exceeds CPU Rising
                     utilization threshold over the configured Rising threshold interval."
         ::= { fastPathSwitchingTraps 21 }
 
@@ -10667,7 +10667,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
                 }
         STATUS      current
         DESCRIPTION
-                    "Trap is sent when the total CPU utilization falls below CPU Falling 
+                    "Trap is sent when the total CPU utilization falls below CPU Falling
                     utilization threshold over the configured falling threshold interval."
         ::= { fastPathSwitchingTraps 22 }
 
@@ -10712,7 +10712,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
                     agentSwitchMbufRisingThreshold,
                     agentSwitchMbufsTotal,
                     agentSwitchMbufsUsed,
-                    agentSwitchMbufsFree 
+                    agentSwitchMbufsFree
                 }
         STATUS      current
         DESCRIPTION
@@ -10769,7 +10769,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
                  ipv4DataCenterPlus(4)
                  ,
                  dualDataCenter(5)
-                 } 
+                 }
       MAX-ACCESS read-write
       STATUS     current
       DESCRIPTION
@@ -10909,7 +10909,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
          DESCRIPTION
                      "Mode changes are effective from the next reload of the Switch.
                       The cut-through feature may not be present on all switches. Use
-                      - agentSwitchCutThroughRunningModeStatus - MIB to check if the feature is 
+                      - agentSwitchCutThroughRunningModeStatus - MIB to check if the feature is
                       present on your switch."
          ::= { agentSwitchCutThroughGroup 1 }
 
@@ -10938,7 +10938,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
         MAX-ACCESS   read-only
         STATUS       current
         DESCRIPTION
-                     "This gives the configured mode of cut-through feature on switch. 
+                     "This gives the configured mode of cut-through feature on switch.
                       Note that Mode changes are effective from the next reload of the Switch.
                       so running mode may be different than the configured mode.
                       A value of not-supported(3) means that the feature is not present on the
@@ -11054,7 +11054,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
                      This must be configured along with agentPrivateVlanIntfAssocHostSecondary before
                      the association will be operational.
 
-                     NOTE: Both agentPrivateVlanIntfAssocHostPrimary and agentPrivateVlanIntfAssocHostSecondary 
+                     NOTE: Both agentPrivateVlanIntfAssocHostPrimary and agentPrivateVlanIntfAssocHostSecondary
                      objects must be specified at the same time."
          ::= { agentPrivateVlanIntfAssocEntry 1 }
 
@@ -11063,11 +11063,11 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Configures the secondary host vlan association with the interface.  
+                     "Configures the secondary host vlan association with the interface.
                      This must be configured along with agentPrivateVlanIntfAssocHostPrimary before
                      the association will be operational.
 
-                     NOTE: Both agentPrivateVlanIntfAssocHostPrimary and agentPrivateVlanIntfAssocHostSecondary 
+                     NOTE: Both agentPrivateVlanIntfAssocHostPrimary and agentPrivateVlanIntfAssocHostSecondary
                      objects must be specified at the same time."
          ::= { agentPrivateVlanIntfAssocEntry 2 }
 
@@ -11412,7 +11412,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
     MAX-ACCESS   not-accessible
     STATUS       current
     DESCRIPTION
-        "A row instance contains the configuration for 
+        "A row instance contains the configuration for
          IPSG at each physical interface capable of this feature."
     INDEX { ifIndex }
     ::= { agentIpv6sgIfConfigTable 1 }
@@ -11429,7 +11429,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
     DESCRIPTION
         "This object indicates whether the interface is enabled for IPv6SG
          to forward the data based up on source Ip address"
-        
+
     DEFVAL      { false }
     ::= { agentIpv6sgIfConfigEntry 1 }
 
@@ -11440,7 +11440,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
     DESCRIPTION
         "This object indicates whether the interface is enabled for IPv6SG
          to forward the data based up on source mac address in fdb table"
-        
+
     DEFVAL      { false }
     ::= { agentIpv6sgIfConfigEntry 2 }
 
@@ -11532,7 +11532,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
          ::= { agentStaticIpv6sgBindingTable  1 }
 
     AgentStaticIpv6sgBindingEntry ::= SEQUENCE {
-       
+
           agentStaticIpv6sgBindingIfIndex     InterfaceIndex,
           agentStaticIpv6sgBindingVlanId      VlanIndex,
           agentStaticIpv6sgBindingIpAddr      Ipv6Address,
@@ -11541,13 +11541,13 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
           }
 
      agentStaticIpv6sgBindingIfIndex OBJECT-TYPE
-         SYNTAX      InterfaceIndex 
+         SYNTAX      InterfaceIndex
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
                      "Interface on which this IPv6SG binding is going to be added."
          ::= { agentStaticIpv6sgBindingEntry  1 }
-     
+
      agentStaticIpv6sgBindingVlanId OBJECT-TYPE
          SYNTAX      VlanIndex
          MAX-ACCESS  read-create
@@ -11926,7 +11926,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
          }
 
     agentPvrstpVlanTableIndex OBJECT-TYPE
-        SYNTAX      VlanId 
+        SYNTAX      VlanId
         MAX-ACCESS  not-accessible
         STATUS      current
         DESCRIPTION
@@ -12026,7 +12026,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "PVRSTP port vlan priority is in the range of 0 to 240. 
+            "PVRSTP port vlan priority is in the range of 0 to 240.
             Port priority value should be a multiple of 16."
         ::= { agentPvrstpPortVlanEntry 3 }
 

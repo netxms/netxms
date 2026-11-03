@@ -45,25 +45,25 @@ NAS-MIB DEFINITIONS ::= BEGIN
       ::= { systemEventMsg 103 }
 
 	systemTraps OBJECT IDENTIFIER ::= { storageSystem  10 }
-	
+
 	eventInform TRAP-TYPE
-		ENTERPRISE systemTraps    
+		ENTERPRISE systemTraps
 		VARIABLES { eventInformMsg }
 		DESCRIPTION
 			"Info: %s"
 		::=  1
 
 	eventWarning TRAP-TYPE
-		ENTERPRISE systemTraps    
+		ENTERPRISE systemTraps
 		VARIABLES { eventWarningMsg }
-		DESCRIPTION 
+		DESCRIPTION
 			"Warn: %s"
 		::=  2
 
 	eventError TRAP-TYPE
 		ENTERPRISE systemTraps
 		VARIABLES { eventErrorMsg }
-		DESCRIPTION 
+		DESCRIPTION
 			"Error: %s"
 		::=  4
 
@@ -456,7 +456,7 @@ sysVolumeStatus OBJECT-TYPE
     ::= { sysVolumeEntry 6 }
 
 
-    
+
  -- system inform Ex
 	systemInfoEx        OBJECT IDENTIFIER ::= { storageSystem 3 }
 
@@ -846,70 +846,70 @@ sysVolumeStatusEX OBJECT-TYPE
     ::= { sysVolumeEntryEx 6 }
 
  -- storageSystemEx inform
-	storageSystemEx        OBJECT IDENTIFIER ::= { storageSystem 4 }      
-	systemSettings        OBJECT IDENTIFIER ::= { storageSystemEx 1 } 
+	storageSystemEx        OBJECT IDENTIFIER ::= { storageSystem 4 }
+	systemSettings        OBJECT IDENTIFIER ::= { storageSystemEx 1 }
 	storageManager        OBJECT IDENTIFIER ::= { systemSettings 1 }
-	systemStatus          OBJECT IDENTIFIER ::= { systemSettings 11 }    
-	nasStorage        OBJECT IDENTIFIER ::= { storageManager 1 }     
-	components        OBJECT IDENTIFIER ::= { nasStorage 1 }       
-	enclosure         OBJECT IDENTIFIER ::= { components 1 } 
-    systemFan         OBJECT IDENTIFIER ::= { components 2 } 
-    systemPower       OBJECT IDENTIFIER ::= { components 3 }     
-    cpu               OBJECT IDENTIFIER ::= { components 4 } 
+	systemStatus          OBJECT IDENTIFIER ::= { systemSettings 11 }
+	nasStorage        OBJECT IDENTIFIER ::= { storageManager 1 }
+	components        OBJECT IDENTIFIER ::= { nasStorage 1 }
+	enclosure         OBJECT IDENTIFIER ::= { components 1 }
+    systemFan         OBJECT IDENTIFIER ::= { components 2 }
+    systemPower       OBJECT IDENTIFIER ::= { components 3 }
+    cpu               OBJECT IDENTIFIER ::= { components 4 }
 	disk              OBJECT IDENTIFIER ::= { components 5 }
 	msataDisk              OBJECT IDENTIFIER ::= { components 6 }
-	
+
 	storageSpace        OBJECT IDENTIFIER ::= { nasStorage 2 }
-	raid        OBJECT IDENTIFIER ::= { storageSpace 1 }      
-	pool        OBJECT IDENTIFIER ::= { storageSpace 2 }  
-	volume        OBJECT IDENTIFIER ::= { storageSpace 3 }  
+	raid        OBJECT IDENTIFIER ::= { storageSpace 1 }
+	pool        OBJECT IDENTIFIER ::= { storageSpace 2 }
+	volume        OBJECT IDENTIFIER ::= { storageSpace 3 }
 
 	cacheAcceleration   OBJECT IDENTIFIER ::= { nasStorage 3 }
-    
-	iSCSI        OBJECT IDENTIFIER ::= { storageManager 2 }   
-	iSCSIStorage        OBJECT IDENTIFIER ::= { iSCSI 1 }   
+
+	iSCSI        OBJECT IDENTIFIER ::= { storageManager 2 }
+	iSCSIStorage        OBJECT IDENTIFIER ::= { iSCSI 1 }
 	lun                 OBJECT IDENTIFIER ::= { iSCSIStorage 10 }
-	target              OBJECT IDENTIFIER ::= { iSCSIStorage 11 }   
-    
+	target              OBJECT IDENTIFIER ::= { iSCSIStorage 11 }
+
     resourceMonitor        OBJECT IDENTIFIER ::= { systemStatus 5 }
-    diskPerformance        OBJECT IDENTIFIER ::= { resourceMonitor 6 }    
+    diskPerformance        OBJECT IDENTIFIER ::= { resourceMonitor 6 }
 
 iSCSIService OBJECT-TYPE
     SYNTAX  INTEGER{
-                   no(0),       
+                   no(0),
                    yes(1)
                    }
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"iSCSI Service."
-    ::= { iSCSIStorage 1 }  
+    ::= { iSCSIStorage 1 }
 
 iSCSIServicePort OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"iSCSI ServicePort."
-    ::= { iSCSIStorage 2 }  
-    
+    ::= { iSCSIStorage 2 }
+
 iSNSService OBJECT-TYPE
     SYNTAX  INTEGER{
-                   no(0),       
+                   no(0),
                    yes(1)
                    }
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"iSNS Service."
-    ::= { iSCSIStorage 3 }  
-    
+    ::= { iSCSIStorage 3 }
+
 iSNSIP OBJECT-TYPE
     SYNTAX  IpAddress
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"iSNS IP."
-    ::= { iSCSIStorage 4 }   
+    ::= { iSCSIStorage 4 }
 
 
-    
+
 -- LUNTable
 lunNumber OBJECT-TYPE
     SYNTAX  INTEGER
@@ -951,30 +951,30 @@ LUNTableEntryDef ::=
         lunName
             DisplayString,
         lunBackupStatus
-            INTEGER,            
+            INTEGER,
         lunIsMap
             INTEGER
-	}  
+	}
 lunIndex OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"LUNIndex."
-    ::= { lunTableEntry 1 }  
-    
+    ::= { lunTableEntry 1 }
+
 lunID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"LUNID."
-    ::= { lunTableEntry 2 }  
-  
+    ::= { lunTableEntry 2 }
+
 lunCapacity OBJECT-TYPE
     SYNTAX  Counter64
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"LUN capacity in byte."
-    ::= { lunTableEntry 3 }    
+    ::= { lunTableEntry 3 }
 
 lunUsedPercent OBJECT-TYPE
     SYNTAX  INTEGER
@@ -982,45 +982,45 @@ lunUsedPercent OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"LUN used percent."
     ::= { lunTableEntry 4 }
-    
+
 lunStatus OBJECT-TYPE
     SYNTAX  DisplayString (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"LUN status."
-    ::= { lunTableEntry 5 }    
+    ::= { lunTableEntry 5 }
 
 lunName OBJECT-TYPE
     SYNTAX  DisplayString (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"LUN name."
-    ::= { lunTableEntry 6 }  
- 
- 
+    ::= { lunTableEntry 6 }
+
+
 lunBackupStatus OBJECT-TYPE
     SYNTAX  INTEGER{
-                   none(0),       
+                   none(0),
                    backup(1),
-                   restore(2),       
+                   restore(2),
                    snapshot(3)
                    }
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"LUN backup status."
-    ::= { lunTableEntry 7 } 
-    
+    ::= { lunTableEntry 7 }
+
 lunIsMap OBJECT-TYPE
     SYNTAX  INTEGER{
-                   unmapped(0),       
+                   unmapped(0),
                    mapped(1)
                    }
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"LUN is Mapped."
     ::= { lunTableEntry 8 }
-    
-    
+
+
 -- targeTable
 targetNumber OBJECT-TYPE
     SYNTAX  INTEGER
@@ -1058,46 +1058,46 @@ TargeTableEntryDef ::=
             DisplayString,
 		targetStatus
             INTEGER
-	}  
+	}
 
 targetIndex OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"TargetIndex."
-    ::= { targeTableEntry 1 }  
-    
+    ::= { targeTableEntry 1 }
+
 targetID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"TargetID."
-    ::= { targeTableEntry 2 }  
+    ::= { targeTableEntry 2 }
 
 targetName OBJECT-TYPE
     SYNTAX  DisplayString (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"Target name."
-    ::= { targeTableEntry 3 }  
-    
+    ::= { targeTableEntry 3 }
+
 targetIQN OBJECT-TYPE
     SYNTAX  DisplayString (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"TargetIQN."
-    ::= { targeTableEntry 4 }    
+    ::= { targeTableEntry 4 }
 
 targetStatus OBJECT-TYPE
     SYNTAX  INTEGER{
                    offline(-1),
-                   ready(0),       
+                   ready(0),
                    connected(1)
                    }
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"Target status."
-    ::= { targeTableEntry 5 }     
+    ::= { targeTableEntry 5 }
 
 -- volumeTable
 volumeNumber OBJECT-TYPE
@@ -1131,7 +1131,7 @@ VolumeTableEntryDef ::=
         volumeID
             INTEGER,
         volumeCapacity
-            Counter64,  
+            Counter64,
         volumeFreeSize
             Counter64,
         volumeStatus
@@ -1139,81 +1139,81 @@ VolumeTableEntryDef ::=
 --        VolumeThreshold
 --            INTEGER,
         volumeSSDCache
-            INTEGER,  
+            INTEGER,
         volumeThin
             INTEGER,
         volumeName
             DisplayString
-	}   
+	}
 volumeIndex OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  current
     DESCRIPTION	"VolumeIndex."
-    ::= { volumeTableEntry 1 }    
+    ::= { volumeTableEntry 1 }
 
 volumeID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  current
     DESCRIPTION	"VolumeID."
-    ::= { volumeTableEntry 2 }   
+    ::= { volumeTableEntry 2 }
 
 volumeCapacity OBJECT-TYPE
     SYNTAX  Counter64
     ACCESS  read-only
     STATUS  current
     DESCRIPTION	"Volume capacity in byte."
-    ::= { volumeTableEntry 3 }      
-    
+    ::= { volumeTableEntry 3 }
+
 volumeFreeSize OBJECT-TYPE
     SYNTAX  Counter64
     ACCESS  read-only
     STATUS  current
     DESCRIPTION	"Volume freesize in byte."
-    ::= { volumeTableEntry 4 }        
- 
+    ::= { volumeTableEntry 4 }
+
 volumeStatus OBJECT-TYPE
     SYNTAX  DisplayString  (SIZE (0..255))
     ACCESS  read-only
     STATUS  current
     DESCRIPTION	"Volume status"
-    ::= { volumeTableEntry 5 }   
+    ::= { volumeTableEntry 5 }
 
 -- VolumeThreshold OBJECT-TYPE
 --     SYNTAX  INTEGER
 --     ACCESS  read-only
 --     STATUS  current
 --     DESCRIPTION	"Volume threshold."
---     ::= { PoolTableEntry 6 } 
-    
+--     ::= { PoolTableEntry 6 }
+
 volumeSSDCache OBJECT-TYPE
     SYNTAX  INTEGER{
-                   no(0),       
+                   no(0),
                    yes(1)
                    }
     ACCESS  read-only
     STATUS  current
     DESCRIPTION	"If volume enable SSDCache acceleration."
-    ::= { volumeTableEntry 6 } 
+    ::= { volumeTableEntry 6 }
 
 volumeThin OBJECT-TYPE
     SYNTAX  INTEGER{
-                   no(0),       
+                   no(0),
                    yes(1)
                    }
     ACCESS  read-only
     STATUS  current
     DESCRIPTION	"If volume is thin type."
-    ::= { volumeTableEntry 7 }   
+    ::= { volumeTableEntry 7 }
 
 volumeName OBJECT-TYPE
     SYNTAX  DisplayString (SIZE (0..255))
     ACCESS  read-only
     STATUS  current
     DESCRIPTION	"Volume alias name."
-    ::= { volumeTableEntry 8 }    
-    
+    ::= { volumeTableEntry 8 }
+
 -- poolTable
 poolNumber OBJECT-TYPE
     SYNTAX  INTEGER
@@ -1246,51 +1246,51 @@ PoolTableEntryDef ::=
         poolID
             INTEGER,
         poolCapacity
-            Counter64,  
+            Counter64,
         poolFreeSize
             Counter64,
         poolStatus
---            INTEGER, 
+--            INTEGER,
 --        PoolThreshold
 --            INTEGER,
 --        PoolAllocated
---            INTEGER,    
+--            INTEGER,
 --        PoolRAIDList
---            INTEGER,  
+--            INTEGER,
 --        PoolVolumeList
-            INTEGER  
-	} 
+            INTEGER
+	}
 poolIndex OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"PoolIndex."
-    ::= { poolTableEntry 1 }      
-    
+    ::= { poolTableEntry 1 }
+
 poolID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"PoolID."
-    ::= { poolTableEntry 2 }  
+    ::= { poolTableEntry 2 }
 
 poolCapacity OBJECT-TYPE
     SYNTAX  Counter64
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"Pool capacity in byte."
-    ::= { poolTableEntry 3 }      
-  
+    ::= { poolTableEntry 3 }
+
 poolFreeSize OBJECT-TYPE
     SYNTAX  Counter64
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"Pool freesize in byte."
-    ::= { poolTableEntry 4 }       
+    ::= { poolTableEntry 4 }
 
 poolStatus OBJECT-TYPE
     SYNTAX  INTEGER{
-                   ready(0),       
+                   ready(0),
                    warning(-1),
                    notReady(-2),
                    error(-3)
@@ -1298,36 +1298,36 @@ poolStatus OBJECT-TYPE
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"Pool status."
-    ::= { poolTableEntry 5 }    
-    
+    ::= { poolTableEntry 5 }
+
 --PoolThreshold OBJECT-TYPE
 --    SYNTAX  INTEGER
 --    ACCESS  read-only
 --    STATUS  mandatory
 --    DESCRIPTION	"PoolThreshold."
---    ::= { PoolTableEntry 6 }  
-    
+--    ::= { PoolTableEntry 6 }
+
 --PoolAllocated OBJECT-TYPE
 --    SYNTAX  INTEGER
 --    ACCESS  read-only
 --    STATUS  mandatory
 --    DESCRIPTION	"PoolAllocated."
---    ::= { PoolTableEntry 7 }      
+--    ::= { PoolTableEntry 7 }
 
 --PoolRAIDList OBJECT-TYPE
 --    SYNTAX  INTEGER
 --    ACCESS  read-only
 --    STATUS  mandatory
 --    DESCRIPTION	"PoolRAIDList."
---    ::= { PoolTableEntry 8 }      
-    
+--    ::= { PoolTableEntry 8 }
+
 --PoolVolumeList OBJECT-TYPE
 --    SYNTAX  INTEGER
 --    ACCESS  read-only
 --    STATUS  mandatory
 --    DESCRIPTION	"PoolVolumeList."
---    ::= { PoolTableEntry 9 }   
- 
+--    ::= { PoolTableEntry 9 }
+
 -- raidGroupTable
 raidNumber OBJECT-TYPE
     SYNTAX  INTEGER
@@ -1337,14 +1337,14 @@ raidNumber OBJECT-TYPE
             "The number of RAIDs (regardless of
             their current state) present on this system."
     ::= { raid 1 }
-    
+
 raidGroupTable OBJECT-TYPE
     SYNTAX  SEQUENCE OF RAIDGroupTableEntryDef
     ACCESS  not-accessible
     STATUS  mandatory
     DESCRIPTION
-             "A list of RAID entries. The number of 
-             entries is given by the value of RAIDNumber." 
+             "A list of RAID entries. The number of
+             entries is given by the value of RAIDNumber."
     ::= { raid 2 }
 raidGroupTableEntry OBJECT-TYPE
     SYNTAX  RAIDGroupTableEntryDef
@@ -1357,7 +1357,7 @@ raidGroupTableEntry OBJECT-TYPE
 RAIDGroupTableEntryDef ::=
     SEQUENCE {
         raidIndex
-            INTEGER,    
+            INTEGER,
         raidID
             INTEGER,
         raidCapacity
@@ -1375,14 +1375,14 @@ RAIDGroupTableEntryDef ::=
 --        RAIDSpareList
 --            INTEGER
 
-	}  
+	}
 raidIndex OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"RAIDIndex."
     ::= { raidGroupTableEntry 1 }
-    
+
 raidID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
@@ -1396,7 +1396,7 @@ raidCapacity OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"RAID capacity  in byte."
     ::= { raidGroupTableEntry 3 }
- 
+
 raidFreeSize OBJECT-TYPE
     SYNTAX  Counter64
     ACCESS  read-only
@@ -1410,10 +1410,10 @@ raidStatus OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"RAID status."
     ::= { raidGroupTableEntry 5 }
-    
+
 raidBitmap OBJECT-TYPE
     SYNTAX  INTEGER{
-                   no(0),       
+                   no(0),
                    yes(1)
                    }
     ACCESS  read-only
@@ -1441,26 +1441,26 @@ raidLevel OBJECT-TYPE
 --    STATUS  mandatory
 --    DESCRIPTION	"RAIDSpareList."
 --    ::= { RAIDGroupTableEntry 9 }
- 
---cacheAcceleration 
+
+--cacheAcceleration
 service OBJECT-TYPE
     SYNTAX  INTEGER{
-                   no(0),       
+                   no(0),
                    yes(1)
                    }
     ACCESS  read-only
     STATUS  current
     DESCRIPTION
             "If service of cache is enabled."
-    ::= { cacheAcceleration 1 } 
-    
+    ::= { cacheAcceleration 1 }
+
 availablePercent OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  current
     DESCRIPTION
             "Available percent of cache."
-    ::= { cacheAcceleration 2 } 
+    ::= { cacheAcceleration 2 }
 
 readHitRate OBJECT-TYPE
     SYNTAX  INTEGER
@@ -1468,24 +1468,24 @@ readHitRate OBJECT-TYPE
     STATUS  current
     DESCRIPTION
             "Read hit rate percent of cache."
-    ::= { cacheAcceleration 3 } 
- 
+    ::= { cacheAcceleration 3 }
+
 writeHitRate OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  current
     DESCRIPTION
             "Write hit rate percent of cache."
-    ::= { cacheAcceleration 4 } 
- 
+    ::= { cacheAcceleration 4 }
+
 status OBJECT-TYPE
     SYNTAX  DisplayString  (SIZE (0..255))
     ACCESS  read-only
     STATUS  current
     DESCRIPTION
             "Status of cache."
-    ::= { cacheAcceleration 5 } 
- 
+    ::= { cacheAcceleration 5 }
+
 -- diskTable
 diskNumber OBJECT-TYPE
     SYNTAX  INTEGER
@@ -1495,7 +1495,7 @@ diskNumber OBJECT-TYPE
             "The number of disks (regardless of
             their current state) present on this system."
     ::= { disk 1 }
-    
+
 diskTable OBJECT-TYPE
     SYNTAX  SEQUENCE OF DiskTableEntryDef
     ACCESS  not-accessible
@@ -1515,7 +1515,7 @@ diskTableEntry OBJECT-TYPE
 DiskTableEntryDef ::=
     SEQUENCE {
         diskIndex
-            INTEGER,    
+            INTEGER,
         diskID
             INTEGER,
         diskEnclosureID
@@ -1523,44 +1523,44 @@ DiskTableEntryDef ::=
         diskSummary
             DisplayString,
         diskSmartInfo
-            INTEGER, 
+            INTEGER,
         diskTemperture
-            INTEGER, 
+            INTEGER,
         diskGlobalSpare
-            INTEGER,             
+            INTEGER,
         diskModel
-            DisplayString, 
+            DisplayString,
         diskCapacity
-            Counter64       
-	} 
+            Counter64
+	}
 diskIndex OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskIndex."
-    ::= { diskTableEntry 1 } 
-    
+    ::= { diskTableEntry 1 }
+
 diskID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskID."
-    ::= { diskTableEntry 2 } 
- 
+    ::= { diskTableEntry 2 }
+
 diskEnclosureID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"disk EnclosureID."
-    ::= { diskTableEntry 3 }     
+    ::= { diskTableEntry 3 }
 
 diskSummary OBJECT-TYPE
     SYNTAX  DisplayString  (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskSummary. 'Good',''Warning','Abnormal'"
-    ::= { diskTableEntry 4 } 
-    
+    ::= { diskTableEntry 4 }
+
 diskSmartInfo OBJECT-TYPE
     SYNTAX  INTEGER{
                    abnormal(2),
@@ -1571,38 +1571,38 @@ diskSmartInfo OBJECT-TYPE
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskSmartInfo."
-    ::= { diskTableEntry 5 } 
+    ::= { diskTableEntry 5 }
 
 diskTemperture OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskTemperture."
-    ::= { diskTableEntry 6 } 
-    
+    ::= { diskTableEntry 6 }
+
 diskGlobalSpare OBJECT-TYPE
     SYNTAX  INTEGER{
-                   no(0),       
+                   no(0),
                    yes(1)
                    }
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskGlobalSpare."
-    ::= { diskTableEntry 7 } 
-    
+    ::= { diskTableEntry 7 }
+
 diskModel OBJECT-TYPE
     SYNTAX  DisplayString  (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskModel."
-    ::= { diskTableEntry 8 }  
-    
+    ::= { diskTableEntry 8 }
+
 diskCapacity OBJECT-TYPE
     SYNTAX  Counter64
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskCapacity."
-    ::= { diskTableEntry 9 }    
+    ::= { diskTableEntry 9 }
 
 -- msataDiskTable
 msataDiskNumber OBJECT-TYPE
@@ -1613,7 +1613,7 @@ msataDiskNumber OBJECT-TYPE
             "The number of msatadisks (regardless of
             their current state) present on this system."
     ::= { msataDisk 1 }
-    
+
 msataDiskTable OBJECT-TYPE
     SYNTAX  SEQUENCE OF MsataDiskTableEntryDef
     ACCESS  not-accessible
@@ -1633,7 +1633,7 @@ msataDiskTableEntry OBJECT-TYPE
 MsataDiskTableEntryDef ::=
     SEQUENCE {
         msataDiskIndex
-            INTEGER,    
+            INTEGER,
         msataDiskID
             INTEGER,
         msataDiskEnclosureID
@@ -1641,44 +1641,44 @@ MsataDiskTableEntryDef ::=
         msataDiskSummary
             DisplayString,
         msataDiskSmartInfo
-            INTEGER, 
+            INTEGER,
         msataDiskTemperture
-            INTEGER, 
+            INTEGER,
         msataDiskGlobalSpare
-            INTEGER,             
+            INTEGER,
         msataDiskModel
-            DisplayString, 
+            DisplayString,
         msataDiskCapacity
-            Counter64       
-	} 
+            Counter64
+	}
 msataDiskIndex OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskIndex."
-    ::= { msataDiskTableEntry 1 } 
-    
+    ::= { msataDiskTableEntry 1 }
+
 msataDiskID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskID."
-    ::= { msataDiskTableEntry 2 } 
- 
+    ::= { msataDiskTableEntry 2 }
+
 msataDiskEnclosureID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"disk EnclosureID."
-    ::= { msataDiskTableEntry 3 }     
+    ::= { msataDiskTableEntry 3 }
 
 msataDiskSummary OBJECT-TYPE
     SYNTAX  DisplayString  (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskSummary. 'Good',''Warning','Abnormal'"
-    ::= { msataDiskTableEntry 4 } 
-    
+    ::= { msataDiskTableEntry 4 }
+
 msataDiskSmartInfo OBJECT-TYPE
     SYNTAX  INTEGER{
                    abnormal(2),
@@ -1689,39 +1689,39 @@ msataDiskSmartInfo OBJECT-TYPE
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskSmartInfo."
-    ::= { msataDiskTableEntry 5 } 
+    ::= { msataDiskTableEntry 5 }
 
 msataDiskTemperture OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskTemperture."
-    ::= { msataDiskTableEntry 6 } 
-    
+    ::= { msataDiskTableEntry 6 }
+
 msataDiskGlobalSpare OBJECT-TYPE
     SYNTAX  INTEGER{
-                   no(0),       
+                   no(0),
                    yes(1)
                    }
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskGlobalSpare."
-    ::= { msataDiskTableEntry 7 } 
-    
+    ::= { msataDiskTableEntry 7 }
+
 msataDiskModel OBJECT-TYPE
     SYNTAX  DisplayString  (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskModel."
-    ::= { msataDiskTableEntry 8 }  
-    
+    ::= { msataDiskTableEntry 8 }
+
 msataDiskCapacity OBJECT-TYPE
     SYNTAX  Counter64
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"DiskCapacity."
-    ::= { msataDiskTableEntry 9 }     
- 
+    ::= { msataDiskTableEntry 9 }
+
 -- enclosureTable
 
 enclosurelNumber OBJECT-TYPE
@@ -1732,7 +1732,7 @@ enclosurelNumber OBJECT-TYPE
             "The number of Enclosures (regardless of
             their current state) present on this system."
     ::= { enclosure 1 }
-    
+
 enclosureTable OBJECT-TYPE
     SYNTAX  SEQUENCE OF EnclosureTableEntryDef
     ACCESS  not-accessible
@@ -1766,7 +1766,7 @@ EnclosureTableEntryDef ::=
         enclosureSystemTemp
             INTEGER
 --        EnclosureDiskList
---            INTEGER           
+--            INTEGER
 	}
 
 enclosureIndex OBJECT-TYPE
@@ -1775,55 +1775,55 @@ enclosureIndex OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"EnclosureIndex."
     ::= { enclosureTableEntry 1 }
-    
+
 enclosureID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"enclosureID."
     ::= { enclosureTableEntry 2 }
-    
+
 enclosureModel OBJECT-TYPE
     SYNTAX  DisplayString  (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"EnclosureModel."
     ::= { enclosureTableEntry 3 }
-    
+
 enclosureSerialNum OBJECT-TYPE
     SYNTAX  DisplayString  (SIZE (0..255))
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"EnclosureSerialNum."
     ::= { enclosureTableEntry 4 }
-    
+
 enclosureSlot OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"EnclosureSlot."
     ::= { enclosureTableEntry 5 }
-    
+
 enclosureName OBJECT-TYPE
     SYNTAX  DisplayString
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"Enclosure Name."
     ::= { enclosureTableEntry 6 }
-    
+
 enclosureSystemTemp OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"Enclosure System temperature in centigrade."
-    ::= { enclosureTableEntry 7 }   
+    ::= { enclosureTableEntry 7 }
 
 --EnclosureDiskList OBJECT-TYPE
 --    SYNTAX  INTEGER
 --    ACCESS  read-only
 --    STATUS  mandatory
 --    DESCRIPTION	"EnclosureDiskList."
---    ::= { EnclosureTableEntry 8 } 
+--    ::= { EnclosureTableEntry 8 }
 
 -- systemFan2Table
 systemFanNumber OBJECT-TYPE
@@ -1834,7 +1834,7 @@ systemFanNumber OBJECT-TYPE
             "The number of systemfans (regardless of
             their current state) present on this system."
     ::= { systemFan 1 }
-    
+
 systemFan2Table OBJECT-TYPE
     SYNTAX  SEQUENCE OF SystemFanTableEntryDef
     ACCESS  not-accessible
@@ -1858,7 +1858,7 @@ SystemFanTableEntryDef ::=
         systemFanID
             INTEGER,
         systemFanEnclosureID
-            INTEGER,            
+            INTEGER,
         systemFanStatus
             INTEGER,
         systemFanSpeed
@@ -1871,13 +1871,13 @@ systemFanIndex OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"SystemFanIndex."
     ::= { systemFan2TableEntry 1 }
-    
+
 systemFanID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"SystemFanID."
-    ::= { systemFan2TableEntry 2 }    
+    ::= { systemFan2TableEntry 2 }
 
 systemFanEnclosureID OBJECT-TYPE
     SYNTAX  INTEGER
@@ -1885,24 +1885,24 @@ systemFanEnclosureID OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"SystemFanEnclosureID."
     ::= { systemFan2TableEntry 3 }
-    
+
 systemFanStatus OBJECT-TYPE
     SYNTAX  INTEGER{
-                   ok(0),       
+                   ok(0),
                    fail(-1)
                    }
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"Systemfan status."
     ::= { systemFan2TableEntry 4 }
-    
+
 systemFanSpeed OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"Systemfan speed."
     ::= { systemFan2TableEntry 5 }
-    
+
 
 -- systemPowerTable
 systemPowerNumber OBJECT-TYPE
@@ -1913,7 +1913,7 @@ systemPowerNumber OBJECT-TYPE
             "The number of systemfans (regardless of
             their current state) present on this system."
     ::= { systemPower 1 }
-    
+
 systemPowerTable OBJECT-TYPE
     SYNTAX  SEQUENCE OF SystemPowerTableEntryDef
     ACCESS  not-accessible
@@ -1937,13 +1937,13 @@ SystemPowerTableEntryDef ::=
         systemPowerID
             INTEGER,
         systemPowerEnclosureID
-            INTEGER,            
+            INTEGER,
         systemPowerStatus
             INTEGER,
         systemPowerFanSpeed
             INTEGER,
         systemPowerTemp
-            INTEGER            
+            INTEGER
 	}
 
 systemPowerIndex OBJECT-TYPE
@@ -1952,13 +1952,13 @@ systemPowerIndex OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"SystemPowerIndex."
     ::= { systemPowerTableEntry 1 }
-    
+
 systemPowerID OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"SystemPowerID."
-    ::= { systemPowerTableEntry 2 }    
+    ::= { systemPowerTableEntry 2 }
 
 systemPowerEnclosureID OBJECT-TYPE
     SYNTAX  INTEGER
@@ -1966,10 +1966,10 @@ systemPowerEnclosureID OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"SystemPowerEnclosureID."
     ::= { systemPowerTableEntry 3 }
-    
+
 systemPowerStatus OBJECT-TYPE
     SYNTAX  INTEGER{
-                   ok(0),       
+                   ok(0),
                    fail(-1)
                    }
     ACCESS  read-only
@@ -1982,15 +1982,15 @@ systemPowerFanSpeed OBJECT-TYPE
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"SystemPower speed."
-    ::= { systemPowerTableEntry 5 }    
+    ::= { systemPowerTableEntry 5 }
 
 systemPowerTemp OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"SystemPower temperature in centigrade."
-    ::= { systemPowerTableEntry 6 } 
-    
+    ::= { systemPowerTableEntry 6 }
+
 -- cpuTable
 cpuNumber OBJECT-TYPE
     SYNTAX  INTEGER
@@ -2007,7 +2007,7 @@ cpuTemp OBJECT-TYPE
     STATUS  current
     DESCRIPTION	"CPU temperature in centigrade."
     ::= { cpu 2 }
-    
+
 cpuTable OBJECT-TYPE
     SYNTAX  SEQUENCE OF CPUTableEntryDef
     ACCESS  not-accessible
@@ -2029,10 +2029,10 @@ CPUTableEntryDef ::=
         cpuIndex
             INTEGER,
         cpuID
-            INTEGER, 
+            INTEGER,
         cpuUsage
             INTEGER
-  
+
 	}
 
 cpuIndex OBJECT-TYPE
@@ -2047,8 +2047,8 @@ cpuID OBJECT-TYPE
     ACCESS  read-only
     STATUS  mandatory
     DESCRIPTION	"CPUID."
-    ::= { cpuTableEntry 2 }  
-    
+    ::= { cpuTableEntry 2 }
+
 cpuUsage OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
@@ -2056,7 +2056,7 @@ cpuUsage OBJECT-TYPE
     DESCRIPTION	"CPUUsage."
     ::= { cpuTableEntry 3 }
 
-    
+
 -- diskPerformanceTable
 diskPerformanceNumber OBJECT-TYPE
     SYNTAX  INTEGER
@@ -2066,7 +2066,7 @@ diskPerformanceNumber OBJECT-TYPE
             "The number of Devices (regardless of
             their current state) for monitor perfrmance present on this system."
     ::= { diskPerformance 1 }
-    
+
 diskPerformanceTable OBJECT-TYPE
     SYNTAX  SEQUENCE OF DiskPerformanceTableEntryDef
     ACCESS  not-accessible
@@ -2094,7 +2094,7 @@ DiskPerformanceTableEntryDef ::=
         iops
             INTEGER,
         latency
-            INTEGER             
+            INTEGER
 	}
 
 diskPerformanceIndex OBJECT-TYPE
@@ -2103,7 +2103,7 @@ diskPerformanceIndex OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"DiskPerformanceIndex."
     ::= { diskPerformanceTableEntry 1 }
-    
+
 blvID OBJECT-TYPE
      SYNTAX  INTEGER
      ACCESS  read-only
@@ -2117,7 +2117,7 @@ iops OBJECT-TYPE
     STATUS  mandatory
     DESCRIPTION	"IOPS."
     ::= { diskPerformanceTableEntry 3 }
-    
+
 latency OBJECT-TYPE
     SYNTAX  INTEGER
     ACCESS  read-only
@@ -2125,5 +2125,3 @@ latency OBJECT-TYPE
     DESCRIPTION	"Latency."
     ::= { diskPerformanceTableEntry 4 }
 END
-
-

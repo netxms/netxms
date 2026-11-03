@@ -462,7 +462,7 @@ IP-FORWARD-MIB DEFINITIONS ::= BEGIN
 
        OBJECT        inetCidrRouteStatus
        SYNTAX        RowStatus
-       WRITE-SYNTAX  RowStatus 
+       WRITE-SYNTAX  RowStatus
        DESCRIPTION  "Support for createAndWait is not required."
 
        ::= { ipForwardCompliances 3 }
@@ -1271,6 +1271,3 @@ IP-FORWARD-MIB DEFINITIONS ::= BEGIN
         ::= { ipForwardGroups 2 }
 
     END
-
-
-

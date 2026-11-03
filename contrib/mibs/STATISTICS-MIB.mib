@@ -1,4 +1,4 @@
--- HP Enterprise Switch Statistics MIB 
+-- HP Enterprise Switch Statistics MIB
 
 
 STATISTICS-MIB DEFINITIONS ::= BEGIN
@@ -18,7 +18,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         hpSwitch
             FROM HP-ICF-OID;
 
-    -- Icf Switch Specific 
+    -- Icf Switch Specific
     hpSwitchStatistics      OBJECT IDENTIFIER ::= { hpSwitch 9 }
 
     MacAddress ::= OCTET STRING (SIZE (6))    -- a 6 octet address
@@ -59,7 +59,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     virtual LAN in this device."
         INDEX       { hpSwitchIpxStatIndex }
         ::= { hpSwitchIpxStatTable 1 }
-       
+
     HpSwitchIpxStatEntry ::=
         SEQUENCE {
             hpSwitchIpxStatIndex              VlanID,
@@ -68,8 +68,8 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
             hpSwitchIpxStatGatewayEncap       INTEGER,
             hpSwitchIpxStatAdminStatus        INTEGER
         }
-       
-          
+
+
     hpSwitchIpxStatIndex OBJECT-TYPE
         SYNTAX      VlanID
         ACCESS      read-only
@@ -78,14 +78,14 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     IPX status of a virtual LAN for which this entry
                     contains information."
         ::= { hpSwitchIpxStatEntry 1 }
-          
+
     hpSwitchIpxStatNodeAddr OBJECT-TYPE
         SYNTAX      MacAddress
         ACCESS      read-only
         STATUS      mandatory
         DESCRIPTION "The current IPX node address of this virtual LAN."
         ::= { hpSwitchIpxStatEntry 2 }
-          
+
     hpSwitchIpxStatGatewayAddr OBJECT-TYPE
         SYNTAX      MacAddress
         ACCESS      read-only
@@ -93,7 +93,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "The current IPX node address of the gateway for
                     this virtual LAN."
         ::= { hpSwitchIpxStatEntry 3 }
-          
+
     hpSwitchIpxStatGatewayEncap OBJECT-TYPE
         SYNTAX      INTEGER {
                         ethernetII(1),
@@ -106,7 +106,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         STATUS      mandatory
         DESCRIPTION "The current type of encapsulation of the gateway."
         ::= { hpSwitchIpxStatEntry 4 }
-          
+
     hpSwitchIpxStatAdminStatus OBJECT-TYPE
         SYNTAX      INTEGER {
                         enable(1),
@@ -128,23 +128,23 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-only
         STATUS      obsolete
-        DESCRIPTION "The operational status of the Time protocol." 
+        DESCRIPTION "The operational status of the Time protocol."
         ::= { hpSwitchIpStat 1 }
-       
+
     hpSwitchIpStatTimepServerAddr OBJECT-TYPE
         SYNTAX      IpAddress
         ACCESS      read-only
         STATUS      obsolete
-        DESCRIPTION "The current IP address of the Time server." 
+        DESCRIPTION "The current IP address of the Time server."
         ::= { hpSwitchIpStat 2 }
-       
+
 
     hpSwitchIpStatTimepPollInterval OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-only
         STATUS      obsolete
         DESCRIPTION "The current client poll interval of the Time server
-                    in minute." 
+                    in minute."
         ::= { hpSwitchIpStat 3 }
 
     hpSwitchIpStatTable OBJECT-TYPE
@@ -163,7 +163,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     LAN in this device."
         INDEX       { hpSwitchIpStatIndex }
         ::= { hpSwitchIpStatTable 1 }
-       
+
     HpSwitchIpStatEntry ::=
         SEQUENCE {
             hpSwitchIpStatIndex               VlanID,
@@ -172,7 +172,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
             hpSwitchIpStatGatewayAddr         IpAddress,
             hpSwitchIpStatAdminStatus         INTEGER
         }
-       
+
     hpSwitchIpStatIndex OBJECT-TYPE
         SYNTAX      VlanID
         ACCESS      read-only
@@ -181,21 +181,21 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     a virtual LAN for which this entry contains
                     information."
         ::= { hpSwitchIpStatEntry 1 }
-          
+
     hpSwitchIpStatAddr OBJECT-TYPE
         SYNTAX      IpAddress
         ACCESS      read-only
         STATUS      obsolete
         DESCRIPTION "The current IP address of this Virtual LAN."
         ::= { hpSwitchIpStatEntry 2 }
-          
+
     hpSwitchIpStatMask OBJECT-TYPE
         SYNTAX      IpAddress
         ACCESS      read-only
         STATUS      obsolete
         DESCRIPTION "The current IP subnet mask of this virtual LAN."
         ::= { hpSwitchIpStatEntry 3 }
-          
+
     hpSwitchIpStatGatewayAddr OBJECT-TYPE
         SYNTAX      IpAddress
         ACCESS      read-only
@@ -203,7 +203,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "The current IP address of the gateway for this
                     virtual LAN."
         ::= { hpSwitchIpStatEntry 4 }
-          
+
     hpSwitchIpStatAdminStatus OBJECT-TYPE
         SYNTAX      INTEGER {
                         enable(1),
@@ -337,7 +337,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
 
     hpSwitchMiscStat OBJECT IDENTIFIER ::= { hpSwitchStatistics 6 }
 
-    hpSwitchCpuStat OBJECT-TYPE 
+    hpSwitchCpuStat OBJECT-TYPE
         SYNTAX      INTEGER (0..100)
         ACCESS      read-only
         STATUS      mandatory
@@ -350,20 +350,20 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
 
     -- The FDDI IP Fragmentation Statistic Table
 
-    hpSwitchFddiIpFragStatTable OBJECT-TYPE 
-        SYNTAX      SEQUENCE OF HpSwitchFddiIpFragStatEntry 
-        ACCESS      not-accessible 
-        STATUS      mandatory 
-        DESCRIPTION "A list of IP fragmentation statistics 
-                    for the FDDI cards in the switch." 
-        ::= { hpSwitchFddiIpFragStat 1 } 
+    hpSwitchFddiIpFragStatTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF HpSwitchFddiIpFragStatEntry
+        ACCESS      not-accessible
+        STATUS      mandatory
+        DESCRIPTION "A list of IP fragmentation statistics
+                    for the FDDI cards in the switch."
+        ::= { hpSwitchFddiIpFragStat 1 }
 
     hpSwitchFddiIpFragStatEntry OBJECT-TYPE
         SYNTAX      HpSwitchFddiIpFragStatEntry
         ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "An Fddi IP fragmentation entry which is 
-                    containing statictics for the FDDI 
+        DESCRIPTION "An Fddi IP fragmentation entry which is
+                    containing statictics for the FDDI
                     cards in the switch."
         INDEX       {  hpSwitchFddiIpFragStatIndex }
         ::= { hpSwitchFddiIpFragStatTable 1 }
@@ -380,18 +380,18 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-only
         STATUS      mandatory
-        DESCRIPTION "A unique value for each FDDI Card.  
-                    The value for each FDDI card must remain constant 
-                    at least from one re-initialization of the entity's 
-                    network management system to the next 
-                    re-initialization." 
+        DESCRIPTION "A unique value for each FDDI Card.
+                    The value for each FDDI card must remain constant
+                    at least from one re-initialization of the entity's
+                    network management system to the next
+                    re-initialization."
         ::= { hpSwitchFddiIpFragStatEntry 1 }
 
     hpSwitchFddiIpFragFramesFragmented OBJECT-TYPE
         SYNTAX      Counter
         ACCESS      read-only
         STATUS      mandatory
-        DESCRIPTION "Number of FDDI Frames which get fragmented when they 
+        DESCRIPTION "Number of FDDI Frames which get fragmented when they
                     are larger than Ethernet Frame size, 1518 bytes."
         ::= { hpSwitchFddiIpFragStatEntry 2 }
 
@@ -414,26 +414,26 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     because the FDDI IP fragmentation is disabled "
         ::= { hpSwitchFddiIpFragStatEntry 4 }
 
-    -- The FDDI System Information and Statistic Group  
+    -- The FDDI System Information and Statistic Group
 
     hpSwitchFddiSystemStat OBJECT IDENTIFIER ::= { hpSwitchStatistics 8 }
 
     -- The FDDI System Information and Statistic Table
 
-    hpSwitchFddiSystemStatTable OBJECT-TYPE 
-        SYNTAX      SEQUENCE OF HpSwitchFddiSystemStatEntry 
-        ACCESS      not-accessible 
-        STATUS      mandatory 
-        DESCRIPTION "A list of system infomations and statistics 
-                    for the FDDI cards in the switch." 
-        ::= { hpSwitchFddiSystemStat 1 } 
+    hpSwitchFddiSystemStatTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF HpSwitchFddiSystemStatEntry
+        ACCESS      not-accessible
+        STATUS      mandatory
+        DESCRIPTION "A list of system infomations and statistics
+                    for the FDDI cards in the switch."
+        ::= { hpSwitchFddiSystemStat 1 }
 
     hpSwitchFddiSystemStatEntry OBJECT-TYPE
         SYNTAX      HpSwitchFddiSystemStatEntry
         ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "An Fddi system entry which is 
-                    containing statictics for the FDDI 
+        DESCRIPTION "An Fddi system entry which is
+                    containing statictics for the FDDI
                     cards in the switch."
         INDEX       {  hpSwitchFddiSystemStatIndex }
         ::= { hpSwitchFddiSystemStatTable 1 }
@@ -455,11 +455,11 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-only
         STATUS      mandatory
-        DESCRIPTION "A unique value for each FDDI Card.  
-                    The value for each FDDI card must remain constant 
-                    at least from one re-initialization of the entity's 
-                    network management system to the next 
-                    re-initialization." 
+        DESCRIPTION "A unique value for each FDDI Card.
+                    The value for each FDDI card must remain constant
+                    at least from one re-initialization of the entity's
+                    network management system to the next
+                    re-initialization."
         ::= { hpSwitchFddiSystemStatEntry 1 }
 
     hpSwitchFddiSystemOsVersion OBJECT-TYPE
@@ -508,7 +508,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         ::= { hpSwitchFddiSystemStatEntry 6 }
 
     hpSwitchFddiSystemBuildDirectory OBJECT-TYPE
-        SYNTAX      OCTET STRING (SIZE (80)) 
+        SYNTAX      OCTET STRING (SIZE (80))
         ACCESS      read-only
         STATUS      mandatory
         DESCRIPTION "The Build directory the FDDI firmware image "
@@ -528,7 +528,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "The Build number of the FDDI firmware image"
         ::= { hpSwitchFddiSystemStatEntry 9 }
 
-    -- The Automatic Broadcast Control (ABC) Statistic Group  
+    -- The Automatic Broadcast Control (ABC) Statistic Group
 
     hpABCStats OBJECT IDENTIFIER ::= { hpSwitchStatistics 9 }
 
@@ -626,7 +626,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     ports shown."
         ::= { hpABCStatsEntry 7 }
 
-    -- The IGMP Statistic Group  
+    -- The IGMP Statistic Group
 
     hpIgmpStats OBJECT IDENTIFIER ::= { hpSwitchStatistics 10 }
 
@@ -726,7 +726,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         ::= { hpIgmpStatsPortTable 1 }
 
 
-    HpIgmpStatsPortEntry ::=        
+    HpIgmpStatsPortEntry ::=
         SEQUENCE {
             hpIgmpStatsPortIndex              INTEGER,
             hpIgmpStatsPortType               HpSwitchPortType,
@@ -787,7 +787,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         ::= { hpIgmpStatsPortTable2 1 }
 
 
-    HpIgmpStatsPortEntry2 ::=        
+    HpIgmpStatsPortEntry2 ::=
         SEQUENCE {
             hpIgmpStatsPortIndex2              INTEGER,
             hpIgmpStatsPortType2               HpSwitchPortType,
@@ -853,7 +853,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
 
     -- IGMP Statistic end
 
-    -- The Load Balance Protocol Statistics Group  
+    -- The Load Balance Protocol Statistics Group
 
     hpLdbalStats OBJECT IDENTIFIER ::= { hpSwitchStatistics 11 }
 
@@ -903,7 +903,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-only
         STATUS      mandatory
-        DESCRIPTION "This variable describes the load balancing port state. 
+        DESCRIPTION "This variable describes the load balancing port state.
                     A disabled state indicates the port does not have a
                     link beat. An initial state indicates the port has
                     recently established a link beat and is detecting
@@ -915,7 +915,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     packets.  A notEstablished state indicates that the
                     port is outside the load balancing domain, not
                     directly connected to a load balancing port, and
-                    learning MAC address by receiving unknown source 
+                    learning MAC address by receiving unknown source
                     address packets. An error state indicates the port
                     has detected a direct connection to more than one
                     load balancing port and is blocked, only accepting
@@ -924,7 +924,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     the established or not established state."
         ::= { hpLdbalStatsPortEntry 2 }
 
-                                                                           
+
     hpLdbalStatsAdjacentSwitch OBJECT-TYPE
         SYNTAX      MacAddress
         ACCESS      read-only
@@ -940,7 +940,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         SYNTAX      MacAddress
         ACCESS      read-only
         STATUS      mandatory
-        DESCRIPTION "The port identifier of the peer port connected to 
+        DESCRIPTION "The port identifier of the peer port connected to
                     the corresponding load balancing established port. If
                     load balancing has not been established on this port
                     then this value is void."
@@ -952,7 +952,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
 
     hpSwitchMacStats OBJECT IDENTIFIER ::= { hpSwitchStatistics 12 }
 
-    hpSwitchFdbAddressCount OBJECT-TYPE 
+    hpSwitchFdbAddressCount OBJECT-TYPE
         SYNTAX      INTEGER (0..16384)
         ACCESS      read-only
         STATUS      mandatory
@@ -976,7 +976,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         SYNTAX      HpSwitchFlowControlStatusEntry
         ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "The flow control status per port basis." 
+        DESCRIPTION "The flow control status per port basis."
         INDEX       { hpSwitchFlowControlStatusPortIndex }
         ::= { hpSwitchFlowControlStatusTable 1 }
 
@@ -995,7 +995,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
                     in the Interfaces Table."
         ::= { hpSwitchFlowControlStatusEntry 1 }
 
-    hpSwitchFlowControlState OBJECT-TYPE 
+    hpSwitchFlowControlState OBJECT-TYPE
         SYNTAX      INTEGER {
                         off(1),
                         on(2),
@@ -1024,7 +1024,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         SYNTAX      HpFECStatsTrunkEntry
         ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "The flow control status per port basis." 
+        DESCRIPTION "The flow control status per port basis."
         INDEX       { hpFECStatsTrunkIndex }
         ::= { hpFECStatsTrunkTable 1 }
 
@@ -1099,7 +1099,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         SYNTAX      HpFECStatsPortEntry
         ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "The flow control status per port basis." 
+        DESCRIPTION "The flow control status per port basis."
         INDEX       { hpFECStatsPortIndex }
         ::= { hpFECStatsPortTable 1 }
 
@@ -1141,7 +1141,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "The name of the trunk group"
         ::= { hpFECStatsPortEntry 3 }
 
-    hpFECStatsPortMode OBJECT-TYPE 
+    hpFECStatsPortMode OBJECT-TYPE
         SYNTAX      INTEGER {
                         down(1),
                         forwarding(2),
@@ -1153,7 +1153,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "FEC port mode"
         ::= { hpFECStatsPortEntry 4 }
 
-    hpFECStatsPortNegotiationStatus OBJECT-TYPE 
+    hpFECStatsPortNegotiationStatus OBJECT-TYPE
         SYNTAX      INTEGER {
                         successful(1),
                         failed(2),
@@ -1178,7 +1178,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "The number of FEC hello packets received"
         ::= { hpFECStatsPortEntry 7 }
 
-    hpFECStatsPortMySlowHello OBJECT-TYPE 
+    hpFECStatsPortMySlowHello OBJECT-TYPE
         SYNTAX      INTEGER {
                         fast(1),
                         slow(2)
@@ -1188,7 +1188,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "Currently running fast or slow FEC hello state"
         ::= { hpFECStatsPortEntry 8 }
 
-    hpFECStatsPortMyAutoMode OBJECT-TYPE 
+    hpFECStatsPortMyAutoMode OBJECT-TYPE
         SYNTAX      INTEGER {
                         desirable(1),
                         auto(2)
@@ -1315,7 +1315,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
             hpSshStatsSesType            INTEGER,
             hpSshStatsSourceIpPort       DisplayString,
             hpSshStatsSesVersion         INTEGER,
-            hpSshStatsSourceIpType       InetAddressType, 
+            hpSshStatsSourceIpType       InetAddressType,
             hpSshStatsSourceIpAddress    InetAddress,
             hpSshStatsSourceIpPortNum    InetPortNumber
         }
@@ -1344,10 +1344,10 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         SYNTAX      DisplayString (SIZE (0..21))
         ACCESS      read-only
         STATUS      deprecated
-        DESCRIPTION "Contains the information about source ip address and 
+        DESCRIPTION "Contains the information about source ip address and
                      port number of active SSH session (e.g. 192.168.31.114:1722).
 
-                     This object has been depreceted as its not big enough to store 
+                     This object has been depreceted as its not big enough to store
                      IPv6 addresses. It is loosely replaced by hpSshStatsSourceIpAddress
                      and hpSshStatsSourceIpPortNum"
         ::= { hpSshStatsEntry 3 }
@@ -1368,7 +1368,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         SYNTAX      InetAddressType
         ACCESS      read-only
         STATUS      mandatory
-        DESCRIPTION "Specifies the Address type of source ip 
+        DESCRIPTION "Specifies the Address type of source ip
                      address of active SSH session."
         ::= { hpSshStatsEntry 5 }
 
@@ -1384,7 +1384,7 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         SYNTAX      InetPortNumber
         ACCESS      read-only
         STATUS      mandatory
-        DESCRIPTION "Specifies the source port number of 
+        DESCRIPTION "Specifies the source port number of
                      active SSH session."
         ::= { hpSshStatsEntry 7 }
 
@@ -1405,14 +1405,14 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "Information about the physical ports of this device."
         INDEX       { hpSwitchPhysicalPortIndex }
         ::= { hpSwitchPhysicalPortTable 1 }
-       
+
     HpSwitchPhysicalPortEntry ::=
         SEQUENCE {
             hpSwitchPhysicalPortIndex                INTEGER,
             hpSwitchPhysicalPortType                 HpSwitchPortType
         }
-       
-          
+
+
     hpSwitchPhysicalPortIndex OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-only
@@ -1420,13 +1420,12 @@ STATISTICS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "An index that uniquely identifies a row in the physical
                     port table."
         ::= { hpSwitchPhysicalPortEntry 1 }
-          
+
     hpSwitchPhysicalPortType OBJECT-TYPE
         SYNTAX      HpSwitchPortType
         ACCESS      read-only
         STATUS      mandatory
         DESCRIPTION "The type for this port."
         ::= { hpSwitchPhysicalPortEntry 2 }
-          
-END
 
+END

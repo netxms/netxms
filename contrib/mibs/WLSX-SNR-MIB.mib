@@ -3,8 +3,8 @@
 WLSX-SNR-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
-       
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
+
        MODULE-IDENTITY,
        OBJECT-TYPE,
        snmpModules,
@@ -28,15 +28,15 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
 
        OBJECT-GROUP
            FROM SNMPv2-CONF
-	  monPhyAddress, 
-	  monRadioNumber, 
+	  monPhyAddress,
+	  monRadioNumber,
 	  monitoredStaPhyAddress,
 	  monitoredApBSSID
 			FROM WLSX-MON-MIB
 		wlsxEnterpriseMibModules
 			FROM ARUBA-MIB;
 
-   wlsxSNRMIB MODULE-IDENTITY 
+   wlsxSNRMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -48,7 +48,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
        DESCRIPTION
            "
 		   This MIB module defines MIB objects which provide
-           information about the Wireless Management System (WMS) in the 
+           information about the Wireless Management System (WMS) in the
 		   Aruba controller.
 		   "
        REVISION        "202008141745Z"
@@ -60,24 +60,24 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
 
  -- AP SNR Table
 
-   wlsxAPSnrTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxAPSnrEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxAPSnrTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxAPSnrEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This Table lists SNR information about monitored APs. 
+			This Table lists SNR information about monitored APs.
 		"
-      ::= { wlsxSNRGroup 1 } 
+      ::= { wlsxSNRGroup 1 }
 
-   wlsxAPSnrEntry OBJECT-TYPE 
-	  SYNTAX       WlsxAPSnrEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxAPSnrEntry OBJECT-TYPE
+	  SYNTAX       WlsxAPSnrEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Management Entry"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredApBSSID}
-      ::= { wlsxAPSnrTable 1 } 
+      ::= { wlsxAPSnrTable 1 }
 
    WlsxAPSnrEntry ::=
      SEQUENCE {
@@ -94,7 +94,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Total Signal Strength observed by the Monitoring station 
+			The Total Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxAPSnrEntry 1 }
@@ -105,7 +105,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Number of Signal Packets observed by the Monitoring station 
+			The Number of Signal Packets observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxAPSnrEntry 2 }
@@ -116,7 +116,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Highest Signal Strength observed by the Monitoring station 
+			The Highest Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxAPSnrEntry 3 }
@@ -127,7 +127,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Lowest Signal Strength observed by the Monitoring station 
+			The Lowest Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxAPSnrEntry 4 }
@@ -145,24 +145,24 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
 
  -- Station SNR Table
 
-   wlsxStaSnrTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxStaSnrEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxStaSnrTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxStaSnrEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This Table lists SNR information about monitored stations. 
+			This Table lists SNR information about monitored stations.
 		"
-      ::= { wlsxSNRGroup 2 } 
+      ::= { wlsxSNRGroup 2 }
 
-   wlsxStaSnrEntry OBJECT-TYPE 
-	  SYNTAX       WlsxStaSnrEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxStaSnrEntry OBJECT-TYPE
+	  SYNTAX       WlsxStaSnrEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Management Entry"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredStaPhyAddress}
-      ::= { wlsxStaSnrTable 1 } 
+      ::= { wlsxStaSnrTable 1 }
 
    WlsxStaSnrEntry ::=
      SEQUENCE {
@@ -179,7 +179,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Total Signal Strength observed by the Monitoring station 
+			The Total Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxStaSnrEntry 1 }
@@ -190,7 +190,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Number of Signal Packets observed by the Monitoring station 
+			The Number of Signal Packets observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxStaSnrEntry 2 }
@@ -201,7 +201,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Highest Signal Strength observed by the Monitoring station 
+			The Highest Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxStaSnrEntry 3 }
@@ -212,7 +212,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Lowest Signal Strength observed by the Monitoring station 
+			The Lowest Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxStaSnrEntry 4 }
@@ -231,24 +231,24 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
 
  -- AP SNR Table Ordered by the BSSID
 
-   wlsxAPSnrBSSIDTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxAPSnrBSSIDEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxAPSnrBSSIDTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxAPSnrBSSIDEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This Table SNR information about monitored APs. 
+			This Table SNR information about monitored APs.
 		"
-      ::= { wlsxSNRGroup 3 } 
+      ::= { wlsxSNRGroup 3 }
 
-   wlsxAPSnrBSSIDEntry OBJECT-TYPE 
-	  SYNTAX       WlsxAPSnrBSSIDEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxAPSnrBSSIDEntry OBJECT-TYPE
+	  SYNTAX       WlsxAPSnrBSSIDEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Management Entry"
 	  INDEX {monitoredApBSSID, monPhyAddress, monRadioNumber}
-      ::= { wlsxAPSnrBSSIDTable 1 } 
+      ::= { wlsxAPSnrBSSIDTable 1 }
 
    WlsxAPSnrBSSIDEntry ::=
      SEQUENCE {
@@ -265,7 +265,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Total Signal Strength observed by the Monitoring station 
+			The Total Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxAPSnrBSSIDEntry 1 }
@@ -276,7 +276,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Number of Signal Packets observed by the Monitoring station 
+			The Number of Signal Packets observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxAPSnrBSSIDEntry 2 }
@@ -287,7 +287,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Highest Signal Strength observed by the Monitoring station 
+			The Highest Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxAPSnrBSSIDEntry 3 }
@@ -298,7 +298,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Lowest Signal Strength observed by the Monitoring station 
+			The Lowest Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxAPSnrBSSIDEntry 4 }
@@ -316,24 +316,24 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
 
  -- Station SNR Station Phy Table
 
-   wlsxStaSnrPhyTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxStaSnrPhyEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxStaSnrPhyTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxStaSnrPhyEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This Table lists SNR information about monitored stations. 
+			This Table lists SNR information about monitored stations.
 		"
-      ::= { wlsxSNRGroup 4 } 
+      ::= { wlsxSNRGroup 4 }
 
-   wlsxStaSnrPhyEntry OBJECT-TYPE 
-	  SYNTAX       WlsxStaSnrPhyEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxStaSnrPhyEntry OBJECT-TYPE
+	  SYNTAX       WlsxStaSnrPhyEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Management Entry"
 	  INDEX {monitoredStaPhyAddress, monPhyAddress, monRadioNumber}
-      ::= { wlsxStaSnrPhyTable 1 } 
+      ::= { wlsxStaSnrPhyTable 1 }
 
    WlsxStaSnrPhyEntry ::=
      SEQUENCE {
@@ -350,7 +350,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Total Signal Strength observed by the Monitoring station 
+			The Total Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxStaSnrPhyEntry 1 }
@@ -361,7 +361,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Number of Signal Packets observed by the Monitoring station 
+			The Number of Signal Packets observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxStaSnrPhyEntry 2 }
@@ -372,7 +372,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Highest Signal Strength observed by the Monitoring station 
+			The Highest Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxStaSnrPhyEntry 3 }
@@ -383,7 +383,7 @@ WLSX-SNR-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Lowest Signal Strength observed by the Monitoring station 
+			The Lowest Signal Strength observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxStaSnrPhyEntry 4 }

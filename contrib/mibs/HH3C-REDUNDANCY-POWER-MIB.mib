@@ -3,9 +3,9 @@
 --
 -- Description: This file describes the hh3c MIB implementation of
 --              redundancy power and fan
--- Reference: 
+-- Reference:
 -- Version: V2.0
--- History: 
+-- History:
 -- V2.0 2004-10-12 updated by gaolong
 --      Add MODULE-IDENTITY clause.
 --      Re-write with SMIv2 syntax.
@@ -15,14 +15,14 @@
 HH3C-REDUNDANCY-POWER-MIB DEFINITIONS ::= BEGIN
 -- From file: "redundancy_power.mib"
 
-IMPORTS  
+IMPORTS
     NOTIFICATION-TYPE, OBJECT-TYPE, MODULE-IDENTITY
-        FROM SNMPv2-SMI  
+        FROM SNMPv2-SMI
     hh3cmlsr
         FROM HH3C-OID-MIB;
 
     hh3credundancyPower MODULE-IDENTITY
-        LAST-UPDATED "200112200000Z"	
+        LAST-UPDATED "200112200000Z"
         ORGANIZATION
             "Hangzhou H3C Tech. Co., Ltd."
         CONTACT-INFO
@@ -31,7 +31,7 @@ IMPORTS
             http://www.h3c.com
             Zip:100085
             "
-        DESCRIPTION 
+        DESCRIPTION
                 " "
         ::= { hh3cmlsr 4 }
 
@@ -51,7 +51,7 @@ hh3credundancyPowerEntry OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
-        "Each entry contains the attributes 
+        "Each entry contains the attributes
         associated with a single power unit entity."
     INDEX { hh3credundancyPowerID }
     ::= { hh3credundancyPowerTable 1 }
@@ -63,7 +63,7 @@ Hh3cRedundancyPowerEntry ::= SEQUENCE {
      }
 
 hh3credundancyPowerID OBJECT-TYPE
-    SYNTAX INTEGER 
+    SYNTAX INTEGER
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
@@ -76,7 +76,7 @@ hh3credundancyPowerStatus OBJECT-TYPE
                    space(1),
                    normal(2),
                    fail(3)
-                  } 
+                  }
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
@@ -91,7 +91,7 @@ hh3credundancyPowerPreviousStatus OBJECT-TYPE
                    space(1),
                    normal(2),
                    fail(3)
-                  } 
+                  }
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
@@ -114,7 +114,7 @@ hh3credundancyFanEntry OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
-        "Each entry contains the attributes 
+        "Each entry contains the attributes
         associated with a single power unit entity."
     INDEX { hh3credundancyFanID }
     ::= { hh3credundancyFanTable 1 }
@@ -125,7 +125,7 @@ Hh3cRedundancyFanEntry ::= SEQUENCE {
      }
 
 hh3credundancyFanID OBJECT-TYPE
-    SYNTAX INTEGER 
+    SYNTAX INTEGER
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
@@ -136,8 +136,8 @@ hh3credundancyFanID OBJECT-TYPE
 hh3credundancyFanStatus OBJECT-TYPE
     SYNTAX INTEGER{
                    normal(1),
-                   fail(2)                   
-                  } 
+                   fail(2)
+                  }
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
@@ -169,4 +169,3 @@ hh3cfanStatusChangedTrap NOTIFICATION-TYPE
 
 
 END
-

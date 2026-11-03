@@ -1,10 +1,10 @@
 -- -----------------------------------------------------------------------------
 -- MIB NAME : EGRESSACL-MIB
--- FILE NAME: EgressACL.MIB  
+-- FILE NAME: EgressACL.MIB
 -- DATE     : 2010/01/11
--- VERSION  : 1.00  
+-- VERSION  : 1.00
 -- PURPOSE  : To construct the MIB structure of egress ACL information for
---            proprietary enterprise			 
+--            proprietary enterprise
 -- -----------------------------------------------------------------------------
 -- MODIFICTION HISTORY:
 -- -----------------------------------------------------------------------------
@@ -16,7 +16,7 @@
 --
 -- Version 1.00, 2010/01/11, Peterson Zhou
 -- This is the first formal version for universal MIB definition.
--- Notes:Requested by Peterson Zhou for project DGS3210	
+-- Notes:Requested by Peterson Zhou for project DGS3210
 -- -----------------------------------------------------------------------------
 
 EGRESSACL-MIB DEFINITIONS ::= BEGIN
@@ -27,9 +27,9 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
                                         FROM SNMPv2-SMI
         MacAddress, RowStatus           FROM SNMPv2-TC
         DisplayString                   FROM RFC1213-MIB
-        SnmpAdminString                 FROM SNMP-FRAMEWORK-MIB 
+        SnmpAdminString                 FROM SNMP-FRAMEWORK-MIB
         PortList, VlanIdOrNone          FROM Q-BRIDGE-MIB
-        Ipv6Address                     FROM IPV6-TC                   
+        Ipv6Address                     FROM IPV6-TC
         dlink-common-mgmt               FROM DLINK-ID-REC-MIB;
 
     swEgressAclMgmtMIB MODULE-IDENTITY
@@ -43,10 +43,10 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         ::= { dlink-common-mgmt 89 }
 
     swEgressAclInfo		 		 OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 1 }
-    swEgressAclMaskMgmt          OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 2 }  
-    swEgressAclRuleMgmt          OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 3 }  
+    swEgressAclMaskMgmt          OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 2 }
+    swEgressAclRuleMgmt          OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 3 }
     swEgressAclMeteringMgmt      OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 4 }
-    
+
 -- -----------------------------------------------------------------------------
 -- swEgressAclInfo
 -- -----------------------------------------------------------------------------
@@ -64,8 +64,8 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         STATUS current
         DESCRIPTION
             "The total number of unused egress ACL rule entries."
-        ::={ swEgressAclInfo 2} 
- 
+        ::={ swEgressAclInfo 2}
+
 -- -----------------------------------------------------------------------------
 -- swEgressACLEthernetTable
 -- -----------------------------------------------------------------------------
@@ -95,15 +95,15 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
             swEgressACLEthernetProfileID
                 INTEGER,
             swEgressACLEthernetRowStatus
-                RowStatus,    
+                RowStatus,
             swEgressACLEthernetProfileName
                 DisplayString,
             swEgressACLEthernetUsevlan
-                INTEGER,      
+                INTEGER,
             swEgressACLEthernetVlanMask
             	OCTET STRING,
             swEgressACLEthernetUse8021p
-                INTEGER, 
+                INTEGER,
             swEgressACLEthernetUseEthernetType
                 INTEGER,
             swEgressACLEthernetMacAddrMaskState
@@ -122,16 +122,16 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "The ID of the egress ACL mask entry unique to the mask list. The maximum value of this object depends on the device."
-        ::= { swEgressACLEthernetEntry 1 }  
-             
+        ::= { swEgressACLEthernetEntry 1 }
+
     swEgressACLEthernetRowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "This object indicates the status of this entry."
-        ::= { swEgressACLEthernetEntry 2 }   
-        
+        ::= { swEgressACLEthernetEntry 2 }
+
     swEgressACLEthernetProfileName OBJECT-TYPE
         SYNTAX DisplayString(SIZE(1..32))
         MAX-ACCESS read-create
@@ -139,7 +139,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The name of the egress ACL mask entry unique to the mask list."
         ::= { swEgressACLEthernetEntry 3 }
-       
+
     swEgressACLEthernetUsevlan OBJECT-TYPE
         SYNTAX  INTEGER {
              enabled(1),
@@ -149,8 +149,8 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "Specifies that the switch will examine the VLAN part of each packet header."
-        ::= { swEgressACLEthernetEntry 4 }  
-        
+        ::= { swEgressACLEthernetEntry 4 }
+
     swEgressACLEthernetVlanMask OBJECT-TYPE
         SYNTAX OCTET STRING(SIZE(2))
         MAX-ACCESS read-create
@@ -160,8 +160,8 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
              Valid values are from 0x0000 to 0x0FFF.
              The default value is 0x0FFF
             "
-        ::= { swEgressACLEthernetEntry 5 }  
-           
+        ::= { swEgressACLEthernetEntry 5 }
+
      swEgressACLEthernetUse8021p OBJECT-TYPE
         SYNTAX  INTEGER {
                 enabled(1),
@@ -185,7 +185,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
             "Specifies if the switch will examine the Ethernet type value in each frame's header
               or not."
         ::= { swEgressACLEthernetEntry 7 }
-    
+
 
      swEgressACLEthernetMacAddrMaskState OBJECT-TYPE
                 SYNTAX  INTEGER {
@@ -230,7 +230,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The number of unused rule entries of this Ethernet profile entry."
         ::={ swEgressACLEthernetEntry 11}
-       
+
 -- -----------------------------------------------------------------------------
 -- swEgressACLIpTable
 -- -----------------------------------------------------------------------------
@@ -259,13 +259,13 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
     SwEgressACLIpEntry ::=
         SEQUENCE {
             swEgressACLIpProfileID
-                INTEGER,   
+                INTEGER,
             swEgressACLIpRowStatus
-                RowStatus,    
+                RowStatus,
             swEgressACLIpProfileName
                 DisplayString,
             swEgressACLIpUsevlan
-                INTEGER, 
+                INTEGER,
             swEgressACLIpVlanMask
                 OCTET STRING,
             swEgressACLIpIpAddrMaskState
@@ -302,16 +302,16 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
                 OCTET STRING,
             swEgressACLIpUnusedRuleEntries
                 INTEGER
-        } 
-        
+        }
+
     swEgressACLIpProfileID OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
             "The ID of the egress ACL mask entry, which is unique to the mask list. The maximum value of this object depends on the device."
-        ::= { swEgressACLIpEntry 1 }   
-       
+        ::= { swEgressACLIpEntry 1 }
+
     swEgressACLIpRowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
@@ -319,7 +319,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the status of this entry."
         ::= { swEgressACLIpEntry 2 }
-    
+
     swEgressACLIpProfileName OBJECT-TYPE
         SYNTAX DisplayString(SIZE(1..32))
         MAX-ACCESS read-create
@@ -327,7 +327,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The name of the egress ACL mask entry unique to the mask list."
         ::= { swEgressACLIpEntry 3 }
-        
+
     swEgressACLIpUsevlan OBJECT-TYPE
         SYNTAX  INTEGER {
                 enabled(1),
@@ -337,8 +337,8 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates if the IP layer VLAN part is examined or not."
-        ::= { swEgressACLIpEntry 4 }   
-        
+        ::= { swEgressACLIpEntry 4 }
+
      swEgressACLIpVlanMask OBJECT-TYPE
         SYNTAX OCTET STRING(SIZE(2))
         MAX-ACCESS read-create
@@ -348,7 +348,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
              Valid values are from 0x0000 to 0x0FFF.
              The default value is 0x0FFF.
             "
-        ::= { swEgressACLIpEntry 5 }            
+        ::= { swEgressACLIpEntry 5 }
 
      swEgressACLIpIpAddrMaskState OBJECT-TYPE
                 SYNTAX  INTEGER {
@@ -606,7 +606,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
     SwEgressACLIpv6MaskEntry ::=
         SEQUENCE {
             swEgressACLIpv6MaskProfileID
-                INTEGER,        
+                INTEGER,
             swEgressACLIpv6MaskRowStatus
                 RowStatus,
             swEgressACLIpv6MaskProfileName
@@ -618,7 +618,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
             swEgressACLIpv6MaskSrcIpv6Mask
                 Ipv6Address,
             swEgressACLIpv6MaskDstIpv6Mask
-                Ipv6Address,  
+                Ipv6Address,
             swEgressACLIpv6MaskUseProtoType
                 INTEGER,
             swEgressACLIpv6MaskIcmpOption
@@ -630,11 +630,11 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
             swEgressACLIpv6MaskTCPorUDPSrcPortMask
                 OCTET STRING,
             swEgressACLIpv6MaskTCPorUDPDstPortMask
-                OCTET STRING,  
+                OCTET STRING,
             swEgressACLIpv6MaskUnusedRuleEntries
                 INTEGER
-        }           
-        
+        }
+
     swEgressACLIpv6MaskProfileID OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  not-accessible
@@ -642,7 +642,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The ID of the egress ACL mask entry, which is unique to the mask list. The maximum value of this object depends on the device."
         ::= { swEgressACLIpv6MaskEntry 1 }
-           
+
      swEgressACLIpv6MaskRowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
@@ -650,7 +650,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the status of this entry."
         ::= { swEgressACLIpv6MaskEntry 2 }
-                  
+
      swEgressACLIpv6MaskProfileName OBJECT-TYPE
         SYNTAX DisplayString(SIZE(1..32))
         MAX-ACCESS read-create
@@ -711,7 +711,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object specifies the IPv6 address mask for the destination IPv6 address."
         ::= { swEgressACLIpv6MaskEntry 7 }
-                
+
     swEgressACLIpv6MaskUseProtoType OBJECT-TYPE
         SYNTAX  INTEGER {
                none(1),
@@ -742,7 +742,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
              type-code (4)- Both ICMP fields identified.
             "
         ::= { swEgressACLIpv6MaskEntry 9 }
-        
+
     swEgressACLIpv6MaskTcpOption OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -805,8 +805,8 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Specifies a TCP port mask for the destination port if swEgressACLIpv6MaskUseProtoType is TCP
              Specifies a UDP port mask for the destination port if swEgressACLIpv6MaskUseProtoType is UDP."
-        ::= { swEgressACLIpv6MaskEntry 13 } 
-            
+        ::= { swEgressACLIpv6MaskEntry 13 }
+
    swEgressACLIpv6MaskUnusedRuleEntries OBJECT-TYPE
         SYNTAX INTEGER
         MAX-ACCESS read-only
@@ -814,7 +814,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The number of unused rule entries of this IPv6 profile entry."
         ::={ swEgressACLIpv6MaskEntry 14}
-      
+
 -- -----------------------------------------------------------------------------
 -- swEgressACLMaskDelAllState
 -- -----------------------------------------------------------------------------
@@ -827,9 +827,9 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION
             "Used to delete all egress ACL masks."
-        ::= { swEgressAclMaskMgmt 4 } 
-        
-        
+        ::= { swEgressAclMaskMgmt 4 }
+
+
 -- -----------------------------------------------------------------------------
 -- swEgressACLEtherRuleTable
 -- -----------------------------------------------------------------------------
@@ -1016,7 +1016,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
              When you set swEgressACLEtherRulePortGroup or swEgressACLEtherRulePort, the value of this object will change to 0 automatically.
              This object cannot be set to 0."
         ::= { swEgressACLEtherRuleEntry 12 }
-        
+
     swEgressACLEtherRulePort OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  read-create
@@ -1029,7 +1029,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
              This object can not be set to 0.
 	     A value of 0 indicates that this object is not active."
         ::= { swEgressACLEtherRuleEntry 13 }
-        
+
     swEgressACLEtherRulePortGroup OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  read-create
@@ -1103,7 +1103,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
              This value will over-write the value in the DSCP field of the packet.
              A value of -1 indicates that this object is not active."
         ::= { swEgressACLEtherRuleEntry 19 }
-        
+
     swEgressAclEtherRuleTimeRangeName OBJECT-TYPE
         SYNTAX  DisplayString
         MAX-ACCESS  read-create
@@ -1200,7 +1200,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
                 INTEGER,
             swEgressAclIpRuleTimeRangeName
                 DisplayString
-                
+
         }
 
     swEgressACLIpRuleProfileID OBJECT-TYPE
@@ -1415,7 +1415,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Specifies that the rule applies to the first four byte behind the IP header."
         ::= { swEgressACLIpRuleEntry 20 }
-        
+
     swEgressACLIpRuleUserDefineMask OBJECT-TYPE
         SYNTAX  OCTET STRING (SIZE(4))
         MAX-ACCESS  read-create
@@ -1438,7 +1438,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
              When you set swEgressACLIpRulePortGroup or swEgressACLIpRulePort , the value of this object will change to 0 automatically.
              This object cannot be set 0."
         ::= { swEgressACLIpRuleEntry 22 }
-        
+
     swEgressACLIpRulePort OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  read-create
@@ -1447,7 +1447,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
             "Specifies that the access rule will only apply to the port.
              This object and swEgressACLIpRuleVID,swEgressACLIpRulePortGroup can not be set together.When you set swEgressACLIpRuleVID or swEgressACLIpRulePortGroup,
              the value of this object will change to 0 automatically.
-             This object can not be set to 0. 
+             This object can not be set to 0.
 	     A value of 0 indicates that this object is not active."
         ::= { swEgressACLIpRuleEntry 23}
 
@@ -1781,7 +1781,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
              This object can not be set to 0.
 	     A value of 0 indicates that this object is not active."
         ::= { swEgressACLIpv6RuleEntry 17 }
-        
+
      swEgressACLIpv6RulePortGroup OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  read-create
@@ -1854,7 +1854,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
              This value will over-write the value in the DSCP field of the packet.
              A value of -1 indicates that this object is not active."
         ::= { swEgressACLIpv6RuleEntry 23 }
-        
+
     swEgressAclIpv6RuleTimeRangeName OBJECT-TYPE
         SYNTAX  DisplayString
         MAX-ACCESS  read-create
@@ -2450,7 +2450,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
                  3.     counter will be cleared when the function is disabled.
                 "
             ::= { swEgressAclMeterEntry 31 }
-            
+
       swEgressAclRateTable OBJECT-TYPE
                 SYNTAX      SEQUENCE OF SwEgressAclRateEntry
                 MAX-ACCESS  not-accessible
@@ -2506,7 +2506,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
                 DESCRIPTION
                    "The ID of the egress ACL rule entry as related to the swEgressAclRateProfileID."
                 ::= { swEgressAclRateEntry 2 }
-                
+
         swEgressAclRateRowStatus OBJECT-TYPE
             SYNTAX  RowStatus
             MAX-ACCESS  read-create
@@ -2514,7 +2514,7 @@ EGRESSACL-MIB DEFINITIONS ::= BEGIN
             DESCRIPTION
                 "This object indicates the status of this entry."
             ::= { swEgressAclRateEntry 3 }
-            
+
         swEgressAclRate OBJECT-TYPE
                 SYNTAX INTEGER
                 MAX-ACCESS  read-create

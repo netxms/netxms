@@ -3,7 +3,7 @@
 WLSX-AUTH-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
 
        MODULE-IDENTITY,
        OBJECT-TYPE,
@@ -38,7 +38,7 @@ WLSX-AUTH-MIB DEFINITIONS ::= BEGIN
 	   ArubaAuthServerType
 	   		FROM ARUBA-TC;
 
-   wlsxAuthMIB MODULE-IDENTITY 
+   wlsxAuthMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -49,7 +49,7 @@ WLSX-AUTH-MIB DEFINITIONS ::= BEGIN
 	    	Fax:		408 752 0626"
        DESCRIPTION
            "This MIB module defines MIB objects which provide
-            information about the authentication servers known to an 
+            information about the authentication servers known to an
 			Aruba controller."
        REVISION        "202008141745Z"
        DESCRIPTION
@@ -63,26 +63,26 @@ WLSX-AUTH-MIB DEFINITIONS ::= BEGIN
 -- wlsxAuthenticationServerGroup contains information about the authentication
 -- servers in the controller.
 
-   wlsxAuthenticationServerTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxAuthenticationServerEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxAuthenticationServerTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxAuthenticationServerEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This Table lists all the authentication servers currently
 			configured in the controller. Servers are identified by name.
 		"
-	
-      ::= { wlsxAuthenticationServerGroup 1 } 
 
-   wlsxAuthenticationServerEntry OBJECT-TYPE 
-	  SYNTAX       WlsxAuthenticationServerEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxAuthenticationServerGroup 1 }
+
+   wlsxAuthenticationServerEntry OBJECT-TYPE
+	  SYNTAX       WlsxAuthenticationServerEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Server entry"
 	  INDEX { authServerName }
-      ::= { wlsxAuthenticationServerTable 1 } 
+      ::= { wlsxAuthenticationServerTable 1 }
 
    WlsxAuthenticationServerEntry ::=
      SEQUENCE {
@@ -256,25 +256,25 @@ WLSX-AUTH-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxAuthenticationServerEntry 15 }
 
-   wlsxPortalServerTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxPortalServerEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxPortalServerTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxPortalServerEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This table lists configured captive portal servers.
 		"
-	
-      ::= { wlsxAuthenticationServerGroup 2 } 
 
-   wlsxPortalServerEntry OBJECT-TYPE 
-	  SYNTAX       WlsxPortalServerEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxAuthenticationServerGroup 2 }
+
+   wlsxPortalServerEntry OBJECT-TYPE
+	  SYNTAX       WlsxPortalServerEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Portal Server Entry"
 	  INDEX { portalServerIndex }
-      ::= { wlsxPortalServerTable 1 } 
+      ::= { wlsxPortalServerTable 1 }
 
    WlsxPortalServerEntry ::=
      SEQUENCE {
@@ -336,23 +336,23 @@ WLSX-AUTH-MIB DEFINITIONS ::= BEGIN
 
    -- LDAP Server Specific State
 
-   wlsxLdapServerStateTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxLdapServerStateEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxLdapServerStateTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxLdapServerStateEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		"
-      ::= { wlsxAuthenticationServerGroup 5 } 
+      ::= { wlsxAuthenticationServerGroup 5 }
 
-   wlsxLdapServerStateEntry OBJECT-TYPE 
-	  SYNTAX       WlsxLdapServerStateEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxLdapServerStateEntry OBJECT-TYPE
+	  SYNTAX       WlsxLdapServerStateEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "LDAP Server Entry"
 	  INDEX { authServerName }
-      ::= { wlsxLdapServerStateTable 1 } 
+      ::= { wlsxLdapServerStateTable 1 }
 
    WlsxLdapServerStateEntry ::=
      SEQUENCE {

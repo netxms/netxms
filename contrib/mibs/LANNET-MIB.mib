@@ -4,8 +4,8 @@ LANNET-MIB DEFINITIONS ::= BEGIN
 -- Version:     7.2
 -- Date:        6-May-1996
 -- By:   Lucia Smilovici
--- Last Update :  
--- Comments:   Some of  MADGE ESD agents support also 
+-- Last Update :
+-- Comments:   Some of  MADGE ESD agents support also
 -- relevant sections of the standard mibs:
 --              - MIB-II  ( RFC1213-MIB )
 --              - dot5    ( RFC1231-MIB, updated by RFC1239 )
@@ -13,17 +13,17 @@ LANNET-MIB DEFINITIONS ::= BEGIN
 --              RMON MIB (RFC1271-MIB)
 
 
--- Copyright 1992,1993, 1994, 1995 MADGE NETWORKS, Ltd.  
--- All Rights Reserved.  
+-- Copyright 1992,1993, 1994, 1995 MADGE NETWORKS, Ltd.
+-- All Rights Reserved.
 
--- Reproduction of this document is authorized on condition 
+-- Reproduction of this document is authorized on condition
 -- that the foregoing copyright notice is included.
 
 -- This MADGE ESD SNMP Management Information Base Specification
 -- (Specification) embodies MADGE ESD confidential and
 -- proprietary intellectual property.  MADGE retains all
--- title and ownership in the Specification, including any 
--- revisions.  
+-- title and ownership in the Specification, including any
+-- revisions.
 
 -- It is MADGE's intent to encourage the widespread use of
 -- this Specification in connection with the management of
@@ -47,10 +47,10 @@ IMPORTS
     FROM RFC1213-MIB;
 --      OwnerString
 --    FROM RFC1271-MIB;
-  
+
 
 -- Some MIB Compilers need these two lines:
---  enterprises  OBJECT IDENTIFIER ::= 
+--  enterprises  OBJECT IDENTIFIER ::=
 --                { iso org(3) dod(6) internet(1) private(4) 1 }
 
 lannet  OBJECT IDENTIFIER ::= { enterprises 81 }
@@ -78,9 +78,9 @@ vnsPacketEntry OBJECT-TYPE
 
 VnsPacketEntry ::=
     SEQUENCE {
-         vnsPacketMACAddress 
+         vnsPacketMACAddress
         OCTET STRING,
-         vnsPacketProtocolTypeMask 
+         vnsPacketProtocolTypeMask
         OCTET STRING,
          vnsPacketIPAddress
         IpAddress,
@@ -101,7 +101,7 @@ VnsPacketEntry ::=
          vnsPacketDetectedVLAN
         INTEGER,
          vnsPacketBoxAgentIP
-        IpAddress 
+        IpAddress
     }
 
 vnsPacketMACAddress OBJECT-TYPE
@@ -113,18 +113,18 @@ vnsPacketMACAddress OBJECT-TYPE
     ::= { vnsPacketEntry 1 }
 
 vnsPacketProtocolTypeMask   OBJECT-TYPE
-    SYNTAX OCTET STRING ( SIZE (1))  
+    SYNTAX OCTET STRING ( SIZE (1))
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This is a mask of the exising protocols. 
+        "This is a mask of the exising protocols.
          Bit(0)='1' when IP protocol exist and '0' otherwise,
          Bit(1)='1' when IPX protocol exist and '0' otherwise,
          all other bits are '0' for the moment."
     ::= { vnsPacketEntry 2 }
 
 vnsPacketIPAddress OBJECT-TYPE
-    SYNTAX IpAddress 
+    SYNTAX IpAddress
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -153,13 +153,13 @@ vnsPacketStationType OBJECT-TYPE
     SYNTAX INTEGER  {
         unknown(1),
         client(2),
-        server(3),  
+        server(3),
         notSupported(255)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The Station Type indicates from where comes the packets 
+        "The Station Type indicates from where comes the packets
          in the case of the IPX protocol."
     DEFVAL { notSupported }
     ::= { vnsPacketEntry 6 }
@@ -170,9 +170,9 @@ vnsPacketPortGroupId OBJECT-TYPE
       STATUS  mandatory
       DESCRIPTION
       "Index which identifies the group inside the chassis for which this
-      entry contains information. It equals with the slot number." 
+      entry contains information. It equals with the slot number."
       ::= { vnsPacketEntry 7 }
-      
+
 vnsPacketPortId OBJECT-TYPE
       SYNTAX  INTEGER (1..255)
       ACCESS  read-only
@@ -181,35 +181,35 @@ vnsPacketPortId OBJECT-TYPE
       "Index which identifies the port inside the group for which this
       entry contains information. It equals  with the port number."
       ::= { vnsPacketEntry 8 }
-      
+
  vnsPacketBackbonePort  OBJECT-TYPE
     SYNTAX INTEGER  {
         unknown(1),
         backbone(2),
-        noBackbone(3),  
+        noBackbone(3),
         notSupported(255)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The value 2 indicates that the port source of the packet is a 
+        "The value 2 indicates that the port source of the packet is a
           backbone port."
     ::= { vnsPacketEntry 9 }
- 
-vnsPacketExpectedVLAN OBJECT-TYPE 
-    SYNTAX  INTEGER 
-    ACCESS read-only
-    STATUS  mandatory 
-    DESCRIPTION 
-    "The value of this item is the VLAN number that the packet had to have 
-     according to it's address." 
-    ::= { vnsPacketEntry 10 } 
 
-vnsPacketDetectedVLAN OBJECT-TYPE 
-    SYNTAX  INTEGER 
+vnsPacketExpectedVLAN OBJECT-TYPE
+    SYNTAX  INTEGER
     ACCESS read-only
-    STATUS  mandatory 
-    DESCRIPTION 
+    STATUS  mandatory
+    DESCRIPTION
+    "The value of this item is the VLAN number that the packet had to have
+     according to it's address."
+    ::= { vnsPacketEntry 10 }
+
+vnsPacketDetectedVLAN OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS read-only
+    STATUS  mandatory
+    DESCRIPTION
     "The value of this item is the detected VLAN number of the arrived packet."
     ::= { vnsPacketEntry 11 }
 
@@ -240,9 +240,9 @@ vnsPacketDetectedVLAN OBJECT-TYPE
                 vnsPacketBoxAgentIP
                 }
         DESCRIPTION
-            "This trap reports to VNS a VLAN violation. 
-             LRE verify the VLAN of the incoming packets. 
-             If there is any inconsistency between the incoming and 
+            "This trap reports to VNS a VLAN violation.
+             LRE verify the VLAN of the incoming packets.
+             If there is any inconsistency between the incoming and
              expected VLAN number then the LRE will issue a SNMP trap."
         ::= 26
 END

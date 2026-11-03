@@ -184,4 +184,3 @@ bsSourceGuardAddrSource OBJECT-TYPE
     ::= { bsSourceGuardAddrEntry 5 }
 
 END
-

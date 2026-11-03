@@ -11,7 +11,7 @@ IMPORTS
 	   FROM Q-BRIDGE-MIB
 	ifIndex, InterfaceIndex
 	   FROM IF-MIB;
-	  
+
 fdryIpSrcGuardMIB MODULE-IDENTITY
 	LAST-UPDATED "201007260000Z" -- July 26, 2010
 	ORGANIZATION "Brocade Communications Systems, Inc."
@@ -23,27 +23,27 @@ fdryIpSrcGuardMIB MODULE-IDENTITY
               Phone: 1-800-752-8061
               URL:  www.brocade.com"
 	DESCRIPTION
-		"Management Information for configuration of IP Source Guard feature. 
-		IP Source Guard is a security feature that restricts IP traffic on untrusted 
-		ports by filtering traffic based on the DHCP snooping binding database or 
+		"Management Information for configuration of IP Source Guard feature.
+		IP Source Guard is a security feature that restricts IP traffic on untrusted
+		ports by filtering traffic based on the DHCP snooping binding database or
 		manually configured IP source bindings.
-			
-		Copyright 1996-2010 Brocade Communications Systems, Inc.  
+
+		Copyright 1996-2010 Brocade Communications Systems, Inc.
   		All rights reserved.
   		This Brocade Communications Systems SNMP Management Information Base Specification
  		embodies Brocade Communications Systems' confidential and proprietary
  		intellectual property. Brocade Communications Systems retains all
   		title and ownership in the Specification, including any revisions.
-                                                
+
  		This Specification is supplied AS IS, and Brocade Communications Systems makes
  		no warranty, either express or implied, as to the use,
- 		operation, condition, or performance of the specification, and any unintended 
+ 		operation, condition, or performance of the specification, and any unintended
  		consequence it may on the user environment."
- 		
+
  	REVISION        "201007260000Z" -- July 26, 2010
- 	DESCRIPTION  
+ 	DESCRIPTION
  		"Changed the ORGANIZATION, CONTACT-INFO and DESCRIPTION fields."
- 		
+
 	REVISION     "201002220000Z" -- February 22, 2010
 	DESCRIPTION
 		""
@@ -67,7 +67,7 @@ BindType ::= TEXTUAL-CONVENTION
 		other(1),
 		ip(2)
 		}
-		
+
 fdryIpSrcGuardInterface  OBJECT IDENTIFIER ::= { fdryIpSrcGuardMIB 1 }
 fdryIpSrcGuardPortVlan OBJECT IDENTIFIER ::= { fdryIpSrcGuardMIB 2 }
 fdryIpSrcGuardBind OBJECT IDENTIFIER ::= { fdryIpSrcGuardMIB 3 }
@@ -81,7 +81,7 @@ fdryIpSrcGuardIfConfigTable OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS current
 	DESCRIPTION
-		"A table provides the mechanism to configure enabling or disabling 
+		"A table provides the mechanism to configure enabling or disabling
 		IP Source Guard purpose at each physical interface."
 	::= { fdryIpSrcGuardInterface 1 }
 
@@ -90,13 +90,13 @@ fdryIpSrcGuardIfConfigEntry OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS current
 	DESCRIPTION
-		"A row instance contains the configuration to enable or disable IP 
+		"A row instance contains the configuration to enable or disable IP
 		Source Guard at each physical interface capable of this feature."
 	INDEX { ifIndex }
 	::= { fdryIpSrcGuardIfConfigTable 1 }
 
 FdryIpSrcGuardIfConfigEntry ::= SEQUENCE {
-	fdryIpSrcGuardIfEnable 
+	fdryIpSrcGuardIfEnable
 		TruthValue
 	}
 
@@ -105,10 +105,10 @@ fdryIpSrcGuardIfEnable  OBJECT-TYPE
 	MAX-ACCESS	read-write
 	STATUS		current
 	DESCRIPTION
-		"This object indicates whether IP Source Guard is 
+		"This object indicates whether IP Source Guard is
 		enabled  at this interface.
 		If this object is set to 'true', IP Source Guard is enabled.
-		Traffic  coming to this interface will be forwarded. If it is 
+		Traffic  coming to this interface will be forwarded. If it is
 		 from the list of IP addresses obtained from DHCP snooping.
 		 Otherwise it is denied.
 		If this object is set to 'false', IP Source Guard is disabled."
@@ -123,7 +123,7 @@ fdryIpSrcGuardPortVlanConfigTable OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS current
 	DESCRIPTION
-		"A table provides the mechanism to configure enabling or disabling 
+		"A table provides the mechanism to configure enabling or disabling
 		IP Source Guard purpose per port per VLAN."
 	::= { fdryIpSrcGuardPortVlan 1 }
 
@@ -132,7 +132,7 @@ fdryIpSrcGuardPortVlanConfigEntry OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS current
 	DESCRIPTION
-		"A row instance contains the configuration to enable or disable IP 
+		"A row instance contains the configuration to enable or disable IP
 		Source Guard per port per VLAN of this feature."
 	INDEX { fdryIpSrcGuardPortVlanPortId, fdryIpSrcGuardPortVlanVlanId }
 	::= { fdryIpSrcGuardPortVlanConfigTable 1 }
@@ -142,7 +142,7 @@ FdryIpSrcGuardPortVlanConfigEntry ::= SEQUENCE {
 		InterfaceIndex,
 	fdryIpSrcGuardPortVlanVlanId
 		VlanIndex,
-	fdryIpSrcGuardPortVlanEnable 
+	fdryIpSrcGuardPortVlanEnable
 		TruthValue
 	}
 
@@ -167,7 +167,7 @@ fdryIpSrcGuardPortVlanEnable  OBJECT-TYPE
 	MAX-ACCESS	read-write
 	STATUS		current
 	DESCRIPTION
-		"This object indicates whether IP Source Guard is 
+		"This object indicates whether IP Source Guard is
 		enabled at this interface and this VLAN number.
 		If this object is set to 'true', IP Source Guard per-port-per-VLAN is enabled.
 		If this object is set to 'false', IP Source Guard per-port-per-VLAN is disabled."
@@ -183,8 +183,8 @@ fdryIpSrcGuardBindTable OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS current
 	DESCRIPTION
-		"A table provides the information of IP addresses used IP Source 
-		Guard purpose at each physical interface with or without specific VLAN 
+		"A table provides the information of IP addresses used IP Source
+		Guard purpose at each physical interface with or without specific VLAN
 		memberships  "
 	::= { fdryIpSrcGuardBind 1 }
 
@@ -193,13 +193,13 @@ fdryIpSrcGuardBindEntry OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS current
 	DESCRIPTION
-		"A row instance contains IP address used for IP Source Guard purpose 
+		"A row instance contains IP address used for IP Source Guard purpose
 		at each physical interface with or without specific VLAN memberships ."
 	INDEX { ifIndex, fdryIpSrcGuardBindIpAddr }
 	::= { fdryIpSrcGuardBindTable 1 }
 
 FdryIpSrcGuardBindEntry ::= SEQUENCE {
-	fdryIpSrcGuardBindIpAddr 
+	fdryIpSrcGuardBindIpAddr
 		IpAddress,
 	fdryIpSrcGuardBindVlanId
 		Unsigned32,
@@ -210,7 +210,7 @@ FdryIpSrcGuardBindEntry ::= SEQUENCE {
 	fdryIpSrcGuardBindType
 		BindType
 	}
-	
+
 fdryIpSrcGuardBindIpAddr  OBJECT-TYPE
 	SYNTAX		IpAddress
 	MAX-ACCESS	not-accessible
@@ -226,8 +226,8 @@ fdryIpSrcGuardBindVlanId  OBJECT-TYPE
 	DESCRIPTION
 		"This object indicates the specific VLAN memberships on this interface.
 		The VLAN number is optional. If you configure a VLAN number, the bindings
-		applies to that VLAN only. If you do not configure a VLAN number, the static 
-		applies to all VLANs associated with the port. In this case, the VLAN number 
+		applies to that VLAN only. If you do not configure a VLAN number, the static
+		applies to all VLANs associated with the port. In this case, the VLAN number
 		will be displayed as 0."
 	::= { fdryIpSrcGuardBindEntry 2 }
 
@@ -243,7 +243,7 @@ fdryIpSrcGuardBindRowStatus  OBJECT-TYPE
  	::= { fdryIpSrcGuardBindEntry 3 }
 
 fdryIpSrcGuardBindMode OBJECT-TYPE
-	SYNTAX    BindMode 
+	SYNTAX    BindMode
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
@@ -251,13 +251,12 @@ fdryIpSrcGuardBindMode OBJECT-TYPE
 	::= { fdryIpSrcGuardBindEntry 4 }
 
 fdryIpSrcGuardBindType OBJECT-TYPE
-	SYNTAX    BindType 
+	SYNTAX    BindType
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
 		"The type of the IP Source Guard entry"
 	::= { fdryIpSrcGuardBindEntry 5 }
 
-	
-   END
 
+   END

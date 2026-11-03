@@ -15,7 +15,7 @@ DNOS-RADIUS-AUTH-CLIENT-MIB DEFINITIONS ::= BEGIN
 
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, 
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
     IpAddress, Integer32, Counter32, Unsigned32
                                         FROM SNMPv2-SMI
     RowStatus                           FROM SNMPv2-TC
@@ -34,11 +34,11 @@ IMPORTS
         REVISION
           "201404210000Z" -- 21 April 2014 12:00:00 GMT
         DESCRIPTION
-          "Dynamic Authorization Statistics related objects are added."		
+          "Dynamic Authorization Statistics related objects are added."
         REVISION
           "201110170000Z" -- 17 Oct 2011 12:00:00 GMT
         DESCRIPTION
-          "Revisions made for new release."	  
+          "Revisions made for new release."
         REVISION
           "200705230000Z" -- 23 May 2007 12:00:00 GMT
         DESCRIPTION
@@ -51,7 +51,7 @@ IMPORTS
           "200305070000Z"
         DESCRIPTION
           "Initial version."
-          
+
     ::= { dnOS 8 }
 
 
@@ -106,13 +106,13 @@ IMPORTS
          DESCRIPTION
                      "Source IP address that will be used for the communication with RADIUS servers."
          ::= { agentRadiusConfigGroup 5 }
- 
+
     agentRadiusServerIndexNextValid OBJECT-TYPE
          SYNTAX      Integer32 (0|1..2147483647)
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Indicates the next valid index into the agentRadiusServerConfigTable 
+                     "Indicates the next valid index into the agentRadiusServerConfigTable
                      for creation.  If no additional entries are allowed, this will be 0."
          ::= { agentRadiusConfigGroup 6 }
 
@@ -124,7 +124,7 @@ IMPORTS
                      "Maximum number of retransmissions of a RADIUS request packet"
          DEFVAL { 4 }
          ::= { agentRadiusConfigGroup 18 }
-    
+
     --**************************************************************************************
     -- agentRadiusServerConfigTable
     --
@@ -144,11 +144,11 @@ IMPORTS
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-                     "Entry consisting of configuration data for a Radius 
+                     "Entry consisting of configuration data for a Radius
                      Authentication Server."
          INDEX       { agentRadiusServerIndex }
          ::= { agentRadiusServerConfigTable 1 }
-         
+
     AgentRadiusServerConfigEntry ::=
          SEQUENCE {
          agentRadiusServerIndex
@@ -173,17 +173,17 @@ IMPORTS
                  DisplayString,
          agentRadiusServerInetAddress
                  InetAddress,
-         agentRadiusServerTimeout               
+         agentRadiusServerTimeout
                  Unsigned32,
-         agentRadiusServerRetransmit            
+         agentRadiusServerRetransmit
                  Unsigned32,
-         agentRadiusServerDeadtime              
+         agentRadiusServerDeadtime
                  Unsigned32,
-         agentRadiusServerSourceIPAddr          
+         agentRadiusServerSourceIPAddr
                  IpAddress,
-         agentRadiusServerPriority              
+         agentRadiusServerPriority
                  Unsigned32,
-         agentRadiusServerUsageType             
+         agentRadiusServerUsageType
                  INTEGER
          }
 
@@ -203,7 +203,7 @@ IMPORTS
                      "IP Address of the configured RADIUS server.
                      This object cannot be changed after creation."
          ::= { agentRadiusServerConfigEntry 2 }
-  
+
     agentRadiusServerPort OBJECT-TYPE
          SYNTAX      Unsigned32 (1..65535)
          MAX-ACCESS  read-write
@@ -288,7 +288,7 @@ IMPORTS
                      During creation, the next available index is specified by the
                      agentRadiusServerIndexNextValid object.  Rows creation using
                      a different value for agentRadiusServerIndex will fail.
-                     
+
                      active(1)       - This entry is active.
                      createAndGo(4)  - Creates a new entry.
                      destroy(6)      - Deletes an entry."
@@ -302,8 +302,8 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Configure the RADIUS server to be the primary server. If there is any 
-                     other server that is configured to be primary, that server is set to be 
+                     "Configure the RADIUS server to be the primary server. If there is any
+                     other server that is configured to be primary, that server is set to be
                      a seconday server and this entry is set Primary."
          ::= { agentRadiusServerConfigEntry 12 }
 
@@ -327,7 +327,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enable or disable the message authenticator attribute for this 
+                     "Enable or disable the message authenticator attribute for this
                      RADIUS server."
          ::= { agentRadiusServerConfigEntry 14 }
 
@@ -347,7 +347,7 @@ IMPORTS
                      "IP Address of the configured RADIUS server.
                      This object cannot be changed after creation."
          ::= { agentRadiusServerConfigEntry 16 }
-  
+
     agentRadiusServerAddressType OBJECT-TYPE
          SYNTAX      InetAddressType
          MAX-ACCESS  read-create
@@ -383,7 +383,7 @@ IMPORTS
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Indicates the next valid index into the agentRadiusAccountingConfigTable 
+                     "Indicates the next valid index into the agentRadiusAccountingConfigTable
                      for creation.  If no additional entries are allowed, this will be 0."
          ::= { agentRadiusConfigGroup 10 }
 
@@ -410,7 +410,7 @@ IMPORTS
                      "Entry consisting of configuration data for a Radius Accounting Server."
          INDEX       { agentRadiusAccountingServerIndex }
          ::= { agentRadiusAccountingConfigTable 1 }
-         
+
     AgentRadiusAccountingConfigEntry ::=
          SEQUENCE {
          agentRadiusAccountingServerIndex
@@ -435,7 +435,7 @@ IMPORTS
          STATUS      current
          DESCRIPTION
                      "Unique index of the configured RADIUS accounting server.  The next valid
-                     value of this object for creation is specified by 
+                     value of this object for creation is specified by
                      agentRadiusAccountingIndexNextValid.
                      "
          ::= { agentRadiusAccountingConfigEntry 1 }
@@ -448,7 +448,7 @@ IMPORTS
                      "IP Address of the configured RADIUS accounting server.
                      This object cannot be changed after creation."
          ::= { agentRadiusAccountingConfigEntry 2 }
-     
+
    agentRadiusAccountingServerAddressType OBJECT-TYPE
          SYNTAX      InetAddressType
          MAX-ACCESS  read-create
@@ -484,7 +484,7 @@ IMPORTS
                      During creation, the next available index is specified by the
                      agentRadiusAccountingIndexNextValid object.  Rows creation using
                      a different value for agentRadiusAccountingServerIndex will fail.
-                     
+
                      active(1)       - This entry is active.
                      createAndGo(4)  - Creates a new entry.
                      destroy(6)      - Deletes an entry."
@@ -526,35 +526,35 @@ IMPORTS
          ::= { agentRadiusConfigGroup 13 }
 
     agentRadiusAuthenticationServers OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Number of RADIUS Authentication Servers that have been configured."         
+                     "Number of RADIUS Authentication Servers that have been configured."
          ::= { agentRadiusConfigGroup 14 }
 
     agentRadiusAccountingServers OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Number of RADIUS Accounting Servers that have been configured."         
+                     "Number of RADIUS Accounting Servers that have been configured."
          ::= { agentRadiusConfigGroup 15 }
 
     agentRadiusNamedAuthenticationServerGroups OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Number of configured RADIUS named Authentication Server groups."         
+                     "Number of configured RADIUS named Authentication Server groups."
          ::= { agentRadiusConfigGroup 16 }
 
     agentRadiusNamedAccountingServerGroups OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Number of configured RADIUS named Accounting Server groups."         
+                     "Number of configured RADIUS named Accounting Server groups."
          ::= { agentRadiusConfigGroup 17 }
 
     agentDasRequestsReceived OBJECT-TYPE

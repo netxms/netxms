@@ -3,7 +3,7 @@
    WLSX-USER6-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
 
        MODULE-IDENTITY,
        OBJECT-TYPE,
@@ -44,7 +44,7 @@
 		wlanESSID
 			FROM WLSX-WLAN-MIB;
 
-   wlsxUser6MIB MODULE-IDENTITY 
+   wlsxUser6MIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -65,7 +65,7 @@
    wlsxUser6InfoGroup         	OBJECT IDENTIFIER ::= { wlsxSwitchMIB 4 }
 
 -- wlsxUser6AllInfoGroup contains information about the users in the controller.
- 
+
   wlsxTotalNumOfUsers6 OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
@@ -76,27 +76,27 @@
             "
   ::= { wlsxUser6AllInfoGroup 1 }
 
-  wlsxUser6Table  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxUser6Entry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+  wlsxUser6Table  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxUser6Entry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This Table lists all the users (both wired and wireless) currently
-			connected to the controller. Users are identified by their MAC 
+			connected to the controller. Users are identified by their MAC
 			address and IP address.
 		"
-	
-  ::= { wlsxUser6AllInfoGroup 2 } 
 
-     wlsxUser6Entry OBJECT-TYPE 
-	  SYNTAX       WlsxUser6Entry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+  ::= { wlsxUser6AllInfoGroup 2 }
+
+     wlsxUser6Entry OBJECT-TYPE
+	  SYNTAX       WlsxUser6Entry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "User Entry"
 	  INDEX { nUser6PhyAddress, nUser6IpAddress }
-      ::= { wlsxUser6Table 1 } 
+      ::= { wlsxUser6Table 1 }
 
      WlsxUser6Entry ::=
      SEQUENCE {
@@ -186,14 +186,14 @@
 			The Role configured for this user.
             "
         ::= { wlsxUser6Entry 4 }
-		 
+
      nUser6UpTime OBJECT-TYPE
          SYNTAX       TimeTicks
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 Time since the user connected to the controller.	
+			 Time since the user connected to the controller.
             "
         ::= { wlsxUser6Entry 5 }
 
@@ -203,7 +203,7 @@
          STATUS       current
          DESCRIPTION
             "
-			Authentication mechanism used by the user to connect to the 
+			Authentication mechanism used by the user to connect to the
 			controller.
             "
         ::= { wlsxUser6Entry 6 }
@@ -224,7 +224,7 @@
          STATUS       current
          DESCRIPTION
             "
-			Name of the authentication server used to authenticate 
+			Name of the authentication server used to authenticate
 			the user.
             "
         ::= { wlsxUser6Entry 8 }
@@ -245,7 +245,7 @@
          STATUS       current
          DESCRIPTION
             "
-			Location of the access point to 
+			Location of the access point to
 			which the user is associated.
             "
         ::= { wlsxUser6Entry 10 }
@@ -256,7 +256,7 @@
          STATUS       current
          DESCRIPTION
             "
-			BSSID of the access point, which 
+			BSSID of the access point, which
 			the user used to connect to the controller.
             "
         ::= { wlsxUser6Entry 11 }
@@ -267,7 +267,7 @@
          STATUS       current
          DESCRIPTION
             "
-			The Object will indicate if the controller is the home controller 
+			The Object will indicate if the controller is the home controller
 			 for the user or not.
             "
         ::= { wlsxUser6Entry 12 }
@@ -278,10 +278,10 @@
          STATUS       current
          DESCRIPTION
             "
-			The Home agent IP Address of the user. If this user is already on 
-			the home controller, then this IP is the controller IP else it 
+			The Home agent IP Address of the user. If this user is already on
+			the home controller, then this IP is the controller IP else it
 			is the home controller IP address.
-			
+
             "
         ::= { wlsxUser6Entry 13 }
 
@@ -298,7 +298,7 @@
          DESCRIPTION
             "
 			The Mobility Status of the User.
-			
+
             "
         ::= { wlsxUser6Entry 14 }
 
@@ -308,7 +308,7 @@
          STATUS       current
          DESCRIPTION
             "
-			Home VLAN of the User. If the user is on the home controller 
+			Home VLAN of the User. If the user is on the home controller
 			 then this VLAN will be same as userDefaultVlan.
             "
         ::= { wlsxUser6Entry 15 }
@@ -329,7 +329,7 @@
          STATUS       current
          DESCRIPTION
             "
-			This Vlan will be different from the Default VLAN if the user has 
+			This Vlan will be different from the Default VLAN if the user has
 			a derived VLAN Configuration.
             "
         ::= { wlsxUser6Entry 17 }
@@ -626,24 +626,24 @@
 	  DESCRIPTION
 	  "
 		This table lists the user session time counts on an ESSID.
-		ssid. The session times  are separated into predefined time length 
-		buckets, with sessions lasting longer than 240 minutes falling into 
-		the 240min bucket. 
+		ssid. The session times  are separated into predefined time length
+		buckets, with sessions lasting longer than 240 minutes falling into
+		the 240min bucket.
 	  "
   ::= { wlsxUser6AllInfoGroup 3 }
 
-    wlsxUser6SessionTimeEntry OBJECT-TYPE 
+    wlsxUser6SessionTimeEntry OBJECT-TYPE
 	  SYNTAX       WlsxUser6SessionTimeEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
         "
 		 User session time data, divided into buckets of different
 	     time length.         "
-			
+
 	  INDEX { wlanESSID, wlsxUser6SessionTimeLength}
 	  ::= { wlsxUser6SessionTimeTable 1 }
- 
+
 	  WlsxUser6SessionTimeEntry ::=
       SEQUENCE {
 		 wlsxUser6SessionTimeLength   Integer32,
@@ -670,26 +670,26 @@
             "
         ::= { wlsxUser6SessionTimeEntry 2 }
 
-   wlsxSwitchUser6Table  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MxSwitchUser6Entry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSwitchUser6Table  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MxSwitchUser6Entry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This Table lists all the users (both wired and wireless) currently
 			connected to the switch. Users are identified by their IP address.
 		"
-	
-      ::= { wlsxUser6InfoGroup 1 } 
 
-     wlsxSwitchUser6Entry OBJECT-TYPE 
-	  SYNTAX       MxSwitchUser6Entry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxUser6InfoGroup 1 }
+
+     wlsxSwitchUser6Entry OBJECT-TYPE
+	  SYNTAX       MxSwitchUser6Entry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "User Entry"
 	  INDEX { user6IpAddress}
-      ::= { wlsxSwitchUser6Table 1 } 
+      ::= { wlsxSwitchUser6Table 1 }
 
      MxSwitchUser6Entry ::=
      SEQUENCE {
@@ -726,7 +726,7 @@
          STATUS       current
          DESCRIPTION
             "
-			Physical Address of the station from which the user connected to 
+			Physical Address of the station from which the user connected to
 			the switch.
             "
         ::= { wlsxSwitchUser6Entry 2 }
@@ -751,14 +751,14 @@
             "
         ::= { wlsxSwitchUser6Entry 4 }
 
-		 
+
      user6UpTime OBJECT-TYPE
          SYNTAX       TimeTicks
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 Time since the user is connected to the switch.	
+			 Time since the user is connected to the switch.
             "
         ::= { wlsxSwitchUser6Entry 5 }
 

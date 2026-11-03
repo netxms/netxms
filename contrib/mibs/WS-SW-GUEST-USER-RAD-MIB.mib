@@ -30,8 +30,8 @@ WS-SW-GUEST-USER-RAD-MIB DEFINITIONS ::= BEGIN
        SYNTAX     SEQUENCE OF WiosRadiusEntry
        MAX-ACCESS not-accessible
        STATUS     current
-       DESCRIPTION 
-            "The (conceptual) table containing 
+       DESCRIPTION
+            "The (conceptual) table containing
              guest user information."
        ::= { wiosRadiusConfig 1 }
 

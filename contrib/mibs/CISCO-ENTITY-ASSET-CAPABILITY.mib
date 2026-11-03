@@ -2,7 +2,7 @@
 -- CISCO-ENTITY-ASSET-CAPABILITY MIB
 --
 -- AGENT-CAPABILITIES mib for CISCO-ENTITY-ASSET-MIB
--- 
+--
 --
 -- Apr 2003, Kapil Kataria
 -- Sep 2003, Seth Wang
@@ -19,7 +19,7 @@ IMPORTS
         AGENT-CAPABILITIES
                 FROM SNMPv2-CONF
         ciscoAgentCapability
-                FROM CISCO-SMI;   
+                FROM CISCO-SMI;
 
 ciscoEntityAssetCapability MODULE-IDENTITY
         LAST-UPDATED    "200309040000Z"
@@ -149,4 +149,3 @@ ceAssetCapCatOSV08R0101Cat6K AGENT-CAPABILITIES
     ::= { ciscoEntityAssetCapability 3 }
 
 END
-

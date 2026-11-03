@@ -6,27 +6,27 @@
 --
 
 WS-CC-RF-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP, MODULE-COMPLIANCE			
-				FROM SNMPv2-CONF			
-			TimeTicks, IpAddress, Integer32, Unsigned32, Counter32, 
-			OBJECT-TYPE, MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			TEXTUAL-CONVENTION, PhysAddress, DisplayString, TruthValue, RowStatus			
-				FROM SNMPv2-TC			
-			wsCcRf			
-				FROM WS-CC-SMI			
-			DoActionNow, MultiPointer64			
+			OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+			TimeTicks, IpAddress, Integer32, Unsigned32, Counter32,
+			OBJECT-TYPE, MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			TEXTUAL-CONVENTION, PhysAddress, DisplayString, TruthValue, RowStatus
+				FROM SNMPv2-TC
+			wsCcRf
+				FROM WS-CC-SMI
+			DoActionNow, MultiPointer64
 				FROM WS-TYPE-MIB;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.3.2.1
-		wsCcRfMIB MODULE-IDENTITY 
+		wsCcRfMIB MODULE-IDENTITY
 			LAST-UPDATED "200610231605Z"		-- October 23, 2006 at 16:05 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technologies, Inc"
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Symbol Technologies, Inc.
 				Customer Service
 				Postal:
@@ -36,85 +36,85 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				Tel: +1. 631.738.6213
 				E-mail: support@symbol.com
 				Web: http://www.symbol.com/support"
-			DESCRIPTION 
+			DESCRIPTION
 				"Mib for wireless features"
 			REVISION "200701171750Z"		-- January 17, 2007 at 17:50 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a22"
 			REVISION "200701041207Z"		-- January 04, 2007 at 12:07 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a21"
 			REVISION "200610231605Z"		-- October 23, 2006 at 16:05 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a20"
 			REVISION "200610041540Z"		-- October 04, 2006 at 15:40 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a19"
 			REVISION "200609272348Z"		-- September 27, 2006 at 23:48 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a18"
 			REVISION "200609261100Z"		-- September 26, 2006 at 11:00 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a17"
 			REVISION "200609091137Z"		-- September 09, 2006 at 11:37 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a16"
 			REVISION "200609081710Z"		-- September 08, 2006 at 17:10 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a15"
 			REVISION "200609061104Z"		-- September 06, 2006 at 11:04 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a14"
 			REVISION "200609051650Z"		-- September 05, 2006 at 16:50 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a13"
 			REVISION "200607211004Z"		-- July 21, 2006 at 10:04 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a12"
 			REVISION "200607171856Z"		-- July 17, 2006 at 18:56 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a11"
 			REVISION "200607141646Z"		-- July 14, 2006 at 16:46 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a10"
 			REVISION "200607121602Z"		-- July 12, 2006 at 16:02 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a09"
 			REVISION "200606161144Z"		-- June 16, 2006 at 11:44 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a08"
 			REVISION "200606151520Z"		-- June 15, 2006 at 15:20 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a07"
 			REVISION "200606131309Z"		-- June 13, 2006 at 13:09 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a06"
 			REVISION "200606100850Z"		-- June 10, 2006 at 08:50 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a05"
 			REVISION "200606061431Z"		-- June 06, 2006 at 14:31 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a04"
 			REVISION "200605161226Z"		-- May 16, 2006 at 12:26 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a03"
 			REVISION "200605151137Z"		-- May 15, 2006 at 11:37 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a02"
 			REVISION "200604061244Z"		-- April 06, 2006 at 12:44 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a01"
 			REVISION "200601121604Z"		-- January 12, 2006 at 16:04 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a51"
 			::= { wsCcRf 1 }
 
-		
-	
+
+
 --
 -- Type definitions
 --
-	
+
 		SinglePointer ::= INTEGER (0..255)
 
 		AbbrevRowStatus ::= INTEGER
@@ -278,12 +278,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			violFilterInvalidLen(15)
 			}
 
-	
-	
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.1
 		wsCcRfCountryCode OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0 | 2))
@@ -292,20 +292,20 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DESCRIPTION
 				"This value is a two-character representation of the country
 				code.
-								
+
 				Note: when changing this _CountrySelection, the current
-				channel and power levels are NOT changed.  The prior 
-				settings for these values may or may not be valid/legal 
-				for the new country selected.  It is up to the network 
+				channel and power levels are NOT changed.  The prior
+				settings for these values may or may not be valid/legal
+				for the new country selected.  It is up to the network
 				management software to ensure that channel and/or power
 				settings are changed BEFORE changing the country selection
 				so that no such invalid/illegal state is reached, even for
 				a short interim.
-								
+
 				country code:
-								
-					Argentina:            ar 
-					Australia:            au 
+
+					Argentina:            ar
+					Australia:            au
 					Austria:              at
 					Bahrain:              bh
 					Belarus:              by
@@ -379,7 +379,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 					Vietnam:              vn"
 			::= { wsCcRfMIB 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.2
 		wsCcRfSnmpSetDelay OBJECT-TYPE
 			SYNTAX INTEGER
@@ -390,14 +390,14 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"NOT Implemented in this release: this would cause 
-				any configuration change to be held in a cache 
-				until this variable is toggled again. It will be 
-				useful if we need to apply some changes in a 
+				"NOT Implemented in this release: this would cause
+				any configuration change to be held in a cache
+				until this variable is toggled again. It will be
+				useful if we need to apply some changes in a
 				batch-mode."
 			::= { wsCcRfMIB 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.3
 		wsCcRfClusterIndex OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -407,19 +407,19 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The cluster index of the switch."
 			::= { wsCcRfMIB 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.4
 		wsCcRfProxyRespMuArpReq OBJECT-TYPE
 			SYNTAX TruthValue
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Causes the switch to respond to an ARP Request 
+				"Causes the switch to respond to an ARP Request
 				on behalf of an MU. Since a lot of traffic is ARP,
 				 this helps to save battery life on the MUs."
 			::= { wsCcRfMIB 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.5
 		wsCcRfOversizedFrameEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -429,7 +429,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable over-sized frame."
 			::= { wsCcRfMIB 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.6
 		wsCcRfWlanPriorityEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -440,7 +440,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				order."
 			::= { wsCcRfMIB 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.7
 		wsCcRfAdvancedConfigEnable OBJECT-TYPE
 			SYNTAX INTEGER
@@ -454,17 +454,17 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DESCRIPTION
 				"Enable or disable Advanced-Config functionality
 				on the switch.
-				
+
 				Disabling of Advanced-Config will fail when the current
 				setting is not compatible with Auto-Config rules.  If user
 				wishes to force the disable action, he/she should use the
 				forcedFalse option instead.
-				
-				Note: After setting with forcedFalse, the object will 
+
+				Note: After setting with forcedFalse, the object will
 				return false(2) on a snmp-get.  "
 			::= { wsCcRfMIB 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.8
 		wsCcRfLastError OBJECT-TYPE
 			SYNTAX DisplayString
@@ -474,11 +474,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Error string of the last failed attempt snmp set"
 			::= { wsCcRfMIB 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9
 		wsCcRfAp OBJECT IDENTIFIER ::= { wsCcRfMIB 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.1
 		wsCcRfApCount OBJECT-TYPE
 			SYNTAX Integer32
@@ -488,7 +488,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of Acess Ports adopted"
 			::= { wsCcRfAp 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2
 		wsCcRfApTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfApEntry
@@ -500,7 +500,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				wireless switch"
 			::= { wsCcRfAp 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1
 		wsCcRfApEntry OBJECT-TYPE
 			SYNTAX WsCcRfApEntry
@@ -511,9 +511,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfApIndex }
 			::= { wsCcRfApTable 1 }
 
-		
+
 		WsCcRfApEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfApIndex
 					INTEGER,
 				wsCcRfApNicMac
@@ -549,7 +549,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Small, arbitrary integer index."
 			::= { wsCcRfApEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.2
 		wsCcRfApNicMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -559,7 +559,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"MAC address of this Access Port."
 			::= { wsCcRfApEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.3
 		wsCcRfApModelNumber OBJECT-TYPE
 			SYNTAX DisplayString
@@ -569,7 +569,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Model number of the Access Port."
 			::= { wsCcRfApEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.4
 		wsCcRfApSerialNumber OBJECT-TYPE
 			SYNTAX DisplayString
@@ -579,7 +579,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Serial Number of this Access Port."
 			::= { wsCcRfApEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.5
 		wsCcRfApPcbRevision OBJECT-TYPE
 			SYNTAX DisplayString
@@ -590,7 +590,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				Access Port."
 			::= { wsCcRfApEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.6
 		wsCcRfApBootLoaderRev OBJECT-TYPE
 			SYNTAX DisplayString
@@ -601,7 +601,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				Port."
 			::= { wsCcRfApEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.7
 		wsCcRfApWispVersion OBJECT-TYPE
 			SYNTAX DisplayString
@@ -612,7 +612,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				implemented by this Access Port."
 			::= { wsCcRfApEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.8
 		wsCcRfApRuntimeFwVersion OBJECT-TYPE
 			SYNTAX DisplayString
@@ -622,7 +622,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Version of run-time code on this Access Port."
 			::= { wsCcRfApEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.9
 		wsCcRfApNumRadios OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -633,29 +633,29 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				Access Port."
 			::= { wsCcRfApEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.10
 		wsCcRfApRadio1 OBJECT-TYPE
 			SYNTAX Integer32
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"Index of the first radio.  0 will be returned if the radio 
+				"Index of the first radio.  0 will be returned if the radio
 				is not adopted."
 			::= { wsCcRfApEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.11
 		wsCcRfApRadio2 OBJECT-TYPE
 			SYNTAX Integer32
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"Index of the second radio. 0 will be returned if the radio 
+				"Index of the second radio. 0 will be returned if the radio
 				is not adopted."
 			::= { wsCcRfApEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.2.1.12
 		wsCcRfApAddress OBJECT-TYPE
 			SYNTAX IpAddress
@@ -665,7 +665,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The IP address of the L3 AP. This field is empty for L2 AP."
 			::= { wsCcRfApEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.3
 		wsCcRfApImageVersionTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfApImageVersionEntry
@@ -675,7 +675,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Table displaying Access Ports image version info."
 			::= { wsCcRfAp 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.3.1
 		wsCcRfApImageVersionEntry OBJECT-TYPE
 			SYNTAX WsCcRfApImageVersionEntry
@@ -686,9 +686,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfApImageVersionIndex }
 			::= { wsCcRfApImageVersionTable 1 }
 
-		
+
 		WsCcRfApImageVersionEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfApImageVersionIndex
 					Integer32,
 				wsCcRfApImageVersionApType
@@ -712,7 +712,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple index."
 			::= { wsCcRfApImageVersionEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.3.1.2
 		wsCcRfApImageVersionApType OBJECT-TYPE
 			SYNTAX ApType
@@ -722,7 +722,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Ap type that the image applies to."
 			::= { wsCcRfApImageVersionEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.3.1.3
 		wsCcRfApImageVersionModel OBJECT-TYPE
 			SYNTAX DisplayString
@@ -732,7 +732,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Model string of the Access Port image."
 			::= { wsCcRfApImageVersionEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.3.1.4
 		wsCcRfApImageVersionName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -742,7 +742,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Version name of the Access Port image."
 			::= { wsCcRfApImageVersionEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.3.1.5
 		wsCcRfApImageVersionReleaseDate OBJECT-TYPE
 			SYNTAX DisplayString
@@ -752,7 +752,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Release date of the Access Port image."
 			::= { wsCcRfApImageVersionEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.3.1.6
 		wsCcRfApImageVersionImageSize OBJECT-TYPE
 			SYNTAX Integer32
@@ -763,7 +763,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Size in bytes of the Access Port image."
 			::= { wsCcRfApImageVersionEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.4
 		wsCcRfApUnadoptedTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfApUnadoptedEntry
@@ -773,7 +773,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Table of detected but unadopted access ports.  "
 			::= { wsCcRfAp 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.4.1
 		wsCcRfApUnadoptedEntry OBJECT-TYPE
 			SYNTAX WsCcRfApUnadoptedEntry
@@ -784,9 +784,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfApUnadoptedIndex }
 			::= { wsCcRfApUnadoptedTable 1 }
 
-		
+
 		WsCcRfApUnadoptedEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfApUnadoptedIndex
 					Integer32,
 				wsCcRfApUnadoptedMac
@@ -806,7 +806,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple index."
 			::= { wsCcRfApUnadoptedEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.4.1.2
 		wsCcRfApUnadoptedMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -816,7 +816,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Mac address of detected but unadopted AP."
 			::= { wsCcRfApUnadoptedEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.4.1.3
 		wsCcRfApUnadoptedApType OBJECT-TYPE
 			SYNTAX ApType
@@ -826,18 +826,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Ap type of detected but unadopted access port."
 			::= { wsCcRfApUnadoptedEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.4.1.4
 		wsCcRfApUnadoptedLastSeen OBJECT-TYPE
 			SYNTAX Unsigned32
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The unadopted-ap was last seen 
+				"The unadopted-ap was last seen
 				wsCcRfApUnadoptedLastSeen seconds ago."
 			::= { wsCcRfApUnadoptedEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.5
 		wsCcRfApHistoryTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfApHistoryEntry
@@ -847,7 +847,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfAp 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.5.1
 		wsCcRfApHistoryEntry OBJECT-TYPE
 			SYNTAX WsCcRfApHistoryEntry
@@ -858,9 +858,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfApHistoryIndex, wsCcRfApHistoryMac }
 			::= { wsCcRfApHistoryTable 1 }
 
-		
+
 		WsCcRfApHistoryEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfApHistoryIndex
 					INTEGER,
 				wsCcRfApHistoryMac
@@ -884,7 +884,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple Index"
 			::= { wsCcRfApHistoryEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.5.1.2
 		wsCcRfApHistoryMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -894,7 +894,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"MAC Address of the AP"
 			::= { wsCcRfApHistoryEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.5.1.3
 		wsCcRfApHistoryRadioType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -910,7 +910,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Radio Type: 11a, 11b, 11g or N/A"
 			::= { wsCcRfApHistoryEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.5.1.4
 		wsCcRfApHistoryTimestamp OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (18..32))
@@ -920,7 +920,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Date and Time"
 			::= { wsCcRfApHistoryEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.5.1.5
 		wsCcRfApHistoryEvent OBJECT-TYPE
 			SYNTAX INTEGER
@@ -935,7 +935,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Adoption/unadoption/self-healing event"
 			::= { wsCcRfApHistoryEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.5.1.6
 		wsCcRfApHistoryReason OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (1..128))
@@ -945,7 +945,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"AP History reason for occurence of event"
 			::= { wsCcRfApHistoryEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.6
 		wsCcRfApHistoryEnable OBJECT-TYPE
 			SYNTAX INTEGER
@@ -959,7 +959,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable / disable AP history data collection"
 			::= { wsCcRfAp 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.9.7
 		wsCcRfApHistoryClear OBJECT-TYPE
 			SYNTAX TruthValue
@@ -969,11 +969,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Clears the entries in the AP History table."
 			::= { wsCcRfAp 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11
 		wsCcRfRadio OBJECT IDENTIFIER ::= { wsCcRfMIB 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.1
 		wsCcRfRadioAutoAdopt OBJECT-TYPE
 			SYNTAX TruthValue
@@ -983,7 +983,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable or disable the switch to auto-adopt radios.  "
 			::= { wsCcRfRadio 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.2
 		wsCcRfRadioCnt OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -993,29 +993,29 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of radios adopted by the switch. This is a count of the number of rows in wsCcRfRadioStatusTable"
 			::= { wsCcRfRadio 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.3
 		wsCcRfRadioLastMac OBJECT-TYPE
 			SYNTAX PhysAddress
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"This scalar records the MAC address of the most 
+				"This scalar records the MAC address of the most
 				recent radio to be Adopted, UnAdopted, or Denied."
 			::= { wsCcRfRadio 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.4
 		wsCcRfRadioLastReason OBJECT-TYPE
 			SYNTAX DisplayString
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"This value notes the reason for the most-recent 
+				"This value notes the reason for the most-recent
 				radio UnAdoption or Denial."
 			::= { wsCcRfRadio 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5
 		wsCcRfRadioTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRadioEntry
@@ -1026,7 +1026,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				switch.  "
 			::= { wsCcRfRadio 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1
 		wsCcRfRadioEntry OBJECT-TYPE
 			SYNTAX WsCcRfRadioEntry
@@ -1037,9 +1037,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRadioIndex }
 			::= { wsCcRfRadioTable 1 }
 
-		
+
 		WsCcRfRadioEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRadioIndex
 					Integer32,
 				wsCcRfRadioApMac
@@ -1105,7 +1105,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Small, arbitrary integer index."
 			::= { wsCcRfRadioEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.2
 		wsCcRfRadioApMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -1117,7 +1117,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 'FFFFFFFFFFFF'h }
 			::= { wsCcRfRadioEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.3
 		wsCcRfRadioDescr OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1128,19 +1128,19 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { "" }
 			::= { wsCcRfRadioEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.4
 		wsCcRfRadioType OBJECT-TYPE
 			SYNTAX RadioType
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"Radio model.  Changing this value will result in all 
+				"Radio model.  Changing this value will result in all
 				parameters getting defaulted for this radio."
 			DEFVAL { radio802dot11BG }
 			::= { wsCcRfRadioEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.5
 		wsCcRfRadioApType OBJECT-TYPE
 			SYNTAX ApType
@@ -1151,21 +1151,21 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { ap300 }
 			::= { wsCcRfRadioEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.6
 		wsCcRfRadioBssWlanMap OBJECT-TYPE
 			SYNTAX OCTET STRING
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The mapping of WLANs to BSSIDs. Each radio 
-				supports 4 BSSIDs and 16 WLANs. The user can map 
-				any number of WLANs to each of the BSSIDs. Each 
+				"The mapping of WLANs to BSSIDs. Each radio
+				supports 4 BSSIDs and 16 WLANs. The user can map
+				any number of WLANs to each of the BSSIDs. Each
 				BSSID forms a virtual ap. "
 			DEFVAL { '00'h }
 			::= { wsCcRfRadioEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.7
 		wsCcRfRadioAntDiversity OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1181,23 +1181,23 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 1 }
 			::= { wsCcRfRadioEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.8
 		wsCcRfRadioShortPreamble OBJECT-TYPE
 			SYNTAX TruthValue
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"Enable support for Short Preamble when MUs 
+				"Enable support for Short Preamble when MUs
 				associate with the Access Port.  Enabling Short
 				Preamble may cause incompatibility with some older
 				clients.
-				
+
 				Applies only to b/g radios."
 			DEFVAL { 1 }
 			::= { wsCcRfRadioEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.9
 		wsCcRfRadioRtsThresh OBJECT-TYPE
 			SYNTAX Integer32
@@ -1209,34 +1209,34 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 2300 }
 			::= { wsCcRfRadioEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.10
 		wsCcRfRadioBeaconInt OBJECT-TYPE
 			SYNTAX Integer32 (50..200)
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"Specify a beacon interval in units of 1,000 
-				microseconds (K-us). This is a multiple of the DTIM 
-				(wsCcRfRadioDtimPrd) value, for example, 
+				"Specify a beacon interval in units of 1,000
+				microseconds (K-us). This is a multiple of the DTIM
+				(wsCcRfRadioDtimPrd) value, for example,
 				100 : 10. "
 			DEFVAL { 100 }
 			::= { wsCcRfRadioEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.11
 		wsCcRfRadioDtimPrd OBJECT-TYPE
 			SYNTAX Integer32 (1..50)
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"Specify a period for the Delivery Traffic Indication 
-				Message (DTIM). This is a divisor of the beacon 
+				"Specify a period for the Delivery Traffic Indication
+				Message (DTIM). This is a divisor of the beacon
 				interval (in milliseconds), for example, 10 : 100. "
 			DEFVAL { 10 }
 			::= { wsCcRfRadioEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.12
 		wsCcRfRadioBasicRates OBJECT-TYPE
 			SYNTAX TransmitRate
@@ -1247,7 +1247,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { { rate1Mb, rate2Mb, rate5pt5Mb, rate11Mb } }
 			::= { wsCcRfRadioEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.13
 		wsCcRfRadioSupportedRates OBJECT-TYPE
 			SYNTAX TransmitRate
@@ -1258,7 +1258,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { { rate1Mb, rate2Mb, rate5pt5Mb, rate6Mb, rate9Mb, rate11Mb, rate12Mb, rate18Mb, rate24Mb, rate36Mb, rate48Mb, rate54Mb } }
 			::= { wsCcRfRadioEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.14
 		wsCcRfRadioRapDetector OBJECT-TYPE
 			SYNTAX TruthValue
@@ -1269,7 +1269,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 1 }
 			::= { wsCcRfRadioEntry 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.15
 		wsCcRfRadioClusterIndex OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
@@ -1279,7 +1279,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The preferred group of Cluster"
 			::= { wsCcRfRadioEntry 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.16
 		wsCcRfRadioMaxMu OBJECT-TYPE
 			SYNTAX Unsigned32 (1..1024)
@@ -1290,7 +1290,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 32 }
 			::= { wsCcRfRadioEntry 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.17
 		wsCcRfRadioSelfHealingAction OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1307,7 +1307,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { none }
 			::= { wsCcRfRadioEntry 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.18
 		wsCcRfRadioSelfHealingPwrOffset OBJECT-TYPE
 			SYNTAX Unsigned32 (0..30)
@@ -1317,7 +1317,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Self-healing power offset for this radio"
 			::= { wsCcRfRadioEntry 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.19
 		wsCcRfRadioRunAcsNow OBJECT-TYPE
 			SYNTAX DoActionNow
@@ -1328,7 +1328,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 2 }
 			::= { wsCcRfRadioEntry 19 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.20
 		wsCcRfRadioResetParentAp OBJECT-TYPE
 			SYNTAX DoActionNow
@@ -1340,7 +1340,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 2 }
 			::= { wsCcRfRadioEntry 20 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.21
 		wsCcRfRadioReset OBJECT-TYPE
 			SYNTAX DoActionNow
@@ -1351,7 +1351,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 2 }
 			::= { wsCcRfRadioEntry 21 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.22
 		wsCcRfRadioRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -1361,7 +1361,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Rows status of the wsCcRfRadioTable"
 			::= { wsCcRfRadioEntry 22 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.23
 		wsCcRfRadioCcaLevel OBJECT-TYPE
 			SYNTAX INTEGER (1..31)
@@ -1372,7 +1372,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 1 }
 			::= { wsCcRfRadioEntry 23 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.24
 		wsCcRfRadioCcaMode OBJECT-TYPE
 			SYNTAX INTEGER (1..3)
@@ -1383,7 +1383,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 1 }
 			::= { wsCcRfRadioEntry 24 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.25
 		wsCcRfRadioRapSingleChannelScan OBJECT-TYPE
 			SYNTAX TruthValue
@@ -1393,7 +1393,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable or disable single-channel scan for Rogue AP."
 			::= { wsCcRfRadioEntry 25 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.26
 		wsCcRfRadioBssDtim OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -1403,7 +1403,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set DTIM per BSS."
 			::= { wsCcRfRadioEntry 26 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.5.1.27
 		wsCcRfRadioCfgMethod OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1418,17 +1418,17 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				or by the switch while adoption"
 			::= { wsCcRfRadioEntry 27 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6
 		wsCcRfRadioChannelPowerTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRadioChannelPowerEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"Use wsCcRfRadioChannelPower table to view and 
-				set the channel/power/placement properties of 
+				"Use wsCcRfRadioChannelPower table to view and
+				set the channel/power/placement properties of
 				the radios.
-				
+
 				The process can be broken down into the following steps:
 				1. Set wsCcRfRadioCpReset to TRUE.
 				2. Set wsCcRfRadioCpPlacement
@@ -1438,12 +1438,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				6. Set wsCcRfRadioCpDesPowerLevel
 				7. Get wsCcRfRadioCpPowerInMW
 				8. Set wsCcRfRadioCpSet
-				
-				
+
+
 				"
 			::= { wsCcRfRadio 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6.1
 		wsCcRfRadioChannelPowerEntry OBJECT-TYPE
 			SYNTAX WsCcRfRadioChannelPowerEntry
@@ -1454,9 +1454,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRadioIndex }
 			::= { wsCcRfRadioChannelPowerTable 1 }
 
-		
+
 		WsCcRfRadioChannelPowerEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRadioCpPlacement
 					INTEGER,
 				wsCcRfRadioCpChannelMode
@@ -1490,7 +1490,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The placement for radio."
 			::= { wsCcRfRadioChannelPowerEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6.1.2
 		wsCcRfRadioCpChannelMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1508,18 +1508,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				least congested channel at startup or reconfiguration)"
 			::= { wsCcRfRadioChannelPowerEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6.1.3
 		wsCcRfRadioCpPosChannel OBJECT-TYPE
 			SYNTAX MultiPointer64
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The possible channels that can be set when 
+				"The possible channels that can be set when
 				placement = wsCcRfRadioCpPlacement."
 			::= { wsCcRfRadioChannelPowerEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6.1.4
 		wsCcRfRadioCpDesChannel OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -1529,18 +1529,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The desired channel for radio."
 			::= { wsCcRfRadioChannelPowerEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6.1.5
 		wsCcRfRadioCpPosPowerDb OBJECT-TYPE
 			SYNTAX Integer32
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The max possible power level (dBm) that can be set when 
+				"The max possible power level (dBm) that can be set when
 				channel= wsCcRfRadioCpDesChannel."
 			::= { wsCcRfRadioChannelPowerEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6.1.6
 		wsCcRfRadioCpDesPowerDb OBJECT-TYPE
 			SYNTAX Integer32
@@ -1550,7 +1550,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The desired power level (dBm) for radio."
 			::= { wsCcRfRadioChannelPowerEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6.1.7
 		wsCcRfRadioCpDesPowerMw OBJECT-TYPE
 			SYNTAX Integer32
@@ -1560,7 +1560,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"wsCcRfRadioCpDesPowerLevel in mW."
 			::= { wsCcRfRadioChannelPowerEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6.1.8
 		wsCcRfRadioCpSet OBJECT-TYPE
 			SYNTAX DoActionShowProgress
@@ -1568,11 +1568,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"Validate values in wsCcRfRadioCpDes fields.  If it is
-				a valid combination, configure the switch with this 
+				a valid combination, configure the switch with this
 				combination and set wsCcRfRadioCp_ to these values."
 			::= { wsCcRfRadioChannelPowerEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.6.1.9
 		wsCcRfRadioCpReset OBJECT-TYPE
 			SYNTAX DoActionShowProgress
@@ -1580,7 +1580,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"Reset the following OIDs.
-				
+
 				wsCcRfRadioCpDesPlacement
 				wsCcRfRadioCpDesChannel
 				wsCcRfRadioCpDesPowerLevel
@@ -1590,20 +1590,20 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"
 			::= { wsCcRfRadioChannelPowerEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.7
 		wsCcRfRadioWmmTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRadioWmmEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"Configuration parameters for 802.11e / Wireless 
-				MultiMedia, which control the Quality of 
-				Service between the wireless devices on 
+				"Configuration parameters for 802.11e / Wireless
+				MultiMedia, which control the Quality of
+				Service between the wireless devices on
 				the network"
 			::= { wsCcRfRadio 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.7.1
 		wsCcRfRadioWmmEntry OBJECT-TYPE
 			SYNTAX WsCcRfRadioWmmEntry
@@ -1614,9 +1614,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRadioIndex, wsCcRfRadioWmmAccessCategory }
 			::= { wsCcRfRadioWmmTable 1 }
 
-		
+
 		WsCcRfRadioWmmEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRadioWmmAccessCategory
 					INTEGER,
 				wsCcRfRadioWmmAdmissionCtrl
@@ -1645,12 +1645,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS accessible-for-notify
 			STATUS current
 			DESCRIPTION
-				"A label for a particular QoS category of traffic in 
-				an 802.11e network. WMM defines 4 Access Categories 
+				"A label for a particular QoS category of traffic in
+				an 802.11e network. WMM defines 4 Access Categories
 				(Voice, Video, Best Effort, Background)."
 			::= { wsCcRfRadioWmmEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.7.1.2
 		wsCcRfRadioWmmAdmissionCtrl OBJECT-TYPE
 			SYNTAX TruthValue
@@ -1660,19 +1660,19 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioWmmEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.7.1.3
 		wsCcRfRadioWmmAifsn OBJECT-TYPE
 			SYNTAX Unsigned32 (0..15)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"The Arbitration Inter-Frame Spacing is the wait time 
-				in milliSeconds between data frames. A smaller 
+				"The Arbitration Inter-Frame Spacing is the wait time
+				in milliSeconds between data frames. A smaller
 				number leads to greater priority for medium access."
 			::= { wsCcRfRadioWmmEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.7.1.4
 		wsCcRfRadioWmmTxOp OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
@@ -1680,45 +1680,45 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"An interval of time where an 802.11e station 
-				(MU/AP) has the right to initiate transmissions 
+				"An interval of time where an 802.11e station
+				(MU/AP) has the right to initiate transmissions
 				on the wireless medium."
 			::= { wsCcRfRadioWmmEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.7.1.5
 		wsCcRfRadioWmmCwMin OBJECT-TYPE
 			SYNTAX Unsigned32 (0..15)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"If the medium is busy, or a transmitted frame 
-				collides, the AP or MU choose a random number 
-				between 0 and this minimum contention window size, 
-				to decide how long to wait before attempting 
-				(re)-transmission. For ease of use this value is 
-				configured as a number between 0 and 10; the 
-				actual window is calculated using 2**x -1 where 
+				"If the medium is busy, or a transmitted frame
+				collides, the AP or MU choose a random number
+				between 0 and this minimum contention window size,
+				to decide how long to wait before attempting
+				(re)-transmission. For ease of use this value is
+				configured as a number between 0 and 10; the
+				actual window is calculated using 2**x -1 where
 				x is the value configured."
 			::= { wsCcRfRadioWmmEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.7.1.6
 		wsCcRfRadioWmmCwMax OBJECT-TYPE
 			SYNTAX Integer32 (0..15)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"On each collision the AP or MU doubles its 
-				initial contention window wait time, until that 
-				number is as large as this maximum contention 
-				window size. For ease of use this value is 
-				configured as a number between 0 and 10; the 
-				actual window is calculated using 2**x -1 where 
+				"On each collision the AP or MU doubles its
+				initial contention window wait time, until that
+				number is as large as this maximum contention
+				window size. For ease of use this value is
+				configured as a number between 0 and 10; the
+				actual window is calculated using 2**x -1 where
 				x is the value configured."
 			::= { wsCcRfRadioWmmEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.7.1.7
 		wsCcRfRadioWmmAdmissionDeviceMax OBJECT-TYPE
 			SYNTAX Integer32 (1..256)
@@ -1728,7 +1728,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfRadioWmmEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8
 		wsCcRfRadioDefaultTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRadioDefaultEntry
@@ -1736,11 +1736,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"This table lists the default setting for all supported
-				radio for this switch.  Please refer to wsCcRfRadioTable 
+				radio for this switch.  Please refer to wsCcRfRadioTable
 				for column descriptions."
 			::= { wsCcRfRadio 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1
 		wsCcRfRadioDefaultEntry OBJECT-TYPE
 			SYNTAX WsCcRfRadioDefaultEntry
@@ -1751,9 +1751,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRadioDefaultIndex }
 			::= { wsCcRfRadioDefaultTable 1 }
 
-		
+
 		WsCcRfRadioDefaultEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRadioDefaultIndex
 					Integer32,
 				wsCcRfRadioDefaultType
@@ -1799,7 +1799,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.2
 		wsCcRfRadioDefaultType OBJECT-TYPE
 			SYNTAX RadioType
@@ -1809,7 +1809,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.3
 		wsCcRfRadioDefaultApType OBJECT-TYPE
 			SYNTAX ApType
@@ -1819,7 +1819,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.4
 		wsCcRfRadioDefaultBssWlanMap OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -1829,7 +1829,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.5
 		wsCcRfRadioDefaultAntDiversity OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1844,7 +1844,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.6
 		wsCcRfRadioDefaultShortPreamble OBJECT-TYPE
 			SYNTAX TruthValue
@@ -1854,7 +1854,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.7
 		wsCcRfRadioDefaultRtsThresh OBJECT-TYPE
 			SYNTAX Integer32
@@ -1864,7 +1864,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.8
 		wsCcRfRadioDefaultBeaconInt OBJECT-TYPE
 			SYNTAX Integer32 (50..200)
@@ -1874,7 +1874,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.9
 		wsCcRfRadioDefaultDtimPrd OBJECT-TYPE
 			SYNTAX Integer32 (1..50)
@@ -1884,7 +1884,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.10
 		wsCcRfRadioDefaultBasicRates OBJECT-TYPE
 			SYNTAX TransmitRate
@@ -1894,7 +1894,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.11
 		wsCcRfRadioDefaultSupportedRates OBJECT-TYPE
 			SYNTAX TransmitRate
@@ -1904,7 +1904,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.12
 		wsCcRfRadioDefaultRapDetector OBJECT-TYPE
 			SYNTAX TruthValue
@@ -1914,7 +1914,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.13
 		wsCcRfRadioDefaultClusterIndex OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -1924,7 +1924,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.14
 		wsCcRfRadioDefaultMaxMu OBJECT-TYPE
 			SYNTAX Unsigned32 (1..256)
@@ -1934,7 +1934,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.15
 		wsCcRfRadioDefaultSelfHealingAction OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1950,7 +1950,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.16
 		wsCcRfRadioDefaultSelfHealingPwrOffset OBJECT-TYPE
 			SYNTAX Unsigned32 (0..30)
@@ -1960,7 +1960,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultEntry 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.8.1.17
 		wsCcRfRadioDefaultRapSingleChannelScan OBJECT-TYPE
 			SYNTAX TruthValue
@@ -1970,24 +1970,24 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable or disable single-channel scan for Rogue AP."
 			::= { wsCcRfRadioDefaultEntry 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9
 		wsCcRfRadioDefaultChannelPowerTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRadioDefaultChannelPowerEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"Use wsCcRfRadioDefaultChannelPower table to view and 
-				set the channel/power/placement properties of 
+				"Use wsCcRfRadioDefaultChannelPower table to view and
+				set the channel/power/placement properties of
 				the default radio configurations.
-				
+
 				Please refer to the descriptions in wsCcRfRadioChannelPowerTable
-				
-				
+
+
 				"
 			::= { wsCcRfRadio 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9.1
 		wsCcRfRadioDefaultChannelPowerEntry OBJECT-TYPE
 			SYNTAX WsCcRfRadioDefaultChannelPowerEntry
@@ -1998,9 +1998,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRadioDefaultIndex }
 			::= { wsCcRfRadioDefaultChannelPowerTable 1 }
 
-		
+
 		WsCcRfRadioDefaultChannelPowerEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRadioDefaultCpPlacement
 					INTEGER,
 				wsCcRfRadioDefaultCpChannelMode
@@ -2034,7 +2034,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultChannelPowerEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9.1.2
 		wsCcRfRadioDefaultCpChannelMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -2048,7 +2048,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultChannelPowerEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9.1.3
 		wsCcRfRadioDefaultCpPosChannel OBJECT-TYPE
 			SYNTAX MultiPointer64
@@ -2058,7 +2058,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultChannelPowerEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9.1.4
 		wsCcRfRadioDefaultCpDesChannel OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -2068,7 +2068,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultChannelPowerEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9.1.5
 		wsCcRfRadioDefaultCpPosPowerDb OBJECT-TYPE
 			SYNTAX Integer32
@@ -2078,7 +2078,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultChannelPowerEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9.1.6
 		wsCcRfRadioDefaultCpDesPowerDb OBJECT-TYPE
 			SYNTAX Integer32
@@ -2088,7 +2088,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultChannelPowerEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9.1.7
 		wsCcRfRadioDefaultCpDesPowerMw OBJECT-TYPE
 			SYNTAX Integer32
@@ -2098,7 +2098,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultChannelPowerEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9.1.8
 		wsCcRfRadioDefaultCpSet OBJECT-TYPE
 			SYNTAX DoActionShowProgress
@@ -2108,7 +2108,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" ."
 			::= { wsCcRfRadioDefaultChannelPowerEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.9.1.9
 		wsCcRfRadioDefaultCpReset OBJECT-TYPE
 			SYNTAX DoActionShowProgress
@@ -2118,20 +2118,20 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultChannelPowerEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.10
 		wsCcRfRadioDefaultWmmTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRadioDefaultWmmEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"Configuration parameters for 802.11e / Wireless 
-				MultiMedia, which control the Quality of 
-				Service between the wireless devices on 
+				"Configuration parameters for 802.11e / Wireless
+				MultiMedia, which control the Quality of
+				Service between the wireless devices on
 				the network"
 			::= { wsCcRfRadio 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.10.1
 		wsCcRfRadioDefaultWmmEntry OBJECT-TYPE
 			SYNTAX WsCcRfRadioDefaultWmmEntry
@@ -2142,9 +2142,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRadioDefaultIndex, wsCcRfRadioDefaultWmmAccessCategory }
 			::= { wsCcRfRadioDefaultWmmTable 1 }
 
-		
+
 		WsCcRfRadioDefaultWmmEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRadioDefaultWmmAccessCategory
 					INTEGER,
 				wsCcRfRadioDefaultWmmAdmissionCtrl
@@ -2171,12 +2171,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS accessible-for-notify
 			STATUS current
 			DESCRIPTION
-				"A label for a particular QoS category of traffic in 
-				an 802.11e network. WMM defines 4 Access Categories 
+				"A label for a particular QoS category of traffic in
+				an 802.11e network. WMM defines 4 Access Categories
 				(Voice, Video, Best Effort, Background)."
 			::= { wsCcRfRadioDefaultWmmEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.10.1.2
 		wsCcRfRadioDefaultWmmAdmissionCtrl OBJECT-TYPE
 			SYNTAX TruthValue
@@ -2186,19 +2186,19 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfRadioDefaultWmmEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.10.1.3
 		wsCcRfRadioDefaultWmmAifsn OBJECT-TYPE
 			SYNTAX Unsigned32 (1..15)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"The Arbitration Inter-Frame Spacing is the wait time 
-				in milliSeconds between data frames. A smaller 
+				"The Arbitration Inter-Frame Spacing is the wait time
+				in milliSeconds between data frames. A smaller
 				number leads to greater priority for medium access."
 			::= { wsCcRfRadioDefaultWmmEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.10.1.4
 		wsCcRfRadioDefaultWmmTxOp OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
@@ -2206,45 +2206,45 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"An interval of time where an 802.11e station 
-				(MU/AP) has the right to initiate transmissions 
+				"An interval of time where an 802.11e station
+				(MU/AP) has the right to initiate transmissions
 				on the wireless medium."
 			::= { wsCcRfRadioDefaultWmmEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.10.1.5
 		wsCcRfRadioDefaultWmmCwMin OBJECT-TYPE
 			SYNTAX Unsigned32 (0..15)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"If the medium is busy, or a transmitted frame 
-				collides, the AP or MU choose a random number 
-				between 0 and this minimum contention window size, 
-				to decide how long to wait before attempting 
-				(re)-transmission. For ease of use this value is 
-				configured as a number between 0 and 10; the 
-				actual window is calculated using 2**x -1 where 
+				"If the medium is busy, or a transmitted frame
+				collides, the AP or MU choose a random number
+				between 0 and this minimum contention window size,
+				to decide how long to wait before attempting
+				(re)-transmission. For ease of use this value is
+				configured as a number between 0 and 10; the
+				actual window is calculated using 2**x -1 where
 				x is the value configured."
 			::= { wsCcRfRadioDefaultWmmEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.10.1.6
 		wsCcRfRadioDefaultWmmCwMax OBJECT-TYPE
 			SYNTAX Integer32 (0..15)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"On each collision the AP or MU doubles its 
-				initial contention window wait time, until that 
-				number is as large as this maximum contention 
-				window size. For ease of use this value is 
-				configured as a number between 0 and 10; the 
-				actual window is calculated using 2**x -1 where 
+				"On each collision the AP or MU doubles its
+				initial contention window wait time, until that
+				number is as large as this maximum contention
+				window size. For ease of use this value is
+				configured as a number between 0 and 10; the
+				actual window is calculated using 2**x -1 where
 				x is the value configured."
 			::= { wsCcRfRadioDefaultWmmEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11
 		wsCcRfRadioStatusTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRadioStatusEntry
@@ -2254,7 +2254,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Status of adopted radios."
 			::= { wsCcRfRadio 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1
 		wsCcRfRadioStatusEntry OBJECT-TYPE
 			SYNTAX WsCcRfRadioStatusEntry
@@ -2265,9 +2265,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRadioIndex }
 			::= { wsCcRfRadioStatusTable 1 }
 
-		
+
 		WsCcRfRadioStatusEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRadioStatusRadioMac
 					PhysAddress,
 				wsCcRfRadioStatusState
@@ -2305,7 +2305,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Radio MAC address"
 			::= { wsCcRfRadioStatusEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.2
 		wsCcRfRadioStatusState OBJECT-TYPE
 			SYNTAX INTEGER
@@ -2319,59 +2319,59 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"This value describes the state of the radio.
-				
+
 				A healthy radio would power-on, and quickly advance from
 				  radioUpAndWaitingForConfig and then on to
 				  radioReceivingConfig and then on to
 				  radioUpAndAdopted.
-				
+
 				A radio that is denied adoption due to ACLs would show:
 				  radioDeniedAdoptionDueToAcl.
-				
+
 				A radio that does not 'handshake' with the switch properly
 				would be found in state:
 				  radioBroken."
 			::= { wsCcRfRadioStatusEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.3
 		wsCcRfRadioStatusPtrToAp OBJECT-TYPE
 			SYNTAX SinglePointer
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"This value is the index in the ApTable for the 
+				"This value is the index in the ApTable for the
 				entry representing the Access Port that contains
 				this radio.
-				
+
 				Since each radio has one and only one Access Port
 				as 'parent', this value is a simple integer, not a
 				bit-mask."
 			::= { wsCcRfRadioStatusEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.4
 		wsCcRfRadioStatusMaxWlans OBJECT-TYPE
 			SYNTAX Integer32
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"the maximum number of 802.11 ESSIDs (wireless lans) 
+				"the maximum number of 802.11 ESSIDs (wireless lans)
 				supported by this radio"
 			::= { wsCcRfRadioStatusEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.5
 		wsCcRfRadioStatusMaxBss OBJECT-TYPE
 			SYNTAX Integer32
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The maximum number of 802.11 BSSIDs supported by 
+				"The maximum number of 802.11 BSSIDs supported by
 				this radio"
 			::= { wsCcRfRadioStatusEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.6
 		wsCcRfRadioStatusCurrChannel OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -2381,7 +2381,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"current channel (may be different from configured channel due to DFS etc)."
 			::= { wsCcRfRadioStatusEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.7
 		wsCcRfRadioStatusCurrPowerDb OBJECT-TYPE
 			SYNTAX Integer32 (0..255)
@@ -2392,7 +2392,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Output power level for the radio in Db. "
 			::= { wsCcRfRadioStatusEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.8
 		wsCcRfRadioStatusCurrPowerMw OBJECT-TYPE
 			SYNTAX Integer32
@@ -2402,7 +2402,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Output power level for the radio in Mw."
 			::= { wsCcRfRadioStatusEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.9
 		wsCcRfRadioStatusAssociatedMus OBJECT-TYPE
 			SYNTAX Integer32
@@ -2412,7 +2412,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of associated MUs."
 			::= { wsCcRfRadioStatusEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.10
 		wsCcRfRadioStatusLastAdoption OBJECT-TYPE
 			SYNTAX TimeTicks
@@ -2422,7 +2422,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Timeticks since radio adoption time"
 			::= { wsCcRfRadioStatusEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.11
 		wsCcRfRadioStatusShortSlotTime OBJECT-TYPE
 			SYNTAX Integer32
@@ -2432,18 +2432,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Indicates the 802.11g short-slot time on the radio"
 			::= { wsCcRfRadioStatusEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.12
 		wsCcRfRadioStatusVlanTag OBJECT-TYPE
 			SYNTAX Unsigned32
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The VLAN tag using which the switch is 
+				"The VLAN tag using which the switch is
 				communicating with the radio"
 			::= { wsCcRfRadioStatusEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.11.1.13
 		wsCcRfRadioStatusCfgMethod OBJECT-TYPE
 			SYNTAX INTEGER
@@ -2458,17 +2458,17 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				or by the switch while adoption."
 			::= { wsCcRfRadioStatusEntry 13 }
 
-		
--- 802.1x Port Authentication is used to provide 
--- security and authentication of all wired clients on 
--- a network. The WS 2000 supports 802.1x port 
--- authentication for the AP 300 Access Ports connected 
--- to it. It uses a username and password for all ports 
+
+-- 802.1x Port Authentication is used to provide
+-- security and authentication of all wired clients on
+-- a network. The WS 2000 supports 802.1x port
+-- authentication for the AP 300 Access Ports connected
+-- to it. It uses a username and password for all ports
 -- that can be configured from the wireless switch.
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.12
 		wsCcRf802dt1xRadioAuth OBJECT IDENTIFIER ::= { wsCcRfRadio 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.12.1
 		wsCcRf802dt1xRadioAuthLogin OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (1..64))
@@ -2478,7 +2478,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"802.1x Port Authentication username."
 			::= { wsCcRf802dt1xRadioAuth 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.12.2
 		wsCcRf802dt1xRadioAuthPass OBJECT-TYPE
 			SYNTAX Password
@@ -2488,19 +2488,19 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"802.1x Port Authentication password."
 			::= { wsCcRf802dt1xRadioAuth 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.12.3
 		wsCcRf802dt1xRadioAuthSetRadio OBJECT-TYPE
 			SYNTAX DoActionNow
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Set the username and password stored in 
+				"Set the username and password stored in
 				wsCcRf802dt1xRadioAuthLogin and wsCcRf802dt1xRadioAuthPass
 				on all radios adopted by the switch."
 			::= { wsCcRf802dt1xRadioAuth 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.13
 		wsCcRfRadioHealingModeCnt OBJECT-TYPE
 			SYNTAX Integer32
@@ -2510,7 +2510,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfRadio 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.14
 		wsCcRfRadioNormalModeCnt OBJECT-TYPE
 			SYNTAX Integer32
@@ -2520,7 +2520,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfRadio 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.11.15
 		wsCcRfRadioConfiguredCnt OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -2530,11 +2530,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of configured radios. This is a count of the number of rows in wsCcRfRadioTable."
 			::= { wsCcRfRadio 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12
 		wsCcRfMus OBJECT IDENTIFIER ::= { wsCcRfMIB 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.1
 		wsCcRfMuCnt OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -2544,18 +2544,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of rows in the wsCcRfMuTable "
 			::= { wsCcRfMus 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.2
 		wsCcRfMuLastMac OBJECT-TYPE
 			SYNTAX PhysAddress
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"This scalar records the MAC address of the most 
+				"This scalar records the MAC address of the most
 				recent mu to be associated/disassociated."
 			::= { wsCcRfMus 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3
 		wsCcRfMuTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfMuEntry
@@ -2566,7 +2566,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				each MU serviced by the switch."
 			::= { wsCcRfMus 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1
 		wsCcRfMuEntry OBJECT-TYPE
 			SYNTAX WsCcRfMuEntry
@@ -2577,9 +2577,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfMuMac }
 			::= { wsCcRfMuTable 1 }
 
-		
+
 		WsCcRfMuEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfMuMac
 					PhysAddress,
 				wsCcRfMuWlanIndex
@@ -2633,7 +2633,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"MAC address of the MU."
 			::= { wsCcRfMuEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.2
 		wsCcRfMuWlanIndex OBJECT-TYPE
 			SYNTAX Integer32 (1..64)
@@ -2643,7 +2643,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"(Reserved for future implementation)."
 			::= { wsCcRfMuEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.3
 		wsCcRfMuRadioIndex OBJECT-TYPE
 			SYNTAX Integer32
@@ -2654,7 +2654,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				which this MU is associated."
 			::= { wsCcRfMuEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.4
 		wsCcRfMuVlanIndex OBJECT-TYPE
 			SYNTAX Unsigned32 (0..4096)
@@ -2664,7 +2664,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The VLAN that this MU is assigned to."
 			::= { wsCcRfMuEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.5
 		wsCcRfMuKeyIndex OBJECT-TYPE
 			SYNTAX Unsigned32 (0..3)
@@ -2676,7 +2676,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				MU is "
 			::= { wsCcRfMuEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.6
 		wsCcRfMuIpAddr OBJECT-TYPE
 			SYNTAX IpAddress
@@ -2686,7 +2686,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"IP address of the MU."
 			::= { wsCcRfMuEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.7
 		wsCcRfMuBSS OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -2696,7 +2696,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The BSSID that this MU is associated with."
 			::= { wsCcRfMuEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.8
 		wsCcRfMuAuthMethod OBJECT-TYPE
 			SYNTAX AuthType
@@ -2706,7 +2706,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Authentication method implemented by the MU."
 			::= { wsCcRfMuEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.9
 		wsCcRfMuEncMethod OBJECT-TYPE
 			SYNTAX EncType
@@ -2716,7 +2716,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Encryption method implemented by the MU."
 			::= { wsCcRfMuEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.10
 		wsCcRfMuRadioType OBJECT-TYPE
 			SYNTAX RadioType
@@ -2726,7 +2726,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Radio type of the MU."
 			::= { wsCcRfMuEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.11
 		wsCcRfMuPowerMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -2738,13 +2738,13 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"Power-mode implemented by the MU.
-				
-				A MU's status will constantly switch between PSP and 
-				CAM mode when it is in PSP mode.  
+
+				A MU's status will constantly switch between PSP and
+				CAM mode when it is in PSP mode.
 				 "
 			::= { wsCcRfMuEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.12
 		wsCcRfMuSupportedRates OBJECT-TYPE
 			SYNTAX TransmitRate
@@ -2754,7 +2754,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"A bit-mask of rates supported by this MU."
 			::= { wsCcRfMuEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.13
 		wsCcRfMuVoice OBJECT-TYPE
 			SYNTAX INTEGER
@@ -2768,7 +2768,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Whether this MU has registered itself as voice-capable."
 			::= { wsCcRfMuEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.14
 		wsCcRfMuIsDataReady OBJECT-TYPE
 			SYNTAX TruthValue
@@ -2781,18 +2781,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				Otherwise this value is false."
 			::= { wsCcRfMuEntry 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.15
 		wsCcRfMuRogueApEna OBJECT-TYPE
 			SYNTAX TruthValue
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"If true, this MU supports Rogue AP detection assist 
+				"If true, this MU supports Rogue AP detection assist
 				algorithm."
 			::= { wsCcRfMuEntry 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.16
 		wsCcRfMuIsWmm OBJECT-TYPE
 			SYNTAX TruthValue
@@ -2802,7 +2802,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"If the MU is using WMM"
 			::= { wsCcRfMuEntry 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.17
 		wsCcRfMuRoamCount OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -2812,7 +2812,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of times the mu has roamed without de-authentication."
 			::= { wsCcRfMuEntry 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.18
 		wsCcRfMuLastHeard OBJECT-TYPE
 			SYNTAX TimeTicks
@@ -2822,18 +2822,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Timeticks since last heard from MU. "
 			::= { wsCcRfMuEntry 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.19
 		wsCcRfMuDisassociateNow OBJECT-TYPE
 			SYNTAX DoActionNow
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Setting this value to one initiates the action to 
+				"Setting this value to one initiates the action to
 				disassociate the MU."
 			::= { wsCcRfMuEntry 19 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.20
 		wsCcRfMuTunnelIndex OBJECT-TYPE
 			SYNTAX INTEGER (0..32)
@@ -2843,15 +2843,15 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The tunnel identifier for this MU."
 			::= { wsCcRfMuEntry 20 }
 
-		
+
 -- Shows the UAPSD parameters for a given MU.  This field has the following bit values :
--- 
+--
 -- Bit 0    - UAPSD enabled for Voice AC
 -- Bit 1    - UAPSD enabled for Video AC
--- Bit 2    - UAPSD enabled for Best-Effort AC 
--- Bit 3    - UAPSD enabled for Background AC 
+-- Bit 2    - UAPSD enabled for Best-Effort AC
+-- Bit 3    - UAPSD enabled for Background AC
 -- Bits 4-5 - UAPSD service period ( 00 - unlimited, 01 - 2 packets, 10 - 4 packets, 11 - 6 packets ).
--- 
+--
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.3.1.21
 		wsCcRfMuQosInfo OBJECT-TYPE
 			SYNTAX INTEGER (0..63)
@@ -2859,18 +2859,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"UAPSD parameters for a given MU. Has the following bit values :
-				
+
 				Bit  0   - UAPSD enabled for Voice AC
 				Bit  1   - UAPSD enabled for Video AC
-				Bit  2   - UAPSD enabled for Best-Effort AC 
-				Bit  3   - UAPSD enabled for Background AC 
+				Bit  2   - UAPSD enabled for Best-Effort AC
+				Bit  3   - UAPSD enabled for Background AC
 				Bits 4-5 - UAPSD service period ( 00 - unlimited, 01 - 2 packets, 10 - 4 packets, 11 - 6 packets ).
-				
-				
+
+
 				"
 			::= { wsCcRfMuEntry 21 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.4
 		wsCcRfMuHistoryTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfMuHistoryEntry
@@ -2880,7 +2880,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfMus 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.4.1
 		wsCcRfMuHistoryEntry OBJECT-TYPE
 			SYNTAX WsCcRfMuHistoryEntry
@@ -2891,9 +2891,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfMuHistoryIndex, wsCcRfMuHistoryMac }
 			::= { wsCcRfMuHistoryTable 1 }
 
-		
+
 		WsCcRfMuHistoryEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfMuHistoryIndex
 					INTEGER,
 				wsCcRfMuHistoryMac
@@ -2917,7 +2917,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple Index"
 			::= { wsCcRfMuHistoryEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.4.1.2
 		wsCcRfMuHistoryMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -2927,7 +2927,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"MAC address of MU"
 			::= { wsCcRfMuHistoryEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.4.1.3
 		wsCcRfMuHistoryRadioIndex OBJECT-TYPE
 			SYNTAX INTEGER (1..2000)
@@ -2937,7 +2937,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Index of Radio"
 			::= { wsCcRfMuHistoryEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.4.1.4
 		wsCcRfMuHistoryWlanIndex OBJECT-TYPE
 			SYNTAX INTEGER (1..32)
@@ -2947,7 +2947,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Index of Wlan"
 			::= { wsCcRfMuHistoryEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.4.1.5
 		wsCcRfMuHistoryTimestamp OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -2957,7 +2957,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The event happened wsCcRfMuHistoryTimestamp seconds ago"
 			::= { wsCcRfMuHistoryEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.4.1.6
 		wsCcRfMuHistoryEvent OBJECT-TYPE
 			SYNTAX INTEGER
@@ -2972,7 +2972,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Event: Adoption, disassociation or timeout."
 			::= { wsCcRfMuHistoryEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.5
 		wsCfRfMuProbeHistoryTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCfRfMuProbeHistoryEntry
@@ -2982,7 +2982,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfMus 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.5.1
 		wsCfRfMuProbeHistoryEntry OBJECT-TYPE
 			SYNTAX WsCfRfMuProbeHistoryEntry
@@ -2993,9 +2993,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCfRfMuProbeHistoryMac, wsCfRfMuProbeHistoryIndex }
 			::= { wsCfRfMuProbeHistoryTable 1 }
 
-		
+
 		WsCfRfMuProbeHistoryEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCfRfMuProbeHistoryMac
 					PhysAddress,
 				wsCfRfMuProbeHistoryIndex
@@ -3017,7 +3017,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCfRfMuProbeHistoryEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.5.1.2
 		wsCfRfMuProbeHistoryIndex OBJECT-TYPE
 			SYNTAX INTEGER (1..255)
@@ -3027,7 +3027,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple Index"
 			::= { wsCfRfMuProbeHistoryEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.5.1.4
 		wsCfRfMuProbeHistoryTimeticks OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -3037,7 +3037,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Date and Time"
 			::= { wsCfRfMuProbeHistoryEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.5.1.5
 		wsCfRfMuProbeHistorySignalStrength OBJECT-TYPE
 			SYNTAX Integer32
@@ -3047,7 +3047,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"It is not yet decided if this will be reported in db or rssi"
 			::= { wsCfRfMuProbeHistoryEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.5.1.6
 		wsCfRfMuProbeHeardRadio OBJECT-TYPE
 			SYNTAX INTEGER (1..1000)
@@ -3057,7 +3057,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Index of the heard radio."
 			::= { wsCfRfMuProbeHistoryEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.6
 		wsCcRfMuProbeRequestsAgeHeardOut OBJECT-TYPE
 			SYNTAX INTEGER (15..900)
@@ -3068,7 +3068,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Range is from 15 secs - 15 minutes"
 			::= { wsCcRfMus 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.7
 		wsCcRfMuHistoryEnable OBJECT-TYPE
 			SYNTAX INTEGER
@@ -3082,7 +3082,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable / disable MU history data collection"
 			::= { wsCcRfMus 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.8
 		wsCcRfMuHistoryClear OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3092,7 +3092,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Clears the entries in the MU History table."
 			::= { wsCcRfMus 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.9
 		wsCcRfMuProbeHistoryEnable OBJECT-TYPE
 			SYNTAX INTEGER
@@ -3106,7 +3106,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable / disable MU probe history data collection"
 			::= { wsCcRfMus 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.10
 		wsCcRfMuProbeHistoryClear OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3116,7 +3116,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Clears the entries in the MU Probe History table."
 			::= { wsCcRfMus 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.11
 		wsCcRfMuProbeConfigTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfMuProbeConfigEntry
@@ -3126,7 +3126,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Table to configure MUs that have to be tracked for probe history status"
 			::= { wsCcRfMus 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.11.1
 		wsCcRfMuProbeConfigEntry OBJECT-TYPE
 			SYNTAX WsCcRfMuProbeConfigEntry
@@ -3137,9 +3137,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfMuProbeConfigIndex }
 			::= { wsCcRfMuProbeConfigTable 1 }
 
-		
+
 		WsCcRfMuProbeConfigEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfMuProbeConfigIndex
 					INTEGER,
 				wsCcRfMuProbeConfigMac
@@ -3157,7 +3157,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple index"
 			::= { wsCcRfMuProbeConfigEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.11.1.2
 		wsCcRfMuProbeConfigMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -3167,7 +3167,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"MAc address of MU to be tracked"
 			::= { wsCcRfMuProbeConfigEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.11.1.3
 		wsCcRfMuProbeConfigStatus OBJECT-TYPE
 			SYNTAX INTEGER
@@ -3181,7 +3181,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set tracking on or off for particular MU"
 			::= { wsCcRfMuProbeConfigEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.12
 		wsCcRfMuProbeStatusTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfMuProbeStatusEntry
@@ -3191,7 +3191,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Status of MU probe history"
 			::= { wsCcRfMus 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.12.1
 		wsCcRfMuProbeStatusEntry OBJECT-TYPE
 			SYNTAX WsCcRfMuProbeStatusEntry
@@ -3202,9 +3202,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfMuProbeConfigIndex, wsCcRfMuProbeStatusIndex }
 			::= { wsCcRfMuProbeStatusTable 1 }
 
-		
+
 		WsCcRfMuProbeStatusEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfMuProbeStatusIndex
 					INTEGER,
 				wsCcRfMuProbeStatusMac
@@ -3226,7 +3226,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple Index"
 			::= { wsCcRfMuProbeStatusEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.12.1.2
 		wsCcRfMuProbeStatusMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -3236,7 +3236,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Mac Address"
 			::= { wsCcRfMuProbeStatusEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.12.1.4
 		wsCcRfMuProbeStatusTimeticks OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -3246,7 +3246,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Date and Time"
 			::= { wsCcRfMuProbeStatusEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.12.1.5
 		wsCcRfMuProbeStatusSignalStrength OBJECT-TYPE
 			SYNTAX Integer32
@@ -3256,7 +3256,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"It is not yet decided if this will be reported in db or rssi"
 			::= { wsCcRfMuProbeStatusEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.12.1.6
 		wsCcRfMuProbeStatusHeardRadio OBJECT-TYPE
 			SYNTAX INTEGER (1..1000)
@@ -3266,7 +3266,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Index of the heard radio."
 			::= { wsCcRfMuProbeStatusEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.13
 		wsCcRfMuHistoryStatusMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -3276,7 +3276,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The Mac addres which the user want to view the history status"
 			::= { wsCcRfMus 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.14
 		wsCcRfMuHistoryStatusTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfMuHistoryStatusEntry
@@ -3288,7 +3288,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				2.do a walk of the table, and it will show you the history of that MU"
 			::= { wsCcRfMus 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.14.1
 		wsCcRfMuHistoryStatusEntry OBJECT-TYPE
 			SYNTAX WsCcRfMuHistoryStatusEntry
@@ -3299,9 +3299,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfMuHistoryStatusIndex }
 			::= { wsCcRfMuHistoryStatusTable 1 }
 
-		
+
 		WsCcRfMuHistoryStatusEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfMuHistoryStatusIndex
 					INTEGER,
 				wsCcRfMuHistoryStatusRadioIndex
@@ -3323,7 +3323,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple index of wsCcRfMuHistoryStatusTable"
 			::= { wsCcRfMuHistoryStatusEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.14.1.2
 		wsCcRfMuHistoryStatusRadioIndex OBJECT-TYPE
 			SYNTAX INTEGER (1..8192)
@@ -3333,7 +3333,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Index of Radio"
 			::= { wsCcRfMuHistoryStatusEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.14.1.3
 		wsCcRfMuHistoryStatusWlanIndex OBJECT-TYPE
 			SYNTAX INTEGER (1..256)
@@ -3343,7 +3343,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Index of Wlan"
 			::= { wsCcRfMuHistoryStatusEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.14.1.4
 		wsCcRfMuHistoryStatusTimestamp OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -3353,7 +3353,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The event happened wsCcRfMuHistoryTimestamp seconds ago"
 			::= { wsCcRfMuHistoryStatusEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.12.14.1.5
 		wsCcRfMuHistoryStatusEvent OBJECT-TYPE
 			SYNTAX INTEGER
@@ -3368,11 +3368,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Event: Adoption, disassociation or timeout"
 			::= { wsCcRfMuHistoryStatusEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14
 		wsCcRfWlan OBJECT IDENTIFIER ::= { wsCcRfMIB 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1
 		wsCcRfWlanTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfWlanEntry
@@ -3382,7 +3382,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Table of wireless LANs on the switch."
 			::= { wsCcRfWlan 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1
 		wsCcRfWlanEntry OBJECT-TYPE
 			SYNTAX WsCcRfWlanEntry
@@ -3393,9 +3393,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex }
 			::= { wsCcRfWlanTable 1 }
 
-		
+
 		WsCcRfWlanEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfWlanIndex
 					Integer32,
 				wsCcRfWlanEnable
@@ -3467,19 +3467,19 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple index."
 			::= { wsCcRfWlanEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.2
 		wsCcRfWlanEnable OBJECT-TYPE
 			SYNTAX StaticRowEnable
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Enable/Disable wireless Lan.  If this wlan is 
-				referenced by wsCcRfRadioBssWlanMap, a set to 
+				"Enable/Disable wireless Lan.  If this wlan is
+				referenced by wsCcRfRadioBssWlanMap, a set to
 				disabled mode will fail."
 			::= { wsCcRfWlanEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.3
 		wsCcRfWlanDescr OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..32))
@@ -3489,7 +3489,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description the Wlan."
 			::= { wsCcRfWlanEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.4
 		wsCcRfWlanEssid OBJECT-TYPE
 			SYNTAX DisplayString
@@ -3499,7 +3499,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"ESSID of the WLAN."
 			::= { wsCcRfWlanEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.5
 		wsCcRfWlanVlan OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -3507,12 +3507,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"The Vlan this Wlan is associated with.
-				
+
 				If not associated with any Vlan, this value
 				will be 0."
 			::= { wsCcRfWlanEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.6
 		wsCcRfWlanDisallowMuToMu OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3522,21 +3522,21 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set to true to prohibit MU-to-MU communication."
 			::= { wsCcRfWlanEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.7
 		wsCcRfWlanSecBeacon OBJECT-TYPE
 			SYNTAX TruthValue
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Enable the Secure Beacon checkbox to disallow the 
-				Access Port from broadcasting an ESSID in its 
-				beacons. This is a safeguard to prevent intruders 
-				from tapping into the WLAN. Consider this security 
+				"Enable the Secure Beacon checkbox to disallow the
+				Access Port from broadcasting an ESSID in its
+				beacons. This is a safeguard to prevent intruders
+				from tapping into the WLAN. Consider this security
 				measure for a private, corporate network."
 			::= { wsCcRfWlanEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.8
 		wsCcRfWlanVoicePrioritization OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3546,7 +3546,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable voice prioritization."
 			::= { wsCcRfWlanEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.9
 		wsCcRfWlanAnswerBroadcastEss OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3556,7 +3556,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Answer broadcast ESS."
 			::= { wsCcRfWlanEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.10
 		wsCcRfWlanMulticastAddr1 OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -3566,7 +3566,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Multicast address 1."
 			::= { wsCcRfWlanEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.11
 		wsCcRfWlanMulticastAddr2 OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -3576,7 +3576,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Multicast address 2."
 			::= { wsCcRfWlanEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.12
 		wsCcRfWlanWeight OBJECT-TYPE
 			SYNTAX Integer32
@@ -3585,13 +3585,13 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DESCRIPTION
 				"The weight to be used when QoS for all WLANs
 				is set to weighted-round-robin.
-				
+
 				Note that the sum of all weights across all
 				WLANs need not total 100.
 				"
 			::= { wsCcRfWlanEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.13
 		wsCcRfWlanWmmEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3601,7 +3601,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable/Disable WMM on this wireless LAN"
 			::= { wsCcRfWlanEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.14
 		wsCcRfWlanSvpEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3612,7 +3612,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				on this wireless LAN"
 			::= { wsCcRfWlanEntry 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.15
 		wsCcRfWlanAuthentication OBJECT-TYPE
 			SYNTAX AuthType
@@ -3620,13 +3620,13 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"If auth802dot1xEap, additional EAP settings for this
-				WLAN will be used from the matching entry in the wireless 
+				WLAN will be used from the matching entry in the wireless
 				authentication.
-				
+
 				"
 			::= { wsCcRfWlanEntry 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.16
 		wsCcRfWlanEncryptionMap OBJECT-TYPE
 			SYNTAX EncMap
@@ -3634,32 +3634,32 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"** this needs to be a bitmap of enc types **
-				If cryptoWep64 or cryptoWep128, additional WEP 
+				If cryptoWep64 or cryptoWep128, additional WEP
 				settings for this WLAN will be used from the matching
 				entry in the ccWlanCryptoWepTable.
-				
+
 				Likewise, if cryptoWpaTkip, use the settings in the
 				matching entry in the ccWlanCryptoWpaTable.
-				
+
 				Likewise, if cryptoKeyguardMcm, use the settings in
 				the matching entry in the ccWlanCryptoKeyguardTable."
 			::= { wsCcRfWlanEntry 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.17
 		wsCcRfWlanBcastEnc OBJECT-TYPE
 			SYNTAX EncType
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The broadcast encryption type in use on a WLAN. 
-				In most cases it is same as the unicast encryption 
-				type. When multiple encryption types are supported 
-				(TKIP+CCMP) it is usually the lowest encryption 
+				"The broadcast encryption type in use on a WLAN.
+				In most cases it is same as the unicast encryption
+				type. When multiple encryption types are supported
+				(TKIP+CCMP) it is usually the lowest encryption
 				type."
 			::= { wsCcRfWlanEntry 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.18
 		wsCcRfWlanNumRadiosAdopted OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -3669,7 +3669,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of radios adopted."
 			::= { wsCcRfWlanEntry 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.19
 		wsCcRfWlanUseDscp OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3679,7 +3679,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Use Dscp when tagged."
 			::= { wsCcRfWlanEntry 19 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.20
 		wsCcRfWlanMuIdleTime OBJECT-TYPE
 			SYNTAX Integer32 (60..86400)
@@ -3687,15 +3687,15 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"The number of seconds for which if the switch does 
-				not receive/send any data frames from/to an MU, it 
-				disassociates the MU. If an MU roams away from an 
-				access point without disassociating, this timeout 
-				helps the switch determine that the MU is gone, and 
+				"The number of seconds for which if the switch does
+				not receive/send any data frames from/to an MU, it
+				disassociates the MU. If an MU roams away from an
+				access point without disassociating, this timeout
+				helps the switch determine that the MU is gone, and
 				clear resources allocated for that MU."
 			::= { wsCcRfWlanEntry 20 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.21
 		wsCcRfWlanMobilityEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3705,7 +3705,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfWlanEntry 21 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.22
 		wsCcRfWlanGRETunnelIdx OBJECT-TYPE
 			SYNTAX INTEGER (0..32)
@@ -3715,7 +3715,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfWlanEntry 22 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.23
 		wsCcRfWlanGRETunnelGatewayIp OBJECT-TYPE
 			SYNTAX IpAddress
@@ -3725,7 +3725,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfWlanEntry 23 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.24
 		wsCcRfWlanGRETunnelGatewayMask OBJECT-TYPE
 			SYNTAX IpAddress
@@ -3735,7 +3735,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfWlanEntry 24 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.25
 		wsCcRfWlanMuToMu OBJECT-TYPE
 			SYNTAX INTEGER
@@ -3747,11 +3747,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"States the form of MU-to-MU communication, whether to drop, 
+				"States the form of MU-to-MU communication, whether to drop,
 				allow or switch to wired."
 			::= { wsCcRfWlanEntry 25 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.26
 		wsCcRfWlanQosPrioritization OBJECT-TYPE
 			SYNTAX INTEGER
@@ -3768,7 +3768,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Sets the prioritization of the WLAN for QoS purposes."
 			::= { wsCcRfWlanEntry 26 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.27
 		wsCcRfWlanDynamicVlanAssignment OBJECT-TYPE
 			SYNTAX TruthValue
@@ -3778,7 +3778,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enables or disables dynamic VLAN assignment for the WLAN."
 			::= { wsCcRfWlanEntry 27 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.28
 		wsCcRfWlanAccountingType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -3793,7 +3793,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Indicates if the accounting type is Radius, Syslog or turned off."
 			::= { wsCcRfWlanEntry 28 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.29
 		wsCcRfWlanSyslogServerIp OBJECT-TYPE
 			SYNTAX IpAddress
@@ -3803,7 +3803,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"IP Address of the Syslog server"
 			::= { wsCcRfWlanEntry 29 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.1.1.30
 		wsCcRfWlanSyslogServerPort OBJECT-TYPE
 			SYNTAX Unsigned32 (1..65535)
@@ -3813,11 +3813,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Port of the Syslog Server"
 			::= { wsCcRfWlanEntry 30 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2
 		wsCcRfWlanAuth OBJECT IDENTIFIER ::= { wsCcRfWlan 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1
 		wsCcRfWlanAuthEapTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfWlanAuthEapEntry
@@ -3827,7 +3827,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Table of EAP authentication settings for each WLAN."
 			::= { wsCcRfWlanAuth 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1
 		wsCcRfWlanAuthEapEntry OBJECT-TYPE
 			SYNTAX WsCcRfWlanAuthEapEntry
@@ -3838,9 +3838,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex }
 			::= { wsCcRfWlanAuthEapTable 1 }
 
-		
+
 		WsCcRfWlanAuthEapEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfWlanAuthEapRadiusServerIp1
 					IpAddress,
 				wsCcRfWlanAuthEapRadiusServerPort1
@@ -3902,7 +3902,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"IP address of the 1st RADIUS server."
 			::= { wsCcRfWlanAuthEapEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.2
 		wsCcRfWlanAuthEapRadiusServerPort1 OBJECT-TYPE
 			SYNTAX Integer32 (1..65535)
@@ -3912,7 +3912,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Port number of the 1st RADIUS server."
 			::= { wsCcRfWlanAuthEapEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.3
 		wsCcRfWlanAuthEapRadiusServerSecret1 OBJECT-TYPE
 			SYNTAX Password (SIZE (0..127))
@@ -3922,7 +3922,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Shared secret of the 1st RADIUS server."
 			::= { wsCcRfWlanAuthEapEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.4
 		wsCcRfWlanAuthEapRadiusServerIp2 OBJECT-TYPE
 			SYNTAX IpAddress
@@ -3932,7 +3932,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"IP address of the 2nd RADIUS server."
 			::= { wsCcRfWlanAuthEapEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.5
 		wsCcRfWlanAuthEapRadiusServerPort2 OBJECT-TYPE
 			SYNTAX Integer32 (1..65535)
@@ -3942,7 +3942,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Port number of the 2nd RADIUS server."
 			::= { wsCcRfWlanAuthEapEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.6
 		wsCcRfWlanAuthEapRadiusServerSecret2 OBJECT-TYPE
 			SYNTAX Password (SIZE (0..127))
@@ -3952,7 +3952,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Shared secret of the 2nd RADIUS server."
 			::= { wsCcRfWlanAuthEapEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.7
 		wsCcRfWlanAuthEapSuppRetries OBJECT-TYPE
 			SYNTAX Integer32 (1..100)
@@ -3962,7 +3962,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Supplicant max retries."
 			::= { wsCcRfWlanAuthEapEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.8
 		wsCcRfWlanAuthEapSuppTimeout OBJECT-TYPE
 			SYNTAX Integer32 (1..300)
@@ -3973,7 +3973,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Supplicant timeout."
 			::= { wsCcRfWlanAuthEapEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.9
 		wsCcRfWlanAuthEapServerRetries OBJECT-TYPE
 			SYNTAX Integer32 (1..10)
@@ -3983,7 +3983,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Server max retries."
 			::= { wsCcRfWlanAuthEapEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.10
 		wsCcRfWlanAuthEapServerTimeout OBJECT-TYPE
 			SYNTAX Integer32 (1..60)
@@ -3994,7 +3994,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Server timeout."
 			::= { wsCcRfWlanAuthEapEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.11
 		wsCcRfWlanAuthEapReauth OBJECT-TYPE
 			SYNTAX TruthValue
@@ -4004,7 +4004,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable reauthentication."
 			::= { wsCcRfWlanAuthEapEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.12
 		wsCcRfWlanAuthEapReauthTimeout OBJECT-TYPE
 			SYNTAX Integer32 (30..65535)
@@ -4015,7 +4015,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Reauthentication timeout."
 			::= { wsCcRfWlanAuthEapEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.13
 		wsCcRfWlanAuthEapAuthProtocol OBJECT-TYPE
 			SYNTAX INTEGER
@@ -4029,7 +4029,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The authentication protocol to be used, PAP or CHAP."
 			::= { wsCcRfWlanAuthEapEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.14
 		wsCcRfWlanAuthEapDscpTos OBJECT-TYPE
 			SYNTAX INTEGER (0..63)
@@ -4039,7 +4039,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"DSCP or TOS value to be used (between 0 and 63)."
 			::= { wsCcRfWlanAuthEapEntry 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.15
 		wsCcRfWlanAuthEapAccountingMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -4054,7 +4054,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Indicates if mode of accounting is one of: Start-Stop, Start-only or Start-interim-Stop"
 			::= { wsCcRfWlanAuthEapEntry 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.16
 		wsCcRfWlanAuthEapInterimAcctInterval OBJECT-TYPE
 			SYNTAX Unsigned32 (60..86400)
@@ -4064,7 +4064,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Interval for interim accounting"
 			::= { wsCcRfWlanAuthEapEntry 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.17
 		wsCcRfWlanAuthEapAcctTimeout OBJECT-TYPE
 			SYNTAX Unsigned32 (1..300)
@@ -4074,7 +4074,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Timeout value for accounting option"
 			::= { wsCcRfWlanAuthEapEntry 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.18
 		wsCcRfWlanAuthEapAcctRetries OBJECT-TYPE
 			SYNTAX Unsigned32 (1..100)
@@ -4084,7 +4084,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of accounting retries"
 			::= { wsCcRfWlanAuthEapEntry 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.19
 		wsCcRfWlanAuthPrimaryServer OBJECT-TYPE
 			SYNTAX IpAddress
@@ -4094,7 +4094,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"IP Address of the Primary Accounting Server"
 			::= { wsCcRfWlanAuthEapEntry 19 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.20
 		wsCcRfWlanAuthEapSecondaryServer OBJECT-TYPE
 			SYNTAX IpAddress
@@ -4104,7 +4104,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"IP Address of the Secondary Accounting Server"
 			::= { wsCcRfWlanAuthEapEntry 20 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.21
 		wsCcRfWlanAuthEapPrimarySrvrPort OBJECT-TYPE
 			SYNTAX Unsigned32 (1..65535)
@@ -4114,7 +4114,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Port Number of the Primary Server"
 			::= { wsCcRfWlanAuthEapEntry 21 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.22
 		wsCcRfWlanAuthEapSecondarySrvrPort OBJECT-TYPE
 			SYNTAX Unsigned32 (1..65535)
@@ -4124,7 +4124,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Port Number of the Secondary Server"
 			::= { wsCcRfWlanAuthEapEntry 22 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.23
 		wsCcRfWlanAuthEapPrimarySecret OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (1..127))
@@ -4134,7 +4134,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Shared secret of the Primary Accounting server."
 			::= { wsCcRfWlanAuthEapEntry 23 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.24
 		wsCcRfWlanAuthEapSecondarySecret OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (1..127))
@@ -4144,7 +4144,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Shared secret of the Secondary Accounting server."
 			::= { wsCcRfWlanAuthEapEntry 24 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.1.1.25
 		wsCcRfWlanAuthEapRadiusMacAuthFormat OBJECT-TYPE
 			SYNTAX INTEGER
@@ -4166,7 +4166,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				                 middle-dash: Dash Delmiter in the middle - AABBCC-DDEEFF"
 			::= { wsCcRfWlanAuthEapEntry 25 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.2
 		wsCcRfWlanAuthKerberosTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfWlanAuthKerberosEntry
@@ -4176,7 +4176,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Table of Kerberos authentication settings for each WLAN."
 			::= { wsCcRfWlanAuth 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.2.1
 		wsCcRfWlanAuthKerberosEntry OBJECT-TYPE
 			SYNTAX WsCcRfWlanAuthKerberosEntry
@@ -4187,9 +4187,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex }
 			::= { wsCcRfWlanAuthKerberosTable 1 }
 
-		
+
 		WsCcRfWlanAuthKerberosEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfwlanAuthKerbRealm
 					DisplayString,
 				wsCcRfWlanAuthKerbPassword
@@ -4213,15 +4213,15 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"Realm name.
-				
-				A realm name functions similarly to a DNS domain 
-				name. In theory, the realm name is arbitrary. 
-				However, in practice a Kerberos realm is named by 
-				uppercasing the DNS domain name that is associated 
+
+				A realm name functions similarly to a DNS domain
+				name. In theory, the realm name is arbitrary.
+				However, in practice a Kerberos realm is named by
+				uppercasing the DNS domain name that is associated
 				with hosts in the realm."
 			::= { wsCcRfWlanAuthKerberosEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.2.1.2
 		wsCcRfWlanAuthKerbPassword OBJECT-TYPE
 			SYNTAX Password (SIZE (0..20))
@@ -4231,7 +4231,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Password for the Kerberos configuration."
 			::= { wsCcRfWlanAuthKerberosEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.2.1.3
 		wsCcRfWlanAuthKerbKdcServerIp1 OBJECT-TYPE
 			SYNTAX IpAddress
@@ -4241,7 +4241,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"IP address of the 1st Kerberos server."
 			::= { wsCcRfWlanAuthKerberosEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.2.1.4
 		wsCcRfWlanAuthKerbKdcServerPort1 OBJECT-TYPE
 			SYNTAX Integer32 (1..65535)
@@ -4251,7 +4251,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Port number of the 1st Kerberos server."
 			::= { wsCcRfWlanAuthKerberosEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.2.1.5
 		wsCcRfWlanAuthKerbKdcServerIp2 OBJECT-TYPE
 			SYNTAX IpAddress
@@ -4261,7 +4261,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"IP address of the 2nd Kerberos server."
 			::= { wsCcRfWlanAuthKerberosEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.2.1.6
 		wsCcRfWlanAuthKerbKdcServerPort2 OBJECT-TYPE
 			SYNTAX Integer32 (1..65535)
@@ -4271,7 +4271,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Port number of the 2nd Kerberos server."
 			::= { wsCcRfWlanAuthKerberosEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.2.2.1.7
 		wsCcRfWlanAuthKerberosServerTimeout OBJECT-TYPE
 			SYNTAX Integer32 (1..65535)
@@ -4281,11 +4281,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfWlanAuthKerberosEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3
 		wsCcRfWlanEnc OBJECT IDENTIFIER ::= { wsCcRfWlan 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.1
 		wsCcRfWlanEncSkEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -4295,7 +4295,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable/disable Wlan encryption shared-key"
 			::= { wsCcRfWlanEnc 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.2
 		wsCcRfWlanEncWep64Table OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfWlanEncWep64Entry
@@ -4305,7 +4305,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Table of WEP encryption settings for each WLAN."
 			::= { wsCcRfWlanEnc 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.2.1
 		wsCcRfWlanEncWep64Entry OBJECT-TYPE
 			SYNTAX WsCcRfWlanEncWep64Entry
@@ -4316,9 +4316,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex }
 			::= { wsCcRfWlanEncWep64Table 1 }
 
-		
+
 		WsCcRfWlanEncWep64Entry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfWlanEncWep64KeyIndex
 					Unsigned32,
 				wsCcRfWlanEncWep64Key1
@@ -4340,7 +4340,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Specifies which WEP key to use."
 			::= { wsCcRfWlanEncWep64Entry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.2.1.2
 		wsCcRfWlanEncWep64Key1 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4348,11 +4348,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"WEP key #1
-				
+
 				exactly  5 octets for WEP-64 (40-bit key)."
 			::= { wsCcRfWlanEncWep64Entry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.2.1.3
 		wsCcRfWlanEncWep64Key2 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4360,11 +4360,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"WEP key #2
-				
+
 				exactly  5 octets for WEP-64 (40-bit key)."
 			::= { wsCcRfWlanEncWep64Entry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.2.1.4
 		wsCcRfWlanEncWep64Key3 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4372,11 +4372,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"WEP key #3
-				
+
 				exactly  5 octets for WEP-64 (40-bit key)."
 			::= { wsCcRfWlanEncWep64Entry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.2.1.5
 		wsCcRfWlanEncWep64Key4 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4384,11 +4384,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"WEP key #4
-				
+
 				exactly  5 octets for WEP-64 (40-bit key)."
 			::= { wsCcRfWlanEncWep64Entry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.3
 		wsCcRfWlanEncWep128KgTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfWlanEncWep128KgEntry
@@ -4398,7 +4398,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Table of WEP encryption settings for each WLAN."
 			::= { wsCcRfWlanEnc 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.3.1
 		wsCcRfWlanEncWep128KgEntry OBJECT-TYPE
 			SYNTAX WsCcRfWlanEncWep128KgEntry
@@ -4409,9 +4409,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex }
 			::= { wsCcRfWlanEncWep128KgTable 1 }
 
-		
+
 		WsCcRfWlanEncWep128KgEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfWlanEncWep128KgKeyIndex
 					Unsigned32,
 				wsCcRfWlanEncWep128KgKey1
@@ -4433,7 +4433,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Specifies which WEP key to use."
 			::= { wsCcRfWlanEncWep128KgEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.3.1.2
 		wsCcRfWlanEncWep128KgKey1 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4441,12 +4441,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"WEP key #1
-				
+
 				exactly 13 octets for WEP-128 (104-bit key);
 				"
 			::= { wsCcRfWlanEncWep128KgEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.3.1.3
 		wsCcRfWlanEncWep128KgKey2 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4454,12 +4454,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"WEP key #2
-				
+
 				exactly 13 octets for WEP-128 (104-bit key);
 				"
 			::= { wsCcRfWlanEncWep128KgEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.3.1.4
 		wsCcRfWlanEncWep128KgKey3 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4467,12 +4467,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"WEP key #3
-				
+
 				exactly 13 octets for WEP-128 (104-bit key);
 				"
 			::= { wsCcRfWlanEncWep128KgEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.3.1.5
 		wsCcRfWlanEncWep128KgKey4 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4480,12 +4480,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"WEP key #4
-				
+
 				exactly 13 octets for WEP-128 (104-bit key);
 				"
 			::= { wsCcRfWlanEncWep128KgEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.4
 		wsCcRfWlanEncTkipCcmpTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfWlanEncTkipCcmpEntry
@@ -4495,7 +4495,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Table of Tkip/Ccmp encryption settings for each WLAN."
 			::= { wsCcRfWlanEnc 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.4.1
 		wsCcRfWlanEncTkipCcmpEntry OBJECT-TYPE
 			SYNTAX WsCcRfWlanEncTkipCcmpEntry
@@ -4506,9 +4506,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex }
 			::= { wsCcRfWlanEncTkipCcmpTable 1 }
 
-		
+
 		WsCcRfWlanEncTkipCcmpEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfWlanEncTkipCcmpKeyType
 					INTEGER,
 				wsCcRfWlanEncTkipCcmpPassphrase
@@ -4540,7 +4540,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Specify whether to use key or passphrase."
 			::= { wsCcRfWlanEncTkipCcmpEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.4.1.2
 		wsCcRfWlanEncTkipCcmpPassphrase OBJECT-TYPE
 			SYNTAX Password
@@ -4550,7 +4550,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Passphrase."
 			::= { wsCcRfWlanEncTkipCcmpEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.4.1.3
 		wsCcRfWlanEncTkipCcmpKey OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4560,19 +4560,19 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Key."
 			::= { wsCcRfWlanEncTkipCcmpEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.4.1.4
 		wsCcRfWlanEncTkipCcmpKeyRotation OBJECT-TYPE
 			SYNTAX TruthValue
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				" A truth-value that indicates whether the group 
-				key for a TKIP/CCMP mobile-unit should be 
+				" A truth-value that indicates whether the group
+				key for a TKIP/CCMP mobile-unit should be
 				periodically rotated."
 			::= { wsCcRfWlanEncTkipCcmpEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.4.1.5
 		wsCcRfWlanEncTkipCcmpKeyInterval OBJECT-TYPE
 			SYNTAX Integer32 (1800..86400)
@@ -4580,43 +4580,43 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"The number of seconds after which the broadcast 
-				key of all mobile-units on a particular wireless 
+				"The number of seconds after which the broadcast
+				key of all mobile-units on a particular wireless
 				lan is replaced by a new broadcast key."
 			::= { wsCcRfWlanEncTkipCcmpEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.4.1.6
 		wsCcRfWlanEncTkipCcmpPmkCaching OBJECT-TYPE
 			SYNTAX TruthValue
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Whether IEEE 802.11i PMK caching is enabled. Use 
-				of PMK caching allows a mobile-unit to authenticate 
-				just once to an AP, even if it roams away from it, 
-				and roams back to it. Enabling this feature results 
-				in much faster roam times on wireless LANs that 
+				"Whether IEEE 802.11i PMK caching is enabled. Use
+				of PMK caching allows a mobile-unit to authenticate
+				just once to an AP, even if it roams away from it,
+				and roams back to it. Enabling this feature results
+				in much faster roam times on wireless LANs that
 				use 802.1x authentication."
 			::= { wsCcRfWlanEncTkipCcmpEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.4.1.7
 		wsCcRfWlanEncTkipCcmpOppPmkCaching OBJECT-TYPE
 			SYNTAX TruthValue
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Whether extensions to IEEE 802.11i PMK caching, 
-				known as opportunistic PMK caching, are enabled. 
-				It extends PMK caching (authenticate once to an AP) 
+				"Whether extensions to IEEE 802.11i PMK caching,
+				known as opportunistic PMK caching, are enabled.
+				It extends PMK caching (authenticate once to an AP)
 				to the whole switch (authenticate once to a switch).
-				Enabling this feature results in much faster roam 
-				times on wireless LANs that use 802.1x 
+				Enabling this feature results in much faster roam
+				times on wireless LANs that use 802.1x
 				authentication"
 			::= { wsCcRfWlanEncTkipCcmpEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.4.1.8
 		wsCcRfWlanEncTkipCcmpPreauthentication OBJECT-TYPE
 			SYNTAX TruthValue
@@ -4626,13 +4626,13 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Whether pre-authentication is enabled."
 			::= { wsCcRfWlanEncTkipCcmpEntry 8 }
 
-		
--- A utility mib group used to generate wep keys from 
+
+-- A utility mib group used to generate wep keys from
 -- a passphrase.
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.5
 		wsCcRfWlanEncPhraseToWep OBJECT IDENTIFIER ::= { wsCcRfWlanEnc 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.5.1
 		wsCcRfWlanEncP2WPassphrase OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (4..32))
@@ -4643,7 +4643,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				wep keys."
 			::= { wsCcRfWlanEncPhraseToWep 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.5.2
 		wsCcRfWlanEncP2WKey1 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4653,7 +4653,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Generated Wep128 key #1."
 			::= { wsCcRfWlanEncPhraseToWep 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.5.3
 		wsCcRfWlanEncP2WKey2 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4663,7 +4663,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Generated Wep128 key #2."
 			::= { wsCcRfWlanEncPhraseToWep 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.5.4
 		wsCcRfWlanEncP2WKey3 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4673,7 +4673,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Generated Wep128 key #3."
 			::= { wsCcRfWlanEncPhraseToWep 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.5.5
 		wsCcRfWlanEncP2WKey4 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -4683,7 +4683,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Generated Wep128 key #4."
 			::= { wsCcRfWlanEncPhraseToWep 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.3.5.6
 		wsCcRfWlanEncP2WClearKeys OBJECT-TYPE
 			SYNTAX DoActionNow
@@ -4694,20 +4694,20 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				fields."
 			::= { wsCcRfWlanEncPhraseToWep 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.4
 		wsCcRfWlanWmmTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfWlanWmmEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"Configuration parameters for 802.11e / Wireless 
-				MultiMedia, which control the Quality of 
-				Service between the wireless devices on 
+				"Configuration parameters for 802.11e / Wireless
+				MultiMedia, which control the Quality of
+				Service between the wireless devices on
 				the network"
 			::= { wsCcRfWlan 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.4.1
 		wsCcRfWlanWmmEntry OBJECT-TYPE
 			SYNTAX WsCcRfWlanWmmEntry
@@ -4718,9 +4718,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex, wsCcRfWlanWmmAccessCategory }
 			::= { wsCcRfWlanWmmTable 1 }
 
-		
+
 		WsCcRfWlanWmmEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfWlanWmmAccessCategory
 					INTEGER,
 				wsCcRfWlanWmmAdmissionCtrl
@@ -4749,12 +4749,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS accessible-for-notify
 			STATUS current
 			DESCRIPTION
-				"A label for a particular QoS category of traffic 
-				in an 802.11e network. WMM defines 4 Access 
+				"A label for a particular QoS category of traffic
+				in an 802.11e network. WMM defines 4 Access
 				Categories (Voice, Video, Best Effort, Background)."
 			::= { wsCcRfWlanWmmEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.4.1.2
 		wsCcRfWlanWmmAdmissionCtrl OBJECT-TYPE
 			SYNTAX TruthValue
@@ -4764,20 +4764,20 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enables/disables admission control."
 			::= { wsCcRfWlanWmmEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.4.1.3
 		wsCcRfWlanWmmAifsn OBJECT-TYPE
 			SYNTAX Unsigned32 (2..15)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"The Arbitration Inter-Frame Spacing is the wait 
-				time in milliSeconds between data frames. A 
-				smaller number leads to greater priority for 
+				"The Arbitration Inter-Frame Spacing is the wait
+				time in milliSeconds between data frames. A
+				smaller number leads to greater priority for
 				medium access."
 			::= { wsCcRfWlanWmmEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.4.1.4
 		wsCcRfWlanWmmTxOp OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
@@ -4785,45 +4785,45 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				" An interval of time where an 802.11e station 
-				(MU/AP) has the right to initiate transmissions 
+				" An interval of time where an 802.11e station
+				(MU/AP) has the right to initiate transmissions
 				on the wireless medium."
 			::= { wsCcRfWlanWmmEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.4.1.5
 		wsCcRfWlanWmmCwMin OBJECT-TYPE
 			SYNTAX Unsigned32 (0..15)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"If the medium is busy, or a transmitted frame 
-				collides, the AP or MU choose a random number 
-				between 0 and this minimum contention window size, 
-				to decide how long to wait before attempting 
-				(re)-transmission. For ease of use this value is 
-				configured as a number between 0 and 10; the 
-				actual window is calculated using 2**x -1 where 
+				"If the medium is busy, or a transmitted frame
+				collides, the AP or MU choose a random number
+				between 0 and this minimum contention window size,
+				to decide how long to wait before attempting
+				(re)-transmission. For ease of use this value is
+				configured as a number between 0 and 10; the
+				actual window is calculated using 2**x -1 where
 				x is the value configured."
 			::= { wsCcRfWlanWmmEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.4.1.6
 		wsCcRfWlanWmmCwMax OBJECT-TYPE
 			SYNTAX Integer32 (0..15)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"On each collision the AP or MU doubles its 
-				initial contention window wait time, until that 
-				number is as large as this maximum contention 
-				window size. For ease of use this value is 
-				configured as a number between 0 and 10; the 
-				actual window is calculated using 2**x -1 where 
+				"On each collision the AP or MU doubles its
+				initial contention window wait time, until that
+				number is as large as this maximum contention
+				window size. For ease of use this value is
+				configured as a number between 0 and 10; the
+				actual window is calculated using 2**x -1 where
 				x is the value configured."
 			::= { wsCcRfWlanWmmEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.4.1.7
 		wsCcRfWlanWmmAdmissionDeviceMax OBJECT-TYPE
 			SYNTAX Integer32 (1..255)
@@ -4833,7 +4833,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Max number of devices to admit."
 			::= { wsCcRfWlanWmmEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.14.5
 		wsCcRfWlanCount OBJECT-TYPE
 			SYNTAX INTEGER (1..256)
@@ -4843,23 +4843,23 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"the current number of wlan in the system"
 			::= { wsCcRfWlan 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.15
 		wsCcRfAssocAcl OBJECT IDENTIFIER ::= { wsCcRfMIB 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.15.1
 		wsCcRfMuAssocAclTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfMuAssocAclEntry
 			MAX-ACCESS not-accessible
 			STATUS current
 			DESCRIPTION
-				"A table that allows users to filter MUs that are 
-				allowed/denied association to different WLANs 
+				"A table that allows users to filter MUs that are
+				allowed/denied association to different WLANs
 				based on their MAC address"
 			::= { wsCcRfAssocAcl 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.15.1.1
 		wsCcRfMuAssocAclEntry OBJECT-TYPE
 			SYNTAX WsCcRfMuAssocAclEntry
@@ -4870,9 +4870,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfMuAssocAclIndex }
 			::= { wsCcRfMuAssocAclTable 1 }
 
-		
+
 		WsCcRfMuAssocAclEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfMuAssocAclIndex
 					Integer32,
 				wsCcRfMuAssocAclMode
@@ -4896,7 +4896,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple index."
 			::= { wsCcRfMuAssocAclEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.15.1.1.2
 		wsCcRfMuAssocAclMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -4907,13 +4907,13 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"Allow or deny the Mac range specified by 
-				wsCcRfWlanMuAclStartingMac and 
+				"Allow or deny the Mac range specified by
+				wsCcRfWlanMuAclStartingMac and
 				wsCcRfWlanMuAclEndingMac."
 			DEFVAL { deny }
 			::= { wsCcRfMuAssocAclEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.15.1.1.3
 		wsCcRfMuAssocAclStartingMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -4924,7 +4924,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 'FFFFFFFFFFFF'h }
 			::= { wsCcRfMuAssocAclEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.15.1.1.4
 		wsCcRfMuAssocAclEndingMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -4935,7 +4935,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 'FFFFFFFFFFFF'h }
 			::= { wsCcRfMuAssocAclEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.15.1.1.5
 		wsCcRfMuAssocAclWlans OBJECT-TYPE
 			SYNTAX MultiPointer64
@@ -4946,7 +4946,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { { referToEntry001 } }
 			::= { wsCcRfMuAssocAclEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.15.1.1.6
 		wsCcRfMuAssocAclRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -4956,11 +4956,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Row status."
 			::= { wsCcRfMuAssocAclEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16
 		wsCcRfRap OBJECT IDENTIFIER ::= { wsCcRfMIB 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.1
 		wsCcRfRapMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -4974,7 +4974,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable/disable rogue AP detection"
 			::= { wsCcRfRap 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.2
 		wsCcRfRapMaxRogue OBJECT-TYPE
 			SYNTAX Integer32 (1..1000)
@@ -4984,7 +4984,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The maximum number of rows in wsCcRfRapStatusTable"
 			::= { wsCcRfRap 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.3
 		wsCcRfRapTimeout OBJECT-TYPE
 			SYNTAX Integer32
@@ -4996,7 +4996,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				seen"
 			::= { wsCcRfRap 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.4
 		wsCcRfRapCfgTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRapCfgEntry
@@ -5006,7 +5006,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Configure rogue-ap (ap-detection) parameter"
 			::= { wsCcRfRap 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.4.1
 		wsCcRfRapCfgEntry OBJECT-TYPE
 			SYNTAX WsCcRfRapCfgEntry
@@ -5017,9 +5017,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRapCfgIndex }
 			::= { wsCcRfRapCfgTable 1 }
 
-		
+
 		WsCcRfRapCfgEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRapCfgIndex
 					Integer32,
 				wsCcRfRapCfgAnyMac
@@ -5043,7 +5043,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple index"
 			::= { wsCcRfRapCfgEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.4.1.2
 		wsCcRfRapCfgAnyMac OBJECT-TYPE
 			SYNTAX TruthValue
@@ -5054,7 +5054,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 1 }
 			::= { wsCcRfRapCfgEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.4.1.3
 		wsCcRfRapCfgMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -5065,7 +5065,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 'FFFFFFFFFFFF'h }
 			::= { wsCcRfRapCfgEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.4.1.4
 		wsCcRfRapCfgAnySsid OBJECT-TYPE
 			SYNTAX TruthValue
@@ -5076,7 +5076,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { 1 }
 			::= { wsCcRfRapCfgEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.4.1.5
 		wsCcRfRapCfgSsid OBJECT-TYPE
 			SYNTAX DisplayString
@@ -5087,7 +5087,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { "" }
 			::= { wsCcRfRapCfgEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.4.1.6
 		wsCcRfRapCfgRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -5097,7 +5097,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Row status"
 			::= { wsCcRfRapCfgEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5
 		wsCcRfRapStatusTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRapStatusEntry
@@ -5107,7 +5107,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Status of AP assisted approved and un-approved access ports"
 			::= { wsCcRfRap 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1
 		wsCcRfRapStatusEntry OBJECT-TYPE
 			SYNTAX WsCcRfRapStatusEntry
@@ -5118,9 +5118,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRapStatusType, wsCcRfRapStatusMac, wsCcRfRapStatusHeardAp }
 			::= { wsCcRfRapStatusTable 1 }
 
-		
+
 		WsCcRfRapStatusEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRapStatusType
 					INTEGER,
 				wsCcRfRapStatusMac
@@ -5158,7 +5158,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Radio type."
 			::= { wsCcRfRapStatusEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.2
 		wsCcRfRapStatusMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -5168,7 +5168,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Mac address of the access port"
 			::= { wsCcRfRapStatusEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.3
 		wsCcRfRapStatusHeardAp OBJECT-TYPE
 			SYNTAX Unsigned32 (1..500)
@@ -5178,7 +5178,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Index of the heard access port "
 			::= { wsCcRfRapStatusEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.4
 		wsCcRfRapStatusChannel OBJECT-TYPE
 			SYNTAX Integer32 (1..512)
@@ -5188,7 +5188,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Channel of heard radio"
 			::= { wsCcRfRapStatusEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.5
 		wsCcRfRapStatusSsid OBJECT-TYPE
 			SYNTAX DisplayString
@@ -5198,7 +5198,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Ssid of heard radio"
 			::= { wsCcRfRapStatusEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.6
 		wsCcRfRapStatusLastTimeSeen OBJECT-TYPE
 			SYNTAX TimeTicks
@@ -5209,7 +5209,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The number of second(s) ago this ap was last seen."
 			::= { wsCcRfRapStatusEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.7
 		wsCcRfRapStatusLastSignal OBJECT-TYPE
 			SYNTAX Integer32
@@ -5220,7 +5220,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Last signal level from the radio."
 			::= { wsCcRfRapStatusEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.8
 		wsCcRfRapStatusMinSignal OBJECT-TYPE
 			SYNTAX Integer32
@@ -5231,7 +5231,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Weakest signal heard from this radio."
 			::= { wsCcRfRapStatusEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.9
 		wsCcRfRapStatusMaxSignal OBJECT-TYPE
 			SYNTAX Integer32
@@ -5242,7 +5242,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Strongest signal heard from this radio."
 			::= { wsCcRfRapStatusEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.10
 		wsCcRfRapStatusSumSignal OBJECT-TYPE
 			SYNTAX Integer32
@@ -5253,7 +5253,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Sum of all signal values for this radio."
 			::= { wsCcRfRapStatusEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.5.1.11
 		wsCcRfRapStatusSignalCount OBJECT-TYPE
 			SYNTAX Counter32
@@ -5263,7 +5263,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of signal data points for this radio."
 			::= { wsCcRfRapStatusEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.6
 		wsCcRfRapMuAssistMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -5277,19 +5277,19 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable mobile-unit assisted scanning"
 			::= { wsCcRfRap 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.7
 		wsCcRfRapMuAssistRefreshPeriod OBJECT-TYPE
 			SYNTAX INTEGER (300..86400)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"The period in seconds with which all scan-capable 
+				"The period in seconds with which all scan-capable
 				mobile-units are requested to scan for neighboring APs
 				"
 			::= { wsCcRfRap 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.8
 		wsCcRfRUnpprovedApTimeout OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -5301,7 +5301,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				seen"
 			::= { wsCcRfRap 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.9
 		wsCcRfRApprovedApTimeout OBJECT-TYPE
 			SYNTAX INTEGER (1..65535)
@@ -5313,7 +5313,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				seen"
 			::= { wsCcRfRap 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.10
 		wsCcRfRapMuAssistTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfRapMuAssistEntry
@@ -5323,7 +5323,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Status of MU assisted un-approved access ports"
 			::= { wsCcRfRap 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.10.1
 		wsCcRfRapMuAssistEntry OBJECT-TYPE
 			SYNTAX WsCcRfRapMuAssistEntry
@@ -5334,9 +5334,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfRapMuAssistIndex }
 			::= { wsCcRfRapMuAssistTable 1 }
 
-		
+
 		WsCcRfRapMuAssistEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfRapMuAssistIndex
 					INTEGER,
 				wsCcRfRapMuAssistMac
@@ -5362,7 +5362,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Simple index of approved and unapproved APs"
 			::= { wsCcRfRapMuAssistEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.10.1.2
 		wsCcRfRapMuAssistMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -5372,7 +5372,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"MAC address of the access port"
 			::= { wsCcRfRapMuAssistEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.10.1.3
 		wsCcRfRapMuAssistFoundOnPrtl OBJECT-TYPE
 			SYNTAX Unsigned32 (1..1000)
@@ -5382,7 +5382,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Portal with which the MU is associated"
 			::= { wsCcRfRapMuAssistEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.10.1.4
 		wsCcRfRapMuAssistTimestamp OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -5392,7 +5392,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Timestamp at which the radio was last heard"
 			::= { wsCcRfRapMuAssistEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.10.1.5
 		wsCcRfRapMuAssistSsid OBJECT-TYPE
 			SYNTAX DisplayString
@@ -5402,7 +5402,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Ssid of heard radio"
 			::= { wsCcRfRapMuAssistEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.10.1.6
 		wsCcRfRapMuAssistBss OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -5412,7 +5412,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Bss of the heard radio"
 			::= { wsCcRfRapMuAssistEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.16.10.1.7
 		wsCcRfRapMuAssistRssi OBJECT-TYPE
 			SYNTAX Unsigned32 (0..256)
@@ -5422,11 +5422,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"RSSI of the heard radio"
 			::= { wsCcRfRapMuAssistEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17
 		wsCcRfIds OBJECT IDENTIFIER ::= { wsCcRfMIB 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.1
 		wsCcRfIdsMaxExcsvAssoc OBJECT-TYPE
 			SYNTAX Integer32 (0..65535)
@@ -5437,7 +5437,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				units."
 			::= { wsCcRfIds 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.2
 		wsCcRfIdsMaxExcsvProbes OBJECT-TYPE
 			SYNTAX Integer32 (0..65535)
@@ -5447,7 +5447,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Monitor the number of probe requests from mobile-units."
 			::= { wsCcRfIds 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.3
 		wsCcRfIdsMuFilterAgeOut OBJECT-TYPE
 			SYNTAX Integer32
@@ -5459,11 +5459,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				set off IDS"
 			::= { wsCcRfIds 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.4
 		wsCcRfIdsMax OBJECT IDENTIFIER ::= { wsCcRfIds 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.4.1
 		wsCcRfIdsMaxExcsvAssos OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -5473,7 +5473,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set the limit on the number of association requests from mobile-units."
 			::= { wsCcRfIdsMax 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.4.2
 		wsCcRfIdsMaxExcsvProbs OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -5483,7 +5483,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set the limit on the number of probe requests from mobile-units."
 			::= { wsCcRfIdsMax 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.4.3
 		wsCcRfIdsMaxExcsvDisassos OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -5493,7 +5493,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set the limit on the number of disassociation requests from mobile-units."
 			::= { wsCcRfIdsMax 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.4.4
 		wsCcRfIdsMaxExcsvAuthFailures OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -5503,7 +5503,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set the limit on the number of authentication failures in mobile-units."
 			::= { wsCcRfIdsMax 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.4.5
 		wsCcRfIdsMaxExcsvCryptoReplays OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -5513,7 +5513,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set the limit on the number of crypto replays in mobile-units."
 			::= { wsCcRfIdsMax 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.4.6
 		wsCcRfIdsMaxExcsv80211Replays OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -5523,7 +5523,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set the limit on the number of 802.11 replays in mobile-units."
 			::= { wsCcRfIdsMax 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.4.7
 		wsCcRfIdsMaxExcsvDecryptFails OBJECT-TYPE
 			SYNTAX Integer32
@@ -5533,11 +5533,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set the limit on the number of decryption failures in mobile-units."
 			::= { wsCcRfIdsMax 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.5
 		wsCcRfIdsAnmly OBJECT IDENTIFIER ::= { wsCcRfIds 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.5.1
 		wsCcRfIdsAnmlySrcMacEqDestMac OBJECT-TYPE
 			SYNTAX INTEGER
@@ -5552,7 +5552,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				addresses are same in the frame."
 			::= { wsCcRfIdsAnmly 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.5.2
 		wsCcRfIdsAnmlyNullDestination OBJECT-TYPE
 			SYNTAX INTEGER
@@ -5566,7 +5566,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"When enabled, it carries out anomaly detection where the destination MAC is NULL."
 			::= { wsCcRfIdsAnmly 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.5.3
 		wsCcRfIdsAnmlySrcMulticastMac OBJECT-TYPE
 			SYNTAX INTEGER
@@ -5581,7 +5581,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				 frame is a multicast address."
 			::= { wsCcRfIdsAnmly 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.5.4
 		wsCcRfIdsAnmlyWeakWepIv OBJECT-TYPE
 			SYNTAX INTEGER
@@ -5595,7 +5595,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"When enabled, it detects the out anomaly where the WEP IV is weak."
 			::= { wsCcRfIdsAnmly 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.6
 		wsCcRfIdsStatusFilteredMacMax OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -5605,7 +5605,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Set the maximum number of MACs to be filtered for IDS."
 			::= { wsCcRfIds 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.7
 		wsCcRfIdsMuFilterAgeOutTime OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -5616,7 +5616,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				set off IDS"
 			::= { wsCcRfIds 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.8
 		wsCcRfIdsStatusTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfIdsStatusEntry
@@ -5626,7 +5626,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"A table to track WIDS status for each filtered MAC."
 			::= { wsCcRfIds 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.8.1
 		wsCcRfIdsStatusEntry OBJECT-TYPE
 			SYNTAX WsCcRfIdsStatusEntry
@@ -5637,9 +5637,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfIdsStatusViolatnIndex }
 			::= { wsCcRfIdsStatusTable 1 }
 
-		
+
 		WsCcRfIdsStatusEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfIdsStatusViolatnIndex
 					INTEGER,
 				wsCcRfIdsStatusFilteredMuMac
@@ -5663,7 +5663,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The index for this table which tells about at most 100 most recent violations."
 			::= { wsCcRfIdsStatusEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.8.1.2
 		wsCcRfIdsStatusFilteredMuMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -5673,18 +5673,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The MAC address of the mobile-unit which is being filtered for WIDS."
 			::= { wsCcRfIdsStatusEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.8.1.3
 		wsCcRfIdsStatusViolatnType OBJECT-TYPE
 			SYNTAX IdsViolationType
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The specific violation type done by the MU, whether a threshold was crossed or an 
+				"The specific violation type done by the MU, whether a threshold was crossed or an
 				anomaly was detected."
 			::= { wsCcRfIdsStatusEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.8.1.4
 		wsCcRfIdsStatusRadioIndex OBJECT-TYPE
 			SYNTAX INTEGER (1..1000)
@@ -5694,7 +5694,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The radio index where this violation occured."
 			::= { wsCcRfIdsStatusEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.8.1.5
 		wsCcRfIdsStatusRemainingBlacklistTime OBJECT-TYPE
 			SYNTAX TimeTicks
@@ -5704,7 +5704,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The remaining blacklist time for this mobile-unit which had a WIDS violation."
 			::= { wsCcRfIdsStatusEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.8.1.6
 		wsCcRfIdsStatusRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -5714,7 +5714,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The row status for this entry."
 			::= { wsCcRfIdsStatusEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.9
 		wsCcRfIdsEventTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfIdsEventEntry
@@ -5724,7 +5724,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"An entry in the wsCcRfIdsEventTable"
 			::= { wsCcRfIds 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.9.1
 		wsCcRfIdsEventEntry OBJECT-TYPE
 			SYNTAX WsCcRfIdsEventEntry
@@ -5735,9 +5735,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfIdsEventRadioIndex, wsCcRfIdsEventType }
 			::= { wsCcRfIdsEventTable 1 }
 
-		
+
 		WsCcRfIdsEventEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfIdsEventRadioIndex
 					INTEGER,
 				wsCcRfIdsEventType
@@ -5759,18 +5759,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The radio index where this event last occured."
 			::= { wsCcRfIdsEventEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.9.1.2
 		wsCcRfIdsEventType OBJECT-TYPE
 			SYNTAX IdsViolationType
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The event type, which is the index for this table. There are eleven event types 
+				"The event type, which is the index for this table. There are eleven event types
 				enumerated so far and hence this table has eleven rows."
 			::= { wsCcRfIdsEventEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.9.1.3
 		wsCcRfIdsEventLastOccurredTime OBJECT-TYPE
 			SYNTAX TimeTicks
@@ -5780,7 +5780,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Timeticks since the last occurence of this event."
 			::= { wsCcRfIdsEventEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.9.1.4
 		wsCcRfIdsEventTotalCount OBJECT-TYPE
 			SYNTAX Integer32
@@ -5790,7 +5790,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The total count of how many times a given type of event has occurred in the switch."
 			::= { wsCcRfIdsEventEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.9.1.5
 		wsCcRfIdsEventCountSinceMidnight OBJECT-TYPE
 			SYNTAX Integer32
@@ -5801,7 +5801,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				00:00:00 hours."
 			::= { wsCcRfIdsEventEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.10
 		wsCcRfIdsClearMuIdsEventEntries OBJECT-TYPE
 			SYNTAX TruthValue
@@ -5811,7 +5811,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"A scalar to reset all entries in the wsCcRfIdsMuEventTable to 0"
 			::= { wsCcRfIds 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.11
 		wsCcRfIdsEventPeriod OBJECT-TYPE
 			SYNTAX INTEGER (0..10)
@@ -5820,12 +5820,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS deprecated
 			DESCRIPTION
 				"The period of time, in seconds, over which the IDS events are observed to check
-				if they exceeded the threshold. For example if this value is set as 5 seconds, 
-				the threshold for, say, excessive authentication failures can be, say, 100 event 
+				if they exceeded the threshold. For example if this value is set as 5 seconds,
+				the threshold for, say, excessive authentication failures can be, say, 100 event
 				detections per 5 second interval."
 			::= { wsCcRfIds 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.12
 		wsCcRfIdsDetectionWindow OBJECT-TYPE
 			SYNTAX Unsigned32 (5..300)
@@ -5836,7 +5836,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of seconds for detection."
 			::= { wsCcRfIds 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.13
 		wsCcRfIdsThresholdsTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfIdsThresholdsEntry
@@ -5846,7 +5846,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Thresholds and filter-ageout for each violation type."
 			::= { wsCcRfIds 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.13.1
 		wsCcRfIdsThresholdsEntry OBJECT-TYPE
 			SYNTAX WsCcRfIdsThresholdsEntry
@@ -5857,9 +5857,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfIdsThresholdsViolTypeIndex }
 			::= { wsCcRfIdsThresholdsTable 1 }
 
-		
+
 		WsCcRfIdsThresholdsEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfIdsThresholdsViolTypeIndex
 					IdsViolationType,
 				wsCcRfIdsThresholdsMu
@@ -5881,40 +5881,40 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfIdsThresholdsEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.13.1.2
 		wsCcRfIdsThresholdsMu OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"MU threshold for violation type.  Setting the value 
+				"MU threshold for violation type.  Setting the value
 				to 0 will disable the check."
 			::= { wsCcRfIdsThresholdsEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.13.1.3
 		wsCcRfIdsThresholdsRadio OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Radio threshold for violation type.  Setting the value 
+				"Radio threshold for violation type.  Setting the value
 				to 0 will disable the check."
 			::= { wsCcRfIdsThresholdsEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.13.1.4
 		wsCcRfIdsThresholdsSwitch OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Switch threshold for violation type.  Setting the value 
+				"Switch threshold for violation type.  Setting the value
 				to 0 will disable the check."
 			::= { wsCcRfIdsThresholdsEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.13.1.5
 		wsCcRfIdsThresholdsFilterAgeout OBJECT-TYPE
 			SYNTAX Unsigned32 (0..86400)
@@ -5925,7 +5925,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Number of seconds to filter for violation type."
 			::= { wsCcRfIdsThresholdsEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.14
 		wsCcRfIdsRadioIndex OBJECT-TYPE
 			SYNTAX Integer32
@@ -5935,7 +5935,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The radio index where this event last occured."
 			::= { wsCcRfIds 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.15
 		wsCcRfIdsViolationType OBJECT-TYPE
 			SYNTAX IdsViolationType
@@ -5945,7 +5945,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The specific type of the IDS violation has occured."
 			::= { wsCcRfIds 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.17.16
 		wsCcRfIdsViolCountLastDetWindow OBJECT-TYPE
 			SYNTAX Integer32
@@ -5955,22 +5955,22 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The number of IDS violations has occured in the last detection window."
 			::= { wsCcRfIds 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18
 		wsCcRfSelfHealing OBJECT IDENTIFIER ::= { wsCcRfMIB 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.1
 		wsCcRfSelfHealingNeighborRecoveryEnable OBJECT-TYPE
 			SYNTAX TruthValue
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Enable/Disable monitoring of APs and attempt to increase coverage 
+				"Enable/Disable monitoring of APs and attempt to increase coverage
 				on failure."
 			::= { wsCcRfSelfHealing 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.2
 		wsCcRfSelfHealingDetectNeighborNow OBJECT-TYPE
 			SYNTAX DoActionShowProgress
@@ -5981,7 +5981,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				neighbor detection"
 			::= { wsCcRfSelfHealing 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.3
 		wsCcRfSelfHealingInterferenceAvoidanceEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -5991,18 +5991,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enable/disable interference avoidance."
 			::= { wsCcRfSelfHealing 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.4
 		wsCcRfSelfHealingInterferenceAvoidanceRetriesx10 OBJECT-TYPE
 			SYNTAX Integer32 (0..150)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"The average number retries (x10) to cause a radio to re-run 
+				"The average number retries (x10) to cause a radio to re-run
 				auto channel selection."
 			::= { wsCcRfSelfHealing 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.5
 		wsCcRfSelfHealingInterferenceAvoidanceHoldTime OBJECT-TYPE
 			SYNTAX Integer32 (0..65535)
@@ -6011,11 +6011,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"The number of seconds to disable interference avoidance
-				after a detection.  This prevents a radio from changing 
+				after a detection.  This prevents a radio from changing
 				channels continuously."
 			::= { wsCcRfSelfHealing 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.6
 		wsCcRfSelfHealingNeighborRadioTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfSelfHealingNeighborRadioEntry
@@ -6025,7 +6025,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"This table stores radio neighbor information."
 			::= { wsCcRfSelfHealing 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.6.1
 		wsCcRfSelfHealingNeighborRadioEntry OBJECT-TYPE
 			SYNTAX WsCcRfSelfHealingNeighborRadioEntry
@@ -6036,9 +6036,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfSelfHealingNeighborRadioFirstRadio, wsCcRfSelfHealingNeighborRadioSecondRadio }
 			::= { wsCcRfSelfHealingNeighborRadioTable 1 }
 
-		
+
 		WsCcRfSelfHealingNeighborRadioEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfSelfHealingNeighborRadioFirstRadio
 					Integer32,
 				wsCcRfSelfHealingNeighborRadioSecondRadio
@@ -6056,7 +6056,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Radio index of the first radio"
 			::= { wsCcRfSelfHealingNeighborRadioEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.6.1.2
 		wsCcRfSelfHealingNeighborRadioSecondRadio OBJECT-TYPE
 			SYNTAX Integer32 (1..500)
@@ -6066,7 +6066,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Radio index of the second radio"
 			::= { wsCcRfSelfHealingNeighborRadioEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.6.1.3
 		wsCcRfSelfHealingNeighborRadioRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -6076,7 +6076,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Row status"
 			::= { wsCcRfSelfHealingNeighborRadioEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7
 		wsCcRfSelfHealingMonitoringTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfSelfHealingMonitoringEntry
@@ -6086,7 +6086,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				" "
 			::= { wsCcRfSelfHealing 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7.1
 		wsCcRfSelfHealingMonitoringEntry OBJECT-TYPE
 			SYNTAX WsCcRfSelfHealingMonitoringEntry
@@ -6097,9 +6097,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfSelfHealingMonitoringTransRadio, wsCcRfSelfHealingMonitoringRecvRadio }
 			::= { wsCcRfSelfHealingMonitoringTable 1 }
 
-		
+
 		WsCcRfSelfHealingMonitoringEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfSelfHealingMonitoringTransRadio
 					Integer32,
 				wsCcRfSelfHealingMonitoringRecvRadio
@@ -6129,7 +6129,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Index of transmitting radio."
 			::= { wsCcRfSelfHealingMonitoringEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7.1.2
 		wsCcRfSelfHealingMonitoringRecvRadio OBJECT-TYPE
 			SYNTAX Integer32 (1..1000)
@@ -6139,7 +6139,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Index of receiving Radio."
 			::= { wsCcRfSelfHealingMonitoringEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7.1.3
 		wsCcRfSelfHealingMonitoringChannel OBJECT-TYPE
 			SYNTAX Integer32
@@ -6149,7 +6149,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Monitoring channel"
 			::= { wsCcRfSelfHealingMonitoringEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7.1.4
 		wsCcRfSelfHealingMonitoringLastTime OBJECT-TYPE
 			SYNTAX TimeTicks
@@ -6159,7 +6159,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The time of the last beacon heard"
 			::= { wsCcRfSelfHealingMonitoringEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7.1.5
 		wsCcRfSelfHealingMonitoringLastSignal OBJECT-TYPE
 			SYNTAX Integer32
@@ -6169,7 +6169,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The dBm signal value of the last beacon heard"
 			::= { wsCcRfSelfHealingMonitoringEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7.1.6
 		wsCcRfSelfHealingMonitoringMinSig OBJECT-TYPE
 			SYNTAX Integer32
@@ -6179,7 +6179,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The lowest dBm signal value heard"
 			::= { wsCcRfSelfHealingMonitoringEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7.1.7
 		wsCcRfSelfHealingMonitoringMaxSig OBJECT-TYPE
 			SYNTAX Integer32
@@ -6189,7 +6189,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The highest dBm signal value heard"
 			::= { wsCcRfSelfHealingMonitoringEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7.1.8
 		wsCcRfSelfHealingMonitoringSumSig OBJECT-TYPE
 			SYNTAX Integer32
@@ -6199,7 +6199,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The sum of all signal values heard"
 			::= { wsCcRfSelfHealingMonitoringEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.18.7.1.9
 		wsCcRfSelfHealingMonitoringNumSig OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -6209,11 +6209,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The number of signal values heard"
 			::= { wsCcRfSelfHealingMonitoringEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19
 		wsCcRfHotspot OBJECT IDENTIFIER ::= { wsCcRfMIB 19 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1
 		wsCcRfHotspotTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfHotspotEntry
@@ -6223,7 +6223,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Configure hotspot related parameters."
 			::= { wsCcRfHotspot 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1
 		wsCcRfHotspotEntry OBJECT-TYPE
 			SYNTAX WsCcRfHotspotEntry
@@ -6234,9 +6234,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex }
 			::= { wsCcRfHotspotTable 1 }
 
-		
+
 		WsCcRfHotspotEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfHotspotServerIp1
 					IpAddress,
 				wsCcRfHotspotServerPort1
@@ -6268,7 +6268,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Primary Radius server ip for hotspot authentication."
 			::= { wsCcRfHotspotEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1.2
 		wsCcRfHotspotServerPort1 OBJECT-TYPE
 			SYNTAX Integer32 (1024..65535)
@@ -6278,18 +6278,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Primary Radius server port for hotspot authentication."
 			::= { wsCcRfHotspotEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1.3
 		wsCcRfHotspotServerSecret1 OBJECT-TYPE
 			SYNTAX Password (SIZE (0..127))
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Primary Radius server shared secret for hotspot 
+				"Primary Radius server shared secret for hotspot
 				authentication."
 			::= { wsCcRfHotspotEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1.4
 		wsCcRfHotspotServerIp2 OBJECT-TYPE
 			SYNTAX IpAddress
@@ -6299,7 +6299,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Secondary Radius server ip for hotspot authentication."
 			::= { wsCcRfHotspotEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1.5
 		wsCcRfHotspotServerPort2 OBJECT-TYPE
 			SYNTAX Integer32 (1024..65535)
@@ -6309,29 +6309,29 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Secondary Radius server port for hotspot authentication."
 			::= { wsCcRfHotspotEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1.6
 		wsCcRfHotspotServerSecret2 OBJECT-TYPE
 			SYNTAX Password (SIZE (0..127))
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Secondary Radius server shared secret for hotspot 
+				"Secondary Radius server shared secret for hotspot
 				authentication."
 			::= { wsCcRfHotspotEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1.7
 		wsCcRfHotspotServerRetries OBJECT-TYPE
 			SYNTAX Integer32 (1..10)
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Number of retries the wireless switch initiates before 
+				"Number of retries the wireless switch initiates before
 				giving up"
 			::= { wsCcRfHotspotEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1.8
 		wsCcRfHotspotServerTimeout OBJECT-TYPE
 			SYNTAX Integer32 (1..60)
@@ -6339,11 +6339,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Time the wireless switch waits for a response from the 
+				"Time the wireless switch waits for a response from the
 				radius server before retrying"
 			::= { wsCcRfHotspotEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1.9
 		wsCcRfHotspotPageLocation OBJECT-TYPE
 			SYNTAX INTEGER
@@ -6354,12 +6354,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS deprecated
 			DESCRIPTION
-				"The location of the webpages to be used for 
+				"The location of the webpages to be used for
 				authentication.  These pages can either be hosted on
 				the wireless switch or on an external web server"
 			::= { wsCcRfHotspotEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.1.1.10
 		wsCcRfHotspotWebsiteType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -6371,12 +6371,12 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"The website type to be used for authentication.  
-				The website can either be hosted on the wireless switch or 
+				"The website type to be used for authentication.
+				The website can either be hosted on the wireless switch or
 				on an external web server"
 			::= { wsCcRfHotspotEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.2
 		wsCcRfHotspotPageTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfHotspotPageEntry
@@ -6386,7 +6386,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Configure hotspot page parameters"
 			::= { wsCcRfHotspot 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.2.1
 		wsCcRfHotspotPageEntry OBJECT-TYPE
 			SYNTAX WsCcRfHotspotPageEntry
@@ -6397,9 +6397,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex, wsCcRfHotspotPageType }
 			::= { wsCcRfHotspotPageTable 1 }
 
-		
+
 		WsCcRfHotspotPageEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfHotspotPageType
 					INTEGER,
 				wsCcRfHotspotIntPageTitle
@@ -6432,7 +6432,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Hotspot page type"
 			::= { wsCcRfHotspotPageEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.2.1.2
 		wsCcRfHotspotIntPageTitle OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -6442,7 +6442,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Ascii string that will be in the title of the webpage."
 			::= { wsCcRfHotspotPageEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.2.1.3
 		wsCcRfHotspotIntPageHeader OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -6453,7 +6453,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				top section) of the webpage. "
 			::= { wsCcRfHotspotPageEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.2.1.4
 		wsCcRfHotspotIntPageDescr OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -6464,7 +6464,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				font, middle of page) of the webpage"
 			::= { wsCcRfHotspotPageEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.2.1.5
 		wsCcRfHotspotIntPageFooter OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -6475,7 +6475,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				bottom section) of the webpage"
 			::= { wsCcRfHotspotPageEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.2.1.6
 		wsCcRfHotspotIntPageImgUrl1 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -6483,11 +6483,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"main image( large size) that will be served up by the
-				local webpage.  Appears between the header and description 
+				local webpage.  Appears between the header and description
 				on the webpage."
 			::= { wsCcRfHotspotPageEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.2.1.7
 		wsCcRfHotspotIntPageImgUrl2 OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -6498,7 +6498,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				local webpage.  Appears near the footer on the webpage."
 			::= { wsCcRfHotspotPageEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.2.1.8
 		wsCcRfHotspotExtPageUrl OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -6508,7 +6508,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Url of external page"
 			::= { wsCcRfHotspotPageEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.3
 		wsCcRfHotspotWhiteIpTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfHotspotWhiteIpEntry
@@ -6516,11 +6516,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			STATUS current
 			DESCRIPTION
 				"Configure hotspot white list parameters.  Users who have
-				not yet authenticated will be allowed access to these IP 
+				not yet authenticated will be allowed access to these IP
 				addresses"
 			::= { wsCcRfHotspot 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.3.1
 		wsCcRfHotspotWhiteIpEntry OBJECT-TYPE
 			SYNTAX WsCcRfHotspotWhiteIpEntry
@@ -6531,9 +6531,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWlanIndex, wsCcRfHotspotWhiteIpRuleIndex }
 			::= { wsCcRfHotspotWhiteIpTable 1 }
 
-		
+
 		WsCcRfHotspotWhiteIpEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfHotspotWhiteIpRuleIndex
 					Integer32,
 				wsCcRfHotspotWhiteIpAddr
@@ -6549,7 +6549,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"rule index"
 			::= { wsCcRfHotspotWhiteIpEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.19.3.1.2
 		wsCcRfHotspotWhiteIpAddr OBJECT-TYPE
 			SYNTAX IpAddress
@@ -6560,11 +6560,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			DEFVAL { ''h }
 			::= { wsCcRfHotspotWhiteIpEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20
 		wsCcRfQos OBJECT IDENTIFIER ::= { wsCcRfMIB 20 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.1
 		wsCcRfQosAcTo802dot1pTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfQosAcTo802dot1pEntry
@@ -6574,7 +6574,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The mapping of access categories to 802.1p priorities."
 			::= { wsCcRfQos 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.1.1
 		wsCcRfQosAcTo802dot1pEntry OBJECT-TYPE
 			SYNTAX WsCcRfQosAcTo802dot1pEntry
@@ -6585,9 +6585,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfQosAcTo802dot1pAccessCategory }
 			::= { wsCcRfQosAcTo802dot1pTable 1 }
 
-		
+
 		WsCcRfQosAcTo802dot1pEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfQosAcTo802dot1pAccessCategory
 					AccCatType,
 				wsCcRfQosAcTo802dot1pPriority
@@ -6603,7 +6603,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"An access category."
 			::= { wsCcRfQosAcTo802dot1pEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.1.1.2
 		wsCcRfQosAcTo802dot1pPriority OBJECT-TYPE
 			SYNTAX Integer32 (0..7)
@@ -6613,7 +6613,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"An 802.1p priority tag."
 			::= { wsCcRfQosAcTo802dot1pEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.2
 		wsCcRfQos802dot1pToAcTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfQos802dot1pToAcEntry
@@ -6623,7 +6623,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The mapping of 802.1p priorities to access categories ."
 			::= { wsCcRfQos 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.2.1
 		wsCcRfQos802dot1pToAcEntry OBJECT-TYPE
 			SYNTAX WsCcRfQos802dot1pToAcEntry
@@ -6634,9 +6634,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfQos802dot1pToAcIndex }
 			::= { wsCcRfQos802dot1pToAcTable 1 }
 
-		
+
 		WsCcRfQos802dot1pToAcEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfQos802dot1pToAcIndex
 					Integer32,
 				wsCcRfQos802dot1pToAcPriority
@@ -6654,7 +6654,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"A simple sequential index."
 			::= { wsCcRfQos802dot1pToAcEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.2.1.2
 		wsCcRfQos802dot1pToAcPriority OBJECT-TYPE
 			SYNTAX Integer32 (0..7)
@@ -6664,7 +6664,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"An 802.1p priority tag."
 			::= { wsCcRfQos802dot1pToAcEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.2.1.3
 		wsCcRfQos802dot1pToAcAccessCategory OBJECT-TYPE
 			SYNTAX AccCatType
@@ -6674,7 +6674,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"An access category."
 			::= { wsCcRfQos802dot1pToAcEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.3
 		wsCcRfQosDscpToAcTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfQosDscpToAcEntry
@@ -6684,7 +6684,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The mapping of DSCP values to access categories."
 			::= { wsCcRfQos 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.3.1
 		wsCcRfQosDscpToAcEntry OBJECT-TYPE
 			SYNTAX WsCcRfQosDscpToAcEntry
@@ -6695,9 +6695,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfQosDscpToAcIndex }
 			::= { wsCcRfQosDscpToAcTable 1 }
 
-		
+
 		WsCcRfQosDscpToAcEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfQosDscpToAcIndex
 					Integer32,
 				wsCcRfQosDscpToAcDscp
@@ -6715,7 +6715,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"A simple sequential index."
 			::= { wsCcRfQosDscpToAcEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.3.1.2
 		wsCcRfQosDscpToAcDscp OBJECT-TYPE
 			SYNTAX Integer32 (0..63)
@@ -6725,7 +6725,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"A DSCP value."
 			::= { wsCcRfQosDscpToAcEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.20.3.1.3
 		wsCcRfQosDscpToAcAccessCategory OBJECT-TYPE
 			SYNTAX AccCatType
@@ -6735,11 +6735,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"An access category."
 			::= { wsCcRfQosDscpToAcEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21
 		wsCcRfWiredWebAuth OBJECT IDENTIFIER ::= { wsCcRfMIB 21 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.1
 		wsCcRfWiredWebAuthEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -6749,7 +6749,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Enabling of wired web authentication."
 			::= { wsCcRfWiredWebAuth 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.2
 		wsCcRfWiredWebAuthVlan OBJECT-TYPE
 			SYNTAX INTEGER (1..4094)
@@ -6759,7 +6759,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Assignment of VLAN to the wired web authentication."
 			::= { wsCcRfWiredWebAuth 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.3
 		wsCcRfWiredWebAuthWlan OBJECT-TYPE
 			SYNTAX INTEGER (1..32)
@@ -6769,18 +6769,18 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Assignment of WLAN to the wired web authentication."
 			::= { wsCcRfWiredWebAuth 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.4
 		wsCcRfWiredWebAuthHostEntryDelete OBJECT-TYPE
 			SYNTAX Integer32
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Description.Use this object to remove an entry in 
+				"Description.Use this object to remove an entry in
 				wsCcRfWiredWebAuthHostTable."
 			::= { wsCcRfWiredWebAuth 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.5
 		wsCcRfWiredWebAuthHostTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsCcRfWiredWebAuthHostEntry
@@ -6790,7 +6790,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description."
 			::= { wsCcRfWiredWebAuth 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.5.1
 		wsCcRfWiredWebAuthHostEntry OBJECT-TYPE
 			SYNTAX WsCcRfWiredWebAuthHostEntry
@@ -6801,9 +6801,9 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			INDEX { wsCcRfWiredWebAuthHostIndex }
 			::= { wsCcRfWiredWebAuthHostTable 1 }
 
-		
+
 		WsCcRfWiredWebAuthHostEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsCcRfWiredWebAuthHostIndex
 					INTEGER,
 				wsCcRfWiredWebAuthHostMac
@@ -6825,7 +6825,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description. The index for the wsCcRfWiredWebAuthHostTable."
 			::= { wsCcRfWiredWebAuthHostEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.5.1.2
 		wsCcRfWiredWebAuthHostMac OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -6835,7 +6835,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description.The Mac Address of this wsCcRfWiredWebAuthHostEntry"
 			::= { wsCcRfWiredWebAuthHostEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.5.1.3
 		wsCcRfWiredWebAuthHostIp OBJECT-TYPE
 			SYNTAX IpAddress
@@ -6845,7 +6845,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description. The IP address of this wsCcRfWiredWebAuthHosEntry"
 			::= { wsCcRfWiredWebAuthHostEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.5.1.4
 		wsCcRfWiredWebAuthHostState OBJECT-TYPE
 			SYNTAX INTEGER
@@ -6860,7 +6860,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description.The current state of this wsCcRfWiredWebAuthHostEntry"
 			::= { wsCcRfWiredWebAuthHostEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.21.5.1.5
 		wsCcRfWiredWebAuthHostVlan OBJECT-TYPE
 			SYNTAX Integer32
@@ -6870,11 +6870,11 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"Description.The Vlan assigned to this wsCcRfWiredWebAuthHostEntry"
 			::= { wsCcRfWiredWebAuthHostEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.22
 		wsCcRfLldp OBJECT IDENTIFIER ::= { wsCcRfMIB 22 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.22.1
 		wsCcRfLldpName OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..127))
@@ -6884,7 +6884,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"LLDP friendly name to be used in LLDP for adopted radio-ports."
 			::= { wsCcRfLldp 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.22.2
 		wsCcRfLldpApMacAddr OBJECT-TYPE
 			SYNTAX PhysAddress
@@ -6894,7 +6894,7 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 				"The Mac address to be associated with LLDP friendly name."
 			::= { wsCcRfLldp 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.22.3
 		wsCcRfLldpNameSet OBJECT-TYPE
 			SYNTAX INTEGER
@@ -6905,136 +6905,136 @@ WS-CC-RF-MIB DEFINITIONS ::= BEGIN
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Configure the LLDP friendly name to be used in LLDP 
+				"Configure the LLDP friendly name to be used in LLDP
 				for adopted radio-ports.  If wsCcRfLldpApMacAddr
-				is not specified, the LLDP friendly name update will  
+				is not specified, the LLDP friendly name update will
 				be sent to all currently adpoted radio ports.  "
 			::= { wsCcRfLldp 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.100
 		wsCcRfConformance OBJECT IDENTIFIER ::= { wsCcRfMIB 100 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.100.1
 		wsCcRfCompliances OBJECT IDENTIFIER ::= { wsCcRfConformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.100.1.1
 		wsCcRfCompliance MODULE-COMPLIANCE
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				" "
 			MODULE -- this module
 				MANDATORY-GROUPS { wsCcRfGroup }
 			::= { wsCcRfCompliances 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.100.2
 		wsCcRfGroups OBJECT IDENTIFIER ::= { wsCcRfConformance 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.100.2.1
 		wsCcRfGroup OBJECT-GROUP
-			OBJECTS { wsCcRfApRadio1, wsCcRfApRadio2, wsCcRfRadioDefaultWmmAccessCategory, wsCcRfRadioDefaultWmmAdmissionCtrl, wsCcRfRadioDefaultWmmAifsn, 
-				wsCcRfRadioDefaultWmmTxOp, wsCcRfRadioDefaultWmmCwMin, wsCcRfRadioDefaultWmmCwMax, wsCcRfWlanNumRadiosAdopted, wsCcRfOversizedFrameEnable, 
-				wsCcRfMuIsWmm, wsCcRfWlanDescr, wsCcRfSelfHealingNeighborRecoveryEnable, wsCcRfSelfHealingInterferenceAvoidanceEnable, wsCcRfSelfHealingInterferenceAvoidanceRetriesx10, 
-				wsCcRfSelfHealingInterferenceAvoidanceHoldTime, wsCcRfSelfHealingMonitoringTransRadio, wsCcRfSelfHealingMonitoringRecvRadio, wsCcRfSelfHealingMonitoringChannel, wsCcRfSelfHealingMonitoringLastTime, 
-				wsCcRfSelfHealingMonitoringLastSignal, wsCcRfSelfHealingMonitoringMinSig, wsCcRfSelfHealingMonitoringMaxSig, wsCcRfSelfHealingMonitoringSumSig, wsCcRfSelfHealingMonitoringNumSig, 
-				wsCcRfRadioDefaultSelfHealingAction, wsCcRfHotspotPageType, wsCcRfHotspotIntPageTitle, wsCcRfHotspotIntPageHeader, wsCcRfHotspotIntPageDescr, 
-				wsCcRfHotspotIntPageFooter, wsCcRfHotspotIntPageImgUrl1, wsCcRfHotspotIntPageImgUrl2, wsCcRfHotspotExtPageUrl, wsCcRfRadioWmmAifsn, 
-				wsCcRf802dt1xRadioAuthLogin, wsCcRf802dt1xRadioAuthPass, wsCcRf802dt1xRadioAuthSetRadio, wsCcRfWlanWmmAifsn, wsCcRfSelfHealingNeighborRadioFirstRadio, 
-				wsCcRfSelfHealingNeighborRadioSecondRadio, wsCcRfSelfHealingNeighborRadioRowStatus, wsCcRfRadioStatusVlanTag, wsCcRfWlanEncP2WPassphrase, wsCcRfWlanEncP2WKey1, 
-				wsCcRfWlanEncP2WKey2, wsCcRfWlanEncP2WKey3, wsCcRfWlanEncP2WKey4, wsCcRfWlanMuIdleTime, wsCcRfRadioRunAcsNow, 
-				wsCcRfRadioResetParentAp, wsCcRfRadioReset, wsCcRfRadioDefaultIndex, wsCcRfRadioDefaultType, wsCcRfRadioDefaultApType, 
-				wsCcRfRadioDefaultBssWlanMap, wsCcRfRadioDefaultAntDiversity, wsCcRfRadioDefaultShortPreamble, wsCcRfRadioDefaultRtsThresh, wsCcRfRadioDefaultBeaconInt, 
-				wsCcRfRadioDefaultDtimPrd, wsCcRfRadioDefaultBasicRates, wsCcRfRadioDefaultSupportedRates, wsCcRfRadioDefaultRapDetector, wsCcRfRadioDefaultClusterIndex, 
-				wsCcRfRadioDefaultMaxMu, wsCcRfWlanEncP2WClearKeys, wsCcRfCountryCode, wsCcRfSnmpSetDelay, wsCcRfClusterIndex, 
-				wsCcRfProxyRespMuArpReq, wsCcRfLastError, wsCcRfApIndex, wsCcRfApNicMac, wsCcRfApModelNumber, 
-				wsCcRfApSerialNumber, wsCcRfApPcbRevision, wsCcRfApBootLoaderRev, wsCcRfApWispVersion, wsCcRfApRuntimeFwVersion, 
-				wsCcRfApNumRadios, wsCcRfApImageVersionIndex, wsCcRfApImageVersionApType, wsCcRfApImageVersionName, wsCcRfApUnadoptedIndex, 
-				wsCcRfApUnadoptedMac, wsCcRfApUnadoptedLastSeen, wsCcRfRadioAutoAdopt, wsCcRfRadioCnt, wsCcRfRadioIndex, 
-				wsCcRfRadioApMac, wsCcRfRadioDescr, wsCcRfRadioType, wsCcRfRadioApType, wsCcRfRadioBssWlanMap, 
-				wsCcRfRadioAntDiversity, wsCcRfRadioShortPreamble, wsCcRfRadioRtsThresh, wsCcRfRadioBeaconInt, wsCcRfRadioDtimPrd, 
-				wsCcRfRadioBasicRates, wsCcRfRadioSupportedRates, wsCcRfRadioRapDetector, wsCcRfRadioClusterIndex, wsCcRfRadioMaxMu, 
-				wsCcRfRadioRowStatus, wsCcRfRadioCpPlacement, wsCcRfRadioCpPosChannel, wsCcRfRadioCpDesChannel, wsCcRfRadioCpPosPowerDb, 
-				wsCcRfRadioCpDesPowerDb, wsCcRfRadioCpDesPowerMw, wsCcRfRadioCpSet, wsCcRfRadioCpReset, wsCcRfRadioStatusState, 
-				wsCcRfRadioStatusPtrToAp, wsCcRfRadioStatusMaxWlans, wsCcRfRadioStatusMaxBss, wsCcRfRadioStatusCurrChannel, wsCcRfRadioStatusCurrPowerDb, 
-				wsCcRfRadioStatusCurrPowerMw, wsCcRfRadioStatusAssociatedMus, wsCcRfRadioStatusLastAdoption, wsCcRfRadioStatusShortSlotTime, wsCcRfRadioWmmAccessCategory, 
-				wsCcRfRadioWmmAdmissionCtrl, wsCcRfRadioWmmTxOp, wsCcRfRadioWmmCwMin, wsCcRfRadioWmmCwMax, wsCcRfMuMac, 
-				wsCcRfMuWlanIndex, wsCcRfMuRadioIndex, wsCcRfMuVlanIndex, wsCcRfMuKeyIndex, wsCcRfMuIpAddr, 
-				wsCcRfMuBSS, wsCcRfMuAuthMethod, wsCcRfMuEncMethod, wsCcRfMuRadioType, wsCcRfMuPowerMode, 
-				wsCcRfMuSupportedRates, wsCcRfMuVoice, wsCcRfMuIsDataReady, wsCcRfMuRogueApEna, wsCcRfMuDisassociateNow, 
-				wsCcRfWlanIndex, wsCcRfWlanEnable, wsCcRfWlanEssid, wsCcRfWlanVlan, wsCcRfWlanSecBeacon, 
-				wsCcRfWlanVoicePrioritization, wsCcRfWlanAnswerBroadcastEss, wsCcRfWlanMulticastAddr1, wsCcRfWlanMulticastAddr2, wsCcRfWlanAuthentication, 
-				wsCcRfWlanEncryptionMap, wsCcRfWlanBcastEnc, wsCcRfWlanUseDscp, wsCcRfWlanAuthEapRadiusServerIp1, wsCcRfWlanAuthEapRadiusServerPort1, 
-				wsCcRfWlanAuthEapRadiusServerSecret1, wsCcRfWlanAuthEapRadiusServerIp2, wsCcRfWlanAuthEapRadiusServerPort2, wsCcRfWlanAuthEapRadiusServerSecret2, wsCcRfWlanAuthEapSuppRetries, 
-				wsCcRfWlanAuthEapSuppTimeout, wsCcRfWlanAuthEapServerRetries, wsCcRfWlanAuthEapServerTimeout, wsCcRfWlanAuthEapReauth, wsCcRfWlanAuthEapReauthTimeout, 
-				wsCcRfwlanAuthKerbRealm, wsCcRfWlanAuthKerbPassword, wsCcRfWlanAuthKerbKdcServerIp1, wsCcRfWlanAuthKerbKdcServerPort1, wsCcRfWlanAuthKerbKdcServerIp2, 
-				wsCcRfWlanAuthKerbKdcServerPort2, wsCcRfWlanEncSkEnable, wsCcRfWlanEncWep64KeyIndex, wsCcRfWlanEncWep64Key1, wsCcRfWlanEncWep64Key2, 
-				wsCcRfWlanEncWep64Key3, wsCcRfWlanEncWep64Key4, wsCcRfWlanEncWep128KgKeyIndex, wsCcRfWlanEncWep128KgKey1, wsCcRfWlanEncWep128KgKey2, 
-				wsCcRfWlanEncWep128KgKey3, wsCcRfWlanEncWep128KgKey4, wsCcRfWlanEncTkipCcmpKeyType, wsCcRfWlanEncTkipCcmpPassphrase, wsCcRfWlanEncTkipCcmpKey, 
-				wsCcRfWlanEncTkipCcmpKeyRotation, wsCcRfWlanEncTkipCcmpKeyInterval, wsCcRfWlanEncTkipCcmpPmkCaching, wsCcRfWlanEncTkipCcmpOppPmkCaching, wsCcRfWlanWmmAccessCategory, 
-				wsCcRfWlanWmmTxOp, wsCcRfWlanWmmCwMin, wsCcRfWlanWmmCwMax, wsCcRfMuAssocAclIndex, wsCcRfMuAssocAclMode, 
-				wsCcRfMuAssocAclStartingMac, wsCcRfMuAssocAclEndingMac, wsCcRfMuAssocAclWlans, wsCcRfRapMode, wsCcRfRapCfgIndex, 
-				wsCcRfRapCfgAnyMac, wsCcRfRapCfgMac, wsCcRfRapCfgAnySsid, wsCcRfRapCfgSsid, wsCcRfRapCfgRowStatus, 
-				wsCcRfRapStatusMac, wsCcRfRapStatusHeardAp, wsCcRfRapStatusChannel, wsCcRfRapStatusType, wsCcRfRapStatusSsid, 
-				wsCcRfRapStatusLastTimeSeen, wsCcRfRapStatusLastSignal, wsCcRfRapStatusMinSignal, wsCcRfRapStatusMaxSignal, wsCcRfRapStatusSumSignal, 
-				wsCcRfRapStatusSignalCount, wsCcRfMuAssocAclRowStatus, wsCcRfRadioDefaultCpPlacement, wsCcRfRadioDefaultCpPosChannel, wsCcRfRadioDefaultCpDesChannel, 
-				wsCcRfRadioDefaultCpPosPowerDb, wsCcRfRadioDefaultCpDesPowerDb, wsCcRfRadioDefaultCpDesPowerMw, wsCcRfRadioDefaultCpSet, wsCcRfRadioDefaultCpReset, 
-				wsCcRfHotspotServerRetries, wsCcRfHotspotServerTimeout, wsCcRfWlanPriorityEnable, wsCcRfApImageVersionModel, wsCcRfRadioCpChannelMode, 
-				wsCcRfRadioDefaultCpChannelMode, wsCcRfApCount, wsCcRfRadioStatusRadioMac, wsCcRfMuRoamCount, wsCcRfAdvancedConfigEnable, 
-				wsCcRfMuLastHeard, wsCcRfRadioSelfHealingPwrOffset, wsCcRfWlanSvpEnable, wsCcRfMuCnt, wsCcRfApImageVersionReleaseDate, 
-				wsCcRfApImageVersionImageSize, wsCcRfApUnadoptedApType, wsCcRfRadioLastMac, wsCcRfRadioLastReason, wsCcRfRadioSelfHealingAction, 
-				wsCcRfMuLastMac, wsCcRfSelfHealingDetectNeighborNow, wsCcRfHotspotServerIp1, wsCcRfHotspotServerPort1, wsCcRfHotspotServerSecret1, 
-				wsCcRfHotspotServerIp2, wsCcRfHotspotServerPort2, wsCcRfHotspotServerSecret2, wsCcRfHotspotWhiteIpRuleIndex, wsCcRfWlanAuthKerberosServerTimeout, wsCcRfWlanMobilityEnable, wsCcRfWlanGRETunnelGatewayIp, wsCcRfWlanGRETunnelGatewayMask, 
-				wsCcRfIdsStatusFilteredMuMac, wsCcRfHotspotWhiteIpAddr, wsCcRfRadioDefaultSelfHealingPwrOffset, wsCcRfWlanWmmEnable, wsCcRfWlanGRETunnelIdx, 
-				wsCcRfHotspotWebsiteType, wsCcRfWlanMuToMu, wsCcRfIdsClearMuIdsEventEntries, wsCcRfIdsEventLastOccurredTime, wsCcRfIdsEventType, 
-				wsCcRfWlanQosPrioritization, wsCcRfQosAcTo802dot1pPriority, wsCcRfQosAcTo802dot1pAccessCategory, wsCcRfQos802dot1pToAcAccessCategory, wsCcRfQos802dot1pToAcPriority, 
-				wsCcRfQosDscpToAcAccessCategory, wsCcRfQosDscpToAcDscp, wsCcRfQosDscpToAcIndex, wsCcRfQos802dot1pToAcIndex, wsCcRfWlanAuthEapAuthProtocol, 
-				wsCcRfWlanAuthEapDscpTos, wsCcRfApAddress, wsCcRfIdsStatusViolatnIndex, wsCcRfIdsStatusViolatnType, wsCcRfIdsStatusRadioIndex, 
-				wsCcRfApHistoryIndex, wsCcRfApHistoryRadioType, wsCcRfApHistoryTimestamp, wsCcRfApHistoryEvent, wsCcRfApHistoryReason, 
-				wsCcRfRadioHealingModeCnt, wsCcRfRadioNormalModeCnt, wsCcRfMuProbeRequestsAgeHeardOut, wsCcRfApHistoryMac, wsCcRfWlanDynamicVlanAssignment, 
-				wsCcRfRadioRapSingleChannelScan, wsCcRfRadioDefaultRapSingleChannelScan, wsCcRfIdsThresholdsMu, wsCcRfIdsThresholdsRadio, wsCcRfIdsThresholdsSwitch, 
-				wsCcRfIdsThresholdsFilterAgeout, wsCcRfIdsStatusRemainingBlacklistTime, wsCcRfIdsEventRadioIndex, wsCcRfIdsStatusRowStatus, wsCcRfIdsEventTotalCount, 
-				wsCcRfIdsEventCountSinceMidnight, wsCcRfWlanEncTkipCcmpPreauthentication, wsCcRfIdsThresholdsViolTypeIndex, wsCcRfWlanAuthEapAccountingMode, wsCcRfWlanAuthEapInterimAcctInterval, 
-				wsCcRfWlanAuthEapAcctTimeout, wsCcRfWlanAuthEapAcctRetries, wsCcRfWlanAuthPrimaryServer, wsCcRfWlanAuthEapSecondaryServer, wsCcRfWlanAuthEapPrimarySrvrPort, 
-				wsCcRfWlanAuthEapSecondarySrvrPort, wsCcRfWlanAuthEapPrimarySecret, wsCcRfWlanAuthEapSecondarySecret, wsCcRfWlanSyslogServerPort, wsCcRfWlanSyslogServerIp, 
-				wsCcRfWlanAccountingType, wsCcRfApHistoryEnable, wsCcRfApHistoryClear, wsCcRfMuHistoryEnable, wsCcRfMuHistoryClear, 
-				wsCcRfMuProbeHistoryEnable, wsCcRfMuProbeHistoryClear, wsCcRfWlanAuthEapRadiusMacAuthFormat, wsCcRfIdsViolCountLastDetWindow, wsCcRfIdsViolationType, 
-				wsCcRfIdsRadioIndex, wsCcRfRadioConfiguredCnt, wsCcRfRapMuAssistMode, wsCcRfRUnpprovedApTimeout, wsCcRfRApprovedApTimeout, 
-				wsCcRfRapMuAssistRefreshPeriod, wsCcRfLldpName, wsCcRfLldpNameSet, wsCcRfLldpApMacAddr, wsCcRfWiredWebAuthWlan, 
-				wsCcRfWiredWebAuthVlan, wsCcRfWiredWebAuthEnable, wsCcRfRadioBssDtim, wsCcRfRapMuAssistIndex, wsCcRfRapMuAssistMac, 
-				wsCcRfRapMuAssistFoundOnPrtl, wsCcRfRapMuAssistTimestamp, wsCcRfRapMuAssistSsid, wsCcRfRapMuAssistBss, wsCcRfRapMuAssistRssi, 
-				wsCcRfWiredWebAuthHostEntryDelete, wsCcRfWiredWebAuthHostVlan, wsCcRfWiredWebAuthHostIp, wsCcRfWiredWebAuthHostState, wsCcRfWiredWebAuthHostIndex, 
-				wsCcRfWiredWebAuthHostMac, wsCcRfMuQosInfo, wsCcRfRadioCfgMethod, wsCcRfRadioWmmAdmissionDeviceMax, wsCcRfMuProbeConfigIndex, 
-				wsCcRfMuProbeConfigMac, wsCcRfMuProbeConfigStatus, wsCcRfMuHistoryStatusRadioIndex, wsCcRfMuHistoryStatusWlanIndex, wsCcRfMuHistoryStatusTimestamp, 
-				wsCcRfMuHistoryStatusEvent, wsCcRfMuHistoryStatusMac, wsCcRfMuHistoryStatusIndex, wsCcRfWlanCount, wsCcRfIdsDetectionWindow, 
-				wsCcRfMuTunnelIndex, wsCcRfMuProbeStatusIndex, wsCcRfMuProbeStatusMac, wsCcRfMuProbeStatusTimeticks, wsCcRfMuProbeStatusSignalStrength, 
+			OBJECTS { wsCcRfApRadio1, wsCcRfApRadio2, wsCcRfRadioDefaultWmmAccessCategory, wsCcRfRadioDefaultWmmAdmissionCtrl, wsCcRfRadioDefaultWmmAifsn,
+				wsCcRfRadioDefaultWmmTxOp, wsCcRfRadioDefaultWmmCwMin, wsCcRfRadioDefaultWmmCwMax, wsCcRfWlanNumRadiosAdopted, wsCcRfOversizedFrameEnable,
+				wsCcRfMuIsWmm, wsCcRfWlanDescr, wsCcRfSelfHealingNeighborRecoveryEnable, wsCcRfSelfHealingInterferenceAvoidanceEnable, wsCcRfSelfHealingInterferenceAvoidanceRetriesx10,
+				wsCcRfSelfHealingInterferenceAvoidanceHoldTime, wsCcRfSelfHealingMonitoringTransRadio, wsCcRfSelfHealingMonitoringRecvRadio, wsCcRfSelfHealingMonitoringChannel, wsCcRfSelfHealingMonitoringLastTime,
+				wsCcRfSelfHealingMonitoringLastSignal, wsCcRfSelfHealingMonitoringMinSig, wsCcRfSelfHealingMonitoringMaxSig, wsCcRfSelfHealingMonitoringSumSig, wsCcRfSelfHealingMonitoringNumSig,
+				wsCcRfRadioDefaultSelfHealingAction, wsCcRfHotspotPageType, wsCcRfHotspotIntPageTitle, wsCcRfHotspotIntPageHeader, wsCcRfHotspotIntPageDescr,
+				wsCcRfHotspotIntPageFooter, wsCcRfHotspotIntPageImgUrl1, wsCcRfHotspotIntPageImgUrl2, wsCcRfHotspotExtPageUrl, wsCcRfRadioWmmAifsn,
+				wsCcRf802dt1xRadioAuthLogin, wsCcRf802dt1xRadioAuthPass, wsCcRf802dt1xRadioAuthSetRadio, wsCcRfWlanWmmAifsn, wsCcRfSelfHealingNeighborRadioFirstRadio,
+				wsCcRfSelfHealingNeighborRadioSecondRadio, wsCcRfSelfHealingNeighborRadioRowStatus, wsCcRfRadioStatusVlanTag, wsCcRfWlanEncP2WPassphrase, wsCcRfWlanEncP2WKey1,
+				wsCcRfWlanEncP2WKey2, wsCcRfWlanEncP2WKey3, wsCcRfWlanEncP2WKey4, wsCcRfWlanMuIdleTime, wsCcRfRadioRunAcsNow,
+				wsCcRfRadioResetParentAp, wsCcRfRadioReset, wsCcRfRadioDefaultIndex, wsCcRfRadioDefaultType, wsCcRfRadioDefaultApType,
+				wsCcRfRadioDefaultBssWlanMap, wsCcRfRadioDefaultAntDiversity, wsCcRfRadioDefaultShortPreamble, wsCcRfRadioDefaultRtsThresh, wsCcRfRadioDefaultBeaconInt,
+				wsCcRfRadioDefaultDtimPrd, wsCcRfRadioDefaultBasicRates, wsCcRfRadioDefaultSupportedRates, wsCcRfRadioDefaultRapDetector, wsCcRfRadioDefaultClusterIndex,
+				wsCcRfRadioDefaultMaxMu, wsCcRfWlanEncP2WClearKeys, wsCcRfCountryCode, wsCcRfSnmpSetDelay, wsCcRfClusterIndex,
+				wsCcRfProxyRespMuArpReq, wsCcRfLastError, wsCcRfApIndex, wsCcRfApNicMac, wsCcRfApModelNumber,
+				wsCcRfApSerialNumber, wsCcRfApPcbRevision, wsCcRfApBootLoaderRev, wsCcRfApWispVersion, wsCcRfApRuntimeFwVersion,
+				wsCcRfApNumRadios, wsCcRfApImageVersionIndex, wsCcRfApImageVersionApType, wsCcRfApImageVersionName, wsCcRfApUnadoptedIndex,
+				wsCcRfApUnadoptedMac, wsCcRfApUnadoptedLastSeen, wsCcRfRadioAutoAdopt, wsCcRfRadioCnt, wsCcRfRadioIndex,
+				wsCcRfRadioApMac, wsCcRfRadioDescr, wsCcRfRadioType, wsCcRfRadioApType, wsCcRfRadioBssWlanMap,
+				wsCcRfRadioAntDiversity, wsCcRfRadioShortPreamble, wsCcRfRadioRtsThresh, wsCcRfRadioBeaconInt, wsCcRfRadioDtimPrd,
+				wsCcRfRadioBasicRates, wsCcRfRadioSupportedRates, wsCcRfRadioRapDetector, wsCcRfRadioClusterIndex, wsCcRfRadioMaxMu,
+				wsCcRfRadioRowStatus, wsCcRfRadioCpPlacement, wsCcRfRadioCpPosChannel, wsCcRfRadioCpDesChannel, wsCcRfRadioCpPosPowerDb,
+				wsCcRfRadioCpDesPowerDb, wsCcRfRadioCpDesPowerMw, wsCcRfRadioCpSet, wsCcRfRadioCpReset, wsCcRfRadioStatusState,
+				wsCcRfRadioStatusPtrToAp, wsCcRfRadioStatusMaxWlans, wsCcRfRadioStatusMaxBss, wsCcRfRadioStatusCurrChannel, wsCcRfRadioStatusCurrPowerDb,
+				wsCcRfRadioStatusCurrPowerMw, wsCcRfRadioStatusAssociatedMus, wsCcRfRadioStatusLastAdoption, wsCcRfRadioStatusShortSlotTime, wsCcRfRadioWmmAccessCategory,
+				wsCcRfRadioWmmAdmissionCtrl, wsCcRfRadioWmmTxOp, wsCcRfRadioWmmCwMin, wsCcRfRadioWmmCwMax, wsCcRfMuMac,
+				wsCcRfMuWlanIndex, wsCcRfMuRadioIndex, wsCcRfMuVlanIndex, wsCcRfMuKeyIndex, wsCcRfMuIpAddr,
+				wsCcRfMuBSS, wsCcRfMuAuthMethod, wsCcRfMuEncMethod, wsCcRfMuRadioType, wsCcRfMuPowerMode,
+				wsCcRfMuSupportedRates, wsCcRfMuVoice, wsCcRfMuIsDataReady, wsCcRfMuRogueApEna, wsCcRfMuDisassociateNow,
+				wsCcRfWlanIndex, wsCcRfWlanEnable, wsCcRfWlanEssid, wsCcRfWlanVlan, wsCcRfWlanSecBeacon,
+				wsCcRfWlanVoicePrioritization, wsCcRfWlanAnswerBroadcastEss, wsCcRfWlanMulticastAddr1, wsCcRfWlanMulticastAddr2, wsCcRfWlanAuthentication,
+				wsCcRfWlanEncryptionMap, wsCcRfWlanBcastEnc, wsCcRfWlanUseDscp, wsCcRfWlanAuthEapRadiusServerIp1, wsCcRfWlanAuthEapRadiusServerPort1,
+				wsCcRfWlanAuthEapRadiusServerSecret1, wsCcRfWlanAuthEapRadiusServerIp2, wsCcRfWlanAuthEapRadiusServerPort2, wsCcRfWlanAuthEapRadiusServerSecret2, wsCcRfWlanAuthEapSuppRetries,
+				wsCcRfWlanAuthEapSuppTimeout, wsCcRfWlanAuthEapServerRetries, wsCcRfWlanAuthEapServerTimeout, wsCcRfWlanAuthEapReauth, wsCcRfWlanAuthEapReauthTimeout,
+				wsCcRfwlanAuthKerbRealm, wsCcRfWlanAuthKerbPassword, wsCcRfWlanAuthKerbKdcServerIp1, wsCcRfWlanAuthKerbKdcServerPort1, wsCcRfWlanAuthKerbKdcServerIp2,
+				wsCcRfWlanAuthKerbKdcServerPort2, wsCcRfWlanEncSkEnable, wsCcRfWlanEncWep64KeyIndex, wsCcRfWlanEncWep64Key1, wsCcRfWlanEncWep64Key2,
+				wsCcRfWlanEncWep64Key3, wsCcRfWlanEncWep64Key4, wsCcRfWlanEncWep128KgKeyIndex, wsCcRfWlanEncWep128KgKey1, wsCcRfWlanEncWep128KgKey2,
+				wsCcRfWlanEncWep128KgKey3, wsCcRfWlanEncWep128KgKey4, wsCcRfWlanEncTkipCcmpKeyType, wsCcRfWlanEncTkipCcmpPassphrase, wsCcRfWlanEncTkipCcmpKey,
+				wsCcRfWlanEncTkipCcmpKeyRotation, wsCcRfWlanEncTkipCcmpKeyInterval, wsCcRfWlanEncTkipCcmpPmkCaching, wsCcRfWlanEncTkipCcmpOppPmkCaching, wsCcRfWlanWmmAccessCategory,
+				wsCcRfWlanWmmTxOp, wsCcRfWlanWmmCwMin, wsCcRfWlanWmmCwMax, wsCcRfMuAssocAclIndex, wsCcRfMuAssocAclMode,
+				wsCcRfMuAssocAclStartingMac, wsCcRfMuAssocAclEndingMac, wsCcRfMuAssocAclWlans, wsCcRfRapMode, wsCcRfRapCfgIndex,
+				wsCcRfRapCfgAnyMac, wsCcRfRapCfgMac, wsCcRfRapCfgAnySsid, wsCcRfRapCfgSsid, wsCcRfRapCfgRowStatus,
+				wsCcRfRapStatusMac, wsCcRfRapStatusHeardAp, wsCcRfRapStatusChannel, wsCcRfRapStatusType, wsCcRfRapStatusSsid,
+				wsCcRfRapStatusLastTimeSeen, wsCcRfRapStatusLastSignal, wsCcRfRapStatusMinSignal, wsCcRfRapStatusMaxSignal, wsCcRfRapStatusSumSignal,
+				wsCcRfRapStatusSignalCount, wsCcRfMuAssocAclRowStatus, wsCcRfRadioDefaultCpPlacement, wsCcRfRadioDefaultCpPosChannel, wsCcRfRadioDefaultCpDesChannel,
+				wsCcRfRadioDefaultCpPosPowerDb, wsCcRfRadioDefaultCpDesPowerDb, wsCcRfRadioDefaultCpDesPowerMw, wsCcRfRadioDefaultCpSet, wsCcRfRadioDefaultCpReset,
+				wsCcRfHotspotServerRetries, wsCcRfHotspotServerTimeout, wsCcRfWlanPriorityEnable, wsCcRfApImageVersionModel, wsCcRfRadioCpChannelMode,
+				wsCcRfRadioDefaultCpChannelMode, wsCcRfApCount, wsCcRfRadioStatusRadioMac, wsCcRfMuRoamCount, wsCcRfAdvancedConfigEnable,
+				wsCcRfMuLastHeard, wsCcRfRadioSelfHealingPwrOffset, wsCcRfWlanSvpEnable, wsCcRfMuCnt, wsCcRfApImageVersionReleaseDate,
+				wsCcRfApImageVersionImageSize, wsCcRfApUnadoptedApType, wsCcRfRadioLastMac, wsCcRfRadioLastReason, wsCcRfRadioSelfHealingAction,
+				wsCcRfMuLastMac, wsCcRfSelfHealingDetectNeighborNow, wsCcRfHotspotServerIp1, wsCcRfHotspotServerPort1, wsCcRfHotspotServerSecret1,
+				wsCcRfHotspotServerIp2, wsCcRfHotspotServerPort2, wsCcRfHotspotServerSecret2, wsCcRfHotspotWhiteIpRuleIndex, wsCcRfWlanAuthKerberosServerTimeout, wsCcRfWlanMobilityEnable, wsCcRfWlanGRETunnelGatewayIp, wsCcRfWlanGRETunnelGatewayMask,
+				wsCcRfIdsStatusFilteredMuMac, wsCcRfHotspotWhiteIpAddr, wsCcRfRadioDefaultSelfHealingPwrOffset, wsCcRfWlanWmmEnable, wsCcRfWlanGRETunnelIdx,
+				wsCcRfHotspotWebsiteType, wsCcRfWlanMuToMu, wsCcRfIdsClearMuIdsEventEntries, wsCcRfIdsEventLastOccurredTime, wsCcRfIdsEventType,
+				wsCcRfWlanQosPrioritization, wsCcRfQosAcTo802dot1pPriority, wsCcRfQosAcTo802dot1pAccessCategory, wsCcRfQos802dot1pToAcAccessCategory, wsCcRfQos802dot1pToAcPriority,
+				wsCcRfQosDscpToAcAccessCategory, wsCcRfQosDscpToAcDscp, wsCcRfQosDscpToAcIndex, wsCcRfQos802dot1pToAcIndex, wsCcRfWlanAuthEapAuthProtocol,
+				wsCcRfWlanAuthEapDscpTos, wsCcRfApAddress, wsCcRfIdsStatusViolatnIndex, wsCcRfIdsStatusViolatnType, wsCcRfIdsStatusRadioIndex,
+				wsCcRfApHistoryIndex, wsCcRfApHistoryRadioType, wsCcRfApHistoryTimestamp, wsCcRfApHistoryEvent, wsCcRfApHistoryReason,
+				wsCcRfRadioHealingModeCnt, wsCcRfRadioNormalModeCnt, wsCcRfMuProbeRequestsAgeHeardOut, wsCcRfApHistoryMac, wsCcRfWlanDynamicVlanAssignment,
+				wsCcRfRadioRapSingleChannelScan, wsCcRfRadioDefaultRapSingleChannelScan, wsCcRfIdsThresholdsMu, wsCcRfIdsThresholdsRadio, wsCcRfIdsThresholdsSwitch,
+				wsCcRfIdsThresholdsFilterAgeout, wsCcRfIdsStatusRemainingBlacklistTime, wsCcRfIdsEventRadioIndex, wsCcRfIdsStatusRowStatus, wsCcRfIdsEventTotalCount,
+				wsCcRfIdsEventCountSinceMidnight, wsCcRfWlanEncTkipCcmpPreauthentication, wsCcRfIdsThresholdsViolTypeIndex, wsCcRfWlanAuthEapAccountingMode, wsCcRfWlanAuthEapInterimAcctInterval,
+				wsCcRfWlanAuthEapAcctTimeout, wsCcRfWlanAuthEapAcctRetries, wsCcRfWlanAuthPrimaryServer, wsCcRfWlanAuthEapSecondaryServer, wsCcRfWlanAuthEapPrimarySrvrPort,
+				wsCcRfWlanAuthEapSecondarySrvrPort, wsCcRfWlanAuthEapPrimarySecret, wsCcRfWlanAuthEapSecondarySecret, wsCcRfWlanSyslogServerPort, wsCcRfWlanSyslogServerIp,
+				wsCcRfWlanAccountingType, wsCcRfApHistoryEnable, wsCcRfApHistoryClear, wsCcRfMuHistoryEnable, wsCcRfMuHistoryClear,
+				wsCcRfMuProbeHistoryEnable, wsCcRfMuProbeHistoryClear, wsCcRfWlanAuthEapRadiusMacAuthFormat, wsCcRfIdsViolCountLastDetWindow, wsCcRfIdsViolationType,
+				wsCcRfIdsRadioIndex, wsCcRfRadioConfiguredCnt, wsCcRfRapMuAssistMode, wsCcRfRUnpprovedApTimeout, wsCcRfRApprovedApTimeout,
+				wsCcRfRapMuAssistRefreshPeriod, wsCcRfLldpName, wsCcRfLldpNameSet, wsCcRfLldpApMacAddr, wsCcRfWiredWebAuthWlan,
+				wsCcRfWiredWebAuthVlan, wsCcRfWiredWebAuthEnable, wsCcRfRadioBssDtim, wsCcRfRapMuAssistIndex, wsCcRfRapMuAssistMac,
+				wsCcRfRapMuAssistFoundOnPrtl, wsCcRfRapMuAssistTimestamp, wsCcRfRapMuAssistSsid, wsCcRfRapMuAssistBss, wsCcRfRapMuAssistRssi,
+				wsCcRfWiredWebAuthHostEntryDelete, wsCcRfWiredWebAuthHostVlan, wsCcRfWiredWebAuthHostIp, wsCcRfWiredWebAuthHostState, wsCcRfWiredWebAuthHostIndex,
+				wsCcRfWiredWebAuthHostMac, wsCcRfMuQosInfo, wsCcRfRadioCfgMethod, wsCcRfRadioWmmAdmissionDeviceMax, wsCcRfMuProbeConfigIndex,
+				wsCcRfMuProbeConfigMac, wsCcRfMuProbeConfigStatus, wsCcRfMuHistoryStatusRadioIndex, wsCcRfMuHistoryStatusWlanIndex, wsCcRfMuHistoryStatusTimestamp,
+				wsCcRfMuHistoryStatusEvent, wsCcRfMuHistoryStatusMac, wsCcRfMuHistoryStatusIndex, wsCcRfWlanCount, wsCcRfIdsDetectionWindow,
+				wsCcRfMuTunnelIndex, wsCcRfMuProbeStatusIndex, wsCcRfMuProbeStatusMac, wsCcRfMuProbeStatusTimeticks, wsCcRfMuProbeStatusSignalStrength,
 				wsCcRfMuProbeStatusHeardRadio }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				" "
 			::= { wsCcRfGroups 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.3.2.1.100.2.2
 		wsCcRfDeprecatedGroup OBJECT-GROUP
-			OBJECTS { wsCcRfIdsMaxExcsvProbes, wsCcRfWlanDisallowMuToMu, wsCcRfHotspotPageLocation, wsCcRfWlanWeight, wsCcRfIdsMaxExcsvAssos, 
-				wsCcRfIdsMaxExcsvProbs, wsCcRfIdsMaxExcsvDisassos, wsCcRfIdsMaxExcsvAuthFailures, wsCcRfIdsMaxExcsvCryptoReplays, wsCcRfIdsMaxExcsv80211Replays, 
-				wsCcRfIdsMaxExcsvDecryptFails, wsCcRfIdsAnmlySrcMacEqDestMac, wsCcRfIdsAnmlyNullDestination, wsCcRfIdsAnmlySrcMulticastMac, wsCcRfIdsAnmlyWeakWepIv, 
-				wsCcRfIdsMuFilterAgeOutTime, wsCcRfIdsStatusFilteredMacMax, wsCcRfIdsEventPeriod, wsCcRfRapMaxRogue, wsCcRfRapTimeout, 
-				wsCcRfRadioStatusCfgMethod, wsCcRfWlanWmmAdmissionDeviceMax, wsCcRfWlanWmmAdmissionCtrl, wsCfRfMuProbeHistoryMac, wsCfRfMuProbeHistoryIndex, 
-				wsCfRfMuProbeHistoryTimeticks, wsCfRfMuProbeHistorySignalStrength, wsCfRfMuProbeHeardRadio, wsCcRfMuHistoryIndex, wsCcRfMuHistoryMac, 
-				wsCcRfMuHistoryRadioIndex, wsCcRfMuHistoryWlanIndex, wsCcRfMuHistoryTimestamp, wsCcRfMuHistoryEvent, wsCcRfRadioCcaLevel, wsCcRfRadioCcaMode, wsCcRfIdsMuFilterAgeOut, 
+			OBJECTS { wsCcRfIdsMaxExcsvProbes, wsCcRfWlanDisallowMuToMu, wsCcRfHotspotPageLocation, wsCcRfWlanWeight, wsCcRfIdsMaxExcsvAssos,
+				wsCcRfIdsMaxExcsvProbs, wsCcRfIdsMaxExcsvDisassos, wsCcRfIdsMaxExcsvAuthFailures, wsCcRfIdsMaxExcsvCryptoReplays, wsCcRfIdsMaxExcsv80211Replays,
+				wsCcRfIdsMaxExcsvDecryptFails, wsCcRfIdsAnmlySrcMacEqDestMac, wsCcRfIdsAnmlyNullDestination, wsCcRfIdsAnmlySrcMulticastMac, wsCcRfIdsAnmlyWeakWepIv,
+				wsCcRfIdsMuFilterAgeOutTime, wsCcRfIdsStatusFilteredMacMax, wsCcRfIdsEventPeriod, wsCcRfRapMaxRogue, wsCcRfRapTimeout,
+				wsCcRfRadioStatusCfgMethod, wsCcRfWlanWmmAdmissionDeviceMax, wsCcRfWlanWmmAdmissionCtrl, wsCfRfMuProbeHistoryMac, wsCfRfMuProbeHistoryIndex,
+				wsCfRfMuProbeHistoryTimeticks, wsCfRfMuProbeHistorySignalStrength, wsCfRfMuProbeHeardRadio, wsCcRfMuHistoryIndex, wsCcRfMuHistoryMac,
+				wsCcRfMuHistoryRadioIndex, wsCcRfMuHistoryWlanIndex, wsCcRfMuHistoryTimestamp, wsCcRfMuHistoryEvent, wsCcRfRadioCcaLevel, wsCcRfRadioCcaMode, wsCcRfIdsMuFilterAgeOut,
 				wsCcRfIdsMaxExcsvAssoc }
 			STATUS deprecated
-			DESCRIPTION 
+			DESCRIPTION
 				"Group of deprecated objects."
 			::= { wsCcRfGroups 2 }
 
-		
-	
+
+
 	END
 
 --

@@ -3,7 +3,7 @@
 -- *                                                                        *
 -- *                  Hirschmann Automation and Control GmbH                *
 -- *                                                                        *
--- *                         PLATFORM SNMP PRIVATE MIB                      * 
+-- *                         PLATFORM SNMP PRIVATE MIB                      *
 -- *                                                                        *
 -- *                                  DVMRP                                 *
 -- *                                                                        *
@@ -48,7 +48,7 @@ hmDVMRPMIB MODULE-IDENTITY
         ORGANIZATION "Hirschmann Automation and Control GmbH"
         CONTACT-INFO
           "Customer Support
-           Postal: 
+           Postal:
            Hirschmann Automation and Control GmbH
            Stuttgarter Str. 45-51
            72654 Neckartenzlingen
@@ -58,14 +58,14 @@ hmDVMRPMIB MODULE-IDENTITY
            E-Mail: hicomcenter@hirschmann.com"
         DESCRIPTION
           "The Hirschmann Private DVMRP MIB definitions for Platform devices."
-          
-        REVISION     
+
+        REVISION
           "201004121200Z" -- 12 Apr 2010 12:00:00 GMT
         DESCRIPTION
-            "Initial version."   
+            "Initial version."
     ::= { hmPlatform4Multicast 100 }
-    
-     
+
+
 hmDVMRPMIBObjects OBJECT IDENTIFIER ::= { hmDVMRPMIB 1 }
 
 hmDVMRP           OBJECT IDENTIFIER ::= { hmDVMRPMIBObjects 1 }

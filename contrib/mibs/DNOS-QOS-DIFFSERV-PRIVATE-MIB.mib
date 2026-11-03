@@ -171,9 +171,9 @@ IMPORTS
     DISPLAY-HINT "2x:"
     STATUS       current
     DESCRIPTION
-        "This data type is used to model IPv6 address prefixes. This is a binary 
+        "This data type is used to model IPv6 address prefixes. This is a binary
         string of up to 16 octets in network byte-order."
-    SYNTAX       OCTET STRING (SIZE (0..16))   
+    SYNTAX       OCTET STRING (SIZE (0..16))
 
 --**************************************************************************************
 --    agentDiffServGenStatusGroup
@@ -458,7 +458,7 @@ IMPORTS
                       object is interpreted as an IP ACL number per the aclIndex definition
                       from the DNOS-QOS-ACL-MIB.  When set to mac(2), the agentDiffServClassAclNum
                       object is interpreted as a MAC ACL index per the aclMacIndex definition
-                      in the DNOS-QOS-ACL-MIB. When set to ipv6(3), the agentDiffServClassAclNum 
+                      in the DNOS-QOS-ACL-MIB. When set to ipv6(3), the agentDiffServClassAclNum
                       object is interpreted as a IPv6 ACL index per the aclIpv6Index definition
                       in the DNOS-QOS-ACL-MIB.  All these objects and agentDiffServClassAclNum
                       must be set (in either order) for an agentDiffServClassType of acl(3)."
@@ -467,17 +467,17 @@ IMPORTS
     agentDiffServClassProtoType OBJECT-TYPE
          SYNTAX         INTEGER {
                         ipv4(1),
-                        ipv6(2) 
+                        ipv6(2)
                         }
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The diffserv class protocol type used to indicate how to interpret any layer 3. 
-                     This attribute is only valid if the value of agentDiffServClassProtoType 
+                     "The diffserv class protocol type used to indicate how to interpret any layer 3.
+                     This attribute is only valid if the value of agentDiffServClassProtoType
                      is set to all(1) or any(2)."
-         ::= { agentDiffServClassEntry 9 }    
-                                    
-    
+         ::= { agentDiffServClassEntry 9 }
+
+
     --*********************** agentDiffServClassRuleTable ***********************
 
     agentDiffServClassRuleTable OBJECT-TYPE
@@ -978,11 +978,11 @@ IMPORTS
         SYNTAX          Unsigned32 (0..1048575)
         MAX-ACCESS      read-create
         STATUS          current
-        DESCRIPTION     
-                    "Flow label is 20-bit number that is unique to an IPv6 packet, used by end 
-                    stations to signify quality-of-service handling in routers." 
+        DESCRIPTION
+                    "Flow label is 20-bit number that is unique to an IPv6 packet, used by end
+                    stations to signify quality-of-service handling in routers."
          ::= { agentDiffServClassRuleEntry 34 }
-        
+
     agentDiffServClassRuleMatchDstIpv6Prefix OBJECT-TYPE
          SYNTAX         Ipv6AddressPrefix
          MAX-ACCESS     read-write
@@ -990,22 +990,22 @@ IMPORTS
          DESCRIPTION
            "The Ipv6 Prefix Address configured on the Service Port."
          ::= { agentDiffServClassRuleEntry 35 }
-        
+
     agentDiffServClassRuleMatchSrcIpv6Prefix OBJECT-TYPE
          SYNTAX         Ipv6AddressPrefix
          MAX-ACCESS     read-write
          STATUS         current
          DESCRIPTION
            "The Ipv6 Prefix Address configured on the Service Port."
-         ::= { agentDiffServClassRuleEntry 36 } 
-   
+         ::= { agentDiffServClassRuleEntry 36 }
+
     agentDiffServClassRuleMatchDstIpv6PrefixLength OBJECT-TYPE
          SYNTAX      Integer32 (1..128)
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
                      "The Prefix Length."
-         ::= { agentDiffServClassRuleEntry 37 }     
+         ::= { agentDiffServClassRuleEntry 37 }
     agentDiffServClassRuleMatchSrcIpv6PrefixLength OBJECT-TYPE
          SYNTAX      Integer32 (1..128)
          MAX-ACCESS  read-create
@@ -1013,7 +1013,7 @@ IMPORTS
          DESCRIPTION
                      "The Prefix Length."
          ::= { agentDiffServClassRuleEntry 38 }
-	 
+
     --**********************************************************************************
     -- agentDiffServPolicyGroup
     --
@@ -1115,8 +1115,8 @@ IMPORTS
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The status of this conceptual row.  
-    
+                     "The status of this conceptual row.
+
                      active(1)      - this Diffserv Policy is active
                      createAndGo(4) - set to this value to create an instance
                      destroy(6)     - set to this value to delete an instance
@@ -1125,7 +1125,7 @@ IMPORTS
 
                      Other columns in this row may be modified when the status is 'active'.
 
-                     Entries can not be deleted until all rows in agentDiffServPolicyInstTable 
+                     Entries can not be deleted until all rows in agentDiffServPolicyInstTable
                      with corresponding values of agentDiffServPolicyIndex have been deleted."
 
          ::= { agentDiffServPolicyEntry 6 }
@@ -1207,17 +1207,17 @@ IMPORTS
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The status of this conceptual row. 
- 
+                     "The status of this conceptual row.
+
                       active(1)      - this Diffserv Policy Instance is active
                       createAndGo(4) - set to this value to create an instance
                       destroy(6)     - set to this value to delete an instance
-  
+
                       All RowStatus operations are permitted.
-  
+
                       Other columns in this row may be modified when the status is 'active'.
 
-                      Entries can not be deleted until all rows in agentDiffServPolicyAttrTable with 
+                      Entries can not be deleted until all rows in agentDiffServPolicyAttrTable with
                       corresponding values of agentDiffServPolicyIndex and agentDiffServPolicyInstIndex
                       have been deleted."
          ::= { agentDiffServPolicyInstEntry 5 }
@@ -1804,9 +1804,9 @@ IMPORTS
                       active(1)      - this Diffserv Policy Attribute is active
                       createAndGo(4) - set to this value to create an instance
                       destroy(6)     - set to this value to delete an instance
-  
+
                       All RowStatus operations are permitted.
-  
+
                       Other columns in this row may be modified when the status is 'active'."
 
          ::= { agentDiffServPolicyAttrEntry 35 }
@@ -2241,9 +2241,9 @@ IMPORTS
           agentDiffServPolicyPerfOutOfferedOctets
               Counter32,
 	  agentDiffServPolicyPerfOutOfferedPackets
-              Counter32, 
+              Counter32,
 	  agentDiffServPolicyPerfOutDiscardedOctets
-              Counter32,   
+              Counter32,
 	  agentDiffServPolicyPerfOutDiscardedPackets
               Counter32,
           agentDiffServPolicyPerfOutHCOfferedOctets
@@ -2422,70 +2422,70 @@ IMPORTS
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Offered octets count for the outbound policy-class instance performance 
+                     "Offered octets count for the outbound policy-class instance performance
                      entry."
          ::= { agentDiffServPolicyPerfOutEntry 19 }
-	 
+
     agentDiffServPolicyPerfOutOfferedPackets OBJECT-TYPE
          SYNTAX      Counter32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Offered packets count for the outbound policy-class instance performance 
+                     "Offered packets count for the outbound policy-class instance performance
                      entry."
          ::= { agentDiffServPolicyPerfOutEntry 20 }
-	 
+
     agentDiffServPolicyPerfOutDiscardedOctets OBJECT-TYPE
          SYNTAX      Counter32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Discarded octets count for the outbound policy-class instance performance 
+                     "Discarded octets count for the outbound policy-class instance performance
                      entry."
          ::= { agentDiffServPolicyPerfOutEntry 21 }
-	 
+
     agentDiffServPolicyPerfOutDiscardedPackets OBJECT-TYPE
          SYNTAX      Counter32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Discarded packets count for the outbound policy-class instance performance 
+                     "Discarded packets count for the outbound policy-class instance performance
                      entry."
          ::= { agentDiffServPolicyPerfOutEntry 22 }
-         	 
+
     agentDiffServPolicyPerfOutHCOfferedOctets OBJECT-TYPE
          SYNTAX      Counter64
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Offered octets high capacity count for the outbound policy-class instance 
+                     "Offered octets high capacity count for the outbound policy-class instance
                      performance entry."
          ::= { agentDiffServPolicyPerfOutEntry 23 }
-	 
+
     agentDiffServPolicyPerfOutHCOfferedPackets OBJECT-TYPE
          SYNTAX      Counter64
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Offered packets high capacity count for the outbound policy-class instance 
+                     "Offered packets high capacity count for the outbound policy-class instance
                      performance entry."
          ::= { agentDiffServPolicyPerfOutEntry 24 }
-	 
+
     agentDiffServPolicyPerfOutHCDiscardedOctets OBJECT-TYPE
          SYNTAX      Counter64
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Discarded octets high capacity count for the outbound policy-class instance 
+                     "Discarded octets high capacity count for the outbound policy-class instance
                      performance entry."
          ::= { agentDiffServPolicyPerfOutEntry 25 }
-	 
+
     agentDiffServPolicyPerfOutHCDiscardedPackets OBJECT-TYPE
          SYNTAX      Counter64
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Discarded packets high capacity count for the outbound policy-class 
+                     "Discarded packets high capacity count for the outbound policy-class
                      instance performance entry."
          ::= { agentDiffServPolicyPerfOutEntry 26 }
 
@@ -2602,9 +2602,9 @@ IMPORTS
                       active(1)      - Diffserv is active
                       createAndGo(4) - set to this value to create an instance
                       destroy(6)     - set to this value to delete an instance
-  
+
                       All RowStatus operations are permitted.
-  
+
                       Other columns in this row may be modified when the status is 'active'."
 
          ::= { agentDiffServServiceEntry 6 }

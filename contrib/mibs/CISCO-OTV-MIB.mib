@@ -1,8 +1,8 @@
 -- *****************************************************************
 -- CISCO-OTV-MIB.my
---   
+--
 -- August 2012, Dipesh Gorashia
---   
+--
 -- Copyright (c) 2012-2013 by Cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -125,7 +125,7 @@ ciscoOtvMIB MODULE-IDENTITY
         DNS     Domain Name System
 
         ISIS    Intermediate System to Intermediate System Routing
-                Protocol 
+                Protocol
 
         LSPDB   Link State PDU Database
 
@@ -183,7 +183,7 @@ cotvSiteIdAdmin OBJECT-TYPE
         four octets value or a six octets valid MAC address.
 
         If the OTV site identifier is not configured, this object
-        will have four zero octets." 
+        will have four zero octets."
     ::= { cotvSiteObjects 1 }
 
 cotvSiteIdOper OBJECT-TYPE
@@ -195,7 +195,7 @@ cotvSiteIdOper OBJECT-TYPE
         for this device.
 
         There is no operational OTV site identifier if the value of
-        this object contains all zeros." 
+        this object contains all zeros."
     ::= { cotvSiteObjects 2 }
 
 cotvSiteVlan OBJECT-TYPE
@@ -203,7 +203,7 @@ cotvSiteVlan OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This object specifies the OTV site VLAN for this device." 
+        "This object specifies the OTV site VLAN for this device."
     ::= { cotvSiteObjects 3 }
 
 cotvSiteVlanState OBJECT-TYPE
@@ -218,11 +218,11 @@ cotvSiteVlanState OBJECT-TYPE
 
         'up'    - OTV site VLAN is up
 
-        'down'  - OTV site VLAN is down" 
+        'down'  - OTV site VLAN is down"
     ::= { cotvSiteObjects 4 }
 
 cotvOverlayTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CotvOverlayEntry 
+    SYNTAX          SEQUENCE OF CotvOverlayEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -236,7 +236,7 @@ cotvOverlayEntry OBJECT-TYPE
     DESCRIPTION
         "An entry containing management information for a
         particular Overlay interface."
-    INDEX           { cotvOverlayNumber } 
+    INDEX           { cotvOverlayNumber }
     ::= { cotvOverlayTable 1 }
 
 CotvOverlayEntry ::= SEQUENCE {
@@ -270,7 +270,7 @@ cotvOverlayNumber OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "A unique number to identify an Overlay interface." 
+        "A unique number to identify an Overlay interface."
     ::= { cotvOverlayEntry 1 }
 
 cotvOverlayVpnName OBJECT-TYPE
@@ -279,7 +279,7 @@ cotvOverlayVpnName OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the name of the Virtual Private Network
-        associated with this Overlay interface." 
+        associated with this Overlay interface."
     ::= { cotvOverlayEntry 2 }
 
 cotvOverlayVpnState OBJECT-TYPE
@@ -299,7 +299,7 @@ cotvOverlayVpnState OBJECT-TYPE
 
          'up'         - The Overlay Virtual Private Network is up
 
-         'down'       - The Overlay Virtual Private Network is down" 
+         'down'       - The Overlay Virtual Private Network is down"
     ::= { cotvOverlayEntry 3 }
 
 cotvOverlayVpnDownReason OBJECT-TYPE
@@ -375,7 +375,7 @@ cotvOverlayVpnDownReason OBJECT-TYPE
 
         'changingDeviceId'      - Changing device ID
 
-        'cleanupInProgress'     - Cleanup in progress" 
+        'cleanupInProgress'     - Cleanup in progress"
     ::= { cotvOverlayEntry 4 }
 
 cotvOverlayVlansExtendedFirst2k OBJECT-TYPE
@@ -396,7 +396,7 @@ cotvOverlayVlansExtendedFirst2k OBJECT-TYPE
         If the bit corresponding to a VLAN is set to 0,
         it indicates that VLAN is not being extended on
         this Overlay interface."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { cotvOverlayEntry 5 }
 
 cotvOverlayVlansExtendedSecond2k OBJECT-TYPE
@@ -417,7 +417,7 @@ cotvOverlayVlansExtendedSecond2k OBJECT-TYPE
         If the bit corresponding to a VLAN is set to 0,
         it indicates that VLAN is not being extended on
         this Overlay interface."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { cotvOverlayEntry 6 }
 
 cotvOverlayControlGroupAddrType OBJECT-TYPE
@@ -427,7 +427,7 @@ cotvOverlayControlGroupAddrType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the type of Internet address of
         Control Group."
-    DEFVAL          { unknown } 
+    DEFVAL          { unknown }
     ::= { cotvOverlayEntry 7 }
 
 cotvOverlayControlGroupAddr OBJECT-TYPE
@@ -439,7 +439,7 @@ cotvOverlayControlGroupAddr OBJECT-TYPE
 
         The type of this address is determined by
         cotvOverlayControlGroupAddrType."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { cotvOverlayEntry 8 }
 
 cotvOverlayBroadcastGroupAddrType OBJECT-TYPE
@@ -449,7 +449,7 @@ cotvOverlayBroadcastGroupAddrType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the type of Internet address to be
         used as Broadcast Group Address."
-    DEFVAL          { unknown } 
+    DEFVAL          { unknown }
     ::= { cotvOverlayEntry 9 }
 
 cotvOverlayBroadcastGroupAddr OBJECT-TYPE
@@ -462,7 +462,7 @@ cotvOverlayBroadcastGroupAddr OBJECT-TYPE
 
         The type of this address is determined by
         cotvOverlayBroadcastGroupAddrType."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { cotvOverlayEntry 10 }
 
 cotvOverlayJoinInterface OBJECT-TYPE
@@ -472,7 +472,7 @@ cotvOverlayJoinInterface OBJECT-TYPE
     DESCRIPTION
         "This object specifies the OTV Join Interface for this
         Overlay interface."
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { cotvOverlayEntry 11 }
 
 cotvOverlaySourceInterface OBJECT-TYPE
@@ -482,7 +482,7 @@ cotvOverlaySourceInterface OBJECT-TYPE
     DESCRIPTION
         "This object specifies the Source Interface for
         this Overlay interface."
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { cotvOverlayEntry 12 }
 
 cotvOverlayAedCapable OBJECT-TYPE
@@ -498,7 +498,7 @@ cotvOverlayAedCapable OBJECT-TYPE
 
         A value of 'false' indicates that the edge device
         does not have the capability to act as an AED on this
-        Overlay interface." 
+        Overlay interface."
     ::= { cotvOverlayEntry 13 }
 
 cotvOverlayAedIncapableReason OBJECT-TYPE
@@ -542,7 +542,7 @@ cotvOverlayAedIncapableReason OBJECT-TYPE
         'overlayDownInProgress' - Overlay state down event in progress
 
         'isisControlGroupSyncPending'  - ISIS control group sync
-                                         pending" 
+                                         pending"
     ::= { cotvOverlayEntry 14 }
 
 cotvOverlayAdjServerTransportType OBJECT-TYPE
@@ -565,7 +565,7 @@ cotvOverlayAdjServerTransportType OBJECT-TYPE
 
          Value of this object can be set to 'unicastOnly' only if
          the value of cotvOverlayPrimaryAdjServerAddrType is 'unknown'."
-    DEFVAL          { multicastAndUnicast } 
+    DEFVAL          { multicastAndUnicast }
     ::= { cotvOverlayEntry 15 }
 
 cotvOverlayAdjServerEnable OBJECT-TYPE
@@ -581,7 +581,7 @@ cotvOverlayAdjServerEnable OBJECT-TYPE
 
         Setting the object to 'false' disables Adjacency Server
         functionality."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cotvOverlayEntry 16 }
 
 cotvOverlayPrimaryAdjServerAddrType OBJECT-TYPE
@@ -591,7 +591,7 @@ cotvOverlayPrimaryAdjServerAddrType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the type of Internet address of the
         Primary Adjacency Server for this Overlay interface."
-    DEFVAL          { unknown } 
+    DEFVAL          { unknown }
     ::= { cotvOverlayEntry 17 }
 
 cotvOverlayPrimaryAdjServerAddr OBJECT-TYPE
@@ -604,7 +604,7 @@ cotvOverlayPrimaryAdjServerAddr OBJECT-TYPE
 
         The type of this address is determined by the value of
         cotvOverlayPrimaryAdjServerAddrType."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { cotvOverlayEntry 18 }
 
 cotvOverlaySecondaryAdjServerAddrType OBJECT-TYPE
@@ -614,7 +614,7 @@ cotvOverlaySecondaryAdjServerAddrType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the type of Internet address of the
         Secondary Adjacency Server for this Overlay interface."
-    DEFVAL          { unknown } 
+    DEFVAL          { unknown }
     ::= { cotvOverlayEntry 19 }
 
 cotvOverlaySecondaryAdjServerAddr OBJECT-TYPE
@@ -627,7 +627,7 @@ cotvOverlaySecondaryAdjServerAddr OBJECT-TYPE
 
         The type of this address is determined by
         cotvOverlaySecondaryAdjServerAddrType."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { cotvOverlayEntry 20 }
 
 cotvOverlaySuppressArpND OBJECT-TYPE
@@ -643,7 +643,7 @@ cotvOverlaySuppressArpND OBJECT-TYPE
 
         Setting the object to 'false' disables suppression of
         ARP Neighbor Discovery on this Overlay interface."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cotvOverlayEntry 21 }
 
 cotvOverlayStorageType OBJECT-TYPE
@@ -653,7 +653,7 @@ cotvOverlayStorageType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the storage type for this
         conceptual row."
-    DEFVAL          { volatile } 
+    DEFVAL          { volatile }
     ::= { cotvOverlayEntry 22 }
 
 cotvOverlayRowStatus OBJECT-TYPE
@@ -661,13 +661,13 @@ cotvOverlayRowStatus OBJECT-TYPE
     MAX-ACCESS      read-create
     STATUS          current
     DESCRIPTION
-        "This object specifies the status of this conceptual row." 
+        "This object specifies the status of this conceptual row."
     ::= { cotvOverlayEntry 23 }
- 
+
 
 
 cotvVlansTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CotvVlansEntry 
+    SYNTAX          SEQUENCE OF CotvVlansEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -684,7 +684,7 @@ cotvVlansEntry OBJECT-TYPE
     INDEX           {
                         cotvOverlayNumber,
                         cotvVlanId
-                    } 
+                    }
     ::= { cotvVlansTable 1 }
 
 CotvVlansEntry ::= SEQUENCE {
@@ -701,7 +701,7 @@ cotvVlanId OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "This object indicates the VLAN ID of the extended VLAN." 
+        "This object indicates the VLAN ID of the extended VLAN."
     ::= { cotvVlansEntry 1 }
 
 cotvVlanState OBJECT-TYPE
@@ -716,7 +716,7 @@ cotvVlanState OBJECT-TYPE
 
         'active'   - OTV is ready to forward traffic for this VLAN
 
-        'inactive' - OTV can not forward traffic for this VLAN" 
+        'inactive' - OTV can not forward traffic for this VLAN"
     ::= { cotvVlansEntry 2 }
 
 cotvVlanInactiveReason OBJECT-TYPE
@@ -749,7 +749,7 @@ cotvVlanInactiveReason OBJECT-TYPE
                            VLAN from becoming 'active'
 
         Value of this object should be ignored if the value of
-        cotvVlanInactiveReason is not 'inactive'." 
+        cotvVlanInactiveReason is not 'inactive'."
     ::= { cotvVlansEntry 3 }
 
 cotvVlanAedAddrType OBJECT-TYPE
@@ -758,7 +758,7 @@ cotvVlanAedAddrType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the type of Internet address of
-        Authoritative Edge Device (AED) on this VLAN." 
+        Authoritative Edge Device (AED) on this VLAN."
     ::= { cotvVlansEntry 4 }
 
 cotvVlanAedAddr OBJECT-TYPE
@@ -770,7 +770,7 @@ cotvVlanAedAddr OBJECT-TYPE
         Edge Device (AED) on this VLAN.
 
         The type of this address is determined by the value of
-        cotvVlanAedAddrType." 
+        cotvVlanAedAddrType."
     ::= { cotvVlansEntry 5 }
 
 cotvVlanEdgeDevIsAed OBJECT-TYPE
@@ -785,13 +785,13 @@ cotvVlanEdgeDevIsAed OBJECT-TYPE
         as an AED for the VLAN.
 
         A value of 'false' indicates that this device is not acting
-        as an AED for the VLAN." 
+        as an AED for the VLAN."
     ::= { cotvVlansEntry 6 }
- 
+
 
 
 cotvDataGroupConfigTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CotvDataGroupConfigEntry 
+    SYNTAX          SEQUENCE OF CotvDataGroupConfigEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -811,7 +811,7 @@ cotvDataGroupConfigEntry OBJECT-TYPE
                         cotvDataGroupMcastRangeAddrType,
                         cotvDataGroupMcastRangeAddr,
                         cotvDataGroupMcastRangePrefixLength
-                    } 
+                    }
     ::= { cotvDataGroupConfigTable 1 }
 
 CotvDataGroupConfigEntry ::= SEQUENCE {
@@ -827,7 +827,7 @@ cotvDataGroupMcastRangeAddrType OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The type of Internet address of multicast data-group range." 
+        "The type of Internet address of multicast data-group range."
     ::= { cotvDataGroupConfigEntry 1 }
 
 cotvDataGroupMcastRangeAddr OBJECT-TYPE
@@ -838,7 +838,7 @@ cotvDataGroupMcastRangeAddr OBJECT-TYPE
         "The Internet address of multicast data-group range.
 
         The type of this address is determined by
-        the value of the cotvDataGroupMcastRangeAddrType object." 
+        the value of the cotvDataGroupMcastRangeAddrType object."
     ::= { cotvDataGroupConfigEntry 2 }
 
 cotvDataGroupMcastRangePrefixLength OBJECT-TYPE
@@ -850,7 +850,7 @@ cotvDataGroupMcastRangePrefixLength OBJECT-TYPE
         cotvDataGroupMcastRangeAddr.
 
         The type of this address prefix is determined by
-        the value of the cotvDataGroupMcastRangeAddrType object." 
+        the value of the cotvDataGroupMcastRangeAddrType object."
     ::= { cotvDataGroupConfigEntry 3 }
 
 cotvDataGroupStorageType OBJECT-TYPE
@@ -860,7 +860,7 @@ cotvDataGroupStorageType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the storage type for this
         conceptual row."
-    DEFVAL          { volatile } 
+    DEFVAL          { volatile }
     ::= { cotvDataGroupConfigEntry 4 }
 
 cotvDataGroupRowStatus OBJECT-TYPE
@@ -868,13 +868,13 @@ cotvDataGroupRowStatus OBJECT-TYPE
     MAX-ACCESS      read-create
     STATUS          current
     DESCRIPTION
-        "This object specifies the status of this conceptual row." 
+        "This object specifies the status of this conceptual row."
     ::= { cotvDataGroupConfigEntry 5 }
- 
+
 
 
 cotvDataGroupInfoTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CotvDataGroupInfoEntry 
+    SYNTAX          SEQUENCE OF CotvDataGroupInfoEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -902,7 +902,7 @@ cotvDataGroupInfoEntry OBJECT-TYPE
                         cotvDataGroupDeliveryGroupAddr,
                         cotvDataGroupDeliverySrcAddrType,
                         cotvDataGroupDeliverySrcAddr
-                    } 
+                    }
     ::= { cotvDataGroupInfoTable 1 }
 
 CotvDataGroupInfoEntry ::= SEQUENCE {
@@ -928,7 +928,7 @@ cotvDataGroupActiveSrcLocation OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The location of Active Multicast source." 
+        "The location of Active Multicast source."
     ::= { cotvDataGroupInfoEntry 1 }
 
 cotvDataGroupVlanId OBJECT-TYPE
@@ -936,7 +936,7 @@ cotvDataGroupVlanId OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The VLAN associated with Active Multicast data-group." 
+        "The VLAN associated with Active Multicast data-group."
     ::= { cotvDataGroupInfoEntry 2 }
 
 cotvDataGroupActiveGroupAddrType OBJECT-TYPE
@@ -945,7 +945,7 @@ cotvDataGroupActiveGroupAddrType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The type of Internet address of the active multicast group
-        (multicast group of the active multicast source)." 
+        (multicast group of the active multicast source)."
     ::= { cotvDataGroupInfoEntry 3 }
 
 cotvDataGroupActiveGroupAddr OBJECT-TYPE
@@ -957,7 +957,7 @@ cotvDataGroupActiveGroupAddr OBJECT-TYPE
         (multicast group of the active multicast source).
 
         The type of this address is determined by the value of
-        cotvDataGroupActiveGroupAddrType." 
+        cotvDataGroupActiveGroupAddrType."
     ::= { cotvDataGroupInfoEntry 4 }
 
 cotvDataGroupActiveSrcAddrType OBJECT-TYPE
@@ -965,7 +965,7 @@ cotvDataGroupActiveSrcAddrType OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The type of Internet address of active multicast source." 
+        "The type of Internet address of active multicast source."
     ::= { cotvDataGroupInfoEntry 5 }
 
 cotvDataGroupActiveSrcAddr OBJECT-TYPE
@@ -976,7 +976,7 @@ cotvDataGroupActiveSrcAddr OBJECT-TYPE
         "The Internet address of active multicast source.
 
         The type of this address is determined by the value of
-        cotvDataGroupActiveSrcAddrType." 
+        cotvDataGroupActiveSrcAddrType."
     ::= { cotvDataGroupInfoEntry 6 }
 
 cotvDataGroupDeliveryGroupAddrType OBJECT-TYPE
@@ -985,7 +985,7 @@ cotvDataGroupDeliveryGroupAddrType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The type of Internet address of the delivery group that is
-        mapped to active multicast group." 
+        mapped to active multicast group."
     ::= { cotvDataGroupInfoEntry 7 }
 
 cotvDataGroupDeliveryGroupAddr OBJECT-TYPE
@@ -997,7 +997,7 @@ cotvDataGroupDeliveryGroupAddr OBJECT-TYPE
         mapped to active multicast group.
 
         The type of this address is determined by
-        cotvDataGroupDeliveryGroupAddrType." 
+        cotvDataGroupDeliveryGroupAddrType."
     ::= { cotvDataGroupInfoEntry 8 }
 
 cotvDataGroupDeliverySrcAddrType OBJECT-TYPE
@@ -1006,7 +1006,7 @@ cotvDataGroupDeliverySrcAddrType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The type of Internet address of the delivery source that is
-        mapped to the active multicast source." 
+        mapped to the active multicast source."
     ::= { cotvDataGroupInfoEntry 9 }
 
 cotvDataGroupDeliverySrcAddr OBJECT-TYPE
@@ -1018,7 +1018,7 @@ cotvDataGroupDeliverySrcAddr OBJECT-TYPE
         mapped to the active multicast source.
 
         The type of this address is determined by the value of
-        cotvDataGroupDeliverySrcAddrType." 
+        cotvDataGroupDeliverySrcAddrType."
     ::= { cotvDataGroupInfoEntry 10 }
 
 cotvDataGroupJoinInterface OBJECT-TYPE
@@ -1027,7 +1027,7 @@ cotvDataGroupJoinInterface OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the OTV Join interface on which
-        active multicast source is located." 
+        active multicast source is located."
     ::= { cotvDataGroupInfoEntry 11 }
 
 cotvDataGroupLocalActiveSrcState OBJECT-TYPE
@@ -1050,16 +1050,16 @@ cotvDataGroupLocalActiveSrcState OBJECT-TYPE
 
         'remote' - multicast source state is remote
 
-        'orphan' - multicast source state is orphan 
+        'orphan' - multicast source state is orphan
 
         Value of this object should be 'none' if
-        cotvDataGroupActiveSrcLocation is 'remote'." 
+        cotvDataGroupActiveSrcLocation is 'remote'."
     ::= { cotvDataGroupInfoEntry 12 }
- 
+
 
 
 cotvAdjacencyDatabaseTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CotvAdjacencyDatabaseEntry 
+    SYNTAX          SEQUENCE OF CotvAdjacencyDatabaseEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1077,7 +1077,7 @@ cotvAdjacencyDatabaseEntry OBJECT-TYPE
                         cotvOverlayNumber,
                         cotvAdjacentDevAddrType,
                         cotvAdjacentDevAddr
-                    } 
+                    }
     ::= { cotvAdjacencyDatabaseTable 1 }
 
 CotvAdjacencyDatabaseEntry ::= SEQUENCE {
@@ -1094,7 +1094,7 @@ cotvAdjacentDevAddrType OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The type of Internet address of adjacent edge device." 
+        "The type of Internet address of adjacent edge device."
     ::= { cotvAdjacencyDatabaseEntry 1 }
 
 cotvAdjacentDevAddr OBJECT-TYPE
@@ -1105,7 +1105,7 @@ cotvAdjacentDevAddr OBJECT-TYPE
         "The Internet address of adjacent edge device.
 
         The type of this address is determined by the value of
-        cotvAdjacentDevAddrType." 
+        cotvAdjacentDevAddrType."
     ::= { cotvAdjacencyDatabaseEntry 2 }
 
 cotvAdjacentDevSystemID OBJECT-TYPE
@@ -1118,7 +1118,7 @@ cotvAdjacentDevSystemID OBJECT-TYPE
 
         The value of this object contains zero length octet, if the
         system identifier of the adjacent edge devices is not
-        available." 
+        available."
     ::= { cotvAdjacencyDatabaseEntry 3 }
 
 cotvAdjacentDevName OBJECT-TYPE
@@ -1127,7 +1127,7 @@ cotvAdjacentDevName OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the DNS name of the
-        adjacent edge device." 
+        adjacent edge device."
     ::= { cotvAdjacencyDatabaseEntry 4 }
 
 cotvAdjacentDevState OBJECT-TYPE
@@ -1145,7 +1145,7 @@ cotvAdjacentDevState OBJECT-TYPE
 
         'up'    - The adjacent device is up
 
-        'down'  - The adjacent device is down." 
+        'down'  - The adjacent device is down."
     ::= { cotvAdjacencyDatabaseEntry 5 }
 
 cotvAdjacentDevUpTime OBJECT-TYPE
@@ -1155,13 +1155,13 @@ cotvAdjacentDevUpTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the amount of time for which
-        the adjacent device has been up." 
+        the adjacent device has been up."
     ::= { cotvAdjacencyDatabaseEntry 6 }
- 
+
 
 
 cotvArpNdCacheTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CotvArpNdCacheEntry 
+    SYNTAX          SEQUENCE OF CotvArpNdCacheEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1180,7 +1180,7 @@ cotvArpNdCacheEntry OBJECT-TYPE
                         cotvVlanId,
                         cotvArpNdCacheL3AddrType,
                         cotvArpNdCacheL3Addr
-                    } 
+                    }
     ::= { cotvArpNdCacheTable 1 }
 
 CotvArpNdCacheEntry ::= SEQUENCE {
@@ -1197,7 +1197,7 @@ cotvArpNdCacheL3AddrType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The type of Internet address (IPv4/IPv6 address) of host
-        discovered using ARP Neighbor discovery." 
+        discovered using ARP Neighbor discovery."
     ::= { cotvArpNdCacheEntry 1 }
 
 cotvArpNdCacheL3Addr OBJECT-TYPE
@@ -1209,7 +1209,7 @@ cotvArpNdCacheL3Addr OBJECT-TYPE
         discovered using ARP Neighbor discovery.
 
         The type of this address is determined by the value of
-        cotvArpNdCacheL3AddrType." 
+        cotvArpNdCacheL3AddrType."
     ::= { cotvArpNdCacheEntry 2 }
 
 cotvArpNdCacheMacAddr OBJECT-TYPE
@@ -1218,7 +1218,7 @@ cotvArpNdCacheMacAddr OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the MAC address discovered using
-        ARP Neighbor discovery and cached in this table." 
+        ARP Neighbor discovery and cached in this table."
     ::= { cotvArpNdCacheEntry 3 }
 
 cotvArpNdCacheAge OBJECT-TYPE
@@ -1228,7 +1228,7 @@ cotvArpNdCacheAge OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the amount of time for which this
-        entry has existed on the system." 
+        entry has existed on the system."
     ::= { cotvArpNdCacheEntry 4 }
 
 cotvArpNdCacheTimeToExpire OBJECT-TYPE
@@ -1238,13 +1238,13 @@ cotvArpNdCacheTimeToExpire OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the amount of time left for this
-        cache entry to be expired." 
+        cache entry to be expired."
     ::= { cotvArpNdCacheEntry 5 }
- 
+
 
 
 cotvRouteTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CotvRouteEntry 
+    SYNTAX          SEQUENCE OF CotvRouteEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1262,7 +1262,7 @@ cotvRouteEntry OBJECT-TYPE
     INDEX           {
                         cotvRouteVlanId,
                         cotvRouteMacAddr
-                    } 
+                    }
     ::= { cotvRouteTable 1 }
 
 CotvRouteEntry ::= SEQUENCE {
@@ -1281,7 +1281,7 @@ cotvRouteVlanId OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The object indicates VLAN associated with this route." 
+        "The object indicates VLAN associated with this route."
     ::= { cotvRouteEntry 1 }
 
 cotvRouteMacAddr OBJECT-TYPE
@@ -1289,7 +1289,7 @@ cotvRouteMacAddr OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "This object indicates the MAC address to be routed." 
+        "This object indicates the MAC address to be routed."
     ::= { cotvRouteEntry 2 }
 
 cotvRouteMetric OBJECT-TYPE
@@ -1297,7 +1297,7 @@ cotvRouteMetric OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object indicates the metric associated with this route." 
+        "This object indicates the metric associated with this route."
     ::= { cotvRouteEntry 3 }
 
 cotvRouteUpTime OBJECT-TYPE
@@ -1307,7 +1307,7 @@ cotvRouteUpTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the amount of time elapsed since
-        the MAC route entry was installed in this table." 
+        the MAC route entry was installed in this table."
     ::= { cotvRouteEntry 4 }
 
 cotvRouteOwner OBJECT-TYPE
@@ -1316,7 +1316,7 @@ cotvRouteOwner OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the type of owner (source) from where
-        the MAC address was learnt." 
+        the MAC address was learnt."
     ::= { cotvRouteEntry 5 }
 
 cotvRouteNextHopIf OBJECT-TYPE
@@ -1328,7 +1328,7 @@ cotvRouteNextHopIf OBJECT-TYPE
         which the MAC address will be routed.
 
         Value of this object should be ignored if cotvRouteOwner
-        is other than 'site' or 'static'." 
+        is other than 'site' or 'static'."
     ::= { cotvRouteEntry 6 }
 
 cotvRouteNextHopAddrType OBJECT-TYPE
@@ -1340,7 +1340,7 @@ cotvRouteNextHopAddrType OBJECT-TYPE
         edge device through which the MAC address will be routed.
 
         Value of this object should be ignored if cotvRouteOwner
-        is other than 'overlay'." 
+        is other than 'overlay'."
     ::= { cotvRouteEntry 7 }
 
 cotvRouteNextHopAddr OBJECT-TYPE
@@ -1355,13 +1355,13 @@ cotvRouteNextHopAddr OBJECT-TYPE
         cotvRouteNextHopAddrType.
 
         Value of this object should be ignored if cotvRouteOwner
-        is other than 'overlay'." 
+        is other than 'overlay'."
     ::= { cotvRouteEntry 8 }
- 
+
 
 
 cotvMcastRouteTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CotvMcastRouteEntry 
+    SYNTAX          SEQUENCE OF CotvMcastRouteEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1382,7 +1382,7 @@ cotvMcastRouteEntry OBJECT-TYPE
                         cotvMcastRouteActiveSrcAddr,
                         cotvMcastRouteActiveGroupAddrType,
                         cotvMcastRouteActiveGroupAddr
-                    } 
+                    }
     ::= { cotvMcastRouteTable 1 }
 
 CotvMcastRouteEntry ::= SEQUENCE {
@@ -1402,7 +1402,7 @@ cotvMcastRouteVlanId OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The object indicates VLAN associated with this
-        multicast route." 
+        multicast route."
     ::= { cotvMcastRouteEntry 1 }
 
 cotvMcastRouteActiveSrcAddrType OBJECT-TYPE
@@ -1410,7 +1410,7 @@ cotvMcastRouteActiveSrcAddrType OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The type of Internet address of active multicast source." 
+        "The type of Internet address of active multicast source."
     ::= { cotvMcastRouteEntry 2 }
 
 cotvMcastRouteActiveSrcAddr OBJECT-TYPE
@@ -1421,7 +1421,7 @@ cotvMcastRouteActiveSrcAddr OBJECT-TYPE
         "The Internet address of active multicast source.
 
         The type of this address is determined by the value of
-        cotvMcastRouteActiveSrcAddrType." 
+        cotvMcastRouteActiveSrcAddrType."
     ::= { cotvMcastRouteEntry 3 }
 
 cotvMcastRouteActiveGroupAddrType OBJECT-TYPE
@@ -1430,7 +1430,7 @@ cotvMcastRouteActiveGroupAddrType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The type of Internet address of the active multicast group
-        (multicast group of the active multicast source)." 
+        (multicast group of the active multicast source)."
     ::= { cotvMcastRouteEntry 4 }
 
 cotvMcastRouteActiveGroupAddr OBJECT-TYPE
@@ -1442,7 +1442,7 @@ cotvMcastRouteActiveGroupAddr OBJECT-TYPE
         (multicast group of the active multicast source).
 
         The type of this address is determined by the value of
-        cotvMcastRouteActiveGroupAddrType." 
+        cotvMcastRouteActiveGroupAddrType."
     ::= { cotvMcastRouteEntry 5 }
 
 cotvMcastRouteOwners OBJECT-TYPE
@@ -1451,7 +1451,7 @@ cotvMcastRouteOwners OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the type of owner(s) (sources) from
-        where this route was learnt." 
+        where this route was learnt."
     ::= { cotvMcastRouteEntry 6 }
 
 cotvMcastRouteMetric OBJECT-TYPE
@@ -1460,7 +1460,7 @@ cotvMcastRouteMetric OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the metric associated with this
-        multicast route." 
+        multicast route."
     ::= { cotvMcastRouteEntry 7 }
 
 cotvMcastRouteUpTime OBJECT-TYPE
@@ -1470,13 +1470,13 @@ cotvMcastRouteUpTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the amount of time elapsed since
-        this multicast route was installed in this table." 
+        this multicast route was installed in this table."
     ::= { cotvMcastRouteEntry 8 }
- 
+
 
 
 cotvMcastRouteInfoTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CotvMcastRouteInfoEntry 
+    SYNTAX          SEQUENCE OF CotvMcastRouteInfoEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1498,7 +1498,7 @@ cotvMcastRouteInfoEntry OBJECT-TYPE
                         cotvMcastRouteInfoActiveGroupAddrType,
                         cotvMcastRouteInfoActiveGroupAddr,
                         cotvMcastRouteInfoIf
-                    } 
+                    }
     ::= { cotvMcastRouteInfoTable 1 }
 
 CotvMcastRouteInfoEntry ::= SEQUENCE {
@@ -1521,7 +1521,7 @@ cotvMcastRouteInfoVlanId OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The object indicates VLAN associated with this
-        multicast route." 
+        multicast route."
     ::= { cotvMcastRouteInfoEntry 1 }
 
 cotvMcastRouteInfoActiveSrcAddrType OBJECT-TYPE
@@ -1529,7 +1529,7 @@ cotvMcastRouteInfoActiveSrcAddrType OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The type of Internet address of active multicast source." 
+        "The type of Internet address of active multicast source."
     ::= { cotvMcastRouteInfoEntry 2 }
 
 cotvMcastRouteInfoActiveSrcAddr OBJECT-TYPE
@@ -1540,7 +1540,7 @@ cotvMcastRouteInfoActiveSrcAddr OBJECT-TYPE
         "The Internet address of active multicast source.
 
         The type of this address is determined by the value of
-        cotvMcastRouteInfoActiveSrcAddrType." 
+        cotvMcastRouteInfoActiveSrcAddrType."
     ::= { cotvMcastRouteInfoEntry 3 }
 
 cotvMcastRouteInfoActiveGroupAddrType OBJECT-TYPE
@@ -1549,7 +1549,7 @@ cotvMcastRouteInfoActiveGroupAddrType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The type of Internet address of the active multicast group
-        (multicast group of the active multicast source)." 
+        (multicast group of the active multicast source)."
     ::= { cotvMcastRouteInfoEntry 4 }
 
 cotvMcastRouteInfoActiveGroupAddr OBJECT-TYPE
@@ -1561,7 +1561,7 @@ cotvMcastRouteInfoActiveGroupAddr OBJECT-TYPE
         (multicast group of the active multicast source).
 
         The type of this address is determined by the value of
-        cotvMcastRouteInfoActiveGroupAddrType." 
+        cotvMcastRouteInfoActiveGroupAddrType."
     ::= { cotvMcastRouteInfoEntry 5 }
 
 cotvMcastRouteInfoIf OBJECT-TYPE
@@ -1570,7 +1570,7 @@ cotvMcastRouteInfoIf OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the next-hop interface on the device
-        through which the multicast group will be routed." 
+        through which the multicast group will be routed."
     ::= { cotvMcastRouteInfoEntry 6 }
 
 cotvMcastRouteInfoHostAddrType OBJECT-TYPE
@@ -1583,7 +1583,7 @@ cotvMcastRouteInfoHostAddrType OBJECT-TYPE
         be routed.
 
         Value of this object will be 'unknown' if no next-hop
-        edge device information is associated with this route." 
+        edge device information is associated with this route."
     ::= { cotvMcastRouteInfoEntry 7 }
 
 cotvMcastRouteInfoHostAddr OBJECT-TYPE
@@ -1599,7 +1599,7 @@ cotvMcastRouteInfoHostAddr OBJECT-TYPE
 
         Value of this object will be a zero length string if no
         next-hop edge device information is associated with
-        this route." 
+        this route."
     ::= { cotvMcastRouteInfoEntry 8 }
 
 cotvMcastRouteInfoProtocolOwners OBJECT-TYPE
@@ -1608,7 +1608,7 @@ cotvMcastRouteInfoProtocolOwners OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the protocols used by multicast
-        route owner to learn this route information." 
+        route owner to learn this route information."
     ::= { cotvMcastRouteInfoEntry 9 }
 
 cotvMcastRouteInfoMetric OBJECT-TYPE
@@ -1617,7 +1617,7 @@ cotvMcastRouteInfoMetric OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the metric associated with this
-        multicast route." 
+        multicast route."
     ::= { cotvMcastRouteInfoEntry 10 }
 
 cotvMcastRouteInfoUpTime OBJECT-TYPE
@@ -1627,9 +1627,9 @@ cotvMcastRouteInfoUpTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the amount of time elapsed since
-        this multicast route entry was installed in this table." 
+        this multicast route entry was installed in this table."
     ::= { cotvMcastRouteInfoEntry 11 }
- 
+
 
 -- Conformance
 
@@ -1923,6 +1923,3 @@ ciscoOtvMcastRouteInfoGroup OBJECT-GROUP
     ::= { ciscoOtvMIBGroups 10 }
 
 END
-
-
-

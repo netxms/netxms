@@ -1,5 +1,5 @@
 -- **********************************************************
--- Copyright 2008 VMware, Inc.  All rights reserved. 
+-- Copyright 2008 VMware, Inc.  All rights reserved.
 -- **********************************************************
 
 VMWARE-VMINFO-MIB DEFINITIONS ::= BEGIN
@@ -13,7 +13,7 @@ VMWARE-VMINFO-MIB DEFINITIONS ::= BEGIN
         FROM SNMPv2-CONF
         VmwConnectedState
         FROM VMWARE-TC-MIB
-        vmwESXNotifications 
+        vmwESXNotifications
         FROM VMWARE-ENV-MIB
         vmwVirtMachines, vmwTraps
         FROM VMWARE-ROOT-MIB;
@@ -42,13 +42,13 @@ DESCRIPTION
 
 REVISION      "201006220000Z"
 DESCRIPTION
-    "Add managed object vmwVmUUID to vmTable to allow management applications 
-     to identify a VM uniquely over a set of ESX systems. This value is useful when 
+    "Add managed object vmwVmUUID to vmTable to allow management applications
+     to identify a VM uniquely over a set of ESX systems. This value is useful when
      VMs may move between systems."
-      
+
 REVISION      "200810230000Z"
 DESCRIPTION
-    "Add to comments the Managed Object Browser (MOB) URLs which provide 
+    "Add to comments the Managed Object Browser (MOB) URLs which provide
      data this MIB module exposes.
      Handle cases in reporting string for managed objects in this mib
      where the values depend on additional operator configuration.
@@ -56,7 +56,7 @@ DESCRIPTION
           W|E: error description
      Add vmNumCpus to vmwVmTable to better report on VSMP virtual machines.
      Add vmwVmNetConnected and vmwVmMAC to vmwVmNetTable
-     VIM Virtual Devices index range values are documented based on ESX 3/4 
+     VIM Virtual Devices index range values are documented based on ESX 3/4
      implementation, they may change in the future releases.
      Update comments to note that CDROM also lists DVDROM virtual devices."
 
@@ -73,8 +73,8 @@ DESCRIPTION
             SYNTAX      SEQUENCE OF VmwVmEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
-                "A table containing information on virtual machines that have been 
+            DESCRIPTION
+                "A table containing information on virtual machines that have been
                 configured on the system."
             ::= { vmwVirtMachines 1 }
 
@@ -82,7 +82,7 @@ DESCRIPTION
             SYNTAX      VmwVmEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Identifies a registered VM on this ESX system."
             INDEX       { vmwVmIdx }
             ::= { vmwVmTable 1 }
@@ -104,7 +104,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "An operational identifier given the VM when registered on this ESX system.
                  The value is not unique across ESX systems and may change upon reboot.
                  VIM property: ha-vm-folder
@@ -117,7 +117,7 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Name by which this vm is displayed. It is not guaranteed to be unique.
                  MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=summary%2eguest"
             ::= { vmwVmEntry 2 }
@@ -126,7 +126,7 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Path to the configuration file for this vm expressed as a fully
                  qualified path name in POSIX or DOS extended format
                  VM Config file File name:
@@ -139,14 +139,14 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Operating system running on this vm. This value corresponds to the
                  value specified when creating the VM and unless set correctly may differ
                  from the actual OS running. Will return one of the values if set in order:
                    Vim.Vm.GuestInfo.guestFullName
                    Vim.Vm.GuestInfo.guestId
                    Vim.Vm.GuestInfo.guestFamily
-                 MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=guest 
+                 MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=guest
                       where moid = vmwVmIdx.
                  If VMware Tools is not running, value will be of form 'E: error message'"
             ::= { vmwVmEntry 4 }
@@ -156,8 +156,8 @@ DESCRIPTION
             UNITS       "megabytes"
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
-                "Memory configured for this virtual machine. 
+            DESCRIPTION
+                "Memory configured for this virtual machine.
                  Memory > MAX Integer32 is reported as max integer32.
                 VIM Property: memoryMB
                 MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=config%2ehardware"
@@ -167,7 +167,7 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Power state of the virtual machine.
                 VIM Property: powerState
                 MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=summary%2eruntime"
@@ -177,8 +177,8 @@ DESCRIPTION
             SYNTAX      Integer32
             MAX-ACCESS  read-only
             STATUS      obsolete
-            DESCRIPTION 
-                "No longer provided, use vmwVmIdx. See vmwVmUUID for cross system, 
+            DESCRIPTION
+                "No longer provided, use vmwVmIdx. See vmwVmUUID for cross system,
                  unique, persistent identifier."
             ::= { vmwVmEntry 7 }
 
@@ -186,7 +186,7 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Operation mode of guest operating system. Values include:
                   running  - Guest is running normally.
                   shuttingdown - Guest has a pending shutdown command.
@@ -202,9 +202,9 @@ DESCRIPTION
             SYNTAX      Integer32
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Number of virtual CPUs assigned to this virtual machine.
-                VIM Property: numCPU 
+                VIM Property: numCPU
                 MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=config%2ehardware"
             ::= { vmwVmEntry 9 }
 
@@ -212,11 +212,11 @@ DESCRIPTION
             SYNTAX      OCTET STRING (SIZE(36..72))
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "A unique identifier for this VM. Must be unique across a set of ESX systems
-	         managed by an instance of vSphere Center. 
+	         managed by an instance of vSphere Center.
                  Example value: 564d95d4-bff7-31fd-f20f-db2d808a8b32
-                 VIM Property: uuid 
+                 VIM Property: uuid
                  MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=config"
             ::= { vmwVmEntry 10 }
 
@@ -226,7 +226,7 @@ DESCRIPTION
             SYNTAX      SEQUENCE OF VmwVmHbaEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Table of host bus adapters (hba) for all vms in vmwVmTable."
             ::= { vmwVirtMachines 2 }
 
@@ -234,7 +234,7 @@ DESCRIPTION
             SYNTAX      VmwVmHbaEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Uniquely identifies a given virtual machine host bus adapter."
             INDEX { vmwHbaVmIdx, vmwVmHbaIdx }
             ::= { vmwVmHbaTable 1 }
@@ -250,7 +250,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "This number corresponds to the vmwVmIdx in vmwVmTable."
             ::= { vmwVmHbaEntry 1 }
 
@@ -258,8 +258,8 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
-                "Uniquely identifies a given Host Bus adapter in this VM. May 
+            DESCRIPTION
+                "Uniquely identifies a given Host Bus adapter in this VM. May
                  change across system reboots."
             ::= { vmwVmHbaEntry 2 }
 
@@ -267,7 +267,7 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "The name of the hba as it appears in the VM Settings.
                  VIM Property: Virtual Device index of 200-299.
                  MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=config%2ehardware"
@@ -277,18 +277,18 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "The oem host bus adapter hardware being emulated to the Guest OS.
                  MOB: Not visible."
             ::= { vmwVmHbaEntry 4 }
 
--- Host Bus Adapter Targets 
+-- Host Bus Adapter Targets
 
         vmwHbaTgtTable OBJECT-TYPE
             SYNTAX      SEQUENCE OF VmwHbaTgtEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Table of all virtual disks configured for vms in vmwVmTable."
             ::= { vmwVirtMachines 3 }
 
@@ -296,7 +296,7 @@ DESCRIPTION
             SYNTAX      VmwHbaTgtEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Identifies a specific storage disk. Index may change across reboots."
             INDEX { vmwHbaTgtVmIdx, vmwHbaTgtIdx }
             ::= { vmwHbaTgtTable 1 }
@@ -311,7 +311,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "This number corresponds to vmwVmIdx in vmwVmTable."
             ::= { vmwHbaTgtEntry 1 }
 
@@ -319,7 +319,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "This value identifies a particular disk."
             ::= { vmwHbaTgtEntry 2 }
 
@@ -327,7 +327,7 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Identifies the disk as seen from the host bus controller
                  VIM Property: Virtual Device's with index of 2000-2999,3000-3999.
                  MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=config%2ehardware"
@@ -339,7 +339,7 @@ DESCRIPTION
             SYNTAX      SEQUENCE OF VmwVmNetEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Table of network adapters (nic) for all vms in vmwVmTable."
             ::= { vmwVirtMachines 4 }
 
@@ -347,7 +347,7 @@ DESCRIPTION
             SYNTAX      VmwVmNetEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Identifies a particular nic for the specified vmwVmIdx"
             INDEX { vmwVmNetVmIdx, vmwVmNetIdx }
             ::= { vmwVmNetTable 1 }
@@ -366,7 +366,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "This number corresponds to vmwVmIdx in vmwVmTable."
             ::= { vmwVmNetEntry 1 }
 
@@ -374,7 +374,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Identifies a unique network adapter in this table.
                  Not guaranteed to be the same across system reboots."
             ::= { vmwVmNetEntry 2 }
@@ -383,9 +383,9 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "The name of the device as it appears in the VM Settings.
-                 VIM Property: Virtual Device's with index of 4000-4999. 
+                 VIM Property: Virtual Device's with index of 4000-4999.
                  MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=config%2ehardware"
             ::= { vmwVmNetEntry 3 }
 
@@ -393,9 +393,9 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "What this virutal nic is connected to such as a virtual switch portgroup identifier.
-                 VIM Property: Virtual Device's with index of 4000-4999. 
+                 VIM Property: Virtual Device's with index of 4000-4999.
                  MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=config%2ehardware
                  then select property 'backing' to how this nic connects.
                  If no backing was defined by operator, string will start with W:
@@ -406,7 +406,7 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      obsolete
-            DESCRIPTION 
+            DESCRIPTION
                 "Do not use this value, and should an agent return it discard it."
             ::= { vmwVmNetEntry 5 }
 
@@ -414,7 +414,7 @@ DESCRIPTION
             SYNTAX      VmwConnectedState
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Reports 'true' if the ethernet virtual device is connected to the virtual machine."
             ::= { vmwVmNetEntry 6 }
 
@@ -422,7 +422,7 @@ DESCRIPTION
             SYNTAX      PhysAddress
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Reports the configured virtual hardware MAC address.  If VMware
                  Tools is not running, or VM has not yet been powered on for the
                  first time and mac is to be generated by VM then the value is
@@ -437,7 +437,7 @@ DESCRIPTION
             SYNTAX      SEQUENCE OF VmwFloppyEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Table of floppy drives for all vms in vmwVmTable."
             ::= { vmwVirtMachines 5 }
 
@@ -445,7 +445,7 @@ DESCRIPTION
             SYNTAX      VmwFloppyEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Identifies one specific floppy device. May change across system reboots."
             INDEX { vmwFdVmIdx, vmwFdIdx }
             ::= { vmwFloppyTable 1 }
@@ -461,7 +461,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "This number corresponds to vmwVmIdx in vmwVmTable."
             ::= { vmwFloppyEntry 1 }
 
@@ -469,7 +469,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Identifies one specific virtual floppy device."
             ::= { vmwFloppyEntry 2 }
 
@@ -477,9 +477,9 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "File or Device that this device is connected to, example /dev/fd0.
-                 VIM Property: Virtual Device's with index of 8000-8999. 
+                 VIM Property: Virtual Device's with index of 8000-8999.
                  MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=config%2ehardware
                  If no backing was defined by operator, string will start with W:
                  If unavailable, string will start with E:"
@@ -489,7 +489,7 @@ DESCRIPTION
             SYNTAX      VmwConnectedState
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Reports 'true' if the floppy drive virtual device is connected to the virtual machine."
             ::= { vmwFloppyEntry 4 }
 
@@ -499,7 +499,7 @@ DESCRIPTION
             SYNTAX      SEQUENCE OF VmwCdromEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Table of DVD or CDROM drives for all vms in vmwVmTable."
             ::= { vmwVirtMachines 6 }
 
@@ -507,7 +507,7 @@ DESCRIPTION
             SYNTAX      VmwCdromEntry
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Identifies a specific DVD or CDROM drive. Value may change across system reboots."
             INDEX { vmwCdVmIdx, vmwCdromIdx }
             ::= { vmwCdromTable 1 }
@@ -523,7 +523,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "This number corresponds to the vmwVmIdx the vmwVmTable."
             ::= { vmwCdromEntry 1 }
 
@@ -531,7 +531,7 @@ DESCRIPTION
             SYNTAX      Integer32 (0..65535)
             MAX-ACCESS  not-accessible
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Identifies the specific DVD or CDROM drive."
             ::= { vmwCdromEntry 2 }
 
@@ -539,7 +539,7 @@ DESCRIPTION
             SYNTAX      DisplayString
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Reports the iso or device this virtual drive has been configured to use
                  VIM Property: Virtual Device's with index of 3000-3999 (same as disks)
                  MOB: https://esx.example.com/mob/?moid=vmwVmIdx&doPath=config%2ehardware
@@ -552,7 +552,7 @@ DESCRIPTION
             SYNTAX      VmwConnectedState
             MAX-ACCESS  read-only
             STATUS      current
-            DESCRIPTION 
+            DESCRIPTION
                 "Reports true if the dvd/cdrom is connected to the virtual machine."
             ::= { vmwCdromEntry 4 }
 
@@ -564,7 +564,7 @@ vmwVmID OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "This holds the same value as vmwVmVMID of the affected vm generating the trap.
          to allow polling of the affected vm in vmwVmTable."
     ::= { vmwTraps 101 }
@@ -573,18 +573,18 @@ vmwVmConfigFilePath OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
-        "This is the path to the config file of the affected vm generating the trap 
+    DESCRIPTION
+        "This is the path to the config file of the affected vm generating the trap
          and is same as vmwVmTable vmwVmConfigFile. It is expressed as POSIX pathname."
     ::= { vmwTraps 102 }
 
 vmwVmPoweredOn NOTIFICATION-TYPE
    OBJECTS     { vmwVmID, vmwVmConfigFilePath, vmwVmDisplayName }
    STATUS      current
-   DESCRIPTION 
-    "This trap is sent when a virtual machine is powered on from a suspended 
+   DESCRIPTION
+    "This trap is sent when a virtual machine is powered on from a suspended
      or a powered off state. The origin of this event can be several:
-     for instance may be operator initiated, existing vmx process reconnects to control subsystem. 
+     for instance may be operator initiated, existing vmx process reconnects to control subsystem.
      NOTE: vms powered up due to VMotion are not reported. Upon receiving this notification client applications should
      poll the vmwVmTable to obtain current status."
 
@@ -593,7 +593,7 @@ vmwVmPoweredOn NOTIFICATION-TYPE
 vmwVmPoweredOff NOTIFICATION-TYPE
    OBJECTS     { vmwVmID, vmwVmConfigFilePath, vmwVmDisplayName }
    STATUS      current
-   DESCRIPTION 
+   DESCRIPTION
     "This trap is sent when a virtual machine is powered off. The origin of this event can be several:
      for instance may be operator initiated, vmx process terminating abnormally. NOTE: vms powered down due
      to VMotion are not reported. Upon receiving this notification client applications should
@@ -603,10 +603,10 @@ vmwVmPoweredOff NOTIFICATION-TYPE
 vmwVmHBLost NOTIFICATION-TYPE
    OBJECTS     { vmwVmID, vmwVmConfigFilePath, vmwVmDisplayName }
    STATUS      current
-   DESCRIPTION 
+   DESCRIPTION
     "This trap is sent when a virtual machine detects a loss in guest heartbeat. The Guest heartbeat
-     is only sent if VMware Tools are installed in the Guest OS. Control process will send this event whenever it 
-     determines the number of guest heartbeats for a given period of time have not been received. 
+     is only sent if VMware Tools are installed in the Guest OS. Control process will send this event whenever it
+     determines the number of guest heartbeats for a given period of time have not been received.
      Upon receiving this notification client applications should
      poll the vmwVmTable to obtain current status."
 ::= { vmwESXNotifications 3 }
@@ -614,7 +614,7 @@ vmwVmHBLost NOTIFICATION-TYPE
 vmwVmHBDetected NOTIFICATION-TYPE
    OBJECTS     { vmwVmID, vmwVmConfigFilePath, vmwVmDisplayName }
    STATUS      current
-   DESCRIPTION 
+   DESCRIPTION
     "This trap is sent when a virtual machine detects or regains the required number of guest heartbeats
      for a given period of time. This is only sent if VMware tools are installed in the Guest OS.
      Upon receiving this notification client applications should
@@ -624,7 +624,7 @@ vmwVmHBDetected NOTIFICATION-TYPE
 vmwVmSuspended NOTIFICATION-TYPE
    OBJECTS     { vmwVmID, vmwVmConfigFilePath, vmwVmDisplayName }
    STATUS      current
-   DESCRIPTION 
+   DESCRIPTION
     "This trap is sent when a virtual machine is suspended. The origin of this event may be several: operator
      initiated, by software api clients, and by other means.
      Upon receiving this notification client applications should
@@ -640,7 +640,7 @@ vmwVmInfoMIBGroups  OBJECT IDENTIFIER ::= { vmwVmInfoMIBConformance 2 }
 vmwResMIBBasicCompliance MODULE-COMPLIANCE
 STATUS  current
 DESCRIPTION
-    "The compliance statement for entities which implement the 
+    "The compliance statement for entities which implement the
     VMWARE-RESOURCE-MIB."
 MODULE  -- this module
 MANDATORY-GROUPS { vmwVmInfoGroup, vmwVmInfoNotificationGroup }
@@ -648,7 +648,7 @@ MANDATORY-GROUPS { vmwVmInfoGroup, vmwVmInfoNotificationGroup }
 
 
 vmwVmInfoGroup OBJECT-GROUP
-    OBJECTS { 
+    OBJECTS {
     vmwVmDisplayName,
     vmwVmConfigFile,
     vmwVmGuestOS,

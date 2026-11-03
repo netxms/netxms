@@ -35,7 +35,7 @@ ciscoVlanBridgingCapability MODULE-IDENTITY
                 E-mail: cs-lan-switch-snmp@cisco.com
                         cs-vlans@cisco.com"
         DESCRIPTION
-                "The agent capabilities description of 
+                "The agent capabilities description of
                  CISCO-VLAN-BRIDGING-MIB."
 
         REVISION        "200406110000Z"
@@ -65,8 +65,3 @@ cVlanBridgingCapCatOSV08R0201 AGENT-CAPABILITIES
     ::= { ciscoVlanBridgingCapability 2 }
 
 END
-
-     
-  
- 
- 

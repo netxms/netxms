@@ -1,7 +1,7 @@
 BASP-Config-MIB  DEFINITIONS ::= BEGIN
 
           -- Broadcom(R) Advanced Server Configuration MIB
-          -- 
+          --
           -- This MIB defines LoadBalance/VLAN configuration Management Information Base.
           -- These objects are part of the enterprise MIB for Broadcom Advanced Server.
           --
@@ -86,20 +86,20 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
                   btLinkTargetIpAddress4
                       IpAddress
               }
-              
+
           btTeamIndex   OBJECT-TYPE
               SYNTAX  INTEGER(0..65535)
               ACCESS  not-accessible
               STATUS  mandatory
               DESCRIPTION
-                      "An unique value for each team.  The value for 
+                      "An unique value for each team.  The value for
                        each team must remain constant at
                        least from one re-initialization of the entity's
                        network management system to the next re-
                        initialization."
-                      
+
               ::= { btTeamEntry 1 }
-              
+
           btTeamName  OBJECT-TYPE
               SYNTAX  DisplayString
               ACCESS  read-only
@@ -107,16 +107,16 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               DESCRIPTION
                       "A textual string containing name of the team"
               ::= { btTeamEntry 2 }
-              
+
           btTeamType  OBJECT-TYPE
-              SYNTAX INTEGER 
+              SYNTAX INTEGER
               {
                    team-SLB(100),
                    team-FEC-GEC(101),
                    team-802-3-AD(102),
 				   team-SLB-AFD(104)
               }
-              
+
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
@@ -124,17 +124,17 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
                        the attribute assigned. When team has only one
                        physical member, the team type is ignored"
               ::= { btTeamEntry 3 }
-              
+
           btTeamMacAddress  OBJECT-TYPE
               SYNTAX  PhysAddress
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                      "Mac address of the team. Mac address is 
+                      "Mac address of the team. Mac address is
                        assigned to a team when the team type is
                        team-FEC-GEC(101) or team-802-3-AD(102)"
               ::= { btTeamEntry 4 }
-              
+
           btPhyNumber  OBJECT-TYPE
               SYNTAX  INTEGER
               ACCESS  read-only
@@ -142,7 +142,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               DESCRIPTION
                       "Number of physical adapters in the team"
               ::= { btTeamEntry 5 }
-              
+
           btVirNumber  OBJECT-TYPE
               SYNTAX  INTEGER
               ACCESS  read-only
@@ -150,7 +150,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               DESCRIPTION
                       "Number of virtual adapters in the team  "
               ::= { btTeamEntry 6 }
-         
+
           btMode  OBJECT-TYPE
               SYNTAX  INTEGER
               {
@@ -161,12 +161,12 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                      "mode of this team, PrimaryMode(0) or 
-                       Standby(1). For team type other than 
-                       team-SLB(100), this should always be 
+                      "mode of this team, PrimaryMode(0) or
+                       Standby(1). For team type other than
+                       team-SLB(100), this should always be
                        PrimaryMode(0)."
               ::= { btTeamEntry 7 }
-         
+
           btLiveLinkEnable  OBJECT-TYPE
               SYNTAX  INTEGER
               {
@@ -177,49 +177,49 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                      "LiveLink is enabled or not. Probe packet can 
+                      "LiveLink is enabled or not. Probe packet can
                        be enabled only for team-SLB(100) and
                        team-SLB-AFD(104)."
               ::= { btTeamEntry 8 }
-         
+
           btLinkPacketFrequency  OBJECT-TYPE
               SYNTAX  INTEGER
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                      "For LiveLink feature: The frequency in 
+                      "For LiveLink feature: The frequency in
                        milliseconds that a link packet is to be sent."
               ::= { btTeamEntry 9 }
-         
+
           btLinkMaxRetry  OBJECT-TYPE
               SYNTAX  INTEGER
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                      "For LiveLink feature: The maximum number of 
+                      "For LiveLink feature: The maximum number of
                        retries before failing a team member."
               ::= { btTeamEntry 10 }
-         
+
           btLinkRetryFrequency  OBJECT-TYPE
               SYNTAX  INTEGER
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                      "For LiveLink feature: The frequency (milliseconds) 
-                       a link packet is to be sent after a dropped link 
+                      "For LiveLink feature: The frequency (milliseconds)
+                       a link packet is to be sent after a dropped link
                        packet is detected."
               ::= { btTeamEntry 11 }
-         
+
           btLinkTargetIpAddress1  OBJECT-TYPE
               SYNTAX  IpAddress
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                     "For LiveLink feature: The target IP address that 
-                      a link packet is sent to.  A DNS name cannot be 
-                      specified since there is no reliable method to 
-                      resolve the DNS name without introducing 
-                      unacceptable risk. Only the first one is mandatory 
+                     "For LiveLink feature: The target IP address that
+                      a link packet is sent to.  A DNS name cannot be
+                      specified since there is no reliable method to
+                      resolve the DNS name without introducing
+                      unacceptable risk. Only the first one is mandatory
                       for LiveLink. All 0 is not available."
               ::= { btTeamEntry 12 }
 
@@ -228,11 +228,11 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                     "For LiveLink feature: The target IP address that 
-                      a link packet is sent to.  A DNS name cannot be 
-                      specified since there is no reliable method to 
-                      resolve the DNS name without introducing 
-                      unacceptable risk. This one is optional for 
+                     "For LiveLink feature: The target IP address that
+                      a link packet is sent to.  A DNS name cannot be
+                      specified since there is no reliable method to
+                      resolve the DNS name without introducing
+                      unacceptable risk. This one is optional for
                       LiveLink. All 0 is not available."
               ::= { btTeamEntry 13 }
 
@@ -241,11 +241,11 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                     "For LiveLink feature: The target IP address that 
-                      a link packet is sent to.  A DNS name cannot be 
-                      specified since there is no reliable method to 
-                      resolve the DNS name without introducing 
-                      unacceptable risk. This one is optional for 
+                     "For LiveLink feature: The target IP address that
+                      a link packet is sent to.  A DNS name cannot be
+                      specified since there is no reliable method to
+                      resolve the DNS name without introducing
+                      unacceptable risk. This one is optional for
                       LiveLink. All 0 is not available."
               ::= { btTeamEntry 14 }
 
@@ -254,11 +254,11 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                     "For LiveLink feature: The target IP address that 
-                      a link packet is sent to.  A DNS name cannot be 
-                      specified since there is no reliable method to 
-                      resolve the DNS name without introducing 
-                      unacceptable risk. This one is optional for 
+                     "For LiveLink feature: The target IP address that
+                      a link packet is sent to.  A DNS name cannot be
+                      specified since there is no reliable method to
+                      resolve the DNS name without introducing
+                      unacceptable risk. This one is optional for
                       LiveLink. All 0 is not available."
               ::= { btTeamEntry 15 }
 
@@ -278,7 +278,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               ACCESS  not-accessible
               STATUS  mandatory
               DESCRIPTION
-                      "The phyMember tables contain the physical 
+                      "The phyMember tables contain the physical
                        adapter members of loadbalance teams."
               ::= { baspPhyAdapter 2 }
 
@@ -310,7 +310,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
                   btpLiveLinkIp
                       IpAddress
               }
-              
+
           btpTeamIndex   OBJECT-TYPE
               SYNTAX  INTEGER(0..65535)
               ACCESS  not-accessible
@@ -318,7 +318,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               DESCRIPTION
                       "An unique value for each team."
               ::= { btPhyAdapterEntry 1 }
-              
+
           btpAdapterIndex   OBJECT-TYPE
               SYNTAX  INTEGER(0..65535)
               ACCESS  not-accessible
@@ -326,7 +326,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               DESCRIPTION
                       "A value for each adapter within a team."
               ::= { btPhyAdapterEntry 2 }
-              
+
 
           btpAdapterDesc  OBJECT-TYPE
               SYNTAX  DisplayString
@@ -337,7 +337,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               ::= { btPhyAdapterEntry 3 }
 
           btpMemberType  OBJECT-TYPE
-              SYNTAX INTEGER 
+              SYNTAX INTEGER
               {
                    load-balance(100),
                    standby(101)
@@ -397,7 +397,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               ACCESS  not-accessible
               STATUS  mandatory
               DESCRIPTION
-                      "The virMember tables contain the VLAN 
+                      "The virMember tables contain the VLAN
                        members of loadbalance teams."
               ::= { baspVirAdapter 2 }
 
@@ -433,7 +433,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
                   btvLineSpeed
                       DisplayString
               }
-              
+
           btvTeamIndex   OBJECT-TYPE
               SYNTAX  INTEGER(0..65535)
               ACCESS  not-accessible
@@ -441,7 +441,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               DESCRIPTION
                       "An unique value for each team."
               ::= { btVirAdapterEntry 1 }
-              
+
           btvAdapterIndex   OBJECT-TYPE
               SYNTAX  INTEGER(0..65535)
               ACCESS  not-accessible
@@ -449,7 +449,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               DESCRIPTION
                       "A unique value for each virtual adapter in a team."
               ::= { btVirAdapterEntry 2 }
-              
+
           btvAdapterDesc  OBJECT-TYPE
               SYNTAX  DisplayString
               ACCESS  read-only
@@ -457,7 +457,7 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               DESCRIPTION
                       " A textual string containing name of the VLAN"
               ::= { btVirAdapterEntry 3 }
-              
+
           btvVlanId  OBJECT-TYPE
               SYNTAX  INTEGER
               ACCESS  read-only
@@ -507,8 +507,8 @@ BASP-Config-MIB  DEFINITIONS ::= BEGIN
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
-                      "A textual string displays the operating speed 
+                      "A textual string displays the operating speed
                        of the virtual adapter."
               ::= { btVirAdapterEntry 9 }
-              
+
 END

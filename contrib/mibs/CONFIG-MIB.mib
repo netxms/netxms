@@ -1,4 +1,4 @@
--- HP Enterprise Switch Configuration MIB 
+-- HP Enterprise Switch Configuration MIB
 
 
 CONFIG-MIB DEFINITIONS ::= BEGIN
@@ -25,7 +25,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
     -- type.
     Timeout ::= INTEGER -- a STP timer in units of 1/100 seconds
 
-    -- Icf Switch Specific 
+    -- Icf Switch Specific
     hpConfig      OBJECT IDENTIFIER ::= { hpSwitch 7 }
 
     VlanID ::= INTEGER (1..65535)
@@ -55,7 +55,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     through Network Control Language Interpreter's ENABLE
                     command."
         ::= { hpSwitchSystemConfig 1 }
-          
+
     hpSwitchTimeZone OBJECT-TYPE
         SYNTAX      INTEGER (-720..840)
         ACCESS      read-write
@@ -64,7 +64,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     Time(GMT). For a location west of GMT, use a negative
                     integer."
         ::= { hpSwitchSystemConfig 2 }
-          
+
     hpSwitchDaylightTimeRule OBJECT-TYPE
         SYNTAX      INTEGER {
                         none(1),
@@ -112,7 +112,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "The day of the month that daylight saving time emds
                     if DaylightTimeRule is set to userDefined."
         ::= { hpSwitchSystemConfig 7 }
-          
+
     hpSwitchSystemConfigStatus OBJECT-TYPE
         SYNTAX      ConfigStatus
         ACCESS      read-only
@@ -190,7 +190,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     not take a reboot to take effect."
         ::= { hpSwitchSystemConfig 13 }
 
-          
+
     hpSwitchConsoleConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 2 }
 
     hpSwitchTelnetAdminStatus OBJECT-TYPE
@@ -229,7 +229,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "The rate, in second per cycle, at which the display
                     of various switch measurements."
         ::= { hpSwitchConsoleConfig 3 }
-          
+
     hpSwitchDisplayedEvent OBJECT-TYPE
         SYNTAX      INTEGER {
                         none(1),
@@ -254,9 +254,9 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     to take effect, the value of this variable will be
                     set to notInService."
         ::= { hpSwitchConsoleConfig 5 }
- 
 
-         
+
+
     hpSwitchPortConfig    OBJECT IDENTIFIER ::= { hpSwitchConfig 3 }
 
     hpSwitchPortTable OBJECT-TYPE
@@ -275,7 +275,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     device."
         INDEX       { hpSwitchPortIndex }
         ::= { hpSwitchPortTable 1 }
-       
+
     HpSwitchPortEntry ::=
         SEQUENCE {
             hpSwitchPortIndex                  INTEGER,
@@ -295,7 +295,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
             hpSwitchPortMDIXStatus             INTEGER,
             hpSwitchPortAutoMDIX               INTEGER
         }
-       
+
     hpSwitchPortIndex OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-only
@@ -310,7 +310,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      mandatory
         DESCRIPTION "The type of port."
         ::= { hpSwitchPortEntry 2 }
-          
+
     hpSwitchPortDescr OBJECT-TYPE
         SYNTAX      DisplayString (SIZE (0..255))
         ACCESS      read-only
@@ -365,14 +365,14 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      mandatory
         DESCRIPTION "The linkbeat status of this port."
         ::= { hpSwitchPortEntry 7 }
-         
+
     hpSwitchPortTrunkGroup OBJECT-TYPE
         SYNTAX      INTEGER (0..65535)
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "The trunk group this port belong to."
         ::= { hpSwitchPortEntry 8 }
-          
+
     hpSwitchPortBcastLimit OBJECT-TYPE
         SYNTAX      INTEGER (0..99)
         ACCESS      read-write
@@ -414,7 +414,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ::= { hpSwitchPortEntry 11}
 
  -- hpSwitchPortBcastPktLimit OBJECT-TYPE
- --     SYNTAX      INTEGER (0..1500000) 
+ --     SYNTAX      INTEGER (0..1500000)
  --     ACCESS      read-write
  --     STATUS      mandatory
  --     DESCRIPTION "Network bandwidth in packets per second consumed
@@ -422,10 +422,10 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
  --                 of this variable is 0, there will be no broadcast
  --                 limit."
  --     ::= { hpSwitchPortEntry 12 }
-         
+
     hpSwitchPortTrunkType OBJECT-TYPE
         SYNTAX      INTEGER {
-                        trunk(1), 
+                        trunk(1),
                         fecAuto(2),
                         saTrunk(3),
                         lacpTrk(4),
@@ -443,7 +443,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
 
     hpSwitchPortTrunkLACPStatus OBJECT-TYPE
         SYNTAX      INTEGER {
-                        disabled(1), 
+                        disabled(1),
                         active(2),
                         passive(3)
                     }
@@ -460,21 +460,21 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                         mdi(2),
                         mdix(3),
                         automdix(4)
-                    }			
+                    }
         ACCESS      read-only
         STATUS      mandatory
         DESCRIPTION "Shows the MDI/MDIX setting for an RJ-45 port.
                      Returns a value of 'not-applicable' for all
                      ports except RJ-45 ports."
         ::= { hpSwitchPortEntry 15 }
-	
+
     hpSwitchPortAutoMDIX OBJECT-TYPE
         SYNTAX       INTEGER {
                         not-applicable(1),
                         mdi(2),
                         mdix(3),
                         automdix(4)
-                    }			
+                    }
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "Sets the MDI/MDIX value for an RJ-45 port.
@@ -483,10 +483,10 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                      configuration is set to any auto-negotiation mode,
                      for example 'auto' or 'auto-100', or to any of the
                      fixed-configuration modes, for example '100-full'.
-                     The MDI/MDIX value is maintained across port 
+                     The MDI/MDIX value is maintained across port
                      configuration mode changes."
         ::= { hpSwitchPortEntry 16 }
-	
+
     hpSwitchPortConfigStatus OBJECT-TYPE
         SYNTAX      ConfigStatus
         ACCESS      read-only
@@ -528,24 +528,24 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "The operational status of the Time protocol." 
+        DESCRIPTION "The operational status of the Time protocol."
         ::= { hpSwitchIpConfig 1 }
-       
+
     hpSwitchIpTimepServerAddr OBJECT-TYPE
         SYNTAX      IpAddress
         ACCESS      read-write
         STATUS      deprecated
-        DESCRIPTION "### deprecated ### The IP address of the Time server." 
+        DESCRIPTION "### deprecated ### The IP address of the Time server."
         ::= { hpSwitchIpConfig 2 }
-       
+
     hpSwitchIpTimepPollInterval OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "The client poll interval of the Time server in
-                    minutes." 
+                    minutes."
         ::= { hpSwitchIpConfig 3 }
-   
+
     hpSwitchIpConfigStatus OBJECT-TYPE
         SYNTAX      ConfigStatus
         ACCESS      read-only
@@ -561,14 +561,14 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "The operational mode of the Tftp protocol." 
+        DESCRIPTION "The operational mode of the Tftp protocol."
         ::= { hpSwitchIpConfig 6 }
 
     hpSwitchIpTimepInetServerAddrType OBJECT-TYPE
         SYNTAX      InetAddressType
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "The IP address type of the Time server." 
+        DESCRIPTION "The IP address type of the Time server."
         ::= { hpSwitchIpConfig 7 }
 
     hpSwitchIpTimepInetServerAddr OBJECT-TYPE
@@ -577,7 +577,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      mandatory
         DESCRIPTION "The IP address (of the Time server)to which this entry's
                     addressing information pertains.
-                    hpSwitchIpTimepInetServerAddr is always interpreted within 
+                    hpSwitchIpTimepInetServerAddr is always interpreted within
                     the context of hpSwitchIpTimepInetServerAddrType."
         ::= { hpSwitchIpConfig 8 }
 
@@ -731,7 +731,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         SYNTAX      SEQUENCE OF HpSwitchFilterConfigEntry
         ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "A table that contains information about the 
+        DESCRIPTION "A table that contains information about the
                     traffic filter configuration in this device."
         ::= { hpSwitchFilterConfig 1 }
 
@@ -739,11 +739,11 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         SYNTAX      HpSwitchFilterConfigEntry
         ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "Information about a traffic filter configuration 
+        DESCRIPTION "Information about a traffic filter configuration
                     in this device."
         INDEX       { hpSwitchFilterIndex }
         ::= { hpSwitchFilterConfigTable 1 }
-       
+
     HpSwitchFilterConfigEntry ::=
         SEQUENCE {
             hpSwitchFilterIndex              INTEGER,
@@ -754,7 +754,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
             hpSwitchFilterPortMask           OCTET STRING,
             hpSwitchFilterEntryStatus        RowStatus
         }
-       
+
     hpSwitchFilterIndex OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-only
@@ -762,7 +762,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "An index that uniquely identifies a traffic filter
                     for which this entry contains information."
         ::= { hpSwitchFilterConfigEntry 1 }
-          
+
     hpSwitchFilterType OBJECT-TYPE
         SYNTAX      INTEGER {
                         multicast(1),
@@ -774,7 +774,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      mandatory
         DESCRIPTION "The type of filter."
         ::= { hpSwitchFilterConfigEntry 2 }
-          
+
     hpSwitchFilterSrcPort OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-write
@@ -783,7 +783,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     unicast filter was configurated. It will be ignored
                     otherwise."
         ::= { hpSwitchFilterConfigEntry 3 }
-         
+
     hpSwitchFilterMacAddr OBJECT-TYPE
         SYNTAX      MacAddress
         ACCESS      read-write
@@ -792,7 +792,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     multicast filter was defined. It will be ignored
                     otherwise."
         ::= { hpSwitchFilterConfigEntry 4 }
-         
+
     hpSwitchFilterProtocolType OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-write
@@ -803,9 +803,9 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     Ethernet) or SAP(IEEE 802) value of the level-3
                     protocol."
         ::= { hpSwitchFilterConfigEntry 5 }
-         
+
     hpSwitchFilterPortMask OBJECT-TYPE
-        SYNTAX      OCTET STRING 
+        SYNTAX      OCTET STRING
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "This variable specifies a group of ports whose
@@ -827,7 +827,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "The status of a filter entry."
         ::= { hpSwitchFilterConfigEntry 7 }
 
-          
+
     hpSwitchProbeConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 9 }
 
     hpSwitchProbeType OBJECT-TYPE
@@ -885,27 +885,27 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     the value of this object."
         ::= { hpSwitchProbeConfig  5 }
 
-        
+
     -- The FDDI IP Fragmention Configuration group
 
     hpSwitchFddiIpFragConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 11 }
-        
+
     -- The FDDI IP Fragmention Configuration Table
-        
-    hpSwitchFddiIpFragConfigTable OBJECT-TYPE 
-        SYNTAX      SEQUENCE OF HpSwitchFddiIpFragConfigEntry 
-        ACCESS      not-accessible 
+
+    hpSwitchFddiIpFragConfigTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF HpSwitchFddiIpFragConfigEntry
+        ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "A list of IP fragmentation configuration 
-                    parameters for the FDDI cards in the switch." 
-        ::= { hpSwitchFddiIpFragConfig 1 } 
+        DESCRIPTION "A list of IP fragmentation configuration
+                    parameters for the FDDI cards in the switch."
+        ::= { hpSwitchFddiIpFragConfig 1 }
 
     hpSwitchFddiIpFragConfigEntry OBJECT-TYPE
         SYNTAX      HpSwitchFddiIpFragConfigEntry
         ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "An Fddi IP fragmentation entry which is 
-                    containing configurable options for the FDDI 
+        DESCRIPTION "An Fddi IP fragmentation entry which is
+                    containing configurable options for the FDDI
                     cards in the switch."
         INDEX       { hpSwitchFddiIpFragConfigIndex }
         ::= { hpSwitchFddiIpFragConfigTable 1 }
@@ -915,16 +915,16 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
             hpSwitchFddiIpFragConfigIndex          INTEGER,
             hpSwitchFddiIpFragConfigStatus         INTEGER
         }
-          
+
     hpSwitchFddiIpFragConfigIndex OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-only
         STATUS      mandatory
-        DESCRIPTION "A unique value for each FDDI Card.  
-                    The value for each FDDI card must remain constant 
-                    at least from one re-initialization of the entity's 
-                    network management system to the next 
-                    re-initialization." 
+        DESCRIPTION "A unique value for each FDDI Card.
+                    The value for each FDDI card must remain constant
+                    at least from one re-initialization of the entity's
+                    network management system to the next
+                    re-initialization."
         ::= { hpSwitchFddiIpFragConfigEntry 1 }
 
     hpSwitchFddiIpFragConfigStatus OBJECT-TYPE
@@ -935,12 +935,12 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "The operational status of FDDI IP fragmentation
-                    for each FDDI card. 
+                    for each FDDI card.
                     enable(1): FDDI card will fragment all packets which
-                            are bigger then the Ethernet packet size 
+                            are bigger then the Ethernet packet size
                             limitation, 1518 Bytes.
                     disable(2): FDDI card will drop all packets which
-                            are bigger then the Ethernet packet size 
+                            are bigger then the Ethernet packet size
                             limitation, 1518 Bytes."
         ::= { hpSwitchFddiIpFragConfigEntry 2 }
 
@@ -993,7 +993,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "ABC control is either IP&IPX or IP or IPX or disabled 
+        DESCRIPTION "ABC control is either IP&IPX or IP or IPX or disabled
                     for each VLAN on the switch."
         ::= { hpSwitchABCConfigEntry 2 }
 
@@ -1264,7 +1264,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "If the value of this variable is set to fast(2), the 
+        DESCRIPTION "If the value of this variable is set to fast(2), the
                     port will go directly into the Forwarding State when a
                     device is connected to it. Use this feature only on
                     ports that are connected to an individual PC or
@@ -1278,27 +1278,27 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ::= { hpSwitchStpPortEntry 6 }
 
     hpSwitchStpPortBpduFilter OBJECT-TYPE
-        SYNTAX      INTEGER { 
-                        true(1), 
-                        false(2) 
+        SYNTAX      INTEGER {
+                        true(1),
+                        false(2)
                     }
         ACCESS      read-write
         STATUS      optional
         DESCRIPTION "Setting True will cause port to ignore ingress BPDUs
-                    and not generate egress BPDUs, as the result the port 
+                    and not generate egress BPDUs, as the result the port
                     will stay in forwarding state. Default is False."
         DEFVAL      { false }
         ::= { hpSwitchStpPortEntry 7 }
 
     hpSwitchStpPortBpduProtection OBJECT-TYPE
-        SYNTAX      INTEGER { 
-                        true(1), 
-                        false(2) 
+        SYNTAX      INTEGER {
+                        true(1),
+                        false(2)
                     }
         ACCESS      read-write
         STATUS      optional
-        DESCRIPTION "Setting True indicates that no BPDUs are expected to 
-                    be received on this port. At the reception of BPDUs 
+        DESCRIPTION "Setting True indicates that no BPDUs are expected to
+                    be received on this port. At the reception of BPDUs
                     the BPDU protection mechanism will disable this port
                     and port will transition into bpduError state.
                     Default is False."
@@ -1309,11 +1309,11 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         SYNTAX      Counter
         ACCESS      read-only
         STATUS      optional
-        DESCRIPTION "Counts the number of BPDUs that were not expected 
-                    to be received on this port. This counter gets 
+        DESCRIPTION "Counts the number of BPDUs that were not expected
+                    to be received on this port. This counter gets
                     incremented only if hpSwitchStpPortBpduProtection,
                     hpSwitchStpPortBpduFilter, hpSwitchStpPortPvstFilter,
-                    or hpSwitchStpPvstProtection is True for the port, 
+                    or hpSwitchStpPvstProtection is True for the port,
                     otherwise it is cleared to zero."
         ::= { hpSwitchStpPortEntry 9 }
 
@@ -1351,8 +1351,8 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                      The set bit means 'enabled'.
 
                       - errantBpdu(0)
-                        The state of this bit specifies whether the 
-                        notification trap allowed to be send when 
+                        The state of this bit specifies whether the
+                        notification trap allowed to be send when
                         unexpected (errant) BPDU is received on a port."
 
         ::= { hpSwitchStpConfig 3 }
@@ -1362,7 +1362,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ACCESS       read-write
         STATUS       optional
         DESCRIPTION  "The duration of time in seconds when a protected port
-                     affected by receiving of an unauthorized BPDU will 
+                     affected by receiving of an unauthorized BPDU will
                      remain in down state. The zero value means infinity."
         DEFVAL      { 0 }
         ::= { hpSwitchStpConfig 4 }
@@ -1387,7 +1387,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         INDEX       { hpSwitchIgmpVlanIndex }
         ::= { hpSwitchIgmpConfigTable 1 }
 
-    HpSwitchIgmpConfigEntry ::= 
+    HpSwitchIgmpConfigEntry ::=
         SEQUENCE {
             hpSwitchIgmpVlanIndex             VlanID,
             hpSwitchIgmpState                 INTEGER,
@@ -1463,7 +1463,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         INDEX       { hpSwitchIgmpPortIndex }
         ::= { hpSwitchIgmpPortConfigTable 1 }
 
-    HpSwitchIgmpPortConfigEntry ::=        
+    HpSwitchIgmpPortConfigEntry ::=
         SEQUENCE {
             hpSwitchIgmpPortIndex             INTEGER,
             hpSwitchIgmpPortType              HpSwitchPortType,
@@ -1521,7 +1521,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         INDEX       { hpSwitchIgmpPortVlanIndex2, hpSwitchIgmpPortIndex2 }
         ::= { hpSwitchIgmpPortConfigTable2 1 }
 
-    HpSwitchIgmpPortConfigEntry2 ::=        
+    HpSwitchIgmpPortConfigEntry2 ::=
         SEQUENCE {
             hpSwitchIgmpPortVlanIndex2          INTEGER,
             hpSwitchIgmpPortIndex2              INTEGER,
@@ -1584,7 +1584,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     hpSwitchIgmpForcedLeaveInterval if no new IGMP V2
                     Reports are received for that group. Normal behavior
                     is for a group issuing a Leave to be deleted after
-                    the Querier's Maximum Response time if no IGMP V2 
+                    the Querier's Maximum Response time if no IGMP V2
                     Report is received."
         ::= { hpSwitchIgmpPortConfigEntry2 5 }
 
@@ -1599,9 +1599,9 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     port or trunk indicates whether any IGMP V2 Leaves
                     received for an IP Multicast group will cause the
                     group to be deleted immediately on single-
-		    connection ports. Normal behavior is for a group 
-		    issuing a Leave to be deleted after the Querier's 
-		    Maximum Response time if no IGMP V2 Report is 
+		    connection ports. Normal behavior is for a group
+		    issuing a Leave to be deleted after the Querier's
+		    Maximum Response time if no IGMP V2 Report is
                     received."
         ::= { hpSwitchIgmpPortConfigEntry2 6 }
 
@@ -1637,7 +1637,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         INDEX       { hpSwitchCosPortIndex }
         ::= { hpSwitchCosPortConfigTable 1 }
 
-    HpSwitchCosPortConfigEntry ::=        
+    HpSwitchCosPortConfigEntry ::=
         SEQUENCE {
             hpSwitchCosPortIndex              INTEGER,
             hpSwitchCosPortType               HpSwitchPortType,
@@ -1682,7 +1682,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     hpSwitchCosDSCPPolicy table, or the value 255
 		    indicating no DSCP Policy exists.  This policy is
                     associated with an 802.1p priority value, which will
-                    be inserted in the 802.1Q tag and will cause the 
+                    be inserted in the 802.1Q tag and will cause the
                     packet to be placed in the appropriate outbound port
                     queue. When the packet is IP protocol type, the DSCP
                     policy value (a Differentiated Services codepoint)
@@ -1710,7 +1710,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "This object determines which configuration policy,
-                    noPolicyOverride, hpSwitchCosPortPriority or 
+                    noPolicyOverride, hpSwitchCosPortPriority or
                     hpSwitchCosPortDSCPPolicy, applies for the given
                     Port CoS entry.  These configuration policies are
                     mutually exclusive of one another."
@@ -1734,7 +1734,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         INDEX       { hpSwitchCosVlanIndex }
         ::= { hpSwitchCosVlanConfigTable 1 }
 
-    HpSwitchCosVlanConfigEntry ::=        
+    HpSwitchCosVlanConfigEntry ::=
         SEQUENCE {
             hpSwitchCosVlanIndex              VlanID,
             hpSwitchCosVlanPriority           INTEGER,
@@ -1801,7 +1801,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "This object determines which configuration policy,
-                    noPolicyOverride, hpSwitchCosVlanPriority or 
+                    noPolicyOverride, hpSwitchCosVlanPriority or
                     hpSwitchCosDSCPPolicy, applies for this given Vlan
                     CoS entry. These configuration policies are mutually
                     exclusive of one another."
@@ -1825,7 +1825,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         INDEX       { hpSwitchCosProtocolType }
         ::= { hpSwitchCosProtocolConfigTable 1 }
 
-    HpSwitchCosProtocolConfigEntry ::=        
+    HpSwitchCosProtocolConfigEntry ::=
         SEQUENCE {
             hpSwitchCosProtocolType             INTEGER,
             hpSwitchCosProtocolPriority         INTEGER
@@ -1876,7 +1876,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         INDEX       { hpSwitchCosAddressIndex }
         ::= { hpSwitchCosAddressConfigTable 1 }
 
-    HpSwitchCosAddressConfigEntry ::=        
+    HpSwitchCosAddressConfigEntry ::=
         SEQUENCE {
             hpSwitchCosAddressIndex            INTEGER,
             hpSwitchCosAddressType             INTEGER,
@@ -1907,9 +1907,9 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "The type of address to configure. Default is ip 
+        DESCRIPTION "The type of address to configure. Default is ip
                     (IPv4).  This field indicates which of the other
-                    address fields must be configured for this table 
+                    address fields must be configured for this table
                     entry. "
         ::= { hpSwitchCosAddressConfigEntry 2 }
 
@@ -1987,12 +1987,12 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "This value is applied as a direct IPv4-address mask
-                    when an IPv4 CoS configuration is defined for this 
-                    table entry.  It will be ignored otherwise.  The 
-                    default mask value is 255.255.255.255, which 
-                    specifies the exact IPv4 address defined in 
+                    when an IPv4 CoS configuration is defined for this
+                    table entry.  It will be ignored otherwise.  The
+                    default mask value is 255.255.255.255, which
+                    specifies the exact IPv4 address defined in
                     hpSwitchCosAddressIp (i.e., no subnet-masking is
-                    performed)." 
+                    performed)."
         ::= { hpSwitchCosAddressConfigEntry 9 }
 
     hpSwitchCosAddressIpv6 OBJECT-TYPE
@@ -2009,16 +2009,16 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         SYNTAX      InetAddressPrefixLength
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "The prefix length associated with the 
-                    hpSwitchCosAddressIpv6 object, if an IPv6 CoS 
+        DESCRIPTION "The prefix length associated with the
+                    hpSwitchCosAddressIpv6 object, if an IPv6 CoS
                     configuration is valid and hpSwitchCosAddressType is
                     type ipv6.  This variable will otherwise be ignored.
-                    The prefix length for an IPv6 entry functions in the 
-                    same way as an address mask for an IPv4 entry. The 
+                    The prefix length for an IPv6 entry functions in the
+                    same way as an address mask for an IPv4 entry. The
                     default value of this object is 128, which specifies
-                    the exact IPv6 address defined in 
+                    the exact IPv6 address defined in
                     hpSwitchCosAddressIpv6 (i.e., no subnet-masking is
-                    performed)."  
+                    performed)."
         ::= { hpSwitchCosAddressConfigEntry 11 }
 
 
@@ -2055,7 +2055,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         INDEX       { hpSwitchCosTosIndex }
         ::= { hpSwitchCosTosConfigTable 1 }
 
-    HpSwitchCosTosConfigEntry ::=        
+    HpSwitchCosTosConfigEntry ::=
         SEQUENCE {
             hpSwitchCosTosIndex             INTEGER,
             hpSwitchCosTosPriority          INTEGER,
@@ -2082,7 +2082,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     received for the specified TOS.  This value will be
                     inserted in the 802.1Q tag and the packet will be
                     placed in the appropriate outbound port queue.  The
-                    value of 255 is used to indicate No Override."  
+                    value of 255 is used to indicate No Override."
         ::= { hpSwitchCosTosConfigEntry 2 }
 
     hpSwitchCosTosDSCPPolicy OBJECT-TYPE
@@ -2091,7 +2091,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      mandatory
         DESCRIPTION "The DSCP Policy to assign to packets received for
                     the specified ToS codepoint.  This is an index
-                    into the hpSwitchCosDSCPPolicy table, or the value 
+                    into the hpSwitchCosDSCPPolicy table, or the value
 		    255 indicating no DSCP Policy exists.  The DSCP
                     policy is associated with an 802.1p priority value,
                     which will be inserted in the 802.1Q tag and will
@@ -2127,7 +2127,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "This object determines which configuration policy, 
+        DESCRIPTION "This object determines which configuration policy,
                     applyInheritedPriority or hpSwitchCosTosDSCPPolicy,
                     applies for the given Tos CoS entry."
         DEFVAL      { applyInheritedPriority }
@@ -2145,7 +2145,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
 
     hpSwitchCosDSCPPolicyConfigEntry OBJECT-TYPE
         SYNTAX      HpSwitchCosDSCPPolicyConfigEntry
-        ACCESS      not-accessible     
+        ACCESS      not-accessible
         STATUS      mandatory
         DESCRIPTION "A list of objects describing a DiffServe Codepoint
                     (DSCP), and the 802.1p priority to apply for that
@@ -2158,16 +2158,16 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
             hpSwitchCosDSCPPolicyIndex        INTEGER,
             hpSwitchCosDSCPPolicyPriority     INTEGER,
             hpSwitchCosDSCPPolicyName         OCTET STRING
-          }    
-        
+          }
+
     hpSwitchCosDSCPPolicyIndex OBJECT-TYPE
         SYNTAX      INTEGER (1..64)
         ACCESS      not-accessible
         STATUS      mandatory
-        DESCRIPTION "An index to uniquely identify each row in the 
-                    hpSwitchCosDSCPPolicyConfigTable." 
+        DESCRIPTION "An index to uniquely identify each row in the
+                    hpSwitchCosDSCPPolicyConfigTable."
         ::= { hpSwitchCosDSCPPolicyConfigEntry 1 }
-      
+
     hpSwitchCosDSCPPolicyPriority OBJECT-TYPE
         SYNTAX      INTEGER (0..7 | 255)
         ACCESS      read-write
@@ -2179,7 +2179,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     is used to indicate no override of the incoming
                     priority."
         ::= { hpSwitchCosDSCPPolicyConfigEntry 2 }
- 
+
     hpSwitchCosDSCPPolicyName OBJECT-TYPE
         SYNTAX      OCTET STRING (SIZE(0..32))
         ACCESS      read-write
@@ -2207,7 +2207,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     hpSwitchCosAppTypeConfigEntry Table."
         INDEX      { hpSwitchCosAppTypeConfigIndex }
         ::= { hpSwitchCosAppTypeConfigTable 1 }
-        
+
     HpSwitchCosAppTypeConfigEntry ::=
         SEQUENCE {
             hpSwitchCosAppTypeConfigIndex        INTEGER,
@@ -2222,7 +2222,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
             hpSwitchCosAppTypeMaxSrcPort         INTEGER,
             hpSwitchCosAppTypeMaxDestPort        INTEGER,
             hpSwitchCosAppTypeIpPacketType       INTEGER
-        } 
+        }
 
     hpSwitchCosAppTypeConfigIndex OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
@@ -2231,7 +2231,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "An index to uniquely identify this
                     hpSwitchCosAppType row."
         ::= { hpSwitchCosAppTypeConfigEntry 1 }
-       
+
     hpSwitchCosAppTypeConfigType OBJECT-TYPE
         SYNTAX      INTEGER {
                         udpSrcPortConfig(1),
@@ -2244,9 +2244,9 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "This signifies which network port number to apply
-                    to the given CoS Application policy."  
+                    to the given CoS Application policy."
         ::= { hpSwitchCosAppTypeConfigEntry 2 }
-        
+
     hpSwitchCosAppTypeSrcPort OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-write
@@ -2254,7 +2254,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION "This object represents the source network port
                     that this policy applies to."
         ::= { hpSwitchCosAppTypeConfigEntry 3 }
-   
+
     hpSwitchCosAppTypeDestPort OBJECT-TYPE
         SYNTAX      INTEGER (1..65535)
         ACCESS      read-write
@@ -2322,7 +2322,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         SYNTAX      RowStatus
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "This object is used to create and delete in the 
+        DESCRIPTION "This object is used to create and delete in the
                     hpSwitchCosAppType table."
         ::= { hpSwitchCosAppTypeConfigEntry 9 }
 
@@ -2331,18 +2331,18 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "This object represents the maximum source network
-                    port that this policy applies to. If a single, 
+                    port that this policy applies to. If a single,
                     specific port is being used and not a range, then
                     value of this object is zero."
         ::= { hpSwitchCosAppTypeConfigEntry 10 }
-   
+
     hpSwitchCosAppTypeMaxDestPort OBJECT-TYPE
         SYNTAX      INTEGER (0..65535)
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "This object represents the maximum destination 
-                    network port that this policy applies to. If a 
-                    single, specific port is being used and not a range, 
+        DESCRIPTION "This object represents the maximum destination
+                    network port that this policy applies to. If a
+                    single, specific port is being used and not a range,
                     then value of this object is zero."
         ::= { hpSwitchCosAppTypeConfigEntry 11 }
 
@@ -2355,8 +2355,8 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "This object represents the type of IP packet for which
-                    this TCP and/or UDP application QoS will apply. The 
-                    default is IPv4." 
+                    this TCP and/or UDP application QoS will apply. The
+                    default is IPv4."
         ::= { hpSwitchCosAppTypeConfigEntry 12 }
 
 
@@ -2365,10 +2365,10 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         ACCESS      read-only
         STATUS      mandatory
         DESCRIPTION "The value of the agent's sysUptime when the last
-                    time this device experienced a change in the 
+                    time this device experienced a change in the
                     Class of Service configuration."
         ::= { hpSwitchCosConfig 8 }
-	
+
     hpSwitchConfigCosLastConfigError OBJECT-TYPE
         SYNTAX      INTEGER {
                          aclQosNoError(1),
@@ -2377,8 +2377,8 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-only
         STATUS      mandatory
-        DESCRIPTION "The type of the last QoS 
-                     configuration result or error. 
+        DESCRIPTION "The type of the last QoS
+                     configuration result or error.
                      This object is updated for each
                      new QoS configuration. It is
                      reset upon reboot."
@@ -2483,7 +2483,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                         local(4),
                         group1(5),
                         group2(6)
-                    } 
+                    }
         ACCESS      read-write
         STATUS      mandatory
         DESCRIPTION "Defines the operational mode of a port when Port
@@ -2510,11 +2510,11 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     }
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "The version of the SSH protocol to run. 
+        DESCRIPTION "The version of the SSH protocol to run.
                      'version1' will accept connections from
-                     v1.3 or v1.5 clients. 'version2' will accept 
+                     v1.3 or v1.5 clients. 'version2' will accept
                      connections only from v2.0 clients.
-                     The default is 'version1_or_2' which will accept  any 
+                     The default is 'version1_or_2' which will accept  any
                      connection which can be successfully negotiated."
         DEFVAL { 1 }
         ::= { hpSwitchSshConfig 2 }
@@ -2523,8 +2523,8 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         SYNTAX      Timeout (5..120)
         ACCESS      read-write
         STATUS      mandatory
-        DESCRIPTION "The maximum length of time (in seconds) between the wakeup 
-                     of SSH task and successful protocol negotiation and 
+        DESCRIPTION "The maximum length of time (in seconds) between the wakeup
+                     of SSH task and successful protocol negotiation and
                      authentication. The default is 120 seconds."
         DEFVAL { 120 }
         ::= { hpSwitchSshConfig 3 }
@@ -2568,13 +2568,13 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                         ipv4or6(3)
                     }
         ACCESS      read-write
-        STATUS      deprecated 
+        STATUS      deprecated
         DESCRIPTION "#### THIS OBJECT IS DEPRECATED ####
-                     The types of IP connections SSH will support. 
+                     The types of IP connections SSH will support.
                      'ipv4' will accept connections from
-                     Ipv4 clients. 'ipv6' will accept 
+                     Ipv4 clients. 'ipv6' will accept
                      connections only from ipv6 clients.
-                     The default is 'ipv4or6' which will accept 
+                     The default is 'ipv4or6' which will accept
                      Connections from both ipv4 and ipv6 clients."
         DEFVAL { 3 }
         ::= { hpSwitchSshConfig 7 }
@@ -2590,20 +2590,20 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      mandatory
         DESCRIPTION "The object controls switch pending configuration.
-                     If set to the 'applyMstp' value the object applies 
-                     pending Multiple Spanning Tree Protocol (MSTP) 
-                     configuration. The 'resetMstp' value, if set, triggers 
-                     copying of the active MSTP configuration to the 
+                     If set to the 'applyMstp' value the object applies
+                     pending Multiple Spanning Tree Protocol (MSTP)
+                     configuration. The 'resetMstp' value, if set, triggers
+                     copying of the active MSTP configuration to the
                      pending one. Before the pending configuration is applied
-                     its consistency is verified and the request fails if 
-                     errors are detected. 
+                     its consistency is verified and the request fails if
+                     errors are detected.
                      The value the object returns is undefined."
         ::= { hpSwitchPendingConfig 1 }
 
     hpSwitchBWMinConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 22 }
 
     hpSwitchBWMinEgressPortConfigTable OBJECT-TYPE
-        SYNTAX      SEQUENCE OF HpSwitchBWMinEgressPortConfigEntry 
+        SYNTAX      SEQUENCE OF HpSwitchBWMinEgressPortConfigEntry
         ACCESS      not-accessible
         STATUS      deprecated
         DESCRIPTION "New definitions under HP-ICF-RATE-LIMIT-MIB.
@@ -2622,7 +2622,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         INDEX       { hpSwitchBWMinEgressPortIndex }
         ::= { hpSwitchBWMinEgressPortConfigTable 1 }
 
-    HpSwitchBWMinEgressPortConfigEntry ::=        
+    HpSwitchBWMinEgressPortConfigEntry ::=
         SEQUENCE {
             hpSwitchBWMinEgressPortIndex  		INTEGER,
             hpSwitchBWMinEgressPortPrctLowPriority 	INTEGER,
@@ -2646,7 +2646,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "New definitions under HP-ICF-RATE-LIMIT-MIB.
           The percentage of Guaranteed Minimum bandwidth to
-		    be assigned to the egress Low-Priority queue for 
+		    be assigned to the egress Low-Priority queue for
 		    this port. Total values for all four queues must not
  		    exceed 100 percent."
         ::= { hpSwitchBWMinEgressPortConfigEntry 2 }
@@ -2657,7 +2657,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "New definitions under HP-ICF-RATE-LIMIT-MIB.
           The percentage of Guaranteed Minimum bandwidth to
-		    be assigned to the egress Normal-Priority queue for 
+		    be assigned to the egress Normal-Priority queue for
 		    this port. Total values for all four queues must not
  		    exceed 100 percent."
         ::= { hpSwitchBWMinEgressPortConfigEntry 3 }
@@ -2668,7 +2668,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "New definitions under HP-ICF-RATE-LIMIT-MIB.
           The percentage of Guaranteed Minimum bandwidth to
-		    be assigned to the egress Medium-Priority queue for 
+		    be assigned to the egress Medium-Priority queue for
 		    this port. Total values for all four queues must not
  		    exceed 100 percent."
         ::= { hpSwitchBWMinEgressPortConfigEntry 4 }
@@ -2679,7 +2679,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "New definitions under HP-ICF-RATE-LIMIT-MIB.
           The percentage of Guaranteed Minimum bandwidth to
-		    be assigned to the egress High-Priority queue for 
+		    be assigned to the egress High-Priority queue for
 		    this port. Total values for all four queues must not
  		    exceed 100 percent."
         ::= { hpSwitchBWMinEgressPortConfigEntry 5 }
@@ -2818,14 +2818,14 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-write
         STATUS      mandatory
-        DESCRIPTION "Specify the queue configuration mode for the switch. 
-                     While changing the queue configuration mode this feature 
-                     momentarily require to bring down the logical port and 
-                     after the initialisation of the queues the ports are 
+        DESCRIPTION "Specify the queue configuration mode for the switch.
+                     While changing the queue configuration mode this feature
+                     momentarily require to bring down the logical port and
+                     after the initialisation of the queues the ports are
                      brought up."
-        
+
         ::= { hpSwitchQosPassThroughMode 1 }
-    
+
     hpSwitchReboot OBJECT IDENTIFIER ::= { hpSwitchConfig 25 }
 
     hpSwitchRebootConfig OBJECT-TYPE
@@ -2837,8 +2837,8 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
         STATUS      mandatory
         DESCRIPTION "This tells the status of the switch whether it requires
                      reboot for some variable to get effective.
-                     The value of this variable can be 
-                     
+                     The value of this variable can be
+
                      yes (1) reboot is required.
                      no (2)  reboot is not required."
         ::= { hpSwitchReboot 1 }
@@ -2879,14 +2879,14 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
 
      hpSwitchLACPAllPortsStatus OBJECT-TYPE
         SYNTAX      INTEGER {
-                        disabled(1), 
+                        disabled(1),
                         active(2),
                         passive(3)
                     }
       ACCESS      read-write
       STATUS      mandatory
       DESCRIPTION "Used to set administrative status of LACP on all the ports.
-                   A Port can have one of the three administrative status of 
+                   A Port can have one of the three administrative status of
 		   LACP. Active/Passive/Disabled are the three states. "
       ::= { hpSwitchLACPConfig 1 }
 
@@ -2899,7 +2899,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
     hpSwitchTrapsObjects
                    OBJECT IDENTIFIER ::= { hpSwitchTraps 1 }
 
-    hpSwitchStpErrantBpduDetector OBJECT-TYPE 
+    hpSwitchStpErrantBpduDetector OBJECT-TYPE
         SYNTAX       INTEGER {
                          bpduFilter (1),
                          bpduProtection (2),
@@ -2908,7 +2908,7 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
                      }
         ACCESS       accessible-for-notify
         STATUS       optional
-        DESCRIPTION  "The identifier of the feature generating Errant 
+        DESCRIPTION  "The identifier of the feature generating Errant
                      BPDU trap."
         ::= { hpSwitchTrapsObjects 1 }
 
@@ -2922,17 +2922,17 @@ CONFIG-MIB DEFINITIONS ::= BEGIN
 
     hpSwitchStpErrantBpduReceived     TRAP-TYPE
         ENTERPRISE  hpSwitchTraps
-        VARIABLES   { hpSwitchStpPort,  
+        VARIABLES   { hpSwitchStpPort,
                       hpSwitchStpPortErrantBpduCounter,
                       dot1dStpPortState,
                       dot1dStpPortDesignatedBridge,
                       dot1dStpPortDesignatedPort,
                       hpSwitchStpErrantBpduSrcMac,
                       hpSwitchStpErrantBpduDetector }
-        DESCRIPTION "This trap indicates that unexpected (errant) STP BPDU  
-                    has been received on a port (e.g. on a port that is 
-                    connected to non-STP device). This notification trap 
-                    is controlled by the state of 'hpSwitchStpTrapCntl' 
+        DESCRIPTION "This trap indicates that unexpected (errant) STP BPDU
+                    has been received on a port (e.g. on a port that is
+                    connected to non-STP device). This notification trap
+                    is controlled by the state of 'hpSwitchStpTrapCntl'
                     object. Implementation of this trap is optional."
         ::= 1
 END

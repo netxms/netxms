@@ -17,25 +17,25 @@ IMPORTS
 	MODULE-IDENTITY,
 	OBJECT-IDENTITY,
 	enterprises		FROM SNMPv2-SMI;
-		
+
 
 
 zyxel		OBJECT IDENTIFIER ::= { enterprises 890 }
 products	OBJECT IDENTIFIER ::= { zyxel 1 }
-                                                  
-                                                                                                                                                                         
-                                                  
-enterpriseSolution MODULE-IDENTITY 
+
+
+
+enterpriseSolution MODULE-IDENTITY
 	LAST-UPDATED	"201009200000Z"
-	ORGANIZATION "Enterprise Solution ZyXEL"     
+	ORGANIZATION "Enterprise Solution ZyXEL"
 	CONTACT-INFO
-		""	     
+		""
 	DESCRIPTION
 		"The Structure of Management Information
 		for Enterprise Solution ZyXEL"
-	::= { products 15 }  
-	            
-	
+	::= { products 15 }
+
+
 esAgentCapability	OBJECT-IDENTITY
 	STATUS		current
 	DESCRIPTION
@@ -49,7 +49,7 @@ esConformance		OBJECT-IDENTITY
 		"The root object identifier for
 		MODULE-COMPLIANCE values"
 	::= { enterpriseSolution 2 }
-                                            
+
 esMgmt			OBJECT-IDENTITY
 	STATUS		current
 	DESCRIPTION
@@ -67,7 +67,7 @@ esPartnerProducts           OBJECT-IDENTITY
 	DESCRIPTION
 		"The root for MIBs from partner products.
 		Followed by partner sysObjectID values"
-	::= { enterpriseSolution 5 }                                            
+	::= { enterpriseSolution 5 }
 
 tenders	OBJECT IDENTIFIER ::= { esProductSpecific 4 }
 

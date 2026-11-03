@@ -1,5 +1,5 @@
 -- **********************************************************
--- Copyright 2007-2011 VMware, Inc.  All rights reserved. 
+-- Copyright 2007-2011 VMware, Inc.  All rights reserved.
 -- **********************************************************
 
 VMWARE-RESOURCES-MIB DEFINITIONS ::= BEGIN
@@ -28,14 +28,14 @@ VMWARE-RESOURCES-MIB DEFINITIONS ::= BEGIN
     Web: http://communities.vmware.com/community/developer/forums/managementapi
     "
 DESCRIPTION
-     "This MIB module provides instrumentation of ESX Hypervisor resources such 
+     "This MIB module provides instrumentation of ESX Hypervisor resources such
       as cpu, memory, and disk."
 
 REVISION      "200810150000Z"
 DESCRIPTION
      "All per-VM managed objects were moved to new managed objects in VMWARE-VMINFO MIB.
       See VMWARE-OBSOLETE-RESOURCE-MIB for oid assignments in prior version of this mib module.
-      Add to comments the Managed Object Browser (MOB) URLs which provide 
+      Add to comments the Managed Object Browser (MOB) URLs which provide
       data this MIB module exposes."
 
 REVISION      "200712270000Z"
@@ -57,7 +57,7 @@ vmwNumCPUs OBJECT-TYPE
         "Number of physical CPUs on the system."
     ::= { vmwCPU 1 }
 
--- Memory subtree 
+-- Memory subtree
 
 vmwMemory OBJECT IDENTIFIER ::= { vmwResources 2 }
 
@@ -79,7 +79,7 @@ vmwMemSize OBJECT-TYPE
          For reference here two other related VIM properties:
          VIM property: memorySize
          MOB: https://esx.example.com/mob/?moid=ha%2dhost&doPath=summary%2ehardware
-         
+
          VIM property: totalMemory
          MOB: https://esx.example.com/mob/?moid=ha%2dcompute%2dres&doPath=summary
          "
@@ -97,7 +97,7 @@ vmwMemCOS OBJECT-TYPE
          interface.
 
          Note that in the VMware ESXi product there is no COS so this will report 0.
-         
+
          This managed object reports the amount of physical memory allocated to the COS.
          VIM Parent Container: https://esx.example.com/mob/?moid=memorySystem
          VIM property: serviceConsoleReserved
@@ -117,7 +117,7 @@ vmwMemAvail OBJECT-TYPE
          the hypervisor.
 
          To get a more accurate view of memory available to VMs the following property
-         represents the amount of resources available for the root resource pool for running 
+         represents the amount of resources available for the root resource pool for running
          virtual machines.
 
          VIM property: effectiveMemory
@@ -139,10 +139,10 @@ vmwHostBusAdapterNumber OBJECT-TYPE
 
 vmwHostBusAdapterTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF VmwHostBusAdapterEntry
-    MAX-ACCESS  not-accessible  
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-        "Inventory of Host Bus Adatpers found in this system. 
+        "Inventory of Host Bus Adatpers found in this system.
          CLI: esxcfg-scsidevs -a
          VIM Parent Container: https://esx.example.com/mob/?moid=storageSystem
          VIM property: hostBusAdapter
@@ -151,7 +151,7 @@ vmwHostBusAdapterTable OBJECT-TYPE
 
 vmwHostBusAdapterEntry OBJECT-TYPE
     SYNTAX      VmwHostBusAdapterEntry
-    MAX-ACCESS  not-accessible  
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
         "Details for this adapter."
@@ -171,14 +171,14 @@ vmwHbaPci                DisplayString
 
 vmwHostBusAdapterIndex OBJECT-TYPE
     SYNTAX      Integer32 (0..1023)
-    MAX-ACCESS  not-accessible  
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
         "An arbitrary index assigned to this adapter."
     ::= { vmwHostBusAdapterEntry 1 }
 
 vmwHbaDeviceName OBJECT-TYPE
-    SYNTAX      DisplayString   
+    SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -240,14 +240,14 @@ vmwResMIBGroups  OBJECT IDENTIFIER ::= { vmwResourceMIBConformance 2 }
 vmwResourceMIBCompliance MODULE-COMPLIANCE
 STATUS  current
 DESCRIPTION
-    "The compliance statement for entities which implement the 
+    "The compliance statement for entities which implement the
     VMWARE-RESOURCE-MIB."
 MODULE  -- this module
 MANDATORY-GROUPS { vmwResourceGroup }
 ::= { vmwResourceMIBCompliances 2 }
 
 vmwResourceGroup OBJECT-GROUP
-    OBJECTS { 
+    OBJECTS {
     vmwNumCPUs,
     vmwMemSize,
     vmwMemCOS,

@@ -3,12 +3,12 @@ FDRY-DNS2-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     MODULE-IDENTITY, Unsigned32,
     OBJECT-TYPE         FROM SNMPv2-SMI                 -- [RFC2578]
-    DisplayString, RowStatus    
+    DisplayString, RowStatus
                         FROM SNMPv2-TC                  -- [RFC2579]
-    InetAddressType, InetAddress        
+    InetAddressType, InetAddress
                         FROM INET-ADDRESS-MIB           -- [RFC 4001]
     ;
-   
+
 fdryDns2MIB MODULE-IDENTITY
     LAST-UPDATED "200901300000Z"  -- 30 January 2009
     ORGANIZATION "Foundry Networks, Inc."
@@ -33,13 +33,13 @@ fdryDns2MIB MODULE-IDENTITY
              This Specification is supplied AS IS, and Foundry Networks makes
              no warranty, either express or implied, as to the use,
              operation, condition, or performance of the Specification."
-   
+
 	REVISION 	"200901300000Z"  -- 30 Jan 2009
     DESCRIPTION "Initial version, obsoletes the earlier mib groups to resolve the mib conflicts.
     			fdryDns2MIB obsoletes fdryDnsMIB,
 				fdryDns2DomainName obsoletes fdryDnsDomainName,
 				fdryDnsServer obsoletes fdryDnsServerAddress"
-         
+
     ::= { iso(1) org(3) dod(6) internet(1) private(4) enterprises(1) foundry(1991) products(1) switch(1) snSwitch(3) 34 }
 
     --
@@ -60,7 +60,7 @@ fdryDns2MIB MODULE-IDENTITY
         DESCRIPTION
             "Domain Name Service domain name table."
         ::= { fdryDns2DomainName 1 }
-    
+
     fdryDns2DomainNameEntry      OBJECT-TYPE
         SYNTAX  FdryDns2DomainNameEntry
         MAX-ACCESS  not-accessible
@@ -69,14 +69,14 @@ fdryDns2MIB MODULE-IDENTITY
             "An entry in the DNS domain name table."
         INDEX   { fdryDns2DomainNameIndex }
         ::= { fdryDns2DomainNameTable 1 }
-    
+
     FdryDns2DomainNameEntry ::= SEQUENCE {
         fdryDns2DomainNameIndex         Unsigned32,
         fdryDns2DomainNameAddrType      InetAddressType,
         fdryDns2DomainNameName          DisplayString,
         fdryDns2DomainNameRowStatus     RowStatus
         }
-    
+
     fdryDns2DomainNameIndex OBJECT-TYPE
         SYNTAX  Unsigned32
         MAX-ACCESS  not-accessible
@@ -84,7 +84,7 @@ fdryDns2MIB MODULE-IDENTITY
         DESCRIPTION
             "The index to the DNS name table."
         ::= { fdryDns2DomainNameEntry 1 }
-    
+
     fdryDns2DomainNameAddrType           OBJECT-TYPE
         SYNTAX  InetAddressType
         MAX-ACCESS  read-create
@@ -93,7 +93,7 @@ fdryDns2MIB MODULE-IDENTITY
               "DNS IP address Type. Supported address types are ipv4(1) and ipv6(2)"
         DEFVAL  { ipv4 }
         ::= { fdryDns2DomainNameEntry 2 }
-    
+
     fdryDns2DomainNameName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE(0..64))
         MAX-ACCESS  read-create
@@ -101,7 +101,7 @@ fdryDns2MIB MODULE-IDENTITY
         DESCRIPTION
             "Domain Name Service Domain Name string."
         ::= { fdryDns2DomainNameEntry 3 }
-    
+
     fdryDns2DomainNameRowStatus  OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
@@ -124,7 +124,7 @@ fdryDns2MIB MODULE-IDENTITY
         DESCRIPTION
             "DNS server table, listing the Ipv4/Ipv6 DNS server addresses"
         ::= { fdryDnsServer 1 }
-    
+
     fdryDnsServerEntry       OBJECT-TYPE
         SYNTAX      FdryDnsServerEntry
         MAX-ACCESS  not-accessible
@@ -134,7 +134,7 @@ fdryDns2MIB MODULE-IDENTITY
 
         INDEX   {fdryDnsServerAddrType, fdryDnsServerIndex}
         ::= { fdryDnsServerTable 1 }
-    
+
     FdryDnsServerEntry ::= SEQUENCE {
         fdryDnsServerAddrType
             InetAddressType,
@@ -162,7 +162,7 @@ fdryDns2MIB MODULE-IDENTITY
             "The index to the DNS server table.  Currently, up to 4 DNS server
              entries each are supported for IPv4 and IPv6."
         ::= { fdryDnsServerEntry 2 }
-    
+
     fdryDnsServerAddr OBJECT-TYPE
         SYNTAX      InetAddress
         MAX-ACCESS  read-create
@@ -170,7 +170,7 @@ fdryDns2MIB MODULE-IDENTITY
         DESCRIPTION
               "DNS server IP address."
         ::= { fdryDnsServerEntry 3 }
-    
+
     fdryDnsServerRowStatus OBJECT-TYPE
         SYNTAX      RowStatus
         MAX-ACCESS  read-create

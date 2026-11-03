@@ -6,26 +6,26 @@
 --
 
 	WS-INFRA-CLUSTER-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP, MODULE-COMPLIANCE			
-				FROM SNMPv2-CONF			
-			IpAddress, Integer32, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			DateAndTime, DisplayString, RowStatus			
-				FROM SNMPv2-TC			
-			wsInfraCluster			
-				FROM WS-INFRA-SMI-MIB			
-			DoActionNow			
+			OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+			IpAddress, Integer32, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			DateAndTime, DisplayString, RowStatus
+				FROM SNMPv2-TC
+			wsInfraCluster
+				FROM WS-INFRA-SMI-MIB
+			DoActionNow
 				FROM WS-TYPE-MIB;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.1.8.1
-		wsInfraClusterMIB MODULE-IDENTITY 
+		wsInfraClusterMIB MODULE-IDENTITY
 			LAST-UPDATED "200512160205Z"		-- December 16, 2005 at 02:05 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technologies"
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Symbol Technologies, Inc.
 				Customer Service
 				Postal:
@@ -35,64 +35,64 @@
 				Tel: +1. 631.738.6213
 				E-mail: support@symbol.com
 				Web: http://www.symbol.com/support"
-			DESCRIPTION 
-				"The Cluster module is responsible for providing a minimal 
-				interrupted service to the network in the case of a switch 
-				failure by making the other standby switch take over the 
-				un-adopted Access ports. 
-				
-				The core functionalities of the Cluster module are as listed 
+			DESCRIPTION
+				"The Cluster module is responsible for providing a minimal
+				interrupted service to the network in the case of a switch
+				failure by making the other standby switch take over the
+				un-adopted Access ports.
+
+				The core functionalities of the Cluster module are as listed
 				below:
-				
-				- Manage and process automatic port adoption by 
+
+				- Manage and process automatic port adoption by
 				   switch(es) in the event of network or any switch failure.
 				- Manage the cluster license.
-				- Act as a tunnel between the application modules of CC 
+				- Act as a tunnel between the application modules of CC
 				   across the switches.
-				
-				All Cluster related configuration parameters (except of course 
-				wsInfraClusterEnable itself) can be modified only if Cluster 
+
+				All Cluster related configuration parameters (except of course
+				wsInfraClusterEnable itself) can be modified only if Cluster
 				Protocol is disabled."
 			REVISION "200605241358Z"		-- May 24, 2006 at 13:58 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a10"
 			REVISION "200512271405Z"		-- December 27, 2005 at 14:05 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a09"
 			REVISION "200512161229Z"		-- December 16, 2005 at 12:29 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a08"
 			REVISION "200509122039Z"		-- September 12, 2005 at 20:39 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a07"
 			REVISION "200508171325Z"		-- August 17, 2005 at 13:25 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a06"
 			REVISION "200508151627Z"		-- August 15, 2005 at 16:27 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a05"
 			REVISION "200508151420Z"		-- August 15, 2005 at 14:20 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a04"
 			REVISION "200508111853Z"		-- August 11, 2005 at 18:53 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a03"
 			REVISION "200507071836Z"		-- July 07, 2005 at 18:36 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a02"
 			REVISION "200507071639Z"		-- July 07, 2005 at 16:39 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a01"
 			::= { wsInfraCluster 1 }
 
-		
-	
-	
-	
+
+
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.1
 		wsInfraClusterSwitchIP OBJECT-TYPE
 			SYNTAX IpAddress
@@ -102,7 +102,7 @@
 				"The IP Address of the switch in the cluster context."
 			::= { wsInfraClusterMIB 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.2
 		wsInfraClusterEnable OBJECT-TYPE
 			SYNTAX INTEGER
@@ -116,7 +116,7 @@
 				"Enable or disable the Cluster feature."
 			::= { wsInfraClusterMIB 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.3
 		wsInfraClusterMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -130,7 +130,7 @@
 				"Set the mode to either Active or Standby."
 			::= { wsInfraClusterMIB 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.4
 		wsInfraClusterId OBJECT-TYPE
 			SYNTAX Unsigned32 (1..65535)
@@ -140,7 +140,7 @@
 				"Cluster/Group id."
 			::= { wsInfraClusterMIB 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.5
 		wsInfraClusterDiscoveryInterval OBJECT-TYPE
 			SYNTAX Unsigned32 (10..60)
@@ -148,11 +148,11 @@
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"During this time switches try to discover other switches 
+				"During this time switches try to discover other switches
 				in the cluster."
 			::= { wsInfraClusterMIB 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.6
 		wsInfraClusterHoldInterval OBJECT-TYPE
 			SYNTAX Unsigned32 (1..255)
@@ -160,11 +160,11 @@
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Time to announce that the neighbour switch is down if 
+				"Time to announce that the neighbour switch is down if
 				no heartbeats received during this period of time."
 			::= { wsInfraClusterMIB 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.7
 		wsInfraClusterHBInterval OBJECT-TYPE
 			SYNTAX Unsigned32 (1..255)
@@ -174,7 +174,7 @@
 				"The frequency in which heartbeats are sent."
 			::= { wsInfraClusterMIB 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.8
 		wsInfraClusterHandleSTP OBJECT-TYPE
 			SYNTAX INTEGER
@@ -188,7 +188,7 @@
 				"Whether the STP convergence time needs to be handled or not."
 			::= { wsInfraClusterMIB 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.9
 		wsInfraClusterSwitchState OBJECT-TYPE
 			SYNTAX INTEGER
@@ -204,7 +204,7 @@
 				"The current state of the switch in the cluster."
 			::= { wsInfraClusterMIB 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.10
 		wsInfraClusterLicNum OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
@@ -214,7 +214,7 @@
 				"The cluster license number."
 			::= { wsInfraClusterMIB 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.11
 		wsInfraClusterInstalledLicNum OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
@@ -224,18 +224,18 @@
 				"Installed license number of the switch."
 			::= { wsInfraClusterMIB 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.12
 		wsInfraClusterApCnt OBJECT-TYPE
 			SYNTAX Unsigned32
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"Total number of APs adopted in the cluster by 
+				"Total number of APs adopted in the cluster by
 				all the switches."
 			::= { wsInfraClusterMIB 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.13
 		wsInfraClusterVersion OBJECT-TYPE
 			SYNTAX DisplayString
@@ -245,11 +245,11 @@
 				"The version of the Cluster Module."
 			::= { wsInfraClusterMIB 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.14
 		wsInfraClusterHistory OBJECT IDENTIFIER ::= { wsInfraClusterMIB 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.14.1
 		wsInfraClusterHistoryTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsInfraClusterHistoryEntry
@@ -259,7 +259,7 @@
 				"List of history entries for the state changes of the switch."
 			::= { wsInfraClusterHistory 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.14.1.1
 		wsInfraClusterHistoryEntry OBJECT-TYPE
 			SYNTAX WsInfraClusterHistoryEntry
@@ -270,9 +270,9 @@
 			INDEX { wsInfraClusterHistoryIndex }
 			::= { wsInfraClusterHistoryTable 1 }
 
-		
+
 		WsInfraClusterHistoryEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsInfraClusterHistoryIndex
 					Unsigned32,
 				wsInfraClusterHistoryState
@@ -294,7 +294,7 @@
 				"Simple Index."
 			::= { wsInfraClusterHistoryEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.14.1.1.2
 		wsInfraClusterHistoryState OBJECT-TYPE
 			SYNTAX INTEGER
@@ -310,7 +310,7 @@
 				"Switch states."
 			::= { wsInfraClusterHistoryEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.14.1.1.3
 		wsInfraClusterHistoryTime OBJECT-TYPE
 			SYNTAX DateAndTime
@@ -320,7 +320,7 @@
 				"The time at which state change happened."
 			::= { wsInfraClusterHistoryEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.14.1.1.4
 		wsInfraClusterHistoryEventTrigger OBJECT-TYPE
 			SYNTAX INTEGER
@@ -336,7 +336,7 @@
 				"The event that triggered the state change."
 			::= { wsInfraClusterHistoryEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.14.1.1.5
 		wsInfraClusterHistoryDesc OBJECT-TYPE
 			SYNTAX DisplayString
@@ -346,11 +346,11 @@
 				"Description of the event and state change reason."
 			::= { wsInfraClusterHistoryEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15
 		wsInfraClusterConfig OBJECT IDENTIFIER ::= { wsInfraClusterMIB 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1
 		wsInfraClusterConfigTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsInfraClusterConfigEntry
@@ -359,11 +359,11 @@
 			DESCRIPTION
 				"This table is used to configure the IP address of the switches
 				in the cluster including this switch. It can be modified only if
-				Cluster Protocol is disabled i.e. when wsInfraClusterEnable is 
+				Cluster Protocol is disabled i.e. when wsInfraClusterEnable is
 				set to 'disable'."
 			::= { wsInfraClusterConfig 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1
 		wsInfraClusterConfigEntry OBJECT-TYPE
 			SYNTAX WsInfraClusterConfigEntry
@@ -374,9 +374,9 @@
 			INDEX { wsInfraClusterConfigIndex, wsInfraClusterMemberIpAddr }
 			::= { wsInfraClusterConfigTable 1 }
 
-		
+
 		WsInfraClusterConfigEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsInfraClusterConfigIndex
 					INTEGER,
 				wsInfraClusterMemberIpAddr
@@ -428,7 +428,7 @@
 				"Description."
 			::= { wsInfraClusterConfigEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.2
 		wsInfraClusterMemberIpAddr OBJECT-TYPE
 			SYNTAX IpAddress
@@ -438,20 +438,20 @@
 				"Unique IP address of the switch."
 			::= { wsInfraClusterConfigEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.3
 		wsInfraClusterCfgRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"SNMP row status about the configured object. The row creation 
-				fails with error status as 'Bad Value' if the Cluster Config 
-				Table already contains the max number of peers specified by 
+				"SNMP row status about the configured object. The row creation
+				fails with error status as 'Bad Value' if the Cluster Config
+				Table already contains the max number of peers specified by
 				the Cluster Protocol Specification."
 			::= { wsInfraClusterConfigEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.4
 		wsInfraClustertNumHBSent OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -459,11 +459,11 @@
 			STATUS current
 			DESCRIPTION
 				"The number of HeartBeats sent from this switch to a
-				peer switch in the cluster. 
+				peer switch in the cluster.
 				"
 			::= { wsInfraClusterConfigEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.5
 		wsInfraClusterNumHBRcvd OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -474,20 +474,20 @@
 				cluster."
 			::= { wsInfraClusterConfigEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.6
 		wsInfraClusterLastSeen OBJECT-TYPE
 			SYNTAX DateAndTime
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The time at which the last heartbeat received from the peer 
-				switch. 
-				
+				"The time at which the last heartbeat received from the peer
+				switch.
+
 				"
 			::= { wsInfraClusterConfigEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.7
 		wsInfraClusterFirstSeen OBJECT-TYPE
 			SYNTAX DateAndTime
@@ -497,7 +497,7 @@
 				"The time at which the peer switch was first seen."
 			::= { wsInfraClusterConfigEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.8
 		wsInfraClusterNumUpdMesgSent OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -508,18 +508,18 @@
 				peer switch in the cluster. "
 			::= { wsInfraClusterConfigEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.9
 		wsInfraClusterNumUpdMesgRecd OBJECT-TYPE
 			SYNTAX Unsigned32
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The number of Update Messages received from the peer switch 
+				"The number of Update Messages received from the peer switch
 				in the cluster."
 			::= { wsInfraClusterConfigEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.10
 		wsInfraClusterStatus OBJECT-TYPE
 			SYNTAX INTEGER
@@ -536,7 +536,7 @@
 				"The status of the peer switch."
 			::= { wsInfraClusterConfigEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.11
 		wsInfraClusterAdoptionCnt OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -546,7 +546,7 @@
 				"Number of APs adopted by the peer switch in cluster."
 			::= { wsInfraClusterConfigEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.12
 		wsInfraClusterSwitchMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -560,7 +560,7 @@
 				"Whether the Peer Switch's mode is primary or standby."
 			::= { wsInfraClusterConfigEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.13
 		wsInfraClusterInstalLicValue OBJECT-TYPE
 			SYNTAX Unsigned32 (0..65535)
@@ -570,7 +570,7 @@
 				"The value of the Installed License of the peer switch."
 			::= { wsInfraClusterConfigEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.14
 		wsInfraClusterUptime OBJECT-TYPE
 			SYNTAX DateAndTime
@@ -580,7 +580,7 @@
 				"Uptime of member switch"
 			::= { wsInfraClusterConfigEntry 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.15
 		wsInfraClusterNumMusAdopted OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -590,7 +590,7 @@
 				"Number of MUs adopted by the member switch"
 			::= { wsInfraClusterConfigEntry 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.16
 		wsInfraClusterNumRadiosAdopted OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -600,7 +600,7 @@
 				"Number of radios adopted by the member switch"
 			::= { wsInfraClusterConfigEntry 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.17
 		wsInfraClusterNumSelfHealingRadios OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -610,7 +610,7 @@
 				"Number of radios in self healing mode in the member switch"
 			::= { wsInfraClusterConfigEntry 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.18
 		wsInfraClusterNumRogueAps OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -620,7 +620,7 @@
 				"Number of rogue APs detected by the member switch"
 			::= { wsInfraClusterConfigEntry 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.19
 		wsInfraClusterCfgRunningImgVer OBJECT-TYPE
 			SYNTAX DisplayString
@@ -630,7 +630,7 @@
 				"Version of the running image on the member switch"
 			::= { wsInfraClusterConfigEntry 19 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.1.1.20
 		wsInfraClusterCfgPortAdoptionCapacity OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -640,7 +640,7 @@
 				"Port adoption capacity of the member switch"
 			::= { wsInfraClusterConfigEntry 20 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.2
 		wsInfraClusterPeerStatTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsInfraClusterPeerStatEntry
@@ -650,7 +650,7 @@
 				"Statistics about different switches in the cluster."
 			::= { wsInfraClusterConfig 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.15.2.1
 		wsInfraClusterPeerStatEntry OBJECT-TYPE
 			SYNTAX WsInfraClusterPeerStatEntry
@@ -661,9 +661,9 @@
 			INDEX { wsInfraClusterConfigIndex, wsInfraClusterMemberIpAddr }
 			::= { wsInfraClusterPeerStatTable 1 }
 
-		
+
 		WsInfraClusterPeerStatEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsInfraClusterStatNumHBSent
 					Unsigned32
 			 }
@@ -675,11 +675,11 @@
 			STATUS obsolete
 			DESCRIPTION
 				"The number of HeartBeats sent from this switch to a
-				peer switch in the cluster. 
+				peer switch in the cluster.
 				"
 			::= { wsInfraClusterPeerStatEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.16
 		wsInfraClusterUpAndFullyConnected OBJECT-TYPE
 			SYNTAX INTEGER
@@ -693,7 +693,7 @@
 				"Indicates if cluster is up and fully connected"
 			::= { wsInfraClusterMIB 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.17
 		wsInfraClusterTotalApsAdopted OBJECT-TYPE
 			SYNTAX Integer32
@@ -703,7 +703,7 @@
 				"Total number of APs adopted by the cluster"
 			::= { wsInfraClusterMIB 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.18
 		wsInfraClusterTotalRadiosAdopted OBJECT-TYPE
 			SYNTAX Integer32
@@ -713,7 +713,7 @@
 				"Total number of radios adopted by the cluster"
 			::= { wsInfraClusterMIB 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.19
 		wsInfraClusterTotalMusAssociated OBJECT-TYPE
 			SYNTAX Integer32
@@ -723,7 +723,7 @@
 				"Total number of MUs adopted by the cluster"
 			::= { wsInfraClusterMIB 19 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.20
 		wsInfraClusterTotalRogueAps OBJECT-TYPE
 			SYNTAX Integer32
@@ -733,7 +733,7 @@
 				"Total number of rogue APs detected by the cluster"
 			::= { wsInfraClusterMIB 20 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.21
 		wsInfraClusterTotalPortAdoptionCapacity OBJECT-TYPE
 			SYNTAX Integer32
@@ -743,7 +743,7 @@
 				"Total port adoption capacity of the cluster"
 			::= { wsInfraClusterMIB 21 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.22
 		wsInfraClusterTotalSelfHealingRadios OBJECT-TYPE
 			SYNTAX Integer32
@@ -753,7 +753,7 @@
 				"Total number of radios in self healing mode in the cluster"
 			::= { wsInfraClusterMIB 22 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.23
 		wsInfraClusterMusAdoptedCnt OBJECT-TYPE
 			SYNTAX Integer32
@@ -763,7 +763,7 @@
 				"Number of MUs adopted by the switch"
 			::= { wsInfraClusterMIB 23 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.24
 		wsInfraClusterRadiosAdoptedCnt OBJECT-TYPE
 			SYNTAX Integer32
@@ -773,7 +773,7 @@
 				"Number of radios adopted by the switch"
 			::= { wsInfraClusterMIB 24 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.25
 		wsInfraClusterSelfHealingRadioCnt OBJECT-TYPE
 			SYNTAX Integer32
@@ -783,7 +783,7 @@
 				"Number of radios in self healing mode in the switch"
 			::= { wsInfraClusterMIB 25 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.26
 		wsInfraClusterRogueApCnt OBJECT-TYPE
 			SYNTAX Integer32
@@ -793,7 +793,7 @@
 				"Number of rogue APs detected by the switch"
 			::= { wsInfraClusterMIB 26 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.27
 		wsInfraClusterRunningImgVer OBJECT-TYPE
 			SYNTAX DisplayString
@@ -803,7 +803,7 @@
 				"Version of the running image on the switch"
 			::= { wsInfraClusterMIB 27 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.28
 		wsInfraClusterPortAdoptionCapacity OBJECT-TYPE
 			SYNTAX Integer32
@@ -813,7 +813,7 @@
 				"Port adoption capacity of the switch"
 			::= { wsInfraClusterMIB 28 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.29
 		wsInfraClusterAutoRevert OBJECT-TYPE
 			SYNTAX INTEGER
@@ -827,7 +827,7 @@
 				"Enable or disable automatic revert"
 			::= { wsInfraClusterMIB 29 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.30
 		wsInfraClusterAutoRevertDelay OBJECT-TYPE
 			SYNTAX Unsigned32 (1..65535)
@@ -837,7 +837,7 @@
 				"Auto-revert delay (in minutes - ranging from 1 to 65535)"
 			::= { wsInfraClusterMIB 30 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.31
 		wsInfraClusterManualRevert OBJECT-TYPE
 			SYNTAX INTEGER { manualRevertNow(1) }
@@ -847,58 +847,58 @@
 				"Set manual revert"
 			::= { wsInfraClusterMIB 31 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.32
 		wsInfrastructureMIBConformance OBJECT IDENTIFIER ::= { wsInfraClusterMIB 32 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.32.1
 		wsInfrastructureMIBCompliances OBJECT IDENTIFIER ::= { wsInfrastructureMIBConformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.32.1.1
 		wsInfrastructureMIBCompliance MODULE-COMPLIANCE
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			MODULE -- this module
 				MANDATORY-GROUPS { wsInfrastructureMIBGroup }
 			::= { wsInfrastructureMIBCompliances 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.32.2
 		wsInfrastructureMIBGroups OBJECT IDENTIFIER ::= { wsInfrastructureMIBConformance 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.32.2.1
 		wsInfrastructureMIBGroup OBJECT-GROUP
-			OBJECTS { wsInfraClusterSwitchIP, wsInfraClusterEnable, wsInfraClusterMode, wsInfraClusterId, wsInfraClusterHBInterval, 
-				wsInfraClusterHandleSTP, wsInfraClusterSwitchState, wsInfraClusterLicNum, wsInfraClusterInstalledLicNum, wsInfraClusterApCnt, 
-				wsInfraClusterVersion, wsInfraClusterHistoryIndex, wsInfraClusterHistoryState, wsInfraClusterHistoryTime, wsInfraClusterHistoryEventTrigger, 
-				wsInfraClusterHistoryDesc, wsInfraClusterCfgRowStatus, wsInfraClusterMemberIpAddr, wsInfraClusterHoldInterval, wsInfraClusterDiscoveryInterval, 
-				wsInfraClusterUpAndFullyConnected, wsInfraClusterTotalApsAdopted, wsInfraClusterTotalRadiosAdopted, wsInfraClusterTotalMusAssociated, wsInfraClusterTotalRogueAps, 
-				wsInfraClusterTotalPortAdoptionCapacity, wsInfraClusterTotalSelfHealingRadios, wsInfraClusterMusAdoptedCnt, wsInfraClusterRadiosAdoptedCnt, wsInfraClusterSelfHealingRadioCnt, 
-				wsInfraClusterRogueApCnt, wsInfraClusterRunningImgVer, wsInfraClusterPortAdoptionCapacity, wsInfraClusterConfigIndex, wsInfraClusterAutoRevert, 
-				wsInfraClusterAutoRevertDelay, wsInfraClusterManualRevert, wsInfraClustertNumHBSent, wsInfraClusterNumHBRcvd, wsInfraClusterLastSeen, 
-				wsInfraClusterFirstSeen, wsInfraClusterNumUpdMesgSent, wsInfraClusterNumUpdMesgRecd, wsInfraClusterStatus, wsInfraClusterAdoptionCnt, 
-				wsInfraClusterSwitchMode, wsInfraClusterInstalLicValue, wsInfraClusterUptime, wsInfraClusterNumMusAdopted, wsInfraClusterNumRadiosAdopted, 
+			OBJECTS { wsInfraClusterSwitchIP, wsInfraClusterEnable, wsInfraClusterMode, wsInfraClusterId, wsInfraClusterHBInterval,
+				wsInfraClusterHandleSTP, wsInfraClusterSwitchState, wsInfraClusterLicNum, wsInfraClusterInstalledLicNum, wsInfraClusterApCnt,
+				wsInfraClusterVersion, wsInfraClusterHistoryIndex, wsInfraClusterHistoryState, wsInfraClusterHistoryTime, wsInfraClusterHistoryEventTrigger,
+				wsInfraClusterHistoryDesc, wsInfraClusterCfgRowStatus, wsInfraClusterMemberIpAddr, wsInfraClusterHoldInterval, wsInfraClusterDiscoveryInterval,
+				wsInfraClusterUpAndFullyConnected, wsInfraClusterTotalApsAdopted, wsInfraClusterTotalRadiosAdopted, wsInfraClusterTotalMusAssociated, wsInfraClusterTotalRogueAps,
+				wsInfraClusterTotalPortAdoptionCapacity, wsInfraClusterTotalSelfHealingRadios, wsInfraClusterMusAdoptedCnt, wsInfraClusterRadiosAdoptedCnt, wsInfraClusterSelfHealingRadioCnt,
+				wsInfraClusterRogueApCnt, wsInfraClusterRunningImgVer, wsInfraClusterPortAdoptionCapacity, wsInfraClusterConfigIndex, wsInfraClusterAutoRevert,
+				wsInfraClusterAutoRevertDelay, wsInfraClusterManualRevert, wsInfraClustertNumHBSent, wsInfraClusterNumHBRcvd, wsInfraClusterLastSeen,
+				wsInfraClusterFirstSeen, wsInfraClusterNumUpdMesgSent, wsInfraClusterNumUpdMesgRecd, wsInfraClusterStatus, wsInfraClusterAdoptionCnt,
+				wsInfraClusterSwitchMode, wsInfraClusterInstalLicValue, wsInfraClusterUptime, wsInfraClusterNumMusAdopted, wsInfraClusterNumRadiosAdopted,
 				wsInfraClusterNumSelfHealingRadios, wsInfraClusterNumRogueAps, wsInfraClusterCfgRunningImgVer, wsInfraClusterCfgPortAdoptionCapacity }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			::= { wsInfrastructureMIBGroups 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.8.1.32.2.2
 		wsInfrastructureMIBObsoleteGroup OBJECT-GROUP
 			OBJECTS { wsInfraClusterStatNumHBSent }
 			STATUS obsolete
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			::= { wsInfrastructureMIBGroups 2 }
 
-		
-	
+
+
 	END
 
 --

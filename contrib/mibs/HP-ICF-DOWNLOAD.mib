@@ -16,7 +16,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
        hpicfDownloadMib MODULE-IDENTITY
             LAST-UPDATED "200804040000Z"  -- April 4, 2008
             ORGANIZATION "Hewlett Packard Company,
-                          Procurve Networking Business" 
+                          Procurve Networking Business"
             CONTACT-INFO
                     "Hewlett Packard Company
                      8000 Foothills Blvd.
@@ -27,7 +27,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
                     Communication Facility product line."
 
             REVISION     "200804040000Z"  -- April 04, 2008
-            DESCRIPTION  "Objects hpicfDownloadTftp6Config & 
+            DESCRIPTION  "Objects hpicfDownloadTftp6Config &
                           hpicfDownloadTftp6SeverConfig are deprecated."
 
             REVISION     "200711051616Z"  -- November 5, 2007
@@ -67,7 +67,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
 
 --
 
--- Deprecated Download Table 
+-- Deprecated Download Table
 
 --
 
@@ -76,10 +76,10 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS not-accessible
            STATUS     deprecated
            DESCRIPTION
-                   "A table of firmware downloads to this device.  
-                   There will at any time be either 0 or 1 rows in 
-                   this table, and the only valid index for this 
-                   table is 1.  It is only a table so that we may 
+                   "A table of firmware downloads to this device.
+                   There will at any time be either 0 or 1 rows in
+                   this table, and the only valid index for this
+                   table is 1.  It is only a table so that we may
                    take advantage of the RowStatus textual convention
                    for configuring the download parameters.
                    Since this table does not support IPv6, it is
@@ -89,9 +89,9 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
        hpicfDownloadEntry OBJECT-TYPE
            SYNTAX     HpicfDownloadEntry
            MAX-ACCESS not-accessible
-           STATUS     deprecated 
+           STATUS     deprecated
            DESCRIPTION
-                   "The row in the hpicfDownloadTable containing the 
+                   "The row in the hpicfDownloadTable containing the
                    download parameters.
                    Since this table does not support IPv6, it is depreca                   ted in favor of hpicfDownloadInetEntry."
            INDEX      { hpicfDownloadIndex }
@@ -122,7 +122,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     deprecated
            DESCRIPTION
-                   "The index which uniquely identifies this row.  
+                   "The index which uniquely identifies this row.
                    The only legal value for this object is 1."
            ::= { hpicfDownloadEntry 1 }
 
@@ -131,9 +131,9 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     deprecated
            DESCRIPTION
-                   "The transport address of the management station 
-                   that initiated this download attempt, formatted 
-                   according to the value of the associated instance 
+                   "The transport address of the management station
+                   that initiated this download attempt, formatted
+                   according to the value of the associated instance
                    of hpicfDownloadOwnerDomain."
            ::= { hpicfDownloadEntry 2 }
 
@@ -142,8 +142,8 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     deprecated
            DESCRIPTION
-                   "The kind of transport service used by the 
-                   management station that initiated this download 
+                   "The kind of transport service used by the
+                   management station that initiated this download
                    attempt."
            ::= { hpicfDownloadEntry 3 }
 
@@ -152,13 +152,13 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-create
            STATUS     deprecated
            DESCRIPTION
-                   "The transport address of the node to download 
+                   "The transport address of the node to download
                    firmware from, formatted according to the value of
                    the associated instance of hpicfDownloadTDomain.
 
-                   An attempt to modify this value will fail if the 
-                   associated hpicfDownloadStatus object would be 
-                   equal to 'active' both before and after the 
+                   An attempt to modify this value will fail if the
+                   associated hpicfDownloadStatus object would be
+                   equal to 'active' both before and after the
                    modification attempt."
            ::= { hpicfDownloadEntry 4 }
 
@@ -167,13 +167,13 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-create
            STATUS     deprecated
            DESCRIPTION
-                   "The kind of transport service to be used for the 
-                   download.  Currently supports snmpUDPDomain and 
+                   "The kind of transport service to be used for the
+                   download.  Currently supports snmpUDPDomain and
                    snmpIPXDomain.
 
-                   An attempt to modify this value will fail if the 
-                   associated hpicfDownloadStatus object would be 
-                   equal to 'active' both before and after the 
+                   An attempt to modify this value will fail if the
+                   associated hpicfDownloadStatus object would be
+                   equal to 'active' both before and after the
                    modification attempt."
            ::= { hpicfDownloadEntry 5 }
 
@@ -182,12 +182,12 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-create
            STATUS     deprecated
            DESCRIPTION
-                   "Filename and path of file to download (maximum 
+                   "Filename and path of file to download (maximum
                    length of 63 characters + NULL).
 
-                   An attempt to modify this value will fail if the 
-                   associated hpicfDownloadStatus object would be 
-                   equal to 'active' both before and after the 
+                   An attempt to modify this value will fail if the
+                   associated hpicfDownloadStatus object would be
+                   equal to 'active' both before and after the
                    modification attempt."
            ::= { hpicfDownloadEntry 6 }
 
@@ -233,7 +233,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     deprecated
            DESCRIPTION
-                   "Status of download.  The first seven codes are 
+                   "Status of download.  The first seven codes are
                    equal to the codes defined by the TFTP protocol.
                    'notDefined' is the same as TFTP protocol error 0.
                    The following are the other possible values for this
@@ -245,7 +245,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
                                           hpicfDownloadTAddress did not
                                           respond to the TFTP request.
                      tftpTimeout        - the download was aborted due
-                                          to excessive timeouts. 
+                                          to excessive timeouts.
                      hardwareError      - there was a hardware problem
                                           on the agent that forced an
                                           abort of the download (see
@@ -301,10 +301,10 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            STATUS     deprecated
            DESCRIPTION
                    "The status of this download entry.  This object
-                   may not be set to 'active' unless the following 
-                   columnar objects exist in this row: 
+                   may not be set to 'active' unless the following
+                   columnar objects exist in this row:
                    hpicfDownloadTAddress, hpicfDownloadTDomain,
-                   hpicfDownloadFilename, and 
+                   hpicfDownloadFilename, and
                    hpicfDownloadResetType."
            ::= { hpicfDownloadEntry 10 }
 
@@ -348,9 +348,9 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
                    of agent being downloaded.  In all cases, a
                    destination of '/os/primary' or '/os/secondary'
                    indicates that this is a download of the agent's
-                   firmware image.  The agent will use '/os/primary' 
+                   firmware image.  The agent will use '/os/primary'
                    as the default value for this object when the row
-                   is created. 
+                   is created.
 
                    ICF router agents also allow a download of a config
                    file.  Currently, the name of the config file on the
@@ -368,7 +368,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            STATUS     current
            DESCRIPTION
                    "The maximum number of the download log entries
-                   supported by this agent.  Note that 0 is a 
+                   supported by this agent.  Note that 0 is a
                    legal value for this variable."
            ::= { hpicfDownload 2 }
 
@@ -386,7 +386,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS not-accessible
            STATUS     current
            DESCRIPTION
-                   "A log of the hpicfDownloadSize most recent 
+                   "A log of the hpicfDownloadSize most recent
                    download attempts to this device.  The first entry
                    in the table is the oldest."
            ::= { hpicfDownload 4 }
@@ -419,7 +419,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The index of this entry in the download log 
+                   "The index of this entry in the download log
                    table.  Index 1 will always contain the oldest
                    entry.  If the table is full when a download
                    attempt is made, the new entry becomes the last
@@ -433,9 +433,9 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The transport address of the management station 
+                   "The transport address of the management station
                    that attempted to initiate a download of this
-                   device, formatted according to the value of 
+                   device, formatted according to the value of
                    hpicfDlLastOwnerDomain."
            ::= { hpicfDownloadLogEntry 2 }
 
@@ -444,8 +444,8 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The kind of transport service used by the 
-                   management station that attempted to initiate a 
+                   "The kind of transport service used by the
+                   management station that attempted to initiate a
                    download of this device."
            ::= { hpicfDownloadLogEntry 3 }
 
@@ -455,7 +455,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            STATUS     current
            DESCRIPTION
                    "The transport address of the node from which this
-                   device attempted to download firmware, formatted 
+                   device attempted to download firmware, formatted
                    according to the value of hpicfDlLastTDomain."
            ::= { hpicfDownloadLogEntry 4 }
 
@@ -464,7 +464,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The kind of transport service which was used for 
+                   "The kind of transport service which was used for
                    the attempt to download firmware to this device."
            ::= { hpicfDownloadLogEntry 5 }
 
@@ -487,7 +487,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            STATUS     current
            DESCRIPTION
                    "The type of reset requested to be  performed
-                   after completion of the firmware download 
+                   after completion of the firmware download
                    attempt."
            ::= { hpicfDownloadLogEntry 7 }
 
@@ -512,7 +512,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            STATUS     current
            DESCRIPTION
                    "The result of the attempt to download firmware to
-                   this device.  The values are the same as the 
+                   this device.  The values are the same as the
                    corresponding values of hpicfDownloadErrorStatus."
            ::= { hpicfDownloadLogEntry 8 }
 
@@ -521,8 +521,8 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "A textual description of the final error status 
-                   of the attempt to download firmware to this 
+                   "A textual description of the final error status
+                   of the attempt to download firmware to this
                    device."
            ::= { hpicfDownloadLogEntry 9 }
 
@@ -543,8 +543,8 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION "When this is true(1), the TFTP server is enabled
-                     and will process incoming requests. When this is 
-                     false(2), the TFTP server will be shut down and 
+                     and will process incoming requests. When this is
+                     false(2), the TFTP server will be shut down and
                      will not accept incoming connections."
         ::= { hpicfDownload 6 }
 
@@ -554,7 +554,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
                         enabled(2)
                     }
         MAX-ACCESS  read-write
-        STATUS      deprecated 
+        STATUS      deprecated
         DESCRIPTION "********* THIS OBJECT IS DEPRECATED ********
                      This object allows switch to enable or disable
                      tftp. Default value is 2. Cannot be enabled if
@@ -567,8 +567,8 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "********* THIS OBJECT IS DEPRECATED ********
                      When this is true(1), the TFTP server is enabled
-                     and will process incoming requests. When this is 
-                     false(2), the TFTP server will be shut down and 
+                     and will process incoming requests. When this is
+                     false(2), the TFTP server will be shut down and
                      will not accept incoming connections."
         ::= { hpicfDownload 8 }
 
@@ -583,7 +583,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
 
 --
 
--- Download Table 
+-- Download Table
 
 --
        hpicfDownloadInetTable OBJECT-TYPE
@@ -591,10 +591,10 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS not-accessible
            STATUS     current
            DESCRIPTION
-                   "A table of firmware downloads to this device.  
-                   There will at any time be either 0 or 1 rows in 
-                   this table, and the only valid index for this 
-                   table is 1.  It is only a table so that we may 
+                   "A table of firmware downloads to this device.
+                   There will at any time be either 0 or 1 rows in
+                   this table, and the only valid index for this
+                   table is 1.  It is only a table so that we may
                    take advantage of the RowStatus textual convention
                    for configuring the download parameters."
            ::= { hpicfDownload 9 }
@@ -602,7 +602,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
        hpicfDownloadInetEntry OBJECT-TYPE
            SYNTAX     HpicfDownloadInetEntry
            MAX-ACCESS not-accessible
-           STATUS     current 
+           STATUS     current
            DESCRIPTION
                    "The row in the hpicfDownloadInetTable containing the download parameters."
            INDEX      { hpicfDownloadInetIndex }
@@ -631,21 +631,21 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
                hpicfDownloadInetFileModeType       INTEGER
            }
      hpicfDownloadInetIndex OBJECT-TYPE
-           SYNTAX     Integer32 
+           SYNTAX     Integer32
            MAX-ACCESS read-only
-           STATUS     current 
+           STATUS     current
            DESCRIPTION
-                   "The index which uniquely identifies this row."  
+                   "The index which uniquely identifies this row."
            ::= { hpicfDownloadInetEntry 1 }
- 
+
       hpicfDownloadInetTAddressType OBJECT-TYPE
            SYNTAX     InetAddressType
-           MAX-ACCESS read-write 
+           MAX-ACCESS read-write
            STATUS     current
            DESCRIPTION
                    "The type of address in the corresponding
-                    hpicfDownloadTAddress object. An attempt to 
-                    modify this value will fail if the  associated 
+                    hpicfDownloadTAddress object. An attempt to
+                    modify this value will fail if the  associated
                     hpicfDownloadInetStatus object would be equal to
                     'active' both before and after the  modification attempt."
            ::= { hpicfDownloadInetEntry 2 }
@@ -655,73 +655,73 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-create
            STATUS     current
            DESCRIPTION
-                   "The transport address of the node to download 
+                   "The transport address of the node to download
                    firmware from, formatted according to the value of
                    the associated instance of hpicfDownloadInetTAddressType.
-                   An attempt to modify this value will fail if the 
-                   associated hpicfDownloadInetStatus object would be 
-                   equal to 'active' both before and after the 
+                   An attempt to modify this value will fail if the
+                   associated hpicfDownloadInetStatus object would be
+                   equal to 'active' both before and after the
                    modification attempt."
            ::= { hpicfDownloadInetEntry 3 }
-           
+
        hpicfDownloadInetFilename OBJECT-TYPE
            SYNTAX     DisplayString (SIZE(0..63))
            MAX-ACCESS read-create
            STATUS     current
            DESCRIPTION
-                   "Filename and path of file to download (maximum 
+                   "Filename and path of file to download (maximum
                    length of 63 characters + NULL).
-                   An attempt to modify this value will fail if the 
-                   associated hpicfDownloadInetStatus object would be 
-                   equal to 'active' both before and after the 
+                   An attempt to modify this value will fail if the
+                   associated hpicfDownloadInetStatus object would be
+                   equal to 'active' both before and after the
                    modification attempt."
            ::= { hpicfDownloadInetEntry 4 }
-    
+
        hpicfDownloadInetOwnerAddressType OBJECT-TYPE
            SYNTAX     InetAddressType
-           MAX-ACCESS read-write 
+           MAX-ACCESS read-write
            STATUS     current
            DESCRIPTION
                    "The type of address in the corresponding
                     hpicfDownloadInetOwnerAddress object."
            ::= { hpicfDownloadInetEntry 5 }
-      
+
        hpicfDownloadInetOwnerAddress OBJECT-TYPE
            SYNTAX     InetAddress
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The transport address of the management station 
-                   that initiated this download attempt, formatted 
-                   according to the value of the associated instance 
+                   "The transport address of the management station
+                   that initiated this download attempt, formatted
+                   according to the value of the associated instance
                    of hpicfDownloadInetOwnerAddressType."
            ::= { hpicfDownloadInetEntry 6 }
-                                            
+
        hpicfDownloadInetSourcePort OBJECT-TYPE
            SYNTAX     Integer32 (0..65535)
-           MAX-ACCESS read-write 
+           MAX-ACCESS read-write
            STATUS     current
            DESCRIPTION
-                   "The port of the management station 
+                   "The port of the management station
                    that initiated this download attempt."
            ::= { hpicfDownloadInetEntry 7 }
 
        hpicfDownloadInetDestinationPort OBJECT-TYPE
            SYNTAX     Integer32 (0..65535)
-           MAX-ACCESS read-write 
+           MAX-ACCESS read-write
            STATUS     current
            DESCRIPTION
-                   "The port of the management station 
+                   "The port of the management station
                    that initiated this download attempt."
            ::= { hpicfDownloadInetEntry 8 }
-                                            
+
        hpicfDownloadInetFileTransferType OBJECT-TYPE
            SYNTAX     INTEGER {
                           usb(1),
                           tftp(2),
                           xmodem(3)
                       }
-           MAX-ACCESS read-write 
+           MAX-ACCESS read-write
            STATUS     current
            DESCRIPTION
                    "The FileTransfer Method used by the management station
@@ -771,7 +771,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "Status of download.  The first seven codes are 
+                   "Status of download.  The first seven codes are
                    equal to the codes defined by the TFTP protocol.
                    'notDefined' is the same as TFTP protocol error 0.
                    The following are the other possible values for this
@@ -783,7 +783,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
                                           hpicfDownloadTAddress did not
                                           respond to the TFTP request.
                      tftpTimeout        - the download was aborted due
-                                          to excessive timeouts. 
+                                          to excessive timeouts.
                      hardwareError      - there was a hardware problem
                                           on the agent that forced an
                                           abort of the download (see
@@ -839,10 +839,10 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            STATUS     current
            DESCRIPTION
                    "The status of this download entry.  This object
-                   may not be set to 'active' unless the following 
-                   columnar objects exist in this row: 
+                   may not be set to 'active' unless the following
+                   columnar objects exist in this row:
                    hpicfDownloadInetTAddress, hpicfDownloadInetTAddressType,
-                   hpicfDownloadInetFilename, and 
+                   hpicfDownloadInetFilename, and
                    hpicfDownloadInetResetType."
            ::= { hpicfDownloadInetEntry 13 }
 
@@ -883,10 +883,10 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "The destination of the download file on the agent.
                    The allowable destination names depend on the type
-                   of agent being downloaded. 
+                   of agent being downloaded.
                    In case of firmware download,destination can be
                    '/os/primary' or '/os/secondary'
-                   The agent will use '/os/primary' as the default 
+                   The agent will use '/os/primary' as the default
                    value for this object when the row is created.
                    In case of downloading a config file, this object
                    is set to the name of the config file on the switch
@@ -903,17 +903,17 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
                    this type of agent."
            DEFVAL  { "/os/primary" } -- public
            ::= { hpicfDownloadInetEntry 16 }
-                                            
+
       hpicfDownloadInetOpType OBJECT-TYPE
            SYNTAX     INTEGER {
                                ftget(1),
                                ftput(2)
                               }
-           MAX-ACCESS read-write 
-           STATUS     current 
+           MAX-ACCESS read-write
+           STATUS     current
            DESCRIPTION
-                   "The OpType which is used for Geting or Putting 
-                   firmware and config from/to the TFTP server."  
+                   "The OpType which is used for Geting or Putting
+                   firmware and config from/to the TFTP server."
            ::= { hpicfDownloadInetEntry 17 }
 
 
@@ -933,7 +933,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
                     OpType-ftget is not supported for runningConfig"
            ::= { hpicfDownloadInetEntry 18}
 
-   
+
        hpicfDownloadInetFileModeType OBJECT-TYPE
            SYNTAX     INTEGER {
                         unix(1),
@@ -1082,7 +1082,7 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
            ::= { hpicfDownloadGroups 3 }
 
        hpicfDownloadConfigInetGroup OBJECT-GROUP
-           OBJECTS    { 
+           OBJECTS    {
                         hpicfDownloadLogMaxSize,
                         hpicfDownloadLogSize,
                         hpicfDownloadInetIndex,
@@ -1113,4 +1113,3 @@ HP-ICF-DOWNLOAD DEFINITIONS ::= BEGIN
 
 
        END
-

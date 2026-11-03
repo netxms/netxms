@@ -112,7 +112,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             swIPv6StaticRouteStatus
                 RowStatus,
             swIPv6StaticRouteBkupState
-                INTEGER                  
+                INTEGER
         }
 
     swIPv6StaticRouteDest OBJECT-TYPE
@@ -194,12 +194,12 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "primary: Specifies the route as the primary route to the destination.
              backup:  Specifies the route as the backup route to the destination.
-             none:    The route is not specified. If the route is not specified as the 
-                      primary route or the backup route, then it will be auto-assigned 
-                      by the system. The first created is the primary, the second 
+             none:    The route is not specified. If the route is not specified as the
+                      primary route or the backup route, then it will be auto-assigned
+                      by the system. The first created is the primary, the second
                       created is the backup."
-        ::= { swIPv6StaticRouteEntry 9 } 
-        
+        ::= { swIPv6StaticRouteEntry 9 }
+
 -- -----------------------------------------------------------------------------
 -- swIPv6NeighborCacheMgmt      OBJECT IDENTIFIER ::= { swIPv6StaticRouteMIB 4 }
 -- -----------------------------------------------------------------------------
@@ -293,15 +293,15 @@ Ipv6Address ::= TEXTUAL-CONVENTION
                	static(2),
                	dynamic(3),
                	other(4)
-               	}	
+               	}
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
             "This object will delete the cached neighbor entries.
-             all: 	Deletes all cached neighbor entries include static 
+             all: 	Deletes all cached neighbor entries include static
              		and dynamic entries.
              static: 	Deletes all the cached static neighbor entries.
              dynamic: 	Deletes all the cached dynamic neighbor entries.
             "
-        ::= { swIPv6NeighborCacheMgmt 2 } 
+        ::= { swIPv6NeighborCacheMgmt 2 }
 END

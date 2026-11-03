@@ -1,12 +1,12 @@
 -- *****************************************************************
 -- CISCO-VLAN-MEMBERSHIP-CAPABILITY.my:
 -- CISCO-VLAN-MEMBERSHIP-MIB AGENT-CAPABILITIES
---   
+--
 -- September 2003, Wen Xu
---   
+--
 -- Copyright (c) 2003, 2004, 2007, 2010 by Cisco Systems Inc.
 -- All rights reserved.
---   
+--
 -- ****************************************************************
 
 CISCO-VLAN-MEMBERSHIP-CAPABILITY DEFINITIONS ::= BEGIN
@@ -209,7 +209,7 @@ cVlanMemberCapV12R0233SXHPCat6K AGENT-CAPABILITIES
     ::= { ciscoVlanMembershipCapability 6 }
 
 cVlanMemberCapV12R0233SXI4PCat6K AGENT-CAPABILITIES
-    PRODUCT-RELEASE "Cisco IOS 12.2(33)SXI4 on Catalyst 
+    PRODUCT-RELEASE "Cisco IOS 12.2(33)SXI4 on Catalyst
                     6000/6500 series devices."
     STATUS          current
     DESCRIPTION
@@ -249,7 +249,7 @@ cVlanMemberCapV12R0233SXI4PCat6K AGENT-CAPABILITIES
     ::= { ciscoVlanMembershipCapability 7 }
 
 cVlanMemberCapV12R0250SYPCat6K AGENT-CAPABILITIES
-    PRODUCT-RELEASE "Cisco IOS 12.2(50)SY on Catalyst 
+    PRODUCT-RELEASE "Cisco IOS 12.2(50)SY on Catalyst
                     6000/6500 series devices."
     STATUS          current
     DESCRIPTION
@@ -289,6 +289,3 @@ cVlanMemberCapV12R0250SYPCat6K AGENT-CAPABILITIES
     ::= { ciscoVlanMembershipCapability 8 }
 
 END
-
-
-

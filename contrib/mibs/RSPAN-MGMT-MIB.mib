@@ -29,10 +29,10 @@ RSPAN-MGMT-MIB DEFINITIONS ::= BEGIN
         OBJECT-TYPE			FROM SNMPv2-SMI
         RowStatus           			FROM SNMPv2-TC
         dlink-common-mgmt			FROM DLINK-ID-REC-MIB;
-        
+
 	VlanId		::= INTEGER (1..4094)
-    	PortList                	::= OCTET STRING(SIZE (0..127))	 
-    	
+    	PortList                	::= OCTET STRING(SIZE (0..127))
+
     swRSPANMIB MODULE-IDENTITY
           LAST-UPDATED "200903100000Z"
           ORGANIZATION "D-Link Crop."
@@ -63,7 +63,7 @@ RSPAN-MGMT-MIB DEFINITIONS ::= BEGIN
             disabled (2) - Writes this value to the object and then removes the
                 corresponding entry from the table."
         ::= { swRSPANCtrl 1 }
-        
+
 -- -----------------------------------------------------------------------------
 -- swRSPANInfo                OBJECT IDENTIFIER ::= { swRSPANMIB 2 }
 -- -----------------------------------------------------------------------------
@@ -105,13 +105,13 @@ RSPAN-MGMT-MIB DEFINITIONS ::= BEGIN
         INDEX   { swRSPANVLANID }
         ::= { swRSPANTable 1 }
 
-    SwRSPANEntry ::= 
+    SwRSPANEntry ::=
         SEQUENCE {
-            swRSPANVLANID 
+            swRSPANVLANID
                 VlanId,
-            swRSPANSourceIngress 
+            swRSPANSourceIngress
                 PortList,
-            swRSPANSourceEgress 
+            swRSPANSourceEgress
                 PortList,
             swRSPANRedirct
                 PortList,
@@ -134,16 +134,16 @@ RSPAN-MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
-            "This object indicates the packets received on source ports 
+            "This object indicates the packets received on source ports
 	will be mirrored to target ports in the source switch."
         ::= { swRSPANEntry 2 }
-        
+
     swRSPANSourceEgress OBJECT-TYPE
         SYNTAX  PortList
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
-            "This object indicates the packets sent on source ports 
+            "This object indicates the packets sent on source ports
 	will be mirrored to target ports in the source switch."
         ::= { swRSPANEntry 3 }
 
@@ -152,7 +152,7 @@ RSPAN-MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
-            "This object indicates the output port of the RSPAN VLAN packets 
+            "This object indicates the output port of the RSPAN VLAN packets
 	in the mediate or destination switch."
         ::= { swRSPANEntry 4 }
 
@@ -163,7 +163,7 @@ RSPAN-MGMT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
              "This object indicates the status of this entry."
         ::= { swRSPANEntry 5 }
-        
+
    swRSPANSrcMirrGroupID OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  read-create

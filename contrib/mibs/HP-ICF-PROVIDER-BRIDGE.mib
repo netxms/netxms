@@ -9,9 +9,9 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
             FROM SNMPv2-TC
         MODULE-COMPLIANCE, OBJECT-GROUP
             FROM SNMPv2-CONF
-        dot1qVlanStaticEntry 
-            FROM Q-BRIDGE-MIB 
-        ifIndex 
+        dot1qVlanStaticEntry
+            FROM Q-BRIDGE-MIB
+        ifIndex
             FROM IF-MIB;
 
 
@@ -23,27 +23,27 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
                       8000 Foothills Blvd.
                       Roseville, CA 95747"
         DESCRIPTION  "This MIB module contains the HP 'version'
-                      of the standard Provider Bridge MIB and 
+                      of the standard Provider Bridge MIB and
                       the proprietary extensions to it."
-        
+
         REVISION     "200810010000Z"  -- Oct 01, 2008
         DESCRIPTION  "Added hpSwitch to imports section."
-        
+
         REVISION     "200608150000Z"  -- August 15, 2006
         DESCRIPTION  "Initial revision."
         ::= { hpSwitch 40 }
 
-    hpicfProviderBridgeObjects OBJECT IDENTIFIER 
+    hpicfProviderBridgeObjects OBJECT IDENTIFIER
                      ::= { hpicfProviderBridge 1 }
 
-    hpicfProviderBridgeBase OBJECT IDENTIFIER 
+    hpicfProviderBridgeBase OBJECT IDENTIFIER
                      ::= { hpicfProviderBridgeObjects 1 }
 
 -- **********************************************************************
 -- Scalar Objects
 -- **********************************************************************
 
--- This is a HP specific define - where we can configure a device as a 
+-- This is a HP specific define - where we can configure a device as a
 -- regular vlanBridge, s-vlan bridge, provider edge bridge or a vlanSvlanBridge..
 
     hpicfProviderBridgeType OBJECT-TYPE
@@ -60,22 +60,22 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
 
                      vlanBridge         - provider bridge feature disabled mode,
                                           all vlans are cvlans.
-                                          
+
                      svlanBridge        - provider bridge mode with only svlans.
-                     
-                     providerEdgeBridge - provider bridge mode with cvlans and 
-                                          svlans and mappings between them.  
-                                          
-                     vlanSvlanBridge    - provider bridge mode with independent 
+
+                     providerEdgeBridge - provider bridge mode with cvlans and
+                                          svlans and mappings between them.
+
+                     vlanSvlanBridge    - provider bridge mode with independent
                                           cvlans and svlans on the same device.
-                                          
-                     Changing from one mode to another will empty out the 
-                     current configuration information and reboot the device." 
+
+                     Changing from one mode to another will empty out the
+                     current configuration information and reboot the device."
         DEFVAL     { vlanBridge }
         ::= { hpicfProviderBridgeBase 1 }
 
--- This is a HP specific define - to configure the EtherType for Provider 
--- tagged frames. Applicable to s-vlan bridge, provider edge bridge or 
+-- This is a HP specific define - to configure the EtherType for Provider
+-- tagged frames. Applicable to s-vlan bridge, provider edge bridge or
 -- a vlanSvlanBridge..
 
     hpicfProviderBridgeEtherType OBJECT-TYPE
@@ -83,8 +83,8 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION "Defines the 2-byte ethertype for provider tagged frames.
-	             The default is 0x88a8. 
-                     Changing from one tag-type to another with a given 
+	             The default is 0x88a8.
+                     Changing from one tag-type to another with a given
                      hpicfProviderBridgeType configuration will save current
                      configurations and reboot the device, the new tag-type
                      will take effect subsequently."
@@ -105,7 +105,7 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
         SYNTAX      SEQUENCE OF HpicfProviderBridgeVlanTypeEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "HP proprietaty extension to dot1qVlanStaticTable 
+        DESCRIPTION "HP proprietaty extension to dot1qVlanStaticTable
                      to classify a vlan as a cvlan or an svlan"
         ::= { hpicfProviderBridgeBase 3}
 
@@ -116,15 +116,15 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
         DESCRIPTION "An entry for HP Specific extension table"
         AUGMENTS    { dot1qVlanStaticEntry }
         ::= { hpicfProviderBridgeVlanTypeTable 1 }
-       
+
     HpicfProviderBridgeVlanTypeEntry ::=
         SEQUENCE {
-            hpicfProviderBridgeVlanType INTEGER            
+            hpicfProviderBridgeVlanType INTEGER
         }
-       
+
     hpicfProviderBridgeVlanType OBJECT-TYPE
         SYNTAX      INTEGER {
-                       cvlan(1), 
+                       cvlan(1),
                        svlan(2)
                     }
         MAX-ACCESS  read-write
@@ -140,7 +140,7 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
         SYNTAX      SEQUENCE OF HpicfProviderBridgePortEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "This specifies the designated type of an externally 
+        DESCRIPTION "This specifies the designated type of an externally
                     accessible port on a Provider Bridge."
         ::= { hpicfProviderBridgeBase 4 }
 
@@ -148,16 +148,16 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
         SYNTAX      HpicfProviderBridgePortEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "An entry that specifies the designated type of an 
+        DESCRIPTION "An entry that specifies the designated type of an
                     externally accessible port on a Provider Bridge."
         INDEX       { ifIndex }
         ::= { hpicfProviderBridgePortTable 1 }
-       
+
     HpicfProviderBridgePortEntry ::=
         SEQUENCE {
             hpicfProviderBridgePortType        INTEGER
         }
-       
+
     hpicfProviderBridgePortType OBJECT-TYPE
         SYNTAX      INTEGER {
                         customer-edge(1),
@@ -166,23 +166,23 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "The type of an externally accessible port on 
+        DESCRIPTION "The type of an externally accessible port on
                      a Provider Bridge.
-                     A customer-edge port is a C-VLAN component Port 
+                     A customer-edge port is a C-VLAN component Port
                      on a Provider Edge Bridge that is connected to
-                     customer owned equipment and receives and transmits 
-                     frames for a single customer. Designating a port as a 
-                     Customer Edge Port implies Provider Edge Bridge 
-                     functionality and, specifically, the existence of a 
-                     C-VLAN component associated with that port. This 
-                     C-VLAN component is uniquely identified within the 
-                     Bridge by the port number of the associated Customer 
+                     customer owned equipment and receives and transmits
+                     frames for a single customer. Designating a port as a
+                     Customer Edge Port implies Provider Edge Bridge
+                     functionality and, specifically, the existence of a
+                     C-VLAN component associated with that port. This
+                     C-VLAN component is uniquely identified within the
+                     Bridge by the port number of the associated Customer
                      Edge Port.
-                     A customer-network port is an S-VLAN component Port 
+                     A customer-network port is an S-VLAN component Port
                      on a Provider Bridge or within a Provider Edge
-                     Bridge that receives and transmits frame for a 
+                     Bridge that receives and transmits frame for a
                      single customer.
-                     A provider-network port is an S-VLAN component Port 
+                     A provider-network port is an S-VLAN component Port
                      on a Provider Bridge that can transmit and
                      receive frames for multiple customers."
         REFERENCE
@@ -198,15 +198,15 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
 -- Conformance information
 -- **********************************************************************
 
-    hpicfProviderBridgeConformance OBJECT IDENTIFIER 
+    hpicfProviderBridgeConformance OBJECT IDENTIFIER
                       ::= { hpicfProviderBridge 2 }
 
-    hpicfProviderBridgeGroups OBJECT IDENTIFIER 
+    hpicfProviderBridgeGroups OBJECT IDENTIFIER
                       ::= { hpicfProviderBridgeConformance 1 }
 
     hpicfProviderBridgeBaseGroup OBJECT-GROUP
         OBJECTS     { hpicfProviderBridgeType,
-                      hpicfProviderBridgeEtherType, 
+                      hpicfProviderBridgeEtherType,
                       hpicfProviderBridgePortType,
                       hpicfProviderBridgeVlanTypeTable
                      }
@@ -219,7 +219,7 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
 -- Compliance statements
 -- **********************************************************************
 
-    hpicfProviderBridgeCompliances OBJECT IDENTIFIER 
+    hpicfProviderBridgeCompliances OBJECT IDENTIFIER
                    ::= { hpicfProviderBridgeConformance 2 }
 
     hpicfProviderBridgeCompliance MODULE-COMPLIANCE
@@ -228,12 +228,7 @@ HP-ICF-PROVIDER-BRIDGE DEFINITIONS ::= BEGIN
                     standard Provider Bridge MIBs."
         MODULE
             MANDATORY-GROUPS { hpicfProviderBridgeBaseGroup }
-            
+
         ::= { hpicfProviderBridgeCompliances 1 }
 
 END
-
-
-
-
-

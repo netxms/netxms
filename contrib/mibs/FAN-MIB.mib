@@ -1,7 +1,7 @@
 FAN-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, Integer32, Counter32, Unsigned32 
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32, Counter32, Unsigned32
         FROM SNMPv2-SMI
 
     MODULE-COMPLIANCE, OBJECT-GROUP
@@ -26,9 +26,9 @@ hpicfFanMIB MODULE-IDENTITY
 --  FAN Textual Conventions
 -- ********************************************************************
 HpicfDcFanIndex ::= TEXTUAL-CONVENTION
-    DISPLAY-HINT "d"   
+    DISPLAY-HINT "d"
     STATUS       current
-    DESCRIPTION  "A unique value that serves as an index to identify the fan." 
+    DESCRIPTION  "A unique value that serves as an index to identify the fan."
     SYNTAX       Unsigned32
 
 HpicfDcFanType ::= TEXTUAL-CONVENTION
@@ -39,7 +39,7 @@ HpicfDcFanType ::= TEXTUAL-CONVENTION
        mm(1),
        fm(2),
        im(3),
-       ps(4),    
+       ps(4),
        rollup(5),
        maxtype(6)
     }
@@ -65,7 +65,7 @@ HpicfDcFanState ::= TEXTUAL-CONVENTION
        removed(1),
        off(2),
        underspeed(3),
-       overspeed(4),    
+       overspeed(4),
        ok(5),
        maxstate(6)
     }
@@ -84,7 +84,7 @@ hpicfFanScalars OBJECT IDENTIFIER ::= { hpicfFanMIB 1 }
       MAX-ACCESS                 read-write
       STATUS                     current
       DESCRIPTION  "The user preferred fan airflow direction. The direction could be
-                    powerToPort or portToPower. The actual fan direction has to be 
+                    powerToPort or portToPower. The actual fan direction has to be
                     changed manually, this will be used to indicate to the user when
                     when the actual fan airflow direction is different from the user
                     preferred airflow direction."
@@ -93,7 +93,7 @@ hpicfFanScalars OBJECT IDENTIFIER ::= { hpicfFanMIB 1 }
 
 
 -- ********************************************************************
--- FAN entry 
+-- FAN entry
 -- ********************************************************************
 
 hpicfEntityFan  OBJECT IDENTIFIER ::= { hpicfFanMIB 2 }
@@ -119,8 +119,8 @@ HpicfFanEntry ::= SEQUENCE {
       hpicfFanType              HpicfDcFanType,
       hpicfFanState             HpicfDcFanState,
       hpicfFanRecovering        Integer32,
-      hpicfFanNumFailures       Counter32, 
-      hpicfFanAirflowDirection  HpicfDcFanAirflowDirection 
+      hpicfFanNumFailures       Counter32,
+      hpicfFanAirflowDirection  HpicfDcFanAirflowDirection
 }
 
 hpicfFanIndex    OBJECT-TYPE
@@ -145,7 +145,7 @@ hpicfFanType OBJECT-TYPE
     ::= { hpicfFanEntry 3 }
 
 hpicfFanState OBJECT-TYPE
-    SYNTAX      HpicfDcFanState 
+    SYNTAX      HpicfDcFanState
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION "The current state of the fan."
@@ -156,11 +156,11 @@ hpicfFanRecovering OBJECT-TYPE
     MAX-ACCESS   read-only
     STATUS       current
     DESCRIPTION  "An indication that the switch fan entity is faulty.
-                 Before declaring a fan to be good after a failure is 
+                 Before declaring a fan to be good after a failure is
                  detected, the same good indication must happen five (5)
                  times in a row. A failure indication is always TRUE, while
-                 a good indication could be FALSE, hence this parameter is 
-                 used to count the repeated good indications before 
+                 a good indication could be FALSE, hence this parameter is
+                 used to count the repeated good indications before
                  declaring the fan to be good "
     ::= { hpicfFanEntry 5 }
 
@@ -172,7 +172,7 @@ hpicfFanNumFailures OBJECT-TYPE
     ::= { hpicfFanEntry 6 }
 
 hpicfFanAirflowDirection OBJECT-TYPE
-    SYNTAX        HpicfDcFanAirflowDirection 
+    SYNTAX        HpicfDcFanAirflowDirection
     MAX-ACCESS    read-only
     STATUS        current
     DESCRIPTION   "Indication of the fan air flow direction, either
@@ -194,7 +194,7 @@ hpicfFanAirflowDirection OBJECT-TYPE
 -- ********************************************************************
    hpicfDcFanCompliance MODULE-COMPLIANCE
       STATUS       current
-      DESCRIPTION  "The compliance statement for entries which implement 
+      DESCRIPTION  "The compliance statement for entries which implement
                     the FAN MIB."
       MODULE        -- This module
       MANDATORY-GROUPS
@@ -204,7 +204,7 @@ hpicfFanAirflowDirection OBJECT-TYPE
       }
       GROUP        hpicfFanGroup
       DESCRIPTION  "Objects associated with switch entity FAN."
-      ::= { hpicfFanCompliance 1 } 
+      ::= { hpicfFanCompliance 1 }
 
 --
 -- FAN Groups
@@ -221,11 +221,11 @@ hpicfFanAirflowDirection OBJECT-TYPE
    hpicfFanGroup OBJECT-GROUP
       OBJECTS
       {
-          hpicfFanTray,              
-          hpicfFanType,              
-          hpicfFanState,            
-          hpicfFanRecovering,      
-          hpicfFanNumFailures,       
+          hpicfFanTray,
+          hpicfFanType,
+          hpicfFanState,
+          hpicfFanRecovering,
+          hpicfFanNumFailures,
           hpicfFanAirflowDirection
       }
       STATUS      current

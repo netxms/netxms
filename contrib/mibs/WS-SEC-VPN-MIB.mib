@@ -6,24 +6,24 @@
 --
 
 	WS-SEC-VPN-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP, MODULE-COMPLIANCE			
-				FROM SNMPv2-CONF			
-			IpAddress, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			PhysAddress, DisplayString, TruthValue, DateAndTime			
-				FROM SNMPv2-TC			
-			wsSec			
+			OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+			IpAddress, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			PhysAddress, DisplayString, TruthValue, DateAndTime
+				FROM SNMPv2-TC
+			wsSec
 				FROM WS-SMI;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.6.1
-		wsSecVpnMib MODULE-IDENTITY 
+		wsSecVpnMib MODULE-IDENTITY
 			LAST-UPDATED "200607131648Z"		-- July 13, 2006 at 16:48 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technoliges"
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Symbol Technologies, Inc.
 				Customer Service
 				Postal:
@@ -33,21 +33,21 @@
 				Phone: (631)-738-6213
 				E-Mail: support@symbol.com
 				Web:http://www.symbo.com"
-			DESCRIPTION 
+			DESCRIPTION
 				"REVISION 2006012140000Z
 				DESCRIPTION
 				   02a02"
 			REVISION "200607141826Z"		-- July 14, 2006 at 18:26 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"This MIB is used for configuring IPSec VPN."
 			::= { wsSec 1 }
 
-		
-	
+
+
 --
 -- Type definitions
 --
-	
+
 		AbbrRowStatus ::= INTEGER
 			{
 			active(1),
@@ -55,16 +55,16 @@
 			destroy(6)
 			}
 
-	
-	
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.6.1.1
 		wsSecIKEScalars OBJECT IDENTIFIER ::= { wsSecVpnMib 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.1.1
 		wsSecIKEKeepAlive OBJECT-TYPE
 			SYNTAX Unsigned32 (10..3600)
@@ -75,7 +75,7 @@
 				"Description."
 			::= { wsSecIKEScalars 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.1.2
 		wsSecISAKMPLocalIdentity OBJECT-TYPE
 			SYNTAX INTEGER
@@ -90,7 +90,7 @@
 				"Description."
 			::= { wsSecIKEScalars 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.2
 		wsSecIKEPolicyTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecIKEPolicyEntry
@@ -100,7 +100,7 @@
 				"Description."
 			::= { wsSecVpnMib 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.2.1
 		wsSecIKEPolicyEntry OBJECT-TYPE
 			SYNTAX WsSecIKEPolicyEntry
@@ -111,9 +111,9 @@
 			INDEX { wsSecIKEPolicyPriority }
 			::= { wsSecIKEPolicyTable 1 }
 
-		
+
 		WsSecIKEPolicyEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecIKEPolicyPriority
 					Unsigned32,
 				wsSecIKEPolicyEncryption
@@ -140,7 +140,7 @@
 				which can not be deleted."
 			::= { wsSecIKEPolicyEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.2.1.2
 		wsSecIKEPolicyEncryption OBJECT-TYPE
 			SYNTAX INTEGER
@@ -158,7 +158,7 @@
 			DEFVAL { des }
 			::= { wsSecIKEPolicyEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.2.1.3
 		wsSecIKEPolicyHash OBJECT-TYPE
 			SYNTAX INTEGER
@@ -173,7 +173,7 @@
 			DEFVAL { sha1 }
 			::= { wsSecIKEPolicyEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.2.1.4
 		wsSecIKEPolicyAuthType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -188,7 +188,7 @@
 			DEFVAL { rsaSig }
 			::= { wsSecIKEPolicyEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.2.1.5
 		wsSecIKEPolicyDHGroup OBJECT-TYPE
 			SYNTAX INTEGER
@@ -204,7 +204,7 @@
 			DEFVAL { group1 }
 			::= { wsSecIKEPolicyEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.2.1.6
 		wsSecIKEPolicySaLifeTimeSec OBJECT-TYPE
 			SYNTAX Unsigned32 (3600..4294967295)
@@ -215,7 +215,7 @@
 				"Description."
 			::= { wsSecIKEPolicyEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.2.1.7
 		wsSecIKEPolicyRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -225,7 +225,7 @@
 				"Description."
 			::= { wsSecIKEPolicyEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.3
 		wsSecPreSharedKeyTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecPreSharedKeyEntry
@@ -235,7 +235,7 @@
 				"Description."
 			::= { wsSecVpnMib 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.3.1
 		wsSecPreSharedKeyEntry OBJECT-TYPE
 			SYNTAX WsSecPreSharedKeyEntry
@@ -246,9 +246,9 @@
 			INDEX { wsSecPreSharedKeyIKEPeer }
 			::= { wsSecPreSharedKeyTable 1 }
 
-		
+
 		WsSecPreSharedKeyEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecPreSharedKeyIKEPeer
 					DisplayString,
 				wsSecPreSharedKeyIKEPeerIdentity
@@ -271,7 +271,7 @@
 				as indicated by the value of wsSecIKEPeerIdentity"
 			::= { wsSecPreSharedKeyEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.3.1.2
 		wsSecPreSharedKeyIKEPeerIdentity OBJECT-TYPE
 			SYNTAX INTEGER
@@ -286,7 +286,7 @@
 				"Description."
 			::= { wsSecPreSharedKeyEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.3.1.3
 		wsSecPreSharedKeyIKEPeerKey OBJECT-TYPE
 			SYNTAX OCTET STRING (SIZE (8..255))
@@ -296,7 +296,7 @@
 				"Description."
 			::= { wsSecPreSharedKeyEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.3.1.4
 		wsSecPreSharedKeyIKEAggressive OBJECT-TYPE
 			SYNTAX TruthValue
@@ -306,18 +306,18 @@
 				"Description."
 			::= { wsSecPreSharedKeyEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.3.1.5
 		wsSecPreSharedKeyRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"All objects in the entry must be specified 
+				"All objects in the entry must be specified
 				 durng a row creation."
 			::= { wsSecPreSharedKeyEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.4
 		wsSecTransformSetTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecTransformSetEntry
@@ -327,7 +327,7 @@
 				"Description."
 			::= { wsSecVpnMib 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.4.1
 		wsSecTransformSetEntry OBJECT-TYPE
 			SYNTAX WsSecTransformSetEntry
@@ -338,9 +338,9 @@
 			INDEX { wsSecTransformSetName }
 			::= { wsSecTransformSetTable 1 }
 
-		
+
 		WsSecTransformSetEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecTransformSetName
 					DisplayString,
 				wsSecTransformSetMode
@@ -364,7 +364,7 @@
 				"Description."
 			::= { wsSecTransformSetEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.4.1.2
 		wsSecTransformSetMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -379,7 +379,7 @@
 			DEFVAL { tunnel }
 			::= { wsSecTransformSetEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.4.1.3
 		wsSecTransformSetAHAuth OBJECT-TYPE
 			SYNTAX INTEGER
@@ -394,7 +394,7 @@
 				"Description."
 			::= { wsSecTransformSetEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.4.1.4
 		wsSecTransformSetEspEncr OBJECT-TYPE
 			SYNTAX INTEGER
@@ -412,7 +412,7 @@
 				"Description."
 			::= { wsSecTransformSetEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.4.1.5
 		wsSecTransformSetEspAuth OBJECT-TYPE
 			SYNTAX INTEGER
@@ -427,7 +427,7 @@
 				"Description."
 			::= { wsSecTransformSetEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.4.1.6
 		wsSecTransformSetRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -438,15 +438,15 @@
 				   wsSecTransformSetAHAuth
 				   wsSecTransformSetEspEncr
 				   wsSecTransformSetEspAuth
-				 must be specified durng a row creation. 
+				 must be specified durng a row creation.
 				"
 			::= { wsSecTransformSetEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.5
 		wsSecIPSecCfgScalars OBJECT IDENTIFIER ::= { wsSecVpnMib 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.5.1
 		wsSecVpnSALifeTimeSec OBJECT-TYPE
 			SYNTAX Unsigned32 (90..4294967295)
@@ -457,7 +457,7 @@
 				"Default value is 3600 seconds."
 			::= { wsSecIPSecCfgScalars 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.5.2
 		wsSecVpnSALifeTimeKB OBJECT-TYPE
 			SYNTAX Unsigned32 (500..4294967295)
@@ -468,7 +468,7 @@
 				"Default value is TBD."
 			::= { wsSecIPSecCfgScalars 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.6
 		wsSecLocalIPAddrPoolTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecLocalIPAddrPoolEntry
@@ -478,7 +478,7 @@
 				"Description."
 			::= { wsSecVpnMib 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.6.1
 		wsSecLocalIPAddrPoolEntry OBJECT-TYPE
 			SYNTAX WsSecLocalIPAddrPoolEntry
@@ -489,9 +489,9 @@
 			INDEX { wsSecLocalIPAddrPoolAddrRangeStart, wsSecLocalIPAddrPoolAddrRangeEnd }
 			::= { wsSecLocalIPAddrPoolTable 1 }
 
-		
+
 		WsSecLocalIPAddrPoolEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecLocalIPAddrPoolAddrRangeStart
 					IpAddress,
 				wsSecLocalIPAddrPoolAddrRangeEnd
@@ -511,19 +511,19 @@
 				255.255.255.0"
 			::= { wsSecLocalIPAddrPoolEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.6.1.2
 		wsSecLocalIPAddrPoolAddrRangeEnd OBJECT-TYPE
 			SYNTAX IpAddress
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"This address and wsSecLocalIPAddrPoolAddrRangeStart 
+				"This address and wsSecLocalIPAddrPoolAddrRangeStart
 				must belong to the same subnet with subnet mask as
 				255.255.255.0"
 			::= { wsSecLocalIPAddrPoolEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.6.1.3
 		wsSecLocalIPAddrPoolRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -533,11 +533,11 @@
 				"Description."
 			::= { wsSecLocalIPAddrPoolEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.7
 		wsSecLocalIPAddressPoolScalars OBJECT IDENTIFIER ::= { wsSecVpnMib 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.7.1
 		wsSecClientDNSServerIP OBJECT-TYPE
 			SYNTAX IpAddress
@@ -547,7 +547,7 @@
 				"Description."
 			::= { wsSecLocalIPAddressPoolScalars 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.7.2
 		wsSecClientWinServerIP OBJECT-TYPE
 			SYNTAX IpAddress
@@ -557,7 +557,7 @@
 				"Description."
 			::= { wsSecLocalIPAddressPoolScalars 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8
 		wsSecCryptoMapTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecCryptoMapEntry
@@ -567,7 +567,7 @@
 				"Description."
 			::= { wsSecVpnMib 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1
 		wsSecCryptoMapEntry OBJECT-TYPE
 			SYNTAX WsSecCryptoMapEntry
@@ -578,9 +578,9 @@
 			INDEX { wsSecCryptoMapSequenceNum, wsSecCryptoMapName }
 			::= { wsSecCryptoMapTable 1 }
 
-		
+
 		WsSecCryptoMapEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecCryptoMapSequenceNum
 					Unsigned32,
 				wsSecCryptoMapName
@@ -618,7 +618,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.2
 		wsSecCryptoMapName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -629,7 +629,7 @@
 				the corresponding wsSecCryptoMapIfMappingEntry"
 			::= { wsSecCryptoMapEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.3
 		wsSecCryptoMapACLId OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..64))
@@ -639,7 +639,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.4
 		wsSecCryptoMapSALifeTimeSec OBJECT-TYPE
 			SYNTAX Unsigned32 (90..4294967295)
@@ -649,7 +649,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.5
 		wsSecCryptoMapSALifeTimeKB OBJECT-TYPE
 			SYNTAX Unsigned32 (500..4294967295)
@@ -659,7 +659,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.6
 		wsSecCryptoMapPFS OBJECT-TYPE
 			SYNTAX INTEGER
@@ -676,7 +676,7 @@
 			DEFVAL { none }
 			::= { wsSecCryptoMapEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.7
 		wsSecCryptoMapSAPerHostEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -686,7 +686,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.8
 		wsSecCryptoMapModeCfgEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -696,7 +696,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.9
 		wsSecCryptoMapLocalId OBJECT-TYPE
 			SYNTAX DisplayString
@@ -706,7 +706,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.10
 		wsSecCryptoMapLocalIdType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -721,7 +721,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.11
 		wsSecCryptoMapMode OBJECT-TYPE
 			SYNTAX INTEGER
@@ -735,7 +735,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.12
 		wsSecCryptoMapRemoteType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -749,7 +749,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.8.1.13
 		wsSecCryptoMapRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -759,7 +759,7 @@
 				"Description."
 			::= { wsSecCryptoMapEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.9
 		wsSecCryptoMapPeerTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecCryptoMapPeerEntry
@@ -769,7 +769,7 @@
 				"Description."
 			::= { wsSecVpnMib 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.9.1
 		wsSecCryptoMapPeerEntry OBJECT-TYPE
 			SYNTAX WsSecCryptoMapPeerEntry
@@ -780,9 +780,9 @@
 			INDEX { wsSecCryptoMapPeerSequenceNum, wsSecCryptoMapPeerName, wsSecCryptoMapPeerIKEPeer }
 			::= { wsSecCryptoMapPeerTable 1 }
 
-		
+
 		WsSecCryptoMapPeerEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecCryptoMapPeerSequenceNum
 					Unsigned32,
 				wsSecCryptoMapPeerName
@@ -799,33 +799,33 @@
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The wsSecCryptoMapSequenceNum value of the 
+				"The wsSecCryptoMapSequenceNum value of the
 				 corresponding wsSecCryptoMapEntry"
 			::= { wsSecCryptoMapPeerEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.9.1.2
 		wsSecCryptoMapPeerName OBJECT-TYPE
 			SYNTAX DisplayString
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"Description.The wsSecCryptoMapName value of the 
+				"Description.The wsSecCryptoMapName value of the
 				 correcponding wsSecCryptoMapEntry."
 			::= { wsSecCryptoMapPeerEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.9.1.3
 		wsSecCryptoMapPeerIKEPeer OBJECT-TYPE
 			SYNTAX DisplayString
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The wsSecPreSharedKeyIKEPeer value of the correconding 
+				"The wsSecPreSharedKeyIKEPeer value of the correconding
 				 wsSecPreSharedKeyEntry. "
 			::= { wsSecCryptoMapPeerEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.9.1.4
 		wsSecCryptoMapPeerRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -835,7 +835,7 @@
 				"Description."
 			::= { wsSecCryptoMapPeerEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10
 		wsSecCryptoMapManualSaTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecCryptoMapManualSaEntry
@@ -845,7 +845,7 @@
 				"Description."
 			::= { wsSecVpnMib 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1
 		wsSecCryptoMapManualSaEntry OBJECT-TYPE
 			SYNTAX WsSecCryptoMapManualSaEntry
@@ -856,9 +856,9 @@
 			INDEX { wsSecCryptoMapManualSaCryptoMapSeqNum, wsSecCryptoMapManualSaCryptoMapName }
 			::= { wsSecCryptoMapManualSaTable 1 }
 
-		
+
 		WsSecCryptoMapManualSaEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecCryptoMapManualSaCryptoMapSeqNum
 					Unsigned32,
 				wsSecCryptoMapManualSaCryptoMapName
@@ -900,7 +900,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.2
 		wsSecCryptoMapManualSaCryptoMapName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -911,18 +911,18 @@
 				the corresponding wsSecCryptoMapIfMappingEntry"
 			::= { wsSecCryptoMapManualSaEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.3
 		wsSecCryptoMapManualSaIKEPeer OBJECT-TYPE
 			SYNTAX DisplayString
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"The wsSecPreSharedKeyIKEPeer value of the 
+				"The wsSecPreSharedKeyIKEPeer value of the
 				 corresponding wsSecPreSharedKeyTable."
 			::= { wsSecCryptoMapManualSaEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.4
 		wsSecCryptoMapManualSaAclId OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..64))
@@ -932,7 +932,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.5
 		wsSecCryptoMapManualSaInAhSpi OBJECT-TYPE
 			SYNTAX Unsigned32 (256..4294967295)
@@ -942,7 +942,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.6
 		wsSecCryptoMapManualSaInAuthKey OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -952,7 +952,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.7
 		wsSecCryptoMapManualSaOutAhSpi OBJECT-TYPE
 			SYNTAX Unsigned32 (256..4294967295)
@@ -962,7 +962,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.8
 		wsSecCryptoMapManualSaOutAuthKey OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -972,7 +972,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.9
 		wsSecCryptoMapManualSaInEspSpi OBJECT-TYPE
 			SYNTAX Unsigned32 (256..4294967295)
@@ -982,7 +982,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.10
 		wsSecCryptoMapManualSaInEspCipherKey OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -992,7 +992,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.11
 		wsSecCryptoMapManualSaOutEspSpi OBJECT-TYPE
 			SYNTAX Unsigned32 (256..4294967295)
@@ -1002,7 +1002,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.12
 		wsSecCryptoMapManualSaOutEspCipherKey OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -1012,7 +1012,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.13
 		wsSecCryptoMapManualSaTSName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1022,7 +1022,7 @@
 				"A value of wsSecTransformSetName."
 			::= { wsSecCryptoMapManualSaEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.14
 		wsSecCryptoMapManualSaAhOrEsp OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1037,7 +1037,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.10.1.15
 		wsSecCryptoMapManualSaRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -1047,7 +1047,7 @@
 				"Description."
 			::= { wsSecCryptoMapManualSaEntry 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.11
 		wsSecCryptoMapTransformSetTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecCryptoMapTransformSetEntry
@@ -1057,7 +1057,7 @@
 				"Description."
 			::= { wsSecVpnMib 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.11.1
 		wsSecCryptoMapTransformSetEntry OBJECT-TYPE
 			SYNTAX WsSecCryptoMapTransformSetEntry
@@ -1068,9 +1068,9 @@
 			INDEX { wsSecCryptoMapTransformCryptoMapSetSeqNum, wsSecCryptoMapTransformSetCryptoMapName, wsSecCryptoMapTransformSetName }
 			::= { wsSecCryptoMapTransformSetTable 1 }
 
-		
+
 		WsSecCryptoMapTransformSetEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecCryptoMapTransformCryptoMapSetSeqNum
 					Unsigned32,
 				wsSecCryptoMapTransformSetCryptoMapName
@@ -1087,33 +1087,33 @@
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The wsSeqCryptoMapSequenceNum value in the 
+				"The wsSeqCryptoMapSequenceNum value in the
 				 corresponding wsSecCryptoMapEntry."
 			::= { wsSecCryptoMapTransformSetEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.11.1.2
 		wsSecCryptoMapTransformSetCryptoMapName OBJECT-TYPE
 			SYNTAX DisplayString
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The wsSeqCryptoMapName vlaue in the 
+				"The wsSeqCryptoMapName vlaue in the
 				 corresponding wsSecCryptoMapEntry."
 			::= { wsSecCryptoMapTransformSetEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.11.1.3
 		wsSecCryptoMapTransformSetName OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..64))
 			MAX-ACCESS read-only
 			STATUS current
 			DESCRIPTION
-				"The wsSecTransformSetName value of the 
+				"The wsSecTransformSetName value of the
 				 corresponding wsSecTransformSetEntry."
 			::= { wsSecCryptoMapTransformSetEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.11.1.4
 		wsSecCryptoMapTransformSetRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -1123,7 +1123,7 @@
 				"Description."
 			::= { wsSecCryptoMapTransformSetEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.12
 		wsSecCryptoMapIfMappingTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecCryptoMapIfMappingEntry
@@ -1133,7 +1133,7 @@
 				"Description."
 			::= { wsSecVpnMib 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.12.1
 		wsSecCryptoMapIfMappingEntry OBJECT-TYPE
 			SYNTAX WsSecCryptoMapIfMappingEntry
@@ -1146,9 +1146,9 @@
 			INDEX { wsSecCryptoMapIfMappingCryptoMapName }
 			::= { wsSecCryptoMapIfMappingTable 1 }
 
-		
+
 		WsSecCryptoMapIfMappingEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecCryptoMapIfMappingCryptoMapName
 					DisplayString,
 				wsSecCryptoMapIfMappingIfName
@@ -1164,7 +1164,7 @@
 				"Description."
 			::= { wsSecCryptoMapIfMappingEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.12.1.2
 		wsSecCryptoMapIfMappingIfName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1174,7 +1174,7 @@
 				"A layer three interface."
 			::= { wsSecCryptoMapIfMappingEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.13
 		wsSecRadiusSvrTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecRadiusSvrEntry
@@ -1184,7 +1184,7 @@
 				"Description."
 			::= { wsSecVpnMib 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.13.1
 		wsSecRadiusSvrEntry OBJECT-TYPE
 			SYNTAX WsSecRadiusSvrEntry
@@ -1195,9 +1195,9 @@
 			INDEX { wsSecRadiusSvrIPAddr }
 			::= { wsSecRadiusSvrTable 1 }
 
-		
+
 		WsSecRadiusSvrEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecRadiusSvrIPAddr
 					IpAddress,
 				wsSecRadiusSvrType
@@ -1219,7 +1219,7 @@
 				"Description."
 			::= { wsSecRadiusSvrEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.13.1.2
 		wsSecRadiusSvrType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1233,7 +1233,7 @@
 				"Description."
 			::= { wsSecRadiusSvrEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.13.1.3
 		wsSecRadiusSvrPort OBJECT-TYPE
 			SYNTAX Unsigned32 (1024..65535)
@@ -1243,7 +1243,7 @@
 				"Description."
 			::= { wsSecRadiusSvrEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.13.1.4
 		wsSecRadiusSvrSharedSecret OBJECT-TYPE
 			SYNTAX OCTET STRING (SIZE (0..32))
@@ -1253,7 +1253,7 @@
 				"This object is null string when read."
 			::= { wsSecRadiusSvrEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.13.1.5
 		wsSecRadiusSvrRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -1263,16 +1263,16 @@
 				"The following objects:
 				   wsSecRadiusSvrType
 				   wsSecRadiusSvrPort
-				   wsSecRadiusSvrSharedSecret 
+				   wsSecRadiusSvrSharedSecret
 				 must be specified during a row creation.
 				  "
 			::= { wsSecRadiusSvrEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.14
 		wsSecRadiusSvrScalars OBJECT IDENTIFIER ::= { wsSecVpnMib 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.14.1
 		wsSecRadiusSvrNasIdentifier OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..64))
@@ -1282,7 +1282,7 @@
 				"Description."
 			::= { wsSecRadiusSvrScalars 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.15
 		wsSecVpnUserTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecVpnUserEntry
@@ -1292,7 +1292,7 @@
 				"Description."
 			::= { wsSecVpnMib 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.15.1
 		wsSecVpnUserEntry OBJECT-TYPE
 			SYNTAX WsSecVpnUserEntry
@@ -1303,9 +1303,9 @@
 			INDEX { wsSecVpnUserName }
 			::= { wsSecVpnUserTable 1 }
 
-		
+
 		WsSecVpnUserEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecVpnUserName
 					DisplayString,
 				wsSecVpnUserPassword
@@ -1323,7 +1323,7 @@
 				"Description."
 			::= { wsSecVpnUserEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.15.1.2
 		wsSecVpnUserPassword OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (8..21))
@@ -1333,7 +1333,7 @@
 				"Ths object returns NULL string when read."
 			::= { wsSecVpnUserEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.15.1.3
 		wsSecVpnUserRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -1344,11 +1344,11 @@
 				 durning a row creation."
 			::= { wsSecVpnUserEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.16
 		wsSecVpnAuth OBJECT IDENTIFIER ::= { wsSecVpnMib 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.16.1
 		wsSecVPNAuthMethod OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1363,11 +1363,11 @@
 				"Description."
 			::= { wsSecVpnAuth 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.17
 		wsSecIKESaStatsClearScalars OBJECT IDENTIFIER ::= { wsSecVpnMib 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.17.1
 		wsSecIpSecClearPeerIpAddr OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1375,11 +1375,11 @@
 			STATUS current
 			DESCRIPTION
 				"This object is to be used in
-				conjuction with wsSecClearAction. 
+				conjuction with wsSecClearAction.
 				Use 0.0.0.0 as a wild card peer ip address."
 			::= { wsSecIKESaStatsClearScalars 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.17.2
 		wsSecClearAction OBJECT-TYPE
 			SYNTAX INTEGER
@@ -1395,7 +1395,7 @@
 				conjuction with wsSecClearPeerIpAddr"
 			::= { wsSecIKESaStatsClearScalars 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18
 		wsSecIPSecSaStatusTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecIPSecSaStatusEntry
@@ -1405,7 +1405,7 @@
 				"Description."
 			::= { wsSecVpnMib 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18.1
 		wsSecIPSecSaStatusEntry OBJECT-TYPE
 			SYNTAX WsSecIPSecSaStatusEntry
@@ -1416,9 +1416,9 @@
 			INDEX { wsSecIPSecSaStatusIndex }
 			::= { wsSecIPSecSaStatusTable 1 }
 
-		
+
 		WsSecIPSecSaStatusEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecIPSecSaStatusIndex
 					Unsigned32,
 				wsSecIPSecSaStatusLocalPeer
@@ -1448,7 +1448,7 @@
 				"Description."
 			::= { wsSecIPSecSaStatusEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18.1.2
 		wsSecIPSecSaStatusLocalPeer OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1458,7 +1458,7 @@
 				"Description."
 			::= { wsSecIPSecSaStatusEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18.1.3
 		wsSecIPSecSaStatusRemotePeer OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1468,7 +1468,7 @@
 				"Description."
 			::= { wsSecIPSecSaStatusEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18.1.4
 		wsSecIPSecSaStatusEspSpiIn OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -1478,7 +1478,7 @@
 				"Description."
 			::= { wsSecIPSecSaStatusEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18.1.5
 		wsSecIPSecSaStatusEspSpiOut OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -1488,7 +1488,7 @@
 				"Description."
 			::= { wsSecIPSecSaStatusEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18.1.6
 		wsSecIPSecSaStatusAhSpiIn OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -1498,7 +1498,7 @@
 				"Description."
 			::= { wsSecIPSecSaStatusEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18.1.7
 		wsSecIPSecSaStatusAhSpiOut OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -1508,7 +1508,7 @@
 				"Description."
 			::= { wsSecIPSecSaStatusEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18.1.8
 		wsSecIPSecSaStatusAlgthmCipher OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1518,7 +1518,7 @@
 				"Description."
 			::= { wsSecIPSecSaStatusEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.18.1.9
 		wsSecIPSecSaStatusAlgthmMac OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1528,7 +1528,7 @@
 				"Description."
 			::= { wsSecIPSecSaStatusEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19
 		wsSecIKESaStatsTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSecIKESaStatsEntry
@@ -1538,7 +1538,7 @@
 				"Description."
 			::= { wsSecVpnMib 19 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1
 		wsSecIKESaStatsEntry OBJECT-TYPE
 			SYNTAX WsSecIKESaStatsEntry
@@ -1549,9 +1549,9 @@
 			INDEX { wsSecIKESaStatIndex }
 			::= { wsSecIKESaStatsTable 1 }
 
-		
+
 		WsSecIKESaStatsEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSecIKESaStatIndex
 					Unsigned32,
 				wsSecIKESaStatsPhase1Done
@@ -1583,7 +1583,7 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1.2
 		wsSecIKESaStatsPhase1Done OBJECT-TYPE
 			SYNTAX TruthValue
@@ -1593,7 +1593,7 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1.3
 		wsSecIKESaStatsNumOfNegotions OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -1603,7 +1603,7 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1.4
 		wsSecIKESaStatsNumOfBytes OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -1613,7 +1613,7 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1.5
 		wsSecIKESaStatsCreateDate OBJECT-TYPE
 			SYNTAX DateAndTime
@@ -1623,7 +1623,7 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1.6
 		wsSecIKESaStatsEncrptAlgthm OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1633,7 +1633,7 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1.7
 		wsSecIKESaStatsHashAlgthm OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1643,7 +1643,7 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1.8
 		wsSecIKESaStatsPrfAlgthm OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1653,7 +1653,7 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1.9
 		wsSecIKESaStatsLocalIdentity OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1663,7 +1663,7 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.19.1.10
 		wsSecIKESaStatsRemoteIdentity OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1673,11 +1673,11 @@
 				"Description."
 			::= { wsSecIKESaStatsEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.20
 		wsSecVPNScalars OBJECT IDENTIFIER ::= { wsSecVpnMib 20 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.20.1
 		wsSecVPNSetError OBJECT-TYPE
 			SYNTAX DisplayString
@@ -1688,58 +1688,58 @@
 				 Set request to an object in this WS-SEC-VPN-MIB."
 			::= { wsSecVPNScalars 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.21
 		wsSecVpnConformance OBJECT IDENTIFIER ::= { wsSecVpnMib 21 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.21.1
 		wsSecVpnCompliances OBJECT IDENTIFIER ::= { wsSecVpnConformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.21.1.1
 		wsSecVpnCompliance MODULE-COMPLIANCE
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			MODULE -- this module
 				MANDATORY-GROUPS { wsSecVpnGroup }
 			::= { wsSecVpnCompliances 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.22
 		wsSecVpnGroups OBJECT IDENTIFIER ::= { wsSecVpnMib 22 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.6.1.23
 		wsSecVpnGroup OBJECT-GROUP
-			OBJECTS { wsSecIKEPolicyRowStatus, wsSecIKEKeepAlive, wsSecTransformSetName, wsSecTransformSetMode, wsSecTransformSetEspEncr, 
-				wsSecTransformSetEspAuth, wsSecTransformSetRowStatus, wsSecVpnSALifeTimeSec, wsSecVpnSALifeTimeKB, wsSecClientDNSServerIP, 
-				wsSecClientWinServerIP, wsSecCryptoMapSequenceNum, wsSecPreSharedKeyRowStatus, wsSecTransformSetAHAuth, wsSecCryptoMapName, 
-				wsSecCryptoMapACLId, wsSecCryptoMapPFS, wsSecCryptoMapSAPerHostEnable, wsSecCryptoMapRowStatus, wsSecCryptoMapPeerRowStatus, 
-				wsSecCryptoMapManualSaCryptoMapSeqNum, wsSecCryptoMapManualSaCryptoMapName, wsSecCryptoMapManualSaIKEPeer, wsSecCryptoMapManualSaAclId, wsSecCryptoMapManualSaInAhSpi, 
-				wsSecCryptoMapManualSaOutAhSpi, wsSecCryptoMapManualSaInEspSpi, wsSecCryptoMapManualSaOutEspSpi, wsSecCryptoMapManualSaRowStatus, wsSecRadiusSvrIPAddr, 
-				wsSecRadiusSvrType, wsSecRadiusSvrPort, wsSecRadiusSvrSharedSecret, wsSecRadiusSvrRowStatus, wsSecVpnUserName, 
-				wsSecVpnUserPassword, wsSecVpnUserRowStatus, wsSecClearAction, wsSecIPSecSaStatusIndex, wsSecIPSecSaStatusLocalPeer, 
-				wsSecIPSecSaStatusRemotePeer, wsSecIPSecSaStatusEspSpiOut, wsSecIPSecSaStatusAhSpiIn, wsSecIPSecSaStatusAhSpiOut, wsSecIPSecSaStatusAlgthmCipher, 
-				wsSecIPSecSaStatusAlgthmMac, wsSecIKESaStatIndex, wsSecIKESaStatsNumOfNegotions, wsSecIKESaStatsNumOfBytes, wsSecIKESaStatsCreateDate, 
-				wsSecIKESaStatsEncrptAlgthm, wsSecIKESaStatsHashAlgthm, wsSecIKESaStatsPrfAlgthm, wsSecIKESaStatsLocalIdentity, wsSecIKESaStatsRemoteIdentity, 
-				wsSecIKESaStatsPhase1Done, wsSecVPNAuthMethod, wsSecCryptoMapManualSaTSName, wsSecCryptoMapModeCfgEnable, wsSecVPNSetError, 
-				wsSecRadiusSvrNasIdentifier, wsSecIKEPolicySaLifeTimeSec, wsSecIKEPolicyDHGroup, wsSecIKEPolicyAuthType, wsSecIKEPolicyHash, 
-				wsSecIKEPolicyEncryption, wsSecIKEPolicyPriority, wsSecCryptoMapIfMappingCryptoMapName, wsSecCryptoMapIfMappingIfName, wsSecCryptoMapTransformSetRowStatus, 
-				wsSecCryptoMapTransformSetName, wsSecCryptoMapTransformSetCryptoMapName, wsSecCryptoMapPeerIKEPeer, wsSecCryptoMapPeerName, wsSecCryptoMapPeerSequenceNum, 
-				wsSecLocalIPAddrPoolRowStatus, wsSecLocalIPAddrPoolAddrRangeEnd, wsSecLocalIPAddrPoolAddrRangeStart, wsSecPreSharedKeyIKEAggressive, wsSecPreSharedKeyIKEPeerKey, 
-				wsSecPreSharedKeyIKEPeerIdentity, wsSecPreSharedKeyIKEPeer, wsSecISAKMPLocalIdentity, wsSecCryptoMapTransformCryptoMapSetSeqNum, wsSecIPSecSaStatusEspSpiIn, 
-				wsSecIpSecClearPeerIpAddr, wsSecCryptoMapManualSaAhOrEsp, wsSecCryptoMapManualSaOutEspCipherKey, wsSecCryptoMapManualSaInEspCipherKey, wsSecCryptoMapManualSaOutAuthKey, 
-				wsSecCryptoMapSALifeTimeSec, wsSecCryptoMapSALifeTimeKB, wsSecCryptoMapManualSaInAuthKey, wsSecCryptoMapMode, wsSecCryptoMapRemoteType, 
+			OBJECTS { wsSecIKEPolicyRowStatus, wsSecIKEKeepAlive, wsSecTransformSetName, wsSecTransformSetMode, wsSecTransformSetEspEncr,
+				wsSecTransformSetEspAuth, wsSecTransformSetRowStatus, wsSecVpnSALifeTimeSec, wsSecVpnSALifeTimeKB, wsSecClientDNSServerIP,
+				wsSecClientWinServerIP, wsSecCryptoMapSequenceNum, wsSecPreSharedKeyRowStatus, wsSecTransformSetAHAuth, wsSecCryptoMapName,
+				wsSecCryptoMapACLId, wsSecCryptoMapPFS, wsSecCryptoMapSAPerHostEnable, wsSecCryptoMapRowStatus, wsSecCryptoMapPeerRowStatus,
+				wsSecCryptoMapManualSaCryptoMapSeqNum, wsSecCryptoMapManualSaCryptoMapName, wsSecCryptoMapManualSaIKEPeer, wsSecCryptoMapManualSaAclId, wsSecCryptoMapManualSaInAhSpi,
+				wsSecCryptoMapManualSaOutAhSpi, wsSecCryptoMapManualSaInEspSpi, wsSecCryptoMapManualSaOutEspSpi, wsSecCryptoMapManualSaRowStatus, wsSecRadiusSvrIPAddr,
+				wsSecRadiusSvrType, wsSecRadiusSvrPort, wsSecRadiusSvrSharedSecret, wsSecRadiusSvrRowStatus, wsSecVpnUserName,
+				wsSecVpnUserPassword, wsSecVpnUserRowStatus, wsSecClearAction, wsSecIPSecSaStatusIndex, wsSecIPSecSaStatusLocalPeer,
+				wsSecIPSecSaStatusRemotePeer, wsSecIPSecSaStatusEspSpiOut, wsSecIPSecSaStatusAhSpiIn, wsSecIPSecSaStatusAhSpiOut, wsSecIPSecSaStatusAlgthmCipher,
+				wsSecIPSecSaStatusAlgthmMac, wsSecIKESaStatIndex, wsSecIKESaStatsNumOfNegotions, wsSecIKESaStatsNumOfBytes, wsSecIKESaStatsCreateDate,
+				wsSecIKESaStatsEncrptAlgthm, wsSecIKESaStatsHashAlgthm, wsSecIKESaStatsPrfAlgthm, wsSecIKESaStatsLocalIdentity, wsSecIKESaStatsRemoteIdentity,
+				wsSecIKESaStatsPhase1Done, wsSecVPNAuthMethod, wsSecCryptoMapManualSaTSName, wsSecCryptoMapModeCfgEnable, wsSecVPNSetError,
+				wsSecRadiusSvrNasIdentifier, wsSecIKEPolicySaLifeTimeSec, wsSecIKEPolicyDHGroup, wsSecIKEPolicyAuthType, wsSecIKEPolicyHash,
+				wsSecIKEPolicyEncryption, wsSecIKEPolicyPriority, wsSecCryptoMapIfMappingCryptoMapName, wsSecCryptoMapIfMappingIfName, wsSecCryptoMapTransformSetRowStatus,
+				wsSecCryptoMapTransformSetName, wsSecCryptoMapTransformSetCryptoMapName, wsSecCryptoMapPeerIKEPeer, wsSecCryptoMapPeerName, wsSecCryptoMapPeerSequenceNum,
+				wsSecLocalIPAddrPoolRowStatus, wsSecLocalIPAddrPoolAddrRangeEnd, wsSecLocalIPAddrPoolAddrRangeStart, wsSecPreSharedKeyIKEAggressive, wsSecPreSharedKeyIKEPeerKey,
+				wsSecPreSharedKeyIKEPeerIdentity, wsSecPreSharedKeyIKEPeer, wsSecISAKMPLocalIdentity, wsSecCryptoMapTransformCryptoMapSetSeqNum, wsSecIPSecSaStatusEspSpiIn,
+				wsSecIpSecClearPeerIpAddr, wsSecCryptoMapManualSaAhOrEsp, wsSecCryptoMapManualSaOutEspCipherKey, wsSecCryptoMapManualSaInEspCipherKey, wsSecCryptoMapManualSaOutAuthKey,
+				wsSecCryptoMapSALifeTimeSec, wsSecCryptoMapSALifeTimeKB, wsSecCryptoMapManualSaInAuthKey, wsSecCryptoMapMode, wsSecCryptoMapRemoteType,
 				wsSecCryptoMapLocalIdType, wsSecCryptoMapLocalId }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			::= { wsSecVpnMib 23 }
 
-		
-	
+
+
 	END
 
 --

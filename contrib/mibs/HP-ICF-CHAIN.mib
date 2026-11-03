@@ -43,24 +43,24 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
 
        hpicfChain      OBJECT IDENTIFIER ::= { hpicfCommon 1 }
 
-       -- This MIB models a chain of "boxes" attached to an HP 
-       -- Distributed Management Chain.  Each box may have one or 
+       -- This MIB models a chain of "boxes" attached to an HP
+       -- Distributed Management Chain.  Each box may have one or
        -- more manageable entities in it, and may contain one or more
        -- SNMP agents, which may each be acting as an SNMP proxy for
-       -- one or more of the other boxes on the Distributed 
+       -- one or more of the other boxes on the Distributed
        -- Management Chain that do not have agents.
        --
-       -- All of the agents on the chain will know about the 
-       -- hpicfChainTable.  The hpicfChainViewTable will contain 
-       -- entries for those boxes on the chain for which the agent 
+       -- All of the agents on the chain will know about the
+       -- hpicfChainTable.  The hpicfChainViewTable will contain
+       -- entries for those boxes on the chain for which the agent
        -- can act as a proxy.
 
-       hpicfChainMaxMembers OBJECT-TYPE 
+       hpicfChainMaxMembers OBJECT-TYPE
            SYNTAX     Integer32 (1..16)
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The maximum number of devices that can be 
+                   "The maximum number of devices that can be
                    supported on the Distributed Management Chain from
                    this agent."
            ::= { hpicfChain 1 }
@@ -70,8 +70,8 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The number of devices currently on the 
-                   Distributed Management Chain connected to this 
+                   "The number of devices currently on the
+                   Distributed Management Chain connected to this
                    agent."
            ::= { hpicfChain 2 }
 
@@ -80,9 +80,9 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The value of sysUpTime on this agent the last 
-                   time a device was added to or removed from the 
-                   Distributed Management Chain connected to this 
+                   "The value of sysUpTime on this agent the last
+                   time a device was added to or removed from the
+                   Distributed Management Chain connected to this
                    agent."
            ::= { hpicfChain 3 }
 
@@ -91,8 +91,8 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "A count of the number of times devices have been 
-                   added to or removed from the Distributed 
+                   "A count of the number of times devices have been
+                   added to or removed from the Distributed
                    Management Chain connected to this agent."
            ::= { hpicfChain 4 }
 
@@ -101,7 +101,7 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            MAX-ACCESS not-accessible
            STATUS     current
            DESCRIPTION
-                   "A table of boxes currently connected to the same 
+                   "A table of boxes currently connected to the same
                    Distributed Management Chain as this agent."
            ::= { hpicfChain 5 }
 
@@ -110,13 +110,13 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            MAX-ACCESS not-accessible
            STATUS     current
            DESCRIPTION
-                   "An entry in the table describing a single box on 
+                   "An entry in the table describing a single box on
                    the Distributed Management Chain connected to this
                    device."
            INDEX      { hpicfChainId }
            ::= { hpicfChainTable 1 }
 
-       HpicfChainEntry ::= 
+       HpicfChainEntry ::=
            SEQUENCE {
                hpicfChainId                    OCTET STRING,
                hpicfChainObjectId              OBJECT IDENTIFIER,
@@ -131,7 +131,7 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "An identifier which uniquely identifies this 
+                   "An identifier which uniquely identifies this
                    particular box.  In practice, this will be a box
                    serial number or MAC address."
            ::= { hpicfChainEntry 1 }
@@ -142,7 +142,7 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            STATUS     current
            DESCRIPTION
                    "The authoritative identification of the box which
-                   provides an easy and unambiguous means for 
+                   provides an easy and unambiguous means for
                    determining the type of box."
            ::= { hpicfChainEntry 2 }
 
@@ -151,7 +151,7 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The value of the agent's sysUpTime at which this 
+                   "The value of the agent's sysUpTime at which this
                    box was last initialized.  If the box has not been
                    initialized since the last reinitialization of the
                    agent, then this object has a zero value."
@@ -164,7 +164,7 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "This object will contain the value 'true' if this
                    box contains at least one network management agent
-                   capable of responding to SNMP requests, and will 
+                   capable of responding to SNMP requests, and will
                    contain the value 'false' otherwise."
            ::= { hpicfChainEntry 4 }
 
@@ -174,7 +174,7 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            STATUS     current
            DESCRIPTION
                    "This object will contain the value 'true' if this
-                   entry in the chain table corresponds to the box 
+                   entry in the chain table corresponds to the box
                    which contains the agent which is responding to
                    this SNMP request, and will contain the value
                    'false' otherwise."
@@ -198,7 +198,7 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            STATUS     current
            DESCRIPTION
                    "This table contains one entry for each box on the
-                   Distributed Management Chain for which this agent 
+                   Distributed Management Chain for which this agent
                    is able to act as a proxy."
            ::= { hpicfChain 6 }
 
@@ -223,7 +223,7 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "An identifier which uniquely identifies this 
+                   "An identifier which uniquely identifies this
                    particular box.  In practice, this will be a box
                    serial number or MAC address."
            ::= { hpicfChainViewEntry 1 }
@@ -235,22 +235,22 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "The local name of this box.  This is used by the
                    proxy agent for the box to determine which box on
-                   the Distributed Management Chain is being 
-                   addressed.  If an agent does not use this method 
-                   to distinguish proxy destinations, it should 
+                   the Distributed Management Chain is being
+                   addressed.  If an agent does not use this method
+                   to distinguish proxy destinations, it should
                    return a zero length octet string for this object.
 
                    For SNMPv1, the destination box is specified by
                    appending this name to the proxy agent's community
                    name.  For example, if this agent has a community
                    with a community name of 'public', and the value
-                   of this object is 'repeater1', the community 
+                   of this object is 'repeater1', the community
                    'public/repeater1' will specify that the agent
                    should proxy to the public community of the
                    'repeater1' box.
 
-                   The default value for this object for box-level 
-                   repeaters is an ASCII hex representation of the 
+                   The default value for this object for box-level
+                   repeaters is an ASCII hex representation of the
                    low-order three bytes of the device MAC address."
            ::= { hpicfChainViewEntry 2 }
 
@@ -354,4 +354,3 @@ HP-ICF-CHAIN DEFINITIONS ::= BEGIN
 
 
        END
-

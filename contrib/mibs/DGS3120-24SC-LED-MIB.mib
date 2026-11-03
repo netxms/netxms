@@ -3,7 +3,7 @@
 -- FILE NAME: led.mib
 -- DATE     : 2013/10/10
 -- VERSION  : 1.03
--- PURPOSE  : To construct the MIB structure of LED information for proprietary 
+-- PURPOSE  : To construct the MIB structure of LED information for proprietary
 -- 			  enterprise
 -- -----------------------------------------------------------------------------
 -- MODIFICTION HISTORY:
@@ -27,7 +27,7 @@ DGS3120-24SC-LED-MIB	DEFINITIONS ::= BEGIN
 	IMPORTS
 		MODULE-IDENTITY , OBJECT-TYPE		FROM SNMPv2-SMI
 		dlink-Dgs3120Proj-DGS-3120-24SC-bx		FROM SWDGS3120PRIMGMT-MIB;
-	    
+
 	swLedMIB MODULE-IDENTITY
 		LAST-UPDATED "201106100000Z"
 	    ORGANIZATION "D-Link Corp."
@@ -36,9 +36,9 @@ DGS3120-24SC-LED-MIB	DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 		    "The Structure of LED Information for the proprietary enterprise."
         ::= { dlink-Dgs3120Proj-DGS-3120-24SC-bx 4 }
-        
+
 	swLedMIBObject OBJECT IDENTIFIER ::={swLedMIB 1}
-        
+
 	swLedInfoTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwLedInfoEntry
         MAX-ACCESS  not-accessible
@@ -46,7 +46,7 @@ DGS3120-24SC-LED-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This table contains the LED information."
         ::= { swLedMIBObject 1 }
-        
+
 	swLedInfoEntry OBJECT-TYPE
         SYNTAX  SwLedInfoEntry
         MAX-ACCESS  not-accessible
@@ -55,12 +55,12 @@ DGS3120-24SC-LED-MIB	DEFINITIONS ::= BEGIN
             "A list of front panel LED information for each unit in the system."
         INDEX  { swLedInfoUnitId }
         ::= { swLedInfoTable 1 }
-        
+
 	SwLedInfoEntry ::=
         SEQUENCE {
 				swLedInfoUnitId
 					INTEGER,
-				swLedInfoFrontPanelLedStatus					
+				swLedInfoFrontPanelLedStatus
 					OCTET STRING
 		}
 
@@ -71,15 +71,15 @@ DGS3120-24SC-LED-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The object indicates the unit ID."
         ::= { swLedInfoEntry 1 }
-        
+
 	swLedInfoFrontPanelLedStatus OBJECT-TYPE
-        SYNTAX  OCTET STRING 
+        SYNTAX  OCTET STRING
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-				"This object is a set of system LED indicators. The first 32 octets are 
+				"This object is a set of system LED indicators. The first 32 octets are
 				defined as next, and following octets are for logical port LED.
-				
+
 				Octet 1 is box ID led
 						bit 7-6:
 							reserved
@@ -92,13 +92,13 @@ DGS3120-24SC-LED-MIB	DEFINITIONS ::= BEGIN
 							0x1 = box ID 1
 							0x2 = box ID 2
 							...
-												
+
 				Octet 2 is power led:
-						0x01 = power work normally                    
-						0x02 = power fail						
+						0x01 = power work normally
+						0x02 = power fail
 
 				Octet 3 is RPS led:
-						0x01 = RPS is not connected										
+						0x01 = RPS is not connected
 						0x02 = RPS is connected to switch but not ready to power the switch
 						0x03 = RPS is ready to power the switch
 						0x04 = RPS is powering the switch
@@ -117,13 +117,13 @@ DGS3120-24SC-LED-MIB	DEFINITIONS ::= BEGIN
 				Octet 6 is fan led:
 						0x01 = all fans are OK
 						0x02 = one or more fans fail
-						
+
 				Octet 7 is SD card led:
 						0x01 = SD card is unplugged
 						0x02 = SD card is plugged
 						0x03 = reading/writing
 						0x04 = read/write fail
-				
+
 				Octet 8 is SIO port led:
 						bit 7-2:
 							reserved
@@ -135,37 +135,37 @@ DGS3120-24SC-LED-MIB	DEFINITIONS ::= BEGIN
 							SIO2 link state
 							0B = linkdown
 							1B = linkup
-						
+
 				Octet 9 is POE led:
 						0x01 = can not support POE
 						0x02 = link/act/speed mode
 						0x03 = POE mode
-						
+
 				Octet 10 is port led control state:
 						0x00 = Port LED control state enabled
 						0x01 = Port LED control state disabled
-							
+
 				Octet 11 is enable light state:
 						0x00 = enable light state disabled
 						0x01 = enable light state enabled
-						
+
 				Octet 12 is port led color state:
 						0x00 = enable light Port LED color state normal
 						0x01 = enable light Port LED color state amber
 						0x02 = enable light Port LED color state green
-						
+
 				Octet 13-32 are reserved.
 
-				The continued octets are the logic port led. Each octet presents one port. 
-				
-				There are two modes: link/act/speed mode and POE mode. 
+				The continued octets are the logic port led. Each octet presents one port.
+
+				There are two modes: link/act/speed mode and POE mode.
 					The link/act/speed mode presents the speed duplex of port.
-					The POE mode presents if the port deliver power to PD. 
+					The POE mode presents if the port deliver power to PD.
 					The POE mode is supported by POE Switch only.
-				
-				The mode is determined by Octet 9. If the switch can not support POE, 
+
+				The mode is determined by Octet 9. If the switch can not support POE,
 				the mode is link/act/speed only.
-						
+
 				In each octet:
 				link/act/speed mode:
 						bit 7:
@@ -192,7 +192,7 @@ DGS3120-24SC-LED-MIB	DEFINITIONS ::= BEGIN
 							0x2 = 100Mbps
 							0x3 = 1000Mbps
 							0x4 = 10Gbps
-						
+
 				POE mode:
 						0x01 = no deliver power to PD
 						0x02 = deliver power to PD."

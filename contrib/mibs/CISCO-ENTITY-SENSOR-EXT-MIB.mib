@@ -1,9 +1,9 @@
 -- *****************************************************************
 -- CISCO-ENTITY-SENSOR-EXT-MIB.my
---   
+--
 -- Copyright (c) 2010 by cisco Systems Inc.
 -- All rights reserved.
---   
+--
 -- *****************************************************************
 
 CISCO-ENTITY-SENSOR-EXT-MIB DEFINITIONS ::= BEGIN
@@ -93,7 +93,7 @@ CiscoSensorThresholdRelation ::= TEXTUAL-CONVENTION
                             the threshold value
         lessOrEqual(2):     if the sensor value is less than or equal to
                             the threshold value
-        greaterThan(3):     if the sensor value is greater than 
+        greaterThan(3):     if the sensor value is greater than
                             the threshold value
         greaterOrEqual(4):  if the sensor value is greater than or equal
                             to the threshold value
@@ -112,12 +112,12 @@ CiscoSensorThresholdRelation ::= TEXTUAL-CONVENTION
 -- ceSensorExtThresholdTable
 
 ceSensorExtThresholdTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeSensorExtThresholdEntry 
+    SYNTAX          SEQUENCE OF CeSensorExtThresholdEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table lists the threshold severity, relation, and
-        comparison value, for a sensor entity listed in  
+        comparison value, for a sensor entity listed in
         entPhysicalTable."
     REFERENCE
         "ENTITY-MIB contains definition for entPhysicalTable"
@@ -130,17 +130,17 @@ ceSensorExtThresholdEntry OBJECT-TYPE
     DESCRIPTION
         "An ceSensorExtThresholdTable entry describes the
         thresholds for a sensor: the threshold severity,
-        the threshold value, the relation, and the 
+        the threshold value, the relation, and the
         evaluation of the threshold.
 
-        Only entities with entPhysicalClass 'sensor' 
+        Only entities with entPhysicalClass 'sensor'
         are listed in this table.
 
         For non FRU entities the entries are created by the agent at
         system startup and entries are never deleted by the agent.
 
-        For FRU entities the entries are created at system startup 
-        if FRU is inserted at system startup, else entries are created 
+        For FRU entities the entries are created at system startup
+        if FRU is inserted at system startup, else entries are created
         when FRU is inserted.  Entries are deleted by the agent when
         FRU is removed."
     REFERENCE
@@ -148,7 +148,7 @@ ceSensorExtThresholdEntry OBJECT-TYPE
     INDEX           {
                         entPhysicalIndex,
                         ceSensorExtThresholdIndex
-                    } 
+                    }
     ::= { ceSensorExtThresholdTable 1 }
 
 CeSensorExtThresholdEntry ::= SEQUENCE {
@@ -167,8 +167,8 @@ ceSensorExtThresholdIndex OBJECT-TYPE
     DESCRIPTION
         "An index that uniquely identifies an entry
         in the ceSensorExtThresholdTable. This index
-        permits the same sensor to have several 
-        different thresholds." 
+        permits the same sensor to have several
+        different thresholds."
     ::= { ceSensorExtThresholdEntry 1 }
 
 ceSensorExtThresholdSeverity OBJECT-TYPE
@@ -176,7 +176,7 @@ ceSensorExtThresholdSeverity OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This object specifies the severity of this threshold." 
+        "This object specifies the severity of this threshold."
     ::= { ceSensorExtThresholdEntry 2 }
 
 ceSensorExtThresholdRelation OBJECT-TYPE
@@ -185,28 +185,28 @@ ceSensorExtThresholdRelation OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the boolean relation between
-        sensor value (entPhySensorValue) and threshold value 
-        (ceSensorExtThresholdValue), required to 
-        trigger the alarm.  
+        sensor value (entPhySensorValue) and threshold value
+        (ceSensorExtThresholdValue), required to
+        trigger the alarm.
 
         in pseudo-code, the evaluation-alarm mechanism is:
 
         ...
-        if (evaluate(entPhySensorValue, 
+        if (evaluate(entPhySensorValue,
                      ceSensorExtThresholdRelation,
-                     ceSensorExtThresholdValue)) 
+                     ceSensorExtThresholdValue))
         then
-            if (((ceSensorExtThresholdNotifEnable 
-                    == enabled) || 
+            if (((ceSensorExtThresholdNotifEnable
+                    == enabled) ||
                   (ceSensorExtThresholdNotifEnable
                     == transparent)) &&
-                  (ceSensorExtThresholdNotifGlobalEnable 
-                    == enabled)) 
+                  (ceSensorExtThresholdNotifGlobalEnable
+                    == enabled))
             then
                 raise_alarm(sensor's entPhysicalIndex);
                endif
         endif
-        ..." 
+        ..."
     ::= { ceSensorExtThresholdEntry 3 }
 
 ceSensorExtThresholdValue OBJECT-TYPE
@@ -216,7 +216,7 @@ ceSensorExtThresholdValue OBJECT-TYPE
     DESCRIPTION
         "This object specifies the value of the threshold.
 
-        The value of objects entPhySensorType, entPhysSensorScale 
+        The value of objects entPhySensorType, entPhysSensorScale
         and entPhySensorPrecision for this sensor entity defines
         how ceSensorExtThresholdValue can be displayed or
         intepreted by the user.
@@ -225,8 +225,8 @@ ceSensorExtThresholdValue OBJECT-TYPE
         ceSensorExtThresholdValue without taking
         care of semantics of both objects."
     REFERENCE
-        "ENTITY-SENSOR-MIB contains definitions for 
-          entPhysSensorScale and entPhySensorPrecision" 
+        "ENTITY-SENSOR-MIB contains definitions for
+          entPhysSensorScale and entPhySensorPrecision"
     ::= { ceSensorExtThresholdEntry 4 }
 
 ceSensorExtThresholdEvaluation OBJECT-TYPE
@@ -235,27 +235,27 @@ ceSensorExtThresholdEvaluation OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the result of the most
-        recent evaluation of the threshold.  
+        recent evaluation of the threshold.
 
         The agent will execute the below 'evaluate' function
         to generate the notification. 'evaluate' function
         returns a boolean value.
 
-        evaluate(entPhySensorValue, 
+        evaluate(entPhySensorValue,
                  ceSensorExtThresholdRelation,
                  ceSensorExtThresholdValue)
 
-        If evalute function returns true then 
+        If evalute function returns true then
         ceSensorExtThresholdEvaluation is set to 'true'
 
-        If evaluate function returns false then  
+        If evaluate function returns false then
         ceSensorExtThresholdEvaluation is set to 'false'.
 
-        Thresholds are evaluated at the rate indicated by 
+        Thresholds are evaluated at the rate indicated by
         entPhySensorValueUpdateRate."
     REFERENCE
-        "ENTITY-SENSOR-MIB contains definition for 
-        entPhySensorValueUpdateRate" 
+        "ENTITY-SENSOR-MIB contains definition for
+        entPhySensorValueUpdateRate"
     ::= { ceSensorExtThresholdEntry 5 }
 
 ceSensorExtThresholdNotifEnable OBJECT-TYPE
@@ -285,7 +285,7 @@ ceSensorExtThresholdNotifEnable OBJECT-TYPE
         object.
 
         This truth table explains how
-        ceSensorExtThresholdNotifEnable is related with 
+        ceSensorExtThresholdNotifEnable is related with
         ceSensorExtThresholdNotifGlobalEnable to control the
         ceSensorExtThresholdNotification for this threshold
 
@@ -301,9 +301,9 @@ ceSensorExtThresholdNotifEnable OBJECT-TYPE
            D            D            D
            T            E            E
            T            D            D"
-    DEFVAL          { transparent } 
+    DEFVAL          { transparent }
     ::= { ceSensorExtThresholdEntry 6 }
- 
+
 
 ciscoEntSensorExtGlobalObjects  OBJECT IDENTIFIER
     ::= { ciscoEntitySensorExtMIBObjects 2 }
@@ -323,22 +323,22 @@ ceSensorExtThresholdNotifGlobalEnable OBJECT-TYPE
         ceSensorExtThresholdNotification.
 
         This object should hold any of the below values.
-        enabled(1) - The notification is enabled globally 
+        enabled(1) - The notification is enabled globally
                      on the device
-        disabled(2)- The notification is disabled globally 
-                     on the device  
+        disabled(2)- The notification is disabled globally
+                     on the device
 
         This object enables the generation of
         ceSensorExtThresholdNotification globally
         on the device. If this object value is
         'disabled', then no ceSensorExtThresholdNotification
         will be generated on this device. If this object
-        value is 'enabled', then whether a 
+        value is 'enabled', then whether a
         ceSensorExtThresholdNotification for a threshold will
         be generated or not depends on the instance value of
         ceSensorExtThresholdNotifEnable for that
         threshold."
-    DEFVAL          { disabled } 
+    DEFVAL          { disabled }
     ::= { ciscoEntSensorExtGlobalObjects 1 }
 
 -- Extended entity Sensor notifications
@@ -380,7 +380,7 @@ ciscoEntSensorExtMIBCompliance MODULE-COMPLIANCE
     GROUP           ciscoEntSensorExtNotificationCtrlGroup
     DESCRIPTION
         "This group is mandatory for the platforms which support
-        global notification control on 
+        global notification control on
         ceSensorExtThresholdNotification."
 
     GROUP           ciscoEntSensorExtNotificationGroup
@@ -419,14 +419,8 @@ ciscoEntSensorExtNotificationCtrlGroup OBJECT-GROUP
     STATUS          current
     DESCRIPTION
         "The collection of objects which provide the global
-        notification control on 
+        notification control on
         ceSensorExtThresholdNotification."
     ::= { ciscoEntSensorExtMIBGroups 3 }
 
 END
-
-
-
-
-
-

@@ -6,7 +6,7 @@ HpicfHighAvailability-MIB DEFINITIONS ::= BEGIN
       OBJECT-GROUP, MODULE-COMPLIANCE
          FROM SNMPv2-CONF
       hpicfCommon
-         FROM HP-ICF-OID;   
+         FROM HP-ICF-OID;
 
    hpicfHighAvailability MODULE-IDENTITY
       LAST-UPDATED "200609050000Z"  -- September 5, 2006
@@ -15,25 +15,25 @@ HpicfHighAvailability-MIB DEFINITIONS ::= BEGIN
       CONTACT-INFO "Hewlett-Packard Company
                     8000 Foothills Blvd.
                     Roseville, CA 95747"
-      DESCRIPTION  "Managment information for configuring Redundant 
+      DESCRIPTION  "Managment information for configuring Redundant
                     Management module on Hewlett-Packard network devices."
       REVISION     "200609050000Z"  -- September 5, 2006
       DESCRIPTION  "Initial version of thie MIB module."
 
-      ::= { hpicfCommon 11 }  
-           
-      
+      ::= { hpicfCommon 11 }
+
+
 -- **********************************************************************
 -- The HP ICF High Availability MIB groups
 -- **********************************************************************
-   
-   hpicfHAConfigObjects   OBJECT IDENTIFIER ::= { hpicfHighAvailability 1}       
+
+   hpicfHAConfigObjects   OBJECT IDENTIFIER ::= { hpicfHighAvailability 1}
    hpicfHAStatusObjects   OBJECT IDENTIFIER ::= { hpicfHighAvailability 2}
    hpicfHAConformance     OBJECT IDENTIFIER ::= { hpicfHighAvailability 3}
 
-           
---The HP ICF High Availability configuration group      
-      
+
+--The HP ICF High Availability configuration group
+
    hpicfHARedundancyManagementModuleMode OBJECT-TYPE
       SYNTAX      INTEGER {
                      enable  (1),
@@ -45,12 +45,12 @@ HpicfHighAvailability-MIB DEFINITIONS ::= BEGIN
                    allows for management module redundancy when there are
                    two management modules in the switch. Disabling
                    prevents redundancy except due to fatal hardware errors
-                   on one management module."	
+                   on one management module."
       ::= { hpicfHAConfigObjects 1 }
 
-    
--- The HP ICF High Availability status group       
-    
+
+-- The HP ICF High Availability status group
+
    hpicfHAMgmtRedundancyFailureReason OBJECT-TYPE
       SYNTAX       INTEGER {
                         noRedundantModule    (1),
@@ -73,27 +73,27 @@ HpicfHighAvailability-MIB DEFINITIONS ::= BEGIN
       STATUS      current
       DESCRIPTION "Specifies the number of management module failovers since
                    last chassis boot."
-                      
+
       ::= { hpicfHAStatusObjects 2 }
 
    hpicfHALastFailoverTime OBJECT-TYPE
       SYNTAX      TimeTicks
       MAX-ACCESS  read-only
       STATUS      current
-      DESCRIPTION "Specifies the time (in hundredths of a second) of the 
+      DESCRIPTION "Specifies the time (in hundredths of a second) of the
                    last management module failover."
-      ::= {hpicfHAStatusObjects 3 }  
-          
-                                         
+      ::= {hpicfHAStatusObjects 3 }
+
+
 -- ***********************************************************
--- 
---        hpicfHighAvailability  M I B   C O N F O R M A N C E 
--- 
--- *********************************************************** 
 --
-   hpicfHACompliances    OBJECT IDENTIFIER   ::= { hpicfHAConformance 1 }  
-   hpicfHAGroups         OBJECT IDENTIFIER   ::= { hpicfHAConformance 2 } 
-   
+--        hpicfHighAvailability  M I B   C O N F O R M A N C E
+--
+-- ***********************************************************
+--
+   hpicfHACompliances    OBJECT IDENTIFIER   ::= { hpicfHAConformance 1 }
+   hpicfHAGroups         OBJECT IDENTIFIER   ::= { hpicfHAConformance 2 }
+
 -- compliance statements
    hpicfHACompliance MODULE-COMPLIANCE
       STATUS      current
@@ -101,16 +101,16 @@ HpicfHighAvailability-MIB DEFINITIONS ::= BEGIN
                   "The compliance statement for SNMP entities which implement
                    the hpicfHighAvailability MIB."
       MODULE  -- this module
-      MANDATORY-GROUPS { 
-                           hpicfHAConfigGroup, 
-                           hpicfHAStatusGroup 
+      MANDATORY-GROUPS {
+                           hpicfHAConfigGroup,
+                           hpicfHAStatusGroup
                         }
       ::= { hpicfHACompliances 1 }
-      
-     
+
+
 -- MIB groupings
    hpicfHAConfigGroup OBJECT-GROUP
-      OBJECTS     { 
+      OBJECTS     {
                     hpicfHARedundancyManagementModuleMode
                   }
       STATUS      current
@@ -123,12 +123,12 @@ HpicfHighAvailability-MIB DEFINITIONS ::= BEGIN
       OBJECTS     {
                     hpicfHAMgmtRedundancyFailureReason,
                     hpicfHAMgmtFailovers,
-                    hpicfHALastFailoverTime              
+                    hpicfHALastFailoverTime
                   }
       STATUS      current
       DESCRIPTION
-                  "The collection of objects which are used to represent 
+                  "The collection of objects which are used to represent
                    Management Module statistics information."
     ::= { hpicfHAGroups 2 }
-   
+
 END

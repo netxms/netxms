@@ -166,4 +166,3 @@ rlRebootDelay OBJECT-TYPE
     ::= { rndMng 10 }
 
 END
-

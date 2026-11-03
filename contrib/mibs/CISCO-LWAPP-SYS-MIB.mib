@@ -2,7 +2,7 @@
 -- CISCO-LWAPP-SYS-MIB.my
 -- March 2007, Devesh Pujari, Srinath Candadai
 -- Feb 2011, Suja Thangaveluchamy
---   
+--
 -- Copyright (c) 2007-2012-2018 by Cisco Systems Inc.
 -- All rights reserved.
 -- *******************************************************************
@@ -61,8 +61,8 @@ ciscoLwappSysMIB MODULE-IDENTITY
         terminate the Light Weight Access Point Protocol
         tunnel from Cisco Light-weight LWAPP Access Points.
 
-        This MIB provides global configuration and status 
-        information for the controller. All general system 
+        This MIB provides global configuration and status
+        information for the controller. All general system
         related information is presented in this MIB.
 
         The relationship between CC and the LWAPP APs
@@ -114,7 +114,7 @@ ciscoLwappSysMIB MODULE-IDENTITY
         An entity that contains an 802.11 medium access
         control ( MAC ) and physical layer ( PHY ) interface
         and provides access to the distribution services via
-        the wireless medium for associated clients.  
+        the wireless medium for associated clients.
 
         LWAPP APs encapsulate all the 802.11 frames in
         LWAPP frames and sends them to the controller to which
@@ -122,15 +122,15 @@ ciscoLwappSysMIB MODULE-IDENTITY
 
         Light Weight Access Point Protocol ( LWAPP )
 
-        This is a generic protocol that defines the 
+        This is a generic protocol that defines the
         communication between the Access Points and the
-        Central Controller. 
+        Central Controller.
 
         Mobile Node ( MN )
 
         A roaming 802.11 wireless device in a wireless
-        network associated with an access point. Mobile Node 
-        and client are used interchangeably. 
+        network associated with an access point. Mobile Node
+        and client are used interchangeably.
 
         Extensible Authentication Protocol ( EAP )
 
@@ -143,25 +143,25 @@ ciscoLwappSysMIB MODULE-IDENTITY
 
         PAC
 
-        PAC (Protected Access Credential) is a meachanism for 
+        PAC (Protected Access Credential) is a meachanism for
         mutual authentication in EAP-FAST.
 
         PEAP
 
-        The Protected Extensible Authentication Protocol, also known 
-        as Protected EAP or simply PEAP, is a protocol that 
-        encapsulates EAP within a potentially encrypted and 
-        authenticated Transport Layer Security (TLS) tunnel.The 
-        purpose was to correct deficiencies in EAP; 
-        EAP assumed a protected communication channel, such as that 
-        provided by physical security, so facilities for protection 
+        The Protected Extensible Authentication Protocol, also known
+        as Protected EAP or simply PEAP, is a protocol that
+        encapsulates EAP within a potentially encrypted and
+        authenticated Transport Layer Security (TLS) tunnel.The
+        purpose was to correct deficiencies in EAP;
+        EAP assumed a protected communication channel, such as that
+        provided by physical security, so facilities for protection
         of the EAP conversation were not provided.
 
         EAP-SIM
 
-        EAP for GSM Subscriber Identity Module (EAP-SIM) is used 
-        for authentication and session key distribution using the 
-        Subscriber Identity Module (SIM) from the Global System 
+        EAP for GSM Subscriber Identity Module (EAP-SIM) is used
+        for authentication and session key distribution using the
+        Subscriber Identity Module (SIM) from the Global System
         for Mobile Communications (GSM).
 
         RAID
@@ -169,9 +169,9 @@ ciscoLwappSysMIB MODULE-IDENTITY
         Redudant array of independant disks (RAID) combines multiple
         disk drive components into logical unit for the purposes of
         data redundancy and performance improvements.
-        
+
         Lawful-Interception (LI)
-        
+
         Lawful Interception is a feature to send client logging
         details to a server.
 
@@ -181,10 +181,10 @@ ciscoLwappSysMIB MODULE-IDENTITY
         [1] Wireless LAN Medium Access Control ( MAC ) and
         Physical Layer ( PHY ) Specifications.
 
-        [2] Draft-obara-capwap-lwapp-00.txt, IETF Light 
+        [2] Draft-obara-capwap-lwapp-00.txt, IETF Light
         Weight Access Point Protocol.
 
-        [3] IEEE 802.1X - Authentication for Wireless and 
+        [3] IEEE 802.1X - Authentication for Wireless and
             Wired Connections."
     REVISION        "201807030000Z"
     DESCRIPTION
@@ -198,9 +198,9 @@ ciscoLwappSysMIB MODULE-IDENTITY
     DESCRIPTION
         "Added clsTransferStreamingUsername,
         clsTransferStreamingPassword,
-        clsTransferStreamingOptimizedJoinEnable, 
+        clsTransferStreamingOptimizedJoinEnable,
         clsUSBMode.
-        Added new enum value https(4) and sftp(5) to 
+        Added new enum value https(4) and sftp(5) to
         clsTransferStreamingMode.
         Added new enum value usb(4) to clsTransferMode."
     REVISION        "201705030000Z"
@@ -208,15 +208,15 @@ ciscoLwappSysMIB MODULE-IDENTITY
         "Added ciscoLwappLyncInfoGroup, ciscoLwappSysInfoGroup,
         ciscoLwappSysMulticastMLDGroup, ciscoLwappSysConfigGroupSup1,
         ciscoLwappSysStatsConfigGroup.
-        Deprecated ciscoLwappSysMIBComplianceRev2 and replaced 
+        Deprecated ciscoLwappSysMIBComplianceRev2 and replaced
         by ciscoLwappSysMIBComplianceRev3."
     REVISION        "201206180000Z"
     DESCRIPTION
         "Added ciscoLwappSysPortConfigGroup,
         ciscoLwappSysSecurityConfigGroup, ciscoLwappSysIgmpConfigGroup,
-        ciscoLwappSysSecNotifObjsGroup, ciscoLwappSysNotifsGroup and 
+        ciscoLwappSysSecNotifObjsGroup, ciscoLwappSysNotifsGroup and
         ciscoLwappSysNotifControlGroup.
-        Deprecated ciscoLwappSysMIBComplianceRev1 and added 
+        Deprecated ciscoLwappSysMIBComplianceRev1 and added
         ciscoLwappSysMIBComplianceRev2"
     REVISION        "201002090000Z"
     DESCRIPTION
@@ -333,11 +333,11 @@ clsDot3BridgeEnabled OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether 803.2 bridging
         mode is enabled or disabled on the controller.
-        A value of 'true' indicates that, the bridging 
-        mode is enabled. 
+        A value of 'true' indicates that, the bridging
+        mode is enabled.
         A value of 'false' indicates that, the bridging
         mode is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 1 }
 
 clsDownloadFileType OBJECT-TYPE
@@ -368,13 +368,13 @@ clsDownloadFileType OBJECT-TYPE
             unknown          -   Unknown file type
             code             -   Code file
             config           -   Configuration file
-            webAuthCert      -   Web authentication certificates 
+            webAuthCert      -   Web authentication certificates
             webAdminCert     -   Web administrative certificates
             signatures       -   Signature file
-            customWebAuth    -   Custom web authentication 
+            customWebAuth    -   Custom web authentication
                                  tar file
             vendorDeviceCert -   Vendor device certificates
-            vendorCaCert     -   Vendor certificate authority 
+            vendorCaCert     -   Vendor certificate authority
                                  certificates
             ipsecDeviceCert  -   Ipsec device certificates
             ipsecCaCert      -   Ipsec certificate authority
@@ -383,11 +383,11 @@ clsDownloadFileType OBJECT-TYPE
                                  packets
             icon             -   icon files to be used in
                                  Hotspot 2.0
-            apimage          -   Download ap image for 
+            apimage          -   Download ap image for
                                  flexexpress
             naservcacert     -   NA server certificate authority
                                  certificates
-            webhookcacert    -   Webhook CA Certificate" 
+            webhookcacert    -   Webhook CA Certificate"
     ::= { clsConfigDownload 1 }
 
 clsDownloadCertificateKey OBJECT-TYPE
@@ -397,13 +397,13 @@ clsDownloadCertificateKey OBJECT-TYPE
     DESCRIPTION
         "This object specifies the key used
         to encrypt the EAP certificate, specified
-        by IEEE 802.1X standard, during upload from 
-        the controller and for decrypting the file 
-        after its downloaded to the controller. 
-        This object is relevant only when 
-        clsDownloadFileType is  'vendorDeviceCert'. 
-        For all other values of clsDownloadFileType 
-        object this will return an empty string." 
+        by IEEE 802.1X standard, during upload from
+        the controller and for decrypting the file
+        after its downloaded to the controller.
+        This object is relevant only when
+        clsDownloadFileType is  'vendorDeviceCert'.
+        For all other values of clsDownloadFileType
+        object this will return an empty string."
     ::= { clsConfigDownload 2 }
 
 clsUploadFileType OBJECT-TYPE
@@ -446,7 +446,7 @@ clsUploadFileType OBJECT-TYPE
              signatures  -   Signature file
              pac         -   PAC file
              radioCoreDump -   AP's Radio core dump file
-             invalidConfig - Upload the file which contains the 
+             invalidConfig - Upload the file which contains the
                              invalid configuration commands feeded
                              by the downloaded Config file.
              debugfile     -   Debug file.
@@ -462,7 +462,7 @@ clsUploadFileType OBJECT-TYPE
                                   certificates
              radiusavplist    -   Avp's to be sent in radius
                                   packets.
-             yangBundle    - Bundle of yang files." 
+             yangBundle    - Bundle of yang files."
     ::= { clsConfigUpload 1 }
 
 clsUploadPacUsername OBJECT-TYPE
@@ -471,11 +471,11 @@ clsUploadPacUsername OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the upload user name
-        for protected access credential (PAC). This 
-        object needs to be set before setting 
-        clsUploadFileType to 'pac'.  For all other 
-        values of clsUploadFileType this will return 
-        an empty string." 
+        for protected access credential (PAC). This
+        object needs to be set before setting
+        clsUploadFileType to 'pac'.  For all other
+        values of clsUploadFileType this will return
+        an empty string."
     ::= { clsConfigUpload 2 }
 
 clsUploadPacPassword OBJECT-TYPE
@@ -484,11 +484,11 @@ clsUploadPacPassword OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the upload password for
-        protected access credential (PAC). This object 
-        needs to be set before setting clsUploadFileType 
-        to 'pac'. For all other values of clsUploadFileType 
+        protected access credential (PAC). This object
+        needs to be set before setting clsUploadFileType
+        to 'pac'. For all other values of clsUploadFileType
         this will return an empty string.
-        When read, this object will return '****'." 
+        When read, this object will return '****'."
     ::= { clsConfigUpload 3 }
 
 clsUploadPacValidity OBJECT-TYPE
@@ -498,18 +498,18 @@ clsUploadPacValidity OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the upload validity in
-        days for protected access credential (PAC). 
-        This object is relevant only when 
-        clsUploadFileType is set to 'pac'. 
-        For all other values of clsUploadFileType 
-        this will return an empty string." 
+        days for protected access credential (PAC).
+        This object is relevant only when
+        clsUploadFileType is set to 'pac'.
+        For all other values of clsUploadFileType
+        this will return an empty string."
     ::= { clsConfigUpload 4 }
 -- ******************************************************
 -- Network Route config table
 -- ******************************************************
 
 clsNetworkRouteConfigTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF ClsNetworkRouteConfigEntry 
+    SYNTAX          SEQUENCE OF ClsNetworkRouteConfigEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -527,7 +527,7 @@ clsNetworkRouteConfigEntry OBJECT-TYPE
     INDEX           {
                         clsNetworkRouteIPAddressType,
                         clsNetworkRouteIPAddress
-                    } 
+                    }
     ::= { clsNetworkRouteConfigTable 1 }
 
 ClsNetworkRouteConfigEntry ::= SEQUENCE {
@@ -545,7 +545,7 @@ clsNetworkRouteIPAddressType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This objects represents network route IP
-        address type." 
+        address type."
     ::= { clsNetworkRouteConfigEntry 1 }
 
 clsNetworkRouteIPAddress OBJECT-TYPE
@@ -554,7 +554,7 @@ clsNetworkRouteIPAddress OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This objects represents the network route IP
-        address." 
+        address."
     ::= { clsNetworkRouteConfigEntry 2 }
 
 clsNetworkRoutePrefixLength OBJECT-TYPE
@@ -563,7 +563,7 @@ clsNetworkRoutePrefixLength OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the prefix length for
-        route Inet address." 
+        route Inet address."
     ::= { clsNetworkRouteConfigEntry 3 }
 
 clsNetworkRouteGatewayType OBJECT-TYPE
@@ -572,7 +572,7 @@ clsNetworkRouteGatewayType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies gateway IP type
-        of network route." 
+        of network route."
     ::= { clsNetworkRouteConfigEntry 4 }
 
 clsNetworkRouteGateway OBJECT-TYPE
@@ -581,7 +581,7 @@ clsNetworkRouteGateway OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies gateway IP
-        of network route." 
+        of network route."
     ::= { clsNetworkRouteConfigEntry 5 }
 
 clsNetworkRouteStatus OBJECT-TYPE
@@ -590,10 +590,10 @@ clsNetworkRouteStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies status column for this
-        row and used to create and delete specific 
-        instances of rows in this table." 
+        row and used to create and delete specific
+        instances of rows in this table."
     ::= { clsNetworkRouteConfigEntry 6 }
- 
+
 
 
 clsTransferConfigFileEncryption OBJECT-TYPE
@@ -605,15 +605,15 @@ clsTransferConfigFileEncryption OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies encryption and decryption
-        of configuration file while uploading and 
-        downloading. 
-        A value of disable(1) indicates that, encryption 
+        of configuration file while uploading and
+        downloading.
+        A value of disable(1) indicates that, encryption
         is disabled.
-        A value of enable(2) indicates that, encryption 
+        A value of enable(2) indicates that, encryption
         is enabled.
-        This is applicable only when clsDownloadFileType, 
+        This is applicable only when clsDownloadFileType,
         clsUploadFileType is set to Config."
-    DEFVAL          { disable } 
+    DEFVAL          { disable }
     ::= { clsTransferConfigGroup 1 }
 
 clsTransferConfigFileEncryptionKey OBJECT-TYPE
@@ -624,23 +624,23 @@ clsTransferConfigFileEncryptionKey OBJECT-TYPE
         "This object specifies the key to be used when encrypting
         the configuration file while upload from the controller
         or while decrypting the file after download to the controller.
-        This is applicable only when clsDownloadFileType, 
+        This is applicable only when clsDownloadFileType,
         clsUploadFileType is set to Config.
-        When read, this object will return '****'." 
+        When read, this object will return '****'."
     ::= { clsTransferConfigGroup 2 }
 -- ******************************************************
 -- Transfer config table
 -- ******************************************************
 
 clsTransferConfigTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF ClsTransferConfigEntry 
+    SYNTAX          SEQUENCE OF ClsTransferConfigEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table represent the server details which
         will be used by the controller to upload/
-        download files. The conceptual rows are 
-        statically populated by the agent during 
+        download files. The conceptual rows are
+        statically populated by the agent during
         system boot up."
     ::= { clsTransferConfig 1 }
 
@@ -655,7 +655,7 @@ clsTransferConfigEntry OBJECT-TYPE
     INDEX           {
                         clsTransferType,
                         clsTransferMode
-                    } 
+                    }
     ::= { clsTransferConfigTable 1 }
 
 ClsTransferConfigEntry ::= SEQUENCE {
@@ -684,12 +684,12 @@ clsTransferType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the type of operation
-        mode of the server by the controller. 
-        A value of download indicates that, mode of transfer 
+        mode of the server by the controller.
+        A value of download indicates that, mode of transfer
         is download
-        A value of upload indicates that, mode of transfer 
+        A value of upload indicates that, mode of transfer
         is upload."
-    DEFVAL          { download } 
+    DEFVAL          { download }
     ::= { clsTransferConfigEntry 1 }
 
 clsTransferMode OBJECT-TYPE
@@ -708,7 +708,7 @@ clsTransferMode OBJECT-TYPE
         A value of ftp indicates that, transfer mode is ftp.
         A value of sftp indicates that, transfer mode is sftp.
         A value of usb indicates that, transfer mode is usb."
-    DEFVAL          { tftp } 
+    DEFVAL          { tftp }
     ::= { clsTransferConfigEntry 2 }
 
 clsTransferServerAddressType OBJECT-TYPE
@@ -717,8 +717,8 @@ clsTransferServerAddressType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the server IP address
-        type to which the controller will transfer 
-        the file." 
+        type to which the controller will transfer
+        the file."
     ::= { clsTransferConfigEntry 3 }
 
 clsTransferServerAddress OBJECT-TYPE
@@ -728,7 +728,7 @@ clsTransferServerAddress OBJECT-TYPE
     DESCRIPTION
         "This object specifies the server IP address
         to which the controller will transfer the file.
-        It is governed by clsTransferServerAddressType." 
+        It is governed by clsTransferServerAddressType."
     ::= { clsTransferConfigEntry 4 }
 
 clsTransferPath OBJECT-TYPE
@@ -739,7 +739,7 @@ clsTransferPath OBJECT-TYPE
         "This object specifies the directory path for file transfer.
         The format depends on the host server.
         e.g. /tftpboot/code/ - in case of UNIX server
-        c:\tftp\code - in case of DOS/Windows server" 
+        c:\tftp\code - in case of DOS/Windows server"
     ::= { clsTransferConfigEntry 5 }
 
 clsTransferFilename OBJECT-TYPE
@@ -748,9 +748,9 @@ clsTransferFilename OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the file name for the file being
-        transferred from the controller. 
-        An example would be file path set to c:\tftp\code\ 
-        and file name set to e1r1v1.opr." 
+        transferred from the controller.
+        An example would be file path set to c:\tftp\code\
+        and file name set to e1r1v1.opr."
     ::= { clsTransferConfigEntry 6 }
 
 clsTransferFtpUsername OBJECT-TYPE
@@ -761,7 +761,7 @@ clsTransferFtpUsername OBJECT-TYPE
         "This object specifies the FTP username for
         transferring file on the server.
         This is valid for FTP/SFTP transfer mode
-        parameters." 
+        parameters."
     ::= { clsTransferConfigEntry 7 }
 
 clsTransferFtpPassword OBJECT-TYPE
@@ -772,7 +772,7 @@ clsTransferFtpPassword OBJECT-TYPE
         "This object specifies the FTP password for
         transferring file on the server.
         This is valid for SFTP/FTP transfer mode
-        parameters. It returns '****' when queried." 
+        parameters. It returns '****' when queried."
     ::= { clsTransferConfigEntry 8 }
 
 clsTransferFtpPortNum OBJECT-TYPE
@@ -782,7 +782,7 @@ clsTransferFtpPortNum OBJECT-TYPE
     DESCRIPTION
         "This object specifies the port number to be used by
         the FTP protocol while connecting to the server.
-        This is valid only for FTP transfer mode." 
+        This is valid only for FTP transfer mode."
     ::= { clsTransferConfigEntry 9 }
 
 clsTransferTftpMaxRetries OBJECT-TYPE
@@ -791,10 +791,10 @@ clsTransferTftpMaxRetries OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies maximum number of retries to be
-        allowed for a TFTP message packet before aborting the 
-        transfer operation. This is valid only for TFTP transfer 
+        allowed for a TFTP message packet before aborting the
+        transfer operation. This is valid only for TFTP transfer
         mode."
-    DEFVAL          { 10 } 
+    DEFVAL          { 10 }
     ::= { clsTransferConfigEntry 10 }
 
 clsTransferTftpTimeout OBJECT-TYPE
@@ -805,7 +805,7 @@ clsTransferTftpTimeout OBJECT-TYPE
     DESCRIPTION
         "This object specifies timeout in seconds for a TFTP message
         packet. This is valid only for TFTP transfer mode."
-    DEFVAL          { 6 } 
+    DEFVAL          { 6 }
     ::= { clsTransferConfigEntry 11 }
 
 clsTransferStart OBJECT-TYPE
@@ -820,11 +820,11 @@ clsTransferStart OBJECT-TYPE
         "This object specifies whether the file transfer
         operation is initiated in active or standby.
         A value of none indicates that, no operation begins.
-        A value of initiate indicates that, transfer of 
-        file begins on active.  
-        A value of initiatePeer indicates that, file transfer 
+        A value of initiate indicates that, transfer of
+        file begins on active.
+        A value of initiatePeer indicates that, file transfer
         operation begins on standby."
-    DEFVAL          { none } 
+    DEFVAL          { none }
     ::= { clsTransferConfigEntry 12 }
 
 clsTransferStatus OBJECT-TYPE
@@ -851,40 +851,40 @@ clsTransferStatus OBJECT-TYPE
     DESCRIPTION
         "This object represents the current status of a file
         transfer operation.
-        The following are valid only when clsTransferType is 
+        The following are valid only when clsTransferType is
         'download' :- bootBreakOff(14), invalidTarFile(15).
-        A value of unknown(1) indicates that, unknown state 
+        A value of unknown(1) indicates that, unknown state
         of transfer.
-        A value of notInitiated(2) indicates that, no transfer 
+        A value of notInitiated(2) indicates that, no transfer
         operation has been initiated
-        A value of transferStarting(3) indicates that, transfer 
+        A value of transferStarting(3) indicates that, transfer
         operation has commenced.
-        A value of errorStarting(4) indicates that, error while 
+        A value of errorStarting(4) indicates that, error while
         starting transfer operation.
-        A value of wrongFileType(5) indicates that, wrong file 
+        A value of wrongFileType(5) indicates that, wrong file
         type specified.
-        A value of updatingConfig(6) indicates that, updating 
+        A value of updatingConfig(6) indicates that, updating
         configuration.
-        A value of invalidConfigFile(7) indicates that, invalid 
+        A value of invalidConfigFile(7) indicates that, invalid
         config file specified.
-        A value of writingToFlash(8) indicates that, writing to 
+        A value of writingToFlash(8) indicates that, writing to
         flash
-        A value of failureWritingToFlash(9) indicates that, writing 
+        A value of failureWritingToFlash(9) indicates that, writing
         to flash failed.
-        A value of checkingCRC(10) indicates that, checking cyclic 
+        A value of checkingCRC(10) indicates that, checking cyclic
         redundancy check.
-        A value of failedCRC(11) indicates that, CRC check failed. 
-        A value of unknownDirection(12) indicates that, unknown 
+        A value of failedCRC(11) indicates that, CRC check failed.
+        A value of unknownDirection(12) indicates that, unknown
         direction of transfer.
-        A value of transferSuccessful(13) indicates that, transfer 
+        A value of transferSuccessful(13) indicates that, transfer
         operation succeeded.
-        A value of transferFailed(14) indicates that, transfer 
+        A value of transferFailed(14) indicates that, transfer
         failed.
-        A value of bootBreakOff(15) indicates that, Boot break 
+        A value of bootBreakOff(15) indicates that, Boot break
         off.
-        A value of invalidTarFile(16) indicates that, invalid Tar 
+        A value of invalidTarFile(16) indicates that, invalid Tar
         file."
-    DEFVAL          { unknown } 
+    DEFVAL          { unknown }
     ::= { clsTransferConfigEntry 13 }
 
 clsTransferStatusString OBJECT-TYPE
@@ -893,9 +893,9 @@ clsTransferStatusString OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents  the current status of a file
-        transfer operation in human readable format." 
+        transfer operation in human readable format."
     ::= { clsTransferConfigEntry 14 }
- 
+
 
 -- EUR ADD
 -- ******************************************************
@@ -903,12 +903,12 @@ clsTransferStatusString OBJECT-TYPE
 -- ******************************************************
 
 clsApTransferTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF ClsApTransferEntry 
+    SYNTAX          SEQUENCE OF ClsApTransferEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table represents the information about the
-        802.11 LWAPP Access Points that have joined to 
+        802.11 LWAPP Access Points that have joined to
         the controller.
         LWAPP APs exchange configuration messages with the
         controller and get the required configuration for
@@ -922,12 +922,12 @@ clsApTransferEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Each entry in this table provides information about
-        one 802.11 LWAPP Access Point that has joined to 
+        one 802.11 LWAPP Access Point that has joined to
         the controller.
         Entries are removed when the APs lose their
-        association with the controller due to loss 
+        association with the controller due to loss
         of communication."
-    INDEX           { clsApTransferSysMacAddress } 
+    INDEX           { clsApTransferSysMacAddress }
     ::= { clsApTransferTable 1 }
 
 ClsApTransferEntry ::= SEQUENCE {
@@ -946,8 +946,8 @@ clsApTransferSysMacAddress OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the radio MAC address
-        of the AP and uniquely identifies an entry in 
-        this table." 
+        of the AP and uniquely identifies an entry in
+        this table."
     ::= { clsApTransferEntry 1 }
 
 clsApPrimaryVers OBJECT-TYPE
@@ -955,7 +955,7 @@ clsApPrimaryVers OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents the primary image version of AP" 
+        "This object represents the primary image version of AP"
     ::= { clsApTransferEntry 2 }
 
 clsApBackupVers OBJECT-TYPE
@@ -963,7 +963,7 @@ clsApBackupVers OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents the backup image version of AP" 
+        "This object represents the backup image version of AP"
     ::= { clsApTransferEntry 3 }
 
 clsApPredStatus OBJECT-TYPE
@@ -972,7 +972,7 @@ clsApPredStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the status of predownload,
-        Initiated/failed/predownloading/backedoff" 
+        Initiated/failed/predownloading/backedoff"
     ::= { clsApTransferEntry 4 }
 
 clsApPredFailReason OBJECT-TYPE
@@ -980,7 +980,7 @@ clsApPredFailReason OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents Failure reason for image download." 
+        "This object represents Failure reason for image download."
     ::= { clsApTransferEntry 5 }
 
 clsApPredRetryCount OBJECT-TYPE
@@ -989,7 +989,7 @@ clsApPredRetryCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents number of retries by AP to download
-        the image" 
+        the image"
     ::= { clsApTransferEntry 6 }
 
 clsApPredNextRetryTime OBJECT-TYPE
@@ -998,9 +998,9 @@ clsApPredNextRetryTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the next retry time of
-        image download by AP." 
+        image download by AP."
     ::= { clsApTransferEntry 7 }
- 
+
 
 
 clsTransferStreamingMode OBJECT-TYPE
@@ -1016,17 +1016,17 @@ clsTransferStreamingMode OBJECT-TYPE
     DESCRIPTION
         "This object specifies the mode of transfer used
         by the controller with the server.
-        A value of tftp indicates that, streaming mode 
+        A value of tftp indicates that, streaming mode
         is TFTP.
-        A value of http indicates that, streaming mode 
+        A value of http indicates that, streaming mode
         is http.
-        A value of cco indicates that, streaming mode 
-        is cco. 
+        A value of cco indicates that, streaming mode
+        is cco.
         A value of https indicates that, streaming mode
         is https.
         A value of sftp indicates that, streaming mode
         is sftp."
-    DEFVAL          { tftp } 
+    DEFVAL          { tftp }
     ::= { clsStreamingTransferConfig 2 }
 
 clsTransferStreamingServerAddressType OBJECT-TYPE
@@ -1035,9 +1035,9 @@ clsTransferStreamingServerAddressType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the server IP address
-        type from which the controller will transfer 
+        type from which the controller will transfer
         the image file."
-    DEFVAL          { ipv4 } 
+    DEFVAL          { ipv4 }
     ::= { clsStreamingTransferConfig 3 }
 
 clsTransferStreamingServerAddress OBJECT-TYPE
@@ -1046,7 +1046,7 @@ clsTransferStreamingServerAddress OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the server IP address to
-        which the controller will transfer the file." 
+        which the controller will transfer the file."
     ::= { clsStreamingTransferConfig 4 }
 
 clsTransferStreamingPath OBJECT-TYPE
@@ -1055,8 +1055,8 @@ clsTransferStreamingPath OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the directory path
-        for file transfer. The controller remembers 
-        the last file path used." 
+        for file transfer. The controller remembers
+        the last file path used."
     ::= { clsStreamingTransferConfig 5 }
 
 clsStreamingTransferStart OBJECT-TYPE
@@ -1069,11 +1069,11 @@ clsStreamingTransferStart OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether the file transfer
         operation started or not.
-        A value of initiate(1) indicates that, the transfer 
+        A value of initiate(1) indicates that, the transfer
         operation is started.
-        A value of none(2) indicates that, no operation is 
+        A value of none(2) indicates that, no operation is
         started"
-    DEFVAL          { none } 
+    DEFVAL          { none }
     ::= { clsStreamingTransferConfig 6 }
 
 clsTransferHttpStreamingUsername OBJECT-TYPE
@@ -1082,7 +1082,7 @@ clsTransferHttpStreamingUsername OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies username of CCO server.
-        Specific to http/cco mode" 
+        Specific to http/cco mode"
     ::= { clsStreamingTransferConfig 7 }
 
 clsTransferHttpStreamingPassword OBJECT-TYPE
@@ -1091,7 +1091,7 @@ clsTransferHttpStreamingPassword OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies password of CCO server.
-        Specific to http/cco mode" 
+        Specific to http/cco mode"
     ::= { clsStreamingTransferConfig 8 }
 
 clsTransferHttpStreamingSuggestedVersion OBJECT-TYPE
@@ -1100,7 +1100,7 @@ clsTransferHttpStreamingSuggestedVersion OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents suggested image version to
-        be downloaded from CCO.Specific to http/cco mode" 
+        be downloaded from CCO.Specific to http/cco mode"
     ::= { clsStreamingTransferConfig 9 }
 
 clsTransferHttpStreamingLatestVersion OBJECT-TYPE
@@ -1109,7 +1109,7 @@ clsTransferHttpStreamingLatestVersion OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents latest image version to
-        be downloaded from CCO.Specific to http/cco mode" 
+        be downloaded from CCO.Specific to http/cco mode"
     ::= { clsStreamingTransferConfig 10 }
 
 clsTransferHttpStreamingCcoPoll OBJECT-TYPE
@@ -1117,7 +1117,7 @@ clsTransferHttpStreamingCcoPoll OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents recent CCO Polled time" 
+        "This object represents recent CCO Polled time"
     ::= { clsStreamingTransferConfig 11 }
 
 clsTransferStreamingServerPort OBJECT-TYPE
@@ -1126,7 +1126,7 @@ clsTransferStreamingServerPort OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents streaming server port
-        for https/sftp" 
+        for https/sftp"
     ::= { clsStreamingTransferConfig 12 }
 
 clsTransferStreamingUsername OBJECT-TYPE
@@ -1135,7 +1135,7 @@ clsTransferStreamingUsername OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies username of server.
-        Specific to https/sftp mode" 
+        Specific to https/sftp mode"
     ::= { clsStreamingTransferConfig 13 }
 
 clsTransferStreamingPassword OBJECT-TYPE
@@ -1144,7 +1144,7 @@ clsTransferStreamingPassword OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies password of server.
-        Specific to https/sftp mode" 
+        Specific to https/sftp mode"
     ::= { clsStreamingTransferConfig 14 }
 
 clsTransferStreamingOptimizedJoinEnable OBJECT-TYPE
@@ -1153,7 +1153,7 @@ clsTransferStreamingOptimizedJoinEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specified the state of the optimized
-        join feature." 
+        join feature."
     ::= { clsStreamingTransferConfig 15 }
 
 -- ******************************************************
@@ -1166,7 +1166,7 @@ clsTimeZone OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies timezone for the controller.
-        Enter the timezone location index. 
+        Enter the timezone location index.
                1. (GMT-12:00) International Date Line West
                2. (GMT-11:00) Samoa
                3. (GMT-10:00) Hawaii
@@ -1177,26 +1177,26 @@ clsTimeZone OBJECT-TYPE
                8. (GMT -5:00) Eastern Time (US and Canada)
                9. (GMT -4:00) Altantic Time (Canada)
               10. (GMT -3:00) Buenos Aires (Agentina)
-              11. (GMT -2:00) Mid-Atlantic 
-              12. (GMT -1:00) Azores 
-              13. (GMT) London, Lisbon, Dublin, Edinburgh 
-              14. (GMT +1:00) Amsterdam, Berlin, Rome, Vienna 
-              15. (GMT +2:00) Jerusalem 
-              16. (GMT +3:00) Baghdad 
-              17. (GMT +4:00) Muscat, Abu Dhabi 
-              18. (GMT +4:30) Kabul 
-              19. (GMT +5:00) Karachi, Islamabad, Tashkent 
-              20. (GMT +5:30) Colombo, Kolkata, Mumbai, New Delhi 
-              21. (GMT +5:45) Katmandu 
-              22. (GMT +6:00) Almaty, Novosibirsk 
-              23. (GMT +6:30) Rangoon 
-              24. (GMT +7:00) Saigon, Hanoi, Bangkok, Jakatar 
-              25. (GMT +8:00) HongKong, Bejing, Chongquing 
-              26. (GMT +9:00) Tokyo, Osaka, Sapporo 
-              27. (GMT +9:30) Darwin 
-              28. (GMT+10:00) Sydney, Melbourne, Canberra 
-              29. (GMT+11:00) Magadan, Solomon Is., New Caledonia 
-              30. (GMT+12:00) Kamchatka, Marshall Is., Fiji" 
+              11. (GMT -2:00) Mid-Atlantic
+              12. (GMT -1:00) Azores
+              13. (GMT) London, Lisbon, Dublin, Edinburgh
+              14. (GMT +1:00) Amsterdam, Berlin, Rome, Vienna
+              15. (GMT +2:00) Jerusalem
+              16. (GMT +3:00) Baghdad
+              17. (GMT +4:00) Muscat, Abu Dhabi
+              18. (GMT +4:30) Kabul
+              19. (GMT +5:00) Karachi, Islamabad, Tashkent
+              20. (GMT +5:30) Colombo, Kolkata, Mumbai, New Delhi
+              21. (GMT +5:45) Katmandu
+              22. (GMT +6:00) Almaty, Novosibirsk
+              23. (GMT +6:30) Rangoon
+              24. (GMT +7:00) Saigon, Hanoi, Bangkok, Jakatar
+              25. (GMT +8:00) HongKong, Bejing, Chongquing
+              26. (GMT +9:00) Tokyo, Osaka, Sapporo
+              27. (GMT +9:30) Darwin
+              28. (GMT+10:00) Sydney, Melbourne, Canberra
+              29. (GMT+11:00) Magadan, Solomon Is., New Caledonia
+              30. (GMT+12:00) Kamchatka, Marshall Is., Fiji"
     ::= { clsConfigGeneral 1 }
 
 clsTimeZoneDescription OBJECT-TYPE
@@ -1205,7 +1205,7 @@ clsTimeZoneDescription OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the timezone description
-        for the controller." 
+        for the controller."
     ::= { clsConfigGeneral 2 }
 
 clsMaxClientsTrapThreshold OBJECT-TYPE
@@ -1218,8 +1218,8 @@ clsMaxClientsTrapThreshold OBJECT-TYPE
         of clients on the controller to trigger a trap.
         The trap ciscoLwappMaxClientsReached
         will be triggered once the count of clients
-        on the controller  reaches this limit and the  
-        clsMaxClientsTrapEnabled is enabled." 
+        on the controller  reaches this limit and the
+        clsMaxClientsTrapEnabled is enabled."
     ::= { clsConfigGeneral 3 }
 
 clsMaxRFIDTagsTrapThreshold OBJECT-TYPE
@@ -1231,9 +1231,9 @@ clsMaxRFIDTagsTrapThreshold OBJECT-TYPE
         "This object specifies the threshold for number
         of RFID tags on the controller to trigger a trap.
         The trap ciscoLwappMaxRFIDTagsReached
-        will be triggered once the count of RFID tags 
-        on the controller reaches this limit and the  
-        clsMaxRFIDTagsTrapEnabled is enabled." 
+        will be triggered once the count of RFID tags
+        on the controller reaches this limit and the
+        clsMaxRFIDTagsTrapEnabled is enabled."
     ::= { clsConfigGeneral 4 }
 
 clsSensorTemperature OBJECT-TYPE
@@ -1243,7 +1243,7 @@ clsSensorTemperature OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents current internal temperature of
-        the unit in Centigrade" 
+        the unit in Centigrade"
     ::= { clsConfigGeneral 6 }
 
 -- ******************************************************
@@ -1256,14 +1256,14 @@ clsLiStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies whether lawful intercept is enabled
-        for the flexconnect access points connected to the 
+        for the flexconnect access points connected to the
         wireless LAN Controller.
         A value of 'true' indicates that lawful intercept is
         enabled.
         A value of 'false' indicates that lawful intercept is
         disabled.
         This config is applicable for flexconnect access points."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsLiConfigGeneral 1 }
 
 clsLiReportingInterval OBJECT-TYPE
@@ -1273,10 +1273,10 @@ clsLiReportingInterval OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the interval at which AP needs to
-        send LI statistical information to the WLC. Interval is in the 
+        send LI statistical information to the WLC. Interval is in the
         range of 60 - 600 seconds.
         This config is applicable for flexconnect access points."
-    DEFVAL          { 60 } 
+    DEFVAL          { 60 }
     ::= { clsLiConfigGeneral 2 }
 
 clsLiAddressType OBJECT-TYPE
@@ -1286,7 +1286,7 @@ clsLiAddressType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the IP address type of the syslog
         server to which the LI statistics will be sent.
-        This config is applicable for flexconnect access points." 
+        This config is applicable for flexconnect access points."
     ::= { clsLiConfigGeneral 3 }
 
 clsLiAddress OBJECT-TYPE
@@ -1296,14 +1296,14 @@ clsLiAddress OBJECT-TYPE
     DESCRIPTION
         "This object specifies the IP address of the syslog server
         to which LI statistics needs to be sent.
-        This config is applicable for flexconnect access points." 
+        This config is applicable for flexconnect access points."
     ::= { clsLiConfigGeneral 4 }
 -- ******************************************************
 -- syslog configuration Table
 -- ******************************************************
 
 cLSysLogConfigTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CLSysLogConfigEntry 
+    SYNTAX          SEQUENCE OF CLSysLogConfigEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1319,7 +1319,7 @@ cLSysLogConfigEntry OBJECT-TYPE
     DESCRIPTION
         "Each entry in this table provides information about
         the host to which the syslog messages will be sent to."
-    INDEX           { cLSysLogServerIndex } 
+    INDEX           { cLSysLogServerIndex }
     ::= { cLSysLogConfigTable 1 }
 
 CLSysLogConfigEntry ::= SEQUENCE {
@@ -1335,7 +1335,7 @@ cLSysLogServerIndex OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the index of the host to
-        which syslog messages will be sent." 
+        which syslog messages will be sent."
     ::= { cLSysLogConfigEntry 1 }
 
 cLSysLogAddressType OBJECT-TYPE
@@ -1346,7 +1346,7 @@ cLSysLogAddressType OBJECT-TYPE
         "This object represents the IP address type of
         the host to which syslog messages will be sent.
         'DNS' is used when the hostname of the server
-        is configured." 
+        is configured."
     ::= { cLSysLogConfigEntry 2 }
 
 cLSysLogAddress OBJECT-TYPE
@@ -1355,7 +1355,7 @@ cLSysLogAddress OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the IP address or hostname
-        of the host to which syslog messages will be sent." 
+        of the host to which syslog messages will be sent."
     ::= { cLSysLogConfigEntry 3 }
 
 cLSysLogHostRowStatus OBJECT-TYPE
@@ -1365,9 +1365,9 @@ cLSysLogHostRowStatus OBJECT-TYPE
     DESCRIPTION
         "This is the status column for this row and is used
         to create and delete specific instances of rows in
-        this table." 
+        this table."
     ::= { cLSysLogConfigEntry 4 }
- 
+
 
 
 cLSysArpUnicastEnabled OBJECT-TYPE
@@ -1377,11 +1377,11 @@ cLSysArpUnicastEnabled OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether ARP unicast
         is enabled or disabled on the controller.
-        A value of 'true' indicates that, the ARP 
-        unicast is enabled. 
-        A value of 'false' indicates that, the ARP 
+        A value of 'true' indicates that, the ARP
+        unicast is enabled.
+        A value of 'false' indicates that, the ARP
         unicast is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 7 }
 
 cLSysBroadcastForwardingEnabled OBJECT-TYPE
@@ -1392,10 +1392,10 @@ cLSysBroadcastForwardingEnabled OBJECT-TYPE
         "This object specifies whether broadcast forwarding
         is enabled or disabled on the controller.
         A value of 'true' indicates that, the broadcast
-        forwarding is enabled. 
-        A value of 'false' indicates that, the broadcast 
+        forwarding is enabled.
+        A value of 'false' indicates that, the broadcast
         forwarding  is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 9 }
 
 cLSysLagModeEnabled OBJECT-TYPE
@@ -1406,10 +1406,10 @@ cLSysLagModeEnabled OBJECT-TYPE
         "This object specifies whether Link Aggregation(LAG)
         mode is enabled or disabled on the controller.
         A value of 'true' indicates that, the LAG mode
-        is enabled. 
-        A value of 'false' indicates that, the LAG mode 
+        is enabled.
+        A value of 'false' indicates that, the LAG mode
         is disabled on the controller."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 10 }
 
 clsConfigProductBranchVersion OBJECT-TYPE
@@ -1418,13 +1418,13 @@ clsConfigProductBranchVersion OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the branch name of the specific
-        controller branch. For Mesh branches, this string has 
-        the value M(Mesh). Zero length string is returned if 
-        there is no branch name. This string is append to the 
-        product version for display purposes.  For example, 
-        if the mesh product version is 4.1.191.10, a manager 
-        application may the version string as 4.1.191.10M 
-        (Mesh)" 
+        controller branch. For Mesh branches, this string has
+        the value M(Mesh). Zero length string is returned if
+        there is no branch name. This string is append to the
+        product version for display purposes.  For example,
+        if the mesh product version is 4.1.191.10, a manager
+        application may the version string as 4.1.191.10M
+        (Mesh)"
     ::= { clsConfig 11 }
 
 clsConfigDhcpProxyEnabled OBJECT-TYPE
@@ -1434,11 +1434,11 @@ clsConfigDhcpProxyEnabled OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether the DHCP proxy
         option is enabled or disabled.
-        A value of 'true' indicates that, the proxy option 
+        A value of 'true' indicates that, the proxy option
         is enabled on the controller.
-        A value of 'false' indicates that, the proxy option 
+        A value of 'false' indicates that, the proxy option
         is disabled on the controller."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 12 }
 
 -- ******************************************************
@@ -1451,14 +1451,14 @@ cLSysMulticastIGMPSnoopingEnabled OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies whether Multicast IGMP Snooping
-        is enabled or disabled on the controller.  
-        A value of 'true' indicates that the Multicast IGMP 
-        Snooping is enabled. To enable this, 
-        agentNetworkMulticastMode/clsConfigMulticastEnabled 
-        must not be in disabled state.  
-        A value of 'false' indicates that the Multicast IGMP 
+        is enabled or disabled on the controller.
+        A value of 'true' indicates that the Multicast IGMP
+        Snooping is enabled. To enable this,
+        agentNetworkMulticastMode/clsConfigMulticastEnabled
+        must not be in disabled state.
+        A value of 'false' indicates that the Multicast IGMP
         Snooping is disabled on the controller."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cLSysMulticastIGMP 1 }
 
 cLSysMulticastIGMPSnoopingTimeout OBJECT-TYPE
@@ -1469,10 +1469,10 @@ cLSysMulticastIGMPSnoopingTimeout OBJECT-TYPE
     DESCRIPTION
         "This object specifies the IGMP timeout, in seconds.
         To set this value, cLSysMulticastIGMPSnoopingEnabled
-        must be set to true.  When the timeout expires, the 
-        controller sends a query on all WLANs, causing all 
-        clients that are listening to a multicast group to 
-        send a packet back to the controller." 
+        must be set to true.  When the timeout expires, the
+        controller sends a query on all WLANs, causing all
+        clients that are listening to a multicast group to
+        send a packet back to the controller."
     ::= { cLSysMulticastIGMP 2 }
 
 cLSysMulticastIGMPQueryInterval OBJECT-TYPE
@@ -1482,8 +1482,8 @@ cLSysMulticastIGMPQueryInterval OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the IGMP query interval, in seconds.
-        To set this value, cLSysMulticastIGMPSnoopingEnabled must 
-        be set to true." 
+        To set this value, cLSysMulticastIGMPSnoopingEnabled must
+        be set to true."
     ::= { cLSysMulticastIGMP 3 }
 
 cLSysMulticastLLBridgingStatus OBJECT-TYPE
@@ -1492,22 +1492,22 @@ cLSysMulticastLLBridgingStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies whether link local is enabled
-        or disabled on the controller.  
-        A value of 'true' indicates that the link local is 
-        enabled.  
-        A value of 'false' indicates that the link local is 
+        or disabled on the controller.
+        A value of 'true' indicates that the link local is
+        enabled.
+        A value of 'false' indicates that the link local is
         disabled on the controller."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cLSysMulticastIGMP 4 }
 -- stats-timer config.
---   
+--
 
 -- ********************************************************************
 -- clsPortModeConfigTable
 -- ********************************************************************
 
 clsPortModeConfigTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF ClsPortModeConfigEntry 
+    SYNTAX          SEQUENCE OF ClsPortModeConfigEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1521,10 +1521,10 @@ clsPortModeConfigEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Each entry contains the switch's physical port,
-        phyical mode related attribues. Each entry exists 
-        for available physical interface. Entries 
+        phyical mode related attribues. Each entry exists
+        for available physical interface. Entries
         cannot be created or deleted by the user."
-    INDEX           { clsPortDot1dBasePort } 
+    INDEX           { clsPortDot1dBasePort }
     ::= { clsPortModeConfigTable 1 }
 
 ClsPortModeConfigEntry ::= SEQUENCE {
@@ -1542,7 +1542,7 @@ clsPortDot1dBasePort OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents unique unsigned integer value
-        which identifies the base port number." 
+        which identifies the base port number."
     ::= { clsPortModeConfigEntry 1 }
 
 clsPortModePhysicalMode OBJECT-TYPE
@@ -1562,28 +1562,28 @@ clsPortModePhysicalMode OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The object specifies the speed mode of switch port.
-        A value of autoNegotiate indicates that, port senses 
-        speed and negotiates with the port at the other end 
+        A value of autoNegotiate indicates that, port senses
+        speed and negotiates with the port at the other end
         of the link for data transfer operation
-        A value of half10 indicates that, port operates at 
+        A value of half10 indicates that, port operates at
         10mbps half duplex speed.
-        A value of full10  indicates that, port operates at 
+        A value of full10  indicates that, port operates at
         10mbps full duplex speed.
-        A value of half100 indicates that, port operates at 
+        A value of half100 indicates that, port operates at
         100mbps half duplex speed.
-        A value of full100 indicates that, port operates at 
+        A value of full100 indicates that, port operates at
         100mbps full duplex speed.
-        A value of full1000sx indicates that, port operates at 
+        A value of full1000sx indicates that, port operates at
         1000mbps full duplex speed over multi mode fiber.
-        A value of half1000 indicates that, port operates at 
+        A value of half1000 indicates that, port operates at
         1000mbps half duplex speed.
-        A value of full1000 indicates that, port operates at 
+        A value of full1000 indicates that, port operates at
         1000mbps full duplex speed.
-        A value of half10000 indicates that, port operates at 
+        A value of half10000 indicates that, port operates at
         10000mbps half duplex speed.
-        A value of full10000 indicates that, port operates at 
+        A value of full10000 indicates that, port operates at
         10000mbps full duplex speed."
-    DEFVAL          { autoNegotiate } 
+    DEFVAL          { autoNegotiate }
     ::= { clsPortModeConfigEntry 2 }
 
 clsPortModePhysicalStatus OBJECT-TYPE
@@ -1609,24 +1609,24 @@ clsPortModePhysicalStatus OBJECT-TYPE
     DESCRIPTION
         "This object represents the switch port's current physical
         speed status.
-        A value of unknown indicates that, the speed of the 
+        A value of unknown indicates that, the speed of the
         port is not known
-        A value of autoNegotiate indicates that, port senses 
-        speed and negotiates with the port at the other end 
+        A value of autoNegotiate indicates that, port senses
+        speed and negotiates with the port at the other end
         of the link for data transfer operation
-        A value of half10 indicates that, port operates at 
+        A value of half10 indicates that, port operates at
         10mbps half duplex speed.
-        A value of full10  indicates that, port operates at 
+        A value of full10  indicates that, port operates at
         10mbps full duplex speed.
-        A value of half100 indicates that, port operates at 
+        A value of half100 indicates that, port operates at
         100mbps half duplex speed.
-        A value of full100 indicates that, port operates at 
+        A value of full100 indicates that, port operates at
         100mbps full duplex speed
-        A value of full1000sx indicates that, port operates at 
+        A value of full1000sx indicates that, port operates at
         1000mbps full duplex speed over multi mode fiber.
-        A value of half1000 indicates that, port operates at 
+        A value of half1000 indicates that, port operates at
         1000mbps half duplex speed.
-        A value of full1000 indicates that, port operates at 
+        A value of full1000 indicates that, port operates at
         1000mbps full duplex speed.
         A value of half2500 indicates that, port operates at
         2500mbps half duplex speed.
@@ -1636,11 +1636,11 @@ clsPortModePhysicalStatus OBJECT-TYPE
         5000mbps half duplex speed.
         A value of full5000 indicates that, port operates at
         5000mbps full duplex speed.
-        A value of half10000 indicates that, port operates at 
+        A value of half10000 indicates that, port operates at
         10000mbps half duplex speed.
-        A value of full10000 indicates that, port operates at 
+        A value of full10000 indicates that, port operates at
         10000mbps full duplex speed."
-    DEFVAL          { unknown } 
+    DEFVAL          { unknown }
     ::= { clsPortModeConfigEntry 3 }
 
 clsPortModeSfpType OBJECT-TYPE
@@ -1649,8 +1649,8 @@ clsPortModeSfpType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the SFP type of the port.
-        When there is no SFP connected to the port, the 
-        string is  represented with value as Not Present." 
+        When there is no SFP connected to the port, the
+        string is  represented with value as Not Present."
     ::= { clsPortModeConfigEntry 4 }
 
 clsPortUpDownCount OBJECT-TYPE
@@ -1659,9 +1659,9 @@ clsPortUpDownCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the total number of
-        up/down count of the port. Every time the 
-        value of ifOperStatus is changed, this MIB 
-        object should be incremented." 
+        up/down count of the port. Every time the
+        value of ifOperStatus is changed, this MIB
+        object should be incremented."
     ::= { clsPortModeConfigEntry 5 }
 
 clsPortModeMaxSpeed OBJECT-TYPE
@@ -1675,15 +1675,15 @@ clsPortModeMaxSpeed OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The object specifies the maxspeed mode of MGIG port.
-        A value of full1000 indicates that, port will operate 
+        A value of full1000 indicates that, port will operate
         at maximum autonegotiated speed of 1000mbps or less.
-        A value of full2500  indicates that, port will operate 
+        A value of full2500  indicates that, port will operate
         at maximum autonegotiated speed of 2500mbps or less.
-        A value of full5000 indicates that, port will operate 
+        A value of full5000 indicates that, port will operate
         at maximum autonegotiated speed of 5000mbps or less."
-    DEFVAL          { autonegotiate } 
+    DEFVAL          { autonegotiate }
     ::= { clsPortModeConfigEntry 6 }
- 
+
 
 
 -- ********************************************************************
@@ -1696,12 +1696,12 @@ clsCoreDumpTransferEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies whether the core dump
-        file transfer is enabled or disabled. 
-        A value of 'true' indicates that, the core dump 
+        file transfer is enabled or disabled.
+        A value of 'true' indicates that, the core dump
         file transfer is enabled.
-        A value of 'false' indicates that , the core dump 
+        A value of 'false' indicates that , the core dump
         file transfer is disabled"
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsCoreDump 1 }
 
 clsCoreDumpTransferMode OBJECT-TYPE
@@ -1713,14 +1713,14 @@ clsCoreDumpTransferMode OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the Core Dump Transfer Mode.
-        A value 'unknown' cannot be set. 
+        A value 'unknown' cannot be set.
         A value of ftp indicates that, mode is ftp.
-        FTP attributes clsCoreDumpServerIpAddress, 
-        clsCoreDumpFileName, clsCoreDumpUserName, clsCoreDumpPassword 
-        can be set. 
-        unknown when the value of clsCoreDumpTransferEnable 
+        FTP attributes clsCoreDumpServerIpAddress,
+        clsCoreDumpFileName, clsCoreDumpUserName, clsCoreDumpPassword
+        can be set.
+        unknown when the value of clsCoreDumpTransferEnable
         is disabled."
-    DEFVAL          { ftp } 
+    DEFVAL          { ftp }
     ::= { clsCoreDump 2 }
 
 clsCoreDumpServerIPAddressType OBJECT-TYPE
@@ -1728,7 +1728,7 @@ clsCoreDumpServerIPAddressType OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This object specifies the IP address type of the server." 
+        "This object specifies the IP address type of the server."
     ::= { clsCoreDump 3 }
 
 clsCoreDumpServerIPAddress OBJECT-TYPE
@@ -1737,9 +1737,9 @@ clsCoreDumpServerIPAddress OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the IP address of the server where the
-        core-dump will be uploaded. The type of this address is 
-        determined by the value of clsCoreDumpServerIpAddressType 
-        object." 
+        core-dump will be uploaded. The type of this address is
+        determined by the value of clsCoreDumpServerIpAddressType
+        object."
     ::= { clsCoreDump 4 }
 
 clsCoreDumpFileName OBJECT-TYPE
@@ -1748,7 +1748,7 @@ clsCoreDumpFileName OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the filename of the core-dump by which
-        it gets uploaded on the server." 
+        it gets uploaded on the server."
     ::= { clsCoreDump 5 }
 
 clsCoreDumpUserName OBJECT-TYPE
@@ -1756,7 +1756,7 @@ clsCoreDumpUserName OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This object specifies the login name at the FTP server." 
+        "This object specifies the login name at the FTP server."
     ::= { clsCoreDump 6 }
 
 clsCoreDumpPassword OBJECT-TYPE
@@ -1764,7 +1764,7 @@ clsCoreDumpPassword OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This object specifies the login password of the FTP server." 
+        "This object specifies the login password of the FTP server."
     ::= { clsCoreDump 7 }
 
 clsConfigMulticastEnabled OBJECT-TYPE
@@ -1774,11 +1774,11 @@ clsConfigMulticastEnabled OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether global multicast  is
         enabled or disabled.
-        A value of 'true' indicates that the multicast option is 
+        A value of 'true' indicates that the multicast option is
         enabled on the controller.
-        A value of 'false' indicates that the multicast option is 
+        A value of 'false' indicates that the multicast option is
         disabled on the controller."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 16 }
 
 clsConfigArpUnicastEnabled OBJECT-TYPE
@@ -1788,12 +1788,12 @@ clsConfigArpUnicastEnabled OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether arp is forwarded in
         unicast format or the default mode of Multicast.
-        A value of 'true' indicates that, the arp packets 
+        A value of 'true' indicates that, the arp packets
         for passive client will be unicasted.
-        A value of 'false' indicates that, the arp-packets 
-        will be sent based on the config of multicast mode 
+        A value of 'false' indicates that, the arp-packets
+        will be sent based on the config of multicast mode
         multicast/unicast."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 37 }
 
 -- ********************************************************************
@@ -1806,13 +1806,13 @@ cLSysMulticastMLDSnoopingEnabled OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies whether multicast MLD Snooping is enabled
-        or disabled on the controller.  
-        A value of 'true' indicates that the multicast MLD Snooping 
+        or disabled on the controller.
+        A value of 'true' indicates that the multicast MLD Snooping
         is enabled. To enable this, agentNetworkMulticastMode/
-        clsConfigMulticastEnabled must not be in disabled state.  
+        clsConfigMulticastEnabled must not be in disabled state.
         A value of 'false' indicates that the multicast MLD Snooping
         is disabled on the controller."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cLSysMulticastMLD 1 }
 
 cLSysMulticastMLDSnoopingTimeout OBJECT-TYPE
@@ -1823,11 +1823,11 @@ cLSysMulticastMLDSnoopingTimeout OBJECT-TYPE
     DESCRIPTION
         "This object specifies the MLD timeout, in seconds.
         To set this value, cLSysMulticastMLDSnoopingEnabled
-        must be set to True.  When the timeout expires, the 
-        controller sends a query on all WLANs, causing all 
+        must be set to True.  When the timeout expires, the
+        controller sends a query on all WLANs, causing all
         clients that are listening to a multicast group to
         send a packet back to the controller."
-    DEFVAL          { 60 } 
+    DEFVAL          { 60 }
     ::= { cLSysMulticastMLD 2 }
 
 cLSysMulticastMLDQueryInterval OBJECT-TYPE
@@ -1837,13 +1837,13 @@ cLSysMulticastMLDQueryInterval OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the MLD query interval, in seconds.
-        To set this value, cLSysMulticastMLDSnoopingEnabled must 
+        To set this value, cLSysMulticastMLDSnoopingEnabled must
         be set to true."
-    DEFVAL          { 20 } 
+    DEFVAL          { 20 }
     ::= { cLSysMulticastMLD 3 }
 
 -- stats-timer config.
---   
+--
 -- ********************************************************************
 -- *     System Realtime Stats Timer Interval
 -- ********************************************************************
@@ -1855,9 +1855,9 @@ clsSysRealtimeStatsTimer OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the realtime stats interval of
-        the system. There are 2 stats modes: realtime and 
+        the system. There are 2 stats modes: realtime and
         normal. Realtime interval is much less than normal mode."
-    DEFVAL          { 5 } 
+    DEFVAL          { 5 }
     ::= { clsConfigStats 1 }
 
 -- ********************************************************************
@@ -1873,7 +1873,7 @@ clsSysNormalStatsTimer OBJECT-TYPE
         "This object specifies the normal stats interval of the system.
         There are 2 stats modes: realtime and normal. Realtime interval
         is much less than normal mode."
-    DEFVAL          { 180 } 
+    DEFVAL          { 180 }
     ::= { clsConfigStats 2 }
 
 -- ********************************************************************
@@ -1888,7 +1888,7 @@ clsSysStatsSamplingInterval OBJECT-TYPE
     DESCRIPTION
         "This object specifies the sampling interval of the system,
         which is applied to WLC and APs connected to this WLC.
-        WLC and APs poll specific data every sampling interval." 
+        WLC and APs poll specific data every sampling interval."
     ::= { clsConfigStats 3 }
 
 -- ********************************************************************
@@ -1902,14 +1902,14 @@ clsSysStatsAverageInterval OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the average statistics interval of
-        the system, which is applied to WLC and APs connected to 
-        this WLC. This interval works as a time window for 
-        calculating the average value of the data polled by WLC/AP 
-        every sampling interval." 
+        the system, which is applied to WLC and APs connected to
+        this WLC. This interval works as a time window for
+        calculating the average value of the data polled by WLC/AP
+        every sampling interval."
     ::= { clsConfigStats 4 }
 
 -- Alarm service config.
---   
+--
 -- ********************************************************************
 -- *     Alarm Hold Time
 -- ********************************************************************
@@ -1923,7 +1923,7 @@ clsAlarmHoldTime OBJECT-TYPE
         "This object specifies the time in seconds for which
         an alarm object should be soaked when its on/off
         state is changed."
-    DEFVAL          { 6 } 
+    DEFVAL          { 6 }
     ::= { clsAlarmObjects 1 }
 
 -- ********************************************************************
@@ -1937,13 +1937,13 @@ clsAlarmTrapRetransmitInterval OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the trap retransmission
-        interval in seconds. Setting this value to 0 means 
+        interval in seconds. Setting this value to 0 means
         no retransmission."
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsAlarmObjects 2 }
 
 -- System-wide thresholds config.
---   
+--
 -- ********************************************************************
 -- *     Controller CPU usage threshold
 -- ********************************************************************
@@ -1957,7 +1957,7 @@ clsSysControllerCpuUsageThreshold OBJECT-TYPE
         "This object specifies the CPU usage threshold on a
         controller.
         Setting this value to 0 means no threshold."
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsSysThresholdConfig 1 }
 
 -- ********************************************************************
@@ -1973,7 +1973,7 @@ clsSysControllerMemoryUsageThreshold OBJECT-TYPE
         "This object specifies the memory usage threshold on a
         controller.
         Setting this value to 0 means no threshold."
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsSysThresholdConfig 2 }
 
 -- ********************************************************************
@@ -1988,7 +1988,7 @@ clsSysApCpuUsageThreshold OBJECT-TYPE
     DESCRIPTION
         "This object specifies the CPU usage threshold on a
         AP. Setting this value to 0 means no threshold."
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsSysThresholdConfig 3 }
 
 -- ********************************************************************
@@ -2003,7 +2003,7 @@ clsSysApMemoryUsageThreshold OBJECT-TYPE
     DESCRIPTION
         "This object specifies the memory usage threshold on a
         AP. Setting this value to 0 means no threshold."
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsSysThresholdConfig 4 }
 
 -- ********************************************************************
@@ -2016,12 +2016,12 @@ clsNMHeartBeatEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies whether heart beat trap to network
-        manager is enabled or disabled. 
+        manager is enabled or disabled.
         A value of 'true' indicates that, network manager
         heart beat feature is enabled.
         A value of 'false' indicates that, network manager
         heart beat feature is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsNMHeartBeat 1 }
 
 clsNMHeartBeatInterval OBJECT-TYPE
@@ -2032,7 +2032,7 @@ clsNMHeartBeatInterval OBJECT-TYPE
     DESCRIPTION
         "This object specifies the heart beat trap interval in
         seconds to network manager."
-    DEFVAL          { 180 } 
+    DEFVAL          { 180 }
     ::= { clsNMHeartBeat 2 }
 
 clsSysLogEnabled OBJECT-TYPE
@@ -2042,11 +2042,11 @@ clsSysLogEnabled OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether debug log to syslog is
         enabled or disabled.
-        A value of 'true' indicates that debug log to syslog is 
+        A value of 'true' indicates that debug log to syslog is
         enabled on the controller.
-        A value of 'false' indicates that debug log to syslog is 
+        A value of 'false' indicates that debug log to syslog is
         disabled on the controller."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 22 }
 
 clsSysLogLevel OBJECT-TYPE
@@ -2073,7 +2073,7 @@ clsSysLogLevel OBJECT-TYPE
             warnings         -   warning conditions
             notifications    -   normal but signification condition
             informational    -   Informational
-            debugging        -   debug-level messages." 
+            debugging        -   debug-level messages."
     ::= { clsConfig 23 }
 
 clsConfigApMaxCount OBJECT-TYPE
@@ -2083,7 +2083,7 @@ clsConfigApMaxCount OBJECT-TYPE
     DESCRIPTION
         "This object represents the the max number of AP's
         supported in WLC."
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsConfig 24 }
 
 clsUSBMode OBJECT-TYPE
@@ -2094,19 +2094,19 @@ clsUSBMode OBJECT-TYPE
         "This object specifies whether USB is enabled or disabled.
         A value of 'true' indicates that, USB is enabled.
         A value of 'false' indicates that, USB is disabled."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { clsConfig 40 }
 -- ********************************************************************
 -- * Trap Black List Table
 -- ********************************************************************
 
 clsTrapBlacklistTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF ClsTrapBlacklistEntry 
+    SYNTAX          SEQUENCE OF ClsTrapBlacklistEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table represents the trap blacklist.
-        Traps in black list will be blocked while 
+        Traps in black list will be blocked while
         sending out."
     ::= { cLSTrapSwitchConfig 1 }
 
@@ -2117,7 +2117,7 @@ clsTrapBlacklistEntry OBJECT-TYPE
     DESCRIPTION
         "Each entry in this table provides the name of trap
         in trap blacklist."
-    INDEX           { clsBlacklistTrapIndex } 
+    INDEX           { clsBlacklistTrapIndex }
     ::= { clsTrapBlacklistTable 1 }
 
 ClsTrapBlacklistEntry ::= SEQUENCE {
@@ -2131,7 +2131,7 @@ clsBlacklistTrapIndex OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "This object represents trap uniquely in blacklist." 
+        "This object represents trap uniquely in blacklist."
     ::= { clsTrapBlacklistEntry 1 }
 
 clsTrapNameInBlacklist OBJECT-TYPE
@@ -2139,7 +2139,7 @@ clsTrapNameInBlacklist OBJECT-TYPE
     MAX-ACCESS      read-create
     STATUS          current
     DESCRIPTION
-        "This object specifies name of trap in trap blacklist." 
+        "This object specifies name of trap in trap blacklist."
     ::= { clsTrapBlacklistEntry 2 }
 
 clsTrapBlacklistRowStatus OBJECT-TYPE
@@ -2149,9 +2149,9 @@ clsTrapBlacklistRowStatus OBJECT-TYPE
     DESCRIPTION
         "This is the status column for this row and used
         to create and delete specific instances of rows
-        in this table." 
+        in this table."
     ::= { clsTrapBlacklistEntry 3 }
- 
+
 
 
 clsLinkLocalBridgingEnabled OBJECT-TYPE
@@ -2161,10 +2161,10 @@ clsLinkLocalBridgingEnabled OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether link local bridging on
         client packets is enabled or disabled.
-        A value of 'true' indicates that link local bridging on 
+        A value of 'true' indicates that link local bridging on
         client packets is enabled on the controller.
-        A value of 'false' indicates that link local bridging on 
-        client packets is disabled on the controller." 
+        A value of 'false' indicates that link local bridging on
+        client packets is disabled on the controller."
     ::= { clsConfig 26 }
 
 clsNetworkHttpProfCustomPort OBJECT-TYPE
@@ -2174,7 +2174,7 @@ clsNetworkHttpProfCustomPort OBJECT-TYPE
     DESCRIPTION
         "This object specifies the custom port
         for http profiling."
-    DEFVAL          { 80 } 
+    DEFVAL          { 80 }
     ::= { clsConfig 27 }
 
 clsWGBForcedL2RoamEnabled OBJECT-TYPE
@@ -2184,11 +2184,11 @@ clsWGBForcedL2RoamEnabled OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether forced L2 Roaming
         is enabled or disable for WGB clients.
-        A value of 'true' indicates that, forced L2 Roaming 
+        A value of 'true' indicates that, forced L2 Roaming
         is enabled for WGB clients.
-        A value of 'false' indicates that, forced L2 Roaming 
+        A value of 'false' indicates that, forced L2 Roaming
         is disabled for WGB clients."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 38 }
 
 clsCrashSystem OBJECT-TYPE
@@ -2198,17 +2198,17 @@ clsCrashSystem OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether to reset the switch
         with a crash or not.
-        A value of 'true' indicates that, the switch 
+        A value of 'true' indicates that, the switch
         would crash.
         A value of 'false'indicates that, not crashed."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 99 }
 -- ********************************************************************
 -- clsIconCfg
 -- ********************************************************************
 
 clsIconCfgTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF ClsIconCfgEntry 
+    SYNTAX          SEQUENCE OF ClsIconCfgEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -2223,7 +2223,7 @@ clsIconCfgEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Each entry in this table represents the icon config entry"
-    INDEX           { clsIconCfgFileName } 
+    INDEX           { clsIconCfgFileName }
     ::= { clsIconCfgTable 1 }
 
 ClsIconCfgEntry ::= SEQUENCE {
@@ -2240,7 +2240,7 @@ clsIconCfgFileName OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "This object represents the icon filename" 
+        "This object represents the icon filename"
     ::= { clsIconCfgEntry 1 }
 
 clsIconCfgFileType OBJECT-TYPE
@@ -2249,7 +2249,7 @@ clsIconCfgFileType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the filetype of the icon file"
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { clsIconCfgEntry 2 }
 
 clsIconCfgLangCode OBJECT-TYPE
@@ -2259,7 +2259,7 @@ clsIconCfgLangCode OBJECT-TYPE
     DESCRIPTION
         "This object specifies the language code associated
         with the icon file"
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { clsIconCfgEntry 3 }
 
 clsIconCfgWidth OBJECT-TYPE
@@ -2268,7 +2268,7 @@ clsIconCfgWidth OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the width of the icon file"
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsIconCfgEntry 4 }
 
 clsIconCfgHeight OBJECT-TYPE
@@ -2277,7 +2277,7 @@ clsIconCfgHeight OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the height of the icon file"
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsIconCfgEntry 5 }
 
 clsIconCfgRowStatus OBJECT-TYPE
@@ -2286,10 +2286,10 @@ clsIconCfgRowStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies status column for this row
-        and used to create and delete specific 
-        instances of rows in this table." 
+        and used to create and delete specific
+        instances of rows in this table."
     ::= { clsIconCfgEntry 6 }
- 
+
 
 
 -- ***************************************************************
@@ -2302,7 +2302,7 @@ clsNetworkHttpProxyPort OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the custom port
-        for http proxy" 
+        for http proxy"
     ::= { clsConfig 29 }
 
 clsNetworkHttpProxyIpType OBJECT-TYPE
@@ -2312,7 +2312,7 @@ clsNetworkHttpProxyIpType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the http proxy IP address
         type"
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsConfig 30 }
 
 clsNetworkHttpProxyIp OBJECT-TYPE
@@ -2321,7 +2321,7 @@ clsNetworkHttpProxyIp OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This Object specifies the IP address of the
-        http proxy" 
+        http proxy"
     ::= { clsConfig 31 }
 
 clsNetworkDnsServerIpType OBJECT-TYPE
@@ -2331,7 +2331,7 @@ clsNetworkDnsServerIpType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the DNS server IP address
         type"
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsConfig 32 }
 
 clsNetworkDnsServerIp OBJECT-TYPE
@@ -2339,7 +2339,7 @@ clsNetworkDnsServerIp OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This Object specifies the IP address of the DNS server" 
+        "This Object specifies the IP address of the DNS server"
     ::= { clsConfig 33 }
 
 -- ***************************************************************
@@ -2353,11 +2353,11 @@ clsConfigCaleaEnabled OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether CALEA lawful Intercept
         feature enabled or disabled.
-        A value of 'true' indicates that, CALEA lawful Intercept 
+        A value of 'true' indicates that, CALEA lawful Intercept
         feature enabled.
-        A value of 'false'indicates that, CALEA lawful Intercept 
+        A value of 'false'indicates that, CALEA lawful Intercept
         feature disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfigCalea 1 }
 
 clsConfigCaleaServerIp OBJECT-TYPE
@@ -2366,7 +2366,7 @@ clsConfigCaleaServerIp OBJECT-TYPE
     STATUS          deprecated
     DESCRIPTION
         "This object specifies the address of the CALEA
-        lawful intercept server" 
+        lawful intercept server"
     ::= { clsConfigCalea 2 }
 
 clsConfigCaleaPort OBJECT-TYPE
@@ -2376,7 +2376,7 @@ clsConfigCaleaPort OBJECT-TYPE
     DESCRIPTION
         "This object specifies about port number of CALEA lawful
         intercept server"
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { clsConfigCalea 3 }
 
 clsConfigCaleaAccountingInterval OBJECT-TYPE
@@ -2387,7 +2387,7 @@ clsConfigCaleaAccountingInterval OBJECT-TYPE
     DESCRIPTION
         "This object specifies the accounting interval of CALEA
         lawful intercept."
-    DEFVAL          { 8 } 
+    DEFVAL          { 8 }
     ::= { clsConfigCalea 4 }
 
 clsConfigCaleaVenue OBJECT-TYPE
@@ -2395,7 +2395,7 @@ clsConfigCaleaVenue OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This object specifies the CALEA Venue description" 
+        "This object specifies the CALEA Venue description"
     ::= { clsConfigCalea 5 }
 
 clsConfigCaleaServerIpType OBJECT-TYPE
@@ -2405,7 +2405,7 @@ clsConfigCaleaServerIpType OBJECT-TYPE
     DESCRIPTION
         "This Object specifies the address type of the
         CALEA lawful intercept server"
-    DEFVAL          { ipv4 } 
+    DEFVAL          { ipv4 }
     ::= { clsConfigCalea 6 }
 
 clsConfigCaleaServerIpAddr OBJECT-TYPE
@@ -2414,7 +2414,7 @@ clsConfigCaleaServerIpAddr OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This Object specifies the IPv4 address of the CALEA
-        lawful intercept server" 
+        lawful intercept server"
     ::= { clsConfigCalea 7 }
 
 clSysLogIPSecStatus OBJECT-TYPE
@@ -2423,11 +2423,11 @@ clSysLogIPSecStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies Syslog over IPSEC Status
-        A value of 'true' indicates that, syslog over 
-        ipsec is enabled. 
-        A value of 'false' indicates that syslog over 
+        A value of 'true' indicates that, syslog over
+        ipsec is enabled.
+        A value of 'false' indicates that syslog over
         ipsec is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsConfig 35 }
 
 clSysLogIPSecProfName OBJECT-TYPE
@@ -2436,7 +2436,7 @@ clSysLogIPSecProfName OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies IPsec profile to be used
-        for syslog over IPSec." 
+        for syslog over IPSec."
     ::= { clsConfig 36 }
 
 -- ********************************************************************
@@ -2451,15 +2451,15 @@ cLSysLagModeInTransition OBJECT-TYPE
         "This object represents whether the LAG mode is
         in transition or not.
         A value of 'true' indicates that, the LAG mode
-        is in transition and the controller has to be 
+        is in transition and the controller has to be
         rebooted to take effect.
-        A value of 'false' indicates that, the LAG mode 
+        A value of 'false' indicates that, the LAG mode
         is not in transition."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsStatus 1 }
 
 clsRAIDStatusTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF ClsRAIDStatusEntry 
+    SYNTAX          SEQUENCE OF ClsRAIDStatusEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -2472,7 +2472,7 @@ clsRAIDStatusEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Each entry in this table provides RAID drive status."
-    INDEX           { clsRAIDDriveNumber } 
+    INDEX           { clsRAIDDriveNumber }
     ::= { clsRAIDStatusTable 1 }
 
 ClsRAIDStatusEntry ::= SEQUENCE {
@@ -2486,7 +2486,7 @@ clsRAIDDriveNumber OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "This object indicates drive number in the system." 
+        "This object indicates drive number in the system."
     ::= { clsRAIDStatusEntry 1 }
 
 clsRAIDStatus OBJECT-TYPE
@@ -2500,15 +2500,15 @@ clsRAIDStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the status of the drive.
-        A value of good indicates that, hard disk in RAID 
+        A value of good indicates that, hard disk in RAID
         volume is good.
-        A value of bad  indicates that, hard disk in RAID 
+        A value of bad  indicates that, hard disk in RAID
         volume is bad.
-        A value of badstartrebuild indicates that, hard disk 
+        A value of badstartrebuild indicates that, hard disk
         in RAID volume is bad and rebuild is triggered.
-        A value of rebuilding indicates that, hard disk in 
+        A value of rebuilding indicates that, hard disk in
         RAID volume is rebuilding."
-    DEFVAL          { good } 
+    DEFVAL          { good }
     ::= { clsRAIDStatusEntry 2 }
 
 clsRAIDRebuildPercentage OBJECT-TYPE
@@ -2518,10 +2518,10 @@ clsRAIDRebuildPercentage OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the rebuild percentage of drive.
-        This object is applicable only when RAID status is 
-        rebuilding." 
+        This object is applicable only when RAID status is
+        rebuilding."
     ::= { clsRAIDStatusEntry 3 }
- 
+
 
 
 -- ********************************************************************
@@ -2534,18 +2534,18 @@ clsEmergencyImageVersion OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents Cisco recommends installing Cisco
-        Unified Wireless Network Controller Boot Software , 
-        (*_ER.aes , where star denotes the version of the controller 
-        image ) on all controller platforms. If this ER.aes is not 
-        installed, the controller would not be able to show the 
-        Emergency Image Version correctly(or Field Recovery Image 
-        Version), and would be shown as 'N/A'. The ER.aes files are 
-        independent from the controller software files. Any controller 
-        software file can be run with any ER.aes file. However,  
-        installing the latest boot software file (*_ER.aes , where 
-        star denotes the controller version) ensures that the boot 
-        software modifications in all of the previous and current 
-        boot software ER.aes files are installed." 
+        Unified Wireless Network Controller Boot Software ,
+        (*_ER.aes , where star denotes the version of the controller
+        image ) on all controller platforms. If this ER.aes is not
+        installed, the controller would not be able to show the
+        Emergency Image Version correctly(or Field Recovery Image
+        Version), and would be shown as 'N/A'. The ER.aes files are
+        independent from the controller software files. Any controller
+        software file can be run with any ER.aes file. However,
+        installing the latest boot software file (*_ER.aes , where
+        star denotes the controller version) ensures that the boot
+        software modifications in all of the previous and current
+        boot software ER.aes files are installed."
     ::= { clsImageInfo 1 }
 
 -- Security oids
@@ -2557,13 +2557,13 @@ clsSecStrongPwdCaseCheck OBJECT-TYPE
     DESCRIPTION
         "This object specifies the whether password case check
         is enabled or disabled.
-        A value of 'true' indicates that, the new password must 
-        contain characters from at least three of the following 
-        classes : lowercase letters, uppercase letters, digits 
+        A value of 'true' indicates that, the new password must
+        contain characters from at least three of the following
+        classes : lowercase letters, uppercase letters, digits
         and special characters.
-        A value of 'false' indicates that, no checks for 
+        A value of 'false' indicates that, no checks for
         password."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 1 }
 
 clsSecStrongPwdConsecutiveCheck OBJECT-TYPE
@@ -2573,12 +2573,12 @@ clsSecStrongPwdConsecutiveCheck OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether the password consecutive
         check is enabled or disabled.
-        A value of 'true' indicates that, the password provided 
-        should not have a character repeated more than thrice 
+        A value of 'true' indicates that, the password provided
+        should not have a character repeated more than thrice
         consecutively.
         A value of 'false' indicates that, character repeatation
         check disabled"
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 2 }
 
 clsSecStrongPwdDefaultCheck OBJECT-TYPE
@@ -2588,14 +2588,14 @@ clsSecStrongPwdDefaultCheck OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether default check for the
         passwords is enabled or disabled.
-        A value of 'true' indicates that, the new password must 
-        not be 'cisco', 'ocsic', 'admin', 'nimda' or any variant 
-        obtained by changing the capitalization of letters therein, 
-        or by substituting '1' '|' or '!' for i, and/or substituting 
-        '0' for 'o', and/or substituting '$' for 's'. 
+        A value of 'true' indicates that, the new password must
+        not be 'cisco', 'ocsic', 'admin', 'nimda' or any variant
+        obtained by changing the capitalization of letters therein,
+        or by substituting '1' '|' or '!' for i, and/or substituting
+        '0' for 'o', and/or substituting '$' for 's'.
         A value of 'false' indicates that, default check disabled for
         the password."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 3 }
 
 clsSecStrongPwdAsUserNameCheck OBJECT-TYPE
@@ -2605,12 +2605,12 @@ clsSecStrongPwdAsUserNameCheck OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether username check for the
         password is enabled or disabled.
-        A value of 'true' indicates that, the new password must 
-        not be same as the associated username or the reversed 
+        A value of 'true' indicates that, the new password must
+        not be same as the associated username or the reversed
         username.
         A value of 'false' indicates that, check for user name in
         the password is disabled"
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 4 }
 
 clsSecStrongPwdPositionCheck OBJECT-TYPE
@@ -2620,11 +2620,11 @@ clsSecStrongPwdPositionCheck OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether position check for the
         passwords is enabled or disabled.
-        A value of 'true' indicates that, position check for 
+        A value of 'true' indicates that, position check for
         the password is enabled.
-        A value of 'false' indicates that, position check for 
+        A value of 'false' indicates that, position check for
         the password is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 5 }
 
 clsSecStrongPwdDigitCheck OBJECT-TYPE
@@ -2634,11 +2634,11 @@ clsSecStrongPwdDigitCheck OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether digit check for the
         passwords is enabled or disabled.
-        A value of 'true' indicates that, digit check for the 
+        A value of 'true' indicates that, digit check for the
         passwords is enabled.
-        A value of 'false' indicates that, digit check for the 
+        A value of 'false' indicates that, digit check for the
         passwords is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 6 }
 
 clsSecStrongPwdMinLength OBJECT-TYPE
@@ -2647,7 +2647,7 @@ clsSecStrongPwdMinLength OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the minimum password length for the
-        passwords configured in controller." 
+        passwords configured in controller."
     ::= { clsSecurityGroup 7 }
 
 clsSecStrongPwdMinUpperCase OBJECT-TYPE
@@ -2656,7 +2656,7 @@ clsSecStrongPwdMinUpperCase OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the minimum number of upper case
-        characters for the passwords configured in controller." 
+        characters for the passwords configured in controller."
     ::= { clsSecurityGroup 8 }
 
 clsSecStrongPwdMinLowerCase OBJECT-TYPE
@@ -2665,7 +2665,7 @@ clsSecStrongPwdMinLowerCase OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the minimum number of upper case
-        characters for the passwords configured in controller." 
+        characters for the passwords configured in controller."
     ::= { clsSecurityGroup 9 }
 
 clsSecStrongPwdMinDigits OBJECT-TYPE
@@ -2674,7 +2674,7 @@ clsSecStrongPwdMinDigits OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the minimum number of digits for the
-        passwords configured in controller." 
+        passwords configured in controller."
     ::= { clsSecurityGroup 10 }
 
 clsSecStrongPwdMinSpecialChar OBJECT-TYPE
@@ -2683,7 +2683,7 @@ clsSecStrongPwdMinSpecialChar OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the minimum special characters for the
-        passwords configured in controller." 
+        passwords configured in controller."
     ::= { clsSecurityGroup 11 }
 
 clsSecWlanCCEnable OBJECT-TYPE
@@ -2697,7 +2697,7 @@ clsSecWlanCCEnable OBJECT-TYPE
         is enabled.
         A value of 'false' indicates that, WLAN common criteria
         is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 12 }
 
 clsSecUcaplEnable OBJECT-TYPE
@@ -2709,7 +2709,7 @@ clsSecUcaplEnable OBJECT-TYPE
         disabled.
         A value of 'true' indicates that, UCAPL is enabled.
         A value of 'false' indicates that, UCAPL is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 13 }
 
 clsSecMgmtUsrLockoutEnable OBJECT-TYPE
@@ -2719,11 +2719,11 @@ clsSecMgmtUsrLockoutEnable OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether lockout for the
         management user is enabled or disabled.
-        A value of 'true'indicates that, lockout for the 
+        A value of 'true'indicates that, lockout for the
         management user is enabled.
-        A value of 'false' indicates that, lockout for the 
+        A value of 'false' indicates that, lockout for the
         management user is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 14 }
 
 clsSecMgmtUsrLockoutTime OBJECT-TYPE
@@ -2732,7 +2732,7 @@ clsSecMgmtUsrLockoutTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the lockout time for the
-        management user configured in controller." 
+        management user configured in controller."
     ::= { clsSecurityGroup 15 }
 
 clsSecMgmtUsrLockoutAttempts OBJECT-TYPE
@@ -2741,7 +2741,7 @@ clsSecMgmtUsrLockoutAttempts OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the lockout attempts for the
-        management user configured in controller." 
+        management user configured in controller."
     ::= { clsSecurityGroup 16 }
 
 clsSecSnmpv3UsrLockoutEnable OBJECT-TYPE
@@ -2755,7 +2755,7 @@ clsSecSnmpv3UsrLockoutEnable OBJECT-TYPE
         SNMPV3 user is enabled.
         A value of 'false' indicates that, lockout for the
         SNMPV3 user is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsSecurityGroup 17 }
 
 clsSecSnmpv3UsrLockoutTime OBJECT-TYPE
@@ -2764,7 +2764,7 @@ clsSecSnmpv3UsrLockoutTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the lockout time for the
-        SNMP v3 user configured in controller." 
+        SNMP v3 user configured in controller."
     ::= { clsSecurityGroup 18 }
 
 clsSecSnmpv3UsrLockoutAttempts OBJECT-TYPE
@@ -2773,7 +2773,7 @@ clsSecSnmpv3UsrLockoutAttempts OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the lockout attempts for the
-        SNMP v3 user configured in controller." 
+        SNMP v3 user configured in controller."
     ::= { clsSecurityGroup 19 }
 
 clsSecMgmtUsrLockoutLifetime OBJECT-TYPE
@@ -2783,7 +2783,7 @@ clsSecMgmtUsrLockoutLifetime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the lockout life time
-        for the management user configured in controller." 
+        for the management user configured in controller."
     ::= { clsSecurityGroup 20 }
 
 clsSecSnmpv3UsrLockoutLifetime OBJECT-TYPE
@@ -2793,7 +2793,7 @@ clsSecSnmpv3UsrLockoutLifetime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the lockout life time for the
-        SNMPV3 user configured in controller." 
+        SNMPV3 user configured in controller."
     ::= { clsSecurityGroup 21 }
 
 -- ********************************************************************
@@ -2807,7 +2807,7 @@ clsSysFlashSize OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the total flash memory
-        size in Kbytes." 
+        size in Kbytes."
     ::= { clsSysInfo 1 }
 
 -- ********************************************************************
@@ -2819,7 +2819,7 @@ clsSysMemoryType OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents the system memory type." 
+        "This object represents the system memory type."
     ::= { clsSysInfo 2 }
 
 -- ********************************************************************
@@ -2832,7 +2832,7 @@ clsSysMaxClients OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents max associated clients
-        supported per WLC" 
+        supported per WLC"
     ::= { clsSysInfo 3 }
 
 -- ********************************************************************
@@ -2845,7 +2845,7 @@ clsSysApConnectCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the count of AP's that are
-        connected with WLC" 
+        connected with WLC"
     ::= { clsSysInfo 4 }
 
 clsSysNetId OBJECT-TYPE
@@ -2854,7 +2854,7 @@ clsSysNetId OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the SysNetId which is the numeric string
-        to identify the system information like SysName" 
+        to identify the system information like SysName"
     ::= { clsSysInfo 5 }
 
 -- ********************************************************************
@@ -2867,8 +2867,8 @@ clsSysCurrentMemoryUsage OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the current percent usage
-        of system memory. This MIB object should be updated 
-        every clsSysStatsSamplingInterval." 
+        of system memory. This MIB object should be updated
+        every clsSysStatsSamplingInterval."
     ::= { clsSysInfo 6 }
 
 -- ********************************************************************
@@ -2881,9 +2881,9 @@ clsSysAverageMemoryUsage OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the average percent usage
-        of system memory. The memory average usage should be 
-        the average of memory-Usage during the time window 
-        specified by clsSysStatsAverageInterval." 
+        of system memory. The memory average usage should be
+        the average of memory-Usage during the time window
+        specified by clsSysStatsAverageInterval."
     ::= { clsSysInfo 7 }
 
 -- ********************************************************************
@@ -2896,7 +2896,7 @@ clsSysCurrentCpuUsage OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the current percent usage of all CPUs.
-        This MIB should be updated every clsSysStatsSamplingInterval." 
+        This MIB should be updated every clsSysStatsSamplingInterval."
     ::= { clsSysInfo 8 }
 
 -- ********************************************************************
@@ -2910,8 +2910,8 @@ clsSysAverageCpuUsage OBJECT-TYPE
     DESCRIPTION
         "This object represents the average percent CPU usage.
         The average CPU usage should be the average of CPU-Usage
-        during the time window specified by 
-        clsSysStatsAverageInterval." 
+        during the time window specified by
+        clsSysStatsAverageInterval."
     ::= { clsSysInfo 9 }
 
 -- ********************************************************************
@@ -2923,7 +2923,7 @@ clsSysCpuType OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents the cpu type." 
+        "This object represents the cpu type."
     ::= { clsSysInfo 10 }
 
 clsMaxRFIDTagsCount OBJECT-TYPE
@@ -2932,7 +2932,7 @@ clsMaxRFIDTagsCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the maximum RFID tags present
-        on the controller." 
+        on the controller."
     ::= { clsSysInfo 11 }
 
 clsMaxClientsCount OBJECT-TYPE
@@ -2941,7 +2941,7 @@ clsMaxClientsCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the maximum clients present
-        on the controller." 
+        on the controller."
     ::= { clsSysInfo 12 }
 
 clsApAssocFailedCount OBJECT-TYPE
@@ -2950,7 +2950,7 @@ clsApAssocFailedCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the count when Access Point
-        failed to associate with the controller." 
+        failed to associate with the controller."
     ::= { clsSysInfo 13 }
 
 clsCurrentPortalClientCount OBJECT-TYPE
@@ -2959,7 +2959,7 @@ clsCurrentPortalClientCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the current portal clients present
-        on the controller." 
+        on the controller."
     ::= { clsSysInfo 14 }
 
 clsCurrentOnlineUsersCount OBJECT-TYPE
@@ -2968,7 +2968,7 @@ clsCurrentOnlineUsersCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the current all online clients present
-        on the controller." 
+        on the controller."
     ::= { clsSysInfo 15 }
 
 clsSysAbnormalOfflineCount OBJECT-TYPE
@@ -2976,7 +2976,7 @@ clsSysAbnormalOfflineCount OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents the abnormal offline count for the wlc." 
+        "This object represents the abnormal offline count for the wlc."
     ::= { clsSysInfo 16 }
 
 clsSysFlashType OBJECT-TYPE
@@ -2984,7 +2984,7 @@ clsSysFlashType OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents the system Flash type." 
+        "This object represents the system Flash type."
     ::= { clsSysInfo 17 }
 
 clsSysOpenUsersCount OBJECT-TYPE
@@ -2993,7 +2993,7 @@ clsSysOpenUsersCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the current all online open
-        authentication clients present on the controller." 
+        authentication clients present on the controller."
     ::= { clsSysInfo 18 }
 
 clsSysWepPskUsersCount OBJECT-TYPE
@@ -3002,7 +3002,7 @@ clsSysWepPskUsersCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the current all online wep/psk
-        authentication clients present on the controller." 
+        authentication clients present on the controller."
     ::= { clsSysInfo 19 }
 
 clsSysPeapSimUsersCount OBJECT-TYPE
@@ -3011,8 +3011,8 @@ clsSysPeapSimUsersCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the current all online
-        peap/sim authentication clients present on the 
-        controller." 
+        peap/sim authentication clients present on the
+        controller."
     ::= { clsSysInfo 20 }
 
 clsSysPeapSimReqCount OBJECT-TYPE
@@ -3021,7 +3021,7 @@ clsSysPeapSimReqCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the PEAP/SIM request
-        on the controller." 
+        on the controller."
     ::= { clsSysInfo 21 }
 
 clsSysPeapSimReqSuccessCount OBJECT-TYPE
@@ -3030,7 +3030,7 @@ clsSysPeapSimReqSuccessCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the successful PEAP/SIM request
-        on the controller." 
+        on the controller."
     ::= { clsSysInfo 22 }
 
 clsSysPeapSimReqFailureCount OBJECT-TYPE
@@ -3039,7 +3039,7 @@ clsSysPeapSimReqFailureCount OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the failed PEAP/SIM request
-        on the controller." 
+        on the controller."
     ::= { clsSysInfo 23 }
 
 clsSysNasId OBJECT-TYPE
@@ -3048,7 +3048,7 @@ clsSysNasId OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the SysNasId. NasId is used to
-        support Roaming, location-based service." 
+        support Roaming, location-based service."
     ::= { clsSysInfo 24 }
 
 clsSysCoChannelTrapRssiThreshold OBJECT-TYPE
@@ -3058,7 +3058,7 @@ clsSysCoChannelTrapRssiThreshold OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the minimum value of RSSI
-        considered for the trap of Co-Channel AP." 
+        considered for the trap of Co-Channel AP."
     ::= { clsSysInfo 25 }
 
 clsSysAdjChannelTrapRssiThreshold OBJECT-TYPE
@@ -3068,7 +3068,7 @@ clsSysAdjChannelTrapRssiThreshold OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the minimum value of RSSI
-        considered for the trap of Adj channel AP" 
+        considered for the trap of Adj channel AP"
     ::= { clsSysInfo 26 }
 
 clsSysClientTrapRssiThreshold OBJECT-TYPE
@@ -3078,7 +3078,7 @@ clsSysClientTrapRssiThreshold OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the minimum value of RSSI
-        considered for the trap of client." 
+        considered for the trap of client."
     ::= { clsSysInfo 27 }
 
 clsSysCmxActiveConnections OBJECT-TYPE
@@ -3087,7 +3087,7 @@ clsSysCmxActiveConnections OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the count of active connections
-        present on the controller." 
+        present on the controller."
     ::= { clsSysInfo 28 }
 
 -- ********************************************************************
@@ -3099,7 +3099,7 @@ clsAllCpuUsage OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents the CPU usage string." 
+        "This object represents the CPU usage string."
     ::= { clsCpuInfo 1 }
 
 -- ********************************************************************
@@ -3114,7 +3114,7 @@ clsLyncState OBJECT-TYPE
         "This object specifies whether Lync is enabled on system.
         A value of 'true' indicates that, Lync state is enabled.
         A value of 'false' indicates that, Lync state is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { clsLyncInfo 1 }
 
 clsLyncPort OBJECT-TYPE
@@ -3122,7 +3122,7 @@ clsLyncPort OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This object specifies about port number of Lync Service." 
+        "This object specifies about port number of Lync Service."
     ::= { clsLyncInfo 2 }
 
 clsLyncProtocol OBJECT-TYPE
@@ -3135,19 +3135,19 @@ clsLyncProtocol OBJECT-TYPE
     DESCRIPTION
         "This object specifies about protocol of Lync Service.
         A value of http indicates that, lync protocol is http.
-        A value of secure http indicates that, lync protocol is 
+        A value of secure http indicates that, lync protocol is
         secure http."
-    DEFVAL          { http } 
+    DEFVAL          { http }
     ::= { clsLyncInfo 3 }
 -- stats-timer config.
---   
+--
 
 -- ********************************************************************
 -- clsSysPing
 -- ********************************************************************
 
 clsSysPingTestTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF ClsSysPingTestEntry 
+    SYNTAX          SEQUENCE OF ClsSysPingTestEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -3161,7 +3161,7 @@ clsSysPingTestEntry OBJECT-TYPE
     DESCRIPTION
         "Each Entry (conceptual row) in the clsSysPingTest Table
         represents a ping test id."
-    INDEX           { clsSysPingTestId } 
+    INDEX           { clsSysPingTestId }
     ::= { clsSysPingTestTable 1 }
 
 ClsSysPingTestEntry ::= SEQUENCE {
@@ -3182,7 +3182,7 @@ clsSysPingTestId OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "This object represents the index of pingtest ID" 
+        "This object represents the index of pingtest ID"
     ::= { clsSysPingTestEntry 1 }
 
 clsSysPingTestIPAddressType OBJECT-TYPE
@@ -3190,7 +3190,7 @@ clsSysPingTestIPAddressType OBJECT-TYPE
     MAX-ACCESS      read-create
     STATUS          current
     DESCRIPTION
-        "This object specifies the IP address type" 
+        "This object specifies the IP address type"
     ::= { clsSysPingTestEntry 2 }
 
 clsSysPingTestIPAddress OBJECT-TYPE
@@ -3199,7 +3199,7 @@ clsSysPingTestIPAddress OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the IP address of the
-        device to which ping test to perform" 
+        device to which ping test to perform"
     ::= { clsSysPingTestEntry 3 }
 
 clsSysPingTestSendCount OBJECT-TYPE
@@ -3208,7 +3208,7 @@ clsSysPingTestSendCount OBJECT-TYPE
     MAX-ACCESS      read-create
     STATUS          current
     DESCRIPTION
-        "This object specifies the number of bytes sent" 
+        "This object specifies the number of bytes sent"
     ::= { clsSysPingTestEntry 4 }
 
 clsSysPingTestReceivedCount OBJECT-TYPE
@@ -3217,7 +3217,7 @@ clsSysPingTestReceivedCount OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents the number of bytes received." 
+        "This object represents the number of bytes received."
     ::= { clsSysPingTestEntry 5 }
 
 clsSysPingTestStatus OBJECT-TYPE
@@ -3229,10 +3229,10 @@ clsSysPingTestStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents status of the ping test.
-        A value of inprogress indicates that, ping test 
+        A value of inprogress indicates that, ping test
         in progress.
-        A value of complete indicates that, ping test 
-        is complete." 
+        A value of complete indicates that, ping test
+        is complete."
     ::= { clsSysPingTestEntry 6 }
 
 clsSysPingTestMaxTimeInterval OBJECT-TYPE
@@ -3241,7 +3241,7 @@ clsSysPingTestMaxTimeInterval OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents maximum time interval in msec." 
+        "This object represents maximum time interval in msec."
     ::= { clsSysPingTestEntry 7 }
 
 clsSysPingTestMinTimeInterval OBJECT-TYPE
@@ -3250,7 +3250,7 @@ clsSysPingTestMinTimeInterval OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents minimum time interval in msec." 
+        "This object represents minimum time interval in msec."
     ::= { clsSysPingTestEntry 8 }
 
 clsSysPingTestAvgTimeInterval OBJECT-TYPE
@@ -3259,7 +3259,7 @@ clsSysPingTestAvgTimeInterval OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents average time interval in msec." 
+        "This object represents average time interval in msec."
     ::= { clsSysPingTestEntry 9 }
 
 clsSysPingTestRowStatus OBJECT-TYPE
@@ -3269,9 +3269,9 @@ clsSysPingTestRowStatus OBJECT-TYPE
     DESCRIPTION
         "This is the status column for this row and used
         to create and delete specific instances of rows
-        in this table." 
+        in this table."
     ::= { clsSysPingTestEntry 10 }
- 
+
 
 
 -- ********************************************************************
@@ -3289,7 +3289,7 @@ clsSecStrongPwdCheckTrapEnabled OBJECT-TYPE
         ciscoLwappStrongPwdCheck notification.
         A value of 'false' indicates that, the agent doesn't
         generates ciscoLwappStrongPwdCheck notification."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { ciscoLwappSysMIBNotifControlObjects 1 }
 
 clsMaxClientsTrapEnabled OBJECT-TYPE
@@ -3298,13 +3298,13 @@ clsMaxClientsTrapEnabled OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies whether the
-        ciscoLwappMaxClientsReached notification would be 
+        ciscoLwappMaxClientsReached notification would be
         generated.
         A value of 'true' indicates that, the agent generates
         ciscoLwappMaxClientsReached notification.
         A value of 'false' indicates that, the agent doesn't
         generates ciscoLwappMaxClientsReached notification."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { ciscoLwappSysMIBNotifControlObjects 2 }
 
 clsMaxRFIDTagsTrapEnabled OBJECT-TYPE
@@ -3313,13 +3313,13 @@ clsMaxRFIDTagsTrapEnabled OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies whether the
-        ciscoLwappMaxRFIDTagsReached notification would be 
+        ciscoLwappMaxRFIDTagsReached notification would be
         generated.
         A value of 'true' indicates that, the agent generates
         ciscoLwappMaxRFIDTagsReached notification.
         A value of 'false' indicates that, the agent doesn't
         generates ciscoLwappMaxRFIDTagsReached notification."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { ciscoLwappSysMIBNotifControlObjects 3 }
 
 clsNacAlertTrapEnabled OBJECT-TYPE
@@ -3328,13 +3328,13 @@ clsNacAlertTrapEnabled OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies whether the
-        Nac alert association/disassociation  notification 
+        Nac alert association/disassociation  notification
         would be generated.
         A value of 'true' indicates that, the agent generates
         nac alert notification.
         A value of 'false' indicates that, the agent doesn't
         generates nac alert notification."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { ciscoLwappSysMIBNotifControlObjects 4 }
 
 clsMfpTrapEnabled OBJECT-TYPE
@@ -3348,7 +3348,7 @@ clsMfpTrapEnabled OBJECT-TYPE
         mfp  notification.
         A value of 'false' indicates that, the agent doesn't
         generates mfp  notification."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { ciscoLwappSysMIBNotifControlObjects 5 }
 
 -- ********************************************************************
@@ -3361,7 +3361,7 @@ clsSecStrongPwdManagementUser OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the management user who
-        enabled or disabled the strong password checks." 
+        enabled or disabled the strong password checks."
     ::= { ciscoLwappSysMIBNotifObjects 1 }
 
 clsSecStrongPwdCheckType OBJECT-TYPE
@@ -3377,19 +3377,19 @@ clsSecStrongPwdCheckType OBJECT-TYPE
     DESCRIPTION
         "This object represents the type of the check that was
         enabled or disabled by the management user.
-        A value of 'caseCheck' indicates that, the caseCheck 
+        A value of 'caseCheck' indicates that, the caseCheck
         was enabled or disabled by the management user.
-        A value of 'consecutiveCheck' indicates that, the 
-        consecutiveCheck was enabled or disabled by the 
+        A value of 'consecutiveCheck' indicates that, the
+        consecutiveCheck was enabled or disabled by the
         management user.
-        A value of 'defaultCheck' indicates that, the 
-        defaultCheck was enabled or disabled by the 
+        A value of 'defaultCheck' indicates that, the
+        defaultCheck was enabled or disabled by the
         management user.
-        A value of 'usernameCheck' indicates that, the 
-        usernameCheck was enabled or disabled by the 
+        A value of 'usernameCheck' indicates that, the
+        usernameCheck was enabled or disabled by the
         management user.
-        A value of 'allChecks' indicates that, all checks 
-        were enabled by the management user." 
+        A value of 'allChecks' indicates that, all checks
+        were enabled by the management user."
     ::= { ciscoLwappSysMIBNotifObjects 2 }
 
 clsSecStrongPwdCheckOption OBJECT-TYPE
@@ -3398,7 +3398,7 @@ clsSecStrongPwdCheckOption OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents whether the strong password check
-        was enabled/disabled." 
+        was enabled/disabled."
     ::= { ciscoLwappSysMIBNotifObjects 3 }
 
 clsSysAlarmSet OBJECT-TYPE
@@ -3408,10 +3408,10 @@ clsSysAlarmSet OBJECT-TYPE
     DESCRIPTION
         "This object represents whether this system alarm is
         raise or clear.
-        A value of 'true' indicates that, this event is 
+        A value of 'true' indicates that, this event is
         enabled.
-        A value of 'false' indicates that, this even is 
-        disabled." 
+        A value of 'false' indicates that, this even is
+        disabled."
     ::= { ciscoLwappSysMIBNotifObjects 4 }
 
 clsSysMaxThresholdReachedClear OBJECT-TYPE
@@ -3421,10 +3421,10 @@ clsSysMaxThresholdReachedClear OBJECT-TYPE
     DESCRIPTION
         "This object represents whether this event is
         raise or clear.
-        A value of 'true' indicates that, this event is 
+        A value of 'true' indicates that, this event is
         cleared
-        A value of 'false' indicates that, this event is 
-        raised." 
+        A value of 'false' indicates that, this event is
+        raised."
     ::= { ciscoLwappSysMIBNotifObjects 5 }
 
 clsTransferCfgAnalyzeResult OBJECT-TYPE
@@ -3439,12 +3439,12 @@ clsTransferCfgAnalyzeResult OBJECT-TYPE
     DESCRIPTION
         "This object represents the config file analyze result.
         A value of unknown indicates that, unknown error.
-        A value of  keyMismatch indicates that, the encrypt 
+        A value of  keyMismatch indicates that, the encrypt
         key mismatch.
-        A value of  fileMissing indicates that, the config 
+        A value of  fileMissing indicates that, the config
         file missing.
-        A value of contentMismatch indicates that, the file is 
-        not intended for this product." 
+        A value of contentMismatch indicates that, the file is
+        not intended for this product."
     ::= { ciscoLwappSysMIBNotifObjects 6 }
 
 clsWlcSwVersionBeforeUpgrade OBJECT-TYPE
@@ -3453,7 +3453,7 @@ clsWlcSwVersionBeforeUpgrade OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the wlc software version
-        info before upgrading fail." 
+        info before upgrading fail."
     ::= { ciscoLwappSysMIBNotifObjects 7 }
 
 clsWlcSwVersionAfterUpgrade OBJECT-TYPE
@@ -3462,7 +3462,7 @@ clsWlcSwVersionAfterUpgrade OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the wlc software version
-        info after upgrading fail." 
+        info after upgrading fail."
     ::= { ciscoLwappSysMIBNotifObjects 8 }
 
 clsWlcUpgradeFailReason OBJECT-TYPE
@@ -3480,11 +3480,11 @@ clsWlcUpgradeFailReason OBJECT-TYPE
         A value of  fileTypeMismatch indicates that, mismatch in
         the file extension. please check whether the extension is
         .aes.
-        A value of  fileCheckFail indicates that, file check fail, 
+        A value of  fileCheckFail indicates that, file check fail,
         please check whether the image is correct.
-        A value of fileBackupToFlashFail indicates that, flash 
-        backup fail, please check whether the flash space is 
-        enough." 
+        A value of fileBackupToFlashFail indicates that, flash
+        backup fail, please check whether the flash space is
+        enough."
     ::= { ciscoLwappSysMIBNotifObjects 9 }
 
 clsPortNumber OBJECT-TYPE
@@ -3492,7 +3492,7 @@ clsPortNumber OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents port number of MGIG port." 
+        "This object represents port number of MGIG port."
     ::= { ciscoLwappSysMIBNotifObjects 10 }
 
 clsPortSpeed OBJECT-TYPE
@@ -3500,7 +3500,7 @@ clsPortSpeed OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents port speed (Mbps) of MGIG Port." 
+        "This object represents port speed (Mbps) of MGIG Port."
     ::= { ciscoLwappSysMIBNotifObjects 11 }
 
 clsPortSlot OBJECT-TYPE
@@ -3508,7 +3508,7 @@ clsPortSlot OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object represents slot number where MGIG port is present." 
+        "This object represents slot number where MGIG port is present."
     ::= { ciscoLwappSysMIBNotifObjects 12 }
 
 -- ********************************************************************
@@ -3542,11 +3542,11 @@ ciscoLwappStrongPwdCheckNotif NOTIFICATION-TYPE
     DESCRIPTION
         "This  notification will be sent whenever the management user
         enables/disables the strong password rules.
-        clsSecStrongPwdManagementUser represents the management user 
+        clsSecStrongPwdManagementUser represents the management user
         configuring the strong password security checks.
         clsSecStrongPwdCheckType represents the type of check that has
         been enabled or disabled.
-        clsSecStrongPwdCheckOption represents the option chosen by the 
+        clsSecStrongPwdCheckOption represents the option chosen by the
         user."
    ::= { ciscoLwappSysMIBNotifs 3 }
 
@@ -3558,11 +3558,11 @@ ciscoLwappSysCpuUsageHigh NOTIFICATION-TYPE
     STATUS          current
     DESCRIPTION
         "This  notification will be sent whenever WLC detects
-        its CPU usage is higher than the threshold 
-        configured in clsSysControllerCpuUsageThreshold, this 
-        notification is generated with clsSysAlarmSet set to 
+        its CPU usage is higher than the threshold
+        configured in clsSysControllerCpuUsageThreshold, this
+        notification is generated with clsSysAlarmSet set to
         true. When its CPU usage falls below the threshold
-        lately, this notification is generated with 
+        lately, this notification is generated with
         clsSysAlarmSet set to false."
    ::= { ciscoLwappSysMIBNotifs 4 }
 
@@ -3574,7 +3574,7 @@ ciscoLwappSysMemoryUsageHigh NOTIFICATION-TYPE
     STATUS          current
     DESCRIPTION
         "This  notification will be sent whenever WLC detects
-        its memory usage is higher than the threshold 
+        its memory usage is higher than the threshold
         configured in clsSysControllerMemoryUsageThreshold,
         this notification is generated with clsSysAlarmSet set
         to true. When its memory usage falls below the threshold
@@ -3591,7 +3591,7 @@ ciscoLwappMaxRFIDTagsReached NOTIFICATION-TYPE
     STATUS          current
     DESCRIPTION
         "This notification is generated when the number of
-        RFID tags on the controller exceeds the limit defined by       
+        RFID tags on the controller exceeds the limit defined by
         clsMaxRFIDTagsTrapThreshold."
    ::= { ciscoLwappSysMIBNotifs 6 }
 
@@ -3762,7 +3762,7 @@ ciscoLwappSysMIBComplianceRev3 MODULE-COMPLIANCE
         "This group is mandatory only for platforms which support
         configuration of Transfer operation."
     ::= { ciscoLwappSysMIBCompliances 4 }
-	
+
 ciscoLwappSysMIBComplianceRev4 MODULE-COMPLIANCE
     STATUS          current
     DESCRIPTION
@@ -3847,7 +3847,7 @@ ciscoLwappSysConfigGroupSup1 OBJECT-GROUP
     STATUS          current
     DESCRIPTION
         "This collection of objects represents the
-        timzone and syslog configuration on the 
+        timzone and syslog configuration on the
         controller."
     ::= { ciscoLwappSysMIBGroups 3 }
 
@@ -3969,7 +3969,7 @@ ciscoLwappSysSecNotifObjsGroup OBJECT-GROUP
     STATUS          current
     DESCRIPTION
         "This collection of objects represent the information carried
-        by the security related notifications sent by the agent to a 
+        by the security related notifications sent by the agent to a
         network management station."
     ::= { ciscoLwappSysMIBGroups 8 }
 
@@ -3992,7 +3992,7 @@ ciscoLwappSysNotifsGroup NOTIFICATION-GROUP
     STATUS          current
     DESCRIPTION
         "This collection of objects represent the system config related
-        notifications sent by the agent to a network management 
+        notifications sent by the agent to a network management
         station."
     ::= { ciscoLwappSysMIBGroups 9 }
 
@@ -4231,6 +4231,5 @@ ciscoLwappSysConfigGroupVer2 OBJECT-GROUP
         "This collection of objects represent the system wide
         configuration on the controller."
     ::= { ciscoLwappSysMIBGroups 16 }
-	
-END
 
+END

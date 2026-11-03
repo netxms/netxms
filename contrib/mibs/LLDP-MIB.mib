@@ -15,13 +15,13 @@ IMPORTS
 lldpMIB MODULE-IDENTITY
     LAST-UPDATED "200411220000Z" -- November 22, 2004
     ORGANIZATION "IEEE 802.1 Working Group"
-    CONTACT-INFO 
+    CONTACT-INFO
             "  WG-URL: http://grouper.ieee.org/groups/802/1/index.html
              WG-EMail: stds-802-1@ieee.org
 
               Contact: Paul Congdon
                Postal: Hewlett-Packard Company
-                       8000 Foothills Blvd. 
+                       8000 Foothills Blvd.
                        Roseville, CA 95747
                        USA
                   Tel: +1-916-785-5753
@@ -41,7 +41,7 @@ lldpMIB MODULE-IDENTITY
 
 lldpNotifications            OBJECT IDENTIFIER ::= { lldpMIB 0 }
 lldpObjects                  OBJECT IDENTIFIER ::= { lldpMIB 1 }
-lldpConformance              OBJECT IDENTIFIER ::= { lldpMIB 2 } 
+lldpConformance              OBJECT IDENTIFIER ::= { lldpMIB 2 }
 
 --
 -- LLDP MIB Objects
@@ -53,11 +53,11 @@ lldpLocalSystemData          OBJECT IDENTIFIER ::= { lldpObjects 3 }
 lldpRemoteSystemsData        OBJECT IDENTIFIER ::= { lldpObjects 4 }
 lldpExtensions               OBJECT IDENTIFIER ::= { lldpObjects 5 }
 
--- 
+--
 -- ***********************************************************
--- 
+--
 -- TimeFilter and ZeroBasedCounter32 (copied from RMON2-MIB)
--- 
+--
 -- ***********************************************************
 
 TimeFilter ::= TEXTUAL-CONVENTION
@@ -148,11 +148,11 @@ ZeroBasedCounter32 ::= TEXTUAL-CONVENTION
         constantly changing and/or the TimeFilter mechanism is in use."
     SYNTAX Gauge32
 
--- 
+--
 -- ***********************************************************
--- 
+--
 -- Textual Conventions
--- 
+--
 -- ***********************************************************
 
 LldpChassisIdSubtype ::= TEXTUAL-CONVENTION
@@ -366,9 +366,9 @@ LldpManAddrIfSubtype ::= TEXTUAL-CONVENTION
 
             The enumeration 'systemPortNumber(3)' represents interface
             identifier based on the system port numbering convention."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.5"
-            
+
     SYNTAX  INTEGER {
             unknown(1),
             ifIndex(2),
@@ -404,7 +404,7 @@ LldpSystemCapabilitiesMap ::= TEXTUAL-CONVENTION
             The bit 'bridge(2)' indicates that the system has bridge
             capability.
 
-            The bit 'wlanAccessPoint(3)' indicates that the system has 
+            The bit 'wlanAccessPoint(3)' indicates that the system has
             WLAN access point capability.
 
             The bit 'router(4)' indicates that the system has router
@@ -431,7 +431,7 @@ LldpSystemCapabilitiesMap ::= TEXTUAL-CONVENTION
 
 LldpPortNumber ::= TEXTUAL-CONVENTION
     DISPLAY-HINT "d"
-    STATUS     current 
+    STATUS     current
     DESCRIPTION
             "Each port contained in the chassis (that is known to the
             LLDP agent) is uniquely identified by a port number.
@@ -463,16 +463,16 @@ LldpPortList ::= TEXTUAL-CONVENTION
             single bit within the value of this object.  If that bit has
             a value of '1' then that port is included in the set of ports;
             the port is not included if its bit has a value of '0'."
-    REFERENCE 
+    REFERENCE
             "IETF RFC 2674 section 5"
     SYNTAX  OCTET STRING(SIZE(0..512))
 
--- 
+--
 -- ***********************************************************
--- 
---                  L L D P    C O N F I G 
--- 
--- *********************************************************** 
+--
+--                  L L D P    C O N F I G
+--
+-- ***********************************************************
 --
 
 lldpMessageTxInterval OBJECT-TYPE
@@ -489,7 +489,7 @@ lldpMessageTxInterval OBJECT-TYPE
 
             The value of this object must be restored from non-volatile
             storage after a re-initialization of the management system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.3.3"
     DEFVAL     { 30 }
     ::= { lldpConfiguration 1 }
@@ -512,9 +512,9 @@ lldpMessageTxHoldMultiplier OBJECT-TYPE
 
             The value of this object must be restored from non-volatile
             storage after a re-initialization of the management system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.3.3"
-    DEFVAL      { 4 }    
+    DEFVAL      { 4 }
     ::= { lldpConfiguration 2 }
 
 lldpReinitDelay OBJECT-TYPE
@@ -532,9 +532,9 @@ lldpReinitDelay OBJECT-TYPE
 
             The value of this object must be restored from non-volatile
             storage after a re-initialization of the management system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.3.3"
-    DEFVAL      { 2 }    
+    DEFVAL      { 2 }
     ::= { lldpConfiguration 3 }
 
 lldpTxDelay OBJECT-TYPE
@@ -544,7 +544,7 @@ lldpTxDelay OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "The lldpTxDelay indicates the delay (in units
-            of seconds) between successive LLDP frame transmissions 
+            of seconds) between successive LLDP frame transmissions
             initiated by value/status changes in the LLDP local systems
             MIB.  The recommended value for the lldpTxDelay is set by the
             following  formula:
@@ -555,9 +555,9 @@ lldpTxDelay OBJECT-TYPE
 
             The value of this object must be restored from non-volatile
             storage after a re-initialization of the management system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.3.3"
-    DEFVAL      { 2 }    
+    DEFVAL      { 2 }
     ::= { lldpConfiguration 4 }
 
 lldpNotificationInterval OBJECT-TYPE
@@ -620,7 +620,7 @@ LldpPortConfigEntry ::= SEQUENCE {
       lldpPortConfigTLVsTxEnable       BITS }
 
 lldpPortConfigPortNum   OBJECT-TYPE
-    SYNTAX      LldpPortNumber 
+    SYNTAX      LldpPortNumber
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
@@ -632,23 +632,23 @@ lldpPortConfigPortNum   OBJECT-TYPE
             lldpPortConfigTable."
     ::= { lldpPortConfigEntry 1 }
 
-lldpPortConfigAdminStatus  OBJECT-TYPE 
-    SYNTAX INTEGER { 
-       txOnly(1), 
+lldpPortConfigAdminStatus  OBJECT-TYPE
+    SYNTAX INTEGER {
+       txOnly(1),
        rxOnly(2),
        txAndRx(3),
        disabled(4)
     }
-    MAX-ACCESS read-write 
-    STATUS     current 
-    DESCRIPTION 
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
             "The administratively desired status of the local LLDP agent.
 
             If the associated lldpPortConfigAdminStatus object has a
             value of 'txOnly(1)', then LLDP agent will transmit LLDP
             frames on this port and it will not store any information
             about the remote systems connected.
-         
+
             If the associated lldpPortConfigAdminStatus object has a
             value of 'rxOnly(2)', then the LLDP agent will receive,
             but it will not transmit LLDP frames on this port.
@@ -663,22 +663,22 @@ lldpPortConfigAdminStatus  OBJECT-TYPE
             information which is received on this port and stored in
             other tables, before the port's lldpPortConfigAdminStatus
             becomes disabled, then the information will naturally age out."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.1"
-    DEFVAL  { txAndRx }    
-   ::= { lldpPortConfigEntry 2 } 
+    DEFVAL  { txAndRx }
+   ::= { lldpPortConfigEntry 2 }
 
-lldpPortConfigNotificationEnable OBJECT-TYPE 
+lldpPortConfigNotificationEnable OBJECT-TYPE
     SYNTAX     TruthValue
-    MAX-ACCESS read-write 
-    STATUS     current 
-    DESCRIPTION 
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
             "The lldpPortConfigNotificationEnable controls, on a per
             port basis,  whether or not notifications from the agent
             are enabled. The value true(1) means that notifications are
             enabled; the value false(2) means that they are not."
-    DEFVAL  { false }    
-   ::= { lldpPortConfigEntry 3 } 
+    DEFVAL  { false }
+   ::= { lldpPortConfigEntry 3 }
 
 lldpPortConfigTLVsTxEnable OBJECT-TYPE
     SYNTAX      BITS {
@@ -698,7 +698,7 @@ lldpPortConfigTLVsTxEnable OBJECT-TYPE
 
             It should be noted that the organizationally-specific TLVs
             are excluded from the lldpTLVsTxEnable bitmap.
-            
+
             LLDP Organization Specific Information Extension MIBs should
             have similar configuration object to control transmission
             of their organizationally defined TLVs.
@@ -724,16 +724,16 @@ lldpPortConfigTLVsTxEnable OBJECT-TYPE
 
             The value of this object must be restored from non-volatile
             storage after a re-initialization of the management system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.2.1.1"
-    ::= { lldpPortConfigEntry 4 } 
+    ::= { lldpPortConfigEntry 4 }
 
 
 --
 -- lldpManAddrConfigTxPortsTable : selection of management addresses
 --                                 to be transmitted on a specified set
 --                                 of ports.
--- 
+--
 
 lldpConfigManAddrTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF LldpConfigManAddrEntry
@@ -777,23 +777,23 @@ lldpConfigManAddrPortsTxEnable  OBJECT-TYPE
             "A set of ports that are identified by a PortList, in which
             each port is represented as a bit.  The corresponding local
             system management address instance will be transmitted on the
-            member ports of the lldpManAddrPortsTxEnable.  
+            member ports of the lldpManAddrPortsTxEnable.
 
             The default value for lldpConfigManAddrPortsTxEnable object
             is empty binary string, which means no ports are specified
             for advertising indicated management address instance."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.2.1.1"
     DEFVAL  { ''H }     -- empty binary string
     ::= { lldpConfigManAddrEntry 1 }
 
 
 --
---  *********************************************************** 
+--  ***********************************************************
 --
---                   L L D P    S T A T S 
+--                   L L D P    S T A T S
 --
---  *********************************************************** 
+--  ***********************************************************
 --
 -- LLDP Stats Group
 
@@ -897,22 +897,22 @@ lldpStatsTxPortTable  OBJECT-TYPE
     SYNTAX      SEQUENCE OF LldpStatsTxPortEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
             "A table containing LLDP transmission statistics for
             individual ports.  Entries are not required to exist in
             this table while the lldpPortConfigEntry object is equal to
             'disabled(4)'."
-    ::= { lldpStatistics 6 } 
+    ::= { lldpStatistics 6 }
 
 lldpStatsTxPortEntry   OBJECT-TYPE
      SYNTAX      LldpStatsTxPortEntry
      MAX-ACCESS  not-accessible
      STATUS      current
      DESCRIPTION
-             "LLDP frame transmission statistics for a particular port.  
+             "LLDP frame transmission statistics for a particular port.
              The port must be contained in the same chassis as the
              LLDP agent.
-            
+
              All counter values in a particular entry shall be
              maintained on a continuing basis and shall not be deleted
              upon expiration of rxInfoTTL timing counters in the LLDP
@@ -923,15 +923,15 @@ lldpStatsTxPortEntry   OBJECT-TYPE
              port on the local LLDP agent become frozen whenever the
              adminStatus is disabled for the same port."
      INDEX  { lldpStatsTxPortNum }
-     ::= { lldpStatsTxPortTable 1 } 
+     ::= { lldpStatsTxPortTable 1 }
 
-LldpStatsTxPortEntry ::= SEQUENCE {      
+LldpStatsTxPortEntry ::= SEQUENCE {
       lldpStatsTxPortNum                 LldpPortNumber,
       lldpStatsTxPortFramesTotal         Counter32
 }
 
 lldpStatsTxPortNum   OBJECT-TYPE
-    SYNTAX      LldpPortNumber 
+    SYNTAX      LldpPortNumber
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
@@ -941,7 +941,7 @@ lldpStatsTxPortNum   OBJECT-TYPE
 
             The value of this object is used as a port index to the
             lldpStatsTable."
-    ::= { lldpStatsTxPortEntry 1 } 
+    ::= { lldpStatsTxPortEntry 1 }
 
 lldpStatsTxPortFramesTotal  OBJECT-TYPE
     SYNTAX        Counter32
@@ -950,7 +950,7 @@ lldpStatsTxPortFramesTotal  OBJECT-TYPE
     DESCRIPTION
             "The number of LLDP frames transmitted by this LLDP agent
             on the indicated port."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.2"
     ::= { lldpStatsTxPortEntry 2 }
 
@@ -962,11 +962,11 @@ lldpStatsRxPortTable  OBJECT-TYPE
     SYNTAX      SEQUENCE OF LldpRxStatsPortEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
             "A table containing LLDP reception statistics for individual
             ports.  Entries are not required to exist in this table while
             the lldpPortConfigEntry object is equal to 'disabled(4)'."
-    ::= { lldpStatistics 7 } 
+    ::= { lldpStatistics 7 }
 
 lldpStatsRxPortEntry   OBJECT-TYPE
      SYNTAX      LldpRxStatsPortEntry
@@ -976,7 +976,7 @@ lldpStatsRxPortEntry   OBJECT-TYPE
              "LLDP frame reception statistics for a particular port.
              The port must be contained in the same chassis as the
              LLDP agent.
-            
+
              All counter values in a particular entry shall be
              maintained on a continuing basis and shall not be deleted
              upon expiration of rxInfoTTL timing counters in the LLDP
@@ -987,9 +987,9 @@ lldpStatsRxPortEntry   OBJECT-TYPE
              port on the local LLDP agent become frozen whenever the
              adminStatus is disabled for the same port."
      INDEX  { lldpStatsRxPortNum }
-     ::= { lldpStatsRxPortTable 1 } 
+     ::= { lldpStatsRxPortTable 1 }
 
-LldpRxStatsPortEntry ::= SEQUENCE {      
+LldpRxStatsPortEntry ::= SEQUENCE {
       lldpStatsRxPortNum                   LldpPortNumber,
       lldpStatsRxPortFramesDiscardedTotal  Counter32,
       lldpStatsRxPortFramesErrors          Counter32,
@@ -1000,7 +1000,7 @@ LldpRxStatsPortEntry ::= SEQUENCE {
 }
 
 lldpStatsRxPortNum   OBJECT-TYPE
-    SYNTAX      LldpPortNumber 
+    SYNTAX      LldpPortNumber
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
@@ -1010,22 +1010,22 @@ lldpStatsRxPortNum   OBJECT-TYPE
 
             The value of this object is used as a port index to the
             lldpStatsTable."
-    ::= { lldpStatsRxPortEntry 1 } 
+    ::= { lldpStatsRxPortEntry 1 }
 
-lldpStatsRxPortFramesDiscardedTotal OBJECT-TYPE 
+lldpStatsRxPortFramesDiscardedTotal OBJECT-TYPE
     SYNTAX        Counter32
     MAX-ACCESS read-only
-    STATUS     current 
-    DESCRIPTION 
+    STATUS     current
+    DESCRIPTION
             "The number of LLDP frames received by this LLDP agent on
             the indicated port, and then discarded for any reason.
             This counter can provide an indication that LLDP header
             formating problems may exist with the local LLDP agent in
             the sending system or that LLDPDU validation problems may
             exist with the local LLDP agent in the receiving system."
-   REFERENCE 
+   REFERENCE
             "IEEE 802.1AB-2004 10.5.2"
-   ::= { lldpStatsRxPortEntry 2 } 
+   ::= { lldpStatsRxPortEntry 2 }
 
 lldpStatsRxPortFramesErrors  OBJECT-TYPE
     SYNTAX        Counter32
@@ -1034,7 +1034,7 @@ lldpStatsRxPortFramesErrors  OBJECT-TYPE
     DESCRIPTION
             "The number of invalid LLDP frames received by this LLDP
             agent on the indicated port, while this LLDP agent is enabled."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.2"
     ::= { lldpStatsRxPortEntry 3 }
 
@@ -1045,7 +1045,7 @@ lldpStatsRxPortFramesTotal OBJECT-TYPE
     DESCRIPTION
             "The number of valid LLDP frames received by this LLDP agent
             on the indicated port, while this LLDP agent is enabled."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.2"
     ::= { lldpStatsRxPortEntry 4 }
 
@@ -1056,7 +1056,7 @@ lldpStatsRxPortTLVsDiscardedTotal OBJECT-TYPE
     DESCRIPTION
             "The number of LLDP TLVs discarded for any reason by this LLDP
             agent on the indicated port."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.2"
     ::= { lldpStatsRxPortEntry 5 }
 
@@ -1067,12 +1067,12 @@ lldpStatsRxPortTLVsUnrecognizedTotal  OBJECT-TYPE
     DESCRIPTION
             "The number of LLDP TLVs received on the given port that
             are not recognized by this LLDP agent on the indicated port.
-            
+
             An unrecognized TLV is referred to as the TLV whose type value
             is in the range of reserved TLV types (000 1001 - 111 1110)
             in Table 9.1 of IEEE Std 802.1AB-2004.  An unrecognized
             TLV may be a basic management TLV from a later LLDP version."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.2"
     ::= { lldpStatsRxPortEntry 6 }
 
@@ -1106,7 +1106,7 @@ lldpStatsRxPortAgeoutsTotal   OBJECT-TYPE
             all related tables on a particular port.  Partial aging
             is not allowed, and thus, should not change the value of
             this counter."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.5.2"
     ::= { lldpStatsRxPortEntry 7 }
 
@@ -1123,7 +1123,7 @@ lldpLocChassisIdSubtype  OBJECT-TYPE
     DESCRIPTION
             "The type of encoding used to identify the chassis
             associated with the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.2.2"
     ::= { lldpLocalSystemData 1 }
 
@@ -1134,7 +1134,7 @@ lldpLocChassisId  OBJECT-TYPE
     DESCRIPTION
             "The string value used to identify the chassis component
             associated with the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.2.3"
     ::= { lldpLocalSystemData 2 }
 
@@ -1147,7 +1147,7 @@ lldpLocSysName  OBJECT-TYPE
             local system.  If the local agent supports IETF RFC 3418,
             lldpLocSysName object should have the same value of sysName
             object."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.6.2"
     ::= { lldpLocalSystemData 3 }
 
@@ -1160,7 +1160,7 @@ lldpLocSysDesc  OBJECT-TYPE
             of the local system.  If the local agent supports IETF RFC 3418,
             lldpLocSysDesc object should have the same value of sysDesc
             object."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.7.2"
     ::= { lldpLocalSystemData 4 }
 
@@ -1171,7 +1171,7 @@ lldpLocSysCapSupported OBJECT-TYPE
     DESCRIPTION
             "The bitmap value used to identify which system capabilities
             are supported on the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.8.1"
     ::= { lldpLocalSystemData 5 }
 
@@ -1182,7 +1182,7 @@ lldpLocSysCapEnabled  OBJECT-TYPE
     DESCRIPTION
             "The bitmap value used to identify which system capabilities
             are enabled on the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.8.2"
     ::= { lldpLocalSystemData 6 }
 
@@ -1201,7 +1201,7 @@ lldpLocPortTable OBJECT-TYPE
     ::= { lldpLocalSystemData 7 }
 
 lldpLocPortEntry OBJECT-TYPE
-    SYNTAX      LldpLocPortEntry 
+    SYNTAX      LldpLocPortEntry
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
@@ -1227,7 +1227,7 @@ lldpLocPortNum  OBJECT-TYPE
             "The index value used to identify the port component
             (contained in the local chassis with the LLDP agent)
             associated with this entry.
-            
+
             The value of this object is used as a port index to the
             lldpLocPortTable."
     ::= { lldpLocPortEntry 1 }
@@ -1239,7 +1239,7 @@ lldpLocPortIdSubtype  OBJECT-TYPE
     DESCRIPTION
             "The type of port identifier encoding used in the associated
             'lldpLocPortId' object."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.3.2"
     ::= { lldpLocPortEntry 2 }
 
@@ -1250,7 +1250,7 @@ lldpLocPortId  OBJECT-TYPE
     DESCRIPTION
             "The string value used to identify the port component
             associated with a given port in the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.3.3"
     ::= { lldpLocPortEntry 3 }
 
@@ -1263,7 +1263,7 @@ lldpLocPortDesc  OBJECT-TYPE
             description associated with the local system.  If the local
             agent supports IETF RFC 2863, lldpLocPortDesc object should
             have the same value of ifDescr object."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.5.2"
     ::= { lldpLocPortEntry 4 }
 
@@ -1314,7 +1314,7 @@ lldpLocManAddrSubtype  OBJECT-TYPE
     DESCRIPTION
             "The type of management address identifier encoding used in
             the associated 'lldpLocManagmentAddr' object."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.3"
     ::= { lldpLocManAddrEntry 1 }
 
@@ -1326,7 +1326,7 @@ lldpLocManAddr  OBJECT-TYPE
             "The string value used to identify the management address
             component associated with the local system.  The purpose of
             this address is to contact the management entity."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.4"
     ::= { lldpLocManAddrEntry 2 }
 
@@ -1343,7 +1343,7 @@ lldpLocManAddrLen  OBJECT-TYPE
             receiving systems that do not implement SNMP will not be
             required to implement an iana family numbers/address length
             equivalency table in order to decode the management adress."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.2"
     ::= { lldpLocManAddrEntry 3 }
 
@@ -1356,7 +1356,7 @@ lldpLocManAddrIfSubtype  OBJECT-TYPE
             "The enumeration value that identifies the interface numbering
             method used for defining the interface number, associated
             with the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.5"
     ::= { lldpLocManAddrEntry 4 }
 
@@ -1368,7 +1368,7 @@ lldpLocManAddrIfId  OBJECT-TYPE
             "The integer value used to identify the interface number
             regarding the management address component associated with
             the local system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.6"
     ::= { lldpLocManAddrEntry 5 }
 
@@ -1380,7 +1380,7 @@ lldpLocManAddrOID  OBJECT-TYPE
             "The OID value used to identify the type of hardware component
             or protocol entity associated with the management address
             advertised by the local system agent."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.8"
     ::= { lldpLocManAddrEntry 6 }
 
@@ -1420,7 +1420,7 @@ lldpRemTable OBJECT-TYPE
                   destinations.
 
                3. NMS receives the notifications and compares the new
-                  values of objects listed in step 1.  
+                  values of objects listed in step 1.
 
                   Periodically, NMS should poll the object
                   lldpStatsRemTablesLastChangeTime to find out if anything
@@ -1483,10 +1483,10 @@ lldpRemTimeMark  OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "A TimeFilter for this entry.  See the TimeFilter textual
-            convention in IETF RFC 2021 and 
+            convention in IETF RFC 2021 and
             http://www.ietf.org/IESG/Implementations/RFC2021-Implementation.txt
             to see how TimeFilter works."
-    REFERENCE 
+    REFERENCE
             "IETF RFC 2021 section 6"
     ::= { lldpRemEntry 1 }
 
@@ -1527,7 +1527,7 @@ lldpRemChassisIdSubtype  OBJECT-TYPE
     DESCRIPTION
             "The type of encoding used to identify the chassis associated
             with the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.2.2"
     ::= { lldpRemEntry 4 }
 
@@ -1538,7 +1538,7 @@ lldpRemChassisId  OBJECT-TYPE
     DESCRIPTION
             "The string value used to identify the chassis component
             associated with the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.2.3"
     ::= { lldpRemEntry 5 }
 
@@ -1549,7 +1549,7 @@ lldpRemPortIdSubtype  OBJECT-TYPE
     DESCRIPTION
             "The type of port identifier encoding used in the associated
             'lldpRemPortId' object."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.3.2"
     ::= { lldpRemEntry 6 }
 
@@ -1560,7 +1560,7 @@ lldpRemPortId  OBJECT-TYPE
     DESCRIPTION
             "The string value used to identify the port component
             associated with the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.3.3"
     ::= { lldpRemEntry 7 }
 
@@ -1571,7 +1571,7 @@ lldpRemPortDesc  OBJECT-TYPE
     DESCRIPTION
             "The string value used to identify the description of
             the given port associated with the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.5.2"
     ::= { lldpRemEntry 8 }
 
@@ -1582,7 +1582,7 @@ lldpRemSysName  OBJECT-TYPE
     DESCRIPTION
             "The string value used to identify the system name of the
             remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.6.2"
     ::= { lldpRemEntry 9 }
 
@@ -1593,7 +1593,7 @@ lldpRemSysDesc  OBJECT-TYPE
     DESCRIPTION
             "The string value used to identify the system description
             of the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.7.2"
     ::= { lldpRemEntry 10 }
 
@@ -1604,7 +1604,7 @@ lldpRemSysCapSupported OBJECT-TYPE
     DESCRIPTION
             "The bitmap value used to identify which system capabilities
             are supported on the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.8.1"
     ::= { lldpRemEntry 11 }
 
@@ -1615,7 +1615,7 @@ lldpRemSysCapEnabled  OBJECT-TYPE
     DESCRIPTION
             "The bitmap value used to identify which system capabilities
             are enabled on the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.8.2"
     ::= { lldpRemEntry 12 }
 
@@ -1672,7 +1672,7 @@ lldpRemManAddrSubtype  OBJECT-TYPE
     DESCRIPTION
             "The type of management address identifier encoding used in
             the associated 'lldpRemManagmentAddr' object."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.3"
     ::= { lldpRemManAddrEntry 1 }
 
@@ -1684,7 +1684,7 @@ lldpRemManAddr  OBJECT-TYPE
             "The string value used to identify the management address
             component associated with the remote system.  The purpose
             of this address is to contact the management entity."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.4"
     ::= { lldpRemManAddrEntry 2 }
 
@@ -1696,7 +1696,7 @@ lldpRemManAddrIfSubtype  OBJECT-TYPE
             "The enumeration value that identifies the interface numbering
             method used for defining the interface number, associated
             with the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.5"
     ::= { lldpRemManAddrEntry 3 }
 
@@ -1708,7 +1708,7 @@ lldpRemManAddrIfId  OBJECT-TYPE
             "The integer value used to identify the interface number
             regarding the management address component associated with
             the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.6"
     ::= { lldpRemManAddrEntry 4 }
 
@@ -1720,12 +1720,12 @@ lldpRemManAddrOID  OBJECT-TYPE
             "The OID value used to identify the type of hardware component
             or protocol entity associated with the management address
             advertised by the remote system agent."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.9.8"
     ::= { lldpRemManAddrEntry 5 }
 
 --
--- lldpRemUnknownTLVTable : Unrecognized TLV information 
+-- lldpRemUnknownTLVTable : Unrecognized TLV information
 --
 lldpRemUnknownTLVTable  OBJECT-TYPE
     SYNTAX      SEQUENCE OF LldpRemUnknownTLVEntry
@@ -1745,7 +1745,7 @@ lldpRemUnknownTLVTable  OBJECT-TYPE
             most recently received unrecognized TLV from the same MSAP,
             or they will naturally age out when the rxInfoTTL timer
             (associated with the MSAP) expires."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.3.2"
     ::= { lldpRemoteSystemsData 3 }
 
@@ -1762,7 +1762,7 @@ lldpRemUnknownTLVEntry OBJECT-TYPE
            lldpRemTimeMark,
            lldpRemLocalPortNum,
            lldpRemIndex,
-           lldpRemUnknownTLVType 
+           lldpRemUnknownTLVType
     }
     ::= { lldpRemUnknownTLVTable 1 }
 
@@ -1778,7 +1778,7 @@ lldpRemUnknownTLVType OBJECT-TYPE
     DESCRIPTION
             "This object represents the value extracted from the type
             field of the TLV."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.3.5"
     ::= { lldpRemUnknownTLVEntry 1 }
 
@@ -1789,12 +1789,12 @@ lldpRemUnknownTLVInfo OBJECT-TYPE
     DESCRIPTION
             "This object represents the value extracted from the value
             field of the TLV."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 10.3.5"
     ::= { lldpRemUnknownTLVEntry 2 }
 
 ------------------------------------------------------------------------------
--- Remote Systems Extension Table - Organizationally-Defined Information 
+-- Remote Systems Extension Table - Organizationally-Defined Information
 ------------------------------------------------------------------------------
 lldpRemOrgDefInfoTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF LldpRemOrgDefInfoEntry
@@ -1851,7 +1851,7 @@ LldpRemOrgDefInfoEntry ::= SEQUENCE {
 }
 
 lldpRemOrgDefInfoOUI  OBJECT-TYPE
-    SYNTAX      OCTET STRING (SIZE(3))  
+    SYNTAX      OCTET STRING (SIZE(3))
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
@@ -1859,7 +1859,7 @@ lldpRemOrgDefInfoOUI  OBJECT-TYPE
             in IEEE std 802-2001, is a 24 bit (three octets) globally
             unique assigned number referenced by various standards,
             of the information received from the remote system."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.1.3"
     ::= { lldpRemOrgDefInfoEntry 1 }
 
@@ -1877,7 +1877,7 @@ lldpRemOrgDefInfoSubtype  OBJECT-TYPE
             retrieved without a unique identifier that indicates the
             particular type of information contained in the information
             string."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.1.4"
     ::= { lldpRemOrgDefInfoEntry 2 }
 
@@ -1906,17 +1906,17 @@ lldpRemOrgDefInfo  OBJECT-TYPE
             "The string value used to identify the organizationally
             defined information of the remote system.  The encoding for
             this object should be as defined for SnmpAdminString TC."
-    REFERENCE 
+    REFERENCE
             "IEEE 802.1AB-2004 9.5.1.5"
     ::= { lldpRemOrgDefInfoEntry 4 }
 
 
 --
 -- ***********************************************************
--- 
+--
 --        L L D P   M I B   N O T I F I C A T I O N S
--- 
--- *********************************************************** 
+--
+-- ***********************************************************
 --
 
 lldpNotificationPrefix OBJECT IDENTIFIER ::= { lldpNotifications 0 }
@@ -1943,10 +1943,10 @@ lldpRemTablesChange NOTIFICATION-TYPE
 
 --
 -- ***********************************************************
--- 
---           L L D P   M I B   C O N F O R M A N C E 
--- 
--- *********************************************************** 
+--
+--           L L D P   M I B   C O N F O R M A N C E
+--
+-- ***********************************************************
 --
 
 lldpCompliances OBJECT IDENTIFIER ::= { lldpConformance 1 }
@@ -1960,11 +1960,11 @@ lldpCompliance MODULE-COMPLIANCE
             "The compliance statement for SNMP entities which implement
             the LLDP MIB."
     MODULE  -- this module
-        MANDATORY-GROUPS { lldpConfigGroup, 
-                           lldpConfigRxGroup, 
-                           lldpConfigTxGroup, 
-                           lldpStatsRxGroup, 
-                           lldpStatsTxGroup, 
+        MANDATORY-GROUPS { lldpConfigGroup,
+                           lldpConfigRxGroup,
+                           lldpConfigTxGroup,
+                           lldpStatsRxGroup,
+                           lldpStatsTxGroup,
                            lldpLocSysGroup,
                            lldpRemSysGroup,
                            lldpNotificationsGroup
@@ -2072,8 +2072,8 @@ lldpLocSysGroup  OBJECT-GROUP
     STATUS  current
     DESCRIPTION
             "The collection of objects which are used to represent LLDP
-            Local System Information.  
-            
+            Local System Information.
+
             This group is mandatory for agents which implement the LLDP
             and have the capability of transmitting LLDP frames."
     ::= { lldpGroups 6 }
@@ -2093,7 +2093,7 @@ lldpRemSysGroup  OBJECT-GROUP
         lldpRemManAddrIfId,
         lldpRemManAddrOID,
         lldpRemUnknownTLVInfo,
-        lldpRemOrgDefInfo 
+        lldpRemOrgDefInfo
     }
     STATUS  current
     DESCRIPTION
@@ -2103,14 +2103,14 @@ lldpRemSysGroup  OBJECT-GROUP
             that even the agent doesn't implement some of the optional
             TLVs, it shall recognize all the optional TLV information
             that the remote system may advertise.
-            
+
             This group is mandatory for agents which implement the LLDP
             and have the capability of receiving LLDP frames."
     ::= { lldpGroups 7 }
 
 lldpNotificationsGroup  NOTIFICATION-GROUP
     NOTIFICATIONS {
-        lldpRemTablesChange 
+        lldpRemTablesChange
     }
     STATUS  current
     DESCRIPTION

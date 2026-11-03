@@ -23,91 +23,91 @@ IMPORTS
 		FROM RFC1155-SMI;
 
 
-ppc OBJECT IDENTIFIER 
+ppc OBJECT IDENTIFIER
    ::= { enterprises 935 }
 
-products OBJECT IDENTIFIER 
+products OBJECT IDENTIFIER
    ::= { ppc 1 }
 
-ppcmgmt OBJECT IDENTIFIER 
+ppcmgmt OBJECT IDENTIFIER
    ::= { ppc 2 }
 
-hardware OBJECT IDENTIFIER 
+hardware OBJECT IDENTIFIER
    ::= { products 1 }
 
-mconfig OBJECT IDENTIFIER 
+mconfig OBJECT IDENTIFIER
    ::= { ppcmgmt 1 }
 
-ups OBJECT IDENTIFIER 
+ups OBJECT IDENTIFIER
    ::= { hardware 1 }
 
-upsIdentp OBJECT IDENTIFIER 
+upsIdentp OBJECT IDENTIFIER
    ::= { ups 1 }
 
-upsBatteryp OBJECT IDENTIFIER 
+upsBatteryp OBJECT IDENTIFIER
    ::= { ups 2 }
 
-upsInputp OBJECT IDENTIFIER 
+upsInputp OBJECT IDENTIFIER
    ::= { ups 3 }
 
-upsOutputp OBJECT IDENTIFIER 
+upsOutputp OBJECT IDENTIFIER
    ::= { ups 4 }
 
-upsConfigp OBJECT IDENTIFIER 
+upsConfigp OBJECT IDENTIFIER
    ::= { ups 5 }
 
-upsControlp OBJECT IDENTIFIER 
+upsControlp OBJECT IDENTIFIER
    ::= { ups 6 }
 
-upsTestp OBJECT IDENTIFIER 
+upsTestp OBJECT IDENTIFIER
    ::= { ups 7 }
 
-upsThreePhase OBJECT IDENTIFIER 
+upsThreePhase OBJECT IDENTIFIER
    ::= { ups 8 }
 
-upsEnvironment OBJECT IDENTIFIER 
+upsEnvironment OBJECT IDENTIFIER
    ::= { ups 9 }
 
-upsBaseIdent OBJECT IDENTIFIER 
+upsBaseIdent OBJECT IDENTIFIER
    ::= { upsIdentp 1 }
 
-upsSmartIdent OBJECT IDENTIFIER 
+upsSmartIdent OBJECT IDENTIFIER
    ::= { upsIdentp 2 }
 
-upsBaseBattery OBJECT IDENTIFIER 
+upsBaseBattery OBJECT IDENTIFIER
    ::= { upsBatteryp 1 }
 
-upsSmartBattery OBJECT IDENTIFIER 
+upsSmartBattery OBJECT IDENTIFIER
    ::= { upsBatteryp 2 }
 
-upsBaseInput OBJECT IDENTIFIER 
+upsBaseInput OBJECT IDENTIFIER
    ::= { upsInputp 1 }
 
-upsSmartInput OBJECT IDENTIFIER 
+upsSmartInput OBJECT IDENTIFIER
    ::= { upsInputp 2 }
 
-upsBaseOutput OBJECT IDENTIFIER 
+upsBaseOutput OBJECT IDENTIFIER
    ::= { upsOutputp 1 }
 
-upsSmartOutput OBJECT IDENTIFIER 
+upsSmartOutput OBJECT IDENTIFIER
    ::= { upsOutputp 2 }
 
-upsBaseConfig OBJECT IDENTIFIER 
+upsBaseConfig OBJECT IDENTIFIER
    ::= { upsConfigp 1 }
 
-upsSmartConfig OBJECT IDENTIFIER 
+upsSmartConfig OBJECT IDENTIFIER
    ::= { upsConfigp 2 }
 
-upsBaseControl OBJECT IDENTIFIER 
+upsBaseControl OBJECT IDENTIFIER
    ::= { upsControlp 1 }
 
-upsSmartControl OBJECT IDENTIFIER 
+upsSmartControl OBJECT IDENTIFIER
    ::= { upsControlp 2 }
 
-upsBaseTest OBJECT IDENTIFIER 
+upsBaseTest OBJECT IDENTIFIER
    ::= { upsTestp 1 }
 
-upsSmartTest OBJECT IDENTIFIER 
+upsSmartTest OBJECT IDENTIFIER
    ::= { upsTestp 2 }
 
 -- object types
@@ -617,11 +617,11 @@ upsSmartConfigRatedOutputVoltage OBJECT-TYPE
 		"The nominal output voltage from the UPS in 1/10 VAC.
 		Possible values are 1000, 1200, 2080, 2200, 2250, 2300
 		and 2400.
-		                
+
 		NOTE: Only units that are 2200, 2250, 2300 and 2400 can
 		be changed.  Allowable values are 2200, 2250, 2300 and
 		2400.
-		                
+
 		For these adjustable units, if a value other than
 		a supported value is provided in a set request, the
 		UPS interprets it as the next lower acceptable value.
@@ -637,13 +637,13 @@ upsSmartConfigHighTransferVolt OBJECT-TYPE
 	DESCRIPTION
 		"The maximum line voltage in 1/10 VAC allowed before the
 		UPS system transfers to battery backup.
-		                
+
 		Allowed value depend on the UPS used:
 		120 Volt units allow settings of 1290, 1320, 1350, 1380.
 		100 Volt units allow settings of 1080, 1100, 1120, 1140.
 		230 Volt units allow settings of 2530, 2640, 2710, 2800.
 		208 Volt units allow settings of 2240, 2290, 2340, 2390.
-		                
+
 		If a value other than a supported value is provided in a
 		set request, the UPS interprets it as the next lower
 		acceptable value.  If the provided value is lower than
@@ -659,13 +659,13 @@ upsSmartConfigLowTransferVolt OBJECT-TYPE
 	DESCRIPTION
 		"The minimum line voltage in 1/10 VAC allowed before the
 		UPS system transfers to battery backup.
-		                
+
 		Allowable values depend on the UPS used:
 		120 Volt units allow settings of  970, 1000, 1030, 1060.
 		100 Volt units allow settings of 810, 830, 850, 870.
 		230 Volt units allow settings of 1880, 1960, 2040, 2080.
 		208 Volt units allow settings of 1680, 1720, 1770, 1820.
-		                
+
 		If a value other than a supported value is provided in a
 		set request, the UPS interprets it as a the next higher
 		acceptable value.  If the provided value is higher than
@@ -696,7 +696,7 @@ upsSmartConfigAlarmTimer OBJECT-TYPE
 		UPS begins emitting audible alarms (beeping).  This timer is
 		observerd only if the value of extControlAlarm is timed(2).
 		Allowed values are 0 or 30 seconds.
-		                
+
 		If a value other than a supported value is provided in a
 		set request, the UPS interprets it as a the next lower
 		acceptable value.  If the provided value is lower than
@@ -715,7 +715,7 @@ upsSmartConfigMinReturnCapacity OBJECT-TYPE
 		shutdown condition.  In other words, the UPS will not
 		re-energize the output until the battery capacity is equal
 		to this value. Allowed values are 0, 10, 25, or 90  percent.
-		                
+
 		If a value other than a supported value is provided in a
 		set request, the UPS interprets it as a the next higher
 		acceptable value.  If the provided value is higher than
@@ -747,7 +747,7 @@ upsSmartConfigLowBatteryRunTime OBJECT-TYPE
 		condition is reached.  Allowed values are 120, 300, 420,
 		or 600 seconds.  During this time the UPS will produce a
 		constant warning tone which can not be disabled.
-		                
+
 		If a value other than a supported value is provided in a
 		set request, the UPS interprets it as a the next higher
 		acceptable value.  If the provided value is higher than
@@ -766,7 +766,7 @@ upsSmartConfigReturnDelay OBJECT-TYPE
 		when the UPS comes out of a reboot and before the UPS
 		wakes up from 'sleep' mode.  Allowed values are 0, 60,
 		180 and 300 seconds.
-		                
+
 		If a value other than a supported value is provided in a
 		set request, the UPS interprets it as a the next higher
 		acceptable value.  If the provided value is higher than
@@ -784,7 +784,7 @@ upsSmartConfigShutoffDelay OBJECT-TYPE
 		to turn off.  Allowed values are 12, 18, 24, 30, 36, 42,
 		48, 54, 60, 120, 180, 240, 300, 360, 420, 480, 540, and
 		600 seconds.
-		                
+
 		If a value other than a supported value is provided in a
 		set request, the UPS interprets it as next higher acceptable
 		value.  If the provided value is higher than the highest
@@ -801,14 +801,14 @@ upsSmartConfigUpsSleepTime OBJECT-TYPE
 		instructed.  When in sleep mode, the UPS will not provide
 		output power regardless of the input line state.  Once the
 		specified time has elapsed, output power will be restored.
-		                
+
 		This is a configuration setting.  The UPS will not go to
 		sleep until told to do so by the manager from a management
 		station.
-		                
+
 		Any input value is allowed, however the UPS only recognizes
 		0 - 9999 minutes in one minute increments.
-		                
+
 		If the provided value is higher than the highest acceptable
 		value, the highest acceptable value is used."
    ::= { upsSmartConfig 11 }
@@ -842,10 +842,10 @@ upsBaseControlConserveBattery OBJECT-TYPE
 		UPS will turn back on when utility power is restored.
 		Attempting to turn off a UPS that is not on battery will
 		result in a badValue error.
-		                
+
 		Setting this value to noTurnOffUps(1) has no
 		effect.
-		                
+
 		The value noTurnOffUps(1) will always be returned
 		when the variable is read."
    ::= { upsBaseControl 1 }
@@ -865,10 +865,10 @@ upsSmartControlUpsOff OBJECT-TYPE
 		will not provide output power regardless of the input
 		line state.  The on/off switch on the UPS
 		must be toggled for the UPS to return to operation.
-		                
+
 		Setting this value to noTurnUpsOff(1) has no
 		effect.
-		                
+
 		The value noTurnUpsOff(1) will always be returned
 		when the variable is read."
    ::= { upsSmartControl 1 }
@@ -883,9 +883,9 @@ upsSmartControlRebootUps OBJECT-TYPE
 	DESCRIPTION
 		"Setting this variable to rebootUps(2) causes the
 		UPS to shut off and turn back on.
-		                
+
 		Setting this value to noRebootUps(1) has no effect.
-		                
+
 		The value noRebootUps(1) will always be returned
 		when the variable is read."
    ::= { upsSmartControl 2 }
@@ -901,15 +901,15 @@ upsSmartControlUpsSleep OBJECT-TYPE
 		"Setting this variable to putUpsToSleep(2) causes
 		the UPS to go to sleep for the time specified by
 		upsSmartConfigUpsSleepTime.
-		                
+
 		When in sleep mode, the UPS will not provide output
 		power regardless of the input line state.  Once the
 		specified time has elapsed, output power will be
 		restored.
-		                
+
 		Setting this value to noPutUpsToSleep(1) has no
 		effect.
-		                
+
 		The value noPutUpsToSleep(1) will always be returned
 		when the variable is read."
    ::= { upsSmartControl 3 }
@@ -924,10 +924,10 @@ upsSmartControlSimulatePowerFail OBJECT-TYPE
 	DESCRIPTION
 		"Setting this variable to simulatePowerFailure(2) causes
 		the UPS switch to battery power.
-		                
+
 		Setting this value to noSimulatePowerFailure(1) has no
 		effect.
-		                
+
 		The value noSimulatePowerFailure(1) will always be returned
 		when the variable is read."
    ::= { upsSmartControl 4 }
@@ -942,13 +942,13 @@ upsSmartControlFlashAndBeep OBJECT-TYPE
 	DESCRIPTION
 		"UPS to identify itself by lighting all indicators
 		and beeping.
-		                
+
 		Setting this variable to FlashAndBeep(2) causes
 		the UPS lights all panel indicators and beeps.
-		                
+
 		Setting this value to noFlashAndBeep(1) has no
 		effect.
-		                
+
 		The value noFlashAndBeep(1) will always be returned
 		when the variable is read."
    ::= { upsSmartControl 5 }
@@ -964,10 +964,10 @@ upsSmartControlTurnOnUpsLoad OBJECT-TYPE
 		"Setting this variable to upsSmartControlTurnOnUpsLoad(2)
 		causes the UPS switch back to utility power if utility
 		power is present.
-		                
+
 		Setting this value to noUpsSmartControlTurnOnUpsLoad(1)
 		has no effect.
-		                
+
 		The value noUpsSmartControlTurnOnUpsLoad(1) will always
 		be returned when the variable is read."
    ::= { upsSmartControl 6 }
@@ -998,10 +998,10 @@ upsSmartTestDiagnostics OBJECT-TYPE
 	DESCRIPTION
 		"Setting this variable to testDiagnostics(2) causes
 		the UPS to perform a diagnostic self test.
-		                
+
 		Setting this value to noTestDiagnostics(1) has no
 		effect.
-		                
+
 		The value noTestDiagnostics(1) will always be returned
 		when the variable is read."
    ::= { upsSmartTest 2 }
@@ -1039,9 +1039,9 @@ upsSmartTestIndicators OBJECT-TYPE
 	DESCRIPTION
 		"Setting this variable to testIndicators(2) causes
 		the UPS to perform a front panel indicator (lights) test.
-		                
+
 		Setting this value to noTestIndicators(1) has no effect.
-		                
+
 		The value noTestIndicators(1) will always be returned
 		when the variable is read."
    ::= { upsSmartTest 5 }
@@ -1059,17 +1059,17 @@ upsSmartTestRuntimeCalibration OBJECT-TYPE
 		the UPS to discharge to calibrate the UPS.
 		The test will only start if the battery capacity is 100 percent.
 		The test runs until capacity is less than 25 percent.
-		                
+
 		Setting this variable to cancelCurrentCalibration(3)
 		after setting performCalibration(2) will cancel the
 		current discharge.
-		                
+
 		Setting this variable to noPerformCalibration(1)
 		will have no effect.
-		                
+
 		The value noPerformCalibration(1) will always be returned
 		when the variable is read.
-		                
+
 		The result of the calibration will be saved in
 		upsSmartTestCalibrationResult."
    ::= { upsSmartTest 6 }
@@ -1084,13 +1084,13 @@ upsSmartTestCalibrationResults OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"The results of the last runtime calibration.
-		                
+
 		Value ok(1) means a successful runtime calibration.
-		                
+
 		Value invalidTest(2) indicates last calibration did
 		not take place since the battery capacity was below
 		100 percent.
-		                
+
 		Value calibrationInProgress(3) means a calibration
 		is occurring now."
    ::= { upsSmartTest 7 }
@@ -1811,7 +1811,7 @@ upsEnvUnderHumidity OBJECT-TYPE
 
 communicationLost TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"SEVERE: Communication to the UPS has been lost.  Steps
 		to reestablish communication are in progress."
 	--#TYPE "PPC UPS: Communication failure"
@@ -1828,7 +1828,7 @@ communicationLost TRAP-TYPE
 
 upsOverLoad TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"SEVERE: The UPS has sensed a load greater than 100 percent
 		of its rated capacity."
 	--#TYPE "PPC UPS: UPS overload"
@@ -1845,7 +1845,7 @@ upsOverLoad TRAP-TYPE
 
 upsDiagnosticsFailed TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"SEVERE: The UPS failed its internal diagnostic self-test."
 	--#TYPE "PPC UPS: Failed self-test"
 	--#SUMMARY "The UPS has failed its internal diagnostic self-test."
@@ -1861,7 +1861,7 @@ upsDiagnosticsFailed TRAP-TYPE
 
 upsDischarged TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"SEVERE: The UPS just started a runtime calibration
 		discharge.  The UPS batteries are being discharged."
 	--#TYPE "PPC UPS: Deep discharge"
@@ -1878,7 +1878,7 @@ upsDischarged TRAP-TYPE
 
 upsOnBattery TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The UPS has switched to battery backup power."
 	--#TYPE "PPC UPS: On battery"
 	--#SUMMARY "The UPS has switched to battery backup power."
@@ -1894,7 +1894,7 @@ upsOnBattery TRAP-TYPE
 
 boostOn TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The UPS has enabled Boost."
 	--#TYPE "PPC UPS: SmartBoost"
 	--#SUMMARY "The UPS has enabled Boost."
@@ -1910,7 +1910,7 @@ boostOn TRAP-TYPE
 
 lowBattery TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"SEVERE: The UPS batteries are low and will soon be exhausted.
 		If utility power is not restored the UPS will put itself
 		to 'sleep' and immediately cut power to the load."
@@ -1928,7 +1928,7 @@ lowBattery TRAP-TYPE
 
 communicationEstablished TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"INFORMATION: Communication with the UPS has been
 		established."
 	--#TYPE "PPC UPS: Communication established"
@@ -1945,7 +1945,7 @@ communicationEstablished TRAP-TYPE
 
 powerRestored TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"INFORMATION: Utility power has been restored."
 	--#TYPE "PPC UPS: Utility restored"
 	--#SUMMARY "Normal power has been restored to the UPS."
@@ -1961,7 +1961,7 @@ powerRestored TRAP-TYPE
 
 upsDiagnosticsPassed TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"INFORMATION: The UPS passed its internal self-test."
 	--#TYPE "PPC UPS: Passed self-test"
 	--#SUMMARY "The UPS has passed its internal self-test."
@@ -1977,7 +1977,7 @@ upsDiagnosticsPassed TRAP-TYPE
 
 returnFromLowBattery TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"INFORMATION: The UPS has returned from a low battery
 		condition."
 	--#TYPE "PPC UPS: Battery normal"
@@ -1994,7 +1994,7 @@ returnFromLowBattery TRAP-TYPE
 
 upsTurnedOff TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The UPS has been turned 'off' by the
 		management station."
 	--#TYPE "PPC UPS: Switching off"
@@ -2011,7 +2011,7 @@ upsTurnedOff TRAP-TYPE
 
 upsSleeping TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The UPS is entering 'sleep' mode.  Power
 		to the load will be cut off."
 	--#TYPE "PPC UPS: Going to sleep"
@@ -2028,7 +2028,7 @@ upsSleeping TRAP-TYPE
 
 upsWokeUp TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"INFORMATION: The UPS woke up from 'sleep' mode.  Power
 		to the load has been restored."
 	--#TYPE "PPC UPS: Wake up"
@@ -2045,7 +2045,7 @@ upsWokeUp TRAP-TYPE
 
 upsRebootStarted TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The UPS has started its reboot sequence.  After
 		the specified delay the UPS will perform a reboot."
 	--#TYPE "PPC UPS: Starting reboot"
@@ -2061,265 +2061,265 @@ upsRebootStarted TRAP-TYPE
 
 envOverTemperature TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The environment temperature exceed the normal value."
  ::= 16
 
 
 envTemperatureNormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"INFORMATION: The environment temperature is normal."
  ::= 17
 
 
 envOverHumidity TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The environment humidity exceed the normal value."
  ::= 18
 
 
 envHumidityNormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"INFORMATION: The environment humidity is normal."
  ::= 19
 
 
 envSmokeAbnormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Smoke is abnormal."
  ::= 20
 
 
 envWaterAbnormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Water is abnormal."
  ::= 21
 
 
 envSecurityAbnormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Security is abnormal."
  ::= 22
 
 
 --envSmokeNormal TRAP-TYPE
 --	ENTERPRISE ppc
---	DESCRIPTION 
+--	DESCRIPTION
 --		"INFORMATION: Smoke is normal."
 -- ::= 23
 
 
 envWaterNormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"INFORMATION: Water is normal."
  ::= 24
 
 
 --envSecurityNormal TRAP-TYPE
 --	ENTERPRISE ppc
---	DESCRIPTION 
+--	DESCRIPTION
 --		"INFORMATION: Security is normal."
 -- ::= 25
 
 
 envGasAbnormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Gas Alarm"
  ::= 26
 
 
 upsTemp TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: UPS Temperature Overrun"
  ::= 27
 
 
 upsLoadNormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: UPS Load Normal"
  ::= 28
 
 
 upsTempNormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: UPS temperature Normal"
  ::= 29
 
 
 envUnderTemperature TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The environment temperature below the normal value."
  ::= 30
 
 
 envUnderHumidity TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The environment humidity below the normal value."
  ::= 31
 
 
 upsBypass TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: The UPS is entering 'bypass' mode."
  ::= 32
 
 
 envSecurity1 TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Security1 Alarm."
  ::= 33
 
 
 envSecurity2 TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Security2 Alarm."
  ::= 34
 
 
 envSecurity3 TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Security3 Alarm."
  ::= 35
 
 
 envSecurity4 TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Security4 Alarm."
  ::= 36
 
 
 envSecurity5 TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Security5 Alarm."
  ::= 37
 
 
 envSecurity6 TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Security6 Alarm."
  ::= 38
 
 
 envSecurity7 TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Security7 Alarm."
  ::= 39
 
 
 --envSecurity1Return TRAP-TYPE
 --	ENTERPRISE ppc
---	DESCRIPTION 
+--	DESCRIPTION
 --		"WARNING: Security1 Normal."
 -- ::= 40
 
 
 --envSecurity2Return TRAP-TYPE
 --	ENTERPRISE ppc
---	DESCRIPTION 
+--	DESCRIPTION
 --		"WARNING: Security2 Normal"
 -- ::= 41
 
 
 --envSecurity3Return TRAP-TYPE
 --	ENTERPRISE ppc
---	DESCRIPTION 
+--	DESCRIPTION
 --		"WARNING: Security3 Normal."
 -- ::= 42
 
 
 --envSecurity4Return TRAP-TYPE
 --	ENTERPRISE ppc
---	DESCRIPTION 
+--	DESCRIPTION
 --		"WARNING: Security4 Normal."
 -- ::= 43
 
 
 --envSecurity5Return TRAP-TYPE
 --	ENTERPRISE ppc
---	DESCRIPTION 
+--	DESCRIPTION
 --		"WARNING: Security5 Normal."
 -- ::= 44
 
 
 --envSecurity6Return TRAP-TYPE
 --	ENTERPRISE ppc
---	DESCRIPTION 
+--	DESCRIPTION
 --		"WARNING: Security6 Normal."
 -- ::= 45
 
 
 --envSecurity7Return TRAP-TYPE
 --	ENTERPRISE ppc
---	DESCRIPTION 
+--	DESCRIPTION
 --		"WARNING: Security7 Normal."
 -- ::= 46
 
 
 upsRecroterror TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Rectifier Rotation Error"
  ::= 47
 
 
 upsBypassFreFail TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Bypass Frequency Fail"
  ::= 48
 
 
 upsBypassacnormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Bypass AC Normal"
  ::= 49
 
 
 upsBypassacabnormal TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: Bypass AC Abnormal"
  ::= 50
 
 
 upsTest TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: UPS Test"
  ::= 51
 
 
 upsScheduleShutdown TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: UPS Schedule Shutdown"
  ::= 52
 
 upsBypassReturn TRAP-TYPE
 	ENTERPRISE ppc
-	DESCRIPTION 
+	DESCRIPTION
 		"The UPS return from Bypass Mode"
  ::= 53
 

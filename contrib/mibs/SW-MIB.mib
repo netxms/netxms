@@ -38,7 +38,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 		  Fax: +1-408-392-6656
 		  Email: support@Brocade.COM
 		  WEB: www.brocade.com"
-		
+
 
     DESCRIPTION	"The MIB module	is for Brocade's Fibre Channel Switch.
                  Copyright (c) 1996-2003 Brocade Communications Systems, Inc.
@@ -73,7 +73,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 				trap SWFCPortScn"
 	REVISION	"200706271030Z" -- Jun 27, 2007 10:30am
 	DESCRIPTION "Added enumerations octuple and decuple for swNbBaudRate"
-	REVISION	"200708011220Z" -- Aug 01, 2007 12:20pm 
+	REVISION	"200708011220Z" -- Aug 01, 2007 12:20pm
 	DESCRIPTION "Added the enumerations swFwEPortUtil and swFwEPortPktl for swFwClassAreaIndex"
 	REVISION	"200708290442Z" -- Aug 29, 2007 4:42pm
 	DESCRIPTION "Added swFCPortBrcdType object to swFCPortTable"
@@ -93,7 +93,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	REVISION    "200902210900Z" -- Feb 21, 2008 9:00pm
 	DESCRIPTION "Added port phy states."
     REVISION    "200903300900Z" -- Mar 30, 2009 9:00am
-    DESCRIPTION "Added swEventVfId in swEventTable."	
+    DESCRIPTION "Added swEventVfId in swEventTable."
     REVISION    "200906251200Z" -- Jun 25, 2009 12:00pm
     DESCRIPTION "Removed the version information from Brocade's proprietary MIB file name."
     REVISION    "200906290100Z" -- Jun 29, 2009 01:00pm
@@ -101,12 +101,12 @@ SW-MIB DEFINITIONS ::= BEGIN
     REVISION    "200906301306Z" -- June 30, 2009 1:06pm
     DESCRIPTION "Added swFwCPUMemUsage enumeration under swFwClassAreaIndex."
     REVISION    "200906300600Z" -- Jun 30, 2009 06:00pm
-    DESCRIPTION "Updated the description of swCpuAction/swMemAction and access of 
-		 swcpuormemoryusage objects and changed the type of swEndDeviceInvalidWord, 
-		 swEndDeviceLinkFailure,swEndDeviceSyncLoss, swEndDeviceSigLoss, 
+    DESCRIPTION "Updated the description of swCpuAction/swMemAction and access of
+		 swcpuormemoryusage objects and changed the type of swEndDeviceInvalidWord,
+		 swEndDeviceLinkFailure,swEndDeviceSyncLoss, swEndDeviceSigLoss,
 		 swEndDeviceProtoErr,swEndDeviceInvalidCRC from integer32 to counter32."
     REVISION    "200910300500Z" -- Oct 30, 2009 05:00pm
-    DESCRIPTION "Added swFabricReconfigTrap and swFabricSegmentTrap."        
+    DESCRIPTION "Added swFabricReconfigTrap and swFabricSegmentTrap."
     REVISION    "200911031306Z" -- Nov 03, 2009 1:06pm
     DESCRIPTION "Removed enum switchReboot from swAdmStatus."
     REVISION    "200911051200Z" -- Nov 05, 2009 12:00pm
@@ -118,7 +118,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	DESCRIPTION "Added swConnUnitExtensionTable and entries for 64 bit
 				portstats."
 	REVISION    "200911301030Z" -- Nov 30, 2009 10:30am
-	DESCRIPTION "Added swMemUsageLimit1 and swMemUsageLimit3 under 
+	DESCRIPTION "Added swMemUsageLimit1 and swMemUsageLimit3 under
 				swCpuOrMemoryUsage"
 	REVISION    "200912031730Z" -- Dec 03, 2009 05:30pm
 	DESCRIPTION "Added swExttrap as internal trap."
@@ -127,18 +127,18 @@ SW-MIB DEFINITIONS ::= BEGIN
 	REVISION    "201007081130Z" -- July 08, 2010 11:30am
 	DESCRIPTION "Obsoleted swGroupTable, swGroupMemTable from swGroup."
 	REVISION    "201007151130Z" -- July 15, 2010 11:30am
-	DESCRIPTION "Added swFCPortWwn, swFCPortBrcdType in swFcPortScn and added 
-				swStateChangeTrap" 
+	DESCRIPTION "Added swFCPortWwn, swFCPortBrcdType in swFcPortScn and added
+				swStateChangeTrap"
 	REVISION    "201007211130Z" -- July 21, 2010 11:30am
-	DESCRIPTION "Added trap swPortMoveTrap" 
+	DESCRIPTION "Added trap swPortMoveTrap"
 	REVISION    "201008061130Z" -- Aug 06, 2010 11:30am
-	DESCRIPTION "Added trap portStats objects under SwConnUnitPortStatEntry" 
+	DESCRIPTION "Added trap portStats objects under SwConnUnitPortStatEntry"
     REVISION    "201008201030Z" -- Aug 20, 2010 10:30am
     DESCRIPTION "Added trap swBrcdGenericTrap"
     REVISION    "201010071030Z" -- Oct 07, 2010 10:30am
     DESCRIPTION "Added swVfName"
     REVISION    "201010091030Z" -- Oct 09, 2010 10:30am
-	DESCRIPTION "Added swPortConfigTable" 
+	DESCRIPTION "Added swPortConfigTable"
     REVISION    "201010251030Z" -- Oct 25, 2010 10:30am
 	DESCRIPTION "Added swFCPortPrevType in swFCPortScn"
 	REVISION    "201011010600Z" -- Nov 1, 2010 06:00pm
@@ -153,7 +153,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	DESCRIPTION "Updated the datatype for swPortEncrypt and swPortCompression"
 	REVISION    "201012201000Z" -- Dec 20, 2010 06:00pm
 	DESCRIPTION "Added enumeration sexdecuple for swNbBaudRate"
-    REVISION    "201012210400Z" -- Dec 21, 2010 04:00pm         		    
+    REVISION    "201012210400Z" -- Dec 21, 2010 04:00pm
 	DESCRIPTION "Added a new value lowBufferCrsd(7) for swFwLastEvent"
 	REVISION    "201012221000Z" -- Dec 22,2010 06:00pm
 	DESCRIPTION "Changed the area name filter-fmcfg to filterFmCfg in SwFwClassesAreas"
@@ -188,7 +188,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	DESCRIPTION "Removed the tab space and added the space key for swFCPortEntry 38
 				as this caused a crash in MIB browser"
 	REVISION    "201303211300Z" -- Mar 21, 2013 01:00pm
-    DESCRIPTION "Added swFCPortDisableReason in SwFCPortEntry and swFCPortScn 
+    DESCRIPTION "Added swFCPortDisableReason in SwFCPortEntry and swFCPortScn
 		         trap."
 	REVISION	"201304041748Z" -- Apr 4,2013 05:48pm
 	DESCRIPTION "Added unroutable frame counter in swConnUnitPortStatEntry"
@@ -201,7 +201,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	REVISION    "201306051600Z" -- June 5, 2013 04:00pm
     DESCRIPTION "Added swFwPowerOnHours in SwFwClassesAreas"
 	REVISION    "201306291000Z" -- June 29, 2013 10:00am
-	DESCRIPTION "Updated the description for swCpuUsageLimit, swCpuAction, 
+	DESCRIPTION "Updated the description for swCpuUsageLimit, swCpuAction,
 				 swMemAction, swMemUsageLimit1 and swMemUsageLimit3."
 
 	REVISION    "201309121000Z" -- Sep 12, 2013 10:00am
@@ -236,7 +236,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	REVISION "201412091700Z" -- Dec 9, 2014 17:00pm
 	DESCRIPTION "swFWLastUpdated obsolete"
 	::=	{ bcsiModules 3 }
-	
+
     sw		    OBJECT-IDENTITY
      STATUS  current
      DESCRIPTION   "The OID sub-tree for Brocade's Silkworm Series of
@@ -273,7 +273,7 @@ SW-MIB DEFINITIONS ::= BEGIN
                informational   (4),
                debug           (5)
             }
-            
+
   FcPortFlag		::= TEXTUAL-CONVENTION
      STATUS  current
      DESCRIPTION   "Represents the port status for a FC Flag. Currently this will indicate
@@ -344,7 +344,7 @@ SW-MIB DEFINITIONS ::= BEGIN
   swTrunk      OBJECT-IDENTITY
      STATUS  current
      DESCRIPTION   "The OID sub-tree for swTrunk group."
-     ::= { sw 24 }   
+     ::= { sw 24 }
 
   swTopTalker   OBJECT-IDENTITY
      STATUS  obsolete
@@ -363,7 +363,7 @@ SW-MIB DEFINITIONS ::= BEGIN
      DESCRIPTION    "This represents the Conn unit Port Stats"
      ::= { sw 27 }
 
--- sw 28 is assigned to faExt 	
+-- sw 28 is assigned to faExt
 
   --
   -- the System Group (sw)
@@ -779,7 +779,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 
   swIPv6Address OBJECT-TYPE
         SYNTAX DisplayString
-        MAX-ACCESS not-accessible 
+        MAX-ACCESS not-accessible
         STATUS  current
         DESCRIPTION
         "IPV6 address."
@@ -792,7 +792,7 @@ SW-MIB DEFINITIONS ::= BEGIN
               ipdeprecated (3),
               inactive  (4)
             }
-    MAX-ACCESS     not-accessible 
+    MAX-ACCESS     not-accessible
     STATUS      current
     DESCRIPTION "The current status of ipv6 address."
   ::= { swSystem 30 }
@@ -803,7 +803,7 @@ SW-MIB DEFINITIONS ::= BEGIN
               switch7500E (2),
               other (3)
             }
-    MAX-ACCESS    read-only 
+    MAX-ACCESS    read-only
     STATUS      current
     DESCRIPTION "Indicates whether the switch is 7500 or 7500E ."
   ::= { swSystem 31 }
@@ -851,9 +851,9 @@ SW-MIB DEFINITIONS ::= BEGIN
 				ex-port			(7),
 				d-port          (8)   -- Diagnostic port
 			}
-	MAX-ACCESS  not-accessible 
+	MAX-ACCESS  not-accessible
 	STATUS      current
-	DESCRIPTION "This represents port type of a port before 
+	DESCRIPTION "This represents port type of a port before
 				it goes online/offline and it is valid only in swFcPortSCN trap"
     ::= { swSystem 35 }
 
@@ -866,7 +866,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	MAX-ACCESS  not-accessible
 	STATUS      current
 	DESCRIPTION "This represents the attached device status.
-		The status will change whenever port/node goes to 
+		The status will change whenever port/node goes to
 		online/offline"
 	::= { swSystem 36 }
 
@@ -1014,7 +1014,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	MAX-ACCESS		read-only
 	STATUS		current
 	DESCRIPTION	"The current state of the ISL.
-			 The swNbIslState will be 0 when ISL 
+			 The swNbIslState will be 0 when ISL
 			 is in incompatible state or port is a slave port."
   ::= { swNbEntry 6 }
 
@@ -1038,7 +1038,7 @@ SW-MIB DEFINITIONS ::= BEGIN
         SYNTAX          SEQUENCE OF SwFabricMemEntry
         MAX-ACCESS          not-accessible
         STATUS          current
-        DESCRIPTION     "This table contains information on the member 
+        DESCRIPTION     "This table contains information on the member
                          switches of a fabric. This may not be available on
                          all versions of Fabric OS."
   ::= { swFabric 10 }
@@ -1137,24 +1137,24 @@ SW-MIB DEFINITIONS ::= BEGIN
               moveport (2),
               fidchange (3),
 			  basechange (4),
-			  vfstatechange(6)	
+			  vfstatechange(6)
             }
 	MAX-ACCESS  not-accessible
 	STATUS      current
 	DESCRIPTION "Indicates Partition manager event type."
   ::= { swFabric 12 }
 
-  swPmgrEventTime OBJECT-TYPE 
+  swPmgrEventTime OBJECT-TYPE
 	SYNTAX          DisplayString(SIZE (0..64))
-	MAX-ACCESS     not-accessible 
+	MAX-ACCESS     not-accessible
 	STATUS          current
 	DESCRIPTION     "This object identifies the date and time when this pmgr
 			 event occurred, in textual format."
   ::= { swFabric 13 }
 
-  swPmgrEventDescr OBJECT-TYPE 
+  swPmgrEventDescr OBJECT-TYPE
 	SYNTAX          DisplayString(SIZE (0..64))
-	MAX-ACCESS      not-accessible    
+	MAX-ACCESS      not-accessible
 	STATUS          current
 	DESCRIPTION     "This object identifies the textual description of
                 the pmgr event."
@@ -1193,16 +1193,16 @@ SW-MIB DEFINITIONS ::= BEGIN
   	SYNTAX		OCTET STRING(SIZE(1..32))
   	MAX-ACCESS		read-write
   	STATUS			current
-  	DESCRIPTION "This entry is created specific to the Pharos switch 
+  	DESCRIPTION "This entry is created specific to the Pharos switch
   		to change the password for the auth protocol to reserved user
   		DirectorServerSNMPv3User"
   ::= { swAgtCfg 12 }
-  
+
   swprivProtocolPassword  OBJECT-TYPE
   	SYNTAX		OCTET STRING(SIZE(1..32))
   	MAX-ACCESS		read-write
   	STATUS			current
-  	DESCRIPTION "This entry is created specific to the Pharos switch 
+  	DESCRIPTION "This entry is created specific to the Pharos switch
   		to change the password for the priv protocol to reserved user
   		DirectorServerSNMPv3User"
   ::= { swAgtCfg 13 }
@@ -1306,7 +1306,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 
 	swFCPortLinkState	INTEGER,
 	swFCPortTxType		INTEGER,
-	
+
 	-- the rest is mapped to gstat_t
 	swFCPortTxWords		Counter32,
 	swFCPortRxWords		Counter32,
@@ -1345,7 +1345,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 
 	-- new for PortSpecifier Feature.
 	swFCPortSpecifier    DisplayString,
-	
+
 	-- new for portFlag Feature.
 	swFCPortFlag	FcPortFlag,
 
@@ -1736,10 +1736,10 @@ SW-MIB DEFINITIONS ::= BEGIN
 	STATUS      current
 	DESCRIPTION "This string indicates the physical port number of the addressed port.
 				The format of the string is: <slot>/port, where 'slot' being
-				present only for bladed systems. 
+				present only for bladed systems.
 				"
   ::= { swFCPortEntry 37 }
-  
+
   -- FC port status flag
 
   swFCPortFlag		OBJECT-TYPE
@@ -1770,233 +1770,233 @@ SW-MIB DEFINITIONS ::= BEGIN
 
   swFCPortDisableReason     OBJECT-TYPE
  			SYNTAX INTEGER {
- 				r-recover-fail                     (1),             -- general recovery failure 
- 				r-invalid-reason                   (2),              -- invalid reason 
- 				r-forced                           (3),              -- forced to disable 
- 				r-sw-disabled                      (4),              -- switch got disabled 
- 				r-bl-disabled                      (5),              -- blade got disabled 
- 				r-slot-off                         (6),              -- slot is turned off 
- 				r-sw-enabled                       (7),              -- switch got enabled 
- 				r-bl-enabled                       (8),              -- blade got enabled 
- 				r-slot-on                          (9),              -- slot turned on 
- 				r-persistid                        (10),              -- port disabled: persistant d-id 
- 				r-sw-violation                     (11),              -- port disabled: switch sec violation 
- 				r-prv-dev-violation                (12),             -- port disabled: prv dev sec violation 
- 				r-pub-dev-violation                (13),             -- port disabled: pub dev sec violation 
- 				r-port-data-fail                   (14),             -- online chip asic data fail 
- 				r-online-incomplete                (15),             -- online incompleted 
- 				r-online-route-fail                (16),             -- online route recovery failure 
- 				r-inconsistent                     (17),             -- port failed consistency check 
- 				r-set-vcc-fail                     (18),             -- set vcc credits ioctl failed 
- 				r-ecp-in-testing                   (19),             -- recvd ecp in switchtesting state 
- 				r-elp-in-testing                   (20),             -- recvd elp in switchtesting state 
- 				r-ecp-retries-exceeded             (21),             -- ecp retries exceeeded 
- 				r-invalid-ecp-state                (22),             -- ecp retr in invalid state 
- 				r-bad-ecp-rcvd                     (23),             -- ecp fctl len not valid 
- 				r-send-rtmark-fail                 (24),             -- send roundtrip mark ioctl failure 
- 				r-send-ecp-fail                    (25),             -- send ecp failure 
- 				r-save-link-rtt-fail               (26),             -- saving link roundtrip time failure 
- 				r-em-incnst                        (27),             -- em has a different state than blade/pic 
- 				r-pci-attach-fail                  (28),             -- pci bus scan/attach failed 
- 				r-buf-starv                        (29),             -- port disabled: due to buffer starvation 
- 				r-elp-fctl-mismatch                (30),             -- flow control mode different in elp acc 
- 				r-eport-disabled                   (31),             -- e-port disabled 
- 				r-trunk-with-vcxlt                 (32),             -- trunk and vcxltinit enabled 
- 				r-sw-fl-port-not-ready             (33),             -- sw not ready for f or l ports 
- 				r-link-reinit                      (34),             -- port disabled: due to too many link re-inits 
- 				r-domain-id-change                 (35),             -- domain id change 
- 				r-auth-rejected                    (36),             -- authentication is rejected 
- 				r-auth-timeout                     (37),             -- authentication timeout 
- 				r-auth-fail-retry                  (38),             -- fail to retry authentication 
- 				r-fcr-conf-mismatch1               (39),             -- brcd mode mcdata switch connected 
- 				r-fcr-conf-mismatch2               (40),             -- mcdt mode  brcd switch connected 
- 				r-fcr-port-ld-mode-mismatch        (41),             -- port is not configured ld 
- 				r-fcr-ld-credit-mismatch           (42),             -- port in ld mode incoming elp is r-rdy 
- 				r-fcr-set-vcc-failed               (43),             -- setting vcc failed for the port 
- 				r-fcr-set-rtc-failed               (44),             -- setting rt credit failed for the port 
- 				r-fcr-elp-ver-inconsis             (45),             -- version of elp is inconsistent 
- 				r-fcr-elp-fctl-mismatch            (46),             -- invalid flow control parameter 
- 				r-fcr-pid-mismatch                 (47),             -- pid mismatch 
- 				r-fcr-tov-mismatch                 (48),             -- tov mismatch 
- 				r-fcr-ld-incompat                  (49),             -- long distance incompatability 
- 				r-fcr-isolated                     (50),             -- long distance incompatability 
- 				r-elp-retries-exceeded             (51),             -- exceeded max elp retries 
- 				r-fcr-exports-exceeded             (52),             -- fcr too many ex ports online 
- 				r-fcr-license                      (53),             -- fcr not licensed 
+ 				r-recover-fail                     (1),             -- general recovery failure
+ 				r-invalid-reason                   (2),              -- invalid reason
+ 				r-forced                           (3),              -- forced to disable
+ 				r-sw-disabled                      (4),              -- switch got disabled
+ 				r-bl-disabled                      (5),              -- blade got disabled
+ 				r-slot-off                         (6),              -- slot is turned off
+ 				r-sw-enabled                       (7),              -- switch got enabled
+ 				r-bl-enabled                       (8),              -- blade got enabled
+ 				r-slot-on                          (9),              -- slot turned on
+ 				r-persistid                        (10),              -- port disabled: persistant d-id
+ 				r-sw-violation                     (11),              -- port disabled: switch sec violation
+ 				r-prv-dev-violation                (12),             -- port disabled: prv dev sec violation
+ 				r-pub-dev-violation                (13),             -- port disabled: pub dev sec violation
+ 				r-port-data-fail                   (14),             -- online chip asic data fail
+ 				r-online-incomplete                (15),             -- online incompleted
+ 				r-online-route-fail                (16),             -- online route recovery failure
+ 				r-inconsistent                     (17),             -- port failed consistency check
+ 				r-set-vcc-fail                     (18),             -- set vcc credits ioctl failed
+ 				r-ecp-in-testing                   (19),             -- recvd ecp in switchtesting state
+ 				r-elp-in-testing                   (20),             -- recvd elp in switchtesting state
+ 				r-ecp-retries-exceeded             (21),             -- ecp retries exceeeded
+ 				r-invalid-ecp-state                (22),             -- ecp retr in invalid state
+ 				r-bad-ecp-rcvd                     (23),             -- ecp fctl len not valid
+ 				r-send-rtmark-fail                 (24),             -- send roundtrip mark ioctl failure
+ 				r-send-ecp-fail                    (25),             -- send ecp failure
+ 				r-save-link-rtt-fail               (26),             -- saving link roundtrip time failure
+ 				r-em-incnst                        (27),             -- em has a different state than blade/pic
+ 				r-pci-attach-fail                  (28),             -- pci bus scan/attach failed
+ 				r-buf-starv                        (29),             -- port disabled: due to buffer starvation
+ 				r-elp-fctl-mismatch                (30),             -- flow control mode different in elp acc
+ 				r-eport-disabled                   (31),             -- e-port disabled
+ 				r-trunk-with-vcxlt                 (32),             -- trunk and vcxltinit enabled
+ 				r-sw-fl-port-not-ready             (33),             -- sw not ready for f or l ports
+ 				r-link-reinit                      (34),             -- port disabled: due to too many link re-inits
+ 				r-domain-id-change                 (35),             -- domain id change
+ 				r-auth-rejected                    (36),             -- authentication is rejected
+ 				r-auth-timeout                     (37),             -- authentication timeout
+ 				r-auth-fail-retry                  (38),             -- fail to retry authentication
+ 				r-fcr-conf-mismatch1               (39),             -- brcd mode mcdata switch connected
+ 				r-fcr-conf-mismatch2               (40),             -- mcdt mode  brcd switch connected
+ 				r-fcr-port-ld-mode-mismatch        (41),             -- port is not configured ld
+ 				r-fcr-ld-credit-mismatch           (42),             -- port in ld mode incoming elp is r-rdy
+ 				r-fcr-set-vcc-failed               (43),             -- setting vcc failed for the port
+ 				r-fcr-set-rtc-failed               (44),             -- setting rt credit failed for the port
+ 				r-fcr-elp-ver-inconsis             (45),             -- version of elp is inconsistent
+ 				r-fcr-elp-fctl-mismatch            (46),             -- invalid flow control parameter
+ 				r-fcr-pid-mismatch                 (47),             -- pid mismatch
+ 				r-fcr-tov-mismatch                 (48),             -- tov mismatch
+ 				r-fcr-ld-incompat                  (49),             -- long distance incompatability
+ 				r-fcr-isolated                     (50),             -- long distance incompatability
+ 				r-elp-retries-exceeded             (51),             -- exceeded max elp retries
+ 				r-fcr-exports-exceeded             (52),             -- fcr too many ex ports online
+ 				r-fcr-license                      (53),             -- fcr not licensed
  				r-fcr-conf-ex                      (54),             -- fcr conflicting ex-port aleady online
- 				r-fcr-ftag-over                    (55),             -- fcr fabric id oversubscribed 
- 				r-fcr-ftag-conflict                (56),             -- fcr fabric id conflict 
- 				r-fcr-fowner-conflict              (57),             -- fcr fabric owner conflict 
- 				r-fcr-zone-resource                (58),             -- fcr exceeded max number of zone resources 
- 				r-fcr-port-state-to                (59),             -- fcr failed to init in time 
- 				r-fcr-authn-reject                 (60),             -- fcr authentication failure 
- 				r-fcr-sec-fcs-list                 (61),             -- fcr invalid member(s) in fcs list 
- 				r-fcr-sec-failure                  (62),             -- fcr fail to join secure fabric 
- 				r-fcr-incompatible-mode            (63),             -- fcr incompatible port mode 
- 				r-fcr-sec-scc-list                 (64),             -- fcr invalid member(s) in scc list 
+ 				r-fcr-ftag-over                    (55),             -- fcr fabric id oversubscribed
+ 				r-fcr-ftag-conflict                (56),             -- fcr fabric id conflict
+ 				r-fcr-fowner-conflict              (57),             -- fcr fabric owner conflict
+ 				r-fcr-zone-resource                (58),             -- fcr exceeded max number of zone resources
+ 				r-fcr-port-state-to                (59),             -- fcr failed to init in time
+ 				r-fcr-authn-reject                 (60),             -- fcr authentication failure
+ 				r-fcr-sec-fcs-list                 (61),             -- fcr invalid member(s) in fcs list
+ 				r-fcr-sec-failure                  (62),             -- fcr fail to join secure fabric
+ 				r-fcr-incompatible-mode            (63),             -- fcr incompatible port mode
+ 				r-fcr-sec-scc-list                 (64),             -- fcr invalid member(s) in scc list
  				r-fcr-generic                      (65),             -- fcr generic error (should not happen)
  				r-sw-ex-port-not-ready             (66),
- 				r-fcr-class-f-incompat             (67),             -- class-f incompatability 
- 				r-fcr-class-n-incompat             (68),             -- class-n incompatability 
- 				r-fcr-invalid-flow-rcvd            (69),             -- invalid flow control recieved 
+ 				r-fcr-class-f-incompat             (67),             -- class-f incompatability
+ 				r-fcr-class-n-incompat             (68),             -- class-n incompatability
+ 				r-fcr-invalid-flow-rcvd            (69),             -- invalid flow control recieved
  				r-fcr-state-disabled               (70),
- 				r-fdd-strict-exist                 (71),             -- strict fabric wide policy  peer is non-acl switch 
+ 				r-fdd-strict-exist                 (71),             -- strict fabric wide policy  peer is non-acl switch
  				r-last-port-disable-msg            (72),
- 				r-sw-l-port-not-support            (73),             -- port does not support l-port 
- 				r-peer-port-in-di-zone             (74),             -- zone member of peer port is on pre-quantum switch 
- 				r-zone-incompat                    (75),             -- neighbor cannot handle zone db and won't segment 
- 				r-sw-config-l-port-not-support     (76),             -- port does not support configed l-port 
- 				r-sw-port-mirror-configured        (77),             -- port disabled: due to port mirroring configured 
- 				r-nportlogin-inprogress            (78),             -- port disabled: n-port login in progress 
- 				r-nonpiv                           (79),             -- port disabled: no npiv support 
- 				r-nomapping                        (80),             -- f-port is not mapped to a n-port 
- 				r-unknowntype                      (81),             -- 289315  296266: port type not detected 
- 				r-nportoffline                     (82),             -- n-port for this f-port is offline 
- 				r-flogifailed                      (83),             -- fabric login failed for port 
- 				r-nportbusy                        (84),             -- n-port is busy handling other login requests 
- 				r-noflogi                          (85),             -- no flogi received on f-port 
- 				r-noflogiresp                      (86),             -- no flogi response received on n-port 
- 				r-flogidupalpa                     (87),             -- fdisc response received duplicate/zero al-pa 
- 				r-loopcfg                          (88),             -- detected loop configuration 
+ 				r-sw-l-port-not-support            (73),             -- port does not support l-port
+ 				r-peer-port-in-di-zone             (74),             -- zone member of peer port is on pre-quantum switch
+ 				r-zone-incompat                    (75),             -- neighbor cannot handle zone db and won't segment
+ 				r-sw-config-l-port-not-support     (76),             -- port does not support configed l-port
+ 				r-sw-port-mirror-configured        (77),             -- port disabled: due to port mirroring configured
+ 				r-nportlogin-inprogress            (78),             -- port disabled: n-port login in progress
+ 				r-nonpiv                           (79),             -- port disabled: no npiv support
+ 				r-nomapping                        (80),             -- f-port is not mapped to a n-port
+ 				r-unknowntype                      (81),             -- 289315  296266: port type not detected
+ 				r-nportoffline                     (82),             -- n-port for this f-port is offline
+ 				r-flogifailed                      (83),             -- fabric login failed for port
+ 				r-nportbusy                        (84),             -- n-port is busy handling other login requests
+ 				r-noflogi                          (85),             -- no flogi received on f-port
+ 				r-noflogiresp                      (86),             -- no flogi response received on n-port
+ 				r-flogidupalpa                     (87),             -- fdisc response received duplicate/zero al-pa
+ 				r-loopcfg                          (88),             -- detected loop configuration
  				r-noenclicense                     (89),             -- n-port's configured fi-port not licensed (enc1&2)
- 				r-nofiportmapping                  (90),             -- n-port has no configured fi-port 
- 				r-brcdfabconn                      (91),             -- n-port connected to brocade fabric - not supported on agmace 
- 				r-port-reset                       (92),             -- the port needs to be disabled and enabled 
- 				r-floginport                       (93),             -- flogi received on port configured as n-port 
- 				r-fdd-strict-conflict              (94),             -- fabric wide strict policy conflict 
- 				r-fdd-cfg-conflict                 (95),             -- fabric wide cfg conflict 
- 				r-fdd-cfg-conflict-na-neigh        (96),             -- fabric wide cfg conflict  neighbor is non-acl switch 
+ 				r-nofiportmapping                  (90),             -- n-port has no configured fi-port
+ 				r-brcdfabconn                      (91),             -- n-port connected to brocade fabric - not supported on agmace
+ 				r-port-reset                       (92),             -- the port needs to be disabled and enabled
+ 				r-floginport                       (93),             -- flogi received on port configured as n-port
+ 				r-fdd-strict-conflict              (94),             -- fabric wide strict policy conflict
+ 				r-fdd-cfg-conflict                 (95),             -- fabric wide cfg conflict
+ 				r-fdd-cfg-conflict-na-neigh        (96),             -- fabric wide cfg conflict  neighbor is non-acl switch
  				r-fcr-insistent-front-did-mismatch (97),
  				r-fcr-fabric-binding-failure       (98),
- 				r-fcr-non-standard-domain-offset   (99),            -- port disabled: non-standard domain offset in esc 
- 				r-area-in-use                      (100),             -- area in use 
- 				r-mstr-diff-pg                     (101),             -- master has different port group than slave 
- 				r-mstr-diff-area                   (102),            -- master has different area than slave 
- 				r-ta-not-supported                 (103),            -- trunk area not supported 
- 				r-eport-not-supported              (104),            -- e-port not suppored on port type 
- 				r-fport-not-supported              (105),            -- f-port not suppored on port type 
- 				r-cfg-not-supported                (106),            -- port cfg not supported 
- 				r-port-ll-th-exceeded              (107),            -- port class link loss threshold exceeded 
- 				r-port-synl-th-exceeded            (108),            -- port class sync loss threshold exceeded 
- 				r-port-pe-th-exceeded              (109),            -- port class protocol errors threshold exceeded 
- 				f-port-disable-no-trk-lic          (110),           -- no trunking license and f port trunk enabled 
- 				r-port-inw-th-exceeded             (111),            -- port class invalid words threshold exceeded 
- 				r-port-crc-th-exceeded             (112),            -- port class invalid crc threshold exceeded 
- 				f-port-tr-disable-speed-not-ok     (113),            -- speed is not 2, 4 or 8g 
- 				r-port-auto-disable                (114),            -- disabled due to port auto disable 
- 				r-fcr-export-in-non-base-sw        (115),            -- ex port is online in non base switch 
- 				r-base-switch-supports-no-device   (116),           -- base switch does not support device 
- 				r-port-trunk-proto-error           (117),            -- invalid trunk state for ac-port 
- 				r-no-area-avail                    (118),            -- no more area is available for dynamic assignment 
+ 				r-fcr-non-standard-domain-offset   (99),            -- port disabled: non-standard domain offset in esc
+ 				r-area-in-use                      (100),             -- area in use
+ 				r-mstr-diff-pg                     (101),             -- master has different port group than slave
+ 				r-mstr-diff-area                   (102),            -- master has different area than slave
+ 				r-ta-not-supported                 (103),            -- trunk area not supported
+ 				r-eport-not-supported              (104),            -- e-port not suppored on port type
+ 				r-fport-not-supported              (105),            -- f-port not suppored on port type
+ 				r-cfg-not-supported                (106),            -- port cfg not supported
+ 				r-port-ll-th-exceeded              (107),            -- port class link loss threshold exceeded
+ 				r-port-synl-th-exceeded            (108),            -- port class sync loss threshold exceeded
+ 				r-port-pe-th-exceeded              (109),            -- port class protocol errors threshold exceeded
+ 				f-port-disable-no-trk-lic          (110),           -- no trunking license and f port trunk enabled
+ 				r-port-inw-th-exceeded             (111),            -- port class invalid words threshold exceeded
+ 				r-port-crc-th-exceeded             (112),            -- port class invalid crc threshold exceeded
+ 				f-port-tr-disable-speed-not-ok     (113),            -- speed is not 2, 4 or 8g
+ 				r-port-auto-disable                (114),            -- disabled due to port auto disable
+ 				r-fcr-export-in-non-base-sw        (115),            -- ex port is online in non base switch
+ 				r-base-switch-supports-no-device   (116),           -- base switch does not support device
+ 				r-port-trunk-proto-error           (117),            -- invalid trunk state for ac-port
+ 				r-no-area-avail                    (118),            -- no more area is available for dynamic assignment
  				r-cannot-unbind-existing-area      (119),
  				r-cannot-use-10bit-area            (120),
- 				r-authentication-required          (121),            -- hba authentication required 
- 				r-port-lr-th-exceeded              (122),            -- port class link reset threshold exceeded 
- 				r-fcr-export-lf-conflict           (123),            -- ex and lf conflict 
- 				r-incompat                         (124),            -- switch incompatible 
- 				r-did-overlap                      (125),            -- domain id overlap 
- 				r-zone-conflict                    (126),            -- zone overlap 
- 				r-eport-seg                        (127),            -- generic eport segment 
- 				r-no-license                       (128),            -- no license 
- 				r-platform-db                      (129),            -- incompatible platform db 
- 				r-sec-incompat                     (130),            -- security incompatibility 
- 				r-sec-violation                    (131),            -- security violation 
- 				r-ecp-longdist                     (132),            -- ecp rejected or retries exceeded 
- 				r-dup-wwn                          (133),            -- duplication wwn in fabric 
- 				r-eport-isolated                   (134),            -- eport isolated 
- 				r-ad                               (135),            -- ad header conflict 
- 				r-esc-did-offset                   (136),            -- domain id offset conflict 
- 				r-esc-etiz                         (137),            -- esc enhanced ti zone conflict 
- 				r-esc-fid                          (138),            -- esc fabric id conflict 
- 				r-safe-zone                        (139),            -- mcdata safezone conflict 
- 				r-vf                               (140),            -- vf ad conflict 
- 				r-vf-bs-incompat                   (141),            -- vf bs conflict 
- 				r-pers-pid-on-lport                (142),            -- persistent pid isnt supported on l port 
- 				r-pers-pid-portaddr-collision      (143),            -- pers pid and port address binding collision 
- 				r-pers-pid-port-on-same-area       (144),            -- another port online with same area 
- 				r-pers-pid-port-addr-bnd           (145),            -- pers pid and port address binding collision port addr bound 
- 				r-msfr                             (146),            -- msfr/rd conflict 
- 				r-sw-halfbw-lic                    (147),            -- half bandwidth license only 
- 				r-1g-mode-incompat                 (148),            -- the port is incompatible in the 1g mode 
- 				r-10g-mode-incompat                (149),            -- the port is incompatible in the 10g mode 
- 				r-dual-mode-incompat               (150),            -- the port is incompatible in the 10g mode 
- 				r-implict-plt-service-block        (151),            -- enabling of platform service implicitly was blocked 
- 				r-port-st-th-exceeded              (152),            -- port class st threshold exceeded 
- 				r-port-c3txto-th-exceeded          (153),            -- port class c3 tx to threshold exceeded 
- 				r-eport-not-supported-def-sw       (154),            -- uppermost 8 ports on quattro blade on dcx on def-sw have no eport supp 
- 				r-eport-ll-th-exceeded             (155),            -- eport class link loss threshold exceeded 
- 				r-eport-synl-th-exceeded           (156),            -- eport class sync loss threshold exceeded 
- 				r-eport-pe-th-exceeded             (157),            -- eport class protocol errors threshold exceeded 
- 				r-eport-inw-th-exceeded            (158),            -- eport class invalid words threshold exceeded 
- 				r-eport-crc-th-exceeded            (159),            -- eport class invalid crc threshold exceeded 
- 				r-eport-lr-th-exceeded             (160),            -- eport class link reset threshold exceeded 
- 				r-eport-st-th-exceeded             (161),            -- eport class st threshold exceeded 
- 				r-eport-c3txto-th-exceeded         (162),            -- eport class c3 tx to threshold exceeded 
- 				r-fopport-ll-th-exceeded           (163),            -- fopport class link loss threshold exceeded 
- 				r-fopport-synl-th-exceeded         (164),            -- fopport class sync loss threshold exceeded 
- 				r-fopport-pe-th-exceeded           (165),            -- fopport class protocol errors threshold exceeded 
- 				r-fopport-inw-th-exceeded          (166),            -- fopport class invalid words threshold exceeded 
- 				r-fopport-crc-th-exceeded          (167),            -- fopport class invalid crc threshold exceeded 
- 				r-fopport-lr-th-exceeded           (168),            -- fopport class link reset threshold exceeded 
- 				r-fopport-st-th-exceeded           (169),            -- fopport class st threshold exceeded 
- 				r-fopport-c3txto-th-exceeded       (170),            -- fopport class c3 tx to threshold exceeded 
- 				r-fcuport-ll-th-exceeded           (171),            -- fcuport class link loss threshold exceeded 
- 				r-fcuport-synl-th-exceeded         (172),            -- fcuport class sync loss threshold exceeded 
- 				r-fcuport-pe-th-exceeded           (173),            -- fcuport class protocol errors threshold exceeded 
- 				r-fcuport-inw-th-exceeded          (174),            -- fcuport class invalid words threshold exceeded 
- 				r-fcuport-crc-th-exceeded          (175),            -- fcuport class invalid crc threshold exceeded 
- 				r-fcuport-lr-th-exceeded           (176),            -- fcuport class link reset threshold exceeded 
- 				r-fcuport-st-th-exceeded           (177),            -- fcuport class st threshold exceeded 
- 				r-fcuport-c3txto-th-exceeded       (178),            -- fcuport class c3 tx to threshold exceeded 
- 				r-port-no-area-avail-pers-disable  (179),              -- out of area 
- 				r-eport-locked                     (180),            -- f-port disabled: due to port is locked as e-port 
- 				r-enh-tizone                       (181),            -- enhanced ti zone conflict 
- 				r-sw-port-swap-not-supported       (182),            -- port swap not supported in quattro 
- 				r-fport-slow-drain-condition       (183),            -- f-port is experiencing slow drain condition 
- 				r-esc-vlanid                       (184),            -- esc vlan id conflict 
+ 				r-authentication-required          (121),            -- hba authentication required
+ 				r-port-lr-th-exceeded              (122),            -- port class link reset threshold exceeded
+ 				r-fcr-export-lf-conflict           (123),            -- ex and lf conflict
+ 				r-incompat                         (124),            -- switch incompatible
+ 				r-did-overlap                      (125),            -- domain id overlap
+ 				r-zone-conflict                    (126),            -- zone overlap
+ 				r-eport-seg                        (127),            -- generic eport segment
+ 				r-no-license                       (128),            -- no license
+ 				r-platform-db                      (129),            -- incompatible platform db
+ 				r-sec-incompat                     (130),            -- security incompatibility
+ 				r-sec-violation                    (131),            -- security violation
+ 				r-ecp-longdist                     (132),            -- ecp rejected or retries exceeded
+ 				r-dup-wwn                          (133),            -- duplication wwn in fabric
+ 				r-eport-isolated                   (134),            -- eport isolated
+ 				r-ad                               (135),            -- ad header conflict
+ 				r-esc-did-offset                   (136),            -- domain id offset conflict
+ 				r-esc-etiz                         (137),            -- esc enhanced ti zone conflict
+ 				r-esc-fid                          (138),            -- esc fabric id conflict
+ 				r-safe-zone                        (139),            -- mcdata safezone conflict
+ 				r-vf                               (140),            -- vf ad conflict
+ 				r-vf-bs-incompat                   (141),            -- vf bs conflict
+ 				r-pers-pid-on-lport                (142),            -- persistent pid isnt supported on l port
+ 				r-pers-pid-portaddr-collision      (143),            -- pers pid and port address binding collision
+ 				r-pers-pid-port-on-same-area       (144),            -- another port online with same area
+ 				r-pers-pid-port-addr-bnd           (145),            -- pers pid and port address binding collision port addr bound
+ 				r-msfr                             (146),            -- msfr/rd conflict
+ 				r-sw-halfbw-lic                    (147),            -- half bandwidth license only
+ 				r-1g-mode-incompat                 (148),            -- the port is incompatible in the 1g mode
+ 				r-10g-mode-incompat                (149),            -- the port is incompatible in the 10g mode
+ 				r-dual-mode-incompat               (150),            -- the port is incompatible in the 10g mode
+ 				r-implict-plt-service-block        (151),            -- enabling of platform service implicitly was blocked
+ 				r-port-st-th-exceeded              (152),            -- port class st threshold exceeded
+ 				r-port-c3txto-th-exceeded          (153),            -- port class c3 tx to threshold exceeded
+ 				r-eport-not-supported-def-sw       (154),            -- uppermost 8 ports on quattro blade on dcx on def-sw have no eport supp
+ 				r-eport-ll-th-exceeded             (155),            -- eport class link loss threshold exceeded
+ 				r-eport-synl-th-exceeded           (156),            -- eport class sync loss threshold exceeded
+ 				r-eport-pe-th-exceeded             (157),            -- eport class protocol errors threshold exceeded
+ 				r-eport-inw-th-exceeded            (158),            -- eport class invalid words threshold exceeded
+ 				r-eport-crc-th-exceeded            (159),            -- eport class invalid crc threshold exceeded
+ 				r-eport-lr-th-exceeded             (160),            -- eport class link reset threshold exceeded
+ 				r-eport-st-th-exceeded             (161),            -- eport class st threshold exceeded
+ 				r-eport-c3txto-th-exceeded         (162),            -- eport class c3 tx to threshold exceeded
+ 				r-fopport-ll-th-exceeded           (163),            -- fopport class link loss threshold exceeded
+ 				r-fopport-synl-th-exceeded         (164),            -- fopport class sync loss threshold exceeded
+ 				r-fopport-pe-th-exceeded           (165),            -- fopport class protocol errors threshold exceeded
+ 				r-fopport-inw-th-exceeded          (166),            -- fopport class invalid words threshold exceeded
+ 				r-fopport-crc-th-exceeded          (167),            -- fopport class invalid crc threshold exceeded
+ 				r-fopport-lr-th-exceeded           (168),            -- fopport class link reset threshold exceeded
+ 				r-fopport-st-th-exceeded           (169),            -- fopport class st threshold exceeded
+ 				r-fopport-c3txto-th-exceeded       (170),            -- fopport class c3 tx to threshold exceeded
+ 				r-fcuport-ll-th-exceeded           (171),            -- fcuport class link loss threshold exceeded
+ 				r-fcuport-synl-th-exceeded         (172),            -- fcuport class sync loss threshold exceeded
+ 				r-fcuport-pe-th-exceeded           (173),            -- fcuport class protocol errors threshold exceeded
+ 				r-fcuport-inw-th-exceeded          (174),            -- fcuport class invalid words threshold exceeded
+ 				r-fcuport-crc-th-exceeded          (175),            -- fcuport class invalid crc threshold exceeded
+ 				r-fcuport-lr-th-exceeded           (176),            -- fcuport class link reset threshold exceeded
+ 				r-fcuport-st-th-exceeded           (177),            -- fcuport class st threshold exceeded
+ 				r-fcuport-c3txto-th-exceeded       (178),            -- fcuport class c3 tx to threshold exceeded
+ 				r-port-no-area-avail-pers-disable  (179),              -- out of area
+ 				r-eport-locked                     (180),            -- f-port disabled: due to port is locked as e-port
+ 				r-enh-tizone                       (181),            -- enhanced ti zone conflict
+ 				r-sw-port-swap-not-supported       (182),            -- port swap not supported in quattro
+ 				r-fport-slow-drain-condition       (183),            -- f-port is experiencing slow drain condition
+ 				r-esc-vlanid                       (184),            -- esc vlan id conflict
  				r-port-recov-state                 (185),
- 				r-port-auto-disable-losn           (186),            -- pad: loss of sync 
- 				r-port-auto-disable-losg           (187),            -- pad: loss of signal 
- 				r-port-auto-disable-ols            (188),            -- pad: offline primitive sequence 
- 				r-port-auto-disable-nos            (189),            -- pad: not operational primitive sequence 
- 				r-port-auto-disable-lip            (190),            -- pad: loop initialization primitive sequence 
- 				r-port-compression                 (191),            -- compression configuration mismatch 
- 				r-port-encryption                  (192),            -- encryption configuration mismatch 
- 				r-port-enccomp-res                 (193),            -- encryption/compression enabled but resource unavailable 
- 				r-port-decommissioned              (194),            -- used to denote a port that has been decommissioned 
- 				r-port-dportmode                   (195),            -- d-port mode we will not allow flogi 
- 				r-port-dport-incompat              (196),            -- d-port mode mismatch with a remot switch 
- 				r-port-enc-comp-mismatch           (197),            -- encryption/compression config mismatch 
- 				r-non-rcs-rem-dom                  (198),            -- remote domain is rcs incapable 
- 				r-port-fips-comp-mismatch          (199),            -- fips compliance mismatch 
- 				r-port-non-fips-comp-mismatch      (200),            -- non fips compliance mismatch 
+ 				r-port-auto-disable-losn           (186),            -- pad: loss of sync
+ 				r-port-auto-disable-losg           (187),            -- pad: loss of signal
+ 				r-port-auto-disable-ols            (188),            -- pad: offline primitive sequence
+ 				r-port-auto-disable-nos            (189),            -- pad: not operational primitive sequence
+ 				r-port-auto-disable-lip            (190),            -- pad: loop initialization primitive sequence
+ 				r-port-compression                 (191),            -- compression configuration mismatch
+ 				r-port-encryption                  (192),            -- encryption configuration mismatch
+ 				r-port-enccomp-res                 (193),            -- encryption/compression enabled but resource unavailable
+ 				r-port-decommissioned              (194),            -- used to denote a port that has been decommissioned
+ 				r-port-dportmode                   (195),            -- d-port mode we will not allow flogi
+ 				r-port-dport-incompat              (196),            -- d-port mode mismatch with a remot switch
+ 				r-port-enc-comp-mismatch           (197),            -- encryption/compression config mismatch
+ 				r-non-rcs-rem-dom                  (198),            -- remote domain is rcs incapable
+ 				r-port-fips-comp-mismatch          (199),            -- fips compliance mismatch
+ 				r-port-non-fips-comp-mismatch      (200),            -- non fips compliance mismatch
  				r-port-enc-auth-disabled           (201),
- 				r-port-disable-on-zeroize          (202),            -- matador zeroize disable 
- 				r-cfgspeed-not-supported           (203),            -- port configured speed not supported 
- 				r-fcr-ex-port-not-allowed          (204),            -- fc routing on this port not supported 
- 				r-port-duplicate-pwwn              (205),            -- duplicate pwwn reason for respective port 
- 				r-fcr-trunk-master-sfid-not-set    (206),            -- sfid is not set for master ex-port 
- 				r-nportistrunkmem                  (207),            -- n-port is a trunk member 
- 				r-policynotsupported               (208),            -- auto wwnloadbalance policies are not supported for a static f-port 
- 				r-no-icl-license                   (209),            -- no icl license 
- 				r-no-ten-gig-license               (210),            -- no ten gig license 
- 				r-fdd-strict-scc-conflict          (211),            -- fdd strict scc policy conflict 
- 				r-fdd-strict-dcc-conflict          (212),            -- fdd strict dcc policy conflict 
- 				r-fdd-strict-fcs-conflict          (213),            -- fdd strict fcs policy conflict 
- 				r-fdd-strict-fabwide-conflict      (214),            -- fdd strict fabwide policy conflict 
- 				r-fdd-strict-pwd-conflict          (215),            -- fdd strict pwd policy conflict 
- 				r-fcr-interop-conf                 (216),            -- ex interopmode mismatch 
- 				r-port-enc-interop-conflict        (217),            -- ex-port in nos and encryption mismatch 
- 				r-port-comp-interop-conflict       (218),            -- ex-port in nos and compression mismatch 
- 				r-no-port-open-rsp                 (219),            -- fail to unblock the port after auth 
- 				r-no-eicl-license                  (220),            -- eicl license not installed 
- 				r-eicl-license-limited             (221),            -- icl links limit reached eicl license 
- 				r-esc-base-sw                      (222),            -- base switch conflict 
- 				r-sw-cpu-overload                  (223),            -- cpu overload 
- 				r-no-icl-pod2-license              (224),            -- no 2nd pod icl license. used only in dcx+/pluto+ switch 
- 				r-port-area-mismatch-pers-disable  (225),           -- port disabled due to area and full-fmt-area mismatch 
- 				r-unauthorized-device              (226),            -- un-authorized device 
- 				r-max-flogi-reached                (227),           -- max allowed flogis reached 
+ 				r-port-disable-on-zeroize          (202),            -- matador zeroize disable
+ 				r-cfgspeed-not-supported           (203),            -- port configured speed not supported
+ 				r-fcr-ex-port-not-allowed          (204),            -- fc routing on this port not supported
+ 				r-port-duplicate-pwwn              (205),            -- duplicate pwwn reason for respective port
+ 				r-fcr-trunk-master-sfid-not-set    (206),            -- sfid is not set for master ex-port
+ 				r-nportistrunkmem                  (207),            -- n-port is a trunk member
+ 				r-policynotsupported               (208),            -- auto wwnloadbalance policies are not supported for a static f-port
+ 				r-no-icl-license                   (209),            -- no icl license
+ 				r-no-ten-gig-license               (210),            -- no ten gig license
+ 				r-fdd-strict-scc-conflict          (211),            -- fdd strict scc policy conflict
+ 				r-fdd-strict-dcc-conflict          (212),            -- fdd strict dcc policy conflict
+ 				r-fdd-strict-fcs-conflict          (213),            -- fdd strict fcs policy conflict
+ 				r-fdd-strict-fabwide-conflict      (214),            -- fdd strict fabwide policy conflict
+ 				r-fdd-strict-pwd-conflict          (215),            -- fdd strict pwd policy conflict
+ 				r-fcr-interop-conf                 (216),            -- ex interopmode mismatch
+ 				r-port-enc-interop-conflict        (217),            -- ex-port in nos and encryption mismatch
+ 				r-port-comp-interop-conflict       (218),            -- ex-port in nos and compression mismatch
+ 				r-no-port-open-rsp                 (219),            -- fail to unblock the port after auth
+ 				r-no-eicl-license                  (220),            -- eicl license not installed
+ 				r-eicl-license-limited             (221),            -- icl links limit reached eicl license
+ 				r-esc-base-sw                      (222),            -- base switch conflict
+ 				r-sw-cpu-overload                  (223),            -- cpu overload
+ 				r-no-icl-pod2-license              (224),            -- no 2nd pod icl license. used only in dcx+/pluto+ switch
+ 				r-port-area-mismatch-pers-disable  (225),           -- port disabled due to area and full-fmt-area mismatch
+ 				r-unauthorized-device              (226),            -- un-authorized device
+ 				r-max-flogi-reached                (227),           -- max allowed flogis reached
  				r-auth-not-supported-in-switch     (228),           -- port authentication not supported in connected switch f-port
  				r-icl-ex-on-non-vf                 (229),           -- EX-port on ICL is not supported in Non-VF mode
 				r-user-disabled-reason             (230)            -- Disable reason configured by the user
@@ -2215,12 +2215,12 @@ SW-MIB DEFINITIONS ::= BEGIN
   -- NOTE
   -- Logically, swEventTable is separate from the error log since it is
   -- essentially a view of the error log within a particular time window.
-  -- The value of swEventIndex shall indicate the event number that has  
+  -- The value of swEventIndex shall indicate the event number that has
   -- occurred since the switch booted. The value will range from 1 through
   -- 2147383647 (2^31 - 1).
   --
   -- #######################################################################
- 
+
   swEventTrapLevel      OBJECT-TYPE
         SYNTAX          INTEGER {
 			  none		(0),
@@ -2241,32 +2241,32 @@ SW-MIB DEFINITIONS ::= BEGIN
 		specified by this object instance, the agent will send
 		the associated swEventTrap to configured recipients."
   ::= { swEvent 1 }
- 
+
   -- { swEvent 2..3 are reserved }
- 
+
   swEventNumEntries     OBJECT-TYPE
         SYNTAX          Integer32 (0..2147483647)
         MAX-ACCESS          read-only
         STATUS          current
         DESCRIPTION     "The number of entries in the Event Table."
   ::= { swEvent 4 }
- 
+
   swEventTable          OBJECT-TYPE
         SYNTAX          SEQUENCE OF SwEventEntry
         MAX-ACCESS          not-accessible
         STATUS          current
         DESCRIPTION     "The table of event entries."
   ::= { swEvent 5 }
- 
+
   swEventEntry          OBJECT-TYPE
         SYNTAX          SwEventEntry
         MAX-ACCESS          not-accessible
         STATUS          current
         DESCRIPTION     "An entry of the event table."
         INDEX           { swEventIndex }
- 
+
   ::= { swEventTable 1 }
- 
+
   SwEventEntry          ::= SEQUENCE {
         swEventIndex		Integer32,
         swEventTimeInfo		DisplayString,
@@ -2282,7 +2282,7 @@ SW-MIB DEFINITIONS ::= BEGIN
         STATUS          current
         DESCRIPTION     "This object identifies the event entry."
   ::= { swEventEntry 1 }
- 
+
   swEventTimeInfo       OBJECT-TYPE
         SYNTAX          DisplayString(SIZE (0..64))
         MAX-ACCESS          read-only
@@ -2290,7 +2290,7 @@ SW-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION     "This object identifies the date and time when this
                 event occurred, in textual format."
   ::= { swEventEntry 2 }
- 
+
   swEventLevel          OBJECT-TYPE
         SYNTAX          INTEGER {
                           critical      (1),
@@ -2304,7 +2304,7 @@ SW-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION     "This object identifies the severity level of this
 		event entry."
   ::= { swEventEntry 3 }
- 
+
   swEventRepeatCount	OBJECT-TYPE
         SYNTAX          Integer32 (0..2147483647)
         MAX-ACCESS          read-only
@@ -2312,7 +2312,7 @@ SW-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION     "This object identifies how many times this particular
 		event has occurred."
   ::= { swEventEntry 4 }
- 
+
   swEventDescr          OBJECT-TYPE
         SYNTAX          DisplayString
         MAX-ACCESS          read-only
@@ -2327,7 +2327,7 @@ SW-MIB DEFINITIONS ::= BEGIN
         STATUS          current
         DESCRIPTION     "This object identifies the Virtual fabric id."
   ::= { swEventEntry 6 }
- 
+
   --
   -- End of Fibre Channel Event Group
   --
@@ -2343,9 +2343,9 @@ SW-MIB DEFINITIONS ::= BEGIN
 
   -- valid action matrix
   -- ###########################################################################
-  -- The valid action matrix is arrived out of the combination of the configured 
-  -- alarm matrix such as Errlog-1(El), SnmpTrap-2(St), PortLogLock-4(Pl), 
-  -- RapiTrap-8(Rn), EmailAlert-16, PortFencing-32(Pf)   
+  -- The valid action matrix is arrived out of the combination of the configured
+  -- alarm matrix such as Errlog-1(El), SnmpTrap-2(St), PortLogLock-4(Pl),
+  -- RapiTrap-8(Rn), EmailAlert-16, PortFencing-32(Pf)
   -- ###########################################################################
   SwFwActs ::= INTEGER {
 				swFwNoAction(0),
@@ -2609,7 +2609,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 				inBetween(6),
 				lowBufferCrsd(7)
 				}
- 
+
   -- behavior type for thresholds
   SwFwBehavior ::= INTEGER {
 				triggered(1),
@@ -2632,7 +2632,7 @@ SW-MIB DEFINITIONS ::= BEGIN
   -- This is the first of the elements declared for Fabric Watch :
   -- one scalar & two tables
   -- A scalar, swFwFabricWatchLicense is used to tell is if the switch has
-  -- proper license for Fabric Watch. Please refer to Fabric Watch 
+  -- proper license for Fabric Watch. Please refer to Fabric Watch
   -- documentation for further information.
   -- One table contains classArea information such as threshold unit string,
   -- time base, low thresholds, etc. The other table contains individual
@@ -2712,10 +2712,10 @@ SW-MIB DEFINITIONS ::= BEGIN
 
   -- {swFwDefaultUnit, swFwDefaultTimebase, swFwDefaultMin, and swFwDefaultMax}
   -- {swFwCustUnit, swFwCustTimebase, swFwCustMin, and swFwCustMax}
-  -- are grouped together to be applied to give threshold areas as in 
+  -- are grouped together to be applied to give threshold areas as in
   --- Default and Cust. Which of default, or custom groups applies depends
   --- on swFwThLevel.
-  swFwDefaultUnit		OBJECT-TYPE	
+  swFwDefaultUnit		OBJECT-TYPE
 	SYNTAX		DisplayString
 	MAX-ACCESS		read-only
 	STATUS		obsolete
@@ -2750,7 +2750,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	DESCRIPTION	"A Default buffer size value."
   ::= { swFwClassAreaEntry 7 }
 
-  swFwCustUnit	OBJECT-TYPE	
+  swFwCustUnit	OBJECT-TYPE
 	SYNTAX		DisplayString
 	MAX-ACCESS		read-only
 	STATUS		obsolete
@@ -2805,10 +2805,10 @@ SW-MIB DEFINITIONS ::= BEGIN
 	DESCRIPTION	"This object is set to apply act value changes."
   ::= { swFwClassAreaEntry 14 }
 
-  -- {swFwDefaultChangedActs, swFwDefaultExceededActs, swFwDefaultBelowActs, 
-  -- and swFwDefaultAboveActs} and {swFwCustChangedActs, swFwCustExceededActs, 
-  -- swFwCustBelowActs, and swFwCustAboveActs} are grouped together to be 
-  -- applied to give threshold areas as in default and cust. Which of 
+  -- {swFwDefaultChangedActs, swFwDefaultExceededActs, swFwDefaultBelowActs,
+  -- and swFwDefaultAboveActs} and {swFwCustChangedActs, swFwCustExceededActs,
+  -- swFwCustBelowActs, and swFwCustAboveActs} are grouped together to be
+  -- applied to give threshold areas as in default and cust. Which of
   -- default, or custom groups applies depends on swFwThLevel.
   swFwDefaultChangedActs	OBJECT-TYPE
 	SYNTAX		SwFwActs
@@ -2816,21 +2816,21 @@ SW-MIB DEFINITIONS ::= BEGIN
 	STATUS		obsolete
 	DESCRIPTION	"Default action matrix for changed event."
   ::= { swFwClassAreaEntry 15 }
-	
+
   swFwDefaultExceededActs	OBJECT-TYPE
 	SYNTAX		SwFwActs
 	MAX-ACCESS		read-only
 	STATUS		obsolete
 	DESCRIPTION	"Default action matrix for exceeded event."
   ::= { swFwClassAreaEntry 16 }
-	
+
   swFwDefaultBelowActs	OBJECT-TYPE
 	SYNTAX		SwFwActs
 	MAX-ACCESS		read-only
 	STATUS		obsolete
 	DESCRIPTION	"Default action matrix for below event."
   ::= { swFwClassAreaEntry 17 }
-	
+
   swFwDefaultAboveActs	OBJECT-TYPE
 	SYNTAX		SwFwActs
 	MAX-ACCESS		read-only
@@ -2851,21 +2851,21 @@ SW-MIB DEFINITIONS ::= BEGIN
 	STATUS		obsolete
 	DESCRIPTION	"custom action matrix for changed event."
   ::= { swFwClassAreaEntry 20 }
-	
+
   swFwCustExceededActs	OBJECT-TYPE
 	SYNTAX		SwFwActs
 	MAX-ACCESS		read-write
 	STATUS		obsolete
 	DESCRIPTION	"custom action matrix for exceeded event."
   ::= { swFwClassAreaEntry 21 }
-	
+
   swFwCustBelowActs	OBJECT-TYPE
 	SYNTAX		SwFwActs
 	MAX-ACCESS		read-write
 	STATUS		obsolete
 	DESCRIPTION	"custom action matrix for below event."
   ::= { swFwClassAreaEntry 22 }
-	
+
   swFwCustAboveActs	OBJECT-TYPE
 	SYNTAX		SwFwActs
 	MAX-ACCESS		read-write
@@ -2925,11 +2925,11 @@ SW-MIB DEFINITIONS ::= BEGIN
 	swFwBehaviorType		SwFwBehavior,
 	swFwBehaviorInt			Integer32,
 	swFwLastSeverityLevel	SwSevType
-	}	
+	}
 
   swFwThresholdIndex	OBJECT-TYPE
 	SYNTAX		Integer32 (0..2147483647)
-	MAX-ACCESS		read-only	
+	MAX-ACCESS		read-only
 	STATUS		obsolete
 	DESCRIPTION	"This object identifies the element index of
 				an threshold."
@@ -3045,7 +3045,7 @@ SW-MIB DEFINITIONS ::= BEGIN
 	swEndDeviceProtoErr			Counter32,
 	swEndDeviceInvalidWord		Counter32,
 	swEndDeviceInvalidCRC		Counter32
-	}	
+	}
 
   -- Since Silkworm family switches start with port # 0
   -- snmp port # should be physical port # + 1.
@@ -3249,7 +3249,7 @@ swGroupIndex    OBJECT-TYPE
  ::= { swBlmPerfALPAMntEntry 2}
 
  swBlmPerfAlpa           OBJECT-TYPE
-   SYNTAX          Integer32 (0..2147483647) 
+   SYNTAX          Integer32 (0..2147483647)
    MAX-ACCESS          read-only
    STATUS          obsolete
    DESCRIPTION  " This Object identifies the ALPA values. These values
@@ -3352,7 +3352,7 @@ swGroupIndex    OBJECT-TYPE
    STATUS          obsolete
    DESCRIPTION     "Gets DID info by reference number.
                     DID (Destination Identifier) is a 3-byte field in the
-                    frame header used to indicate the address identifier of 
+                    frame header used to indicate the address identifier of
                     the N-Port to which the frame was sent."
  ::= { swBlmPerfEEMntEntry 7 }
 
@@ -3456,10 +3456,10 @@ swTrunkPortIndex		OBJECT-TYPE
  ::= { swTrunkEntry 1 }
 
 swTrunkGroupNumber		OBJECT-TYPE
-	SYNTAX			Integer32 (0..2147483647) 
+	SYNTAX			Integer32 (0..2147483647)
 	MAX-ACCESS			read-only
 	STATUS			current
-	DESCRIPTION		"This object is a logical entity which specifies 
+	DESCRIPTION		"This object is a logical entity which specifies
 					the Group Number to which the port belongs to.
 					If this value is Zero it means the port is not Trunked."
 	::= { swTrunkEntry 2}
@@ -3468,8 +3468,8 @@ swTrunkMaster			OBJECT-TYPE
   SYNTAX			SwTrunkMaster
   MAX-ACCESS			read-only
   STATUS			current
-  DESCRIPTION		"Port number that is the trunk master of the group. 
-			The trunk master implicitly defines the group. 
+  DESCRIPTION		"Port number that is the trunk master of the group.
+			The trunk master implicitly defines the group.
 			All ports with the same master are considered to be part of the same group."
  ::= { swTrunkEntry 3 }
 
@@ -3510,7 +3510,7 @@ swTrunkMaster			OBJECT-TYPE
 	MAX-ACCESS          read-only
 	STATUS          current
 	DESCRIPTION     "This object is a logical entity which
-					specifies the Group Number to which port 
+					specifies the Group Number to which port
 					belongs to."
     ::= { swTrunkGrpEntry  1 }
 
@@ -3526,7 +3526,7 @@ swTrunkMaster			OBJECT-TYPE
   	  SYNTAX          OCTET STRING (SIZE (8))
 	  MAX-ACCESS          read-only
 	  STATUS          current
-	  DESCRIPTION     "Gives the aggregate value of the    
+	  DESCRIPTION     "Gives the aggregate value of the
 					   transmitted words from this TrunkGroup."
 	::= { swTrunkGrpEntry  3}
 
@@ -3534,7 +3534,7 @@ swTrunkMaster			OBJECT-TYPE
 	   SYNTAX            OCTET STRING (SIZE (8))
 	   MAX-ACCESS          read-only
 	   STATUS          current
-	   DESCRIPTION     "Gives the aggregate value of the  
+	   DESCRIPTION     "Gives the aggregate value of the
 	   					received words by this TrunkGroup."
 	::= { swTrunkGrpEntry  4 }
 
@@ -3542,7 +3542,7 @@ swTopTalkerMntMode       OBJECT-TYPE
   SYNTAX                INTEGER {
                        fabricmode  (1),
                        portmode   (2)
-                       } 
+                       }
   MAX-ACCESS               read-only
   STATUS                 obsolete
   DESCRIPTION          "Gives the mode in which toptalker
@@ -3550,7 +3550,7 @@ swTopTalkerMntMode       OBJECT-TYPE
     ::= { swTopTalker 1}
 
 swTopTalkerMntNumEntries   OBJECT-TYPE
-  SYNTAX                 Integer32 (1..32) 
+  SYNTAX                 Integer32 (1..32)
   MAX-ACCESS               read-only
   STATUS                  obsolete
   DESCRIPTION           "Gives the number of toptalking
@@ -3559,7 +3559,7 @@ swTopTalkerMntNumEntries   OBJECT-TYPE
 
 swTopTalkerMntTable       OBJECT-TYPE
   SYNTAX            SEQUENCE OF SwTopTalkerMntEntry
-  MAX-ACCESS             not-accessible 
+  MAX-ACCESS             not-accessible
   STATUS                 obsolete
   DESCRIPTION           "Table to display toptalkingflows"
     ::= { swTopTalker 3}
@@ -3570,13 +3570,13 @@ swTopTalkerMntTable       OBJECT-TYPE
   STATUS                  obsolete
   DESCRIPTION            "Entry for the toptalker table"
   INDEX{ swTopTalkerMntIndex}
-    ::= { swTopTalkerMntTable 1} 
+    ::= { swTopTalkerMntTable 1}
 
  SwTopTalkerMntEntry ::= SEQUENCE{
   swTopTalkerMntIndex   Integer32,
   swTopTalkerMntPort    Integer32,
   swTopTalkerMntSpid    Integer32,
-  swTopTalkerMntDpid    Integer32,  
+  swTopTalkerMntDpid    Integer32,
   swTopTalkerMntflow    Integer32,
   swTopTalkerMntSwwn    FcWwn,
   swTopTalkerMntDwwn    FcWwn
@@ -3592,23 +3592,23 @@ swTopTalkerMntTable       OBJECT-TYPE
 
 
    swTopTalkerMntPort      OBJECT-TYPE
-    SYNTAX                 Integer32 (1..32) 
+    SYNTAX                 Integer32 (1..32)
     MAX-ACCESS             read-only
     STATUS                  obsolete
     DESCRIPTION            "This object identifies the switch port
                             number on which the f-port mode toptalker
                             is added."
       ::= { swTopTalkerMntEntry 2}
- 
+
    swTopTalkerMntSpid      OBJECT-TYPE
-    SYNTAX               Integer32 (1..32) 
+    SYNTAX               Integer32 (1..32)
     MAX-ACCESS             read-only
     STATUS                  obsolete
     DESCRIPTION            "This object identifies the SID of the host"
       ::= { swTopTalkerMntEntry 3}
 
    swTopTalkerMntDpid       OBJECT-TYPE
-    SYNTAX                Integer32 (1..32) 
+    SYNTAX                Integer32 (1..32)
     MAX-ACCESS             read-only
     STATUS                  obsolete
     DESCRIPTION              "This object identifies the DID of the SID-DID pair"
@@ -3634,7 +3634,7 @@ swTopTalkerMntTable       OBJECT-TYPE
     STATUS                  obsolete
     DESCRIPTION              "This object identifies the DID in WWN format of the SID-DID pair"
       ::= { swTopTalkerMntEntry 7}
-	
+
 
 	swCpuUsage   OBJECT-TYPE
     SYNTAX      Integer32(0..100)
@@ -3654,7 +3654,7 @@ swTopTalkerMntTable       OBJECT-TYPE
     SYNTAX      Integer32 (1..100)
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "CPU usage limit. If MAPS is enabled, then this 
+    DESCRIPTION     "CPU usage limit. If MAPS is enabled, then this
 					 object is not supported and return 0 value."
      ::= { swCpuOrMemoryUsage 3 }
 
@@ -3677,7 +3677,7 @@ swTopTalkerMntTable       OBJECT-TYPE
     STATUS          current
     DESCRIPTION     "Specifies  the  actions to be taken if system
 		             resources  exceed  the  specified  threshold.
-					 If MAPS is enabled, then this object is not 
+					 If MAPS is enabled, then this object is not
 					 supported and return 0 value."
      ::= { swCpuOrMemoryUsage 5 }
 
@@ -3721,7 +3721,7 @@ swTopTalkerMntTable       OBJECT-TYPE
     STATUS          current
     DESCRIPTION     "Specifies  the  actions to be taken if system
 	             	 resources  exceed  the  specified  threshold.
-					 If MAPS is enabled, then this object is not 
+					 If MAPS is enabled, then this object is not
 					 supported and return 0 value."
      ::= { swCpuOrMemoryUsage 10 }
 
@@ -3730,8 +3730,8 @@ swTopTalkerMntTable       OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "Low memory usage limit. If MAPS is enabled, 
-					 then this object is not supported and 
+    DESCRIPTION     "Low memory usage limit. If MAPS is enabled,
+					 then this object is not supported and
 					 return 0 value."
      ::= { swCpuOrMemoryUsage 11 }
 
@@ -3740,8 +3740,8 @@ swTopTalkerMntTable       OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "High memory usage limit. If MAPS is enabled, 
-					 then this object is not supported and 
+    DESCRIPTION     "High memory usage limit. If MAPS is enabled,
+					 then this object is not supported and
 					 return 0 value."
      ::= { swCpuOrMemoryUsage 12 }
 
@@ -3912,7 +3912,7 @@ swTopTalkerMntTable       OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION "The number low level interrupts generated by the physical and link layer."
-            ::= { swConnUnitPortStatEntry 18 }	
+            ::= { swConnUnitPortStatEntry 18 }
 
   swConnUnitInterrupts OBJECT-TYPE
     SYNTAX OCTET STRING (SIZE (8))
@@ -4022,7 +4022,7 @@ swTopTalkerMntTable       OBJECT-TYPE
 	::= { sw 0 }
 
   swFault		NOTIFICATION-TYPE
-	OBJECTS	{ swDiagResult, swSsn 
+	OBJECTS	{ swDiagResult, swSsn
 			}
 	STATUS	obsolete
 	DESCRIPTION	"Obsoleted this trap as firmware doesn't support this trap.
@@ -4063,9 +4063,9 @@ swTopTalkerMntTable       OBJECT-TYPE
 	STATUS	current
 	DESCRIPTION	"This trap is sent whenever an FC port operational status or
                 its type changed. The events that trigger this trap are
-                port goes to online/offline, port type changed to 
-				E-port/F-port/FL-port. swFCPortName and swSsn are optional 
-				varbind in the trap PDU" 
+                port goes to online/offline, port type changed to
+				E-port/F-port/FL-port. swFCPortName and swSsn are optional
+				varbind in the trap PDU"
 	--#TYPE		"A Fibre Channel Port changed its operational state."
 	--#SUMMARY	"Port Index %d changed state to %d  Port Name: %s and SSN is #%s"
 	--#ARGUMENTS	{ 1, 0, 2, 3 }
@@ -4102,7 +4102,7 @@ swTopTalkerMntTable       OBJECT-TYPE
 					swFwLastState,
 					swFwLastSeverityLevel,
 					swSsn,
-					swVfId	
+					swVfId
 					}
 	STATUS	obsolete
 	DESCRIPTION	"trap to be sent by Fabric Watch to notify of an event."
@@ -4128,15 +4128,15 @@ swTopTalkerMntTable       OBJECT-TYPE
 	--#TIMEINDEX	1
 	--#STATE	OPERATIONAL
 	::= { swTrapsV2 6 }
-	
+
 	swIPv6ChangeTrap           NOTIFICATION-TYPE
      OBJECTS       { swIPv6Address, swIPv6Status }
      STATUS      current
      DESCRIPTION     "This trap is generated when an ipv6 address
                 status change event occurs."
 	--#TYPE		"IPv6 address status change has generated a trap"
-	--#SUMMARY	"IPv6 address change event has occured"	
-	--#ARGUMENTS	{}	
+	--#SUMMARY	"IPv6 address change event has occured"
+	--#ARGUMENTS	{}
 	--#SEVERITY	INFORMATIONAL
 	--#TIMEINDEX	1
 	--#STATE	OPERATIONAL
@@ -4148,8 +4148,8 @@ swTopTalkerMntTable       OBJECT-TYPE
      DESCRIPTION     "This trap is generated when any partition manager
                 change happens."
 	--#TYPE		"Partition manager status change has generated a trap"
-	--#SUMMARY  "pmgr event of type %d occured on %d swVfId and SSN is #%s. Time is %s and the description is %s"  	
-	--#ARGUMENTS { 0, 4, 3, 1, 2 }	
+	--#SUMMARY  "pmgr event of type %d occured on %d swVfId and SSN is #%s. Time is %s and the description is %s"
+	--#ARGUMENTS { 0, 4, 3, 1, 2 }
 	--#SEVERITY	INFORMATIONAL
 	--#TIMEINDEX	1
 	--#STATE	OPERATIONAL
@@ -4160,21 +4160,21 @@ swTopTalkerMntTable       OBJECT-TYPE
 	STATUS current
 	DESCRIPTION	"trap to be sent for tracking fabric reconfiguration"
 	--#TYPE		"Fabric reconfiguration has generated a trap"
-	--#SUMMARY	"Fabric reconfiguration has occured"	
-	--#ARGUMENTS	{}	
+	--#SUMMARY	"Fabric reconfiguration has occured"
+	--#ARGUMENTS	{}
 	--#SEVERITY	INFORMATIONAL
 	--#TIMEINDEX	1
 	--#STATE	OPERATIONAL
     ::= { swTrapsV2 9 }
 
   swFabricSegmentTrap	NOTIFICATION-TYPE
-	OBJECTS	{ swFCPortIndex, swFCPortName, swSsn, 
+	OBJECTS	{ swFCPortIndex, swFCPortName, swSsn,
                   swFCPortFlag, swVfId }
 	STATUS current
 	DESCRIPTION	"trap to be sent for tracking segmentation"
 	--#TYPE		"Fabric segmentation has generated a trap"
-	--#SUMMARY	"Fabric segmentation event has occured"	
-	--#ARGUMENTS	{}	
+	--#SUMMARY	"Fabric segmentation event has occured"
+	--#ARGUMENTS	{}
 	--#SEVERITY	INFORMATIONAL
 	--#TIMEINDEX	1
 	--#STATE	OPERATIONAL
@@ -4200,8 +4200,8 @@ swTopTalkerMntTable       OBJECT-TYPE
   swBrcdGenericTrap NOTIFICATION-TYPE
     OBJECTS { swBrcdTrapBitMask, swBrcdBitObjVal, swVfId}
     STATUS current
-    DESCRIPTION "This trap is sent when there is any one of the following 
-                 event occured. 
+    DESCRIPTION "This trap is sent when there is any one of the following
+                 event occured.
 				 1. fabric change
 				 2. device change
 			     3. Fapwwn change

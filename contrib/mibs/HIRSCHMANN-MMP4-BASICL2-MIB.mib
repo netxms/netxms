@@ -3,7 +3,7 @@
 -- *                                                                        *
 -- *                  Hirschmann Automation and Control GmbH                *
 -- *                                                                        *
--- *                         PLATFORM SNMP PRIVATE MIB                      * 
+-- *                         PLATFORM SNMP PRIVATE MIB                      *
 -- *                                                                        *
 -- *                          Platform4 Basic Layer 2                       *
 -- *                                                                        *
@@ -48,7 +48,7 @@ hmPlatform4BasicL2 MODULE-IDENTITY
         ORGANIZATION "Hirschmann Automation and Control GmbH"
         CONTACT-INFO
           "Customer Support
-           Postal: 
+           Postal:
            Hirschmann Automation and Control GmbH
            Stuttgarter Str. 45-51
            72654 Neckartenzlingen
@@ -59,7 +59,7 @@ hmPlatform4BasicL2 MODULE-IDENTITY
         DESCRIPTION
           "The Hirschmann Private Platform4 Basic Layer 2 MIB definitions for Platform devices."
 
-        -- Revision history.	  
+        -- Revision history.
         REVISION
           "200511221200Z" -- 22 Nov 2005 12:00:00 GMT
         DESCRIPTION
@@ -71,13 +71,13 @@ hmPlatform4BasicL2 MODULE-IDENTITY
         REVISION
           "200407020000Z" -- 4 Jul 2004 12:00:00 GMT
         DESCRIPTION
-          "first release"         
+          "first release"
     ::= { hmPlatform4 1 }
 
 
 hmPlatform4    OBJECT IDENTIFIER ::= { hirschmann 15 }
-    
-    
+
+
 HmAgentPortMask ::= TEXTUAL-CONVENTION
    STATUS  current
    DESCRIPTION
@@ -91,15 +91,15 @@ HmAgentPortMask ::= TEXTUAL-CONVENTION
         value of this object.  If that bit has a value of '1'
         then that port is included in the set of ports; the port
         is not included if its bit has a value of '0'
-             
-        When setting this value, the system will ignore 
-        configuration for ports not between the first and last 
-        valid ports.  Configuration of any port numbers between 
-        this range that are not valid ports return a failure 
-        message, but will still apply configuration for valid 
+
+        When setting this value, the system will ignore
+        configuration for ports not between the first and last
+        valid ports.  Configuration of any port numbers between
+        this range that are not valid ports return a failure
+        message, but will still apply configuration for valid
         ports."
-   SYNTAX  OCTET STRING      
-   
+   SYNTAX  OCTET STRING
+
 BridgeId ::= TEXTUAL-CONVENTION
    STATUS  current
    DESCRIPTION
@@ -125,7 +125,7 @@ HmAgentDot1xSessionTerminationAction ::= TEXTUAL-CONVENTION
     SYNTAX       INTEGER {
                             default(1),
                             reauthenticate(2)
-                          } 
+                          }
 
 --**************************************************************************************
 --    hmAgentInfoGroup
@@ -133,14 +133,14 @@ HmAgentDot1xSessionTerminationAction ::= TEXTUAL-CONVENTION
 
 hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4BasicL2 1 }
 
-    
+
     --**************************************************************************************
     -- hmAgentTrapLogGroup
     --
     --**************************************************************************************
-    
+
     hmAgentTrapLogGroup          OBJECT IDENTIFIER ::= { hmAgentInfoGroup 2}
-    
+
     hmAgentTrapLogTotal OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-only
@@ -148,7 +148,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The total number of traps sent since last reset."
          ::= { hmAgentTrapLogGroup 1 }
-         
+
     hmAgentTrapLogTotalSinceLastViewed OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-only
@@ -156,10 +156,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The number of traps sent since last viewed."
          ::= { hmAgentTrapLogGroup 3 }
-         
+
    --**************************************************************************************
    -- hmAgentTrapLogTable
-   
+
     hmAgentTrapLogTable OBJECT-TYPE
          SYNTAX SEQUENCE OF HmAgentTrapLogEntry
          MAX-ACCESS  not-accessible
@@ -167,7 +167,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Agent Trap Log"
          ::= { hmAgentTrapLogGroup 4 }
-    
+
     hmAgentTrapLogEntry OBJECT-TYPE
          SYNTAX      HmAgentTrapLogEntry
          MAX-ACCESS  not-accessible
@@ -176,7 +176,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "Agent trap log entry"
          INDEX { hmAgentTrapLogIndex }
          ::= { hmAgentTrapLogTable 1 }
-    
+
     HmAgentTrapLogEntry ::= SEQUENCE {
           hmAgentTrapLogIndex
               Integer32,
@@ -185,7 +185,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
           hmAgentTrapLogTrap
               DisplayString
           }
-    
+
     hmAgentTrapLogIndex OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-only
@@ -193,16 +193,16 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Unique index of trap entry"
          ::= { hmAgentTrapLogEntry 1 }
-    
+
     hmAgentTrapLogSystemTime OBJECT-TYPE
          SYNTAX      DisplayString
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "System uptime when trap was sent. 
+                     "System uptime when trap was sent.
                      This entry shows how long the system has been up when the trap occurred."
          ::= { hmAgentTrapLogEntry 2 }
-    
+
     hmAgentTrapLogTrap OBJECT-TYPE
          SYNTAX      DisplayString (SIZE (0..512))
          MAX-ACCESS  read-only
@@ -210,12 +210,12 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Description of the trap sent."
          ::= { hmAgentTrapLogEntry 3 }
-    
+
  --**************************************************************************************
  -- hmAgentConfigGroup
  --
  --**************************************************************************************
- 
+
     hmAgentConfigGroup                           OBJECT IDENTIFIER ::= { hmPlatform4BasicL2 2 }
 
     hmAgentCLIConfigGroup                        OBJECT IDENTIFIER ::= { hmAgentConfigGroup 1 }
@@ -224,24 +224,24 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
     -- hmAgentLoginSessionTable
     --
     --**************************************************************************************
-    
+
     hmAgentLoginSessionTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentLoginSessionEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "A table of the switch's login session"
          ::= { hmAgentCLIConfigGroup 1 }
-    
+
     hmAgentLoginSessionEntry OBJECT-TYPE
          SYNTAX      HmAgentLoginSessionEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "Login Session Entry"
          INDEX { hmAgentLoginSessionIndex }
          ::= { hmAgentLoginSessionTable 1 }
-    
+
     HmAgentLoginSessionEntry ::= SEQUENCE {
            hmAgentLoginSessionIndex
                Integer32,
@@ -258,7 +258,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
            hmAgentLoginSessionStatus
                RowStatus
        }
-    
+
     hmAgentLoginSessionIndex OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-only
@@ -274,7 +274,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Agent Login Session UserName of the switch"
          ::= { hmAgentLoginSessionEntry 2 }
-    
+
     hmAgentLoginSessionIPAddress OBJECT-TYPE
          SYNTAX      IpAddress
          MAX-ACCESS  read-only
@@ -282,7 +282,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Agent Login Session IP Address of the switch"
          ::= { hmAgentLoginSessionEntry 3 }
-    
+
     hmAgentLoginSessionConnectionType OBJECT-TYPE
          SYNTAX      INTEGER {
                       serial(1),
@@ -293,7 +293,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Agent Login Session Connection Type of the switch"
          ::= { hmAgentLoginSessionEntry 4 }
-         
+
     hmAgentLoginSessionIdleTime OBJECT-TYPE
          SYNTAX      TimeTicks
          MAX-ACCESS  read-only
@@ -301,7 +301,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Agent Login Session Idle Time of the switch"
          ::= { hmAgentLoginSessionEntry 5 }
-    
+
     hmAgentLoginSessionSessionTime OBJECT-TYPE
          SYNTAX      TimeTicks
          MAX-ACCESS  read-only
@@ -309,7 +309,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Agent Login Session Time of the switch"
          ::= { hmAgentLoginSessionEntry 6 }
-    
+
     hmAgentLoginSessionStatus OBJECT-TYPE
          SYNTAX      RowStatus
          MAX-ACCESS  read-write
@@ -319,25 +319,25 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      active(1)    - This connection is active.
                      destroy(6)   - Set to this value to disconnect this user."
          ::= { hmAgentLoginSessionEntry 7 }
-    
+
     --**************************************************************************************
-    -- hmAgentLogging  
+    -- hmAgentLogging
     --
     --**************************************************************************************
     hmAgentLogging                                 OBJECT IDENTIFIER ::= { hmPlatform4 14 }
-   
+
     --**************************************************************************************
-    -- hmAgentLogConfigGroup  
+    -- hmAgentLogConfigGroup
     --
     --**************************************************************************************
     hmAgentLogConfigGroup                          OBJECT IDENTIFIER ::= { hmAgentLogging 1 }
-    
+
     --**************************************************************************************
-    -- hmAgentLogSysLogConfigGroup  
+    -- hmAgentLogSysLogConfigGroup
     --
-    --**************************************************************************************  
+    --**************************************************************************************
         hmAgentLogSysLogConfigGroup                    OBJECT IDENTIFIER ::= { hmAgentLogConfigGroup 4 }
-    
+
         hmAgentLogSyslogAdminStatus OBJECT-TYPE
         SYNTAX      INTEGER {
                     enable(1),
@@ -346,11 +346,11 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "For Enabling and Disabling logging to configured syslog hosts. Setting this to disable 
+            "For Enabling and Disabling logging to configured syslog hosts. Setting this to disable
              stops logging to all syslog hosts."
         DEFVAL { disable }
         ::= { hmAgentLogSysLogConfigGroup 1 }
-        
+
     --**************************************************************************************
     -- hmAgentLogSyslogHostTable
     --
@@ -385,7 +385,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          hmAgentLogHostTableRowStatus
                  RowStatus
          }
-         
+
     hmAgentLogHostTableIndex OBJECT-TYPE
         SYNTAX      Unsigned32
         MAX-ACCESS  not-accessible
@@ -428,12 +428,12 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
         DESCRIPTION
             "Syslog Host table row status"
         ::= { hmAgentLogSyslogHostEntry 7 }
-        
+
     --**************************************************************************************
     -- hmAgentTelnetConfigGroup
     --
     --**************************************************************************************
-    
+
     hmAgentTelnetConfigGroup                  OBJECT IDENTIFIER ::= { hmAgentCLIConfigGroup 2 }
 
     hmAgentTelnetLoginTimeout OBJECT-TYPE
@@ -442,12 +442,12 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "Telnet login timeout (minutes)
-                     
-                     Config telnet timeout  will set the telnet session timeout value. 
-                     A session is active as long as the session has not remained idle for 
-                     the value set. Specify a value from 1 to 160.                     
-                     Note: Changing the timeout value for active 
-                     sessions does not become effective until the session is reaccessed. 
+
+                     Config telnet timeout  will set the telnet session timeout value.
+                     A session is active as long as the session has not remained idle for
+                     the value set. Specify a value from 1 to 160.
+                     Note: Changing the timeout value for active
+                     sessions does not become effective until the session is reaccessed.
                      Any keystroke will also activate the new timeout duration."
          ::= { hmAgentTelnetConfigGroup 1 }
 
@@ -458,11 +458,11 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Maximum number of Telnet Sessions
                      Config telnet maxsessions is an integer value from 0 to 5 that specifies the
-                     maximum number of telnet sessions that can be established. 
-                     If the value is 0, no Telnet session can be established. 
+                     maximum number of telnet sessions that can be established.
+                     If the value is 0, no Telnet session can be established.
                      "
          ::= { hmAgentTelnetConfigGroup 2 }
-    
+
     hmAgentTelnetAllowNewMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -472,17 +472,17 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "Allow new telnet sessions (enable or disable)
-                     Config telnet disable means that no new Telnet sessions are to be 
-                     established. Any already established session remains active until 
-                     the session is ended or an abnormal network error ends it. 
+                     Config telnet disable means that no new Telnet sessions are to be
+                     established. Any already established session remains active until
+                     the session is ended or an abnormal network error ends it.
                      "
           ::= { hmAgentTelnetConfigGroup 3 }
-    
+
     --**************************************************************************************
     -- hmAgentUserConfigGroup
     --
     --**************************************************************************************
-    
+
     hmAgentUserConfigGroup                    OBJECT IDENTIFIER ::= { hmAgentCLIConfigGroup 3 }
 
 
@@ -498,24 +498,24 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          ::= { hmAgentUserConfigGroup 1 }
 
     --**************************************************************************************
-    
+
     hmAgentUserConfigTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentUserConfigEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "User Config Table"
          ::= { hmAgentUserConfigGroup 2 }
-    
+
     hmAgentUserConfigEntry OBJECT-TYPE
          SYNTAX      HmAgentUserConfigEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "User Config Entry"
          INDEX { hmAgentUserIndex }
          ::= { hmAgentUserConfigTable 1 }
-    
+
     HmAgentUserConfigEntry ::= SEQUENCE {
                  hmAgentUserIndex
                      Integer32,
@@ -534,7 +534,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                  hmAgentUserEncryptionPassword
                      DisplayString
              }
-    
+
     hmAgentUserIndex OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  not-accessible
@@ -542,7 +542,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Agent User Config Index"
          ::= { hmAgentUserConfigEntry 1 }
-        
+
     hmAgentUserName OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(1..32))
          MAX-ACCESS  read-write
@@ -551,7 +551,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "Agent User Name.
                      This string is limited to alpha-numeric strings (including the '-' and '_' characters)."
          ::= { hmAgentUserConfigEntry 2 }
-        
+
     hmAgentUserPassword OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(0..32))
          MAX-ACCESS  read-write
@@ -560,7 +560,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "Agent User Password
                      This object will return an empty string even if a password is set."
          ::= { hmAgentUserConfigEntry 3 }
-        
+
     hmAgentUserAccessMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      read(1),
@@ -571,7 +571,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Agent User Access Mode"
          ::= { hmAgentUserConfigEntry 4 }
-        
+
     hmAgentUserStatus OBJECT-TYPE
          SYNTAX      RowStatus
          MAX-ACCESS  read-write
@@ -581,7 +581,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      active(1)  - This user account is active.
                      destroy(6) - Set to this value to remove this user account."
          ::= { hmAgentUserConfigEntry 5 }
-    
+
     hmAgentUserAuthenticationType OBJECT-TYPE
          SYNTAX      INTEGER {
                      none(1),
@@ -594,7 +594,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "SNMPv3 User Authentication.  The user passsword must be set
                      to a string greater than or equal to 8 characters for this to be
                      set to anything but none(1).
-                     
+
                      none(1)      - no authentication used
                      hmacmd5(1)   - Use HMAC-MD5 authentication
                      hmacsha(1)   - Use HMAC-SHA authentication"
@@ -611,24 +611,24 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "SNMPv3 User Encryption
                      Can not be set to des(2) if hmAgentUserAuthenticationType is set to
                      none(1).
-                     
+
                      none(1) - no encryption used
                      des(2)  - DES encryption used"
          ::= { hmAgentUserConfigEntry 7 }
-        
+
     hmAgentUserEncryptionPassword OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(8..64))
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "SNMPv3 User Encryption Password
-                     This object will return an empty string even if a password is 
+                     This object will return an empty string even if a password is
                      set. hmAgentUserEncryptionType must be set to des(2) before this
                      object can be configured.
                      This object will return an empty string even if a password is set."
          ::= { hmAgentUserConfigEntry 8 }
-         
-         
+
+
     hmAgentUserDefaultPwdActive OBJECT-TYPE
          SYNTAX      TruthValue
          MAX-ACCESS  read-only
@@ -637,41 +637,41 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "Shows if one or more default passwords are active for
 					  users configured in the hmAgentUserConfigTable."
          ::= { hmAgentUserConfigGroup 248 }
-         
+
 
     --**************************************************************************************
     -- hmAgentLagConfigGroup
     --
     --**************************************************************************************
     hmAgentLagConfigGroup                 OBJECT IDENTIFIER ::= { hmAgentConfigGroup 2 }
-    
+
     hmAgentLagConfigCreate OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(0|1..15))
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "Agent LAG Create.
-                     When this object is set with a non-empty string, a new LAG will be created 
+                     When this object is set with a non-empty string, a new LAG will be created
                      if possible with the entered string as its name."
          ::= { hmAgentLagConfigGroup 1 }
-         
+
     hmAgentLagSummaryConfigTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentLagSummaryConfigEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "A summary table of the switch's LAG config entries"
          ::= { hmAgentLagConfigGroup 2 }
-    
+
     hmAgentLagSummaryConfigEntry OBJECT-TYPE
          SYNTAX      HmAgentLagSummaryConfigEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "Switch's LAG config entry"
          INDEX       { hmAgentLagSummaryLagIndex }
          ::= { hmAgentLagSummaryConfigTable 1 }
-    
+
     HmAgentLagSummaryConfigEntry ::= SEQUENCE {
              hmAgentLagSummaryLagIndex
                  Integer32,
@@ -700,20 +700,20 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "Agent LAG IfIndex.
-                     
+
                      This value corresponds with the LAG interface in the ifTable."
          ::= { hmAgentLagSummaryConfigEntry 1 }
-    
+
     hmAgentLagSummaryName OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(1..15))
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "Agent LAG Name.
-                     
+
                      The associated name of the LAG used during creation."
          ::= { hmAgentLagSummaryConfigEntry 2 }
-    
+
     hmAgentLagSummaryFlushTimer OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-write
@@ -721,7 +721,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Agent LAG FlushTimer."
          ::= { hmAgentLagSummaryConfigEntry 3 }
-    
+
     hmAgentLagSummaryLinkTrap OBJECT-TYPE
          SYNTAX      INTEGER {
                       enable(1),
@@ -731,10 +731,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "Agent LAG LinkTrap.
-                     
+
                      Configures sending Link Up/Down traps when the LAG interface goes Up or Down."
          ::= { hmAgentLagSummaryConfigEntry 4 }
-    
+
     hmAgentLagSummaryAdminMode OBJECT-TYPE
          SYNTAX      INTEGER {
                       enable(1),
@@ -744,10 +744,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "Agent LAG AdminMode.
-                     
+
                      Administratively enables or disables this LAG interface."
          ::= { hmAgentLagSummaryConfigEntry 5 }
-    
+
     hmAgentLagSummaryStpMode OBJECT-TYPE
          SYNTAX      INTEGER {
                       off(3),
@@ -756,41 +756,41 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Agent LAG StpMode."                     
+                     "Agent LAG StpMode."
          ::= { hmAgentLagSummaryConfigEntry 6 }
-    
+
     hmAgentLagSummaryAddPort OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Agent LAG AddPort.  
-                     
+                     "Agent LAG AddPort.
+
                      Set to a non 0 value to add a port to the LAG.  Values correspond to
                      ifIndex values in the ifTable.
-                     
+
                      Note: hmAgentPortType for the port to be added must be full duplex
                      and the same speed as previously added port(s), if any."
          ::= { hmAgentLagSummaryConfigEntry 7 }
-    
+
     hmAgentLagSummaryDeletePort OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "Agent LAG DeletePort.
-                     
+
                      Set to a non 0 value to remove a port from the LAG.  Values correspond to
                      ifIndex values in the ifTable."
          ::= { hmAgentLagSummaryConfigEntry 8 }
-         
+
     hmAgentLagSummaryStatus OBJECT-TYPE
          SYNTAX      RowStatus
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "Agent LAG Status.
-                     
+
                      active(1)  - This LAG is enabled.
                      destroy(6) - Set to this value to remove the LAG."
          ::= { hmAgentLagSummaryConfigEntry 9 }
@@ -804,7 +804,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "Agent LAG Type.
-                     
+
                      static(1)  - This LAG is staticly maintained.
                      dynamic(2) - This LAG is dynamicly maintained."
          ::= { hmAgentLagSummaryConfigEntry 10 }
@@ -815,19 +815,19 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          SYNTAX      SEQUENCE OF HmAgentLagDetailedConfigEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "A detailed table of the switch's LAG config entries"
          ::= { hmAgentLagConfigGroup 3 }
-    
+
     hmAgentLagDetailedConfigEntry OBJECT-TYPE
          SYNTAX      HmAgentLagDetailedConfigEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "Switch's LAG config entry"
          INDEX       { hmAgentLagDetailedLagIndex, hmAgentLagDetailedIfIndex }
          ::= { hmAgentLagDetailedConfigTable 1 }
-    
+
     HmAgentLagDetailedConfigEntry ::= SEQUENCE {
              hmAgentLagDetailedLagIndex
                  Integer32,
@@ -838,7 +838,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
              hmAgentLagDetailedPortStatus
                  INTEGER
              }
-                 
+
     hmAgentLagDetailedLagIndex OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-only
@@ -846,7 +846,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "LAG index"
          ::= { hmAgentLagDetailedConfigEntry 1 }
-    
+
     hmAgentLagDetailedIfIndex OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-only
@@ -854,7 +854,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "LAG port index"
          ::= { hmAgentLagDetailedConfigEntry 2 }
-    
+
     hmAgentLagDetailedPortSpeed OBJECT-TYPE
          SYNTAX      OBJECT IDENTIFIER
          MAX-ACCESS  read-only
@@ -863,7 +863,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "LAG port speed.  See hmAgentPortType for a description and list
                       of valid values."
          ::= { hmAgentLagDetailedConfigEntry 3 }
-    
+
     hmAgentLagDetailedPortStatus OBJECT-TYPE
          SYNTAX      INTEGER {
                      active(1),
@@ -873,13 +873,13 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "LAG port status.
-                     
+
                      active(1)   - Actively participating in the LAG.
                      inactive(2) - Not participating in the LAG."
          ::= { hmAgentLagDetailedConfigEntry 4 }
-         
+
     --**************************************************************************************
-    
+
     hmAgentLagConfigStaticCapability OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -891,8 +891,8 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "Agent LAG Static Capability.
                      Configures whether Static LAGs are supported on this device."
          ::= { hmAgentLagConfigGroup 4 }
-    
-   
+
+
 
     --**************************************************************************************
     -- hmAgentSpanningTreePortTable
@@ -911,16 +911,16 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The switch's Spanning Tree Switch Status"
          ::= { hmAgentSpanningTreeConfigGroup 1 }
-    
-    
-    
+
+
+
     --**************************************************************************************
     -- hmAgentSwitchConfigGroup
     --
     --**************************************************************************************
 
     hmAgentSwitchConfigGroup                      OBJECT IDENTIFIER ::= { hmAgentConfigGroup 8 }
-    
+
     hmAgentSwitchAddressAgingTimeoutTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentSwitchAddressAgingTimeoutEntry
          MAX-ACCESS  not-accessible
@@ -928,7 +928,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The switch's address aging timeout table"
          ::= { hmAgentSwitchConfigGroup 4 }
-         
+
     hmAgentSwitchAddressAgingTimeoutEntry OBJECT-TYPE
          SYNTAX      HmAgentSwitchAddressAgingTimeoutEntry
          MAX-ACCESS  not-accessible
@@ -937,13 +937,13 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "Aging information about a specific Filtering Database."
          INDEX       { dot1qFdbId }
          ::= { hmAgentSwitchAddressAgingTimeoutTable 1 }
-         
+
     HmAgentSwitchAddressAgingTimeoutEntry ::=
          SEQUENCE {
              hmAgentSwitchAddressAgingTimeout
                  Integer32
          }
-    
+
     hmAgentSwitchAddressAgingTimeout OBJECT-TYPE
          SYNTAX   Integer32 (10..1000000)
          MAX-ACCESS  read-write
@@ -952,7 +952,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "The FDB entry's address aging timeout (in seconds)"
          DEFVAL { 30 }
          ::= { hmAgentSwitchAddressAgingTimeoutEntry 1 }
-    
+
     hmAgentSwitchBroadcastControlMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -961,15 +961,15 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The switch config broadcast allows you to enable or disable 
-                     broadcast storm recovery mode. When you specify Enable for Broadcast 
-                     Storm Recovery and the broadcast traffic on any Ethernet port exceeds 
-                     20 percent of the link speed, the switch blocks (discards) the broadcast 
+                     "The switch config broadcast allows you to enable or disable
+                     broadcast storm recovery mode. When you specify Enable for Broadcast
+                     Storm Recovery and the broadcast traffic on any Ethernet port exceeds
+                     20 percent of the link speed, the switch blocks (discards) the broadcast
                      traffic until the broadcast traffic returns to 10 percent or less.
-                     Upper limit for 10M link is 20% and lower limit is 10%. 
+                     Upper limit for 10M link is 20% and lower limit is 10%.
                      For 100M link Upper limit is 5% and lower limit is 2%"
          ::= { hmAgentSwitchConfigGroup 2 }
-    
+
     hmAgentSwitchDot3FlowControlMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -978,12 +978,12 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Config switchconfig flowcontrol allows you to enable or disable 
-                     802.3x flow control for the switch. This value 
+                     "Config switchconfig flowcontrol allows you to enable or disable
+                     802.3x flow control for the switch. This value
                      applies to only full-duplex mode ports. "
          ::= { hmAgentSwitchConfigGroup 3 }
-    
-    
+
+
     hmAgentSwitchStaticMacFilteringTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentSwitchStaticMacFilteringEntry
          MAX-ACCESS  not-accessible
@@ -991,7 +991,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The switch's static Mac filtering table"
          ::= { hmAgentSwitchConfigGroup 5 }
-         
+
     hmAgentSwitchStaticMacFilteringEntry OBJECT-TYPE
          SYNTAX      HmAgentSwitchStaticMacFilteringEntry
          MAX-ACCESS  not-accessible
@@ -1000,7 +1000,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "Per-port ingress/egress filter configuration based on VLAN Id and MAC address."
          INDEX       { hmAgentSwitchStaticMacFilteringVlanId, hmAgentSwitchStaticMacFilteringAddress }
          ::= { hmAgentSwitchStaticMacFilteringTable 1 }
-         
+
     HmAgentSwitchStaticMacFilteringEntry ::=
          SEQUENCE {
              hmAgentSwitchStaticMacFilteringVlanId
@@ -1014,7 +1014,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
              hmAgentSwitchStaticMacFilteringStatus
                  RowStatus
          }
-    
+
     hmAgentSwitchStaticMacFilteringVlanId OBJECT-TYPE
          SYNTAX   Integer32
          MAX-ACCESS  read-only
@@ -1022,7 +1022,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The Static MAC Filter Vlan Id"
          ::= { hmAgentSwitchStaticMacFilteringEntry 1 }
-   
+
     hmAgentSwitchStaticMacFilteringAddress OBJECT-TYPE
          SYNTAX   MacAddress
          MAX-ACCESS  read-only
@@ -1030,39 +1030,39 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The Static MAC Filter MAC address"
          ::= { hmAgentSwitchStaticMacFilteringEntry 2 }
-   
+
     hmAgentSwitchStaticMacFilteringSourcePortMask OBJECT-TYPE
          SYNTAX   HmAgentPortMask
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "The Static MAC Filter source port mask.
-                     
+
                      When setting this value, the system will ignore configuration for ports not
-                     between the first and last valid ports.  Configuration of any port numbers 
+                     between the first and last valid ports.  Configuration of any port numbers
                      between this range that are not valid ports return a failure message, but will
                      still apply configuration for valid ports.
-                     
+
                      To obtain port numbers from interface numbers, use the objects
-                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable 
+                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable
                      table."
-                     
+
          ::= { hmAgentSwitchStaticMacFilteringEntry 3 }
-   
+
     hmAgentSwitchStaticMacFilteringDestPortMask OBJECT-TYPE
          SYNTAX   HmAgentPortMask
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "The Static MAC Filter destination port mask.
-                     
+
                      When setting this value, the system will ignore configuration for ports not
-                     between the first and last valid ports.  Configuration of any port numbers 
+                     between the first and last valid ports.  Configuration of any port numbers
                      between this range that are not valid ports return a failure message, but will
                      still apply configuration for valid ports.
-                     
+
                      To obtain port numbers from interface numbers, use the objects
-                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable 
+                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable
                      table."
          ::= { hmAgentSwitchStaticMacFilteringEntry 4 }
 
@@ -1071,21 +1071,21 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The Static MAC Filter status.  
-                     
+                     "The Static MAC Filter status.
+
                      Supported values:
                      active(1)      - valid entry
                      createAndGo(4) - used to create a new entry
                      destroy(6)     - removes the entry"
          ::= { hmAgentSwitchStaticMacFilteringEntry 5 }
-   
+
     --**************************************************************************************
     -- hmAgentSwitchIGMPSnoopingGroup
     --
     --**************************************************************************************
-    
+
     hmAgentSwitchIGMPSnoopingGroup                      OBJECT IDENTIFIER ::= { hmAgentSwitchConfigGroup 6 }
-    
+
     hmAgentSwitchIGMPSnoopingAdminMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -1114,13 +1114,13 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The amount of time in seconds a switch will wait after sending 
-                     a query on an interface because it did not receive a report for 
-                     a particular group in that interface.  This value must be less 
+                     "The amount of time in seconds a switch will wait after sending
+                     a query on an interface because it did not receive a report for
+                     a particular group in that interface.  This value must be less
                      than hmAgentSwitchIGMPSnoopingQueryInterval."
          DEFVAL { 10 }
          ::= { hmAgentSwitchIGMPSnoopingGroup 3 }
-    
+
     hmAgentSwitchIGMPSnoopingMRPExpirationTime OBJECT-TYPE
          SYNTAX      Integer32 (0..3600)
          MAX-ACCESS  read-write
@@ -1141,18 +1141,18 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "IGMP Snooping Port Mask.
-                     
-                     This allows configuration of IGMP Snooping on selected ports.  
+
+                     This allows configuration of IGMP Snooping on selected ports.
                      IGMP Snooping cannot be enabled on an interface that has routing
-                     enabled, or is a member of a LAG.  If a port which has IGMP Snooping 
-                     enabled becomes enabled for routing, or is enlisted as a member of a 
+                     enabled, or is a member of a LAG.  If a port which has IGMP Snooping
+                     enabled becomes enabled for routing, or is enlisted as a member of a
                      LAG, IGMP Snooping functionality will be disabled on that port.  IGMP
                      Snooping functionality will be subsequently be reenabled if routing is
                      disabled or LAG membership is removed from an interface that had previously
                      had IGMP Snooping enabled.
-                     
+
                      To obtain port numbers from interface numbers, use the objects
-                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable 
+                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable
                      table."
          DEFVAL { '000000000000'H }
          ::= { hmAgentSwitchIGMPSnoopingGroup 5 }
@@ -1171,7 +1171,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
     --
     --**************************************************************************************
     hmAgentSwitchMFDBGroup                      OBJECT IDENTIFIER ::= { hmAgentSwitchConfigGroup 7 }
-    
+
     hmAgentSwitchMFDBTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentSwitchMFDBEntry
          MAX-ACCESS  not-accessible
@@ -1179,17 +1179,17 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The Multicast Forwarding Database table"
          ::= { hmAgentSwitchMFDBGroup 1 }
-         
+
     hmAgentSwitchMFDBEntry OBJECT-TYPE
          SYNTAX      HmAgentSwitchMFDBEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-                     "Contains Forwarding and Filtering information per Vlan Index, MAC Address, and 
+                     "Contains Forwarding and Filtering information per Vlan Index, MAC Address, and
                      Component User."
          INDEX       { hmAgentSwitchMFDBVlanId, hmAgentSwitchMFDBMacAddress, hmAgentSwitchMFDBProtocolType }
          ::= { hmAgentSwitchMFDBTable 1 }
-         
+
     HmAgentSwitchMFDBEntry ::=
          SEQUENCE {
              hmAgentSwitchMFDBVlanId
@@ -1207,7 +1207,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
              hmAgentSwitchMFDBFilteringPortMask
                  HmAgentPortMask
          }
-    
+
     hmAgentSwitchMFDBVlanId OBJECT-TYPE
          SYNTAX   VlanIndex
          MAX-ACCESS  read-only
@@ -1215,16 +1215,16 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Vlan Index for which this entry is associated with."
          ::= { hmAgentSwitchMFDBEntry 1 }
-         
+
     hmAgentSwitchMFDBMacAddress OBJECT-TYPE
          SYNTAX   MacAddress
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "A multicast MAC address for which the switch has forwarding and or 
+                     "A multicast MAC address for which the switch has forwarding and or
                      filtering information."
          ::= { hmAgentSwitchMFDBEntry 2 }
-         
+
     hmAgentSwitchMFDBProtocolType OBJECT-TYPE
          SYNTAX   INTEGER {
                   static(1),
@@ -1235,10 +1235,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "The component that is responsible for this entry in the Multicast 
+                     "The component that is responsible for this entry in the Multicast
                      Forwarding Database."
          ::= { hmAgentSwitchMFDBEntry 3 }
-   
+
     hmAgentSwitchMFDBType OBJECT-TYPE
          SYNTAX   INTEGER {
                   static(1),
@@ -1247,12 +1247,12 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "This displays the type of the entry. 
-                     
+                     "This displays the type of the entry.
+
                      static(1)  - Entries configured by the end user
                      dynamic(2) - Entries added as a result of a learning process or protocol"
          ::= { hmAgentSwitchMFDBEntry 4 }
-   
+
     hmAgentSwitchMFDBDescription OBJECT-TYPE
          SYNTAX   DisplayString
          MAX-ACCESS  read-only
@@ -1260,33 +1260,33 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Text description of this multicast table entry."
          ::= { hmAgentSwitchMFDBEntry 5 }
-   
+
     hmAgentSwitchMFDBForwardingPortMask OBJECT-TYPE
          SYNTAX   HmAgentPortMask
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
                      "BitMask indicating which ports this entry indicates should be forwarded.
-                     
+
                      To obtain port numbers from interface numbers, use the objects
-                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable 
+                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable
                      table."
          ::= { hmAgentSwitchMFDBEntry 6 }
-   
+
     hmAgentSwitchMFDBFilteringPortMask OBJECT-TYPE
          SYNTAX   HmAgentPortMask
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
                      "BitMask indicating which ports this entry indicates should be filtered.
-                     
+
                      To obtain port numbers from interface numbers, use the objects
-                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable 
+                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable
                      table."
          ::= { hmAgentSwitchMFDBEntry 7 }
-    
+
     --**************************************************************************************
-    
+
     hmAgentSwitchMFDBSummaryTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentSwitchMFDBSummaryEntry
          MAX-ACCESS  not-accessible
@@ -1294,7 +1294,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The Multicast Forwarding Database Summary table"
          ::= { hmAgentSwitchMFDBGroup 2 }
-         
+
     hmAgentSwitchMFDBSummaryEntry OBJECT-TYPE
          SYNTAX      HmAgentSwitchMFDBSummaryEntry
          MAX-ACCESS  not-accessible
@@ -1304,7 +1304,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      MFDB table entries with the same Vlan Index and MAC Address."
          INDEX       { hmAgentSwitchMFDBSummaryVlanId, hmAgentSwitchMFDBSummaryMacAddress }
          ::= { hmAgentSwitchMFDBSummaryTable 1 }
-         
+
     HmAgentSwitchMFDBSummaryEntry ::=
          SEQUENCE {
              hmAgentSwitchMFDBSummaryVlanId
@@ -1314,7 +1314,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
              hmAgentSwitchMFDBSummaryForwardingPortMask
                  HmAgentPortMask
          }
-    
+
     hmAgentSwitchMFDBSummaryVlanId OBJECT-TYPE
          SYNTAX   VlanIndex
          MAX-ACCESS  read-only
@@ -1322,66 +1322,66 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Vlan Index for which this entry is associated with."
          ::= { hmAgentSwitchMFDBSummaryEntry 1 }
-         
+
     hmAgentSwitchMFDBSummaryMacAddress OBJECT-TYPE
          SYNTAX   MacAddress
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "A multicast MAC address for which the switch has forwarding and or 
+                     "A multicast MAC address for which the switch has forwarding and or
                      filtering information."
          ::= { hmAgentSwitchMFDBSummaryEntry 2 }
-         
+
     hmAgentSwitchMFDBSummaryForwardingPortMask OBJECT-TYPE
          SYNTAX   HmAgentPortMask
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
                      "Port Mask indicating which ports this entry indicates should be forwarded.
-                     
+
                      To obtain port numbers from interface numbers, use the objects
-                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable 
+                     hmAgentPortDot1dBasePort and hmAgentPortIfIndex in the hmAgentPortConfigTable
                      table."
          ::= { hmAgentSwitchMFDBSummaryEntry 3 }
-         
+
     --**************************************************************************************
-         
+
     hmAgentSwitchMFDBMaxTableEntries OBJECT-TYPE
          SYNTAX   Gauge32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "This displays the maximum number of entries that can possibly be in 
+                     "This displays the maximum number of entries that can possibly be in
                      the Multicast Forwarding Database table."
          ::= { hmAgentSwitchMFDBGroup 3 }
-         
+
     hmAgentSwitchMFDBMostEntriesUsed OBJECT-TYPE
          SYNTAX   Gauge32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "This displays the largest number of entries that have been present 
-                     in the Multicast Forwarding Database table. This value is also known 
+                     "This displays the largest number of entries that have been present
+                     in the Multicast Forwarding Database table. This value is also known
                      as the MFDB high-water mark."
          ::= { hmAgentSwitchMFDBGroup 4 }
-         
+
     hmAgentSwitchMFDBCurrentEntries OBJECT-TYPE
          SYNTAX   Gauge32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "This displays the current number of entries in the Multicast 
+                     "This displays the current number of entries in the Multicast
                      Forwarding Database table."
          ::= { hmAgentSwitchMFDBGroup 5 }
-    
+
 
     --**************************************************************************************
     -- hmAgentSwitchDVlanTagGroup
     --
     --**************************************************************************************
-    
+
     hmAgentSwitchDVlanTagGroup                      OBJECT IDENTIFIER ::= { hmAgentSwitchConfigGroup 8 }
-    
+
     hmAgentSwitchDVlanTagEthertype OBJECT-TYPE
          SYNTAX      Integer32 (0..65535) -- 0x0000..0xFFFF
          MAX-ACCESS  read-write
@@ -1391,10 +1391,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                       If this object is supported, ethertype cannot be
                       configured per port.
 
-                      Commonly used are the Ethertypes for vman tags (34984, or 0x88A8) 
+                      Commonly used are the Ethertypes for vman tags (34984, or 0x88A8)
                       and dot1q tags (33024, or 0x8100)."
          ::= { hmAgentSwitchDVlanTagGroup 1 }
-         
+
 
     --**************************************************************************************
     -- hmAgentTransferConfigGroup
@@ -1402,15 +1402,15 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
     --**************************************************************************************
 
     hmAgentTransferConfigGroup                  OBJECT IDENTIFIER ::= { hmAgentConfigGroup 9 }
-    
-    
+
+
     --**************************************************************************************
     -- hmAgentTransferUploadGroup
     --
     --**************************************************************************************
-    
+
     hmAgentTransferUploadGroup                  OBJECT IDENTIFIER ::= { hmAgentTransferConfigGroup 1 }
-    
+
     hmAgentTransferUploadMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      tftp(1),
@@ -1421,9 +1421,9 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer upload mode configures the mode to use when uploading from the 
-                     switch. The mode is either X/Y/ZMODEM or TFTP. X/Y/ZMODEM is valid only when the 
-                     file transfer is initiated by the serial EIA 232 port. 
+                     "Transfer upload mode configures the mode to use when uploading from the
+                     switch. The mode is either X/Y/ZMODEM or TFTP. X/Y/ZMODEM is valid only when the
+                     file transfer is initiated by the serial EIA 232 port.
                      "
          ::= { hmAgentTransferUploadGroup 1 }
 
@@ -1432,37 +1432,37 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer upload tftpserverip configures the IP address of the server 
-                     where the file is located. It is valid only when the Transfer Mode is 
+                     "Transfer upload tftpserverip configures the IP address of the server
+                     where the file is located. It is valid only when the Transfer Mode is
                      TFTP. The address is 4 integer bytes ranging from 0 to 255."
          ::= { hmAgentTransferUploadGroup 2 }
- 
+
     hmAgentTransferUploadPath OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(0..31))
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "Transfer upload tftppath configures the directory path where the file
-                     is to be uploaded to. The switch remembers the last file path used. 
+                     is to be uploaded to. The switch remembers the last file path used.
                      "
          ::= { hmAgentTransferUploadGroup 3 }
- 
+
     hmAgentTransferUploadFilename OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(0..31))
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer upload tftpfilename configures the file name for the file being 
-                     uploaded from the switch. It can be up to 32 alphanumeric characters. 
-                     The switch remembers the last file name used.  
-                     File path can be appended to the file name if the string is less than 17 
-                     characters. Otherwise, the File Path field will need to be used and the 
-                     File Name will be appended to the File Path as is. An example would be 
-                     File Path set to c:/tftp/code/ and File Name set to e1r1v1.opr. 
-                     Note: File Name, File Path, and TFTP Server IP Address are applicable 
+                     "Transfer upload tftpfilename configures the file name for the file being
+                     uploaded from the switch. It can be up to 32 alphanumeric characters.
+                     The switch remembers the last file name used.
+                     File path can be appended to the file name if the string is less than 17
+                     characters. Otherwise, the File Path field will need to be used and the
+                     File Name will be appended to the File Path as is. An example would be
+                     File Path set to c:/tftp/code/ and File Name set to e1r1v1.opr.
+                     Note: File Name, File Path, and TFTP Server IP Address are applicable
                      only if the Transfer Mode is TFTP."
          ::= { hmAgentTransferUploadGroup 4 }
- 
+
     hmAgentTransferUploadDataType OBJECT-TYPE
          SYNTAX      INTEGER {
                       config(2),
@@ -1474,8 +1474,8 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer upload datatype configures the type of file to upload from the 
-                     switch. 
+                     "Transfer upload datatype configures the type of file to upload from the
+                     switch.
                      The types for upload are:
                         -	Configuration File
                         -	Error log
@@ -1493,7 +1493,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer upload start will start an upload transfer. 
+                     "Transfer upload start will start an upload transfer.
                      The hmAgentTransferUploadMode object must not be set to xmodem(2),
 			 ymodem(3), or zmodem(4) to initiate a transfer via SNMP."
          ::= { hmAgentTransferUploadGroup 6 }
@@ -1519,16 +1519,16 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Indicates the current status of an upload transfer."
          ::= { hmAgentTransferUploadGroup 7 }
-         
+
 
 
     --**************************************************************************************
     -- hmAgentTransferDownloadGroup
     --
     --**************************************************************************************
-    
+
     hmAgentTransferDownloadGroup                  OBJECT IDENTIFIER ::= { hmAgentTransferConfigGroup 2 }
-    
+
     hmAgentTransferDownloadMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      tftp(1),
@@ -1539,9 +1539,9 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer download mode configures the mode to use when downloading 
-                     to the switch. The mode is either X/Y/ZMODEM or TFTP. X/Y/ZMODEM is valid only 
-                     when the file transfer is initiated by the serial EIA 232 port. 
+                     "Transfer download mode configures the mode to use when downloading
+                     to the switch. The mode is either X/Y/ZMODEM or TFTP. X/Y/ZMODEM is valid only
+                     when the file transfer is initiated by the serial EIA 232 port.
                      "
          ::= { hmAgentTransferDownloadGroup 1 }
 
@@ -1550,41 +1550,41 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer download tftpserverip configures the IP address of the server 
-                     where the file is located. It is valid only when the Transfer Mode is TFTP. 
-                     The address is 4 integer bytes ranging from 0 to 255. 
+                     "Transfer download tftpserverip configures the IP address of the server
+                     where the file is located. It is valid only when the Transfer Mode is TFTP.
+                     The address is 4 integer bytes ranging from 0 to 255.
                      "
-                     
+
          ::= { hmAgentTransferDownloadGroup 2 }
- 
+
     hmAgentTransferDownloadPath OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(0..31))
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer download tftppath configures the directory path where the 
-                     file is located. The switch remembers the last file path used. 
+                     "Transfer download tftppath configures the directory path where the
+                     file is located. The switch remembers the last file path used.
                      "
-                     
+
          ::= { hmAgentTransferDownloadGroup 3 }
- 
+
     hmAgentTransferDownloadFilename OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(0..31))
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer download tftpfilename configures the file name for the file 
-                     being downloaded to the switch. It can be up to 32 alphanumeric characters. 
-                     The switch remembers the last file name used.  
-                     File path can be appended to the file name if the string is less than 33 
-                     characters. Otherwise, the File Path field will need to be used and the 
-                     File Name will be appended to the File Path as is. An example would be 
-                     File Path set to c:/tftp/code/ and File Name set to e1r1v1.opr. 
-                     Note: File Name, File Path, and TFTP Server IP Address are applicable 
+                     "Transfer download tftpfilename configures the file name for the file
+                     being downloaded to the switch. It can be up to 32 alphanumeric characters.
+                     The switch remembers the last file name used.
+                     File path can be appended to the file name if the string is less than 33
+                     characters. Otherwise, the File Path field will need to be used and the
+                     File Name will be appended to the File Path as is. An example would be
+                     File Path set to c:/tftp/code/ and File Name set to e1r1v1.opr.
+                     Note: File Name, File Path, and TFTP Server IP Address are applicable
                      only if the Transfer Mode is TFTP."
-                     
+
          ::= { hmAgentTransferDownloadGroup 4 }
- 
+
     hmAgentTransferDownloadDataType OBJECT-TYPE
          SYNTAX      INTEGER {
                      code(2),
@@ -1601,10 +1601,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer download datatype configures the type of file to download to 
-                     the switch. 
+                     "Transfer download datatype configures the type of file to download to
+                     the switch.
                      The types for download are:
-                     
+
                      code               - Code File
                      config             - Configuration File
                       "
@@ -1619,7 +1619,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Transfer download start will start an download transfer. 
+                     "Transfer download start will start an download transfer.
                      The hmAgentTransferDownloadMode object must not be set to xmodem(2),
 			 ymodem(3), or zmodem(4) to initiate a transfer via SNMP."
          ::= { hmAgentTransferDownloadGroup 6 }
@@ -1661,7 +1661,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                          "IfIndex of the mirrored port"
              DEFVAL { 0 }
              ::= { hmAgentPortMirroringGroup 1 }
-             
+
          hmAgentProbePortIfIndex OBJECT-TYPE
              SYNTAX      Integer32
              MAX-ACCESS  read-write
@@ -1670,7 +1670,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                          "IfIndex of the probe port"
              DEFVAL { 0 }
              ::= { hmAgentPortMirroringGroup 2 }
-             
+
          hmAgentPortMirroringMode OBJECT-TYPE
              SYNTAX      INTEGER {
                          enable(1),
@@ -1681,7 +1681,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
              STATUS      obsolete
              DESCRIPTION
                          "Port mirroring mode:
-                         
+
                          enable - enable mirroring mode
                          disable - disable mirroring mode
                          delete - clear MirroredPort and Probe Port configuration"
@@ -1752,7 +1752,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "The ports from which traffic will be sent to the destination port.
                      The destination port can not be included in this list of ports."
          ::= { hmAgentPortMirrorEntry 3 }
-         
+
     hmAgentPortMirrorIngressMask OBJECT-TYPE
          SYNTAX      HmAgentPortMask
          MAX-ACCESS  read-write
@@ -1789,33 +1789,33 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
     --**************************************************************************************
     -- hmAgentDot3adAggPortTable
     --**************************************************************************************
-    
+
     hmAgentDot3adAggPortTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentDot3adAggPortEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "This table provides 802.3ad link aggregation information for each
                       physical port that is not available through the standard MIB."
          ::= { hmAgentConfigGroup 12 }
-    
+
     hmAgentDot3adAggPortEntry OBJECT-TYPE
          SYNTAX      HmAgentDot3adAggPortEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "Information about a table entry.  The hmAgentDot3adAggPort identifies
                       the external interface number of the port."
          INDEX       { hmAgentDot3adAggPort }
          ::= { hmAgentDot3adAggPortTable 1 }
-         
+
     HmAgentDot3adAggPortEntry ::= SEQUENCE {
          hmAgentDot3adAggPort
               Integer32,
          hmAgentDot3adAggPortLACPMode
               INTEGER
          }
-         
+
     hmAgentDot3adAggPort OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-only
@@ -1823,7 +1823,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "ifIndex of this physical port"
          ::= { hmAgentDot3adAggPortEntry 1 }
-         
+
     hmAgentDot3adAggPortLACPMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -1834,29 +1834,29 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Enable/disable 802.3ad LACP on this port"
          ::= { hmAgentDot3adAggPortEntry 2 }
-         
+
     --**************************************************************************************
     -- hmAgentPortConfigTable
     --
     --**************************************************************************************
-    
+
     hmAgentPortConfigTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentPortConfigEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "A table of the switch's physical port config entries"
          ::= { hmAgentConfigGroup 13 }
-    
+
     hmAgentPortConfigEntry OBJECT-TYPE
          SYNTAX      HmAgentPortConfigEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "Switch's physical port config entry"
          INDEX       { hmAgentPortDot1dBasePort }
          ::= { hmAgentPortConfigTable 1 }
-    
+
     HmAgentPortConfigEntry ::= SEQUENCE {
           hmAgentPortDot1dBasePort
               Integer32,
@@ -1890,8 +1890,8 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
               INTEGER,
           hmAgentPortDVlanTagEthertype
               Integer32,
-          hmAgentPortDVlanTagCustomerId              
-              Integer32,            
+          hmAgentPortDVlanTagCustomerId
+              Integer32,
           hmAgentPortMaxFrameSizeLimit
               Integer32,
           hmAgentPortMaxFrameSize
@@ -1909,9 +1909,9 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
           hmAgentPortVoiceVlanDSCP
               Integer32,
           hmAgentPortVoiceVlanAuthMode
-              INTEGER              
+              INTEGER
           }
-        
+
     hmAgentPortDot1dBasePort OBJECT-TYPE
          SYNTAX  Integer32 (1..65535)
          MAX-ACCESS  read-only
@@ -1919,7 +1919,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                  "The port number of this port."
          ::= { hmAgentPortConfigEntry 1 }
-         
+
     hmAgentPortIfIndex OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-only
@@ -1927,7 +1927,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The switch's Port IfIndex"
          ::= { hmAgentPortConfigEntry 2 }
-    
+
     hmAgentPortIanaType OBJECT-TYPE
          SYNTAX      IANAifType
          MAX-ACCESS  read-only
@@ -1935,7 +1935,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The switch's Port Type"
          ::= { hmAgentPortConfigEntry 3 }
-    
+
     hmAgentPortSTPMode OBJECT-TYPE
          SYNTAX      INTEGER {
                       dot1d(1),
@@ -1946,14 +1946,14 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "The switch's Port Spanning Tree Protocol Mode
-                      STP mode values are: 
-                      
-                      dot1d (the default) 
+                      STP mode values are:
+
+                      dot1d (the default)
                       fast, indicates you want to use the fast spanning tree mode
                       off, indicates the STP mode is turned off for a particular port
                       This object is only supported when the Dot1d Protocol is enabled."
          ::= { hmAgentPortConfigEntry 4 }
-    
+
     hmAgentPortSTPState OBJECT-TYPE
          SYNTAX      INTEGER {
                       blocking(1),
@@ -1968,7 +1968,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "The switch's Port Spanning Tree Protocol State.
                       This object is only supported when the Dot1d Protocol is enabled."
          ::= { hmAgentPortConfigEntry 5 }
-    
+
     hmAgentPortAdminMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -1979,7 +1979,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The switch's Port Admin Mode"
          ::= { hmAgentPortConfigEntry 6 }
-    
+
     hmAgentPortPhysicalMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      auto-negotiate(1),
@@ -1997,7 +1997,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "The switch's Port Speed Mode.  This is the configured physical mode.
                       This object is read-only for gigabit ports"
          ::= { hmAgentPortConfigEntry 7 }
-    
+
     hmAgentPortPhysicalStatus OBJECT-TYPE
          SYNTAX      INTEGER {
                      auto-negotiate(1),
@@ -2045,7 +2045,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                  "This object identifies the default administrative port type,
                   to be used in conjunction with the operational port type
                   denoted by hmAgentPortType.
-                  
+
                   The set of possible values for this object is
                   the same as the set defined for the hmAgentPortType
                   object.
@@ -2060,9 +2060,9 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                   the operational type of the MAU is determined by auto-negotiation,
                   and the value of this object denotes the type to which the MAU
                   will automatically revert if/when auto-negotiation is later disabled.
-                  
+
                   The valid values for this object are:
-                  
+
                        dot3MauType10BaseTHD
                        dot3MauType10BaseTFD
                        dot3MauType100BaseTXHD
@@ -2071,7 +2071,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                        dot3MauType1000BaseSXFD"
          REFERENCE "RFC 2668"
          ::= { hmAgentPortConfigEntry 11 }
-         
+
     hmAgentPortType OBJECT-TYPE
          SYNTAX  OBJECT IDENTIFIER
          MAX-ACCESS  read-only
@@ -2095,9 +2095,9 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                   a value determined by the GBIC connected to the card.  In case (2), a
                   set to the object hmAgentPortDefaultType will force the MAU into the
                   new operating mode.
-                 
+
                   The valid values for this object are:
-                  
+
                        dot3MauType10BaseTHD
                        dot3MauType10BaseTFD
                        dot3MauType100BaseTXHD
@@ -2107,7 +2107,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                        dot3MauType1000BaseTFD"
          REFERENCE "RFC 2668"
          ::= { hmAgentPortConfigEntry 12 }
-         
+
     hmAgentPortAutoNegAdminStatus OBJECT-TYPE
          SYNTAX  INTEGER {
                     enable(1),
@@ -2119,7 +2119,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                  "This object identifies the administration status of auto negotiation
                   for this port."
          ::= { hmAgentPortConfigEntry 13 }
-         
+
     hmAgentPortDot3FlowControlMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -2128,11 +2128,11 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Config flowcontrol allows you to enable or disable 
-                     802.3x flow control for this port. This value 
+                     "Config flowcontrol allows you to enable or disable
+                     802.3x flow control for this port. This value
                      applies to only full-duplex mode ports. "
          ::= { hmAgentPortConfigEntry 14 }
-         
+
     hmAgentPortDVlanTagMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      core(1),
@@ -2146,7 +2146,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                       Default is normal(2)."
          DEFVAL { normal }
          ::= { hmAgentPortConfigEntry 15 }
-         
+
     hmAgentPortDVlanTagEthertype OBJECT-TYPE
          SYNTAX      Integer32 (0..65535) -- 0x0000..0xFFFF
          MAX-ACCESS  read-write
@@ -2156,11 +2156,11 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                       If this object is supported, ethertype cannot be configured
                       globally for the switch.
 
-                      Commonly used are the Ethertypes for vman tags (34984, or 0x88A8) 
+                      Commonly used are the Ethertypes for vman tags (34984, or 0x88A8)
                       and dot1q tags (33024, or 0x8100)."
  		 DEFVAL { 33024 }
          ::= { hmAgentPortConfigEntry 16 }
-         
+
     hmAgentPortDVlanTagCustomerId OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-write
@@ -2168,7 +2168,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "Configures the Customer ID for the Double Vlan Tag for this port."
          ::= { hmAgentPortConfigEntry 17 }
-         
+
     hmAgentPortMaxFrameSizeLimit OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-only
@@ -2177,7 +2177,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "This object identifies the largest value that can be
                      configured for hmAgentPortMaxFrameSize"
          ::= { hmAgentPortConfigEntry 18 }
-         
+
     hmAgentPortMaxFrameSize OBJECT-TYPE
          SYNTAX      Integer32
          MAX-ACCESS  read-write
@@ -2189,7 +2189,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      which support 802.1Q vlan tagging, the minimum value that this object
                      can be set to is 1522"
          ::= { hmAgentPortConfigEntry 19 }
-         
+
     hmAgentPortVoiceVlanMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      none(1),
@@ -2266,14 +2266,14 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "Describes and Configures the Port Voice VLAN Authentication mode.
                      Disable means authentication not required for voice devices when dot1x is enabled."
          ::= { hmAgentPortConfigEntry 26 }
-         
-         
+
+
     --**************************************************************************************
     --    hmAgentProtocolConfigGroup
     --**************************************************************************************
 
     hmAgentProtocolConfigGroup                     OBJECT IDENTIFIER ::= { hmAgentConfigGroup 14 }
-    
+
     hmAgentProtocolGroupCreate OBJECT-TYPE
          SYNTAX  DisplayString (SIZE(1..16))
          MAX-ACCESS  read-write
@@ -2281,28 +2281,28 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                  "Set to non-empty string to create a Protocol-Based VLAN group."
          ::= { hmAgentProtocolConfigGroup 1 }
-    
+
     --**************************************************************************************
     --    hmAgentProtocolGroupTable
     --**************************************************************************************
-    
+
     hmAgentProtocolGroupTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentProtocolGroupEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "A table of the switch's Protocol-based VLAN entries"
          ::= { hmAgentProtocolConfigGroup 2 }
-         
+
     hmAgentProtocolGroupEntry OBJECT-TYPE
          SYNTAX      HmAgentProtocolGroupEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "Switch's Protocol-based VLAN entry"
          INDEX       { hmAgentProtocolGroupId }
          ::= { hmAgentProtocolGroupTable 1 }
-    
+
     HmAgentProtocolGroupEntry ::= SEQUENCE {
           hmAgentProtocolGroupId
               Integer32,
@@ -2319,7 +2319,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
           hmAgentProtocolGroupStatus
               RowStatus
           }
-    
+
     hmAgentProtocolGroupId OBJECT-TYPE
          SYNTAX  Integer32
          MAX-ACCESS  read-only
@@ -2327,7 +2327,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                  "Group identifier of the Protocol-based VLAN entry."
          ::= { hmAgentProtocolGroupEntry 1 }
-          
+
     hmAgentProtocolGroupName OBJECT-TYPE
          SYNTAX  DisplayString
          MAX-ACCESS  read-only
@@ -2335,7 +2335,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                  "Group name of the Protocol-based VLAN entry."
          ::= { hmAgentProtocolGroupEntry 2 }
-          
+
     hmAgentProtocolGroupVlanId OBJECT-TYPE
          SYNTAX  Integer32
          MAX-ACCESS  read-write
@@ -2343,7 +2343,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                  "VLAN associated with the Protocol-based VLAN entry.  Set to 0 to remove."
          ::= { hmAgentProtocolGroupEntry 3 }
-          
+
     hmAgentProtocolGroupProtocolIP OBJECT-TYPE
          SYNTAX     INTEGER {
                     enable(1),
@@ -2354,7 +2354,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                  "The status of the IP protocol association with the Protocol-based VLAN entry."
          ::= { hmAgentProtocolGroupEntry 4 }
-          
+
     hmAgentProtocolGroupProtocolARP OBJECT-TYPE
          SYNTAX     INTEGER {
                     enable(1),
@@ -2376,14 +2376,14 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                  "The status of the IPX protocol association with the Protocol-based VLAN entry."
          ::= { hmAgentProtocolGroupEntry 6 }
-          
+
     hmAgentProtocolGroupStatus OBJECT-TYPE
          SYNTAX  RowStatus
          MAX-ACCESS  read-write
          STATUS  current
          DESCRIPTION
                  "The status of the Protocol-based VLAN entry.
-                 
+
                  active(1)  - this entry is active
                  destroy(6) - remove this entry"
          ::= { hmAgentProtocolGroupEntry 7 }
@@ -2391,31 +2391,31 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
     --**************************************************************************************
     --    hmAgentProtocolGroupPortTable
     --**************************************************************************************
-    
+
     hmAgentProtocolGroupPortTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF HmAgentProtocolGroupPortEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "A table of the switch's physical port config entries"
          ::= { hmAgentProtocolConfigGroup 3 }
-         
+
     hmAgentProtocolGroupPortEntry OBJECT-TYPE
          SYNTAX      HmAgentProtocolGroupPortEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "Switch's physical port config entry"
          INDEX       { hmAgentProtocolGroupId, hmAgentProtocolGroupPortIfIndex }
          ::= { hmAgentProtocolGroupPortTable 1 }
-    
+
     HmAgentProtocolGroupPortEntry ::= SEQUENCE {
           hmAgentProtocolGroupPortIfIndex
               Integer32,
           hmAgentProtocolGroupPortStatus
               RowStatus
           }
-          
+
     hmAgentProtocolGroupPortIfIndex OBJECT-TYPE
          SYNTAX  Integer32
          MAX-ACCESS  read-only
@@ -2423,20 +2423,20 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                  "The interface number of this instance."
          ::= { hmAgentProtocolGroupPortEntry 1 }
-          
+
     hmAgentProtocolGroupPortStatus OBJECT-TYPE
          SYNTAX  RowStatus
          MAX-ACCESS  read-create
          STATUS  current
          DESCRIPTION
                  "The status of this entry.
-                 
+
                  active(1)        - the port is associated with this group
                  createAndGo(4)   - add the port to this group
                  createAndWait(5) - add the port to this group
                  destroy(6)       - remove the port from this group"
          ::= { hmAgentProtocolGroupPortEntry 2 }
-          
+
     --**************************************************************************************
     --    hmAgentStpSwitchConfigGroup
     --**************************************************************************************
@@ -2456,7 +2456,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "The MST configuration format selector. A value other than 0 (zero) 
+                     "The MST configuration format selector. A value other than 0 (zero)
                      indicates non-support for the IEEE 802.1s standard."
          ::= { hmAgentStpSwitchConfigGroup 2 }
 
@@ -2499,10 +2499,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "The spanning tree operational status.
-                     
+
                      enable(1)  - enables spanning tree operational status on the switch.
                      disable(2) - disables spanning tree operational status on the switch.
-                     
+
                      The default status is enabled."
          DEFVAL { enable }
          ::= { hmAgentStpSwitchConfigGroup 6 }
@@ -2563,7 +2563,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "STP port entry."
          INDEX       { ifIndex }
          ::= { hmAgentStpPortTable 1 }
-         
+
     HmAgentStpPortEntry ::=
          SEQUENCE {
          hmAgentStpPortState
@@ -2597,15 +2597,15 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "The administrative STP state for the port.
-                     
+
                      enable(1)  - enables STP on the port.
                      disable(2) - disables STP on the port.
-                     
-                     The default port STP state is enabled for the first 4095 
+
+                     The default port STP state is enabled for the first 4095
                      ports and disabled for any ports beyond."
          DEFVAL { enable }
          ::= { hmAgentStpPortEntry 1 }
-         
+
     hmAgentStpPortStatsMstpBpduRx OBJECT-TYPE
          SYNTAX      Counter32
          MAX-ACCESS  read-only
@@ -2659,10 +2659,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Time since port was reset. 
+                     "Time since port was reset.
                      It is displayed in days, hours, minutes, and seconds."
          ::= { hmAgentStpPortEntry 8 }
-         
+
     hmAgentStpPortMigrationCheck OBJECT-TYPE
          SYNTAX      INTEGER {
                      false(0),
@@ -2671,12 +2671,12 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Force the specified port to transmit RSTP or MSTP BPDU's. 
-                     
+                     "Force the specified port to transmit RSTP or MSTP BPDU's.
+
                      Supported values:
                      false(0) - BPDUs are not to be transmitted.
                      true(1)  - BPDUs are to be transmitted
-                     
+
                      A non-zero value indicates that BPDUs are to be sent on the specified port."
          ::= { hmAgentStpPortEntry 9 }
 
@@ -2835,7 +2835,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
 	      REFERENCE
 	              "IEEE 802.1D-1990: Section 4.5.3.3"
 	      ::= { hmAgentStpCstConfigGroup 15 }
-      
+
     hmAgentStpCstBridgeMaxHops OBJECT-TYPE
          SYNTAX      Unsigned32 (6..40)
          MAX-ACCESS  read-write
@@ -2878,7 +2878,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "CIST port entry."
          INDEX       { ifIndex }
          ::= { hmAgentStpCstPortTable 1 }
-         
+
     HmAgentStpCstPortEntry ::=
          SEQUENCE {
          hmAgentStpCstPortOperEdge
@@ -2967,10 +2967,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "The administrative state of a specific port in CIST.
-                     
+
                      true(1)  - port is edge port.
                      false(2) - port is auto-edge or no edge port.
-                     
+
                      The default port state is disabled."
          DEFVAL { false }
          ::= { hmAgentStpCstPortEntry 4 }
@@ -3003,8 +3003,8 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The MSTP port path cost in CIST. The default value will 
-                     correspond to the recommendation specified in IEEE 802.1s Table 13-2 
+                     "The MSTP port path cost in CIST. The default value will
+                     correspond to the recommendation specified in IEEE 802.1s Table 13-2
                      which varies depending upon link speed."
          ::= { hmAgentStpCstPortEntry 7 }
 
@@ -3013,7 +3013,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The MSTP port priority in CIST. The priority is 
+                     "The MSTP port priority in CIST. The priority is
                      in the increments of 16. The default value is 128."
          DEFVAL { 128 }
          ::= { hmAgentStpCstPortEntry 8 }
@@ -3080,9 +3080,9 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "The current Port Role for the Port (i.e., Root, Alternate,
-                     Designated, or Backup), for the CIST." 
+                     Designated, or Backup), for the CIST."
          ::= { hmAgentStpCstPortEntry 14 }
-	
+
     hmAgentStpCstPortDisputed OBJECT-TYPE
          SYNTAX      INTEGER {
                      true(1),
@@ -3217,7 +3217,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "MST entry."
          INDEX       { hmAgentStpMstId }
          ::= { hmAgentStpMstTable 1 }
-         
+
     HmAgentStpMstEntry ::=
          SEQUENCE {
          hmAgentStpMstId
@@ -3255,7 +3255,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The MSTP bridge priority in a specific instance. The priority is 
+                     "The MSTP bridge priority in a specific instance. The priority is
                      in the increments of 4096. The recommended default value is 32768."
          DEFVAL { 32768 }
          ::= { hmAgentStpMstEntry 2 }
@@ -3325,7 +3325,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "The MSTP instance status.
-                     
+
                      Supported values:
                      active(1)      - valid instance.
                      createAndGo(4) - used to create a new instance.
@@ -3353,7 +3353,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "MST port entry."
          INDEX       { hmAgentStpMstId, ifIndex }
          ::= { hmAgentStpMstPortTable 1 }
-         
+
     HmAgentStpMstPortEntry ::=
          SEQUENCE {
          hmAgentStpMstPortForwardingState
@@ -3385,7 +3385,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          hmAgentStpMstReceivedRPC
                  Unsigned32,
          hmAgentStpMstReceivedPortId
-                 OCTET STRING                
+                 OCTET STRING
          }
 
     hmAgentStpMstPortForwardingState OBJECT-TYPE
@@ -3416,8 +3416,8 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The MSTP port path cost in a specific instance. The default value will 
-                     correspond to the recommendation specified in IEEE 802.1s Table 13-2 
+                     "The MSTP port path cost in a specific instance. The default value will
+                     correspond to the recommendation specified in IEEE 802.1s Table 13-2
                      which varies depending upon link speed."
          ::= { hmAgentStpMstPortEntry 3 }
 
@@ -3426,7 +3426,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The MSTP port priority in a specific instance. The priority is 
+                     "The MSTP port priority in a specific instance. The priority is
                      in the increments of 16. The default value is 128."
          DEFVAL { 128 }
          ::= { hmAgentStpMstPortEntry 4 }
@@ -3511,7 +3511,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The number of times this interface has transitioned out of loop inconsistent state."
          ::= { hmAgentStpMstPortEntry 12 }
-         
+
     hmAgentStpMstReceivedBridgeId OBJECT-TYPE
          SYNTAX      OCTET STRING (SIZE(8))
          MAX-ACCESS  read-only
@@ -3519,7 +3519,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                      "The MSTP received bridge ID on a specific port in a specific instance."
          ::= { hmAgentStpMstPortEntry 13 }
-         
+
     hmAgentStpMstReceivedRPC OBJECT-TYPE
          SYNTAX      Unsigned32
          MAX-ACCESS  read-only
@@ -3534,8 +3534,8 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "The MSTP received port ID on a specific port in a specific instance."
-         ::= { hmAgentStpMstPortEntry 15 }   
-         
+         ::= { hmAgentStpMstPortEntry 15 }
+
     --**************************************************************************************
     -- hmAgentStpMstVlanTable
     --
@@ -3557,7 +3557,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      "MST VLAN entry."
          INDEX       { hmAgentStpMstId, dot1qVlanIndex }
          ::= { hmAgentStpMstVlanTable 1 }
-         
+
     HmAgentStpMstVlanEntry ::=
          SEQUENCE {
          hmAgentStpMstVlanRowStatus
@@ -3570,13 +3570,13 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          STATUS      current
          DESCRIPTION
                      "The association status of an MSTP instance and a VLAN.
-                     
+
                      Supported values:
                      active(1)      - valid association between an MSTP instance and a VLAN.
                      createAndGo(4) - used to create a new association between an MSTP instance and a VLAN.
                      destroy(6)     - removes the association between an MSTP instance and a VLAN."
          ::= { hmAgentStpMstVlanEntry 1 }
-         
+
 --**************************************************************************************
 --    hmAgentClassOfServiceGroup
 --**************************************************************************************
@@ -3586,27 +3586,27 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          SYNTAX      SEQUENCE OF HmAgentClassOfServicePortEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                     "A table that contains information about the 802.1p priority
                      mapping to traffic class priority queue for every physical port."
          ::= { hmAgentClassOfServiceGroup 1 }
-    
+
     hmAgentClassOfServicePortEntry OBJECT-TYPE
          SYNTAX      HmAgentClassOfServicePortEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                     "A 802.1p priority mapped to a traffic class priority queue."
          INDEX       { ifIndex, hmAgentClassOfServicePortPriority }
          ::= { hmAgentClassOfServicePortTable 1 }
-         
+
     HmAgentClassOfServicePortEntry ::= SEQUENCE {
          hmAgentClassOfServicePortPriority
               Integer32,
          hmAgentClassOfServicePortClass
               Integer32
          }
-         
+
     hmAgentClassOfServicePortPriority OBJECT-TYPE
          SYNTAX      Integer32 (0..7)
          MAX-ACCESS  not-accessible
@@ -3621,7 +3621,7 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
                      value is equal to the dot1dPortDefaultUserPriority value
                      for the ingress port."
          ::= { hmAgentClassOfServicePortEntry 1 }
-         
+
     hmAgentClassOfServicePortClass OBJECT-TYPE
          SYNTAX      Integer32 (0..7)
          MAX-ACCESS  read-write
@@ -3629,10 +3629,10 @@ hmAgentInfoGroup                             OBJECT IDENTIFIER ::= { hmPlatform4
          DESCRIPTION
                     "Traffic class priority queue the received frame is mapped to.
                      The possible range depends on the number of supported traffic
-                     classes for the appropriate port, as shown in 
+                     classes for the appropriate port, as shown in
                      dot1dPortNumTrafficClasses."
          ::= { hmAgentClassOfServicePortEntry 2 }
-         
+
 
 --**************************************************************************************
 --    hmAgentSystemGroup
@@ -3650,10 +3650,10 @@ hmAgentSystemGroup                             OBJECT IDENTIFIER ::= { hmPlatfor
          STATUS      current
          DESCRIPTION
                      "Enable hmAgentSaveConfig will initiate an configuration save to nvram.
-                      Disable hmAgentSaveConfig after a configuration save will reset 
-                      hmAgentSaveConfigStatus back to notInitiated state."  
+                      Disable hmAgentSaveConfig after a configuration save will reset
+                      hmAgentSaveConfigStatus back to notInitiated state."
          ::= { hmAgentSystemGroup 1 }
-         
+
      hmAgentClearConfig OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -3675,7 +3675,7 @@ hmAgentSystemGroup                             OBJECT IDENTIFIER ::= { hmPlatfor
          DESCRIPTION
                      "clear lag configuration"
          ::= { hmAgentSystemGroup 3 }
-     
+
      hmAgentClearLoginSessions OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -3708,7 +3708,7 @@ hmAgentSystemGroup                             OBJECT IDENTIFIER ::= { hmPlatfor
          DESCRIPTION
                      "clear all port statistics"
          ::= { hmAgentSystemGroup 6 }
-     
+
      hmAgentClearSwitchStats OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -3719,7 +3719,7 @@ hmAgentSystemGroup                             OBJECT IDENTIFIER ::= { hmPlatfor
          DESCRIPTION
                      "clear all switch statistics"
          ::= { hmAgentSystemGroup 7 }
-         
+
      hmAgentClearTrapLog OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -3741,7 +3741,7 @@ hmAgentSystemGroup                             OBJECT IDENTIFIER ::= { hmPlatfor
          DESCRIPTION
                      "clear vlan entries"
          ::= { hmAgentSystemGroup 9 }
-     
+
      hmAgentResetSystem OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -3764,7 +3764,7 @@ hmAgentSystemGroup                             OBJECT IDENTIFIER ::= { hmPlatfor
          DESCRIPTION
                      "Indicates the current status of an save configuration request."
          ::= { hmAgentSystemGroup 11 }
-         
+
 
 --**************************************************************************************
 --    hmAgentCableTesterGroup
@@ -3772,7 +3772,7 @@ hmAgentSystemGroup                             OBJECT IDENTIFIER ::= { hmPlatfor
 --    This group provides configuration and status of the Virtual Cable Tester
 --    feature.  This provides cable fault and length estimation on copper cables.
 --    Once initiated, the test requires up to 2 seconds before results are obtained.
---    If the link specified to test is active, it will go down for the duration of 
+--    If the link specified to test is active, it will go down for the duration of
 --    the test.
 --
 --**************************************************************************************
@@ -3804,11 +3804,11 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Determines on which port to perform the cable test.  Limited to 
+                     "Determines on which port to perform the cable test.  Limited to
                      copper based ports."
          DEFVAL { 0 }
          ::= { hmAgentCableTesterGroup 2 }
-         
+
      hmAgentCableTesterCableStatus OBJECT-TYPE
          SYNTAX      INTEGER {
                      normal(1),
@@ -3820,8 +3820,8 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          STATUS      current
          DESCRIPTION
                      "Indicates the results of the Cable Test.
-                     
-                     
+
+
                      normal(1)        - The cable is working correctly.
                      open(2)          - The cable is disconnected or there is a faulty
                                         connector.
@@ -3836,7 +3836,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "The estimated length of the cable in meters.  This value 
+                     "The estimated length of the cable in meters.  This value
                      indicates the shortest length estimated.  This object will
                      return 0 if hmAgentCableTesterStatus is not success(2) or the cable
                      length is unknown."
@@ -3848,7 +3848,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "The estimated length of the cable in meters.  This value 
+                     "The estimated length of the cable in meters.  This value
                      indicates the longest length estimated.  This object will
                      return 0 if hmAgentCableTesterStatus is not success(2) or the cable
                      length is unknown."
@@ -3861,22 +3861,22 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          STATUS      current
          DESCRIPTION
                      "The estimated distance in meters from the end of the cable to
-                     the failure location.  This object will return 0 if 
+                     the failure location.  This object will return 0 if
                      hmAgentCableTesterStatus is not success(2)."
          DEFVAL { 0 }
          ::= { hmAgentCableTesterGroup 6 }
- 
+
 
 
  hmAgentMgmtSecurity  OBJECT IDENTIFIER   ::= { hmPlatform4 11 }
- 
+
  --**************************************************************************************
     -- hmAgentSSHConfigGroup
     --
     --**************************************************************************************
 
     hmAgentSSHConfigGroup                        OBJECT IDENTIFIER ::= { hmAgentMgmtSecurity 2 }
-    
+
     hmAgentSSHAdminMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -3909,12 +3909,12 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          DESCRIPTION
                      "Current number of active SSH sessions on this switch."
          ::= { hmAgentSSHConfigGroup 3 }
-         
+
    hmAgentSSHMaxSessionsCount OBJECT-TYPE
          SYNTAX       Integer32 (0..5)
          MAX-ACCESS   read-write
          STATUS       current
-         DESCRIPTION  
+         DESCRIPTION
                      "Max number of SSH sessions permitted on this switch."
          ::= { hmAgentSSHConfigGroup 4 }
 
@@ -3922,7 +3922,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          SYNTAX       Integer32 (1..160)
          MAX-ACCESS   read-write
          STATUS       current
-         DESCRIPTION  
+         DESCRIPTION
                      "ssh idle timeout value for this switch im minutes."
          ::= { hmAgentSSHConfigGroup 5 }
 
@@ -3993,7 +3993,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Indicates the next valid index into the hmAgentRadiusAccountingConfigTable 
+                     "Indicates the next valid index into the hmAgentRadiusAccountingConfigTable
                      for creation.  If no additional entries are allowed, this will be 0."
          ::= { hmAgentRadiusConfigGroup 5 }
 
@@ -4020,7 +4020,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                      "Entry consisting of configuration data for a Radius Accounting Server."
          INDEX       { hmAgentRadiusAccountingServerIndex }
          ::= { hmAgentRadiusAccountingConfigTable 1 }
-         
+
     HmAgentRadiusAccountingConfigEntry ::=
          SEQUENCE {
          hmAgentRadiusAccountingServerIndex
@@ -4041,7 +4041,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          STATUS      current
          DESCRIPTION
                      "Unique index of the configured RADIUS accounting server.  The next valid
-                     value of this object for creation is specified by 
+                     value of this object for creation is specified by
                      hmAgentRadiusAccountingIndexNextValid.
                      "
          ::= { hmAgentRadiusAccountingConfigEntry 1 }
@@ -4081,23 +4081,23 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                      During creation, the next available index is specified by the
                      hmAgentRadiusAccountingIndexNextValid object.  Rows creation using
                      a different value for hmAgentRadiusAccountingServerIndex will fail.
-                     
+
                      active(1)       - This entry is active.
                      createAndGo(4)  - Creates a new entry.
                      destroy(6)      - Deletes an entry."
          ::= { hmAgentRadiusAccountingConfigEntry 5 }
 
     --**************************************************************************************
-    
+
     hmAgentRadiusServerIndexNextValid OBJECT-TYPE
          SYNTAX      Integer32 (0|1..2147483647)
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Indicates the next valid index into the hmAgentRadiusServerConfigTable 
+                     "Indicates the next valid index into the hmAgentRadiusServerConfigTable
                      for creation.  If no additional entries are allowed, this will be 0."
          ::= { hmAgentRadiusConfigGroup 7 }
-    
+
     --**************************************************************************************
     -- hmAgentRadiusServerConfigTable
     --
@@ -4117,11 +4117,11 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-                     "Entry consisting of configuration data for a Radius 
+                     "Entry consisting of configuration data for a Radius
                      Authentication Server."
          INDEX       { hmAgentRadiusServerIndex }
          ::= { hmAgentRadiusServerConfigTable 1 }
-         
+
     HmAgentRadiusServerConfigEntry ::=
          SEQUENCE {
          hmAgentRadiusServerIndex
@@ -4184,8 +4184,8 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Configure the RADIUS server to be the primary server. If there is any 
-                     other server that is configured to be primary, that server is set to be 
+                     "Configure the RADIUS server to be the primary server. If there is any
+                     other server that is configured to be primary, that server is set to be
                      a seconday server and this entry is set Primary."
          ::= { hmAgentRadiusServerConfigEntry 5 }
 
@@ -4209,7 +4209,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enable or disable the message authenticator attribute for this 
+                     "Enable or disable the message authenticator attribute for this
                      RADIUS server."
          ::= { hmAgentRadiusServerConfigEntry 7 }
 
@@ -4222,18 +4222,18 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                      During creation, the next available index is specified by the
                      hmAgentRadiusServerIndexNextValid object.  Rows creation using
                      a different value for hmAgentRadiusServerIndex will fail.
-                     
+
                      active(1)       - This entry is active.
                      createAndGo(4)  - Creates a new entry.
                      destroy(6)      - Deletes an entry."
          ::= { hmAgentRadiusServerConfigEntry 8 }
-                           
-                             
+
+
  --**************************************************************************************
     -- hmAgentOutboundTelnetGroup -> contains MIB objects displaying various properties of a Outbound Telnet
     --
     --**************************************************************************************
-                        
+
     hmPlatform4OutboundTelnetPrivate  OBJECT IDENTIFIER ::= { hmPlatform4 19 }
     hmAgentOutboundTelnetGroup        OBJECT IDENTIFIER ::= { hmPlatform4OutboundTelnetPrivate 1 }
 
@@ -4266,10 +4266,10 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
       DESCRIPTION
        " The login inactivity timeout value for Outbound Telnet."
       DEFVAL { 0 }
-    ::= { hmAgentOutboundTelnetGroup 3 }         
-    
-  
-                        
+    ::= { hmAgentOutboundTelnetGroup 3 }
+
+
+
 
 --**************************************************************************************
     -- hmAgentSwitchVoiceVLANGroup
@@ -4334,9 +4334,9 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
     -- hmAgentDot1xAdvanced
     --
     --**************************************************************************************
-    
+
     hmAgentDot1xAdvanced OBJECT IDENTIFIER   ::= { hmPlatform4 36 }
-                        
+
 	hmAgentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { hmAgentDot1xAdvanced 1 }
 
     hmAgentDot1xRadiusVlanAssignment OBJECT-TYPE
@@ -4350,7 +4350,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                "Enable/Disable dot1x Vlan Assignment Support on the switch."
          DEFVAL { disable }
          ::= { hmAgentDot1xEnhancementConfigGroup 1 }
-         
+
      hmAgentDot1xDynamicVlanCreationMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -4361,8 +4361,8 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          DESCRIPTION
                "Enable/Disable dot1x dynamic vlan creation Support on the switch."
          DEFVAL { disable }
-         ::= { hmAgentDot1xEnhancementConfigGroup 2 }       
-         
+         ::= { hmAgentDot1xEnhancementConfigGroup 2 }
+
      hmAgentDot1xSafeVlanMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -4374,11 +4374,11 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                "Enable/Disable dot1x safe vlan assignment on the switch
                 for multi-client authentication."
          DEFVAL { disable }
-         ::= { hmAgentDot1xEnhancementConfigGroup 3 }    
+         ::= { hmAgentDot1xEnhancementConfigGroup 3 }
 
 
 --**************************************************************************************
--- hmAgentDot1xPortConfigGroup -> Contains MIB objects configuring/displaying Dot1x Port details 
+-- hmAgentDot1xPortConfigGroup -> Contains MIB objects configuring/displaying Dot1x Port details
 -- and associated Functionality
 --
 --**************************************************************************************
@@ -4404,17 +4404,17 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          INDEX       { dot1xPaePortNumber}
          ::= {hmAgentDot1xPortConfigTable 1 }
 
-    HmAgentDot1xPortConfigEntry ::= SEQUENCE { 
+    HmAgentDot1xPortConfigEntry ::= SEQUENCE {
         hmAgentDot1xPortControlMode
              HmAgentDot1xPortControlMode,
         hmAgentDot1xGuestVlanId
              Unsigned32,
         hmAgentDot1xGuestVlanPeriod
              Unsigned32,
-        hmAgentDot1xUnauthenticatedVlan  
+        hmAgentDot1xUnauthenticatedVlan
              Unsigned32,
         hmAgentDot1xMaxUsers
-             Unsigned32,    
+             Unsigned32,
         hmAgentDot1xPortVlanAssigned
              Unsigned32,
         hmAgentDot1xPortVlanAssignedReason
@@ -4426,8 +4426,8 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
         hmAgentDot1xPortMABenabled
              INTEGER,
         hmAgentDot1xPortMABenabledOperational
-             INTEGER            
-                
+             INTEGER
+
     }
 
        hmAgentDot1xPortControlMode  OBJECT-TYPE
@@ -4435,11 +4435,11 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                 MAX-ACCESS   read-write
                 STATUS       current
                 DESCRIPTION
-                       "Dot1x port control mode of this port.The Port control mode . 
+                       "Dot1x port control mode of this port.The Port control mode .
                         The port control mode for this interface can take the following values ,
                                 force-unauthorized - the port is in unauthorized mode,
                                 auto-Port based mode. If a client authenticates suscessfully, then the interface is authorized .
-                                     Otherwise, the port is in unauthorized mode. 
+                                     Otherwise, the port is in unauthorized mode.
                                      If more than one clients are attached to the port , then only one client needs to authenticate to allow other clients access.
                                 force-authorized - The port is placed in authorized mode
                                 macBased - If more than one client is attached to the port, then each client needs to authenticate separately.
@@ -4454,7 +4454,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                 DESCRIPTION
                         "Specifies the Guest Vlan of the port. A port will
                          be moved to its Guest Vlan if no client sucessfully
-                         authenticates on that port for the Guest Vlan Period. 
+                         authenticates on that port for the Guest Vlan Period.
                          A value of zero indicates no Guest Vlan is configured for the interface."
                 DEFVAL {0}
                 ::= { hmAgentDot1xPortConfigEntry 2}
@@ -4465,26 +4465,26 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                 STATUS      current
                 DESCRIPTION
                          "The value, in seconds, of the guestVlanPeriod constant
-                         currently in use for Guest Vlan Assignment for the 
+                         currently in use for Guest Vlan Assignment for the
                          port ."
                 DEFVAL { 90 }
                 ::= { hmAgentDot1xPortConfigEntry 3 }
 
 
         hmAgentDot1xUnauthenticatedVlan  OBJECT-TYPE
-                SYNTAX       Unsigned32 
+                SYNTAX       Unsigned32
                 MAX-ACCESS   read-write
                 STATUS       current
                 DESCRIPTION
                         "Specifies the Unauthenticated Vlan of the port. A port will
                          be moved to its unauthenticated Vlan if the client authenticates unsucessfully
-                         on that port . 
+                         on that port .
                          A value of zero indicates no Unauthenticated Vlan is configured for the port. "
                 DEFVAL {0}
                 ::= {  hmAgentDot1xPortConfigEntry 4}
 
         hmAgentDot1xMaxUsers OBJECT-TYPE
-                SYNTAX      Unsigned32 
+                SYNTAX      Unsigned32
                 MAX-ACCESS   read-write
                 STATUS       current
                 DESCRIPTION
@@ -4492,11 +4492,11 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                 ::= {  hmAgentDot1xPortConfigEntry 5}
 
         hmAgentDot1xPortVlanAssigned OBJECT-TYPE
-                SYNTAX       Unsigned32 
+                SYNTAX       Unsigned32
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
-                        " Specifies the vlan the port is assigned to by Dot1x  . 
+                        " Specifies the vlan the port is assigned to by Dot1x  .
                           Only relevant if the port control mode of the port is auto. "
                 DEFVAL {0}
                 ::= {  hmAgentDot1xPortConfigEntry 6}
@@ -4508,12 +4508,12 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                               unauthenticatedVlan(3),
                               guestVlan(4),
                               voiceVlan(5),
-                              notAssigned(7)  
-                        }  
+                              notAssigned(7)
+                        }
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
-                        " Reason the port is assigned to the vlan specified by hmAgentDot1xPortVlanAssigned . 
+                        " Reason the port is assigned to the vlan specified by hmAgentDot1xPortVlanAssigned .
                           Only relevant if the port control mode of the port is auto. "
                 DEFVAL {5}
                 ::= {  hmAgentDot1xPortConfigEntry 7}
@@ -4523,16 +4523,16 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
-                        " Specifies the session timeout value assigned by the Radius server for this port  . 
+                        " Specifies the session timeout value assigned by the Radius server for this port  .
                         Only relevant if the port control mode of the port is auto. "
                 ::= {  hmAgentDot1xPortConfigEntry 8}
 
         hmAgentDot1xPortTerminationAction OBJECT-TYPE
-                SYNTAX      HmAgentDot1xSessionTerminationAction 
+                SYNTAX      HmAgentDot1xSessionTerminationAction
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
-                        " Specifies the session termination action assigned by the Radius Server .This is the action taken when the session times out . 
+                        " Specifies the session termination action assigned by the Radius Server .This is the action taken when the session times out .
                           Only relevant if the port control mode of the port is auto. "
                 DEFVAL {1}
                 ::= {  hmAgentDot1xPortConfigEntry 9}
@@ -4540,8 +4540,8 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
         hmAgentDot1xPortMABenabled OBJECT-TYPE
                 SYNTAX       INTEGER {
                               enable(1),
-                              disable(2)                               
-                        }  
+                              disable(2)
+                        }
                 MAX-ACCESS   read-write
                 STATUS       current
                 DESCRIPTION
@@ -4552,8 +4552,8 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
         hmAgentDot1xPortMABenabledOperational OBJECT-TYPE
                 SYNTAX       INTEGER {
                               enable(1),
-                              disable(2)                               
-                        }  
+                              disable(2)
+                        }
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
@@ -4584,7 +4584,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                 INDEX       { hmAgentDot1xClientMacAddress}
                 ::= {hmAgentDot1xClientConfigTable 1 }
 
-        HmAgentDot1xClientConfigEntry ::= SEQUENCE { 
+        HmAgentDot1xClientConfigEntry ::= SEQUENCE {
                 hmAgentDot1xClientMacAddress
                         MacAddress,
                 hmAgentDot1xLogicalPort
@@ -4609,8 +4609,8 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                         Unsigned32,
                 hmAgentDot1xClientTerminationAction
                         HmAgentDot1xSessionTerminationAction
-    }    
-    
+    }
+
      hmAgentDot1xClientMacAddress  OBJECT-TYPE
                 SYNTAX           MacAddress
                 MAX-ACCESS       read-only
@@ -4669,7 +4669,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                 DESCRIPTION
                         "The current state of the Backend Authentication
                         state machine."
-                ::={ hmAgentDot1xClientConfigEntry 5} 
+                ::={ hmAgentDot1xClientConfigEntry 5}
 
         hmAgentDot1xClientUserName OBJECT-TYPE
                 SYNTAX           DisplayString
@@ -4694,7 +4694,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                 MAX-ACCESS          read-only
                 STATUS              current
                 DESCRIPTION
-                        "Specifies the Filter ID or Diffserv Policy name to be applied to the session . 
+                        "Specifies the Filter ID or Diffserv Policy name to be applied to the session .
                          This vlaue is populated only if it has been assigned by the RADIUS server.
                          This value is only valid when the client is in authenticated state."
                 ::= { hmAgentDot1xClientConfigEntry 8}
@@ -4715,13 +4715,13 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                               unauthenticatedVlan(3),
                               guestVlan(4),
                               voiceVlan(5),
-                              invalid(7)  
-                            }  
+                              invalid(7)
+                            }
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
                         " Reason the client is associated to the vlan specified by hmAgentDot1xClientVlanAssigned .
-                          This value is only valid when the client is in authenticated state." 
+                          This value is only valid when the client is in authenticated state."
                 ::= {  hmAgentDot1xClientConfigEntry 10}
 
         hmAgentDot1xClientSessionTimeout OBJECT-TYPE
@@ -4729,7 +4729,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                 MAX-ACCESS          read-only
                 STATUS              current
                 DESCRIPTION
-                        "Specifies the session time remaining for the client if  assigned by the Radius server  . 
+                        "Specifies the session time remaining for the client if  assigned by the Radius server  .
                          A value of 0 indicates that no session timeout was assigned by the RADIUS server.
                          This value is only valid when the client is in authenticated state. "
                 ::= { hmAgentDot1xClientConfigEntry 11}
@@ -4742,8 +4742,8 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
                         "Specifies the session termination action assigned by the Radius Server .
                         This is the action taken when the session times out .
                         This value is only valid when the client is in authenticated state. "
-                ::= { hmAgentDot1xClientConfigEntry 12} 
-                     
+                ::= { hmAgentDot1xClientConfigEntry 12}
+
 --**************************************************************************************
 --   Traps
 --**************************************************************************************
@@ -4777,8 +4777,8 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          ::= { hmPlatform4SwitchingTraps 4 }
 
      vlanRequestFailureTrap NOTIFICATION-TYPE
-         OBJECTS { 
-                      dot1qVlanIndex 
+         OBJECTS {
+                      dot1qVlanIndex
                  }
          STATUS             obsolete
          DESCRIPTION
@@ -4786,7 +4786,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          ::= { hmPlatform4SwitchingTraps 5 }
 
      vlanDeleteLastTrap NOTIFICATION-TYPE
-         OBJECTS { 
+         OBJECTS {
                       dot1qVlanIndex
                  }
          STATUS             current
@@ -4806,7 +4806,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
          ::= { hmPlatform4SwitchingTraps 7 }
 
      vlanRestoreFailureTrap NOTIFICATION-TYPE
-         OBJECTS { 
+         OBJECTS {
                       dot1qVlanIndex
                  }
          STATUS             obsolete
@@ -4829,7 +4829,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
              "Trap is sent when this machine is a new STP Root when there is more
              than one STP instance."
          ::= { hmPlatform4SwitchingTraps 10 }
-         
+
      stpInstanceTopologyChangeTrap NOTIFICATION-TYPE
          OBJECTS {
                       hmAgentStpMstId
@@ -4839,12 +4839,12 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
              "Trap is sent when there is a STP topology change when there is more
              than one STP instance."
          ::= { hmPlatform4SwitchingTraps 11 }
-     
+
      powerSupplyStatusChangeTrap NOTIFICATION-TYPE
          STATUS             obsolete
          DESCRIPTION
              "Trap is obsolete."
-         ::= { hmPlatform4SwitchingTraps 12 }     
+         ::= { hmPlatform4SwitchingTraps 12 }
 
      failedUserLoginTrap NOTIFICATION-TYPE
          STATUS             current
@@ -4852,9 +4852,9 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
              "Trap is sent when a user fails to authenticate via the CLI or Web
              interfaces."
          ::= { hmPlatform4SwitchingTraps 13 }
-         
+
 	dot1xTraps      OBJECT IDENTIFIER ::= { hmAgentDot1xAdvanced 4 }
-	
+
 	dot1xPortStatusAuthorized NOTIFICATION-TYPE
 	    OBJECTS {
 	       dot1xPaePortNumber
@@ -4863,7 +4863,7 @@ hmAgentCableTesterGroup               OBJECT IDENTIFIER ::= { hmPlatform4BasicL2
 	    DESCRIPTION
 	            "DOT1X port status is authorized."
 	    ::= { dot1xTraps 1 }
-	
+
 	dot1xPortStatusUnauthorized NOTIFICATION-TYPE
 	    OBJECTS {
 	       dot1xPaePortNumber

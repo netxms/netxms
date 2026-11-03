@@ -1,8 +1,8 @@
 -- *****************************************************************
 -- CISCO-ENTITY-SENSOR-MIB
---   
+--
 -- November 1997, Cliff L. Sojourner
---   
+--
 -- Copyright (c) 1998-2017 by cisco Systems Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -45,7 +45,7 @@ ciscoEntitySensorMIB MODULE-IDENTITY
             E-mail: cs-snmp@cisco.com"
     DESCRIPTION
         "The CISCO-ENTITY-SENSOR-MIB is used to monitor
-        the values of sensors in the Entity-MIB (RFC 2037) 
+        the values of sensors in the Entity-MIB (RFC 2037)
         entPhysicalTable."
     REVISION        "201701190000Z"
     DESCRIPTION
@@ -59,13 +59,13 @@ ciscoEntitySensorMIB MODULE-IDENTITY
         entitySensorMIBNotifications.
         Added entSensorThresholdSeverity as a varbind
         object to entSensorThresholdNotification.
-        Added entitySensorNotificationGroup 
-        and deprecated 
+        Added entitySensorNotificationGroup
+        and deprecated
         entitySensorThresholdNotificationGroup.
         Added entSensorThresholdNotification and
         entSensorThresholdRecoveryNotification to
         entitySensorNotificationGroup.
-        Added entitySensorMIBComplianceV05 and 
+        Added entitySensorMIBComplianceV05 and
         deprecated entitySensorMIBComplianceV04."
     REVISION        "200711120000Z"
     DESCRIPTION
@@ -110,8 +110,8 @@ SensorDataType ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "sensor measurement data types.  valid values are:
         other(1):        a measure other than those listed below
-        unknown(2):      unknown measurement, or 
-                         arbitrary, relative numbers    
+        unknown(2):      unknown measurement, or
+                         arbitrary, relative numbers
         voltsAC(3):      electric potential
         voltsDC(4):      electric potential
         amperes(5):      electric current
@@ -164,39 +164,39 @@ SensorDataScale ::= TEXTUAL-CONVENTION
                         exa(14), -- 10^15
                         peta(15), -- 10^18
                         zetta(16), -- 10^21
-                        yotta(17) -- 10^24                        
+                        yotta(17) -- 10^24
                     }
 
 SensorPrecision ::= TEXTUAL-CONVENTION
     STATUS          current
     DESCRIPTION
         "When in the range 1 to 9, SensorPrecision is the number
-        of decimal places in the fractional part of 
+        of decimal places in the fractional part of
         a SensorValue fixed-point number.  When in the range -8 to
-        -1, SensorPrecision is the number of accurate digits in 
+        -1, SensorPrecision is the number of accurate digits in
         a SensorValue fixed-point number.
 
         SensorPrecision is 0 for non-fixed-point numbers.
 
-        Agent implementors must choose a value for SensorPrecision 
-        so that the precision and accuracy of a SensorValue is 
+        Agent implementors must choose a value for SensorPrecision
+        so that the precision and accuracy of a SensorValue is
         correctly indicated.
 
-        For example, a temperature sensor that can measure 0o to 
-        100o C in 0.1o increments, +/- 0.05o, would have a 
-        SensorPrecision of 1, a SensorDataScale of units(0), and a 
-        SensorValue ranging from 0 to 1000.  
+        For example, a temperature sensor that can measure 0o to
+        100o C in 0.1o increments, +/- 0.05o, would have a
+        SensorPrecision of 1, a SensorDataScale of units(0), and a
+        SensorValue ranging from 0 to 1000.
         The SensorValue would be interpreted as (degrees C * 10).
 
-        If that temperature sensor's precision were 0.1o but its 
-        accuracy were only +/- 0.5o, then the SensorPrecision would 
+        If that temperature sensor's precision were 0.1o but its
+        accuracy were only +/- 0.5o, then the SensorPrecision would
         be 0. The SensorValue would be interpreted as degrees C.
 
-        Another example: a fan rotation speed sensor that measures RPM 
-        from 0 to 10,000 in 100 RPM increments, with an accuracy of 
-        +50/-37 RPM, would have a SensorPrecision of -2, a 
-        SensorDataScale of units(9), and a SensorValue ranging from 0 
-        to 10000. The 10s and 1s digits of SensorValue would always 
+        Another example: a fan rotation speed sensor that measures RPM
+        from 0 to 10,000 in 100 RPM increments, with an accuracy of
+        +50/-37 RPM, would have a SensorPrecision of -2, a
+        SensorDataScale of units(9), and a SensorValue ranging from 0
+        to 10000. The 10s and 1s digits of SensorValue would always
         be 0."
     SYNTAX          INTEGER (-8..9)
 
@@ -205,9 +205,9 @@ SensorValue ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "For sensors that measure voltsAC, voltsDC,
         amperes, watts, hertz, celsius, cmm
-        this item is a fixed point number ranging from 
-        -999,999,999 to +999,999,999.  Use the value 
-        -1000000000 to indicate underflow. Use the value 
+        this item is a fixed point number ranging from
+        -999,999,999 to +999,999,999.  Use the value
+        -1000000000 to indicate underflow. Use the value
         +1000000000 to indicate overflow.  Use SensorPrecision
         to indicate how many fractional digits the SensorValue
         has.
@@ -218,17 +218,17 @@ SensorValue ::= TEXTUAL-CONVENTION
         For sensors that measure rpm, this item
         can take only nonnegative values, 0..999999999.
 
-        For sensors of type truthvalue, this item 
+        For sensors of type truthvalue, this item
         can take only two values: true(1), false(2).
 
         For sensors of type specialEnum, this item
         can take any value in the range (-1000000000..1000000000),
-        but the meaning of each value is specific to the 
+        but the meaning of each value is specific to the
         sensor.
 
-        For sensors of type other and unknown, 
-        this item can take any value in the range 
-        (-1000000000..1000000000), but the meaning of the values 
+        For sensors of type other and unknown,
+        this item can take any value in the range
+        (-1000000000..1000000000), but the meaning of the values
         are specific to the sensor.
 
         Use Entity-MIB entPhysicalTable.entPhysicalVendorType
@@ -240,14 +240,14 @@ SensorStatus ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "Indicates the operational status of the sensor.
 
-        ok(1) means the agent can read the sensor 
+        ok(1) means the agent can read the sensor
         value.
 
-        unavailable(2) means that the agent presently 
+        unavailable(2) means that the agent presently
         can not report the sensor value.
 
         nonoperational(3) means that the agent believes
-        the sensor is broken.  The sensor could have a 
+        the sensor is broken.  The sensor could have a
         hard failure (disconnected wire), or a soft failure
         such as out-of-range, jittery, or wildly fluctuating
         readings."
@@ -261,12 +261,12 @@ SensorValueUpdateRate ::= TEXTUAL-CONVENTION
     STATUS          current
     DESCRIPTION
         "Indicates the interval in seconds between updates to the
-        sensor's value.  
+        sensor's value.
 
         The value zero indicates:
-        - the sensor value is updated on demand (when polled by the 
-          agent for a get-request), 
-        - or when the sensor value changes (event-driven), 
+        - the sensor value is updated on demand (when polled by the
+          agent for a get-request),
+        - or when the sensor value changes (event-driven),
         - or the agent does not know the rate"
     SYNTAX          INTEGER (0..999999999)
 
@@ -298,7 +298,7 @@ SensorThresholdRelation ::= TEXTUAL-CONVENTION
                             the threshold value
         lessOrEqual(2):     if the sensor value is less than or equal to
                             the threshold value
-        greaterThan(3):     if the sensor value is greater than 
+        greaterThan(3):     if the sensor value is greater than
                             the threshold value
         greaterOrEqual(4):  if the sensor value is greater than or equal
                             to the threshold value
@@ -328,7 +328,7 @@ entSensorGlobalObjects  OBJECT IDENTIFIER
 -- entSensorValueTable
 
 entSensorValueTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF EntSensorValueEntry 
+    SYNTAX          SEQUENCE OF EntSensorValueEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -344,7 +344,7 @@ entSensorValueEntry OBJECT-TYPE
         "An entSensorValueTable entry describes the
         present reading of a sensor, the measurement units
         and scale, and sensor operational status."
-    INDEX           { entPhysicalIndex } 
+    INDEX           { entPhysicalIndex }
     ::= { entSensorValueTable 1 }
 
 EntSensorValueEntry ::= SEQUENCE {
@@ -367,7 +367,7 @@ entSensorType OBJECT-TYPE
         reported by the entSensorValue.
 
         This variable is set by the agent at start-up
-        and the value does not change during operation." 
+        and the value does not change during operation."
     ::= { entSensorValueEntry 1 }
 
 entSensorScale OBJECT-TYPE
@@ -379,7 +379,7 @@ entSensorScale OBJECT-TYPE
         to sensor values reported by entSensorValue.
 
         This variable is set by the agent at start-up
-        and the value does not change during operation." 
+        and the value does not change during operation."
     ::= { entSensorValueEntry 2 }
 
 entSensorPrecision OBJECT-TYPE
@@ -392,11 +392,11 @@ entSensorPrecision OBJECT-TYPE
         sensor values reported by entSensorValue.
 
         This variable is set to 0 when entSensorType
-        is not a fixed-point type: e.g.'percentRH(9)', 
+        is not a fixed-point type: e.g.'percentRH(9)',
         'rpm(10)', 'cmm(11)', or 'truthvalue(12)'.
 
         This variable is set by the agent at start-up
-        and the value does not change during operation." 
+        and the value does not change during operation."
     ::= { entSensorValueEntry 3 }
 
 entSensorValue OBJECT-TYPE
@@ -407,13 +407,13 @@ entSensorValue OBJECT-TYPE
         "This variable reports the most recent measurement seen
         by the sensor.
 
-        To correctly display or interpret this variable's value, 
-        you must also know entSensorType, entSensorScale, and 
+        To correctly display or interpret this variable's value,
+        you must also know entSensorType, entSensorScale, and
         entSensorPrecision.
 
         However, you can compare entSensorValue with the threshold
         values given in entSensorThresholdTable without any semantic
-        knowledge." 
+        knowledge."
     ::= { entSensorValueEntry 4 }
 
 entSensorStatus OBJECT-TYPE
@@ -422,7 +422,7 @@ entSensorStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This variable indicates the present operational status
-        of the sensor." 
+        of the sensor."
     ::= { entSensorValueEntry 5 }
 
 entSensorValueTimeStamp OBJECT-TYPE
@@ -431,7 +431,7 @@ entSensorValueTimeStamp OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This variable indicates the age of the value reported by
-        entSensorValue" 
+        entSensorValue"
     ::= { entSensorValueEntry 6 }
 
 entSensorValueUpdateRate OBJECT-TYPE
@@ -441,7 +441,7 @@ entSensorValueUpdateRate OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This variable indicates the rate that the agent
-        updates entSensorValue." 
+        updates entSensorValue."
     ::= { entSensorValueEntry 7 }
 
 entSensorMeasuredEntity OBJECT-TYPE
@@ -460,19 +460,19 @@ entSensorMeasuredEntity OBJECT-TYPE
         This object has a value of zero when the physical entity
         for which the sensor is taking measurements can not be
         represented by any one row in the entPhysicalTable, or that
-        there is no such physical entity." 
+        there is no such physical entity."
     ::= { entSensorValueEntry 8 }
- 
+
 
 -- entSensorThresholdTable
 
 entSensorThresholdTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF EntSensorThresholdEntry 
+    SYNTAX          SEQUENCE OF EntSensorThresholdEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table lists the threshold severity, relation, and
-        comparison value, for a sensor listed in the Entity-MIB 
+        comparison value, for a sensor listed in the Entity-MIB
         entPhysicalTable."
     ::= { entSensorThresholds 1 }
 
@@ -483,7 +483,7 @@ entSensorThresholdEntry OBJECT-TYPE
     DESCRIPTION
         "An entSensorThresholdTable entry describes the
         thresholds for a sensor: the threshold severity,
-        the threshold value, the relation, and the 
+        the threshold value, the relation, and the
         evaluation of the threshold.
 
         Only entities of type sensor(8) are listed in this table.
@@ -498,7 +498,7 @@ entSensorThresholdEntry OBJECT-TYPE
     INDEX           {
                         entPhysicalIndex,
                         entSensorThresholdIndex
-                    } 
+                    }
     ::= { entSensorThresholdTable 1 }
 
 EntSensorThresholdEntry ::= SEQUENCE {
@@ -517,8 +517,8 @@ entSensorThresholdIndex OBJECT-TYPE
     DESCRIPTION
         "An index that uniquely identifies an entry
         in the entSensorThresholdTable. This index
-        permits the same sensor to have several 
-        different thresholds." 
+        permits the same sensor to have several
+        different thresholds."
     ::= { entSensorThresholdEntry 1 }
 
 entSensorThresholdSeverity OBJECT-TYPE
@@ -526,7 +526,7 @@ entSensorThresholdSeverity OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This variable indicates the severity of this threshold." 
+        "This variable indicates the severity of this threshold."
     ::= { entSensorThresholdEntry 2 }
 
 entSensorThresholdRelation OBJECT-TYPE
@@ -535,25 +535,25 @@ entSensorThresholdRelation OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This variable indicates the relation between sensor value
-        (entSensorValue) and threshold value (entSensorThresholdValue), 
-        required to trigger the alarm.  when evaluating the relation, 
-        entSensorValue is on the left of entSensorThresholdRelation, 
-        entSensorThresholdValue is on the right. 
+        (entSensorValue) and threshold value (entSensorThresholdValue),
+        required to trigger the alarm.  when evaluating the relation,
+        entSensorValue is on the left of entSensorThresholdRelation,
+        entSensorThresholdValue is on the right.
 
         in pseudo-code, the evaluation-alarm mechanism is:
 
         ...
         if (entSensorStatus == ok) then
-            if (evaluate(entSensorValue, entSensorThresholdRelation,  
-                entSensorThresholdValue)) 
+            if (evaluate(entSensorValue, entSensorThresholdRelation,
+                entSensorThresholdValue))
             then
-                if (entSensorThresholdNotificationEnable == true)) 
+                if (entSensorThresholdNotificationEnable == true))
                 then
                     raise_alarm(sensor's entPhysicalIndex);
                 endif
             endif
         endif
-        ..." 
+        ..."
     ::= { entSensorThresholdEntry 3 }
 
 entSensorThresholdValue OBJECT-TYPE
@@ -563,13 +563,13 @@ entSensorThresholdValue OBJECT-TYPE
     DESCRIPTION
         "This variable indicates the value of the threshold.
 
-        To correctly display or interpret this variable's value, 
-        you must also know entSensorType, entSensorScale, and 
+        To correctly display or interpret this variable's value,
+        you must also know entSensorType, entSensorScale, and
         entSensorPrecision.
 
-        However, you can directly compare entSensorValue 
-        with the threshold values given in entSensorThresholdTable 
-        without any semantic knowledge." 
+        However, you can directly compare entSensorValue
+        with the threshold values given in entSensorThresholdTable
+        without any semantic knowledge."
     ::= { entSensorThresholdEntry 4 }
 
 entSensorThresholdEvaluation OBJECT-TYPE
@@ -579,12 +579,12 @@ entSensorThresholdEvaluation OBJECT-TYPE
     DESCRIPTION
         "This variable indicates the result of the most
         recent evaluation of the threshold.  If the threshold
-        condition is true, entSensorThresholdEvaluation 
-        is true(1).  If the threshold condition is false, 
+        condition is true, entSensorThresholdEvaluation
+        is true(1).  If the threshold condition is false,
         entSensorThresholdEvaluation is false(2).
 
-        Thresholds are evaluated at the rate indicated by 
-        entSensorValueUpdateRate." 
+        Thresholds are evaluated at the rate indicated by
+        entSensorValueUpdateRate."
     ::= { entSensorThresholdEntry 5 }
 
 entSensorThresholdNotificationEnable OBJECT-TYPE
@@ -595,13 +595,13 @@ entSensorThresholdNotificationEnable OBJECT-TYPE
         "This variable controls generation of
         entSensorThresholdNotification for this threshold.
 
-        When this variable is 'true', generation of 
+        When this variable is 'true', generation of
         entSensorThresholdNotification is enabled for this
-        threshold. When this variable is 'false', 
+        threshold. When this variable is 'false',
         generation of entSensorThresholdNotification is
-        disabled for this threshold." 
+        disabled for this threshold."
     ::= { entSensorThresholdEntry 6 }
- 
+
 
 
 -- Entity Sensor Global Objects
@@ -616,11 +616,11 @@ entSensorThreshNotifGlobalEnable OBJECT-TYPE
         on the device. If this object value is
         'false', then no entSensorThresholdNotification
         will be generated on this device. If this object
-        value is 'true', then whether a 
+        value is 'true', then whether a
         entSensorThresholdNotification for a threshold will
         be generated or not depends on the instance value of
         entSensorThresholdNotificationEnable for that
-        threshold." 
+        threshold."
     ::= { entSensorGlobalObjects 1 }
 -- notifications
 
@@ -637,11 +637,11 @@ entSensorThresholdNotification NOTIFICATION-TYPE
     STATUS          current
     DESCRIPTION
         "The notification is generated when
-        the sensor value entSensorValue crosses 
+        the sensor value entSensorValue crosses
         the threshold value entSensorThresholdValue and
         the value of entSensorThreshNotifGlobalEnable is true.
 
-        entSensorThresholdSeverity indicates the severity 
+        entSensorThresholdSeverity indicates the severity
         of this threshold.
 
         The agent implementation guarantees prompt, timely
@@ -658,14 +658,14 @@ entSensorThresholdRecoveryNotification NOTIFICATION-TYPE
     STATUS          current
     DESCRIPTION
         "This notification is generated
-        as a recovery notification when 
-        the sensor value entSensorValue goes below 
+        as a recovery notification when
+        the sensor value entSensorValue goes below
         the threshold value entSensorThresholdValue
         once it has generated entSensorThresholdNotification.
         The value of entSensorThreshNotifGlobalEnable needs
         to be true.
 
-        entSensorThresholdSeverity indicates the severity 
+        entSensorThresholdSeverity indicates the severity
         of this threshold.
 
         The agent implementation guarantees prompt, timely
@@ -801,7 +801,7 @@ entitySensorMIBComplianceV04 MODULE-COMPLIANCE
     GROUP           entitySensorNotifCtrlGlobalGroup
     DESCRIPTION
         "This group is mandatory for the platforms which support
-        global notification control on 
+        global notification control on
         entSensorThresholdNotification."
 
     OBJECT          entSensorThresholdSeverity
@@ -832,25 +832,25 @@ entitySensorMIBComplianceV05 MODULE-COMPLIANCE
     GROUP           entitySensorValueGroup
     DESCRIPTION
         "This group is mandatory for the systems
-        which don't support IETF version of 
+        which don't support IETF version of
         ENTITY-SENSOR-MIB."
 
     GROUP           entitySensorValueGroupSup1
     DESCRIPTION
         "This group is mandatory for the systems
-        which don't support IETF version of 
+        which don't support IETF version of
         ENTITY-SENSOR-MIB."
 
     GROUP           entitySensorNotifCtrlGlobalGroup
     DESCRIPTION
         "This group is mandatory for the systems
-        which don't support IETF version of 
+        which don't support IETF version of
         ENTITY-SENSOR-MIB."
 
     GROUP           entitySensorNotificationGroup
     DESCRIPTION
         "This group is mandatory for the systems
-        which don't support IETF version of 
+        which don't support IETF version of
         ENTITY-SENSOR-MIB."
 
     OBJECT          entSensorThresholdSeverity
@@ -884,7 +884,7 @@ entitySensorValueGroup OBJECT-GROUP
     STATUS          current
     DESCRIPTION
         "The collection of objects which are used
-        to describe and monitor values of Entity-MIB 
+        to describe and monitor values of Entity-MIB
         entPhysicalTable entries of sensors."
     ::= { entitySensorMIBGroups 1 }
 
@@ -909,8 +909,8 @@ entitySensorThresholdNotificationGroup NOTIFICATION-GROUP
     DESCRIPTION
         "The collection of notifications used for
         monitoring sensor threshold activity.
-        entitySensorThresholdNotificationGroup 
-        object is superseded by 
+        entitySensorThresholdNotificationGroup
+        object is superseded by
         entitySensorNotificationGroup."
     ::= { entitySensorMIBGroups 3 }
 
@@ -949,22 +949,21 @@ END
 -- %DNP%  MRS -with reviewer MRS
 
 -- %DNP%  MRC - ciscoEntitySensorMIB~1~ - 2017011904:47 PST - linche -18.0 -ACK
--- %DNP%  - < ^^ Copyright (c) 1998-2017 by cisco Systems Inc. 
--- %DNP%^^- 
--- %DNP%> ^^ Copyright (c) 1998-2003-2006, 2013, 2015, 2017 by cisco Systems 
--- %DNP%Inc. 
--- %DNP%35c35 
--- %DNP%<     LAST-UPDATED    "201701190000Z" 
--- %DNP%^^- 
--- %DNP%>     LAST-UPDATED    "201612210000Z" 
--- %DNP%50c50 
--- %DNP%<     REVISION        "201701190000Z" 
--- %DNP%^^- 
--- %DNP%>     REVISION        "201612210000Z" 
--- %DNP%52c52 
--- %DNP%<         "Added enumerated value dB(15) to SensorDataType." 
--- %DNP%^^- 
+-- %DNP%  - < ^^ Copyright (c) 1998-2017 by cisco Systems Inc.
+-- %DNP%^^-
+-- %DNP%> ^^ Copyright (c) 1998-2003-2006, 2013, 2015, 2017 by cisco Systems
+-- %DNP%Inc.
+-- %DNP%35c35
+-- %DNP%<     LAST-UPDATED    "201701190000Z"
+-- %DNP%^^-
+-- %DNP%>     LAST-UPDATED    "201612210000Z"
+-- %DNP%50c50
+-- %DNP%<     REVISION        "201701190000Z"
+-- %DNP%^^-
+-- %DNP%>     REVISION        "201612210000Z"
+-- %DNP%52c52
+-- %DNP%<         "Added enumerated value dB(15) to SensorDataType."
+-- %DNP%^^-
 -- %DNP%>         "[1] Add dB(15) in SensorDataType."
 -- %DNP%
--- %DNP% -0 MRC 
-
+-- %DNP% -0 MRC

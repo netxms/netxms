@@ -1,14 +1,14 @@
 FSC-RAID-MIB DEFINITIONS ::= BEGIN
 
 -- MibName=fscRAIDMIB
--- 
+--
 -- ServerView RAID Manager MIB - Unified RAID system monitoring for internal RAID controllers
--- 
+--
 -- MIB Revision: 1.6.6
--- 
+--
 -- Copyright (c) Fujitsu Technology Solutions 2009 - 2013
 -- All rights reserved
--- 
+--
 
    IMPORTS
         OBJECT-TYPE                 FROM RFC-1212
@@ -18,7 +18,7 @@ FSC-RAID-MIB DEFINITIONS ::= BEGIN
 
 -- The Windows MIB compiler doesn't support IMPORTS.
 -- In this case uncomment the next few lines.
--- 
+--
 -- DisplayString ::= OCTET STRING
 -- enterprises       OBJECT IDENTIFIER   ::= { iso org(3) dod(6) internet(1) private(4) 1 }
 
@@ -861,7 +861,7 @@ svrNumberLogicalDrives OBJECT-TYPE
     SYNTAX       INTEGER
     ACCESS       read-only
     STATUS       mandatory
-    DESCRIPTION  "Number of available logical drives (number of entries in 
+    DESCRIPTION  "Number of available logical drives (number of entries in
                     svrLogicalDriveTable and svrLogicalDriveContentsTable)"
     ::= { svrLogicalDriveInfo 1 }
 

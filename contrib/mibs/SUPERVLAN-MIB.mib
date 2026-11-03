@@ -1,10 +1,10 @@
 -- -----------------------------------------------------------------------------
 -- MIB NAME : Supervlan-MIB
--- FILE NAME: Supervlan.mib  
+-- FILE NAME: Supervlan.mib
 -- DATE     : 2010/02/02
--- VERSION  : 1.00  
+-- VERSION  : 1.00
 -- PURPOSE  : To construct the MIB structure of the super VLAN function for
---            proprietary enterprises			 
+--            proprietary enterprises
 -- -----------------------------------------------------------------------------
 -- MODIFICATION HISTORY:
 -- -----------------------------------------------------------------------------
@@ -16,7 +16,7 @@
 --
 -- Version 1.00, 2010/02/02, Rock Zhang
 -- This is the first formal version for universal MIB definition.
--- Notes:Requested by Rock Zhang for project DGS3600	
+-- Notes:Requested by Rock Zhang for project DGS3600
 -- -----------------------------------------------------------------------------
 
 SUPERVLAN-MIB DEFINITIONS ::= BEGIN
@@ -32,10 +32,10 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 		ORGANIZATION "D-Link Corp."
 		CONTACT-INFO
 			"http://support.dlink.com"
-		DESCRIPTION			
+		DESCRIPTION
 			"The structure of the super VLAN for the proprietary enterprises."
 			::= { dlink-common-mgmt 91}
-			
+
 	swSuperVlanMIBObjects	OBJECT IDENTIFIER ::={swSuperVlanMIB 1}
 -- ---------------------------------------------------------------------------------------------------------
 -- swSuperVlanTable
@@ -47,7 +47,7 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"This table contain super VLAN information."
 		::= { swSuperVlanMIBObjects 1 }
-    
+
 	swSuperVlanEntry OBJECT-TYPE
 		SYNTAX  SwSuperVlanEntry
 		MAX-ACCESS  not-accessible
@@ -85,11 +85,11 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 				INTEGER,
 			swSuperVlanRowStatus
 				RowStatus
-			}     
-            
+			}
+
 	swSuperVlanId	OBJECT-TYPE
 		SYNTAX  VlanIndex
-		MAX-ACCESS  not-accessible	
+		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
 			"This object indicates the VLAN-ID of the super VLAN."
@@ -97,7 +97,7 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 
 	swSuperVlanIPAddress	OBJECT-TYPE
 		SYNTAX  IpAddress
-		MAX-ACCESS  read-only	
+		MAX-ACCESS  read-only
 		STATUS  current
 		DESCRIPTION
 			"This object indicates the super VLAN IP Address."
@@ -105,12 +105,12 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 
 	swSuperVlanIPAddrMask	OBJECT-TYPE
 		SYNTAX  IpAddress
-		MAX-ACCESS  read-only	
+		MAX-ACCESS  read-only
 		STATUS  current
 		DESCRIPTION
 			"This object indicates the super VLAN IP Mask."
-		::= { swSuperVlanEntry 3 }				
-     
+		::= { swSuperVlanEntry 3 }
+
 	swSubVlanList1to64 OBJECT-TYPE
 		SYNTAX     OCTET STRING (SIZE (64))
 		MAX-ACCESS  read-create
@@ -196,7 +196,7 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 
 	swSuperVlanRowStatus	OBJECT-TYPE
 		SYNTAX  RowStatus
-		MAX-ACCESS  read-create	
+		MAX-ACCESS  read-create
 		STATUS  current
 		DESCRIPTION
 			"This object indicates the status of this entry."
@@ -229,10 +229,10 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 			swSubVlanOperStatus
 				INTEGER
 			}
-			
+
 	swSubVlanId	OBJECT-TYPE
 		SYNTAX  VlanIndex
-		MAX-ACCESS  not-accessible	
+		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
 			"This object indicates the sub-VLAN-ID."
@@ -241,7 +241,7 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 	swSubVlanOperStatus OBJECT-TYPE
 		SYNTAX  INTEGER {
 		                active(1),
-		                inactive(2) 
+		                inactive(2)
                         }
 		MAX-ACCESS  read-only
         STATUS  current
@@ -258,7 +258,7 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"This table contains the IP range of the sub-VLAN."
 		::= { swSuperVlanMIBObjects 3 }
-    
+
 	swSubVlanIPRangeEntry OBJECT-TYPE
 		SYNTAX  SwSubVlanIPRangeEntry
 		MAX-ACCESS  not-accessible
@@ -267,7 +267,7 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 			"A list of information about the IP range of the sub-VLAN."
 		INDEX  { swSubVlanId,swSubVlanIPAddressRangeFrom,swSubVlanIPAddressRangeTo}
 		::= { swSubVlanIPRangeTable 1 }
-        
+
 	SwSubVlanIPRangeEntry ::=
 		SEQUENCE {
 			swSubVlanIPAddressRangeFrom
@@ -275,12 +275,12 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 			swSubVlanIPAddressRangeTo
 				IpAddress,
 			swSubVlanRowStatus
-				RowStatus                        
-			}     
+				RowStatus
+			}
 
 	swSubVlanIPAddressRangeFrom	OBJECT-TYPE
 		SYNTAX  IpAddress
-		MAX-ACCESS  not-accessible	
+		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
 			"This object indicates the sub-VLAN IP address."
@@ -288,7 +288,7 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 
 	swSubVlanIPAddressRangeTo	OBJECT-TYPE
 		SYNTAX  IpAddress
-		MAX-ACCESS  not-accessible	
+		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
 			"This object indicates the sub-VLAN IP range from the previous
@@ -297,10 +297,10 @@ SUPERVLAN-MIB DEFINITIONS ::= BEGIN
 
 	swSubVlanRowStatus	OBJECT-TYPE
 		SYNTAX  RowStatus
-		MAX-ACCESS  read-create	
+		MAX-ACCESS  read-create
 		STATUS  current
 		DESCRIPTION
 			"This object indicates the status of this entry."
 		::= { swSubVlanIPRangeEntry 100 }
-        
+
 END

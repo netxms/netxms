@@ -221,7 +221,7 @@ brcdIPSecFailedAntiReplayCheckNotification NOTIFICATION-TYPE
          "The SNMP trap that is generated when the received packet
           fails the anti-replay checks."
          --#TYPE "Brocade Trap: received packet fails the anti-replay check."
-         --#SUMMARY "I:ESP: Anti-Replay Check Failed for Received Packet with 
+         --#SUMMARY "I:ESP: Anti-Replay Check Failed for Received Packet with
 		      -- Source address type %u Source %s Destination address type %u
               -- Destination %s SPI %s Sequence Number %u."
          --#ARGUMENTS {0, 1, 2, 3, 4, 5}
@@ -243,7 +243,7 @@ brcdIPSecFailedIntegrityCheckNotification NOTIFICATION-TYPE
          "The SNMP trap that is generated when the  received packet
           fails integrity check."
          --#TYPE "Brocade Trap: received packet fails integrity check."
-         --#SUMMARY "I:ESP: Integrity Check Failed for Received Packet with 
+         --#SUMMARY "I:ESP: Integrity Check Failed for Received Packet with
 		      -- Source address type %u Source %s Destination address type %u
 		      -- Destination %s SPI %s Sequence Number %u."
          --#ARGUMENTS {0, 1, 2, 3, 4, 5}
@@ -265,7 +265,7 @@ brcdIPSecDeencapsulationFailedNotification NOTIFICATION-TYPE
          "The SNMP trap that is generated when the deencapsulation of
           received packet failed."
          --#TYPE "Brocade Trap: deencapsulation of received packet failed."
-         --#SUMMARY "I:ESP: Deencapsulation Failed for Received Packet with 
+         --#SUMMARY "I:ESP: Deencapsulation Failed for Received Packet with
 		      -- Source address type %u Source %s Destination address type %u
               -- Destination %s SPI %s Sequence Number %u."
          --#ARGUMENTS { 0, 1, 2, 3, 4, 5}
@@ -308,7 +308,7 @@ brcdIKEInvalidMsgTypeNotification NOTIFICATION-TYPE
          "The SNMP trap that is generated when an invalid IKE message
           Type is received."
          --#TYPE "Brocade Trap: Invalid IKE Message Type received."
-         --#SUMMARY "I:IKEv2: Invalid Message Type Received with 
+         --#SUMMARY "I:IKEv2: Invalid Message Type Received with
 		      -- Source address type %u Source %s Destination address type %u
   		      -- Destination %s SPI %s Message Type %u.
          --#ARGUMENTS {0, 1, 2, 3, 4, 5}
@@ -385,7 +385,7 @@ brcdIPSecSessionNotification NOTIFICATION-TYPE
        "The SNMP trap that is generated when IPsec session state
         is changed."
        --#TYPE "Brocade Trap: IPsec session state."
-       --#SUMMARY "I:IPsec: IPsec session Source address type %u 
+       --#SUMMARY "I:IPsec: IPsec session Source address type %u
 		   -- Source %s Destination address type %u Destination %s
   	          -- VRF %u SPI %u Direction %s.
        --#ARGUMENTS {0, 1, 2, 3, 4, 5, 6, 7}
@@ -399,7 +399,7 @@ brcdIKESessionNotification NOTIFICATION-TYPE
 	spdIPSourceType,
 	spdIPSourceAddress,
 	spdIPDestinationType,
-	spdIPDestinationAddress,	
+	spdIPDestinationAddress,
         brcdIPSecVRFValue,
 	brcdIPSecSPIValue
 	   }
@@ -408,7 +408,7 @@ brcdIKESessionNotification NOTIFICATION-TYPE
          "The SNMP trap that is generated when IKEv2 session state
           is changed."
          --#TYPE "Brocade Trap: IKEv2 session state."
-         --#SUMMARY "I:IKEv2: IKEv2 session %s Source address type %u 
+         --#SUMMARY "I:IKEv2: IKEv2 session %s Source address type %u
 		   -- Source %s Destination address type %u Destination %s
   	          -- VRF %u SPI %u.
          --#ARGUMENTS {0, 1, 2, 3, 4, 5, 6}
@@ -432,7 +432,7 @@ brcdIPSecModuleNotification NOTIFICATION-TYPE
          --#SEVERITY INFORMATIONAL
          --#STATE OPERATIONAL
     ::= {brcdIPSecMIBNotification 14 }
-    
+
 brcdIKEMaxPeerReachedStackingNotification NOTIFICATION-TYPE
    STATUS current
    DESCRIPTION
@@ -456,7 +456,6 @@ brcdIKERecoveredMaxPeerLimitStackingNotification NOTIFICATION-TYPE
          --#SEVERITY WARNING
          --#STATE OPERATIONAL
     ::= {brcdIPSecMIBNotification 16 }
-    
+
 
 END
-

@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Link Aggregation mib
 -------------------------------------------------------------------------------
--- Revision 1.0                
+-- Revision 1.0
 -- 2004/3/17 03:55
 -- by Chrissy
 
@@ -28,8 +28,8 @@ IMPORTS
     PortList
         FROM Q-BRIDGE-MIB
 	dlink-common-mgmt	FROM DLINK-ID-REC-MIB;
-    
-    
+
+
 swLagMIB MODULE-IDENTITY
     LAST-UPDATED "9911220000Z"
     ORGANIZATION ""
@@ -64,7 +64,7 @@ LacpState ::= TEXTUAL-CONVENTION
         defaulted(6),
         expired(7)
     }
-    
+
 ChurnState ::= TEXTUAL-CONVENTION
     STATUS current
     DESCRIPTION
@@ -104,7 +104,7 @@ dot3adTablesLastChanged OBJECT-TYPE
         dot3adAggPortListTable, or
         dot3adAggPortTable."
     ::= { lagMIBObjects 3 }
-    
+
 -- -------------------------------------------------------------
 -- The Aggregator Configuration Table
 -- -------------------------------------------------------------
@@ -119,7 +119,7 @@ dot3adAggTable OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1"
     ::= { dot3adAgg 1 }
-    
+
 dot3adAggEntry OBJECT-TYPE
     SYNTAX Dot3adAggEntry
     MAX-ACCESS not-accessible
@@ -155,7 +155,7 @@ Dot3adAggEntry ::=
         dot3adAggCollectorMaxDelay
             INTEGER
     }
-    
+
 dot3adAggIndex OBJECT-TYPE
     SYNTAX InterfaceIndex
     MAX-ACCESS not-accessible
@@ -167,7 +167,7 @@ dot3adAggIndex OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.1"
     ::= { dot3adAggEntry 1 }
-    
+
 dot3adAggMACAddress OBJECT-TYPE
     SYNTAX MacAddress
     MAX-ACCESS read-only
@@ -178,7 +178,7 @@ dot3adAggMACAddress OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.9"
     ::= { dot3adAggEntry 2 }
-    
+
 dot3adAggActorSystemPriority OBJECT-TYPE
     SYNTAX INTEGER (0..65535)
     MAX-ACCESS read-write
@@ -189,7 +189,7 @@ dot3adAggActorSystemPriority OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.5"
     ::= { dot3adAggEntry 3 }
-    
+
 dot3adAggActorSystemID OBJECT-TYPE
     SYNTAX MacAddress
     MAX-ACCESS read-only
@@ -209,7 +209,7 @@ dot3adAggActorSystemID OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.4"
     ::= { dot3adAggEntry 4 }
-    
+
 dot3adAggAggregateOrIndividual OBJECT-TYPE
     SYNTAX TruthValue
     MAX-ACCESS read-only
@@ -221,7 +221,7 @@ dot3adAggAggregateOrIndividual OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.6"
     ::= { dot3adAggEntry 5 }
-    
+
 dot3adAggActorAdminKey OBJECT-TYPE
     SYNTAX LacpKey
     MAX-ACCESS read-write
@@ -235,7 +235,7 @@ dot3adAggActorAdminKey OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.7"
     ::= { dot3adAggEntry 6 }
-    
+
 dot3adAggActorOperKey OBJECT-TYPE
     SYNTAX LacpKey
     MAX-ACCESS read-only
@@ -249,7 +249,7 @@ dot3adAggActorOperKey OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.8"
     ::= { dot3adAggEntry 7 }
-    
+
 dot3adAggPartnerSystemID OBJECT-TYPE
     SYNTAX MacAddress
     MAX-ACCESS read-only
@@ -263,7 +263,7 @@ dot3adAggPartnerSystemID OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.10"
     ::= { dot3adAggEntry 8 }
-    
+
 dot3adAggPartnerSystemPriority OBJECT-TYPE
     SYNTAX INTEGER (0..65535)
     MAX-ACCESS read-only
@@ -276,7 +276,7 @@ dot3adAggPartnerSystemPriority OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.11"
     ::= { dot3adAggEntry 9 }
-    
+
 dot3adAggPartnerOperKey OBJECT-TYPE
     SYNTAX LacpKey
     MAX-ACCESS read-only
@@ -290,7 +290,7 @@ dot3adAggPartnerOperKey OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.12"
     ::= { dot3adAggEntry 10 }
-    
+
 dot3adAggCollectorMaxDelay OBJECT-TYPE
     SYNTAX INTEGER (0..65535)
     MAX-ACCESS read-write
@@ -305,7 +305,7 @@ dot3adAggCollectorMaxDelay OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.31"
     ::= { dot3adAggEntry 11 }
-    
+
 
 -- -------------------------------------------------------------
 -- The Aggregation Port List Table
@@ -321,7 +321,7 @@ dot3adAggPortListTable OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.30"
     ::= { dot3adAgg 2 }
-    
+
 dot3adAggPortListEntry OBJECT-TYPE
     SYNTAX Dot3adAggPortListEntry
     MAX-ACCESS not-accessible
@@ -337,7 +337,7 @@ Dot3adAggPortListEntry ::=
         dot3adAggPortListPorts
         PortList
     }
-    
+
 dot3adAggPortListPorts OBJECT-TYPE
     SYNTAX PortList
     MAX-ACCESS read-only
@@ -349,8 +349,8 @@ dot3adAggPortListPorts OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.1.1.30"
     ::= { dot3adAggPortListEntry 1 }
-    
-    
+
+
 -- -------------------------------------------------------------
 -- The Aggregation Port Table
 -- -------------------------------------------------------------
@@ -367,7 +367,7 @@ dot3adAggPortTable OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2"
     ::= { dot3adAggPort 1 }
-    
+
 dot3adAggPortEntry OBJECT-TYPE
     SYNTAX Dot3adAggPortEntry
     MAX-ACCESS not-accessible
@@ -377,7 +377,7 @@ dot3adAggPortEntry OBJECT-TYPE
         parameters for each Aggregation Port on this device."
     INDEX { dot3adAggPortIndex }
     ::= { dot3adAggPortTable 1 }
-    
+
 Dot3adAggPortEntry ::=
     SEQUENCE {
         dot3adAggPortIndex
@@ -429,7 +429,7 @@ Dot3adAggPortEntry ::=
         dot3adAggPortAggregateOrIndividual
             TruthValue
         }
-        
+
 dot3adAggPortIndex OBJECT-TYPE
     SYNTAX InterfaceIndex
     MAX-ACCESS not-accessible
@@ -439,7 +439,7 @@ dot3adAggPortIndex OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.1"
     ::= { dot3adAggPortEntry 1 }
-    
+
 dot3adAggPortActorSystemPriority OBJECT-TYPE
     SYNTAX INTEGER (0..255)
     MAX-ACCESS read-write
@@ -450,7 +450,7 @@ dot3adAggPortActorSystemPriority OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.2"
     ::= { dot3adAggPortEntry 2 }
-    
+
 dot3adAggPortActorSystemID OBJECT-TYPE
     SYNTAX MacAddress
     MAX-ACCESS read-only
@@ -462,7 +462,7 @@ dot3adAggPortActorSystemID OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.3"
     ::= { dot3adAggPortEntry 3 }
-    
+
 dot3adAggPortActorAdminKey OBJECT-TYPE
     SYNTAX LacpKey
     MAX-ACCESS read-write
@@ -474,7 +474,7 @@ dot3adAggPortActorAdminKey OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.4"
     ::= { dot3adAggPortEntry 4 }
-    
+
 dot3adAggPortActorOperKey OBJECT-TYPE
     SYNTAX LacpKey
     MAX-ACCESS read-write
@@ -486,7 +486,7 @@ dot3adAggPortActorOperKey OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.5"
     ::= { dot3adAggPortEntry 5 }
-    
+
 dot3adAggPortPartnerAdminSystemPriority OBJECT-TYPE
     SYNTAX INTEGER (0..255)
     MAX-ACCESS read-write
@@ -501,7 +501,7 @@ dot3adAggPortPartnerAdminSystemPriority OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.6"
     ::= { dot3adAggPortEntry 6 }
-    
+
 dot3adAggPortPartnerOperSystemPriority OBJECT-TYPE
     SYNTAX INTEGER (0..255)
     MAX-ACCESS read-only
@@ -531,7 +531,7 @@ dot3adAggPortPartnerAdminSystemID OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.8"
     ::= { dot3adAggPortEntry 8 }
-    
+
 dot3adAggPortPartnerOperSystemID OBJECT-TYPE
     SYNTAX MacAddress
     MAX-ACCESS read-only
@@ -546,7 +546,7 @@ dot3adAggPortPartnerOperSystemID OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.9"
     ::= { dot3adAggPortEntry 9 }
-    
+
 dot3adAggPortPartnerAdminKey OBJECT-TYPE
     SYNTAX LacpKey
     MAX-ACCESS read-write
@@ -575,7 +575,7 @@ dot3adAggPortPartnerOperKey OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.11"
     ::= { dot3adAggPortEntry 11 }
-    
+
 dot3adAggPortSelectedAggID OBJECT-TYPE
     SYNTAX InterfaceIndexOrZero
     MAX-ACCESS read-only
@@ -589,7 +589,7 @@ dot3adAggPortSelectedAggID OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.12"
     ::= { dot3adAggPortEntry 12 }
-    
+
 dot3adAggPortAttachedAggID OBJECT-TYPE
     SYNTAX InterfaceIndexOrZero
     MAX-ACCESS read-only
@@ -601,7 +601,7 @@ dot3adAggPortAttachedAggID OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.13"
     ::= { dot3adAggPortEntry 13 }
-    
+
 dot3adAggPortActorPort OBJECT-TYPE
     SYNTAX INTEGER (0..65535)
     MAX-ACCESS read-only
@@ -613,7 +613,7 @@ dot3adAggPortActorPort OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.14"
     ::= { dot3adAggPortEntry 14 }
-    
+
 dot3adAggPortActorPortPriority OBJECT-TYPE
     SYNTAX INTEGER (0..255)
     MAX-ACCESS read-write
@@ -624,7 +624,7 @@ dot3adAggPortActorPortPriority OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.15"
     ::= { dot3adAggPortEntry 15 }
-    
+
 dot3adAggPortPartnerAdminPort OBJECT-TYPE
     SYNTAX INTEGER (0..65535)
     MAX-ACCESS read-write
@@ -640,7 +640,7 @@ dot3adAggPortPartnerAdminPort OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.16"
     ::= { dot3adAggPortEntry 16 }
-    
+
 dot3adAggPortPartnerOperPort OBJECT-TYPE
     SYNTAX INTEGER (0..65535)
     MAX-ACCESS read-only
@@ -654,7 +654,7 @@ dot3adAggPortPartnerOperPort OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.17"
     ::= { dot3adAggPortEntry 17 }
-    
+
 dot3adAggPortPartnerAdminPortPriority OBJECT-TYPE
     SYNTAX INTEGER (0..255)
     MAX-ACCESS read-write
@@ -669,7 +669,7 @@ dot3adAggPortPartnerAdminPortPriority OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.18"
     ::= { dot3adAggPortEntry 18 }
-    
+
 dot3adAggPortPartnerOperPortPriority OBJECT-TYPE
     SYNTAX INTEGER (0..255)
     MAX-ACCESS read-only
@@ -683,7 +683,7 @@ dot3adAggPortPartnerOperPortPriority OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.19"
     ::= { dot3adAggPortEntry 19 }
-    
+
 dot3adAggPortActorAdminState OBJECT-TYPE
     SYNTAX LacpState
     MAX-ACCESS read-write
@@ -703,7 +703,7 @@ dot3adAggPortActorAdminState OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.20"
     ::= { dot3adAggPortEntry 20 }
-    
+
 dot3adAggPortActorOperState OBJECT-TYPE
     SYNTAX LacpState
     MAX-ACCESS read-only
@@ -716,7 +716,7 @@ dot3adAggPortActorOperState OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.21"
     ::= { dot3adAggPortEntry 21 }
-    
+
 dot3adAggPortPartnerAdminState OBJECT-TYPE
     SYNTAX LacpState
     MAX-ACCESS read-write
@@ -730,7 +730,7 @@ dot3adAggPortPartnerAdminState OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.22"
     ::= { dot3adAggPortEntry 22 }
-    
+
 dot3adAggPortPartnerOperState OBJECT-TYPE
     SYNTAX LacpState
     MAX-ACCESS read-only
@@ -745,7 +745,7 @@ dot3adAggPortPartnerOperState OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.23"
     ::= { dot3adAggPortEntry 23 }
-    
+
 dot3adAggPortAggregateOrIndividual OBJECT-TYPE
     SYNTAX TruthValue
     MAX-ACCESS read-only
@@ -757,8 +757,8 @@ dot3adAggPortAggregateOrIndividual OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.2.1.24"
     ::= { dot3adAggPortEntry 24 }
-    
-    
+
+
 -- -------------------------------------------------------------
 -- LACP Statistics Table
 -- -------------------------------------------------------------
@@ -774,7 +774,7 @@ dot3adAggPortStatsTable OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.3"
     ::= { dot3adAggPort 2 }
-    
+
 dot3adAggPortStatsEntry OBJECT-TYPE
     SYNTAX Dot3adAggPortStatsEntry
     MAX-ACCESS not-accessible
@@ -784,7 +784,7 @@ dot3adAggPortStatsEntry OBJECT-TYPE
         for each port on this device."
     INDEX { dot3adAggPortIndex }
     ::= { dot3adAggPortStatsTable 1 }
-    
+
 Dot3adAggPortStatsEntry ::=
     SEQUENCE {
         dot3adAggPortStatsLACPDUsRx
@@ -804,7 +804,7 @@ Dot3adAggPortStatsEntry ::=
         dot3adAggPortStatsMarkerResponsePDUsTx
             Counter32
         }
-        
+
 dot3adAggPortStatsLACPDUsRx OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -815,7 +815,7 @@ dot3adAggPortStatsLACPDUsRx OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.3.1.2"
     ::= { dot3adAggPortStatsEntry 1 }
-    
+
 dot3adAggPortStatsMarkerPDUsRx OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -826,7 +826,7 @@ dot3adAggPortStatsMarkerPDUsRx OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.3.1.3"
     ::= { dot3adAggPortStatsEntry 2 }
-    
+
 dot3adAggPortStatsMarkerResponsePDUsRx OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -837,7 +837,7 @@ dot3adAggPortStatsMarkerResponsePDUsRx OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.3.1.4"
     ::= { dot3adAggPortStatsEntry 3 }
-    
+
 dot3adAggPortStatsUnknownRx OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -852,7 +852,7 @@ dot3adAggPortStatsUnknownRx OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.3.1.5"
     ::= { dot3adAggPortStatsEntry 4 }
-    
+
 dot3adAggPortStatsIllegalRx OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -865,7 +865,7 @@ dot3adAggPortStatsIllegalRx OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.3.1.6"
     ::= { dot3adAggPortStatsEntry 5 }
-    
+
 dot3adAggPortStatsLACPDUsTx OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -876,7 +876,7 @@ dot3adAggPortStatsLACPDUsTx OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.3.1.7"
     ::= { dot3adAggPortStatsEntry 6 }
-    
+
 dot3adAggPortStatsMarkerPDUsTx OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -887,7 +887,7 @@ dot3adAggPortStatsMarkerPDUsTx OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.3.1.8"
     ::= { dot3adAggPortStatsEntry 7 }
-    
+
 dot3adAggPortStatsMarkerResponsePDUsTx OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -898,8 +898,8 @@ dot3adAggPortStatsMarkerResponsePDUsTx OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.3.1.9"
     ::= { dot3adAggPortStatsEntry 8 }
-    
-    
+
+
 -- -------------------------------------------------------------
 -- LACP Debug Table
 -- -------------------------------------------------------------
@@ -916,7 +916,7 @@ dot3adAggPortDebugTable OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4"
     ::= { dot3adAggPort 3 }
-    
+
 dot3adAggPortDebugEntry OBJECT-TYPE
     SYNTAX Dot3adAggPortDebugEntry
     MAX-ACCESS not-accessible
@@ -925,7 +925,7 @@ dot3adAggPortDebugEntry OBJECT-TYPE
         "A list of the debug parameters for a port."
     INDEX { dot3adAggPortIndex }
     ::= { dot3adAggPortDebugTable 1 }
-    
+
 Dot3adAggPortDebugEntry ::=
     SEQUENCE {
         dot3adAggPortDebugRxState
@@ -953,7 +953,7 @@ Dot3adAggPortDebugEntry ::=
         dot3adAggPortDebugPartnerChangeCount
             Counter32
         }
-        
+
 dot3adAggPortDebugRxState OBJECT-TYPE
     SYNTAX INTEGER {
             currentx(1),
@@ -979,7 +979,7 @@ dot3adAggPortDebugRxState OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4.1.2"
     ::= { dot3adAggPortDebugEntry 1 }
-    
+
 dot3adAggPortDebugLastRxTime OBJECT-TYPE
     SYNTAX TimeTicks
     MAX-ACCESS read-only
@@ -991,7 +991,7 @@ dot3adAggPortDebugLastRxTime OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4.1.3"
     ::= { dot3adAggPortDebugEntry 2 }
-    
+
 dot3adAggPortDebugMuxState OBJECT-TYPE
     SYNTAX INTEGER {
             detached(1),
@@ -1019,7 +1019,7 @@ dot3adAggPortDebugMuxState OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4.1.4"
     ::= { dot3adAggPortDebugEntry 3 }
-    
+
 dot3adAggPortDebugMuxReason OBJECT-TYPE
     SYNTAX DisplayString
     MAX-ACCESS read-only
@@ -1031,7 +1031,7 @@ dot3adAggPortDebugMuxReason OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4.1.5"
     ::= { dot3adAggPortDebugEntry 4 }
-    
+
 dot3adAggPortDebugActorChurnState OBJECT-TYPE
     SYNTAX ChurnState
     MAX-ACCESS read-only
@@ -1046,7 +1046,7 @@ dot3adAggPortDebugActorChurnState OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4.1.6"
     ::= { dot3adAggPortDebugEntry 5 }
-    
+
 dot3adAggPortDebugPartnerChurnState OBJECT-TYPE
     SYNTAX ChurnState
     MAX-ACCESS read-only
@@ -1098,7 +1098,7 @@ dot3adAggPortDebugActorSyncTransitionCount OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4.1.10"
     ::= { dot3adAggPortDebugEntry 9 }
-    
+
 dot3adAggPortDebugPartnerSyncTransitionCount OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -1110,7 +1110,7 @@ dot3adAggPortDebugPartnerSyncTransitionCount OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4.1.11"
     ::= { dot3adAggPortDebugEntry 10 }
-    
+
 dot3adAggPortDebugActorChangeCount OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -1122,7 +1122,7 @@ dot3adAggPortDebugActorChangeCount OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4.1.12"
     ::= { dot3adAggPortDebugEntry 11 }
-    
+
 dot3adAggPortDebugPartnerChangeCount OBJECT-TYPE
     SYNTAX Counter32
     MAX-ACCESS read-only
@@ -1134,8 +1134,8 @@ dot3adAggPortDebugPartnerChangeCount OBJECT-TYPE
     REFERENCE
         "IEEE 802.3 Section 30.7.4.1.13"
     ::= { dot3adAggPortDebugEntry 12 }
-    
-    
+
+
 -- -------------------------------------------------------------
 -- IEEE 802.3ad MIB - Conformance Information
 -- -------------------------------------------------------------
@@ -1167,7 +1167,7 @@ dot3adAggGroup OBJECT-GROUP
         "A collection of objects providing information about an
         aggregation."
     ::= { dot3adAggGroups 1 }
-    
+
 dot3adAggPortListGroup OBJECT-GROUP
     OBJECTS {
         dot3adAggPortListPorts
@@ -1177,7 +1177,7 @@ dot3adAggPortListGroup OBJECT-GROUP
         "A collection of objects providing information about every
         port in an aggregation."
     ::= { dot3adAggGroups 2 }
-    
+
 dot3adAggPortGroup OBJECT-GROUP
     OBJECTS {
         dot3adAggPortActorSystemPriority,
@@ -1209,7 +1209,7 @@ dot3adAggPortGroup OBJECT-GROUP
         "A collection of objects providing information about every
         port in an aggregation."
     ::= { dot3adAggGroups 3 }
-    
+
 dot3adAggPortStatsGroup OBJECT-GROUP
     OBJECTS {
         dot3adAggPortStatsLACPDUsRx,
@@ -1226,7 +1226,7 @@ dot3adAggPortStatsGroup OBJECT-GROUP
         "A collection of objects providing information about every
         port in an aggregation."
     ::= { dot3adAggGroups 4 }
-    
+
 dot3adAggPortDebugGroup OBJECT-GROUP
     OBJECTS {
         dot3adAggPortDebugRxState,
@@ -1247,7 +1247,7 @@ dot3adAggPortDebugGroup OBJECT-GROUP
         "A collection of objects providing debug information about every
         every aggregated port."
     ::= { dot3adAggGroups 5 }
-    
+
 dot3adTablesLastChangedGroup OBJECT-GROUP
     OBJECTS {
         dot3adTablesLastChanged
@@ -1257,8 +1257,8 @@ dot3adTablesLastChangedGroup OBJECT-GROUP
         "A collection of objects providing information about the time
         of changes to the configuration of aggregations and their ports."
     ::= { dot3adAggGroup 6 }
-    
-    
+
+
 -- -------------------------------------------------------------
 -- compliance statements
 -- -------------------------------------------------------------
@@ -1268,26 +1268,26 @@ dot3adAggCompliance MODULE-COMPLIANCE
     DESCRIPTION
         "The compliance statement for device support of
         Link Aggregation."
-    
+
     MODULE
         MANDATORY-GROUPS {
             dot3adAggGroup,
             dot3adAggPortGroup,
             dot3adTablesLastChangedGroup
         }
-        
+
     GROUP dot3adAggPortListGroup
     DESCRIPTION
         "This group is optional."
-        
+
     GROUP dot3adAggPortStatsGroup
     DESCRIPTION
         "This group is optional."
-        
+
     GROUP dot3adAggPortDebugGroup
     DESCRIPTION
         "This group is optional."
-        
+
     ::= { dot3adAggCompliances 1 }
-          
+
 END

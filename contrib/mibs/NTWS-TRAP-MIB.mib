@@ -410,7 +410,7 @@ NtwsDot1xFailureType ::= TEXTUAL-CONVENTION
                  time after a failed connection attempt
     administrative-kill means that the session was cleared using the
                         'clear dot1x client' command
-    bad-rsnie means that client sent an invalid IE 
+    bad-rsnie means that client sent an invalid IE
     timeout is when there are excessive retransmissions
     max-sessions-exceeded means the maximum allowed wired clients
                           has been exceeded on the switch
@@ -425,8 +425,8 @@ NtwsDot1xFailureType ::= TEXTUAL-CONVENTION
     force-unauth-configured means that the client is trying to connect
                             through a port which is configured as
                             force-unauth
-    cert-not-installed means that there is no certificate installed on 
-                       the switch"                    
+    cert-not-installed means that there is no certificate installed on
+                       the switch"
     SYNTAX      INTEGER {
             other               (1),
             quiet-period        (2),
@@ -2489,7 +2489,7 @@ ntwsRFDetectBlacklistedTrap NOTIFICATION-TYPE
     STATUS      current
     DESCRIPTION
         "This trap is sent if an association, re-association or de-association
-        request (packet) is detected from a blacklisted transmitter 
+        request (packet) is detected from a blacklisted transmitter
         (identified by MAC: 'ntwsRFDetectXmtrMacAddr').
         If 'ntwsBlacklistingCause' is 'configured',
         then 'ntwsBlacklistingRemainingTime' will be zero, meaning indefinite

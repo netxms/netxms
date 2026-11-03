@@ -5,7 +5,7 @@ IMPORTS
 	MacAddress        				FROM SNMPv2-TC
 	SnmpAdminString					FROM SNMP-FRAMEWORK-MIB
 	InetAddressType,
-    InetAddress, 
+    InetAddress,
     InetAddressPrefixLength
     				                FROM INET-ADDRESS-MIB
 	hmManagement					FROM HIRSCHMANN-MGMT-MIB;
@@ -64,7 +64,7 @@ hmMgmtDiscMacAddr	OBJECT-TYPE
 
 hmMgmtDiscIpIntfType	OBJECT-TYPE
 			SYNTAX		INTEGER
-								{ 
+								{
 								  loopback-intf (1),
 								  router-intf (2),
 								  mgmt-intf (3)
@@ -84,8 +84,8 @@ hmMgmtDiscSwVersion		OBJECT-TYPE
 			 ::= { hmMgmtDiscoveryStatusGroup 4 }
 
 hmMgmtDiscProductDescr OBJECT-TYPE
-		 SYNTAX   			SnmpAdminString 
-		 MAX-ACCESS   		read-only							  
+		 SYNTAX   			SnmpAdminString
+		 MAX-ACCESS   		read-only
 		 STATUS 	  		current
 		 DESCRIPTION
 				"Manufacturer-defined product description."
@@ -178,7 +178,7 @@ hmMgmtDiscCfgAction		OBJECT-TYPE
 hmMgmtDiscCfgBlinking	OBJECT-TYPE
 			SYNTAX		INTEGER
 								{
-							        enable(1), 
+							        enable(1),
 			        				disable(2)
 								}
 			MAX-ACCESS		read-write
@@ -190,5 +190,3 @@ hmMgmtDiscCfgBlinking	OBJECT-TYPE
 			::= { hmMgmtDiscoveryCfgGroup 9 }
 
 END
-
-

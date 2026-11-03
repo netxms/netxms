@@ -10,7 +10,7 @@
 -- -----------------------------------------------------------------------------
 -- Version 1.00, 2011/09/19, Robert Wang
 -- This is the first formal version for universal MIB definition.
--- -----------------------------------------------------------------------------  
+-- -----------------------------------------------------------------------------
 
 SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 
@@ -19,7 +19,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 			FROM SNMPv2-SMI
 		DateAndTime, MacAddress, RowStatus, DisplayString, TimeInterval, TruthValue
 			FROM SNMPv2-TC
-		dlink-common-mgmt	
+		dlink-common-mgmt
 			FROM DLINK-ID-REC-MIB
 		PortList,VlanIdOrNone
 			FROM Q-BRIDGE-MIB;
@@ -32,27 +32,27 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"The surveillance VLAN module MIB for the proprietary enterprise."
 		::= { dlink-common-mgmt 102}
-        
+
 	swSurveillanceVLANNotifications	OBJECT IDENTIFIER ::= { swSurveillanceVLANMIB 0 }
 	swSurveillanceVLANMIBObjects	OBJECT IDENTIFIER ::= { swSurveillanceVLANMIB 1 }
 	swSurveillanceVlanCtrl		OBJECT IDENTIFIER ::= { swSurveillanceVLANMIBObjects 1 }
 	swSurveillanceVlanInfo		OBJECT IDENTIFIER ::= { swSurveillanceVLANMIBObjects 2 }
 	swSurveillanceVlanMgmt		OBJECT IDENTIFIER ::= { swSurveillanceVLANMIBObjects 3 }
-		   
+
 -- -----------------------------------------------------------------------------
 -- swSurveillanceVlanCtrl
--- -----------------------------------------------------------------------------	
+-- -----------------------------------------------------------------------------
 	swSurveillanceVlanId OBJECT-TYPE
 		SYNTAX  VlanIdOrNone
 		MAX-ACCESS  read-write
 		STATUS  current
 		DESCRIPTION
-			"The VLAN ID of the surveillance VLAN. The surveillance VLAN is used to assign 
+			"The VLAN ID of the surveillance VLAN. The surveillance VLAN is used to assign
 			VLANs for untagged video packets.
-			The value zero is for display only and not configurable, which 
-			means there is no surveillance VLAN on the switch."  		
+			The value zero is for display only and not configurable, which
+			means there is no surveillance VLAN on the switch."
 		::= { swSurveillanceVlanCtrl 1 }
-	
+
 	swSurveillanceVlanGlobalState OBJECT-TYPE
 		SYNTAX  INTEGER
 		{
@@ -62,7 +62,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  read-write
 		STATUS  current
 		DESCRIPTION
-		   	"This object indicates the global status of the surveillance VLAN. If we 
+		   	"This object indicates the global status of the surveillance VLAN. If we
 		   	enable the surveillance VLAN, we should set the VID first."
 		::= { swSurveillanceVlanCtrl 2 }
 
@@ -71,7 +71,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  read-write
 		STATUS  current
 		DESCRIPTION
-			"The priority for the surveillance VLAN, which is used to distinguish 
+			"The priority for the surveillance VLAN, which is used to distinguish
 			the QoS of the surveillance traffic from data traffic."
 		::= { swSurveillanceVlanCtrl 3 }
 
@@ -80,7 +80,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  read-write
 		STATUS  current
 		DESCRIPTION
-			"The aging time for the surveillance VLAN, which is used to remove a 
+			"The aging time for the surveillance VLAN, which is used to remove a
 			port from a surveillance VLAN when the working mode is auto."
 		::= { swSurveillanceVlanCtrl 4 }
 
@@ -95,7 +95,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			" This object indicates the surveillance VLAN log state."
 		::= { swSurveillanceVlanCtrl 5 }
-					 	
+
 -- -----------------------------------------------------------------------------
 -- swSurveillanceVlanInfo
 -- -----------------------------------------------------------------------------
@@ -105,8 +105,8 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 		STATUS	  current
 		DESCRIPTION
 			"The surveillance VLAN's member ports."
-		::= { swSurveillanceVlanInfo 1 }	 	
-	
+		::= { swSurveillanceVlanInfo 1 }
+
 	swSurveillanceVlanDynamicPortlist OBJECT-TYPE
 		SYNTAX	  PortList
 		MAX-ACCESS  read-only
@@ -114,7 +114,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"The surveillance VLAN's member ports that dynamically joined the surveillance
 			 VLAN from a learned surveillance device."
-		::= { swSurveillanceVlanInfo 2 }	
+		::= { swSurveillanceVlanInfo 2 }
 
 	swSurveillanceVlanDeviceTable OBJECT-TYPE
 		SYNTAX  SEQUENCE OF SwSurveillanceVlanDeviceEntry
@@ -131,22 +131,22 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 			DESCRIPTION
 				"The information from the surveillance device connected to the switch."
 			INDEX { swSurveillanceVlanDevPort, swSurveillanceVlanDevAddr}
-	
+
 			::= { swSurveillanceVlanDeviceTable 1 }
 
 		SwSurveillanceVlanDeviceEntry ::=
-			SEQUENCE 
+			SEQUENCE
 			{
-				swSurveillanceVlanDevPort 
+				swSurveillanceVlanDevPort
 						INTEGER,
 				swSurveillanceVlanDevAddr
 						MacAddress,
 				swSurveillanceVlanDevComponentType
-						INTEGER,				
+						INTEGER,
 				swSurveillanceVlanDevStartTime
 						DateAndTime
 			}
-		 	
+
 				swSurveillanceVlanDevPort OBJECT-TYPE
 					SYNTAX	INTEGER
 					MAX-ACCESS	read-only
@@ -154,15 +154,15 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 					DESCRIPTION
 						"The surveillance device's connected port."
 					::= { swSurveillanceVlanDeviceEntry 1 }
-		
+
 				swSurveillanceVlanDevAddr OBJECT-TYPE
 					SYNTAX	  MacAddress
 					MAX-ACCESS  read-only
 					STATUS	  current
 					DESCRIPTION
 						"The surveillance device's MAC address."
-					::= { swSurveillanceVlanDeviceEntry 2 }          
-				
+					::= { swSurveillanceVlanDeviceEntry 2 }
+
 				swSurveillanceVlanDevComponentType OBJECT-TYPE
 					SYNTAX	  INTEGER
 					{
@@ -171,7 +171,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 						video_encoder(3),
 						network_storage(4),
 						other(5)
-					} 
+					}
 					MAX-ACCESS  read-create
 					STATUS	  current
 					DESCRIPTION
@@ -185,7 +185,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 					DESCRIPTION
 						"The time the surveillance device first connected to the switch."
 					::= { swSurveillanceVlanDeviceEntry 4 }
-		
+
 -- -----------------------------------------------------------------------------
 -- swSurveillanceVlanMgmt
 -- -----------------------------------------------------------------------------
@@ -195,7 +195,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS not-accessible
 		STATUS current
 		DESCRIPTION
-			"The management information of the surveillance VLAN OUI." 
+			"The management information of the surveillance VLAN OUI."
 		::= { swSurveillanceVlanMgmt 1 }
 
 		swSurveillanceVlanOuiEntry OBJECT-TYPE
@@ -208,7 +208,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 				to check the surveillance traffic."
 			INDEX { swSurveillanceVlanOuiAddr}
 			::= { swSurveillanceVlanOuiTable 1 }
-	
+
 		SwSurveillanceVlanOuiEntry ::=
 			SEQUENCE {
 				swSurveillanceVlanOuiAddr
@@ -218,7 +218,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 				swSurveillanceVlanOuiComponentType
 					INTEGER,
 				swSurveillanceVlanOuiDes
-					DisplayString,	 				
+					DisplayString,
 				swSurveillanceVlanOuiRowStatus
 					RowStatus
 			}
@@ -230,14 +230,14 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 				DESCRIPTION
 					"The address of the OUI referring to this swSurveillanceVlanOuiEntry."
 				::= { swSurveillanceVlanOuiEntry 1 }
-			
+
 			swSurveillanceVlanOuiMask OBJECT-TYPE
 				SYNTAX	  MacAddress
 				MAX-ACCESS  read-create
 				STATUS	  current
 				DESCRIPTION
 					"The OUI mask indicates the valid bit of the OUI address."
-				::= { swSurveillanceVlanOuiEntry 2 }	
+				::= { swSurveillanceVlanOuiEntry 2 }
 
 			swSurveillanceVlanOuiComponentType OBJECT-TYPE
 				SYNTAX	  INTEGER
@@ -247,13 +247,13 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 					video_encoder(3),
 					network_storage(4),
 					other(5)
-				} 
+				}
 				MAX-ACCESS  read-create
 				STATUS	  current
 				DESCRIPTION
 					"The Component type of the OUI."
 				::= { swSurveillanceVlanOuiEntry 3 }
- 	
+
 			swSurveillanceVlanOuiDes OBJECT-TYPE
 				SYNTAX	  DisplayString
 				MAX-ACCESS  read-create
@@ -261,7 +261,7 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 				DESCRIPTION
 					"The description of the OUI.(0-32)"
 				::= { swSurveillanceVlanOuiEntry 4 }
-	
+
 			swSurveillanceVlanOuiRowStatus	OBJECT-TYPE
 				SYNTAX	  RowStatus
 				MAX-ACCESS  read-create
@@ -269,17 +269,17 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 				DESCRIPTION
 					"This object indicates the status of this entry."
 				::= { swSurveillanceVlanOuiEntry 5 }
-		
+
 	swSurveillanceVlanPortTable OBJECT-TYPE
 		SYNTAX  SEQUENCE OF SwSurveillanceVlanPortEntry
 		MAX-ACCESS not-accessible
 		STATUS current
 		DESCRIPTION
-			"The management of the surveillance VLAN function on all bridge ports. Some ports 
-			are not member ports of a surveillance VLAN, but they may be added in auto mode. 
-			Therefore, this function enables both current surveillance VLAN member ports and 
-			non-VLAN member ports to be managed." 
-			
+			"The management of the surveillance VLAN function on all bridge ports. Some ports
+			are not member ports of a surveillance VLAN, but they may be added in auto mode.
+			Therefore, this function enables both current surveillance VLAN member ports and
+			non-VLAN member ports to be managed."
+
 		::= { swSurveillanceVlanMgmt 2 }
 
 		swSurveillanceVlanPortEntry OBJECT-TYPE
@@ -289,37 +289,37 @@ SURVEILLANCE-VLAN-MIB DEFINITIONS ::= BEGIN
 			DESCRIPTION
 				"The management of the surveillance VLAN function on ports"
 			INDEX { swSurveillanceVlanPortNumber}
-	
+
 			::= { swSurveillanceVlanPortTable 1 }
 
 		SwSurveillanceVlanPortEntry ::=
-			SEQUENCE 
+			SEQUENCE
 			{
 				swSurveillanceVlanPortNumber
 				INTEGER,
 				swSurveillanceVlanPortState
-				INTEGER			
+				INTEGER
 			}
-		
+
 			swSurveillanceVlanPortNumber OBJECT-TYPE
 				SYNTAX	  INTEGER
 				MAX-ACCESS  read-only
 				STATUS	  current
 				DESCRIPTION
 					"Bridge ports can be configured with surveillance VLAN function."
-				::= { swSurveillanceVlanPortEntry 1 }	
-					
+				::= { swSurveillanceVlanPortEntry 1 }
+
 			swSurveillanceVlanPortState OBJECT-TYPE
 					SYNTAX	 INTEGER
 					{
 					 	enabled(1),
 						disabled(2)
-					} 
+					}
 					MAX-ACCESS  read-write
 					STATUS  current
 					DESCRIPTION
-						"The port state here indicates whether the port supports the surveillance 
-						VLAN function. We can enable/disable the surveillance VLAN function on the 
+						"The port state here indicates whether the port supports the surveillance
+						VLAN function. We can enable/disable the surveillance VLAN function on the
 						port."
 					::= { swSurveillanceVlanPortEntry 2 }
 

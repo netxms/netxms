@@ -15,7 +15,7 @@ DNOS-IPV6-TUNNEL-MIB DEFINITIONS ::= BEGIN
 
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, 
+    MODULE-IDENTITY, OBJECT-TYPE,
     Integer32                               FROM SNMPv2-SMI
     RowStatus                               FROM SNMPv2-TC
     Ipv6IfIndex, Ipv6Address, Ipv6AddressPrefix
@@ -93,7 +93,7 @@ IMPORTS
          STATUS      current
          DESCRIPTION
                      "The tunnel ID is associated with Internal Interface number
-                      which is generated when we create a tunnel, and is used 
+                      which is generated when we create a tunnel, and is used
                       to configure the tunnel."
          ::= { agentTunnelIPV6Entry 1 }
 
@@ -102,9 +102,9 @@ IMPORTS
          MAX-ACCESS       read-only
          STATUS           current
          DESCRIPTION
-                     "The external interface of the tunnel is associted with 
-                      internal interface. The tunnel ID associated with 
-                      Internal Interface number is generated when we create a 
+                     "The external interface of the tunnel is associted with
+                      internal interface. The tunnel ID associated with
+                      Internal Interface number is generated when we create a
                       tunnel, which is used to configure the tunnel."
          ::= { agentTunnelIPV6Entry 2 }
 
@@ -121,7 +121,7 @@ IMPORTS
                      "Specifies the type of Tunnel either undefined, 6over4 or 6to4.
                       The default value is undefined. It supports 6over4
                       which supports an assigned IPV6 address, an IPV4 address
-                      is not allowed. For this mode, the tunnel source and 
+                      is not allowed. For this mode, the tunnel source and
                       tunnel destination must be IPV4 address. For 6to4 tunnel,
                       the tunnel source must be IPv4 address. Tunnel destination
                       should not be set. The first 48-bits of the IPv4 address assigned
@@ -172,7 +172,7 @@ IMPORTS
                      createAndGo(4) - set to this value to create an instance
                      destroy(6)     - set to this value to delete an instance"
          ::= { agentTunnelIPV6Entry 7 }
-    
+
     agentTunnelIcmpUnreachableMode OBJECT-TYPE
          SYNTAX      INTEGER {
                       enable(1),
@@ -219,7 +219,7 @@ IMPORTS
          DESCRIPTION
                      "The prefix associated with the tunnel interface. The data type
                       is used to model the IPV6 address. It is a binary string
-                      of 16 octects in network byte-order. It specifies the IP 
+                      of 16 octects in network byte-order. It specifies the IP
                       address of tunnel which will be in IPV6 Format, generated
                       using internal interface number."
          ::= { agentTunnelIPV6PrefixEntry 1 }
@@ -232,7 +232,7 @@ IMPORTS
                      "The length of the prefix (in bits)."
          DEFVAL { 0 }
          ::= { agentTunnelIPV6PrefixEntry 2 }
-         
+
     agentTunnelIPV6PrefixStatus OBJECT-TYPE
          SYNTAX       RowStatus
          MAX-ACCESS   read-create
@@ -240,7 +240,7 @@ IMPORTS
          DESCRIPTION
                      "Status of this instance.Row can be added or deleted
                      by setting the value to createAndGo/destroy
-                      
+
                      active(1)      - this Tunnel instance is active
                      createAndGo(4) - set to this value to create an instance
                      destroy(6)     - set to this value to delete an instance"

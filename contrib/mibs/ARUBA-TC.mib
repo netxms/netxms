@@ -48,7 +48,7 @@ ArubaPhyType ::= TEXTUAL-CONVENTION
 						wired(5),
 						dot11ax6ghz(6)
 					  }
-        
+
 ArubaHTMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -69,7 +69,7 @@ ArubaHTMode ::= TEXTUAL-CONVENTION
 						he160(12),
 						he80plus80(13)
 					  }
-        
+
 ArubaHTExtChannel ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -82,7 +82,7 @@ ArubaHTExtChannel ::= TEXTUAL-CONVENTION
 						onesixty(5),
 						eightyPlusEighty(6)
 					  }
-        
+
 ArubaMonEncryptionType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -128,7 +128,7 @@ ArubaMonAuthAlgorithm ::= TEXTUAL-CONVENTION
 						suiteb(11),
 						owe(12)
 					  }
-                      
+
 ArubaSwitchRole ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -139,7 +139,7 @@ ArubaSwitchRole ::= TEXTUAL-CONVENTION
 						backupconductor(3),
                                                 standalone(4)
 					  }
-          
+
 ArubaSupportStatus ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -148,7 +148,7 @@ ArubaSupportStatus ::= TEXTUAL-CONVENTION
 		 				unsupported(1),
 						supported(2)
 					  }
-         
+
 ArubaActiveState ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -157,7 +157,7 @@ ArubaActiveState ::= TEXTUAL-CONVENTION
 		 				active(1),
 						inactive(2)
 					  }
-          
+
 ArubaACLDomain ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -171,7 +171,7 @@ ArubaACLDomain ::= TEXTUAL-CONVENTION
 						host(4),
 						network(5)
 					  }
-           
+
 ArubaACLNetworkServiceType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -183,7 +183,7 @@ ArubaACLNetworkServiceType ::= TEXTUAL-CONVENTION
 						udp(4),
 						protocol(5)
 					  }
-            
+
 ArubaACLAction ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -195,7 +195,7 @@ ArubaACLAction ::= TEXTUAL-CONVENTION
 						dstNAT(4),
 						redirect(5)
 					  }
-             
+
 ArubaDaysOfWeek ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -209,7 +209,7 @@ ArubaDaysOfWeek ::= TEXTUAL-CONVENTION
 						fri(6),
 						sat(7)
 					  }
-              
+
 ArubaAuthenticationMethods ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -228,7 +228,7 @@ ArubaAuthenticationMethods ::= TEXTUAL-CONVENTION
 						via-vpn(28),
 						other(255)
 					  }
-     
+
 ArubaSubAuthenticationMethods ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -273,7 +273,7 @@ ArubaEncryptionType ::= TEXTUAL-CONVENTION
                         wpa3-sae-aes(21),
                         wpa3-aes-gcmp-256(22)
 					  }
-     
+
 ArubaUserForwardMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -298,7 +298,7 @@ ArubaRogueApType ::= TEXTUAL-CONVENTION
 						knownInterfering(6),
 						suspectedUnsecure(7)
 					 }
-          
+
 ArubaAPMatchType ::= TEXTUAL-CONVENTION
    STATUS	  current
    DESCRIPTION
@@ -343,7 +343,7 @@ ArubaStationType ::= TEXTUAL-CONVENTION
 						interfering(2),
 		 				dos(3)
 					 }
-          
+
 ArubaEncryptionMethods ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -380,13 +380,13 @@ ArubaEncryptionMethods ::= TEXTUAL-CONVENTION
 		 				md5(1),
 						sha(2)
 					  }
-  
+
 ArubaVlanValidRange	::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
 		"Represents the Valid Vlan Id Range."
 	SYNTAX		INTEGER(1..4095)
-  
+
 ArubaPortMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -395,7 +395,7 @@ ArubaPortMode ::= TEXTUAL-CONVENTION
 					access(1),
 					dot1q(2)
 				}
-  
+
 ArubaDot1dState ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -407,7 +407,7 @@ ArubaDot1dState ::= TEXTUAL-CONVENTION
 					learning(4),
 					forwarding(5)
 				}
-  
+
 ArubaAPDot1dState ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -421,7 +421,7 @@ ArubaAPDot1dState ::= TEXTUAL-CONVENTION
 					forwarding(6),
 					blocking(7)
 				}
-  
+
 ArubaPoeState ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -432,7 +432,7 @@ ArubaPoeState ::= TEXTUAL-CONVENTION
 					enabledCisco(3),
                                         notAvailable(4)
 				}
- 
+
 ArubaCardType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -469,7 +469,7 @@ ArubaCardType ::= TEXTUAL-CONVENTION
 					sw7024(27),
 					sw7024xm(28)
 				}
- 
+
 ArubaESIServerMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -481,7 +481,7 @@ ArubaESIServerMode ::= TEXTUAL-CONVENTION
 					routed(2),
 					nat(3)
 				}
- 
+
 ArubaESIServerStatus ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -561,7 +561,7 @@ ArubaAddressType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
 		"
-		Address Type. 
+		Address Type.
 		"
 	SYNTAX       INTEGER{
 		 				srcAddress(1),
@@ -573,7 +573,7 @@ ArubaBlackListReason ::= TEXTUAL-CONVENTION
 	STATUS		obsolete
 	DESCRIPTION
 		"
-		Black List Reason. 
+		Black List Reason.
 		**NOTE: this textual convention is obsoleted and replaced by
 		ArubaDenyListReason.
 		"
@@ -594,7 +594,7 @@ ArubaDenyListReason ::= TEXTUAL-CONVENTION
         STATUS          current
         DESCRIPTION
                 "
-                Deny List Reason. 
+                Deny List Reason.
                 "
         SYNTAX       INTEGER {
                                                 userDefined(1),
@@ -613,7 +613,7 @@ ArubaDBType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
 		"
-		DataBase Type. 
+		DataBase Type.
 		"
 	SYNTAX       INTEGER {
 		 				mssql(1),
@@ -625,7 +625,7 @@ ArubaVrrpState ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
 		"
-		DataBase Type. 
+		DataBase Type.
 		"
 	SYNTAX       INTEGER {
 						initialize(1),
@@ -662,9 +662,9 @@ ArubaPortSpeed ::= TEXTUAL-CONVENTION
 		"
 		Port Speed.
 		"
-	SYNTAX		INTEGER { speed10Mbps(1), 
-						  speed100Mbps(2), 
-						  speed1000Mbps(3), 
+	SYNTAX		INTEGER { speed10Mbps(1),
+						  speed100Mbps(2),
+						  speed1000Mbps(3),
 						  speedAuto(4),
 						  speed10Gbps(5),
 						  speed2Point5Gbps(6),
@@ -678,8 +678,8 @@ ArubaPortDuplex ::= TEXTUAL-CONVENTION
 		"
 		Port Duplexity.
 		"
-	SYNTAX		INTEGER { half(1), 
-						  full(2), 
+	SYNTAX		INTEGER { half(1),
+						  full(2),
 						  auto(3)
 						}
 
@@ -689,11 +689,11 @@ ArubaPortType ::= TEXTUAL-CONVENTION
 		"
 		Port Type.
 		"
-	SYNTAX		INTEGER { fastethernet(1), 
+	SYNTAX		INTEGER { fastethernet(1),
 						  gigabitethernet(2),
 						  xgigabitethernet(3),
-						  twogigabitethernet(4), 
-						  fivegigabitethernet(5) 
+						  twogigabitethernet(4),
+						  fivegigabitethernet(5)
 						}
 
 ArubaEnet1Mode ::= TEXTUAL-CONVENTION
@@ -707,7 +707,7 @@ ArubaEnet1Mode ::= TEXTUAL-CONVENTION
 						notApplicable(4),
 						split(5)
 					  }
- 
+
 ArubaUnprovisionedStatus ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -716,7 +716,7 @@ ArubaUnprovisionedStatus ::= TEXTUAL-CONVENTION
 		 				yes(1),
 						no(2)
 					  }
- 
+
 ArubaMonitorMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -727,19 +727,19 @@ ArubaMonitorMode ::= TEXTUAL-CONVENTION
 						none(2),
 						mixed(3)
 					  }
- 
+
 ArubaConfigurationState ::= TEXTUAL-CONVENTION
 	STATUS		current
-	DESCRIPTION	
+	DESCRIPTION
 		"Configuration Transfer Types."
 	SYNTAX		INTEGER {
 					success(1),
 					error(2)
 				}
- 
+
 ArubaConfigurationChangeType ::= TEXTUAL-CONVENTION
 	STATUS		current
-	DESCRIPTION	
+	DESCRIPTION
 		"Configuration Change Types."
 	SYNTAX		INTEGER {
 					create(1),
@@ -771,7 +771,7 @@ ArubaCallStates ::= TEXTUAL-CONVENTION
 				aborted(14),
 				blocked(15)
 			}
-   
+
 ArubaVoipProtocol ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -779,11 +779,11 @@ ArubaVoipProtocol ::= TEXTUAL-CONVENTION
 		  VoIP protocol used
 		"
 	SYNTAX		INTEGER {
-			sccp(1), 
-			svp(2), 
-			vocera(3), 
-			sip(9), 
-			ua(11), 
+			sccp(1),
+			svp(2),
+			vocera(3),
+			sip(9),
+			ua(11),
 			h323(13)
 	}
 
@@ -794,11 +794,11 @@ ArubaVoipRegState ::= TEXTUAL-CONVENTION
 		  VoIP registered state
 		"
 	SYNTAX		INTEGER {
-			unknown(0), 
-			registering(1), 
-			unregistering(2), 
-			challenge(3), 
-			registered(4), 
+			unknown(0),
+			registering(1),
+			unregistering(2),
+			challenge(3),
+			registered(4),
 			unregistered(5)
 	}
 
@@ -809,7 +809,7 @@ ArubaVoiceCdrDirection ::= TEXTUAL-CONVENTION
 		  VoIP CDR direction
 		"
 	SYNTAX		INTEGER {
-			og(0), 
+			og(0),
 			ic(1)
 	}
 
@@ -825,7 +825,7 @@ ArubaVoiceCacBit ::= TEXTUAL-CONVENTION
 			cacHandRsrvThresholdReached(2),
 			cacPeakCapacityReached(3)
 	}
-	
+
 ArubaMeshRole ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -834,7 +834,7 @@ ArubaMeshRole ::= TEXTUAL-CONVENTION
 		"
 	SYNTAX		INTEGER {
 			nonmesh(0),
-			point(1), 
+			point(1),
 			portal(2)
 	}
 
@@ -930,7 +930,7 @@ ArubaAPMasterStatus ::= TEXTUAL-CONVENTION
 		"
 	SYNTAX		INTEGER {
 			up(1),
-			down(2), 
+			down(2),
 			move(3)
 	}
 
@@ -948,7 +948,7 @@ ArubaDot3azStatus ::= TEXTUAL-CONVENTION
 						eee10GBaseKX4(6),
 						eee10GBaseKR(7)
 					 }
-	
+
 ArubaDot3bzStatus ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -958,7 +958,7 @@ ArubaDot3bzStatus ::= TEXTUAL-CONVENTION
 						no(1),
 		 				yes(2)
 					 }
-		
+
 ArubaThresholdResourceType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -1158,7 +1158,7 @@ ArubaFlexRadioMode ::= TEXTUAL-CONVENTION
 	SYNTAX		INTEGER {
                             single2GHzBand(0),
                             single5GHzBand(1),
-                            dual2GHzplus5GHzBand(2), 
+                            dual2GHzplus5GHzBand(2),
                             unknown(3),
                             notApplicable(4)
                        }

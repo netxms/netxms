@@ -9,7 +9,7 @@ ENTITY-STATE-MIB DEFINITIONS ::= BEGIN
               FROM SNMPv2-CONF
          entPhysicalIndex
               FROM ENTITY-MIB;
-     
+
      entityStateMIB MODULE-IDENTITY
          LAST-UPDATED "200609060000Z"
          ORGANIZATION "IETF Entity MIB Working Group"
@@ -35,7 +35,7 @@ ENTITY-STATE-MIB DEFINITIONS ::= BEGIN
                    dperkins@snmpinfo.com
                   "
          DESCRIPTION
-             "This MIB defines a state extension to the Entity MIB.  
+             "This MIB defines a state extension to the Entity MIB.
               Copyright at The Internet Society 2005.  This version
               of this MIB module is part of RFC 4268; see the RFC
               itself for full legal notices."
@@ -48,8 +48,8 @@ ENTITY-STATE-MIB DEFINITIONS ::= BEGIN
      -- Entity State Objects
 
      entStateObjects OBJECT IDENTIFIER ::= { entityStateMIB 1 }
-     
-     -- Textual Conventions 
+
+     -- Textual Conventions
       EntityAdminState  ::=  TEXTUAL-CONVENTION
        STATUS         current
        DESCRIPTION
@@ -456,4 +456,3 @@ ENTITY-STATE-MIB DEFINITIONS ::= BEGIN
        ::= { entStateGroups 2}
 
    END
-        

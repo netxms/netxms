@@ -1,6 +1,6 @@
 --
 -- Juniper Enterprise Specific MIB: Fabric MIB
--- 
+--
 -- Copyright (c) 2012, Juniper Networks, Inc.
 -- All rights reserved.
 --
@@ -15,7 +15,7 @@ IMPORTS
     CounterBasedGauge64
         FROM HCNUM-TC
 
-    TEXTUAL-CONVENTION 
+    TEXTUAL-CONVENTION
         FROM SNMPv2-TC
 
     jnxFabricMibRoot
@@ -37,7 +37,7 @@ jnxFabricMib MODULE-IDENTITY
              fabric Manager"
 
     REVISION
-        "201410090000Z" -- 09-Oct-14 
+        "201410090000Z" -- 09-Oct-14
     DESCRIPTION
         "Initial"
 
@@ -76,10 +76,10 @@ JnxFabricStatisticsPriority ::= TEXTUAL-CONVENTION
                      low(1),
                      all(255)
                   }
-                  
+
 -- Juniper Fabric Manager MIB
 --
-     
+
 --
 -- Fabric Statistics Table
 --
@@ -105,7 +105,7 @@ jnxFabricSourceStatisticsTable OBJECT-TYPE
                     jnxFabricSourcePfe,
                     jnxFabricDestinationType,
                     jnxFabricDestinationSlot,
-                    jnxFabricDestinationPfe, 
+                    jnxFabricDestinationPfe,
                     jnxFabricSourceStatisticsPriority}
       ::= { jnxFabricSourceStatisticsTable 1 }
 
@@ -132,7 +132,7 @@ jnxFabricSourceStatisticsTable OBJECT-TYPE
           jnxFabricSourceStatisticsErrorPackets        Counter64,
           jnxFabricSourceStatisticsErrorPps            CounterBasedGauge64
     }
- 
+
 
     jnxFabricSourceType OBJECT-TYPE
       SYNTAX	    JnxFabricType
@@ -189,7 +189,7 @@ jnxFabricSourceStatisticsTable OBJECT-TYPE
       DESCRIPTION
                 "Statistics priority."
       ::= { jnxFabricSourceStatisticsEntry 7 }
-      
+
     jnxFabricSourceStatisticsPackets OBJECT-TYPE
       SYNTAX	    Counter64
       MAX-ACCESS    read-only
@@ -197,7 +197,7 @@ jnxFabricSourceStatisticsTable OBJECT-TYPE
       DESCRIPTION
                 "Number of packets transmitted for a source."
       ::= { jnxFabricSourceStatisticsEntry 8 }
-      
+
     jnxFabricSourceStatisticsBytes OBJECT-TYPE
       SYNTAX	    Counter64
       MAX-ACCESS    read-only
@@ -303,4 +303,3 @@ jnxFabricSourceStatisticsTable OBJECT-TYPE
       ::= { jnxFabricSourceStatisticsEntry 21 }
 
 END
-

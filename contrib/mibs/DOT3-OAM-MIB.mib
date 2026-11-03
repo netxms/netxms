@@ -1291,7 +1291,7 @@ DOT3-OAM-MIB DEFINITIONS ::= BEGIN
           Notification OAMPDU should be generated with an Errored Frame
           Period Event TLV indicating that the threshold has been
           crossed in this window.
-          
+
           Each value is a multiple of 10000 frames.
           For example, if the the value is 100, the realy frame number is 100 * 10000.
           "
@@ -2098,5 +2098,3 @@ DOT3-OAM-MIB DEFINITIONS ::= BEGIN
        ::= { dot3OamGroups 11 }
 
       END
-
-

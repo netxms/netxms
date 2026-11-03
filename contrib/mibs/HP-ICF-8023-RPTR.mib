@@ -60,25 +60,25 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   The local name of this repeater.  This is the 
-                   same value as hpicfEntityName in the case where 
+                   The local name of this repeater.  This is the
+                   same value as hpicfEntityName in the case where
                    there is Distributed Management Protocol to access
                    this device.
 
-                   For SNMPv1, this name is appended to the agent 
+                   For SNMPv1, this name is appended to the agent
                    community name to obtain a community name to use
                    to specify that the agent should proxy to this
-                   repeater.  For example, if this agent has a 
+                   repeater.  For example, if this agent has a
                    community with a community name of 'public', and
-                   the value of this object is 'repeater1', the 
+                   the value of this object is 'repeater1', the
                    community 'public/repeater1' will specify that the
                    agent should proxy to the public community of the
                    repeater1 box to obtain management information
                    about this repeater.
 
-                   If an agent receives a management request where 
-                   the localEntity is not specified, it will default 
-                   to the local repeater on which this agent is 
+                   If an agent receives a management request where
+                   the localEntity is not specified, it will default
+                   to the local repeater on which this agent is
                    executing.
 
                    This object has been deprecated.  Since it is a
@@ -96,7 +96,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   When set to 'true' this object causes the Fault 
+                   When set to 'true' this object causes the Fault
                    Led to blink if the ThinLan Port is segmented.
 
                    This object has been deprecated.  It only makes
@@ -110,7 +110,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   When 'true', this flag indicates that SQE has 
+                   When 'true', this flag indicates that SQE has
                    been detected for the last ten agent transmits and
                    there is a high probability that the SQE switch on
                    the transceiver attached to the AUI port is set to
@@ -129,13 +129,13 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   When this flag is set to 'true', it enables 
+                   When this flag is set to 'true', it enables
                    robust port healing mode.  The 802.3 specification
-                   states that a segmented port is healed by 
+                   states that a segmented port is healed by
                    successfully transmitting or receiving a packet on
-                   the port.  This mode disables port healing on 
-                   successful packet reception and requires that a 
-                   packet be successfully transmitted on a port in 
+                   the port.  This mode disables port healing on
+                   successful packet reception and requires that a
+                   packet be successfully transmitted on a port in
                    order for a segmented port to be healed."
            ::= { hpRptrBasicGlobal 4 }
 
@@ -158,7 +158,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   An entry in the table, containing HP extensions 
+                   An entry in the table, containing HP extensions
                    for a specific group."
            INDEX      { hpRptrGrpGroupIndex }
            ::= { hpRptrBasicGroupTable 1 }
@@ -180,9 +180,9 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   The group within the repeater for which this 
-                   entry contains information.  This object has the 
-                   same value as the corresponding instance of 
+                   The group within the repeater for which this
+                   entry contains information.  This object has the
+                   same value as the corresponding instance of
                    rptrGroupIndex."
            ::= {  hpRptrBasicGroupEntry 1 }
 
@@ -201,14 +201,14 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    a zero bit for each port for which the value of
                    rptrPortAdminStatus is equal to 'disabled(2)'.
 
-                   The bits are placed into the OCTET STRING in the 
+                   The bits are placed into the OCTET STRING in the
                    following order:
 
                        octet   0  octet    1  octet     2  ...
                        bits  7-0  bits   7-0  bits    7-0  ...
                        ports 1-8  ports 9-16  ports 17-24  ...
 
-                   Values of unused bits in the last octet are 
+                   Values of unused bits in the last octet are
                    undefined."
            ::= { hpRptrBasicGroupEntry 2 }
 
@@ -219,24 +219,24 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   The hpRptrGrpPortsSegStatus is a bit map of the 
+                   The hpRptrGrpPortsSegStatus is a bit map of the
                    state of the rptrPortAutoPartitionState of all of
                    the ports in this group.  The object  has a one
                    bit for each port for which the value of
-                   rptrPortAutoPartitionState is equal to 
+                   rptrPortAutoPartitionState is equal to
                    'notAutoPartitioned(1)' and a zero bit for each
-                   port for which the value of 
-                   rptrPortAutoPartitionState is equal to 
+                   port for which the value of
+                   rptrPortAutoPartitionState is equal to
                    'autoPartitioned(2)'.
 
-                   The bits are placed into the OCTET STRING in the 
+                   The bits are placed into the OCTET STRING in the
                    following order:
 
                        octet   0  octet    1  octet     2  ...
                        bits  7-0  bits   7-0  bits    7-0  ...
                        ports 1-8  ports 9-16  ports 17-24  ...
 
-                   Values of unused bits in the last octet are 
+                   Values of unused bits in the last octet are
                    undefined."
            ::= { hpRptrBasicGroupEntry 3 }
 
@@ -247,23 +247,23 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   The hpRptrGrpPortsMediaAvailable is a bit map of 
-                   the state of the rpMauMediaAvailable object for 
-                   all of the ports in this group.  The object has a 
+                   The hpRptrGrpPortsMediaAvailable is a bit map of
+                   the state of the rpMauMediaAvailable object for
+                   all of the ports in this group.  The object has a
                    one bit for each port for which the value of
                    rpMauMediaAvailable is equal to 'available(3)'
                    and a zero bit for each port for which the value
                    of rpMauMediaAvailable is not equal to
                    'available(3)'.
 
-                   The bits are placed into the OCTET STRING in the 
+                   The bits are placed into the OCTET STRING in the
                    following order:
 
                        octet   0  octet    1  octet     2  ...
                        bits  7-0  bits   7-0  bits    7-0  ...
                        ports 1-8  ports 9-16  ports 17-24  ...
 
-                   Values of unused bits in the last octet are 
+                   Values of unused bits in the last octet are
                    undefined."
            ::= { hpRptrBasicGroupEntry 4 }
 
@@ -282,14 +282,14 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    a zero bit for each port for which the value of
                    hpRptrPtLinkbeatEnable is equal to 'false(2)'.
 
-                   The bits are placed into the OCTET STRING in the 
+                   The bits are placed into the OCTET STRING in the
                    following order:
 
                        octet   0  octet    1  octet     2  ...
                        bits  7-0  bits   7-0  bits    7-0  ...
                        ports 1-8  ports 9-16  ports 17-24  ...
 
-                   Values of unused bits in the last octet are 
+                   Values of unused bits in the last octet are
                    undefined."
            ::= { hpRptrBasicGroupEntry 5 }
 
@@ -300,19 +300,19 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   The hpRptrGrpPortsOperStatus is a bit map of the 
-                   state of all hub ports in the group.  The object  
-                   has a 1 bit for each port that is enabled, not 
-                   segmented, and the media is available.  Ports on 
-                   which these conditions are not true have a 0 bit.  
-                   The bits are placed into the OCTET STRING in the 
+                   The hpRptrGrpPortsOperStatus is a bit map of the
+                   state of all hub ports in the group.  The object
+                   has a 1 bit for each port that is enabled, not
+                   segmented, and the media is available.  Ports on
+                   which these conditions are not true have a 0 bit.
+                   The bits are placed into the OCTET STRING in the
                    following order:
 
                        octet   0  octet    1  octet     2  ...
                        bits  7-0  bits   7-0  bits    7-0  ...
                        ports 1-8  ports 9-16  ports 17-24  ...
 
-                   Values of unused bits in the last octet are 
+                   Values of unused bits in the last octet are
                    undefined."
            ::= { hpRptrBasicGroupEntry 6 }
 
@@ -332,7 +332,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS not-accessible
            STATUS     current
            DESCRIPTION
-                   "An entry in the table, containing HP extensions 
+                   "An entry in the table, containing HP extensions
                    for a specific port."
            INDEX      { hpRptrPtGroupIndex, hpRptrPtPortIndex }
            ::= { hpRptrBasicPtTable 1 }
@@ -353,9 +353,9 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The group containing the port for which this 
-                   entry contains information.  This object has the 
-                   same value as the corresponding instance of 
+                   "The group containing the port for which this
+                   entry contains information.  This object has the
+                   same value as the corresponding instance of
                    rptrPortGroupIndex."
            ::= { hpRptrBasicPtEntry 1 }
 
@@ -364,9 +364,9 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The port within the group for which this entry 
-                   contains information.  This object has the same 
-                   value as the corresponding instance of 
+                   "The port within the group for which this entry
+                   contains information.  This object has the same
+                   value as the corresponding instance of
                    rptrPortIndex."
            ::= { hpRptrBasicPtEntry 2 }
 
@@ -375,8 +375,8 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS read-write
            STATUS     current
            DESCRIPTION
-                   "When this flag is set to 'true' the port's link 
-                   beat is enabled and when set to 'false' it is 
+                   "When this flag is set to 'true' the port's link
+                   beat is enabled and when set to 'false' it is
                    disabled."
            ::= { hpRptrBasicPtEntry 3 }
 
@@ -386,10 +386,10 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            STATUS     current
            DESCRIPTION
                    "This object is used to indicate that the hub port
-                   was wired with the positive/negative polarity of 
-                   its transmit and receive pairs reversed.  Note 
-                   that the port will continue to operate in this 
-                   state, with the hub inverting the polarity 
+                   was wired with the positive/negative polarity of
+                   its transmit and receive pairs reversed.  Note
+                   that the port will continue to operate in this
+                   state, with the hub inverting the polarity
                    internally."
            ::= { hpRptrBasicPtEntry 4 }
 
@@ -398,7 +398,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "When 'true', this flag indicates that SQE has 
+                   "When 'true', this flag indicates that SQE has
                    been detected for the last ten agent transmits and
                    there is a high probability that the SQE switch on
                    the transceiver attached to this port is set to
@@ -415,7 +415,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    hpicfMediaAvailLostTrap events should be generated
                    for MAUs attached to this port.  This object has the
                    value of 'false' by default.  Setting the value of
-                   this object to 'true' will cause a 
+                   this object to 'true' will cause a
                    hpicfMediaAvailDetectTrap event to be generated
                    whenever an instance of rpMauMediaAvailable object
                    associated with a MAU attached to this port enters
@@ -453,7 +453,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
        hpRptrMonitorGlobal OBJECT IDENTIFIER ::= { hpRptrMonitor 1 }
 
        -- Note: The hpRptrMonitorGlobal counters that are composed of
-       -- other objects are provided to allow for event testing on 
+       -- other objects are provided to allow for event testing on
        -- global error conditions.
        --
        -- Note: the hpRptrMonitorGlobal counters have been deprecated.
@@ -482,10 +482,10 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    The total number of frames of valid frame length
                    that have been received on all ports in this
                    repeater.  This counter is the summation  of the
-                   values of the rptrMonitorPortReadableFrames 
+                   values of the rptrMonitorPortReadableFrames
                    counter for all of the ports in this repeater.
                    Equivalently, this counter is the summation of the
-                   values of the rptrMonitorGroupTotalFrames counter 
+                   values of the rptrMonitorGroupTotalFrames counter
                    for all of the port groups in this repeater."
            REFERENCE
                    "RFC 1516 rptrMonitorPortReadableFrames and
@@ -526,7 +526,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    asserted and the FramingError and CollisionEvent
                    signals deasserted and whose OctetCount is greater
                    than or equal to minFrameSize and less than or
-                   equal to maxFrameSize (Ref: 4.4.2.1, IEEE 802.3 
+                   equal to maxFrameSize (Ref: 4.4.2.1, IEEE 802.3
                    Std).  This counter is the summation of the values
                    of the rptrMonitorPortFCSErrors counter for all of
                    the ports in this repeater."
@@ -551,8 +551,8 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    Std).  If hpRptrMonGlobalAlignmentErrors is
                    incremented, then the hpRptrMonGlobalFCSErorrs
                    counter shall not be incremented for the same
-                   frame.  This counter is the summation of the 
-                   values of the rptrMonitorPortAlignmentErrors 
+                   frame.  This counter is the summation of the
+                   values of the rptrMonitorPortAlignmentErrors
                    counter for all of the ports in this repeater."
            REFERENCE
                    "RFC 1516 rptrMonitorPortAlignmentErrors and IEEE
@@ -570,7 +570,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    received on any port whose OctetCount is greater
                    than maxFrameSize (Ref: 4.4.2.1, IEEE 802.3 Std).
                    If hpRptrMonGlobalFrameTooLongs is incremented,
-                   then neither the hpRptrMonGlobalAlignmentErorrs 
+                   then neither the hpRptrMonGlobalAlignmentErorrs
                    nor the hpRptrMonGlobalFCSErrors counter shall be
                    incremented for the frame.  This counter is the
                    summation of the values of the
@@ -595,7 +595,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    times.  ShortEventMaxTime has tolerances included
                    to provide for circuit losses between a
                    conformance test point at the AUI and the
-                   measurement point within the state machine.  This 
+                   measurement point within the state machine.  This
                    counter is the summation of the values of the
                    rptrMonitorPortShortEvents counter for all of the
                    ports in this repeater."
@@ -617,7 +617,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    made.  a) The ActivityDuration is greater than
                    ShortEventMaxTime and less than ValidPacketMinTime
                    and the CollisionEvent signal is deasserted.  b)
-                   The OctetCount is less than 64, the 
+                   The OctetCount is less than 64, the
                    ActivityDuration is greater than ShortEventMaxTime
                    and the CollisionEvent signal is deasserted.
                    ValidPacketMinTime is greater than or equal to 552
@@ -630,14 +630,14 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    CarrierEvent greater than or equal to 552 bit
                    times but less than 565 bit times may or may not
                    increment the hpRptrMonGlobalRunts counter.
-                   ValidPacketMinTime has tolerances included to 
+                   ValidPacketMinTime has tolerances included to
                    provide for circuit losses between a conformance
                    test point at the AUI and the measurement point
-                   within the state machine.  
+                   within the state machine.
 
-                   Runts usually indicate collision fragments, a 
+                   Runts usually indicate collision fragments, a
                    normal network event.  This counter is the
-                   summation of the values of the 
+                   summation of the values of the
                    rptrMonitorPortRunts counter for all of the ports
                    in this repeater."
            REFERENCE
@@ -656,7 +656,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    CarrierEvent signal on any port for which the
                    CollisionEvent signal on any port is asserted.
 
-                   This counter differs from 
+                   This counter differs from
                    rptrMonitorTransmitCollisions in that it counts
                    all collisions seen by this repeater, even those
                    involving only a single port on this repeater,
@@ -679,17 +679,17 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    CarrierEvent on any port in which the CollIn(X)
                    variable transitions to the value SQE (Ref:
                    9.6.6.2, IEEE 802.3 Std) while the
-                   ActivityDuration is greater than the 
+                   ActivityDuration is greater than the
                    LateEventThreshold.  Such a CarrierEvent is
                    counted twice, as both hpRptrMonGlobalCollisions
-                   and hpRptrMonGlobalLateEvents.  The 
+                   and hpRptrMonGlobalLateEvents.  The
                    LateEventThreshold is greater than 480 bit times
                    and less than 565 bit times.  LateEventThreshold
-                   has tolerances included to permit an 
+                   has tolerances included to permit an
                    implementation to build a single threshold to
                    serve as both the LateEventThreshold and
                    ValidPacketMinTime threshold.  This counter is the
-                   summation of the values of the 
+                   summation of the values of the
                    rptrMonitorPortLateEvents counter for all of the
                    ports in this repeater."
            REFERENCE
@@ -704,9 +704,9 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   This counter is incremented by one for each 
+                   This counter is incremented by one for each
                    CarrierEvent on any port whose ActivityDuration is
-                   greater than the MAU Jabber Lockup Protection 
+                   greater than the MAU Jabber Lockup Protection
                    timer TW3 (Ref: 9.6.1 & 9.6.5, IEEE 802.3 Std).
                    Other counters may be incremented as appropriate.
                    This counter is the summation of the values of the
@@ -729,14 +729,14 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    following conditions:  a) The CollisionEvent
                    signal is not asserted.  b) The ActivityDuration
                    is greater than ValidPacketMinTime.  c) The
-                   frequency (data rate) is detectably mismatched 
+                   frequency (data rate) is detectably mismatched
                    from the local transmit frequency.  The exact
                    degree of mismatch is vendor specific and is to be
                    defined by the vendor for conformance testing.
                    When this event occurs, other counters whose
                    increment conditions were satisfied may or may not
-                   also be incremented.  This counter is the 
-                   summation of the values of the 
+                   also be incremented.  This counter is the
+                   summation of the values of the
                    rptrMonitorPortDatRateMismatches counter for all
                    of the ports in this repeater."
            REFERENCE
@@ -756,7 +756,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
                    port.  The conditions that cause port partitioning
                    are specified in the partition state machine in
                    Section 9 of the IEEE 802.3 Std.  This counter is
-                   the summation of the values of the 
+                   the summation of the values of the
                    rptrMonitorPortAutoPartitions for all of the ports
                    in this repeater."
            REFERENCE
@@ -773,7 +773,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
 
                    The total number of errors which have occured
                    on any port in this repeater.  This counter is
-                   the summation of the values of other error 
+                   the summation of the values of other error
                    counters, namely:
 
                        hpRptrMonGlobalFCSErrors,
@@ -802,12 +802,12 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   This counter is incremented by one for each 
-                   unicast packet of valid frame length received on 
-                   any port.  This counter is the summation of 
+                   This counter is incremented by one for each
+                   unicast packet of valid frame length received on
+                   any port.  This counter is the summation of
                    hpRptrMonPortUcastPackets for all of the ports
                    in this repeater.  This counter may not be
-                   implemented for repeaters which do not have a 
+                   implemented for repeaters which do not have a
                    local network management agent."
            ::= { hpRptrMonCounters 14 }
 
@@ -818,12 +818,12 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   This counter is incremented by one for each 
+                   This counter is incremented by one for each
                    broadcast packet of valid frame length received on
                    any port.  This counter is the summation of
                    hpRptrMonPortBcastPackets for all of the ports
                    in this repeater.  This counter may not be
-                   implemented for repeaters which do not have a 
+                   implemented for repeaters which do not have a
                    local network management agent."
            ::= { hpRptrMonCounters 15 }
 
@@ -834,12 +834,12 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS DEPRECATED *********
 
-                   This counter is incremented by one for each 
+                   This counter is incremented by one for each
                    multicast packet of valid frame length received on
                    any port.  This counter is the summation of
                    hpRptrMonPortMcastPackets for all of the ports in
-                   this repeater.  This counter may not be 
-                   implemented for repeaters which do not have a 
+                   this repeater.  This counter may not be
+                   implemented for repeaters which do not have a
                    local network management agent."
            ::= { hpRptrMonCounters 16 }
 
@@ -862,7 +862,7 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS not-accessible
            STATUS     current
            DESCRIPTION
-                   "An entry in the table, containing per port 
+                   "An entry in the table, containing per port
                    objects for a single port."
            INDEX     { hpRptrMonPtGroupIndex, hpRptrMonPtPortIndex }
            ::= { hpRptrMonPtTable 1 }
@@ -881,9 +881,9 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The group containing the port for which this 
-                   entry contains information.  This object has the 
-                   same value as the corresponding instance of 
+                   "The group containing the port for which this
+                   entry contains information.  This object has the
+                   same value as the corresponding instance of
                    rptrMonitorPortGroupIndex."
            ::= { hpRptrMonPtEntry 1 }
 
@@ -892,9 +892,9 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "The port within the group for which this entry 
-                   contains information.  This object has the same 
-                   value as the corresponding instance of 
+                   "The port within the group for which this entry
+                   contains information.  This object has the same
+                   value as the corresponding instance of
                    rptrMonitorPortIndex."
            ::= { hpRptrMonPtEntry 2 }
 
@@ -903,10 +903,10 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "This counter is incremented by one for each 
-                   unicast packet of valid frame length received on 
+                   "This counter is incremented by one for each
+                   unicast packet of valid frame length received on
                    this port.  This object may not be implemented for
-                   repeaters which do not have a local network 
+                   repeaters which do not have a local network
                    management agent."
            ::= { hpRptrMonPtEntry 3 }
 
@@ -915,10 +915,10 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "This counter is incremented by one for each 
+                   "This counter is incremented by one for each
                    broadcast packet of valid frame length received on
                    this port.  This object may not be implemented for
-                   repeaters which do not have a local network 
+                   repeaters which do not have a local network
                    management agent."
            ::= { hpRptrMonPtEntry 4 }
 
@@ -927,10 +927,10 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            MAX-ACCESS read-only
            STATUS     current
            DESCRIPTION
-                   "This counter is incremented by one for each 
+                   "This counter is incremented by one for each
                    multicast packet of valid frame length received on
                    this port.  This object may not be implemented for
-                   repeaters which do not have a local network 
+                   repeaters which do not have a local network
                    management agent."
            ::= { hpRptrMonPtEntry 5 }
 
@@ -1506,4 +1506,3 @@ HP-ICF-8023-RPTR DEFINITIONS ::= BEGIN
            ::= { hpicf8023RptrGroups 10 }
 
        END
-

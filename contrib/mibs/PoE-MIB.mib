@@ -31,7 +31,7 @@
 -- [New Object]
 -- 1.Add object swPoESystemCtrlLegacyPD in swPoESystemCtrl.
 --   For support legacy PD detection.
--- 2.Add object swPoESystemInfoLegacyPD in swPoESystemInfo. 
+-- 2.Add object swPoESystemInfoLegacyPD in swPoESystemInfo.
 --   For show legacy PD detection status.
 -- [Modification]
 -- 1. Remove swPoEPortCtrlLegacyPD from swPoEPortCtrlTable.
@@ -258,7 +258,7 @@ PoE-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		 	"Specifies the system mode to be POE or NORMAL."
 		::= { swPoESystemStackingCtrlEntry 5 }
-		
+
 	swPoESystemStackingCtrlLegacyPD OBJECT-TYPE
 		SYNTAX		INTEGER{
        			        enabled(1),
@@ -397,7 +397,7 @@ PoE-MIB DEFINITIONS ::= BEGIN
 		port will be shut down. For the upper limit for each class, it is 4W for
 		class 1 PD class, 7W for class 2, and 15.4W for class 3 PD and class 0 PD."
         ::= { swPoESystemInfoEntry 6 }
-        
+
     swPoESystemInfoLegacyPD OBJECT-TYPE
 	SYNTAX		INTEGER{
       			        enabled(1),
@@ -520,17 +520,17 @@ PoE-MIB DEFINITIONS ::= BEGIN
 			limit, the PoE system will shut down that port. The default setting is 15400 mW.
 			Note: This object is valid only while the swPoEPortCtrlPowerLimit object is configured as
 			user-defined."
-		::= { swPoEPortCtrlEntry 5 }    
-		
+		::= { swPoEPortCtrlEntry 5 }
+
     swPoEPortCtrlTimeRangeName OBJECT-TYPE
     		SYNTAX      SnmpAdminString (SIZE (0..32))
     		MAX-ACCESS  read-write
     		STATUS      current
     		DESCRIPTION
         	"Specifies the time_range that applies to the port of the POE.If time range is configured,
-        	 power can only be supplied during the period specified by the time range."    
-    	::= { swPoEPortCtrlEntry 6 }  
-    	   
+        	 power can only be supplied during the period specified by the time range."
+    	::= { swPoEPortCtrlEntry 6 }
+
 
 -- -----------------------------------------------------------------------------
 --  swPoEPortInfo             OBJECT IDENTIFIER ::= { PoEMIB 4 }

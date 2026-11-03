@@ -20,7 +20,7 @@
 -- [New Object]
 -- 1. Add object mgmdRouterSrcListExpire to support source timer.
 -- Notes: Requested by Bruce Ge for DGS3620 R1.0.
--- 
+--
 -- Version 2.03, 2010/05/11, Wesley Wang
 -- Description:
 -- [New Object]
@@ -32,7 +32,7 @@
 -- Description:
 -- [Modification]
 -- 1. Add mgmdRouterChkSubSrcNetTable to dispaying the state of whether to check
--- subscriber source IP when receive IGMP report/leave. 
+-- subscriber source IP when receive IGMP report/leave.
 -- Notes: requested by bruce ge for dgs3600-r2.52.
 --
 -- Version 2.01, 2007/4/6, yedda
@@ -406,9 +406,9 @@ mgmdRouterSrcListEntry OBJECT-TYPE
     STATUS     current
     DESCRIPTION
             "An entry (conceptual row) in the mgmdRouterSrcListTable."
-    INDEX      { mgmdRouterSrcListAddressType, 
+    INDEX      { mgmdRouterSrcListAddressType,
                  mgmdRouterSrcListIfIndex,
-                 mgmdRouterSrcListAddress, 
+                 mgmdRouterSrcListAddress,
                  mgmdRouterSrcListHostAddress }
     ::= { mgmdRouterSrcListTable 1 }
 
@@ -459,7 +459,7 @@ mgmdRouterSrcListHostAddress OBJECT-TYPE
             address and interface indicates whether this Host address
             is included or excluded."
     ::= { mgmdRouterSrcListEntry 4 }
- 
+
 mgmdRouterSrcListExpire OBJECT-TYPE
     SYNTAX     TimeTicks
     MAX-ACCESS read-only
@@ -528,14 +528,14 @@ mgmdRouterChkSubSrcNetState OBJECT-TYPE
     SYNTAX     INTEGER{
     			enabled(1),
     			disabled(2)
-    			}   
+    			}
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-            "The state of the specified interface whether to check subscriber 
-            source IP when receive IGMP report/leave."  
+            "The state of the specified interface whether to check subscriber
+            source IP when receive IGMP report/leave."
     ::= { mgmdRouterChkSubSrcNetEntry 4 }
-    
+
 --  -----------------------------------------------------------------------------
 --  The MGMD Router IGMP Static Group Table
 --  -----------------------------------------------------------------------------
@@ -544,7 +544,7 @@ mgmdRouterIGMPStaticGroupTable OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-            "The (conceptual) table listing the static IP multicast groups 
+            "The (conceptual) table listing the static IP multicast groups
              for which there are members on a particular router interface."
     ::= { swIgmpMIBObjects 12 }
 
@@ -556,7 +556,7 @@ mgmdRouterIGMPStaticGroupEntry OBJECT-TYPE
             "An entry (conceptual row) in the mgmdRouterIGMPStaticGroupTable."
     INDEX      { mgmdRouterIGMPStaticGroupIfIndex, mgmdRouterIGMPStaticGroupIpAddr}
     ::= { mgmdRouterIGMPStaticGroupTable 1 }
-    
+
 MgmdRouterIGMPStaticGroupEntry ::= SEQUENCE {
     mgmdRouterIGMPStaticGroupIfIndex          InterfaceIndex,
     mgmdRouterIGMPStaticGroupIpAddr           IpAddress,
@@ -584,10 +584,10 @@ mgmdRouterIGMPStaticGroupIpAddr OBJECT-TYPE
 mgmdRouterIGMPStaticGroupRowStatus OBJECT-TYPE
     SYNTAX   RowStatus
     MAX-ACCESS read-create
-    STATUS   current 
+    STATUS   current
     DESCRIPTION
 	    "This object indicates the status of this static IP multicast
-	     entry."		
+	     entry."
     ::= { mgmdRouterIGMPStaticGroupEntry 3 }
 
 END

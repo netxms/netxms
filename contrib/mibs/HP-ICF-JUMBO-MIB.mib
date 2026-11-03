@@ -20,10 +20,10 @@ HP-ICF-JUMBO-MIB DEFINITIONS ::= BEGIN
                        Roseville, CA 95747"
          DESCRIPTION  "This MIB module describes HP Jumbo information."
 
-         
+
 	      REVISION     "200408221030Z"  -- August 22, 2004
          DESCRIPTION  "Initial version."
-         
+
          ::= { hpicfObjectModules 13 }
 
 
@@ -59,7 +59,7 @@ HP-ICF-JUMBO-MIB DEFINITIONS ::= BEGIN
         SYNTAX      InterfaceIndex
         MAX-ACCESS  read-only
         STATUS      current
-        DESCRIPTION "The interface index associated with this set of 
+        DESCRIPTION "The interface index associated with this set of
                      counters."
         ::= { hpJumboStatsEntry 1 }
 
@@ -99,7 +99,7 @@ HP-ICF-JUMBO-MIB DEFINITIONS ::= BEGIN
 -- Conformance Information
 
    hpicfJumboConformance OBJECT IDENTIFIER ::= { hpicfJumboMIB 2 }
- 
+
    hpicfJumboGroups OBJECT IDENTIFIER ::= { hpicfJumboConformance 1 }
 
    hpicfJumboCompliances OBJECT IDENTIFIER
@@ -118,7 +118,7 @@ HP-ICF-JUMBO-MIB DEFINITIONS ::= BEGIN
             hpJumboStatsPkts4096to9216Octets
         }
         STATUS     current
-        DESCRIPTION    
+        DESCRIPTION
           "A collection of objects providing private HP Jumbo packet statistics."
        ::= { hpicfJumboGroups 1 }
 
@@ -133,7 +133,7 @@ HP-ICF-JUMBO-MIB DEFINITIONS ::= BEGIN
            HP-ICF-JUMBO MIB."
        MODULE -- This Module
 
-          MANDATORY-GROUPS { hpicfJumboStatsGroup }   
+          MANDATORY-GROUPS { hpicfJumboStatsGroup }
        ::= { hpicfJumboCompliances 1 }
 
  END

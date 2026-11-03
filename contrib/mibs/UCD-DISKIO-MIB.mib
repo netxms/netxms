@@ -19,7 +19,7 @@ IMPORTS
 ucdDiskIOMIB MODULE-IDENTITY
     LAST-UPDATED "200001260000Z"
     ORGANIZATION "University of California, Davis"
-    CONTACT-INFO    
+    CONTACT-INFO
 	"This mib is no longer being maintained by the University of
 	 California and is now in life-support-mode and being
 	 maintained by the net-snmp project.  The best place to write

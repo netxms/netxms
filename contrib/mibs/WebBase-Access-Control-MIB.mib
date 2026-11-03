@@ -18,7 +18,7 @@
 -- [New Object]
 -- [1]Add swWACPageElementPageTitle, swWACPageElementLoginWindowTitle,
 --    swWACPageElementUserName, swWACPageElementPassWord, swJWACPageElementLogoutWindowTitle,
---    swWACPageElementNotificationLine1, swWACPageElementNotificationLine2, 
+--    swWACPageElementNotificationLine1, swWACPageElementNotificationLine2,
 --    swWACPageElementNotificationLine3, swWACPageElementNotificationLine4,
 --    swWACPageElementNotificationLine5 in swWACCtrl for supporting customized page elements.
 --
@@ -85,7 +85,7 @@ WebBase-Access-Control-MIB DEFINITIONS ::= BEGIN
         DisplayString                   		FROM RFC1213-MIB
         dlink-common-mgmt				FROM DLINK-ID-REC-MIB
 	Ipv6Address	             	FROM IPV6-TC;
-	
+
 	VlanId					::= INTEGER (1..4094)
      swWACMIB MODULE-IDENTITY
           LAST-UPDATED "1007160000Z"
@@ -166,7 +166,7 @@ swWebAuthLogouttimer OBJECT-TYPE
     STATUS      obsolete
     DESCRIPTION
         "The authenticated port will revert to an un-authenticated state after the logout times out.
-         When the value is 0, it means the logout timer is infinite and the authenticated port 
+         When the value is 0, it means the logout timer is infinite and the authenticated port
          will never revert to an un-authenticated state.
 The default value is 60 minutes.
 "
@@ -177,17 +177,17 @@ swWACVirtualIpAddr OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS  	current
     DESCRIPTION
-    		"Specifies the WAC virtual IP address which is used to accept 
+    		"Specifies the WAC virtual IP address which is used to accept
     		 authentication requests from an unauthenticated host.
-    
-    		 The virtual IP of WAC is used to accept authentication requests 
-    		 from an unauthenticated host. Only requests sent to this IP will 
+
+    		 The virtual IP of WAC is used to accept authentication requests
+    		 from an unauthenticated host. Only requests sent to this IP will
     		 get a correct response.
-    		 
+
 		 NOTE: This IP does not respond to ARP requests or ICMP packets.
     		"
     ::= { swWACCtrl 7 }
-	
+
 swWACSwitchHttpProtocol OBJECT-TYPE
     SYNTAX	INTEGER{
 		http(1),
@@ -204,7 +204,7 @@ swWACSwitchHttpPort OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS  	current
     DESCRIPTION
-   		"Specifies the TCP port which the WAC switch listens to and uses 
+   		"Specifies the TCP port which the WAC switch listens to and uses
     		 to finish the authenticating process."
     ::= { swWACCtrl 9 }
 
@@ -217,12 +217,12 @@ swWACAuthFailOverState OBJECT-TYPE
     STATUS  	current
     DESCRIPTION
     		"This object enables/disables the web-based authentication auth_failover status
-             of the device. When the authentication failover is enabled, 
+             of the device. When the authentication failover is enabled,
              if RADIU servers authentication are unreachable, the local database will be used to
              do the authentication."
-    ::= { swWACCtrl 10 }  
-    
-    
+    ::= { swWACCtrl 10 }
+
+
  swWACRadiusAuthorizationState OBJECT-TYPE
     SYNTAX 	INTEGER {
                enabled(1),
@@ -232,10 +232,10 @@ swWACAuthFailOverState OBJECT-TYPE
     STATUS  	current
     DESCRIPTION
     		"This object enables/disables the web-based authentication RADIUS authorization status
-             of the device. When the RADIUS authorization state is disabled, 
+             of the device. When the RADIUS authorization state is disabled,
              the assigned information from the RADIUS server will be ignored."
-    ::= { swWACCtrl 11 }  
-    
+    ::= { swWACCtrl 11 }
+
  swWACLocalAuthorizationState OBJECT-TYPE
     SYNTAX 	INTEGER {
                enabled(1),
@@ -245,44 +245,44 @@ swWACAuthFailOverState OBJECT-TYPE
     STATUS  	current
     DESCRIPTION
     		"This object enables/disables the web-based authentication local authorization status
-             of the device. When the local authorization state is disabled, 
+             of the device. When the local authorization state is disabled,
              the assigned information from the local database will be ignored."
-    ::= { swWACCtrl 12 }    
-              	
+    ::= { swWACCtrl 12 }
+
 swWACAuthClearDefaultredirpath OBJECT-TYPE
 		SYNTAX			INTEGER {
 									other(1),
-									start(2)							
+									start(2)
 								}
 		MAX-ACCESS 	read-write
 		STATUS			current
 		DESCRIPTION
-				"This object is used to clear the default redirect URL that has been previously configured."	
-		::= { swWACCtrl 13 }	
+				"This object is used to clear the default redirect URL that has been previously configured."
+		::= { swWACCtrl 13 }
 
 swWACVirtualIPv6Addr OBJECT-TYPE
     SYNTAX  	Ipv6Address
     MAX-ACCESS  read-write
     STATUS  	current
     DESCRIPTION
-    		"Specifies the WAC virtual IPv6 address which is used to accept 
+    		"Specifies the WAC virtual IPv6 address which is used to accept
     		 authentication requests from an unauthenticated host.
-    
-    		 The virtual IP of WAC is used to accept authentication requests 
-    		 from an unauthenticated host. Only requests sent to this IP will 
+
+    		 The virtual IP of WAC is used to accept authentication requests
+    		 from an unauthenticated host. Only requests sent to this IP will
     		 get a correct response.
-    		 
+
 		 NOTE: This IP does not respond to ARP requests or ICMP packets.
     		"
     ::= { swWACCtrl 14 }
-	
+
 swWACPageElementPageTitle OBJECT-TYPE
 	SYNTAX		DisplayString(SIZE(0..128))
 	MAX-ACCESS	read-write
 	STATUS		current
 	DESCRIPTION
 		"Specifies the JWAC page title of the authenticate page."
-	::= { swWACCtrl 30 }	
+	::= { swWACCtrl 30 }
 
 swWACPageElementLoginWindowTitle OBJECT-TYPE
 	SYNTAX		DisplayString(SIZE(0..64))
@@ -292,7 +292,7 @@ swWACPageElementLoginWindowTitle OBJECT-TYPE
 		"Specifies the WAC login window title mapping of the
 					authenticate page."
 	::= { swWACCtrl 31 }
-	
+
 swWACPageElementUserName OBJECT-TYPE
 	SYNTAX		DisplayString(SIZE(0..32))
 	MAX-ACCESS	read-write
@@ -301,11 +301,11 @@ swWACPageElementUserName OBJECT-TYPE
 		"Specifies the JWAC user name mapping of the
 					authenticate page."
 	::= { swWACCtrl 32 }
-	
+
 swWACPageElementPassWord OBJECT-TYPE
 	SYNTAX		DisplayString(SIZE(0..32))
 	MAX-ACCESS	read-write
-	STATUS		current 
+	STATUS		current
 	DESCRIPTION
 		"Specifies the remaining JWAC password mapping of the
 					authenticate page."
@@ -325,7 +325,7 @@ swWACPageElementNotificationLine1 OBJECT-TYPE
 	MAX-ACCESS	read-write
 	STATUS		current
 	DESCRIPTION
-		"Used to set the notification information of line 1 
+		"Used to set the notification information of line 1
 		 in web page after successful authentication."
 	::= { swWACCtrl 35 }
 
@@ -334,7 +334,7 @@ swWACPageElementNotificationLine2 OBJECT-TYPE
 	MAX-ACCESS	read-write
 	STATUS		current
 	DESCRIPTION
-		"Used to set the notification information of line 1 
+		"Used to set the notification information of line 1
 		 in web page after successful authentication."
 	::= { swWACCtrl 36 }
 
@@ -343,7 +343,7 @@ swWACPageElementNotificationLine3 OBJECT-TYPE
 	MAX-ACCESS	read-write
 	STATUS		current
 	DESCRIPTION
-		"Used to set the notification information of line 1 
+		"Used to set the notification information of line 1
 		 in web page after successful authentication."
 	::= { swWACCtrl 37 }
 
@@ -352,16 +352,16 @@ swWACPageElementNotificationLine4 OBJECT-TYPE
 	MAX-ACCESS	read-write
 	STATUS		current
 	DESCRIPTION
-		"Used to set the notification information of line 1 
+		"Used to set the notification information of line 1
 		 in web page after successful authentication."
-	::= { swWACCtrl 38 }	
-	
+	::= { swWACCtrl 38 }
+
 swWACPageElementNotificationLine5 OBJECT-TYPE
 	SYNTAX		DisplayString(SIZE(0..128))
 	MAX-ACCESS	read-write
 	STATUS		current
 	DESCRIPTION
-		"Used to set the notification information of line 1 
+		"Used to set the notification information of line 1
 		 in web page after successful authentication."
 	::= { swWACCtrl 39 }
 
@@ -419,7 +419,7 @@ swWACAuthInfoPort OBJECT-TYPE
     DESCRIPTION
 	"Specifies the WAC host port number."
     ::= { swWACAuthInfoEntry 1 }
-	
+
 swWACAuthInfoAuthStatus OBJECT-TYPE
     SYNTAX      INTEGER{
                authenticated(1),
@@ -431,7 +431,7 @@ swWACAuthInfoAuthStatus OBJECT-TYPE
     DESCRIPTION
 	"Specifies the WAC host Authentication state."
     ::= { swWACAuthInfoEntry 2 }
-					
+
 swWACAuthInfoMACAddr OBJECT-TYPE
     SYNTAX	MacAddress
     MAX-ACCESS	read-only
@@ -439,14 +439,14 @@ swWACAuthInfoMACAddr OBJECT-TYPE
     DESCRIPTION
 	"Specifies the WAC host MAC address."
     ::= { swWACAuthInfoEntry 3 }
-	
+
 swWACAuthInfoVID OBJECT-TYPE
     SYNTAX	VlanId
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
 	"Specifies the WAC host VID."
-    ::= { swWACAuthInfoEntry 4 }			
+    ::= { swWACAuthInfoEntry 4 }
 
 swWACAuthInfoRemainAgeTime OBJECT-TYPE
     SYNTAX	INTEGER
@@ -454,11 +454,11 @@ swWACAuthInfoRemainAgeTime OBJECT-TYPE
     STATUS	current
     DESCRIPTION
 		"Specifies the remaining WAC host agetime.
-		
+
 		 0 indicates the authenticated host on
 		 the port will never age out.
 		"
-    ::= { swWACAuthInfoEntry 5 }	
+    ::= { swWACAuthInfoEntry 5 }
 
 swWACAuthInfoIdleTime OBJECT-TYPE
     SYNTAX	INTEGER
@@ -466,12 +466,12 @@ swWACAuthInfoIdleTime OBJECT-TYPE
     STATUS	current
     DESCRIPTION
 		"Specifies the WAC host idle time.
-		
+
 		 0 indicates the idle state of the
 		 authenticated host on the port will never be checked.
 		"
     ::= { swWACAuthInfoEntry 6 }
-		
+
  swWACAuthInfoBlockTime OBJECT-TYPE
     SYNTAX	INTEGER
     MAX-ACCESS	read-only
@@ -479,11 +479,11 @@ swWACAuthInfoIdleTime OBJECT-TYPE
     DESCRIPTION
 	"Specifies the WAC host block time."
     ::= { swWACAuthInfoEntry 7 }
-	
+
 swWACAuthInfoStatus OBJECT-TYPE
     SYNTAX	INTEGER{
 		active(1),
-		delete(2)		
+		delete(2)
     		}
     MAX-ACCESS	read-write
     STATUS	current
@@ -492,15 +492,15 @@ swWACAuthInfoStatus OBJECT-TYPE
 	 Setting delete (2) will delete this WAC host entry.
 	"
     ::= { swWACAuthInfoEntry 8 }
-    
+
   swWACAuthInfoPriority OBJECT-TYPE
     SYNTAX	INTEGER
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-	"Specifies the WAC host priority assigned when pass authentication.			
+	"Specifies the WAC host priority assigned when pass authentication.
 			 -1 indicates the host has no priority assigned."
-    ::= { swWACAuthInfoEntry 9 }  
+    ::= { swWACAuthInfoEntry 9 }
 
 -- -----------------------------------------------------------------------------
 -- swWACAuthStateTable            OBJECT IDENTIFIER ::= { swWACInfo 2}
@@ -520,7 +520,7 @@ swWACAuthStateEntry OBJECT-TYPE
     STATUS	current
     DESCRIPTION
       "This list contains WAC client host information."
-    INDEX { swWACAuthStatePort, 
+    INDEX { swWACAuthStatePort,
 		swWACAuthStateOriginalVid,
 		swWACAuthStateMACAddr
 	}
@@ -563,7 +563,7 @@ swWACAuthStateOriginalVid OBJECT-TYPE
     DESCRIPTION
 	"Specifies the WAC host original receive VLAN ID."
     ::= { swWACAuthStateEntry 2 }
-	
+
 swWACAuthStateMACAddr OBJECT-TYPE
     SYNTAX	MacAddress
     MAX-ACCESS	read-only
@@ -590,36 +590,36 @@ swWACAuthStateAssignVid OBJECT-TYPE
     STATUS	current
     DESCRIPTION
 	"Specifies the WAC host assign VID."
-    ::= { swWACAuthStateEntry 7 }			
+    ::= { swWACAuthStateEntry 7 }
 
 swWACAuthStateAssignPriority OBJECT-TYPE
     SYNTAX	INTEGER
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-	"Specifies the WAC host priority assigned when pass authentication.			
+	"Specifies the WAC host priority assigned when pass authentication.
 	-1 indicates the host has no priority assigned."
-    ::= { swWACAuthStateEntry 8 } 
-	
+    ::= { swWACAuthStateEntry 8 }
+
 swWACAuthStateRemainTime OBJECT-TYPE
     SYNTAX	INTEGER
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
 		"Specifies the remaining WAC host aging time/ block time.
-		
+
 		 0 indicates the authenticated host on
 		 the port will never age out.
 		"
-    ::= { swWACAuthStateEntry 12 }	
-	
+    ::= { swWACAuthStateEntry 12 }
+
 swWACAuthStateIdleTime OBJECT-TYPE
     SYNTAX	INTEGER
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
 		"Specifies the WAC host idle time.
-		
+
 		 0 indicates the idle state of the
 		 authenticated host on the port will never be checked.
 		"
@@ -628,7 +628,7 @@ swWACAuthStateIdleTime OBJECT-TYPE
 swWACAuthStateDelAction OBJECT-TYPE
     SYNTAX	INTEGER{
 			active(1),
-			delete(2)		
+			delete(2)
     		}
     MAX-ACCESS	read-write
     STATUS	current
@@ -637,7 +637,7 @@ swWACAuthStateDelAction OBJECT-TYPE
 	Setting delete(2) will delete this WAC host entry.
 	"
     ::= { swWACAuthStateEntry 25 }
-	
+
 -- -----------------------------------------------------------------------------
 -- swWACMgmt            OBJECT IDENTIFIER ::= { swWACMIB 3}
 -- -----------------------------------------------------------------------------
@@ -675,7 +675,7 @@ SwWebAuthPortEntry ::=
 	swWACPortIdleTime
 	    INTEGER,
 	swWACPortBlockTime
-	    INTEGER              
+	    INTEGER
         }
 
 swWebAuthPortIndex OBJECT-TYPE
@@ -716,7 +716,7 @@ swWebAuthAuthStatus OBJECT-TYPE
     DESCRIPTION
         "This object indicates whether the current port is authenticated or not."
     ::= { swWebAuthPortEntry 4 }
-    
+
 swWebAuthAssignedVID OBJECT-TYPE
     SYNTAX      INTEGER
     MAX-ACCESS  read-only
@@ -724,31 +724,31 @@ swWebAuthAssignedVID OBJECT-TYPE
     DESCRIPTION
         "This object indicates the assigned VLAN ID of this port."
     ::= { swWebAuthPortEntry 5 }
-    
+
 swWACPortAgeingTime      OBJECT-TYPE
     SYNTAX	INTEGER(0..1440)
     MAX-ACCESS	read-write
     STATUS	current
     DESCRIPTION
-	"Specifies the time period during which an authenticated 
+	"Specifies the time period during which an authenticated
 	 host will remain in the authenticated state.
-	 
-	 0 indicates the authenticated host will never age out on 
+
+	 0 indicates the authenticated host will never age out on
 	 the port.
 	"
-    ::= { swWebAuthPortEntry 6 }	
-	
+    ::= { swWebAuthPortEntry 6 }
+
 swWACPortIdleTime      OBJECT-TYPE
     SYNTAX	INTEGER(0..1440)
     MAX-ACCESS	read-write
     STATUS	current
     DESCRIPTION
 	"Specifies the idle_time.
-	
-	 If there is no traffic during idle_time, the host will be 
+
+	 If there is no traffic during idle_time, the host will be
 	 moved back to the unauthenticated state.
-	 
-	 0 indicates the idle state of the 
+
+	 0 indicates the idle state of the
 	 authenticated host on the port will never be checked.
 	"
     ::= { swWebAuthPortEntry 7 }
@@ -759,11 +759,11 @@ swWACPortBlockTime      OBJECT-TYPE
     STATUS	current
     DESCRIPTION
 	"Specifies the block_time.
-	 If a host fails to pass authentication, it will be blocked 
+	 If a host fails to pass authentication, it will be blocked
 	 for a period specified by the block_time.
 	"
     ::= { swWebAuthPortEntry 8 }
-    		   
+
 -----------------------------------------------------------------------------
 swWebAuthUserTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF SwWebAuthUserEntry
@@ -821,7 +821,7 @@ swWebAuthUserVlanName OBJECT-TYPE
     DESCRIPTION
         "This object indicates the VLAN name for this user account."
     ::= { swWebAuthUserEntry 3 }
-    
+
 swWebAuthUserStatus OBJECT-TYPE
     SYNTAX      RowStatus
     MAX-ACCESS  read-create
@@ -838,5 +838,5 @@ swWebAuthUserVID OBJECT-TYPE
 	"This object indicates the VID for this user account.
 	0 indicates to delete configure VID in this user account."
     ::= { swWebAuthUserEntry 5 }
-	
+
 END

@@ -41,7 +41,7 @@ IMPORTS
           "201404090000Z" -- 09 Apr 2014 12:00:00 GMT
         DESCRIPTION
           "Added group agentDynamicAuthorizationGroup to the agentConfigGroup to support
-           Dynamic Authorization."		
+           Dynamic Authorization."
         REVISION
           "201110170000Z" -- 17 Oct 2011 12:00:00 GMT
         DESCRIPTION
@@ -2265,7 +2265,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
              MAX-ACCESS  not-accessible
              STATUS      current
              DESCRIPTION
-                  "The list of IPv6 address prefixes 
+                  "The list of IPv6 address prefixes
                    configured on the Service port."
              ::=  { agentServicePortConfigGroup 9 }
 
@@ -2295,7 +2295,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
              MAX-ACCESS  read-create
              STATUS      current
              DESCRIPTION
-                  "The IPv6 Address Prefix configured on the 
+                  "The IPv6 Address Prefix configured on the
                    Servie port."
              ::=  { agentServicePortIpv6AddrEntry 1 }
 
@@ -2304,7 +2304,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
              MAX-ACCESS  read-create
              STATUS      current
              DESCRIPTION
-                  "The IPv6 Address Prefix Length of the 
+                  "The IPv6 Address Prefix Length of the
                    address configured on the Service port."
              ::=  { agentServicePortIpv6AddrEntry 2 }
 
@@ -2563,7 +2563,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                   }
          MAX-ACCESS  read-write
          STATUS      current
-         DESCRIPTION "Enables sending of a trap on the internal message buffer count 
+         DESCRIPTION "Enables sending of a trap on the internal message buffer count
                       exceeding the rising threshold."
          ::= { agentSnmpTrapFlagsConfigGroup 7 }
 
@@ -2897,7 +2897,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          STATUS        current
          DESCRIPTION
                        "An entry (conceptual row) in the agentSwitchSnoopSSMSrcListTable."
-         INDEX         { agentSwitchSnoopSSMSrcListAddressType, 
+         INDEX         { agentSwitchSnoopSSMSrcListAddressType,
                          agentSwitchSnoopSSMSrcListIfIndex, agentSwitchSnoopSSMSrcListVlanId,
                          agentSwitchSnoopSSMSrcListHostAddress, agentSwitchSnoopSSMSrcListAddress }
          ::= { agentSwitchSnoopSSMSrcListTable 1 }
@@ -3071,8 +3071,8 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          DESCRIPTION
                      "Config switchconfig flowcontrol allows you to enable or disable
                      802.3x flow control for the switch. This value applies to only
-                     full-duplex mode ports. Enabling asymmetric flow control allows 
-                     the switch to receive pause frames but it will not transmit 
+                     full-duplex mode ports. Enabling asymmetric flow control allows
+                     the switch to receive pause frames but it will not transmit
                      pause frames."
          DEFVAL { disable }
          ::= { agentSwitchStormControlGroup 1 }
@@ -3218,7 +3218,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
          MAX-ACCESS  accessible-for-notify
          STATUS      current
          DESCRIPTION
-                     "Action to be taken when storm control rate limit is reached. 
+                     "Action to be taken when storm control rate limit is reached.
                      shutdown(1) - Diag disable the interface on storm control.
                      trap(2)     - Generate trap on storm control."
 
@@ -3384,7 +3384,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                      a particular group in the interface participating in the vlan.
                      This value must be less than
                      agentSwitchSnoopingIntfGroupMembershipInterval.
-                     The default value is 10. 
+                     The default value is 10.
                      For IGMP & MLD Snooping this value ranges from 1 to 25."
          DEFVAL { 10 }
          ::= { agentSwitchSnoopingVlanEntry 3 }
@@ -4701,7 +4701,7 @@ agentInfoGroup                             OBJECT IDENTIFIER ::= { fastPathSwitc
                      sslpem-dhweak      - SSL DH Weak Encryption Parameter PEM File
                      sslpem-dhstrong    - SSL DH Strong Encryption Parameter PEM File
                      ias-users          - IAS user file
- 
+
                      Note: SSH Key files can only be downloaded if SSH Server is administratively
                      disabled, and there are no active SSH sessions.
                      Kernel file can be downloaded only on raptor platform and linux operating system.
@@ -5373,7 +5373,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                       off(3)
                      }
          MAX-ACCESS  read-write
-         STATUS      obsolete 
+         STATUS      obsolete
          DESCRIPTION
                      "The switch's Port Spanning Tree Protocol Mode
                       STP mode values are:
@@ -5393,7 +5393,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                       disabled(5)
                      }
          MAX-ACCESS  read-only
-         STATUS      obsolete 
+         STATUS      obsolete
          DESCRIPTION
                      "The switch's Port Spanning Tree Protocol State.
                       This object is only supported when the Dot1d Protocol is enabled."
@@ -8294,7 +8294,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
     agentSwitchMbufConfigGroup                 OBJECT IDENTIFIER ::= { agentConfigGroup 29 }
 
     --**********************************************************
-    --agentSwitchMbufConfigGroup 
+    --agentSwitchMbufConfigGroup
     --Allows user to configure rising threshold, falling threshold
     --and LOG notification severity.
     --**********************************************************
@@ -8320,8 +8320,8 @@ agentPortMirrorTypeTable OBJECT-TYPE
       MAX-ACCESS    read-write
       STATUS        current
       DESCRIPTION
-                    "The Mbuf utilization falling threshold in percentage. 
-                    A single notification (falling event) is generated when 
+                    "The Mbuf utilization falling threshold in percentage.
+                    A single notification (falling event) is generated when
                     the total Mbuf utilization falls below this threshold.
 
                     After a falling event is generated, another such event
@@ -8354,23 +8354,23 @@ agentPortMirrorTypeTable OBJECT-TYPE
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-                    "Configures the Dynamic Authorization mode which must be 
+                    "Configures the Dynamic Authorization mode which must be
                      enabled to support CoA functionality."
         ::= { agentDynamicAuthorizationGroup 1 }
-		  
+
     agentDynamicAuthorizationServerKey OBJECT-TYPE
         SYNTAX      DisplayString
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
                     "Configures a global shared secret that is used for all
-                     dynamic authorization clients that do not have an 
+                     dynamic authorization clients that do not have an
                      individual shared secret key configured.
                      If agentDynamicAuthorizationEncryptServerKey is
-                     set to true, then the length of this string has to be 
+                     set to true, then the length of this string has to be
                      exactly 256 else it can be 1-128."
         ::= { agentDynamicAuthorizationGroup 2 }
-		
+
     agentDynamicAuthorizationEncryptServerKey OBJECT-TYPE
         SYNTAX      INTEGER {
                     true(1),
@@ -8380,22 +8380,22 @@ agentPortMirrorTypeTable OBJECT-TYPE
         STATUS      current
         DESCRIPTION
                     "Specifies whether the global shared secret configured
-                     is to be encrypted or not. Set this in conjnction with 
+                     is to be encrypted or not. Set this in conjnction with
                      agentDynamicAuthorizationServerKey."
         ::= { agentDynamicAuthorizationGroup 3 }
 
-    agentDynamicAuthorizationPortNum OBJECT-TYPE		
+    agentDynamicAuthorizationPortNum OBJECT-TYPE
         SYNTAX      Integer32 (1025..65535)
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-                    "Configures UDP port on which a device listens for 
+                    "Configures UDP port on which a device listens for
                      RADIUS requests from configured RADIUS clients.
                      The default port number is 3799.
                      The supported range for the port-number is 1025 to 65535."
         DEFVAL { 3799 }
         ::= { agentDynamicAuthorizationGroup 4 }
-		
+
     agentDynamicAuthorizationType OBJECT-TYPE
         SYNTAX      INTEGER {
                     any(1),
@@ -8406,7 +8406,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
         STATUS      current
         DESCRIPTION
                     "Configures the type of authorization that the device
-                     must use for RADIUS clients. The client must match 
+                     must use for RADIUS clients. The client must match
                      the configured attributes for authorization."
         DEFVAL { all }
         ::= { agentDynamicAuthorizationGroup 5 }
@@ -8432,7 +8432,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
         DESCRIPTION
                     "Specifies whether the server-key is to be ignored or not."
         ::= { agentDynamicAuthorizationGroup 7 }
-		
+
     agentDynamicAuthorizationClientTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF AgentDynamicAuthorizationClientEntry
          MAX-ACCESS  not-accessible
@@ -8460,7 +8460,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
           agentDynamicAuthorizationClientRowStatus
               RowStatus
           }
-		  
+
     agentDynamicAuthorizationClientAddress OBJECT-TYPE
          SYNTAX      DisplayString
          MAX-ACCESS  not-accessible
@@ -8476,10 +8476,10 @@ agentPortMirrorTypeTable OBJECT-TYPE
          DESCRIPTION
                      "Configures a Dynamic Authorization Client Server Key.
                       If agentDynamicAuthorizationClientEncryptServerKey is
-                      set to true, then the length of this string has to be 
+                      set to true, then the length of this string has to be
                       exactly 256 else it can be 1-128."
          ::= { agentDynamicAuthorizationClientEntry 2 }
-		 
+
     agentDynamicAuthorizationClientEncryptServerKey OBJECT-TYPE
         SYNTAX       INTEGER {
                      true(1),
@@ -8517,7 +8517,7 @@ agentPortMirrorTypeTable OBJECT-TYPE
                      "When set to enable(1), all dynamic authorization statistics will be reset."
          DEFVAL { disable }
          ::= { agentDynamicAuthorizationGroup 9 }
-		 
+
 --**************************************************************************************
 --    agentSystemGroup
 --**************************************************************************************
@@ -9987,7 +9987,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
              "Trap is sent when this port in this STP instance exits
              loop inconsistent state upon reception of a BPDU."
          ::= { fastPathSwitchingTraps 18 }
-     
+
 
      dhcpSnoopingIntfErrorDisabledTrap NOTIFICATION-TYPE
          OBJECTS {
@@ -10062,13 +10062,13 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
         ::= { fastPathSwitchingTraps 26 }
 
 
-    
+
     agentSwitchMbufRisingThresholdTrap NOTIFICATION-TYPE
         OBJECTS {
                     agentSwitchMbufRisingThreshold,
                     agentSwitchMbufsTotal,
                     agentSwitchMbufsUsed,
-                    agentSwitchMbufsFree 
+                    agentSwitchMbufsFree
                 }
         STATUS      current
         DESCRIPTION
@@ -10405,7 +10405,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
                      This must be configured along with agentPrivateVlanIntfAssocHostSecondary before
                      the association will be operational.
 
-                     NOTE: Both agentPrivateVlanIntfAssocHostPrimary and agentPrivateVlanIntfAssocHostSecondary 
+                     NOTE: Both agentPrivateVlanIntfAssocHostPrimary and agentPrivateVlanIntfAssocHostSecondary
                      objects must be specified at the same time."
          ::= { agentPrivateVlanIntfAssocEntry 1 }
 
@@ -10418,7 +10418,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
                      This must be configured along with agentPrivateVlanIntfAssocHostPrimary before
                      the association will be operational.
 
-                     NOTE: Both agentPrivateVlanIntfAssocHostPrimary and agentPrivateVlanIntfAssocHostSecondary 
+                     NOTE: Both agentPrivateVlanIntfAssocHostPrimary and agentPrivateVlanIntfAssocHostSecondary
                      objects must be specified at the same time."
          ::= { agentPrivateVlanIntfAssocEntry 2 }
 
@@ -10987,7 +10987,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
     STATUS       current
     DESCRIPTION
         "A table provides the mechanism to configure the trust
-        state for DHCPv6 snooping purpose at each 
+        state for DHCPv6 snooping purpose at each
         interface capable of this feature."
     ::= { agentDhcpv6SnoopingConfigGroup 4 }
 
@@ -11072,7 +11072,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
     MAX-ACCESS   not-accessible
     STATUS       current
     DESCRIPTION
-        "A row instance contains the configuration for 
+        "A row instance contains the configuration for
          IPv6SG at each physical interface capable of this feature."
     INDEX { ifIndex }
     ::= { agentIpv6sgIfConfigTable 1 }
@@ -11089,7 +11089,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
     DESCRIPTION
         "This object indicates whether the interface is enabled for IPv6SG
          to forward the data based up on source IP address."
-        
+
     DEFVAL      { false }
     ::= { agentIpv6sgIfConfigEntry 1 }
 
@@ -11100,7 +11100,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
     DESCRIPTION
         "This object indicates whether the interface is enabled for IPv6SG
          to forward the data based up on source mac address in snooping table."
-        
+
     DEFVAL      { false }
     ::= { agentIpv6sgIfConfigEntry 2 }
 
@@ -11192,7 +11192,7 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
          ::= { agentStaticIpv6sgBindingTable  1 }
 
     AgentStaticIpv6sgBindingEntry ::= SEQUENCE {
-       
+
           agentStaticIpv6sgBindingIfIndex     InterfaceIndex,
           agentStaticIpv6sgBindingVlanId      VlanIndex,
           agentStaticIpv6sgBindingIpAddr      Ipv6Address,
@@ -11201,13 +11201,13 @@ agentCableTesterGroup               OBJECT IDENTIFIER ::= { fastPathSwitching 4 
           }
 
      agentStaticIpv6sgBindingIfIndex OBJECT-TYPE
-         SYNTAX      InterfaceIndex 
+         SYNTAX      InterfaceIndex
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
                      "Interface on which this IPv6SG binding is going to be added."
          ::= { agentStaticIpv6sgBindingEntry  1 }
-     
+
      agentStaticIpv6sgBindingVlanId OBJECT-TYPE
          SYNTAX      VlanIndex
          MAX-ACCESS  read-create

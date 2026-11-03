@@ -1,6 +1,6 @@
 -- These MIBs were created on 1/9/2003
 -- This module defines enterprise MIBs for virtual router
--- 
+--
 -- Copyright (c) 1999-2004, Juniper Networks, Inc.
 -- All rights reserved.
 
@@ -19,7 +19,7 @@ netscreenVRMibModule MODULE-IDENTITY
     CONTACT-INFO
         "Customer Support
 
-         1194 North Mathilda Avenue 
+         1194 North Mathilda Avenue
          Sunnyvale, California 94089-1206
          USA
 
@@ -78,7 +78,7 @@ VrEntry ::= SEQUENCE {
 }
 
 vrName OBJECT-TYPE
-    SYNTAX     OCTET STRING 
+    SYNTAX     OCTET STRING
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
@@ -103,7 +103,7 @@ vrVsysName OBJECT-TYPE
     ::= { vrEntry 3 }
 
 vrRouteId OBJECT-TYPE
-    SYNTAX     INTEGER 
+    SYNTAX     INTEGER
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
@@ -111,7 +111,7 @@ vrRouteId OBJECT-TYPE
     ::= { vrEntry 4 }
 
 vrMaxRoutes OBJECT-TYPE
-    SYNTAX     INTEGER 
+    SYNTAX     INTEGER
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
@@ -119,7 +119,7 @@ vrMaxRoutes OBJECT-TYPE
     ::= { vrEntry 5 }
 
 vrNumRoutes OBJECT-TYPE
-    SYNTAX     INTEGER 
+    SYNTAX     INTEGER
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
@@ -127,7 +127,7 @@ vrNumRoutes OBJECT-TYPE
     ::= { vrEntry 6 }
 
 vrSharable OBJECT-TYPE
-    SYNTAX     INTEGER 
+    SYNTAX     INTEGER
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
@@ -135,7 +135,7 @@ vrSharable OBJECT-TYPE
     ::= { vrEntry 7 }
 
 vrOspfRipBgpEnabled OBJECT-TYPE
-    SYNTAX     INTEGER 
+    SYNTAX     INTEGER
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
@@ -143,15 +143,14 @@ vrOspfRipBgpEnabled OBJECT-TYPE
     ::= { vrEntry 8 }
 
 vrTrapPrivate OBJECT-TYPE
-    SYNTAX     INTEGER 
+    SYNTAX     INTEGER
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-        "0 private, 1 public. This only applies to 
+        "0 private, 1 public. This only applies to
          root system' default VR. If private trap is
          enabled, a private trap is sent, otherwise,
          the standard trap is sent. For other VRs, By
          default, the public trap is supported."
     ::= { vrEntry 9 }
 END
-

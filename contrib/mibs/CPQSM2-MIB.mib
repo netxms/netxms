@@ -792,10 +792,10 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
 
             pciIntegratedLightsOutRemoteInsight2(7)
               This is the Integrated Lights-Out 2 Edition.
-                            
-            pciLightsOut100series(8)  
+
+            pciLightsOut100series(8)
               This is the Lights-Out 100 Edition for 100 Series of ProLiant servers.
-              
+
             pciIntegratedLightsOutRemoteInsight3(9)
               This is the Integrated Lights-Out 3 Edition.
 
@@ -1053,8 +1053,8 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "iLO Active ASCII License key string. On implicitly licensed 
-             systems like blades, a license will be indicated as installed, 
+            "iLO Active ASCII License key string. On implicitly licensed
+             systems like blades, a license will be indicated as installed,
              although the key value may be blank"
 
         ::= { cpqSm2Cntlr 31}
@@ -1068,8 +1068,8 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
                              }
         ACCESS  read-only
         STATUS  mandatory
-        DESCRIPTION        
-            "The current power state for the server.  The power cap reach state indicates there was an attempt to power on, but the server could not reserve enough power. " 
+        DESCRIPTION
+            "The current power state for the server.  The power cap reach state indicates there was an attempt to power on, but the server could not reserve enough power. "
         ::= { cpqSm2Cntlr 32}
 
     cpqSm2CntlrSysAutoShutdownCause OBJECT-TYPE
@@ -1089,8 +1089,8 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
                              }
         ACCESS  read-only
         STATUS  mandatory
-        DESCRIPTION        
-            "Indicate the reason for triggering system auto shutdown or cancelling auto shutdown. " 
+        DESCRIPTION
+            "Indicate the reason for triggering system auto shutdown or cancelling auto shutdown. "
         ::= { cpqSm2Cntlr 33}
 
     cpqSm2CntlrSecurityState OBJECT-TYPE
@@ -1104,8 +1104,8 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
                  }
         ACCESS  read-only
         STATUS  mandatory
-        DESCRIPTION        
-            "Indicate security state " 
+        DESCRIPTION
+            "Indicate security state "
         ::= { cpqSm2Cntlr 34}
 
 
@@ -1116,16 +1116,16 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
                  }
         ACCESS  read-only
         STATUS  mandatory
-        DESCRIPTION        
-            "Indicate the watchdog timer type." 
+        DESCRIPTION
+            "Indicate the watchdog timer type."
         ::= { cpqSm2Cntlr 35}
 
     cpqSm2WDTimerTimeoutDetails OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (128))
         ACCESS  read-only
         STATUS  mandatory
-        DESCRIPTION        
-            "Indicate the watchdog timer timeout action and timer details." 
+        DESCRIPTION
+            "Indicate the watchdog timer timeout action and timer details."
         ::= { cpqSm2Cntlr 36}
 
     cpqSm2CntlrOverallSecStatus OBJECT-TYPE
@@ -1141,7 +1141,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
 
         ::= { cpqSm2Cntlr 37}
 
-		
+
 -- ****************************************************************************
 --   Remote Insight/ Integrated Lights-Out Event Log Group
 --   =====================================================
@@ -2311,7 +2311,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "An index that uniquely specifies this entry."
         ::= { cpqSm2NicIpv6AddressEntry 1 }
-          
+
     cpqSm2NicIpv6Address OBJECT-TYPE
         SYNTAX  DisplayString
         ACCESS  read-only
@@ -2379,7 +2379,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "An index that uniquely specifies this entry."
         ::= { cpqSm2NicIpv6DhcpEntry 1 }
-          
+
     cpqSm2NicIpv6Dhcp OBJECT-TYPE
         SYNTAX  DisplayString
         ACCESS  read-only
@@ -2447,7 +2447,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "An index that uniquely specifies this entry."
         ::= { cpqSm2NicIpv6SlaacEntry 1 }
-          
+
     cpqSm2NicIpv6Slaac OBJECT-TYPE
         SYNTAX  DisplayString
         ACCESS  read-only
@@ -2517,7 +2517,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "An index that uniquely specifies this entry."
         ::= { cpqSm2NicIpv6RouteEntry 1 }
-          
+
     cpqSm2NicIpv6RouteDest OBJECT-TYPE
         SYNTAX  DisplayString
         ACCESS  read-only
@@ -2643,7 +2643,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "Remote destination server`s hostname and port as configured 
+            "Remote destination server`s hostname and port as configured
              on the Remote Insight/ Integrated Lights-Out.
 
              Example: myremotehost.hp.com:6789"
@@ -2677,7 +2677,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
                }
         ACCESS  read-only
         STATUS  mandatory
-        DESCRIPTION        
+        DESCRIPTION
             "Indicate the firmware type supported through Integrated Lights-Out .
 
             The following values are defined:
@@ -2692,13 +2692,13 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
 
             cpld(4)
               Firmware type is System Programmable Logic Device.
-            
+
             ie(5)
               Firmware type is Innovation Engine.
 
             sps(6)
               Firmware type is SPS Platform Services (SPS) Firmware.
-             " 
+             "
 
         ::= { cpqSm2FW 1}
 
@@ -2742,7 +2742,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY CRITICAL
               --#HWSTATUS_CATEGORY DEVICEBAY
-              
+
         ::= 9001
 
     cpqSm2ServerPowerOutage TRAP-TYPE
@@ -2764,7 +2764,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#SIMPLE_SEVERITY CRITICAL
               --#HWSTATUS_CATEGORY POWER
               --#ACTION "Check the server`s power source."
-              
+
         ::= 9002
 
     cpqSm2UnauthorizedLoginAttempts TRAP-TYPE
@@ -2786,7 +2786,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#SIMPLE_SEVERITY MAJOR
               --#HWSTATUS_CATEGORY NONE
               --#ACTION "Check the iLO log for more information on the login failure."
-              
+
         ::= 9003
 
     cpqSm2BatteryFailed TRAP-TYPE
@@ -2830,7 +2830,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#SIMPLE_SEVERITY CRITICAL
               --#HWSTATUS_CATEGORY NONE
               --#ACTION "To decode the error-code look into cpqSm2CntlrSelfTestErrors description. You can also check iLO logs & Diagnostic page to get more details on the error."
-              
+
         ::= 9005
 
     cpqSm2InterfaceError TRAP-TYPE
@@ -2851,7 +2851,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY MAJOR
               --#HWSTATUS_CATEGORY NONE
-              
+
         ::= 9006
 
     cpqSm2BatteryDisconnected TRAP-TYPE
@@ -2871,7 +2871,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY MAJOR
               --#HWSTATUS_CATEGORY NONE
-              
+
         ::= 9007
 
     cpqSm2KeyboardCableDisconnected TRAP-TYPE
@@ -2891,7 +2891,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY MAJOR
               --#HWSTATUS_CATEGORY NONE
-              
+
         ::= 9008
 
     cpqSm2MouseCableDisconnected TRAP-TYPE
@@ -2911,7 +2911,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY MAJOR
               --#HWSTATUS_CATEGORY NONE
-              
+
         ::= 9009
 
     cpqSm2ExternalPowerCableDisconnected TRAP-TYPE
@@ -2931,7 +2931,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY MAJOR
               --#HWSTATUS_CATEGORY NONE
-              
+
         ::= 9010
 
 -- New for 5.30.0.0
@@ -2952,7 +2952,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY MAJOR
               --#HWSTATUS_CATEGORY LOGS
-              
+
         ::= 9011
 
 -- New for 5.30.0.0
@@ -2973,7 +2973,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#STATE   OPERATIONAL
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY OK
-              --#HWSTATUS_CATEGORY NONE              
+              --#HWSTATUS_CATEGORY NONE
               --#LIFECYCLE
 
         ::= 9012
@@ -2996,7 +2996,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
               --#STATE   OPERATIONAL
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY OK
-              --#HWSTATUS_CATEGORY NONE            
+              --#HWSTATUS_CATEGORY NONE
               --#LIFECYCLE
 
         ::= 9013
@@ -3007,7 +3007,7 @@ CPQSM2-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Server Fatal Error Detected.
 
-            The Remote Insight/ Integrated Lights-Out firmware has 
+            The Remote Insight/ Integrated Lights-Out firmware has
 detected a server fatal error."
 
               --#TYPE "Server Fatal Error Detected (9014)"
@@ -3017,7 +3017,7 @@ detected a server fatal error."
               --#TIMEINDEX 99
               --#STATE   DEGRADED
               --#SIMPLE_SEVERITY CRITICAL
-              --#HWSTATUS_CATEGORY NONE              
+              --#HWSTATUS_CATEGORY NONE
 
         ::= 9014
 
@@ -3027,7 +3027,7 @@ detected a server fatal error."
         DESCRIPTION
             "The iLO NIC Link is Down.
 
-            The Remote Insight/ Integrated Lights-Out firmware has 
+            The Remote Insight/ Integrated Lights-Out firmware has
 detected the loss of network link."
 
               --#TYPE "The iLO NIC Link is Down (9015)"
@@ -3038,7 +3038,7 @@ detected the loss of network link."
               --#STATE   DEGRADED
               --#SIMPLE_SEVERITY CRITICAL
               --#HWSTATUS_CATEGORY NETWORK
-              --#ACTION "Check the network connections for the iLO."              
+              --#ACTION "Check the network connections for the iLO."
 
         ::= 9015
 
@@ -3048,7 +3048,7 @@ detected the loss of network link."
         DESCRIPTION
             "The iLO NIC Link is Up.
 
-            The Remote Insight/ Integrated Lights-Out firmware has 
+            The Remote Insight/ Integrated Lights-Out firmware has
 detected the presence of network link."
 
               --#TYPE "The iLO NIC Link is Up (9016)"
@@ -3058,7 +3058,7 @@ detected the presence of network link."
               --#TIMEINDEX 99
               --#STATE   OPERATIONAL
               --#SIMPLE_SEVERITY OK
-              --#HWSTATUS_CATEGORY NETWORK              
+              --#HWSTATUS_CATEGORY NETWORK
 
         ::= 9016
 
@@ -3066,7 +3066,7 @@ detected the presence of network link."
         ENTERPRISE compaq
         VARIABLES  { sysName,  cpqHoTrapFlags, cpqHoGUIDCanonical }
         DESCRIPTION
-            "The server has been powered on. This will be sent once a server power on transition has occurred." 
+            "The server has been powered on. This will be sent once a server power on transition has occurred."
               --#TYPE "Server powered on (9017)"
               --#SUMMARY "The server has been powered on."
               --#ARGUMENTS {}
@@ -3076,15 +3076,15 @@ detected the presence of network link."
               --#VARBINDSEVERITY 2
               --#SIMPLE_SEVERITY OK
               --#HWSTATUS_CATEGORY POWER
-              --#LIFECYCLE              
-    ::= 9017  
- 
+              --#LIFECYCLE
+    ::= 9017
+
     cpqSm2ServerPowerOff TRAP-TYPE
         ENTERPRISE compaq
         VARIABLES  { sysName,  cpqHoTrapFlags, cpqHoGUIDCanonical }
         DESCRIPTION
             "The server has been powered off. This will be sent once the server has been powered off, either by OS, or the power button. "
- 
+
               --#TYPE "Server powered off (9018)"
               --#SUMMARY "The server has been powered off."
               --#ARGUMENTS {}
@@ -3095,14 +3095,14 @@ detected the presence of network link."
               --#SIMPLE_SEVERITY OK
               --#HWSTATUS_CATEGORY POWER
               --#LIFECYCLE
-    ::= 9018 
- 
+    ::= 9018
+
     cpqSm2ServerPowerOnFailure TRAP-TYPE
         ENTERPRISE compaq
         VARIABLES  { sysName, cpqHoTrapFlags, cpqHoGUIDCanonical }
         DESCRIPTION
             "A request was made to power on the server, however the server could not be powered on due to a failure condition."
- 
+
               --#TYPE "Server power on failure (9019)"
               --#SUMMARY "The server could not be powered on."
               --#ARGUMENTS {}
@@ -3134,7 +3134,7 @@ detected the presence of network link."
               --#HWSTATUS_CATEGORY REMOTESUPPORT
               --#ACTION "Please check the connectivity to Insight Remote Support or Insight Online Host."
     ::= 9020
-	
+
     cpqSm2FirmwareValidationScanFailed TRAP-TYPE
         ENTERPRISE compaq
         VARIABLES  { sysName, cpqHoTrapFlags, cpqSm2FirmwareType }
@@ -3286,7 +3286,7 @@ detected the presence of network link."
           --#HWSTATUS_CATEGORY SECURITY
           --#ACTION "Refer to iLO User Manual or Security Dashboard help page."
     ::= 9029
-	
+
     cpqSm2OverallSecStatusChange TRAP-TYPE
         ENTERPRISE compaq
         VARIABLES { sysName, cpqHoTrapFlags, cpqSm2CntlrOverallSecStatus}

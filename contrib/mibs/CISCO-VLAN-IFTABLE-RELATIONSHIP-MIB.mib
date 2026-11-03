@@ -1,9 +1,9 @@
 -- *****************************************************************
 -- CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB - show the VLAN-ID and
 -- ifIndex for routed VLANs (ISL subinterfaces, and SVIs)
---   
+--
 -- January 1999, Cliff Sojourner
---   
+--
 -- Copyright (c) 1999, 2013 by cisco Systems Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -43,10 +43,10 @@ ciscoVlanIfTableRelationshipMIB MODULE-IDENTITY
             E-mail: cs-snmp@cisco.com"
     DESCRIPTION
         "Cisco VLAN ifTable Relationship MIB lists VLAN-id and ifIndex
-        information for routed VLAN interfaces.  
+        information for routed VLAN interfaces.
 
-        A routed VLAN interface is the router interface or sub-interface 
-        to which the router's IP address on the VLAN is attached.  
+        A routed VLAN interface is the router interface or sub-interface
+        to which the router's IP address on the VLAN is attached.
         For example, an ISL, SDE, or 802.1Q encapsulated
         subinterface, or Switched Virtual Interface (SVI)."
     REVISION        "201307150000Z"
@@ -63,19 +63,19 @@ cviGlobals  OBJECT IDENTIFIER
 
 
 cviVlanInterfaceIndexTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CviVlanInterfaceIndexEntry 
+    SYNTAX          SEQUENCE OF CviVlanInterfaceIndexEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "The cviVlanInterfaceIndexTable provides a way to
-        translate a VLAN-id in to an ifIndex, so that 
-        the routed VLAN interface's routing configuration 
+        translate a VLAN-id in to an ifIndex, so that
+        the routed VLAN interface's routing configuration
         can be obtained from interface entry in ipRouteTable.
 
         Note that some routers can have interfaces to multiple
-        VLAN management domains, and therefore can have multiple 
-        routed VLAN interfaces which connect to different VLANs 
-        having the same VLAN-id.  Thus, it is possible to have 
+        VLAN management domains, and therefore can have multiple
+        routed VLAN interfaces which connect to different VLANs
+        having the same VLAN-id.  Thus, it is possible to have
         multiple rows in this table for the same VLAN-id.
 
         The cviVlanInterfaceIndexTable also provides a way
@@ -101,7 +101,7 @@ cviVlanInterfaceIndexEntry OBJECT-TYPE
     INDEX           {
                         cviVlanId,
                         cviPhysicalIfIndex
-                    } 
+                    }
     ::= { cviVlanInterfaceIndexTable 1 }
 
 CviVlanInterfaceIndexEntry ::= SEQUENCE {
@@ -115,7 +115,7 @@ cviVlanId OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The VLAN-id number of the routed VLAN interface." 
+        "The VLAN-id number of the routed VLAN interface."
     ::= { cviVlanInterfaceIndexEntry 1 }
 
 cviPhysicalIfIndex OBJECT-TYPE
@@ -126,7 +126,7 @@ cviPhysicalIfIndex OBJECT-TYPE
         "For subinterfaces, this object is the ifIndex of the
         physical interface for the subinterface.
 
-        For Switch Virtual Interfaces (SVIs), this object is zero." 
+        For Switch Virtual Interfaces (SVIs), this object is zero."
     ::= { cviVlanInterfaceIndexEntry 2 }
 
 cviRoutedVlanIfIndex OBJECT-TYPE
@@ -135,9 +135,9 @@ cviRoutedVlanIfIndex OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The index for the ifTable entry associated with
-        this routed VLAN interface." 
+        this routed VLAN interface."
     ::= { cviVlanInterfaceIndexEntry 3 }
- 
+
 
 cviMIBConformance  OBJECT IDENTIFIER
     ::= { cviMIBObjects 3 }

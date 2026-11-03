@@ -25,13 +25,13 @@ IMPORTS
     RowStatus,MacAddress,DateAndTime    FROM SNMPv2-TC
     DisplayString                       FROM RFC1213-MIB
     dnOS                            FROM DELL-REF-MIB;
-    
+
 
     fastPathdot1xAdvanced MODULE-IDENTITY
            LAST-UPDATED "201101260000Z" -- 26 January 2011 12:00:00 GMT
            ORGANIZATION "Dell, Inc."
            CONTACT-INFO ""
-           
+
      DESCRIPTION
           "The Dell Networking Private MIB for Dot1x Advanced Features "
 
@@ -47,7 +47,7 @@ IMPORTS
 
       ::= { dnOS 36 }
 
- 
+
 Dot1xPortControlMode ::= TEXTUAL-CONVENTION
     STATUS       current
     DESCRIPTION
@@ -67,8 +67,8 @@ Dot1xSessionTerminationAction ::= TEXTUAL-CONVENTION
         SYNTAX       INTEGER {
                                 default(1),
                                 reauthenticate(2)
-                              } 
-                         
+                              }
+
 agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1 }
 
     agentDot1xRadiusVlanAssignment OBJECT-TYPE
@@ -108,7 +108,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
          ::= { agentDot1xEnhancementConfigGroup 3 }
 
 --**************************************************************************************
--- agentDot1xPortConfigGroup -> Contains MIB objects configuring/displaying Dot1x Port details 
+-- agentDot1xPortConfigGroup -> Contains MIB objects configuring/displaying Dot1x Port details
 -- and associated Functionality
 --
 --**************************************************************************************
@@ -134,17 +134,17 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
          INDEX       { dot1xPaePortNumber}
          ::= {agentDot1xPortConfigTable 1 }
 
-    AgentDot1xPortConfigEntry ::= SEQUENCE { 
+    AgentDot1xPortConfigEntry ::= SEQUENCE {
         agentDot1xPortControlMode
              Dot1xPortControlMode,
         agentDot1xGuestVlanId
              Unsigned32,
         agentDot1xGuestVlanPeriod
              Unsigned32,
-        agentDot1xUnauthenticatedVlan  
+        agentDot1xUnauthenticatedVlan
              Unsigned32,
         agentDot1xMaxUsers
-             Unsigned32,    
+             Unsigned32,
         agentDot1xPortVlanAssigned
              Unsigned32,
         agentDot1xPortVlanAssignedReason
@@ -156,8 +156,8 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
         agentDot1xPortMABenabled
              INTEGER,
         agentDot1xPortMABenabledOperational
-             INTEGER            
-                
+             INTEGER
+
     }
 
        agentDot1xPortControlMode  OBJECT-TYPE
@@ -165,11 +165,11 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 MAX-ACCESS   read-write
                 STATUS       current
                 DESCRIPTION
-                       "Dot1x port control mode of this port.The Port control mode . 
+                       "Dot1x port control mode of this port.The Port control mode .
                         The port control mode for this interface can take the following values ,
                                 force-unauthorized - the port is in unauthorized mode,
                                 auto-Port based mode. If a client authenticates suscessfully, then the interface is authorized .
-                                     Otherwise, the port is in unauthorized mode. 
+                                     Otherwise, the port is in unauthorized mode.
                                      If more than one clients are attached to the port , then only one client needs to authenticate to allow other clients access.
                                 force-authorized - The port is placed in authorized mode
                                 macBased - If more than one client is attached to the port, then each client needs to authenticate separately.
@@ -184,7 +184,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 DESCRIPTION
                         "Specifies the Guest Vlan of the port. A port will
                          be moved to its Guest Vlan if no client sucessfully
-                         authenticates on that port for the Guest Vlan Period. 
+                         authenticates on that port for the Guest Vlan Period.
                          A value of zero indicates no Guest Vlan is configured for the interface."
                 DEFVAL {0}
                 ::= { agentDot1xPortConfigEntry 2}
@@ -195,26 +195,26 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 STATUS      current
                 DESCRIPTION
                          "The value, in seconds, of the guestVlanPeriod constant
-                         currently in use for Guest Vlan Assignment for the 
+                         currently in use for Guest Vlan Assignment for the
                          port ."
                 DEFVAL { 90 }
                 ::= { agentDot1xPortConfigEntry 3 }
 
 
         agentDot1xUnauthenticatedVlan  OBJECT-TYPE
-                SYNTAX       Unsigned32 
+                SYNTAX       Unsigned32
                 MAX-ACCESS   read-write
                 STATUS       current
                 DESCRIPTION
                         "Specifies the Unauthenticated Vlan of the port. A port will
                          be moved to its unauthenticated Vlan if the client authenticates unsucessfully
-                         on that port . 
+                         on that port .
                          A value of zero indicates no Unauthenticated Vlan is configured for the port. "
                 DEFVAL {0}
                 ::= {  agentDot1xPortConfigEntry 4}
 
         agentDot1xMaxUsers OBJECT-TYPE
-                SYNTAX      Unsigned32 
+                SYNTAX      Unsigned32
                 MAX-ACCESS   read-write
                 STATUS       current
                 DESCRIPTION
@@ -222,11 +222,11 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 ::= {  agentDot1xPortConfigEntry 5}
 
         agentDot1xPortVlanAssigned OBJECT-TYPE
-                SYNTAX       Unsigned32 
+                SYNTAX       Unsigned32
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
-                        " Specifies the vlan the port is assigned to by Dot1x  . 
+                        " Specifies the vlan the port is assigned to by Dot1x  .
                           Only relevant if the port control mode of the port is auto. "
                 DEFVAL {0}
                 ::= {  agentDot1xPortConfigEntry 6}
@@ -239,12 +239,12 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                               guestVlan(4),
                               voiceVlan(5),
                               monitorVlan(6),
-                              notAssigned(7)  
-                        }  
+                              notAssigned(7)
+                        }
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
-                        " Reason the port is assigned to the vlan specified by agentDot1xPortVlanAssigned . 
+                        " Reason the port is assigned to the vlan specified by agentDot1xPortVlanAssigned .
                           Only relevant if the port control mode of the port is auto. "
                 DEFVAL {5}
                 ::= {  agentDot1xPortConfigEntry 7}
@@ -254,16 +254,16 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
-                        " Specifies the session timeout value assigned by the Radius server for this port  . 
+                        " Specifies the session timeout value assigned by the Radius server for this port  .
                         Only relevant if the port control mode of the port is auto. "
                 ::= {  agentDot1xPortConfigEntry 8}
 
         agentDot1xPortTerminationAction OBJECT-TYPE
-                SYNTAX      Dot1xSessionTerminationAction 
+                SYNTAX      Dot1xSessionTerminationAction
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
-                        " Specifies the session termination action assigned by the Radius Server .This is the action taken when the session times out . 
+                        " Specifies the session termination action assigned by the Radius Server .This is the action taken when the session times out .
                           Only relevant if the port control mode of the port is auto. "
                 DEFVAL {1}
                 ::= {  agentDot1xPortConfigEntry 9}
@@ -271,8 +271,8 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
       agentDot1xPortMABenabled OBJECT-TYPE
                 SYNTAX       INTEGER {
                               enable(1),
-                              disable(2)                               
-                        }  
+                              disable(2)
+                        }
                 MAX-ACCESS   read-write
                 STATUS       current
                 DESCRIPTION
@@ -283,8 +283,8 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
         agentDot1xPortMABenabledOperational OBJECT-TYPE
                 SYNTAX       INTEGER {
                               enable(1),
-                              disable(2)                               
-                        }  
+                              disable(2)
+                        }
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
@@ -315,7 +315,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 INDEX       { agentDot1xClientMacAddress}
                 ::= {agentDot1xClientConfigTable 1 }
 
-        AgentDot1xClientConfigEntry ::= SEQUENCE { 
+        AgentDot1xClientConfigEntry ::= SEQUENCE {
                 agentDot1xClientMacAddress
                         MacAddress,
                 agentDot1xLogicalPort
@@ -340,8 +340,8 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                         Unsigned32,
                 agentDot1xClientTerminationAction
                         Dot1xSessionTerminationAction
-    }    
-    
+    }
+
      agentDot1xClientMacAddress  OBJECT-TYPE
                 SYNTAX           MacAddress
                 MAX-ACCESS       read-only
@@ -400,7 +400,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 DESCRIPTION
                         "The current state of the Backend Authentication
                         state machine."
-                ::={ agentDot1xClientConfigEntry 5} 
+                ::={ agentDot1xClientConfigEntry 5}
 
         agentDot1xClientUserName OBJECT-TYPE
                 SYNTAX           DisplayString
@@ -425,7 +425,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 MAX-ACCESS          read-only
                 STATUS              current
                 DESCRIPTION
-                        "Specifies the Filter ID or Diffserv Policy name to be applied to the session . 
+                        "Specifies the Filter ID or Diffserv Policy name to be applied to the session .
                          This vlaue is populated only if it has been assigned by the RADIUS server.
                          This value is only valid when the client is in authenticated state."
                 ::= { agentDot1xClientConfigEntry 8}
@@ -446,12 +446,12 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                               unauthenticatedVlan(3),
                               monitorVlan(6),
                               invalid(7)
-                            }  
+                            }
                 MAX-ACCESS   read-only
                 STATUS       current
                 DESCRIPTION
                         " Reason the client is associated to the vlan specified by agentDot1xClientVlanAssigned .
-                          This value is only valid when the client is in authenticated state." 
+                          This value is only valid when the client is in authenticated state."
                 ::= {  agentDot1xClientConfigEntry 10}
 
         agentDot1xClientSessionTimeout OBJECT-TYPE
@@ -459,7 +459,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 MAX-ACCESS          read-only
                 STATUS              current
                 DESCRIPTION
-                        "Specifies the session time remaining for the client if  assigned by the Radius server  . 
+                        "Specifies the session time remaining for the client if  assigned by the Radius server  .
                          A value of 0 indicates that no session timeout was assigned by the RADIUS server.
                          This value is only valid when the client is in authenticated state. "
                 ::= { agentDot1xClientConfigEntry 11}
@@ -472,34 +472,34 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                         "Specifies the session termination action assigned by the Radius Server .
                         This is the action taken when the session times out .
                         This value is only valid when the client is in authenticated state. "
-                ::= { agentDot1xClientConfigEntry 12} 
+                ::= { agentDot1xClientConfigEntry 12}
 
- 
+
 
 --**************************************************************************************
--- agentDot1xMonitorModeConfigGroup -> Contains MIB objects configuring/displaying Dot1x 
+-- agentDot1xMonitorModeConfigGroup -> Contains MIB objects configuring/displaying Dot1x
 -- Monitor Mode details and associated Functionality
 --
 --**************************************************************************************
     agentDot1xMonitorModeConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 4 }
-    
+
     agentDot1xMonitorModeEnabled OBJECT-TYPE
                    SYNTAX        INTEGER {
-                                     enable(1),                                                    
+                                     enable(1),
                                      disable(2)
                                  }
                    MAX-ACCESS    read-write
                    STATUS        current
-                   DESCRIPTION   "Enable/Disable Dot1x Monitor mode 
+                   DESCRIPTION   "Enable/Disable Dot1x Monitor mode
                                   Support on the switch."
                    DEFVAL        { disable }
                    ::= { agentDot1xMonitorModeConfigGroup 1 }
-    
+
     agentDot1xMonitorModeClients OBJECT-TYPE
            SYNTAX        Unsigned32
            MAX-ACCESS    read-only
            STATUS        current
-           DESCRIPTION   "Retrieves the number of clients that got 
+           DESCRIPTION   "Retrieves the number of clients that got
                           authenticated by Monitor mode globally."
            ::= { agentDot1xMonitorModeConfigGroup 2 }
 
@@ -512,7 +512,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
 
 
 --**************************************************************************************
--- agentDot1xMonitorModeConfigGroup -> Contains MIB objects configuring/displaying Dot1x 
+-- agentDot1xMonitorModeConfigGroup -> Contains MIB objects configuring/displaying Dot1x
 -- Monitor Mode details and associated Functionality
 --
 --**************************************************************************************
@@ -530,7 +530,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION "Represents Dot1x Authentication results for a Dot1x Authentication History table."
-         INDEX       { agentDot1xAuthHistoryResultIfaceIndex,         
+         INDEX       { agentDot1xAuthHistoryResultIfaceIndex,
                        agentDot1xAuthHistoryResultIndex}
          ::= {agentDot1xPortAuthHistoryResultTable 1 }
 
@@ -547,14 +547,14 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
          agentDot1xAuthHistoryResultVlanAssigned      Unsigned32,
          agentDot1xAuthHistoryResultVlanAssignedType  INTEGER,
          agentDot1xAuthHistoryResultReasonCode        INTEGER
-    }	
+    }
 
     agentDot1xAuthHistoryResultIfaceIndex     OBJECT-TYPE
                 SYNTAX           Unsigned32
                 MAX-ACCESS       read-only
                 STATUS           current
-                DESCRIPTION      
-                   "This object represents the  physical Bridge Port on which dot1x Auth event 
+                DESCRIPTION
+                   "This object represents the  physical Bridge Port on which dot1x Auth event
                     might be received."
                 ::= { agentDot1xPortAuthHistoryResultEntry 1 }
 
@@ -571,8 +571,8 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 MAX-ACCESS       read-only
                 STATUS           current
                 DESCRIPTION
-                        "Specifies the exact time of Dot1x Authentication 
-                         event information occurred maintained in the 
+                        "Specifies the exact time of Dot1x Authentication
+                         event information occurred maintained in the
                          history table."
                 ::= { agentDot1xPortAuthHistoryResultEntry 3 }
 
@@ -589,7 +589,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 MAX-ACCESS       read-only
                 STATUS           current
                 DESCRIPTION
-                        "Specifies the client MAC Address maintained in 
+                        "Specifies the client MAC Address maintained in
                          the Dot1x Authentication history table."
                 ::= { agentDot1xPortAuthHistoryResultEntry 5 }
 
@@ -598,12 +598,12 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 MAX-ACCESS       read-only
                 STATUS           current
                 DESCRIPTION
-                        "Specifies the VLANID maintained in the history 
-                         table. It is the VLANID which is failed to 
+                        "Specifies the VLANID maintained in the history
+                         table. It is the VLANID which is failed to
                          associate to the port during authentication process.
-                         The VLANID is identified distinctly by the Reason 
+                         The VLANID is identified distinctly by the Reason
                          code for the respective entry. Valid only when the
-                         reason code is set to 13 (VLAN assignment failure). 
+                         reason code is set to 13 (VLAN assignment failure).
                          In all the other cases, VLANID is set to 0. "
                 ::= { agentDot1xPortAuthHistoryResultEntry 6 }
 
@@ -611,7 +611,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 SYNTAX       INTEGER {
                               success(1),
                               failure(2)
-                            }           
+                            }
                 MAX-ACCESS       read-only
                 STATUS           current
                 DESCRIPTION
@@ -622,12 +622,12 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 SYNTAX       INTEGER {
                               granted(1),
                               denied(2)
-                            }           
+                            }
                 MAX-ACCESS       read-only
                 STATUS           current
                 DESCRIPTION
-                        " Authentication access status indicates the exact status of the dot1x client. 
-                          Granted means the client is allowed access to the network using dot1x or monitor mode. 
+                        " Authentication access status indicates the exact status of the dot1x client.
+                          Granted means the client is allowed access to the network using dot1x or monitor mode.
                           Denied means the client is not allowed access to the network."
                 ::= { agentDot1xPortAuthHistoryResultEntry 8 }
 
@@ -636,7 +636,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
           MAX-ACCESS          read-only
           STATUS              current
           DESCRIPTION
-                        "Specifies the Filter ID or Diffserv Policy name assigned by the RADIUS server. 
+                        "Specifies the Filter ID or Diffserv Policy name assigned by the RADIUS server.
                          This value is only valid when the client is in authenticated state."
                 ::= { agentDot1xPortAuthHistoryResultEntry 9 }
 
@@ -645,7 +645,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                 MAX-ACCESS       read-only
                 STATUS           current
                 DESCRIPTION
-                        "Specifies the VLANID maintained in the history 
+                        "Specifies the VLANID maintained in the history
                          table (It is the VLANID Assigned to a Port or Client authenticate)."
                 ::= { agentDot1xPortAuthHistoryResultEntry 10 }
 
@@ -657,19 +657,19 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                                    guestVlan(4),
                                    voiceVlan(5),
                                    monitorVlan(6),
-                                   notAssigned(7)  
-                                 }  
+                                   notAssigned(7)
+                                 }
                 MAX-ACCESS       read-only
                 STATUS           current
                 DESCRIPTION
-                        "Specifies the VLAN Assigned Reason maintained in the history 
+                        "Specifies the VLAN Assigned Reason maintained in the history
                          table."
                 ::= { agentDot1xPortAuthHistoryResultEntry 11 }
 
 
     agentDot1xAuthHistoryResultReasonCode OBJECT-TYPE
           SYNTAX       INTEGER {
-                          supplicant-timeout(1),                        
+                          supplicant-timeout(1),
                           eapol-timeout(2),
                           radius-request-timeout(3),
                           radius-auth-failure(4),
@@ -702,7 +702,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
                     }
            MAX-ACCESS    read-only
            STATUS        current
-           DESCRIPTION   "Specifies the Dot1x authentication reason 
+           DESCRIPTION   "Specifies the Dot1x authentication reason
                           refered by the result index on a port."
            ::= { agentDot1xPortAuthHistoryResultEntry 12 }
 
@@ -725,7 +725,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
     --**************************************************************************************
 
     agentDot1xPortAuthHistoryResultClearTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF AgentDot1xPortAuthHistoryResultClearEntry 
+         SYNTAX      SEQUENCE OF AgentDot1xPortAuthHistoryResultClearEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION "A table to clear the dot1x monitor mode results per interface."
@@ -736,20 +736,20 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION "Represents to clear the Dot1x Authentication results for a Dot1x Authentication History table."
-         INDEX       { agentDot1xAuthHistoryResultIfIndex }         
+         INDEX       { agentDot1xAuthHistoryResultIfIndex }
          ::= {agentDot1xPortAuthHistoryResultClearTable 1 }
 
     AgentDot1xPortAuthHistoryResultClearEntry ::= SEQUENCE {
          agentDot1xAuthHistoryResultIfIndex    Unsigned32,
-         agentDot1xPortAuthHistoryResultsClear    INTEGER 
+         agentDot1xPortAuthHistoryResultsClear    INTEGER
     }
- 
+
     agentDot1xAuthHistoryResultIfIndex     OBJECT-TYPE
                 SYNTAX           Unsigned32
                 MAX-ACCESS       read-only
                 STATUS           current
-                DESCRIPTION      
-                   "This object represents the  physical Bridge Port on which dot1x Auth event 
+                DESCRIPTION
+                   "This object represents the  physical Bridge Port on which dot1x Auth event
                     might be received."
                 ::= { agentDot1xPortAuthHistoryResultClearEntry 1 }
 
@@ -762,7 +762,7 @@ agentDot1xEnhancementConfigGroup OBJECT IDENTIFIER ::= { fastPathdot1xAdvanced 1
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "When set to enable(1), all Dot1x Authentication History information for 
+                     "When set to enable(1), all Dot1x Authentication History information for
                       the given port will be reset. The value is write-only. Attempt to read
                       will return disable(2)."
          DEFVAL { disable }

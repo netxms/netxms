@@ -19,10 +19,10 @@
 -- 1. Remove the description about unit and use the "UNITS¡± macro to define it
 -- for all related objects. Requested by customer.
 -- 2. Add default value to swPktStormCtrlthreshold, swPktStormCtrlCountDown,
--- swPktStormCtrlTimeinterval, swPktStormCtrlBCastThreshold, 
+-- swPktStormCtrlTimeinterval, swPktStormCtrlBCastThreshold,
 -- swPktStormCtrlMCastThreshold and swPktStormCtrlUnicastThreshold. Requested by customer.
 -- 3. Remove value range in swPktStormCtrlCountDown, swPktStormCtrlTimeinterval,
--- swPktStormCtrlBCastThreshold, swPktStormCtrlMCastThreshold 
+-- swPktStormCtrlBCastThreshold, swPktStormCtrlMCastThreshold
 -- and swPktStormCtrlUnicastThreshold. Requested by customer.
 -- 4. Add value "-1" in swPktStormCtrlCountDown to support directly shutdown function.
 -- Notes: Requested by Shawn Chen for project DGS36xxR2.
@@ -31,11 +31,11 @@
 -- Description:
 -- [New Object]
 -- 1. Added swPktStormLogCtrl to support packet storm log control.
--- 2. Added swPktStormAutoRecoverTime to support packet storm auto recover from 
--- shutdown status. 
+-- 2. Added swPktStormAutoRecoverTime to support packet storm auto recover from
+-- shutdown status.
 -- [Modification]
 -- 1. Modified the range of swPktStormCtrlCountDown from (0..30) to (0|3..30).
--- 2. Modified the range of swPktStormCtrlTimeinterval from (5..30) to (5..600).     
+-- 2. Modified the range of swPktStormCtrlTimeinterval from (5..30) to (5..600).
 -- 3. Remove the range for MIB object swPktStormAutoRecoverTime.
 -- Notes: Requested by henry Chen for project DGS36xxR2.
 --
@@ -88,8 +88,8 @@ swPktStormRecover  OBJECT-TYPE
         STATUS  current
         DESCRIPTION
             "Manually recover port from shutdown state. If a port has encountered a packet
-             storm continuously for a long period of time as indicated by swPktStormCtrlCountDown, 
-            this port will be shutdown forever. This command recovers it manually. If the 
+             storm continuously for a long period of time as indicated by swPktStormCtrlCountDown,
+            this port will be shutdown forever. This command recovers it manually. If the
             auto-recover mechanism is supported, this object is of no use."
         ::= { swPktStormCtrl 1 }
 
@@ -136,7 +136,7 @@ swPktStormAutoRecoverTime  OBJECT-TYPE
         DESCRIPTION
             "Automatically recover port from shutdown state when the auto recover timer timeout.
             Note:
-            The max entry range is (0..N), the value N means the maximum number, it is 
+            The max entry range is (0..N), the value N means the maximum number, it is
             determined by the project itself.
             The value 0 to disable the function of auto recover from shutdown state."
         DEFVAL{0}
@@ -277,12 +277,12 @@ swPktStormAutoRecoverTime  OBJECT-TYPE
          period of time (indicated by the value of this object), the port will be shut
          down forever until it's recovered manually.
          Note:
-         The max entry range is (-1..N), the value N means the maximum number, it is 
+         The max entry range is (-1..N), the value N means the maximum number, it is
          determined by the project itself.
 
          Value 0 to disable the function of shutdown forever.
-         
-         Value -1 means disable the countdown timer, When the action is shutdown and countdown time is disabled, 
+
+         Value -1 means disable the countdown timer, When the action is shutdown and countdown time is disabled,
 		 when the switch detects storm, it will shutdown the port directly.
          "
         DEFVAL{0}

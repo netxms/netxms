@@ -1,4 +1,4 @@
--- HP Enterprise Switch MIB 
+-- HP Enterprise Switch MIB
 
 
 NETSWITCH-MIB DEFINITIONS ::= BEGIN
@@ -26,7 +26,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
 
     -- The buffers group contains variables that describe the switch's use
     -- of two types of global memory buffers: message buffers, which
-    -- facilitate internal process-to-process communication, and packet 
+    -- facilitate internal process-to-process communication, and packet
     -- buffers, which facilitate external communications by temporarily
     -- storing incoming or outgoing data packets.
 
@@ -39,7 +39,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
         ACCESS    not-accessible
         STATUS    mandatory
         DESCRIPTION
-                "A table that contains information on all the 
+                "A table that contains information on all the
                 Message buffers for each slot."
         ::= { hpMsgBuf 1 }
 
@@ -51,7 +51,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
                 "Information about a slot in a chassis"
         INDEX      { hpMsgBufSlotIndex }
         ::= { hpMsgBufTable 1 }
-          
+
     HpMsgBufEntry ::=
         SEQUENCE {
             hpMsgBufSlotIndex                  INTEGER,
@@ -68,10 +68,10 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
         ACCESS    read-only
         STATUS    mandatory
         DESCRIPTION
-                "The slot number within the box for which this 
+                "The slot number within the box for which this
                 entry contains information."
         ::= { hpMsgBufEntry 1 }
-          
+
     hpMsgBufCorrupted OBJECT-TYPE
         SYNTAX    Counter
         ACCESS    read-only
@@ -100,7 +100,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
         STATUS    mandatory
         DESCRIPTION
                 "The number of message buffers allocated when
-                the switch booted." 
+                the switch booted."
         ::= { hpMsgBufEntry 4 }
 
     hpMsgBufMin OBJECT-TYPE
@@ -138,7 +138,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
         ACCESS    not-accessible
         STATUS    mandatory
         DESCRIPTION
-                "A table that contains information on all the 
+                "A table that contains information on all the
                 Packet buffers for each slot."
         ::= { hpPktBuf 1 }
 
@@ -150,7 +150,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
                 "Information about a slot in a chassis"
         INDEX      { hpPktBufSlotIndex }
         ::= { hpPktBufTable 1 }
-          
+
     HpPktBufEntry ::=
         SEQUENCE {
             hpPktBufSlotIndex                  INTEGER,
@@ -161,13 +161,13 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
             hpPktBufSize                       INTEGER,
             hpPktBufCorrupted                  Counter
         }
-          
+
     hpPktBufSlotIndex OBJECT-TYPE
         SYNTAX    INTEGER (1..16)
         ACCESS    read-only
         STATUS    mandatory
         DESCRIPTION
-                "The slot number within the box for which this 
+                "The slot number within the box for which this
                 entry contains information."
         ::= { hpPktBufEntry 1 }
 
@@ -199,7 +199,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
         STATUS    mandatory
         DESCRIPTION
                 "The number of packet buffers allocated when
-                the switch booted." 
+                the switch booted."
         ::= { hpPktBufEntry 4 }
 
     hpPktBufMin OBJECT-TYPE
@@ -244,13 +244,13 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
     hpMem       OBJECT IDENTIFIER ::= { hpOpSystem 2 }
     hpLocalMem  OBJECT IDENTIFIER ::= { hpMem 1 }
     hpGlobalMem OBJECT IDENTIFIER ::= { hpMem 2 }
- 
+
     hpLocalMemTable OBJECT-TYPE
         SYNTAX    SEQUENCE OF HpLocalMemEntry
         ACCESS    not-accessible
         STATUS    mandatory
         DESCRIPTION
-                "A table that contains information on all the 
+                "A table that contains information on all the
                 local memory for each slot."
         ::= { hpLocalMem 1 }
 
@@ -262,7 +262,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
                 "Information about a slot in a chassis"
         INDEX      { hpLocalMemSlotIndex }
         ::= { hpLocalMemTable 1 }
-          
+
     HpLocalMemEntry ::=
         SEQUENCE {
             hpLocalMemSlotIndex                INTEGER,
@@ -279,10 +279,10 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
         ACCESS    read-only
         STATUS    mandatory
         DESCRIPTION
-                "The slot number within the box for which this 
+                "The slot number within the box for which this
                 entry contains information."
         ::= { hpLocalMemEntry 1 }
-          
+
     hpLocalMemSlabCnt OBJECT-TYPE
         SYNTAX    Counter
         ACCESS    read-only
@@ -342,7 +342,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
         ACCESS    not-accessible
         STATUS    mandatory
         DESCRIPTION
-                "A table that contains information on all the 
+                "A table that contains information on all the
                 local memory for each slot."
         ::= { hpGlobalMem 1 }
 
@@ -354,7 +354,7 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
                 "Information about a slot in a chassis"
         INDEX      { hpGlobalMemSlotIndex }
         ::= { hpGlobalMemTable 1 }
-          
+
     HpGlobalMemEntry ::=
         SEQUENCE {
             hpGlobalMemSlotIndex                INTEGER,
@@ -371,10 +371,10 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
         ACCESS    read-only
         STATUS    mandatory
         DESCRIPTION
-                "The slot number within the box for which this 
+                "The slot number within the box for which this
                 entry contains information."
         ::= { hpGlobalMemEntry 1 }
-          
+
     hpGlobalMemSlabCnt OBJECT-TYPE
         SYNTAX    Counter
         ACCESS    read-only
@@ -470,9 +470,9 @@ NETSWITCH-MIB DEFINITIONS ::= BEGIN
         ACCESS    read-only
         STATUS    mandatory
         DESCRIPTION
-                "Return the type of Smart Cards in the system. 
+                "Return the type of Smart Cards in the system.
                 Some system may contains more than one types
-                of smart cards, such as FDDI and ATM"  
+                of smart cards, such as FDDI and ATM"
         ::= { hpOpSystem 5 }
 
     hpSwitchBaseMACAddress OBJECT-TYPE

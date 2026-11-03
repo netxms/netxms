@@ -138,10 +138,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "Choice between generic traps as defined in RFC or 
+                "Choice between generic traps as defined in RFC or
                  correponding enterprise specific traps to be generated
-                 by the node. This attribute is applicable only when 
-                 generic traps are being generated and there exists a 
+                 by the node. This attribute is applicable only when
+                 generic traps are being generated and there exists a
                  corresponding enterprise specific trap."
         ::= { cdx6500NMSNMPGroup 8 }
 
@@ -149,7 +149,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             SYNTAX SEQUENCE OF Cdx6500SNMPTrapThrottleEntry
             ACCESS not-accessible
             STATUS mandatory
-            DESCRIPTION 
+            DESCRIPTION
                  "Throttling table."
         ::= { cdx6500NMSNMPGroup 9 }
 
@@ -205,7 +205,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             SYNTAX INTEGER {active(1), deleted(2)}
             ACCESS read-write
             STATUS mandatory
-            DESCRIPTION "Table row status. 
+            DESCRIPTION "Table row status.
                          Setting the value to deleted removes the entry from the table."
             DEFVAL {active}
         ::= { cdx6500SNMPTrapThrottleEntry 5 }
@@ -218,7 +218,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Snmp Set operation control      
+                "Snmp Set operation control
 			off : snmp set operation is not allowed
 			on  : snmp set operation is allowed."
         ::= { cdx6500NMSNMPGroup 10 }
@@ -232,7 +232,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
         ::= { cdx6500NMSNMPGroup 11 }
 
           -- The Node Parameters Group
-          -- contains configuration, inventory, and statistics 
+          -- contains configuration, inventory, and statistics
           -- on a node-wide basis.
 
         cdx6500NMNPconfig OBJECT IDENTIFIER ::= { cdx6500NMNodeParametersGroup 1 }
@@ -266,7 +266,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             STATUS mandatory
             DESCRIPTION
                 "The node address specifies the main part of the network
-                 address for calls destined within this node: PAD port or 
+                 address for calls destined within this node: PAD port or
                  node resource (for example, control port) calls. Individual
                  subaddresses specify exact destination."
         ::= { cdx6500NMNPconfig 3 }
@@ -382,7 +382,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             STATUS mandatory
             DESCRIPTION
                 "Maximum Routing Hops.This parameter specifies the maximum
-                 number of nodes a call may pass through before reaching 
+                 number of nodes a call may pass through before reaching
                  its destination."
         ::= { cdx6500NMNPconfig 12 }
 
@@ -476,9 +476,9 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "When billing records need to be printed, the node will use 
-                 this mnemonic to call and send the records to this 
-                 destination.  This location is usually a printer used to 
+                "When billing records need to be printed, the node will use
+                 this mnemonic to call and send the records to this
+                 destination.  This location is usually a printer used to
                  print billing records."
         ::= { cdx6500NMNPconfig 21 }
 
@@ -488,7 +488,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             STATUS mandatory
             DESCRIPTION
                 "When the number of billing records queued up equals this
-                 threshold, a call will be placed to the logging device to 
+                 threshold, a call will be placed to the logging device to
                  dump the billing records."
         ::= { cdx6500NMNPconfig 22 }
 
@@ -498,7 +498,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             STATUS mandatory
             DESCRIPTION
                 "This is the maximum number of billing records the node will
-                 be allowed to store to be printed. Billing records created 
+                 be allowed to store to be printed. Billing records created
                  after this maximum is reached will be lost."
         ::= { cdx6500NMNPconfig 23 }
 
@@ -507,7 +507,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "If billing records have been stored for printing for this 
+                "If billing records have been stored for printing for this
                  amount of time (in minutes) without reaching the threshold,
                  a call will be made so that they can be printed."
         ::= { cdx6500NMNPconfig 24 }
@@ -517,8 +517,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "At this interval the billing records will be gathered 
-                 and printed for all of the PVC's in the node that have 
+                "At this interval the billing records will be gathered
+                 and printed for all of the PVC's in the node that have
                  billing turned on."
         ::= { cdx6500NMNPconfig 25 }
 
@@ -572,8 +572,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "This defines the facility used to carry DCP information 
-                 at call setup and reconnection time in Call Request and 
+                "This defines the facility used to carry DCP information
+                 at call setup and reconnection time in Call Request and
                  Call Accept packets through the 6500 network. Change the
                  value only if it interferes with some other private network
                  facility."
@@ -613,7 +613,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "This is the Codex Proprietary Protocol ID. Its
                  value is put in the first byte of the Protocol
-                 Identifier field of the CUD in the Call Request 
+                 Identifier field of the CUD in the Call Request
                  packets for protocols that have not been assigned
                  a standardized value by the CCITT."
         ::= { cdx6500NMNPconfig 32 }
@@ -679,7 +679,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                  CONN - connection events reported.
                  CODE - alarms from Codex 6000 communication processors
                         reported.
-                 Any combination of above specified by summing 
+                 Any combination of above specified by summing
                  (e.g. HIGH+CONN+. . .)."
         ::= { cdx6500NMNPconfig 37 }
 
@@ -744,7 +744,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
         ::= { cdx6500NMNPinvent 2 }
 
         cdx6500NMNPIserialNum OBJECT-TYPE
-            SYNTAX INTEGER 
+            SYNTAX INTEGER
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
@@ -872,9 +872,9 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                     DisplayString,
                 cdx6500NMNPIinventSerial
                     DisplayString,
-                cdx6500NMNPIinventAssy 
+                cdx6500NMNPIinventAssy
                     DisplayString,
-                cdx6500NMNPIinventRev 
+                cdx6500NMNPIinventRev
                     DisplayString,
                 cdx6500NMNPIinventDIM1
                     DisplayString,
@@ -1013,7 +1013,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "The last time the reset button was pressed."
         ::= { cdx6500NMNPstats 2 }
- 
+
         cdx6500NMNPSevLastOccReboot OBJECT-TYPE
             SYNTAX DisplayString
             ACCESS read-only
@@ -1051,7 +1051,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "The operational status of the cooling fan.
                  newvalNotMonitored : same functionality as
-                 'notMonitored', new enumeration added for 
+                 'notMonitored', new enumeration added for
                  RFC1155 compatibility."
         ::= { cdx6500NMNPstats 6 }
 
@@ -1193,7 +1193,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "The number of packet buffers available. Applicable to all 
+                "The number of packet buffers available. Applicable to all
                  platforms except VG100 ."
         ::= { cdx6500NMNPstats 21 }
 
@@ -1202,7 +1202,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "The number of packet buffers in use. Applicable to all 
+                "The number of packet buffers in use. Applicable to all
                  platforms except VG100."
         ::= { cdx6500NMNPstats 22 }
 
@@ -1211,8 +1211,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "The number of times the packet buffer pool has been 
-                 exhausted since last reset. Applicable to all platforms 
+                "The number of times the packet buffer pool has been
+                 exhausted since last reset. Applicable to all platforms
                  except VG100."
         ::= { cdx6500NMNPstats 23 }
 
@@ -1221,7 +1221,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "The number of management buffers available. Applicable to 
+                "The number of management buffers available. Applicable to
                  all platforms except VG100."
         ::= { cdx6500NMNPstats 24 }
 
@@ -1230,7 +1230,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "The number of management buffers in use. Applicable to all 
+                "The number of management buffers in use. Applicable to all
                  platforms except VG100."
         ::= { cdx6500NMNPstats 25 }
 
@@ -1239,8 +1239,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "The number of times the management buffer pool has been 
-                 exhausted since last reset. Applicable to all platforms 
+                "The number of times the management buffer pool has been
+                 exhausted since last reset. Applicable to all platforms
                  except VG100."
         ::= { cdx6500NMNPstats 26 }
 
@@ -1249,7 +1249,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Node throughput, number of current chararacters/second 
+                "Node throughput, number of current chararacters/second
                  for the node."
         ::= { cdx6500NMNPstats 27 }
 
@@ -1258,7 +1258,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Node throughput, number of current packets/second 
+                "Node throughput, number of current packets/second
                  for the node."
         ::= { cdx6500NMNPstats 28 }
 
@@ -1573,11 +1573,11 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
         ::= { cdx6500NMNPSstatsEntry 8 }
 
         cdx6500NMNPSstatsMaxcpuUtil OBJECT-TYPE
-            SYNTAX INTEGER 
+            SYNTAX INTEGER
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "Peak CPU Utilization since last node or statistics 
+                "Peak CPU Utilization since last node or statistics
                  reset. Applicable to 6500 platforms."
         ::= { cdx6500NMNPSstatsEntry 9 }
 
@@ -1604,7 +1604,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Time stamp of Max number of PVC connections since the 
+                "Time stamp of Max number of PVC connections since the
                  last reset."
         ::= { cdx6500NMNPstats 45 }
 
@@ -1627,7 +1627,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
         ::= { cdx6500NMNPstats 47 }
 
         cdx6500NMNPSbuffPacketGauge OBJECT-TYPE
-            SYNTAX Gauge 
+            SYNTAX Gauge
             ACCESS read-only
             STATUS optional
             DESCRIPTION
@@ -1641,16 +1641,16 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             STATUS optional
             DESCRIPTION
                 "Time stamp of Max number of packet buffers in use since
-                 the last reset. Applicable to all platforms except 
+                 the last reset. Applicable to all platforms except
                  VG100."
         ::= { cdx6500NMNPstats 49 }
 
         cdx6500NMNPSbuffMgtGauge OBJECT-TYPE
-            SYNTAX Gauge 
+            SYNTAX Gauge
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "The maximum number of management buffers in use since 
+                "The maximum number of management buffers in use since
                  the last reset. Applicable to all platforms except
                  VG100."
         ::= { cdx6500NMNPstats 50 }
@@ -1660,8 +1660,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "Time stamp of Max number of management buffers in use 
-                 since the last reset. Applicable to all platforms 
+                "Time stamp of Max number of management buffers in use
+                 since the last reset. Applicable to all platforms
                  except VG100."
         ::= { cdx6500NMNPstats 51 }
 
@@ -1684,11 +1684,11 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
         ::= { cdx6500NMNPstats 53 }
 
         cdx6500NMNPSMaxcpuUtil OBJECT-TYPE
-            SYNTAX INTEGER 
+            SYNTAX INTEGER
             ACCESS read-only
             STATUS optional
             DESCRIPTION
-                "Peak CPU Utilization since last node or statistics 
+                "Peak CPU Utilization since last node or statistics
                  reset. Applicable to 6520 platforms."
         ::= { cdx6500NMNPstats 54 }
 
@@ -1703,7 +1703,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
 
 
         -- The Report Statistics Table
-        -- This table contains statistics paramaters 
+        -- This table contains statistics paramaters
         -- for the Report Operator event log table.
 
         cdx6500NMReportTable OBJECT-TYPE
@@ -1731,7 +1731,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 cdx6500reptEvent
                     DisplayString
                 }
-    
+
         cdx6500reptIndex OBJECT-TYPE
             SYNTAX INTEGER (1..512)
             ACCESS not-accessible
@@ -1739,7 +1739,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Report Log Index"
         ::= { cdx6500NMReportEntry 1 }
-    
+
         cdx6500reptEvent OBJECT-TYPE
             SYNTAX DisplayString (SIZE (0..152))
             ACCESS read-only
@@ -1747,7 +1747,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Report Log Alarm Text"
         ::= { cdx6500NMReportEntry 2 }
-  
+
         cdx6500NMreptClearLog OBJECT-TYPE
             SYNTAX INTEGER {
                     clearLog   (1),
@@ -1762,7 +1762,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
         ::= { cdx6500NMDiagnosticsGroup 2 }
 
         -- The V54 Loopback group, part of Pegasus Diagnostics
-        -- This Group contains controls, configurables, and statistics 
+        -- This Group contains controls, configurables, and statistics
         -- parameters related to invoking and monitoring loopback tests.
 
         cdx6500NMV54Loopback OBJECT IDENTIFIER ::= { cdx6500NMDiagnosticsGroup 3 }
@@ -1890,7 +1890,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Number of bad messages received"
         ::= { cdx6500NMV54Loopback 11 }
-                                
+
         cdx6500NMV54LastPortTested OBJECT-TYPE
             SYNTAX INTEGER (1..54)
             ACCESS read-only
@@ -1974,7 +1974,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Number of bad messages received"
         ::= { cdx6500NMV54Loopback 20}
- 
+
         -- Node Management Controls Group
 
         cdx6500NMCBootNode OBJECT-TYPE
@@ -2066,7 +2066,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                    idle         (1),
                    ramToram     (2),
                    flashToflash (3)
-                   } 
+                   }
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
@@ -2100,7 +2100,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             STATUS mandatory
             DESCRIPTION
                 "This is the segment size used for accounting purposes
-                 with data packets. 
+                 with data packets.
                  segmentSizeDisable - segment counting disabled.
                  segmentSize16      - 16   byte segments.
                  segmentSize32      - 32   byte segments.
@@ -2109,7 +2109,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                  segmentSize256     - 256  byte segments.
                  segmentSize512     - 512  byte segments.
                  segmentSize1024    - 1024 byte segments
-                 newvalSegmentSizeDisable - same as 
+                 newvalSegmentSizeDisable - same as
                                       'segmentSizeDisable', new
                                       enumeration added for
                                       RFC1155 compatibility."
@@ -2147,10 +2147,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
 
         -- The Statistics Tables
         -- The allPorts Statistics Table
-        -- This table contains statistic parameters 
+        -- This table contains statistic parameters
         -- for the allPorts table.
-  
-  
+
+
         cdx6500PPSTallPortsTable OBJECT-TYPE
             SYNTAX SEQUENCE OF Cdx6500PPSTallPortsEntry
             ACCESS not-accessible
@@ -2159,7 +2159,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "All of the statistics parameters relevant
                  to the allPorts table."
         ::= { cdx6500PSTPortProtocolGroup 18 }
-  
+
         cdx6500PPSTallPortsEntry OBJECT-TYPE
             SYNTAX Cdx6500PPSTallPortsEntry
             ACCESS not-accessible
@@ -2168,7 +2168,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "A row of allPorts statistics parameters."
             INDEX { cdx6500allportsPortNum }
         ::= { cdx6500PPSTallPortsTable 1 }
-  
+
         Cdx6500PPSTallPortsEntry ::=
             SEQUENCE {
                 cdx6500allportsPortNum
@@ -2226,7 +2226,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 cdx6500allportsPortControlStatus
                     INTEGER
                 }
-  
+
         cdx6500allportsPortNum OBJECT-TYPE
             SYNTAX INTEGER (1..54)
             ACCESS read-only
@@ -2234,7 +2234,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Number of the port"
         ::= { cdx6500PPSTallPortsEntry 1 }
-  
+
         cdx6500allportsPortType OBJECT-TYPE
             SYNTAX INTEGER {
                     null      (1),
@@ -2286,7 +2286,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Type of port."
         ::= { cdx6500PPSTallPortsEntry 2 }
-  
+
         cdx6500allportsPortStatus OBJECT-TYPE
             SYNTAX INTEGER {
                     disabled       (0),
@@ -2308,7 +2308,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                  newvalDisabled - same functionality as 'disabled',
                  new enumeration added for RFC1155 compatibility."
         ::= { cdx6500PPSTallPortsEntry 3 }
-  
+
         cdx6500allportsPortState OBJECT-TYPE
             SYNTAX DisplayString (SIZE(1..25))
             ACCESS read-only
@@ -2316,18 +2316,18 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Current Port state."
         ::= { cdx6500PPSTallPortsEntry 4 }
-  
+
         cdx6500allportsPortSpeed OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "This is the speed of the port when Clock=Int; 
-                 this is detected clock speed if Clock=Ext. 
+                "This is the speed of the port when Clock=Int;
+                 this is detected clock speed if Clock=Ext.
                  If Port Speed is 0, Clock=Ext then
                  clocking is not being received from attached device."
         ::= { cdx6500PPSTallPortsEntry 5 }
-  
+
         cdx6500allportsUtilizationIn OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2343,34 +2343,34 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Percentage of port bandwidth in use."
         ::= { cdx6500PPSTallPortsEntry 7 }
-  
+
         cdx6500allportsCharInTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Number of characters received by the port since the 
+                "Number of characters received by the port since the
                  last node, port or statistics reset."
         ::= { cdx6500PPSTallPortsEntry 8 }
-  
+
         cdx6500allportsCharOutTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Number of characters sent by the port since the last 
+                "Number of characters sent by the port since the last
                  node, port or statistics reset."
         ::= { cdx6500PPSTallPortsEntry 9 }
-  
+
         cdx6500allportsPktInTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Number of packets received by the port since the last 
+                "Number of packets received by the port since the last
                  node, port or statistics reset."
         ::= { cdx6500PPSTallPortsEntry 10 }
-  
+
         cdx6500allportsPktOutTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
@@ -2379,16 +2379,16 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "Number of packets sent by the port since the last node, port
                  or statistics reset."
         ::= { cdx6500PPSTallPortsEntry 11 }
-  
+
         cdx6500allportsFrameInTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Number of frames received by the port since the last node, 
+                "Number of frames received by the port since the last node,
                  port or statistics reset."
         ::= { cdx6500PPSTallPortsEntry 12 }
-  
+
         cdx6500allportsFrameOutTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
@@ -2397,7 +2397,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "Number of frames sent by the port since the last node, port
                  or statistics reset."
         ::= { cdx6500PPSTallPortsEntry 13 }
-  
+
         cdx6500allportsPktsQueued OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2405,7 +2405,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Number of packets currently queued."
         ::= { cdx6500PPSTallPortsEntry 14}
-  
+
         cdx6500allportsCharsInPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2413,7 +2413,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the characters being received over the port."
         ::= { cdx6500PPSTallPortsEntry 15 }
-  
+
         cdx6500allportsCharsOutPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2421,7 +2421,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the characters being sent over the port."
         ::= { cdx6500PPSTallPortsEntry 16 }
-  
+
         cdx6500allportsPktsInPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2429,7 +2429,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the packets being received over the port."
         ::= { cdx6500PPSTallPortsEntry 17 }
-  
+
         cdx6500allportsPktsOutPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2437,7 +2437,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the packets being sent over the port."
         ::= { cdx6500PPSTallPortsEntry 18 }
-  
+
         cdx6500allportsFramesInPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2445,7 +2445,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the frames being received over the port."
         ::= { cdx6500PPSTallPortsEntry 19 }
-  
+
         cdx6500allportsFramesOutPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2453,34 +2453,34 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the frames being sent over the port."
         ::= { cdx6500PPSTallPortsEntry 20 }
-  
+
         cdx6500allportsOverrunErrors OBJECT-TYPE
             SYNTAX Counter16
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Number of Overrun errors since the last node or statistics 
-                 reset.  Overrun Errors: Received data was lost because it 
+                "Number of Overrun errors since the last node or statistics
+                 reset.  Overrun Errors: Received data was lost because it
                  could not be processed by the CPU."
         ::= { cdx6500PPSTallPortsEntry 21 }
-  
+
         cdx6500allportsUnderrunErrors OBJECT-TYPE
             SYNTAX Counter16
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
                 "Number of Underrun errors since the last node or statistics
-                 reset.  UnderrunErrors: Transmission of a frame could not be 
+                 reset.  UnderrunErrors: Transmission of a frame could not be
                  completed because all the data had not been sent to port."
         ::= { cdx6500PPSTallPortsEntry 22 }
-  
+
         cdx6500allportsCRCErrors OBJECT-TYPE
             SYNTAX Counter16
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
                 "Number of CRC errors since the last node or statistics reset.
-                 CRC Errors: Cyclical Redundancy failure because of noise on 
+                 CRC Errors: Cyclical Redundancy failure because of noise on
                  the line."
         ::= { cdx6500PPSTallPortsEntry 23 }
 
@@ -2527,10 +2527,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
         ::= { cdx6500PPSTallPortsEntry 27 }
 
         -- The allStations Statistics Table
-        -- This table contains statistic paramaters 
+        -- This table contains statistic paramaters
         -- for the allStations table.
-    
-    
+
+
         cdx6500SPSTallStationsTable OBJECT-TYPE
             SYNTAX SEQUENCE OF Cdx6500SPSTallStationsEntry
             ACCESS not-accessible
@@ -2539,7 +2539,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "All of the statistics parameters relevant
                  to the allStations table."
         ::= { cdx6500PSTStationProtocolGroup 8 }
-  
+
         cdx6500SPSTallStationsEntry OBJECT-TYPE
             SYNTAX Cdx6500SPSTallStationsEntry
             ACCESS not-accessible
@@ -2549,7 +2549,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             INDEX { cdx6500allstationsPortNum,
                     cdx6500allstationsStnNum }
         ::= { cdx6500SPSTallStationsTable 1 }
-  
+
         Cdx6500SPSTallStationsEntry ::=
             SEQUENCE {
                 cdx6500allstationsPortNum
@@ -2601,7 +2601,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 cdx6500allstationsBusyOutStation
                     INTEGER
                 }
-  
+
         cdx6500allstationsPortNum OBJECT-TYPE
             SYNTAX INTEGER (1..54)
             ACCESS read-only
@@ -2609,7 +2609,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Number of the port."
         ::= { cdx6500SPSTallStationsEntry 1 }
-  
+
         cdx6500allstationsStnNum OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2617,7 +2617,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Number of the station."
         ::= { cdx6500SPSTallStationsEntry 2 }
-  
+
         cdx6500allstationsStnType OBJECT-TYPE
             SYNTAX DisplayString (SIZE(0..10))
             ACCESS read-only
@@ -2625,7 +2625,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Type of station."
         ::= { cdx6500SPSTallStationsEntry 3 }
-  
+
         cdx6500allstationsStnStatus OBJECT-TYPE
             SYNTAX INTEGER {
                     disabled       (0),
@@ -2647,7 +2647,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                  newvalDisabled - same functionality as 'disabled',
                  new enumeration added for RFC1155 compatibility."
         ::= { cdx6500SPSTallStationsEntry 4 }
-  
+
         cdx6500allstationsStnState OBJECT-TYPE
             SYNTAX DisplayString (SIZE(0..15))
             ACCESS read-only
@@ -2655,7 +2655,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Current Station state."
         ::= { cdx6500SPSTallStationsEntry 5 }
-  
+
         cdx6500allstationsUtilizationIn OBJECT-TYPE
             SYNTAX INTEGER (0..100)
             ACCESS read-only
@@ -2663,7 +2663,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Percentage of station bandwidth in use."
         ::= { cdx6500SPSTallStationsEntry 6 }
-  
+
         cdx6500allstationsUtilizationOut OBJECT-TYPE
             SYNTAX INTEGER (0..100)
             ACCESS read-only
@@ -2671,34 +2671,34 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Percentage of station bandwidth in use."
         ::= { cdx6500SPSTallStationsEntry 7 }
-  
+
         cdx6500allstationsCharInTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Number of characters received by the station since the 
+                "Number of characters received by the station since the
                  last node, port, station or statistics reset."
         ::= { cdx6500SPSTallStationsEntry 8 }
-  
+
         cdx6500allstationsCharOutTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Number of characters sent by the station since the last 
+                "Number of characters sent by the station since the last
                  node, port, station or statistics reset."
         ::= { cdx6500SPSTallStationsEntry 9 }
-  
+
         cdx6500allstationsPktInTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "Number of packets received by the station since the last 
+                "Number of packets received by the station since the last
                  node, port, station or statistics reset."
         ::= { cdx6500SPSTallStationsEntry 10 }
-  
+
         cdx6500allstationsPktOutTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
@@ -2707,7 +2707,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "Number of packets sent by the port since the last node, port,
                  station or statistics reset."
         ::= { cdx6500SPSTallStationsEntry 11 }
-  
+
         cdx6500allstationsFrameInTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
@@ -2716,7 +2716,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "Number of frames received by the port since the last node,
                  port, station or statistics reset."
         ::= { cdx6500SPSTallStationsEntry 12 }
-  
+
         cdx6500allstationsFrameOutTot OBJECT-TYPE
             SYNTAX Counter
             ACCESS read-only
@@ -2725,7 +2725,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "Number of frames sent by the port since the last node, port,
                  station or statistics reset."
         ::= { cdx6500SPSTallStationsEntry 13 }
-  
+
         cdx6500allstationsPktsQueued OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2733,7 +2733,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Number of packets currently queued."
         ::= { cdx6500SPSTallStationsEntry 14}
-  
+
         cdx6500allstationsCharsInPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2741,7 +2741,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the characters being received over the station."
         ::= { cdx6500SPSTallStationsEntry 15 }
-  
+
         cdx6500allstationsCharsOutPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2749,7 +2749,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the characters being sent over the station."
         ::= { cdx6500SPSTallStationsEntry 16 }
-  
+
         cdx6500allstationsPktsInPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2757,7 +2757,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the packets being received over the station."
         ::= { cdx6500SPSTallStationsEntry 17 }
-  
+
         cdx6500allstationsPktsOutPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2765,7 +2765,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Summary of the packets being sent over the station."
         ::= { cdx6500SPSTallStationsEntry 18 }
-  
+
         cdx6500allstationsFramesInPerSec OBJECT-TYPE
             SYNTAX INTEGER
             ACCESS read-only
@@ -2794,7 +2794,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                   bootStn   - Boot Station
                   noBootStn - Do not boot Station."
         ::= { cdx6500SPSTallStationsEntry 21 }
-  
+
         cdx6500allstationsDisableStation OBJECT-TYPE
             SYNTAX INTEGER {
                     disableStn   (1),
@@ -2807,7 +2807,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                  disableStn   - Disable Station.
                  noDisableStn - Do not disable Station."
         ::= { cdx6500SPSTallStationsEntry 22 }
-  
+
         cdx6500allstationsEnableStation OBJECT-TYPE
             SYNTAX INTEGER {
                     enableStn   (1),
@@ -2820,7 +2820,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                  enableStn   - Enable Station.
                  noEnableStn - Not not enable Station."
         ::= { cdx6500SPSTallStationsEntry 23 }
-  
+
         cdx6500allstationsBusyOutStation OBJECT-TYPE
             SYNTAX INTEGER {
                     busyoutStn   (1),
@@ -2854,7 +2854,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS not-accessible
             STATUS mandatory
             DESCRIPTION
-                "Each entry contains a list of parameters that 
+                "Each entry contains a list of parameters that
                  makeup the Route Selection Table."
             INDEX { cdx6500RoutSVCEntryNumber }
         ::= { cdx6500GCTRouteSelectionTable 1 }
@@ -2906,9 +2906,9 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "This is not a configurable parameter. 
-                 This identifies the particular Route 
-                 Selection Table entry being configured by 
+                "This is not a configurable parameter.
+                 This identifies the particular Route
+                 Selection Table entry being configured by
                  the other parameters in the record."
         ::= { cdx6500GCTRouteSelectionEntry 1 }
 
@@ -2927,8 +2927,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the network address to 
-                 which calls are routed. For example: 
+                "This specifies the network address to
+                 which calls are routed. For example:
                  BCST         route calls to the broadcast module.
                  BSC2780-4    route calls to BSC2780 port 4.
                  BSC3270-9    route calls to BSC3270 port 9.
@@ -2945,10 +2945,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the priority for call forwarding 
-                 to ports within the Route Selection Table. Call 
+                "This specifies the priority for call forwarding
+                 to ports within the Route Selection Table. Call
                  forwarding is determined by a combination of priority
-                 and load conditions. 
+                 and load conditions.
                  0         - backup port.
                  1 to 15   - 1 is the highest priority and 15, the lowest."
         ::= { cdx6500GCTRouteSelectionEntry 4 }
@@ -2958,8 +2958,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the network address to 
-                 which calls are routed. For example: 
+                "This specifies the network address to
+                 which calls are routed. For example:
                  BCST         route calls to the broadcast module.
                  BSC2780-4    route calls to BSC2780 port 4.
                  BSC3270-9    route calls to BSC3270 port 9.
@@ -2976,10 +2976,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the priority for call forwarding 
-                 to ports within the Route Selection Table. Call 
+                "This specifies the priority for call forwarding
+                 to ports within the Route Selection Table. Call
                  forwarding is determined by a combination of priority
-                 and load conditions. 
+                 and load conditions.
                  0         - backup port.
                  1 to 15   - 1 is the highest priority and 15, the lowest."
         ::= { cdx6500GCTRouteSelectionEntry 6 }
@@ -2989,8 +2989,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the network address to 
-                 which calls are routed. For example: 
+                "This specifies the network address to
+                 which calls are routed. For example:
                  BCST         route calls to the broadcast module.
                  BSC2780-4    route calls to BSC2780 port 4.
                  BSC3270-9    route calls to BSC3270 port 9.
@@ -3007,10 +3007,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the priority for call forwarding 
-                 to ports within the Route Selection Table. Call 
+                "This specifies the priority for call forwarding
+                 to ports within the Route Selection Table. Call
                  forwarding is determined by a combination of priority
-                 and load conditions. 
+                 and load conditions.
                  0         - backup port.
                  1 to 15   - 1 is the highest priority and 15, the lowest."
         ::= { cdx6500GCTRouteSelectionEntry 8 }
@@ -3020,8 +3020,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the network address to 
-                 which calls are routed. For example: 
+                "This specifies the network address to
+                 which calls are routed. For example:
                  BCST         route calls to the broadcast module.
                  BSC2780-4    route calls to BSC2780 port 4.
                  BSC3270-9    route calls to BSC3270 port 9.
@@ -3038,10 +3038,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the priority for call forwarding 
-                 to ports within the Route Selection Table. Call 
+                "This specifies the priority for call forwarding
+                 to ports within the Route Selection Table. Call
                  forwarding is determined by a combination of priority
-                 and load conditions. 
+                 and load conditions.
                  0         - backup port.
                  1 to 15   - 1 is the highest priority and 15, the lowest."
         ::= { cdx6500GCTRouteSelectionEntry 10 }
@@ -3051,8 +3051,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the network address to 
-                 which calls are routed. For example: 
+                "This specifies the network address to
+                 which calls are routed. For example:
                  BCST         route calls to the broadcast module.
                  BSC2780-4    route calls to BSC2780 port 4.
                  BSC3270-9    route calls to BSC3270 port 9.
@@ -3069,10 +3069,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the priority for call forwarding 
-                 to ports within the Route Selection Table. Call 
+                "This specifies the priority for call forwarding
+                 to ports within the Route Selection Table. Call
                  forwarding is determined by a combination of priority
-                 and load conditions. 
+                 and load conditions.
                  0         - backup port.
                  1 to 15   - 1 is the highest priority and 15, the lowest."
         ::= { cdx6500GCTRouteSelectionEntry 12 }
@@ -3082,8 +3082,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the network address to 
-                 which calls are routed. For example: 
+                "This specifies the network address to
+                 which calls are routed. For example:
                  BCST         route calls to the broadcast module.
                  BSC2780-4    route calls to BSC2780 port 4.
                  BSC3270-9    route calls to BSC3270 port 9.
@@ -3100,10 +3100,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the priority for call forwarding 
-                 to ports within the Route Selection Table. Call 
+                "This specifies the priority for call forwarding
+                 to ports within the Route Selection Table. Call
                  forwarding is determined by a combination of priority
-                 and load conditions. 
+                 and load conditions.
                  0         - backup port.
                  1 to 15   - 1 is the highest priority and 15, the lowest."
         ::= { cdx6500GCTRouteSelectionEntry 14 }
@@ -3113,8 +3113,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the network address to 
-                 which calls are routed. For example: 
+                "This specifies the network address to
+                 which calls are routed. For example:
                  BCST         route calls to the broadcast module.
                  BSC2780-4    route calls to BSC2780 port 4.
                  BSC3270-9    route calls to BSC3270 port 9.
@@ -3131,10 +3131,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the priority for call forwarding 
-                 to ports within the Route Selection Table. Call 
+                "This specifies the priority for call forwarding
+                 to ports within the Route Selection Table. Call
                  forwarding is determined by a combination of priority
-                 and load conditions. 
+                 and load conditions.
                  0         - backup port.
                  1 to 15   - 1 is the highest priority and 15, the lowest."
         ::= { cdx6500GCTRouteSelectionEntry 16 }
@@ -3144,8 +3144,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the network address to 
-                 which calls are routed. For example: 
+                "This specifies the network address to
+                 which calls are routed. For example:
                  BCST         route calls to the broadcast module.
                  BSC2780-4    route calls to BSC2780 port 4.
                  BSC3270-9    route calls to BSC3270 port 9.
@@ -3162,10 +3162,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This specifies the priority for call forwarding 
-                 to ports within the Route Selection Table. Call 
+                "This specifies the priority for call forwarding
+                 to ports within the Route Selection Table. Call
                  forwarding is determined by a combination of priority
-                 and load conditions. 
+                 and load conditions.
                  0         - backup port.
                  1 to 15   - 1 is the highest priority and 15, the lowest."
         ::= { cdx6500GCTRouteSelectionEntry 18 }
@@ -3175,12 +3175,12 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "Network address for calls routed beyond this 
-                 node. A route selection entry is not needed 
+                "Network address for calls routed beyond this
+                 node. A route selection entry is not needed
                  for calls destined within this node: PAD port
-                 or node resource (for example, control port) 
+                 or node resource (for example, control port)
                  calls. The wild card(match anything) character
-                 is * and can also be part of the entry. When 
+                 is * and can also be part of the entry. When
                  set to (blank), this parameter is ignored."
         ::= { cdx6500GCTRouteSelectionEntry 19 }
 
@@ -3218,8 +3218,8 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "This is not a configurable parameter. 
-                 This identifies the particular PVC Table entry being 
+                "This is not a configurable parameter.
+                 This identifies the particular PVC Table entry being
                  configured by the other parameters in the record."
         ::= { cdx6500GCTPVCSetupEntry 1 }
 
@@ -3228,7 +3228,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This is the PVC source channel identifier.  
+                "This is the PVC source channel identifier.
                  Entries are not case sensitive. For example:
                  BCST        route calls to the broadcast module.
                  MX25-2s3(2) route calls to MX25 port 2, station 3, channel 2.
@@ -3243,7 +3243,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-write
             STATUS mandatory
             DESCRIPTION
-                "This is the PVC destination channel identifier.  
+                "This is the PVC destination channel identifier.
                  Entries are not case sensitive. For example:
                  BCST        route calls to the broadcast module.
                  MX25-2s3(2) route calls to MX25 port 2, station 3, channel 2.
@@ -3254,7 +3254,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
         ::= { cdx6500GCTPVCSetupEntry 3 }
 
         -- The Mnemonic Configuration Table
-        -- This table contains Configuration paramaters 
+        -- This table contains Configuration paramaters
         -- for the Mnemonic table.
 
         cdx6500CfgMnemonicTable OBJECT-TYPE
@@ -3293,10 +3293,10 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 "This is not a configuration parameter. Instead, it
                  identifies the particular Mnemonic Table entry being
                  configured by the other parameters in the record.
-                 NOTE: You can have up to 256 entries for the 6507Plus 
+                 NOTE: You can have up to 256 entries for the 6507Plus
                  and 6525Plus, but only 64 entries for the 6505Plus."
         ::= { cdx6500CfgMnemonicEntry 1 }
-  
+
         cdx6500mnemName OBJECT-TYPE
             SYNTAX DisplayString (SIZE (0..8))
             ACCESS read-only
@@ -3304,7 +3304,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "This is an mnemonic name available to PAD port users for
                  abbreviated calling or autocalling. The following parameter
-                 will specify call details. The mnemonic CTP is reserved 
+                 will specify call details. The mnemonic CTP is reserved
                  and specifies a call to the control port."
         ::= { cdx6500CfgMnemonicEntry 2 }
 
@@ -3313,13 +3313,13 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "This specifies call details for the mnemonic configured 
-                 in the previous parameter. Use the format of an X.28 call 
-                 command, but leave out the command specifier 
+                "This specifies call details for the mnemonic configured
+                 in the previous parameter. Use the format of an X.28 call
+                 command, but leave out the command specifier
                  (the c or call)."
         ::= { cdx6500CfgMnemonicEntry 3 }
 
-        -- The CSIS NUI Password Table 
+        -- The CSIS NUI Password Table
 
         cdx6500GCTNUIPasswordTable OBJECT-TYPE
             SYNTAX SEQUENCE OF Cdx6500GCTNUIPasswordEntry
@@ -3386,7 +3386,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                  a valid password. Use 0 for standard asterisk prompt."
         ::= { cdx6500GCTNUIPasswordEntry 4 }
 
-        -- The CSIS Software Key Table 
+        -- The CSIS Software Key Table
 
         cdx6500GCTSoftwareKeyTable OBJECT-TYPE
             SYNTAX SEQUENCE OF Cdx6500GCTSoftwareKeyEntry
@@ -3475,46 +3475,46 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "Table index, which is code for the software option.
                  Following are the various software options and their codes.
-                 1   -  MX25                                        
-                 2   -  SDLC                                        
-                 3   -  BSC3270                                     
-                 4   -  BSC2780                                     
-                 5   -  VIP                                         
-                 6   -  VIDEOTEX                                    
-                 7   -  Data/Connection Protect                     
-                 8   -  INL backup                                  
-                 9   -  FR DTE Interface                            
-                 10  -  6600 ETM                                    
-                 11  -  NCRBSC                                      
-                 12  -  TRANSPARENT POLLED ASYNC                    
-                 13  -  INTERNAL DSD                                
-                 14  -  801 AUTODIALER                              
-                 15  -  BSTD                                        
-                 16  -  FLASH Enable                                
-                 17  -  NCCP Pad                                    
-                 18  -  TBOP                                        
-                 19  -  Source Routing Bridge                       
-                 22  -  IBM2260                                     
-                 23  -  XDLC                                        
-                 24  -  Transparent Bridge                          
-                 25  -  Local Termination                           
-                 26  -  SR/TB Bridge                                
-                 29  -  IP Routing                                  
-                 31  -  FR DCE Interface                            
-                 32  -  6520 Model ID RN                            
-                 33  -  6520 Model ID SN                            
-                 34  -  6520 Model ID BN                            
-                 40  -  TCOP                                        
-                 42  -  FrameRelay LLC Conversion                   
-                 43  -  IP stack on CPU+                            
-                 44  -  TNPP-PAD Enable                             
-                 45  -  Token Ring LLC Conversion                   
-                 46  -  Ethernet LLC Conversion                     
-                 50  -  Dial-Out Routing Manager                    
-                 51  -  Dial-Out Routing Agent                      
-                 52  -  Chinapac Billing Feature                    
-                 53  -  Chinapac NUIC Interface                     
-                 54  -  X32 Port                                    
+                 1   -  MX25
+                 2   -  SDLC
+                 3   -  BSC3270
+                 4   -  BSC2780
+                 5   -  VIP
+                 6   -  VIDEOTEX
+                 7   -  Data/Connection Protect
+                 8   -  INL backup
+                 9   -  FR DTE Interface
+                 10  -  6600 ETM
+                 11  -  NCRBSC
+                 12  -  TRANSPARENT POLLED ASYNC
+                 13  -  INTERNAL DSD
+                 14  -  801 AUTODIALER
+                 15  -  BSTD
+                 16  -  FLASH Enable
+                 17  -  NCCP Pad
+                 18  -  TBOP
+                 19  -  Source Routing Bridge
+                 22  -  IBM2260
+                 23  -  XDLC
+                 24  -  Transparent Bridge
+                 25  -  Local Termination
+                 26  -  SR/TB Bridge
+                 29  -  IP Routing
+                 31  -  FR DCE Interface
+                 32  -  6520 Model ID RN
+                 33  -  6520 Model ID SN
+                 34  -  6520 Model ID BN
+                 40  -  TCOP
+                 42  -  FrameRelay LLC Conversion
+                 43  -  IP stack on CPU+
+                 44  -  TNPP-PAD Enable
+                 45  -  Token Ring LLC Conversion
+                 46  -  Ethernet LLC Conversion
+                 50  -  Dial-Out Routing Manager
+                 51  -  Dial-Out Routing Agent
+                 52  -  Chinapac Billing Feature
+                 53  -  Chinapac NUIC Interface
+                 54  -  X32 Port
                  55  -  Chinapac NUI Concentrator."
         ::= { cdx6500OSTCSISOptionStatEntry 1 }
 
@@ -3609,7 +3609,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             STATUS mandatory
             DESCRIPTION
                 "A table of currently active switched virtual circuits (SVC).
-                 The table is dynamic i.e. changing as queries are being 
+                 The table is dynamic i.e. changing as queries are being
                  performed on the table."
         ::= { cdx6500StatNetworkSvcsGroup 1}
 
@@ -3617,12 +3617,12 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             SYNTAX Cdx6500StatSVCEntry
             ACCESS not-accessible
             STATUS mandatory
-            DESCRIPTION 
+            DESCRIPTION
                 "A list of objects describing a single SVC."
             INDEX { cdx6500StatSVCIndex}
         ::= { cdx6500StatSVCTable 1}
 
-        Cdx6500StatSVCEntry ::= 
+        Cdx6500StatSVCEntry ::=
             SEQUENCE {
                 cdx6500StatSVCIndex
                     INTEGER,
@@ -3632,7 +3632,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                     DisplayString,
                 cdx6500StatSVCReverseCharge
                     INTEGER,
-                cdx6500StatSVCFastSelect             
+                cdx6500StatSVCFastSelect
                     INTEGER,
                 cdx6500StatSVCNetUserIdentification
                     INTEGER,
@@ -3649,7 +3649,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
             DESCRIPTION
                 "It is position in the list of SVC's."
         ::= { cdx6500StatSVCEntry 1 }
-         
+
         cdx6500StatSVCCallingChannel OBJECT-TYPE
             SYNTAX DisplayString (SIZE(0..17))
             ACCESS read-only
@@ -3695,7 +3695,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                  noFastSelect   -  Fast select facility is not selected.
                  fastSelect     -  Fast select facility is selected.
                  newvalNoFastSelect - same functionality as 'noFastSelect',
-                                   new enumeration added for RFC1155 
+                                   new enumeration added for RFC1155
                                    compatibility."
         ::= { cdx6500StatSVCEntry 5}
 
@@ -3829,7 +3829,7 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
         ::= { cdx6500CfgProtocolGroup 9 }
 
         cdx6500CreatePortAndStationEntry OBJECT-TYPE
-            SYNTAX Cdx6500CreatePortAndStationEntry 
+            SYNTAX Cdx6500CreatePortAndStationEntry
             ACCESS not-accessible
             STATUS mandatory
             DESCRIPTION
@@ -4019,9 +4019,9 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                  disable    - Disables the T3E3 port
                  resetstats - Resets the T3E3 port statistics."
         ::= { cdx6500T3E3ContEntry 2 }
-	
+
 	-- The DSCP-to-CoS Mapping Profile
-        -- This table contains the DSCP-to-CoS Mapping Profile 
+        -- This table contains the DSCP-to-CoS Mapping Profile
 
         cdx6500CfgDSCPtoCoSTable OBJECT-TYPE
             SYNTAX SEQUENCE OF Cdx6500CfgDSCPtoCoSEntry
@@ -4054,23 +4054,23 @@ cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 
                 }
 
         cdx6500DSCPtoCoSProfile OBJECT-TYPE
-            SYNTAX INTEGER 
+            SYNTAX INTEGER
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
                 "This value represents the profile number."
-        ::= { cdx6500CfgDSCPtoCoSEntry 1 }        
+        ::= { cdx6500CfgDSCPtoCoSEntry 1 }
 
         cdx6500DSCPtoCoSEntryNum OBJECT-TYPE
-            SYNTAX INTEGER 
+            SYNTAX INTEGER
             ACCESS read-only
             STATUS mandatory
             DESCRIPTION
-                "This value identifies the particular DSCP-to-CoS 
-                 Mapping Profile entry being configured by the 
+                "This value identifies the particular DSCP-to-CoS
+                 Mapping Profile entry being configured by the
                  other parameters in the record."
         ::= { cdx6500CfgDSCPtoCoSEntry 2 }
-  
+
         cdx6500DSCPValue OBJECT-TYPE
             SYNTAX DisplayString
             ACCESS read-write

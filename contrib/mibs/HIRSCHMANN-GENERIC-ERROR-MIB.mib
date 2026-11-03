@@ -1,22 +1,22 @@
 HIRSCHMANN-GENERIC-ERROR-MIB   DEFINITIONS ::= BEGIN
 
--- 
+--
 -- ***********************************************************
 -- Hirschmann Generic-Error MIB
 -- ***********************************************************
 --
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, OBJECT-IDENTITY, 
+    MODULE-IDENTITY, OBJECT-TYPE, OBJECT-IDENTITY,
 	enterprises, Integer32							FROM SNMPv2-SMI
-    TEXTUAL-CONVENTION, DisplayString, 
+    TEXTUAL-CONVENTION, DisplayString,
 	AutonomousType, TestAndIncr						FROM SNMPv2-TC;
 
 hirschmann					  OBJECT IDENTIFIER ::= { enterprises 248 }
 hmMgmtSEEErrorIDGroup 	OBJECT IDENTIFIER ::= { enterprises hirschmann(248) hmManagement(16) 2  }
 hmMgmtSEInfoIDGroup 	OBJECT IDENTIFIER ::= { enterprises hirschmann(248) hmManagement(16) 3  }
 
--- 
+--
 -- ***********************************************************
 -- hmMgmtSEEErrorIDGroup
 -- ***********************************************************
@@ -35,12 +35,12 @@ hmMaxNumExceeded OBJECT-IDENTITY
            STATUS      current
            DESCRIPTION "Max. number exceeded for {0}."
            ::= { hmMgmtSEEErrorIDGroup 3 }
-           
+
 hmAlreadyCreated OBJECT-IDENTITY
            STATUS      current
            DESCRIPTION "Instance already created."
            ::= { hmMgmtSEEErrorIDGroup 4 }
-           
+
 hmRedundancyConflictFpgaPort OBJECT-IDENTITY
            STATUS      current
            DESCRIPTION "Conflict Redundancy Protocols: Cannot enable {0} on configured ports."
@@ -55,7 +55,7 @@ hmRedundancyConflictPortShort OBJECT-IDENTITY
            STATUS      current
            DESCRIPTION "Cannot enable {0} on configured ports. Reason: {1}"
            ::= { hmMgmtSEEErrorIDGroup 7 }
-           
+
 -- hmTableFullError - Cannot add more rows to a table.
 hmTableFullError OBJECT-IDENTITY
            STATUS      current
@@ -67,12 +67,12 @@ hmFunctionNotUsableWithInterface OBJECT-IDENTITY
            DESCRIPTION "This function cannot be used with this interface."
            ::= { hmMgmtSEEErrorIDGroup 9 }
 
--- general conflict 
+-- general conflict
 hmGeneralConflict OBJECT-IDENTITY
            STATUS      current
            DESCRIPTION "{0} conflicts with {1}. {2}."
            ::= { hmMgmtSEEErrorIDGroup 10 }
-           
+
 hmGeneralExceededRange OBJECT-IDENTITY
     	STATUS      current
     	DESCRIPTION "The {0} is exceeding the range. Maximum permissable range is {1}..{2}."
@@ -99,17 +99,17 @@ hmMgmtIPAddressConflictWithMgmtIP OBJECT-IDENTITY
            STATUS      current
            DESCRIPTION "Given IP address/netmask {0}/{1} conflicts with the management IP address/netmask."
            ::= { hmMgmtSEEErrorIDGroup 202 }
-           
+
 hmMgmtIPAddressConflictWithOobIP OBJECT-IDENTITY
            STATUS      current
            DESCRIPTION "Given IP address/netmask {0}/{1} conflicts with the out-of-band management IP address/netmask."
            ::= { hmMgmtSEEErrorIDGroup 203 }
-           
+
 hmMgmtIPAddressConflictWithRouterIP OBJECT-IDENTITY
            STATUS      current
            DESCRIPTION "Given IP address/netmask {0}/{1} conflicts with a routing interface IP address/netmask."
            ::= { hmMgmtSEEErrorIDGroup 204 }
-           
+
 -- hmMgmtSEEErrorIDGroup 300 - MGMT Group
 hm2NetIPAddrInvalid OBJECT-IDENTITY
            STATUS      current
@@ -132,7 +132,7 @@ hm2NetPrefixLengthInvalid OBJECT-IDENTITY
            ::= { hmMgmtSEEErrorIDGroup 303 }
 
 
--- 
+--
 -- ***********************************************************
 -- hmMgmtSEInfoIDGroup
 -- ***********************************************************

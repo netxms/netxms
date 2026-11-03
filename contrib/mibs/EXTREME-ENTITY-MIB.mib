@@ -71,9 +71,4 @@ EXTREME-ENTITY-MIB DEFINITIONS ::= BEGIN
 		"Time unit used to represent value reported by extremeEntityFRUOdometer. Depending on the underlying hardware capability, the agent implementation can choose the time-unit used to represent the Odometer value."
 		  ::= { extremeEntityFRUEntry 3 }
 
-END	
-
-
-
-
-
+END

@@ -122,8 +122,8 @@ SnpxChassisType ::=  TEXTUAL-CONVENTION
 	mBayStack100Hub(27),	-- product 100Base-T Hub
 	m3000FastEth(28),       -- product 3000 Fast Ethernet
 	mXediaSwitch(29),	-- product Orion switch
-	notUsed(30),            -- not used 
-        m28200EthSwitch(31),    -- product DDS 
+	notUsed(30),            -- not used
+        m28200EthSwitch(31),    -- product DDS
 	mCent6Slot(32),         -- product Centillion
 	mCent12Slot(33),        -- product Centillion
 	mCent1Slot(34),         -- product Centillion
@@ -152,8 +152,8 @@ SnpxChassisType ::=  TEXTUAL-CONVENTION
         mPassport8010(58),      -- product Passport 8010
         mPassport8006(59),      -- product Passport 8006
         mBayStack670(60),       -- product BayStack 670 wireless access point
-        mPassport740(61),       -- product Passport 740 
-        mPassport750(62),       -- product Passport 750 
+        mPassport740(61),       -- product Passport 740
+        mPassport750(62),       -- product Passport 750
         mPassport790(63),       -- product Passport 790
         mBPS2000(64),           -- product Business Policy Switch 2000 10/100 Switches
         mPassport8110(65),      -- product Passport 8110 L2 Switch
@@ -185,16 +185,16 @@ SnpxChassisType ::=  TEXTUAL-CONVENTION
         mPassport1424(91),      -- product Passport 1424 L3 switch
         mPassport1648(92),      -- product Passport 1648 L3 switch
         mPassport1612(93),      -- product Passport 1612 L3 switch
-        mPassport1624(94),      -- product Passport 1624 L3 switch 
+        mPassport1624(94),      -- product Passport 1624 L3 switch
         mBayStack380-24F(95),   -- product BayStack 380-24F Fiber 1000 Switch
         mERS5510-24T(96),       -- product Ethernet Routing Switch 5510-24T
         mERS5510-48T(97),       -- product Ethernet Routing Switch 5510-48T
         mES470-24T(98),         -- product Ethernet Switch 470-24T
         mWLANAccessPoint2220(99),  -- product Nortel Networks Wireless LAN Access Point 2220
         mPassport2402(100),     -- product Passport RBS 2402 L3 switch
-        mAlteon2424(101),       -- product Alteon Application Switch 2424  
-        mAlteon2224(102),       -- product Alteon Application Switch 2224 
-        mAlteon2208(103),       -- product Alteon Application Switch 2208 
+        mAlteon2424(101),       -- product Alteon Application Switch 2424
+        mAlteon2224(102),       -- product Alteon Application Switch 2224
+        mAlteon2208(103),       -- product Alteon Application Switch 2208
         mAlteon2216(104),       -- product Alteon Application Switch 2216
         mAlteon3408(105),       -- product Alteon Application Switch 3408
         mAlteon3416(106),       -- product Alteon Application Switch 3416
@@ -250,7 +250,7 @@ series3000	OBJECT IDENTIFIER ::= { products 3 }
 superAgent	OBJECT IDENTIFIER ::= { products 4 }
 specialTraps	OBJECT IDENTIFIER ::= { products 5 }
 series5000	OBJECT IDENTIFIER ::= { products 6 }
-lanSwitch	OBJECT IDENTIFIER ::= { products 7 } 
+lanSwitch	OBJECT IDENTIFIER ::= { products 7 }
 snpxRmonExt OBJECT IDENTIFIER ::= { products 8 }
 wirelessLAN OBJECT IDENTIFIER ::= { products 9 }
 powerSupply OBJECT IDENTIFIER ::= { products 10 }
@@ -294,7 +294,7 @@ s3reg-3030	OBJECT IDENTIFIER ::= { registration 3 }
   s3reg-3030-FDDI-NMM
 		OBJECT IDENTIFIER ::= { s3reg-3030 3 }
   s3reg-3030-ethSwitchNMM
-		OBJECT IDENTIFIER ::= { s3reg-3030 4 } 
+		OBJECT IDENTIFIER ::= { s3reg-3030 4 }
 
 
 s3reg-2310	OBJECT IDENTIFIER ::= { registration 4 }
@@ -393,7 +393,7 @@ ecreg-1032x	OBJECT IDENTIFIER ::= { registration 20 }
 
 
 sreg-5DN00x	OBJECT IDENTIFIER ::= { registration 21 }
-  sreg-5DN00x-EthNMM	OBJECT IDENTIFIER ::= { sreg-5DN00x 1 } 
+  sreg-5DN00x-EthNMM	OBJECT IDENTIFIER ::= { sreg-5DN00x 1 }
 
 
 sreg-BayStackEth	OBJECT IDENTIFIER ::= { registration 22 }
@@ -423,7 +423,7 @@ lsreg-28200   OBJECT IDENTIFIER ::= { registration 28 }
                  OBJECT IDENTIFIER ::= { lsreg-28200 1 }
 
 sreg-BayStack302   OBJECT IDENTIFIER ::= { registration 29 }
-   sreg-BayStack302-9port -- BayStack302 8+1Tx/Fx 10 Mb/s Ethernet Switch 
+   sreg-BayStack302-9port -- BayStack302 8+1Tx/Fx 10 Mb/s Ethernet Switch
                  OBJECT IDENTIFIER ::= { sreg-BayStack302 1 }
 
 sreg-BayStack350   OBJECT IDENTIFIER ::= { registration 30 }
@@ -435,7 +435,7 @@ sreg-BayStack350   OBJECT IDENTIFIER ::= { registration 30 }
 sreg-BayStack150Eth        OBJECT IDENTIFIER ::= { registration 31 }
   sreg-BayStack150Eth-ethNMM
 		OBJECT IDENTIFIER ::= { sreg-BayStack150Eth 1 }
-   
+
 sreg-BayStack303-304	OBJECT IDENTIFIER ::= { registration 32 }
   sreg-BayStack303-304-Sw   -- 12-24 10mb 1 100mb with MDA Switch
                  OBJECT IDENTIFIER ::= { sreg-BayStack303-304 1 }
@@ -483,7 +483,7 @@ sreg-BayStack3580          OBJECT IDENTIFIER ::= { registration 41 }
 sreg-BayStack10            OBJECT IDENTIFIER ::= { registration 42 }
   sreg-BayStack10-powerSupplyUnit  -- BayStack 10 Power Supply Unit
           OBJECT IDENTIFIER ::= { sreg-BayStack10 1 }
-          
+
 sreg-BayStack420           OBJECT IDENTIFIER ::= { registration 43 }
   sreg-BayStack420-24T-ethSwitchNMM  -- BayStack 420-24T 10/100 Switch
 	      OBJECT IDENTIFIER ::= { sreg-BayStack420 1 }
@@ -514,8 +514,8 @@ sreg-BayStack460-24T-PWR    OBJECT IDENTIFIER ::= { registration 49 }
 
 sreg-Metro8000    	    OBJECT IDENTIFIER ::= { registration 50 }
   sreg-Metro8000-8664GB-OPM  -- OPTera Metro 8000 4 Ports Open Protocol Module
-	      OBJECT IDENTIFIER ::= { sreg-Metro8000 1 }          
-	      
+	      OBJECT IDENTIFIER ::= { sreg-Metro8000 1 }
+
 sreg-BayStack380-24F        OBJECT IDENTIFIER ::= { registration 51 }
   sreg-BayStack380-24F-ethSwitchNMM -- BayStack 380-24F Switch 1000 Fiber Switch
              OBJECT IDENTIFIER ::= { sreg-BayStack380-24F 1 }
@@ -592,4 +592,3 @@ sreg-NortelWLAN2370 OBJECT IDENTIFIER ::= { sreg-NortelWLAN 4 }
 sreg-NortelWLAN2380 OBJECT IDENTIFIER ::= { sreg-NortelWLAN 5 }
 
 END
-

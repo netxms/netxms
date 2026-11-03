@@ -39,7 +39,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
                       in 'hpicfInetDNSNameServersTable' table."
 
         REVISION     "200804040000Z"  -- April 04, 2008
-        DESCRIPTION  "Deprecated object hpicfTelnet6Enable" 
+        DESCRIPTION  "Deprecated object hpicfTelnet6Enable"
 
         REVISION     "200709130000Z"  -- Sept 13, 2007
         DESCRIPTION  "Limit the size to 1300 for the hpicfBannerMOTD."
@@ -50,21 +50,21 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
 
         REVISION     "200705300954Z"  -- May 30, 2007
         DESCRIPTION  "Added the hpicfTelnet6Enable object."
-	
+
         REVISION     "200511170000Z"  -- November 17, 2005
-        DESCRIPTION  "Added hpicfBasicDNSConfig object group to 
-                      the HP ICF Basic Group.  Updated conformance and 
+        DESCRIPTION  "Added hpicfBasicDNSConfig object group to
+                      the HP ICF Basic Group.  Updated conformance and
                       compliences objects."
 
         REVISION     "200301090108Z"  -- January 9, 2003
-        DESCRIPTION  "Changed the default value for 
+        DESCRIPTION  "Changed the default value for
                       hpicfSnmpTargetAddrLogFilter to 1."
 
         REVISION     "200210100401Z"  -- October 10, 2002
         DESCRIPTION  "Added hpicfSnmpTargetAddrLogFilter for to add
                       log filtering in snmpTargetAddrTable.  Added
                       conformance group hpicfSnmpTargetAddrLogFilterGroup.
-                      Deprecated hpicfTrapDestTable.  Deprecated 
+                      Deprecated hpicfTrapDestTable.  Deprecated
                       hpicfBasicCompliance3 and replaced it
                       with hpicfBasicCompliance4."
 
@@ -100,8 +100,8 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
                      the hpicfReset and hpicfSelfTest objects."
 
         REVISION     "9501180000Z"  -- April 12, 2004
-        DESCRIPTION  "Added the hpicfIpZeroBroadcastEnable object." 
-	
+        DESCRIPTION  "Added the hpicfIpZeroBroadcastEnable object."
+
         ::= { hpicfObjectModules 5 }
 
 
@@ -119,14 +119,14 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "When this object is set to to 'normalReset' it 
+        DESCRIPTION "When this object is set to to 'normalReset' it
                     results in a 'powerup' reset of the device.  When
                     set to 'agentReset', it results in a reset of the
                     agent software, without resetting the device
                     hardware.  When this object is set, the agent
                     replies, dallies a short time to allow the reply
                     to be emitted from the device, then performs the
-                    reset.  When read, this object always returns 
+                    reset.  When read, this object always returns
                     'noReset'."
         ::= { hpicfBasic 1 }
 
@@ -137,7 +137,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "Self test is invoked by setting this flag to 
+        DESCRIPTION "Self test is invoked by setting this flag to
                     'stExecute'. When the object changes to 'stSuccess',
                     the test has completed successfully."
         ::= { hpicfBasic 2 }
@@ -522,7 +522,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "********* THIS OBJECT IS DEPRECATED *********
 
-                    Enables/disables ARP proxy on the interface. If set 
+                    Enables/disables ARP proxy on the interface. If set
                     to enabled(1), the switch will respond on ARP request
                     for IP addresses from other subnets."
         ::= { hpicfIpConfigEntry 7 }
@@ -536,7 +536,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "********* THIS OBJECT IS DEPRECATED *********
 
-                    Enables/disables local ARP proxy on the interface. If set 
+                    Enables/disables local ARP proxy on the interface. If set
                     to enabled(1), the switch will respond on ARP request
                     for IP addresses from local subnets."
         ::= { hpicfIpConfigEntry 8 }
@@ -642,11 +642,11 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION "This object is used to configure whether switch
-                     should silently discard on receipt any packet 
-                     addressed to 0.0.0.0 or {<Network>, 0}.If these 
-                     packets are not silently discarded, they must be 
-                     treated as IP broadcasts.This object is by default 
-                     configured to discard zero broadcast packet"   
+                     should silently discard on receipt any packet
+                     addressed to 0.0.0.0 or {<Network>, 0}.If these
+                     packets are not silently discarded, they must be
+                     treated as IP broadcasts.This object is by default
+                     configured to discard zero broadcast packet"
         ::= { hpicfBasicIpConfig 5 }
 
 
@@ -895,7 +895,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS      deprecated
         DESCRIPTION "*************THIS OBJECT IS DEPRECATED **********
-                     A value that uniquely identifies this 
+                     A value that uniquely identifies this
                      hpicfTrapDestEntry."
         ::= { hpicfTrapDestEntry 1 }
 
@@ -922,7 +922,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
                     of this object to a value representing a version of
                     the SNMP framework that is not supported by that
                     agent."
-        DEFVAL      { snmpv1 } 
+        DEFVAL      { snmpv1 }
         ::= { hpicfTrapDestEntry 2 }
 
     hpicfTrapDestCommunity OBJECT-TYPE
@@ -1036,7 +1036,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
 		    notifications will be sent. When the value of this
 		    object is 'inform', informs will be sent."
 
-        DEFVAL      { trap } 
+        DEFVAL      { trap }
         ::= { hpicfTrapDestEntry 8 }
 
     hpicfTrapDestRetries OBJECT-TYPE
@@ -1045,10 +1045,10 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "*************THIS OBJECT IS DEPRECATED **********
                     This object is used to indicate what number of
-                    retries to be attempted when a response is not 
+                    retries to be attempted when a response is not
 		    received for a generated message."
 
-        DEFVAL      { 3 } 
+        DEFVAL      { 3 }
         ::= { hpicfTrapDestEntry 9 }
 
     hpicfTrapDestTimeout OBJECT-TYPE
@@ -1057,10 +1057,10 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "*************THIS OBJECT IS DEPRECATED **********
                     This object is used to indicate what number of
-                    seconds between retries to be attempted when a 
+                    seconds between retries to be attempted when a
 		    response is not received for a generated message."
 
-        DEFVAL      { 1500 } 
+        DEFVAL      { 1500 }
         ::= { hpicfTrapDestEntry 10 }
 
     -- HP Basic extensions to the Remote Monitoring MIB.
@@ -1229,9 +1229,9 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
                     this object as read-only, or with a restricted
                     write syntax."
         DEFVAL      { 1 }   -- SNMP traps only
-        ::= { hpicfSnmpTargetAddrLogFilterEntry 1 } 
+        ::= { hpicfSnmpTargetAddrLogFilterEntry 1 }
 
-    -- HP ICF BASIC Domain Name Services Objects 
+    -- HP ICF BASIC Domain Name Services Objects
 
     hpicfBasicDNSConfig OBJECT IDENTIFIER ::= { hpicfBasic 15}
 
@@ -1239,21 +1239,21 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         SYNTAX      DisplayString (SIZE (0..255))
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "The default domain name (A unique designator on the 
-                     network composed of symbols separated by dots) to 
-                     which resolver appends host names before sending the 
-                     queries to name servers.  An example of a valid 
+        DESCRIPTION "The default domain name (A unique designator on the
+                     network composed of symbols separated by dots) to
+                     which resolver appends host names before sending the
+                     queries to name servers.  An example of a valid
                      default domain suffix is 'hp.com'.  The resolver
-                     will not use a default domain suffix if this object 
-                     is set to empty-string (which is the default value.)" 
+                     will not use a default domain suffix if this object
+                     is set to empty-string (which is the default value.)"
         ::= { hpicfBasicDNSConfig 1 }
 
     hpicfDNSNameServerTable OBJECT-TYPE
         SYNTAX      SEQUENCE OF HpicfDNSNameServerEntry
         MAX-ACCESS  not-accessible
         STATUS      deprecated
-        DESCRIPTION "#### Deprecated #### A table that contains information about the 
-                    (DNS) Name Server configuration in this 
+        DESCRIPTION "#### Deprecated #### A table that contains information about the
+                    (DNS) Name Server configuration in this
                     device."
         ::= { hpicfBasicDNSConfig 2 }
 
@@ -1265,17 +1265,17 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
                      on this resolver device. "
         INDEX       { hpicfDNSNameServerAddress }
         ::= { hpicfDNSNameServerTable 1 }
-       
+
     HpicfDNSNameServerEntry ::=
         SEQUENCE {
             hpicfDNSNameServerAddress     IpAddress,
-            hpicfDNSNameServerEntryStatus RowStatus 
+            hpicfDNSNameServerEntryStatus RowStatus
         }
 
     hpicfDNSNameServerAddress OBJECT-TYPE
         SYNTAX      IpAddress
         MAX-ACCESS  not-accessible
-        STATUS      deprecated 
+        STATUS      deprecated
         DESCRIPTION "### Deprecated ###IPv4 address of the given name server."
         ::= { hpicfDNSNameServerEntry 1 }
 
@@ -1290,8 +1290,8 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         SYNTAX      SEQUENCE OF HpicfInetDNSNameServerEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "A table that contains information about the 
-                    (DNS) Name Server configuration in this 
+        DESCRIPTION "A table that contains information about the
+                    (DNS) Name Server configuration in this
                     device.This table has 3 index's PRIORITY ADDRTYPE
                     ADDR,for each pririoty only one address can be configured."
 
@@ -1301,17 +1301,17 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         SYNTAX      HpicfInetDNSNameServerEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "An entry in hpicfInetDNSNameServerEntry contains single 
+        DESCRIPTION "An entry in hpicfInetDNSNameServerEntry contains single
                      manually configured DNS Address
                      on this resolver device. "
         INDEX       { hpicfInetDNSNameServerAddrIndex,
-							 hpicfInetDNSNameServerAddrType, 
+							 hpicfInetDNSNameServerAddrType,
                       hpicfInetDNSNameServerAddress }
         ::= { hpicfInetDNSNameServerTable 1 }
-       
+
     HpicfInetDNSNameServerEntry ::=
         SEQUENCE {
-				hpicfInetDNSNameServerAddrIndex	 INTEGER, 
+				hpicfInetDNSNameServerAddrIndex	 INTEGER,
             hpicfInetDNSNameServerAddrType    InetAddressType,
             hpicfInetDNSNameServerAddress     InetAddress,
             hpicfInetDNSNameServerEntryStatus RowStatus,
@@ -1319,28 +1319,28 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         }
 
 	 hpicfInetDNSNameServerAddrIndex OBJECT-TYPE
-		SYNTAX		INTEGER(0..255)	
+		SYNTAX		INTEGER(0..255)
 		MAX-ACCESS 	not-accessible
 		STATUS	   current
     DESCRIPTION "Index(which is also treated as priority) of DNS server address
                  configured."
 		 ::=	{ hpicfInetDNSNameServerEntry 1 }
-			
+
     hpicfInetDNSNameServerAddrType OBJECT-TYPE
         SYNTAX      InetAddressType
         MAX-ACCESS  not-accessible
-        STATUS      current 
+        STATUS      current
         DESCRIPTION "Address Type of the DNS Name server stored in hpicfInetDNSNameServer
                      Address."
         ::= { hpicfInetDNSNameServerEntry 2 }
 
     hpicfInetDNSNameServerAddress OBJECT-TYPE
-        SYNTAX      InetAddress  
+        SYNTAX      InetAddress
         MAX-ACCESS  not-accessible
-        STATUS      current 
+        STATUS      current
         DESCRIPTION "Address of DNS and type of address stored is
-                      is mentioned in hpicfInetDNSNameServerAddType 
-                     This field needs to be used in conjuction with 
+                      is mentioned in hpicfInetDNSNameServerAddType
+                     This field needs to be used in conjuction with
                      hpicfInetDNSNameServerAddrType."
         ::= { hpicfInetDNSNameServerEntry 3 }
 
@@ -1362,7 +1362,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
       DEFVAL      {false}
       ::= {  hpicfInetDNSNameServerEntry 5 }
 
-    -- HP ICF BASIC Banner 
+    -- HP ICF BASIC Banner
 
     hpicfBannerStatus OBJECT-TYPE
         SYNTAX      INTEGER {
@@ -1373,20 +1373,20 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "When the value of this object is 'enabled(1)', it means
                     that the banner has been configured and will be displayed
-                    at console or web-ui login. When the value of this object 
+                    at console or web-ui login. When the value of this object
 		    is disabled(2), it means the banner has been unconfigured."
-	DEFVAL      { 1 } 	    
-		    
+	DEFVAL      { 1 }
+
         ::= { hpicfBasic 13 }
 
     hpicfBanner     OBJECT IDENTIFIER ::= { hpicfBasic 14}
 
     hpicfBannerMOTD OBJECT-TYPE
-        SYNTAX      OCTET STRING (SIZE(1..1300)) 
+        SYNTAX      OCTET STRING (SIZE(1..1300))
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "An administratively configured message that is displayed 
-                     to the user when logged in to the device through 
+        DESCRIPTION "An administratively configured message that is displayed
+                     to the user when logged in to the device through
                      either the console or web-ui"
         ::= { hpicfBanner 1 }
 
@@ -1398,7 +1398,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "The switch boots from 'primary image' or 'secondary image' 
+        DESCRIPTION "The switch boots from 'primary image' or 'secondary image'
                     based on this object."
         ::= { hpicfBasic 16 }
 
@@ -1978,7 +1978,7 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
                       hpicfIpConfigAdminStatus,
                       hpicfIpGlobalDefaultRouter,
                       hpicfIpGlobalPingRouter,
-                      hpicfIpZeroBroadcastEnable 
+                      hpicfIpZeroBroadcastEnable
                     }
         STATUS      current
         DESCRIPTION "A collection of objects for configuring the IP
@@ -2029,4 +2029,3 @@ HP-ICF-BASIC DEFINITIONS ::= BEGIN
 
 
 END
-

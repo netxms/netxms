@@ -36,7 +36,7 @@ fdryMplsL2VpnMIB MODULE-IDENTITY
          It has additional information for Virtual Leased Line (VLL),
          VLL-Local and Virtual Private LAN Service (VPLS) Endpoints,
          as well as for VPLS Instance.
-         
+
          Copyright (C) Foundry Networks, Inc, (2008)
          This document and the information contained herein are provided on an
          AS IS basis and FOUNDRY NETWORKS DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED,
@@ -120,7 +120,7 @@ Layer2StateTC ::= TEXTUAL-CONVENTION
      STATUS        current
      DESCRIPTION
           "A row in this table represents a VLL or VLL-local end point for a
-          pseudo-wire (PW) virtual connection across a packet network. 
+          pseudo-wire (PW) virtual connection across a packet network.
           For a VLL, we would have one instance of this table for a given PW.
           For a VLL-local, there would be two instances of this table for a given PW.
           It is indexed by fdryVllEndPointServiceType, pwIndex, and pwEnetPwInstance.
@@ -295,7 +295,7 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
      STATUS        deprecated
      DESCRIPTION
           "A row in this table represents a VPLS end point for a
-          given VPLS instance. The VPLS instance is represented 
+          given VPLS instance. The VPLS instance is represented
           by vplsConfigTable and fdryVplsTable.
           For a given VPLS instance, there could be multiple instances
           of rows within this table, each describing one endpoint.
@@ -304,10 +304,10 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
           vlan id, and ifIndex of the physical port which is acting as an endpoint.
           This allows a tagged port to be associated with multiple VPLS instances.
           An untagged port can only be associated with one VPLS instance.
-          Note that this table is kept independent of the PW tables to indicate 
+          Note that this table is kept independent of the PW tables to indicate
           that endpoints terminate on the VPLS instance.
           On the other side, a VPLS instance will have association with the PW MIB.
-          This table is indexed by vplsConfigIndex, fdryVplsEndPointPortVlan, 
+          This table is indexed by vplsConfigIndex, fdryVplsEndPointPortVlan,
           and fdryVplsEndPointIfIndex.
            "
      INDEX  {vplsConfigIndex, fdryVplsEndPointPortVlan, fdryVplsEndPointIfIndex}
@@ -358,7 +358,7 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
      MAX-ACCESS    read-only
      STATUS        deprecated
      DESCRIPTION
-         "This counter indicates the number of packets egressing 
+         "This counter indicates the number of packets egressing
          out from this endpoint towards the Customer Edge (CE).
          This value counts packets coming from multiple pseudo-wires
          towards the endpoint, as well as locally switched packets
@@ -420,7 +420,7 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
      MAX-ACCESS    read-only
      STATUS        deprecated
      DESCRIPTION
-         "This counter indicates the number of octets ingressing 
+         "This counter indicates the number of octets ingressing
          into this endpoint from the Customer Edge (CE).
            This object is supported in CES/CER only.
          "
@@ -446,7 +446,7 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
      STATUS        current
      DESCRIPTION
           "A row in this table represents a VPLS end point for a
-          given VPLS instance. The VPLS instance is represented 
+          given VPLS instance. The VPLS instance is represented
           by vplsConfigTable and fdryVplsTable.
           For a given VPLS instance, there could be multiple instances
           of rows within this table, each describing one endpoint.
@@ -456,10 +456,10 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
           This allows a tagged port to be associated with multiple VPLS instances, and also many inner VLAN or ISID
           to be associated with a tagged port (outer VLAN tag)
           An untagged port can only be associated with one VPLS instance.
-          Note that this table is kept independent of the PW tables to indicate 
+          Note that this table is kept independent of the PW tables to indicate
           that endpoints terminate on the VPLS instance.
           On the other side, a VPLS instance will have association with the PW MIB.
-          This table is indexed by vplsConfigIndex, fdryVplsEndPointPortVlan, 
+          This table is indexed by vplsConfigIndex, fdryVplsEndPointPortVlan,
           and fdryVplsEndPointIfIndex.
            "
      INDEX  {vplsConfigIndex,
@@ -495,7 +495,7 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
      MAX-ACCESS    not-accessible
      STATUS        current
      DESCRIPTION
-         "This value indicates the inner id for this endpoint. 
+         "This value indicates the inner id for this endpoint.
          If no inner tag is specified, value invalid(1) is returned.
          "
      ::= { fdryVplsEndPoint2Entry 2 }
@@ -505,10 +505,10 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
      MAX-ACCESS    not-accessible
      STATUS        current
      DESCRIPTION
-         "This value indicates the inner tag for this endpoint. 
-          If the index fdryVplsEndPoint2InnerTagType has 
-          value isid(3), then this object will have the 
-          ISID value for that endpoint. Valid ISID value 
+         "This value indicates the inner tag for this endpoint.
+          If the index fdryVplsEndPoint2InnerTagType has
+          value isid(3), then this object will have the
+          ISID value for that endpoint. Valid ISID value
           is between 256 (0x100) and 16777214 (0xFFFFFE).
          If no inner tag is specified, value 0 is returned.
          "
@@ -538,7 +538,7 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
      MAX-ACCESS    read-only
      STATUS        current
      DESCRIPTION
-         "This counter indicates the number of octets ingressing 
+         "This counter indicates the number of octets ingressing
          into this endpoint from the Customer Edge (CE).
            This object is supported in CES/CER only.
          "
@@ -588,7 +588,7 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
      DESCRIPTION
          "This table specifies additional information about the VPLS instance configuration
           which is not available in the VplsConfigTable. Some of these
-          objects are configuration specific, some are commands specific 
+          objects are configuration specific, some are commands specific
           to that VPLS instance."
      ::= { fdryMplsVplsInfo 2 }
 
@@ -597,7 +597,7 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
      MAX-ACCESS    not-accessible
      STATUS        current
      DESCRIPTION
-          "A row in this table represents a VPLS instance. It augments 
+          "A row in this table represents a VPLS instance. It augments
           the vplsConfigTable in the VPLS draft mib.
            "
      AUGMENTS    { vplsConfigEntry }
@@ -681,7 +681,7 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
       STATUS          current
       DESCRIPTION
            "This notification is generated when one entry in the
-            fdryVplsTable have been marked for deletion, indicating 
+            fdryVplsTable have been marked for deletion, indicating
            deletion of an existing VPLS instance."
       --#TYPE "Foundry Trap: MPLS VPLS Instance Deleted"
       --#SUMMARY "VPLS %s (VC ID %d) has been deleted."
@@ -712,5 +712,3 @@ fdryVllEndPointInnerVlanId OBJECT-TYPE
       ::= { fdryMplsVpnNotifications 3 }
 
 END
-
-

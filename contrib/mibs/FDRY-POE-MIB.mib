@@ -1,13 +1,13 @@
 FDRY-POE-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-	MODULE-IDENTITY, OBJECT-TYPE, 
+	MODULE-IDENTITY, OBJECT-TYPE,
 			Integer32, Unsigned32	   	FROM SNMPv2-SMI	  			-- [RFC2578]
 	DisplayString		 				FROM SNMPv2-TC 		 		-- [RFC2579]
 	InterfaceIndex						FROM IF-MIB
 	snAgentSys	 						FROM FOUNDRY-SN-ROOT-MIB
 	;
-   
+
 snAgentPoe MODULE-IDENTITY
 	LAST-UPDATED "200909300000Z" -- September 30, 2009
 	ORGANIZATION "Foundry Networks, Inc."
@@ -20,7 +20,7 @@ snAgentPoe MODULE-IDENTITY
 	DESCRIPTION
 			"The Foundry proprietary MIB module for Power Over Ethernet(PoE)
 			It has PoE port and module configuring information.
-			
+
 			Copyright 1996-2008 Foundry Networks, Inc.
 			All rights reserved.
 			This Foundry Networks SNMP Management Information Base Specification
@@ -28,17 +28,17 @@ snAgentPoe MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
 			operation, condition, or performance of the Specification.
 			"
-   
+
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION	"Changed INTEGER to Integer32"
 	REVISION 	"200904030000Z"  -- 3 April 2009
 	DESCRIPTION	"Initial version, snAgentPoePortTable which was in SNMPv1 written in SNMPv2-SMI."
-		  
+
  ::= { snAgentSys 14 }
 
 -- Power Over Ethernet MIB Group
@@ -244,7 +244,7 @@ snAgentPoeModuleMaxPDTypeSupport  OBJECT-TYPE
 	MAX-ACCESS  read-only
 	STATUS	current
     DESCRIPTION
-		"This object talks about the POE module type which is capable to support Power Device (PD) type 
+		"This object talks about the POE module type which is capable to support Power Device (PD) type
 		ieee802.3af or ieee802.3at(also called POE plus)type. Module which support ieee802.3at can also
 		support ieee802.3af but reverse is not true."
 
@@ -259,7 +259,7 @@ snAgentPoeUnitTable       OBJECT-TYPE
 	MAX-ACCESS	not-accessible
 	STATUS	current
 	DESCRIPTION
-		"A table of POE informaion for each unit. Only the unit 
+		"A table of POE informaion for each unit. Only the unit
 		that has POE capability appears in a table row"
 	::= { snAgentPoeUnit 1 }
 
@@ -314,6 +314,5 @@ snAgentPoeUnitPowerAllocationsRequestsHonored   OBJECT-TYPE
 	DESCRIPTION
 		"This object shows number of times the inline power allocations requests honored on that unit (device)."
 	::= { snAgentPoeUnitEntry 4}
- 
-END
 
+END

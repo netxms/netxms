@@ -23,7 +23,7 @@ products OBJECT IDENTIFIER ::= { aruba 1}
 
 arubaEnterpriseMibModules OBJECT IDENTIFIER ::= { aruba 2}
 
--- Node arubaMgmtGroup defines the objects related to the Aruba Management 
+-- Node arubaMgmtGroup defines the objects related to the Aruba Management
 -- Extensions.
 
 arubaMgmt OBJECT IDENTIFIER ::= { aruba 3}
@@ -213,7 +213,7 @@ apDuowj OBJECT IDENTIFIER ::= {apProducts 16}
 -- ortronics Duo
 apDuo OBJECT IDENTIFIER ::= {apProducts 17}
 
---ap80MB, this object is the SYSOID 
+--ap80MB, this object is the SYSOID
 
 ap80MB OBJECT IDENTIFIER ::= {apProducts 18}
 

@@ -28,7 +28,7 @@ IMPORTS
                                         FROM SNMPv2-SMI
     MODULE-COMPLIANCE, OBJECT-GROUP,
     NOTIFICATION-GROUP                  FROM SNMPv2-CONF
-    DisplayString, PhysAddress,           
+    DisplayString, PhysAddress,
     RowStatus, MacAddress, TruthValue   FROM SNMPv2-TC
     airespace                           FROM AIRESPACE-REF-MIB
     dot1qVlanIndex, dot1qFdbId          FROM Q-BRIDGE-MIB
@@ -50,19 +50,19 @@ IMPORTS
                 Tel: +1 800 553-NETS
 
               Email: cs-wnbu-snmp@cisco.com"
-        DESCRIPTION             
+        DESCRIPTION
                 "This MIB is intended to be implemented on all those
                 devices operating as Central Controllers (CC) that
                 terminate the Light Weight Access Point Protocol
                 tunnel from Light-weight LWAPP Access Points.
 
-                This MIB provides configuration, statistics and 
-                status information about the controller. 
-                This includes controller statistics and provides 
-                information such as Inventory, Trap logs, memory and 
-                CPU. This MIB also provides configuration of CLI, 
-                SNMP, LAG, DHCP, Spanning Tree, etc. 
-                
+                This MIB provides configuration, statistics and
+                status information about the controller.
+                This includes controller statistics and provides
+                information such as Inventory, Trap logs, memory and
+                CPU. This MIB also provides configuration of CLI,
+                SNMP, LAG, DHCP, Spanning Tree, etc.
+
                 The relationship between controller and the LWAPP APs
                 can be depicted as follows:
 
@@ -104,15 +104,15 @@ IMPORTS
                 The APs then encapsulate all the 802.11 frames from
                 wireless clients inside LWAPP frames and forward
                 the LWAPP frames to the controller.
-               
+
                                    GLOSSARY
- 
+
                 Access Point ( AP )
 
                 An entity that contains an 802.11 medium access
                 control ( MAC ) and physical layer ( PHY ) interface
                 and provides access to the distribution services via
-                the wireless medium for associated clients.  
+                the wireless medium for associated clients.
 
                 LWAPP APs encapsulate all the 802.11 frames in
                 LWAPP frames and sends it to the controller to which
@@ -126,25 +126,25 @@ IMPORTS
                 happens to be the MAC address of the dot11 radio
                 interface of the Access Point.  The wireless
                 clients that associate with the Access Point
-                get the wired uplink through this particular 
-                dot11 interface. 
+                get the wired uplink through this particular
+                dot11 interface.
 
                 Central Controller ( CC )
 
                 The central entity that terminates the LWAPP protocol
                 tunnel from the LWAPP APs.  Throughout this MIB,
-                this entity also referred to as 'controller'. 
+                this entity also referred to as 'controller'.
 
-                Light Weight Access Point Protocol ( LWAPP ) 
+                Light Weight Access Point Protocol ( LWAPP )
 
-                This is a generic protocol that defines the 
+                This is a generic protocol that defines the
                 communication between the Access Points and the
-                Central Controller. 
+                Central Controller.
 
                 Mobile Node ( MN )
 
                 A roaming 802.11 wireless device in a wireless
-                network associated with an access point. 
+                network associated with an access point.
 
                 Station Management (SMT)
 
@@ -152,13 +152,13 @@ IMPORTS
                 802.11 protocol operations by the AP to work
                 cooperatively with the other APs and 802.11
                 devices in the network.
- 
+
                 REFERENCE
- 
+
                 [1] Part 11 Wireless LAN Medium Access Control ( MAC )
                 and Physical Layer ( PHY ) Specifications.
-  
-                [2] Draft-obara-capwap-lwapp-00.txt, IETF Light 
+
+                [2] Draft-obara-capwap-lwapp-00.txt, IETF Light
                 Weight Access Point Protocol. "
 
         REVISION    "200604100000Z"
@@ -3961,7 +3961,7 @@ bsnSwitchingAgentConfigGroup OBJECT-GROUP
     }
     STATUS      current
     DESCRIPTION
-        "This collection of objects provide switching configuration 
+        "This collection of objects provide switching configuration
          information."
     ::= { bsnSwitchingGroups 2}
 
@@ -3978,7 +3978,7 @@ bsnSwitchingAgentSystemGroup OBJECT-GROUP
     }
     STATUS      current
     DESCRIPTION
-        "This collection of objects provide switching system 
+        "This collection of objects provide switching system
          information and config."
     ::= { bsnSwitchingGroups 3 }
 
@@ -4055,7 +4055,7 @@ bsnSwitchingTrap NOTIFICATION-GROUP
     }
     STATUS      current
     DESCRIPTION
-        "This  collection of objects provides switching related 
+        "This  collection of objects provides switching related
          notification."
     ::= { bsnSwitchingGroups 6 }
 

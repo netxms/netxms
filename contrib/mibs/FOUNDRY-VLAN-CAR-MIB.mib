@@ -2,12 +2,12 @@ FOUNDRY-VLAN-CAR-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
 
-	MODULE-IDENTITY, OBJECT-TYPE,Gauge32, Counter64,Integer32 
+	MODULE-IDENTITY, OBJECT-TYPE,Gauge32, Counter64,Integer32
 		FROM SNMPv2-SMI
 	snSwitch
 		FROM FOUNDRY-SN-SWITCH-GROUP-MIB
 	PacketSource, RateLimitType, RateLimitAction
-		FROM FOUNDRY-CAR-MIB; 
+		FROM FOUNDRY-CAR-MIB;
 
 
 
@@ -31,15 +31,15 @@ snVLanCAR MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
-			operation, condition, or performance of the Specification.			
-			"            
+			operation, condition, or performance of the Specification.
+			"
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION
 			"convert from SMIv1 to SMIv2"
-   ::= {snSwitch  17}	
+   ::= {snSwitch  17}
 snVLanCARs	OBJECT IDENTIFIER ::= { snVLanCAR 1 }
 
 
@@ -62,7 +62,7 @@ snVLanCAREntry OBJECT-TYPE
 		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
-			"A collection of rate-limit configuration objects on this 
+			"A collection of rate-limit configuration objects on this
 		vlan."
 		INDEX { snVLanCARVLanId, snVLanCARDirection, snVLanCARRowIndex }
 		::= { snVLanCARTable 1 }
@@ -111,7 +111,7 @@ snVLanCARVLanId OBJECT-TYPE
 	STATUS  current
 	DESCRIPTION
 		"The VLAN ID as one of the indices of this table .
-		 Each VLAN ID can have a membership of multiple 
+		 Each VLAN ID can have a membership of multiple
 		 ports."
 	::= { snVLanCAREntry 1 }
 
@@ -120,7 +120,7 @@ snVLanCARDirection OBJECT-TYPE
 		MAX-ACCESS  read-only
 		STATUS  current
 		DESCRIPTION
-			"The input or output transmission direction for the 
+			"The input or output transmission direction for the
 				Rate Limit object."
 		::= { snVLanCAREntry 2 }
 
@@ -161,7 +161,7 @@ snVLanCARRate OBJECT-TYPE
 		DESCRIPTION
 		"The comitted access rate. This determines the long term
 		average transmission rate. Traffic that falls under this
-		rate always conforms. This is average rate in bits per 
+		rate always conforms. This is average rate in bits per
 		second."
 
 	::= { snVLanCAREntry 6 }

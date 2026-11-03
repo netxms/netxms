@@ -1392,7 +1392,7 @@ ntwsApStatRadioOpStatisticsEntry OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Operational statistics (counters) for a particular radio."
-    INDEX   { ntwsApStatRadioOpStatsApSerialNum, 
+    INDEX   { ntwsApStatRadioOpStatsApSerialNum,
               ntwsApStatRadioOpStatsRadioNum }
     ::= { ntwsApStatRadioOpStatisticsTable 1 }
 
@@ -1446,7 +1446,7 @@ ntwsApStatRadioOpStatsRadioNum OBJECT-TYPE
     DESCRIPTION
         "The Number of this Radio on the AP."
     ::= { ntwsApStatRadioOpStatisticsEntry 2 }
-    
+
 ntwsApStatRadioOpStatsTxUniPkt OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only

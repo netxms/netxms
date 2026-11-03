@@ -32,7 +32,7 @@ IMPORTS
            LAST-UPDATED "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
            ORGANIZATION "Dell, Inc."
            CONTACT-INFO ""
- 
+
      DESCRIPTION
           "The Broadcom Private MIB for DNOS Link Local Protocol Filtering."
 
@@ -53,7 +53,7 @@ IMPORTS
     -- agentSwitchLlpfGroup
     --
     --**************************************************************************************
-    
+
     agentSwitchLlpfGroup          OBJECT IDENTIFIER ::= { fastPathLlpf 1 }
 
     agentSwitchLlpfPortConfigTable OBJECT-TYPE

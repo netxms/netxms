@@ -2,47 +2,47 @@
 HP-ICF-ARP-PROTECT DEFINITIONS ::= BEGIN
 
     IMPORTS
-        hpSwitch            
-            FROM HP-ICF-OID            
-        ifIndex            
-            FROM IF-MIB            
-    InetAddressType            
-        FROM INET-ADDRESS-MIB            
-    InetAddress            
-        FROM INET-ADDRESS-MIB             
-        VlanIndex            
-            FROM Q-BRIDGE-MIB            
-        OBJECT-GROUP, MODULE-COMPLIANCE, NOTIFICATION-GROUP            
-            FROM SNMPv2-CONF            
-    Counter32, OBJECT-TYPE, MODULE-IDENTITY, NOTIFICATION-TYPE            
-            FROM SNMPv2-SMI            
-        TruthValue, MacAddress            
+        hpSwitch
+            FROM HP-ICF-OID
+        ifIndex
+            FROM IF-MIB
+    InetAddressType
+        FROM INET-ADDRESS-MIB
+    InetAddress
+        FROM INET-ADDRESS-MIB
+        VlanIndex
+            FROM Q-BRIDGE-MIB
+        OBJECT-GROUP, MODULE-COMPLIANCE, NOTIFICATION-GROUP
+            FROM SNMPv2-CONF
+    Counter32, OBJECT-TYPE, MODULE-IDENTITY, NOTIFICATION-TYPE
+            FROM SNMPv2-SMI
+        TruthValue, MacAddress
             FROM SNMPv2-TC;
 
 
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37
-    hpicfArpProtect MODULE-IDENTITY 
+    hpicfArpProtect MODULE-IDENTITY
     LAST-UPDATED "200708290000Z"      -- August 29, 2007 at 00:00 GMT
-        ORGANIZATION 
+        ORGANIZATION
             "Hewlett-Packard Company
             ProCurve Networking Business"
-        CONTACT-INFO 
+        CONTACT-INFO
             "Hewlett-Packard Company
             8000 Foothills Blvd.
             Roseville, CA 95747"
-        DESCRIPTION 
+        DESCRIPTION
             "This MIB module contains HP proprietary
             objects for managing Dynamic ARP
             Protection."
     REVISION "200708290000Z"      -- August 29, 2007 at 00:00 GMT
-        DESCRIPTION 
+        DESCRIPTION
             "Added hpicfArpProtectNotification and associated objects."
         REVISION "200605030027Z"      -- May 03, 2006 at 00:27 GMT
-        DESCRIPTION 
+        DESCRIPTION
             "Initial revision."
         ::= { hpSwitch 37 }
 
-    
+
 --
 -- Node definitions
 --
@@ -50,15 +50,15 @@ HP-ICF-ARP-PROTECT DEFINITIONS ::= BEGIN
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.0
     hpicfArpProtectNotifications OBJECT IDENTIFIER ::= { hpicfArpProtect 0 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.0.1
     hpicfArpProtectErrantReply NOTIFICATION-TYPE
-    OBJECTS { hpicfArpProtectErrantCnt, hpicfArpProtectErrantSrcMac, 
-        hpicfArpProtectErrantSrcIpType, hpicfArpProtectErrantSrcIp, 
-        hpicfArpProtectErrantDestMac, hpicfArpProtectErrantDestIpType, 
+    OBJECTS { hpicfArpProtectErrantCnt, hpicfArpProtectErrantSrcMac,
+        hpicfArpProtectErrantSrcIpType, hpicfArpProtectErrantSrcIp,
+        hpicfArpProtectErrantDestMac, hpicfArpProtectErrantDestIpType,
         hpicfArpProtectErrantDestIp }
         STATUS current
-        DESCRIPTION 
+        DESCRIPTION
             "An hpicfArpProtectErrantReply notification signifies that
             the ARP protection entity is enabled and has detected
             an errant ARP reply packet.  The source and
@@ -66,19 +66,19 @@ HP-ICF-ARP-PROTECT DEFINITIONS ::= BEGIN
             in the notification."
         ::= { hpicfArpProtectNotifications 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1
     hpicfArpProtectObjects OBJECT IDENTIFIER ::= { hpicfArpProtect 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.1
     hpicfArpProtectConfig OBJECT IDENTIFIER ::= { hpicfArpProtectObjects 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.1.1
     hpicfArpProtectGlobalCfg OBJECT IDENTIFIER ::= { hpicfArpProtectConfig 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.1.1.1
     hpicfArpProtectEnable OBJECT-TYPE
         SYNTAX TruthValue
@@ -89,7 +89,7 @@ HP-ICF-ARP-PROTECT DEFINITIONS ::= BEGIN
             feature."
         ::= { hpicfArpProtectGlobalCfg 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.1.1.2
     hpicfArpProtectVlanEnable OBJECT-TYPE
         SYNTAX OCTET STRING (SIZE (512))
@@ -113,7 +113,7 @@ HP-ICF-ARP-PROTECT DEFINITIONS ::= BEGIN
             value of '0'."
         ::= { hpicfArpProtectGlobalCfg 2 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.1.1.3
     hpicfArpProtectValidation OBJECT-TYPE
         SYNTAX BITS
@@ -150,7 +150,7 @@ HP-ICF-ARP-PROTECT DEFINITIONS ::= BEGIN
             without validation."
         ::= { hpicfArpProtectGlobalCfg 3 }
 
-    
+
 -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.1.1.4
 hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
     SYNTAX INTEGER
@@ -175,7 +175,7 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             Protection."
         ::= { hpicfArpProtectConfig 2 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.1.2.1
     hpicfArpProtectPortEntry OBJECT-TYPE
         SYNTAX HpicfArpProtectPortEntry
@@ -187,9 +187,9 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
         INDEX { ifIndex }
         ::= { hpicfArpProtectPortTable 1 }
 
-    
+
     HpicfArpProtectPortEntry ::=
-        SEQUENCE { 
+        SEQUENCE {
             hpicfArpProtectPortTrust
                 TruthValue
          }
@@ -204,11 +204,11 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             trusted for Dynamic ARP Protection."
         ::= { hpicfArpProtectPortEntry 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.2
     hpicfArpProtectStatus OBJECT IDENTIFIER ::= { hpicfArpProtectObjects 2 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.2.1
     hpicfArpProtectVlanStatTable OBJECT-TYPE
         SYNTAX SEQUENCE OF HpicfArpProtectVlanStatEntry
@@ -218,7 +218,7 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             "Per-VLAN statistics for Dynamic ARP Protection."
         ::= { hpicfArpProtectStatus 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.2.1.1
     hpicfArpProtectVlanStatEntry OBJECT-TYPE
         SYNTAX HpicfArpProtectVlanStatEntry
@@ -229,9 +229,9 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
         INDEX { hpicfArpProtectVlanStatIndex }
         ::= { hpicfArpProtectVlanStatTable 1 }
 
-    
+
     HpicfArpProtectVlanStatEntry ::=
-        SEQUENCE { 
+        SEQUENCE {
             hpicfArpProtectVlanStatIndex
                 VlanIndex,
             hpicfArpProtectVlanStatForwards
@@ -261,7 +261,7 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             dot1qVlanIndex object."
         ::= { hpicfArpProtectVlanStatEntry 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.2.1.1.2
     hpicfArpProtectVlanStatForwards OBJECT-TYPE
         SYNTAX Counter32
@@ -275,7 +275,7 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             enabled."
         ::= { hpicfArpProtectVlanStatEntry 2 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.2.1.1.3
     hpicfArpProtectVlanStatBadPkts OBJECT-TYPE
         SYNTAX Counter32
@@ -292,7 +292,7 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             for which Dynamic ARP Protection is not enabled."
         ::= { hpicfArpProtectVlanStatEntry 3 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.2.1.1.4
     hpicfArpProtectVlanStatBadBindings OBJECT-TYPE
         SYNTAX Counter32
@@ -307,7 +307,7 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             enabled."
         ::= { hpicfArpProtectVlanStatEntry 4 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.2.1.1.5
     hpicfArpProtectVlanStatBadSrcMacs OBJECT-TYPE
         SYNTAX Counter32
@@ -324,7 +324,7 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             is not enabled."
         ::= { hpicfArpProtectVlanStatEntry 5 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.2.1.1.6
     hpicfArpProtectVlanStatBadDstMacs OBJECT-TYPE
         SYNTAX Counter32
@@ -341,7 +341,7 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             Dynamic ARP Protection is not enabled."
         ::= { hpicfArpProtectVlanStatEntry 6 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.2.1.1.7
     hpicfArpProtectVlanStatBadIpAddrs OBJECT-TYPE
         SYNTAX Counter32
@@ -358,21 +358,21 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             is not enabled."
         ::= { hpicfArpProtectVlanStatEntry 7 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.3
     hpicfArpProtectErrantCnt OBJECT-TYPE
         SYNTAX Counter32
         MAX-ACCESS accessible-for-notify
         STATUS current
         DESCRIPTION
-        "A count of hpicfArpProtectErrantReply sent 
+        "A count of hpicfArpProtectErrantReply sent
         from the ARP Protection entity to the SNMP
         entity.  This count may differ from the count
-        of notifications transmitted due to rate 
+        of notifications transmitted due to rate
         limiting or configuration."
         ::= { hpicfArpProtectObjects 3 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.4
     hpicfArpProtectErrantSrcMac OBJECT-TYPE
         SYNTAX MacAddress
@@ -383,7 +383,7 @@ hpicfArpProtectErrantNotifyEnable OBJECT-TYPE
             hpicfArpProtectNotification."
         ::= { hpicfArpProtectObjects 4 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.1.5
 hpicfArpProtectErrantSrcIpType OBJECT-TYPE
     SYNTAX InetAddressType
@@ -436,60 +436,59 @@ hpicfArpProtectErrantDestIpType OBJECT-TYPE
             hpicfArpProtectNotification."
     ::= { hpicfArpProtectObjects 9 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.2
     hpicfArpProtectConformance OBJECT IDENTIFIER ::= { hpicfArpProtect 2 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.2.1
     hpicfArpProtectGroups OBJECT IDENTIFIER ::= { hpicfArpProtectConformance 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.2.1.1
     hpicfArpProtectBaseGroup OBJECT-GROUP
-    OBJECTS { hpicfArpProtectEnable, hpicfArpProtectVlanEnable, 
-    hpicfArpProtectValidation, hpicfArpProtectPortTrust, 
-    hpicfArpProtectVlanStatForwards, hpicfArpProtectVlanStatBadPkts, 
-    hpicfArpProtectVlanStatBadBindings, hpicfArpProtectVlanStatBadSrcMacs, 
-    hpicfArpProtectVlanStatBadDstMacs, hpicfArpProtectVlanStatBadIpAddrs, 
-        hpicfArpProtectErrantSrcMac, hpicfArpProtectErrantSrcIp, 
-        hpicfArpProtectErrantDestMac, hpicfArpProtectErrantSrcIpType, 
-        hpicfArpProtectErrantDestIpType, hpicfArpProtectErrantDestIp, 
+    OBJECTS { hpicfArpProtectEnable, hpicfArpProtectVlanEnable,
+    hpicfArpProtectValidation, hpicfArpProtectPortTrust,
+    hpicfArpProtectVlanStatForwards, hpicfArpProtectVlanStatBadPkts,
+    hpicfArpProtectVlanStatBadBindings, hpicfArpProtectVlanStatBadSrcMacs,
+    hpicfArpProtectVlanStatBadDstMacs, hpicfArpProtectVlanStatBadIpAddrs,
+        hpicfArpProtectErrantSrcMac, hpicfArpProtectErrantSrcIp,
+        hpicfArpProtectErrantDestMac, hpicfArpProtectErrantSrcIpType,
+        hpicfArpProtectErrantDestIpType, hpicfArpProtectErrantDestIp,
         hpicfArpProtectErrantCnt, hpicfArpProtectErrantNotifyEnable }
         STATUS current
-        DESCRIPTION 
+        DESCRIPTION
             "A collection of objects for configuring and
             monitoring the base Dynamic ARP Protection
             functionality."
         ::= { hpicfArpProtectGroups 1 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.2.1.2
     hpicfArpProtectionNotifications NOTIFICATION-GROUP
         NOTIFICATIONS { hpicfArpProtectErrantReply }
         STATUS current
-        DESCRIPTION 
-        "A group of Notifications whose implementation is 
-        mandatory when HP-ICF-ARP-PROTECTION is 
+        DESCRIPTION
+        "A group of Notifications whose implementation is
+        mandatory when HP-ICF-ARP-PROTECTION is
         implemented."
         ::= { hpicfArpProtectGroups 2 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.2.2
     hpicfArpProtectCompliances OBJECT IDENTIFIER ::= { hpicfArpProtectConformance 2 }
 
-    
+
     -- 1.3.6.1.4.1.11.2.14.11.5.1.37.2.2.1
     hpicfArpProtectCompliance MODULE-COMPLIANCE
         STATUS current
-        DESCRIPTION 
+        DESCRIPTION
             "The compliance statement for HP ProCurve switches
             that support Dynamic ARP Protection."
         MODULE -- this module
             MANDATORY-GROUPS { hpicfArpProtectBaseGroup, hpicfArpProtectionNotifications }
         ::= { hpicfArpProtectCompliances 1 }
 
-    
+
 
 END
-

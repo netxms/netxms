@@ -13,11 +13,11 @@
 --  [New Object]
 --  [Modification]
 -- Notes: (Requested by who and which project)
---    
+--
 -- Version 2.06, 2013/02/27, Jessy Ji
 -- Description:
 --   Add swSSHPublKeyOwnerTable to associate a public key to SSH user account.
---    
+--
 -- Version 2.05, 2012/03/05, Jessy Ji
 -- Description:
 --   Add node swSSHBypassLoginScreenState to control secondary password authentcation.
@@ -36,7 +36,7 @@
 --
 -- Version 2.01, 2008/06/17, Green
 -- Description:
---   Correct the object name from swSSHEncryptAlgCAST28Admin to 
+--   Correct the object name from swSSHEncryptAlgCAST28Admin to
 --   swSSHEncryptAlgCAST128Admin.
 --
 -- Version 2.00, 2007/03/27, Yedda
@@ -50,7 +50,7 @@ IMPORTS
     Unsigned32                       FROM SNMPv2-SMI
     IpAddress                        FROM RFC1155-SMI
     Ipv6Address	                     FROM IPV6-TC
-    InetAddressType, InetAddress     FROM INET-ADDRESS-MIB		   
+    InetAddressType, InetAddress     FROM INET-ADDRESS-MIB
     MODULE-IDENTITY, OBJECT-TYPE     FROM SNMPv2-SMI
     RowStatus,DisplayString          FROM SNMPv2-TC
     MODULE-COMPLIANCE, OBJECT-GROUP  FROM SNMPv2-CONF
@@ -137,15 +137,15 @@ IMPORTS
         ::= { swSSHMgmt 7}
 
     swSSHBypassLoginScreenState OBJECT-TYPE
-        SYNTAX  INTEGER {   
+        SYNTAX  INTEGER {
                     enabled(1),
                     disabled(2)
                     }
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object is used to enable or disable bypassing login 
-            screen which is used to avoid a secondary username/password 
+            "This object is used to enable or disable bypassing login
+            screen which is used to avoid a secondary username/password
             authentication for users using SSH public key authentication."
         ::= { swSSHMgmt 8}
 
@@ -496,17 +496,17 @@ IMPORTS
         DESCRIPTION
         	"Denotes a generic Internet address. "
     	::= { swSSHPublicKeyMgmt 2 }
-        
+
     swSSHPublKeyTftpServerFileName OBJECT-TYPE
      	SYNTAX  	DisplayString (SIZE(1..64))
     	MAX-ACCESS read-write
     	STATUS current
         DESCRIPTION
-            "Specify the path name and file name of the TFTP server. It can be a relative 
-             path name or an absolute path name. If path name is not specified, it refers 
+            "Specify the path name and file name of the TFTP server. It can be a relative
+             path name or an absolute path name. If path name is not specified, it refers
              to the TFTP server path. The maximum length is 64 characters."
         ::= { swSSHPublicKeyMgmt 3}
-       
+
     swSSHPublKeyAction OBJECT-TYPE
         SYNTAX  INTEGER {
                     download(1),
@@ -516,15 +516,15 @@ IMPORTS
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object allows the administrator to download or upload 
-			the SSH public key file to or from the switch through TFTP 
+            "This object allows the administrator to download or upload
+			the SSH public key file to or from the switch through TFTP
 			protocol.
-             
-            NOTE - The newly downloaded public keys will overwrite the 
-			previously downloaded public keys. You must pay attention 
+
+            NOTE - The newly downloaded public keys will overwrite the
+			previously downloaded public keys. You must pay attention
 			to the previous keys before you overwrite them."
         ::= { swSSHPublicKeyMgmt 10}
-		
+
     swSSHPublKeyOwnerTable OBJECT-TYPE
     	SYNTAX SEQUENCE OF SshPublKeyOwnerEntry
     		MAX-ACCESS not-accessible
@@ -550,71 +550,71 @@ IMPORTS
 			swPublKeyString     DisplayString,
     		swPublKeyUserName	SnmpAdminString,
     		swPublKeyRowStatus 	RowStatus
-    	}	
+    	}
 
     swPublKeyEntryIndex OBJECT-TYPE
-        SYNTAX  Unsigned32 
+        SYNTAX  Unsigned32
         MAX-ACCESS    not-accessible
         STATUS        current
-        DESCRIPTION   
+        DESCRIPTION
             "The index of this table.
-			The administrator should use a non-existed value of this 
+			The administrator should use a non-existed value of this
 			objected for creating a new entry."
-    ::= { swPublKeyOwnerEntry 1 }	
+    ::= { swPublKeyOwnerEntry 1 }
 
     swPublKeyIndex OBJECT-TYPE
-        SYNTAX  Unsigned32 
+        SYNTAX  Unsigned32
         MAX-ACCESS    read-write
         STATUS        current
-        DESCRIPTION   
+        DESCRIPTION
             "The index of a public key.
-			 Once the authorized public keys file (each line of the 
-			 file contains one key) is downloaded to the switch, 
-			 each key will be automatically assigned an index which 
-			 is started from one. The administrator can associate 
+			 Once the authorized public keys file (each line of the
+			 file contains one key) is downloaded to the switch,
+			 each key will be automatically assigned an index which
+			 is started from one. The administrator can associate
 			 the public key with a user account based on the index."
     ::= { swPublKeyOwnerEntry 2 }
 
     swPublKeyType OBJECT-TYPE
         SYNTAX  INTEGER {
-                    rsa(1),                         
+                    rsa(1),
                     dsa(2)
                 }
         MAX-ACCESS    read-only
         STATUS        current
-        DESCRIPTION   
-            "The SSH public key type. 
+        DESCRIPTION
+            "The SSH public key type.
 
              rsa  - A public-key cryptosystem defined by Rivest,
                   Shamir and Adleman.
 
              dsa  - Digital Signature Algorithm, a public key
                   cipher used to generate digital signatures."
-    ::= { swPublKeyOwnerEntry 3 }	
-	
+    ::= { swPublKeyOwnerEntry 3 }
+
     swPublKeyString              OBJECT-TYPE
         SYNTAX          DisplayString (SIZE (0..255))
         MAX-ACCESS      read-only
         STATUS          current
         DESCRIPTION
             "The content of SSH public key string."
-        ::= { swPublKeyOwnerEntry 4 }	
-    	
+        ::= { swPublKeyOwnerEntry 4 }
+
     swPublKeyUserName     OBJECT-TYPE
         SYNTAX          SnmpAdminString (SIZE (0..15))
         MAX-ACCESS      read-write
         STATUS          current
         DESCRIPTION
             "The owner of this public key.
-			If this filed does not contain any value, this indicates that 
+			If this filed does not contain any value, this indicates that
 			this public key has not been associated any user account."
-        ::= { swPublKeyOwnerEntry 5 }		
-		
+        ::= { swPublKeyOwnerEntry 5 }
+
     swPublKeyRowStatus       OBJECT-TYPE
         SYNTAX          RowStatus
         MAX-ACCESS      read-create
         STATUS          current
         DESCRIPTION
                "Status of this SSH public key."
-        ::= { swPublKeyOwnerEntry 20 }		
+        ::= { swPublKeyOwnerEntry 20 }
 END

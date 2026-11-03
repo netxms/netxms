@@ -1,10 +1,10 @@
 FOUNDRY-SN-IPX-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-	MODULE-IDENTITY, OBJECT-TYPE,Counter32,Integer32 
+	MODULE-IDENTITY, OBJECT-TYPE,Counter32,Integer32
 		FROM SNMPv2-SMI
 	TEXTUAL-CONVENTION
-		FROM SNMPv2-TC		
+		FROM SNMPv2-TC
 	router
 		FROM FOUNDRY-SN-ROOT-MIB
 	PhysAddress
@@ -30,11 +30,11 @@ snIpx MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
-			operation, condition, or performance of the Specification.			
-			"        
+			operation, condition, or performance of the Specification.
+			"
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION
 			"convert from SMIv1 to SMIv2"
@@ -48,7 +48,7 @@ snIpx MODULE-IDENTITY
 			RtrStatus Values
 			"
 		SYNTAX	INTEGER { disabled(0), enabled (1) }
-		
+
 
 
 	ClearStatus ::= TEXTUAL-CONVENTION
@@ -64,10 +64,10 @@ snIpx MODULE-IDENTITY
 		STATUS	  current
 		DESCRIPTION
 			"
-			The bits 0-7 = port number. 
+			The bits 0-7 = port number.
 			The bits 8-15 = slot number (slot for chassis only).
 			ve port format         bits 16-24 = 0x01, bits 0-15 = ve number
-			loopback port format bits 16-24 = 0x02, bits 0-15= lb number	
+			loopback port format bits 16-24 = 0x02, bits 0-15= lb number
 			"
 		SYNTAX	Integer32(1..3900)
 
@@ -87,7 +87,7 @@ snIpx MODULE-IDENTITY
 			"
 		SYNTAX	OCTET STRING (SIZE(4))
 
--- SECTION 2: MIB 
+-- SECTION 2: MIB
 
 -- Router IPX MIB
 
@@ -122,7 +122,7 @@ snIpxNetBiosFilterMode		    OBJECT-TYPE
 		"Enabled/Disabled NetBios Filter Mode status."
 	::= { snIpxGen 2 }
 
-				
+
 snIpxClearCache 		OBJECT-TYPE
 	SYNTAX  ClearStatus
 	MAX-ACCESS  read-write
@@ -212,19 +212,19 @@ snIpxRipFiltOnAllPort		OBJECT-TYPE
 	MAX-ACCESS	read-write
 	STATUS  current
 	DESCRIPTION
-	"Apply the IPX RIP Global filter list snIpxRipGblFiltList to 
-	 all interfaces. This object is used to add all RIP filter 
+	"Apply the IPX RIP Global filter list snIpxRipGblFiltList to
+	 all interfaces. This object is used to add all RIP filter
 	 lists and delete all RIP filter lists to/from all ports.
 	 Prior to sending this command, snIpxRipGblFiltList must be ready.
 	 The values that can be written are:
-	 deleteAllInBound(2)...delete all in-bound filter lists from all ports. 
+	 deleteAllInBound(2)...delete all in-bound filter lists from all ports.
 	 deleteAllOutBound(3)..delete all out-bound filter lists from all ports.
 	 addAllInBound(4)......add all in-bound filter lists to all ports.
 	 addAllOutBound(5).....add all out-bound filter lists to all ports.
 
 	 If set operation is failed, then a SET with
-	 value of (2)or(3) returns error 'GenError'. 
-	 Deleted(2)&(3) go away immediately. 
+	 value of (2)or(3) returns error 'GenError'.
+	 Deleted(2)&(3) go away immediately.
 	 The following values can be returned on reads:
 	 noSuch(0)...no such operation yet.
 	 valid(1)....set operation is done and is valid"
@@ -251,19 +251,19 @@ snIpxSapFiltOnAllPort		OBJECT-TYPE
 	MAX-ACCESS	read-write
 	STATUS  current
 	DESCRIPTION
-	"Apply the IPX SAP Global filter list snIpxSapGblFiltList to 
-	 all interfaces. This object is used to add all RIP filter 
+	"Apply the IPX SAP Global filter list snIpxSapGblFiltList to
+	 all interfaces. This object is used to add all RIP filter
 	 lists and delete all SAP filter lists to/from all ports.
 	 Prior to sending this command, snIpxSapGblFiltList must be ready.
 	 The values that can be written are:
-	 deleteAllInBound(2)...delete all in-bound filter lists from all ports. 
+	 deleteAllInBound(2)...delete all in-bound filter lists from all ports.
 	 deleteAllOutBound(3)..delete all out-bound filter lists from all ports.
 	 addAllInBound(4)......add all in-bound filter lists to all ports.
 	 addAllOutBound(5).....add all out-bound filter lists to all ports.
 
 	 If set operation is failed, then a SET with
-	 value of (2)or(3) returns error 'GenError'. 
-	 Deleted(2)&(3) go away immediately. 
+	 value of (2)or(3) returns error 'GenError'.
+	 Deleted(2)&(3) go away immediately.
 	 The following values can be returned on reads:
 	 noSuch(0)...no such operation yet.
 	 valid(1)....set operation is done and is valid"
@@ -314,7 +314,7 @@ SnIpxCacheEntry ::= SEQUENCE {
 		PhysAddress,
 	snIpxCacheOutFilter
 		RtrStatus,
-	snIpxCacheEncap  
+	snIpxCacheEncap
 		INTEGER,
 	snIpxCachePort
 		PortIndex
@@ -372,7 +372,7 @@ snIpxCachePort  OBJECT-TYPE
 	MAX-ACCESS	read-only
 	STATUS  current
 	DESCRIPTION
-		"IPX Router Port number." 
+		"IPX Router Port number."
 	::= { snIpxCacheEntry 6 }
 
 
@@ -492,7 +492,7 @@ SnIpxServerEntry ::= SEQUENCE {
 		PhysAddress,
 	snIpxServerSocket
 		Integer32,
-	snIpxServerHopCnts  
+	snIpxServerHopCnts
 		Integer32,
 	snIpxServerName
 		OCTET STRING
@@ -598,7 +598,7 @@ SnIpxFwdFilterEntry ::= SEQUENCE {
 	}
 
 snIpxFwdFilterIdx       OBJECT-TYPE
-	SYNTAX   Integer32 
+	SYNTAX   Integer32
 	MAX-ACCESS  read-only
 	STATUS  current
 	DESCRIPTION
@@ -606,7 +606,7 @@ snIpxFwdFilterIdx       OBJECT-TYPE
 	::= { snIpxFwdFilterEntry 1 }
 
 snIpxFwdFilterAction	  OBJECT-TYPE
-	SYNTAX  Action 
+	SYNTAX  Action
 	MAX-ACCESS  read-write
 	STATUS  current
 	DESCRIPTION
@@ -727,7 +727,7 @@ snIpxRipFilterId       OBJECT-TYPE
 	::= { snIpxRipFilterEntry 1 }
 
 snIpxRipFilterAction	  OBJECT-TYPE
-	SYNTAX  Action 
+	SYNTAX  Action
 	MAX-ACCESS  read-write
 	STATUS  current
 	DESCRIPTION
@@ -825,7 +825,7 @@ snIpxSapFilterId       OBJECT-TYPE
 	::= { snIpxSapFilterEntry 1 }
 
 snIpxSapFilterAction	  OBJECT-TYPE
-	SYNTAX  Action 
+	SYNTAX  Action
 	MAX-ACCESS  read-write
 	STATUS  current
 	DESCRIPTION
@@ -846,7 +846,7 @@ snIpxSapFilterName    OBJECT-TYPE
 	MAX-ACCESS  read-write
 	STATUS  current
 	DESCRIPTION
-		"IPX SAP Filter Name."  
+		"IPX SAP Filter Name."
 	::= { snIpxSapFilterEntry 4 }
 
 
@@ -1196,7 +1196,7 @@ snIpxPortAddrEncap	      OBJECT-TYPE
 	DESCRIPTION
 		"The IPX encapsulation type.
 		ethernet8022(1), ethernet8023(2),
-		ethernetII(3),  ethernetSnap(4)  
+		ethernetII(3),  ethernetSnap(4)
 		Note: Each Network Number can be assigned with one unique Frame type; Otherwise,
 		a SNMP-SET error will be returned."
 	::= { snIpxPortAddrEntry 2 }
@@ -1356,4 +1356,3 @@ snIpxPortCountersTxFiltPktsCnt		OBJECT-TYPE
 
 
 END
-

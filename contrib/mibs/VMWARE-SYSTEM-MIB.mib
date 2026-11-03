@@ -1,5 +1,5 @@
 -- **********************************************************
--- Copyright 2007-2010 VMware, Inc.  All rights reserved. 
+-- Copyright 2007-2010 VMware, Inc.  All rights reserved.
 -- **********************************************************
 
 VMWARE-SYSTEM-MIB DEFINITIONS ::= BEGIN
@@ -34,7 +34,7 @@ DESCRIPTION
 
 REVISION      "200801120000Z"
 DESCRIPTION
-    "Add to comments the Managed Object Browser (MOB) URLs which provide 
+    "Add to comments the Managed Object Browser (MOB) URLs which provide
      data this MIB module exposes."
 
 REVISION      "200712270000Z"
@@ -49,7 +49,7 @@ vmwProdName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "This product's name.
          VIM Property: AboutInfo.name
          https://esx.example.com/mob/?moid=ServiceInstance&doPath=content%2eabout"
@@ -59,7 +59,7 @@ vmwProdVersion OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The product's version release identifier. Format is Major.Minor.Update
          VIM Property: AboutInfo.version
          https://esx.example.com/mob/?moid=ServiceInstance&doPath=content%2eabout"
@@ -71,7 +71,7 @@ vmwProdBuild OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "This identifier represents the most specific identifier.
          VIM Property: AboutInfo.build
          https://esx.example.com/mob/?moid=ServiceInstance&doPath=content%2eabout"
@@ -81,7 +81,7 @@ vmwProdUpdate OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "This identifier represents the update level applied to this system.
          VIM Property: Advanced Options key: Misc.HostAgentUpdateLevel
          https://esx.example.com/mob/?moid=ha%2dadv%2doptions"
@@ -91,9 +91,9 @@ vmwProdPatch OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "This identifier represents the patch level applied to this system.
-         VIM Property: None. 
+         VIM Property: None.
          CLI: esxcli system version get"
     ::= { vmwSystem 6 }
 
@@ -108,14 +108,14 @@ vmwSysMIBGroups  OBJECT IDENTIFIER ::= { vmwSystemMIBConformance 2 }
 vmwSysMIBBasicCompliance MODULE-COMPLIANCE
 STATUS  current
 DESCRIPTION
-    "The compliance statement for entities which implement the 
+    "The compliance statement for entities which implement the
     VMWARE-SYSTEM-MIB."
 MODULE  -- this module
 MANDATORY-GROUPS { vmwSystemGroup }
 ::= { vmwSystemMIBCompliances 2 }
 
 vmwSystemGroup OBJECT-GROUP
-    OBJECTS { 
+    OBJECTS {
     vmwProdName,
     vmwProdVersion,
     vmwProdBuild,

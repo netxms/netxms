@@ -17,7 +17,7 @@ netscreenProductsMibModule MODULE-IDENTITY
     CONTACT-INFO
         "Customer Support
 
-         1194 North Mathilda Avenue 
+         1194 North Mathilda Avenue
          Sunnyvale, California 94089-1206
          USA
 
@@ -27,7 +27,7 @@ netscreenProductsMibModule MODULE-IDENTITY
     DESCRIPTION
         "This module defines the object identifiers that are assigned
          to various hardware platforms, and hence are returned as values
-         for sysObjectID"   
+         for sysObjectID"
     REVISION      "200511000000Z" -- Nov 11, 2005
     DESCRIPTION
         "Added new products 16-28"
@@ -90,5 +90,3 @@ netscreen-5GT-ADSL-AnnexA-WLAN OBJECT IDENTIFIER ::= { netscreenProducts 25 }
 
 netscreen-ISG1000 	OBJECT IDENTIFIER ::= { netscreenProducts 28 }
 END
-
-

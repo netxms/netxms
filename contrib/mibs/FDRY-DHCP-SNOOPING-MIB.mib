@@ -15,7 +15,7 @@ IMPORTS
 	   FROM FOUNDRY-SN-AGENT-MIB
 	ifIndex
 	   FROM IF-MIB;
-	  
+
 fdryDhcpSnoopMIB MODULE-IDENTITY
 	LAST-UPDATED "201007260000Z" -- July 26, 2010
 	ORGANIZATION "Brocade Communications Systems, Inc."
@@ -27,27 +27,27 @@ fdryDhcpSnoopMIB MODULE-IDENTITY
               Phone: 1-800-752-8061
               URL:  www.brocade.com"
 	DESCRIPTION
-		"Management Information for configuration of DHCP Snooping feature. 
+		"Management Information for configuration of DHCP Snooping feature.
 		DHCP Snooping  is a security feature which enables the device to filter
-		untrusted DHCP packets in a subnet. It can also stop unauthorized DHCP 
+		untrusted DHCP packets in a subnet. It can also stop unauthorized DHCP
 		serves and prevent errors due to user mis-configuration servers.
-			
-		Copyright 1996-2010 Brocade Communications Systems, Inc.  
+
+		Copyright 1996-2010 Brocade Communications Systems, Inc.
   		All rights reserved.
   		This Brocade Communications Systems SNMP Management Information Base Specification
  		embodies Brocade Communications Systems' confidential and proprietary
  		intellectual property. Brocade Communications Systems retains all
   		title and ownership in the Specification, including any revisions.
-                                                
+
  		This Specification is supplied AS IS, and Brocade Communications Systems makes
  		no warranty, either express or implied, as to the use,
- 		operation, condition, or performance of the specification, and any unintended 
+ 		operation, condition, or performance of the specification, and any unintended
  		consequence it may on the user environment."
- 		
+
  	REVISION        "201007260000Z" -- July 26, 2010
- 	DESCRIPTION  
+ 	DESCRIPTION
  		"Changed the ORGANIZATION, CONTACT-INFO and DESCRIPTION fields."
- 		
+
 	REVISION     "201003220000Z" -- March 22, 2010
 	DESCRIPTION
 		""
@@ -80,8 +80,8 @@ fdryDhcpSnoopGlobalClearOper OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-        "valid(0) - this value is always returned when the variable is read. 
-         clear(1) - setting the variable to this value clears all entries in the 
+        "valid(0) - this value is always returned when the variable is read.
+         clear(1) - setting the variable to this value clears all entries in the
          DHCP binding database."
     ::= { fdryDhcpSnoopGlobalObjects 1 }
 
@@ -111,9 +111,9 @@ fdryDhcpSnoopVlanConfigEntry OBJECT-TYPE
 	::= { fdryDhcpSnoopVlanConfigTable 1 }
 
 FdryDhcpSnoopVlanConfigEntry ::= SEQUENCE {
-	fdryDhcpSnoopVlanVLanId 
+	fdryDhcpSnoopVlanVLanId
 		VlanIndex,
-	fdryDhcpSnoopVlanDhcpSnoopEnable 
+	fdryDhcpSnoopVlanDhcpSnoopEnable
 		TruthValue
 	}
 
@@ -132,7 +132,7 @@ fdryDhcpSnoopVlanDhcpSnoopEnable	 OBJECT-TYPE
 	STATUS 		current
 	DESCRIPTION
 		"This object indicates whether DHCP Snooping is enabled in this VLAN.
-		
+
 		If this object is set to 'true', DHCP Snooping is enabled.
 		If this object is set to 'false', DHCP Snooping is disabled."
 	::= { fdryDhcpSnoopVlanConfigEntry 2 }
@@ -163,7 +163,7 @@ fdryDhcpSnoopIfConfigEntry OBJECT-TYPE
 	::= { fdryDhcpSnoopIfConfigTable 1 }
 
 FdryDhcpSnoopIfConfigEntry ::= SEQUENCE {
-	fdryDhcpSnoopIfTrustValue 
+	fdryDhcpSnoopIfTrustValue
 		TruthValue
 	}
 
@@ -177,8 +177,8 @@ fdryDhcpSnoopIfTrustValue  OBJECT-TYPE
 		If this object is set to 'true', the interface is trusted.
 		DHCP packets coming to this interface will be forwarded
 		without checking.
-		If this object is set to 'false', the interface is not trusted. 
-		DHCP packets received on this interface will be subjected 
+		If this object is set to 'false', the interface is not trusted.
+		DHCP packets received on this interface will be subjected
 		to DHCP checks."
 	::= { fdryDhcpSnoopIfConfigEntry 1 }
 
@@ -192,7 +192,7 @@ fdryDhcpSnoopBindTable OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS current
 	DESCRIPTION
-		"A table provides the information of DHCP snooping 
+		"A table provides the information of DHCP snooping
 		binding database learnt by the device"
 	::= { fdryDhcpSnoopBind 1 }
 
@@ -206,9 +206,9 @@ fdryDhcpSnoopBindEntry OBJECT-TYPE
 	::= { fdryDhcpSnoopBindTable 1 }
 
 FdryDhcpSnoopBindEntry ::= SEQUENCE {
-	fdryDhcpSnoopBindIpAddr 
+	fdryDhcpSnoopBindIpAddr
 		IpAddress,
-	fdryDhcpSnoopBindMacAddr 
+	fdryDhcpSnoopBindMacAddr
 		MacAddress,
 	fdryDhcpSnoopBindType
 		ArpType,
@@ -221,7 +221,7 @@ FdryDhcpSnoopBindEntry ::= SEQUENCE {
 	fdryDhcpSnoopBindClearOper
 		ClearAction
 	}
-	
+
 fdryDhcpSnoopBindIpAddr  OBJECT-TYPE
 	SYNTAX		IpAddress
 	MAX-ACCESS	not-accessible
@@ -276,11 +276,10 @@ fdryDhcpSnoopBindClearOper OBJECT-TYPE
 	MAX-ACCESS read-write
 	STATUS     current
 	DESCRIPTION
-		 "valid(0) - this value is always returned when the variable is read. 
-         	clear(1) - setting the variable to this value clears this entry in the 
+		 "valid(0) - this value is always returned when the variable is read.
+         	clear(1) - setting the variable to this value clears this entry in the
         	 DHCP binding database."
 	::= {fdryDhcpSnoopBindEntry 7 }
 
 
    END
-

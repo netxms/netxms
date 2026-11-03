@@ -1,9 +1,9 @@
 FDRY-ACL-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-   MODULE-IDENTITY, OBJECT-TYPE, 
+   MODULE-IDENTITY, OBJECT-TYPE,
 					 Unsigned32 	FROM SNMPv2-SMI	   -- [RFC2578]
-   TEXTUAL-CONVENTION, RowStatus, 
+   TEXTUAL-CONVENTION, RowStatus,
    DisplayString, TruthValue		FROM SNMPv2-TC			-- [RFC2579]
    Ipv6Address						FROM IPV6-TC			-- [RFC2465]
    fdryAcl							FROM FOUNDRY-SN-ROOT-MIB -- [snroo101]
@@ -19,9 +19,9 @@ fdryAclMIB MODULE-IDENTITY
 			Email: support@foundrynet.com
 			Phone: 1-877-TURBO-CALL"
 	DESCRIPTION
-		"The Foundry proprietary MIB module for Ipv6 Access Control List. 
+		"The Foundry proprietary MIB module for Ipv6 Access Control List.
 		 It has new tables for Ipv6 Access Control List.
-		 
+
 		 Copyright (C) Foundry Networks, Inc, (2008)
 		 This document and the information contained herein are provided on an
 		 AS IS basis and FOUNDRY NETWORKS DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED,
@@ -32,7 +32,7 @@ fdryAclMIB MODULE-IDENTITY
 
 	REVISION	 "200802140000Z"  -- 14 February 2008
 	DESCRIPTION  "Initial version"
-	   
+
    ::= { fdryAcl 1 }
 
 --
@@ -42,18 +42,18 @@ RtrStatus ::= TEXTUAL-CONVENTION
 	STATUS	  current
 	DESCRIPTION
 		"Represents a status value such as disabled or enabled."
-	SYNTAX	INTEGER { 
-						disabled(0), 
-						enabled (1) 
+	SYNTAX	INTEGER {
+						disabled(0),
+						enabled (1)
 					}
 
 Action ::= TEXTUAL-CONVENTION
 	STATUS	  current
 	DESCRIPTION
 		"Represents a action value such as deny or permit."
-	SYNTAX	INTEGER { 
-						deny(0), 
-						permit (1) 
+	SYNTAX	INTEGER {
+						deny(0),
+						permit (1)
 					}
 
 Operator ::= TEXTUAL-CONVENTION
@@ -61,13 +61,13 @@ Operator ::= TEXTUAL-CONVENTION
 	DESCRIPTION
 		"Represents a operators value, such as equal, not-equal, lesser than,
 		greater than, range and undefined."
-	SYNTAX	INTEGER { 
-						eq(0), 
-						neq (1), 
-						lt (2), 
-						gt (3), 
-						range (4), 
-						undefined (7) 
+	SYNTAX	INTEGER {
+						eq(0),
+						neq (1),
+						lt (2),
+						gt (3),
+						range (4),
+						undefined (7)
 					}
 
 IpProtocol ::= TEXTUAL-CONVENTION
@@ -107,9 +107,9 @@ FdryIpv6AclEntry ::= SEQUENCE {
 		Unsigned32,
 	fdryIpv6AclName
 		DisplayString,
-	fdryIpv6AclAction              
+	fdryIpv6AclAction
 		Action,
-	fdryIpv6AclProtocol            
+	fdryIpv6AclProtocol
 		IpProtocol,
 	fdryIpv6AclSourceIp
 		Ipv6Address,
@@ -148,7 +148,7 @@ fdryIpv6AclIndex       OBJECT-TYPE
 	DESCRIPTION
 		"The access control list item number for an entry.
 		This is a unique number that identifies different
-		Access list entries. This one has to be 
+		Access list entries. This one has to be
 		unique even though the name is not unique
 		for a give access list with same or different source
 		address, prefix length, destination address and destination
@@ -165,7 +165,7 @@ fdryIpv6AclName		OBJECT-TYPE
 	::= { fdryIpv6AclEntry 2 }
 
 fdryIpv6AclAction      OBJECT-TYPE
-	SYNTAX  Action 
+	SYNTAX  Action
 	MAX-ACCESS  read-create
 	STATUS  current
 	DESCRIPTION
@@ -213,7 +213,7 @@ fdryIpv6AclSourceOperand1     OBJECT-TYPE
 	MAX-ACCESS  read-create
 	STATUS  current
 	DESCRIPTION
-		"For now this only refers to transport 
+		"For now this only refers to transport
 		protocol port number."
 	::= { fdryIpv6AclEntry 8 }
 
@@ -222,7 +222,7 @@ fdryIpv6AclSourceOperand2     OBJECT-TYPE
 	MAX-ACCESS  read-create
 	STATUS  current
 	DESCRIPTION
-		"For now this only refers to transport 
+		"For now this only refers to transport
 		protocol port number."
 	::= { fdryIpv6AclEntry 9 }
 
@@ -240,7 +240,7 @@ fdryIpv6AclDestinationPrefixLen    OBJECT-TYPE
 	STATUS  current
 	DESCRIPTION
 		"Destination IPv6 address prefix length."
-		
+
     DEFVAL  {64}
  	::= { fdryIpv6AclEntry 11 }
 
@@ -259,7 +259,7 @@ fdryIpv6AclDestinationOperand1     OBJECT-TYPE
 	MAX-ACCESS  read-create
 	STATUS  current
 	DESCRIPTION
-		"For now this only refers to transport 
+		"For now this only refers to transport
 		protocol port number."
 	::= { fdryIpv6AclEntry 13 }
 
@@ -268,7 +268,7 @@ fdryIpv6AclDestinationOperand2     OBJECT-TYPE
 	MAX-ACCESS  read-create
 	STATUS  current
 	DESCRIPTION
-		"For now this only refers to transport 
+		"For now this only refers to transport
 		protocol port number."
 	::= { fdryIpv6AclEntry 14 }
 
@@ -308,5 +308,3 @@ fdryIpv6AclRowStatus   OBJECT-TYPE
 			entry."
 		::= { fdryIpv6AclEntry 18 }
 	END
-
-

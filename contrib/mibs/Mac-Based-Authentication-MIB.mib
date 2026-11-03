@@ -148,7 +148,7 @@ swMacBasedAuthMemberPorts OBJECT-TYPE
     DESCRIPTION
         "This object indicates the member ports of the authentication method."
     ::= { swMBACtrl 5 }
-    
+
 --swMacBasedAuthRelativeVLAN OBJECT-TYPE
 --    SYNTAX      DisplayString(SIZE(0..32))
 --    MAX-ACCESS  read-write
@@ -167,14 +167,14 @@ swMacBasedAuthVlanNameDelState OBJECT-TYPE
     DESCRIPTION
         "Used to delete the guest VLAN of MAC-based authentication."
     ::= { swMBACtrl 7 }
-    
+
 swMacBasedAuthClearAllAction OBJECT-TYPE
     SYNTAX      INTEGER{other(1), start(2)}
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
 	"Used to clear the authentication state of all ports."
-    ::= { swMBACtrl 8 }        	
+    ::= { swMBACtrl 8 }
 
 swMacBasedAuthMaxUser OBJECT-TYPE
 	SYNTAX		INTEGER
@@ -183,8 +183,8 @@ swMacBasedAuthMaxUser OBJECT-TYPE
 	DESCRIPTION
 			"This object indicates the maximum number of authorized client(s) on the whole device.
 			Note:
-			The maximum number of authorized client(s) range is (0..N), the value N means the maximum number. This is 
-			determined by the project itself.	
+			The maximum number of authorized client(s) range is (0..N), the value N means the maximum number. This is
+			determined by the project itself.
 			When 0 is set, the maximum number of authorized clients is unlimited."
 	DEFVAL	{128}
 		::= { swMBACtrl 9 }
@@ -197,13 +197,13 @@ swMacBasedAuthFailOver OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS  current
     DESCRIPTION
-            "This object sets the RADIUS authentication failover state. 
-			
+            "This object sets the RADIUS authentication failover state.
+
 			When the authentication failover is disabled,
-				if RADIUS servers are unreachable, the authentication will fail. 
-            When the authentication failover is enabled, 
+				if RADIUS servers are unreachable, the authentication will fail.
+            When the authentication failover is enabled,
 				if RADIUS servers authentication are unreachable, the local database will be used to do the authentication.
-				
+
 			By default, the state is disabled."
 		DEFVAL	{disabled}
     ::= { swMBACtrl 10 }
@@ -216,14 +216,14 @@ swMacBasedAuthRadiusAuthorization OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS  current
     DESCRIPTION
-            "This object sets the acceptance state of RADIUS authorization. 
-			
-			When the authorization is enabled for MAC-based access control's RADIUS method, 
+            "This object sets the acceptance state of RADIUS authorization.
+
+			When the authorization is enabled for MAC-based access control's RADIUS method,
 			the authorized attributes (for example VLAN, 802.1p default priority, and ACL)
 			assigned by the local database will be accepted if the global authorization state is enabled."
 	DEFVAL	{enabled}
     ::= { swMBACtrl 11 }
-	
+
 swMacBasedAuthLocalAuthorization OBJECT-TYPE
     SYNTAX  INTEGER {
                enabled(1),
@@ -232,10 +232,10 @@ swMacBasedAuthLocalAuthorization OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS  current
     DESCRIPTION
-            "This object sets the acceptance state of local authorization. 
-			
-			When the authorization is enabled for MAC-based access control's local method, 
-			the authorized attributes assigned by the local database 
+            "This object sets the acceptance state of local authorization.
+
+			When the authorization is enabled for MAC-based access control's local method,
+			the authorized attributes assigned by the local database
 			will be accepted if the global authorization state is enabled."
 	DEFVAL	{enabled}
     ::= { swMBACtrl 12 }
@@ -252,7 +252,7 @@ swMacBasedAuthTrapState OBJECT-TYPE
             Access Control."
 	DEFVAL	{disabled}
     ::= { swMBACtrl 13 }
-    
+
 swMacBasedAuthLogState OBJECT-TYPE
     SYNTAX  INTEGER {
                enabled(1),
@@ -265,7 +265,7 @@ swMacBasedAuthLogState OBJECT-TYPE
             Access Control."
 	DEFVAL	{disabled}
     ::= { swMBACtrl 14 }
-    
+
 -- -----------------------------------------------------------------------------
 -- swMBAInfo            OBJECT IDENTIFIER ::= { swMBAMIB 2}
 -- -----------------------------------------------------------------------------
@@ -304,7 +304,7 @@ SwMacBasedAuthPortInfoEntry ::=
             INTEGER,
         swMacBasedAuthInfoBlockTime
             INTEGER,
-        swMacBasedAuthInfoAssignVID            
+        swMacBasedAuthInfoAssignVID
             INTEGER
             }
 
@@ -393,10 +393,10 @@ swMacBasedAuthInfoAssignVID OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-	"This object indicates the VID that the port is assigned to once 
+	"This object indicates the VID that the port is assigned to once
 	 MAC authentication is successful."
-		::= { swMacBasedAuthPortInfoEntry 9 }		
-		
+		::= { swMacBasedAuthPortInfoEntry 9 }
+
 -- -----------------------------------------------------------------------------
 -- swMBAPortMgmt         OBJECT IDENTIFIER ::= { swMBAMIB 3}
 -- -----------------------------------------------------------------------------
@@ -453,7 +453,7 @@ swMacBasedAuthPortState OBJECT-TYPE
     DESCRIPTION
         "This object enables/disables the authentication state of this port."
     ::= { swMacBasedAuthPortEntry 2 }
-    
+
 swMacBasedAuthPortMode OBJECT-TYPE
     SYNTAX    INTEGER{
             		port_based(1),
@@ -478,12 +478,12 @@ swMacBasedAuthPortAgingTime   OBJECT-TYPE
 		will be kept in an authenticated state. When the aging time has
 		timed-out, the host will be moved back to an unauthenticated state.
 		Note:
-		When 0 is set on the specified port, it means that aging has been disabled meaning that the 
+		When 0 is set on the specified port, it means that aging has been disabled meaning that the
 		aging time is set to infinite.
 		"
-  	DEFVAL {1440}	
+  	DEFVAL {1440}
    ::= { swMacBasedAuthPortEntry 4 }
-    
+
 swMacBasedAuthPortBlockTime   OBJECT-TYPE
    SYNTAX      INTEGER(0..300)
    MAX-ACCESS  read-write
@@ -495,9 +495,9 @@ swMacBasedAuthPortBlockTime   OBJECT-TYPE
 		When 0 is set on the specified port, it means block authentication fail mac,
 		that is the block time is set to infinite.
 		"
-  	DEFVAL {300}	
+  	DEFVAL {300}
   ::= { swMacBasedAuthPortEntry 5 }
-  
+
 swMacBasedAuthClearPortAction OBJECT-TYPE
    SYNTAX INTEGER{
                   other(1),
@@ -519,13 +519,13 @@ swMacBasedAuthPortMaxUser OBJECT-TYPE
 	DESCRIPTION
 			"This object indicates the maximum number of authorized client(s) on the specified port.
 			Note:
-			The maximum number of authorized client(s) range is (0..N), the value N means the max number, it is 
-			determined by the project itself.	
+			The maximum number of authorized client(s) range is (0..N), the value N means the max number, it is
+			determined by the project itself.
 			When 0 is set on the specified port, the maximum number of authorized client(s) has no limit."
 	DEFVAL	{128}
 		::= { swMacBasedAuthPortEntry 7 }
 
--- ----------------------------------------------------------------------------- 
+-- -----------------------------------------------------------------------------
 -- swMBAMgmt            OBJECT IDENTIFIER ::= { swMBAMIB 4}
 -- -----------------------------------------------------------------------------
 swMacBasedAuthDatabaseTable OBJECT-TYPE
@@ -621,7 +621,7 @@ swMacBasedAuthDatabaseVID OBJECT-TYPE
           STATUS  current
           DESCRIPTION
            "The trap is sent when a MAC-based access control host is successfully logged in."
- 
+
         ::={swMBANotifyPrefix 1}
 
    swMacBasedAuthLoggedFail  NOTIFICATION-TYPE

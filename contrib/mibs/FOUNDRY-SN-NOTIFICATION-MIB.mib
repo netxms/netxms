@@ -2,7 +2,7 @@ FOUNDRY-SN-NOTIFICATION-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
    MODULE-IDENTITY, NOTIFICATION-TYPE	FROM SNMPv2-SMI
-   foundry				FROM FOUNDRY-SN-ROOT-MIB   
+   foundry				FROM FOUNDRY-SN-ROOT-MIB
    ifIndex                          FROM IF-MIB
    dot3OamLoopbackStatus	FROM DOT3-OAM-MIB
    snVLanByPortCfgVLanId 		  FROM FOUNDRY-SN-SWITCH-GROUP-MIB
@@ -22,7 +22,7 @@ IMPORTS
    snL4LinkVirtualInterface,
    snL4MaxSessionLimit,
    snL4TcpSynLimit,
-   snL4TrapRealServerIP, 
+   snL4TrapRealServerIP,
    snL4TrapRealServerName,
    snL4TrapRealServerPort,
    snL4TrapRealServerCurConnections FROM FOUNDRY-SN-SW-L4-SWITCH-GROUP-MIB
@@ -37,8 +37,8 @@ IMPORTS
    snOspfNbrRtrId,
    snOspfNbrState,
    snOspfVirtNbrArea,
-   snOspfVirtNbrRtrId, 
-   snOspfVirtNbrState, 
+   snOspfVirtNbrRtrId,
+   snOspfVirtNbrState,
    snOspfPacketSrc,
    snOspfConfigErrorType,
    snOspfPacketType,
@@ -49,7 +49,7 @@ IMPORTS
    snOspfExtLsdbLimit	  FROM FOUNDRY-SN-OSPF-GROUP-MIB
    snStackingGlobalMixedMode FROM FOUNDRY-SN-STACKING-MIB
    ;
-   
+
 snTraps MODULE-IDENTITY
 	LAST-UPDATED "200909300000Z" -- September 30, 2009
 	ORGANIZATION "Foundry Networks, Inc"
@@ -63,9 +63,9 @@ snTraps MODULE-IDENTITY
 			"
 	DESCRIPTION
 			"
-			The MIB module describes proprietery SNMP Trap information 
+			The MIB module describes proprietery SNMP Trap information
 			of Foundry Networks' router/switch product.
-			
+
 			Copyright 1996-2008 Foundry Networks, Inc.
 			All rights reserved.
 			This Foundry Networks SNMP Management Information Base Specification
@@ -73,15 +73,15 @@ snTraps MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
-			operation, condition, or performance of the Specification.			
-			"            
+			operation, condition, or performance of the Specification.
+			"
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION
-			"convert from SMIv1 to SMIv2"                        
-	::= { foundry 0 }			
+			"convert from SMIv1 to SMIv2"
+	::= { foundry 0 }
 
 -- Trap Information
 -- Foundry Networks, Inc. Specific Traps
@@ -93,7 +93,7 @@ snTrapChasPwrSupply NOTIFICATION-TYPE
 	   "The SNMP trap that is generated when a power supply fails
 		to operate normally. The value is a packed bit string;
 		the 2 power supplies status are encoded into 4 bits
-		(a nibble). 
+		(a nibble).
 		The following shows the meaning of each bit:
 		(bit 0 is the least significant bit).
 
@@ -1016,7 +1016,7 @@ snTrapMplsException NOTIFICATION-TYPE
 	--#SEVERITY MAJOR
 	--#STATE OPERATIONAL
    ::= { snTraps 58 }
-   
+
 snTrapMplsAudit NOTIFICATION-TYPE
    STATUS obsolete
    DESCRIPTION
@@ -1027,7 +1027,7 @@ snTrapMplsAudit NOTIFICATION-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#STATE OPERATIONAL
    ::= { snTraps 59 }
-   
+
 snTrapMplsDeveloper NOTIFICATION-TYPE
    STATUS obsolete
    DESCRIPTION
@@ -1341,7 +1341,7 @@ snTrapMacAuthEnable NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when MAC-Authentication is enabled 
+	   "The SNMP trap that is generated when MAC-Authentication is enabled
 	   on an interface."
    --#TYPE "Foundry Trap: MAC-Authentication enabled"
    --#SUMMARY "%s."
@@ -1354,7 +1354,7 @@ snTrapMacAuthDisable NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when MAC-Authentication is disabled 
+	   "The SNMP trap that is generated when MAC-Authentication is disabled
 	   on an interface."
    --#TYPE "Foundry Trap: MAC-Authentication disabled"
    --#SUMMARY "%s."
@@ -1367,7 +1367,7 @@ snTrapMacAuthMACAccepted NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when MAC-Authentication is successful 
+	   "The SNMP trap that is generated when MAC-Authentication is successful
 	   on an interface."
    --#TYPE "Foundry Trap: MAC-Authentication success"
    --#SUMMARY "%s."
@@ -1380,7 +1380,7 @@ snTrapMacAuthMACRejected NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when MAC-Authentication is failed 
+	   "The SNMP trap that is generated when MAC-Authentication is failed
 	   on an interface."
    --#TYPE "Foundry Trap: MAC-Authentication failure"
    --#SUMMARY "%s."
@@ -1408,7 +1408,7 @@ snTrapClientLoginReject NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when a login attempt by a 
+	   "The SNMP trap that is generated when a login attempt by a
 	   telnet or SSH client fails."
    --#TYPE "Foundry Trap: Client Login Reject"
    --#SUMMARY "%s."
@@ -1911,7 +1911,7 @@ snTrapStpRootGuardDetect NOTIFICATION-TYPE
 	--#ARGUMENTS {  2  }
 	--#SEVERITY NOTIFICATIONS
 	--#STATE OPERATIONAL
-   ::= { snTraps 150 } 
+   ::= { snTraps 150 }
 
 snTrapStpRootGuardExpire NOTIFICATION-TYPE
    OBJECTS {ifIndex, snVLanByPortCfgVLanId, snAgGblTrapMessage}
@@ -1924,7 +1924,7 @@ snTrapStpRootGuardExpire NOTIFICATION-TYPE
 	 --#SEVERITY NOTIFICATIONS
 	 --#STATE OPERATIONAL
    ::= { snTraps 151 }
- 
+
 snTrapStpBPDUGuardDetect NOTIFICATION-TYPE
    OBJECTS {ifIndex, snVLanByPortCfgVLanId, snAgGblTrapMessage}
    STATUS current
@@ -2113,7 +2113,7 @@ snTrapStackingChasPwrSupplyOK NOTIFICATION-TYPE
   --#SEVERITY MINOR
   --#STATE OPERATIONAL
    ::= { snTraps 166 }
-   
+
 snTrapStackingChasPwrSupplyFailed NOTIFICATION-TYPE
    OBJECTS { snChasUnitIndex, snChasPwrSupplyIndex, snAgGblTrapMessage }
    STATUS current
@@ -2139,7 +2139,7 @@ snTrapStackingChasFanNormal NOTIFICATION-TYPE
 		--#SEVERITY MINOR
 		--#STATE OPERATIONAL
    ::= { snTraps 168 }
-   
+
 snTrapStackingChasFanFailed NOTIFICATION-TYPE
    OBJECTS { snChasUnitIndex, snChasFanIndex, snChasFanDescription }
    STATUS current
@@ -2164,7 +2164,7 @@ snTrapStackingChasFanFailed NOTIFICATION-TYPE
 	--#ARGUMENTS { 0 }
 	--#SEVERITY NOTIFICATIONS
 	--#STATE OPERATIONAL
-   ::= { snTraps 170 }  
+   ::= { snTraps 170 }
 
   snTrapStackingTemperatureWarning NOTIFICATION-TYPE
    OBJECTS { snChasUnitIndex, snAgGblTrapMessage }
@@ -2197,7 +2197,7 @@ snTrapPBRConfigChanged NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	  "The SNMP trap that is generated when a Policy Based Routing (PBR) routemap 
+	  "The SNMP trap that is generated when a Policy Based Routing (PBR) routemap
 	   is bound or unbound either globally or to an interface."
 	  --#TYPE "Foundry Trap: Policy Based Routing (PBR) Config Changed "
 	  --#SUMMARY "%s."
@@ -2210,7 +2210,7 @@ snTrapChasPwrSupplyRPSAdd NOTIFICATION-TYPE
    OBJECTS { snChasPwrSupplyIndex, snChasPwrSupplyDescription }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when an External Redundant 
+	   "The SNMP trap that is generated when an External Redundant
 	   Power Supply (RPS2-EIF) is added to the system."
   --#TYPE "Foundry Trap: Power Supply RPS Added"
   --#SUMMARY "External redundant power supply %d (%s) added."
@@ -2218,12 +2218,12 @@ snTrapChasPwrSupplyRPSAdd NOTIFICATION-TYPE
   --#SEVERITY MINOR
   --#STATE OPERATIONAL
    ::= { snTraps 174}
-   
+
 snTrapChasPwrSupplyRPSRemove NOTIFICATION-TYPE
    OBJECTS { snChasPwrSupplyIndex, snChasPwrSupplyDescription }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when an External Redundant 
+	   "The SNMP trap that is generated when an External Redundant
 	   Power Supply (RPS2-EIF) is removed from the system."
   --#TYPE "Foundry Trap: Power Supply RPS Removed"
   --#SUMMARY "External redundant power supply %d (%s) removed."
@@ -2239,7 +2239,7 @@ snTrapModuleStatusChange NOTIFICATION-TYPE
 	   "The SNMP notification that is generated when a module's operational state changes.
 	   The management entity receiving the notification can identify the
 	   module and the event by referencing snChasUnitIndex, snAgentBrdIndex, snAgentBrdModuleStatus.
-	   In case of a module-down event, the varbind snAgGblTrapMessage is a text string 
+	   In case of a module-down event, the varbind snAgGblTrapMessage is a text string
 	   that describes the cause. In case of module-up event, snAgGblTrapMessage is a null
 	   string. "
 	--#TYPE "Foundry Trap: Module status changed"
@@ -2354,7 +2354,7 @@ snTrapI2CAccessLog NOTIFICATION-TYPE
 	--#SEVERITY WARNING
 	--#STATE OPERATIONAL
    ::= { snTraps 184 }
-   
+
 snTrapLinkOAMLoopbackEntered NOTIFICATION-TYPE
    OBJECTS {ifIndex, dot3OamLoopbackStatus, snAgGblTrapMessage }
    STATUS current
@@ -2367,7 +2367,7 @@ snTrapLinkOAMLoopbackEntered NOTIFICATION-TYPE
 	  --#SEVERITY NOTIFICATIONS
 	  --#STATE OPERATIONAL
    ::= { snTraps 185 }
-   
+
 snTrapLinkOAMLoopbackCleared NOTIFICATION-TYPE
    OBJECTS {ifIndex, dot3OamLoopbackStatus, snAgGblTrapMessage }
    STATUS current
@@ -2380,7 +2380,7 @@ snTrapLinkOAMLoopbackCleared NOTIFICATION-TYPE
 	  --#SEVERITY NOTIFICATIONS
 	  --#STATE OPERATIONAL
    ::= { snTraps 186 }
-   
+
 snTrapLicenseAdded NOTIFICATION-TYPE
    OBJECTS { snChasUnitIndex, snAgGblTrapMessage }
    STATUS current
@@ -2459,7 +2459,7 @@ snTrapMacMoveThresholdRate NOTIFICATION-TYPE
    STATUS current
    DESCRIPTION
 	   "The SNMP notification is generated when MAC movement exceeding the certain threshold for a sampling interval is detected.
-	   Format: Mac-Move threshold-rate: MAC address <mac> moved from interface <port-id> to interface <port-id> for vlan <vlan-id>, 
+	   Format: Mac-Move threshold-rate: MAC address <mac> moved from interface <port-id> to interface <port-id> for vlan <vlan-id>,
 	   <move-count> times exceeding the threshold rate <threshold-rate> for a sampling interval <interval> seconds"
 			--#TYPE "Brocade Trap: MAC movement threshold-rate Detection"
 			--#SUMMARY "%s."
@@ -2513,7 +2513,7 @@ snTrapMacNotification NOTIFICATION-TYPE
 	   "The SNMP notification is generated when MAC event(s) is(are) detected.
 	   Format: MAC-Event:MAC:<mac>-VLAN:<vlan-id>-PORT:<port-id>-ACT:<action>::MAC:<mac>-VLAN:<vlan-id>-PORT:<port-id>-ACT:<action>:: ...
 	   		...MAC:<mac>-VLAN:<vlan-id>-PORT:<port-id>-ACT:<action>::
- 			where action: 1-MAC addition; 2-MAC deletion; 3-remove all MACs; 4-remove MAC from a port; 
+ 			where action: 1-MAC addition; 2-MAC deletion; 3-remove all MACs; 4-remove MAC from a port;
  			5-remove MAC from a VLAN; 6-remove MAC from a VLAN on a port"
 			--#TYPE "Brocade Trap: MAC event notification"
 			--#SUMMARY "%s."
@@ -2563,9 +2563,9 @@ snTrapLicenseNNLLTrialNotify NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when a non-node locked licensed feature is enabled with 
+	   "The SNMP trap that is generated when a non-node locked licensed feature is enabled with
 	   no a non-node locked license installed.
-	   Format: Stack <stack_id>: Use of the <feature_name> feature requires a license to be purchased 
+	   Format: Stack <stack_id>: Use of the <feature_name> feature requires a license to be purchased
 	   and installed within <day> days. "
 	--#TYPE "Foundry Trap: add a NNLL license"
 	--#SUMMARY "%s."
@@ -2578,10 +2578,10 @@ snTrapLicenseNNLLTrialExpiry NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when a non-node locked licensed feature is enabled after 
-	   30-44 days with no a non-node locked license installed. This message will be displayed 3 times 
-	   day 30, day 37, day 44. 
-	   Format: Stack <stack_id>: The <feature_name> feature has been activated for <day> days. 
+	   "The SNMP trap that is generated when a non-node locked licensed feature is enabled after
+	   30-44 days with no a non-node locked license installed. This message will be displayed 3 times
+	   day 30, day 37, day 44.
+	   Format: Stack <stack_id>: The <feature_name> feature has been activated for <day> days.
 	   To ensure compliance, please purchase and install a license as soon as possible "
 	--#TYPE "Foundry Trap: Need to add a NNLL license"
 	--#SUMMARY "%s."
@@ -2594,11 +2594,11 @@ snTrapLicenseNNLLNonCompliant NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when a non-node locked licensed feature is enabled after 45+ days 
-	   whit no a non-node locked license installed. Or deletion of an installed license if any of the 
+	   "The SNMP trap that is generated when a non-node locked licensed feature is enabled after 45+ days
+	   whit no a non-node locked license installed. Or deletion of an installed license if any of the
 	   associsted features are still enabled. This message will be displayed daily.
-	   Format: Stack <shack_id>: THIS UNIT IS NOT COMPLIANT. A license for <feature_name> feature must 
-	   be purchased and installed or the feature <feature_name> must be deactivated to become compliant 
+	   Format: Stack <shack_id>: THIS UNIT IS NOT COMPLIANT. A license for <feature_name> feature must
+	   be purchased and installed or the feature <feature_name> must be deactivated to become compliant
 	   with the terms and conditions of use "
 	--#TYPE "Foundry Trap: have to add a NNLL license"
 	--#SUMMARY "%s."
@@ -2611,10 +2611,10 @@ snTrapLicenseNNLLNonCompliant NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when a non-node locked licensed feature is enabled after a 
+	   "The SNMP trap that is generated when a non-node locked licensed feature is enabled after a
 	   non-node locked license is deleted.
-	   Format: Stack <shack_id>: The <license_name> license has been deleted on this unit and is available 
-	   for redeployment on another unit in accordance with the terms and conditions of use. All features 
+	   Format: Stack <shack_id>: The <license_name> license has been deleted on this unit and is available
+	   for redeployment on another unit in accordance with the terms and conditions of use. All features
 	   associated to this license must be disabled"
 	--#TYPE "Foundry Trap: delete a NNLL license"
 	--#SUMMARY "%s."
@@ -2627,9 +2627,9 @@ snTrapLicenseNNLLNonCompliant NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when the background diagnosis detects the connection errors 
-	   to notify the user to check the connections in a stacking system 
-	   Format: Background diagnosis detects connection errors. Please use show stack conn to 
+	   "The SNMP trap that is generated when the background diagnosis detects the connection errors
+	   to notify the user to check the connections in a stacking system
+	   Format: Background diagnosis detects connection errors. Please use show stack conn to
 	   view detailed connections"
 	--#TYPE "Foundry Trap: check stack connections"
 	--#SUMMARY "%s."
@@ -2686,7 +2686,7 @@ snTrapUnicastlimit  NOTIFICATION-TYPE
    --#STATE OPERATIONAL
    ::= { snTraps 213  }
 
--- snTraps 214 for snTrapPsuFanStateChange 
+-- snTraps 214 for snTrapPsuFanStateChange
 snTrapPsuFanStateChange  NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
@@ -2925,7 +2925,7 @@ snTrapPosMonitoringWarning NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-       "The SNMP trap that is generated if there is a warning during POS 
+       "The SNMP trap that is generated if there is a warning during POS
        alarm monitoring.
         The first varbind, snAgGblTrapMessage, will have a detailed message on
         the cause of event. The second optional varbind, ifIndex, points to the affected interface
@@ -2942,7 +2942,7 @@ snTrapPosMonitoringWarning NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-       "The SNMP trap that is generated if there is an alarm up/down 
+       "The SNMP trap that is generated if there is an alarm up/down
        during POS alarm monitoring.
         The first varbind, snAgGblTrapMessage, will have a detailed message on
         the cause of event. The second optional varbind, ifIndex, points to the affected interface
@@ -3059,14 +3059,14 @@ snTrapTMEgressDataError NOTIFICATION-TYPE
 	--#ARGUMENTS { 0 }
 	--#SEVERITY MAJOR
 	--#STATE OPERATIONAL
-::= { snTraps 1020 } 
+::= { snTraps 1020 }
 
 
 snTrapSFMLinkDown NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when a link from LP Traffic Manager to 
+	   "The SNMP trap that is generated when a link from LP Traffic Manager to
 	   SFM Fabric Element is down.
 	   For eg.  Fabric Monitoring Link Down : SFM <num>/FE <num>/Link <num>, LP <num>/TM <num>"
 	--#TYPE "Foundry Trap: SFM Link Down"
@@ -3080,7 +3080,7 @@ snTrapSFMLinkUp NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
-	   "The SNMP trap that is generated when a link from LP Traffic Manager to 
+	   "The SNMP trap that is generated when a link from LP Traffic Manager to
 	   SFM Fabric Element is up.
 	   For eg.  Fabric Monitoring Link Up : SFM <num>/FE <num>/Link <num>, LP <num>/TM <num>"
 	--#TYPE "Foundry Trap: SFM Link Up"
@@ -3102,7 +3102,7 @@ snTrapSFMAccessError NOTIFICATION-TYPE
 	--#ARGUMENTS { 0 }
 	--#SEVERITY MAJOR
 	--#STATE OPERATIONAL
-::= { snTraps 1102 }  
+::= { snTraps 1102 }
 
 snTrapChassisFanSpeedLow NOTIFICATION-TYPE
    OBJECTS { snAgGblTrapMessage }
@@ -3153,11 +3153,11 @@ snTrapChassisFanSpeedHigh NOTIFICATION-TYPE
 ::= { snTraps 1203 }
 
 snTrapFIPSModeEnable NOTIFICATION-TYPE
-   OBJECTS { snAgGblTrapMessage }   
+   OBJECTS { snAgGblTrapMessage }
    STATUS current
    DESCRIPTION
                    "The SNMP trap that is generated when FIPS mode is enabled."
-   --#TYPE "Foundry Trap: FIPS mode enabled by <username> from console" 
+   --#TYPE "Foundry Trap: FIPS mode enabled by <username> from console"
    --#SUMMARY "%s."
    --#ARGUMENTS { 0 }
    --#SEVERITY INFORMATIONAL
@@ -3222,7 +3222,7 @@ snTrapFIPSCryptoModuleFailure NOTIFICATION-TYPE
    --#TYPE "Foundry Trap: FIPS Cryptographic Module Failure"
    --#SUMMARY "%s."
    --#ARGUMENTS { 0 }
-   --#SEVERITY CRITICAL 
+   --#SEVERITY CRITICAL
    --#STATE OPERATIONAL
    ::= { snTraps 1212  }
 

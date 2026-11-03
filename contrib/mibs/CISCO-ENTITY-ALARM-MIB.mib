@@ -86,7 +86,7 @@ AlarmSeverity ::= TEXTUAL-CONVENTION
                     the operation of the system.
 
         'info'      An indication used to raise attention to a condition
-                    that could possibly be an impending problem or to 
+                    that could possibly be an impending problem or to
                     notify the customer of an event that improves
                     operation."
     REFERENCE
@@ -181,7 +181,7 @@ ceAlarmDescrMapTable OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "For each type of entity (represented entPhysicalVendorType
-        OID), this table contains a mapping between a unique 
+        OID), this table contains a mapping between a unique
         ceAlarmDescrIndex and entPhysicalvendorType OID."
     ::= { ceAlarmDescription 1 }
 
@@ -228,7 +228,7 @@ ceAlarmDescrTable OBJECT-TYPE
         "This table contains a description for each alarm type
         defined by each vendor type employed by the system.
         Observe that this table is sparse in nature, as it is
-        rarely the case that a physical entity type needs to 
+        rarely the case that a physical entity type needs to
         define every alarm in its alarm space."
     ::= { ceAlarmDescription 2 }
 
@@ -279,7 +279,7 @@ ceAlarmDescrSeverity OBJECT-TYPE
         foundation in which carrier-class companies house equipment.
         The central office typically controls the temperature and
         humidity of the environment, reducing reliance on a system's
-        fans.  Thus, the customer probably has a desire to reduce the 
+        fans.  Thus, the customer probably has a desire to reduce the
         severity of alarms indicating the failure of a fan.  However, a
         pedestal environment has a much greater reliance on a system's
         fans.  Thus, the customer probably has a desire to increase the
@@ -364,7 +364,7 @@ ceAlarmEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-        "Alarm control and status information related to the 
+        "Alarm control and status information related to the
         corresponding physical entity, including a list of those
         alarms currently being asserted by that physical entity."
     INDEX       { entPhysicalIndex }
@@ -420,7 +420,7 @@ ceAlarmList OBJECT-TYPE
         For example, a slot in a chassis may define an alarm that
         specifies whether the slot contains a module.  At the time of
         module insertion, the physical entity corresponding to the slot
-        asserts this alarm, and the alarm remains asserted until the 
+        asserts this alarm, and the alarm remains asserted until the
         slot becomes empty.
 
         If an alarm is being asserted by the physical entity, then the
@@ -436,7 +436,7 @@ ceAlarmHistTableSize OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-        "This object specifies the number of entries that the 
+        "This object specifies the number of entries that the
         ceAlarmHistTable can contain.  When a physical entity
         generates an unfiltered alarm, and the capacity of the
         ceAlarmHistTable has reached the value specified by
@@ -525,7 +525,7 @@ ceAlarmHistAlarmType OBJECT-TYPE
     DESCRIPTION
         "This object specifies the type of alarm generated."
     ::= { ceAlarmHistEntry 4 }
- 
+
 ceAlarmHistSeverity OBJECT-TYPE
     SYNTAX      AlarmSeverity
     MAX-ACCESS  read-only
@@ -555,10 +555,10 @@ ceAlarmNotifiesEnable OBJECT-TYPE
         notifications.  For example, if the value of this object is
         set to 'major', then the agent generates these notifications
         if and only if the severity of the alarm being indicated is
-        'major' or 'critical'.  The value of '0' disables the 
+        'major' or 'critical'.  The value of '0' disables the
         generation of notifications.
 
-        Observe that this setting overrides the value of the 
+        Observe that this setting overrides the value of the
         ceAlarmFilterNotifiesEnabled object.
 
         This object affects notification generation only; that is, it
@@ -579,7 +579,7 @@ ceAlarmSyslogEnable OBJECT-TYPE
         The value of '0' disables the generation of syslog messages
         corresponding to alarms.
 
-        Observe that this setting overrides the value of the 
+        Observe that this setting overrides the value of the
         ceAlarmFilterSyslogEnabled object.
 
         This object affects syslog message generation only; that is, it
@@ -597,8 +597,8 @@ ceAlarmFilterProfileIndexNext OBJECT-TYPE
         ceAlarmFilterProfileTable.  The value '0' indicates
         that no unassigned entries are available.  To obtain
         a ceAlarmFilterIndex, the management client issues
-        a get request.  The agent has the responsibility of 
-        modifying the value of this object following each 
+        a get request.  The agent has the responsibility of
+        modifying the value of this object following each
         successful get request."
     ::= { ceAlarmFiltering 3 }
 
@@ -628,7 +628,7 @@ ceAlarmFilterProfileEntry OBJECT-TYPE
 
         2)  The agent creates an entry in the ceAlarmHistTable.
 
-        3)  If the alarm list specified by the alarm filter profile's 
+        3)  If the alarm list specified by the alarm filter profile's
             ceAlarmFilterNotifiesEnabled object specifies that the alarm
             type is enabled, then the agent generates the appropriate
             notification.
@@ -662,18 +662,18 @@ ceAlarmFilterStatus OBJECT-TYPE
     MAX-ACCESS  read-create
     STATUS      current
     DESCRIPTION
-        "This object facilitates the creation, modification, or 
+        "This object facilitates the creation, modification, or
         deletion of a conceptual row in this table.
 
         A management client can create a conceptual row in this
-        table by setting this object to 'createAndWait' or 
+        table by setting this object to 'createAndWait' or
         'createAndGo'.  If a request to create a conceptual row
         in this table fails, then the system is not capable of
         supporting any more alarm filters.
 
-        Before modifying a conceptual row in this table, the 
+        Before modifying a conceptual row in this table, the
         management client must set this object to 'notInService'.
-        After modifying a conceptual row in this table, the 
+        After modifying a conceptual row in this table, the
         management client must set this object to 'active'.
         This operation causes the modifications made to an
         alarm filter profile to take effect.
@@ -700,7 +700,7 @@ ceAlarmFilterAlias OBJECT-TYPE
         If an implementation supports write access to this object,
         then the agent is responsible for ensuring the retention
         of any value written to this object until a management client
-        deletes it.  The level of retention must span reboots and 
+        deletes it.  The level of retention must span reboots and
         reinitializations of the network management system, including
         those that result in different assignments to the value of
         the entPhysicalIndex associated with the physical entity."
@@ -737,7 +737,7 @@ ceAlarmFilterSyslogEnabled OBJECT-TYPE
 ciscoEntityAlarmMIBNotificationsPrefix OBJECT IDENTIFIER ::=
     { ciscoEntityAlarmMIB 2 }
 
-ciscoEntityAlarmMIBNotifications      OBJECT IDENTIFIER ::= 
+ciscoEntityAlarmMIBNotifications      OBJECT IDENTIFIER ::=
     { ciscoEntityAlarmMIBNotificationsPrefix 0 }
 
 ceAlarmAsserted NOTIFICATION-TYPE
@@ -748,7 +748,7 @@ ceAlarmAsserted NOTIFICATION-TYPE
         ceAlarmHistTimeStamp
         }
     STATUS      current
-    DESCRIPTION    
+    DESCRIPTION
         "The agent generates this trap when a physical entity
         asserts an alarm."
     ::= { ciscoEntityAlarmMIBNotifications 1 }
@@ -761,7 +761,7 @@ ceAlarmCleared NOTIFICATION-TYPE
         ceAlarmHistTimeStamp
     }
     STATUS      current
-    DESCRIPTION    
+    DESCRIPTION
         "The agent generates this trap when a physical entity
         clears a previously asserted alarm."
     ::= { ciscoEntityAlarmMIBNotifications 2 }
@@ -879,4 +879,3 @@ ceAlarmFilterProfileGroup OBJECT-GROUP
 --    ::= { ciscoEntityAlarmMIBGroups 7 }
 --
 END
-

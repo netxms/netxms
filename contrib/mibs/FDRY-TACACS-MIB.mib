@@ -1,16 +1,16 @@
 FDRY-TACACS-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-	MODULE-IDENTITY, OBJECT-TYPE, 
+	MODULE-IDENTITY, OBJECT-TYPE,
 			Unsigned32	   	FROM SNMPv2-SMI	  			-- [RFC2578]
 	RowStatus							FROM SNMPv2-TC 				-- [RFC2579]
 	DisplayString		 				FROM SNMPv2-TC 		 		-- [RFC2579]
-	
+
 	InetAddressType, InetAddress		FROM INET-ADDRESS-MIB
 	fdryTacacs	 					   	FROM FOUNDRY-SN-ROOT-MIB	-- [snroo101]
 	ServerUsage							FROM FDRY-RADIUS-MIB		-- [fdryradius]
 	;
-   
+
 fdryTacacsMIB MODULE-IDENTITY
 	LAST-UPDATED "200802250000Z"  -- 25 February 2008
 	ORGANIZATION "Foundry Networks, Inc."
@@ -23,7 +23,7 @@ fdryTacacsMIB MODULE-IDENTITY
 	DESCRIPTION
 			"The Foundry proprietary MIB module for Tacacs Authentication Servers
 			It has new table combines Ipv4 and Ipv6 Tacacs Authentication Servers configuration.
-			
+
 			Copyright 1996-2008 Foundry Networks, Inc.
 			All rights reserved.
 			This Foundry Networks SNMP Management Information Base Specification
@@ -31,15 +31,15 @@ fdryTacacsMIB MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
 			operation, condition, or performance of the Specification.
 			"
-   
+
 	REVISION 	"200802250000Z"  -- 25 February 2008
 	DESCRIPTION	"Initial version, obsoletes the earlier snTacacsServerTable."
-		  
+
 	::= { fdryTacacs 1 }
 
 --
@@ -51,7 +51,7 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 --
 -- Ipv4/Ipv6  Tacacs server table
 --
-	
+
 	fdryTacacsServerTable 	   OBJECT-TYPE
 		SYNTAX	SEQUENCE OF FdryTacacsServerEntry
 		MAX-ACCESS	not-accessible
@@ -59,7 +59,7 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 		DESCRIPTION
 			"Tacacs server table, listing the Tacacs authentication servers"
 		::= { fdryTacacsServer 1 }
-	
+
 	fdryTacacsServerEntry 	   OBJECT-TYPE
 		SYNTAX	FdryTacacsServerEntry
 		MAX-ACCESS	not-accessible
@@ -69,12 +69,12 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 			  Reasons to go for running index Scheme than IP addresses:
 			  1.  The table will be Virtual Routing and Forwarding(VRF) independent
 				  that multiple VRFs could share the same address type and address.
-			  2.  Index with address type and address could be potentially 17 unsigned integer, parsing and finding next index takes CPU time. 
-				  The PDU gets to be huge too! 
+			  2.  Index with address type and address could be potentially 17 unsigned integer, parsing and finding next index takes CPU time.
+				  The PDU gets to be huge too!
 			  3.  IP address is just another attribute, they are supposed to be list of servers."
 		INDEX	{ fdryTacacsServerIndex }
 		::= { fdryTacacsServerTable 1 }
-	
+
 	FdryTacacsServerEntry ::= SEQUENCE {
 		fdryTacacsServerIndex
 			Unsigned32,
@@ -91,7 +91,7 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 		fdryTacacsServerRowStatus
 			RowStatus
 		}
-	
+
 	fdryTacacsServerIndex OBJECT-TYPE
 		SYNTAX  Unsigned32
 		MAX-ACCESS  not-accessible
@@ -99,7 +99,7 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 		DESCRIPTION
 		"The index to the Tacacs server Table, Maximum 8 Tacacs servers are supported."
 		::= { fdryTacacsServerEntry 1 }
-	
+
 	fdryTacacsServerAddrType 			 OBJECT-TYPE
 		SYNTAX  InetAddressType
 		MAX-ACCESS  read-create
@@ -108,7 +108,7 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 			  "Tacacs server IP address Type. Supported address types are ipv4(1) and ipv6(2)"
 		DEFVAL	{ ipv4 }
 		::= { fdryTacacsServerEntry 2 }
-	
+
 	fdryTacacsServerAddr 			 OBJECT-TYPE
 		SYNTAX  InetAddress
 		MAX-ACCESS  read-create
@@ -116,7 +116,7 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 		DESCRIPTION
 			  "Tacacs server IP address."
 		::= { fdryTacacsServerEntry 3 }
-	
+
 	fdryTacacsServerAuthPort	   OBJECT-TYPE
 		SYNTAX	Unsigned32
 		MAX-ACCESS	read-create
@@ -125,7 +125,7 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 			"Authentication UDP port number."
 		DEFVAL	{ 49 }
 		::= { fdryTacacsServerEntry 4 }
-	
+
 	fdryTacacsServerRowKey	   OBJECT-TYPE
 		SYNTAX	DisplayString (SIZE(0..32))
 		MAX-ACCESS	read-create
@@ -133,7 +133,7 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 		DESCRIPTION
 			"Authentication key displayed as encrypted text."
 		::= { fdryTacacsServerEntry 5 }
-	
+
 	fdryTacacsServerUsage    OBJECT-TYPE
 		SYNTAX	ServerUsage
 		MAX-ACCESS	read-create
@@ -154,5 +154,5 @@ fdryTacacsServer OBJECT IDENTIFIER ::= { fdryTacacsMIB 1 }
 			can be modified except this object.
 			 "
 		::= { fdryTacacsServerEntry 7 }
-	
+
 	END

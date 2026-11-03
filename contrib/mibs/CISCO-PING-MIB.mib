@@ -5,7 +5,7 @@
 --
 -- Copyright (c) 1994-2000, 2001 by cisco Systems, Inc.
 -- All rights reserved.
--- 
+--
 -- *****************************************************************
 
 CISCO-PING-MIB DEFINITIONS ::= BEGIN
@@ -48,10 +48,10 @@ ciscoPingMIB MODULE-IDENTITY
                 E-mail: cs-snmp@cisco.com"
         DESCRIPTION
                 "Modified description of ciscoPingAddress object."
-        REVISION        "200108280000Z" 
+        REVISION        "200108280000Z"
         DESCRIPTION
                 "Added VPN name to notifications"
-        REVISION        "200105140000Z" 
+        REVISION        "200105140000Z"
         DESCRIPTION
                 "Add VrfName attribute to support VPN ping"
         REVISION        "9910080000Z"
@@ -320,22 +320,22 @@ ciscoPingEntryStatus OBJECT-TYPE
                 the sequence completes (ciscoPingCompleted is true)."
         ::= { ciscoPingEntry 16 }
 
-              
+
 ciscoPingVrfName OBJECT-TYPE
         SYNTAX     OCTET STRING (SIZE (0..32))
         MAX-ACCESS read-create
         STATUS     current
         DESCRIPTION
-                "This field is used to specify the VPN name in 
+                "This field is used to specify the VPN name in
                  which the ping will be used. For regular ping this
                  field should not be configured. The agent will use
-                 this field to identify the VPN routing Table for 
-                 this ping. This is the same ascii string used in 
-                 the CLI to refer to this VPN. " 
+                 this field to identify the VPN routing Table for
+                 this ping. This is the same ascii string used in
+                 the CLI to refer to this VPN. "
         DEFVAL { "" }
         ::= { ciscoPingEntry 17 }
 
-              
+
 ciscoPingMIBTrapPrefix OBJECT IDENTIFIER ::= { ciscoPingMIB 2 }
 ciscoPingMIBTraps OBJECT IDENTIFIER ::= { ciscoPingMIBTrapPrefix 0 }
 
@@ -350,7 +350,7 @@ ciscoPingCompletion NOTIFICATION-TYPE
                 of a sequence of pings if such a trap was requested
                 when the sequence was initiated.  In addition to the
                 above listed objects (which are always present),
-                the message will contain the following objects if 
+                the message will contain the following objects if
                 any responses were received:
                         ciscoPingMinRtt
                         ciscoPingAvgRtt
@@ -413,7 +413,7 @@ ciscoPingMIBGroup OBJECT-GROUP
                 "A collection of objects providing ping (echo) ability to a
                 Cisco agent."
         ::= { ciscoPingMIBGroups 1 }
-        
+
 ciscoPingMIBGroupVpn OBJECT-GROUP
         OBJECTS {
                 ciscoPingProtocol,
@@ -447,5 +447,5 @@ ciscoPingMIBNotificationGroup NOTIFICATION-GROUP
         DESCRIPTION
                 "Set of notifications implemented in this module."
         ::= { ciscoPingMIBGroups 3 }
-        
+
 END

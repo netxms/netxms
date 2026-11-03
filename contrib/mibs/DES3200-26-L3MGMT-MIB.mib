@@ -12,20 +12,20 @@
 -- Description:
 --  [New Object]
 --  [Modification]
--- Notes: (Requested by who and which project)  
+-- Notes: (Requested by who and which project)
 --
 -- Version 1.03, 2015/02/04, Zoey Chen
 -- Description:
 -- [New Object]
--- Add swL3IpCtrlDhcpv6ClientState and swL3Ipv6AddressCtrlAddressType 
---    to support DHCPv6 Client.   
---  
+-- Add swL3IpCtrlDhcpv6ClientState and swL3Ipv6AddressCtrlAddressType
+--    to support DHCPv6 Client.
+--
 -- Version 1.02 2009/11/07,  Eli
 -- Description:
 -- [New Object]
--- Add swL3IpCtrlIpDhcpOption12State and swL3IpCtrlIpDhcpOption12HostName to 
+-- Add swL3IpCtrlIpDhcpOption12State and swL3IpCtrlIpDhcpOption12HostName to
 -- support DHCP option 12 host name function.
---  
+--
 -- Version 1.01 2009/05/16, Eli Lin
 -- Description:
 -- [Remove Object]
@@ -40,11 +40,11 @@
 -- swL3IpCtrlInterfaceName, swL3IpCtrlIpv6LinkLocalAddress,
 -- swL3IpCtrlIpv6LinkLocalPrefixLen, swL3IpCtrlIpv6LinkLocalAutoState
 -- for IPV6 Automatic Link Local Address
---  
+--
 -- Version 1.00 2009/04/28, Eli Lin
 -- Description:
 -- [New Object]
--- Add swL2IpCtrlAllIpIfState, swL2Ipv6CtrlTable, 
+-- Add swL2IpCtrlAllIpIfState, swL2Ipv6CtrlTable,
 -- swL2Ipv6AddressCtrlTable for IPv6
 -- -----------------------------------------------------------------------------
 DES3200-26-L3MGMT-MIB DEFINITIONS ::= BEGIN
@@ -64,13 +64,13 @@ DES3200-26-L3MGMT-MIB DEFINITIONS ::= BEGIN
 	   		"http://support.dlink.com"
 	  	DESCRIPTION
 	    		"The Structure of Layer 3 Network Management Information for enterprise."
-	  	::= {des3200-26 3} 
+	  	::= {des3200-26 3}
 
     swL3DevMgmt             OBJECT IDENTIFIER ::= { swL3MgmtMIB 1 }
     swL3IpMgmt              OBJECT IDENTIFIER ::= { swL3MgmtMIB 2 }
-    
-    swL3IpCtrlMgmt          OBJECT IDENTIFIER ::= { swL3IpMgmt 1 } 
-   
+
+    swL3IpCtrlMgmt          OBJECT IDENTIFIER ::= { swL3IpMgmt 1 }
+
 -- -----------------------------------------------------------------------------
 -- Textual Conventions
 -- -----------------------------------------------------------------------------
@@ -105,14 +105,14 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         INDEX  { swL3IpCtrlInterfaceName }
         ::= { swL3IpCtrlTable 1 }
 
-    SwL3IpCtrlEntry ::= 
+    SwL3IpCtrlEntry ::=
         SEQUENCE {
             swL3IpCtrlInterfaceName
                 DisplayString,
             swL3IpCtrlIpv6LinkLocalAddress
             	Ipv6Address,
             swL3IpCtrlIpv6LinkLocalPrefixLen
-                INTEGER,                   
+                INTEGER,
             swL3IpCtrlIpv6LinkLocalAutoState
             	INTEGER,
             swL3IpCtrlDhcpv6ClientState
@@ -120,9 +120,9 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             swL3IpCtrlIpDhcpOption12State
             	INTEGER,
             swL3IpCtrlIpDhcpOption12HostName
-            	DisplayString            	
+            	DisplayString
         }
-        
+
     swL3IpCtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-only
@@ -146,7 +146,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The IPv6 prefix length for this IPv6 link local address."
         ::= { swL3IpCtrlEntry 15 }
-        
+
     swL3IpCtrlIpv6LinkLocalAutoState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -157,8 +157,8 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "The state of the IPv6 link local auto."
-        ::= { swL3IpCtrlEntry 17 }    
-        
+        ::= { swL3IpCtrlEntry 17 }
+
     swL3IpCtrlDhcpv6ClientState OBJECT-TYPE
         SYNTAX  INTEGER {
 			enabled(1),
@@ -169,7 +169,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The object indicates the state of the DHCPv6 client."
         ::= { swL3IpCtrlEntry 20 }
-        
+
     swL3IpCtrlIpDhcpOption12State OBJECT-TYPE
         SYNTAX  INTEGER {
                     enabled(1),
@@ -178,7 +178,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Enable or disable insertion of option 12 in the DHCPDISCOVER and 
+            "Enable or disable insertion of option 12 in the DHCPDISCOVER and
              DHCPREQUEST message."
         ::= { swL3IpCtrlEntry 22 }
 
@@ -187,15 +187,15 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Specify the host name to be inserted in the DHCPDISCOVER and 
-             DHCPREQUEST message. The specified host name must start with a 
-             letter, end with a letter or digit, and have only letters, digits, 
-             and hyphen as interior characters; the maximal length is 63. By 
+            "Specify the host name to be inserted in the DHCPDISCOVER and
+             DHCPREQUEST message. The specified host name must start with a
+             letter, end with a letter or digit, and have only letters, digits,
+             and hyphen as interior characters; the maximal length is 63. By
              default, the host name is empty.
-             When set an empty host name, means to clear the host name setting and 
+             When set an empty host name, means to clear the host name setting and
              use the default value to encode option 12."
         ::= { swL3IpCtrlEntry 23 }
-                	                	        
+
     swL3Ipv6CtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3Ipv6CtrlEntry
         MAX-ACCESS  not-accessible
@@ -213,36 +213,36 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         INDEX  { swL3Ipv6CtrlInterfaceName }
         ::= { swL3Ipv6CtrlTable 1 }
 
-    SwL3Ipv6CtrlEntry ::= 
+    SwL3Ipv6CtrlEntry ::=
         SEQUENCE {
             swL3Ipv6CtrlInterfaceName
                 DisplayString,
             swL3Ipv6CtrlMaxReassmblySize
-                INTEGER,   
+                INTEGER,
             swL3Ipv6CtrlNsRetransTimer
                 Unsigned32
 --            swL3Ipv6CtrlRsState
 --                INTEGER,
 --            swL3Ipv6CtrlRaState
---                INTEGER, 
+--                INTEGER,
 --            swL3Ipv6CtrlRaMinRtrAdvInterval
 --            	INTEGER,
 --            swL3Ipv6CtrlRaMaxRtrAdvInterval
---            	INTEGER,	                
---            swL3Ipv6CtrlRaLifeTime  
---                INTEGER, 
---            swL3Ipv6CtrlRaReachableTime   
---                INTEGER, 
---            swL3Ipv6CtrlRaRetransTime   
---                Unsigned32, 
+--            	INTEGER,
+--            swL3Ipv6CtrlRaLifeTime
+--                INTEGER,
+--            swL3Ipv6CtrlRaReachableTime
+--                INTEGER,
+--            swL3Ipv6CtrlRaRetransTime
+--                Unsigned32,
 --            swL3Ipv6CtrlRaHopLimit
---            	INTEGER,  
+--            	INTEGER,
 --            swL3Ipv6CtrlRaManagedFlag
 --            	INTEGER,
 --            swL3Ipv6CtrlRaOtherConfigFlag
---            	INTEGER		 
+--            	INTEGER
         }
-        
+
     swL3Ipv6CtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-only
@@ -258,7 +258,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "Maximum Reassembly Size of the IP interface."
         ::= { swL3Ipv6CtrlEntry 2 }
-        
+
     swL3Ipv6CtrlNsRetransTimer  OBJECT-TYPE
         SYNTAX  Unsigned32 (0..4294967295)
         MAX-ACCESS  read-write
@@ -295,10 +295,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "The minimum time allowed between sending unsolicited multicast Router 
---             Advertisements from the interface. The unit is set in seconds.             
+--            "The minimum time allowed between sending unsolicited multicast Router
+--             Advertisements from the interface. The unit is set in seconds.
 --             It must be no less than 3 seconds and no greater than .75 * MaxRtrAdvInterval.
---             Default value: 0.33 * MaxRtrAdvInterval"     
+--             Default value: 0.33 * MaxRtrAdvInterval"
 --        ::= { swL3Ipv6CtrlEntry 6 }
 --
 --    swL3Ipv6CtrlRaMaxRtrAdvInterval  OBJECT-TYPE
@@ -306,11 +306,11 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "The maximum time allowed between sending unsolicited multicast Router 
+--            "The maximum time allowed between sending unsolicited multicast Router
 --            Advertisements from the interface. The unit is set in seconds."
---        DEFVAL {600}    
+--        DEFVAL {600}
 --        ::= { swL3Ipv6CtrlEntry 7 }
---        
+--
 --    swL3Ipv6CtrlRaLifeTime  OBJECT-TYPE
 --        SYNTAX  INTEGER (0..9000)
 --        MAX-ACCESS  read-write
@@ -324,7 +324,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "Indicates the amount of time that a node can consider a neighboring 
+--            "Indicates the amount of time that a node can consider a neighboring
 --             node reachable after receiving a reachability confirmation."
 --        ::= { swL3Ipv6CtrlEntry 9 }
 --
@@ -333,7 +333,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "Indicates the amount of time between retransmissions of neighbor 
+--            "Indicates the amount of time between retransmissions of neighbor
 --             solicited messages.
 --             The unit is set in millisecond."
 --        ::= { swL3Ipv6CtrlEntry 10 }
@@ -343,7 +343,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "Indicates the default value of the hop limit field in the IPv6 header for 
+--            "Indicates the default value of the hop limit field in the IPv6 header for
 --             packets sent by hosts that receive this RA message."
 --        ::= { swL3Ipv6CtrlEntry 11 }
 --
@@ -355,11 +355,11 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "When enabled, it indicates that hosts receiving this RA must use a 
---             stateful address configuration protocol to obtain an address in the addition 
+--            "When enabled, it indicates that hosts receiving this RA must use a
+--             stateful address configuration protocol to obtain an address in the addition
 --             to the addresses derived from the stateless address configuration."
 --        ::= { swL3Ipv6CtrlEntry 12 }
--- 
+--
 --    swL3Ipv6CtrlRaOtherConfigFlag OBJECT-TYPE
 --        SYNTAX  INTEGER {
 --               enabled(1),
@@ -368,10 +368,10 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "When enabled, it indicates that hosts receiving this RA must use a stateful 
+--            "When enabled, it indicates that hosts receiving this RA must use a stateful
 --             address configuration protocol to obtain an on-link address configuration information."
---        ::= { swL3Ipv6CtrlEntry 13 } 
-        
+--        ::= { swL3Ipv6CtrlEntry 13 }
+
     swL3Ipv6AddressCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3Ipv6AddressCtrlEntry
         MAX-ACCESS  not-accessible
@@ -388,8 +388,8 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             "A list of information about a specific IPv6 address."
         INDEX  { swL3Ipv6AddressCtrlInterfaceName, swL3Ipv6Address, swL3Ipv6AddressCtrlPrefixLen }
         ::= { swL3Ipv6AddressCtrlTable 1 }
-        
-    SwL3Ipv6AddressCtrlEntry ::= 
+
+    SwL3Ipv6AddressCtrlEntry ::=
         SEQUENCE {
             swL3Ipv6AddressCtrlInterfaceName
             	DisplayString,
@@ -409,7 +409,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
                 RowStatus,
             swL3Ipv6AddressCtrlAddressType
                 INTEGER
-            }        
+            }
 
     swL3Ipv6AddressCtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
@@ -417,15 +417,15 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "This object indicates the name of the IP interface. "
-        ::= { swL3Ipv6AddressCtrlEntry 1 }   
-        
+        ::= { swL3Ipv6AddressCtrlEntry 1 }
+
     swL3Ipv6Address OBJECT-TYPE
         SYNTAX   Ipv6Address
         MAX-ACCESS read-only
         STATUS   current
         DESCRIPTION
            "Specify the IPv6 address."
-        ::= { swL3Ipv6AddressCtrlEntry 2 }  
+        ::= { swL3Ipv6AddressCtrlEntry 2 }
 
     swL3Ipv6AddressCtrlPrefixLen OBJECT-TYPE
         SYNTAX  INTEGER
@@ -433,27 +433,27 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "Indicates the prefix length of this IPv6 address."
-        ::= { swL3Ipv6AddressCtrlEntry 3 }  
-        
+        ::= { swL3Ipv6AddressCtrlEntry 3 }
+
 --    swL3Ipv6AddressCtrlPreferredLifeTime  OBJECT-TYPE
 --        SYNTAX  Unsigned32 (0..4294967294)
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "Indicates the number of seconds that an address, based on the specified prefix, 
---             using the stateless address configuration, remains in preferred state.  
+--            "Indicates the number of seconds that an address, based on the specified prefix,
+--             using the stateless address configuration, remains in preferred state.
 --             For an infinite valid lifetime, the value can be set to 0xffffffff."
---        ::= { swL3Ipv6AddressCtrlEntry 4 }  
---        
+--        ::= { swL3Ipv6AddressCtrlEntry 4 }
+--
 --    swL3Ipv6AddressCtrlValidLifeTime  OBJECT-TYPE
 --        SYNTAX  Unsigned32 (0..4294967294)
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "Indicates the number of seconds that an address, based on the specified prefix, 
---             using the stateless address configuration, remains valid.  
+--            "Indicates the number of seconds that an address, based on the specified prefix,
+--             using the stateless address configuration, remains valid.
 --             For an infinite valid lifetime, the value can be set to 0xffffffff."
---        ::= { swL3Ipv6AddressCtrlEntry 5 }             
+--        ::= { swL3Ipv6AddressCtrlEntry 5 }
 --
 --    swL3Ipv6AddressCtrlOnLinkFlag OBJECT-TYPE
 --        SYNTAX  INTEGER {
@@ -463,9 +463,9 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "When enabled, the address implied by the specified prefix is available 
+--            "When enabled, the address implied by the specified prefix is available
 --             on the link where the RA message is received."
---        ::= { swL3Ipv6AddressCtrlEntry 6 } 
+--        ::= { swL3Ipv6AddressCtrlEntry 6 }
 --
 --    swL3Ipv6AddressCtrlAutonomousFlag OBJECT-TYPE
 --        SYNTAX  INTEGER {
@@ -476,7 +476,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --        STATUS  current
 --        DESCRIPTION
 --            "When enabled, the specified prefix will be used to create an autonomous address configuration."
---        ::= { swL3Ipv6AddressCtrlEntry 7 } 
+--        ::= { swL3Ipv6AddressCtrlEntry 7 }
 
     swL3Ipv6AddressCtrlState OBJECT-TYPE
         SYNTAX  RowStatus
@@ -484,7 +484,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
             "This variable displays the status of the entry. The status is used
-            for creating, modifying, and deleting instances of the objects 
+            for creating, modifying, and deleting instances of the objects
             in this table."
         ::= { swL3Ipv6AddressCtrlEntry 8 }
 
@@ -493,7 +493,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 			manual(1),
 			dhcpv6(2),
 			stateless(3)
-		}    
+		}
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
@@ -502,17 +502,17 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 		 dhcpv6(2): the IPv6 address is assigned by DHCPv6 server.
 		 stateless(3): the IPv6 address is assigned by router advertisement."
         ::= { swL3Ipv6AddressCtrlEntry 9 }
-        
-     swL3IpCtrlAllIpIfState OBJECT-TYPE                                       
+
+     swL3IpCtrlAllIpIfState OBJECT-TYPE
     	SYNTAX  INTEGER {
-    	   other(1),                                                 
-           enabled(2),                                                
-           disabled(3)                                                
-           }                                                          
-    	MAX-ACCESS  read-write                                            
-    	STATUS  current                                                   
-    	DESCRIPTION                                                       
+    	   other(1),
+           enabled(2),
+           disabled(3)
+           }
+    	MAX-ACCESS  read-write
+    	STATUS  current
+    	DESCRIPTION
         	"This object indicates all interface function state of the device."
-    	::= { swL3IpCtrlMgmt 7 }       
-       
+    	::= { swL3IpCtrlMgmt 7 }
+
 END

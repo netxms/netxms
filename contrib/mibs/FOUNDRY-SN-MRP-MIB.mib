@@ -322,4 +322,4 @@ snMetroRingSecPortActivePort OBJECT-TYPE
             "The ifIndex value of active secondary port."
     ::= { snMetroRingEntry 24 }
 
-END		
+END

@@ -13,7 +13,7 @@ IMPORTS
 ucdDlmodMIB MODULE-IDENTITY
     LAST-UPDATED "9912100000Z"
     ORGANIZATION "University of California, Davis"
-    CONTACT-INFO    
+    CONTACT-INFO
 	"This mib is no longer being maintained by the University of
 	 California and is now in life-support-mode and being
 	 maintained by the net-snmp project.  The best place to write
@@ -27,14 +27,14 @@ ucdDlmodMIB MODULE-IDENTITY
          email:    net-snmp-coders@lists.sourceforge.net
         "
     DESCRIPTION
-	"This file defines the MIB objects for dynamic 
+	"This file defines the MIB objects for dynamic
 	 loadable MIB modules."
     REVISION	 "9912100000Z"
     DESCRIPTION
 	"SMIv2 version converted from older MIB definitions."
     ::= { ucdExperimental 14 }
 
-dlmodNextIndex OBJECT-TYPE 
+dlmodNextIndex OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
@@ -43,7 +43,7 @@ dlmodNextIndex OBJECT-TYPE
 	 in the dlmodTable."
     ::= { ucdDlmodMIB 1 }
 
-dlmodTable OBJECT-TYPE 
+dlmodTable OBJECT-TYPE
     SYNTAX	SEQUENCE OF DlmodEntry
     MAX-ACCESS	not-accessible
     STATUS	current
@@ -90,7 +90,7 @@ dlmodPath OBJECT-TYPE
     STATUS	current
     DESCRIPTION
 	"The path of the module executable file."
-    ::= { dlmodEntry 3 } 
+    ::= { dlmodEntry 3 }
 
 dlmodError OBJECT-TYPE
     SYNTAX	DisplayString

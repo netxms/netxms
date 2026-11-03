@@ -6,46 +6,46 @@
 --
 
 	WS-INFRA-AUTO-UPDATE-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP, MODULE-COMPLIANCE			
-				FROM SNMPv2-CONF			
-			IpAddress, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			DisplayString, TruthValue, RowStatus			
-				FROM SNMPv2-TC			
-			wsInfraAutoUpdate			
-				FROM WS-INFRA-SMI-MIB			
-			DoActionNow			
+			OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+			IpAddress, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			DisplayString, TruthValue, RowStatus
+				FROM SNMPv2-TC
+			wsInfraAutoUpdate
+				FROM WS-INFRA-SMI-MIB
+			DoActionNow
 				FROM WS-TYPE-MIB;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.1.11.1
-		wsInfraAutoUpdateModule MODULE-IDENTITY 
+		wsInfraAutoUpdateModule MODULE-IDENTITY
 			LAST-UPDATED "200608091334Z"		-- August 09, 2006 at 13:34 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technologies"
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Contact-info."
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			REVISION "200610071517Z"		-- October 07, 2006 at 15:17 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"Added AutoUpdate start."
 			REVISION "200608111634Z"		-- August 11, 2006 at 16:34 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"Changed Name to AutoUpdate"
 			REVISION "200608091540Z"		-- August 09, 2006 at 15:40 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"Added Auto Update MIB for monarch"
 			::= { wsInfraAutoUpdate 1 }
 
-		
-	
+
+
 --
 -- Type definitions
 --
-	
+
 		DoActionState ::= INTEGER
 			{
 			success(1),
@@ -53,12 +53,12 @@
 			inProgress(3)
 			}
 
-	
-	
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.1
 		wsInfraAutoUpdateTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsInfraAutoUpdateEntry
@@ -68,7 +68,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateModule 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.1.1
 		wsInfraAutoUpdateEntry OBJECT-TYPE
 			SYNTAX WsInfraAutoUpdateEntry
@@ -79,9 +79,9 @@
 			INDEX { wsInfraAutoUpdateIndex }
 			::= { wsInfraAutoUpdateTable 1 }
 
-		
+
 		WsInfraAutoUpdateEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsInfraAutoUpdateIndex
 					Unsigned32,
 				wsInfraAutoUpdateEnableUpdate
@@ -109,7 +109,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.1.1.2
 		wsInfraAutoUpdateEnableUpdate OBJECT-TYPE
 			SYNTAX TruthValue
@@ -119,7 +119,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.1.1.3
 		wsInfraAutoUpdateFileLoc OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..128))
@@ -129,7 +129,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.1.1.4
 		wsInfraAutoUpdateSvrIpAddr OBJECT-TYPE
 			SYNTAX IpAddress
@@ -139,7 +139,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.1.1.5
 		wsInfraAutoUpdateSvrProtocol OBJECT-TYPE
 			SYNTAX INTEGER
@@ -162,7 +162,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.1.1.6
 		wsInfraAutoUpdateSvrUsername OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..49))
@@ -172,7 +172,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.1.1.7
 		wsInfraAutoUpdateSvrPassword OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..49))
@@ -182,7 +182,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.1.1.8
 		wsInfraAutoUpdateRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -192,7 +192,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.2
 		wsInfraAutoUpdateImageFileVersion OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..29))
@@ -202,7 +202,7 @@
 				"Description."
 			::= { wsInfraAutoUpdateModule 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.3
 		wsInfraAutoUpdateStart OBJECT-TYPE
 			SYNTAX DoActionNow
@@ -212,41 +212,41 @@
 				"Start Update Manually."
 			::= { wsInfraAutoUpdateModule 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.100
 		wsInfraAutoUpdateMIBConformance OBJECT IDENTIFIER ::= { wsInfraAutoUpdateModule 100 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.100.1
 		wsInfraAutoUpdateMIBGroups OBJECT IDENTIFIER ::= { wsInfraAutoUpdateMIBConformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.100.1.1
 		wsInfraAutoUpdateGroup OBJECT-GROUP
-			OBJECTS { wsInfraAutoUpdateIndex, wsInfraAutoUpdateEnableUpdate, wsInfraAutoUpdateFileLoc, wsInfraAutoUpdateSvrIpAddr, wsInfraAutoUpdateSvrProtocol, 
+			OBJECTS { wsInfraAutoUpdateIndex, wsInfraAutoUpdateEnableUpdate, wsInfraAutoUpdateFileLoc, wsInfraAutoUpdateSvrIpAddr, wsInfraAutoUpdateSvrProtocol,
 				wsInfraAutoUpdateSvrUsername, wsInfraAutoUpdateSvrPassword, wsInfraAutoUpdateStart, wsInfraAutoUpdateImageFileVersion, wsInfraAutoUpdateRowStatus
 				 }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			::= { wsInfraAutoUpdateMIBGroups 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.100.2
 		wsInfraAutoUpdateMIBCompliances OBJECT IDENTIFIER ::= { wsInfraAutoUpdateMIBConformance 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.1.11.1.100.2.1
 		wsInfraAutoUpdateMibCompliance MODULE-COMPLIANCE
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			MODULE -- this module
 				MANDATORY-GROUPS { wsInfraAutoUpdateGroup }
 			::= { wsInfraAutoUpdateMIBCompliances 1 }
 
-		
-	
+
+
 	END
 
 --

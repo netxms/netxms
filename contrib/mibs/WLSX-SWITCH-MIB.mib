@@ -3,8 +3,8 @@
    WLSX-SWITCH-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
-       
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
+
        MODULE-IDENTITY,
        OBJECT-TYPE,
        snmpModules,
@@ -44,7 +44,7 @@
                         Santa Clara, CA 95054
             E-mail:     aruba-ext-eng-reg@hpe.com
             Phone:      408 227 4500
-            Fax:        408 752 0626" 
+            Fax:        408 752 0626"
        DESCRIPTION
            "This MIB module defines MIB objects which provide
             System level information about the Aruba switches."
@@ -82,7 +82,7 @@
         MAX-ACCESS   read-only
         STATUS       current
         DESCRIPTION
-			"Switch IP as configured by the user. This IP address uniquely 
+			"Switch IP as configured by the user. This IP address uniquely
 			identifies the switch."
         ::= { wlsxSystemXGroup 3 }
 
@@ -114,29 +114,29 @@
         ::= { wlsxSystemXGroup 5 }
 
 
--- Switch List Table contains all the switches in the domain. This table is 
+-- Switch List Table contains all the switches in the domain. This table is
 -- valid only when queried from the conductor switch.
 
-   wlsxSwitchListTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MxSwitchListEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSwitchListTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MxSwitchListEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"This Table will list all the switches in the Switch Domain.
 		 It will be populated only on the conductor switch. Local switches
 		 return empty table.
 		"
-	
-      ::= { wlsxSystemXGroup 6 } 
 
-     wlsxSwitchListEntry OBJECT-TYPE 
-	  SYNTAX       MxSwitchListEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxSystemXGroup 6 }
+
+     wlsxSwitchListEntry OBJECT-TYPE
+	  SYNTAX       MxSwitchListEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Switch List Entry"
 	  INDEX { switchListSwitchIPAddress}
-      ::= { wlsxSwitchListTable 1 } 
+      ::= { wlsxSwitchListTable 1 }
 
      MxSwitchListEntry ::=
      SEQUENCE {
@@ -184,24 +184,24 @@
 
 -- The license table lists all valid licenses installed on the switch
 
-   wlsxSwitchLicenseTable  OBJECT-TYPE 
+   wlsxSwitchLicenseTable  OBJECT-TYPE
 	  SYNTAX       SEQUENCE OF LicenseEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"This table lists all licenses installed on the switch.
 		"
-	
-      ::= { wlsxSystemXGroup 8 } 
 
-     wlsxLicenseEntry OBJECT-TYPE 
+      ::= { wlsxSystemXGroup 8 }
+
+     wlsxLicenseEntry OBJECT-TYPE
 	  SYNTAX       LicenseEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "License Entry"
 	  INDEX { licenseIndex }
-      ::= { wlsxSwitchLicenseTable 1 } 
+      ::= { wlsxSwitchLicenseTable 1 }
 
      LicenseEntry ::=
      SEQUENCE {
@@ -276,26 +276,26 @@
 
 -- Table lists all the processors and there corresponding Load.
 
-   wlsxSysXProcessorTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysXProcessorEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysXProcessorTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysXProcessorEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			The table of processors contained by the switch.
 		"
-      ::= { wlsxSystemXGroup 9 } 
+      ::= { wlsxSystemXGroup 9 }
 
-   wlsxSysXProcessorEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysXProcessorEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysXProcessorEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysXProcessorEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  "
 	  	An entry for one processor contained by the switch.
 	  "
 	  INDEX { sysXProcessorID}
-      ::= { wlsxSysXProcessorTable 1 } 
+      ::= { wlsxSysXProcessorTable 1 }
 
    WlsxSysXProcessorEntry ::=
      SEQUENCE {
@@ -335,31 +335,31 @@
 			"
         ::= { wlsxSysXProcessorEntry 3 }
 
--- Table contains all the storage devices in the switch and there 
+-- Table contains all the storage devices in the switch and there
 -- utilization numbers.
 
-   wlsxSysXStorageTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysXStorageEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysXStorageTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysXStorageEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 		"
 		The table of Storage-devices contained by the switch.
 		"
-	
-      ::= { wlsxSystemXGroup 10 } 
 
-   wlsxSysXStorageEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysXStorageEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxSystemXGroup 10 }
+
+   wlsxSysXStorageEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysXStorageEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
-			 	An entry for one long-term storage device contained by the 
+			 	An entry for one long-term storage device contained by the
 				switch.
 			 "
 	  INDEX { sysXStorageIndex }
-      ::= { wlsxSysXStorageTable 1 } 
+      ::= { wlsxSysXStorageTable 1 }
 
    WlsxSysXStorageEntry ::=
      SEQUENCE {
@@ -425,28 +425,28 @@
 
 -- This table describes the memory utilization of the switch
 
-   wlsxSysXMemoryTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysXMemoryEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysXMemoryTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysXMemoryEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 		"
 		The memory status of the switch
 		"
-	
-      ::= { wlsxSystemXGroup 11 } 
 
-   wlsxSysXMemoryEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysXMemoryEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxSystemXGroup 11 }
+
+   wlsxSysXMemoryEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysXMemoryEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
 		An entry for one memory region on the switch.  Currently,
 		only the CP region is monitored.
 	     "
 	  INDEX { sysXMemoryIndex }
-      ::= { wlsxSysXMemoryTable 1 } 
+      ::= { wlsxSysXMemoryTable 1 }
 
    WlsxSysXMemoryEntry ::=
      SEQUENCE {
@@ -549,26 +549,26 @@
 
 -- wlsxUserInfoGroup contains information about the users connected to the switch.
 
-   wlsxSwitchUserTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MxSwitchUserEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSwitchUserTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MxSwitchUserEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This Table lists all the users (both wired and wireless) currently
 			connected to the switch. Users are identified by their IP address.
 		"
-	
-      ::= { wlsxUserInfoGroup 1 } 
 
-     wlsxSwitchUserEntry OBJECT-TYPE 
-	  SYNTAX       MxSwitchUserEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxUserInfoGroup 1 }
+
+     wlsxSwitchUserEntry OBJECT-TYPE
+	  SYNTAX       MxSwitchUserEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "User Entry"
 	  INDEX { userIpAddress}
-      ::= { wlsxSwitchUserTable 1 } 
+      ::= { wlsxSwitchUserTable 1 }
 
      MxSwitchUserEntry ::=
      SEQUENCE {
@@ -605,7 +605,7 @@
          STATUS       current
          DESCRIPTION
             "
-			Physical Address of the station from which the user connected to 
+			Physical Address of the station from which the user connected to
 			the switch.
             "
         ::= { wlsxSwitchUserEntry 2 }
@@ -630,14 +630,14 @@
             "
         ::= { wlsxSwitchUserEntry 4 }
 
-		 
+
      userUpTime OBJECT-TYPE
          SYNTAX       TimeTicks
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 Time since the user is connected to the switch.	
+			 Time since the user is connected to the switch.
             "
         ::= { wlsxSwitchUserEntry 5 }
 
@@ -747,26 +747,26 @@
   -- StationMgmt Table
   --Station Management Table contains all the station associated with this AP.
 
-   wlsxSwitchStationMgmtTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MxSwitchStationMgmtEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSwitchStationMgmtTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MxSwitchStationMgmtEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This Table lists all the wireless stations associated with the 
-			Access points connected to this switch. 
+			This Table lists all the wireless stations associated with the
+			Access points connected to this switch.
 		"
-	
-      ::= { wlsxUserInfoGroup 2 } 
 
-   wlsxSwitchStationMgmtEntry OBJECT-TYPE 
-	  SYNTAX       MxSwitchStationMgmtEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxUserInfoGroup 2 }
+
+   wlsxSwitchStationMgmtEntry OBJECT-TYPE
+	  SYNTAX       MxSwitchStationMgmtEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Management Entry"
 	  INDEX {staPhyAddress, staAccessPointBSSID}
-      ::= { wlsxSwitchStationMgmtTable 1 } 
+      ::= { wlsxSwitchStationMgmtTable 1 }
 
    MxSwitchStationMgmtEntry ::=
      SEQUENCE {
@@ -904,26 +904,26 @@
   --switch. The stats are indexed by Station Mac and AP BSSID it is associated
   --to.
 
-   wlsxSwitchStationStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MxSwitchStationStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSwitchStationStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MxSwitchStationStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This Table lists the statistics of all the wireless stations 
-			associated with the Access points connected to this switch. 
+			This Table lists the statistics of all the wireless stations
+			associated with the Access points connected to this switch.
 		"
-	
-      ::= { wlsxUserInfoGroup 3 } 
 
-   wlsxSwitchStationStatsEntry OBJECT-TYPE 
-	  SYNTAX       MxSwitchStationStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxUserInfoGroup 3 }
+
+   wlsxSwitchStationStatsEntry OBJECT-TYPE
+	  SYNTAX       MxSwitchStationStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Statistics Entry"
 	  INDEX {staPhyAddress, staAccessPointBSSID}
-      ::= { wlsxSwitchStationStatsTable 1 } 
+      ::= { wlsxSwitchStationStatsTable 1 }
 
    MxSwitchStationStatsEntry ::=
      SEQUENCE {
@@ -1042,11 +1042,11 @@
 -- wlsxAccessPointInfoGroup contains a Local Access Point Information Table.
 -- which lists all the AP's connected to this switch, a Global AP Info Table
 -- which lists all the AP's in the Domain. The Global table is valid only
--- on the Conductor switch. The Group also contains two scalar objects which 
+-- on the Conductor switch. The Group also contains two scalar objects which
 -- indicate the total number of AP's and the total number of Clients connected.
 
 
-   wlsxSwitchTotalNumAccessPoints  OBJECT-TYPE 
+   wlsxSwitchTotalNumAccessPoints  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -1056,7 +1056,7 @@
             "
         ::= { wlsxAccessPointInfoGroup 1 }
 
-   wlsxSwitchTotalNumStationsAssociated  OBJECT-TYPE 
+   wlsxSwitchTotalNumStationsAssociated  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -1068,24 +1068,24 @@
 
 -- Local Access Point Table.
 
-   wlsxSwitchAccessPointTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MxSwitchAccessPointEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSwitchAccessPointTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MxSwitchAccessPointEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This Table lists all the Access Points Connected to this switch. 
+			This Table lists all the Access Points Connected to this switch.
 		"
-      ::= { wlsxAccessPointInfoGroup 3 } 
+      ::= { wlsxAccessPointInfoGroup 3 }
 
-   wlsxSwitchAccessPointEntry OBJECT-TYPE 
-	  SYNTAX       MxSwitchAccessPointEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSwitchAccessPointEntry OBJECT-TYPE
+	  SYNTAX       MxSwitchAccessPointEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Management Entry"
 	  INDEX {apBSSID}
-      ::= { wlsxSwitchAccessPointTable 1 } 
+      ::= { wlsxSwitchAccessPointTable 1 }
 
    MxSwitchAccessPointEntry ::=
      SEQUENCE {
@@ -1214,7 +1214,7 @@
          STATUS       current
          DESCRIPTION
             "
-			Time since the Ap is connected to the switch 
+			Time since the Ap is connected to the switch
             "
         ::= { wlsxSwitchAccessPointEntry 10 }
 
@@ -1224,7 +1224,7 @@
          STATUS       current
          DESCRIPTION
             "
-            Time since the Ap has been inactive 
+            Time since the Ap has been inactive
             "
         ::= { wlsxSwitchAccessPointEntry 11 }
 
@@ -1335,26 +1335,26 @@
         ::= { wlsxSwitchAccessPointEntry 19 }
 
  --Global AP Table
-   wlsxSwitchGlobalAPTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MxSwitchGlobalAPEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       deprecated 
-      DESCRIPTION 
+   wlsxSwitchGlobalAPTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MxSwitchGlobalAPEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       deprecated
+      DESCRIPTION
 	  	"
-			This Table lists all the Access Points Connected in the 
+			This Table lists all the Access Points Connected in the
 			Switch Domain. This table is valid only on a
 			Master switch. On a Local switch, the table is empty.
 		"
-      ::= { wlsxAccessPointInfoGroup 4 } 
+      ::= { wlsxAccessPointInfoGroup 4 }
 
-   wlsxSwitchGlobalAPEntry OBJECT-TYPE 
-	  SYNTAX       MxSwitchGlobalAPEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       deprecated 
-      DESCRIPTION 
+   wlsxSwitchGlobalAPEntry OBJECT-TYPE
+	  SYNTAX       MxSwitchGlobalAPEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       deprecated
+      DESCRIPTION
              "Station Management Entry"
 	  INDEX {globalAPLocation, globalAPAddress}
-      ::= { wlsxSwitchGlobalAPTable 1 } 
+      ::= { wlsxSwitchGlobalAPTable 1 }
 
    MxSwitchGlobalAPEntry ::=
      SEQUENCE {
@@ -1405,7 +1405,7 @@
          DESCRIPTION
             "
 			Physical Mac address of the module supporting dot11a in the
-			Access Point. AP can have support for both dot11a and dot11b 
+			Access Point. AP can have support for both dot11a and dot11b
 			physical layer.
             "
         ::= { wlsxSwitchGlobalAPEntry 4 }
@@ -1417,7 +1417,7 @@
          DESCRIPTION
             "
 			Physical Mac address of the module supporting dot11b in the
-			Access Point. AP can have support for both dot11a and dot11b 
+			Access Point. AP can have support for both dot11a and dot11b
 			physical layer.
             "
         ::= { wlsxSwitchGlobalAPEntry 5 }
@@ -1442,34 +1442,34 @@
          DESCRIPTION
             "
 			Physical Mac address of the module supporting dot11g in the
-			Access Point. AP can have support for both a,b,g 
+			Access Point. AP can have support for both a,b,g
 			physical layer.
             "
         ::= { wlsxSwitchGlobalAPEntry 7 }
 
  -- Local AP Stats.
 
-   wlsxSwitchAccessPointStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MxSwitchAccessPointStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSwitchAccessPointStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MxSwitchAccessPointStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This Table lists the statistics of all the Access Points Connected 
-			to this switch. 
+			This Table lists the statistics of all the Access Points Connected
+			to this switch.
 		"
-      ::= { wlsxAccessPointInfoGroup 5 } 
+      ::= { wlsxAccessPointInfoGroup 5 }
 
-   wlsxSwitchAccessPointStatsEntry OBJECT-TYPE 
-	  SYNTAX       MxSwitchAccessPointStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSwitchAccessPointStatsEntry OBJECT-TYPE
+	  SYNTAX       MxSwitchAccessPointStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
 			 Ap Stats Entry.
 			 "
 	  INDEX {apBSSID}
-      ::= { wlsxSwitchAccessPointStatsTable 1 } 
+      ::= { wlsxSwitchAccessPointStatsTable 1 }
 
    MxSwitchAccessPointStatsEntry ::=
      SEQUENCE {
@@ -1850,7 +1850,7 @@
 		::= { wlsxIapBranchEntry 8 }
 
 -- wlsxSwitchTraps
--- This group defines all the traps related to the switch platform. 
+-- This group defines all the traps related to the switch platform.
 wlsxSwitchTrapObjectsGroup      OBJECT IDENTIFIER ::= { wlsxSwitchTraps 100 }
 
 wlsxAuthServerName OBJECT-TYPE
@@ -1859,7 +1859,7 @@ wlsxAuthServerName OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate the 
+				This Object is used in the traps to indicate the
 				Authentication Server, used for Authentication.
             "
 ::= { wlsxSwitchTrapObjectsGroup 1 }
@@ -1871,7 +1871,7 @@ wlsxAuthServerTimeout OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate the 
+				This Object is used in the traps to indicate the
 				Authentication Server Timeout.
             "
 ::= { wlsxSwitchTrapObjectsGroup 2 }
@@ -1882,7 +1882,7 @@ wlsxFanNumber OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate 
+				This Object is used in the traps to indicate
 				a failing fan number.
             "
 ::= { wlsxSwitchTrapObjectsGroup 4 }
@@ -1894,7 +1894,7 @@ wlsxLineCardNumber OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate a 
+				This Object is used in the traps to indicate a
 				Line Card in the switch.
             "
 ::= { wlsxSwitchTrapObjectsGroup 5 }
@@ -1906,7 +1906,7 @@ wlsxVoltageType OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate the 
+				This Object is used in the traps to indicate the
 				type of the voltage.
             "
 ::= { wlsxSwitchTrapObjectsGroup 6 }
@@ -1918,7 +1918,7 @@ wlsxVoltageValue OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate the 
+				This Object is used in the traps to indicate the
 				voltage value in Float.
             "
 ::= { wlsxSwitchTrapObjectsGroup 7 }
@@ -1930,7 +1930,7 @@ wlsxTemperatureValue OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate 
+				This Object is used in the traps to indicate
 				Temperature Value.
             "
 ::= { wlsxSwitchTrapObjectsGroup 8 }
@@ -1942,7 +1942,7 @@ wlsxProcessName OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate a 
+				This Object is used in the traps to indicate a
 				process name.
             "
 ::= { wlsxSwitchTrapObjectsGroup 9 }
@@ -1973,7 +1973,7 @@ wlsxStationBlackListReason OBJECT-TYPE
          STATUS       obsolete
          DESCRIPTION
             "
-			The Reason for which a station is black listed. 
+			The Reason for which a station is black listed.
 			**NOTE: this object is obsoleted
             "
 ::= { wlsxSwitchTrapObjectsGroup 11 }
@@ -2102,7 +2102,7 @@ wlsxESIServerGrpName OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-			This Object represents the External Services Interface 
+			This Object represents the External Services Interface
 			(ESI) Server Group name
             "
 ::= { wlsxSwitchTrapObjectsGroup 23 }
@@ -2125,8 +2125,8 @@ wlsxESIServerIpaddress OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-			This Object represents the External Services Interface 
-			(ESI) Server 
+			This Object represents the External Services Interface
+			(ESI) Server
 			IP Address
             "
 ::= { wlsxSwitchTrapObjectsGroup 25 }
@@ -2148,7 +2148,7 @@ wlsxSlotNumber OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate a 
+				This Object is used in the traps to indicate a
 				Line Card in the switch.  This value matches the value
 				of sysExtCardSlot.
             "
@@ -2168,23 +2168,23 @@ wlsxStationBlackListReasonStr OBJECT-TYPE
 
 -- Trap Definitions.
 
-wlsxSwitchIPChanged NOTIFICATION-TYPE        
+wlsxSwitchIPChanged NOTIFICATION-TYPE
 	OBJECTS {wlsxSwitchIp}
     STATUS  obsolete
     DESCRIPTION
-			"A trap which indicates that the switch IP address has changed." 
+			"A trap which indicates that the switch IP address has changed."
     ::= { wlsxSwitchTraps 1001 }
 
-wlsxSwitchRoleChange NOTIFICATION-TYPE        
+wlsxSwitchRoleChange NOTIFICATION-TYPE
 	OBJECTS {wlsxSwitchRole}
     STATUS  current
     DESCRIPTION
-			"A trap which indicates that the role of the switch has changed in 
+			"A trap which indicates that the role of the switch has changed in
 			the Domain."
     ::= { wlsxSwitchTraps 1002 }
 
 -- Authentication Traps.
-wlsxUserEntryCreated NOTIFICATION-TYPE        
+wlsxUserEntryCreated NOTIFICATION-TYPE
 	OBJECTS {userPhyAddress}
     STATUS  current
     DESCRIPTION
@@ -2193,7 +2193,7 @@ wlsxUserEntryCreated NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1003 }
 
-wlsxUserEntryDeleted NOTIFICATION-TYPE        
+wlsxUserEntryDeleted NOTIFICATION-TYPE
 	OBJECTS {userPhyAddress}
     STATUS  current
     DESCRIPTION
@@ -2203,7 +2203,7 @@ wlsxUserEntryDeleted NOTIFICATION-TYPE
     ::= { wlsxSwitchTraps 1004 }
 
 
-wlsxUserEntryAuthenticated NOTIFICATION-TYPE        
+wlsxUserEntryAuthenticated NOTIFICATION-TYPE
 	OBJECTS {userPhyAddress, userName, userAuthenticationMethod, userRole}
     STATUS  current
     DESCRIPTION
@@ -2213,7 +2213,7 @@ wlsxUserEntryAuthenticated NOTIFICATION-TYPE
     ::= { wlsxSwitchTraps 1005 }
 
 
-wlsxUserEntryDeAuthenticated NOTIFICATION-TYPE        
+wlsxUserEntryDeAuthenticated NOTIFICATION-TYPE
 	OBJECTS {userPhyAddress}
     STATUS  current
     DESCRIPTION
@@ -2223,7 +2223,7 @@ wlsxUserEntryDeAuthenticated NOTIFICATION-TYPE
     ::= { wlsxSwitchTraps 1006 }
 
 
-wlsxUserAuthenticationFailed NOTIFICATION-TYPE        
+wlsxUserAuthenticationFailed NOTIFICATION-TYPE
 	OBJECTS {userPhyAddress}
     STATUS  current
     DESCRIPTION
@@ -2233,27 +2233,27 @@ wlsxUserAuthenticationFailed NOTIFICATION-TYPE
     ::= { wlsxSwitchTraps 1007 }
 
 
-wlsxAuthServerReqTimedOut NOTIFICATION-TYPE        
+wlsxAuthServerReqTimedOut NOTIFICATION-TYPE
 	OBJECTS {wlsxAuthServerName}
     STATUS  current
     DESCRIPTION
 			"
-			A trap which indicates that the authentication server request 
+			A trap which indicates that the authentication server request
 			timed out.
 			"
     ::= { wlsxSwitchTraps 1008 }
 
-wlsxAuthServerTimedOut NOTIFICATION-TYPE        
+wlsxAuthServerTimedOut NOTIFICATION-TYPE
 	OBJECTS {wlsxAuthServerName, wlsxAuthServerTimeout}
     STATUS  current
     DESCRIPTION
 			"
-			A trap which indicates that the authentication server 
+			A trap which indicates that the authentication server
 			timed out.
 			"
     ::= { wlsxSwitchTraps 1009 }
 
-wlsxAuthServerIsUp NOTIFICATION-TYPE        
+wlsxAuthServerIsUp NOTIFICATION-TYPE
 	OBJECTS {wlsxAuthServerName}
     STATUS  current
     DESCRIPTION
@@ -2262,7 +2262,7 @@ wlsxAuthServerIsUp NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1010 }
 
-wlsxAuthMaxUserEntries NOTIFICATION-TYPE        
+wlsxAuthMaxUserEntries NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2271,7 +2271,7 @@ wlsxAuthMaxUserEntries NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1011 }
 
-wlsxAuthMaxAclEntries NOTIFICATION-TYPE        
+wlsxAuthMaxAclEntries NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2280,7 +2280,7 @@ wlsxAuthMaxAclEntries NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1012 }
 
-wlsxAuthMaxBWContracts NOTIFICATION-TYPE        
+wlsxAuthMaxBWContracts NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2291,7 +2291,7 @@ wlsxAuthMaxBWContracts NOTIFICATION-TYPE
 
 -- Platform Traps.
 
-wlsxPowerSupplyFailure NOTIFICATION-TYPE        
+wlsxPowerSupplyFailure NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2299,7 +2299,7 @@ wlsxPowerSupplyFailure NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1014 }
 
-wlsxFanFailure NOTIFICATION-TYPE        
+wlsxFanFailure NOTIFICATION-TYPE
 	OBJECTS {wlsxFanNumber}
     STATUS  current
     DESCRIPTION
@@ -2308,17 +2308,17 @@ wlsxFanFailure NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1015 }
 
-wlsxOutOfRangeVoltage NOTIFICATION-TYPE        
+wlsxOutOfRangeVoltage NOTIFICATION-TYPE
 	OBJECTS {wlsxVoltageType, wlsxVoltageValue}
     STATUS  current
     DESCRIPTION
 			"
-			A trap which indicates that the switch received out of range 
+			A trap which indicates that the switch received out of range
 			voltage.
 			"
     ::= { wlsxSwitchTraps 1016 }
 
-wlsxOutOfRangeTemperature NOTIFICATION-TYPE        
+wlsxOutOfRangeTemperature NOTIFICATION-TYPE
 	OBJECTS {wlsxTemperatureValue}
     STATUS  current
     DESCRIPTION
@@ -2328,7 +2328,7 @@ wlsxOutOfRangeTemperature NOTIFICATION-TYPE
     ::= { wlsxSwitchTraps 1017 }
 
 
-wlsxLCInserted NOTIFICATION-TYPE        
+wlsxLCInserted NOTIFICATION-TYPE
 	OBJECTS {wlsxLineCardNumber, wlsxSlotNumber}
     STATUS  current
     DESCRIPTION
@@ -2337,7 +2337,7 @@ wlsxLCInserted NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1018 }
 
-wlsxSCInserted NOTIFICATION-TYPE        
+wlsxSCInserted NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2345,15 +2345,15 @@ wlsxSCInserted NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1019 }
 
-wlsxGBICInserted NOTIFICATION-TYPE        
+wlsxGBICInserted NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
-			A trap which indicates that a GBIC is inserted in a line card. 
+			A trap which indicates that a GBIC is inserted in a line card.
 			"
     ::= { wlsxSwitchTraps 1020 }
 
-wlsxProcessDied NOTIFICATION-TYPE        
+wlsxProcessDied NOTIFICATION-TYPE
 	OBJECTS {wlsxProcessName}
     STATUS  current
     DESCRIPTION
@@ -2362,7 +2362,7 @@ wlsxProcessDied NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1021 }
 
-wlsxProcessExceedsMemoryLimits NOTIFICATION-TYPE        
+wlsxProcessExceedsMemoryLimits NOTIFICATION-TYPE
 	OBJECTS {wlsxProcessName}
     STATUS  current
     DESCRIPTION
@@ -2372,7 +2372,7 @@ wlsxProcessExceedsMemoryLimits NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1022 }
 
-wlsxLowOnFlashSpace NOTIFICATION-TYPE        
+wlsxLowOnFlashSpace NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2380,7 +2380,7 @@ wlsxLowOnFlashSpace NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1023 }
 
-wlsxLowMemory NOTIFICATION-TYPE        
+wlsxLowMemory NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2388,7 +2388,7 @@ wlsxLowMemory NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1024 }
 
-wlsxFanTrayRemoved NOTIFICATION-TYPE        
+wlsxFanTrayRemoved NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2396,7 +2396,7 @@ wlsxFanTrayRemoved NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1025 }
 
-wlsxFanTrayInserted NOTIFICATION-TYPE        
+wlsxFanTrayInserted NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2404,7 +2404,7 @@ wlsxFanTrayInserted NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1026 }
 
-wlsxLCRemoved NOTIFICATION-TYPE        
+wlsxLCRemoved NOTIFICATION-TYPE
 	OBJECTS {wlsxLineCardNumber, wlsxSlotNumber}
     STATUS  current
     DESCRIPTION
@@ -2413,7 +2413,7 @@ wlsxLCRemoved NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1027 }
 
-wlsxSCRemoved NOTIFICATION-TYPE        
+wlsxSCRemoved NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2421,7 +2421,7 @@ wlsxSCRemoved NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1028 }
 
-wlsxPowerSupplyMissing NOTIFICATION-TYPE        
+wlsxPowerSupplyMissing NOTIFICATION-TYPE
     STATUS  current
     DESCRIPTION
 			"
@@ -2431,28 +2431,28 @@ wlsxPowerSupplyMissing NOTIFICATION-TYPE
 
 -- Access point up/down traps.
 
-wlsxAccessPointIsUp NOTIFICATION-TYPE        
+wlsxAccessPointIsUp NOTIFICATION-TYPE
 	OBJECTS {apLocation, apIpAddress}
     STATUS  deprecated
     DESCRIPTION
 			"
-			A trap which indicates that an Access point at Location 
+			A trap which indicates that an Access point at Location
 			apLocation and Address apIpAddress is up.
 			"
     ::= { wlsxSwitchTraps 1030 }
 
-wlsxAccessPointIsDown NOTIFICATION-TYPE        
+wlsxAccessPointIsDown NOTIFICATION-TYPE
 	OBJECTS {apLocation, apIpAddress}
     STATUS  deprecated
     DESCRIPTION
 			"
-			A trap which indicates that an Access point at Location 
+			A trap which indicates that an Access point at Location
 			apLocation and Address apIpAddress is down.
 			"
     ::= { wlsxSwitchTraps 1031}
 
 
-wlsxCoverageHoleDetected NOTIFICATION-TYPE        
+wlsxCoverageHoleDetected NOTIFICATION-TYPE
 	OBJECTS {apLocation, apIpAddress, wlsxStationMacAddress}
     STATUS  current
     DESCRIPTION
@@ -2463,31 +2463,31 @@ wlsxCoverageHoleDetected NOTIFICATION-TYPE
     ::= { wlsxSwitchTraps 1032}
 
 
-wlsxChannelChanged NOTIFICATION-TYPE        
+wlsxChannelChanged NOTIFICATION-TYPE
 	OBJECTS {apLocation, apIpAddress, apCurrentChannel}
     STATUS  deprecated
     DESCRIPTION
 			"
-			A trap which indicates that an Access point at Location 
-			apLocation and Address apIpAddress has changed the channel to 
+			A trap which indicates that an Access point at Location
+			apLocation and Address apIpAddress has changed the channel to
 			apCurrentChannel.
 			"
     ::= { wlsxSwitchTraps 1033}
 
-wlsxStationAddedToBlackList NOTIFICATION-TYPE        
+wlsxStationAddedToBlackList NOTIFICATION-TYPE
 	OBJECTS {wlsxStationMacAddress, wlsxStationBlackListReason, wlsxStationBlackListReasonStr}
     STATUS  obsolete
     DESCRIPTION
 			"
 			A trap which indicates that a station with address
-			wlsxStationMacAddress is black listed for 
+			wlsxStationMacAddress is black listed for
 			wlsxStationBlackListReason reason.
 			**NOTE: this notification is obsoleted and replaced by
 			wlsxNStationAddedToDenyList.
 			"
     ::= { wlsxSwitchTraps 1034}
 
-wlsxStationRemovedFromBlackList NOTIFICATION-TYPE        
+wlsxStationRemovedFromBlackList NOTIFICATION-TYPE
 	OBJECTS {wlsxStationMacAddress}
     STATUS  obsolete
     DESCRIPTION
@@ -2499,7 +2499,7 @@ wlsxStationRemovedFromBlackList NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1035}
 
-wlsxIpSpoofingDetected NOTIFICATION-TYPE        
+wlsxIpSpoofingDetected NOTIFICATION-TYPE
 	OBJECTS {wlsxSpoofedIpAddress, wlsxSpoofedOldPhyAddress, wlsxSpoofedNewPhyAddress}
     STATUS  current
     DESCRIPTION
@@ -2508,7 +2508,7 @@ wlsxIpSpoofingDetected NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1036}
 
-wlsxDBCommunicationFailure NOTIFICATION-TYPE        
+wlsxDBCommunicationFailure NOTIFICATION-TYPE
 	OBJECTS {wlsxDBName, wlsxDBUserName, wlsxDBIpAddress, wlsxDBType}
     STATUS  current
     DESCRIPTION
@@ -2517,7 +2517,7 @@ wlsxDBCommunicationFailure NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1037}
 
-wlsxVrrpStateChange NOTIFICATION-TYPE        
+wlsxVrrpStateChange NOTIFICATION-TYPE
 	OBJECTS {wlsxVrID, wlsxVrMasterIp, wlsxVrrpOperState}
     STATUS  obsolete
     DESCRIPTION
@@ -2526,39 +2526,39 @@ wlsxVrrpStateChange NOTIFICATION-TYPE
 			"
     ::= { wlsxSwitchTraps 1038}
 
-wlsxAPRadioAttributesChanged NOTIFICATION-TYPE        
+wlsxAPRadioAttributesChanged NOTIFICATION-TYPE
 	OBJECTS {apLocation, apIpAddress, apCurrentChannel, wlsxApTxPower}
     STATUS  current
     DESCRIPTION
 			"
-			A trap which indicates changes in the Radio attributes of an 
+			A trap which indicates changes in the Radio attributes of an
 			Access Point at location apLocation and address apIpAddress.
-			Ap channel is apCurrentChannel, and Transmit power is 
+			Ap channel is apCurrentChannel, and Transmit power is
 			apTxPower.
 			"
     ::= { wlsxSwitchTraps 1039}
 
-wlsxESIServerUp NOTIFICATION-TYPE        
+wlsxESIServerUp NOTIFICATION-TYPE
 	OBJECTS {wlsxESIServerGrpName, wlsxESIServerName, wlsxESIServerIpaddress}
     STATUS  current
     DESCRIPTION
 			"
-			A trap which indicates that a ESI server <wlsxESIServerName> in 
+			A trap which indicates that a ESI server <wlsxESIServerName> in
 			group <wlsxESIServerGrpName> with <wlsxESIServerIpaddress> is up
 			"
     ::= { wlsxSwitchTraps 1040}
 
-wlsxESIServerDown NOTIFICATION-TYPE        
+wlsxESIServerDown NOTIFICATION-TYPE
 	OBJECTS {wlsxESIServerGrpName, wlsxESIServerName, wlsxESIServerIpaddress}
     STATUS  current
     DESCRIPTION
 			"
-			A trap which indicates that a ESI server <wlsxESIServerName> in 
+			A trap which indicates that a ESI server <wlsxESIServerName> in
 			group <wlsxESIServerGrpName> with <wlsxESIServerIpaddress> is down
 			"
     ::= { wlsxSwitchTraps 1041}
 
-wlsxLicenseExpiry NOTIFICATION-TYPE        
+wlsxLicenseExpiry NOTIFICATION-TYPE
 	OBJECTS {wlsxLicenseDaysRemaining}
     STATUS  current
     DESCRIPTION
@@ -2624,5 +2624,3 @@ wlsxDot1xTotalLimitHit NOTIFICATION-TYPE
 
 
 END
-
-

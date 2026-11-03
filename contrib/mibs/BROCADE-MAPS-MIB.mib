@@ -12,9 +12,9 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
 
 			 IMPORTS
 			 Integer32, OBJECT-IDENTITY, OBJECT-TYPE,
-			 MODULE-IDENTITY, NOTIFICATION-TYPE 
+			 MODULE-IDENTITY, NOTIFICATION-TYPE
 			 FROM SNMPv2-SMI
-			 
+
 			 bcsiModules
 			 FROM Brocade-REG-MIB
 
@@ -39,42 +39,42 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION "added db category"
 		REVISION	"201304221330Z" -- April 22, 2013 01:30pm
 		DESCRIPTION "Updated mapsConfigObjectGroupType syntax values"
-             ::=        { bcsiModules 4 }     
-            
+             ::=        { bcsiModules 4 }
+
     mapsTraps OBJECT-IDENTITY
     STATUS     current
     DESCRIPTION     "The OID represents the MAPS Trap."
-    ::= { maps 0 }          
-    
+    ::= { maps 0 }
+
     mapsConfig OBJECT-IDENTITY
     STATUS     current
     DESCRIPTION     "The OID represents the MAPS Config params."
-    ::= { maps 1 }     
-    
+    ::= { maps 1 }
+
     mapsConfigRuleName OBJECT-TYPE
     SYNTAX            OCTET STRING (SIZE (64))
     MAX-ACCESS        read-only
     STATUS            current
-    DESCRIPTION       "It indicates the rule name which associates a condition 
-    					with actions that need to be triggered 
+    DESCRIPTION       "It indicates the rule name which associates a condition
+    					with actions that need to be triggered
     					when the specified condition is evaluated to true."
-    ::= { mapsConfig 1 }     
-    
+    ::= { mapsConfig 1 }
+
     mapsConfigCondition OBJECT-TYPE
     SYNTAX            OCTET STRING (SIZE (64))
     MAX-ACCESS        read-only
     STATUS            current
-    DESCRIPTION       "It indicates the condition defined in the rule. 
-					It includes the counter, time base and threshold 
-					value with the logical operation (eg: >, <, >= etc) that 
+    DESCRIPTION       "It indicates the condition defined in the rule.
+					It includes the counter, time base and threshold
+					value with the logical operation (eg: >, <, >= etc) that
 					needs to be evaluated. Eg: (CRC/MIN > 10)"
-    ::= { mapsConfig 2 }     
-    
+    ::= { mapsConfig 2 }
+
     mapsConfigNumOfMS            OBJECT-TYPE
     SYNTAX             Integer32
     MAX-ACCESS         read-only
     STATUS             current
-    DESCRIPTION     "It indicates the number of monitoring system entries 
+    DESCRIPTION     "It indicates the number of monitoring system entries
 					in the notifications"
     ::= { mapsConfig 3 }
 
@@ -82,9 +82,9 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
     SYNTAX            OCTET STRING (SIZE (16))
     MAX-ACCESS        read-only
     STATUS            current
-    DESCRIPTION       "This is monitoring system name like CRC, ITW, PS, FAN."   
+    DESCRIPTION       "This is monitoring system name like CRC, ITW, PS, FAN."
     ::= { mapsConfig 4 }
-    
+
   	mapsConfigObjectGroupType     OBJECT-TYPE
     SYNTAX      INTEGER {
     			unknown  (1),
@@ -102,51 +102,51 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
 				cpu (13),
 				wwn (14),
 				flow (15)
-    		}	
+    		}
     MAX-ACCESS     read-only
     STATUS         current
-    DESCRIPTION    "It indicates the object group type like circuit, PS, FAN."   
+    DESCRIPTION    "It indicates the object group type like circuit, PS, FAN."
     ::= { mapsConfig 5 }
-    
+
   	mapsConfigObjectKeyType     OBJECT-TYPE
     SYNTAX      INTEGER {
     			int32  (1),
     			uint32 (2),
     			float  (3),
     			string (4)
-    		}	
+    		}
     MAX-ACCESS     read-only
     STATUS         current
     DESCRIPTION    "It indicates the object key type. The main purpose of this
  				object to help NMS applications to interpret the data easily.
-				Eg: If the mapsConfigObjectGroupType is port then the key type 
-				is an integer and key value is the port number." 
+				Eg: If the mapsConfigObjectGroupType is port then the key type
+				is an integer and key value is the port number."
     ::= { mapsConfig 6 }
-  
+
     mapsConfigObjectKeyValue     OBJECT-TYPE
     SYNTAX         OCTET STRING (SIZE (64))
     MAX-ACCESS     read-only
     STATUS         current
     DESCRIPTION    "It indicates the object key value. Incase of integer this field
-					keeps as 1, 2, 3, 4, etc., and for string it keeps 
+					keeps as 1, 2, 3, 4, etc., and for string it keeps
 					flowname1, flowname2, etc., Eg: if Group type is port,
 					then the object key value is the port number."
     ::= { mapsConfig 7 }
-     
+
   	mapsConfigValueType     OBJECT-TYPE
     SYNTAX      INTEGER {
     			int32  (1),
     			uint32 (2),
     			float  (3),
     			string (4)
-    		}	
+    		}
     MAX-ACCESS     read-only
     STATUS         current
     DESCRIPTION    "It indicates the value type which could be integer, float
-					or string. The main purpose of this object to help 
-	   				NMS applications to interpret the data easily."   
+					or string. The main purpose of this object to help
+	   				NMS applications to interpret the data easily."
     ::= { mapsConfig 8 }
-     
+
     mapsConfigCurrentValue        OBJECT-TYPE
     SYNTAX             OCTET STRING (SIZE (64))
     MAX-ACCESS         read-only
@@ -159,10 +159,10 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
     SYNTAX             OCTET STRING (SIZE (16))
     MAX-ACCESS         read-only
     STATUS             current
-    DESCRIPTION     "The time period across which the change 
+    DESCRIPTION     "The time period across which the change
     					in a counter is to be monitored"
     ::= { mapsConfig 10 }
-   
+
     mapsConfigSeverityLevel      OBJECT-TYPE
     SYNTAX          INTEGER {
                    critical      (1),
@@ -176,7 +176,7 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
     DESCRIPTION     "It indicates the severity level of the
        					condition triggered"
     ::= { mapsConfig 11 }
-        
+
     mapsConfigMsList		       OBJECT-TYPE
     SYNTAX             OCTET STRING (SIZE (128))
     MAX-ACCESS         read-only
@@ -185,14 +185,14 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
     				format is <msname>,<value-type>,<current-value>,<time-base>
        				   ::<msName>,<value-type>,<current-value>,<time-base>::."
     ::= { mapsConfig 12 }
-	
+
 	mapsConfigAction 				OBJECT-TYPE
 	SYNTAX 			   Integer32
 	MAX-ACCESS         read-only
     STATUS             current
-        DESCRIPTION    "It indicates the actions(bitmask value) that need 
-						to be triggered when the specified condition 
-						evaluated to be true. Action bitmask value mapping are 
+        DESCRIPTION    "It indicates the actions(bitmask value) that need
+						to be triggered when the specified condition
+						evaluated to be true. Action bitmask value mapping are
 							none				(0),
 							raslog				(1),
 							snmp				(2),
@@ -205,7 +205,7 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
 							sfp-marginal		(1024)
 				Ex: mapsConfigAction value 3 represents both raslog and snmp action"
     ::= { mapsConfig 13 }
-	
+
 
     mapsDbCategory     OBJECT-TYPE
     SYNTAX             OCTET STRING (SIZE (24))
@@ -213,16 +213,16 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
     STATUS             current
     DESCRIPTION     	"indicates db category name"
     ::= { mapsConfig 14 }
-						 
-    mapsTrapAM	NOTIFICATION-TYPE        
-    OBJECTS     {            
-                mapsConfigRuleName, 
+
+    mapsTrapAM	NOTIFICATION-TYPE
+    OBJECTS     {
+                mapsConfigRuleName,
                 mapsConfigObjectGroupType,
 				mapsConfigObjectKeyType,
                 mapsConfigObjectKeyValue,
                 mapsConfigNumOfMS,
                 mapsConfigMsList,
-                mapsConfigSeverityLevel,          
+                mapsConfigSeverityLevel,
 				mapsConfigCondition,
 				mapsConfigAction,
 				swVfId,
@@ -230,8 +230,8 @@ BROCADE-MAPS-MIB DEFINITIONS ::= BEGIN
                 }
     STATUS current
     DESCRIPTION     "Trap to be send for MAPS threshold events."
-    ::= { mapsTraps 1 }        
-     
-					 
-	        
+    ::= { mapsTraps 1 }
+
+
+
 END

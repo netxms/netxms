@@ -26,7 +26,7 @@
 --  [New Objects]
 --  1. Add swPimSSmMgmt to support PIM-SSM function.
 --  Notes: Requested by Bruce Ge for DGS3620 1.00.
--- 
+--
 -- Version 2.02, 2008/10/16, Kevin Liao
 --  [New Object]
 --  1. Add swPimInfoState in swPimInfoEntry.
@@ -166,7 +166,7 @@ swPimSmGlobalState OBJECT-TYPE
         MAX-ACCESS read-only
         STATUS     current
         DESCRIPTION
-                "The Designated Router on this PIM interface.  
+                "The Designated Router on this PIM interface.
                 For point-to-point interfaces, this object has the value 0.0.0.0."
         ::= { swPimInfoEntry 4 }
 
@@ -228,14 +228,14 @@ swPimSmGlobalState OBJECT-TYPE
         MAX-ACCESS read-write
         STATUS     current
         DESCRIPTION
-                "Specifies the interface is operates in PIM passive mode 
-                or not. When enabling the passive mode, the interface will 
-                neither send PIM messages nor accept PIM messages from 
+                "Specifies the interface is operates in PIM passive mode
+                or not. When enabling the passive mode, the interface will
+                neither send PIM messages nor accept PIM messages from
                 other routers across this interface.
-                
+
                 To communicate with other PIM routers using this interface,
                 this object must set to disabled.
-                
+
                 More than one multicast routers on LANs, this object must
                 set to disabled, to prevent duplicate traffic."
         DEFVAL     { disabled }
@@ -268,7 +268,7 @@ swPimSmGlobalState OBJECT-TYPE
         MAX-ACCESS not-accessible
         STATUS     current
         DESCRIPTION
-                "The PIM CBSR Table contains information related to the candidate bootstrap 
+                "The PIM CBSR Table contains information related to the candidate bootstrap
                 router, such as interface name, IP address and priority."
         ::= { swPimCbsrInfoMgmt 3 }
 
@@ -605,7 +605,7 @@ swPimSmGlobalState OBJECT-TYPE
         STATUS     current
         DESCRIPTION
                 "The multicast group address mask which, when combined with
-                swPimStaticRPGroupAddress, identifies a group prefix that 
+                swPimStaticRPGroupAddress, identifies a group prefix that
                 the local router will use to advertise itself as a static RP."
         ::= { swPimStaticRPEntry 2 }
 
@@ -808,7 +808,7 @@ swPimSmGlobalState OBJECT-TYPE
         DESCRIPTION
                 " A number uniquely identifying the component.  Each
                 protocol instance connected to a separate domain should have
-                a different index value." 
+                a different index value."
         ::= { swPimRPSetEntry 1 }
 
     swPimRPSetGroupAddress OBJECT-TYPE
@@ -816,10 +816,10 @@ swPimSmGlobalState OBJECT-TYPE
         MAX-ACCESS not-accessible
         STATUS     current
         DESCRIPTION
-                "The IP multicast group address which, when combined with 
-                pimRPSetGroupMask, gives the group a prefix. This prefix 
+                "The IP multicast group address which, when combined with
+                pimRPSetGroupMask, gives the group a prefix. This prefix
                 will determine for which entry CRP information is to be
-                displayed, and which entry contains information about the 
+                displayed, and which entry contains information about the
                 Candidate-RP."
         ::= { swPimRPSetEntry 2 }
 
@@ -829,8 +829,8 @@ swPimSmGlobalState OBJECT-TYPE
         STATUS     current
         DESCRIPTION
                 "The multicast group address mask which, when combined with
-                pimRPSetGroupAddress, gives the group a prefix to determine 
-                which entry contains the CRP information to be displayed for 
+                pimRPSetGroupAddress, gives the group a prefix to determine
+                which entry contains the CRP information to be displayed for
                 the entry containing information about the Candidate-RP."
         ::= { swPimRPSetEntry 3 }
 
@@ -852,9 +852,9 @@ swPimSmGlobalState OBJECT-TYPE
         STATUS     current
         DESCRIPTION
                 "The type of Candidate-RP.
-                
-                The value of 'dynamic' indicates the RP address is 
-                created as a result of running the PIM Bootstrap 
+
+                The value of 'dynamic' indicates the RP address is
+                created as a result of running the PIM Bootstrap
                 Router (BSR) mechanism."
         ::= { swPimRPSetEntry 5 }
 
@@ -893,9 +893,9 @@ swPimSmGlobalState OBJECT-TYPE
         MAX-ACCESS read-write
         STATUS     current
         DESCRIPTION
-                "The object indicates the state of PIM-SSM. 
-                
-                The PIM-SSM function will take active only when SSM 
+                "The object indicates the state of PIM-SSM.
+
+                The PIM-SSM function will take active only when SSM
                 service model and PIM-SM state both enabled."
         ::= { swPimSSmMgmt 1 }
 

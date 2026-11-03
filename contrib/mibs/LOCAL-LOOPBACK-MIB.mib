@@ -26,8 +26,8 @@ LOCAL-LOOPBACK-MIB DEFINITIONS ::= BEGIN
                                           FROM SNMPv2-SMI
         dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
 
-		
-    	
+
+
     swLocalLoopbackMIB MODULE-IDENTITY
           LAST-UPDATED "200808110000Z"
           ORGANIZATION "D-Link Corp."
@@ -37,7 +37,7 @@ LOCAL-LOOPBACK-MIB DEFINITIONS ::= BEGIN
 		    "The structure of local loopback for the proprietary
                     enterprise."
         ::= { dlink-common-mgmt 67 }
-     	
+
     swLocalLoopbackCtrl           OBJECT IDENTIFIER ::= { swLocalLoopbackMIB 1 }
     swLocalLoopbackInfo           OBJECT IDENTIFIER ::= { swLocalLoopbackMIB 2 }
     swLocalLoopbackMgmt           OBJECT IDENTIFIER ::= { swLocalLoopbackMIB 3 }
@@ -49,7 +49,7 @@ LOCAL-LOOPBACK-MIB DEFINITIONS ::= BEGIN
 -- -----------------------------------------------------------------------------
 -- swLocalLoopbackInfo
 -- -----------------------------------------------------------------------------
-    	     	
+
 -- -----------------------------------------------------------------------------
 -- swLocalLoopbackMgmt
 -- -----------------------------------------------------------------------------
@@ -137,7 +137,7 @@ LOCAL-LOOPBACK-MIB DEFINITIONS ::= BEGIN
             for external loopback, recover port(s) from external loopback mode.
             "
         ::= { swLocalLoopbackConfigEntry 4 }
-        
+
     swLocalLoopbackResultTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwLocalLoopbackResultEntry
         MAX-ACCESS  not-accessible
@@ -174,9 +174,9 @@ LOCAL-LOOPBACK-MIB DEFINITIONS ::= BEGIN
             swLocalLoopback1536Rx
             	Counter32,
             swLocalLoopbackStatus
-            	INTEGER       	
+            	INTEGER
         }
-        
+
     swLocalLoopback64Tx OBJECT-TYPE
         SYNTAX  Counter32
         MAX-ACCESS  read-only
@@ -192,7 +192,7 @@ LOCAL-LOOPBACK-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the 64-byte packets of loopback Rx."
         ::= { swLocalLoopbackResultEntry 2 }
-        
+
     swLocalLoopback512Tx OBJECT-TYPE
         SYNTAX  Counter32
         MAX-ACCESS  read-only
@@ -216,7 +216,7 @@ LOCAL-LOOPBACK-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the 1024-byte packets of loopback Tx."
         ::= { swLocalLoopbackResultEntry 5 }
-        
+
     swLocalLoopback1024Rx OBJECT-TYPE
         SYNTAX  Counter32
         MAX-ACCESS  read-only
@@ -224,7 +224,7 @@ LOCAL-LOOPBACK-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the 1024-byte packets of loopback Rx."
         ::= { swLocalLoopbackResultEntry 6 }
-        
+
     swLocalLoopback1536Tx OBJECT-TYPE
         SYNTAX  Counter32
         MAX-ACCESS  read-only

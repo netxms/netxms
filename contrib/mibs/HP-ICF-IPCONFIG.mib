@@ -7,19 +7,19 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
             FROM SNMPv2-TC
         MODULE-COMPLIANCE, OBJECT-GROUP
             FROM SNMPv2-CONF
-        InetAddress, InetAddressType, InetAddressPrefixLength, InetAddressIPv4, 
+        InetAddress, InetAddressType, InetAddressPrefixLength, InetAddressIPv4,
         InetPortNumber
             FROM INET-ADDRESS-MIB
         ifIndex
             FROM IF-MIB
         hpicfCommon
             FROM HP-ICF-OID
-        ipv4InterfaceEntry, ipv6InterfaceEntry, IpAddressOriginTC, 
+        ipv4InterfaceEntry, ipv6InterfaceEntry, IpAddressOriginTC,
 	    IpAddressStatusTC, ipNetToPhysicalEntry
             FROM IP-MIB
         tunnelInetConfigEntry
             FROM TUNNEL-MIB;
-        
+
     hpicfIpConfig MODULE-IDENTITY
         LAST-UPDATED "200812090000Z"  -- Dec 09, 2008
         ORGANIZATION "Hewlett Packard Company,
@@ -40,7 +40,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         DESCRIPTION  "Move ipNetToPhysicalEntry to correct IMPORT."
 
         REVISION     "200702020000Z"  -- JUNE 06, 2007
-        DESCRIPTION  "Added hpicfIpv6NDDadAttempts to augment the 
+        DESCRIPTION  "Added hpicfIpv6NDDadAttempts to augment the
                       hpicfIpv6GlobalConfigObjects."
 
         REVISION     "200705300000Z"  -- MAY 30, 2007
@@ -48,15 +48,15 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                       hpicfIpv4InterfaceEntry."
 
         REVISION     "200702020000Z"  -- FEBRUARY 02, 2007
-        DESCRIPTION  "Added hpicfIpv6InterfaceTable to augment the 
+        DESCRIPTION  "Added hpicfIpv6InterfaceTable to augment the
                       Ipv6InterfaceTable."
 
         REVISION     "200612030000Z"  -- DECEMBER 03, 2006
-        DESCRIPTION  "Added hpicfUdpTunnelMirrorSessionID to augment the 
+        DESCRIPTION  "Added hpicfUdpTunnelMirrorSessionID to augment the
                       tunnelInetConfigEntry object in RFC4087."
 
         REVISION     "200607070000Z"  -- JULY 07, 2006
-        DESCRIPTION  "Added hpicfUdpTunnelSrcPort to augment the 
+        DESCRIPTION  "Added hpicfUdpTunnelSrcPort to augment the
                       tunnelInetConfigEntry object in RFC4087."
 
         REVISION     "200508081600Z"  -- August 08, 2005
@@ -84,28 +84,28 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
     -- The HP ICF IPV6 global config group
 
     hpicfIpv6GlobalConfigObjects    OBJECT IDENTIFIER ::= {hpicfIpv6ConfigObjects 1}
-    
-    
+
+
     hpicfIpv6NDObjects                OBJECT IDENTIFIER ::= {hpicfIpv6GlobalConfigObjects 1}
-    
-    
+
+
     -- The HP ICF IPV6 ICMP group
-    
+
     hpicfIpv6IcmpObjects              OBJECT IDENTIFIER ::= {hpicfIpv6GlobalConfigObjects 2}
-    
-    
+
+
     -- The HP ICF IPV6 interface group
 
     hpicfIpv6InterfaceObjects    OBJECT IDENTIFIER ::= {hpicfIpv6ConfigObjects 2}
 
-    
+
 
 
     hpicfIpAddressTable  OBJECT-TYPE
         SYNTAX      SEQUENCE OF HpicfIpAddressEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "This table contains manually configured IPv4 and IPv6 
+        DESCRIPTION "This table contains manually configured IPv4 and IPv6
                      addresses for each interface. An entry in this table
                      may not exist in the active state unless all objects
                      in the entry are consistent. In particular, the value of
@@ -117,7 +117,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         SYNTAX      HpicfIpAddressEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "An entry in the hpicfIpAddressEntry contains a single 
+        DESCRIPTION "An entry in the hpicfIpAddressEntry contains a single
                      manually configured IP address."
         INDEX       { ifIndex,
                       hpicfIpAddressAddrType,
@@ -149,7 +149,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "The IP address to which this entry's addressing
                      information pertains.
-                     hpicfIpAddressAddr is always interpreted within the 
+                     hpicfIpAddressAddr is always interpreted within the
                      context of hpicfIpAddressAddrType."
         ::= { hpicfIpAddressEntry 2 }
 
@@ -169,7 +169,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-create
         STATUS      current
-        DESCRIPTION "IP address type. For V4 addresses the value will be 
+        DESCRIPTION "IP address type. For V4 addresses the value will be
                      unicast."
         DEFVAL { unicast }
         ::= { hpicfIpAddressEntry 4 }
@@ -190,7 +190,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-create
         STATUS      current
-        DESCRIPTION "IP address type. For V4 addresses the value will be 
+        DESCRIPTION "IP address type. For V4 addresses the value will be
                      none. For V6 address it can be eui64 and linkLocal also."
         DEFVAL { none }
         ::= { hpicfIpAddressEntry 6 }
@@ -205,7 +205,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         DESCRIPTION "This read only table contains IPV4 and/or IPV6 addresses
                      for each interface.
 
-                     These IP Addresses are either manually configured or 
+                     These IP Addresses are either manually configured or
                      obtained by a dynamic meathod (such as DHCP).
 
                      This table will hold all manually configured IP Addresses
@@ -218,7 +218,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         SYNTAX      HpicfSwitchIpAddressEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "An entry in the hpicfSwitchIpAddressEntry contains a single 
+        DESCRIPTION "An entry in the hpicfSwitchIpAddressEntry contains a single
                      IP address."
         INDEX       { ifIndex,
                       hpicfSwitchIpAddressAddrType,
@@ -273,7 +273,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-only
         STATUS      current
-        DESCRIPTION "IP address type. For V4 addresses the value will be 
+        DESCRIPTION "IP address type. For V4 addresses the value will be
                      unicast."
         ::= { hpicfSwitchIpAddressEntry 4 }
 
@@ -284,7 +284,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
     DESCRIPTION
            "The origin of the address."
     ::= { hpicfSwitchIpAddressEntry 5 }
-    
+
    hpicfSwitchIpAddressStatus OBJECT-TYPE
     SYNTAX     IpAddressStatusTC
     MAX-ACCESS read-only
@@ -313,7 +313,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
             The default for IPv4 addresses is 4,294,967,295 (infinity)."
     REFERENCE "For IPv6 RFC2461, especially sections 2 and 4.6.2 and RFC2462"
     ::= { hpicfSwitchIpAddressEntry 7 }
-    
+
 
    hpicfSwitchIpAddressValidLifetime OBJECT-TYPE
     SYNTAX     Unsigned32
@@ -328,7 +328,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
             appear as the destination or source address of a packet.
             The default for IPv4 addresses is 4,294,967,295 (infinity)."
     REFERENCE "For IPv6 RFC2461, especially sections 2 and 4.6.2 and RFC2462"
-    ::= { hpicfSwitchIpAddressEntry 8 }   
+    ::= { hpicfSwitchIpAddressEntry 8 }
 
     hpicfSwitchIpAddressExtendedType OBJECT-TYPE
      SYNTAX      INTEGER {
@@ -338,7 +338,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                  }
      MAX-ACCESS  read-only
      STATUS      current
-     DESCRIPTION "IP address type. For V4 addresses the value will be 
+     DESCRIPTION "IP address type. For V4 addresses the value will be
                   none. For V6 address it can be eui64 and linkLocal also."
      DEFVAL { none }
      ::= { hpicfSwitchIpAddressEntry 9 }
@@ -350,19 +350,19 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
 
     STATUS     current
 
-    DESCRIPTION 
+    DESCRIPTION
     "This table augments ipNeTtoPhysicalTable"
-    
+
     ::= {hpicfIpAddressObjects 3 }
 
    hpicfIpNetToPhysicalEntry OBJECT-TYPE
          SYNTAX      HpicfIpNetToPhysicalEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION "This table augments ipNeTtoPhysicalTable" 
+         DESCRIPTION "This table augments ipNeTtoPhysicalTable"
          AUGMENTS { ipNetToPhysicalEntry }
     ::= { hpicfIpNetToPhysicalTable 1 }
-    
+
     HpicfIpNetToPhysicalEntry ::=
     SEQUENCE {
             hpicfIpNetToPhysicalPort Integer32
@@ -394,7 +394,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         SYNTAX      HpicfIpv4InterfaceEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "An entry in the hpicfIpv4InterfaceEntry contains IPV4 
+        DESCRIPTION "An entry in the hpicfIpv4InterfaceEntry contains IPV4
                      interface specific configuration information. This table
                      is indexed by ipv4InterfaceIfIndex."
         AUGMENTS    { ipv4InterfaceEntry }
@@ -407,7 +407,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
             hpicfIpv4InterfaceForwarding         INTEGER,
             hpicfIpv4InterfaceProxyArp           INTEGER,
             hpicfIpv4InterfaceLocalProxyArp      INTEGER,
-            hpicfIpv4InterfaceBootpGateway       InetAddressIPv4 
+            hpicfIpv4InterfaceBootpGateway       InetAddressIPv4
         }
 
     hpicfIpv4InterfaceDhcpEnable OBJECT-TYPE
@@ -446,8 +446,8 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         DESCRIPTION "This flag indicates whether this interface is forwarding
                      the datagrams that were not addressed to this interface.
 
-                     Setting this flag to 'enabled' (the default) results 
-                     in forwarding the datagrams that were not addressed to 
+                     Setting this flag to 'enabled' (the default) results
+                     in forwarding the datagrams that were not addressed to
                      this interface.
 
                      Setting this flag to 'disabled' results in ignoring
@@ -467,7 +467,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                      to 'enabled', the switch will respond on ARP request
                      for IP addresses from other subnets.
                      If set to disabled (the default), the switch will not
-                     respond on ARP request for IP addresses from other 
+                     respond on ARP request for IP addresses from other
                      subnets."
         DEFVAL { disabled }
         ::= { hpicfIpv4InterfaceEntry 3 }
@@ -483,7 +483,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                      to 'enabled', the switch will respond on ARP request
                      for IP addresses within the local subnet.
                      If set to disabled (the default), the switch will not
-                     respond on ARP request for IP addresses within the 
+                     respond on ARP request for IP addresses within the
                      local subnet."
         DEFVAL { disabled }
         ::= { hpicfIpv4InterfaceEntry 4 }
@@ -492,27 +492,27 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         SYNTAX      InetAddressIPv4
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "This entry will specify the IP address to be used 
-	             as the BOOTP gateway for this interface. Note that 
-		     this IP address will be used as the BOOTP gateway 
+        DESCRIPTION "This entry will specify the IP address to be used
+	             as the BOOTP gateway for this interface. Note that
+		     this IP address will be used as the BOOTP gateway
 		     only when it is configured as an IP address on this
-		     interface. Otherwise, the lowest IP address 
+		     interface. Otherwise, the lowest IP address
 		     configured on the interface will be used as the
 		     gateway address."
         ::= { hpicfIpv4InterfaceEntry 5 }
 
-    -- V6 Global Objects 
+    -- V6 Global Objects
     hpicfIpv6NDDadAttempts OBJECT-TYPE
         SYNTAX      Integer32
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION "The value in this object indicates the maximum number of
                      neighbour solicitation requests that will be sent while
-                     performing duplicate address detection." 
+                     performing duplicate address detection."
 
         ::= { hpicfIpv6NDObjects 1 }
 
-    -- V6 Global Icmp Objects 
+    -- V6 Global Icmp Objects
     hpicfIpv6IcmpErrorInterval OBJECT-TYPE
         SYNTAX      Integer32
         MAX-ACCESS  read-write
@@ -521,9 +521,9 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                      in which the token bucket algorithm places one token
                      in the bucket for ICMPV6 rate limiting.Each token
                      represents the right to send one ICMP error message.
-                     Each time an error is sent, it takes a token from the bucket. 
-                     ICMP will not be allowed to originate an error 
-                     message if the bucket is empty." 
+                     Each time an error is sent, it takes a token from the bucket.
+                     ICMP will not be allowed to originate an error
+                     message if the bucket is empty."
         ::= { hpicfIpv6IcmpObjects 1 }
 
      hpicfIpv6IcmpBucketsize OBJECT-TYPE
@@ -549,7 +549,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         SYNTAX      HpicfIpv6InterfaceEntry
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "An entry in the hpicfIpv6InterfaceEntry contains IPV6 
+        DESCRIPTION "An entry in the hpicfIpv6InterfaceEntry contains IPV6
                      interface specific configuration information. This table
                      is indexed by ipv6InterfaceIfIndex."
         AUGMENTS    { ipv6InterfaceEntry }
@@ -628,7 +628,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "Setting this flag to 'enabled' will allow the host to get
                      address and configuration information from the dhcp server
-                     rapidly. This flag can be enabled only if the 
+                     rapidly. This flag can be enabled only if the
                      hpicfIpv6InterfaceDhcpMode object is set as dhcpFull.
                      By default this flag is set to disabled."
         DEFVAL { disabled }
@@ -655,16 +655,16 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
     STATUS     current
     DESCRIPTION
            "The indication of whether IPv6 is enabled (up) or disabled
-            (down) on this interface.  
+            (down) on this interface.
             Setting this object to up(1) will enable ipv6 for the given
             interface.Setting this object to down(2) will disable the ipv6
             for the interface only if hpicfIpv6InterfaceDhcpMode,
-            hpicfIpv6InterfaceManual and hpicfIpv6InterfaceAutoConfig are 
-            disabled.A get on this object reflects the data saved in a 
+            hpicfIpv6InterfaceManual and hpicfIpv6InterfaceAutoConfig are
+            disabled.A get on this object reflects the data saved in a
             non-volatile storage.
-            Note:To get the current ipv6 status for an interface refer to 
+            Note:To get the current ipv6 status for an interface refer to
                  ipv6InterfaceEnableStatus."
-    ::= { hpicfIpv6InterfaceEntry 6 }        
+    ::= { hpicfIpv6InterfaceEntry 6 }
 
 -- **********************************************************************
 -- Remote mirroring tunnel Objects
@@ -702,15 +702,15 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-create
         STATUS      current
         DESCRIPTION "This variable is valid only for the remote
-                        mirroring source or destination switch.  
-                        The value will be ignored otherwise. A 
+                        mirroring source or destination switch.
+                        The value will be ignored otherwise. A
                         value of 0 means that the UDP port
                         is irrelevant for the tunnel type. If this
                         value is non-zero it must be duplicated
                         in the tunnelInetConfigID value (this
                         will ensure that a given UDP port can
-                        only be associated once with a given 
-                        tunnelInetConfigAddressType, 
+                        only be associated once with a given
+                        tunnelInetConfigAddressType,
                         tunnelInetConfigLocalAddress,
                         tunnelInetConfigRemoteAddress,
                         tunnelInetConfigEncapsMethod combination)."
@@ -718,13 +718,13 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         ::= { hpicfUdpTunnelEntry 1 }
 
     hpicfUdpTunnelMirrorSessionID OBJECT-TYPE
-        SYNTAX      Integer32(0..512)   
+        SYNTAX      Integer32(0..512)
         MAX-ACCESS  read-create
         STATUS      current
         DESCRIPTION "This variable is valid only for a remote
                         mirroring switch which interfaces with the
-                        source end of the tunnel.  
-                        The value will be ignored otherwise. A 
+                        source end of the tunnel.
+                        The value will be ignored otherwise. A
                         value of 0 means that the mirror session ID
                         is irrelevant for the tunnel type. "
         DEFVAL { 0 }
@@ -749,7 +749,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
     hpicfIpConfigCompliance MODULE-COMPLIANCE
         STATUS      deprecated
         DESCRIPTION "
-                A compliance statement for HP Routing switches with IP 
+                A compliance statement for HP Routing switches with IP
                 Configuration"
         MODULE
         MANDATORY-GROUPS {  hpicfIpAddressTableGroup,
@@ -758,28 +758,28 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
 
         OBJECT      hpicfIpv4InterfaceDhcpEnable
         MIN-ACCESS  read-write
-        DESCRIPTION "An agent is not required to implement inform (3) 
+        DESCRIPTION "An agent is not required to implement inform (3)
                      state."
 
         ::= { hpicfIpConfigCompliances 1 }
 
     hpicfIpConfigCompliance2 MODULE-COMPLIANCE
-        STATUS      current 
+        STATUS      current
         DESCRIPTION "
-                A compliance statement for HP Routing switches with IP 
+                A compliance statement for HP Routing switches with IP
                 Configuration"
         MODULE
         MANDATORY-GROUPS {  hpicfIpAddressTableGroup,
                             hpicfIpv4InterfaceTableGroup,
                             hpicfSwitchIpAddressTableGroup }
-        
+
         GROUP       hpicfUdpTunnelTableGroup
         DESCRIPTION "This group is valid only for the remote
-                        mirroring source or destination switch.  
+                        mirroring source or destination switch.
                         The value will be ignored otherwise."
         OBJECT      hpicfIpv4InterfaceDhcpEnable
-        MIN-ACCESS  read-write        
-        DESCRIPTION "An agent is not required to implement inform (3) 
+        MIN-ACCESS  read-write
+        DESCRIPTION "An agent is not required to implement inform (3)
                      state."
         ::= { hpicfIpConfigCompliances 2 }
 
@@ -787,26 +787,26 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
     hpicfIpConfigCompliance4 MODULE-COMPLIANCE
         STATUS      current
         DESCRIPTION "
-                A compliance statement for HP Routing switches with IP 
+                A compliance statement for HP Routing switches with IP
                 Configuration"
         MODULE
         MANDATORY-GROUPS {  hpicfIpAddressTableGroup,
                             hpicfIpv4InterfaceTableGroup2,
                             hpicfSwitchIpAddressTableGroup,
                             hpicfIpv6InterfaceTableGroup }
-        
+
         GROUP       hpicfUdpTunnelTableGroup
         DESCRIPTION "This group is valid only for the remote
-                        mirroring source or destination switch.  
+                        mirroring source or destination switch.
                         The value will be ignored otherwise."
         OBJECT      hpicfIpv4InterfaceDhcpEnable
-        MIN-ACCESS  read-write        
-        DESCRIPTION "An agent is not required to implement inform (3) 
+        MIN-ACCESS  read-write
+        DESCRIPTION "An agent is not required to implement inform (3)
                      state."
         ::= { hpicfIpConfigCompliances 4 }
 
     hpicfIpAddressTableGroup OBJECT-GROUP
-        OBJECTS { 
+        OBJECTS {
                     hpicfIpAddressPrefixLength,
                     hpicfIpAddressType,
                     hpicfIpAddressRowStatus,
@@ -817,7 +817,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         ::= { hpicfIpConfigGroups 1 }
 
     hpicfSwitchIpAddressTableGroup OBJECT-GROUP
-        OBJECTS { 
+        OBJECTS {
                     hpicfSwitchIpAddressAddrType,
                     hpicfSwitchIpAddressAddr}
         STATUS      current
@@ -835,17 +835,17 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
         DESCRIPTION "Deprecated - see hpicfIpv4InterfaceTableGroup2"
         ::= { hpicfIpConfigGroups 3 }
 
- 
+
     hpicfUdpTunnelTableGroup  OBJECT-GROUP
         OBJECTS {
                     hpicfUdpTunnelSrcPort,
                     hpicfUdpTunnelMirrorSessionID }
         STATUS      current
-        DESCRIPTION "A Collection of objects that allows IPV4 interface 
+        DESCRIPTION "A Collection of objects that allows IPV4 interface
                      configuration for remote mirroring"
         ::= { hpicfIpConfigGroups 4 }
 
-                              
+
     hpicfIpv6InterfaceTableGroup  OBJECT-GROUP
         OBJECTS {
                     hpicfIpv6InterfaceDhcpMode,
@@ -854,7 +854,7 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                     hpicfIpv6InterfaceDhcpRapidCommit,
                     hpicfIpv6InterfaceDhcpRelay }
         STATUS      current
-        DESCRIPTION "A Collection of objects that allows IPV6 interface 
+        DESCRIPTION "A Collection of objects that allows IPV6 interface
                      configuration"
         ::= { hpicfIpConfigGroups 5 }
 
@@ -865,10 +865,10 @@ HP-ICF-IPCONFIG DEFINITIONS ::= BEGIN
                     hpicfIpv4InterfaceProxyArp,
                     hpicfIpv4InterfaceLocalProxyArp }
         STATUS      current
-        DESCRIPTION "A Collection of objects that allows IPV4 interface 
+        DESCRIPTION "A Collection of objects that allows IPV4 interface
                      configuration"
         ::= { hpicfIpConfigGroups 6 }
 
- 
- 
+
+
 END

@@ -15,13 +15,13 @@
 -- Notes: (Requested by who and which project)
 --
 -- Version 1.01, 2012/03/30, Shawn Chen
--- Added radius(3) and tacacs(4) in value list of node swSrcIpIfType 
+-- Added radius(3) and tacacs(4) in value list of node swSrcIpIfType
 -- to support RADIUS and TACACS support specified source interface feature.
 -- SNR-20120319-003-Protect Modules For Using The Loopback Interface.doc
 --
 -- Version 1.00, 2009/05/26, Jok Long
 -- This is the first formal version for universal MIB definition.
--- Notes:Requested by Jok Long for project DGS36xx	
+-- Notes:Requested by Jok Long for project DGS36xx
 -- -----------------------------------------------------------------------------
 
 	SRC-IPIF-MIB DEFINITIONS ::= BEGIN
@@ -34,10 +34,10 @@
 	                FROM SNMPv2-TC
 		Ipv6Address
 					FROM IPV6-TC
-		dlink-common-mgmt	
+		dlink-common-mgmt
 		        FROM DLINK-ID-REC-MIB;
-	
-	
+
+
 	swSrcIpIfMIB MODULE-IDENTITY
 	    LAST-UPDATED "201203300000Z"
 	    ORGANIZATION " D-Link Corp."
@@ -46,7 +46,7 @@
 	    DESCRIPTION
 	        "The structure of source interface for the proprietary enterprise."
 	    ::= { dlink-common-mgmt 81}
-	
+
 	    swSrcIpIfCtrl             OBJECT IDENTIFIER ::= { swSrcIpIfMIB 1 }
 	    swSrcIpIfInfo             OBJECT IDENTIFIER ::= { swSrcIpIfMIB 2 }
 	    swSrcIpIfMgmt             OBJECT IDENTIFIER ::= { swSrcIpIfMIB 3 }

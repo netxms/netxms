@@ -226,7 +226,7 @@ hh3cIpxIfNetbiosPropagation OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "This node is used to configure whether the current interface
-        can forward broadcasting packets which IPX type is 20 used 
+        can forward broadcasting packets which IPX type is 20 used
         for NetBIOS."
     DEFVAL     { disabled }
     ::= { hh3cIpxIfConfigEntry 9 }
@@ -266,9 +266,9 @@ hh3cIpxIfRowStatus OBJECT-TYPE
     MAX-ACCESS  read-create
     STATUS      current
     DESCRIPTION
-        "The status of this row. To create a row, user can 
-        select 'createAndGo'. If the row is created successfully, 
-        this object will became 'active'. To delete one row, 
+        "The status of this row. To create a row, user can
+        select 'createAndGo'. If the row is created successfully,
+        this object will became 'active'. To delete one row,
         user can select 'destory' and the row will be deleted."
     ::= { hh3cIpxIfConfigEntry 13 }
 
@@ -433,7 +433,7 @@ hh3cIpxRouteHops OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-        "The object indicates the number of hops that the packet must be 
+        "The object indicates the number of hops that the packet must be
         passed through to reach the destination."
     ::= { hh3cIpxRouteEntry 7 }
 
@@ -544,7 +544,7 @@ hh3cIpxStaticRouteTicks OBJECT-TYPE
     MAX-ACCESS  read-create
     STATUS      current
     DESCRIPTION
-        "The time, in ticks that the packet takes to reach the destination 
+        "The time, in ticks that the packet takes to reach the destination
         with the static route."
     ::= { hh3cIpxStaticRouteEntry 5 }
 
@@ -574,9 +574,9 @@ hh3cIpxStaticRouteRowStatus OBJECT-TYPE
     MAX-ACCESS  read-create
     STATUS      current
     DESCRIPTION
-        "The status of this row. To create a row, user can 
-        select 'createAndGo'. If the row is created successfully, 
-        this object will became 'active'. To delete one row, 
+        "The status of this row. To create a row, user can
+        select 'createAndGo'. If the row is created successfully,
+        this object will became 'active'. To delete one row,
         user can select 'destory' and the row will be deleted."
     ::= { hh3cIpxStaticRouteEntry 8 }
 
@@ -710,7 +710,7 @@ hh3cIpxSapGnsLoadBalance OBJECT-TYPE
         response to the GNS request with the servers known to the device
         in turn, preventing from the nearest server's over loading. With
         value of disabled, in this way, the system will response to the
-        request with the nearest server(who has smallest hop in system's 
+        request with the nearest server(who has smallest hop in system's
         service information table)."
     DEFVAL     { enabled }
     ::= { hh3cIpxSap 3 }
@@ -722,7 +722,7 @@ hh3cIpxSapMaxResServers OBJECT-TYPE
     DESCRIPTION
         "This object is used to configure maximum number of servers of a type.
         If the newly defined value is smaller than the previous value, the
-        information out of the value will not be deleted. If the queue reaches 
+        information out of the value will not be deleted. If the queue reaches
         to the maximum number, no new information can be added."
     DEFVAL      { 2048 }
     ::= { hh3cIpxSap 4 }
@@ -961,9 +961,9 @@ hh3cIpxStaticServiceRowStatus OBJECT-TYPE
     MAX-ACCESS  read-create
     STATUS      current
     DESCRIPTION
-        "The status of this row. To create a row, user can 
-        select 'createAndGo'. If the row is created successfully, 
-        this object will became 'active'. To delete one row, 
+        "The status of this row. To create a row, user can
+        select 'createAndGo'. If the row is created successfully,
+        this object will became 'active'. To delete one row,
         user can select 'destory' and the row will be deleted."
     ::= { hh3cIpxStaticServiceEntry 9 }
 
@@ -987,7 +987,7 @@ hh3cIpxStatPitchs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION "The number of received packets filled by device when forwarding 
+    DESCRIPTION "The number of received packets filled by device when forwarding
                 or delivering up to upper protocol."
     ::= { hh3cIpxStatGlobal 2 }
 
@@ -1264,7 +1264,7 @@ hh3cIpxIfStatIndex OBJECT-TYPE
     SYNTAX      Integer32 (1..2147483647)
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION "The index of the table's entry. According to the 
+    DESCRIPTION "The index of the table's entry. According to the
                 interface's index."
     REFERENCE   "ifIndex"
     ::= { hh3cIpxIfStatEntry 1 }

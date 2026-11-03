@@ -3,8 +3,8 @@
 WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
-       
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
+
        MODULE-IDENTITY,
        OBJECT-TYPE,
        snmpModules,
@@ -37,7 +37,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 	wlsxEnterpriseMibModules
            FROM ARUBA-MIB;
 
-   wlsxSystemExtMIB MODULE-IDENTITY 
+   wlsxSystemExtMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -64,7 +64,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS   read-only
         STATUS       current
         DESCRIPTION
-			"Controller IP as configured by the user. This IP address uniquely 
+			"Controller IP as configured by the user. This IP address uniquely
 			identifies the controller."
         ::= { wlsxSystemExtGroup 1 }
 
@@ -163,7 +163,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 			The license serial number of the controller.
 			"
         ::= { wlsxSystemExtGroup 11 }
-         
+
    wlsxSysExtSwitchLicenseCount OBJECT-TYPE
         SYNTAX       Integer32
         MAX-ACCESS   read-only
@@ -176,27 +176,27 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 
  -- Table lists all the processors and their corresponding Load.
 
-   wlsxSysExtProcessorTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysExtProcessorEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysExtProcessorTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysExtProcessorEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			The table of processors contained by the controller.
 		"
-	
-      ::= { wlsxSystemExtGroup 13 } 
 
-   wlsxSysExtProcessorEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysExtProcessorEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxSystemExtGroup 13 }
+
+   wlsxSysExtProcessorEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysExtProcessorEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  "
 	  	An entry for one processor contained by the controller.
 	  "
 	  INDEX { sysExtProcessorID}
-      ::= { wlsxSysExtProcessorTable 1 } 
+      ::= { wlsxSysExtProcessorTable 1 }
 
    WlsxSysExtProcessorEntry ::=
      SEQUENCE {
@@ -239,28 +239,28 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
    -- Table contains all the storage devices in the controller and their
    -- utilization numbers.
 
-   wlsxSysExtStorageTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysExtStorageEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysExtStorageTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysExtStorageEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 		"
 		The table of Storage-devices contained by the controller.
 		"
-	
-      ::= { wlsxSystemExtGroup 14 } 
 
-   wlsxSysExtStorageEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysExtStorageEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxSystemExtGroup 14 }
+
+   wlsxSysExtStorageEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysExtStorageEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
-			 	An entry for one long-term storage device contained by the 
+			 	An entry for one long-term storage device contained by the
 				controller.
 			 "
 	  INDEX { sysExtStorageIndex }
-      ::= { wlsxSysExtStorageTable 1 } 
+      ::= { wlsxSysExtStorageTable 1 }
 
    WlsxSysExtStorageEntry ::=
      SEQUENCE {
@@ -328,28 +328,28 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 
 -- This table describes the memory utilization of the controller
 
-   wlsxSysExtMemoryTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysExtMemoryEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysExtMemoryTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysExtMemoryEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 		"
 		The memory status of the controller
 		"
-	
-      ::= { wlsxSystemExtGroup 15 } 
 
-   wlsxSysExtMemoryEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysExtMemoryEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxSystemExtGroup 15 }
+
+   wlsxSysExtMemoryEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysExtMemoryEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
 		An entry for one memory region on the controller.  Currently,
 		only the control processor memory is monitored.
 	     "
 	  INDEX { sysExtMemoryIndex }
-      ::= { wlsxSysExtMemoryTable 1 } 
+      ::= { wlsxSysExtMemoryTable 1 }
 
    WlsxSysExtMemoryEntry ::=
      SEQUENCE {
@@ -402,27 +402,27 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 
 -- This table lists the different Hardware Modules in the controller.
 
-   wlsxSysExtCardTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysExtCardEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysExtCardTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysExtCardEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 		"
 		The table of Hardware modules in the controller.
 		"
-	
-      ::= { wlsxSystemExtGroup 16 } 
 
-   wlsxSysExtCardEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysExtCardEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxSystemExtGroup 16 }
+
+   wlsxSysExtCardEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysExtCardEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
 			 	An entry for one Hardware Module in the controller.
 			 "
 	  INDEX { sysExtCardSlot }
-      ::= { wlsxSysExtCardTable 1 } 
+      ::= { wlsxSysExtCardTable 1 }
 
    WlsxSysExtCardEntry ::=
      SEQUENCE {
@@ -470,7 +470,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-		    Number of data ports on the card.	
+		    Number of data ports on the card.
             "
         ::= { wlsxSysExtCardEntry 3 }
 
@@ -602,27 +602,27 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 
 -- This table lists the Fans in the controller.
 
-   wlsxSysExtFanTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysExtFanEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysExtFanTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysExtFanEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 		"
 		The table of all supported fans in the controller. Not supported in Aruba 200/800 and 2400 controllers.
 		"
-	
-      ::= { wlsxSystemExtGroup 17 } 
 
-   wlsxSysExtFanEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysExtFanEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxSystemExtGroup 17 }
+
+   wlsxSysExtFanEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysExtFanEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
 			 	An entry for one fan.
 			 "
 	  INDEX { sysExtFanIndex }
-      ::= { wlsxSysExtFanTable 1 } 
+      ::= { wlsxSysExtFanTable 1 }
 
    WlsxSysExtFanEntry ::=
      SEQUENCE {
@@ -652,27 +652,27 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 
 -- This table lists the Power supplies in the controller.
 
-   wlsxSysExtPowerSupplyTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysExtPowerSupplyEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxSysExtPowerSupplyTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysExtPowerSupplyEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 		"
 		The table of all supported Power supplies in the controller. Not supported in Aruba 200, 800 and 2400 controllers.
 		"
-	
-      ::= { wlsxSystemExtGroup 18 } 
 
-   wlsxSysExtPowerSupplyEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysExtPowerSupplyEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxSystemExtGroup 18 }
+
+   wlsxSysExtPowerSupplyEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysExtPowerSupplyEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
 			 An entry for one power supply.
 			 "
 	  INDEX { sysExtPowerSupplyIndex }
-      ::= { wlsxSysExtPowerSupplyTable 1 } 
+      ::= { wlsxSysExtPowerSupplyTable 1 }
 
    WlsxSysExtPowerSupplyEntry ::=
      SEQUENCE {
@@ -700,29 +700,29 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxSysExtPowerSupplyEntry 2 }
 
--- Switch List Table contains all the controllers in the domain. This table is 
+-- Switch List Table contains all the controllers in the domain. This table is
 -- valid only, when queried from the conductor controller.
 
-   wlsxSysExtSwitchListTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxSysExtSwitchListEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS      current 
-      DESCRIPTION 
+   wlsxSysExtSwitchListTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxSysExtSwitchListEntry
+	  MAX-ACCESS   not-accessible
+      STATUS      current
+      DESCRIPTION
 	  	"This Table will list all the controllers in the Aruba Domain.
 		 It will be populated only on the conductor controller. Local controllers
 		 return empty table.
 		"
-	
-      ::= { wlsxSystemExtGroup 19 } 
 
-     wlsxSysExtSwitchListEntry OBJECT-TYPE 
-	  SYNTAX       WlsxSysExtSwitchListEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS      current 
-      DESCRIPTION 
+      ::= { wlsxSystemExtGroup 19 }
+
+     wlsxSysExtSwitchListEntry OBJECT-TYPE
+	  SYNTAX       WlsxSysExtSwitchListEntry
+	  MAX-ACCESS   not-accessible
+      STATUS      current
+      DESCRIPTION
              "Switch List Entry"
 	  INDEX { sysExtSwitchIPAddress}
-      ::= { wlsxSysExtSwitchListTable 1 } 
+      ::= { wlsxSysExtSwitchListTable 1 }
 
      WlsxSysExtSwitchListEntry ::=
      SEQUENCE {
@@ -738,7 +738,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
      sysExtSwitchIPAddress OBJECT-TYPE
          SYNTAX       IpAddress
          MAX-ACCESS   not-accessible
-         STATUS       current 
+         STATUS       current
          DESCRIPTION
             "
 			IP Address of the controller.
@@ -748,7 +748,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
      sysExtSwitchRole OBJECT-TYPE
         SYNTAX      ArubaSwitchRole
          MAX-ACCESS   read-only
-         STATUS       current 
+         STATUS       current
          DESCRIPTION
             "
 			 Role of the controller.
@@ -758,7 +758,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
      sysExtSwitchLocation OBJECT-TYPE
         SYNTAX      DisplayString(SIZE(0..64))
          MAX-ACCESS   read-only
-         STATUS      current 
+         STATUS      current
          DESCRIPTION
             "
 			Location of the controller
@@ -768,7 +768,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
      sysExtSwitchSWVersion OBJECT-TYPE
         SYNTAX      DisplayString(SIZE(0..64))
          MAX-ACCESS   read-only
-         STATUS     current 
+         STATUS     current
          DESCRIPTION
             "
 			Software version the controller is running.
@@ -778,7 +778,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
      sysExtSwitchStatus OBJECT-TYPE
         SYNTAX      ArubaActiveState
          MAX-ACCESS   read-only
-         STATUS      current 
+         STATUS      current
          DESCRIPTION
             "
 			Status of the controller.
@@ -788,7 +788,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
      sysExtSwitchName OBJECT-TYPE
         SYNTAX      DisplayString(SIZE(0..128))
          MAX-ACCESS   read-only
-         STATUS      current 
+         STATUS      current
          DESCRIPTION
             "
 			Host name of the controller.
@@ -798,7 +798,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
      sysExtSwitchSerNo OBJECT-TYPE
         SYNTAX      DisplayString(SIZE(0..32))
          MAX-ACCESS   read-only
-         STATUS      current 
+         STATUS      current
          DESCRIPTION
             "
 			Serial number of the controller.
@@ -807,24 +807,24 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 
 -- The license table lists all valid licenses installed on the controller
 
-   wlsxSysExtSwitchLicenseTable  OBJECT-TYPE 
+   wlsxSysExtSwitchLicenseTable  OBJECT-TYPE
 	  SYNTAX       SEQUENCE OF WlsxSysExtLicenseEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"This table lists all licenses installed on the controller.
 		"
-	
-      ::= { wlsxSystemExtGroup 20 } 
 
-     wlsxSysExtLicenseEntry OBJECT-TYPE 
+      ::= { wlsxSystemExtGroup 20 }
+
+     wlsxSysExtLicenseEntry OBJECT-TYPE
 	 	SYNTAX      WlsxSysExtLicenseEntry
-	 	MAX-ACCESS   not-accessible		
-     	STATUS       current 
-     	DESCRIPTION 
+	 	MAX-ACCESS   not-accessible
+     	STATUS       current
+     	DESCRIPTION
              "License Entry"
 	  	INDEX { sysExtLicenseIndex }
-      ::= { wlsxSysExtSwitchLicenseTable 1 } 
+      ::= { wlsxSysExtSwitchLicenseTable 1 }
 
      WlsxSysExtLicenseEntry ::=
      SEQUENCE {
@@ -1012,7 +1012,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
         STATUS       deprecated
         DESCRIPTION
 			"
-			This objects denotes the number of times the user table was 
+			This objects denotes the number of times the user table was
 			modified since reboot.
 			"
         ::= { wlsxSystemExtTableGenNumberGroup 1 }
@@ -1023,7 +1023,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
         STATUS       deprecated
         DESCRIPTION
 			"
-			This objects denotes the number of times the AP BSSID table was 
+			This objects denotes the number of times the AP BSSID table was
 			modified since reboot.
 			"
         ::= { wlsxSystemExtTableGenNumberGroup 2 }
@@ -1035,7 +1035,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
         STATUS       deprecated
         DESCRIPTION
 			"
-			This objects denotes the number of times the Radio table was 
+			This objects denotes the number of times the Radio table was
 			modified since reboot.
 			"
         ::= { wlsxSystemExtTableGenNumberGroup 3 }
@@ -1044,10 +1044,10 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
    wlsxSysExtAPTableGenNumber OBJECT-TYPE
         SYNTAX       Integer32
         MAX-ACCESS   read-only
-        STATUS       deprecated 
+        STATUS       deprecated
         DESCRIPTION
 			"
-			This objects denotes the number of times the AP table was 
+			This objects denotes the number of times the AP table was
 			modified since reboot.
 			"
         ::= { wlsxSystemExtTableGenNumberGroup 4 }
@@ -1056,10 +1056,10 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
    wlsxSysExtSwitchListTableGenNumber OBJECT-TYPE
         SYNTAX       Integer32
         MAX-ACCESS   read-only
-        STATUS       deprecated 
+        STATUS       deprecated
         DESCRIPTION
 			"
-			This objects denotes the number of times the Switch list table was 
+			This objects denotes the number of times the Switch list table was
 			modified since reboot.
 			"
         ::= { wlsxSystemExtTableGenNumberGroup 5 }
@@ -1071,7 +1071,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
         STATUS       deprecated
         DESCRIPTION
 			"
-			This objects denotes the number of times the port table was 
+			This objects denotes the number of times the port table was
 			modified since reboot.
 			"
         ::= { wlsxSystemExtTableGenNumberGroup 6 }
@@ -1080,10 +1080,10 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
    wlsxSysExtVlanTableGenNumber OBJECT-TYPE
         SYNTAX       Integer32
         MAX-ACCESS   read-only
-        STATUS       deprecated 
+        STATUS       deprecated
         DESCRIPTION
 			"
-			This objects denotes the number of times the Vlan table was 
+			This objects denotes the number of times the Vlan table was
 			modified since reboot.
 			"
         ::= { wlsxSystemExtTableGenNumberGroup 7 }
@@ -1092,10 +1092,10 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
    wlsxSysExtVlanInterfaceTableGenNumber OBJECT-TYPE
         SYNTAX       Integer32
         MAX-ACCESS   read-only
-        STATUS       deprecated 
+        STATUS       deprecated
         DESCRIPTION
 			"
-			This objects denotes the number of times the Vlan Interface table 
+			This objects denotes the number of times the Vlan Interface table
 			was modified since reboot.
 			"
         ::= { wlsxSystemExtTableGenNumberGroup 8 }
@@ -1114,7 +1114,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
    wlsxSysExtMonAPTableGenNumber OBJECT-TYPE
         SYNTAX       Integer32
         MAX-ACCESS   read-only
-        STATUS       deprecated 
+        STATUS       deprecated
         DESCRIPTION
 			"
 			This objects denotes the number of times the monitored AP table
@@ -1125,7 +1125,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
    wlsxSysExtMonStationTableGenNumber OBJECT-TYPE
         SYNTAX       Integer32
         MAX-ACCESS   read-only
-        STATUS       deprecated 
+        STATUS       deprecated
         DESCRIPTION
 			"
 			This objects denotes the number of times the monitored station table
@@ -1146,7 +1146,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
         SYNTAX       DisplayString (SIZE(1..64))
         MAX-ACCESS   read-only
         STATUS       current
-        DESCRIPTION           
+        DESCRIPTION
                          "Host type is KVM/ HyperV/ VMware."
         ::= { wlsxSystemExtGroup 34 }
 
@@ -1154,9 +1154,9 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
         SYNTAX       DisplayString (SIZE(1..64))
         MAX-ACCESS   read-only
         STATUS       current
-        DESCRIPTION           
+        DESCRIPTION
                          "Processor Model Name."
-        ::= { wlsxSystemExtGroup 35 } 
+        ::= { wlsxSystemExtGroup 35 }
 
    wlsxSysExtTotalCpu OBJECT-TYPE
         SYNTAX       Integer32
@@ -1185,7 +1185,7 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
                   "This variable contains the last SNMP
                    authorization failure IP address."
         ::= { wlsxSystemExtGroup 38 }
-	
+
     wlsxSysExtDiskSize  OBJECT-TYPE
         SYNTAX       Integer32
         MAX-ACCESS   read-only
@@ -1195,30 +1195,30 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
 
         ::= { wlsxSystemExtGroup 39 }
 
--- New Switch List Table contains all the controllers in the domain. This table is 
+-- New Switch List Table contains all the controllers in the domain. This table is
 -- valid only, when queried from the conductor controller.
 
-   wlsxNSysExtSwitchListTable  OBJECT-TYPE 
-      SYNTAX       SEQUENCE OF WlsxNSysExtSwitchListEntry 
-      MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxNSysExtSwitchListTable  OBJECT-TYPE
+      SYNTAX       SEQUENCE OF WlsxNSysExtSwitchListEntry
+      MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"This new Table will list all the controllers in the Aruba Domain.
 		 It will be populated only on the conductor controller. Local controllers
 		 return empty table. It is a common table for IPv4 and IPv6 Address of
 		 the controller.
 		"
-	
-      ::= { wlsxSystemExtGroup 40 } 
 
-     wlsxNSysExtSwitchListEntry OBJECT-TYPE 
-	  SYNTAX       WlsxNSysExtSwitchListEntry 
-	  MAX-ACCESS   not-accessible		
-          STATUS       current 
-          DESCRIPTION 
+      ::= { wlsxSystemExtGroup 40 }
+
+     wlsxNSysExtSwitchListEntry OBJECT-TYPE
+	  SYNTAX       WlsxNSysExtSwitchListEntry
+	  MAX-ACCESS   not-accessible
+          STATUS       current
+          DESCRIPTION
              "New Switch List Entry"
 	  INDEX { sysExtNSwitchIPAddressType, sysExtNSwitchIPAddress}
-      ::= { wlsxNSysExtSwitchListTable 1 } 
+      ::= { wlsxNSysExtSwitchListTable 1 }
 
      WlsxNSysExtSwitchListEntry ::=
      SEQUENCE {
@@ -1323,4 +1323,3 @@ WLSX-SYSTEMEXT-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxSystemExtGroup 41 }
 
 END
-

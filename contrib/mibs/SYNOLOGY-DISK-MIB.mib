@@ -19,7 +19,7 @@ synoDisk MODULE-IDENTITY
         "Second draft."
     ::= { synology 2 }
 
-synology	 OBJECT IDENTIFIER 
+synology	 OBJECT IDENTIFIER
 	::= { enterprises 6574 }
 
 diskTable OBJECT-TYPE
@@ -91,12 +91,12 @@ diskStatus OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS	  current
     DESCRIPTION
-    "Synology disk status 
+    "Synology disk status
 	 Each meanings of status represented describe below.
 
 	 Normal(1): The hard disk functions normally.
 	 Initialized(2): The hard disk has system partition but no data.
-	 NotInitialized(3):	The hard disk does not have system in system partition.	
+	 NotInitialized(3):	The hard disk does not have system in system partition.
 	 SystemPartitionFailed(4): The system partitions on the hard disks are damaged.
 	 Crashed(5): The hard disk has damaged.
 	"

@@ -1,14 +1,14 @@
 HIRSCHMANN-SNMP-RETURN-SET-MIB   DEFINITIONS ::= BEGIN
 
--- 
+--
 -- ***********************************************************
 -- Hirschmann SNMP extended error handling MIB
 -- ***********************************************************
 --
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, 
-	OBJECT-IDENTITY, enterprises, 
+    MODULE-IDENTITY, OBJECT-TYPE,
+	OBJECT-IDENTITY, enterprises,
 	Integer32						FROM SNMPv2-SMI
     DisplayString, AutonomousType,
 	TestAndIncr						FROM SNMPv2-TC;
@@ -55,8 +55,8 @@ hmMgmtSESFailureReturn OBJECT-IDENTITY
 
 hmMgmtSESTestReturn OBJECT-IDENTITY
            STATUS      current
-           DESCRIPTION "Indicates an error on a write to the attribute hmMgmtSETestVar. Two parameters are 
-						expected. The fist parameter is the length of the value, the second parameter is the value itself. 
+           DESCRIPTION "Indicates an error on a write to the attribute hmMgmtSETestVar. Two parameters are
+						expected. The fist parameter is the length of the value, the second parameter is the value itself.
 						The parameter length is {0}. The parameter is {1}."
            ::= { hmMgmtSESReturns 100 }
 hmMgmtSESpinLock OBJECT-TYPE
@@ -122,7 +122,7 @@ hmMgmtSEParameterTable OBJECT-TYPE
               SYNTAX  SEQUENCE OF HmMgmtSEParameterEntry
               MAX-ACCESS  not-accessible
               STATUS  current
-              DESCRIPTION 
+              DESCRIPTION
               	"The table of additional Parameter the HmMgmtSEReturnTable for the specific message."
               ::= {  hmMgmtSEReturnSetGroup 4 }
 
@@ -167,12 +167,12 @@ hmMgmtSEParameterValue OBJECT-TYPE
 --
 -- hmMgmtSETestGroup
 --
-hmMgmtSETestGroup OBJECT IDENTIFIER ::= {  hmMgmtSEReturnSetGroup 100 }  
+hmMgmtSETestGroup OBJECT IDENTIFIER ::= {  hmMgmtSEReturnSetGroup 100 }
 hmMgmtSETestVar OBJECT-TYPE
        		  SYNTAX  OCTET STRING
        		  MAX-ACCESS  read-write
        		  STATUS  current
-       		  DESCRIPTION 
+       		  DESCRIPTION
        		  	"Test variable to check the functionality of extended error handling.
 				Setting a value to this attribute MUST return hmMgmtSESTestReturn with specific parameter."
        			::= { hmMgmtSETestGroup 1 }

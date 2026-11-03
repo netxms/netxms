@@ -1,12 +1,12 @@
 -- *********************************************************************
 -- ciscoEntitySensorCapability MIB
---   
+--
 -- AGENT-CAPABILITIES MIB for CISCO-ENTITY-SENSOR-MIB
---   
+--
 -- March 2003, Feng Luo
---   
+--
 -- Copyright(c) 2003-2011 by Cisco Systems,Inc.
---   
+--
 -- *********************************************************************
 
 CISCO-ENTITY-SENSOR-CAPABILITY DEFINITIONS ::= BEGIN
@@ -49,14 +49,14 @@ ciscoEntitySensorCapability MODULE-IDENTITY
     REVISION        "200707090000Z"
     DESCRIPTION
         "* Added capability statement
-           cEntitySensorCapMDS3R1: entSensorThresholdSeverity, 
-           entSensorThresholdRelation, entSensorThresholdValue 
+           cEntitySensorCapMDS3R1: entSensorThresholdSeverity,
+           entSensorThresholdRelation, entSensorThresholdValue
            are read-only objects for cEntitySensorCapMDS3R1.
          * Added capability statement
            cEntitySensorCapDCOSNEXUS.
-           entSensorThresholdSeverity, 
-           entSensorThresholdRelation, entSensorThresholdValue 
-           are read-only objects for 
+           entSensorThresholdSeverity,
+           entSensorThresholdRelation, entSensorThresholdValue
+           are read-only objects for
            cEntitySensorCapDCOSNEXUS."
     REVISION        "200706290000Z"
     DESCRIPTION
@@ -103,7 +103,7 @@ ciscoEntitySensorCapabilityV5R000 AGENT-CAPABILITIES
     STATUS          current
     DESCRIPTION
         "Agent capabilities for CISCO-ENTITY-SENSOR-MIB
-        of Voice Switch Service Module(VXSM) in 
+        of Voice Switch Service Module(VXSM) in
         Release 5.0.0."
 
     SUPPORTS        CISCO-ENTITY-SENSOR-MIB
@@ -239,7 +239,7 @@ cEntitySensorCapabilityV5R015 AGENT-CAPABILITIES
     STATUS          current
     DESCRIPTION
         "Agent capabilities for CISCO-ENTITY-SENSOR-MIB
-        of Voice Switch Service Module(VXSM) in 
+        of Voice Switch Service Module(VXSM) in
         Release 5.0.15."
 
     SUPPORTS        CISCO-ENTITY-SENSOR-MIB

@@ -31,27 +31,27 @@ os10TextualConventionsMib MODULE-IDENTITY
 
         REVISION     "201907031200Z"
         DESCRIPTION
-            "Add N3248TE and Mt. Evans products." 
+            "Add N3248TE and Mt. Evans products."
 
         REVISION     "201903071200Z"
         DESCRIPTION
-            "Add Z9332F and Mt. Echo products." 
+            "Add Z9332F and Mt. Echo products."
 
         REVISION     "201805151200Z"
         DESCRIPTION
-            "Add Z9232F and Mt. Princeton products." 
+            "Add Z9232F and Mt. Princeton products."
 
         REVISION     "201801261200Z"
         DESCRIPTION
-            "Add z9264F product." 
+            "Add z9264F product."
 
         REVISION     "201710271200Z"
         DESCRIPTION
-            "Add s4112F and s4112T products." 
+            "Add s4112F and s4112T products."
 
         REVISION     "201710111200Z"
         DESCRIPTION
-            "Add s4248FB and s4248FBL products. 
+            "Add s4248FB and s4248FBL products.
              Depreciate s4200."
 
         REVISION     "201709061200Z"

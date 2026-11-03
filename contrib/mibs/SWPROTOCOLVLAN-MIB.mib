@@ -45,9 +45,9 @@ SWPROTOCOLVLAN-MIB DEFINITIONS ::= BEGIN
 	        FROM SNMPv2-TC
 	    MODULE-COMPLIANCE, OBJECT-GROUP
 	        FROM SNMPv2-CONF
-	    dlink-common-mgmt	
+	    dlink-common-mgmt
 	        FROM DLINK-ID-REC-MIB
-	    dot1vProtocolPortEntry	
+	    dot1vProtocolPortEntry
 	        FROM Q-BRIDGE-MIB;
 
 
@@ -257,5 +257,5 @@ swdot1vProtocolPortGroupPriority OBJECT-TYPE
         "The Priority associated with a group of protocols for
          each port."
     ::= { swdot1vProtocolPortEntry 1 }
-    
+
 END

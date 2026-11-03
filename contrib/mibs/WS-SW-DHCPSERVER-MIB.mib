@@ -6,24 +6,24 @@
 --
 
 	WS-SW-DHCPSERVER-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP, MODULE-COMPLIANCE			
-				FROM SNMPv2-CONF			
-			IpAddress, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			RowStatus, TruthValue, DisplayString			
-				FROM SNMPv2-TC			
-			wsSwDHCP			
+			OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+			IpAddress, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			RowStatus, TruthValue, DisplayString
+				FROM SNMPv2-TC
+			wsSwDHCP
 				FROM WS-SW-SMI;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.2.3.5
-		wsSwDhcpServerModule MODULE-IDENTITY 
+		wsSwDhcpServerModule MODULE-IDENTITY
 			LAST-UPDATED "200604141134Z"		-- April 14, 2006 at 11:34 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technologies"
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Symbol Technologies, Inc.
 				Customer Service
 				Postal:
@@ -33,81 +33,81 @@
 				Tel: +1. 631.738.6213
 				E-mail: support@symbol.com
 				Web: http://www.symbol.com/support"
-			DESCRIPTION 
+			DESCRIPTION
 				"This module contains DHCP server MIB definition"
 			REVISION "200611291042Z"		-- November 29, 2006 at 10:42 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a20"
 			REVISION "200607120031Z"		-- July 12, 2006 at 00:31 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a19"
 			REVISION "200607110532Z"		-- July 11, 2006 at 05:32 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a18"
 			REVISION "200607080450Z"		-- July 08, 2006 at 04:50 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a17"
 			REVISION "200606051329Z"		-- June 05, 2006 at 13:29 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a16"
 			REVISION "200605241649Z"		-- May 24, 2006 at 16:49 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a15"
 			REVISION "200605161109Z"		-- May 16, 2006 at 11:09 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a14"
 			REVISION "200605121636Z"		-- May 12, 2006 at 16:36 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a13"
 			REVISION "200605121201Z"		-- May 12, 2006 at 12:01 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a12"
 			REVISION "200605121126Z"		-- May 12, 2006 at 11:26 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a11"
 			REVISION "200605121056Z"		-- May 12, 2006 at 10:56 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a10"
 			REVISION "200605111743Z"		-- May 11, 2006 at 17:43 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a09"
 			REVISION "200605101652Z"		-- May 10, 2006 at 16:52 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a08"
 			REVISION "200605031047Z"		-- May 03, 2006 at 10:47 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a07"
 			REVISION "200605011334Z"		-- May 01, 2006 at 13:34 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a06"
 			REVISION "200604271333Z"		-- April 27, 2006 at 13:33 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a05"
 			REVISION "200604251354Z"		-- April 25, 2006 at 13:54 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a04"
 			REVISION "200604201016Z"		-- April 20, 2006 at 10:16 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a03"
 			REVISION "200604191409Z"		-- April 19, 2006 at 14:09 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a02"
 			REVISION "200604141145Z"		-- April 14, 2006 at 11:45 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a01"
 			::= { wsSwDHCP 5 }
 
-		
-	
-	
+
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.1
 		wsSwDhcpSvrGlobal OBJECT IDENTIFIER ::= { wsSwDhcpServerModule 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.1.1
 		wsSwDhcpSvrBootp OBJECT-TYPE
 			SYNTAX TruthValue
@@ -117,7 +117,7 @@
 				"Allow /Ignore Bootp requests "
 			::= { wsSwDhcpSvrGlobal 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.1.2
 		wsSwDhcpSvrPingInterval OBJECT-TYPE
 			SYNTAX INTEGER (1..10)
@@ -127,7 +127,7 @@
 				"Ping time interval"
 			::= { wsSwDhcpSvrGlobal 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.1.3
 		wsSwDhcpSvrEnable OBJECT-TYPE
 			SYNTAX TruthValue
@@ -137,7 +137,7 @@
 				"Description."
 			::= { wsSwDhcpSvrGlobal 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.1.4
 		wsSwDhcpSvrRestart OBJECT-TYPE
 			SYNTAX INTEGER
@@ -151,7 +151,7 @@
 				"dhcp svr restart"
 			::= { wsSwDhcpSvrGlobal 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.1.5
 		wsSwDhcpSvrStatus OBJECT-TYPE
 			SYNTAX INTEGER
@@ -165,7 +165,7 @@
 				"Description."
 			::= { wsSwDhcpSvrGlobal 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.1.6
 		wsSwDhcpSvrLastErrorMsg OBJECT-TYPE
 			SYNTAX DisplayString
@@ -175,7 +175,7 @@
 				"Description."
 			::= { wsSwDhcpSvrGlobal 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.2
 		wsSwDhcpSvrExcludeTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwDhcpSvrExcludeEntry
@@ -185,7 +185,7 @@
 				"Description."
 			::= { wsSwDhcpServerModule 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.2.1
 		wsSwDhcpSvrExcludeEntry OBJECT-TYPE
 			SYNTAX WsSwDhcpSvrExcludeEntry
@@ -196,9 +196,9 @@
 			INDEX { wsSwDhcpSvrExcludeLowIpAddr, wsSwDhcpSvrExcludeHighIpAddr }
 			::= { wsSwDhcpSvrExcludeTable 1 }
 
-		
+
 		WsSwDhcpSvrExcludeEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwDhcpSvrExcludeLowIpAddr
 					IpAddress,
 				wsSwDhcpSvrExcludeHighIpAddr
@@ -216,7 +216,7 @@
 				"Excluded low address"
 			::= { wsSwDhcpSvrExcludeEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.2.1.2
 		wsSwDhcpSvrExcludeHighIpAddr OBJECT-TYPE
 			SYNTAX DisplayString
@@ -226,7 +226,7 @@
 				"Excluded high address"
 			::= { wsSwDhcpSvrExcludeEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.2.1.3
 		wsSwDhcpSvrExcludeRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -236,7 +236,7 @@
 				"row status of wsSwDhcpSvrExcludeEntry"
 			::= { wsSwDhcpSvrExcludeEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3
 		wsSwDhcpSvrPoolTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwDhcpSvrPoolEntry
@@ -246,7 +246,7 @@
 				"Description."
 			::= { wsSwDhcpServerModule 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1
 		wsSwDhcpSvrPoolEntry OBJECT-TYPE
 			SYNTAX WsSwDhcpSvrPoolEntry
@@ -257,9 +257,9 @@
 			INDEX { wsSwDhcpSvrPoolNameIndex }
 			::= { wsSwDhcpSvrPoolTable 1 }
 
-		
+
 		WsSwDhcpSvrPoolEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwDhcpSvrPoolNameIndex
 					DisplayString,
 				wsSwDhcpSvrPoolType
@@ -317,7 +317,7 @@
 				"index of wsSwDhcpSvrPoolTable"
 			::= { wsSwDhcpSvrPoolEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.2
 		wsSwDhcpSvrPoolType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -332,7 +332,7 @@
 				"Description."
 			::= { wsSwDhcpSvrPoolEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.3
 		wsSwDhcpSvrPoolHostIp OBJECT-TYPE
 			SYNTAX IpAddress
@@ -342,7 +342,7 @@
 				"Description."
 			::= { wsSwDhcpSvrPoolEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.4
 		wsSwDhcpSvrPoolSubnetIpAndMask OBJECT-TYPE
 			SYNTAX DisplayString
@@ -352,7 +352,7 @@
 				"subnet IP and mask"
 			::= { wsSwDhcpSvrPoolEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.5
 		wsSwDhcpSvrPoolClientId OBJECT-TYPE
 			SYNTAX OCTET STRING
@@ -360,11 +360,11 @@
 			STATUS current
 			DESCRIPTION
 				"client identifier
-				
+
 				To prepend Null character use \0 at the beginning."
 			::= { wsSwDhcpSvrPoolEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.6
 		wsSwDhcpSvrPoolClientName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -374,7 +374,7 @@
 				"Description."
 			::= { wsSwDhcpSvrPoolEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.7
 		wsSwDhcpSvrPoolHardWareAddrAndType OBJECT-TYPE
 			SYNTAX DisplayString
@@ -382,15 +382,15 @@
 			STATUS current
 			DESCRIPTION
 				"Hardware address and hardware type for the pool. Hardware type is optional. Default hardware type is ethernet
-				Input formats are 
+				Input formats are
 				XX:XX:XX:XX:XX:XX
 				or
-				XX:XX:XX:XX:XX:XX,ethernet 
+				XX:XX:XX:XX:XX:XX,ethernet
 				or
 				XX:XX:XX:XX:XX:XX,token-ring"
 			::= { wsSwDhcpSvrPoolEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.8
 		wsSwDhcpSvrPoolDomainName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -400,7 +400,7 @@
 				"Domain name"
 			::= { wsSwDhcpSvrPoolEntry 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.9
 		wsSwDhcpSvrPoolNetBiosNodeType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -417,7 +417,7 @@
 				"etbios-node-type"
 			::= { wsSwDhcpSvrPoolEntry 9 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.10
 		wsSwDhcpSvrPoolBootfile OBJECT-TYPE
 			SYNTAX DisplayString
@@ -427,7 +427,7 @@
 				"boot file name"
 			::= { wsSwDhcpSvrPoolEntry 10 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.11
 		wsSwDhcpSvrPoolDdnsUpdate OBJECT-TYPE
 			SYNTAX INTEGER
@@ -442,7 +442,7 @@
 				"DDNS updates"
 			::= { wsSwDhcpSvrPoolEntry 11 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.12
 		wsSwDhcpSvrPoolDdnsUpdateAll OBJECT-TYPE
 			SYNTAX INTEGER
@@ -456,14 +456,14 @@
 				"Description."
 			::= { wsSwDhcpSvrPoolEntry 12 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.13
 		wsSwDhcpSvrPoolDdnsIp OBJECT-TYPE
 			SYNTAX DisplayString
 			MAX-ACCESS read-create
 			STATUS current
 			DESCRIPTION
-				"This can take a max of 2 IP addresses in the format IP1, IP2. 
+				"This can take a max of 2 IP addresses in the format IP1, IP2.
 				To remove just IP1 use any of the following formats
 				,IP2   or
 				0.0.0.0,IP2
@@ -476,7 +476,7 @@
 				"
 			::= { wsSwDhcpSvrPoolEntry 13 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.14
 		wsSwDhcpSvrPoolDdnsDomainName OBJECT-TYPE
 			SYNTAX DisplayString
@@ -486,7 +486,7 @@
 				"DDNS domain name"
 			::= { wsSwDhcpSvrPoolEntry 14 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.15
 		wsSwDhcpSvrPoolDdnsTtl OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -496,7 +496,7 @@
 				"DDNS TTL value. This OID can take values in range 1 to 864000. The value -1 is used to remove the configured value."
 			::= { wsSwDhcpSvrPoolEntry 15 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.16
 		wsSwDhcpSvrPoolDdnsMultiUserClass OBJECT-TYPE
 			SYNTAX TruthValue
@@ -506,7 +506,7 @@
 				"enable/disable DDNS multi user class"
 			::= { wsSwDhcpSvrPoolEntry 16 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.17
 		wsSwDhcpSvrPoolDefaultRouter OBJECT-TYPE
 			SYNTAX DisplayString
@@ -516,7 +516,7 @@
 				"Default Router, the format is xxx.xxx.xxx.xxx, yyy.yyy.yyy.yy,..., the maximum number of the router entry is 8"
 			::= { wsSwDhcpSvrPoolEntry 17 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.18
 		wsSwDhcpSvrPoolBootpNextSvrIP OBJECT-TYPE
 			SYNTAX IpAddress
@@ -526,7 +526,7 @@
 				"bootp next server address, set it to 0.0.0.0 means there is no bootp next server address"
 			::= { wsSwDhcpSvrPoolEntry 18 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.19
 		wsSwDhcpSvrPoolDnsSvrIP OBJECT-TYPE
 			SYNTAX DisplayString
@@ -536,7 +536,7 @@
 				"dns server address, the format is xxx.xxx.xxx.xxx, yyy.yyy.yyy.yy,..., the maximum number of the server entry is 8"
 			::= { wsSwDhcpSvrPoolEntry 19 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.20
 		wsSwDhcpSvrPoolNetbiosSvrIP OBJECT-TYPE
 			SYNTAX DisplayString
@@ -546,7 +546,7 @@
 				"net bios server address, the format is xxx.xxx.xxx.xxx, yyy.yyy.yyy.yy,..., the maximum number of the server entry is 8"
 			::= { wsSwDhcpSvrPoolEntry 20 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.21
 		wsSwDhcpSvrPoolNoDefault OBJECT-TYPE
 			SYNTAX INTEGER
@@ -562,7 +562,7 @@
 				"No default"
 			::= { wsSwDhcpSvrPoolEntry 21 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.22
 		wsSwDhcpSvrPoolLeaseTime OBJECT-TYPE
 			SYNTAX DisplayString
@@ -572,7 +572,7 @@
 				"Lease time, the format is XX:YY:ZZ, which represents days:hours:mins. 00:00:00 means infinite lease"
 			::= { wsSwDhcpSvrPoolEntry 22 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.3.1.23
 		wsSwDhcpSvrPoolRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -582,7 +582,7 @@
 				"row status of wsSwDhcpSvrPoolTable"
 			::= { wsSwDhcpSvrPoolEntry 23 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.4
 		wsSwDhcpSvrIncludeTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwDhcpSvrIncludeEntry
@@ -592,7 +592,7 @@
 				"Description."
 			::= { wsSwDhcpServerModule 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.4.1
 		wsSwDhcpSvrIncludeEntry OBJECT-TYPE
 			SYNTAX WsSwDhcpSvrIncludeEntry
@@ -603,9 +603,9 @@
 			INDEX { wsSwDhcpSvrPoolNameIndex, wsSwDhcpSvrIncludeLowIP, wsSwDhcpSvrIncludeHighIP }
 			::= { wsSwDhcpSvrIncludeTable 1 }
 
-		
+
 		WsSwDhcpSvrIncludeEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwDhcpSvrIncludeLowIP
 					IpAddress,
 				wsSwDhcpSvrIncludeHighIP
@@ -623,7 +623,7 @@
 				"Included low address"
 			::= { wsSwDhcpSvrIncludeEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.4.1.2
 		wsSwDhcpSvrIncludeHighIP OBJECT-TYPE
 			SYNTAX DisplayString
@@ -633,7 +633,7 @@
 				"Included high address"
 			::= { wsSwDhcpSvrIncludeEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.4.1.3
 		wsSwDhcpSvrIncludeRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -643,7 +643,7 @@
 				"row status of wsSwDhcpSvrIncludeTable"
 			::= { wsSwDhcpSvrIncludeEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.5
 		wsSwDhcpSvrPoolOptionTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwDhcpSvrPoolOptionEntry
@@ -653,7 +653,7 @@
 				"Description."
 			::= { wsSwDhcpServerModule 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.5.1
 		wsSwDhcpSvrPoolOptionEntry OBJECT-TYPE
 			SYNTAX WsSwDhcpSvrPoolOptionEntry
@@ -664,9 +664,9 @@
 			INDEX { wsSwDhcpSvrPoolNameIndex, wsSwDhcpSvrPoolOptionName, wsSwDhcpSvrPoolOptionValue }
 			::= { wsSwDhcpSvrPoolOptionTable 1 }
 
-		
+
 		WsSwDhcpSvrPoolOptionEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwDhcpSvrPoolOptionName
 					DisplayString,
 				wsSwDhcpSvrPoolOptionValue
@@ -684,7 +684,7 @@
 				"option name"
 			::= { wsSwDhcpSvrPoolOptionEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.5.1.2
 		wsSwDhcpSvrPoolOptionValue OBJECT-TYPE
 			SYNTAX DisplayString
@@ -694,7 +694,7 @@
 				"option tpe"
 			::= { wsSwDhcpSvrPoolOptionEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.5.1.3
 		wsSwDhcpSvrPoolOptionRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -704,7 +704,7 @@
 				"row status of the table"
 			::= { wsSwDhcpSvrPoolOptionEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.6
 		wsSwDhcpBindingStatusTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwDhcpBindingStatusEntry
@@ -714,7 +714,7 @@
 				"Description."
 			::= { wsSwDhcpServerModule 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.6.1
 		wsSwDhcpBindingStatusEntry OBJECT-TYPE
 			SYNTAX WsSwDhcpBindingStatusEntry
@@ -725,9 +725,9 @@
 			INDEX { wsSwDhcpBindingStatusIp }
 			::= { wsSwDhcpBindingStatusTable 1 }
 
-		
+
 		WsSwDhcpBindingStatusEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwDhcpBindingStatusIp
 					IpAddress,
 				wsSwDhcpBindingStatusHardwareAddr
@@ -751,7 +751,7 @@
 				"IP address of binding"
 			::= { wsSwDhcpBindingStatusEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.6.1.2
 		wsSwDhcpBindingStatusHardwareAddr OBJECT-TYPE
 			SYNTAX DisplayString
@@ -761,7 +761,7 @@
 				"Hardware address"
 			::= { wsSwDhcpBindingStatusEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.6.1.3
 		wsSwDhcpBindingStatusClientID OBJECT-TYPE
 			SYNTAX DisplayString
@@ -771,7 +771,7 @@
 				"Description."
 			::= { wsSwDhcpBindingStatusEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.6.1.4
 		wsSwDhcpBindingStatusLeaseExpired OBJECT-TYPE
 			SYNTAX DisplayString
@@ -781,7 +781,7 @@
 				"Lease expiration"
 			::= { wsSwDhcpBindingStatusEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.6.1.5
 		wsSwDhcpBindingStatusLeaseType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -795,7 +795,7 @@
 				"Description."
 			::= { wsSwDhcpBindingStatusEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.6.1.6
 		wsSwDhcpBindingStatusRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -805,7 +805,7 @@
 				"only delete is supported in this row-status."
 			::= { wsSwDhcpBindingStatusEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.7
 		wsSwDhcpSvrGlobalOptionTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwDhcpSvrGlobalOptionEntry
@@ -815,7 +815,7 @@
 				"Description."
 			::= { wsSwDhcpServerModule 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.7.1
 		wsSwDhcpSvrGlobalOptionEntry OBJECT-TYPE
 			SYNTAX WsSwDhcpSvrGlobalOptionEntry
@@ -826,9 +826,9 @@
 			INDEX { wsSwDhcpSvrGlobalOptionName, wsSwDhcpSvrGlobalOptionCode, wsSwDhcpSvrGlobalOptionType }
 			::= { wsSwDhcpSvrGlobalOptionTable 1 }
 
-		
+
 		WsSwDhcpSvrGlobalOptionEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwDhcpSvrGlobalOptionName
 					DisplayString,
 				wsSwDhcpSvrGlobalOptionCode
@@ -848,7 +848,7 @@
 				"Description."
 			::= { wsSwDhcpSvrGlobalOptionEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.7.1.2
 		wsSwDhcpSvrGlobalOptionCode OBJECT-TYPE
 			SYNTAX Unsigned32 (0..254)
@@ -858,7 +858,7 @@
 				"Description."
 			::= { wsSwDhcpSvrGlobalOptionEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.7.1.3
 		wsSwDhcpSvrGlobalOptionType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -872,7 +872,7 @@
 				"Description."
 			::= { wsSwDhcpSvrGlobalOptionEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.7.1.4
 		wsSwDhcpSvrGlobalOptionRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -882,7 +882,7 @@
 				"Description."
 			::= { wsSwDhcpSvrGlobalOptionEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.8
 		wsSwDhcpRelayTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwDhcpRelayEntry
@@ -892,7 +892,7 @@
 				"Description."
 			::= { wsSwDhcpServerModule 8 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.8.1
 		wsSwDhcpRelayEntry OBJECT-TYPE
 			SYNTAX WsSwDhcpRelayEntry
@@ -903,9 +903,9 @@
 			INDEX { wsSwDhcpRelayInterface }
 			::= { wsSwDhcpRelayTable 1 }
 
-		
+
 		WsSwDhcpRelayEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwDhcpRelayInterface
 					DisplayString,
 				wsSwDhcpRelayTarget
@@ -925,7 +925,7 @@
 				"Interface Name"
 			::= { wsSwDhcpRelayEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.8.1.2
 		wsSwDhcpRelayTarget OBJECT-TYPE
 			SYNTAX DisplayString
@@ -935,7 +935,7 @@
 				"This is a read-only attribute which shows the currently configured relay targets in the format Ip,interface;Ip,interface... There can be a maximum of 4 such relay targets."
 			::= { wsSwDhcpRelayEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.8.1.3
 		wsSwDhcpRelayTargetSet OBJECT-TYPE
 			SYNTAX DisplayString
@@ -947,7 +947,7 @@
 				0:IP, Iface. If there is only one relay target then it cannot be removed. In such a case the entire row has to be deleted."
 			::= { wsSwDhcpRelayEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.8.1.4
 		wsSwDhcpRelayRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -957,49 +957,49 @@
 				"Row status of DHCP Relay Table"
 			::= { wsSwDhcpRelayEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.100
 		wsSwDhcpServerMIBConformance OBJECT IDENTIFIER ::= { wsSwDhcpServerModule 100 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.100.1
 		wsSwDhcpServerCompliances OBJECT IDENTIFIER ::= { wsSwDhcpServerMIBConformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.100.1.1
 		wsSwDhcpServerCompliance MODULE-COMPLIANCE
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			MODULE -- this module
 				MANDATORY-GROUPS { wsSwDhcpServerGroup }
 			::= { wsSwDhcpServerCompliances 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.100.2
 		wsSwDhcpServerGroups OBJECT IDENTIFIER ::= { wsSwDhcpServerMIBConformance 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.3.5.100.2.1
 		wsSwDhcpServerGroup OBJECT-GROUP
-			OBJECTS { wsSwDhcpSvrBootp, wsSwDhcpSvrPingInterval, wsSwDhcpSvrExcludeRowStatus, wsSwDhcpSvrPoolDomainName, wsSwDhcpSvrPoolNetBiosNodeType, 
-				wsSwDhcpSvrPoolBootfile, wsSwDhcpSvrPoolDdnsUpdate, wsSwDhcpSvrPoolDdnsDomainName, wsSwDhcpSvrPoolDdnsTtl, wsSwDhcpSvrPoolDdnsMultiUserClass, 
-				wsSwDhcpSvrPoolDefaultRouter, wsSwDhcpSvrPoolBootpNextSvrIP, wsSwDhcpSvrPoolDnsSvrIP, wsSwDhcpSvrPoolNetbiosSvrIP, wsSwDhcpSvrPoolNoDefault, 
-				wsSwDhcpSvrPoolLeaseTime, wsSwDhcpSvrPoolRowStatus, wsSwDhcpSvrIncludeRowStatus, wsSwDhcpBindingStatusHardwareAddr, wsSwDhcpBindingStatusLeaseExpired, 
-				wsSwDhcpBindingStatusRowStatus, wsSwDhcpSvrPoolDdnsIp, wsSwDhcpSvrEnable, wsSwDhcpSvrPoolHostIp, wsSwDhcpBindingStatusLeaseType, 
-				wsSwDhcpSvrPoolClientId, wsSwDhcpSvrExcludeLowIpAddr, wsSwDhcpSvrExcludeHighIpAddr, wsSwDhcpSvrPoolNameIndex, wsSwDhcpSvrIncludeLowIP, 
-				wsSwDhcpSvrIncludeHighIP, wsSwDhcpBindingStatusIp, wsSwDhcpSvrGlobalOptionCode, wsSwDhcpSvrGlobalOptionType, wsSwDhcpSvrGlobalOptionRowStatus, 
-				wsSwDhcpSvrGlobalOptionName, wsSwDhcpBindingStatusClientID, wsSwDhcpSvrPoolDdnsUpdateAll, wsSwDhcpSvrPoolType, wsSwDhcpSvrPoolSubnetIpAndMask, 
-				wsSwDhcpSvrPoolClientName, wsSwDhcpSvrPoolHardWareAddrAndType, wsSwDhcpSvrPoolOptionName, wsSwDhcpSvrPoolOptionValue, wsSwDhcpRelayInterface, 
-				wsSwDhcpRelayRowStatus, wsSwDhcpRelayTargetSet, wsSwDhcpRelayTarget, wsSwDhcpSvrLastErrorMsg, wsSwDhcpSvrStatus, 
+			OBJECTS { wsSwDhcpSvrBootp, wsSwDhcpSvrPingInterval, wsSwDhcpSvrExcludeRowStatus, wsSwDhcpSvrPoolDomainName, wsSwDhcpSvrPoolNetBiosNodeType,
+				wsSwDhcpSvrPoolBootfile, wsSwDhcpSvrPoolDdnsUpdate, wsSwDhcpSvrPoolDdnsDomainName, wsSwDhcpSvrPoolDdnsTtl, wsSwDhcpSvrPoolDdnsMultiUserClass,
+				wsSwDhcpSvrPoolDefaultRouter, wsSwDhcpSvrPoolBootpNextSvrIP, wsSwDhcpSvrPoolDnsSvrIP, wsSwDhcpSvrPoolNetbiosSvrIP, wsSwDhcpSvrPoolNoDefault,
+				wsSwDhcpSvrPoolLeaseTime, wsSwDhcpSvrPoolRowStatus, wsSwDhcpSvrIncludeRowStatus, wsSwDhcpBindingStatusHardwareAddr, wsSwDhcpBindingStatusLeaseExpired,
+				wsSwDhcpBindingStatusRowStatus, wsSwDhcpSvrPoolDdnsIp, wsSwDhcpSvrEnable, wsSwDhcpSvrPoolHostIp, wsSwDhcpBindingStatusLeaseType,
+				wsSwDhcpSvrPoolClientId, wsSwDhcpSvrExcludeLowIpAddr, wsSwDhcpSvrExcludeHighIpAddr, wsSwDhcpSvrPoolNameIndex, wsSwDhcpSvrIncludeLowIP,
+				wsSwDhcpSvrIncludeHighIP, wsSwDhcpBindingStatusIp, wsSwDhcpSvrGlobalOptionCode, wsSwDhcpSvrGlobalOptionType, wsSwDhcpSvrGlobalOptionRowStatus,
+				wsSwDhcpSvrGlobalOptionName, wsSwDhcpBindingStatusClientID, wsSwDhcpSvrPoolDdnsUpdateAll, wsSwDhcpSvrPoolType, wsSwDhcpSvrPoolSubnetIpAndMask,
+				wsSwDhcpSvrPoolClientName, wsSwDhcpSvrPoolHardWareAddrAndType, wsSwDhcpSvrPoolOptionName, wsSwDhcpSvrPoolOptionValue, wsSwDhcpRelayInterface,
+				wsSwDhcpRelayRowStatus, wsSwDhcpRelayTargetSet, wsSwDhcpRelayTarget, wsSwDhcpSvrLastErrorMsg, wsSwDhcpSvrStatus,
 				wsSwDhcpSvrPoolOptionRowStatus, wsSwDhcpSvrRestart }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			::= { wsSwDhcpServerGroups 1 }
 
-		
-	
+
+
 	END
 
 --

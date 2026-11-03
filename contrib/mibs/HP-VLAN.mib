@@ -31,7 +31,7 @@ HP-VLAN DEFINITIONS ::= BEGIN
         REVISION     "9510200000Z"  -- October 20, 1995
         DESCRIPTION  "Initial revision of this MIB module"
         ::= { hpVLAN 1 }
-          
+
     hpVLAN                OBJECT IDENTIFIER ::= { hpSwitch  3 }
 
     hpVlanObjects      OBJECT IDENTIFIER ::= { hpVlanLevelOne 1 }
@@ -62,26 +62,26 @@ HP-VLAN DEFINITIONS ::= BEGIN
                     not be used to indicate the highest VLAN ID
                     value currently in use."
         ::= { hpVlanObjects 1 }
-          
+
     -- HP VLAN Identification Objects
-          
+
     hpVlanIdentTable OBJECT-TYPE
         SYNTAX      SEQUENCE OF HpVlanIdentEntry
         MAX-ACCESS  not-accessible
         STATUS      deprecated
-        DESCRIPTION "A table describing the various VLANs that 
+        DESCRIPTION "A table describing the various VLANs that
                     are currently defined for this device."
         ::= { hpVlanObjects 4 }
-          
+
     hpVlanIdentEntry OBJECT-TYPE
         SYNTAX      HpVlanIdentEntry
         MAX-ACCESS  not-accessible
         STATUS      deprecated
-        DESCRIPTION "The row in the hpVlanIdentTable containing 
+        DESCRIPTION "The row in the hpVlanIdentTable containing
                     the general VLAN information."
         INDEX       { hpVlanIdentIndex }
         ::= { hpVlanIdentTable 1 }
-          
+
     HpVlanIdentEntry ::=
         SEQUENCE {
             hpVlanIdentIndex             VlanID,
@@ -92,13 +92,13 @@ HP-VLAN DEFINITIONS ::= BEGIN
             hpVlanIdentState             INTEGER,
             hpVlanIdentType              INTEGER
         }
-          
+
     hpVlanIdentIndex OBJECT-TYPE
         SYNTAX      VlanID
         MAX-ACCESS  not-accessible
         STATUS      deprecated
-        DESCRIPTION "The VLAN ID which uniquely identifies a row  
-                    in this table." 
+        DESCRIPTION "The VLAN ID which uniquely identifies a row
+                    in this table."
         ::= { hpVlanIdentEntry 1 }
 
     hpVlanIdentName OBJECT-TYPE
@@ -106,9 +106,9 @@ HP-VLAN DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-create
         STATUS      deprecated
         DESCRIPTION "The user defined textual name that is
-                    associated with this VLAN."  
+                    associated with this VLAN."
         ::= { hpVlanIdentEntry 2 }
-          
+
     hpVlanIdentMode OBJECT-TYPE
         SYNTAX      INTEGER {
                         port(1),
@@ -118,15 +118,15 @@ HP-VLAN DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "The mode of this VLAN. A VLAN can be either
                     port-based or MAC address-based. A port-based
-                    VLAN supports a multiple addresses per VLAN 
+                    VLAN supports a multiple addresses per VLAN
                     port.
 
                     A MAC address-based VLAN supports multiple MAC
                     addresses per port such that VLAN address tables
                     must be consulted to determine the number of VLAN
-                    clients."  
+                    clients."
                ::= { hpVlanIdentEntry 3 }
-          
+
     hpVlanIdentStatus OBJECT-TYPE
         SYNTAX      RowStatus
         MAX-ACCESS  read-create
@@ -170,20 +170,20 @@ HP-VLAN DEFINITIONS ::= BEGIN
                          across reboots. They may be relearnt after a
                          reboot via GVRP activity"
         ::= { hpVlanIdentEntry 7 }
-          
+
     -- HP VLAN Membership Tables (Member and Address Tables)
-          
+
     hpVlanMemberTable OBJECT-TYPE
         SYNTAX      SEQUENCE OF HpVlanMemberEntry
         MAX-ACCESS  not-accessible
         STATUS      deprecated
-        DESCRIPTION "A table describing the members of the various  
+        DESCRIPTION "A table describing the members of the various
                     VLANs that are currently defined for this device.
                     Interfaces can be associated with a pre-defined
                     VLAN (i.e., VLANs can be created by grouping
                     existing interfaces) by adding rows to this table.
                     Likewise, deleting rows from this table removes
-                    the specified interface from the VLAN. 
+                    the specified interface from the VLAN.
 
                     Note that certain entries in this table will
                     automatically be created when a VLAN is created,
@@ -193,16 +193,16 @@ HP-VLAN DEFINITIONS ::= BEGIN
                     are read-only and can not be manipulated via
                     the MIB."
         ::= { hpVlanObjects 5 }
-          
+
     hpVlanMemberEntry OBJECT-TYPE
         SYNTAX      HpVlanMemberEntry
         MAX-ACCESS  not-accessible
         STATUS      deprecated
-        DESCRIPTION "The row in the hpVlanMemberTable containing the 
+        DESCRIPTION "The row in the hpVlanMemberTable containing the
                     VLAN ID to Interface Group ifIndex mappings."
         INDEX       { hpVlanMemberIfIndex }
         ::= { hpVlanMemberTable 1 }
-          
+
     HpVlanMemberEntry ::=
         SEQUENCE {
             hpVlanMemberIfIndex          InterfaceIndex,
@@ -215,7 +215,7 @@ HP-VLAN DEFINITIONS ::= BEGIN
         STATUS      deprecated
         DESCRIPTION "The ifIndex value which uniquely identifies
                     a row in the Interfaces Table. The corresponding
-                    row in the Interfaces Table must exist prior 
+                    row in the Interfaces Table must exist prior
                     to the index being used in this table."
         ::= { hpVlanMemberEntry 1 }
 
@@ -238,18 +238,18 @@ HP-VLAN DEFINITIONS ::= BEGIN
                     are currently associated with a specific
                     VLAN. Entries are added to and deleted
                     from this read-only table automatically
-                    as they are learned from the network." 
+                    as they are learned from the network."
         ::= { hpVlanObjects 6 }
 
     hpVlanAddrEntry OBJECT-TYPE
         SYNTAX      HpVlanAddrEntry
         MAX-ACCESS  not-accessible
         STATUS      deprecated
-        DESCRIPTION "The row in the hpVlanAddrTable containing 
+        DESCRIPTION "The row in the hpVlanAddrTable containing
                     the VLAN ID to MAC address mappings."
         INDEX       { hpVlanAddrIndex }
         ::= { hpVlanAddrTable 1 }
-          
+
     HpVlanAddrEntry ::=
         SEQUENCE {
             hpVlanAddrIndex              VlanID,
@@ -260,17 +260,17 @@ HP-VLAN DEFINITIONS ::= BEGIN
         SYNTAX      VlanID
         MAX-ACCESS  not-accessible
         STATUS      deprecated
-        DESCRIPTION "The VLAN ID which uniquely identifies a row  
-                    in the VLAN Ident Table. The corresponding 
-                    row in the VLAN Ident Table must exist prior 
+        DESCRIPTION "The VLAN ID which uniquely identifies a row
+                    in the VLAN Ident Table. The corresponding
+                    row in the VLAN Ident Table must exist prior
                     to the index being present in this table."
         ::= { hpVlanAddrEntry 1 }
-          
+
     hpVlanAddrPhysAddress OBJECT-TYPE
         SYNTAX      PhysAddress
         MAX-ACCESS  read-only
         STATUS      deprecated
-        DESCRIPTION "The MAC address of a node that is associated 
+        DESCRIPTION "The MAC address of a node that is associated
                     with a specific VLAN as identified by the
                     object hpVlanAddrIndex."
         ::= { hpVlanAddrEntry 2 }
@@ -281,7 +281,7 @@ HP-VLAN DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      deprecated
         DESCRIPTION "The status of a VLAN information table. If one or more
-                    variables in this group were reconfigurated since last 
+                    variables in this group were reconfigurated since last
                     reboot and required reboot to take effect, the value of
                     this variable will be set to notInService."
         ::= { hpVlanObjects 7 }
@@ -355,7 +355,7 @@ HP-VLAN DEFINITIONS ::= BEGIN
     hpVlanGeneralGroup OBJECT-GROUP
         OBJECTS     { hpVlanNumber,
                       hpVlanIdentMode,
-                      hpVlanIdentName, 
+                      hpVlanIdentName,
                       hpVlanIdentStatus }
         STATUS      deprecated
         DESCRIPTION "A collection of objects that provide
@@ -392,4 +392,3 @@ HP-VLAN DEFINITIONS ::= BEGIN
         ::= { hpVlanGroups 4 }
 
 END
-

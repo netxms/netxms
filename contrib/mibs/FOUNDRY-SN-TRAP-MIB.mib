@@ -35,8 +35,8 @@ IMPORTS
    snOspfNbrRtrId,
    snOspfNbrState,
    snOspfVirtNbrArea,
-   snOspfVirtNbrRtrId, 
-   snOspfVirtNbrState, 
+   snOspfVirtNbrRtrId,
+   snOspfVirtNbrState,
    snOspfPacketSrc,
    snOspfConfigErrorType,
    snOspfPacketType,
@@ -47,7 +47,7 @@ IMPORTS
    snOspfExtLsdbLimit	  FROM FOUNDRY-SN-OSPF-GROUP-MIB
    snL4MaxSessionLimit,
    snL4TcpSynLimit,
-   snL4TrapRealServerIP, 
+   snL4TrapRealServerIP,
    snL4TrapRealServerName,
    snL4TrapRealServerPort,
    snL4TrapRealServerCurConnections FROM FOUNDRY-SN-SW-L4-SWITCH-GROUP-MIB;
@@ -64,7 +64,7 @@ snTrapChasPwrSupply TRAP-TYPE
        "The SNMP trap that is generated when a power supply fails
         to operate normally. The value is a packed bit string;
         the 2 power supplies status are encoded into 4 bits
-        (a nibble). 
+        (a nibble).
         The following shows the meaning of each bit:
         (bit 0 is the least significant bit).
         bit position   meaning

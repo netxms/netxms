@@ -3,7 +3,7 @@
 S5-ETH-MULTISEG-TOPOLOGY-MIB DEFINITIONS ::= BEGIN
 
 -- 5000 Ethernet Multi-segment MIB Release 1.0.4
--- Revision 03/05/98 
+-- Revision 03/05/98
 
 -- Copyright 1995, 96, 97 Bay Networks, Inc.
 -- All rights reserved.
@@ -69,7 +69,7 @@ s5EnMsTopStatus OBJECT-TYPE
 		multi-segment topology. The values are:
 		  topOn(1)....topology is on
 		  topOff(2)...topology is off
-		When the value is topOff(2) the status of 	
+		When the value is topOff(2) the status of
 		topology table entries is undefined.  However, the
 		agent should make its best attempt when the value is
 		changed to topOff(2) to remove all existing instances
@@ -180,7 +180,7 @@ S5EnMsTopNmmEntry ::= SEQUENCE {
 	s5EnMsTopNmmPort INTEGER,
 	s5EnMsTopNmmIpAddr IpAddress,
 	s5EnMsTopNmmSegId INTEGER,
-	s5EnMsTopNmmMacAddr  MacAddress, 
+	s5EnMsTopNmmMacAddr  MacAddress,
 	s5EnMsTopNmmChassisType SnpxChassisType,
 	s5EnMsTopNmmBkplType SnpxBackplaneType,
 	s5EnMsTopNmmLocalSeg INTEGER,
@@ -207,7 +207,7 @@ s5EnMsTopNmmPort OBJECT-TYPE
 	ACCESS	read-only
 	STATUS	mandatory
 	DESCRIPTION
-		"The port on which the topology message 
+		"The port on which the topology message
 		was received.
 
 		NOTE: there is an artificial 'row' for the reporting
@@ -236,7 +236,7 @@ s5EnMsTopNmmSegId OBJECT-TYPE
 		the SrcIndx of the segment as the segment identifier;
                 switches use a computed a value equal to '(256 * s) + p'
                 where 's' is the board, card or slot number and 'p' is
-                the port number on and as seen by the switch sending the 
+                the port number on and as seen by the switch sending the
                 topology message;
 		system 3000 NMMs use the lower three bytes of the MAC
 		address of the NMM as the segment identifier.  In any
@@ -669,7 +669,7 @@ s5EnMsTopSrcMacAddrEntry OBJECT-TYPE
 	ACCESS	not-accessible
 	STATUS	mandatory
 	DESCRIPTION
-		"A row in the table of MAC address-to-segment mappings. 
+		"A row in the table of MAC address-to-segment mappings.
 		Entries in the table can not be created or deleted
 		via SNMP."
 	INDEX	{ s5EnMsTopSrcMacAddr }
@@ -689,11 +689,11 @@ s5EnMsTopSrcMacAddr OBJECT-TYPE
 	::= { s5EnMsTopSrcMacAddrEntry 1 }
 
 s5EnMsTopSrcMacSegId OBJECT-TYPE
-	SYNTAX	INTEGER (0..16777215) 
+	SYNTAX	INTEGER (0..16777215)
 	ACCESS	read-only
 	STATUS	mandatory
 	DESCRIPTION
-		"The 'segment-identifier' of the segment 
+		"The 'segment-identifier' of the segment
 		on which topology messages were transmitted."
 	::= { s5EnMsTopSrcMacAddrEntry 2 }
 
@@ -702,7 +702,7 @@ s5EnMsTopSrcMacAddrLstChg OBJECT-TYPE
 	ACCESS	read-only
 	STATUS	mandatory
 	DESCRIPTION
-		"The value of sysUpTime when an entry in the 
+		"The value of sysUpTime when an entry in the
 		table s5EnMsTopSrcMacAddrTable was last changed.
 		If no changes have been done since cold/warm start
 		of the agent, then the value is zero."

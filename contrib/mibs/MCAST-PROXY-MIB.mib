@@ -22,7 +22,7 @@
 --
 -- Version 1.00, 2009/04/14, Phoenix Xie
 -- This is the first formal version for universal MIB definition.
--- Notes:Requested by Phoenix Xie for project DES3700	
+-- Notes:Requested by Phoenix Xie for project DES3700
 -- -----------------------------------------------------------------------------
 
 MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
@@ -34,7 +34,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         Ipv6Address			  FROM IPV6-TC
         PortList,VlanId		  FROM Q-BRIDGE-MIB
         dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
-    	
+
     swMcastProxyMIB MODULE-IDENTITY
           LAST-UPDATED "0904141704Z"
           ORGANIZATION "D-Link Corp."
@@ -51,7 +51,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
     swMcastProxyCtrl             OBJECT IDENTIFIER ::= { swMcastProxyMIB 1 }
     swMcastProxyInfo             OBJECT IDENTIFIER ::= { swMcastProxyMIB 2 }
     swMcastProxyMgmt             OBJECT IDENTIFIER ::= { swMcastProxyMIB 3 }
-		 		
+
 -- -----------------------------------------------------------------------------
 -- swMcastProxyCtrl             OBJECT IDENTIFIER ::= { swMcastProxyMIB 1 }
 -- -----------------------------------------------------------------------------
@@ -89,7 +89,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
 -- -----------------------------------------------------------------------------
 
     swIGMPProxyInfo		OBJECT IDENTIFIER ::= { swMcastProxyInfo 1 }
-                                                                                              	
+
 -- -----------------------------------------------------------------------------
 -- swIGMPProxyGroupTable		OBJECT-TYPE ::= { swIGMPProxyInfo 1 }
 -- -----------------------------------------------------------------------------
@@ -135,7 +135,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the destination IP Address of the group entry of
             IGMP Proxy downstream interface."
-        ::= { swIGMPProxyGroupEntry 1 }	        	
+        ::= { swIGMPProxyGroupEntry 1 }
 
     swIGMPProxyGroupSrcAddr OBJECT-TYPE
         SYNTAX  IpAddress
@@ -145,14 +145,14 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             "This object indicates the source IP Address of the group entry of
             IGMP Proxy downstream interface."
         ::= { swIGMPProxyGroupEntry 2 }
-                	
+
      swIGMPProxyDownstreamVlanID OBJECT-TYPE
         SYNTAX  VlanId
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
             "This object indicates the VLAN ID of IGMP Proxy downstream VLAN."
-        ::= { swIGMPProxyGroupEntry 3 }	        	
+        ::= { swIGMPProxyGroupEntry 3 }
 
     swIGMPProxyDownstreamVlanMemberPorts OBJECT-TYPE
         SYNTAX  PortList
@@ -161,7 +161,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the member port list of IGMP Proxy downstream VLAN."
         ::= { swIGMPProxyGroupEntry 4 }
-        
+
     swIGMPProxyGroupStatus OBJECT-TYPE
         SYNTAX  INTEGER{
                 active(1),
@@ -178,7 +178,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
 -- -----------------------------------------------------------------------------
 
     swMLDProxyInfo		OBJECT IDENTIFIER ::= { swMcastProxyInfo 2 }
-                                                                                              	
+
 -- -----------------------------------------------------------------------------
 -- swMLDProxyGroupTable		OBJECT-TYPE ::= { swMLDProxyInfo 1 }
 -- -----------------------------------------------------------------------------
@@ -224,7 +224,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the destination IPv6 Address of the group entry of
             MLD Proxy downstream interface."
-        ::= { swMLDProxyGroupEntry 1 }	        	
+        ::= { swMLDProxyGroupEntry 1 }
 
     swMLDProxyGroupSrcAddr OBJECT-TYPE
         SYNTAX  Ipv6Address
@@ -234,14 +234,14 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             "This object indicates the source IPv6 Address of the group entry of
             MLD Proxy downstream interface."
         ::= { swMLDProxyGroupEntry 2 }
-                	
+
      swMLDProxyDownstreamVlanID OBJECT-TYPE
         SYNTAX  VlanId
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
             "This object indicates the VLAN ID of MLD Proxy downstream VLAN."
-        ::= { swMLDProxyGroupEntry 3 }	        	
+        ::= { swMLDProxyGroupEntry 3 }
 
     swMLDProxyDownstreamVlanMemberPorts OBJECT-TYPE
         SYNTAX  PortList
@@ -250,7 +250,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the member port list of MLD Proxy downstream VLAN."
         ::= { swMLDProxyGroupEntry 4 }
-        
+
     swMLDProxyGroupStatus OBJECT-TYPE
         SYNTAX  INTEGER{
                 active(1),
@@ -261,7 +261,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the status whether the MLD group has been inserted into the chip successfully."
         ::= { swMLDProxyGroupEntry 5 }
-        
+
 -- -----------------------------------------------------------------------------
 -- swMcastProxyMgmt            OBJECT IDENTIFIER ::= { swMcastProxyMIB 3 }
 -- -----------------------------------------------------------------------------
@@ -271,7 +271,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
 -- -----------------------------------------------------------------------------
 
    swIGMPProxyMgmt		OBJECT IDENTIFIER ::= { swMcastProxyMgmt 1 }
- 		
+
 -- -----------------------------------------------------------------------------
 -- swIGMPProxyUpstreamInterfaceTable	OBJECT-TYPE ::= { swIGMPProxyMgmt 1 }
 -- -----------------------------------------------------------------------------
@@ -298,7 +298,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             swIGMPProxyUpstreamIndex
                 INTEGER,
             swIGMPProxyUpstreamVlanID
-            	VlanId,	
+            	VlanId,
             swIGMPProxyUpstreamDynamicRouterPorts
                 PortList,
             swIGMPProxyUpstreamStaticRouterPorts
@@ -306,7 +306,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             swIGMPProxyUpstreamUnsolicitedReportInterval
                 INTEGER,
 	    swIGMPProxyUpstreamSourceIP
-		IpAddress		
+		IpAddress
         }
 
      swIGMPProxyUpstreamIndex OBJECT-TYPE
@@ -317,7 +317,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             "This object indicates the index of IGMP Proxy Upstream interface
              entry. "
         ::= { swIGMPProxyUpstreamInterfaceEntry 1 }
-        
+
     swIGMPProxyUpstreamVlanID OBJECT-TYPE
         SYNTAX  VlanId
         MAX-ACCESS  read-write
@@ -325,8 +325,8 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the VLAN ID of the IGMP Proxy Upstream interface
              entry."
-        ::= { swIGMPProxyUpstreamInterfaceEntry 2 }	
-        	
+        ::= { swIGMPProxyUpstreamInterfaceEntry 2 }
+
     swIGMPProxyUpstreamDynamicRouterPorts OBJECT-TYPE
         SYNTAX  PortList
         MAX-ACCESS  read-only
@@ -334,7 +334,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the dynamic router port list of the IGMP Proxy
             Upstream Interface."
-        ::= { swIGMPProxyUpstreamInterfaceEntry 3 }	
+        ::= { swIGMPProxyUpstreamInterfaceEntry 3 }
 
     swIGMPProxyUpstreamStaticRouterPorts OBJECT-TYPE
         SYNTAX  PortList
@@ -343,7 +343,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the static router port list of the IGMP Proxy
             Upstream Interface."
-        ::= { swIGMPProxyUpstreamInterfaceEntry 4 }		
+        ::= { swIGMPProxyUpstreamInterfaceEntry 4 }
 
     swIGMPProxyUpstreamUnsolicitedReportInterval OBJECT-TYPE
         SYNTAX  INTEGER (0..25)
@@ -353,7 +353,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             "This object indicates the time between repetitions of the host's initial
             report of membership in a group."
         DEFVAL {10}
-        ::= { swIGMPProxyUpstreamInterfaceEntry 5 }	
+        ::= { swIGMPProxyUpstreamInterfaceEntry 5 }
 
     swIGMPProxyUpstreamSourceIP OBJECT-TYPE
         SYNTAX  IpAddress
@@ -361,7 +361,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the source IP of the upstream interface's IGMP packets."
-        ::= { swIGMPProxyUpstreamInterfaceEntry 6 }	
+        ::= { swIGMPProxyUpstreamInterfaceEntry 6 }
 
 
 -- -----------------------------------------------------------------------------
@@ -390,7 +390,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             swIGMPProxyDownstreamRowStatus
                 RowStatus
                  }
-    
+
     swIGMPProxyDownstreamRowStatus OBJECT-TYPE
        SYNTAX  RowStatus
        MAX-ACCESS read-create
@@ -398,13 +398,13 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
        DESCRIPTION
            "This object indicates the status of this entry."
        ::= {swIGMPProxyDownstreamInterfaceEntry 1 }
-       
+
 -- -----------------------------------------------------------------------------
 -- swMLDProxyMgmt		OBJECT IDENTIFIER ::= { swMcastProxyMgmt 2 }
 -- -----------------------------------------------------------------------------
 
    swMLDProxyMgmt		OBJECT IDENTIFIER ::= { swMcastProxyMgmt 2 }
- 		
+
 -- -----------------------------------------------------------------------------
 -- swMLDProxyUpstreamInterfaceTable	OBJECT-TYPE ::= { swMLDProxyMgmt 1 }
 -- -----------------------------------------------------------------------------
@@ -431,7 +431,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             swMLDProxyUpstreamIndex
                 INTEGER,
             swMLDProxyUpstreamVlanID
-            	VlanId,	
+            	VlanId,
             swMLDProxyUpstreamDynamicRouterPorts
                 PortList,
             swMLDProxyUpstreamStaticRouterPorts
@@ -439,7 +439,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             swMLDProxyUpstreamUnsolicitedReportInterval
                 INTEGER,
 	    swMLDProxyUpstreamSourceIP
-		Ipv6Address		
+		Ipv6Address
         }
 
      swMLDProxyUpstreamIndex OBJECT-TYPE
@@ -450,7 +450,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             "This object indicates the index of MLD Proxy Upstream interface
              entry. "
         ::= { swMLDProxyUpstreamInterfaceEntry 1 }
-        
+
     swMLDProxyUpstreamVlanID OBJECT-TYPE
         SYNTAX  VlanId
         MAX-ACCESS  read-write
@@ -458,8 +458,8 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the VLAN ID of the MLD Proxy Upstream interface
              entry."
-        ::= { swMLDProxyUpstreamInterfaceEntry 2 }	
-        	
+        ::= { swMLDProxyUpstreamInterfaceEntry 2 }
+
     swMLDProxyUpstreamDynamicRouterPorts OBJECT-TYPE
         SYNTAX  PortList
         MAX-ACCESS  read-only
@@ -467,7 +467,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the dynamic router port list of the MLD Proxy
             Upstream Interface."
-        ::= { swMLDProxyUpstreamInterfaceEntry 3 }	
+        ::= { swMLDProxyUpstreamInterfaceEntry 3 }
 
     swMLDProxyUpstreamStaticRouterPorts OBJECT-TYPE
         SYNTAX  PortList
@@ -476,7 +476,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the static router port list of the MLD Proxy
             Upstream Interface."
-        ::= { swMLDProxyUpstreamInterfaceEntry 4 }		
+        ::= { swMLDProxyUpstreamInterfaceEntry 4 }
 
     swMLDProxyUpstreamUnsolicitedReportInterval OBJECT-TYPE
         SYNTAX  INTEGER (0..25)
@@ -485,8 +485,8 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the time between repetitions of the host's initial
             report of membership in a group."
-	DEFVAL{10}           
-        ::= { swMLDProxyUpstreamInterfaceEntry 5 }	
+	DEFVAL{10}
+        ::= { swMLDProxyUpstreamInterfaceEntry 5 }
 
     swMLDProxyUpstreamSourceIP OBJECT-TYPE
         SYNTAX  Ipv6Address
@@ -494,7 +494,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the source IP of the upstream interface's MLD packets."
-        ::= { swMLDProxyUpstreamInterfaceEntry 6 }	
+        ::= { swMLDProxyUpstreamInterfaceEntry 6 }
 
 
 -- -----------------------------------------------------------------------------
@@ -523,7 +523,7 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
             swMLDProxyDownstreamRowStatus
                 RowStatus
                  }
-                 
+
    swMLDProxyDownstreamRowStatus OBJECT-TYPE
        SYNTAX  RowStatus
        MAX-ACCESS read-create
@@ -531,5 +531,5 @@ MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
        DESCRIPTION
            "This object indicates the status of this entry."
        ::= {swMLDProxyDownstreamInterfaceEntry 1 }
-       
+
 END

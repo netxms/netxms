@@ -8,16 +8,16 @@ IMPORTS
         FROM SNMPv2-TC;
 
 lldpV2TcMIB MODULE-IDENTITY
-    LAST-UPDATED "200906080000Z" -- June 08, 2009 
+    LAST-UPDATED "200906080000Z" -- June 08, 2009
 -- <<Editor's Note: Date will need updating before publication>>
     ORGANIZATION "IEEE 802.1 Working Group"
-    CONTACT-INFO 
+    CONTACT-INFO
             "WG-URL: http://grouper.ieee.org/groups/802/1/index.html
              WG-EMail: STDS-802-1-L@LISTSERV.IEEE.ORG
 
              Contact: Tony Jeffree
              Postal:  11a Poplar Grove
-                      Sale 
+                      Sale
                       Cheshire M33 3AX
                       UK
              Tel:     +44-161-973-4278
@@ -47,7 +47,7 @@ lldpV2TcMIB MODULE-IDENTITY
             "Published as part of IEEE Std 802.1AB-2009 revision."
 
    ::= { org ieee(111) standards-association-numbers-series-standards(2)
-         lan-man-stds(802) ieee802dot1(1) 1 12 } 
+         lan-man-stds(802) ieee802dot1(1) 1 12 }
 
 --
 -- Definition of the root OID arc for IEEE 802.1 MIBs
@@ -57,11 +57,11 @@ ieee802dot1mibs OBJECT IDENTIFIER
     ::= { org ieee(111) standards-association-numbers-series-standards(2)
           lan-man-stds(802) ieee802dot1(1) 1 }
 
--- 
+--
 -- ***********************************************************
--- 
+--
 -- Textual Conventions
--- 
+--
 -- ***********************************************************
 
 LldpV2ChassisIdSubtype ::= TEXTUAL-CONVENTION
@@ -273,7 +273,7 @@ LldpV2ManAddrIfSubtype ::= TEXTUAL-CONVENTION
             interface number object.
 
             The enumeration 'unknown(1)' represents the case where the
-            interface is not known. In this case, the corresponding 
+            interface is not known. In this case, the corresponding
             interface number is of zero length.
 
             The enumeration 'ifIndex(2)' represents interface identifier
@@ -281,9 +281,9 @@ LldpV2ManAddrIfSubtype ::= TEXTUAL-CONVENTION
 
             The enumeration 'systemPortNumber(3)' represents interface
             identifier based on the system port numbering convention."
-    REFERENCE 
+    REFERENCE
             "8.5.9.5"
-            
+
     SYNTAX  INTEGER {
             unknown(1),
             ifIndex(2),
@@ -320,7 +320,7 @@ LldpV2SystemCapabilitiesMap ::= TEXTUAL-CONVENTION
             The bit 'bridge(2)' indicates that the system has bridge
             capability.
 
-            The bit 'wlanAccessPoint(3)' indicates that the system has 
+            The bit 'wlanAccessPoint(3)' indicates that the system has
             WLAN access point capability.
 
             The bit 'router(4)' indicates that the system has router
@@ -367,7 +367,7 @@ LldpV2DestAddressTableIndex ::= TEXTUAL-CONVENTION
             MAC addresses used both as the destination addresses on
             transmitted LLDPDUs and on received LLDPDUs. This index value
             is also used as a secondary index value in tables indexed
-            by fields of type  ifIndex, in order to associate 
+            by fields of type  ifIndex, in order to associate
             a destination address with each row of the table."
     SYNTAX  Unsigned32(1..4096)
 
@@ -377,7 +377,7 @@ LldpV2LinkAggStatusMap ::= TEXTUAL-CONVENTION
             "This TC describes the link aggregation status.
 
             The bit 'aggCapable(0)' indicates the link is capable of being
-            aggregated. 
+            aggregated.
 
             The bit 'aggEnabled(1)' indicates the link is currently in
             aggregation."

@@ -89,7 +89,7 @@ hh3clldpPortConfigEntry   OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "LLDP extended configuration information for a particular port. This co-
-        nfiguration parameter controls compliance with other non-standard link 
+        nfiguration parameter controls compliance with other non-standard link
         layer discovery protocol such as CDP."
     INDEX  { hh3clldpPortConfigPortNum }
     ::= { hh3clldpPortConfigTable 1 }
@@ -116,9 +116,9 @@ hh3clldpPortConfigCDPComplianceStatus  OBJECT-TYPE
     STATUS     current
     DESCRIPTION
         "The administratively desired CDP Compliance status of the local LLDP a-
-        gent. If the associated hh3clldpPortConfigCDPComplianceStatus object has 
+        gent. If the associated hh3clldpPortConfigCDPComplianceStatus object has
         a value of 'txAndRx', then the LLDP agent will receive CDP frames on th-
-        is port, and will transmit CDP frames only after receive a CDP frames. 
+        is port, and will transmit CDP frames only after receive a CDP frames.
         If the associated lldpPortConfigAdminStatus object has a value of 'disa-
         bled', LLDP agent will not transmit or receive CDP frames on this port."
    DEFVAL  { disabled }

@@ -1,8 +1,8 @@
---/* 
+--/*
 -- * $RCSfile: extreme.mib,v $ - ExtremeWare enterprise MIB
 -- *
 -- * Copyright (c) 1997 - 2002 by Extreme Networks Inc.
--- * 
+-- *
 -- *	  Extreme Networks
 -- *      http://www.extremenetworks.com
 -- *
@@ -1017,11 +1017,11 @@
 -- * Revision 1.61  2001/08/03 21:09:14  agidwani
 -- * Re-checkin of PR14214. Had missed out a few traps during earlier check-in.
 -- * Revision 1.60  2001/07/25 17:41:40  agidwani
--- * Updated the mib descriptions for PRs 12284 and 15624. Also filled up the descriptions across the whole mib that had been left blank earlier. 
+-- * Updated the mib descriptions for PRs 12284 and 15624. Also filled up the descriptions across the whole mib that had been left blank earlier.
 -- * Revision 1.59  2001/07/19 22:21:58  agidwani
 -- * MIB changes for PRs 12551, 13695 and 15266. Also added some ESRP descriptions that were blank earlier.
 -- * Revision 1.58  2001/07/16 17:25:53  agidwani
--- * Fixed PR15237. The v2 traps are moved to a MIB of their own. Their OIDs remain the same though. Also extremeCore references are changed to extremeCoreSC. 
+-- * Fixed PR15237. The v2 traps are moved to a MIB of their own. Their OIDs remain the same though. Also extremeCore references are changed to extremeCoreSC.
 -- * Revision 1.57  2001/07/03 18:22:24  agidwani
 -- * Fixed PR's 15084 and 14214. For the former, added an extra 0 to the v2 trap oid root.
 -- * Revision 1.56  2001/06/15 16:47:28  agidwani
@@ -1115,7 +1115,7 @@
 -- * the mib syntax from SMI v1 to SMI v2.
 -- * Revision 1.11  1999/09/20 22:54:54  ibagchi
 -- * Removed extremePortSummitlink and extremeVCLinkTables for
--- * 6.0. These tables will not be supported on NG. 
+-- * 6.0. These tables will not be supported on NG.
 -- * Revision 1.10  1999/09/14 20:32:13  ibagchi
 -- * Removed additional attributes from the extremeQosProfileTable.
 -- * Need to discuss their mapping in the new hardware. Almost sure
@@ -1214,17 +1214,17 @@ EXTREME-BASE-MIB DEFINITIONS ::= BEGIN
 
 
 	--  Organization & Product branches
-    
+
         extremenetworks		OBJECT IDENTIFIER ::= { enterprises 1916 }
         extremeV1Traps            OBJECT IDENTIFIER ::= { extremenetworks 0 }
 	extremeAgent            OBJECT IDENTIFIER ::= { extremenetworks 1 }
 	extremeProduct          OBJECT IDENTIFIER ::= { extremenetworks 2 }
 	extremeMisc             OBJECT IDENTIFIER ::= { extremenetworks 3 }
-   	extremeV2Traps	        OBJECT IDENTIFIER ::= { extremenetworks 4 } 
+   	extremeV2Traps	        OBJECT IDENTIFIER ::= { extremenetworks 4 }
 
     --
     -- Extreme Products
-    --    
+    --
     summit1			OBJECT IDENTIFIER ::= { extremeProduct 1 }
                         -- 8 x 1Gbps
 
@@ -1283,7 +1283,7 @@ EXTREME-BASE-MIB DEFINITIONS ::= BEGIN
                     -- 4 x 1Gbps GBIC, 12 x 10/100/1000 Base-TX inferno chipset
 
 	enetSwitch24Port	OBJECT IDENTIFIER ::= { extremeProduct 23 }
-		    --  24 x 10/100 Mbps  
+		    --  24 x 10/100 Mbps
 
 	blackDiamond6816 	OBJECT IDENTIFIER ::= { extremeProduct 24 }
                     -- black diamond with 4 msm's and 16 switching cards
@@ -1299,7 +1299,7 @@ EXTREME-BASE-MIB DEFINITIONS ::= BEGIN
 
 	summit48si		OBJECT IDENTIFIER ::= { extremeProduct 28 }
 		    -- 2 x 1Gbps GBIC, 48 x 10/100Mbps, 1u
-        	
+
 	summitPx1		OBJECT IDENTIFIER ::= { extremeProduct 30 }
 		    --	1 x 1Gbps GBIC
 
@@ -1311,22 +1311,22 @@ EXTREME-BASE-MIB DEFINITIONS ::= BEGIN
 		    --  2 x 1Gbps GBIC, 24 x 10/100 Base-TX
         summit200-24    OBJECT IDENTIFIER ::= { extremeProduct 53 }
                     --  2 x 1Gbps GBIC, 24 x 10/100 Base-TX
- 
+
         summit200-48    OBJECT IDENTIFIER ::= { extremeProduct 54 }
                     --  2 x 1Gbps GBIC, 48 x 10/100 Base-TX
- 
+
         summit400-48t   OBJECT IDENTIFIER ::= { extremeProduct 58 }
                     --  4 x 1Gbps fiber/copper, 44 x 1000 Base-T
- 
+
         summit400-24x   OBJECT IDENTIFIER ::= { extremeProduct 59 }
                     --  4 x 1Gbps fiber/copper, 20 x 1Gbps fiber
-                    
+
         summit400-24t   OBJECT IDENTIFIER ::= { extremeProduct 63 }
                     --  4 x 1Gbps fiber/copper, 20 x 1Gbps fiber
-                    
+
         summit400-24p   OBJECT IDENTIFIER ::= { extremeProduct 64 }
                     --  4 x 1Gbps fiber/copper, 20 x 1Gbps fiber
-                    
+
         summit300-24   OBJECT IDENTIFIER ::= { extremeProduct 61 }
                     --  2 x 1Gbps GBIC, 24 x 10/100 Base-TX POE
 
@@ -1466,7 +1466,7 @@ L4Port ::= TEXTUAL-CONVENTION
         STATUS  current
         DESCRIPTION
            "The value of a transport layer (layer-4) port number, in network
-           byte order. A value of 0 indicates all allowed values of this 
+           byte order. A value of 0 indicates all allowed values of this
            field i.e. wildcard."
         SYNTAX  INTEGER (0|1..65535)
 
@@ -1487,7 +1487,7 @@ WPACipherSet ::= TEXTUAL-CONVENTION
 	DESCRIPTION
 		"A set of supported ciphers which can be advertised
 	 	 by WPA stations.  Each set bit indicates support for
-		 a given cipher suite.  The special value none is 
+		 a given cipher suite.  The special value none is
 		 allowed for representing the absence of information.
 		 The value other is used to indicate an unknown cipher."
 	SYNTAX BITS {
@@ -1528,7 +1528,7 @@ SYNTAX INTEGER { none(0),
 WirelessRemoteConnectBindingType ::= TEXTUAL-CONVENTION
 STATUS current
 DESCRIPTION "The type of binding to be used when mapping APs to virtual ports"
-SYNTAX INTEGER { 
+SYNTAX INTEGER {
     none(0),
     mac-address(1),
     serial-number(2),
@@ -1542,4 +1542,3 @@ END
 --
 -- Extreme System objects
 --
-

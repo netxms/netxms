@@ -59,7 +59,7 @@ IMPORTS
             "This object enables or disables the DHCPv6 Server state
              of the device."
     	::= { swDHCPv6ServerStateCtrl 1 }
-  
+
     swDHCPv6ServerCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwDHCPv6ServerCtrlEntry
         MAX-ACCESS  not-accessible
@@ -95,7 +95,7 @@ IMPORTS
 
     swDHCPv6ServerCtrlState OBJECT-TYPE
         SYNTAX  INTEGER {
-	               enabled(1),   
+	               enabled(1),
 	               disabled(2)
                 }
         MAX-ACCESS  read-write
@@ -146,7 +146,7 @@ SwDHCPv6ServerPoolEntry ::=
         	Unsigned32,
         swDHCPv6ServerPoolValidLifetime
             Unsigned32,
-        swDHCPv6ServerPoolRowStatus 
+        swDHCPv6ServerPoolRowStatus
         	RowStatus
         }
 
@@ -195,7 +195,7 @@ swDHCPv6ServerPoolPreferredLifetime OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-        "The amount of time (in seconds) that the IPv6 address, 
+        "The amount of time (in seconds) that the IPv6 address,
         based on the specified pool, remains in the preferred state."
     ::= { swDHCPv6ServerPoolEntry 6 }
 
@@ -204,7 +204,7 @@ swDHCPv6ServerPoolValidLifetime OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-        "The amount of time (in seconds) that the IPv6 address, 
+        "The amount of time (in seconds) that the IPv6 address,
         based on the specified pool, remains in the valid state."
     ::= { swDHCPv6ServerPoolEntry 7 }
 
@@ -296,7 +296,7 @@ SwDHCPv6ServerManualBindingEntry ::=
     SEQUENCE {
         swDHCPv6ServerManualBindingIpv6Address
             Ipv6Address,
-        swDHCPv6ServerManualBindingDUID 
+        swDHCPv6ServerManualBindingDUID
         	DisplayString,
         swDHCPv6ServerManualBindingRowStatus
         	RowStatus
@@ -353,7 +353,7 @@ SwDHCPv6ServerExcludedAddressEntry ::=
     SEQUENCE {
         swDHCPv6ServerExcludedAddressBegin
             Ipv6Address,
-        swDHCPv6ServerExcludedAddressEnd 
+        swDHCPv6ServerExcludedAddressEnd
         	Ipv6Address,
         swDHCPv6ServerExcludedAddressRowStatus
         	RowStatus
@@ -408,10 +408,10 @@ SwDHCPv6ServerBindingEntry ::=
     SEQUENCE {
         swDHCPv6ServerBindingIpv6Address
         		Ipv6Address,
-        swDHCPv6ServerBindingDUID 
+        swDHCPv6ServerBindingDUID
         		DisplayString,
         swDHCPv6ServerBindingPreferredLifetime
-        		Unsigned32, 
+        		Unsigned32,
         swDHCPv6ServerBindingValidLifetime
         		Unsigned32,
         swDHCPv6ServerBindingClearState
@@ -441,7 +441,7 @@ swDHCPv6ServerBindingPreferredLifetime OBJECT-TYPE
 	DESCRIPTION
 		"The preferred-lifetime of the binding entry in seconds."
 	::= { swDHCPv6ServerBindingEntry 3 }
-                                               
+
 swDHCPv6ServerBindingValidLifetime OBJECT-TYPE
 	SYNTAX  Unsigned32      (60..4294967295)
 	MAX-ACCESS  read-only
@@ -449,7 +449,7 @@ swDHCPv6ServerBindingValidLifetime OBJECT-TYPE
 	DESCRIPTION
 		"The valid-lifetime of the binding entry in seconds."
 	::= { swDHCPv6ServerBindingEntry 4 }
-                                              
+
 swDHCPv6ServerBindingClearState OBJECT-TYPE
 		SYNTAX  INTEGER {
 		none(1),

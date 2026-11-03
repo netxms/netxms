@@ -1,9 +1,9 @@
 -- *****************************************************************
 -- CISCO-VLAN-GROUP-CAPABILITY.my:
 -- Cisco CISCO-VLAN-GROUP-MIB AGENT-CAPABILITIES
---   
+--
 -- March 2010, Binh P Le
---   
+--
 -- Copyright (c) 2010-2012 by Cisco Systems Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -199,9 +199,3 @@ ciscoVlanGroupCapV15R0101SGPCat4k AGENT-CAPABILITIES
     ::= { ciscoVlanGroupCapability 5 }
 
 END
-
-
-
-
-
-

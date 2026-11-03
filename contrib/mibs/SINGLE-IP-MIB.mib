@@ -16,7 +16,7 @@
 --
 -- Version 2.02, 2009/01/21, Eli Lin
 -- [New Object]
--- Add swSingleIPTrapMgmt and swSingleIPTrapStatus for enableing/disable the 
+-- Add swSingleIPTrapMgmt and swSingleIPTrapStatus for enableing/disable the
 -- trap function.
 -- Notes: Requested by Eli for project DES3028
 --
@@ -168,7 +168,7 @@ swSingleIPCtrl OBJECT IDENTIFIER ::= { swSingleIPMgmt 2 }
 -- -----------------------------------------------------------------------------
 -- swSingleIPTrapMgmt
 -- -----------------------------------------------------------------------------
-  
+
   swSingleIPTrapMgmt OBJECT IDENTIFIER ::= { swSingleIPCtrl 6 }
 
   swSingleIPTrapStatus OBJECT-TYPE
@@ -182,7 +182,7 @@ swSingleIPCtrl OBJECT IDENTIFIER ::= { swSingleIPMgmt 2 }
             "When enabled (1), whenever the commander detects a member's trap
              event, a trap will be sent out."
     ::= { swSingleIPTrapMgmt 1 }
-              	
+
 -- -----------------------------------------------------------------------------
 -- swSingleIPMSTable
 -- -----------------------------------------------------------------------------

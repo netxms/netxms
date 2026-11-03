@@ -1,6 +1,6 @@
-DNOS-GREENETHERNET-PRIVATE-MIB DEFINITIONS ::= BEGIN 
-               
-IMPORTS           
+DNOS-GREENETHERNET-PRIVATE-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
     Unsigned32, Integer32               FROM SNMPv2-SMI
     TEXTUAL-CONVENTION                  FROM SNMPv2-TC
@@ -51,7 +51,7 @@ IMPORTS
 	AgentGreenEthernetEntry::= SEQUENCE {
 		agentEthernetIntfIndex
 		    INTEGER,
-		agentGreenEnergyDetectMode         
+		agentGreenEnergyDetectMode
 		    INTEGER,
                 agentGreenEnergyDetectOperStatus
                     INTEGER,
@@ -72,14 +72,14 @@ IMPORTS
          MAX-ACCESS  not-accessible
 	     STATUS      current
 	     DESCRIPTION
-			 "This is a unique index for an entry in the agentGreenEthernetTable. 
+			 "This is a unique index for an entry in the agentGreenEthernetTable.
                           A non-zero value indicates the ifIndex for the corresponding interface
                           entry in the ifTable.  A value of zero represents global configuration,
-                          which in turn causes all interface entries to be updated for a set operation, 
+                          which in turn causes all interface entries to be updated for a set operation,
                           or reflects the most recent global setting for a get operation."
 		 ::= { agentGreenEthernetEntry 1 }
 
-    agentGreenEnergyDetectMode         OBJECT-TYPE 
+    agentGreenEnergyDetectMode         OBJECT-TYPE
 	     SYNTAX      INTEGER {
 			 enable(1),
 			 disable(0),
@@ -88,7 +88,7 @@ IMPORTS
 	     MAX-ACCESS  read-write
 	     STATUS      current
 	     DESCRIPTION
-			 "Enable or disable Energy Detect Mode. If Energy detect Mode is not supported 
+			 "Enable or disable Energy Detect Mode. If Energy detect Mode is not supported
                           on a particular port then not-applicable is displayed. When user tries to set not-applicable(2) then it returns failure."
 	     ::= { agentGreenEthernetEntry 2 }
 
@@ -118,7 +118,7 @@ IMPORTS
              ::= { agentGreenEthernetEntry 4}
 
 
-agentGreenEeeMode         OBJECT-TYPE 
+agentGreenEeeMode         OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
                      disable(0),
@@ -127,7 +127,7 @@ agentGreenEeeMode         OBJECT-TYPE
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-"Enable or disable Energy Efficient Ethernet Mode. If EEE Mode is not supported  
+"Enable or disable Energy Efficient Ethernet Mode. If EEE Mode is not supported
                           on a particular port then not-applicable is displayed. When user tries to set not-applicable(2) then it returns failure."
 
          ::= { agentGreenEthernetEntry 9 }
@@ -141,17 +141,17 @@ agentGreenEeeTxWakeTime         OBJECT-TYPE
 
          ::= { agentGreenEthernetEntry 10 }
 
-agentGreenEeeTxIdleTime         OBJECT-TYPE 
+agentGreenEeeTxIdleTime         OBJECT-TYPE
          SYNTAX      Unsigned32
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-"Time for which condition to move to LPI state is satisfied, at the end of which MAC TX transitions to LPI state. The value 
+"Time for which condition to move to LPI state is satisfied, at the end of which MAC TX transitions to LPI state. The value
 of this object must be a positive integer in the range from 600 to 4294967295."
 
          ::= { agentGreenEthernetEntry 11 }
 
-agentGreenCumEnergySaving         OBJECT-TYPE 
+agentGreenCumEnergySaving         OBJECT-TYPE
          SYNTAX      INTEGER
          MAX-ACCESS  read-only
          STATUS      current
@@ -187,7 +187,7 @@ agentGreenIntfEeeLpiHistoryEntry OBJECT-TYPE
          SEQUENCE {
             agentGreenEeeLpiHistoryIntfIndex
                 INTEGER,
-            agentGreenEeeLpiHistoryIntfSampleIndex         
+            agentGreenEeeLpiHistoryIntfSampleIndex
                 INTEGER,
             agentGreenEeeLpiHistoryIntfSampleTime
                 DisplayString,
@@ -202,24 +202,24 @@ agentGreenEeeLpiHistoryIntfIndex OBJECT-TYPE
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-            "This is a unique index for an entry in the agentGreenEthernetTable. 
-            A non-zero value indicates the ifIndex for the corresponding interface 
+            "This is a unique index for an entry in the agentGreenEthernetTable.
+            A non-zero value indicates the ifIndex for the corresponding interface
             entry in the ifTable."
 
          ::= { agentGreenIntfEeeLpiHistoryEntry 1 }
 
-agentGreenEeeLpiHistoryIntfSampleIndex         OBJECT-TYPE 
+agentGreenEeeLpiHistoryIntfSampleIndex         OBJECT-TYPE
          SYNTAX      INTEGER (1..2147483647)
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-            "This is a unique index for an entry in the agentGreenEthernetTable. 
-            A non-zero value indicates the sampleIndex for the corresponding sample 
+            "This is a unique index for an entry in the agentGreenEthernetTable.
+            A non-zero value indicates the sampleIndex for the corresponding sample
             entry in the Power Saving History Table."
 
          ::= { agentGreenIntfEeeLpiHistoryEntry 2 }
 
-agentGreenEeeLpiHistoryIntfSampleTime         OBJECT-TYPE 
+agentGreenEeeLpiHistoryIntfSampleTime         OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(1..32))
          MAX-ACCESS  read-only
          STATUS      current
@@ -228,7 +228,7 @@ agentGreenEeeLpiHistoryIntfSampleTime         OBJECT-TYPE
 
          ::= { agentGreenIntfEeeLpiHistoryEntry 3}
 
-agentGreenEeeLpiHistoryIntfPercentLpiTime         OBJECT-TYPE 
+agentGreenEeeLpiHistoryIntfPercentLpiTime         OBJECT-TYPE
          SYNTAX      INTEGER
          MAX-ACCESS  read-only
          STATUS      current
@@ -237,7 +237,7 @@ agentGreenEeeLpiHistoryIntfPercentLpiTime         OBJECT-TYPE
 
          ::= { agentGreenIntfEeeLpiHistoryEntry 4 }
 
-agentGreenEeeLpiHistoryIntfPercentLpiTimeTotal         OBJECT-TYPE 
+agentGreenEeeLpiHistoryIntfPercentLpiTimeTotal         OBJECT-TYPE
          SYNTAX      INTEGER
          MAX-ACCESS  read-only
          STATUS      current
@@ -247,10 +247,10 @@ agentGreenEeeLpiHistoryIntfPercentLpiTimeTotal         OBJECT-TYPE
          ::= { agentGreenIntfEeeLpiHistoryEntry 5 }
 
  -- scalars
- 
+
  -- Green Ethernet Interface EEE LPI History Configuration table
 
-agentGreenEeeLpiHistoryIntfSampleInterval         OBJECT-TYPE 
+agentGreenEeeLpiHistoryIntfSampleInterval         OBJECT-TYPE
          SYNTAX      INTEGER (30..36000)
          MAX-ACCESS  read-write
          STATUS      current
@@ -259,7 +259,7 @@ agentGreenEeeLpiHistoryIntfSampleInterval         OBJECT-TYPE
 
          ::= { agentGreenEthernet 4 }
 
-agentGreenEeeLpiHistoryIntfMaxSamples         OBJECT-TYPE 
+agentGreenEeeLpiHistoryIntfMaxSamples         OBJECT-TYPE
          SYNTAX      INTEGER (1..168)
          MAX-ACCESS  read-write
          STATUS      current
@@ -267,7 +267,7 @@ agentGreenEeeLpiHistoryIntfMaxSamples         OBJECT-TYPE
             "Maximum number of samples to keep."
 
          ::= { agentGreenEthernet 5 }
-         
+
 --*********************************************************************
 -- Green Ethernet Unit Feature Table
 --
@@ -304,23 +304,23 @@ agentGreenUnitIndex OBJECT-TYPE
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-            "This is a unique index for an entry in the agentGreenUnitFeatureTable. 
-            A non-zero value indicates the unitIndex for the corresponding unit 
+            "This is a unique index for an entry in the agentGreenUnitFeatureTable.
+            A non-zero value indicates the unitIndex for the corresponding unit
             entry in the Green Ethernet Unit Feature Table."
 
          ::= { agentGreenUnitFeatureEntry 1 }
 
-agentGreenFeatureList         OBJECT-TYPE 
+agentGreenFeatureList         OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(1..128))
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
             "List of Green Features supported on the given unit which could be one or more of the following:
-            Energy-Detect (Energy Detect) 
+            Energy-Detect (Energy Detect)
             Short-Reach (Short Reach)
-            EEE (Energy Efficient Ethernet) 
-            LPI-History (EEE Low Power Idle History) 
-            LLDP-Cap-Exchg (EEE LLDP Capability Exchange) 
+            EEE (Energy Efficient Ethernet)
+            LPI-History (EEE Low Power Idle History)
+            LLDP-Cap-Exchg (EEE LLDP Capability Exchange)
             Pwr-Usg-Est (Power Usage Estimates)."
 
          ::= { agentGreenUnitFeatureEntry 2}
@@ -331,7 +331,7 @@ agentGreenFeatureList         OBJECT-TYPE
 --
 --*********************************************************************
 
-agentGreenEeeLpiHistoryLpiTimePerStack         OBJECT-TYPE 
+agentGreenEeeLpiHistoryLpiTimePerStack         OBJECT-TYPE
          SYNTAX      INTEGER (1..100)
          MAX-ACCESS  read-only
          STATUS      current
@@ -340,7 +340,7 @@ agentGreenEeeLpiHistoryLpiTimePerStack         OBJECT-TYPE
 
          ::= { agentGreenEthernet 6 }
 
-agentGreenStackCumEnergySaving         OBJECT-TYPE 
+agentGreenStackCumEnergySaving         OBJECT-TYPE
          SYNTAX      INTEGER
          MAX-ACCESS  read-only
          STATUS      current
@@ -349,7 +349,7 @@ agentGreenStackCumEnergySaving         OBJECT-TYPE
 
          ::= { agentGreenEthernet 7 }
 
-agentGreenStackCurPowerConsumption         OBJECT-TYPE 
+agentGreenStackCurPowerConsumption         OBJECT-TYPE
          SYNTAX      INTEGER
          MAX-ACCESS  read-only
          STATUS      current
@@ -358,7 +358,7 @@ agentGreenStackCurPowerConsumption         OBJECT-TYPE
 
          ::= { agentGreenEthernet 8 }
 
-agentGreenStackPowerSaving         OBJECT-TYPE 
+agentGreenStackPowerSaving         OBJECT-TYPE
          SYNTAX      INTEGER
          MAX-ACCESS  read-only
          STATUS      current

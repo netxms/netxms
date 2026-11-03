@@ -1407,7 +1407,7 @@ PrtAlertCodeTC ::= TEXTUAL-CONVENTION
                 inputMediaSupplyLow(807),
                 inputMediaSupplyEmpty(808),
                 inputMediaChangeRequest(809),
-                    -- An interpreter has detected that a 
+                    -- An interpreter has detected that a
                     -- different medium is need in this input
                     -- tray subunit. The prtAlertDescription may
                     -- be used to convey a human readable
@@ -1420,7 +1420,7 @@ PrtAlertCodeTC ::= TEXTUAL-CONVENTION
                     -- a human readable description of the medium
                     -- required to satisfy the request.
                 inputTrayPositionFailure(811),
-                    -- The input tray failed to position 
+                    -- The input tray failed to position
                     -- correctly.
                 inputTrayElevationFailure(812),
                 inputCannotFeedSizeSelected(813),
@@ -1597,7 +1597,7 @@ prtGeneralCurrentLocalization OBJECT-TYPE
 
  prtGeneralReset OBJECT-TYPE
     -- This value is a type 3 enumeration
-    SYNTAX     PrtGeneralResetTC 
+    SYNTAX     PrtGeneralResetTC
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION

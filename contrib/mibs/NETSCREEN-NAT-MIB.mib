@@ -1,5 +1,5 @@
 -- This module defines enterprise MIBs for NAT
--- 
+--
 -- Copyright (c) 1999-2004, Juniper Networks, Inc.
 -- All rights reserved.
 
@@ -21,7 +21,7 @@ netscreenNATMibModule MODULE-IDENTITY
     CONTACT-INFO
         "Customer Support
 
-         1194 North Mathilda Avenue 
+         1194 North Mathilda Avenue
          Sunnyvale, California 94089-1206
          USA
 
@@ -29,7 +29,7 @@ netscreenNATMibModule MODULE-IDENTITY
          E-mail: customerservice@juniper.net
          HTTP://www.juniper.net"
     DESCRIPTION
-        "Added dip pool utilization attribute" 
+        "Added dip pool utilization attribute"
     REVISION      "200503030000Z" -- March 03, 2005
     DESCRIPTION
         "This module defines the managed objects for Netscreen NAT"
@@ -455,5 +455,3 @@ nsNatVipServerStatus OBJECT-TYPE
     ::= { nsNatVipServerEntry 7 }
 
 END
-
-

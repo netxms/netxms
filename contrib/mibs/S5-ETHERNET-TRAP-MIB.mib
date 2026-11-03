@@ -105,7 +105,7 @@ s5EtrRedPortFailure TRAP-TYPE
 		              port in the redundant pair.
 		  s5EnPortPartStatus, s5EnPortLinkStatus and
 		  s5EnPortJabberStatus..........These values may help
-		              determine the cause of the local fault."  
+		              determine the cause of the local fault."
 	::= 3	-- 0x03
 
 s5EtrRedBadRemCfgDetected TRAP-TYPE
@@ -133,7 +133,7 @@ s5EtrSbsMacAccessViolation TRAP-TYPE
 		"This trap is sent when the switch device detects a
 		Mac_address based security violation on a port set by
 		s5SbsSecurityAction defined in s5sbs100.mib. This trap
-		is sent only once when the condition is first detected. 
+		is sent only once when the condition is first detected.
 		The following values are returned:
 		s5SbsViolationStatusBrdIndx...the Board number on which a security violation was seen.
 		s5SbsViolationStatusPortIndx...the Port number on which a security violation was seen.
@@ -148,9 +148,9 @@ s5EtrMgmAccessViolation TRAP-TYPE
 	DESCRIPTION
 		"This trap is sent when the switch device detects a
 		management access violation on the switch. This trap
-		is sent only once when the condition is first detected. 
+		is sent only once when the condition is first detected.
 		The following values are returned:
-		s5SbsMgmViolationType.....WEB access violation or telnet 
+		s5SbsMgmViolationType.....WEB access violation or telnet
 					access violation or SNMP access violation.
 		s5SbsMgmViolationIpAddress...the invalid IP address."
 	::= 6	-- 0x06
@@ -162,7 +162,7 @@ s5EtrPortManualPart TRAP-TYPE
 --	STATUS		mandatory
 	DESCRIPTION
 		"A port was manually partitioned (wrapped). This
-		trap is sent once when the port is initially 
+		trap is sent once when the port is initially
 		partitioned. The following values are
 		returned:
 		  s5EnPortPartStatus.....the partition status

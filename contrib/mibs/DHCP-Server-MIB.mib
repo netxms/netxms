@@ -13,7 +13,7 @@
 --  [New Object]
 --  [Modification]
 -- Notes: (Requested by who and which project)
--- 
+--
 -- Revision 2.13, 2013/10/15, Lillian Li
 -- [Modification]
 -- [1]. Add default value for node "swDHCPServerPoolNetBIOSNodeType".
@@ -29,9 +29,9 @@
 -- [3].Remove swDHCPServerOptionProfileName and referent swDHCPServerProfileName as index; remove  swDHCPServerPoolOptionPoolName  and referent swDHCPServerProfileName as index, remove swDHCPServerPoolOptionProfileName and referent  swDHCPServerPoolName as index
 -- [4].Add new node swDHCPServerOptionProfile and move table swDHCPServerProfileTable and swDHCPServerOptionTable below this node.
 -- Notes: Requested by Jerry Qin for project DGS-3620
--- 
+--
 -- Revision 2.10, 2012/1/30, Jerry Qin
--- [1]change swDHCPServerVRFName to 
+-- [1]change swDHCPServerVRFName to
 --           swDHCPServerPoolVRFName.
 -- [2]Reserve change of Revision 2.09 and 2.08 of
 --           table swDHCPServerExcludedAddressTable
@@ -41,7 +41,7 @@
 --           table swDHCPServerConflictIPTable
 -- [5]For support VRF lite, Add new table
 --           swDHCPServerVRFConflictIPTable.
--- [6]For support flexible option profile, Add new table 
+-- [6]For support flexible option profile, Add new table
 --           swDHCPServerProfileTable, swDHCPServerOptionTable
 --           and swDHCPServerPoolOptionTable.
 -- Notes: Requested by Jerry Qin for project DGS-3620
@@ -49,17 +49,17 @@
 -- Revision 2.09, 2011/12/28, Jerry Qin
 -- [Modification]
 -- [1]Change swDHCPServerExcludedAddressVRF as index --    of table swDHCPServerExcludedAddressTable.
--- [2]Reserve  VRF name  "reserved" for global address 
---    space and change description of 
+-- [2]Reserve  VRF name  "reserved" for global address
+--    space and change description of
 --      swDHCPServerPoolVRFName,
---     swDHCPServerExcludedAddressVRF and 
+--     swDHCPServerExcludedAddressVRF and
 --     swDHCPServerConflictIPVRFName.
 -- Notes: Requested by Jerry Qin for project DGS-3620
 --
 -- Revision 2.08, 2011/09/22, Jerry
 -- [New Object]
 -- [1]Add object swDHCPServerExcludedAddressVRF,
---    swDHCPServerVRFName and swDHCPServerConflictIPVRFName 
+--    swDHCPServerVRFName and swDHCPServerConflictIPVRFName
 --    to support VRF-lite.
 -- Notes: Requested by Jerry Qin for project DGS-3620
 --
@@ -159,7 +159,7 @@ swDHCPServerPingPktNumber OBJECT-TYPE
     DESCRIPTION
             "This object specifies the number of ping packets
             the DHCP server sends to an IP address before
-            assigning this address to a requesting client. 
+            assigning this address to a requesting client.
             0 means no ping test."
     ::= { swDHCPServerCtrl 2 }
 
@@ -245,7 +245,7 @@ swDHCPServerExcludedAddressStatus OBJECT-TYPE
     DESCRIPTION
         "This object manages this entry."
     ::= { swDHCPServerExcludedAddressEntry 3 }
-    
+
 
 
 -- -----------------------------------------------------------------------------
@@ -418,7 +418,7 @@ swDHCPServerPoolOption43Value OBJECT-TYPE
     DESCRIPTION
         "The value of DHCP server option 43."
     ::= { swDHCPServerPoolEntry 13 }
- 
+
 swDHCPServerPoolVRFName OBJECT-TYPE
     SYNTAX  DisplayString	(SIZE(0..12))
     MAX-ACCESS  read-create
@@ -426,7 +426,7 @@ swDHCPServerPoolVRFName OBJECT-TYPE
     DESCRIPTION
         "The name of virtual routing and forwarding(VRF). Use 'reserved' for global address space."
     ::= { swDHCPServerPoolEntry 14 }
-    
+
 -- -----------------------------------------------------------------------------
 -- swDHCPServerDNSServerAddressTable	 { swDHCPServerPoolMgmt 2 }
 -- -----------------------------------------------------------------------------
@@ -637,7 +637,7 @@ swDHCPServerPoolClassEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-        "By using DHCP class, DHCP server using option to further 
+        "By using DHCP class, DHCP server using option to further
         determine which IP addresses to allocate to clients."
     INDEX { swDHCPServerPoolClassPoolName, swDHCPServerPoolClassName }
     ::= { swDHCPServerPoolClassTable 1 }
@@ -645,10 +645,10 @@ swDHCPServerPoolClassEntry OBJECT-TYPE
 SwDHCPServerPoolClassEntry ::=
     SEQUENCE {
         swDHCPServerPoolClassPoolName
-            DisplayString,   
+            DisplayString,
         swDHCPServerPoolClassName
             DisplayString,
-        swDHCPServerPoolClassAddressBegin 
+        swDHCPServerPoolClassAddressBegin
             IpAddress,
         swDHCPServerPoolClassAddressEnd
             IpAddress,
@@ -664,7 +664,7 @@ swDHCPServerPoolClassPoolName OBJECT-TYPE
     DESCRIPTION
         "The pool name of this entry."
     ::= { swDHCPServerPoolClassEntry 1 }
-    
+
 swDHCPServerPoolClassName OBJECT-TYPE
     SYNTAX  DisplayString	(SIZE(1..12))
     MAX-ACCESS  not-accessible
@@ -672,7 +672,7 @@ swDHCPServerPoolClassName OBJECT-TYPE
     DESCRIPTION
         "DHCP class's name."
     ::= { swDHCPServerPoolClassEntry 2 }
-  
+
 swDHCPServerPoolClassAddressBegin OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-create
@@ -730,7 +730,7 @@ swDHCPServerPoolOptionRowStatus OBJECT-TYPE
 	DESCRIPTION
 		"This object manages this entry."
 	::= { swDHCPServerPoolOptionEntry 1 }
-    
+
 -- -----------------------------------------------------------------------------
 -- swDHCPServerManualBindingTable	 { swDHCPServerMgmt 3 }
 -- -----------------------------------------------------------------------------
@@ -1011,7 +1011,7 @@ swDHCPServerClassState OBJECT-TYPE
             "This object enables/disables the DHCP class
 		of the device."
         ::= { swDHCPServerClass 1 }
-        
+
 swDHCPServerClassTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwDHCPServerClassEntry
         MAX-ACCESS  not-accessible
@@ -1050,7 +1050,7 @@ swDHCPServerClassName OBJECT-TYPE
 	DESCRIPTION
 		"DHCP class's name."
 	::= { swDHCPServerClassEntry 1 }
-    
+
 swDHCPServerClassOption OBJECT-TYPE
 	SYNTAX  INTEGER
 	MAX-ACCESS  not-accessible
@@ -1063,7 +1063,7 @@ swDHCPServerClassOption OBJECT-TYPE
 		82: relay agent information option;
 		125: vendor-identifying vendor-specific information."
 	::= { swDHCPServerClassEntry 2 }
-	
+
 swDHCPServerClassOptionType OBJECT-TYPE
 	SYNTAX  INTEGER {
 		string(1),
@@ -1073,9 +1073,9 @@ swDHCPServerClassOptionType OBJECT-TYPE
 	STATUS  current
 	DESCRIPTION
 		"This object indicates the type of option.
-		string(1): Means the type of option value is character string, 
+		string(1): Means the type of option value is character string,
 		it depends on swDHCPServerClassOptionValue.
-		hex(2): Means the type of option value is hexadecimal, 
+		hex(2): Means the type of option value is hexadecimal,
 		it depends on swDHCPServerClassOptionValue."
 	::= { swDHCPServerClassEntry 3 }
 
@@ -1094,7 +1094,7 @@ swDHCPServerClassOptionRowStatus OBJECT-TYPE
 	DESCRIPTION
 		"This object manages this entry."
 	::= { swDHCPServerClassEntry 5 }
-        
+
 -- -----------------------------------------------------------------------------
 -- swDHCPServerVRFExcludedAddressTable	 { swDHCPServerMgmt 7 }
 -- -----------------------------------------------------------------------------
@@ -1160,7 +1160,7 @@ swDHCPServerVRFExcludedAddressStatus OBJECT-TYPE
     DESCRIPTION
         "This object manages this entry."
     ::= { swDHCPServerVRFExcludedAddressEntry 4 }
-    
+
 -- -----------------------------------------------------------------------------
 -- swDHCPServerVRFConflictIPEntryTable	 { swDHCPServerMgmt 8 }
 -- -----------------------------------------------------------------------------
@@ -1243,7 +1243,7 @@ swDHCPServerVRFConflictIPEntryClearState OBJECT-TYPE
 	DESCRIPTION
 		"This object is used to clear this entry."
 	::= { swDHCPServerVRFConflictIPEntryEntry 5 }
-	
+
 -- -----------------------------------------------------------------------------
 -- swDHCPServerOptionProfile	 { swDHCPServerMgmt 9 }
 -- -----------------------------------------------------------------------------
@@ -1332,8 +1332,8 @@ swDHCPServerOptionCode OBJECT-TYPE
 		"DHCP server option profile configured options.
 		Must not configure follow:
 		53:DHCP Message Type
-		54:Server Identifier 
-		Should not configure follow optoin that can configure through swDHCPServerPoolTable: 
+		54:Server Identifier
+		Should not configure follow optoin that can configure through swDHCPServerPoolTable:
 		1:Subnet Mask (swDHCPServerPoolNetworkAddress and swDHCPServerPoolNetworkAddressMask)
 		3:Router Option (swDHCPServerDefaultRouterTable)
 		6:Domain Name Server (swDHCPServerNetBIOSNameServerTable)
@@ -1345,7 +1345,7 @@ swDHCPServerOptionCode OBJECT-TYPE
 			swDHCPServerPoolLeaseHour and swDHCPServerPoolLeaseMinute)
 		"
 	::= { swDHCPServerOptionEntry 1 }
-	
+
 swDHCPServerOptionValueType OBJECT-TYPE
 	SYNTAX  INTEGER {
 		string(1),
@@ -1355,9 +1355,9 @@ swDHCPServerOptionValueType OBJECT-TYPE
 	STATUS  current
 	DESCRIPTION
 		"This object indicates the type of option.
-		string(1): Means the type of option value is character string, 
+		string(1): Means the type of option value is character string,
 		it depends on swDHCPServerOptionProfileOptionValue.
-		hex(2): Means the type of option value is hexadecimal, 
+		hex(2): Means the type of option value is hexadecimal,
 		it depends on swDHCPServerOptionProfileOptionValue."
 	::= { swDHCPServerOptionEntry 2 }
 
@@ -1376,5 +1376,5 @@ swDHCPServerOptionRowStatus OBJECT-TYPE
 	DESCRIPTION
 		"This object manages this entry."
 	::= { swDHCPServerOptionEntry 4 }
-        
+
 END

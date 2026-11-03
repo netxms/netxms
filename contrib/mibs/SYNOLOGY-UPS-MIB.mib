@@ -5,7 +5,7 @@ IMPORTS
         FROM SNMPv2-SMI
     DisplayString, TEXTUAL-CONVENTION
         FROM SNMPv2-TC
-	Float 
+	Float
 		FROM NET-SNMP-TC
     MODULE-COMPLIANCE, OBJECT-GROUP
         FROM SNMPv2-CONF;
@@ -21,9 +21,9 @@ synoUPS MODULE-IDENTITY
     REVISION     "201309110000Z"
     DESCRIPTION
         "Second draft."
-    ::= { synology 4 }		
+    ::= { synology 4 }
 
-synology	 OBJECT IDENTIFIER 
+synology	 OBJECT IDENTIFIER
 	::= { enterprises 6574 }
 
 NonNegativeInteger ::= TEXTUAL-CONVENTION

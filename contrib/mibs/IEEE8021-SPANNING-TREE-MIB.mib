@@ -516,9 +516,9 @@ ieee8021SpanningTreePortState OBJECT-TYPE
         will place that port into the broken(6) state.  For
         ports that are disabled (see
         ieee8021SpanningTreePortEnabled), this object will have a
-        value of disabled(1).  The values disabled, blocking, 
-        listening, and broken correspond to the Clause 12 port 
-        state of 'Discarding'. The value learning corresponds to 
+        value of disabled(1).  The values disabled, blocking,
+        listening, and broken correspond to the Clause 12 port
+        state of 'Discarding'. The value learning corresponds to
         the Clause 12 port state of 'Learning'. The value forwarding
         corresponds to the Clause 12 port state of 'Forwarding'."
 
@@ -874,4 +874,3 @@ ieee8021SpanningTreeRstpCompliance MODULE-COMPLIANCE
     ::= { ieee8021SpanningTreeCompliances 2 }
 
 END
-

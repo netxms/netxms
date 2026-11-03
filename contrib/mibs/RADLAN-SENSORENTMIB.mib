@@ -84,4 +84,3 @@ rlEnvPhySensorTestValue OBJECT-TYPE
         ::= { rlEntPhySensorEntry 3 }
 
 END
-

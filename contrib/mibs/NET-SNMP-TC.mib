@@ -14,7 +14,7 @@ IMPORTS
 netSnmpTCs MODULE-IDENTITY
     LAST-UPDATED "200202090000Z"
     ORGANIZATION "www.net-snmp.org"
-    CONTACT-INFO    
+    CONTACT-INFO
 	 "postal:   Wes Hardaker
                     P.O. Box 382
                     Davis CA  95617

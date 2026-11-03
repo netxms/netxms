@@ -23,7 +23,7 @@ IMPORTS
 -- microwaveRadio   OBJECT IDENTIFIER ::= { tehnika 1 }
 -- pointToPoint     OBJECT IDENTIFIER ::= { microwaveRadio 1 }
 -- safIntegra       OBJECT IDENTIFIER ::= { pointToPoint 7 }
- 
+
 integraW MODULE-IDENTITY
         LAST-UPDATED "201605110000Z" --  11 may 2016
         ORGANIZATION "SAF Tehnika"
@@ -175,7 +175,7 @@ integraWradioTxMuteDuration OBJECT-TYPE
                     "Time remaning for Tx to be muted in seconds.
                     To turn mute on send number of seconds between 10 and MAX.
                     To turn mute off send 0.
-                    GET will retrieve remaining duration for mute or 
+                    GET will retrieve remaining duration for mute or
                     0 if Tx mute is turned off."
               ::= { integraWradio 9 }
 
@@ -215,8 +215,8 @@ integraWradioRangeEntryIndex OBJECT-TYPE
               MAX-ACCESS read-only
               STATUS current
               DESCRIPTION
-                      "A unique value, greater than zero, for each range 
-                      entry. Starts with 1 and is equal to a number of all range 
+                      "A unique value, greater than zero, for each range
+                      entry. Starts with 1 and is equal to a number of all range
                       parameters."
               ::= { integraWradioRangeEntry 1 }
 
@@ -418,7 +418,7 @@ integraWsysLicenseExpire OBJECT-TYPE
               UNITS   "s"
               MAX-ACCESS  read-only
               STATUS  current
-              DESCRIPTION "License expires after number of seconds. 
+              DESCRIPTION "License expires after number of seconds.
                            In the case of -1, check licenseGenStatus status"
               ::= { integraWsystem 3 }
 integraWsysLicenseGenStatus OBJECT-TYPE
@@ -1321,7 +1321,7 @@ integraWexecuteConfig OBJECT-TYPE
               MAX-ACCESS  read-write
               STATUS current
               DESCRIPTION "This object can only be set to 1.
-                           It initiates new running configuration 
+                           It initiates new running configuration
                            applying using values, that have been set before.
                            Setting it when no new changes are available
                            will do nothing and return an error.
@@ -1416,7 +1416,7 @@ integraWCompliance MODULE-COMPLIANCE
     DESCRIPTION "The compliance statement for SNMP engine which
                  implements the SAF Tehnika Integra-W device."
     MODULE -- this module
-      MANDATORY-GROUPS { 
+      MANDATORY-GROUPS {
                 integraWMiscGroup,
                 integraWRadioGroup,
                 integraWModemGroup,
@@ -1578,7 +1578,7 @@ integraWEthernetMiiPortGroup OBJECT-GROUP
           integraWtxCollisions
    }
    STATUS current
-   DESCRIPTION "A collection of objects, providing info applicable 
+   DESCRIPTION "A collection of objects, providing info applicable
                only to MII group interfaces."
    ::= { integraWGroups 6 }
 

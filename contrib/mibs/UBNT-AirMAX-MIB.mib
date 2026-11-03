@@ -138,7 +138,7 @@ UBNT-AirMAX-MIB DEFINITIONS ::= BEGIN
 
     ubntRadioRssiIndex OBJECT-TYPE
         SYNTAX     Integer32 (1..255)
-        MAX-ACCESS not-accessible 
+        MAX-ACCESS not-accessible
         STATUS     current
         DESCRIPTION "Index for the ubntRadioRssiTable"
         ::= { ubntRadioRssiEntry 1 }
@@ -194,7 +194,7 @@ UBNT-AirMAX-MIB DEFINITIONS ::= BEGIN
 
     ubntAirMaxIfIndex OBJECT-TYPE
         SYNTAX     Integer32 (1..255)
-        MAX-ACCESS not-accessible 
+        MAX-ACCESS not-accessible
         STATUS     current
         DESCRIPTION "Index for the ubntAirMaxTable"
         ::= { ubntAirMaxEntry 1 }
@@ -268,7 +268,7 @@ UBNT-AirMAX-MIB DEFINITIONS ::= BEGIN
 
     ubntAirSyncIfIndex OBJECT-TYPE
         SYNTAX     Integer32 (1..255)
-        MAX-ACCESS not-accessible 
+        MAX-ACCESS not-accessible
         STATUS     current
         DESCRIPTION "Index for the ubntAirSyncTable"
         ::= { ubntAirSyncEntry 1 }
@@ -332,7 +332,7 @@ UBNT-AirMAX-MIB DEFINITIONS ::= BEGIN
 
     ubntAirSelIfIndex OBJECT-TYPE
         SYNTAX     Integer32 (1..255)
-        MAX-ACCESS not-accessible 
+        MAX-ACCESS not-accessible
         STATUS     current
         DESCRIPTION "Index for the ubntAirSelTable"
         ::= { ubntAirSelEntry 1 }
@@ -390,7 +390,7 @@ UBNT-AirMAX-MIB DEFINITIONS ::= BEGIN
 
     ubntWlStatIndex OBJECT-TYPE
         SYNTAX     Integer32 (1..255)
-        MAX-ACCESS not-accessible 
+        MAX-ACCESS not-accessible
         STATUS     current
         DESCRIPTION "Index for the ubntWlStatTable"
         ::= { ubntWlStatEntry 1 }
@@ -538,7 +538,7 @@ UBNT-AirMAX-MIB DEFINITIONS ::= BEGIN
 
     ubntStaMac OBJECT-TYPE
         SYNTAX     MacAddress
-        MAX-ACCESS not-accessible 
+        MAX-ACCESS not-accessible
         STATUS     current
         DESCRIPTION "Station MAC address"
         ::= { ubntStaEntry 1 }

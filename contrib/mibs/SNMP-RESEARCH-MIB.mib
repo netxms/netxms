@@ -5,7 +5,7 @@ IMPORTS
         FROM SNMPv2-SMI;
 
 -- The top node
-snmpResearch             OBJECT IDENTIFIER ::= { enterprises 99 } 
+snmpResearch             OBJECT IDENTIFIER ::= { enterprises 99 }
 
 --
 -- snmpResearch.1:  SNMP Research Products
@@ -33,7 +33,7 @@ snmpResearchLb100Proxy   OBJECT IDENTIFIER ::= { snmpResearchProxyAgent 1 }
 -- EMANATE Master Agent
 snmpResearchEMANATEMasterAgent OBJECT IDENTIFIER ::= { snmpResearchAgent 3 }
 
--- EMANATE Master Agents on Various OSs 
+-- EMANATE Master Agents on Various OSs
 solarisEMANATEMasterAgent      OBJECT IDENTIFIER ::= { snmpResearchEMANATEMasterAgent 1 }
 solarisTCPEMANATEMasterAgent   OBJECT IDENTIFIER ::= { snmpResearchEMANATEMasterAgent 2 }
 solarisx86TCPEMANATEMasterAgent OBJECT IDENTIFIER ::= { snmpResearchEMANATEMasterAgent 3 }
@@ -85,7 +85,7 @@ snmpResearchLT301Agent       OBJECT IDENTIFIER ::= { snmpResearchLTxxxAgent 1 }
 -- snmpResearchLT301AgentMW  OBJECT IDENTIFIER ::= { snmpResearchLT301Agent 6 }
 -- snmpResearchLT301AgentMEW OBJECT IDENTIFIER ::= { snmpResearchLT301Agent 7 }
 
--- 
+--
 -- SNMP Research Managers
 --
 -- Note that these objects are not currently used.  The Security Pack
@@ -238,7 +238,7 @@ srProxyAgentOption     OBJECT IDENTIFIER ::= { snmpResearchMIBs 55 }
 -- not be used!
 -- trap           OBJECT IDENTIFIER ::= { snmpResearchMIBs 37 }
 
-siServiceMIB           OBJECT IDENTIFIER ::= { snmpResearchMIBs 38 } 
+siServiceMIB           OBJECT IDENTIFIER ::= { snmpResearchMIBs 38 }
 siFsMonitor            OBJECT IDENTIFIER ::= { snmpResearchMIBs 39 }
 siLog                  OBJECT IDENTIFIER ::= { snmpResearchMIBs 40 }
 
@@ -341,7 +341,7 @@ snmpTCPDomain          OBJECT IDENTIFIER ::= { srExperimentalDomains 2 }
 --
 -- This branch contains OID assignments for the SecureIntelligence project
 --
-secureIntelligence       OBJECT IDENTIFIER ::= { snmpResearch 16 } 
+secureIntelligence       OBJECT IDENTIFIER ::= { snmpResearch 16 }
 
 enterpol                 OBJECT IDENTIFIER ::= { secureIntelligence 1 }
 enterpolEvents           OBJECT IDENTIFIER ::= { enterpol 1 }

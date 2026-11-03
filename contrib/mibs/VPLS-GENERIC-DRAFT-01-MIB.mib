@@ -23,7 +23,7 @@
         vplsRoot
                FROM FOUNDRY-SN-ROOT-MIB          --snroot
 ;
-        
+
    vplsGenericDraft01MIB MODULE-IDENTITY
       LAST-UPDATED "200608301200Z"  -- 30 Aug 2006 12:00:00 GMT
       ORGANIZATION "Layer 2 Virtual Private Networks (L2VPN)
@@ -64,7 +64,7 @@
           "
       REVISION
           "200606041200Z"  -- 4 June 2006 12:00:00 GMT
-        
+
 
       DESCRIPTION "Initial version published as part of RFC YYYY."
    -- RFC Editor: please replace YYYY with IANA assigned value, and
@@ -166,7 +166,7 @@
 
       vplsConfigIndex  OBJECT-TYPE
           SYNTAX          Unsigned32 (1.. 2147483647)
-        
+
           MAX-ACCESS      not-accessible
           STATUS          current
           DESCRIPTION
@@ -215,7 +215,7 @@
                 perform the tasks of a VPLS service.
                 The testing(3) state indicates that no operational
                 packets can be passed. "
-        
+
 
           DEFVAL           { down }
           ::= { vplsConfigEntry 4 }
@@ -262,7 +262,7 @@
           MAX-ACCESS      read-create
           STATUS          current
           DESCRIPTION
-        
+
                "This object specifies the utilization of the
                 forwarding database for this VPLS instance at
                 which the vplsFwdFullAlarmRaised notification
@@ -323,19 +323,19 @@
           MAX-ACCESS      read-create
           STATUS          current
           DESCRIPTION
-               "The value of this object specifies the type of 
+               "The value of this object specifies the type of
                 service emulated by this vpls instance."
           DEFVAL          { vlan }
           ::= { vplsConfigEntry 15 }
 
-  vplsConfigStorageType OBJECT-TYPE   
-          SYNTAX        StorageType  
-          MAX-ACCESS    read-create  
-          STATUS        current  
-          DESCRIPTION  
-               "This variable indicates the storage type for this row."  
+  vplsConfigStorageType OBJECT-TYPE
+          SYNTAX        StorageType
+          MAX-ACCESS    read-create
+          STATUS        current
+          DESCRIPTION
+               "This variable indicates the storage type for this row."
           DEFVAL { volatile }
-          ::= { vplsConfigEntry 16 }  
+          ::= { vplsConfigEntry 16 }
 
 -- VPLS Status table
 
@@ -344,7 +344,7 @@
           MAX-ACCESS      not-accessible
           STATUS          current
           DESCRIPTION
-        
+
 
                "This table provides information for monitoring
                 Virtual Private Lan Services(VPLS).
@@ -392,7 +392,7 @@
                "This objects specifies the number of peers
                 present in this vpls instance."
           ::= { vplsStatusEntry 2 }
-        
+
 
       -- VPLS PW Binding Table
 
@@ -490,14 +490,14 @@
                  object is in the active(1) state"
           ::= { vplsPwBindEntry 4 }
 
-      vplsPwBindStorageType OBJECT-TYPE   
-           SYNTAX        StorageType  
-           MAX-ACCESS    read-create 
-           STATUS        current  
-           DESCRIPTION  
-                "This variable indicates the storage type for this row."  
+      vplsPwBindStorageType OBJECT-TYPE
+           SYNTAX        StorageType
+           MAX-ACCESS    read-create
+           STATUS        current
+           DESCRIPTION
+                "This variable indicates the storage type for this row."
            DEFVAL { volatile }
-           ::= { vplsPwBindEntry 5 }  
+           ::= { vplsPwBindEntry 5 }
 
    vplsStatusNotifEnable  OBJECT-TYPE
       SYNTAX      TruthValue
@@ -586,7 +586,7 @@
       DESCRIPTION
            "Compliance requirement for implementations that
             provide full support for VPLS-GENERIC-DRAFT-01-MIB.
-            Such devices can then be monitored and configured using 
+            Such devices can then be monitored and configured using
             this MIB module."
       MODULE -- this module
 
@@ -619,7 +619,7 @@
            MIN-ACCESS      read-only
            DESCRIPTION
                "Write access is not required."
-    
+
 
            OBJECT          vplsConfigDescr
            MIN-ACCESS      read-only
@@ -692,7 +692,7 @@
 
       vplsGroups
         OBJECT IDENTIFIER ::= { vplsConformance 2 }
-        
+
 
       vplsGroup OBJECT-GROUP
           OBJECTS {
@@ -749,7 +749,6 @@
                 the  Notifications generated for
                 VPLS Services"
           ::= { vplsGroups 3 }
-        
+
 
        END
-

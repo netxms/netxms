@@ -39,8 +39,8 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
                 STATUS current
                 DESCRIPTION
             	"When this object is set, the device will copy the contents
-		of the configuration database to a buffer and save it to the 
-		persistant store specified by the value of the object.  The 
+		of the configuration database to a buffer and save it to the
+		persistant store specified by the value of the object.  The
 		save is	performed asynchronously, and the snmp agent will
                 continue to respond to both gets and sets while the save is
                 taking place.  A network management application may use the
@@ -57,7 +57,7 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
 		by setting the extremeSaveConfiguration object.  A network
 		management application can read this object to determine that a
 		save operation has completed."
-	::= { extremeSystemCommon 4 }                
+	::= { extremeSystemCommon 4 }
 
         extremeCurrentConfigInUse OBJECT-TYPE
                 SYNTAX INTEGER { primary(1), secondary(2) }
@@ -65,23 +65,23 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
                 STATUS current
                 DESCRIPTION
                 "Shows which NVRAM configuration store was used at last boot"
-	::= { extremeSystemCommon 5 }                
+	::= { extremeSystemCommon 5 }
 
         extremeConfigToUseOnReboot OBJECT-TYPE
                 SYNTAX INTEGER { primary(1), secondary(2) }
         	MAX-ACCESS read-write
                 STATUS current
                 DESCRIPTION
-        	"Controls which NVRAM configuration store will be used 
+        	"Controls which NVRAM configuration store will be used
                 on next reboot."
-	::= { extremeSystemCommon 6 }               
- 
+	::= { extremeSystemCommon 6 }
+
         extremeOverTemperatureAlarm OBJECT-TYPE
                 SYNTAX TruthValue
         	MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                "Alarm status of overtemperature sensor in device 
+                "Alarm status of overtemperature sensor in device
                 enclosure."
 	::= { extremeSystemCommon 7 }
 
@@ -120,7 +120,7 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
 				INTEGER,
 			extremeFanOperational
 				TruthValue,
-		        extremeFanEntPhysicalIndex 
+		        extremeFanEntPhysicalIndex
 				INTEGER
 		}
 
@@ -129,7 +129,7 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
         	MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                "Identifier of cooling fan, numbered from the front and/or 
+                "Identifier of cooling fan, numbered from the front and/or
                 left side of device."
 	::= { extremeFanStatusEntry 1 }
 
@@ -170,8 +170,8 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
         	MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                "Alarm state of an external redundant power supply to a device. 
-                Alarm state indicates either fan failure or overtemperature 
+                "Alarm state of an external redundant power supply to a device.
+                Alarm state indicates either fan failure or overtemperature
                 condition."
 	::= { extremeSystemCommon 12 }
 
@@ -180,8 +180,8 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
-                "The software revision of the primary image stored in 
-                this device.  This string will have a zero length if 
+                "The software revision of the primary image stored in
+                this device.  This string will have a zero length if
                 the revision is unknown, invalid or not present. This
                 will also be reported in RMON2 probeSoftwareRev if this
                 is the software image currently running in the device."
@@ -192,8 +192,8 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
-                "The software revision of the secondary image stored in 
-                this device.  This string will have a zero length if 
+                "The software revision of the secondary image stored in
+                this device.  This string will have a zero length if
                 the revision is unknown, invalid or not present. This
                 will also be reported in RMON2 probeSoftwareRev if this
                 is the software image currently running in the device."
@@ -204,9 +204,9 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
         	MAX-ACCESS read-write
                 STATUS current
                 DESCRIPTION
-        	"Controls which image will be used 
+        	"Controls which image will be used
                 on next reboot."
-	::= { extremeSystemCommon 15 }               
+	::= { extremeSystemCommon 15 }
 
         extremeSystemID  OBJECT-TYPE
             SYNTAX DisplayString (SIZE(0..126))
@@ -246,7 +246,7 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
 			v110 (1),
 			v220 (2),
 			v48DC (3)
-		}	
+		}
 		MAX-ACCESS  read-only
 		STATUS current
 		DESCRIPTION
@@ -266,8 +266,8 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
         	MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-                "Alarm state of the power supply to a device. 
-                Alarm state indicates either fan failure or overtemperature 
+                "Alarm state of the power supply to a device.
+                Alarm state indicates either fan failure or overtemperature
                 condition."
 	::= { extremeSystemCommon 22 }
 
@@ -276,7 +276,7 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
         	MAX-ACCESS read-write
                 STATUS current
                 DESCRIPTION
-                      "Setting this to true will cause the agent to 
+                      "Setting this to true will cause the agent to
 		       start collecting RMON statistics."
 	::= { extremeSystemCommon 23 }
 
@@ -284,14 +284,14 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
 -- has been moved to extremeSystemCommon.29 with new name extremeCpuTask2table
 
    extremeBootROMVersion OBJECT-TYPE
-		SYNTAX DisplayString (SIZE(0..15))	
+		SYNTAX DisplayString (SIZE(0..15))
         	MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
-		  "The software revision of the bootrom on the device. 
-                   This string will have a zero length if the revision is 
+		  "The software revision of the bootrom on the device.
+                   This string will have a zero length if the revision is
                    unknown or invalid."
-		       
+
 	::= { extremeSystemCommon 25 }
 
    extremeDot1dTpFdbTableEnable OBJECT-TYPE
@@ -330,7 +330,7 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
 				INTEGER,
                         extremePowerSupplySerialNumber
                                 DisplayString,
-		        extremePowerSupplyEntPhysicalIndex 
+		        extremePowerSupplyEntPhysicalIndex
 				INTEGER
 		}
 
@@ -385,7 +385,7 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
 	::= { extremeSystemCommon 28 }
 
 --
--- The CPU Task table lists all executing tasks 
+-- The CPU Task table lists all executing tasks
 --
         extremeCpuTask2Table OBJECT-TYPE
 		SYNTAX  SEQUENCE OF ExtremeCpuTask2Entry
@@ -439,7 +439,7 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
                   "Name associated with the reported task id."
 	::= { extremeCpuTask2Entry 2 }
 
-    
+
         extremeCpuTask2Id OBJECT-TYPE
                 SYNTAX Unsigned32
         	MAX-ACCESS read-only
@@ -457,7 +457,7 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
                   "The value of the program counter for this task.
 		   It indicates the address of the next instruction
                    that would be executed once the operating system
- 		   resumes this task." 
+ 		   resumes this task."
 	::= { extremeCpuTask2Entry 4 }
 
         extremeCpuTask2Status OBJECT-TYPE
@@ -493,8 +493,8 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
             MAX-ACCESS  accessible-for-notify
             STATUS current
             DESCRIPTION
-                "The IP address of the originator of the bad SNMP 
-                request that caused the generation of an authentication 
+                "The IP address of the originator of the bad SNMP
+                request that caused the generation of an authentication
                 failure trap."
         ::= { extremeSystemCommon 30 }
 
@@ -515,31 +515,31 @@ EXTREME-SYSTEM-MIB DEFINITIONS ::= BEGIN
                 STATUS current
                 DESCRIPTION
         	"The image with which the switch was last booted, using which it is currently running."
-	::= { extremeSystemCommon 32 }               
-        
+	::= { extremeSystemCommon 32 }
+
         extremeMsmFailoverCause OBJECT-TYPE
             SYNTAX INTEGER { never(1),
                              admin(2),
-                             exception(3), 
+                             exception(3),
                              removal(4),
-                             hwFailure(5), 
+                             hwFailure(5),
                              watchdog(6),
-                             keepalive(7) 
+                             keepalive(7)
                            }
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
         "The cause of the last MSM failover. never(1) means an
-                MSM Failover has not occurred since the last reboot. 
-                admin(2) means the failover was initiated by the user. 
-                exception(3) means the former master MSM encountered a 
-                software exception condition. removal(4) means the master 
-                MSM was physically removed from the chassis. hwFailure(5) 
-                means a diagnostic failure was detected in the master MSM. 
-                watchdog(6) means that the master MSM hardware watchdog 
-                timer expired. keepalive(7) means the master MSM failed to 
-                respond to slave keepalive requests. The MSM failover will 
-                have been hitless only in the admin(2) and exception(3) 
+                MSM Failover has not occurred since the last reboot.
+                admin(2) means the failover was initiated by the user.
+                exception(3) means the former master MSM encountered a
+                software exception condition. removal(4) means the master
+                MSM was physically removed from the chassis. hwFailure(5)
+                means a diagnostic failure was detected in the master MSM.
+                watchdog(6) means that the master MSM hardware watchdog
+                timer expired. keepalive(7) means the master MSM failed to
+                respond to slave keepalive requests. The MSM failover will
+                have been hitless only in the admin(2) and exception(3)
                 cases "
         ::= { extremeSystemCommon 33 }
 
@@ -608,7 +608,7 @@ extremeImageTable OBJECT-TYPE
                  extremePatchVersion gets the value of old extremeMinorVersion
                  value."
 		::= { extremeImageEntry 3 }
-                
+
         extremeMinorVersion   OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -616,7 +616,7 @@ extremeImageTable OBJECT-TYPE
 		DESCRIPTION
 		"The ExtremeWare Release Minor Version."
 		::= { extremeImageEntry 4 }
-                
+
         extremeBuildNumber   OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -624,7 +624,7 @@ extremeImageTable OBJECT-TYPE
 		DESCRIPTION
 		"The ExtremeWare Build Number."
 		::= { extremeImageEntry 5 }
-                
+
         extremeTechnologyReleaseNumber   OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -633,7 +633,7 @@ extremeImageTable OBJECT-TYPE
 		"The Technology Release version. This value is zero for
                 all but TR releases."
 		::= { extremeImageEntry 6 }
-                
+
         extremeSustainingReleaseNumber   OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -641,7 +641,7 @@ extremeImageTable OBJECT-TYPE
 		DESCRIPTION
 		"The Sustaining Release number for the ExtremeWare version."
 		::= { extremeImageEntry 7 }
-                
+
         extremeBranchRevisionNumber   OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -649,7 +649,7 @@ extremeImageTable OBJECT-TYPE
 		DESCRIPTION
 		"The incremental build on specified branch."
 		::= { extremeImageEntry 8 }
-                
+
         extremeImageType   OBJECT-TYPE
 		SYNTAX  INTEGER {
                        trunk(0),
@@ -663,7 +663,7 @@ extremeImageTable OBJECT-TYPE
 		DESCRIPTION
 		"The branch type from which the image was built."
 		::= { extremeImageEntry 9 }
-                
+
         extremeImageDescription   OBJECT-TYPE
 		SYNTAX  DisplayString (SIZE(0..13))
             MAX-ACCESS read-only
@@ -672,7 +672,7 @@ extremeImageTable OBJECT-TYPE
 		"A unique string that can be used to identify the specific patch,
                 technology, or development branch release."
 		::= { extremeImageEntry 10 }
-                
+
         extremeImageSecurity   OBJECT-TYPE
 		SYNTAX  INTEGER {
                        unknown(0),
@@ -686,7 +686,7 @@ extremeImageTable OBJECT-TYPE
                  is deprecated, the ssh capability can be obtained from
                  the extremeImageSshCapability of the ImageFeatureTable"
 		::= { extremeImageEntry 11 }
-               
+
         extremePatchVersion   OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -694,7 +694,7 @@ extremeImageTable OBJECT-TYPE
 		DESCRIPTION
 		"The ExtremeWare Release Patch Version."
 		::= { extremeImageEntry 12 }
-                
+
 extremeImageFeatureTable OBJECT-TYPE
 		SYNTAX  SEQUENCE OF ExtremeImageFeatureEntry
 		MAX-ACCESS  not-accessible
@@ -766,7 +766,7 @@ extremeImageFeatureTable OBJECT-TYPE
 		DESCRIPTION
 		"The extremeSlotNumber of the master MSM module."
 	::= { extremeChassisGroup 1  }
-	
+
 	extremeChassisPortsPerSlot OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -776,13 +776,13 @@ extremeImageFeatureTable OBJECT-TYPE
 		in a single slot. This number would change to accomodate
 		blades with higher port density than current ones."
 	::= { extremeChassisGroup 3  }
-	
+
 	extremeSlotTable OBJECT-TYPE
 		SYNTAX  SEQUENCE OF ExtremeSlotEntry
 		MAX-ACCESS  not-accessible
 		STATUS current
 		DESCRIPTION
-		"A table containing information about each slot in the 
+		"A table containing information about each slot in the
 		chassis."
 			::= { extremeChassisGroup 2 }
 
@@ -791,17 +791,17 @@ extremeImageFeatureTable OBJECT-TYPE
 		MAX-ACCESS  not-accessible
 		STATUS current
 		DESCRIPTION
-		"A table entry containing information about the module in 
+		"A table entry containing information about the module in
 		each slot of the chassis."
 		INDEX	  { extremeSlotNumber }
 			::= { extremeSlotTable 1 }
 
 	ExtremeSlotEntry ::= SEQUENCE {
-		extremeSlotNumber 		INTEGER,	
+		extremeSlotNumber 		INTEGER,
 		extremeSlotName			DisplayString,
 		extremeSlotModuleConfiguredType	INTEGER,
 		extremeSlotModuleInsertedType	INTEGER,
-		extremeSlotModuleState		INTEGER,	
+		extremeSlotModuleState		INTEGER,
 		extremeSlotModuleSerialNumber	DisplayString
 	}
 
@@ -810,7 +810,7 @@ extremeImageFeatureTable OBJECT-TYPE
 		MAX-ACCESS  read-only
 		STATUS current
 		DESCRIPTION
-		"A unique integer identifying the particular slot 
+		"A unique integer identifying the particular slot
 		in the chassis."
 		::= { extremeSlotEntry 1 }
 
@@ -872,18 +872,18 @@ extremeImageFeatureTable OBJECT-TYPE
 		MAX-ACCESS  read-write
 		STATUS current
 		DESCRIPTION
-		"The configured module type for the given slot. 
-		At startup, the module-type is none(1). It is 
-		possible to configure the module-type even if there 
-		is no module in the slot. If the current module in the 
-		slot is different than the requested configured module-type, 
-		then the current configuration for the module is erased and 
-		the card will be restarted. The new configured module-type 
-		will be recorded. Since the configured module type is different 
+		"The configured module type for the given slot.
+		At startup, the module-type is none(1). It is
+		possible to configure the module-type even if there
+		is no module in the slot. If the current module in the
+		slot is different than the requested configured module-type,
+		then the current configuration for the module is erased and
+		the card will be restarted. The new configured module-type
+		will be recorded. Since the configured module type is different
 		than the actual module type, a moduleMismatch trap will be sent,
- 		and the extremeSlotModuleState for that module will show a 
-		mismatch(3). Setting this variable to none(1) will clear the 
-		previously assigned module-type of this slot, and all 
+ 		and the extremeSlotModuleState for that module will show a
+		mismatch(3). Setting this variable to none(1) will clear the
+		previously assigned module-type of this slot, and all
 		configuration information related to the slot will be erased."
 		::= { extremeSlotEntry 3 }
 
@@ -908,14 +908,14 @@ extremeImageFeatureTable OBJECT-TYPE
 			gm4sx(23),
 			gm4t(24),
             wdm8(25),
-			fm24f(26), 
+			fm24f(26),
 			fm24sf(27),
 			fm24te(28),
 			f96ti(29),
 	        wdm4(30),
 			f32fi(31),
             tenGx3(32),
-            tenGigLR(33),   
+            tenGigLR(33),
             g16x3(34),
             g24t3(35),
             gm16x3(36),
@@ -943,8 +943,8 @@ extremeImageFeatureTable OBJECT-TYPE
 		MAX-ACCESS  read-only
 		STATUS current
 		DESCRIPTION
-		"The module type inserted into the slot. It is possible 
-		to have a slot inserted into the slot even though 
+		"The module type inserted into the slot. It is possible
+		to have a slot inserted into the slot even though
 		extremeSlotConfiguredType is none(1)."
 		::= { extremeSlotEntry 4 }
 
@@ -964,7 +964,7 @@ extremeImageFeatureTable OBJECT-TYPE
                         booting(12),
                         offline(13),
                         initializing(14),
-                        invalid(100) 
+                        invalid(100)
 
 		}
 		MAX-ACCESS  read-only
@@ -984,13 +984,13 @@ extremeImageFeatureTable OBJECT-TYPE
 		::= { extremeSystem 3 }
 
 	extremeHealthCheckErrorType OBJECT-TYPE
-		SYNTAX INTEGER { 
-				unknown(1), 
-				cpuPacket(2), 
-				backplane(3), 
+		SYNTAX INTEGER {
+				unknown(1),
+				cpuPacket(2),
+				backplane(3),
 				hardwareFail(4),
 				pbusChecksum(5)
-				}			
+				}
 		MAX-ACCESS accessible-for-notify
 		STATUS current
 		DESCRIPTION
@@ -1016,12 +1016,12 @@ extremeImageFeatureTable OBJECT-TYPE
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION
-		"The maximum number of times a module restart will be attempted if it fails. 
+		"The maximum number of times a module restart will be attempted if it fails.
 		If extremeHealthCheckAction is not autorecovery(5), then this value is zero."
 		::= { extremeSystemHealthCheck 3 }
 
--- =========================================================================== 
- 
+-- ===========================================================================
+
   extremeSystemThresholds OBJECT IDENTIFIER
         ::= { extremeSystem  4 }
 
@@ -1034,7 +1034,7 @@ extremeImageFeatureTable OBJECT-TYPE
 	::= { extremeSystemThresholds 1 }
 
   extremeCpuTaskUtilPair OBJECT-TYPE
-                SYNTAX DisplayString 
+                SYNTAX DisplayString
         	    MAX-ACCESS accessible-for-notify
                 STATUS current
                 DESCRIPTION
@@ -1051,4 +1051,3 @@ END
 --
 -- Extreme VLAN objects
 --
-

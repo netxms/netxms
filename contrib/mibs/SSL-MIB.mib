@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
---  SSL module MIB      
+--  SSL module MIB
 -------------------------------------------------------------------------------
 -- Version 0.02
 -- 2004/3/30 14:30
@@ -52,7 +52,7 @@ swSSLMgmt OBJECT IDENTIFIER ::= { swSSLMIB 1 }
 -- -------------------------------------------------------------
 -- Textual Conventions
 -- -------------------------------------------------------------
-        
+
  swSSLStatusAdmin OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -70,24 +70,24 @@ swSSLMgmt OBJECT IDENTIFIER ::= { swSSLMIB 1 }
                     rsa-with-rc4-128-MD5 (0),
                     rsa-with-3des-ede-cbc-sha(1),
                     dhe-dss-with-3des-ede-cbc-sha(2),
-                    rsa-export-with-rc4-40-md5(3)                  
+                    rsa-export-with-rc4-40-md5(3)
                 	}
     	MAX-ACCESS  read-write
-    	STATUS      current                  
+    	STATUS      current
         DESCRIPTION
             "This object indicates the ciphersuites are enabled or not in the system.
              If the bit is 1 , indicate that ciphersuite is enabled , else is disabled . "
         ::= { swSSLMgmt 2}
- 
+
  swSSLCacheTimeout OBJECT-TYPE
     	SYNTAX     Unsigned32 (60..86400)
     	MAX-ACCESS  read-write
-    	STATUS      current                  
+    	STATUS      current
         DESCRIPTION
-            "This object indicates the Cache Timeout value for SSL module to refresh the session 
+            "This object indicates the Cache Timeout value for SSL module to refresh the session
             resume data kept in database"
         ::= { swSSLMgmt 3}
-        
+
 swSSLCertificateFile OBJECT IDENTIFIER ::= { swSSLMIB 2 }
 
 ----------------------------------------------------------------------------------------------
@@ -108,15 +108,15 @@ swSSLCertificateFile OBJECT IDENTIFIER ::= { swSSLMIB 2 }
         DESCRIPTION
             "The description for the certificate file name included full path to be downloaded ."
         ::= { swSSLCertificateFile 2 }
-        
+
     swSSLCertificateKeyFilePath OBJECT-TYPE
         SYNTAX  DisplayString  (SIZE (0..64))
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
             "The description for the key file name included full path to be downloaded ."
-        ::= { swSSLCertificateFile 3 }        
-                                                    
+        ::= { swSSLCertificateFile 3 }
+
      swSSLCertificateFileCtrl OBJECT-TYPE
         SYNTAX  INTEGER {
                     other(1),
@@ -140,7 +140,7 @@ swSSLCertificateFile OBJECT IDENTIFIER ::= { swSSLMIB 2 }
         STATUS  current
         DESCRIPTION
             "Show certificate file status."
-        ::= { swSSLCertificateFile 5 }    
+        ::= { swSSLCertificateFile 5 }
 -- -------------------------------------------------------------------------------------
 
 END

@@ -30,28 +30,28 @@ commonModelId OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" The hardware model ID of this managed node. "
-	
+
 	::= { common 1 }
-	
+
 commonSoftwareVer OBJECT-TYPE
 	SYNTAX		OwnerString
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" The software version of this managed node. "
-		
+
 	::= { common 2 }
-	
+
 commonFirmwareVer OBJECT-TYPE
 	SYNTAX		OwnerString
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" The firmware version of this managed node. "
-		
+
 	::= { common 3 }
 
-	
+
 -- the Common Management Group
 
 mgtWarmStart OBJECT-TYPE
@@ -60,55 +60,55 @@ mgtWarmStart OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { commonMgt 1 }
-	
+
 mgtFactoryReset OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { commonMgt 2 }
-	
+
 mgtAdministrator OBJECT-TYPE
 	SYNTAX		OwnerString (SIZE(0..64))
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { commonMgt 3 }
-	
+
 mgtBootStatus OBJECT-TYPE
 	SYNTAX		INTEGER { abnormal(0), normal(1) }
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { commonMgt 4 }
-	
+
 mgtRefreshMIB OBJECT-TYPE
 	SYNTAX		INTEGER { none(0), apply(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		"Refresh Enterprise MIB object data from RAM NV."
-		
+
 	::= { commonMgt 5 }
-	
+
 mgtUpdateNV OBJECT-TYPE
 	SYNTAX		INTEGER { none(0), apply(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		"Save Enterprise MIB Object data to RAM NV and Flash, and reboot system."
-		
+
 	::= { commonMgt 6 }
 
-	
+
 -- the Community Table
 
 mgtCommunityTable OBJECT-TYPE
@@ -117,53 +117,53 @@ mgtCommunityTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" Table of access community. "
-		
+
 	::= { commonMgt 7 }
-	
+
 mgtCommunityEntry OBJECT-TYPE
 	SYNTAX		MgtCommunityEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" An entry in the table, containing read/write community names. "
-		
+
 	INDEX 		{ mgtCommunityIndex }
 	::= { mgtCommunityTable 1 }
-	
+
 MgtCommunityEntry ::=
 	SEQUENCE {
 		mgtCommunityIndex		INTEGER,
 		mgtCommunityName		OwnerString,
 		mgtCommunityType		INTEGER
 	}
-	
+
 mgtCommunityIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { mgtCommunityEntry 1 }
-	
+
 mgtCommunityName OBJECT-TYPE
 	SYNTAX		OwnerString (SIZE(0..32))
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { mgtCommunityEntry 2 }
-	
+
 mgtCommunityType OBJECT-TYPE
 	SYNTAX		INTEGER { read-only(1), read-write(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { mgtCommunityEntry 3 }
-	
+
 
 -- the BroadBand broadbandGateway Management Group
 
@@ -173,169 +173,169 @@ hostName OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 1 }
-	
+
 domainName OBJECT-TYPE
 	SYNTAX		OwnerString (SIZE(0..64))
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 2 }
-	
+
 netAddressLAN OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 3 }
-	
+
 physicalAddrLAN OBJECT-TYPE
 	SYNTAX		PhysAddress
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { broadbandGateway 4 }
-	
+
 subnetMaskLAN OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 5 }
-	
+
 dhcpStatusWAN OBJECT-TYPE
 	SYNTAX		INTEGER { specific(1), dynamic(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 6 }
-	
+
 netAddressWAN OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 7 }
-	
+
 physicalAddrWAN OBJECT-TYPE
 	SYNTAX		PhysAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 8 }
-	
+
 subnetMaskWAN OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 9 }
-	
+
 defaultbroadbandGatewayWAN OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 10 }
-	
+
 loginStatus OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), pppoe(1), ras(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 11 }
-	
+
 loginUserName OBJECT-TYPE
 	SYNTAX		OwnerString (SIZE(0..64))
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 12 }
-	
+
 loginPassword OBJECT-TYPE
 	SYNTAX		OwnerString (SIZE(0..64))
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 13 }
-	
+
 rasPlan OBJECT-TYPE
 	SYNTAX		INTEGER { ethernet-512k(0), ethernet-256k(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 14 }
-	
+
 connectedState OBJECT-TYPE
 	SYNTAX		INTEGER { keepAlive(0), onDemand(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 15 }
-		
+
 connectedIdleTime OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 16 }
-		
+
 dhcpStatusLAN OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { broadbandGateway 17 }
-	
+
 dhcpStartNetAddr OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 18 }
-	
+
 dhcpNumberUsers	 OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 19 }
 
 workingMode OBJECT-TYPE
@@ -344,25 +344,25 @@ workingMode OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
-	::= { broadbandGateway 20 }	
-	
+
+	::= { broadbandGateway 20 }
+
 dynamicRoutingTX OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), rip1(1), rip1-compatible(2), rip2(3) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 21 }
-	
+
 dynamicRoutingRX OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), rip1(1), rip2(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 22 }
 
 spiStatus OBJECT-TYPE
@@ -371,34 +371,34 @@ spiStatus OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 23 }
-	
+
 wanReqBlockStatus OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 24 }
-			
+
 ipSecPassThroughStatus OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { broadbandGateway 25 }
-	
+
 pptpPassThroughStatus OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 26 }
 
 remoteMgtStatus OBJECT-TYPE
@@ -407,26 +407,26 @@ remoteMgtStatus OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { broadbandGateway 27 }
-	
+
 remoteUpgradeStatus OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 28 }
-	
+
 accessLogStatus OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" Trap Status"
-		
-	::= { broadbandGateway 29 }	
+
+	::= { broadbandGateway 29 }
 
 dmzHostIPAddress OBJECT-TYPE
 	SYNTAX		IpAddress
@@ -434,8 +434,8 @@ dmzHostIPAddress OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
-	::= { broadbandGateway 30 }		
+
+	::= { broadbandGateway 30 }
 
 qosStatus OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
@@ -443,9 +443,9 @@ qosStatus OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { broadbandGateway 31 }
-	
+
 -- the DHCPActiveTable Group
 
 dhcpActiveTable OBJECT-TYPE
@@ -454,20 +454,20 @@ dhcpActiveTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 32 }
-	
-	
+
+
 dhcpActiveEntry OBJECT-TYPE
 	SYNTAX		DHCPActiveEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ dhcpActiveIndex }
 	::= { dhcpActiveTable 1 }
-	
+
 DHCPActiveEntry ::=
 	SEQUENCE {
 		dhcpActiveIndex			INTEGER,
@@ -475,43 +475,43 @@ DHCPActiveEntry ::=
 		dhcpNetAddress			IpAddress,
 		dhcpPhysicalAddress		PhysAddress
 	}
-	
+
 dhcpActiveIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { dhcpActiveEntry 1 }
-	
+
 dhcpClientHostName OBJECT-TYPE
 	SYNTAX		OwnerString (SIZE(0..32))
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { dhcpActiveEntry 2 }
-	
+
 dhcpNetAddress OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { dhcpActiveEntry 3 }
-	
+
 dhcpPhysicalAddress OBJECT-TYPE
 	SYNTAX		PhysAddress
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { dhcpActiveEntry 4 }
-	
+
 -- the StaticRoutingTable Group
 
 staticRoutingTable OBJECT-TYPE
@@ -520,19 +520,19 @@ staticRoutingTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 33 }
-	
+
 staticRoutingEntry OBJECT-TYPE
 	SYNTAX		StaticRoutingEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ staticRoutingIndex }
 	::= { staticRoutingTable 1 }
-	
+
 StaticRoutingEntry ::=
 	SEQUENCE {
 		staticRoutingIndex			INTEGER,
@@ -543,70 +543,70 @@ StaticRoutingEntry ::=
 		routingInterface			INTEGER,
 		nFlagStatus					INTEGER
 	}
-	
+
 staticRoutingIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { staticRoutingEntry 1 }
-	
+
 destinationNetAddress OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { staticRoutingEntry 2 }
-	
+
 routingSubnetMask OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { staticRoutingEntry 3 }
-	
+
 routingDefaultbroadbandGateway OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { staticRoutingEntry 4 }
-	
+
 routingHopCount OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { staticRoutingEntry 5 }
-	
+
 routingInterface OBJECT-TYPE
 	SYNTAX		INTEGER { lan(1), wan(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { staticRoutingEntry 6 }
-	
+
 nFlagStatus	OBJECT-TYPE
 	SYNTAX		INTEGER { free(0), ready(1), active(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { staticRoutingEntry 7 }
-	
+
 -- the FilterIPRangeTable Group
 
 filterIPRangeTable OBJECT-TYPE
@@ -615,53 +615,53 @@ filterIPRangeTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 34 }
-	
+
 filterIPRangeEntry OBJECT-TYPE
 	SYNTAX		FilterIPRangeEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ filterIPRangeIndex }
 	::= { filterIPRangeTable 1 }
-	
+
 FilterIPRangeEntry ::=
 	SEQUENCE {
 		filterIPRangeIndex			INTEGER,
 		filterIPStart				IpAddress,
 		filterIPEnd					IpAddress
 	}
-	
+
 filterIPRangeIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { filterIPRangeEntry 1 }
-	
+
 filterIPStart OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { filterIPRangeEntry 2 }
-	
+
 filterIPEnd	OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { filterIPRangeEntry 3 }
-	
+
 -- the FilterPortRangeTable Group
 
 filterPortRangeTable OBJECT-TYPE
@@ -670,19 +670,19 @@ filterPortRangeTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 35 }
-	
+
 filterPortRangeEntry OBJECT-TYPE
 	SYNTAX		FilterPortRangeEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ filterPortRangeIndex }
 	::= { filterPortRangeTable 1 }
-	
+
 FilterPortRangeEntry ::=
 	SEQUENCE {
 		filterPortRangeIndex		INTEGER,
@@ -690,43 +690,43 @@ FilterPortRangeEntry ::=
 		filterPortStart				INTEGER,
 		filterPortEnd				INTEGER
 	}
-	
+
 filterPortRangeIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { filterPortRangeEntry 1 }
-	
+
 filterPortProto OBJECT-TYPE
 	SYNTAX		INTEGER { both(0), udp(1), tcp(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { filterPortRangeEntry 2 }
-	
+
 filterPortStart OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { filterPortRangeEntry 3 }
-	
+
 filterPortEnd OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
-	::= { filterPortRangeEntry 4 }	
-	
+
+	::= { filterPortRangeEntry 4 }
+
 -- the FilterMACTable Group
 
 filterMACTable OBJECT-TYPE
@@ -735,32 +735,32 @@ filterMACTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 36 }
-	
+
 filterMACEntry OBJECT-TYPE
 	SYNTAX		FilterMACEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ filterMACIndex }
 	::= { filterMACTable 1 }
-	
+
 FilterMACEntry ::=
 	SEQUENCE {
 		filterMACIndex		INTEGER,
 		filterMAC			PhysAddress
 	}
-	
+
 filterMACIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { filterMACEntry 1 }
 
 filterMAC OBJECT-TYPE
@@ -769,7 +769,7 @@ filterMAC OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { filterMACEntry 2 }
 
 -- the ForwardTable Group
@@ -780,19 +780,19 @@ forwardTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 37 }
-	
+
 forwardEntry OBJECT-TYPE
 	SYNTAX		ForwardEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ forwardIndex }
 	::= { forwardTable 1 }
-	
+
 ForwardEntry ::=
 	SEQUENCE {
 		forwardIndex		INTEGER,
@@ -801,52 +801,52 @@ ForwardEntry ::=
 		servicePortProto	INTEGER,
 		forwardIPAddress	IpAddress
 	}
-	
+
 forwardIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { forwardEntry 1 }
-	
+
 servicePortStart OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { forwardEntry 2 }
-	
+
 servicePortEnd OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { forwardEntry 3 }
-	
+
 servicePortProto OBJECT-TYPE
 	SYNTAX		INTEGER { both(0), udp(1), tcp(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
-	::= { forwardEntry 4 }	
-	
+
+	::= { forwardEntry 4 }
+
 forwardIPAddress OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { forwardEntry 5 }
-	
+
 -- the DnsNetAddressWANTable Group
 
 dnsNetAddressWANTable OBJECT-TYPE
@@ -855,44 +855,44 @@ dnsNetAddressWANTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 38 }
-	
-	
+
+
 dnsNetAddressWANEntry OBJECT-TYPE
 	SYNTAX		DnsNetAddressWANEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ dnsNetAddressWANIndex }
 	::= { dnsNetAddressWANTable 1 }
-	
+
 DnsNetAddressWANEntry ::=
 	SEQUENCE {
 		dnsNetAddressWANIndex		INTEGER,
 		dnsNetAddressWAN			IpAddress
 	}
-	
+
 dnsNetAddressWANIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { dnsNetAddressWANEntry 1 }
-	
+
 dnsNetAddressWAN OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { dnsNetAddressWANEntry 2 }
-	
+
 -- the OutingLogTable Group
 
 outgoingLogTable OBJECT-TYPE
@@ -901,19 +901,19 @@ outgoingLogTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 39 }
-	
+
 outgoingLogEntry OBJECT-TYPE
 	SYNTAX		OutgoingLogEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	INDEX		{ outgoingLogIndex }
 	::= { outgoingLogTable 1 }
-	
+
 OutgoingLogEntry ::=
 	SEQUENCE {
 		outgoingLogIndex	INTEGER,
@@ -921,44 +921,44 @@ OutgoingLogEntry ::=
 		destinationIP		IpAddress,
 		servicePortNumber	INTEGER
 	}
-	
+
 outgoingLogIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { outgoingLogEntry 1 }
-	
+
 sourceIPLAN OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { outgoingLogEntry 2 }
-	
+
 destinationIP OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { outgoingLogEntry 3 }
-	
-	
+
+
 servicePortNumber OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { outgoingLogEntry 4 }
-	
+
 -- the IncomingLogTable Group
 
 incomingLogTable OBJECT-TYPE
@@ -967,53 +967,53 @@ incomingLogTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 40 }
-	
+
 incomingLogEntry OBJECT-TYPE
 	SYNTAX		IncomingLogEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	INDEX		{ incomingLogIndex }
 	::= { incomingLogTable 1 }
-	
+
 IncomingLogEntry ::=
 	SEQUENCE {
 		incomingLogIndex		INTEGER,
 		sourceIP				IpAddress,
 		destinationPortNumber	INTEGER
 	}
-	
+
 incomingLogIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { incomingLogEntry 1 }
-	
+
 sourceIP OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { incomingLogEntry 2 }
-	
+
 destinationPortNumber OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { incomingLogEntry 3 }
-	
+
 
 -- the TrapManagerTable Group
 
@@ -1023,154 +1023,154 @@ trapManagerTable OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 41 }
-	
+
 trapManagerEntry OBJECT-TYPE
 	SYNTAX		TrapManagerEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ trapManagerIndex }
 	::= { trapManagerTable 1 }
-	
+
 TrapManagerEntry ::=
 	SEQUENCE {
 		trapManagerIndex		INTEGER,
 		trapMgrNetAddress		IpAddress
 	}
-	
+
 trapManagerIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { trapManagerEntry 1 }
-	
+
 trapMgrNetAddress OBJECT-TYPE
 	SYNTAX		IpAddress
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { trapManagerEntry 2 }
-	
+
 -- OoS application Table Group
-	
+
 qosAppTable OBJECT-TYPE
 	SYNTAX		SEQUENCE OF QoSAppEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 42 }
-	
+
 qosAppEntry OBJECT-TYPE
 	SYNTAX		QoSAppEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ qosAppIndex }
 	::= { qosAppTable 1 }
-	
+
 QoSAppEntry ::=
 	SEQUENCE {
 		qosAppIndex				INTEGER,
 		appPort					INTEGER,
 		appPriority				INTEGER
 	}
-	
+
 qosAppIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { qosAppEntry 1 }
-	
+
 appPort OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { qosAppEntry 2 }
-	
+
 appPriority OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), low(1), high(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { qosAppEntry 3 }
-	
+
 -- OoS Port Table Group
-	
+
 qosPortTable OBJECT-TYPE
 	SYNTAX		SEQUENCE OF QoSPortEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 43 }
-	
+
 qosPortEntry OBJECT-TYPE
 	SYNTAX		QoSPortEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ qosPortIndex }
 	::= { qosPortTable 1 }
-	
+
 QoSPortEntry ::=
 	SEQUENCE {
 		qosPortIndex			INTEGER,
 		lanPort					INTEGER,
 		portPriority			INTEGER
 	}
-	
+
 qosPortIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { qosPortEntry 1 }
-	
+
 lanPort OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { qosPortEntry 2 }
-	
+
 portPriority OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), low(1), high(2) }
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { qosPortEntry 3 }
-	
--- 81 v2.39 
+
+-- 81 v2.39
 
 multicastPassStatus OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
@@ -1178,9 +1178,9 @@ multicastPassStatus OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { broadbandGateway 44 }
-	
+
 
 mtuStatus OBJECT-TYPE
 	SYNTAX		INTEGER { disable(0), enable(1) }
@@ -1188,9 +1188,9 @@ mtuStatus OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { broadbandGateway 45 }
-	
+
 
 mtuSize OBJECT-TYPE
 	SYNTAX		INTEGER
@@ -1198,9 +1198,9 @@ mtuSize OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { broadbandGateway 46 }
-	
+
 
 redialPeriod OBJECT-TYPE
 	SYNTAX		INTEGER
@@ -1208,9 +1208,9 @@ redialPeriod OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-	
+
 	::= { broadbandGateway 47 }
-	
+
 -- the Port Triggering Group
 
 portTriggering OBJECT-TYPE
@@ -1219,19 +1219,19 @@ portTriggering OBJECT-TYPE
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { broadbandGateway 48 }
-	
+
 portTriggerEntry OBJECT-TYPE
 	SYNTAX		PortTriggerEntry
 	ACCESS		not-accessible
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	INDEX		{ portTriggerIndex }
 	::= { portTriggering 1 }
-	
+
 PortTriggerEntry ::=
 	SEQUENCE {
 		portTriggerIndex	INTEGER,
@@ -1241,61 +1241,61 @@ PortTriggerEntry ::=
 		incomingPortStart	INTEGER,
 		incomingPortEnd		INTEGER
 	}
-	
+
 portTriggerIndex OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-only
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { portTriggerEntry 1 }
-	
+
 appName OBJECT-TYPE
 	SYNTAX		OwnerString (SIZE(0..12))
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { portTriggerEntry 2 }
-	
+
 triggerPortStart OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { portTriggerEntry 3 }
-	
+
 triggerPortEnd OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
-	::= { portTriggerEntry 4 }	
-	
+
+	::= { portTriggerEntry 4 }
+
 incomingPortStart OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { portTriggerEntry 5 }
-	
+
 incomingPortEnd OBJECT-TYPE
 	SYNTAX		INTEGER
 	ACCESS		read-write
 	STATUS		mandatory
 	DESCRIPTION
 		" "
-		
+
 	::= { portTriggerEntry 6 }
-	
+
 
 
 END

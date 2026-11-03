@@ -1,8 +1,8 @@
 -- *****************************************************************
 -- CISCO-ENTITY-DISPLAY-MIB: Cisco Entity DISPLAY MIB file
---   
+--
 -- Jan 2003, Arvind Prabhudev, Mickey Spiegel, Sonal Maheshwari
---   
+--
 -- Copyright (c) 2003, 2009 by Cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -110,7 +110,7 @@ ciscoEntityDisplayMIBObjects  OBJECT IDENTIFIER
 -- This table contains current display status information.
 
 ceDisplayTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeDisplayEntry 
+    SYNTAX          SEQUENCE OF CeDisplayEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -130,7 +130,7 @@ ceDisplayEntry OBJECT-TYPE
     INDEX           {
                         entPhysicalIndex,
                         ceDisplayIndex
-                    } 
+                    }
     ::= { ceDisplayTable 1 }
 
 CeDisplayEntry ::= SEQUENCE {
@@ -149,7 +149,7 @@ ceDisplayIndex OBJECT-TYPE
     DESCRIPTION
         "An arbitrary index that uniquely identifies an LED or
         an alphanumeric display on the physical entity
-        identified by entPhysicalIndex." 
+        identified by entPhysicalIndex."
     ::= { ceDisplayEntry 1 }
 
 ceDisplayType OBJECT-TYPE
@@ -159,7 +159,7 @@ ceDisplayType OBJECT-TYPE
     DESCRIPTION
         "This object indicates the type of display described
         in this entry. i.e. whether it is an LED display or
-        an alphanumeric display." 
+        an alphanumeric display."
     ::= { ceDisplayEntry 2 }
 
 ceDisplayName OBJECT-TYPE
@@ -168,7 +168,7 @@ ceDisplayName OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object provides a human-readable string which is
-        the name for the display device specified in this entry." 
+        the name for the display device specified in this entry."
     ::= { ceDisplayEntry 3 }
 
 ceDisplayState OBJECT-TYPE
@@ -177,7 +177,7 @@ ceDisplayState OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the current display state for
-        the display specified in this entry." 
+        the display specified in this entry."
     ::= { ceDisplayEntry 4 }
 
 ceDisplayColor OBJECT-TYPE
@@ -190,7 +190,7 @@ ceDisplayColor OBJECT-TYPE
         specified by this entry is an alphanumeric display,
         i.e. ceDisplayType is of type 'alphanumeric' then,
         color may not apply and the agent may choose to
-        indicate this by setting this object to 'unknown'." 
+        indicate this by setting this object to 'unknown'."
     ::= { ceDisplayEntry 5 }
 
 ceDisplayText OBJECT-TYPE
@@ -202,13 +202,13 @@ ceDisplayText OBJECT-TYPE
         the text currently displayed in the alphanumeric display
         specified in this entry. If the display specified by
         this entry is an LED, i.e. ceDisplayType is of type 'led'
-        then, this object would be an empty string." 
+        then, this object would be an empty string."
     ::= { ceDisplayEntry 6 }
- 
+
 
 
 ceDisplayBeaconTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeDisplayBeaconEntry 
+    SYNTAX          SEQUENCE OF CeDisplayBeaconEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -222,17 +222,17 @@ ceDisplayBeaconEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An entry containing management information of
-        beacon functionality of a particular beacon 
+        beacon functionality of a particular beacon
         display device.
 
-        Only those display devices, as specified by 
-        entPhysicalIndex in ENTITY-MIB, that support 
-        beacon functionality will be populated in this 
+        Only those display devices, as specified by
+        entPhysicalIndex in ENTITY-MIB, that support
+        beacon functionality will be populated in this
         table."
     INDEX           {
                         entPhysicalIndex,
                         ceDisplayIndex
-                    } 
+                    }
     ::= { ceDisplayBeaconTable 1 }
 
 CeDisplayBeaconEntry ::= SEQUENCE {
@@ -247,12 +247,12 @@ ceDisplayBeaconEnabled OBJECT-TYPE
         "This object specifies if the beacon functionality is
         administratively enabled for this display device.
 
-        'true'    - beacon functionality is administratively 
+        'true'    - beacon functionality is administratively
                     enabled
-        'false'   - beacon functionality is administratively 
-                    disabled." 
+        'false'   - beacon functionality is administratively
+                    disabled."
     ::= { ceDisplayBeaconEntry 1 }
- 
+
 
 -- MIB Conformance Information
 
@@ -356,10 +356,3 @@ ceDisplayBeaconGroup OBJECT-GROUP
     ::= { ceDisplayMIBGroups 4 }
 
 END
-
-
-
-
-
-
-

@@ -546,7 +546,7 @@ ieee8021MstpCistPortAdminPathCost OBJECT-TYPE
          which returns the operational value of the path cost.
 
          The value of this object MUST be retained across
-         reinitializations of the management system."     
+         reinitializations of the management system."
     REFERENCE   "13.22:p, 17.13.11 of IEEE Std 802.1D"
     ::= { ieee8021MstpCistPortEntry 4 }
 
@@ -611,7 +611,7 @@ ieee8021MstpCistPortMacEnabled OBJECT-TYPE
     DESCRIPTION
         "In a Bridge that supports the MAC Enabled parameter, the current
          state of the MAC Enabled parameter.
-         True(1) indicates that adminstratively the MAC is set as if it 
+         True(1) indicates that adminstratively the MAC is set as if it
          was connected to a point-to-point LAN."
     REFERENCE   "12.8.2.1.3 m)"
     ::= { ieee8021MstpCistPortEntry 10 }
@@ -633,7 +633,7 @@ ieee8021MstpCistPortRestrictedRole OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "The current state of the restrictedRole parameter for the Port.
-         True(1) causes the Port not to be selected as Root Port for the 
+         True(1) causes the Port not to be selected as Root Port for the
          CIST or any MSTI. "
     REFERENCE   "13.25.14"
     ::= { ieee8021MstpCistPortEntry 12 }
@@ -644,7 +644,7 @@ ieee8021MstpCistPortRestrictedTcn OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "The current state of the restrictedTcn parameter for the Port.
-         True(1) causes the Port not to propagate topology changes to 
+         True(1) causes the Port not to propagate topology changes to
          other Ports."
     REFERENCE   "13.25.15"
     ::= { ieee8021MstpCistPortEntry 13 }

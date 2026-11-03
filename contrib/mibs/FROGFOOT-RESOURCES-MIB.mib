@@ -365,4 +365,3 @@ resLoadGroup	OBJECT-GROUP
 	::= { resGroups 4 }
 
 END
-

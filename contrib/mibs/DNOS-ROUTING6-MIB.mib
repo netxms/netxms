@@ -56,9 +56,9 @@ IMPORTS
     -- agentIpv6Group
     --
     --**************************************************************************************
-    
+
     agentIpv6Group                       OBJECT IDENTIFIER ::= { fastPathRoutingIpv6 1 }
-    
+
     agentIpv6RoutingMode OBJECT-TYPE
          SYNTAX      INTEGER {
                       enable(1),
@@ -74,12 +74,12 @@ IMPORTS
     -- agentIpv6InterfaceTable
     --
     --**************************************************************************************
-        
+
     agentIpv6InterfaceTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF AgentIpv6InterfaceEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      ""
          ::= { agentIpv6Group 2 }
 
@@ -87,12 +87,12 @@ IMPORTS
          SYNTAX      AgentIpv6InterfaceEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      ""
          INDEX       { agentIpv6InterfaceIfIndex }
          ::= { agentIpv6InterfaceTable 1 }
-         
-    AgentIpv6InterfaceEntry ::= SEQUENCE {         
+
+    AgentIpv6InterfaceEntry ::= SEQUENCE {
           agentIpv6InterfaceIfIndex
               Integer32,
           agentIpv6InterfaceMtuValue
@@ -110,7 +110,7 @@ IMPORTS
           agentIpv6InterfaceIcmpRedirects
               INTEGER
           }
-          
+
     agentIpv6InterfaceIfIndex OBJECT-TYPE
          SYNTAX      Integer32 (0..2147483647)
          MAX-ACCESS  read-only
@@ -118,7 +118,7 @@ IMPORTS
          DESCRIPTION
                      "The IfIndex associated with this instance."
          ::= { agentIpv6InterfaceEntry 1 }
-          
+
     agentIpv6InterfaceMtuValue OBJECT-TYPE
          SYNTAX      Unsigned32 (0|1280..1500)
          MAX-ACCESS  read-write
@@ -128,13 +128,13 @@ IMPORTS
                       retrieving the value of this object results in a zero value.
                       Setting the value zero to this object effectively un-configures the MTU."
          ::= { agentIpv6InterfaceEntry 2 }
-          
+
     agentIpv6InterfaceDadTransmits OBJECT-TYPE
          SYNTAX      Integer32 (0..100)
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Configures the dad transmits value for this interface."  
+                     "Configures the dad transmits value for this interface."
          ::= { agentIpv6InterfaceEntry 3 }
 
     agentIpv6InterfaceLinkLocalOnly OBJECT-TYPE
@@ -149,7 +149,7 @@ IMPORTS
                       In this case, an eui-64 based link-local address is used. "
          DEFVAL      { disable }
          ::= { agentIpv6InterfaceEntry 4 }
-     
+
     agentIpv6InterfaceIcmpUnreachables OBJECT-TYPE
          SYNTAX      INTEGER {
                     enable(1),
@@ -162,7 +162,7 @@ IMPORTS
                      "If this object is enable, it indicates that ICMPv6 unreachables can be sent on this
                       interface."
          ::= { agentIpv6InterfaceEntry 5 }
-          
+
     agentIpv6InterfaceAutoconfig OBJECT-TYPE
          SYNTAX      INTEGER{
                      enable(1),
@@ -205,12 +205,12 @@ IMPORTS
     -- agentIpv6RouterAdvertisementTable
     --
     --**************************************************************************************
-        
+
     agentIpv6RouterAdvertisementTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF AgentIpv6RouterAdvertisementEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "There is no global administrative flag for router advertisement.  The global
                      routing flag (agentIpv6RoutingMode) will be used for this purpose.  If routing
                      is disabled, router advertisement is disabled as well."
@@ -220,12 +220,12 @@ IMPORTS
          SYNTAX      AgentIpv6RouterAdvertisementEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      ""
          INDEX       { agentIpv6RouterAdvertisementIfIndex }
          ::= { agentIpv6RouterAdvertisementTable 1 }
-         
-    AgentIpv6RouterAdvertisementEntry ::= SEQUENCE {         
+
+    AgentIpv6RouterAdvertisementEntry ::= SEQUENCE {
           agentIpv6RouterAdvertisementIfIndex
               Integer32,
           agentIpv6RouterAdvertisementSuppressMode
@@ -245,7 +245,7 @@ IMPORTS
           agentIpv6RouterAdvertisementHopLimitUnspecifiedMode
               INTEGER
           }
-          
+
     agentIpv6RouterAdvertisementIfIndex OBJECT-TYPE
          SYNTAX      Integer32 (0..2147483647)
          MAX-ACCESS  read-only
@@ -253,7 +253,7 @@ IMPORTS
          DESCRIPTION
                      "Interface Number to configure Router Advertisement on."
          ::= { agentIpv6RouterAdvertisementEntry 1 }
-         
+
     agentIpv6RouterAdvertisementSuppressMode OBJECT-TYPE
          SYNTAX      INTEGER {
                       enable(1),
@@ -265,54 +265,54 @@ IMPORTS
                      "Enable or disable router advertisement suppression on the interface."
          DEFVAL      { disable }
          ::= { agentIpv6RouterAdvertisementEntry 2 }
-         
+
     agentIpv6RouterAdvertisementMaxAdvertisementInterval OBJECT-TYPE
          SYNTAX      Integer32 (4..1800)
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Maximum time allowed between sending router advertisements 
+                     "Maximum time allowed between sending router advertisements
                      from the interface."
          DEFVAL      { 600 }
          ::= { agentIpv6RouterAdvertisementEntry 3 }
-         
+
     agentIpv6RouterAdvertisementAdvertisementLifetime OBJECT-TYPE
          SYNTAX      Integer32 (4..65520)
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Value of lifetime field of router advertisement sent from 
+                     "Value of lifetime field of router advertisement sent from
                      the interface.
-                     
-                     This value must be greater than or equal to 
+
+                     This value must be greater than or equal to
                      agentIpv6RouterAdvertisementMaxAdvertisementInterval."
          DEFVAL      { 1800 }
          ::= { agentIpv6RouterAdvertisementEntry 4 }
-         
+
     agentIpv6RouterAdvertisementNbrSolicitInterval OBJECT-TYPE
          SYNTAX      Integer32 (0..3600000)
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Value of retrans time field of router advertisement sent from 
-                     the interface. A value of 0 means this router does not specifiy 
+                     "Value of retrans time field of router advertisement sent from
+                     the interface. A value of 0 means this router does not specifiy
                      the interval."
-                     
+
          DEFVAL      { 0 }
          ::= { agentIpv6RouterAdvertisementEntry 5 }
-         
+
     agentIpv6RouterAdvertisementReachableTime OBJECT-TYPE
          SYNTAX      Integer32 (0..3600000)
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Value of reachable time field of router advertisement sent from 
-                     the interface. A value of 0 means this router does not specifiy 
+                     "Value of reachable time field of router advertisement sent from
+                     the interface. A value of 0 means this router does not specifiy
                      the interval."
-                     
+
          DEFVAL      { 0 }
          ::= { agentIpv6RouterAdvertisementEntry 6 }
-         
+
     agentIpv6RouterAdvertisementManagedFlag OBJECT-TYPE
          SYNTAX      INTEGER {
                       enable(1),
@@ -321,7 +321,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Value of managed config field of router advertisement sent from 
+                     "Value of managed config field of router advertisement sent from
                       the interface."
          DEFVAL      { disable }
          ::= { agentIpv6RouterAdvertisementEntry 7 }
@@ -334,7 +334,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Value of other config field of router advertisement sent from 
+                     "Value of other config field of router advertisement sent from
                       the interface."
          DEFVAL      { disable }
          ::= { agentIpv6RouterAdvertisementEntry 8 }
@@ -353,15 +353,15 @@ IMPORTS
                       from this Router."
          DEFVAL     { disable }
          ::= { agentIpv6RouterAdvertisementEntry 9 }
-         
-         
+
+
 
     -- Address Prefix table
-    
+
     -- The IPv6 Address Prefix table contains information on
     -- the entity's IPv6 Address Prefixes that are associated
     -- with IPv6 interfaces.
-      
+
     agentIpv6AddrPrefixTable OBJECT-TYPE
          SYNTAX  SEQUENCE OF AgentIpv6AddrPrefixEntry
          MAX-ACCESS  not-accessible
@@ -370,7 +370,7 @@ IMPORTS
              "The list of IPv6 address prefixes of
              IPv6 interfaces."
          ::= { agentIpv6Group 4 }
-      
+
     agentIpv6AddrPrefixEntry OBJECT-TYPE
          SYNTAX  AgentIpv6AddrPrefixEntry
          MAX-ACCESS  not-accessible
@@ -382,7 +382,7 @@ IMPORTS
                    agentIpv6AddrPrefix,
                    agentIpv6AddrPrefixLength }
          ::= { agentIpv6AddrPrefixTable 1 }
-      
+
     AgentIpv6AddrPrefixEntry ::= SEQUENCE {
           agentIpv6AddrPrefix                     Ipv6AddressPrefix,
           agentIpv6AddrPrefixLength               INTEGER,
@@ -391,7 +391,7 @@ IMPORTS
           agentIpv6AddrPrefixAdvPreferredLifetime Unsigned32,
           agentIpv6AddrPrefixAdvValidLifetime     Unsigned32
          }
-      
+
     agentIpv6AddrPrefix OBJECT-TYPE
          SYNTAX      Ipv6AddressPrefix
          MAX-ACCESS  not-accessible
@@ -399,7 +399,7 @@ IMPORTS
          DESCRIPTION
            "The prefix associated with the this interface."
          ::= { agentIpv6AddrPrefixEntry 1 }
-      
+
     agentIpv6AddrPrefixLength OBJECT-TYPE
          SYNTAX      INTEGER (0..128)
          UNITS       "bits"
@@ -408,7 +408,7 @@ IMPORTS
          DESCRIPTION
            "The length of the prefix (in bits)."
          ::= { agentIpv6AddrPrefixEntry 2 }
-      
+
     agentIpv6AddrPrefixOnLinkFlag OBJECT-TYPE
          SYNTAX      TruthValue
          MAX-ACCESS  read-write
@@ -418,7 +418,7 @@ IMPORTS
            prefix can be used  for on-link determination
            and the value 'false(2)' otherwise."
          ::= { agentIpv6AddrPrefixEntry 3 }
-      
+
     agentIpv6AddrPrefixAutonomousFlag OBJECT-TYPE
          SYNTAX      TruthValue
          MAX-ACCESS  read-write
@@ -431,12 +431,12 @@ IMPORTS
            If false(2), it is not used to autoconfigure
            a local interface address."
          ::= { agentIpv6AddrPrefixEntry 4 }
-      
-      
-      
-      
-      
-      
+
+
+
+
+
+
     agentIpv6AddrPrefixAdvPreferredLifetime OBJECT-TYPE
          SYNTAX      Unsigned32
          UNITS       "seconds"
@@ -447,13 +447,13 @@ IMPORTS
             prefix will remain preferred, i.e. time until
             deprecation.  A value of 4,294,967,295 represents
             infinity.
-      
+
             The address generated from a deprecated prefix
             should no longer be used as a source address in
             new communications, but packets received on such
             an interface are processed as expected."
          ::= { agentIpv6AddrPrefixEntry 5 }
-      
+
     agentIpv6AddrPrefixAdvValidLifetime OBJECT-TYPE
          SYNTAX      Unsigned32
          UNITS       "seconds"
@@ -464,20 +464,20 @@ IMPORTS
            prefix will remain valid, i.e. time until
            invalidation.  A value of 4,294,967,295 represents
            infinity.
-      
+
            The address generated from an invalidated prefix
            should not appear as the destination or source
            address of a packet."
          ::= { agentIpv6AddrPrefixEntry 6 }
-      
-      
-      
-      
+
+
+
+
     -- the IPv6 Address table
-    
+
     -- The IPv6 address table contains this node's IPv6
     -- addressing information.
-      
+
     agentIpv6AddrTable OBJECT-TYPE
         SYNTAX      SEQUENCE OF AgentIpv6AddrEntry
         MAX-ACCESS  not-accessible
@@ -486,8 +486,8 @@ IMPORTS
           "The table of addressing information relevant to
           this node's interface addresses."
         ::= { agentIpv6Group 5 }
-      
-      
+
+
     agentIpv6AddrEntry OBJECT-TYPE
         SYNTAX      AgentIpv6AddrEntry
         MAX-ACCESS  not-accessible
@@ -497,7 +497,7 @@ IMPORTS
             node's interface addresses."
         INDEX   { agentIpv6InterfaceIfIndex, agentIpv6AddrAddress }
         ::= { agentIpv6AddrTable 1 }
-      
+
     AgentIpv6AddrEntry ::=
         SEQUENCE {
              agentIpv6AddrAddress        Ipv6Address,
@@ -505,7 +505,7 @@ IMPORTS
              agentIpv6AddrEui64Flag      TruthValue,
              agentIpv6AddrStatus         RowStatus
             }
-      
+
     agentIpv6AddrAddress OBJECT-TYPE
         SYNTAX      Ipv6Address
         MAX-ACCESS  not-accessible
@@ -514,7 +514,7 @@ IMPORTS
           "The IPv6 address to which this entry's addressing
           information pertains."
         ::= { agentIpv6AddrEntry 1 }
-      
+
     agentIpv6AddrPfxLength OBJECT-TYPE
         SYNTAX      INTEGER(0..128)
         UNITS       "bits"
@@ -524,7 +524,7 @@ IMPORTS
           "The length of the prefix (in bits) associated with
           the IPv6 address of this entry."
         ::= { agentIpv6AddrEntry 2 }
-      
+
     agentIpv6AddrEui64Flag OBJECT-TYPE
          SYNTAX      TruthValue
          MAX-ACCESS  read-create
@@ -534,7 +534,7 @@ IMPORTS
            address uses and eui-64 generated interface identifier and the value
            'false(2)' otherwise."
          ::= { agentIpv6AddrEntry 3 }
-      
+
     agentIpv6AddrStatus OBJECT-TYPE
          SYNTAX      RowStatus
          MAX-ACCESS  read-create
@@ -542,18 +542,18 @@ IMPORTS
          DESCRIPTION
                  "Creates a new entry in the Address table.
                  Allowed values are:
-                 
+
                  createAndGo(4)  - Creates an entry in this table, associating the address
                                    with a given interface.  The agentIpv6NetMask
                                    object must be set during creation.
-                                    
+
                  destroy(6)      - Removes the associated address from the interface."
          ::= { agentIpv6AddrEntry 4 }
-      
-      
-      
+
+
+
     -- IPv6 Static Routing table
-    
+
     agentIpv6StaticRouteTable OBJECT-TYPE
          SYNTAX     SEQUENCE OF AgentIpv6StaticRouteEntry
          MAX-ACCESS not-accessible
@@ -564,7 +564,7 @@ IMPORTS
            that can be used for packet forwarding
            determination."
          ::= { agentIpv6Group 6 }
-      
+
     agentIpv6StaticRouteEntry OBJECT-TYPE
          SYNTAX     AgentIpv6StaticRouteEntry
          MAX-ACCESS not-accessible
@@ -576,7 +576,7 @@ IMPORTS
                    agentIpv6StaticRouteIfIndex,
                    agentIpv6StaticRouteNextHop }
          ::= { agentIpv6StaticRouteTable 1 }
-      
+
     AgentIpv6StaticRouteEntry ::= SEQUENCE {
              agentIpv6StaticRouteDest           Ipv6AddressPrefix,
              agentIpv6StaticRoutePfxLength      INTEGER,
@@ -585,7 +585,7 @@ IMPORTS
              agentIpv6StaticRoutePreference     INTEGER,
              agentIpv6StaticRouteStatus         RowStatus
          }
-      
+
     agentIpv6StaticRouteDest OBJECT-TYPE
          SYNTAX     Ipv6AddressPrefix
          MAX-ACCESS not-accessible
@@ -595,7 +595,7 @@ IMPORTS
            This object may not take a Multicast address
            value."
          ::= { agentIpv6StaticRouteEntry 1 }
-      
+
     agentIpv6StaticRoutePfxLength OBJECT-TYPE
          SYNTAX     INTEGER(0..128)
          UNITS      "bits"
@@ -605,7 +605,7 @@ IMPORTS
            "Indicates the prefix length of the destination
            address."
          ::= { agentIpv6StaticRouteEntry 2 }
-    
+
     agentIpv6StaticRouteIfIndex OBJECT-TYPE
          SYNTAX     Ipv6IfIndexOrZero
          MAX-ACCESS not-accessible
@@ -619,7 +619,7 @@ IMPORTS
            ipv6IfIndex.  For routes with global address next hop this
            value can be zero."
          ::= { agentIpv6StaticRouteEntry 3 }
-    
+
     agentIpv6StaticRouteNextHop OBJECT-TYPE
          SYNTAX     Ipv6Address
          MAX-ACCESS not-accessible
@@ -628,8 +628,8 @@ IMPORTS
            "The address of the next
            system en route. "
          ::= { agentIpv6StaticRouteEntry 4 }
-    
-    
+
+
     agentIpv6StaticRoutePreference OBJECT-TYPE
          SYNTAX     INTEGER (1..255)
          MAX-ACCESS read-create
@@ -639,7 +639,7 @@ IMPORTS
              value is more preferred."
          DEFVAL      { 1 }
          ::= { agentIpv6StaticRouteEntry 5 }
-    
+
     agentIpv6StaticRouteStatus OBJECT-TYPE
          SYNTAX      RowStatus
          MAX-ACCESS  read-create
@@ -647,22 +647,22 @@ IMPORTS
          DESCRIPTION
                  "Creates a new entry in the Address table.
                  Allowed values are:
-                 
-                 createAndGo(4)  - Creates an entry in this table. 
-                                    
+
+                 createAndGo(4)  - Creates an entry in this table.
+
                  destroy(6)      - Removes the associated route from the interface."
          ::= { agentIpv6StaticRouteEntry 6 }
-    
-    
+
+
     --**************************************************************************************
     -- agentIpv6ServicePortGroup
     --
     --**************************************************************************************
-    
+
     agentIpv6ServicePortGroup            OBJECT IDENTIFIER ::= { agentIpv6Group 7 }
 
     -- IPv6 Service Port Prefix Table
-    
+
     agentIpv6ServicePortPrefixTable OBJECT-TYPE
          SYNTAX     SEQUENCE OF AgentIpv6ServicePortPrefixEntry
          MAX-ACCESS not-accessible
@@ -672,7 +672,7 @@ IMPORTS
            an entry for each valid IPv6 prefix configured on the
            Service Port."
          ::= { agentIpv6ServicePortGroup 1 }
-      
+
     agentIpv6ServicePortPrefixEntry OBJECT-TYPE
          SYNTAX     AgentIpv6ServicePortPrefixEntry
          MAX-ACCESS not-accessible
@@ -681,7 +681,7 @@ IMPORTS
                  "An IPv6 Service Port Prefix entry."
          INDEX   { agentIpv6ServicePortPrefixIndex }
          ::= { agentIpv6ServicePortPrefixTable 1 }
-      
+
     AgentIpv6ServicePortPrefixEntry ::= SEQUENCE {
              agentIpv6ServicePortPrefixIndex    Unsigned32,
              agentIpv6ServicePortPrefix         Ipv6Address,
@@ -694,10 +694,10 @@ IMPORTS
          STATUS     current
          DESCRIPTION
            "The index of the Ipv6 Prefix Address configured on the
-           Service Port. Removal of a row will cause index values 
+           Service Port. Removal of a row will cause index values
            to be reassigned."
          ::= { agentIpv6ServicePortPrefixEntry 1 }
-      
+
     agentIpv6ServicePortPrefix OBJECT-TYPE
          SYNTAX     Ipv6Address
          MAX-ACCESS read-only
@@ -725,7 +725,7 @@ IMPORTS
            an entry for each valid IPv6 Default Router configured on the
            Service Port."
          ::= { agentIpv6ServicePortGroup 2 }
-      
+
     agentIpv6ServicePortDefaultRouterEntry OBJECT-TYPE
          SYNTAX     AgentIpv6ServicePortDefaultRouterEntry
          MAX-ACCESS not-accessible
@@ -734,7 +734,7 @@ IMPORTS
                  "An IPv6 Service Port Default Router entry."
          INDEX   { agentIpv6ServicePortDefaultRouterIndex }
          ::= { agentIpv6ServicePortDefaultRouterTable 1 }
-      
+
     AgentIpv6ServicePortDefaultRouterEntry ::= SEQUENCE {
              agentIpv6ServicePortDefaultRouterIndex    Unsigned32,
              agentIpv6ServicePortDefaultRouter         Ipv6Address
@@ -745,8 +745,8 @@ IMPORTS
          MAX-ACCESS not-accessible
          STATUS     current
          DESCRIPTION
-           "The index of the IPv6 Default Router Address 
-           configured on the Service Port. Removal of a 
+           "The index of the IPv6 Default Router Address
+           configured on the Service Port. Removal of a
            row will cause index values to be reassigned."
          ::= { agentIpv6ServicePortDefaultRouterEntry 1 }
 
@@ -755,7 +755,7 @@ IMPORTS
          MAX-ACCESS read-only
          STATUS     current
          DESCRIPTION
-            "The Address of the IPv6 Default Router configured 
+            "The Address of the IPv6 Default Router configured
             on the Service Port."
          ::= { agentIpv6ServicePortDefaultRouterEntry 2 }
 
@@ -771,7 +771,7 @@ IMPORTS
            an entry for each valid IPv6 Neighbor configured on the
            Service Port."
          ::= { agentIpv6ServicePortGroup 3 }
-      
+
     agentIpv6ServicePortNbrEntry OBJECT-TYPE
          SYNTAX     AgentIpv6ServicePortNbrEntry
          MAX-ACCESS not-accessible
@@ -780,7 +780,7 @@ IMPORTS
                  "An IPv6 Service Port Neighbor entry."
          INDEX   { agentIpv6ServicePortNbrAddr }
          ::= { agentIpv6ServicePortNbrTable 1 }
-      
+
     AgentIpv6ServicePortNbrEntry ::= SEQUENCE {
              agentIpv6ServicePortNbrAddr         Ipv6Address,
              agentIpv6ServicePortNbrPhysAddr     MacAddress,
@@ -838,7 +838,7 @@ IMPORTS
          MAX-ACCESS read-only
          STATUS     current
          DESCRIPTION
-           "Returns true(1) if the neighbor machine is a router, 
+           "Returns true(1) if the neighbor machine is a router,
            false(2) otherwise."
          ::= { agentIpv6ServicePortNbrEntry 5 }
 
@@ -955,22 +955,22 @@ IMPORTS
          DESCRIPTION
                      "Information about the DHCPv6 Client parameters on the interfaces."
          ::= { agentIpv6Group 9 }
-    
+
     agentDhcp6ClientParametersEntry OBJECT-TYPE
          SYNTAX      AgentDhcp6ClientParametersEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "DHCPv6 Client information on an interface."
          INDEX       { agentDhcp6ClientInterfaceIndex }
          ::= { agentDhcp6ClientParametersTable 1 }
-         
+
     AgentDhcp6ClientParametersEntry ::= SEQUENCE {
          agentDhcp6ClientInterfaceIndex       Unsigned32,
          agentDhcp6ClientPrefix               Ipv6AddressPrefix,
          agentDhcp6ClientPrefixlength         INTEGER,
          agentDhcp6ClientState                INTEGER,
-         agentDhcp6ClientServerDUID           DisplayString, 
+         agentDhcp6ClientServerDUID           DisplayString,
          agentDhcp6ClientT1Time               Unsigned32,
          agentDhcp6ClientT2Time               Unsigned32,
          agentDhcp6ClientIAID                 Unsigned32,
@@ -979,9 +979,9 @@ IMPORTS
          agentDhcp6ClientRenewTime            Unsigned32,
          agentDhcp6ClientExpireTime           Unsigned32
          }
-         
+
     agentDhcp6ClientInterfaceIndex        OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -989,7 +989,7 @@ IMPORTS
          ::= { agentDhcp6ClientParametersEntry 1 }
 
     agentDhcp6ClientPrefix                OBJECT-TYPE
-         SYNTAX      Ipv6AddressPrefix 
+         SYNTAX      Ipv6AddressPrefix
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -997,7 +997,7 @@ IMPORTS
          ::= { agentDhcp6ClientParametersEntry 2 }
 
     agentDhcp6ClientPrefixlength          OBJECT-TYPE
-         SYNTAX      INTEGER 
+         SYNTAX      INTEGER
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -1021,20 +1021,20 @@ IMPORTS
          ::= { agentDhcp6ClientParametersEntry 4 }
 
      agentDhcp6ClientServerDUID           OBJECT-TYPE
-         SYNTAX      DisplayString (SIZE(1..255)) 
+         SYNTAX      DisplayString (SIZE(1..255))
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
                      "The DHCPv6 Unique Identifier of the DHCPv6 Server on this interface."
          ::= { agentDhcp6ClientParametersEntry 5 }
-  
+
     agentDhcp6ClientT1Time                OBJECT-TYPE
          SYNTAX      Unsigned32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                    "The T1 (in seconds) time as indicated by the DHCPv6 Server. T1 value indicates the time interval 
-                     after which the address is requested for renewal." 
+                    "The T1 (in seconds) time as indicated by the DHCPv6 Server. T1 value indicates the time interval
+                     after which the address is requested for renewal."
          ::= { agentDhcp6ClientParametersEntry 6 }
 
     agentDhcp6ClientT2Time                OBJECT-TYPE
@@ -1042,7 +1042,7 @@ IMPORTS
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "The T2 (in seconds) time as indicated by the DHCPv6 Server.  T2 value indicates the time interval 
+                     "The T2 (in seconds) time as indicated by the DHCPv6 Server.  T2 value indicates the time interval
                       after which the Client sends Rebind message to the Server incase there are no replies to the Renew messages."
          ::= { agentDhcp6ClientParametersEntry 7 }
 
@@ -1072,15 +1072,15 @@ IMPORTS
          ::= { agentDhcp6ClientParametersEntry 10 }
 
     agentDhcp6ClientRenewTime             OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
                      "The time (in seconds) remaining to send a DHCPv6 Renew request to DHCPv6 Server for the leased address."
          ::= { agentDhcp6ClientParametersEntry 11 }
- 
+
     agentDhcp6ClientExpireTime            OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -1088,282 +1088,282 @@ IMPORTS
          ::= { agentDhcp6ClientParametersEntry 12 }
 
 
-    --****************************************************************     
+    --****************************************************************
     -- agentIpv6RoutingTableSummaryGroup
-    -- 
+    --
     --****************************************************************
 
     agentIpv6RoutingTableSummaryGroup    OBJECT IDENTIFIER ::= { agentIpv6Group 10 }
 
     agentIpv6ConnectedRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of connected routes in the IPv6 routing table." 
+        "The number of connected routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 1 }
 
     agentIpv6StaticRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of static routes in the IPv6 routing table." 
+        "The number of static routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 2 }
 
     agentIpv66to4Routes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of 6to4 routes in the IPv6 routing table." 
+        "The number of 6to4 routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 3 }
 
     agentIpv6OspfRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of OSPFv2 routes in the IPv6 routing table." 
+        "The number of OSPFv2 routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 4 }
 
     agentIpv6OspfIntraRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of OSPFv2 intra-area routes in the IPv6 routing table." 
+        "The number of OSPFv2 intra-area routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 5 }
 
     agentIpv6OspfInterRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of OSPFv2 inter-area routes in the IPv6 routing table." 
+        "The number of OSPFv2 inter-area routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 6 }
 
     agentIpv6OspfExt1Routes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of OSPFv2 external type 1 routes in the IPv6 routing table." 
+        "The number of OSPFv2 external type 1 routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 7 }
 
     agentIpv6OspfExt2Routes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of OSPFv2 external type 2 routes in the IPv6 routing table." 
+        "The number of OSPFv2 external type 2 routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 8 }
 
     agentIpv6BgpRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of BGP routes in the IPv6 routing table." 
+        "The number of BGP routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 9 }
 
     agentIpv6EbgpRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of external BGP routes in the IPv6 routing table." 
+        "The number of external BGP routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 10 }
 
     agentIpv6IbgpRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of internal BGP routes in the IPv6 routing table." 
+        "The number of internal BGP routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 11 }
 
     agentIpv6LocalBgpRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of local BGP routes in the IPv6 routing table." 
+        "The number of local BGP routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 12 }
 
     agentIpv6RejectRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of reject routes in the IPv6 routing table." 
+        "The number of reject routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 13 }
 
     agentIpv6TotalRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of routes in the IPv6 routing table." 
+        "The number of routes in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 14 }
 
     agentIpv6BestRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of IPv6 routes in the forwarding table." 
+        "The number of IPv6 routes in the forwarding table."
     ::= { agentIpv6RoutingTableSummaryGroup 15 }
 
     agentIpv6BestRoutesHigh OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The highest number of IPv6 routes in the forwarding table." 
+        "The highest number of IPv6 routes in the forwarding table."
     ::= { agentIpv6RoutingTableSummaryGroup 16 }
 
     agentIpv6AlternateRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of alternate routes in the IPv6 routing table. 
-         An alternate route is less preferred than the best route and is not used for forwarding." 
+        "The number of alternate routes in the IPv6 routing table.
+         An alternate route is less preferred than the best route and is not used for forwarding."
     ::= { agentIpv6RoutingTableSummaryGroup 17 }
 
     agentIpv6RouteAdds OBJECT-TYPE
-      SYNTAX     Counter32 
+      SYNTAX     Counter32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of routes added to the IPv6 routing table." 
+        "The number of routes added to the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 18 }
 
     agentIpv6RouteModifies OBJECT-TYPE
-      SYNTAX     Counter32 
+      SYNTAX     Counter32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of routes changed in the IPv6 routing table." 
+        "The number of routes changed in the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 19 }
 
     agentIpv6RouteDeletes OBJECT-TYPE
-      SYNTAX     Counter32 
+      SYNTAX     Counter32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of routes removed from the IPv6 routing table." 
+        "The number of routes removed from the IPv6 routing table."
     ::= { agentIpv6RoutingTableSummaryGroup 20 }
 
     agentIpv6UnresolvedRouteAdds OBJECT-TYPE
-      SYNTAX     Counter32 
+      SYNTAX     Counter32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of IPv6 route adds that failed because none of the route's next hops were on a local subnet." 
+        "The number of IPv6 route adds that failed because none of the route's next hops were on a local subnet."
     ::= { agentIpv6RoutingTableSummaryGroup 21 }
 
     agentIpv6InvalidRouteAdds OBJECT-TYPE
-      SYNTAX     Counter32 
+      SYNTAX     Counter32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of IPv6 routes adds that failed because the route was invalid." 
+        "The number of IPv6 routes adds that failed because the route was invalid."
     ::= { agentIpv6RoutingTableSummaryGroup 22 }
 
     agentIpv6FailedRouteAdds OBJECT-TYPE
-      SYNTAX     Counter32 
+      SYNTAX     Counter32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of IPv6 routes adds that failed because of a resource limitation in the routing table" 
+        "The number of IPv6 routes adds that failed because of a resource limitation in the routing table"
     ::= { agentIpv6RoutingTableSummaryGroup 23 }
 
     agentIpv6ReservedLocals OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of IPv6 routing table entries reserved for a local subnet on a routing interface that is down. " 
+        "The number of IPv6 routing table entries reserved for a local subnet on a routing interface that is down. "
     ::= { agentIpv6RoutingTableSummaryGroup 24 }
 
     agentIpv6UniqueNextHops OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of distinct next hops used among all IPv6 routes currently in the routing table. 
-         These include local interfaces for local routes and neighbors for indirect routes." 
+        "The number of distinct next hops used among all IPv6 routes currently in the routing table.
+         These include local interfaces for local routes and neighbors for indirect routes."
     ::= { agentIpv6RoutingTableSummaryGroup 25 }
 
     agentIpv6UniqueNextHopsHigh OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The highest count of unique next hops since counters were last cleared." 
+        "The highest count of unique next hops since counters were last cleared."
     ::= { agentIpv6RoutingTableSummaryGroup 26 }
 
     agentIpv6NextHopGroups OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The current number of next hop groups in use by one or more routes. 
-         Each next hop group includes one or more next hops." 
+        "The current number of next hop groups in use by one or more routes.
+         Each next hop group includes one or more next hops."
     ::= { agentIpv6RoutingTableSummaryGroup 27 }
 
     agentIpv6NextHopGroupsHigh OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The highest count of next hop groups since counters were last cleared." 
+        "The highest count of next hop groups since counters were last cleared."
     ::= { agentIpv6RoutingTableSummaryGroup 28 }
 
     agentIpv6EcmpGroups OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of next hop groups with multiple next hops." 
+        "The number of next hop groups with multiple next hops."
     ::= { agentIpv6RoutingTableSummaryGroup 29 }
 
     agentIpv6EcmpGroupsHigh OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The high water mark of the number of ECMP groups." 
+        "The high water mark of the number of ECMP groups."
     ::= { agentIpv6RoutingTableSummaryGroup 30 }
 
     agentIpv6EcmpRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The current number of IPv6 routes with multiple next hops." 
+        "The current number of IPv6 routes with multiple next hops."
     ::= { agentIpv6RoutingTableSummaryGroup 31 }
 
     agentIpv6TruncEcmpRoutes OBJECT-TYPE
-      SYNTAX     Gauge32 
+      SYNTAX     Gauge32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of ECMP routes that are currently installed in the forwarding table 
-         with just one next hop. The forwarding table may limit the number of ECMP 
-         routes or the number of ECMP groups. When an ECMP route cannot be installed 
-         because such a limit is reached, the route is installed with a single next hop." 
+        "The number of ECMP routes that are currently installed in the forwarding table
+         with just one next hop. The forwarding table may limit the number of ECMP
+         routes or the number of ECMP groups. When an ECMP route cannot be installed
+         because such a limit is reached, the route is installed with a single next hop."
     ::= { agentIpv6RoutingTableSummaryGroup 32 }
 
     agentIpv6EcmpRetries OBJECT-TYPE
-      SYNTAX     Counter32 
+      SYNTAX     Counter32
       MAX-ACCESS read-only
       STATUS     current
       DESCRIPTION
-        "The number of ECMP routes that have been installed in the forwarding table 
-         after initially being installed with a single next hop." 
+        "The number of ECMP routes that have been installed in the forwarding table
+         after initially being installed with a single next hop."
     ::= { agentIpv6RoutingTableSummaryGroup 33 }
 
     --****************************************************************
@@ -1376,8 +1376,8 @@ IMPORTS
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-                     "A count of the number of routes with each number of ECMP next hops. 
-                      A walk of this table only returns the entries with a non-zero value 
+                     "A count of the number of routes with each number of ECMP next hops.
+                      A walk of this table only returns the entries with a non-zero value
                       for agentIpv6EcmpRouteCount."
          ::= { agentIpv6Group 11 }
 
@@ -1402,7 +1402,7 @@ IMPORTS
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-                     "The number of next hops in a route. From 0 to the maximum number of 
+                     "The number of next hops in a route. From 0 to the maximum number of
                       next hops in an ECMP route. The maximum varies by platform."
          ::= { agentIpv6EcmpCountEntry 1 }
 
@@ -1415,9 +1415,9 @@ IMPORTS
          ::= { agentIpv6EcmpCountEntry 2 }
 
 
-    --****************************************************************     
+    --****************************************************************
     -- agentIpv6NetworkPortGroup
-    -- 
+    --
     --****************************************************************
 
     agentIpv6NetworkPortGroup    OBJECT IDENTIFIER ::= { agentIpv6Group 12 }
@@ -1433,7 +1433,7 @@ IMPORTS
            an entry for each valid IPv6 Neighbor configured on the
            Network Port."
          ::= { agentIpv6NetworkPortGroup 1 }
-      
+
     agentIpv6NetworkPortNbrEntry OBJECT-TYPE
          SYNTAX     AgentIpv6NetworkPortNbrEntry
          MAX-ACCESS not-accessible
@@ -1442,7 +1442,7 @@ IMPORTS
                  "An IPv6 Network Port Neighbor entry."
          INDEX   { agentIpv6NetworkPortNbrAddr }
          ::= { agentIpv6NetworkPortNbrTable 1 }
-      
+
     AgentIpv6NetworkPortNbrEntry ::= SEQUENCE {
              agentIpv6NetworkPortNbrAddr         Ipv6Address,
              agentIpv6NetworkPortNbrPhysAddr     MacAddress,
@@ -1500,7 +1500,7 @@ IMPORTS
          MAX-ACCESS read-only
          STATUS     current
          DESCRIPTION
-           "Returns true(1) if the neighbor machine is a router, 
+           "Returns true(1) if the neighbor machine is a router,
            false(2) otherwise."
          ::= { agentIpv6NetworkPortNbrEntry 5 }
 
@@ -1579,7 +1579,7 @@ IMPORTS
             The configured static neighbor entry is always active."
          ::= { agentIpv6NetworkPortNbrCfgEntry 3 }
 
-    
+
     -- IPv6 Static Neighbor Config table
 
 

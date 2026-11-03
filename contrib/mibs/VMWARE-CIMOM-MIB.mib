@@ -1,5 +1,5 @@
 -- **********************************************************
--- Copyright 2010 VMware, Inc.  All rights reserved. 
+-- Copyright 2010 VMware, Inc.  All rights reserved.
 -- **********************************************************
 
 VMWARE-CIMOM-MIB DEFINITIONS ::= BEGIN
@@ -26,7 +26,7 @@ VMWARE-CIMOM-MIB DEFINITIONS ::= BEGIN
     Web: http://communities.vmware.com/community/developer/forums/managementapi
     "
 DESCRIPTION
-     "This MIB module provides instrumentation of a CIM Object Manager." 
+     "This MIB module provides instrumentation of a CIM Object Manager."
 REVISION      "201008200000Z"
 DESCRIPTION
      "Information on a CIM object manager subsystem."
@@ -35,14 +35,14 @@ DESCRIPTION
 vmwCimOm OBJECT IDENTIFIER
     ::= { vmwProductSpecific 90 }
 
-vmwCimOmNotifications OBJECT IDENTIFIER 
+vmwCimOmNotifications OBJECT IDENTIFIER
     ::= {vmwCimOm 0 }
 
 vmwCimOmHeartbeat NOTIFICATION-TYPE
     OBJECTS     { vmwEnvIndicationTime }
-    STATUS      current 
+    STATUS      current
     DESCRIPTION
-        "This notification, if the agent is so configured, will be sent 
+        "This notification, if the agent is so configured, will be sent
          on a periodic basis to indicate cimom indication delivery is functioning."
     ::= { vmwCimOmNotifications 401 }
 
@@ -58,7 +58,7 @@ vmwCimOmMIBGroups  OBJECT IDENTIFIER ::= { vmwCimOmMIBConformance 2 }
 vmwCimOmMIBBasicCompliance MODULE-COMPLIANCE
 STATUS  current
 DESCRIPTION
-    "The compliance statement for entities which implement the 
+    "The compliance statement for entities which implement the
     VMWARE-CIMOM-MIB."
 MODULE  -- this module
 MANDATORY-GROUPS { vmwCimOmNotificationGroup }

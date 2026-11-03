@@ -1,7 +1,7 @@
 -- =========================================================================
 -- Copyright (C) 2001,2002 by  H3C TECHNOLOGIES. All rights reserved.
 --
--- Description: This file describes various common MIB objects implemented 
+-- Description: This file describes various common MIB objects implemented
 -- by both Routers and Switches.
 -- Reference: VRRP-MIB
 -- Version: V1.0
@@ -12,24 +12,24 @@
 HH3C-VRRP-EXT-MIB DEFINITIONS ::= BEGIN
 
  IMPORTS
-     MODULE-IDENTITY, OBJECT-TYPE, Integer32                         
+     MODULE-IDENTITY, OBJECT-TYPE, Integer32
          FROM SNMPv2-SMI
 
-     RowStatus       
+     RowStatus
          FROM SNMPv2-TC
 
-     ifIndex               
-         FROM IF-MIB  
+     ifIndex
+         FROM IF-MIB
 
-     vrrpOperVrId                        
-         FROM VRRP-MIB     
+     vrrpOperVrId
+         FROM VRRP-MIB
 
-     hh3cCommon                          
+     hh3cCommon
          FROM HH3C-OID-MIB;
 
 
  hh3cVrrpExt MODULE-IDENTITY
-     LAST-UPDATED 
+     LAST-UPDATED
          "200412090000Z"
      ORGANIZATION
          "Hangzhou H3C Tech. Co., Ltd."
@@ -49,7 +49,7 @@ HH3C-VRRP-EXT-MIB DEFINITIONS ::= BEGIN
 --  Start of MIB objects
 -- ===================================================================
 
- hh3cVrrpExtMibObject      OBJECT IDENTIFIER ::= { hh3cVrrpExt 1 }        
+ hh3cVrrpExtMibObject      OBJECT IDENTIFIER ::= { hh3cVrrpExt 1 }
 
 -- ===================================================================
 --  VRRP EXT Table
@@ -90,7 +90,7 @@ HH3C-VRRP-EXT-MIB DEFINITIONS ::= BEGIN
      MAX-ACCESS not-accessible
      STATUS current
      DESCRIPTION
-         "This value is the ifIndex that identifies which interface 
+         "This value is the ifIndex that identifies which interface
          the virtual router tracked."
      ::= { hh3cVrrpExtEntry 1 }
 
@@ -108,12 +108,12 @@ HH3C-VRRP-EXT-MIB DEFINITIONS ::= BEGIN
      SYNTAX       RowStatus
      MAX-ACCESS   read-create
      STATUS       current
-     DESCRIPTION   
+     DESCRIPTION
          "The row status variable, used according to installation
          and removal conventions for conceptual rows. Setting this
          object to active(1) or createAndGo(4) results in the
          addition of the ifIndex tracked by a virtual router.
-         Destroying the entry removes the tracked ifIndex from the 
+         Destroying the entry removes the tracked ifIndex from the
          virtual router. Other values is not supported now."
      ::= { hh3cVrrpExtEntry 3 }
 

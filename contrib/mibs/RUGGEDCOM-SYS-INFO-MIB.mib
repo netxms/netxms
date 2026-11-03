@@ -1,20 +1,20 @@
 RUGGEDCOM-SYS-INFO-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-IDENTITY, 
+    MODULE-IDENTITY, OBJECT-IDENTITY,
     OBJECT-TYPE, Integer32	        	FROM SNMPv2-SMI
-    TEXTUAL-CONVENTION, TruthValue, 
+    TEXTUAL-CONVENTION, TruthValue,
     DisplayString			        	FROM SNMPv2-TC
-    OBJECT-GROUP						FROM SNMPv2-CONF    
+    OBJECT-GROUP						FROM SNMPv2-CONF
     ruggedcomMgmt						FROM RUGGEDCOM-MIB;
-	
+
 rcSysInfo MODULE-IDENTITY
     LAST-UPDATED "201208301700Z"       -- Aug 30, 17:00 EST 2012
     ORGANIZATION "RuggedCom"
     CONTACT-INFO
        "Postal: RuggedCom Inc.
                 300 Applewood Crescent
-                Concord, Ontario, 
+                Concord, Ontario,
                 L4K 5C7 Canada
         Tel:    1-905-856-5288
         E-Mail: support@ruggedcom.com"
@@ -23,14 +23,14 @@ rcSysInfo MODULE-IDENTITY
 
 
 	REVISION    "201208301700Z"      -- Aug 30, 17:00 EST 2012
-    DESCRIPTION                
+    DESCRIPTION
         "Added new objects: rcDeviceStsKeysDflt and rcDeviceInfoMinBootSwVer
-         related to the device security in the group 
+         related to the device security in the group
          rcSysDeviceSecurityGroup01."
-    
+
 	REVISION    "201206011700Z"      -- Jun 01, 17:00 EST 2012
 
-    DESCRIPTION                
+    DESCRIPTION
         "Added new objects rcDeviceStsPwdsWeak related to the device
         security in the group rcSysDeviceSecurityGroup."
 
@@ -56,7 +56,7 @@ rcSysInfo MODULE-IDENTITY
 
     REVISION "200812171300Z"         -- Dec 17, 13:00 EST 2008
     DESCRIPTION
-        "Fixed mistyped object name for rcDeviceStsErrorAlarm in 
+        "Fixed mistyped object name for rcDeviceStsErrorAlarm in
          rcSysStsObjectsGroup objects list.
          Added new object:
         	rcDeviceCommIdentify."
@@ -80,7 +80,7 @@ rcSysInfo MODULE-IDENTITY
            rcDeviceInfoPendingBootSwVersion
            rcDeviceInfoPendingMainSwVersion
            rcDeviceInfoCfgRevision
-		   rcDeviceCommReset           
+		   rcDeviceCommReset
            rcDeviceCommLoadDefaultCfg,
 		   rcDeviceCommClearAlarms,
 		   rcDeviceCommClearSyslog
@@ -93,7 +93,7 @@ rcSysInfo MODULE-IDENTITY
 
 RcHardwareStatus ::= TEXTUAL-CONVENTION
     STATUS       current
-    DESCRIPTION 
+    DESCRIPTION
 		"A status of a hardware module in the RuggedCom device."
     SYNTAX  	INTEGER {
 					notPresent(1),		-- the module is not present
@@ -105,13 +105,13 @@ RcHardwareStatus ::= TEXTUAL-CONVENTION
 
 RcFanStatus ::= TEXTUAL-CONVENTION
     STATUS       current
-    DESCRIPTION 
-		"The status of a fan-bank." 
+    DESCRIPTION
+		"The status of a fan-bank."
     SYNTAX  	INTEGER {
 					notPresent(1),	-- this bank is not present
 					failed(2),		-- this bank has failed due to a mechanical
 									-- or sensor problem
-					standby(3),	    -- the fan system is active, but this bank 
+					standby(3),	    -- the fan system is active, but this bank
 									-- is designated as a backup and not
 					off(4),			-- currently spinning this bank is off
 					on(5)			-- this bank is currently spinning
@@ -119,67 +119,67 @@ RcFanStatus ::= TEXTUAL-CONVENTION
 
 RcHotswapModuleSlot ::= TEXTUAL-CONVENTION
     STATUS       current
-    DESCRIPTION 
+    DESCRIPTION
 		"A physical slot holding the hotswapable module (ROX 2 specific).
-		 As the value 0 is forbidden in SNMP enumerations, this value is the 
+		 As the value 0 is forbidden in SNMP enumerations, this value is the
 		 value 1 higher than some other ROX 2 slot values"
     SYNTAX  	INTEGER {
 					pm1(1),
 					lm1(2),
 					lm2(3),
 					lm3(4),
-					cm(5), 	  
+					cm(5),
 					sm(6),
 					lm4(7),
 					lm5(8),
 					lm6(9),
 					pm2(10),
 					main(11), -- The backplane is not hotswapable
-					em(12)    -- This is a logical slot not a physical one,  
+					em(12)    -- This is a logical slot not a physical one,
 							  -- not hotswapable
 			    }
 
 RcHotswapModuleState ::= TEXTUAL-CONVENTION
     STATUS       current
-    DESCRIPTION 
+    DESCRIPTION
 		"A status of a hardware module in the RuggedCom device."
-    SYNTAX  	INTEGER {	
+    SYNTAX  	INTEGER {
 					empty(1),		-- the module is not present
 					disabled(2),	-- the module is present, but has been
 									-- disabled by configuration.
-					resetting(3),   -- the module is present and is on its way 
+					resetting(3),   -- the module is present and is on its way
 									-- to either operating or failed.
 					operating(4),   -- the module is present and has reached
 									-- the operating state
 					failed(5),		-- the module is present, but cannot be
 					unknown(255)    -- booted unknown status
 			    }
-			    
-			    
+
+
 
 RcMainBoard ::= TEXTUAL-CONVENTION
     STATUS       current
-    DESCRIPTION 
+    DESCRIPTION
 		"A main board type code. This textual convention will be updated
 		any time when new main board type is developed."
     SYNTAX  	INTEGER {
 							rsMCPU2(1),			-- RSMCPU, otherwise known as
 												-- 40-00-0026 Rev A1
-							rs400revB2(2),		
-							rmc30(3),			
-							rs900revB1F(4),		-- RS900 with 6 copper, 
+							rs400revB2(2),
+							rmc30(3),
+							rs900revB1F(4),		-- RS900 with 6 copper,
 												-- 2 fiber and 1 optional port
-							rs900revB1noF(5),	-- RS900 with 8 copper and 1 
+							rs900revB1noF(5),	-- RS900 with 8 copper and 1
 												-- optional port
-							rs1600M(6),			-- RS1600 Modular, obsolete	
-							rs400revC1(7),	
-							rsG2100(8),	
-							rs900G(9),		
-							rsG2200(10),	
-							rs969(11),		
-							rs900v2F(12),		-- RS900 88E6095 based with 
+							rs1600M(6),			-- RS1600 Modular, obsolete
+							rs400revC1(7),
+							rsG2100(8),
+							rs900G(9),
+							rsG2200(10),
+							rs969(11),
+							rs900v2F(12),		-- RS900 88E6095 based with
 												-- 6 copper, 2 fiber and
-							rs900v2noF(13),		-- 1 optional port RS900 
+							rs900v2noF(13),		-- 1 optional port RS900
 												-- 88E6095 based with 8 copper
 												-- and 1 optional port
 							rs416(15),
@@ -191,7 +191,7 @@ RcMainBoard ::= TEXTUAL-CONVENTION
 							rs940G(21),
 							rsi80x(22),
 							rsG2300(23),
-							rsMCPU(255),	    -- RSMCPU, otherwise known 
+							rsMCPU(255),	    -- RSMCPU, otherwise known
 												-- as 40-00-0008 Rev B1
 							rx1000(256),
 							rx1100(257),
@@ -204,7 +204,7 @@ RcMainBoard ::= TEXTUAL-CONVENTION
 							mx5000(264)
 			    }
 
-                         
+
 rcSysInfoConformance OBJECT IDENTIFIER ::= { rcSysInfo 5 }
 -- rcSysInfoCompliances  OBJECT IDENTIFIER ::= { rcSysInfoConformance 1 }
 rcSysInfoGroups OBJECT IDENTIFIER ::= { rcSysInfoConformance 2 }
@@ -218,26 +218,26 @@ rcDeviceError OBJECT-IDENTITY
     STATUS      current
     DESCRIPTION
         "The main subtree for various errors detected in RuggedCom devices."
-    ::= { rcSysInfo  1 }  
+    ::= { rcSysInfo  1 }
 
 rcDeviceStatus OBJECT-IDENTITY
     STATUS      current
     DESCRIPTION
-        "The main subtree for various status information detected in 
+        "The main subtree for various status information detected in
         RuggedCom devices."
-    ::= { rcSysInfo  2 }  
+    ::= { rcSysInfo  2 }
 
 rcDeviceInfo OBJECT-IDENTITY
     STATUS      current
     DESCRIPTION
         "The main subtree for RuggedCom devices manufacturing information."
-    ::= { rcSysInfo  3 }  
+    ::= { rcSysInfo  3 }
 
 rcDeviceCommands OBJECT-IDENTITY
     STATUS      current
     DESCRIPTION
         "The main subtree for device control commands."
-    ::= { rcSysInfo  4 }  
+    ::= { rcSysInfo  4 }
 
 -- ---------------------------------------------------------------------- --
 --  Device errors objects
@@ -266,15 +266,15 @@ rcDeviceErrConfigurationFailure OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-         "Indicates whether errors were detected while applying configuration 
-         settings from configuration file.  
-         Configuration is updated from the configureation file at bootup time 
-         when file is loaded from nonvolatile memory, or when new file is 
+         "Indicates whether errors were detected while applying configuration
+         settings from configuration file.
+         Configuration is updated from the configureation file at bootup time
+         when file is loaded from nonvolatile memory, or when new file is
          downloaded to the device.
          Whenever the value of this object changes from false(2) to true(1),
          the device will generate genericTrap notification."
     REFERENCE
-    	"genericTrap notification is defined in ruggedcomTrapsModule."   
+    	"genericTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceError 3}
 
 rcDeviceErrCrashLogCreated OBJECT-TYPE
@@ -282,12 +282,12 @@ rcDeviceErrCrashLogCreated OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-         "Indicates whether the device error that caused creation of an 
+         "Indicates whether the device error that caused creation of an
          entry in crashlog.txt file was detected.
          Whenever the value of this object changes from false(2) to true(1),
          the device will generate genericTrap notification."
     REFERENCE
-    	"genericTrap notification is defined in ruggedcomTrapsModule."   
+    	"genericTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceError 4}
 
 rcDeviceErrStackOverflow OBJECT-TYPE
@@ -300,7 +300,7 @@ rcDeviceErrStackOverflow OBJECT-TYPE
          Whenever the value of this object changes from false(2) to true(1),
          the device will generate genericTrap notification."
     REFERENCE
-    	"genericTrap notification is defined in ruggedcomTrapsModule."   
+    	"genericTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceError 5}
 
 rcDeviceErrHeapError OBJECT-TYPE
@@ -312,7 +312,7 @@ rcDeviceErrHeapError OBJECT-TYPE
          Whenever the value of this object changes from false(2) to true(1),
          the device will generate genericTrap notification."
     REFERENCE
-    	"genericTrap notification is defined in ruggedcomTrapsModule."   
+    	"genericTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceError 6}
 
 rcDeviceErrDateAndTimeSetFailed OBJECT-TYPE
@@ -324,7 +324,7 @@ rcDeviceErrDateAndTimeSetFailed OBJECT-TYPE
          Whenever the value of this object changes from false(2) to true(1),
          the device will generate genericTrap notification."
     REFERENCE
-    	"genericTrap notification is defined in ruggedcomTrapsModule."   
+    	"genericTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceError 7}
 
 rcDeviceErrNtpServerUnreachable OBJECT-TYPE
@@ -336,7 +336,7 @@ rcDeviceErrNtpServerUnreachable OBJECT-TYPE
          Whenever the value of this object changes from false(2) to true(1),
          the device will generate genericTrap notification."
     REFERENCE
-    	"genericTrap notification is defined in ruggedcomTrapsModule."   
+    	"genericTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceError 8 }
 
 rcDeviceErrBootPTftpTrFailed OBJECT-TYPE
@@ -344,12 +344,12 @@ rcDeviceErrBootPTftpTrFailed OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-         "Indicates whether the the file was transfered properly after 
+         "Indicates whether the the file was transfered properly after
          obtaining IP address from the BootP server.
          Whenever the value of this object changes from false(2) to true(1),
          the device will generate genericTrap notification."
     REFERENCE
-    	"genericTrap notification is defined in ruggedcomTrapsModule."   
+    	"genericTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceError 9 }
 
 rcDeviceErrRadiusServerUnreachable OBJECT-TYPE
@@ -361,7 +361,7 @@ rcDeviceErrRadiusServerUnreachable OBJECT-TYPE
          Whenever the value of this object changes from false(2) to true(1),
          the device will generate genericTrap notification."
     REFERENCE
-    	"genericTrap notification is defined in ruggedcomTrapsModule."   
+    	"genericTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceError 10 }
 
 rcDeviceErrTacacsServerUnreachable OBJECT-TYPE
@@ -373,25 +373,25 @@ rcDeviceErrTacacsServerUnreachable OBJECT-TYPE
          Whenever the value of this object changes from false(2) to true(1),
          the device will generate genericTrap notification."
     REFERENCE
-    	"genericTrap notification is defined in ruggedcomTrapsModule."   
+    	"genericTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceError 11 }
 
 -- ---------------------------------------------------------------------- --
 --  Device Status information objects
 -- ---------------------------------------------------------------------- --
 
-rcDeviceStsCpuUsage OBJECT-TYPE  
+rcDeviceStsCpuUsage OBJECT-TYPE
     SYNTAX  	Integer32
     UNITS      "tenths of percent"
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-         "The percentage in tenths of percent of available CPU cycles used 
-         for device operation as measured over the last second when 
+         "The percentage in tenths of percent of available CPU cycles used
+         for device operation as measured over the last second when
          object was retreived."
     ::= { rcDeviceStatus 1 }
 
-rcDeviceStsAvailableRam OBJECT-TYPE  
+rcDeviceStsAvailableRam OBJECT-TYPE
     SYNTAX  	Integer32
     MAX-ACCESS  read-only
     STATUS      current
@@ -400,7 +400,7 @@ rcDeviceStsAvailableRam OBJECT-TYPE
          control CPU."
     ::= { rcDeviceStatus 2 }
 
-rcDeviceStsTemperature OBJECT-TYPE  
+rcDeviceStsTemperature OBJECT-TYPE
     SYNTAX  	Integer32
     UNITS      "Celsius degrees"
     MAX-ACCESS  read-only
@@ -415,11 +415,11 @@ rcDeviceStsPowerSupply1 OBJECT-TYPE
     STATUS      current
     DESCRIPTION
          "Indicates the status of Power Supply Module 1.
-         Whenever the value of this object changes from functional(2) to 
+         Whenever the value of this object changes from functional(2) to
          notFunctional(3), or from notFunctionl(3) to functional(2),
          the device will generate powerSupplyTrap notification."
     REFERENCE
-    	"powerSupplyTrap notification is defined in ruggedcomTrapsModule."   
+    	"powerSupplyTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceStatus 4 }
 
 rcDeviceStsPowerSupply2 OBJECT-TYPE
@@ -428,14 +428,14 @@ rcDeviceStsPowerSupply2 OBJECT-TYPE
     STATUS      current
     DESCRIPTION
          "Indicates the status of Power Supply Module 2.
-         Whenever the value of this object changes from functional(2) to 
+         Whenever the value of this object changes from functional(2) to
          notFunctional(3), or from notFunctionl(3) to functional(2),
          the device will generate powerSupplyTrap notification."
     REFERENCE
-    	"powerSupplyTrap notification is defined in ruggedcomTrapsModule."   
+    	"powerSupplyTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceStatus 5 }
 
-rcDeviceStsCpuUsagePercent OBJECT-TYPE  
+rcDeviceStsCpuUsagePercent OBJECT-TYPE
     SYNTAX  	Integer32
     UNITS      "percent"
     MAX-ACCESS  read-only
@@ -485,7 +485,7 @@ rcDeviceStsFanBank1 OBJECT-TYPE
     DESCRIPTION
          "Indicates the status of Fan Bank Module 1."
     REFERENCE
-    	"fanBankTrap notification is defined in ruggedcomTrapsModule."   
+    	"fanBankTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceStatus 10 }
 
 rcDeviceStsFanBank2 OBJECT-TYPE
@@ -495,7 +495,7 @@ rcDeviceStsFanBank2 OBJECT-TYPE
     DESCRIPTION
          "Indicates the status of Fan Bank Module 2."
     REFERENCE
-    	"fanBankTrap notification is defined in ruggedcomTrapsModule."   
+    	"fanBankTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceStatus 11 }
 
 rcDeviceStsPwdsWeak OBJECT-TYPE
@@ -503,32 +503,32 @@ rcDeviceStsPwdsWeak OBJECT-TYPE
 				     adminPwd(0),
 				     operPwd(1),
 				     guestPwd(2)
-			    } 
+			    }
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
          "Indicates if any of passwords is configured as 'weak'.
-         Change in the value of the bit in this object from '0' to  '1' 
+         Change in the value of the bit in this object from '0' to  '1'
          will generate weakPasswordTrap."
     REFERENCE
-    	"weakPasswordTrap notification is defined in ruggedcomTrapsModule."   
+    	"weakPasswordTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceStatus 12 }
 
 rcDeviceStsKeysDflt OBJECT-TYPE
     SYNTAX  	BITS {
 					sshDfltKeys(0),
 					sslDfltKeys(1)
-			    } 
+			    }
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-         "Indicates if any of secure services uses default keys and/or 
+         "Indicates if any of secure services uses default keys and/or
          certificates. Customer is advised to update keys for secure
          services if defaults are used.
-         Change in the value of the bit in this object from '0' to  '1' 
+         Change in the value of the bit in this object from '0' to  '1'
          will generate defaultKeysTrap notification."
     REFERENCE
-    	"defaultKeysTrap notification is defined in ruggedcomTrapsModule."   
+    	"defaultKeysTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceStatus 13 }
 
 -- ---------------------------------------------------------------------- --
@@ -556,7 +556,7 @@ rcDeviceInfoMainSwVersion OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-         "The version and the build date of the main operating system 
+         "The version and the build date of the main operating system
          software."
     ::= { rcDeviceInfo 3 }
 
@@ -568,7 +568,7 @@ rcDeviceInfoMainBoardType OBJECT-TYPE
          "The identification code of the device main board."
     ::= { rcDeviceInfo 4 }
 
-rcDeviceInfoTotalRam OBJECT-TYPE  
+rcDeviceInfoTotalRam OBJECT-TYPE
     SYNTAX  	Integer32
     MAX-ACCESS  read-only
     STATUS      current
@@ -584,10 +584,10 @@ rcDeviceInfoPendingBootSwVersion OBJECT-TYPE
          "The version and the build date of the boot loader software
          that has been loaded to the device and is pending reboot.
          Whenever the value of this object changes from zero-length string
-         to any string of non-zero length, the device will generate 
+         to any string of non-zero length, the device will generate
          swUpgradeTrap notification."
     REFERENCE
-    	"swUpgradeTrap notification is defined in ruggedcomTrapsModule."   
+    	"swUpgradeTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceInfo 6 }
 
 rcDeviceInfoPendingMainSwVersion OBJECT-TYPE
@@ -598,10 +598,10 @@ rcDeviceInfoPendingMainSwVersion OBJECT-TYPE
          "The version and the build date of the main operating system
          software that has been loaded to the device and is pending reboot.
          Whenever the value of this object changes from zero-length string
-         to any string of non-zero length, the device will generate 
+         to any string of non-zero length, the device will generate
          swUpgradeTrap notification."
     REFERENCE
-    	"swUpgradeTrap notification is defined in ruggedcomTrapsModule."   
+    	"swUpgradeTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceInfo 7 }
 
 rcDeviceInfoCfgRevision OBJECT-TYPE
@@ -609,14 +609,14 @@ rcDeviceInfoCfgRevision OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-         "The configuration file revision. 
-         The revision number will be updated whenever file is saved to the 
+         "The configuration file revision.
+         The revision number will be updated whenever file is saved to the
          flash memory. This number is recorded in config.csv at the time file
          is uploaded from the device.
-         Whenever the value of this object changes the device will generate 
+         Whenever the value of this object changes the device will generate
          cfgChangeTrap notification."
     REFERENCE
-    	"cfgChangeTrap notification is defined in ruggedcomTrapsModule."   
+    	"cfgChangeTrap notification is defined in ruggedcomTrapsModule."
     ::= { rcDeviceInfo 8 }
 
 rcDeviceInfoMinBootSwVer OBJECT-TYPE
@@ -624,14 +624,14 @@ rcDeviceInfoMinBootSwVer OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-         "The minimum version of the boot loader software required by 
+         "The minimum version of the boot loader software required by
          ROS device. If this version is not newer than the version
          retreived as a value of object rcDeviceInfoBootSwVersion, trap
          bootVersionMismatchTrap will be generated."
-		 	
+
     REFERENCE
-    	"bootVersionMismatchTrap notification is defined in 
-    	ruggedcomTrapsModule."   
+    	"bootVersionMismatchTrap notification is defined in
+    	ruggedcomTrapsModule."
     ::= { rcDeviceInfo 9 }
 
 -- ---------------------------------------------------------------------- --
@@ -643,7 +643,7 @@ rcDeviceCommReset OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-         "Setting the value of this object to 'true(1)' will cause device 
+         "Setting the value of this object to 'true(1)' will cause device
           to reboot.
           As a result of Read request the agent will return value 'false(2)'."
     ::= { rcDeviceCommands 1}
@@ -653,7 +653,7 @@ rcDeviceCommLoadDefaultCfg OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-         "Setting the value of this object to 'true(1)' will force device 
+         "Setting the value of this object to 'true(1)' will force device
           to load default configuration to all tables.
           As a result of Read request the agent will return value 'false(2)'."
     ::= { rcDeviceCommands 2}
@@ -663,7 +663,7 @@ rcDeviceCommClearAlarms OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-         "Setting the value of this object to 'true(1)' will cause device 
+         "Setting the value of this object to 'true(1)' will cause device
          to clear all alarms.
          As a result of Read request the agent will return value 'false(2)'."
     ::= { rcDeviceCommands 3}
@@ -673,7 +673,7 @@ rcDeviceCommClearSyslog OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-         "Setting the value of this object to 'true(1)' will cause device 
+         "Setting the value of this object to 'true(1)' will cause device
          to clear syslog.txt file.
          As a result of Read request the agent will return value 'false(2)'."
     ::= { rcDeviceCommands 4}
@@ -683,12 +683,12 @@ rcDeviceCommClearLogs OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-         "Setting the value of this object to 'true(1)' will cause device 
+         "Setting the value of this object to 'true(1)' will cause device
          to clear syslog.txt and crashlog.txt files.
          As a result of Read request the agent will return value 'false(2)'."
     ::= { rcDeviceCommands 5}
 
-rcDeviceCommIdentify OBJECT-TYPE  
+rcDeviceCommIdentify OBJECT-TYPE
     SYNTAX  	Integer32 (0..300)
     MAX-ACCESS  read-write
     STATUS      current
@@ -697,7 +697,7 @@ rcDeviceCommIdentify OBJECT-TYPE
          the LEDs when possible so that device is visually recognized.
          Setting this value to any value greater than 0 will start LED flash
          timer on the device.Setting the value to 0 will stop the LED flash
-         timer. On Read request agent always sends back the existing Timeout 
+         timer. On Read request agent always sends back the existing Timeout
          value for LED flash Timer."
     ::= { rcDeviceCommands 6 }
 
@@ -721,10 +721,10 @@ rcSysErrObjectsGroup OBJECT-GROUP
 					rcDeviceErrTacacsServerUnreachable
                 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A group of objects providing information about irregularities
         in the device."
-    ::= { rcSysInfoGroups 1 }    
+    ::= { rcSysInfoGroups 1 }
 
 rcSysStsObjectsGroup OBJECT-GROUP
     OBJECTS     {
@@ -733,9 +733,9 @@ rcSysStsObjectsGroup OBJECT-GROUP
 					rcDeviceStsAvailableRam
 				}
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A group of objects providing information device resources."
-    ::= { rcSysInfoGroups 2 }    
+    ::= { rcSysInfoGroups 2 }
 
 
 rcSysStsObjectsTemperatureGroup OBJECT-GROUP
@@ -743,23 +743,23 @@ rcSysStsObjectsTemperatureGroup OBJECT-GROUP
 					rcDeviceStsTemperature
 				}
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "This group is created to allow MIBs for products that do not have
-        temperature sensore installed to exclude rcDeviceStsTemperature 
+        temperature sensore installed to exclude rcDeviceStsTemperature
         object."
-    ::= { rcSysInfoGroups 3 }    
-				
+    ::= { rcSysInfoGroups 3 }
+
 rcSysStsPowerSupplyGroup OBJECT-GROUP
     OBJECTS     {
 					rcDeviceStsPowerSupply1,
 					rcDeviceStsPowerSupply2
                 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A group of objects providing information about power supply modules
         in the device. This group is mandatory for products with redundant
         power supply."
-    ::= { rcSysInfoGroups 4 }    
+    ::= { rcSysInfoGroups 4 }
 
 rcSysInfoDeviceInfoGroup  OBJECT-GROUP
     OBJECTS     {
@@ -773,10 +773,10 @@ rcSysInfoDeviceInfoGroup  OBJECT-GROUP
 					rcDeviceInfoSerialNumber
                 }
     STATUS      current
-    DESCRIPTION 
-        "A group of object providing manufacturer's information about 
+    DESCRIPTION
+        "A group of object providing manufacturer's information about
         product's main board hardware, software, identification."
-    ::= { rcSysInfoGroups 5 }    
+    ::= { rcSysInfoGroups 5 }
 
 rcSysDeviceCommGroup  OBJECT-GROUP
     OBJECTS     {
@@ -787,19 +787,19 @@ rcSysDeviceCommGroup  OBJECT-GROUP
                     rcDeviceCommClearLogs
                 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A group of object providing device control commands."
-    ::= { rcSysInfoGroups 6 }    
+    ::= { rcSysInfoGroups 6 }
 
 rcSysDeviceCommIdentifyGroup  OBJECT-GROUP
     OBJECTS     {
 					rcDeviceCommIdentify
                 }
     STATUS      current
-    DESCRIPTION 
-        "A group of object providing device control commands for 
+    DESCRIPTION
+        "A group of object providing device control commands for
         visual recognisation of the device (LED flashing)."
-    ::= { rcSysInfoGroups 7 }    
+    ::= { rcSysInfoGroups 7 }
 
 
 
@@ -813,10 +813,10 @@ rcSysStsObjectsGroup1 OBJECT-GROUP
 					rcDeviceStsNoOfActiveAlarms
 				}
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A group of objects providing information device resources."
     ::= { rcSysInfoGroups 8 }
-      
+
 
 rcSysStsFanBankGroup OBJECT-GROUP
     OBJECTS     {
@@ -824,21 +824,21 @@ rcSysStsFanBankGroup OBJECT-GROUP
 					rcDeviceStsFanBank2
                 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A group of objects providing information about fan bank modules
         in the device. This group is mandatory for products with redundant
         fan banks."
     ::= { rcSysInfoGroups 9 }
-    
+
 
 rcSysDeviceSecurityGroup  OBJECT-GROUP
     OBJECTS     {
 					rcDeviceStsPwdsWeak
                 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A group of object providing device control commands."
-    ::= { rcSysInfoGroups 10 }    
+    ::= { rcSysInfoGroups 10 }
 
 rcSysDeviceSecurityGroup01  OBJECT-GROUP
     OBJECTS     {
@@ -847,8 +847,8 @@ rcSysDeviceSecurityGroup01  OBJECT-GROUP
 					rcDeviceInfoMinBootSwVer
                 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A group of object providing device control commands."
-    ::= { rcSysInfoGroups 11 }    
+    ::= { rcSysInfoGroups 11 }
 
 END

@@ -1,9 +1,9 @@
 -- ArubaOS 8.11.1.2_87606
--- vim:set ts=4 sw=4: 
+-- vim:set ts=4 sw=4:
 WLSX-MON-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
 
        MODULE-IDENTITY,
        OBJECT-TYPE,
@@ -45,7 +45,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 		wlsxEnterpriseMibModules
 			FROM ARUBA-MIB;
 
-   wlsxMonMIB MODULE-IDENTITY 
+   wlsxMonMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -73,25 +73,25 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 -- Stats group contains tables for station statistics, channel statistics and
 -- AP statistics.
 
-   wlsxMonAPStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonAPStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonAPStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonAPStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This Table lists the statistics of all the APs being monitored
-			by the controller. 
+			by the controller.
 		"
-      ::= { wlsxMonAccessPointStatsGroup 1 } 
+      ::= { wlsxMonAccessPointStatsGroup 1 }
 
-   wlsxMonAPStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonAPStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonAPStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonAPStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Monitored Access Point Stats entry"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredApBSSID}
-      ::= { wlsxMonAPStatsTable 1 } 
+      ::= { wlsxMonAPStatsTable 1 }
 
    WlsxMonAPStatsEntry ::=
      SEQUENCE {
@@ -257,7 +257,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			 The number of retry 
+			 The number of retry
 			 packets as a percentage of the total packets
 			 transmitted and received by this monitored AP
             "
@@ -318,14 +318,14 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 			 received on this monitored AP.
             "
         ::= { wlsxMonAPStatsEntry 19 }
-	
+
 	monAPChannelErrorRate OBJECT-TYPE
          SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			The number of error packets 
+			The number of error packets
 			 as a percentage of the total packets received
 			on the current channel.
             "
@@ -362,31 +362,31 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 			 received on this monitored AP.
             "
         ::= { wlsxMonAPStatsEntry 23 }
-	
+
 -- This table breaks down the AP statistics observed into different
 -- rate categories.
 
-   wlsxMonAPRateStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonAPRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonAPRateStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonAPRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the monitored AP Packet and Byte Counts
 		but represented in terms of rate categories.
 		"
-	
-      ::= { wlsxMonAccessPointStatsGroup 2 } 
 
-     wlsxMonAPRateStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonAPRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxMonAccessPointStatsGroup 2 }
+
+     wlsxMonAPRateStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonAPRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Data rate based packet and byte count entry for a monitored AP"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredApBSSID}
-      ::= { wlsxMonAPRateStatsTable 1 } 
-	
+      ::= { wlsxMonAPRateStatsTable 1 }
+
      WlsxMonAPRateStatsEntry ::=
      SEQUENCE {
 		 monAPStatsTotPktsAt1Mbps			Counter32,
@@ -410,13 +410,13 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 		 monAPStatsTotPktsAt48Mbps			Counter32,
 		 monAPStatsTotBytesAt48Mbps		Counter32,
 		 monAPStatsTotPktsAt54Mbps			Counter32,
-		 monAPStatsTotBytesAt54Mbps		Counter32, 
+		 monAPStatsTotBytesAt54Mbps		Counter32,
 		 monAPStatsTotPktsAt9Mbps			Counter32,
 		 monAPStatsTotBytesAt9Mbps		Counter32
      }
 
      monAPStatsTotPktsAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -427,7 +427,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 1 }
 
      monAPStatsTotBytesAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -438,7 +438,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 2 }
 
      monAPStatsTotPktsAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -449,7 +449,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 3 }
 
      monAPStatsTotBytesAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -460,7 +460,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 4 }
 
      monAPStatsTotPktsAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -471,7 +471,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 5 }
 
      monAPStatsTotBytesAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -482,7 +482,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 6 }
 
      monAPStatsTotPktsAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -493,7 +493,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 7 }
 
      monAPStatsTotBytesAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -504,7 +504,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 8 }
 
      monAPStatsTotPktsAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -515,7 +515,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 9 }
 
      monAPStatsTotBytesAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -526,7 +526,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 10 }
 
      monAPStatsTotPktsAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -537,7 +537,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 11 }
 
      monAPStatsTotBytesAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -548,7 +548,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 12 }
 
      monAPStatsTotPktsAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -559,7 +559,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 13 }
 
      monAPStatsTotBytesAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -570,7 +570,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 14 }
 
      monAPStatsTotPktsAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -581,7 +581,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 15 }
 
      monAPStatsTotBytesAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -592,7 +592,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 16 }
 
      monAPStatsTotPktsAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -603,7 +603,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 17 }
 
      monAPStatsTotBytesAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -614,7 +614,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 18 }
 
      monAPStatsTotPktsAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -625,7 +625,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 19 }
 
      monAPStatsTotBytesAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -636,7 +636,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 20 }
 
      monAPStatsTotPktsAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -647,7 +647,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 21 }
 
      monAPStatsTotBytesAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -658,7 +658,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 22 }
 
      monAPStatsTotPktsAt9Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -669,7 +669,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPRateStatsEntry 23 }
 
      monAPStatsTotBytesAt9Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -681,31 +681,31 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 
 
 -- This table breaks down the channel statistics observed based on the
--- Destination Address Types. 
+-- Destination Address Types.
 
-   wlsxMonAPDATypeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonAPDATypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonAPDATypeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonAPDATypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per BSSID Packet and Byte Counts
-		but broken down in terms of Destination Address Type. 
+		but broken down in terms of Destination Address Type.
 		"
-      ::= { wlsxMonAccessPointStatsGroup 3 } 
+      ::= { wlsxMonAccessPointStatsGroup 3 }
 
-     wlsxMonAPDATypeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonAPDATypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsxMonAPDATypeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonAPDATypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
 			 Destination Address based packet and byte count entry for a
 			 monitored AP
 			 "
 	  INDEX {monPhyAddress, monRadioNumber, monitoredApBSSID}
-      ::= { wlsxMonAPDATypeStatsTable 1 } 
-	
+      ::= { wlsxMonAPDATypeStatsTable 1 }
+
      WlsxMonAPDATypeStatsEntry ::=
      SEQUENCE {
 		 monAPStatsTotDABroadcastPkts		Counter32  ,
@@ -713,99 +713,99 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 		 monAPStatsTotDAMulticastPkts		Counter32  ,
 		 monAPStatsTotDAMulticastBytes		Counter32  ,
 		 monAPStatsTotDAUnicastPkts			Counter32  ,
-		 monAPStatsTotDAUnicastBytes		Counter32  
+		 monAPStatsTotDAUnicastBytes		Counter32
 
      }
 
      monAPStatsTotDABroadcastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Broadcast packets 
+			 This attribute indicates the total number of Broadcast packets
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPDATypeStatsEntry 1 }
 
      monAPStatsTotDABroadcastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Broadcast Bytes 
+			 This attribute indicates the total number of Broadcast Bytes
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPDATypeStatsEntry 2 }
 
      monAPStatsTotDAMulticastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Multicast packets 
+			 This attribute indicates the total number of Multicast packets
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPDATypeStatsEntry 3 }
 
      monAPStatsTotDAMulticastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Multicast Bytes 
+			 This attribute indicates the total number of Multicast Bytes
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPDATypeStatsEntry 4 }
 
      monAPStatsTotDAUnicastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Unicast packets 
+			 This attribute indicates the total number of Unicast packets
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPDATypeStatsEntry 5 }
 
      monAPStatsTotDAUnicastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Unicast Bytes 
+			 This attribute indicates the total number of Unicast Bytes
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPDATypeStatsEntry 6 }
 
 -- This table breaks down the channel statistics observed based on the
--- the Type of the Packet. 
+-- the Type of the Packet.
 
-   wlsxMonAPFrameTypeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonAPFrameTypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonAPFrameTypeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonAPFrameTypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per BSSID Packet and Byte Counts
-		but broken down into different Frame Types. 
+		but broken down into different Frame Types.
 		"
-      ::= { wlsxMonAccessPointStatsGroup 4 } 
+      ::= { wlsxMonAccessPointStatsGroup 4 }
 
-     wlsxMonAPFrameTypeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonAPFrameTypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsxMonAPFrameTypeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonAPFrameTypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Frame Type based packet and byte count entry for a monitored AP"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredApBSSID}
-      ::= { wlsxMonAPFrameTypeStatsTable 1 } 
-	
+      ::= { wlsxMonAPFrameTypeStatsTable 1 }
+
      WlsxMonAPFrameTypeStatsEntry ::=
      SEQUENCE {
 		 monAPStatsTotMgmtPkts		Counter32  ,
@@ -813,99 +813,99 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 		 monAPStatsTotCtrlPkts		Counter32  ,
 		 monAPStatsTotCtrlBytes	Counter32  ,
 		 monAPStatsTotDataPkts		Counter32  ,
-		 monAPStatsTotDataBytes	Counter32  
+		 monAPStatsTotDataBytes	Counter32
 
      }
 
      monAPStatsTotMgmtPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Management packets 
+			 This attribute indicates the total number of Management packets
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPFrameTypeStatsEntry 1 }
 
      monAPStatsTotMgmtBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Management Bytes 
+			 This attribute indicates the total number of Management Bytes
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPFrameTypeStatsEntry 2 }
 
      monAPStatsTotCtrlPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Control packets 
+			 This attribute indicates the total number of Control packets
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPFrameTypeStatsEntry 3 }
 
      monAPStatsTotCtrlBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Control Bytes 
+			 This attribute indicates the total number of Control Bytes
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPFrameTypeStatsEntry 4 }
 
      monAPStatsTotDataPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Data packets 
+			 This attribute indicates the total number of Data packets
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPFrameTypeStatsEntry 5 }
 
      monAPStatsTotDataBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Data Bytes 
+			 This attribute indicates the total number of Data Bytes
 			 observed from this BSSID.
             "
         ::= { wlsxMonAPFrameTypeStatsEntry 6 }
 
--- This table breaks down the channel statistics observed into packet size 
+-- This table breaks down the channel statistics observed into packet size
 -- buckets.
 
-   wlsxMonAPPktSizeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonAPPktSizeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonAPPktSizeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonAPPktSizeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per BSSID Packet and Byte Counts
-		but broken down into different Packet Sizes. 
+		but broken down into different Packet Sizes.
 		"
-      ::= { wlsxMonAccessPointStatsGroup 5 } 
+      ::= { wlsxMonAccessPointStatsGroup 5 }
 
-     wlsxMonAPPktSizeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonAPPktSizeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsxMonAPPktSizeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonAPPktSizeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Packet Size based packet count entry for a BSSID"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredApBSSID}
-      ::= { wlsxMonAPPktSizeStatsTable 1 } 
-	
+      ::= { wlsxMonAPPktSizeStatsTable 1 }
+
      WlsxMonAPPktSizeStatsEntry ::=
      SEQUENCE {
 		 monAPStatsPkts63Bytes		Counter32  ,
@@ -913,12 +913,12 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 		 monAPStatsPkts128To255		Counter32  ,
 		 monAPStatsPkts256To511		Counter32  ,
 		 monAPStatsPkts512To1023	Counter32  ,
-		 monAPStatsPkts1024To1518	Counter32  
+		 monAPStatsPkts1024To1518	Counter32
 
      }
 
      monAPStatsPkts63Bytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -929,7 +929,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPPktSizeStatsEntry 1 }
 
      monAPStatsPkts64To127 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -940,18 +940,18 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPPktSizeStatsEntry 2 }
 
      monAPStatsPkts128To255 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of packets 
+			 This attribute indicates the total number of packets
 			 transmitted by the AP that were between 128 and 255 bytes long.
             "
         ::= { wlsxMonAPPktSizeStatsEntry 3 }
 
      monAPStatsPkts256To511 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -962,7 +962,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPPktSizeStatsEntry 4 }
 
      monAPStatsPkts512To1023 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -973,7 +973,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxMonAPPktSizeStatsEntry 5 }
 
      monAPStatsPkts1024To1518 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -986,27 +986,27 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 -- This table breaks down the AP statistics observed into different
 -- HT rate categories.
 
-   wlsxMonAPHTRateStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonAPHTRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonAPHTRateStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonAPHTRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the monitored AP Packet and Byte Counts
 		but represented in terms of HT rate categories.
 		"
-	
-      ::= { wlsxMonAccessPointStatsGroup 6 } 
 
-     wlsxMonAPHTRateStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonAPHTRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxMonAccessPointStatsGroup 6 }
+
+     wlsxMonAPHTRateStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonAPHTRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Data rate based packet and byte count entry for a monitored AP"
 	  INDEX { monPhyAddress, monRadioNumber, monitoredApBSSID, monHTRate }
-      ::= { wlsxMonAPHTRateStatsTable 1 } 
-	
+      ::= { wlsxMonAPHTRateStatsTable 1 }
+
      WlsxMonAPHTRateStatsEntry ::=
      SEQUENCE {
 	 	 monHTRate					    ArubaHTRate,
@@ -1030,7 +1030,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The total number of packets processed at the indicated rate 
+			The total number of packets processed at the indicated rate
             "
         ::= { wlsxMonAPHTRateStatsEntry 2 }
 
@@ -1040,43 +1040,43 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The total number of bytes processed at the indicated rate 
+			The total number of bytes processed at the indicated rate
             "
         ::= { wlsxMonAPHTRateStatsEntry 3 }
 
--- wlsxMonStationStatsGroup contains all the statistics observed by different 
--- Air Monitors attached to this controller. 
--- Station Statatistics are observed by the Air Monitor for that 
+-- wlsxMonStationStatsGroup contains all the statistics observed by different
+-- Air Monitors attached to this controller.
+-- Station Statatistics are observed by the Air Monitor for that
 -- specific Station.
 
 -- Station Statistics are grouped into Generic,
 -- Rate, Destination Address and Frame Type Stats.
 
--- Station Statistics Group contains all the statistics related to 
+-- Station Statistics Group contains all the statistics related to
 -- a Station.
 
 -- wlsxMonStationStatsTable will contain all the Agregate statistics collected
 -- for a Station
 
-   wlsxMonStationStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MonStationStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonStationStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MonStationStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This Table lists the statistics of all the wireless stations being monitored
-			by an AP connected to this controller. 
+			by an AP connected to this controller.
 		"
-      ::= { wlsxMonStationStatsGroup 1} 
+      ::= { wlsxMonStationStatsGroup 1}
 
-   wlsxMonStationStatsEntry OBJECT-TYPE 
-	  SYNTAX       MonStationStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonStationStatsEntry OBJECT-TYPE
+	  SYNTAX       MonStationStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Monitored Station Stats Entry"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredStaPhyAddress}
-      ::= { wlsxMonStationStatsTable 1 } 
+      ::= { wlsxMonStationStatsTable 1 }
 
    MonStationStatsEntry ::=
      SEQUENCE {
@@ -1275,7 +1275,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			 The number of retry 
+			 The number of retry
 			 packets as a percentage of the total packets
 			 transmitted and received by this station.
             "
@@ -1394,26 +1394,26 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 -- This table breaks down the Station statistics into different
 -- rate categories.
 
-   wlsxMonStaRateStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonStaRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonStaRateStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonStaRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the Packet and Byte Counts for a monitored station
 		represented in terms of rate categories.
 		"
-      ::= { wlsxMonStationStatsGroup 2} 
+      ::= { wlsxMonStationStatsGroup 2}
 
-     wlsxMonStaRateStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonStaRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsxMonStaRateStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonStaRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Data rate based packet and byte count entry for a monitored station"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredStaPhyAddress}
-      ::= { wlsxMonStaRateStatsTable 1 } 
-	
+      ::= { wlsxMonStaRateStatsTable 1 }
+
      WlsxMonStaRateStatsEntry ::=
      SEQUENCE {
 		 monStaTxPktsAt1Mbps				Counter32,
@@ -1467,559 +1467,559 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
      }
 
      monStaTxPktsAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 1Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 1 }
 
      monStaTxBytesAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 1Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 2 }
 
      monStaTxPktsAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 2Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 3 }
 
      monStaTxBytesAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 2Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 4 }
 
      monStaTxPktsAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 5Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 5 }
 
      monStaTxBytesAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 5Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 6 }
 
      monStaTxPktsAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 11Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 7 }
 
      monStaTxBytesAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 11Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 8 }
 
      monStaTxPktsAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 6Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 9 }
 
      monStaTxBytesAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 6Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 10 }
 
      monStaTxPktsAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 12Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 11 }
 
      monStaTxBytesAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 12Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 12 }
 
      monStaTxPktsAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 18Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 13 }
 
      monStaTxBytesAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 18Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 14 }
 
      monStaTxPktsAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 24Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 15 }
 
      monStaTxBytesAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 24Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 16 }
 
      monStaTxPktsAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 36Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 17 }
 
      monStaTxBytesAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 36Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 18 }
 
      monStaTxPktsAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 48Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 19 }
 
      monStaTxBytesAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 48Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 20 }
 
      monStaTxPktsAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets transmitted by the 
+			 This attribute indicates the number of Packets transmitted by the
 			 station at 54Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 21 }
 
      monStaTxBytesAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets transmitted by the 
+			 This attribute indicates the number of Octets transmitted by the
 			 station at 54Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 22 }
 
      monStaRxPktsAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 1Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 23 }
 
      monStaRxBytesAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 1Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 24 }
 
      monStaRxPktsAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 2Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 25 }
 
      monStaRxBytesAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 2Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 26 }
 
      monStaRxPktsAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 5Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 27 }
 
      monStaRxBytesAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 5Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 28 }
 
      monStaRxPktsAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 11Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 29 }
 
      monStaRxBytesAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 11Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 30 }
 
      monStaRxPktsAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 6Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 31 }
 
      monStaRxBytesAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 6Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 32 }
 
      monStaRxPktsAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 12Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 33 }
 
      monStaRxBytesAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 12Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 34 }
 
      monStaRxPktsAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 18Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 35 }
 
      monStaRxBytesAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 18Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 36 }
 
      monStaRxPktsAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 24Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 37 }
 
      monStaRxBytesAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 24Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 38 }
 
      monStaRxPktsAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 36Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 39 }
 
      monStaRxBytesAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 36Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 40 }
 
      monStaRxPktsAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 48Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 41 }
 
      monStaRxBytesAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 48Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 42 }
 
      monStaRxPktsAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 54Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 43 }
 
      monStaRxBytesAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 54Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 44 }
 
 
      monStaTxPktsAt9Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 9Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 45 }
 
      monStaTxBytesAt9Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 9Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 46 }
 
 
      monStaRxPktsAt9Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 9Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 47 }
 
      monStaRxBytesAt9Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 9Mbps rate.
             "
         ::= { wlsxMonStaRateStatsEntry 48 }
 
 
 -- This table breaks down the Station statistics based on the
--- Destination Address Types. 
+-- Destination Address Types.
 
-   wlsxMonStaDATypeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonStaDATypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonStaDATypeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonStaDATypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the Packet and Byte Counts for a monitored station but
-		but broken down in terms of Destination Address Type. 
+		but broken down in terms of Destination Address Type.
 		"
-      ::= { wlsxMonStationStatsGroup 3} 
+      ::= { wlsxMonStationStatsGroup 3}
 
-     wlsxMonStaDATypeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonStaDATypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsxMonStaDATypeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonStaDATypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Data rate based packet and byte count entry for a monitored station"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredStaPhyAddress}
-      ::= { wlsxMonStaDATypeStatsTable 1 } 
-	
+      ::= { wlsxMonStaDATypeStatsTable 1 }
+
      WlsxMonStaDATypeStatsEntry ::=
      SEQUENCE {
 		 monStaTxDABroadcastPkts		Counter32  ,
@@ -2027,99 +2027,99 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 		 monStaTxDAMulticastPkts		Counter32  ,
 		 monStaTxDAMulticastBytes		Counter32  ,
 		 monStaTxDAUnicastPkts			Counter32  ,
-		 monStaTxDAUnicastBytes		Counter32  
+		 monStaTxDAUnicastBytes		Counter32
 
      }
 
      monStaTxDABroadcastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Broadcast packets 
+			 This attribute indicates the number of Broadcast packets
 			 transmitted by this Station.
             "
         ::= { wlsxMonStaDATypeStatsEntry 1 }
 
      monStaTxDABroadcastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Broadcast Bytes 
+			 This attribute indicates the number of Broadcast Bytes
 			 transmitted by this Station.
             "
         ::= { wlsxMonStaDATypeStatsEntry 2 }
 
      monStaTxDAMulticastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Multicast packets 
+			 This attribute indicates the number of Multicast packets
 			 transmitted by this station.
             "
         ::= { wlsxMonStaDATypeStatsEntry 3 }
 
      monStaTxDAMulticastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Multicast Bytes 
+			 This attribute indicates the number of Multicast Bytes
 			 transmitted by this station.
             "
         ::= { wlsxMonStaDATypeStatsEntry 4 }
 
      monStaTxDAUnicastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total of Unicast packets 
+			 This attribute indicates the total of Unicast packets
 			 transmitted by this station.
             "
         ::= { wlsxMonStaDATypeStatsEntry 5 }
 
      monStaTxDAUnicastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total of Unicast Bytes 
+			 This attribute indicates the total of Unicast Bytes
 			 transmitted by this station.
             "
         ::= { wlsxMonStaDATypeStatsEntry 6 }
 
 -- This table breaks down the Station statistics based on the
--- the Type of the Packet. 
+-- the Type of the Packet.
 
-   wlsxMonStaFrameTypeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonStaFrameTypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonStaFrameTypeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonStaFrameTypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the Packet and Byte Counts for monitored
-		stations but broken down into different Frame Types. 
+		stations but broken down into different Frame Types.
 		"
-      ::= { wlsxMonStationStatsGroup 4} 
+      ::= { wlsxMonStationStatsGroup 4}
 
-     wlsxMonStaFrameTypeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonStaFrameTypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsxMonStaFrameTypeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonStaFrameTypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Frame Type based packet and byte count entry for a monitored station"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredStaPhyAddress}
-      ::= { wlsxMonStaFrameTypeStatsTable 1 } 
-	
+      ::= { wlsxMonStaFrameTypeStatsTable 1 }
+
      WlsxMonStaFrameTypeStatsEntry ::=
      SEQUENCE {
 		 monStaTxMgmtPkts		Counter32  ,
@@ -2133,166 +2133,166 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 		 monStaRxCtrlPkts		Counter32  ,
 		 monStaRxCtrlBytes		Counter32  ,
 		 monStaRxDataPkts		Counter32  ,
-		 monStaRxDataBytes		Counter32  
+		 monStaRxDataBytes		Counter32
 
      }
 
      monStaTxMgmtPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the transmitted Management packets 
+			 This attribute indicates the transmitted Management packets
 			 from a station.
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 1 }
 
      monStaTxMgmtBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the transmitted Management Bytes 
+			 This attribute indicates the transmitted Management Bytes
 			 from a station
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 2 }
 
      monStaTxCtrlPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the transmitted Control packets 
+			 This attribute indicates the transmitted Control packets
 			 from a station
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 3 }
 
      monStaTxCtrlBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the transmitted Control Bytes 
+			 This attribute indicates the transmitted Control Bytes
 			 from a station
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 4 }
 
      monStaTxDataPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the transmitted Data packets 
+			 This attribute indicates the transmitted Data packets
 			 from a station
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 5 }
 
      monStaTxDataBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the transmitted Data Bytes 
+			 This attribute indicates the transmitted Data Bytes
 			 observed from this station.
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 6 }
 
      monStaRxMgmtPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Management packets 
+			 This attribute indicates the number of received Management packets
 			 at a station.
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 7 }
 
      monStaRxMgmtBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Management Bytes 
+			 This attribute indicates the number of received Management Bytes
 			 at a station.
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 8 }
 
      monStaRxCtrlPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Control packets 
+			 This attribute indicates the number of received Control packets
 			 at a station.
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 9 }
 
      monStaRxCtrlBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Control Bytes 
+			 This attribute indicates the number of received Control Bytes
 			 at a station.
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 10 }
 
      monStaRxDataPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Data packets 
+			 This attribute indicates the number of received Data packets
 			 at a station.
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 11 }
 
      monStaRxDataBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Data Bytes 
+			 This attribute indicates the number of received Data Bytes
 			 at a station.
             "
         ::= { wlsxMonStaFrameTypeStatsEntry 12 }
 
 
--- This table breaks down the Station statistics received or transmitted by a 
--- station into packet size buckets. 
+-- This table breaks down the Station statistics received or transmitted by a
+-- station into packet size buckets.
 
-   wlsxMonStaPktSizeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonStaPktSizeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonStaPktSizeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonStaPktSizeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the Packet and Byte Counts for monitored
-		stations but broken down into different Packet Sizes. 
+		stations but broken down into different Packet Sizes.
 		"
-      ::= { wlsxMonStationStatsGroup 5} 
+      ::= { wlsxMonStationStatsGroup 5}
 
-     wlsxMonStaPktSizeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonStaPktSizeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsxMonStaPktSizeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonStaPktSizeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Packet Size based packet count entry for a monitored station"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredStaPhyAddress}
-      ::= { wlsxMonStaPktSizeStatsTable 1 } 
-	
+      ::= { wlsxMonStaPktSizeStatsTable 1 }
+
      WlsxMonStaPktSizeStatsEntry ::=
      SEQUENCE {
 		 monStaTxPkts63Bytes		Counter32  ,
@@ -2306,138 +2306,138 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 		 monStaRxPkts128To255		Counter32  ,
 		 monStaRxPkts256To511		Counter32  ,
 		 monStaRxPkts512To1023	Counter32  ,
-		 monStaRxPkts1024To1518	Counter32  
+		 monStaRxPkts1024To1518	Counter32
 
      }
 
      monStaTxPkts63Bytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were less than 64 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 1 }
 
      monStaTxPkts64To127 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 64 and 127 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 2 }
 
      monStaTxPkts128To255 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 128 and 255 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 3 }
 
      monStaTxPkts256To511 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 256 and 511 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 4 }
 
      monStaTxPkts512To1023 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 512 and 1023 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 5 }
 
      monStaTxPkts1024To1518 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 1024 and 1518 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 6 }
 
      monStaRxPkts63Bytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were less than 64 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 7 }
 
      monStaRxPkts64To127 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 64 and 127 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 8 }
 
      monStaRxPkts128To255 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 128 and 255 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 9 }
 
      monStaRxPkts256To511 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 256 and 511 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 10 }
 
      monStaRxPkts512To1023 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 512 and 1023 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 11 }
 
      monStaRxPkts1024To1518 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 1024 and 1518 bytes long.
             "
         ::= { wlsxMonStaPktSizeStatsEntry 12 }
@@ -2448,25 +2448,25 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
    wlsxMonAccessPointInfoGroup  OBJECT IDENTIFIER ::= { wlsxMonInfoGroup 1 }
    wlsxMonStationInfoGroup  OBJECT IDENTIFIER ::= { wlsxMonInfoGroup 2 }
 
-   wlsxMonAPInfoTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonAPInfoEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonAPInfoTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonAPInfoEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This lists all of the Access Points being monitored by 
-			the controller. 
+			This lists all of the Access Points being monitored by
+			the controller.
 		"
-      ::= { wlsxMonAccessPointInfoGroup 1 } 
+      ::= { wlsxMonAccessPointInfoGroup 1 }
 
-   wlsxMonAPInfoEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonAPInfoEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonAPInfoEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonAPInfoEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Access Point Info entry"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredApBSSID}
-      ::= { wlsxMonAPInfoTable 1 } 
+      ::= { wlsxMonAPInfoTable 1 }
 
    WlsxMonAPInfoEntry ::=
      SEQUENCE {
@@ -2569,7 +2569,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Number of Signal Packets observed by the Monitoring AP 
+			The Number of Signal Packets observed by the Monitoring AP
 			during this sample time.
             "
         ::= { wlsxMonAPInfoEntry 8 }
@@ -2653,7 +2653,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
             "
 			Indicates the WPA/WPA2 unicast cipher supported by the monitored AP.
-            If multiple ciphers are supported, the weakest will be indicated. 
+            If multiple ciphers are supported, the weakest will be indicated.
             "
         ::= { wlsxMonAPInfoEntry 16 }
 
@@ -2664,7 +2664,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
             "
 			Indicates the WPA/WPA2 authentication algorithm supported by the monitored AP.
-            If multiple authentication algorithms are supported, the weakest will be indicated. 
+            If multiple authentication algorithms are supported, the weakest will be indicated.
             "
         ::= { wlsxMonAPInfoEntry 17 }
 
@@ -2678,25 +2678,25 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxMonAPInfoEntry 18 }
 
-   wlsxMonStationInfoTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MonStationInfoEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonStationInfoTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MonStationInfoEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This Table lists statistics of all the wireless stations 
-			being monitored. 
+			This Table lists statistics of all the wireless stations
+			being monitored.
 		"
-      ::= { wlsxMonStationInfoGroup 1} 
+      ::= { wlsxMonStationInfoGroup 1}
 
-   wlsxMonStationInfoEntry OBJECT-TYPE 
-	  SYNTAX       MonStationInfoEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonStationInfoEntry OBJECT-TYPE
+	  SYNTAX       MonStationInfoEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Info Entry"
 	  INDEX {monPhyAddress, monRadioNumber, monitoredStaPhyAddress}
-      ::= { wlsxMonStationInfoTable 1 } 
+      ::= { wlsxMonStationInfoTable 1 }
 
    MonStationInfoEntry ::=
      SEQUENCE {
@@ -2801,7 +2801,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The Number of Signal Packets observed by the Monitoring station 
+			The Number of Signal Packets observed by the Monitoring station
 			during this sample time.
             "
         ::= { wlsxMonStationInfoEntry 9 }
@@ -2839,24 +2839,24 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 -- Event table contains the event ID and the number of events of that type
 -- raised so far
 
-   wlsxMonEventCountTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF MonEventCountEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonEventCountTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF MonEventCountEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This Table lists counts of Events generated by the APs.
 		"
-      ::= { wlsxMonStationStatsGroup 6} 
+      ::= { wlsxMonStationStatsGroup 6}
 
-   wlsxMonEventCountEntry OBJECT-TYPE 
-	  SYNTAX       MonEventCountEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonEventCountEntry OBJECT-TYPE
+	  SYNTAX       MonEventCountEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Event Count Entry"
 	  INDEX {monEventID}
-      ::= { wlsxMonEventCountTable 1 } 
+      ::= { wlsxMonEventCountTable 1 }
 
    MonEventCountEntry ::=
      SEQUENCE {
@@ -2887,27 +2887,27 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
 -- This table breaks down the station statistics observed into different
 -- HT rate categories.
 
-   wlsxMonStationHTRateStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsxMonStationHTRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsxMonStationHTRateStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsxMonStationHTRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the monitored AP Packet and Byte Counts
 		but represented in terms of HT rate categories.
 		"
-	
-      ::= { wlsxMonStationStatsGroup 7 } 
 
-     wlsxMonStationHTRateStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsxMonStationHTRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxMonStationStatsGroup 7 }
+
+     wlsxMonStationHTRateStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsxMonStationHTRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "HT Data rate based packet and byte count entry for a monitored station"
 	  INDEX { monPhyAddress, monRadioNumber, monitoredStaPhyAddress, monHTRate }
-      ::= { wlsxMonStationHTRateStatsTable 1 } 
-	
+      ::= { wlsxMonStationHTRateStatsTable 1 }
+
      WlsxMonStationHTRateStatsEntry ::=
      SEQUENCE {
 		 monStaTxHTPkts				Counter32,
@@ -2922,7 +2922,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The total number of packets transmitted at the indicated rate 
+			The total number of packets transmitted at the indicated rate
             "
         ::= { wlsxMonStationHTRateStatsEntry 1 }
 
@@ -2932,7 +2932,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The total number of bytes transmitted at the indicated rate 
+			The total number of bytes transmitted at the indicated rate
             "
         ::= { wlsxMonStationHTRateStatsEntry 2 }
 
@@ -2942,7 +2942,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The total number of packets received at the indicated rate 
+			The total number of packets received at the indicated rate
             "
         ::= { wlsxMonStationHTRateStatsEntry 3 }
 
@@ -2952,7 +2952,7 @@ WLSX-MON-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			The total number of bytes received at the indicated rate 
+			The total number of bytes received at the indicated rate
             "
         ::= { wlsxMonStationHTRateStatsEntry 4 }
 

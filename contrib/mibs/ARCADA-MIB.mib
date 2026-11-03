@@ -15,8 +15,8 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 			FROM RFC1213-MIB
 		DateAndTime
 			FROM SNMPv2-TC;
-	
-	
+
+
 	arcada			OBJECT IDENTIFIER ::= { enterprises 1302 }
 	open			OBJECT IDENTIFIER ::= { arcada 1 }
 	instprods		OBJECT IDENTIFIER ::= { arcada 2 }
@@ -42,13 +42,13 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 			"Installed products table."
 		INDEX   { ipProductName }
 		::= { instprods 1 }
-	
+
 	ipProductEntry	OBJECT-TYPE
 		SYNTAX	IpProductEntry
 		ACCESS	not-accessible
 		STATUS	mandatory
 		::= { ipProductTable 1 }
-	
+
 	IpProductEntry ::= SEQUENCE {
 		ipProductName			DisplayString,
 		ipProductOptions		DisplayString,
@@ -59,7 +59,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		ipSerialNumber			DisplayString,
 		ipInstallDate			DateAndTime
 		}
-	
+
 	ipProductName	OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -67,7 +67,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Product name."
 		::= { ipProductEntry 1 }
-	
+
 	ipProductOptions	OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -75,7 +75,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Optional installed features."
 		::= { ipProductEntry 2 }
-	
+
 	ipInstallPath		OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -83,7 +83,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Installation path."
 		::= { ipProductEntry 3 }
-	
+
 	ipMajorRevision		OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -91,7 +91,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Major revision."
 		::= { ipProductEntry 4 }
-	
+
 	ipMinorRevision		OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -99,7 +99,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Minor revision."
 		::= { ipProductEntry 5 }
-	
+
 	ipBuildNumber		OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -107,7 +107,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Engineering build number."
 		::= { ipProductEntry 6 }
-	
+
 	ipSerialNumber		OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -115,7 +115,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Serial number."
 		::= { ipProductEntry 7 }
-	
+
 	ipInstallDate		OBJECT-TYPE
 		SYNTAX	DateAndTime
 		ACCESS	read-only
@@ -125,7 +125,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		::= { ipProductEntry 8 }
 
 --	Configuration Group
-	
+
 	cgCatalogPath			OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -133,7 +133,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Path to the catalog files for the backup service."
 		::= { backupconfig 1 }
-	
+
 	cgReportPath			OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -141,7 +141,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Path to the report files for the backup service."
 		::= { backupconfig 2 }
-	
+
 	cgTempFilesPath			OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -149,7 +149,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Path to the temporary files for the backup service."
 		::= { backupconfig 3 }
-	
+
 	cgHistoryPath			OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -157,7 +157,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Path to the history files for the backup service."
 		::= { backupconfig 4 }
-	
+
 	cgTapeRotationPath		OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -165,7 +165,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Path to the tape rotation files for the backup service."
 		::= { backupconfig 5 }
-	
+
 	cgHistoryFileEntryLimit	OBJECT-TYPE
 		SYNTAX	UInteger32
 		ACCESS	read-only
@@ -173,7 +173,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Maximum number of history file entries to allow."
 		::= { backupconfig 6 }
-	
+
 	cgCatalogEntryAgeLimit	OBJECT-TYPE
 		SYNTAX	UInteger32
 		ACCESS	read-only
@@ -181,7 +181,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of days to retain catalog entries."
 		::= { backupconfig 7 }
-	
+
 	cgState	OBJECT-TYPE
 		SYNTAX	INTEGER {
 			running(0),
@@ -210,7 +210,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Product stop trap."
 		::= 2
-	
+
 --	Jobs Group
 
 	cjStatisticsStartTime	OBJECT-TYPE
@@ -269,13 +269,13 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 			"Jobs table."
 		INDEX   { cjJobID }
 		::= { backupjobs 7 }
-	
+
 	cjJobEntry	OBJECT-TYPE
 		SYNTAX	CjJobEntry
 		ACCESS	not-accessible
 		STATUS	mandatory
 		::= { cjJobTable 1 }
-	
+
 	CjJobEntry ::= SEQUENCE {
 		cjJobID					DisplayString,
 		cjJobName				DisplayString,
@@ -292,7 +292,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		cjJobXferRate			Gauge32,
 		cjJobScheduleFrequency	DisplayString
 		}
-	
+
 	cjJobID					OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -300,7 +300,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Unique ID for the job."
 		::= { cjJobEntry 1 }
-	
+
 	cjJobName				OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -308,7 +308,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Name of the job."
 		::= { cjJobEntry 2 }
-	
+
 	cjJobType				OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -316,7 +316,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Type of job."
 		::= { cjJobEntry 3 }
-	
+
 	cjJobStatus				OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -324,7 +324,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Status of the job."
 		::= { cjJobEntry 4 }
-	
+
 	cjJobSubmitter			OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -332,7 +332,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"ID of the person that submitted the job."
 		::= { cjJobEntry 5 }
-	
+
 	cjJobDestination		OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -340,7 +340,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Name of the resources used by the job."
 		::= { cjJobEntry 6 }
-	
+
 	cjJobLogFile			OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -348,7 +348,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Name of the logfile for the job."
 		::= { cjJobEntry 7 }
-	
+
 	cjJobStartTime			OBJECT-TYPE
 		SYNTAX	DateAndTime
 		ACCESS	read-only
@@ -356,7 +356,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Start time for this job."
 		::= { cjJobEntry 8 }
-	
+
 	cjJobElapsedTime		OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -364,7 +364,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of seconds job has been running."
 		::= { cjJobEntry 9 }
-	
+
 	cjJobPercentComplete	OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -372,7 +372,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Percent complete."
 		::= { cjJobEntry 10 }
-	
+
 	cjJobEstMB				OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -380,7 +380,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Estimated total megabytes for this job."
 		::= { cjJobEntry 11 }
-	
+
 	cjJobActMB				OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -388,7 +388,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Actual number of megabytes for this job."
 		::= { cjJobEntry 12 }
-	
+
 	cjJobXferRate			OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -396,7 +396,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Megabytes per minute transferred."
 		::= { cjJobEntry 13 }
-	
+
 	cjJobScheduleFrequency	OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -477,20 +477,20 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 			"PVR table."
 		INDEX   { pvrName }
 		::= { pvr 2 }
-	
+
 	pvrEntry	OBJECT-TYPE
 		SYNTAX	PvrEntry
 		ACCESS	not-accessible
 		STATUS	mandatory
 		::= { pvrTable 1 }
-	
+
 	PvrEntry ::= SEQUENCE {
 		pvrName		DisplayString,
 		pvrSlots	UInteger32,
 		pvrScratchAvail	Gauge32,
 		pvrScratchLow	UInteger32
 		}
-	
+
 	pvrName	OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -498,7 +498,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"PVR name."
 		::= { pvrEntry 1 }
-	
+
 	pvrSlots	OBJECT-TYPE
 		SYNTAX	UInteger32
 		ACCESS	read-only
@@ -506,7 +506,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of slots."
 		::= { pvrEntry 2 }
-	
+
 	pvrScratchAvail	OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -514,7 +514,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of scratch tapes resident in the PVR."
 		::= { pvrEntry 3 }
-	
+
 	pvrScratchLow	OBJECT-TYPE
 		SYNTAX	UInteger32
 		ACCESS	read-only
@@ -575,13 +575,13 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 			"PVL table."
 		INDEX   { pvlName }
 		::= { pvl 2 }
-	
+
 	pvlEntry	OBJECT-TYPE
 		SYNTAX	PvlEntry
 		ACCESS	not-accessible
 		STATUS	mandatory
 		::= { pvlTable 1 }
-	
+
 	PvlEntry ::= SEQUENCE {
 		pvlName					DisplayString,
 		pvlVolumesTracked		Gauge32,
@@ -592,7 +592,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		pvlToBeReturned			Gauge32,
 		pvlScratchLowerLimit	UInteger32
 		}
-	
+
 	pvlName					OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -600,7 +600,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"PVL name."
 		::= { pvlEntry 1 }
-	
+
 	pvlVolumesTracked		OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -608,7 +608,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of tape volumes tracked in the PVL."
 		::= { pvlEntry 2 }
-	
+
 	pvlScratchPoolSize		OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -616,7 +616,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of tape volumes in the scratch pool."
 		::= { pvlEntry 3 }
-	
+
 	pvlToBeRecycled			OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -624,7 +624,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of tape volumes to be returned to the scratch pool."
 		::= { pvlEntry 4 }
-	
+
 	pvlToBeDiscarded		OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -632,7 +632,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of tape volumes to be discarded."
 		::= { pvlEntry 5 }
-	
+
 	pvlToBeShipped			OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -640,7 +640,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of tape volumes to be shipped to off-site location."
 		::= { pvlEntry 6 }
-	
+
 	pvlToBeReturned			OBJECT-TYPE
 		SYNTAX	Gauge32
 		ACCESS	read-only
@@ -648,7 +648,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of tape volumes to be returned from off-site location."
 		::= { pvlEntry 7 }
-	
+
 	pvlScratchLowerLimit	OBJECT-TYPE
 		SYNTAX	Counter
 		ACCESS	read-only
@@ -709,13 +709,13 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 			"Loader table."
 		INDEX   { ldSCSIDeviceID }
 		::= { loader 2 }
-	
+
 	ldEntry	OBJECT-TYPE
 		SYNTAX	LdEntry
 		ACCESS	not-accessible
 		STATUS	mandatory
 		::= { ldTable 1 }
-	
+
 	LdEntry ::= SEQUENCE {
 		ldSCSIDeviceID			DisplayString,
 		ldName					DisplayString,
@@ -732,7 +732,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		ldDoorOpen				INTEGER,
 		ldIntervention			INTEGER
 		}
-	
+
 	ldSCSIDeviceID		OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -740,7 +740,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"SCSI device name of the loader."
 		::= { ldEntry 1 }
-	
+
 	ldName				OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -748,7 +748,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Loader name."
 		::= { ldEntry 2 }
-	
+
 	ldVendorProductID	OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -756,7 +756,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Vendor and product ID."
 		::= { ldEntry 3 }
-	
+
 	ldMaxDrives	OBJECT-TYPE
 		SYNTAX	UInteger32
 		ACCESS	read-only
@@ -764,7 +764,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Maximum mumber of drives."
 		::= { ldEntry 4 }
-	
+
 	ldMaxSlots	OBJECT-TYPE
 		SYNTAX	UInteger32
 		ACCESS	read-only
@@ -772,7 +772,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Maximum number of slots."
 		::= { ldEntry 5 }
-	
+
 	ldStatus	OBJECT-TYPE
 		SYNTAX	INTEGER { offline(0), online(1) }
 		ACCESS	read-only
@@ -780,7 +780,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Loader status."
 		::= { ldEntry 6 }
-	
+
 	ldMoveMediumCount	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -788,7 +788,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of 'MoveMedium' operations performed."
 		::= { ldEntry 7 }
-	
+
 	ldHasImportExportPorts	OBJECT-TYPE
 		SYNTAX	INTEGER { False(0), True(1) }
 		ACCESS	read-only
@@ -796,7 +796,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Has Import/Export ports flag."
 		::= { ldEntry 8 }
-	
+
 	ldTransportErrors	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -804,7 +804,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of Transport errors."
 		::= { ldEntry 9 }
-	
+
 	ldImportExportErrors	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -812,7 +812,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of Import/Export errors."
 		::= { ldEntry 10 }
-	
+
 	ldHasBarCodeReader	OBJECT-TYPE
 		SYNTAX	INTEGER { False(0), True(1) }
 		ACCESS	read-only
@@ -828,7 +828,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of bar-code read errors."
 		::= { ldEntry 12 }
-	
+
 	ldDoorOpen	OBJECT-TYPE
 		SYNTAX	INTEGER { False(0), True(1) }
 		ACCESS	read-only
@@ -836,7 +836,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Door open status."
 		::= { ldEntry 13 }
-	
+
 	ldIntervention	OBJECT-TYPE
 		SYNTAX	INTEGER { False(0), True(1) }
 		ACCESS	read-only
@@ -849,7 +849,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 	ldoffline	OBJECT IDENTIFIER ::= { ldtraps 1 }
 	ldonline	OBJECT IDENTIFIER ::= { ldtraps 2 }
 	ldhuman		OBJECT IDENTIFIER ::= { ldtraps 3 }
-	
+
 	ldActionString	OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -897,13 +897,13 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 			"Tape Drive table."
 		INDEX   { tdSCSIDeviceID }
 		::= { tape 2 }
-	
+
 	tdEntry	OBJECT-TYPE
 		SYNTAX	TdEntry
 		ACCESS	not-accessible
 		STATUS	mandatory
 		::= { tdTable 1 }
-	
+
 	TdEntry ::= SEQUENCE {
 		tdSCSIDeviceID		DisplayString,
 		tdDeviceName		DisplayString,
@@ -922,7 +922,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		tdReadUncorrected	Counter32,
 		tdInterventionRequired	INTEGER
 		}
-	
+
 	tdSCSIDeviceID	OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -938,7 +938,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Name of the device."
 		::= { tdEntry 2 }
-	
+
 	tdVendorProductID	OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only
@@ -946,7 +946,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Vendor product ID."
 		::= { tdEntry 3 }
-	
+
 	tdCleaningRequired	OBJECT-TYPE
 		SYNTAX	INTEGER { False(0), True(1) }
 		ACCESS	read-only
@@ -954,7 +954,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Drive cleaning status."
 		::= { tdEntry 4 }
-	
+
 	tdHWCompression	OBJECT-TYPE
 		SYNTAX	INTEGER { Off(0), On(1) }
 		ACCESS	read-only
@@ -962,7 +962,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Hardware compression flag for this tape drive."
 		::= { tdEntry 5 }
-	
+
 	tdStatus	OBJECT-TYPE
 		SYNTAX	INTEGER { offline(0), online(1) }
 		ACCESS	read-only
@@ -970,7 +970,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Status of the tape drive."
 		::= { tdEntry 6 }
-	
+
 	tdStatisticsBase	OBJECT-TYPE
 		SYNTAX	DateAndTime
 		ACCESS	read-only
@@ -978,7 +978,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Date and time when statistics began for the tape drive."
 		::= { tdEntry 7 }
-	
+
 	tdMBWritten	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -986,7 +986,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of megabytes written to the tape drive."
 		::= { tdEntry 8 }
-	
+
 	tdWriteErrors	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -994,7 +994,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of write errors."
 		::= { tdEntry 9 }
-	
+
 	tdWriteCorrected	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -1002,7 +1002,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of write errors corrected."
 		::= { tdEntry 10 }
-	
+
 	tdWriteUncorrected	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -1010,7 +1010,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of write errors uncorrected."
 		::= { tdEntry 11 }
-	
+
 	tdMBRead	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -1018,7 +1018,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of megabytes read from the tape drive."
 		::= { tdEntry 12 }
-	
+
 	tdReadErrors	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -1026,7 +1026,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of read errors."
 		::= { tdEntry 13 }
-	
+
 	tdReadCorrected	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -1034,7 +1034,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of read errors corrected."
 		::= { tdEntry 14 }
-	
+
 	tdReadUncorrected	OBJECT-TYPE
 		SYNTAX	Counter32
 		ACCESS	read-only
@@ -1042,7 +1042,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Number of read errors uncorrected."
 		::= { tdEntry 15 }
-	
+
 	tdInterventionRequired	OBJECT-TYPE
 		SYNTAX	INTEGER { False(0), True(1) }
 		ACCESS	read-only
@@ -1055,7 +1055,7 @@ ARCADA-MIB DEFINITIONS ::= BEGIN
 	tdoffline	OBJECT IDENTIFIER ::= { tdtraps 1 }
 	tdonline	OBJECT IDENTIFIER ::= { tdtraps 2 }
 	tdhuman		OBJECT IDENTIFIER ::= { tdtraps 3 }
-	
+
 	tdActionString	OBJECT-TYPE
 		SYNTAX	DisplayString
 		ACCESS	read-only

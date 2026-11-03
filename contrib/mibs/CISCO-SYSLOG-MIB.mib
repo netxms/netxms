@@ -17,10 +17,10 @@
 -- can be configured such that these messages are sent to a "syslog"
 -- server.  With this MIB these same messages can also be received via
 -- the SNMP.  These messages are hereupon referred to as "syslog
--- messages" in this document. Note: Messages generated as a result 
+-- messages" in this document. Note: Messages generated as a result
 -- of entering CLI debug commands are not made available via the SNMP
 -- at this time.
--- 
+--
 -- All IOS syslog messages have the following attributes:
 --	timestamp (optional), facility name (where the message came
 --	from), severity, message name, message text
@@ -48,7 +48,7 @@ IMPORTS
 	        FROM SNMPv2-CONF
         ciscoMgmt
 	        FROM CISCO-SMI;
-     
+
 
 ciscoSyslogMIB MODULE-IDENTITY
 	LAST-UPDATED	"9508070000Z"
@@ -104,9 +104,9 @@ clogNotificationsSent OBJECT-TYPE
         STATUS          current
         DESCRIPTION
 	       "The number of clogMessageGenerated notifications that
-		have been sent. This number may include notifications 
-		that were prevented from being transmitted due to 
-		reasons such as resource limitations and/or 
+		have been sent. This number may include notifications
+		that were prevented from being transmitted due to
+		reasons such as resource limitations and/or
 		non-connectivity.  If one is receiving notifications,
 		one can periodically poll this object to determine if
 		any notifications were missed.  If so, a poll of the
@@ -242,7 +242,7 @@ clogHistIndex OBJECT-TYPE
         DESCRIPTION
 	       "A monotonically increasing integer for the sole
 		purpose of indexing messages.  When it reaches the
-		maximum value the agent flushes the table and wraps 
+		maximum value the agent flushes the table and wraps
 		the value back to 1."
 	::= { clogHistoryEntry 1 }
 
@@ -268,8 +268,8 @@ clogHistMsgName OBJECT-TYPE
         MAX-ACCESS      read-only
         STATUS          current
         DESCRIPTION
-	       "A textual identification for the message type.  A 
-		facility name in conjunction with a message name 
+	       "A textual identification for the message type.  A
+		facility name in conjunction with a message name
 		uniquely identifies a message type."
 	::= { clogHistoryEntry 4 }
 
@@ -296,7 +296,7 @@ clogHistTimestamp  OBJECT-TYPE
 -- notifications
 
 ciscoSyslogMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoSyslogMIB 2 }
-ciscoSyslogMIBNotifications OBJECT IDENTIFIER 
+ciscoSyslogMIBNotifications OBJECT IDENTIFIER
 				::= { ciscoSyslogMIBNotificationPrefix 0 }
 
 clogMessageGenerated NOTIFICATION-TYPE
@@ -353,6 +353,5 @@ ciscoSyslogMIBGroup OBJECT-GROUP
       DESCRIPTION
 	"A collection of objects providing the syslog MIB capability."
       ::= { ciscoSyslogMIBGroups 1 }
-	
-END
 
+END

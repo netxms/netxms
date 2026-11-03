@@ -28,10 +28,10 @@ netup MODULE-IDENTITY
               +7 495 510 1025 (ext 1) - technical support
       Fax:    +7 499 783 0080"
   DESCRIPTION "The Structure of Management Information for NetUp enterprise."
-  
+
   REVISION      "9404262000Z"
     DESCRIPTION "Initial version of this MIB module."
-  
+
   ::= { enterprises 39054 }     -- Assigned by IANA
 
 netupHost OBJECT-IDENTITY

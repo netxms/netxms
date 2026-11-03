@@ -1,5 +1,5 @@
 -- **********************************************************
--- Copyright 2008-2010 VMware, Inc.  All rights reserved. 
+-- Copyright 2008-2010 VMware, Inc.  All rights reserved.
 -- **********************************************************
 
 VMWARE-ENV-MIB DEFINITIONS ::= BEGIN
@@ -63,7 +63,7 @@ vmwEnvNumber OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Count of number of conceptual rows in vmwEnvTable"
     ::= { vmwEnv 1 }
 
@@ -71,7 +71,7 @@ vmwEnvLastChange OBJECT-TYPE
     SYNTAX      TimeTicks
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The value of sysUptime when a conceptual row was added
          or deleted from this table"
     ::= { vmwEnv 2 }
@@ -80,7 +80,7 @@ vmwEnvTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF VmwEnvEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "This table is populated from monitoring subsystems such as IPMI
          One conceptual row is maintained for each reporting component.
          Conceptual rows are not persistent across device resets"
@@ -90,7 +90,7 @@ vmwEnvEntry OBJECT-TYPE
     SYNTAX      VmwEnvEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "One entry for each physical component reporting its
          status to ESX Operating System"
     INDEX       { vmwEnvIndex }
@@ -108,7 +108,7 @@ vmwEnvIndex OBJECT-TYPE
     SYNTAX      Integer32 (1..1000)
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A unique identifier that does not persist across management restarts"
     ::= { vmwEnvEntry 1 }
 
@@ -116,7 +116,7 @@ vmwSubsystemType OBJECT-TYPE
     SYNTAX      VmwSubsystemTypes
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Hardware component reporting environmental state"
     ::= { vmwEnvEntry 2 }
 
@@ -124,7 +124,7 @@ vmwHardwareStatus OBJECT-TYPE
     SYNTAX      VmwSubsystemStatus
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Last reported state of this component"
     ::= { vmwEnvEntry 3 }
 
@@ -132,7 +132,7 @@ vmwEventDescription OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Human readable description of this event"
     ::= { vmwEnvEntry 4 }
 
@@ -140,28 +140,28 @@ vmwEnvHardwareTime OBJECT-TYPE
     SYNTAX      TimeTicks
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Value of sysUptime when vmwHardwareStatus was obtained"
     ::= { vmwEnvEntry 5 }
 
 vmwEnvHardwareEvent NOTIFICATION-TYPE
-    OBJECTS     { vmwSubsystemType, vmwHardwareStatus, 
+    OBJECTS     { vmwSubsystemType, vmwHardwareStatus,
                   vmwEventDescription, vmwEnvHardwareTime }
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "This notification, if the agent is so configured, may be sent when the
          system has detected a material change in physical condition of the
          hardware"
     ::= { vmwNotifications 301 }
 
 vmwESXEnvHardwareEvent NOTIFICATION-TYPE
-    OBJECTS     { vmwSubsystemType, vmwHardwareStatus, 
+    OBJECTS     { vmwSubsystemType, vmwHardwareStatus,
                   vmwEventDescription, vmwEnvHardwareTime }
     STATUS      deprecated
-    DESCRIPTION 
-        "ESX Specific version of this notification, 
-         if the agent is so configured, may be sent when 
-         the ESX Operating System has detected a material change in 
+    DESCRIPTION
+        "ESX Specific version of this notification,
+         if the agent is so configured, may be sent when
+         the ESX Operating System has detected a material change in
          physical condition of the hardware"
     ::= { vmwESXNotifications 301 }
 
@@ -172,7 +172,7 @@ vmwEnvSource OBJECT-TYPE
     SYNTAX      INTEGER {unknown(1), sensors(2), indications(3) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The source being used to obtain hardware state."
     ::= { vmwEnv 100 }
 
@@ -180,7 +180,7 @@ vmwEnvInIndications OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP POST msgs containing CIM Indications in XML as received by agent."
     ::= { vmwEnv 101 }
 
@@ -188,7 +188,7 @@ vmwEnvLastIn OBJECT-TYPE
     SYNTAX      TimeTicks
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "sysUptime when agent last received an indication."
     ::= { vmwEnv 102 }
 
@@ -196,7 +196,7 @@ vmwEnvOutNotifications OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of notifications (traps|informs) sent that originated as CIM indication."
     ::= { vmwEnv 103 }
 
@@ -204,7 +204,7 @@ vmwEnvInErrs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of CIM Indications that agent did not complete receipt of."
     ::= { vmwEnv 104 }
 
@@ -212,7 +212,7 @@ vmwEnvIndOidErrs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of CIM Indications having a MappingString qualifier for which the value was not a valid oid."
     ::= { vmwEnv 105 }
 
@@ -220,7 +220,7 @@ vmwEnvCvtValueErrs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of CIM Indication properties having a MappingString qualifier
         for which the cim value for the given cim type could not be converted."
     ::= { vmwEnv 106 }
@@ -229,7 +229,7 @@ vmwEnvCvtSyntaxErrs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of CIM Indication properties having a MappingString qualifier
         for which the cim type could not be converted to smi syntax."
     ::= { vmwEnv 107 }
@@ -238,7 +238,7 @@ vmwEnvCvtOidErrs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of CIM Indication properties having a MappingString qualifier
         for which the the oid was not valid."
     ::= { vmwEnv 108 }
@@ -247,7 +247,7 @@ vmwEnvGetClassErrs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of CIM GetClass operations over a given cim indication class and namespace
         could not be completed (timeout) or returned error."
     ::= { vmwEnv 109 }
@@ -256,7 +256,7 @@ vmwEnvPropertySkips OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of CIM indications having properties which do not have MappingString qualifier
          in the class definition and were not converted, sent along with the notification."
     ::= { vmwEnv 110 }
@@ -265,7 +265,7 @@ vmwEnvIndicationSkips OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of CIM indications recieved for which GetClass reported no MappingStrings qualifier
         and were not converted to a notification."
     ::= { vmwEnv 111 }
@@ -279,7 +279,7 @@ vmwEnvDescription OBJECT-TYPE
     MAX-ACCESS accessible-for-notify
     STATUS     current
     DESCRIPTION
-      "A short description of the Indication." 
+      "A short description of the Indication."
     REFERENCE
       "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof : property Description"
     ::= { vmwEnvCIM 1 }
@@ -289,10 +289,10 @@ vmwEnvEventTime OBJECT-TYPE
     MAX-ACCESS accessible-for-notify
     STATUS     current
     DESCRIPTION
-      "The time and date the underlying event was first 
-       detected. May be set to the time the SNMP agent recieved the notification 
+      "The time and date the underlying event was first
+       detected. May be set to the time the SNMP agent recieved the notification
        if in the incoming CIM indication the value is
-       NULL due to the creating entity not being capable of providing 
+       NULL due to the creating entity not being capable of providing
        this information. This value is based on the notion of
        local date and time of the Managed System Element
        generating the Indication."
@@ -319,7 +319,7 @@ vmwEnvPerceivedSeverity OBJECT-TYPE
     MAX-ACCESS accessible-for-notify
     STATUS     current
     DESCRIPTION
-      "An enumerated value that describes the severity of the 
+      "An enumerated value that describes the severity of the
        Alert Indication from the notifier's point of view."
     REFERENCE
       "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof : property PerceivedSeverity"
@@ -340,7 +340,7 @@ vmwEnvSysCreationClassName OBJECT-TYPE
     MAX-ACCESS accessible-for-notify
     STATUS     current
     DESCRIPTION
-      "The scoping System's CreationClassName for the Provider 
+      "The scoping System's CreationClassName for the Provider
        generating this Indication."
     REFERENCE
       "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof : property SystemCreationClassName"
@@ -353,7 +353,7 @@ vmwEnvAlertingElement OBJECT-TYPE
     DESCRIPTION
       "The identifying information of the entity (ie, the
        instance) for which this notification is generated. The
-       property contains the CIM path of an CIM object instance, 
+       property contains the CIM path of an CIM object instance,
        encoded as a string parameter - if the instance is modeled in the CIM
        Schema. If not a CIM instance, the property contains
        some identifying string that names the entity for which
@@ -400,7 +400,7 @@ vmwESXEnvHardwareAlert NOTIFICATION-TYPE
                  vmwEnvAlertType, vmwEnvSysCreationClassName, vmwEnvAlertingElement, vmwEnvAlertingFormat,
                  vmwEnvSystemName, vmwEnvProviderName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A hardware alert as received from the Common Infrastructure Management (CIM) subsystem on this system."
     REFERENCE  "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof"
     ::= { vmwESXNotifications 302 }
@@ -410,7 +410,7 @@ vmwESXEnvBatteryAlert NOTIFICATION-TYPE
                  vmwEnvAlertType, vmwEnvSysCreationClassName, vmwEnvAlertingElement, vmwEnvAlertingFormat,
                  vmwEnvSystemName, vmwEnvProviderName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A battery alert as received from the Common Infrastructure Management (CIM) subsystem on this system."
     REFERENCE  "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof"
     ::= { vmwESXNotifications 303 }
@@ -420,7 +420,7 @@ vmwESXEnvChassisAlert NOTIFICATION-TYPE
                  vmwEnvAlertType, vmwEnvSysCreationClassName, vmwEnvAlertingElement, vmwEnvAlertingFormat,
                  vmwEnvSystemName, vmwEnvProviderName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A chassis alert as received from the Common Infrastructure Management (CIM) subsystem on this system."
     REFERENCE  "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof"
     ::= { vmwESXNotifications 304 }
@@ -431,7 +431,7 @@ vmwESXEnvThermalAlert NOTIFICATION-TYPE
                  vmwEnvAlertType, vmwEnvSysCreationClassName, vmwEnvAlertingElement, vmwEnvAlertingFormat,
                  vmwEnvSystemName, vmwEnvProviderName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A cooling/thermal alert as received from the Common Infrastructure Management (CIM) subsystem on this system."
     REFERENCE  "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof"
     ::= { vmwESXNotifications 305 }
@@ -441,7 +441,7 @@ vmwESXEnvDiskAlert NOTIFICATION-TYPE
                  vmwEnvAlertType, vmwEnvSysCreationClassName, vmwEnvAlertingElement, vmwEnvAlertingFormat,
                  vmwEnvSystemName, vmwEnvProviderName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A disk drive alert as received from the Common Infrastructure Management (CIM) subsystem on this system."
     REFERENCE  "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof"
     ::= { vmwESXNotifications 306 }
@@ -451,7 +451,7 @@ vmwESXEnvPowerAlert NOTIFICATION-TYPE
                  vmwEnvAlertType, vmwEnvSysCreationClassName, vmwEnvAlertingElement, vmwEnvAlertingFormat,
                  vmwEnvSystemName, vmwEnvProviderName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A power suppply alert as received from the Common Infrastructure Management (CIM) subsystem on this system."
     REFERENCE  "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof"
     ::= { vmwESXNotifications 307 }
@@ -461,7 +461,7 @@ vmwESXEnvProcessorAlert NOTIFICATION-TYPE
                  vmwEnvAlertType, vmwEnvSysCreationClassName, vmwEnvAlertingElement, vmwEnvAlertingFormat,
                  vmwEnvSystemName, vmwEnvProviderName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A IPMI processor alert as received from the Common Infrastructure Management (CIM) subsystem on this system."
     REFERENCE  "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof"
     ::= { vmwESXNotifications 308 }
@@ -471,7 +471,7 @@ vmwESXEnvMemoryAlert NOTIFICATION-TYPE
                  vmwEnvAlertType, vmwEnvSysCreationClassName, vmwEnvAlertingElement, vmwEnvAlertingFormat,
                  vmwEnvSystemName, vmwEnvProviderName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A IPMI memory alert as received from the Common Infrastructure Management (CIM) subsystem on this system."
     REFERENCE  "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof"
     ::= { vmwESXNotifications 309 }
@@ -482,7 +482,7 @@ vmwESXEnvBIOSAlert NOTIFICATION-TYPE
                  vmwEnvAlertType, vmwEnvSysCreationClassName, vmwEnvAlertingElement, vmwEnvAlertingFormat,
                  vmwEnvSystemName, vmwEnvProviderName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "BIOS System Event Log alert as received from the Common Infrastructure Management (CIM) subsystem on this system."
     REFERENCE  "http://www.dmtf.org/standards/cim/cim_schema_v2240 : file CIM_AlertIndication.mof"
     ::= { vmwESXNotifications 310 }
@@ -499,7 +499,7 @@ vmwEnvMIBGroups  OBJECT IDENTIFIER ::= { vmwEnvironmentalMIBConformance 2 }
 vmwEnvMIBBasicCompliance3 MODULE-COMPLIANCE
 STATUS  current
 DESCRIPTION
-    "The compliance statement for entities which implement the 
+    "The compliance statement for entities which implement the
     VMWARE-ENV-MIB."
 MODULE  -- this module
 MANDATORY-GROUPS { vmwEnvAlertGroup, vmwESXEnvNotificationGroup2 }
@@ -511,7 +511,7 @@ DESCRIPTION
 vmwEnvMIBBasicCompliance2 MODULE-COMPLIANCE
 STATUS  deprecated
 DESCRIPTION
-    "The compliance statement for entities which implement the 
+    "The compliance statement for entities which implement the
     VMWARE-ENV-MIB."
 MODULE  -- this module
 MANDATORY-GROUPS { vmwEnvironmentGroup }
@@ -529,7 +529,7 @@ DESCRIPTION
 vmwEnvMIBBasicCompliance MODULE-COMPLIANCE
 STATUS  obsolete
 DESCRIPTION
-    "The compliance statement for entities which implement the 
+    "The compliance statement for entities which implement the
     VMWARE-ENV-MIB."
 MODULE  -- this module
 MANDATORY-GROUPS { vmwEnvironmentGroup, vmwEnvNotificationGroup }
@@ -560,14 +560,14 @@ vmwEnvAlertGroup OBJECT-GROUP
     vmwEnvAlertingFormat,
     vmwEnvSystemName,
     vmwEnvProviderName
-    } 
+    }
     STATUS current
     DESCRIPTION
         "These objects provide physical hardware environmental details as reported by CIM subsystem."
     ::= { vmwEnvMIBGroups 5 }
 
 vmwEnvironmentGroup OBJECT-GROUP
-    OBJECTS { 
+    OBJECTS {
     vmwEnvNumber,
     vmwEnvLastChange,
     vmwSubsystemType,

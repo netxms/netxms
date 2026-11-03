@@ -313,7 +313,7 @@ UBNT-EdgeMAX-MIB DEFINITIONS ::= BEGIN
     -- --------------------------------------------------------------------------------
     --                                  gpon ONUs
     -- --------------------------------------------------------------------------------
-    
+
     UbntOnuSN ::= TEXTUAL-CONVENTION
         STATUS      current
         SYNTAX      DisplayString (SIZE (0..12))
@@ -357,7 +357,7 @@ UBNT-EdgeMAX-MIB DEFINITIONS ::= BEGIN
         ubntOnuTxBytes        Counter64,
         ubntOnuRxBytes        Counter64
     }
-    
+
     ubntOnuSN OBJECT-TYPE
         SYNTAX UbntOnuSN
         MAX-ACCESS read-only
@@ -369,7 +369,7 @@ UBNT-EdgeMAX-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-only
         STATUS     current
         ::= { ubntOnuEntry 2 }
-    
+
     ubntOnuOnline OBJECT-TYPE
         SYNTAX     TruthValue
         MAX-ACCESS read-only
@@ -427,7 +427,7 @@ UBNT-EdgeMAX-MIB DEFINITIONS ::= BEGIN
         ::= { ubntOnuEntry 11 }
 
     -- --------------------------------------------------------------------------------
-    --                                  SFP 
+    --                                  SFP
     -- --------------------------------------------------------------------------------
 
     ubntSfps OBJECT IDENTIFIER ::= { ubntEdgeMax 7 }
@@ -461,7 +461,7 @@ UBNT-EdgeMAX-MIB DEFINITIONS ::= BEGIN
         ubntSfpTxBytes        Counter64,
         ubntSfpRxBytes        Counter64
     }
-    
+
     ubntSfpIndex OBJECT-TYPE
         SYNTAX     Integer32
         MAX-ACCESS read-only
@@ -503,7 +503,7 @@ UBNT-EdgeMAX-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-only
         STATUS     current
         ::= { ubntSfpEntry 7 }
-    
+
 
     -- --------------------------------------------------------------------------------
     --                                  gpon ONU ports
@@ -529,7 +529,7 @@ UBNT-EdgeMAX-MIB DEFINITIONS ::= BEGIN
         ubntOnuPortIndex      Integer32,
         ubntOnuPortIfSpeed    Gauge32
     }
-    
+
     ubntOnuPortSN OBJECT-TYPE
         SYNTAX     UbntOnuSN
         MAX-ACCESS read-only

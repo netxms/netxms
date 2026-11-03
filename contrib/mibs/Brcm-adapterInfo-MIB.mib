@@ -1,9 +1,9 @@
 Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
 
           -- Broadcom(R) NetXtreme Network Adapter Extended Information MIB
-          -- 
+          --
           -- This MIB defines the Broadcom NetXtreme Adapter Extended Information Set.
-          -- These objects are part of the enterprise MIB for Broadcom server and 
+          -- These objects are part of the enterprise MIB for Broadcom server and
           -- work station network adapters.
           --
 
@@ -25,7 +25,7 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
     baspConfig       	OBJECT IDENTIFIER ::= { basp 1 }
     baspStat         	OBJECT IDENTIFIER ::= { basp 2 }
     baspTrap         	OBJECT IDENTIFIER ::= { basp 3 }
-    
+
 --
 -- adaptergroup Group
 --
@@ -37,13 +37,13 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
                       "The number of Broadcom network interfaces (regardless
                       of their current state) present on this system."
               ::= { ifControllers 1 }
-              
+
           ifiTable OBJECT-TYPE
               SYNTAX  SEQUENCE OF IfiEntry
               ACCESS  not-accessible
               STATUS  mandatory
               DESCRIPTION
-                      "A list of Broadcom network interface entries.  
+                      "A list of Broadcom network interface entries.
                       The number of entries is given by the ifiNumber."
               ::= { ifControllers 2 }
 
@@ -56,7 +56,7 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
                        network interface in this system."
               INDEX   { ifiIndex }
               ::= { ifiTable 1 }
-              
+
 		  IfiEntry ::=
               SEQUENCE {
 			      ifiIndex
@@ -84,7 +84,7 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
 				  ifMemBaseLow
 					  DisplayString,
 				  ifMemBaseHigh
-				  	  DisplayString,	
+				  	  DisplayString,
 				  ifInterrupt
                       INTEGER,
 				  ifBusNumber
@@ -96,7 +96,7 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
 				  ifIpv6NetworkAddress
 				      InetAddressIPv6
 			  }
-              
+
           ifiIndex  OBJECT-TYPE
               SYNTAX  INTEGER(0..65535)
               ACCESS  not-accessible
@@ -116,7 +116,7 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
               DESCRIPTION
                       " A textual string containing name of the adapter or team"
               ::= { ifiEntry 2 }
-              
+
           ifiDescr  OBJECT-TYPE
               SYNTAX  DisplayString
               ACCESS  read-only
@@ -124,7 +124,7 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
               DESCRIPTION
                       " A textual string containing the adapter or team description"
               ::= { ifiEntry 3 }
-              
+
           ifNetworkAddress  OBJECT-TYPE
               SYNTAX  IpAddress
               ACCESS  read-only
@@ -171,7 +171,7 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
           	  ::= { ifiEntry 8 }
 
           ifState  OBJECT-TYPE
-              SYNTAX INTEGER 
+              SYNTAX INTEGER
               {
                    normal-mode(1),
                    diagnotic-mode(2),
@@ -194,7 +194,7 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
 					speed-1000-Mbps (4),
 					speed-2500-Mbps (5),
 					speed-10-Gbps (6)
-			  } 
+			  }
               ACCESS  read-only
               STATUS  mandatory
               DESCRIPTION
@@ -278,4 +278,4 @@ Brcm-adapterInfo-MIB DEFINITIONS ::= BEGIN
                      "IPv6 address of the adapter."
               ::= { ifiEntry 18 }
 
-END	
+END

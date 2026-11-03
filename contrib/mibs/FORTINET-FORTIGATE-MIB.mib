@@ -33,62 +33,62 @@ IMPORTS
 
 fnFortiGateMib MODULE-IDENTITY
     LAST-UPDATED "201606170000Z"
-    ORGANIZATION 
+    ORGANIZATION
         "Fortinet Technologies, Inc."
-    CONTACT-INFO 
+    CONTACT-INFO
         "
          Technical Support
          email: support@fortinet.com
          http://www.fortinet.com"
-    DESCRIPTION 
+    DESCRIPTION
         "Various non-monotonically increase Counter32 values have been changed to Gauge32."
     REVISION    "201606170000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added fgProcessorFnNP6 in fgProcessorTypes."
     REVISION    "201504230000Z"
-    DESCRIPTION 
+    DESCRIPTION
 	 "Added fgDevice OIDs"
     REVISION    "201503160000Z"
-    DESCRIPTION 
+    DESCRIPTION
 	 "Added fgIntfVlanHbs OIDs for vlan interface heartbeat feature"
     REVISION    "201501100000Z"
-    DESCRIPTION 
+    DESCRIPTION
 	 "Added fgLinkMonitor OIDs for link-monitor feature"
     REVISION    "201412040000Z"
-    DESCRIPTION 
+    DESCRIPTION
 	 "Added fgUsbModemInfoObjects OIDs for LTE Modem"
     REVISION    "201406040000Z"
-    DESCRIPTION 
+    DESCRIPTION
 	 "Added fgUsbports OIDs for external USB ports"
     REVISION    "201402130000Z"
-    DESCRIPTION 
+    DESCRIPTION
 	 "Added fgIntfVrrps OIDs for VRRP"
     REVISION    "201308120000Z"
-    DESCRIPTION 
+    DESCRIPTION
 	 "Added fgServerLoadBalance OIDs."
     REVISION    "201307260000Z"
-    DESCRIPTION 
+    DESCRIPTION
 	 "Added fgTrapIpsFailOpen OID in fgTraps"
     REVISION    "201304120000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added fgWc wireless controller OIDs"
     REVISION    "201304060000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added fgVpnTrapPhase1Name OID in VPN traps"
     REVISION    "201211290000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added OID for 64-bit sysUpTime"
     REVISION    "201207100000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added OID for a virtual domain's HA cluster member state."
     REVISION    "201205160000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added OIDs for advanced system info and NP4/NP2 processors."
     REVISION    "201202060000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added OIDs for IPv6 statistics."
     REVISION    "201109120000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "MIB module for Fortinet FortiGate devices."
     REVISION    "201101100000Z"
     DESCRIPTION
@@ -100,24 +100,24 @@ fnFortiGateMib MODULE-IDENTITY
     DESCRIPTION
         "Added new FortiGate models."
     REVISION    "200907070000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added fgTrapFazDisconnect."
     REVISION    "200811030000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added fgVdTpTable. Re-ordered MIB tree to improve readability.
          Replaced indexes for tables that had a dependent relationship
          with another table."
     REVISION    "200809020000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added OIDs for compatibility with FORTIOS-300-MIB."
     REVISION    "200808190000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Conformance statements."
     REVISION    "200806160000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Spelling corrections."
     REVISION    "200804140000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Initial version of FORTINET-FORTIGATE-MIB."
     ::= { fortinet 101 }
 
@@ -125,90 +125,90 @@ fnFortiGateMib MODULE-IDENTITY
 FgVdIndex ::= TEXTUAL-CONVENTION
     DISPLAY-HINT "d"
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "data type for virtual-domain indexes"
     SYNTAX      Integer32 (1..2147483647)
 
 FgOpMode ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "enumerated type for device operation modes"
     SYNTAX      INTEGER { nat(1), transparent(2) }
 
 FgHaMode ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "enumerated type for HA cluster modes"
-    SYNTAX      INTEGER { standalone(1), activeActive(2), 
+    SYNTAX      INTEGER { standalone(1), activeActive(2),
                     activePassive(3) }
 
 FgHaState ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "enumerated type for HA cluster member state"
     SYNTAX      INTEGER { master(1), backup(2), standalone(3) }
 
 FgHaLBSchedule ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "enumerated type for HA load-balancing schedules"
-    SYNTAX      INTEGER { none(1), hub(2), leastConnections(3), 
-                    roundRobin(4), weightedRoundRobin(5), random(6), 
+    SYNTAX      INTEGER { none(1), hub(2), leastConnections(3),
+                    roundRobin(4), weightedRoundRobin(5), random(6),
                     ipBased(7), ipPortBased(8) }
 
 FgAdminPermLevel ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "enumerated type for administrative permissions"
-    SYNTAX      INTEGER { readAdmin(0), writeAdmin(1), domainAdmin(15), 
+    SYNTAX      INTEGER { readAdmin(0), writeAdmin(1), domainAdmin(15),
                     superAdmin(255) }
 
 FgFwUserAuthType ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "enumerated type for user authentication types"
-    SYNTAX      INTEGER { local(1), radiusSingle(2), radiusMultiple(3), 
+    SYNTAX      INTEGER { local(1), radiusSingle(2), radiusMultiple(3),
                     ldap(4) }
 
 FgSessProto ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "data type for session protocols"
-    SYNTAX      INTEGER { ip(0), icmp(1), igmp(2), ipip(4), tcp(6), 
-                    egp(8), pup(12), udp(17), idp(22), ipv6(41), 
-                    rsvp(46), gre(47), esp(50), ah(51), ospf(89), 
+    SYNTAX      INTEGER { ip(0), icmp(1), igmp(2), ipip(4), tcp(6),
+                    egp(8), pup(12), udp(17), idp(22), ipv6(41),
+                    rsvp(46), gre(47), esp(50), ah(51), ospf(89),
                     pim(103), comp(108), raw(255) }
 
 FgP2PProto ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "data type for session protocols"
-    SYNTAX      INTEGER { bitTorrent(0), eDonkey(1), gnutella(2), 
+    SYNTAX      INTEGER { bitTorrent(0), eDonkey(1), gnutella(2),
                     kaZaa(3), skype(4), winNY(5) }
 
 FgScanAvDisposition ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Scan AV Disposition for detected anomalies"
     SYNTAX      INTEGER { detected(1), blocked(2) }
 
 FgWanOptProtocols ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "WAN optimization protocol types"
-    SYNTAX      INTEGER { http(1), mapi(2), cifs(3), 
+    SYNTAX      INTEGER { http(1), mapi(2), cifs(3),
                     ftp(4), tcp(5) }
 
 FgWanOptHistPeriods ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "WAN optimization history statistics time period types"
-    SYNTAX      INTEGER { last10Min(1), lastHour(2), lastDay(3), 
+    SYNTAX      INTEGER { last10Min(1), lastHour(2), lastDay(3),
                     lastMonth(4) }
 
 FgHaStatsSyncStatusType ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current HA Sync status types"
     SYNTAX      INTEGER { unsynchronized(0), synchronized(1) }
 
@@ -475,7 +475,7 @@ fgVdNumber OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of virtual domains in vdTable"
     ::= { fgVdInfo 1 }
 
@@ -483,7 +483,7 @@ fgVdMaxVdoms OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The maximum number of virtual domains allowed on the device as allowed by hardware and/or licensing"
     ::= { fgVdInfo 2 }
 
@@ -491,7 +491,7 @@ fgVdEnabled OBJECT-TYPE
     SYNTAX      FnBoolState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Whether virtual domains are enabled on this device"
     ::= { fgVdInfo 3 }
 
@@ -510,7 +510,7 @@ fgVdTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgVdEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of virtual domains configured on the device"
     ::= { fgVdTables 1 }
 
@@ -518,7 +518,7 @@ fgVdEntry OBJECT-TYPE
     SYNTAX      FgVdEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing information applicable
          to a particular virtual domain"
     INDEX       { fgVdEntIndex }
@@ -539,7 +539,7 @@ fgVdEntIndex OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Internal virtual domain index used to uniquely identify rows in this table. This index is also used by other tables referencing a virtual domain."
     ::= { fgVdEntry 1 }
 
@@ -547,7 +547,7 @@ fgVdEntName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The name of the virtual domain"
     ::= { fgVdEntry 2 }
 
@@ -555,7 +555,7 @@ fgVdEntOpMode OBJECT-TYPE
     SYNTAX      FgOpMode
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Operation mode of the virtual domain (NAT or Transparent)"
     ::= { fgVdEntry 3 }
 
@@ -563,7 +563,7 @@ fgVdEntHaState OBJECT-TYPE
     SYNTAX      FgHaState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "HA cluster member state of the virtual domain on this device
          (master, backup or standalone)"
     ::= { fgVdEntry 4 }
@@ -572,7 +572,7 @@ fgVdEntCpuUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "CPU usage of the virtual domain (percentage)."
     ::= { fgVdEntry 5 }
 
@@ -580,7 +580,7 @@ fgVdEntMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Memory usage of the virtual domain (percentage)."
     ::= { fgVdEntry 6 }
 
@@ -588,7 +588,7 @@ fgVdEntSesCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of active sessions on the virtual domain."
     ::= { fgVdEntry 7 }
 
@@ -597,7 +597,7 @@ fgVdEntSesRate OBJECT-TYPE
     UNITS       "Sessions Per Second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The session setup rate on the virtual domain."
     ::= { fgVdEntry 8 }
 
@@ -609,16 +609,16 @@ fgVdTpTable OBJECT-TYPE
     SYNTAX SEQUENCE OF FgVdTpEntry
     MAX-ACCESS not-accessible
     STATUS current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of virtual domains in transparent operation mode.  This table has a
-         sparse dependent relationship with fgVdTable."    
+         sparse dependent relationship with fgVdTable."
     ::= { fgVdTables 2 }
 
 fgVdTpEntry OBJECT-TYPE
     SYNTAX FgVdTpEntry
     MAX-ACCESS not-accessible
     STATUS current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing information applicable
          to a particular virtual domain in transparent mode"
     INDEX { fgVdEntIndex }
@@ -634,7 +634,7 @@ fgVdTpMgmtAddrType OBJECT-TYPE
     SYNTAX InetAddressType
     MAX-ACCESS read-only
     STATUS current
-    DESCRIPTION 
+    DESCRIPTION
         "The type of address stored in fgVdTpMgmtAddr, in compliance with INET-ADDRESS-MIB"
     ::= { fgVdTpEntry 1 }
 
@@ -642,7 +642,7 @@ fgVdTpMgmtAddr OBJECT-TYPE
     SYNTAX InetAddress
     MAX-ACCESS read-only
     STATUS current
-    DESCRIPTION 
+    DESCRIPTION
         "The management IP address of the virtual domain in transparent mode,
          typically an IPv4 address. The address type/format is determined by fgVdTpMgmtAddrType."
     ::= { fgVdTpEntry 2 }
@@ -651,7 +651,7 @@ fgVdTpMgmtMask OBJECT-TYPE
     SYNTAX InetAddressPrefixLength
     MAX-ACCESS read-only
     STATUS current
-    DESCRIPTION 
+    DESCRIPTION
         "The address prefix length (or network mask) applied to the fgVdTpMgmtAddr"
     ::= { fgVdTpEntry 3 }
 
@@ -673,7 +673,7 @@ fgSysVersion OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..128))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Firmware version of the device"
     ::= { fgSystemInfo 1 }
 
@@ -681,7 +681,7 @@ fgSysMgmtVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Index that identifies the management virtual domain. This index corresponds to the index used by fgVdTable."
     ::= { fgSystemInfo 2 }
 
@@ -689,7 +689,7 @@ fgSysCpuUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current CPU usage (percentage)"
     ::= { fgSystemInfo 3 }
 
@@ -697,7 +697,7 @@ fgSysMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current memory utilization (percentage)"
     ::= { fgSystemInfo 4 }
 
@@ -705,7 +705,7 @@ fgSysMemCapacity OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Total physical memory (RAM) installed (KB)"
     ::= { fgSystemInfo 5 }
 
@@ -713,7 +713,7 @@ fgSysDiskUsage OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current hard disk usage (MB), if disk is present"
     ::= { fgSystemInfo 6 }
 
@@ -721,7 +721,7 @@ fgSysDiskCapacity OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Total hard disk capacity (MB), if disk is present"
     ::= { fgSystemInfo 7 }
 
@@ -729,7 +729,7 @@ fgSysSesCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of active sessions on the device"
     ::= { fgSystemInfo 8 }
 
@@ -737,7 +737,7 @@ fgSysLowMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current lowmem utilization (percentage). Lowmem is memory available
          for the kernel's own data structures and kernel specific tables. The
          system can get into a bad state if it runs out of lowmem."
@@ -747,9 +747,9 @@ fgSysLowMemCapacity OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Total lowmem capacity (KB). See fgSysLowMemUsage for the description
-         of lowmem." 
+         of lowmem."
     ::= { fgSystemInfo 10 }
 
 fgSysSesRate1 OBJECT-TYPE
@@ -757,7 +757,7 @@ fgSysSesRate1 OBJECT-TYPE
     UNITS       "Sessions Per Second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average session setup rate over the past minute."
     ::= { fgSystemInfo 11 }
 
@@ -766,7 +766,7 @@ fgSysSesRate10 OBJECT-TYPE
     UNITS       "Sessions Per Second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average session setup rate over the past 10 minutes."
     ::= { fgSystemInfo 12 }
 
@@ -775,7 +775,7 @@ fgSysSesRate30 OBJECT-TYPE
     UNITS       "Sessions Per Second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average session setup rate over the past 30 minutes."
     ::= { fgSystemInfo 13 }
 
@@ -784,7 +784,7 @@ fgSysSesRate60 OBJECT-TYPE
     UNITS       "Sessions Per Second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average session setup rate over the past 60 minutes."
     ::= { fgSystemInfo 14 }
 
@@ -792,7 +792,7 @@ fgSysSes6Count OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of active ipv6 sessions on the device"
     ::= { fgSystemInfo 15 }
 
@@ -801,7 +801,7 @@ fgSysSes6Rate1 OBJECT-TYPE
     UNITS       "Sessions Per Second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average ipv6 session setup rate over the past minute."
     ::= { fgSystemInfo 16 }
 
@@ -810,7 +810,7 @@ fgSysSes6Rate10 OBJECT-TYPE
     UNITS       "Sessions Per Second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average ipv6 session setup rate over the past 10 minutes."
     ::= { fgSystemInfo 17 }
 
@@ -819,7 +819,7 @@ fgSysSes6Rate30 OBJECT-TYPE
     UNITS       "Sessions Per Second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average ipv6 session setup rate over the past 30 minutes."
     ::= { fgSystemInfo 18 }
 
@@ -828,7 +828,7 @@ fgSysSes6Rate60 OBJECT-TYPE
     UNITS       "Sessions Per Second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average ipv6 session setup rate over the past 60 minutes."
     ::= { fgSystemInfo 19 }
 
@@ -837,7 +837,7 @@ fgSysUpTime OBJECT-TYPE
     UNITS       "hundredths of a second"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The 64bit time (in hundredths of a second) since the network management portion of the system was last re-initialized."
     ::= { fgSystemInfo 20 }
 
@@ -852,7 +852,7 @@ fgSysVersionAv OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..128))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Virus signature database version installed on the device"
     ::= { fgSoftware 1 }
 
@@ -860,7 +860,7 @@ fgSysVersionIps OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..128))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IPS signature database version installed on the device"
     ::= { fgSoftware 2 }
 
@@ -875,7 +875,7 @@ fgHwSensorCount OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of entries in fgHwSensorTable"
     ::= { fgHwSensors 1 }
 
@@ -883,7 +883,7 @@ fgHwSensorTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgHwSensorEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A list of device specific hardware sensors and values. Because different devices have different hardware sensor capabilities, this table may or may not contain any values."
     ::= { fgHwSensors 2 }
 
@@ -891,7 +891,7 @@ fgHwSensorEntry OBJECT-TYPE
     SYNTAX      FgHwSensorEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing the name, value, and alarm status of a given hardware sensor"
     INDEX       { fgHwSensorEntIndex }
     ::= { fgHwSensorTable 1 }
@@ -907,7 +907,7 @@ fgHwSensorEntIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A unique identifier within the fgHwSensorTable"
     ::= { fgHwSensorEntry 1 }
 
@@ -915,7 +915,7 @@ fgHwSensorEntName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A string identifying the sensor by name"
     ::= { fgHwSensorEntry 2 }
 
@@ -923,7 +923,7 @@ fgHwSensorEntValue OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A string representation of the value of the sensor. Because sensors can present data in different formats, string representation is most general format. Interpretation of the value (units of measure, for example) is dependent on the individual sensor."
     ::= { fgHwSensorEntry 3 }
 
@@ -931,7 +931,7 @@ fgHwSensorEntAlarmStatus OBJECT-TYPE
     SYNTAX      INTEGER { false(0), true(1) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "If the sensor has an alarm threshold and has exceeded it, this will indicate its status. Not all sensors have alarms."
     ::= { fgHwSensorEntry 4 }
 
@@ -946,7 +946,7 @@ fgProcessorCount OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of entries in fgProcessorTable"
     ::= { fgProcessors 1 }
 
@@ -954,7 +954,7 @@ fgProcessorTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgProcessorEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table that lists information for each processor"
     ::= { fgProcessors 2 }
 
@@ -962,7 +962,7 @@ fgProcessorEntry OBJECT-TYPE
     SYNTAX      FgProcessorEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing information for a particular processor"
     INDEX       { fgProcessorEntIndex }
     ::= { fgProcessorTable 1 }
@@ -984,7 +984,7 @@ fgProcessorEntIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A unique identifier within the fgProcessorTable"
     ::= { fgProcessorEntry 1 }
 
@@ -993,7 +993,7 @@ fgProcessorUsage OBJECT-TYPE
     UNITS       "%"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The processor's CPU usage (percentage), which is an average
         calculated over the last minute.
         (only valid for processors types that support this statistic)."
@@ -1004,7 +1004,7 @@ fgProcessorUsage5sec OBJECT-TYPE
     UNITS       "%"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The processor's CPU usage (percentage), which is an average
         calculated over the last 5 sec.
         (only valid for processors types that support this statistic)."
@@ -1014,7 +1014,7 @@ fgProcessorType OBJECT-TYPE
     SYNTAX      AutonomousType
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An indication of the type of the processor.
         Types are defined in fgProcessorTypes."
     ::= { fgProcessorEntry 4 }
@@ -1023,7 +1023,7 @@ fgProcessorContainedIn OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The index to the processor module entry in the fgProcessorModuleTable
         that contains this processor."
     ::= { fgProcessorEntry 5 }
@@ -1032,7 +1032,7 @@ fgProcessorPktRxCount OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The total number of packets received by this processor
          (only valid for processors types that support this statistic)."
     ::= { fgProcessorEntry 6 }
@@ -1041,7 +1041,7 @@ fgProcessorPktTxCount OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The total number of packets transmitted by this processor
          (only valid for processors types that support this statistic)."
     ::= { fgProcessorEntry 7 }
@@ -1050,7 +1050,7 @@ fgProcessorPktDroppedCount OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The total number of packets dropped by this processor
          (only valid for processors types that support this statistic)."
     ::= { fgProcessorEntry 8 }
@@ -1060,8 +1060,8 @@ fgProcessorUserUsage OBJECT-TYPE
     UNITS       "%"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
-        "The processor's CPU user space usage, which is an average 
+    DESCRIPTION
+        "The processor's CPU user space usage, which is an average
          calculated over the last minute.
          (only valid for processors types that support this statistic)."
     ::= { fgProcessorEntry 9 }
@@ -1071,8 +1071,8 @@ fgProcessorSysUsage OBJECT-TYPE
     UNITS       "%"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
-        "The processor's CPU system space usage, which is an average 
+    DESCRIPTION
+        "The processor's CPU system space usage, which is an average
          calculated over the last minute.
          (only valid for processors types that support this statistic)."
     ::= { fgProcessorEntry 10 }
@@ -1247,7 +1247,7 @@ fgProcessorModuleCount OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of entries in fgProcessorModuleTable"
     ::= { fgProcessorModules 2 }
 
@@ -1255,7 +1255,7 @@ fgProcessorModuleTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgProcessorModuleEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table that lists information for each processor module"
     ::= { fgProcessorModules 3 }
 
@@ -1263,7 +1263,7 @@ fgProcessorModuleEntry OBJECT-TYPE
     SYNTAX      FgProcessorModuleEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing information for a particular processor module"
     INDEX       { fgProcModIndex }
     ::= { fgProcessorModuleTable 1 }
@@ -1285,7 +1285,7 @@ fgProcModIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A unique identifier within the fgProcessorModuleTable"
     ::= { fgProcessorModuleEntry 1 }
 
@@ -1318,7 +1318,7 @@ fgProcModProcessorCount OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Total number of processors contained by this module."
     ::= { fgProcessorModuleEntry 5}
 
@@ -1326,7 +1326,7 @@ fgProcModMemCapacity OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Total physical memory (RAM) installed (KB) on this processor module."
     ::= { fgProcessorModuleEntry 6 }
 
@@ -1334,7 +1334,7 @@ fgProcModMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current memory utilization (percentage) on this processor module."
     ::= { fgProcessorModuleEntry 7 }
 
@@ -1342,7 +1342,7 @@ fgProcModSessionCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of active sessions on this processor module
          (only valid for processors types that support this statistic)."
     ::= { fgProcessorModuleEntry 8}
@@ -1351,7 +1351,7 @@ fgProcModSACount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of IPsec Security Associations on this processor module
          (only valid for processors types that support this statistic)."
     ::= { fgProcessorModuleEntry 9}
@@ -1375,7 +1375,7 @@ fgSIAdvMemPageCache OBJECT-TYPE
     UNITS       "KB"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The amount of physical RAM used as cache memory for files read from
          the disk (the page cache)."
     ::= { fgSysInfoAdvMem 1 }
@@ -1385,7 +1385,7 @@ fgSIAdvMemCacheActive OBJECT-TYPE
     UNITS       "KB"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The toal amount of buffer or page cache memory that are active.
          This part of the memory is used recently and usually not reclaimed
          unless absolutely necessary."
@@ -1396,9 +1396,9 @@ fgSIAdvMemCacheInactive OBJECT-TYPE
     UNITS       "KB"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The total amount of buffer or page cache memory that are free and
-         available. This is memory that has not been recently used and can be 
+         available. This is memory that has not been recently used and can be
          reclaimed for other purposes by the paging algorithm."
     ::= { fgSysInfoAdvMem 3 }
 
@@ -1407,7 +1407,7 @@ fgSIAdvMemBuffer OBJECT-TYPE
     UNITS       "KB"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The amount of physical RAM used for filesystem buffers."
     ::= { fgSysInfoAdvMem 4 }
 
@@ -1416,7 +1416,7 @@ fgSIAdvMemEnterKerConsThrsh OBJECT-TYPE
     UNITS       "KB"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current memory threshold level to enter kernel conserve mode."
     ::= { fgSysInfoAdvMem 5 }
 
@@ -1425,7 +1425,7 @@ fgSIAdvMemLeaveKerConsThrsh OBJECT-TYPE
     UNITS       "KB"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current memory threshold level to leave kernel conserve mode."
     ::= { fgSysInfoAdvMem 6 }
 
@@ -1434,7 +1434,7 @@ fgSIAdvMemEnterProxyConsThrsh OBJECT-TYPE
     UNITS       "KB"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current memory threshold level to enter proxy conserve mode."
     ::= { fgSysInfoAdvMem 7 }
 
@@ -1443,7 +1443,7 @@ fgSIAdvMemLeaveProxyConsThrsh OBJECT-TYPE
     UNITS       "KB"
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current memory threshold level to leave proxy conserve mode."
     ::= { fgSysInfoAdvMem 8 }
 
@@ -1458,7 +1458,7 @@ fgSIAdvSesEphemeralCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The current number of ephemeral sessions on the device."
     ::= { fgSysInfoAdvSessions 1 }
 
@@ -1466,7 +1466,7 @@ fgSIAdvSesEphemeralLimit OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The limit number of allowed ephemeral sessions on the device."
     ::= { fgSysInfoAdvSessions 2 }
 
@@ -1474,7 +1474,7 @@ fgSIAdvSesClashCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of new sessions which have collision with existing sessions.
          This generally highlights a shortage of ports or IP in ip-pool during
          source natting (PNAT)."
@@ -1484,7 +1484,7 @@ fgSIAdvSesExpCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of current expectation sessions."
     ::= { fgSysInfoAdvSessions 4 }
 
@@ -1492,7 +1492,7 @@ fgSIAdvSesSyncQFCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The sync queue full counter, reflecting bursts on the sync queue."
     ::= { fgSysInfoAdvSessions 5 }
 
@@ -1500,7 +1500,7 @@ fgSIAdvSesAcceptQFCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The accept queue full counter, reflecting bursts on the accept queue."
     ::= { fgSysInfoAdvSessions 6 }
 
@@ -1508,7 +1508,7 @@ fgSIAdvSesNoListenerCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of direct requests to Fortigate local stack from external,
          reflecting DOS attack towards the Fortigate."
     ::= { fgSysInfoAdvSessions 7 }
@@ -1524,7 +1524,7 @@ fgUsbportCount OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of entries in fgUsbportTable."
     ::= { fgUsbports 1 }
 
@@ -1532,7 +1532,7 @@ fgUsbportTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgUsbportEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table that lists information for each external USB port."
     ::= { fgUsbports 2 }
 
@@ -1540,7 +1540,7 @@ fgUsbportEntry OBJECT-TYPE
     SYNTAX      FgUsbportEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing information for a particular USB port."
     INDEX       { fgUsbportEntIndex }
     ::= { fgUsbportTable 1 }
@@ -1562,7 +1562,7 @@ fgUsbportEntIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A unique identifier within the fgUsbportTable."
     ::= { fgUsbportEntry 1 }
 
@@ -1570,7 +1570,7 @@ fgUsbportPlugged OBJECT-TYPE
     SYNTAX      INTEGER { unplugged(0), plugged(1) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The USB port's plugged status."
     ::= { fgUsbportEntry 2 }
 
@@ -1578,7 +1578,7 @@ fgUsbportVersion OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The USB port's version."
     ::= { fgUsbportEntry 3 }
 
@@ -1589,7 +1589,7 @@ fgUsbportClass OBJECT-TYPE
                 }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The device class."
     ::= { fgUsbportEntry 4 }
 
@@ -1597,7 +1597,7 @@ fgUsbportVendId OBJECT-TYPE
     SYNTAX      OCTET STRING
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The Vendor ID of the device."
     ::= { fgUsbportEntry 5 }
 
@@ -1605,7 +1605,7 @@ fgUsbportProdId OBJECT-TYPE
     SYNTAX      OCTET STRING
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The Product ID of the device."
     ::= { fgUsbportEntry 6 }
 
@@ -1613,7 +1613,7 @@ fgUsbportRevision OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The release number of the device."
     ::= { fgUsbportEntry 7 }
 
@@ -1621,7 +1621,7 @@ fgUsbportManufacturer OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The manufacturer of the device."
     ::= { fgUsbportEntry 8 }
 
@@ -1629,7 +1629,7 @@ fgUsbportProduct OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The product of the device."
     ::= { fgUsbportEntry 9 }
 
@@ -1637,7 +1637,7 @@ fgUsbportSerial OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The serial number of the device."
     ::= { fgUsbportEntry 10 }
 
@@ -1651,7 +1651,7 @@ fgLinkMonitorNumber OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of link monitor in fgLinkMonitorTable"
     ::= { fgLinkMonitor 1 }
 
@@ -1659,7 +1659,7 @@ fgLinkMonitorTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgLinkMonitorEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Link Monitor statistics table.  This table has a dependent expansion relationship with fgVdTable.
          Only virtual domains with enabled link monitor are present in this table."
     ::= { fgLinkMonitor 2 }
@@ -1668,7 +1668,7 @@ fgLinkMonitorEntry OBJECT-TYPE
     SYNTAX      FgLinkMonitorEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Link Monitor statistics on a virtual domain"
     INDEX       {fgLinkMonitorID}
     ::= { fgLinkMonitorTable 1 }
@@ -1689,7 +1689,7 @@ fgLinkMonitorID OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Link Monitor ID. Only enabled link monitor entries are present in this table. Link Monitor IDs are only unique within a virtual domain."
     ::= { fgLinkMonitorEntry 1 }
 
@@ -1697,7 +1697,7 @@ fgLinkMonitorName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Link Monitor name."
     ::= { fgLinkMonitorEntry 2 }
 
@@ -1705,7 +1705,7 @@ fgLinkMonitorState OBJECT-TYPE
     SYNTAX      INTEGER { alive(0), dead(1) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Link Monitor state."
     ::= { fgLinkMonitorEntry 3 }
 
@@ -1713,7 +1713,7 @@ fgLinkMonitorLatency OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average latency of link monitor in float number within last 30 probes."
     ::= { fgLinkMonitorEntry 4 }
 
@@ -1721,7 +1721,7 @@ fgLinkMonitorJitter OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average jitter of link monitor in float number within last 30 probes."
     ::= { fgLinkMonitorEntry 5 }
 
@@ -1729,7 +1729,7 @@ fgLinkMonitorPacketSend OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The total number of packets sent by link monitor."
     ::= { fgLinkMonitorEntry 6 }
 
@@ -1737,7 +1737,7 @@ fgLinkMonitorPacketRecv OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The total number of packets received by link monitor."
     ::= { fgLinkMonitorEntry 7 }
 
@@ -1745,7 +1745,7 @@ fgLinkMonitorPacketLoss OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The average packet loss percentage in float number within last 30 probes."
     ::= { fgLinkMonitorEntry 8 }
 
@@ -1753,7 +1753,7 @@ fgLinkMonitorVdom OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Virtual domain the link monitor entry exists in. This name corresponds to the fgVdEntName used in fgVdTable."
     ::= { fgLinkMonitorEntry 9 }
 
@@ -1785,7 +1785,7 @@ fgFwPolStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgFwPolStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Firewall policy statistics table.  This table has a dependent expansion relationship with fgVdTable.
          Only virtual domains with enabled policies are present in this table."
     ::= { fgFwPolTables 1 }
@@ -1794,7 +1794,7 @@ fgFwPolStatsEntry OBJECT-TYPE
     SYNTAX      FgFwPolStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Firewall policy statistics on a virtual domain"
     INDEX       { fgVdEntIndex, fgFwPolID }
     ::= { fgFwPolStatsTable 1 }
@@ -1812,7 +1812,7 @@ fgFwPolID OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Firewall policy ID. Only enabled policies are present in this table. Policy IDs are only unique within a virtual domain."
     ::= { fgFwPolStatsEntry 1 }
 
@@ -1820,7 +1820,7 @@ fgFwPolPktCount OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of packets matched to policy (passed or blocked, depending on policy action). Count is from the time the policy became active."
     ::= { fgFwPolStatsEntry 2 }
 
@@ -1828,7 +1828,7 @@ fgFwPolByteCount OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes in packets matching the policy. See fgFwPolPktCount."
     ::= { fgFwPolStatsEntry 3 }
 
@@ -1836,7 +1836,7 @@ fgFwPolLastUsed OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "How many minutes since last used."
     ::= { fgFwPolStatsEntry 4 }
 
@@ -1844,7 +1844,7 @@ fgFwPolPktCountHc OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "64-bit Number of packets matched to policy (passed or blocked, depending on policy action). Count is from the time the policy became active."
     ::= { fgFwPolStatsEntry 5 }
 
@@ -1852,7 +1852,7 @@ fgFwPolByteCountHc OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "64-bit Number of bytes in packets matching the policy. See fgFwPolPktCountHc."
     ::= { fgFwPolStatsEntry 6 }
 
@@ -1864,7 +1864,7 @@ fgFwPol6StatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgFwPol6StatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Firewall policy6 statistics table.  This table has a dependent
          expansion relationship with fgVdTable.
          Only virtual domains with enabled policies are present in this table."
@@ -1874,7 +1874,7 @@ fgFwPol6StatsEntry OBJECT-TYPE
     SYNTAX      FgFwPol6StatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Firewall policy6 statistics on a virtual domain"
     INDEX       { fgVdEntIndex, fgFwPol6ID }
     ::= { fgFwPol6StatsTable 1 }
@@ -1890,7 +1890,7 @@ fgFwPol6ID OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Firewall policy6 ID. Only enabled policies are present in this table.
          Policy IDs are only unique within a virtual domain."
     ::= { fgFwPol6StatsEntry 1 }
@@ -1899,7 +1899,7 @@ fgFwPol6PktCount OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of packets matched to policy (passed or blocked, depending
          on policy action). Count is from the time the policy became active."
     ::= { fgFwPol6StatsEntry 2 }
@@ -1908,7 +1908,7 @@ fgFwPol6ByteCount OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes in packets matching the policy. See fgFwPol6PktCount."
     ::= { fgFwPol6StatsEntry 3 }
 
@@ -1916,7 +1916,7 @@ fgFwPol6LastUsed OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "How many minutes since last used."
     ::= { fgFwPol6StatsEntry 4 }
 
@@ -1934,7 +1934,7 @@ fgFwUserNumber OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of user accounts in fgFwUserTable"
     ::= { fgFwUserInfo 1 }
 
@@ -1942,7 +1942,7 @@ fgFwUserAuthTimeout OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Idle period after which a firewall-authentication user's session
          is automatically expired"
     ::= { fgFwUserInfo 2 }
@@ -1954,7 +1954,7 @@ fgFwUserTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgFwUserEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A list of local and proxy (Radius server)
          user accounts for use with firewall user authentication"
     ::= { fgFwUserTables 1 }
@@ -1963,7 +1963,7 @@ fgFwUserEntry OBJECT-TYPE
     SYNTAX      FgFwUserEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing information applicable
          to a particular user account"
     INDEX       { fgFwUserIndex }
@@ -1981,7 +1981,7 @@ fgFwUserIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An index for uniquely identifying the users in fgFwUserTable"
     ::= { fgFwUserEntry 1 }
 
@@ -1989,7 +1989,7 @@ fgFwUserName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "User-name of the specified account"
     ::= { fgFwUserEntry 2 }
 
@@ -1997,7 +1997,7 @@ fgFwUserAuth OBJECT-TYPE
     SYNTAX      FgFwUserAuthType
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Type of authentication the account uses (local, RADIUS, LDAP, etc.)"
     ::= { fgFwUserEntry 3 }
 
@@ -2005,7 +2005,7 @@ fgFwUserState OBJECT-TYPE
     SYNTAX      FnBoolState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Status of the user account (enable/disable)"
     ::= { fgFwUserEntry 4 }
 
@@ -2013,7 +2013,7 @@ fgFwUserVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Virtual domain the user account exists in. This index corresponds to the index used in fgVdTable."
     ::= { fgFwUserEntry 5 }
 
@@ -2041,7 +2041,7 @@ fgAdminIdleTimeout OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Idle period after which an administrator
          is automatically logged out of the system"
     ::= { fgAdminOptions 1 }
@@ -2050,7 +2050,7 @@ fgAdminLcdProtection OBJECT-TYPE
     SYNTAX      FnBoolState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Status of the LCD protection (enabled/disabled)"
     ::= { fgAdminOptions 2 }
 
@@ -2065,7 +2065,7 @@ fgAdminTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgAdminEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of administrator accounts on the device"
     ::= { fgAdminTables 1 }
 
@@ -2073,7 +2073,7 @@ fgAdminEntry OBJECT-TYPE
     SYNTAX      FgAdminEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing information applicable
          to a particular admin account"
     AUGMENTS    { fnAdminEntry }
@@ -2087,7 +2087,7 @@ fgAdminVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The virtual domain the administrator belongs to"
     ::= { fgAdminEntry 1 }
 
@@ -2102,7 +2102,7 @@ fgManIfIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP address of the interface listed in the trap"
     ::= { fgMgmtTrapObjects 1 }
 
@@ -2110,7 +2110,7 @@ fgManIfMask OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Mask of subnet the interface belongs to"
     ::= { fgMgmtTrapObjects 2 }
 
@@ -2118,7 +2118,7 @@ fgManIfIp6 OBJECT-TYPE
     SYNTAX      Ipv6Address
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IPv6 address of the interface listed in the trap"
     ::= { fgMgmtTrapObjects 3 }
 
@@ -2139,7 +2139,7 @@ fgIntfTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgIntfEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Fortinet specific extensions to MIB-2 ifTable"
     ::= { fgIntfTables 1 }
 
@@ -2147,7 +2147,7 @@ fgIntfEntry OBJECT-TYPE
     SYNTAX      FgIntfEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Fortinet specific information about an ifEntry. This table augments the standard ifTable, so the same indexing is used."
     AUGMENTS    { ifEntry }
     ::= { fgIntfTable 1 }
@@ -2160,7 +2160,7 @@ fgIntfEntVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The virtual domain the interface belongs to. This index corresponds to the index used by fgVdTable."
     ::= { fgIntfEntry 1 }
 
@@ -2171,7 +2171,7 @@ fgIntfVrrpCount OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of entries in fgIntfVrrpTable"
     ::= { fgIntfVrrps 1 }
 
@@ -2179,7 +2179,7 @@ fgIntfVrrpTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgIntfVrrpEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A list of VRRPs and values."
     ::= { fgIntfVrrps 2 }
 
@@ -2187,7 +2187,7 @@ fgIntfVrrpEntry OBJECT-TYPE
     SYNTAX      FgIntfVrrpEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing the ID, group ID, interface name, state and IP address of a given virtual router."
     INDEX       { fgIntfVrrpEntIndex }
     ::= { fgIntfVrrpTable 1 }
@@ -2205,7 +2205,7 @@ fgIntfVrrpEntIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A unique identifier within the fgIntfVrrpTable"
     ::= { fgIntfVrrpEntry 1 }
 
@@ -2213,7 +2213,7 @@ fgIntfVrrpEntVrId OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "ID of a virtual router."
     ::= { fgIntfVrrpEntry 2 }
 
@@ -2221,7 +2221,7 @@ fgIntfVrrpEntGrpId OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The group ID of a virtual router."
     ::= { fgIntfVrrpEntry 3 }
 
@@ -2229,7 +2229,7 @@ fgIntfVrrpEntIfName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The interface name of a virtual router."
     ::= { fgIntfVrrpEntry 4 }
 
@@ -2237,7 +2237,7 @@ fgIntfVrrpEntState OBJECT-TYPE
     SYNTAX      INTEGER { backup(1), master(2) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "State of a virtual router."
     ::= { fgIntfVrrpEntry 5 }
 
@@ -2245,7 +2245,7 @@ fgIntfVrrpEntVrIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP address of a virtual router."
     ::= { fgIntfVrrpEntry 6 }
 
@@ -2256,7 +2256,7 @@ fgIntfVlanHbCount OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of entries in fgIntfVlanHbTable"
     ::= { fgIntfVlanHbs 1 }
 
@@ -2264,7 +2264,7 @@ fgIntfVlanHbTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgIntfVlanHbEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A list of VlanHbs and values."
     ::= { fgIntfVlanHbs 2 }
 
@@ -2272,7 +2272,7 @@ fgIntfVlanHbEntry OBJECT-TYPE
     SYNTAX      FgIntfVlanHbEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing the vlan interface name, peer's serial number and state of a given vlan interface heartbeat."
     INDEX       { fgIntfVlanHbEntIndex }
     ::= { fgIntfVlanHbTable 1 }
@@ -2288,7 +2288,7 @@ fgIntfVlanHbEntIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A unique identifier within the fgIntfVlanHbTable"
     ::= { fgIntfVlanHbEntry 1 }
 
@@ -2296,7 +2296,7 @@ fgIntfVlanHbEntIfName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The vlan interface name."
     ::= { fgIntfVlanHbEntry 2 }
 
@@ -2304,7 +2304,7 @@ fgIntfVlanHbEntSerial OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Serial number of a vlan HA peer."
     ::= { fgIntfVlanHbEntry 3 }
 
@@ -2312,7 +2312,7 @@ fgIntfVlanHbEntState OBJECT-TYPE
     SYNTAX      INTEGER { active(1), inactive(2) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "State of a vlan interface heartbeat."
     ::= { fgIntfVlanHbEntry 4 }
 
@@ -2333,7 +2333,7 @@ fgAvStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgAvStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of Anti-virus statistics per virtual domain"
     ::= { fgAvTables 1 }
 
@@ -2341,7 +2341,7 @@ fgAvStatsEntry OBJECT-TYPE
     SYNTAX      FgAvStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Anti-virus statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgAvStatsTable 1 }
@@ -2371,7 +2371,7 @@ fgAvVirusDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions detected in the virtual domain since start-up"
     ::= { fgAvStatsEntry 1 }
 
@@ -2379,7 +2379,7 @@ fgAvVirusBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions blocked in the virtual domain since start-up"
     ::= { fgAvStatsEntry 2 }
 
@@ -2387,7 +2387,7 @@ fgAvHTTPVirusDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over HTTP detected in the virtual domain since start-up"
     ::= { fgAvStatsEntry 3 }
 
@@ -2395,7 +2395,7 @@ fgAvHTTPVirusBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over HTTP blocked in the virtual domain since start-up"
     ::= { fgAvStatsEntry 4 }
 
@@ -2403,7 +2403,7 @@ fgAvSMTPVirusDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over SMTP detected in the virtual domain since start-up"
     ::= { fgAvStatsEntry 5 }
 
@@ -2411,7 +2411,7 @@ fgAvSMTPVirusBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over SMTP blocked in the virtual domain since start-up"
     ::= { fgAvStatsEntry 6 }
 
@@ -2419,7 +2419,7 @@ fgAvPOP3VirusDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over POP3 detected in the virtual domain since start-up"
     ::= { fgAvStatsEntry 7 }
 
@@ -2427,7 +2427,7 @@ fgAvPOP3VirusBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over POP3 blocked in the virtual domain since start-up"
     ::= { fgAvStatsEntry 8 }
 
@@ -2435,7 +2435,7 @@ fgAvIMAPVirusDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over IMAP detected in the virtual domain since start-up"
     ::= { fgAvStatsEntry 9 }
 
@@ -2443,7 +2443,7 @@ fgAvIMAPVirusBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over IMAP blocked in the virtual domain since start-up"
     ::= { fgAvStatsEntry 10 }
 
@@ -2451,7 +2451,7 @@ fgAvFTPVirusDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over FTP detected in the virtual domain since start-up"
     ::= { fgAvStatsEntry 11 }
 
@@ -2459,7 +2459,7 @@ fgAvFTPVirusBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over FTP blocked in the virtual domain since start-up"
     ::= { fgAvStatsEntry 12 }
 
@@ -2467,7 +2467,7 @@ fgAvIMVirusDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over IM protocols detected in the virtual domain since start-up"
     ::= { fgAvStatsEntry 13 }
 
@@ -2475,7 +2475,7 @@ fgAvIMVirusBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over IM protocols blocked in the virtual domain since start-up"
     ::= { fgAvStatsEntry 14 }
 
@@ -2483,7 +2483,7 @@ fgAvNNTPVirusDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over NNTP detected in the virtual domain since start-up"
     ::= { fgAvStatsEntry 15 }
 
@@ -2491,7 +2491,7 @@ fgAvNNTPVirusBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of virus transmissions over NNTP blocked in the virtual domain since start-up"
     ::= { fgAvStatsEntry 16 }
 
@@ -2499,7 +2499,7 @@ fgAvOversizedDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of over-sized file transmissions detected in the virtual domain since start-up"
     ::= { fgAvStatsEntry 17 }
 
@@ -2507,7 +2507,7 @@ fgAvOversizedBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of over-sized file transmissions blocked in the virtual domain since start-up"
     ::= { fgAvStatsEntry 18 }
 
@@ -2522,7 +2522,7 @@ fgAvTrapVirName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Virus name that triggered event"
     ::= { fgAvTrapObjects 1 }
 
@@ -2543,7 +2543,7 @@ fgIpsStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgIpsStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of IPS/IDS statistics per virtual domain"
     ::= { fgIpsTables 1 }
 
@@ -2551,7 +2551,7 @@ fgIpsStatsEntry OBJECT-TYPE
     SYNTAX      FgIpsStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IPS/IDS statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgIpsStatsTable 1 }
@@ -2572,7 +2572,7 @@ fgIpsIntrusionsDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of intrusions detected since start-up in this virtual domain"
     ::= { fgIpsStatsEntry 1 }
 
@@ -2580,7 +2580,7 @@ fgIpsIntrusionsBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of intrusions blocked since start-up in this virtual domain"
     ::= { fgIpsStatsEntry 2 }
 
@@ -2588,7 +2588,7 @@ fgIpsCritSevDetections OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of critical severity intrusions
          detected since start-up in this virtual domain"
     ::= { fgIpsStatsEntry 3 }
@@ -2597,8 +2597,8 @@ fgIpsHighSevDetections OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
-        "Number of high severity intrusions 
+    DESCRIPTION
+        "Number of high severity intrusions
          detected since start-up in this virtual domain"
     ::= { fgIpsStatsEntry 4 }
 
@@ -2606,7 +2606,7 @@ fgIpsMedSevDetections OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of medium severity intrusions
          detected since start-up in this virtual domain"
     ::= { fgIpsStatsEntry 5 }
@@ -2615,8 +2615,8 @@ fgIpsLowSevDetections OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
-        "Number of low severity intrusions 
+    DESCRIPTION
+        "Number of low severity intrusions
          detected since start-up in this virtual domain"
     ::= { fgIpsStatsEntry 6 }
 
@@ -2624,7 +2624,7 @@ fgIpsInfoSevDetections OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of informational severity intrusions
          detected since start-up in this virtual domain"
     ::= { fgIpsStatsEntry 7 }
@@ -2633,7 +2633,7 @@ fgIpsSignatureDetections OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of intrusions detected by signature
          since start-up in this virtual domain"
     ::= { fgIpsStatsEntry 8 }
@@ -2642,8 +2642,8 @@ fgIpsAnomalyDetections OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
-        "Number of intrusions DECed as anomalies 
+    DESCRIPTION
+        "Number of intrusions DECed as anomalies
          since start-up in this virtual domain"
     ::= { fgIpsStatsEntry 9 }
 
@@ -2658,7 +2658,7 @@ fgIpsTrapSigId OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "ID of IPS signature identified in trap"
     ::= { fgIpsTrapObjects 1 }
 
@@ -2666,7 +2666,7 @@ fgIpsTrapSrcIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Source IP Address of the IPS signature trigger"
     ::= { fgIpsTrapObjects 2 }
 
@@ -2674,7 +2674,7 @@ fgIpsTrapSigMsg OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Message associated with IPS event"
     ::= { fgIpsTrapObjects 3 }
 
@@ -2702,7 +2702,7 @@ fgWebfilterStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgWebfilterStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of Web-filter statistics per virtual domain"
     ::= { fgWebfilterTables 1 }
 
@@ -2710,7 +2710,7 @@ fgWebfilterStatsEntry OBJECT-TYPE
     SYNTAX      FgWebfilterStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Web-filter statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgWebfilterStatsTable 1 }
@@ -2729,7 +2729,7 @@ fgWfHTTPBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP sessions blocked by Web-filter since start-up"
     ::= { fgWebfilterStatsEntry 1 }
 
@@ -2737,7 +2737,7 @@ fgWfHTTPSBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTPS sessions blocked by Web-filter since start-up"
     ::= { fgWebfilterStatsEntry 2 }
 
@@ -2745,7 +2745,7 @@ fgWfHTTPURLBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP URLs blocked by Web-filter since start-up"
     ::= { fgWebfilterStatsEntry 3 }
 
@@ -2753,7 +2753,7 @@ fgWfHTTPSURLBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTPS URLs blocked by Web-filter since start-up"
     ::= { fgWebfilterStatsEntry 4 }
 
@@ -2761,7 +2761,7 @@ fgWfActiveXBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of ActiveX downloads blocked by Web-filter since start-up"
     ::= { fgWebfilterStatsEntry 5 }
 
@@ -2769,7 +2769,7 @@ fgWfCookieBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP Cookies blocked by Web-filter since start-up"
     ::= { fgWebfilterStatsEntry 6 }
 
@@ -2777,7 +2777,7 @@ fgWfAppletBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of Applets blocked by Web-filter since start-up"
     ::= { fgWebfilterStatsEntry 7 }
 
@@ -2789,7 +2789,7 @@ fgFortiGuardStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgFortiGuardStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of FortiGuard statistics per virtual domain"
     ::= { fgWebfilterTables 2 }
 
@@ -2797,7 +2797,7 @@ fgFortiGuardStatsEntry OBJECT-TYPE
     SYNTAX      FgFortiGuardStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "FortiGuard statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgFortiGuardStatsTable 1 }
@@ -2819,7 +2819,7 @@ fgFgWfHTTPExamined OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP requests examined using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 1 }
 
@@ -2827,7 +2827,7 @@ fgFgWfHTTPSExamined OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTPS requests examined using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 2 }
 
@@ -2835,7 +2835,7 @@ fgFgWfHTTPAllowed OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP requests allowed to proceed using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 3 }
 
@@ -2843,7 +2843,7 @@ fgFgWfHTTPSAllowed OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTPS requests allowed to proceed using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 4 }
 
@@ -2851,7 +2851,7 @@ fgFgWfHTTPBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP requests blocked using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 5 }
 
@@ -2859,7 +2859,7 @@ fgFgWfHTTPSBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTPS requests blocked using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 6 }
 
@@ -2867,7 +2867,7 @@ fgFgWfHTTPLogged OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP requests logged using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 7 }
 
@@ -2875,7 +2875,7 @@ fgFgWfHTTPSLogged OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTPS requests logged using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 8 }
 
@@ -2883,7 +2883,7 @@ fgFgWfHTTPOverridden OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP requests overridden using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 9 }
 
@@ -2891,7 +2891,7 @@ fgFgWfHTTPSOverridden OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTPS requests overridden using FortiGuard since start-up"
     ::= { fgFortiGuardStatsEntry 10 }
 
@@ -2906,7 +2906,7 @@ fgApHTTPUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "HTTP proxy up-time (in seconds)"
     ::= { fgAppProxyHTTP 1 }
 
@@ -2914,7 +2914,7 @@ fgApHTTPMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "HTTP proxy memory usage (percentage of system total)"
     ::= { fgAppProxyHTTP 2 }
 
@@ -2936,7 +2936,7 @@ fgApHTTPStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgApHTTPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of HTTP Proxy statistics per virtual domain"
     ::= { fgAppProxyHTTP 3 }
 
@@ -2944,7 +2944,7 @@ fgApHTTPStatsEntry OBJECT-TYPE
     SYNTAX      FgApHTTPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "HTTP Proxy statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgApHTTPStatsTable 1 }
@@ -2957,7 +2957,7 @@ fgApHTTPReqProcessed OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of HTTP requests in this virtual domain processed by the HTTP proxy since start-up"
     ::= { fgApHTTPStatsEntry 1 }
 
@@ -2972,7 +2972,7 @@ fgApSMTPUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "SMTP Proxy up-time, in seconds"
     ::= { fgAppProxySMTP 1 }
 
@@ -2980,7 +2980,7 @@ fgApSMTPMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "SMTP Proxy memory utilization (percentage of system total)"
     ::= { fgAppProxySMTP 2 }
 
@@ -3002,7 +3002,7 @@ fgApSMTPStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgApSMTPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of SMTP proxy statistics per virtual domain"
     ::= { fgAppProxySMTP 3 }
 
@@ -3010,7 +3010,7 @@ fgApSMTPStatsEntry OBJECT-TYPE
     SYNTAX      FgApSMTPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "SMTP Proxy statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgApSMTPStatsTable 1 }
@@ -3024,7 +3024,7 @@ fgApSMTPReqProcessed OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of requests in this virtual domain processed by the SMTP proxy since start-up"
     ::= { fgApSMTPStatsEntry 1 }
 
@@ -3032,7 +3032,7 @@ fgApSMTPSpamDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of spam detected in this virtual domain by the SMTP proxy since start-up"
     ::= { fgApSMTPStatsEntry 2 }
 
@@ -3047,7 +3047,7 @@ fgApPOP3UpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Up-time of the POP3 proxy, in seconds"
     ::= { fgAppProxyPOP3 1 }
 
@@ -3055,7 +3055,7 @@ fgApPOP3MemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Memory usage of the POP3 Proxy (percentage of system total)"
     ::= { fgAppProxyPOP3 2 }
 
@@ -3077,7 +3077,7 @@ fgApPOP3StatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgApPOP3StatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of POP3 proxy statistics per virtual domain"
     ::= { fgAppProxyPOP3 3 }
 
@@ -3085,7 +3085,7 @@ fgApPOP3StatsEntry OBJECT-TYPE
     SYNTAX      FgApPOP3StatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Proxy pop3 statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgApPOP3StatsTable 1 }
@@ -3099,7 +3099,7 @@ fgApPOP3ReqProcessed OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of requests in this virtual domain processed by the POP3 proxy since start-up"
     ::= { fgApPOP3StatsEntry 1 }
 
@@ -3107,7 +3107,7 @@ fgApPOP3SpamDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of spam detected in this virtual domain by the POP3 Proxy since start-up"
     ::= { fgApPOP3StatsEntry 2 }
 
@@ -3122,7 +3122,7 @@ fgApIMAPUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Up-time of the IMAP proxy, in seconds"
     ::= { fgAppProxyIMAP 1 }
 
@@ -3130,7 +3130,7 @@ fgApIMAPMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Memory utilization of the IMAP Proxy (as a percentage of the system total)"
     ::= { fgAppProxyIMAP 2 }
 
@@ -3152,7 +3152,7 @@ fgApIMAPStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgApIMAPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of IMAP proxy statistics per virtual domain"
     ::= { fgAppProxyIMAP 3 }
 
@@ -3160,7 +3160,7 @@ fgApIMAPStatsEntry OBJECT-TYPE
     SYNTAX      FgApIMAPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IMAP Proxy statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgApIMAPStatsTable 1 }
@@ -3174,7 +3174,7 @@ fgApIMAPReqProcessed OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of requests in this virtual domain processed by the IMAP proxy since start-up"
     ::= { fgApIMAPStatsEntry 1 }
 
@@ -3182,7 +3182,7 @@ fgApIMAPSpamDetected OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of spam detected in this virtual domain by the IMAP proxy since start-up"
     ::= { fgApIMAPStatsEntry 2 }
 
@@ -3197,7 +3197,7 @@ fgApNNTPUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Up-time of the NNTP proxy, in seconds"
     ::= { fgAppProxyNNTP 1 }
 
@@ -3205,7 +3205,7 @@ fgApNNTPMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Memory utilization of the NNTP proxy, as a percentage of the system total"
     ::= { fgAppProxyNNTP 2 }
 
@@ -3227,7 +3227,7 @@ fgApNNTPStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgApNNTPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of NNTP proxy statistics per virtual domain"
     ::= { fgAppProxyNNTP 3 }
 
@@ -3235,7 +3235,7 @@ fgApNNTPStatsEntry OBJECT-TYPE
     SYNTAX      FgApNNTPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "NNTP Proxy statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgApNNTPStatsTable 1 }
@@ -3248,7 +3248,7 @@ fgApNNTPReqProcessed OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of requests in the virtual domain processed by the NNTP proxy since start-up"
     ::= { fgApNNTPStatsEntry 1 }
 
@@ -3263,7 +3263,7 @@ fgApIMUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Up-time of the IM proxy, in seconds"
     ::= { fgAppProxyIM 1 }
 
@@ -3271,7 +3271,7 @@ fgApIMMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IM Proxy memory usage, as a percentage of the system total"
     ::= { fgAppProxyIM 2 }
 
@@ -3279,7 +3279,7 @@ fgApIMStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgApIMStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of IM proxy statistics per virtual domain"
     ::= { fgAppProxyIM 3 }
 
@@ -3287,7 +3287,7 @@ fgApIMStatsEntry OBJECT-TYPE
     SYNTAX      FgApIMStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IM Proxy statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgApIMStatsTable 1 }
@@ -3300,7 +3300,7 @@ fgApIMReqProcessed OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of requests in this virtual domain processed by the IM proxy since start-up"
     ::= { fgApIMStatsEntry 1 }
 
@@ -3315,7 +3315,7 @@ fgApSIPUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Up-time of the SIP Proxy, in seconds"
     ::= { fgAppProxySIP 1 }
 
@@ -3323,7 +3323,7 @@ fgApSIPMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "SIP Proxy memory utilization, as a percentage of the system total"
     ::= { fgAppProxySIP 2 }
 
@@ -3331,7 +3331,7 @@ fgApSIPStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgApSIPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of SIP proxy statistics per virtual domain"
     ::= { fgAppProxySIP 3 }
 
@@ -3339,7 +3339,7 @@ fgApSIPStatsEntry OBJECT-TYPE
     SYNTAX      FgApSIPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "SIP Proxy statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgApSIPStatsTable 1 }
@@ -3355,7 +3355,7 @@ fgApSIPClientReg OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of client registration requests (Register and Options) in this virtual domain
          processed by the SIP proxy since start-up"
     ::= { fgApSIPStatsEntry 1 }
@@ -3364,7 +3364,7 @@ fgApSIPCallHandling OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of call handling requests (Invite, Ack, Bye, Cancel and Refer) in this virtual domain
          processed by the SIP proxy since start-up"
     ::= { fgApSIPStatsEntry 2 }
@@ -3373,7 +3373,7 @@ fgApSIPServices OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of service requests (Subscribe, notify and Message) in this virtual domain
          processed by the SIP proxy since start-up"
     ::= { fgApSIPStatsEntry 3 }
@@ -3382,7 +3382,7 @@ fgApSIPOtherReq OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of other sip requests in this virtual domain processed by the SIP proxy since start-up"
     ::= { fgApSIPStatsEntry 4 }
 
@@ -3397,7 +3397,7 @@ fgAppSuNumber OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of scan units in the fgAppSuStatsTable"
     ::= { fgAppScanUnit 1 }
 
@@ -3405,7 +3405,7 @@ fgAppSuStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgAppSuStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of scan unit statistics"
     ::= { fgAppScanUnit 2 }
 
@@ -3413,7 +3413,7 @@ fgAppSuStatsEntry OBJECT-TYPE
     SYNTAX      FgAppSuStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Statistics entry for a particular scan unit"
     INDEX       { fgAppSuIndex }
     ::= { fgAppSuStatsTable 1 }
@@ -3427,7 +3427,7 @@ fgAppSuIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Index that uniquely identifies a scan unit in the fgAppSuStatsTable"
     ::= { fgAppSuStatsEntry 1 }
 
@@ -3435,7 +3435,7 @@ fgAppSuFileScanned OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of files scanned by this scan unit"
     ::= { fgAppSuStatsEntry 2 }
 
@@ -3450,7 +3450,7 @@ fgAppVoIPStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgAppVoIPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of VoIP related statistics per virtual domain"
     ::= { fgAppVoIP 1 }
 
@@ -3458,7 +3458,7 @@ fgAppVoIPStatsEntry OBJECT-TYPE
     SYNTAX      FgAppVoIPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "VoIP statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgAppVoIPStatsTable 1 }
@@ -3472,7 +3472,7 @@ fgAppVoIPConn OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The current number of VoIP connections on the virtual domain"
     ::= { fgAppVoIPStatsEntry 1 }
 
@@ -3480,7 +3480,7 @@ fgAppVoIPCallBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of VoIP calls blocked (SIP Invites blocked and
          SCCP calls blocked) in this virtual domain"
     ::= { fgAppVoIPStatsEntry 2 }
@@ -3500,7 +3500,7 @@ fgAppP2PStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgAppP2PStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of P2P protocol related statistics per virtual domain"
     ::= { fgAppP2P 1 }
 
@@ -3508,7 +3508,7 @@ fgAppP2PStatsEntry OBJECT-TYPE
     SYNTAX      FgAppP2PStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "P2P statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgAppP2PStatsTable 1 }
@@ -3521,7 +3521,7 @@ fgAppP2PConnBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of P2P connections blocked in this virtual domain"
     ::= { fgAppP2PStatsEntry 1 }
 
@@ -3533,7 +3533,7 @@ fgAppP2PProtoTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgAppP2PProtoEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of peer to peer statistics per virtual domain per protocol.
          This table has a dependent expansion relationship with fgVdTable."
     ::= { fgAppP2P 2 }
@@ -3542,7 +3542,7 @@ fgAppP2PProtoEntry OBJECT-TYPE
     SYNTAX      FgAppP2PProtoEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "P2P statistics for a particular virtual domain and protocol"
     INDEX       { fgVdEntIndex, fgAppP2PProtEntProto }
     ::= { fgAppP2PProtoTable 1 }
@@ -3557,7 +3557,7 @@ fgAppP2PProtEntProto OBJECT-TYPE
     SYNTAX      FgP2PProto
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "P2P protocol this row of statistics is for, within the specified virtual domain"
     ::= { fgAppP2PProtoEntry 1 }
 
@@ -3565,7 +3565,7 @@ fgAppP2PProtEntBytes OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes transferred through this virtual domain on this P2P protocol since last reset"
     ::= { fgAppP2PProtoEntry 2 }
 
@@ -3573,7 +3573,7 @@ fgAppP2PProtoEntLastReset OBJECT-TYPE
     SYNTAX      TimeTicks
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Time elapsed since the corresponding fgAppP2PProtEntBytes was
          last reset to 0."
     ::= { fgAppP2PProtoEntry 3 }
@@ -3589,7 +3589,7 @@ fgAppIMStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgAppIMStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of instant messaging statistics per virtual domain"
     ::= { fgAppIM 1 }
 
@@ -3597,7 +3597,7 @@ fgAppIMStatsEntry OBJECT-TYPE
     SYNTAX      FgAppIMStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IM statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgAppIMStatsTable 1 }
@@ -3613,7 +3613,7 @@ fgAppIMMessages OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Total number of IM messages processed in this virtual domain"
     ::= { fgAppIMStatsEntry 1 }
 
@@ -3621,7 +3621,7 @@ fgAppIMFileTransfered OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of files transferred through this virtual domain"
     ::= { fgAppIMStatsEntry 2 }
 
@@ -3629,7 +3629,7 @@ fgAppIMFileTxBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of blocked file transfers in this virtual domain"
     ::= { fgAppIMStatsEntry 3 }
 
@@ -3637,7 +3637,7 @@ fgAppIMConnBlocked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of connections blocked in this virtual domain"
     ::= { fgAppIMStatsEntry 4 }
 
@@ -3652,7 +3652,7 @@ fgApFTPUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Up-time of the FTP proxy, in seconds"
     ::= { fgAppProxyFTP 1 }
 
@@ -3660,7 +3660,7 @@ fgApFTPMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "FTP Proxy memory utilization, as a percentage of the system total"
     ::= { fgAppProxyFTP 2 }
 
@@ -3682,7 +3682,7 @@ fgApFTPStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgApFTPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of FTP proxy statistics per virtual domain"
     ::= { fgAppProxyFTP 3 }
 
@@ -3690,7 +3690,7 @@ fgApFTPStatsEntry OBJECT-TYPE
     SYNTAX      FgApFTPStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "FTP Proxy statistics for a particular virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgApFTPStatsTable 1 }
@@ -3703,7 +3703,7 @@ fgApFTPReqProcessed OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of requests in this virtual domain processed by the FTP proxy since start-up"
     ::= { fgApFTPStatsEntry 1 }
 
@@ -3725,7 +3725,7 @@ fgExplicitProxyUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Explicit proxy up-time (in seconds)"
     ::= { fgExplicitProxyInfo 1 }
 
@@ -3733,7 +3733,7 @@ fgExplicitProxyMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Explicit proxy memory usage (percentage of system total)"
     ::= { fgExplicitProxyInfo 2 }
 
@@ -3753,7 +3753,7 @@ fgExplicitProxyStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgExplicitProxyStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of explicit proxy statistics per virtual domain"
     ::= { fgAppExplicitProxy 2 }
 
@@ -3761,7 +3761,7 @@ fgExplicitProxyStatsEntry OBJECT-TYPE
     SYNTAX      FgExplicitProxyStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Explicit proxy statistics for a particular virtual domain"
     INDEX       { fgVdEntIndex }
     ::= { fgExplicitProxyStatsTable 1 }
@@ -3775,7 +3775,7 @@ fgExplicitProxyUsers OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of current users in this virtual domain"
     ::= { fgExplicitProxyStatsEntry 1 }
 
@@ -3783,7 +3783,7 @@ fgExplicitProxySessions OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of current sessions in this virtual domain"
     ::= { fgExplicitProxyStatsEntry 2 }
 
@@ -3795,7 +3795,7 @@ fgExplicitProxyScanStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgExplicitProxyScanStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of explicit proxy scan statistics per virtual domain"
     ::= { fgAppExplicitProxy 3 }
 
@@ -3803,7 +3803,7 @@ fgExplicitProxyScanStatsEntry OBJECT-TYPE
     SYNTAX      FgExplicitProxyScanStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Explicit proxy scan statistics for a particular virtual domain"
     INDEX       { fgVdEntIndex, fgExplicitProxyScanStatsDisp }
     ::= { fgExplicitProxyScanStatsTable 1 }
@@ -3827,7 +3827,7 @@ fgExplicitProxyScanStatsDisp OBJECT-TYPE
     SYNTAX      FgScanAvDisposition
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Disposition of an Scan result"
    ::= { fgExplicitProxyScanStatsEntry 1 }
 
@@ -3835,7 +3835,7 @@ fgExplicitProxyVirus OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of viruses in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 2 }
 
@@ -3843,7 +3843,7 @@ fgExplicitProxyBannedWords OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of elements containing banned words in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 3 }
 
@@ -3851,7 +3851,7 @@ fgExplicitProxyPolicy OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of elements violating policy (e.g. filename or file type rules) in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 4 }
 
@@ -3859,7 +3859,7 @@ fgExplicitProxyOversized OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of oversized elements in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 5 }
 
@@ -3867,7 +3867,7 @@ fgExplicitProxyArchNest OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of too deeply nested archives in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 6 }
 
@@ -3875,7 +3875,7 @@ fgExplicitProxyArchSize OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of archives that decompress beyond size limit in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 7 }
 
@@ -3883,7 +3883,7 @@ fgExplicitProxyArchEncrypted OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of encrypted archives in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 8 }
 
@@ -3891,7 +3891,7 @@ fgExplicitProxyArchMultiPart OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of multipart archives in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 9 }
 
@@ -3899,7 +3899,7 @@ fgExplicitProxyArchUnsupported OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of archives with unsupported (but known) formats in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 10 }
 
@@ -3907,7 +3907,7 @@ fgExplicitProxyArchBomb OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of archive bombs in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 11 }
 
@@ -3915,7 +3915,7 @@ fgExplicitProxyArchCorrupt OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of corrupt archives in this virtual domain"
     ::= { fgExplicitProxyScanStatsEntry 12 }
 
@@ -3927,7 +3927,7 @@ fgExplicitProxyScriptStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgExplicitProxyScriptStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of explicit proxy script filtering statistics per virtual domain"
     ::= { fgAppExplicitProxy 4 }
 
@@ -3935,7 +3935,7 @@ fgExplicitProxyScriptStatsEntry OBJECT-TYPE
     SYNTAX      FgExplicitProxyScriptStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Explicit proxy scan statistics for a particular virtual domain"
     INDEX       { fgVdEntIndex }
     ::= { fgExplicitProxyScriptStatsTable 1 }
@@ -3953,7 +3953,7 @@ fgExplicitProxyFilteredApplets OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of applets filtered from files in this virtual domain"
     ::= { fgExplicitProxyScriptStatsEntry 1 }
 
@@ -3961,7 +3961,7 @@ fgExplicitProxyFilteredActiveX OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of ActiveX scripts filtered from files in this virtual domain"
     ::= { fgExplicitProxyScriptStatsEntry 2 }
 
@@ -3969,7 +3969,7 @@ fgExplicitProxyFilteredJScript OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of JScript scripts filtered from files in this virtual domain"
     ::= { fgExplicitProxyScriptStatsEntry 3 }
 
@@ -3977,7 +3977,7 @@ fgExplicitProxyFilteredJS OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of JavaScript scripts filtered from files in this virtual domain"
     ::= { fgExplicitProxyScriptStatsEntry 4 }
 
@@ -3985,7 +3985,7 @@ fgExplicitProxyFilteredVBS OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of Visual Basic scripts filtered from files in this virtual domain"
     ::= { fgExplicitProxyScriptStatsEntry 5 }
 
@@ -3993,7 +3993,7 @@ fgExplicitProxyFilteredOthScript OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of other types of scripts filtered from files in this virtual domain"
     ::= { fgExplicitProxyScriptStatsEntry 6 }
 
@@ -4005,7 +4005,7 @@ fgExplicitProxyFilterStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgExplicitProxyFilterStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of explicit proxy policy enforcement statistics per virtual domain"
     ::= { fgAppExplicitProxy 5 }
 
@@ -4013,7 +4013,7 @@ fgExplicitProxyFilterStatsEntry OBJECT-TYPE
     SYNTAX      FgExplicitProxyFilterStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Explicit proxy scan statistics for a particular virtual domain"
     INDEX       { fgVdEntIndex }
     ::= { fgExplicitProxyFilterStatsTable 1 }
@@ -4032,7 +4032,7 @@ fgExplicitProxyBlockedDLP OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of elements blocked due to Data Leak Prevention in this virtual domain"
     ::= { fgExplicitProxyFilterStatsEntry 1 }
 
@@ -4040,7 +4040,7 @@ fgExplicitProxyBlockedConType OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of elements blocked due to Content-Type filtering rules in this virtual domain"
     ::= { fgExplicitProxyFilterStatsEntry 2 }
 
@@ -4048,7 +4048,7 @@ fgExplicitProxyExaminedURLs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of URLs inspected against filtering rules in this virtual domain"
     ::= { fgExplicitProxyFilterStatsEntry 3 }
 
@@ -4056,7 +4056,7 @@ fgExplicitProxyAllowedURLs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of URLs explicitly allowed due to filtering rules in this virtual domain"
     ::= { fgExplicitProxyFilterStatsEntry 4 }
 
@@ -4064,7 +4064,7 @@ fgExplicitProxyBlockedURLs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of URLs explicitly blocked due to filtering rules in this virtual domain"
     ::= { fgExplicitProxyFilterStatsEntry 5 }
 
@@ -4072,7 +4072,7 @@ fgExplicitProxyLoggedURLs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of URLs logged due to filtering rules in this virtual domain"
     ::= { fgExplicitProxyFilterStatsEntry 6 }
 
@@ -4080,7 +4080,7 @@ fgExplicitProxyOverriddenURLs OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of URLs access due to overriding filtering rules in this virtual domain"
     ::= { fgExplicitProxyFilterStatsEntry 7 }
 
@@ -4102,7 +4102,7 @@ fgWebCacheRAMLimit OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "RAM available for web cache in bytes"
     ::= { fgWebCacheInfo 1 }
 
@@ -4110,7 +4110,7 @@ fgWebCacheRAMUsage OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "RAM used by web cache in bytes"
     ::= { fgWebCacheInfo 2 }
 
@@ -4118,7 +4118,7 @@ fgWebCacheRAMHits OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of cache hits in RAM since last reset"
     ::= { fgWebCacheInfo 3 }
 
@@ -4126,7 +4126,7 @@ fgWebCacheRAMMisses OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of cache misses in RAM since last reset"
     ::= { fgWebCacheInfo 4 }
 
@@ -4134,7 +4134,7 @@ fgWebCacheRequests OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of cache requests since last reset"
     ::= { fgWebCacheInfo 5 }
 
@@ -4142,7 +4142,7 @@ fgWebCacheBypass OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of cache bypasses since last reset"
     ::= { fgWebCacheInfo 6 }
 
@@ -4150,7 +4150,7 @@ fgWebCacheUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Web Cache up-time (in seconds)"
     ::= { fgWebCacheInfo 7 }
 
@@ -4162,7 +4162,7 @@ fgWebCacheDiskStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgWebCacheDiskStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of the Web Cache disk statistics per disk"
     ::= { fgAppWebCache 2 }
 
@@ -4170,7 +4170,7 @@ fgWebCacheDiskStatsEntry OBJECT-TYPE
     SYNTAX      FgWebCacheDiskStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The Web Cache disk statistics for a particular disk"
     INDEX       { fgWebCacheDisk }
     ::= { fgWebCacheDiskStatsTable 1 }
@@ -4241,7 +4241,7 @@ fgMemCacheLimit OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "RAM available for mem cache in bytes"
     ::= { fgWanOptInfo 1 }
 
@@ -4249,7 +4249,7 @@ fgMemCacheUsage OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "RAM used by mem cache in bytes"
     ::= { fgWanOptInfo 2 }
 
@@ -4257,7 +4257,7 @@ fgMemCacheHits OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of hits in mem cache since last reset"
     ::= { fgWanOptInfo 3 }
 
@@ -4265,7 +4265,7 @@ fgMemCacheMisses OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of misses in mem cache since last reset"
     ::= { fgWanOptInfo 4 }
 
@@ -4273,7 +4273,7 @@ fgByteCacheRAMLimit OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "RAM available for byte cache in bytes"
     ::= { fgWanOptInfo 5 }
 
@@ -4281,7 +4281,7 @@ fgByteCacheRAMUsage OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "RAM used by byte cache in bytes"
     ::= { fgWanOptInfo 6 }
 
@@ -4289,7 +4289,7 @@ fgWanOptUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Wan Optimization up-time (in seconds)"
     ::= { fgWanOptInfo 7 }
 
@@ -4301,7 +4301,7 @@ fgWanOptStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgWanOptStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of WAN optimization statistics per virtual domain"
     ::= { fgAppWanOpt 2 }
 
@@ -4309,7 +4309,7 @@ fgWanOptStatsEntry OBJECT-TYPE
     SYNTAX      FgWanOptStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "WAN optimization statistics for a particular virtual domain"
     INDEX       { fgVdEntIndex }
     ::= { fgWanOptStatsTable 1 }
@@ -4326,7 +4326,7 @@ fgWanOptTunnels OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of current tunnels in this virtual domain"
     ::= { fgWanOptStatsEntry 1 }
 
@@ -4334,7 +4334,7 @@ fgWanOptLANBytesIn OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes received on LAN in last 5 seconds"
     ::= { fgWanOptStatsEntry 2 }
 
@@ -4342,7 +4342,7 @@ fgWanOptLANBytesOut OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes sent on LAN in last 5 seconds"
     ::= { fgWanOptStatsEntry 3 }
 
@@ -4350,7 +4350,7 @@ fgWanOptWANBytesIn OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes received on WAN in last 5 seconds"
     ::= { fgWanOptStatsEntry 4 }
 
@@ -4358,7 +4358,7 @@ fgWanOptWANBytesOut OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes sent on WAN in last 5 seconds"
     ::= { fgWanOptStatsEntry 5 }
 
@@ -4370,7 +4370,7 @@ fgWanOptHistoryStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgWanOptHistoryStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of the WAN optimization history per protocol"
     ::= { fgAppWanOpt 3 }
 
@@ -4378,7 +4378,7 @@ fgWanOptHistoryStatsEntry OBJECT-TYPE
     SYNTAX      FgWanOptHistoryStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The WAN optimization history for a particular virtual domain, period, and protocol"
     INDEX       { fgVdEntIndex, fgWanOptHistPeriod, fgWanOptProtocol }
     ::= { fgWanOptHistoryStatsTable 1 }
@@ -4395,7 +4395,7 @@ fgWanOptHistPeriod OBJECT-TYPE
     SYNTAX      FgWanOptHistPeriods
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "WAN optimization table entry period"
     ::= { fgWanOptHistoryStatsEntry 1 }
 
@@ -4403,7 +4403,7 @@ fgWanOptProtocol OBJECT-TYPE
     SYNTAX      FgWanOptProtocols
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Internal WAN optimization table entry protocol"
     ::= { fgWanOptHistoryStatsEntry 2 }
 
@@ -4411,7 +4411,7 @@ fgWanOptReductionRate OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Reduction rate achieved by WAN optimization"
     ::= { fgWanOptHistoryStatsEntry 3 }
 
@@ -4419,7 +4419,7 @@ fgWanOptLanTraffic OBJECT-TYPE
     SYNTAX      CounterBasedGauge64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes transferred via LAN"
     ::= { fgWanOptHistoryStatsEntry 4 }
 
@@ -4427,7 +4427,7 @@ fgWanOptWanTraffic OBJECT-TYPE
     SYNTAX      CounterBasedGauge64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes transferred via WAN"
     ::= { fgWanOptHistoryStatsEntry 5 }
 
@@ -4439,7 +4439,7 @@ fgWanOptTrafficStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgWanOptTrafficStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of the WAN optimization traffic for a particular virtual domain and protocol"
     ::= { fgAppWanOpt 4 }
 
@@ -4447,7 +4447,7 @@ fgWanOptTrafficStatsEntry OBJECT-TYPE
     SYNTAX      FgWanOptTrafficStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The WAN optimization history for a particular protocol"
     INDEX       { fgVdEntIndex, fgWanOptProtocol }
     ::= { fgWanOptTrafficStatsTable 1 }
@@ -4463,7 +4463,7 @@ fgWanOptLanInTraffic OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Amount of traffic received from the LAN by WAN optimization"
     ::= { fgWanOptTrafficStatsEntry 1 }
 
@@ -4471,7 +4471,7 @@ fgWanOptLanOutTraffic OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Amount of traffic sent to the LAN by WAN optimization"
     ::= { fgWanOptTrafficStatsEntry 2 }
 
@@ -4479,7 +4479,7 @@ fgWanOptWanInTraffic OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Amount of traffic received from the WAN by WAN optimization"
     ::= { fgWanOptTrafficStatsEntry 3 }
 
@@ -4487,7 +4487,7 @@ fgWanOptWanOutTraffic OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Amount of traffic sent to the WAN by WAN optimization"
     ::= { fgWanOptTrafficStatsEntry 4 }
 
@@ -4499,7 +4499,7 @@ fgWanOptDiskStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgWanOptDiskStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of the Web Cache disk statistics per disk"
     ::= { fgAppWanOpt 5 }
 
@@ -4507,7 +4507,7 @@ fgWanOptDiskStatsEntry OBJECT-TYPE
     SYNTAX      FgWanOptDiskStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The Web Cache disk statistics for a particular disk"
     INDEX       { fgWanOptDisk }
     ::= { fgWanOptDiskStatsTable 1 }
@@ -4581,7 +4581,7 @@ fgIpSessTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgIpSessEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Information on the IP sessions active on the device"
     ::= { fgInetProtoTables 1 }
 
@@ -4589,7 +4589,7 @@ fgIpSessEntry OBJECT-TYPE
     SYNTAX      FgIpSessEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Information on a specific session, including source and destination"
     INDEX       { fgIpSessIndex }
     ::= { fgIpSessTable 1 }
@@ -4609,7 +4609,7 @@ fgIpSessIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An index value that uniquely identifies
          an IP session within the fgIpSessTable"
     ::= { fgIpSessEntry 1 }
@@ -4618,7 +4618,7 @@ fgIpSessProto OBJECT-TYPE
     SYNTAX      FgSessProto
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The protocol the session is using (IP, TCP, UDP, etc.)"
     ::= { fgIpSessEntry 2 }
 
@@ -4626,7 +4626,7 @@ fgIpSessFromAddr OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Source IP address (IPv4 only) of the session"
     ::= { fgIpSessEntry 3 }
 
@@ -4634,7 +4634,7 @@ fgIpSessFromPort OBJECT-TYPE
     SYNTAX      InetPortNumber
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Source port number (UDP and TCP only) of the session"
     ::= { fgIpSessEntry 4 }
 
@@ -4642,7 +4642,7 @@ fgIpSessToAddr OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Destination IP address (IPv4 only) of the session"
     ::= { fgIpSessEntry 5 }
 
@@ -4650,7 +4650,7 @@ fgIpSessToPort OBJECT-TYPE
     SYNTAX      InetPortNumber
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Destination Port number (UDP and TCP only) of the session"
     ::= { fgIpSessEntry 6 }
 
@@ -4658,7 +4658,7 @@ fgIpSessExp OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of seconds remaining before the session expires (if idle)"
     ::= { fgIpSessEntry 7 }
 
@@ -4666,7 +4666,7 @@ fgIpSessVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Virtual domain the session is part of. This index corresponds to the index used by fgVdTable."
     ::= { fgIpSessEntry 8 }
 
@@ -4678,7 +4678,7 @@ fgIpSessStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgIpSessStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP session statistics table"
     ::= { fgInetProtoTables 2 }
 
@@ -4686,7 +4686,7 @@ fgIpSessStatsEntry OBJECT-TYPE
     SYNTAX      FgIpSessStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP session statistics on a virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgIpSessStatsTable 1 }
@@ -4699,7 +4699,7 @@ fgIpSessNumber OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current number of sessions on the virtual domain"
     ::= { fgIpSessStatsEntry 1 }
 
@@ -4711,7 +4711,7 @@ fgIp6SessStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgIp6SessStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP session statistics table"
     ::= { fgInetProtoTables 3 }
 
@@ -4719,7 +4719,7 @@ fgIp6SessStatsEntry OBJECT-TYPE
     SYNTAX      FgIp6SessStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP session statistics on a virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgIp6SessStatsTable 1 }
@@ -4732,7 +4732,7 @@ fgIp6SessNumber OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current number of sessions on the virtual domain"
     ::= { fgIp6SessStatsEntry 1 }
 
@@ -4755,7 +4755,7 @@ fgVpnTunnelUpCount OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of IPsec VPN tunnels with at least one SA"
     ::= { fgVpnInfo 1 }
 
@@ -4774,7 +4774,7 @@ fgVpnDialupTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgVpnDialupEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Dial-up VPN peers information"
     ::= { fgVpnTables 1 }
 
@@ -4782,7 +4782,7 @@ fgVpnDialupEntry OBJECT-TYPE
     SYNTAX      FgVpnDialupEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Dial-up VPN peer info"
     INDEX       { fgVpnDialupIndex }
     ::= { fgVpnDialupTable 1 }
@@ -4804,7 +4804,7 @@ fgVpnDialupIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An index value that uniquely identifies
          an VPN dial-up peer within the fgVpnDialupTable"
     ::= { fgVpnDialupEntry 1 }
@@ -4813,7 +4813,7 @@ fgVpnDialupGateway OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Remote gateway IP address of the tunnel"
     ::= { fgVpnDialupEntry 2 }
 
@@ -4821,7 +4821,7 @@ fgVpnDialupLifetime OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Tunnel life time (seconds) of the tunnel"
     ::= { fgVpnDialupEntry 3 }
 
@@ -4829,7 +4829,7 @@ fgVpnDialupTimeout OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Time before the next key exchange (seconds) of the tunnel"
     ::= { fgVpnDialupEntry 4 }
 
@@ -4837,7 +4837,7 @@ fgVpnDialupSrcBegin OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Remote subnet address of the tunnel"
     ::= { fgVpnDialupEntry 5 }
 
@@ -4845,7 +4845,7 @@ fgVpnDialupSrcEnd OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Remote subnet mask of the tunnel"
     ::= { fgVpnDialupEntry 6 }
 
@@ -4853,7 +4853,7 @@ fgVpnDialupDstAddr OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Local subnet address of the tunnel"
     ::= { fgVpnDialupEntry 7 }
 
@@ -4861,7 +4861,7 @@ fgVpnDialupVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Virtual domain tunnel is part of. This index corresponds to the index used by fgVdTable."
     ::= { fgVpnDialupEntry 8 }
 
@@ -4869,7 +4869,7 @@ fgVpnDialupInOctets OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes received on tunnel since instantiation."
     ::= { fgVpnDialupEntry 9 }
 
@@ -4877,7 +4877,7 @@ fgVpnDialupOutOctets OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes sent on tunnel since instantiation."
     ::= { fgVpnDialupEntry 10 }
 
@@ -4889,7 +4889,7 @@ fgVpnTunTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgVpnTunEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Table of non-dial-up IPsec VPN tunnels"
     ::= { fgVpnTables 2 }
 
@@ -4897,7 +4897,7 @@ fgVpnTunEntry OBJECT-TYPE
     SYNTAX      FgVpnTunEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Tunnel VPN peer info"
     INDEX       { fgVpnTunEntIndex }
     ::= { fgVpnTunTable 1 }
@@ -4930,7 +4930,7 @@ fgVpnTunEntIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An index value that uniquely identifies
          a VPN tunnel within the fgVpnTunTable"
     ::= { fgVpnTunEntry 1 }
@@ -4939,7 +4939,7 @@ fgVpnTunEntPhase1Name OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Descriptive name of phase1 configuration for the tunnel"
     ::= { fgVpnTunEntry 2 }
 
@@ -4947,7 +4947,7 @@ fgVpnTunEntPhase2Name OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Descriptive name of phase2 configuration for the tunnel"
     ::= { fgVpnTunEntry 3 }
 
@@ -4955,7 +4955,7 @@ fgVpnTunEntRemGwyIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP of remote gateway used by the tunnel"
     ::= { fgVpnTunEntry 4 }
 
@@ -4963,7 +4963,7 @@ fgVpnTunEntRemGwyPort OBJECT-TYPE
     SYNTAX      InetPortNumber
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "port of remote gateway used by tunnel, if UDP"
     ::= { fgVpnTunEntry 5 }
 
@@ -4971,7 +4971,7 @@ fgVpnTunEntLocGwyIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP of local gateway used by the tunnel"
     ::= { fgVpnTunEntry 6 }
 
@@ -4979,7 +4979,7 @@ fgVpnTunEntLocGwyPort OBJECT-TYPE
     SYNTAX      InetPortNumber
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "port of local gateway used by tunnel, if UDP"
     ::= { fgVpnTunEntry 7 }
 
@@ -4987,7 +4987,7 @@ fgVpnTunEntSelectorSrcBeginIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Beginning of address range of source selector"
     ::= { fgVpnTunEntry 8 }
 
@@ -4995,7 +4995,7 @@ fgVpnTunEntSelectorSrcEndIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "End of address range of source selector"
     ::= { fgVpnTunEntry 9 }
 
@@ -5003,7 +5003,7 @@ fgVpnTunEntSelectorSrcPort OBJECT-TYPE
     SYNTAX      InetPortNumber
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Source selector port"
     ::= { fgVpnTunEntry 10 }
 
@@ -5011,7 +5011,7 @@ fgVpnTunEntSelectorDstBeginIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Beginning of address range of destination
          selector"
     ::= { fgVpnTunEntry 11 }
@@ -5020,7 +5020,7 @@ fgVpnTunEntSelectorDstEndIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "End of address range of destination selector"
     ::= { fgVpnTunEntry 12 }
 
@@ -5028,7 +5028,7 @@ fgVpnTunEntSelectorDstPort OBJECT-TYPE
     SYNTAX      InetPortNumber
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Destination selector port"
     ::= { fgVpnTunEntry 13 }
 
@@ -5036,7 +5036,7 @@ fgVpnTunEntSelectorProto OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Protocol number for selector"
     ::= { fgVpnTunEntry 14 }
 
@@ -5044,7 +5044,7 @@ fgVpnTunEntLifeSecs OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Lifetime of tunnel in seconds, if time based lifetime used"
     ::= { fgVpnTunEntry 15 }
 
@@ -5052,7 +5052,7 @@ fgVpnTunEntLifeBytes OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Lifetime of tunnel in bytes, if byte transfer based lifetime used"
     ::= { fgVpnTunEntry 16 }
 
@@ -5060,7 +5060,7 @@ fgVpnTunEntTimeout OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Timeout of tunnel in seconds"
     ::= { fgVpnTunEntry 17 }
 
@@ -5068,7 +5068,7 @@ fgVpnTunEntInOctets OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes received on tunnel"
     ::= { fgVpnTunEntry 18 }
 
@@ -5076,7 +5076,7 @@ fgVpnTunEntOutOctets OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes sent out on tunnel"
     ::= { fgVpnTunEntry 19 }
 
@@ -5084,7 +5084,7 @@ fgVpnTunEntStatus OBJECT-TYPE
     SYNTAX      INTEGER { down(1), up(2) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current status of tunnel (up or down)"
     ::= { fgVpnTunEntry 20 }
 
@@ -5092,7 +5092,7 @@ fgVpnTunEntVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Virtual domain the tunnel is part of. This index corresponds to the index used by fgVdTable."
     ::= { fgVpnTunEntry 21 }
 
@@ -5104,7 +5104,7 @@ fgVpnSslStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgVpnSslStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "SSL VPN statistics table"
     ::= { fgVpnTables 3 }
 
@@ -5112,7 +5112,7 @@ fgVpnSslStatsEntry OBJECT-TYPE
     SYNTAX      FgVpnSslStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "SSL VPN statistics for a given virtual domain"
     AUGMENTS    { fgVdEntry }
     ::= { fgVpnSslStatsTable 1 }
@@ -5131,7 +5131,7 @@ fgVpnSslState OBJECT-TYPE
     SYNTAX      FnBoolState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Whether SSL-VPN is enabled on this virtual domain"
     ::= { fgVpnSslStatsEntry 1 }
 
@@ -5139,7 +5139,7 @@ fgVpnSslStatsLoginUsers OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The current number of users logged in through SSL-VPN tunnels in the virtual domain"
     ::= { fgVpnSslStatsEntry 2 }
 
@@ -5147,7 +5147,7 @@ fgVpnSslStatsMaxUsers OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The maximum number of total users that can be logged in
          at any one time on the virtual domain"
     ::= { fgVpnSslStatsEntry 3 }
@@ -5156,7 +5156,7 @@ fgVpnSslStatsActiveWebSessions OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The current number of active SSL web sessions in the virtual domain"
     ::= { fgVpnSslStatsEntry 4 }
 
@@ -5164,7 +5164,7 @@ fgVpnSslStatsMaxWebSessions OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The maximum number of active SSL web sessions
          at any one time within the virtual domain"
     ::= { fgVpnSslStatsEntry 5 }
@@ -5173,7 +5173,7 @@ fgVpnSslStatsActiveTunnels OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The current number of active SSL tunnels in the virtual domain"
     ::= { fgVpnSslStatsEntry 6 }
 
@@ -5181,7 +5181,7 @@ fgVpnSslStatsMaxTunnels OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The maximum number of active SSL tunnels
          at any one time in the virtual domain"
     ::= { fgVpnSslStatsEntry 7 }
@@ -5194,7 +5194,7 @@ fgVpnSslTunnelTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgVpnSslTunnelEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A list of active SSL VPN tunnel entries"
     ::= { fgVpnTables 4 }
 
@@ -5202,7 +5202,7 @@ fgVpnSslTunnelEntry OBJECT-TYPE
     SYNTAX      FgVpnSslTunnelEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An SSL VPN tunnel entry containing connection information
          and traffic statistics"
     INDEX       { fgVpnSslTunnelIndex }
@@ -5223,7 +5223,7 @@ fgVpnSslTunnelIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An index value that uniquely identifies
          an active SSL VPN tunnel within the fgVpnSslTunnelTable"
     ::= { fgVpnSslTunnelEntry 1 }
@@ -5232,7 +5232,7 @@ fgVpnSslTunnelVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The index of the virtual domain this tunnel belongs to. This index corresponds to the index used by fgVdTable."
     ::= { fgVpnSslTunnelEntry 2 }
 
@@ -5240,7 +5240,7 @@ fgVpnSslTunnelUserName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The user name used to authenticate the tunnel"
     ::= { fgVpnSslTunnelEntry 3 }
 
@@ -5248,7 +5248,7 @@ fgVpnSslTunnelSrcIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The source IP address of this tunnel"
     ::= { fgVpnSslTunnelEntry 4 }
 
@@ -5256,7 +5256,7 @@ fgVpnSslTunnelIp OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The connection IP address of this tunnel"
     ::= { fgVpnSslTunnelEntry 5 }
 
@@ -5264,7 +5264,7 @@ fgVpnSslTunnelUpTime OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The up-time of this tunnel in seconds"
     ::= { fgVpnSslTunnelEntry 6 }
 
@@ -5272,7 +5272,7 @@ fgVpnSslTunnelBytesIn OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of incoming bytes of L2 traffic through this tunnel since it was established"
     ::= { fgVpnSslTunnelEntry 7 }
 
@@ -5280,7 +5280,7 @@ fgVpnSslTunnelBytesOut OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of outgoing bytes of L2 traffic through this tunnel since it was established"
     ::= { fgVpnSslTunnelEntry 8 }
 
@@ -5295,7 +5295,7 @@ fgVpnTrapLocalGateway OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Local gateway IP address. Used in VPN related traps."
     ::= { fgVpnTrapObjects 2 }
 
@@ -5303,7 +5303,7 @@ fgVpnTrapRemoteGateway OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Remote gateway IP address. Used in VPN related traps."
     ::= { fgVpnTrapObjects 3 }
 
@@ -5311,7 +5311,7 @@ fgVpnTrapPhase1Name OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Name of the phase 1. Used in VPN related traps."
     ::= { fgVpnTrapObjects 4 }
 
@@ -5334,7 +5334,7 @@ fgHaSystemMode OBJECT-TYPE
     SYNTAX      FgHaMode
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "High-availability mode (Standalone, A-A or A-P)"
     ::= { fgHaInfo 1 }
 
@@ -5342,7 +5342,7 @@ fgHaGroupId OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "HA cluster group ID device is configured for"
     ::= { fgHaInfo 2 }
 
@@ -5350,7 +5350,7 @@ fgHaPriority OBJECT-TYPE
     SYNTAX      Integer32 (0..255)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "HA clustering priority of the device (default = 127)"
     ::= { fgHaInfo 3 }
 
@@ -5358,7 +5358,7 @@ fgHaOverride OBJECT-TYPE
     SYNTAX      FnBoolState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Status of a master override flag"
     ::= { fgHaInfo 4 }
 
@@ -5366,7 +5366,7 @@ fgHaAutoSync OBJECT-TYPE
     SYNTAX      FnBoolState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Configuration of an automatic configuration
          synchronization (enabled or disabled)"
     ::= { fgHaInfo 5 }
@@ -5375,7 +5375,7 @@ fgHaSchedule OBJECT-TYPE
     SYNTAX      FgHaLBSchedule
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Load-balancing schedule of cluster (in A-A mode)"
     ::= { fgHaInfo 6 }
 
@@ -5383,7 +5383,7 @@ fgHaGroupName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "HA cluster group name"
     ::= { fgHaInfo 7 }
 
@@ -5398,7 +5398,7 @@ fgHaStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FgHaStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Some useful statistics for all members of a cluster. This table is also available in standalone mode."
     ::= { fgHaTables 1 }
 
@@ -5406,7 +5406,7 @@ fgHaStatsEntry OBJECT-TYPE
     SYNTAX      FgHaStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Statistics for a particular HA cluster's unit"
     INDEX       { fgHaStatsIndex }
     ::= { fgHaStatsTable 1 }
@@ -5434,7 +5434,7 @@ fgHaStatsIndex OBJECT-TYPE
     SYNTAX      FnIndex
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An index value that uniquely identifies an
          unit in the HA Cluster"
     ::= { fgHaStatsEntry 1 }
@@ -5443,7 +5443,7 @@ fgHaStatsSerial OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..32))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Serial number of the HA cluster member for this row"
     ::= { fgHaStatsEntry 2 }
 
@@ -5451,7 +5451,7 @@ fgHaStatsCpuUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "CPU usage of the specified cluster member (percentage)"
     ::= { fgHaStatsEntry 3 }
 
@@ -5459,7 +5459,7 @@ fgHaStatsMemUsage OBJECT-TYPE
     SYNTAX      Gauge32 (0..100)
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Memory usage of the specified cluster member (percentage)"
     ::= { fgHaStatsEntry 4 }
 
@@ -5467,7 +5467,7 @@ fgHaStatsNetUsage OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Network bandwidth usage of specified cluster member (kbps)"
     ::= { fgHaStatsEntry 5 }
 
@@ -5475,7 +5475,7 @@ fgHaStatsSesCount OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current session count of specified cluster member"
     ::= { fgHaStatsEntry 6 }
 
@@ -5483,7 +5483,7 @@ fgHaStatsPktCount OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of packets processed by the specified cluster member since start-up"
     ::= { fgHaStatsEntry 7 }
 
@@ -5491,7 +5491,7 @@ fgHaStatsByteCount OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of bytes processed by the specified cluster member since start-up"
     ::= { fgHaStatsEntry 8 }
 
@@ -5499,7 +5499,7 @@ fgHaStatsIdsCount OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of IDS/IPS events triggered on the specified cluster member since start-up"
     ::= { fgHaStatsEntry 9 }
 
@@ -5507,7 +5507,7 @@ fgHaStatsAvCount OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Number of anti-virus events triggered on the specified cluster member since start-up"
     ::= { fgHaStatsEntry 10 }
 
@@ -5515,7 +5515,7 @@ fgHaStatsHostname OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..255))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Host name of the specified cluster member"
     ::= { fgHaStatsEntry 11 }
 
@@ -5523,7 +5523,7 @@ fgHaStatsSyncStatus OBJECT-TYPE
     SYNTAX      FgHaStatsSyncStatusType
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current HA Sync status"
     ::= { fgHaStatsEntry 12 }
 
@@ -5531,7 +5531,7 @@ fgHaStatsSyncDatimeSucc OBJECT-TYPE
     SYNTAX      DateAndTime
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Date and time of last successful sync"
     ::= { fgHaStatsEntry 13 }
 
@@ -5539,7 +5539,7 @@ fgHaStatsSyncDatimeUnsucc OBJECT-TYPE
     SYNTAX      DateAndTime
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Date and time of last unsuccessful sync"
     ::= { fgHaStatsEntry 14 }
 
@@ -5547,7 +5547,7 @@ fgHaStatsGlobalChecksum OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..32))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Current HA global checksum value"
     ::= { fgHaStatsEntry 15 }
 
@@ -5555,7 +5555,7 @@ fgHaStatsMasterSerial OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..32))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Serial number of master during the last synch attempt (successful of not)"
     ::= { fgHaStatsEntry 16 }
 
@@ -5570,7 +5570,7 @@ fgHaTrapMemberSerial OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Serial number of an HA cluster member. Used to identify the origin of a trap when a cluster is configured."
     ::= { fgHaTrapObjects 1 }
 
@@ -5592,7 +5592,7 @@ fgWcApVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Virtual domain the wtp is part of"
     ::= { fgWcTrapObjects 1 }
 
@@ -5600,7 +5600,7 @@ fgWcApSerial OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..32))
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Serial number of the wtp"
     ::= { fgWcTrapObjects 2 }
 
@@ -5608,7 +5608,7 @@ fgWcApName OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..32))
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Name of the wtp"
     ::= { fgWcTrapObjects 3 }
 
@@ -5660,7 +5660,7 @@ fgWcInfoWtpSessions OBJECT-TYPE
     ::= { fgWcInfo 5 }
 
 fgWcInfoStationCapacity  OBJECT-TYPE
-    SYNTAX      Unsigned32 
+    SYNTAX      Unsigned32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -5724,7 +5724,7 @@ fgWcWlanBroadcastSsid OBJECT-TYPE
     SYNTAX      FnBoolState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Whether SSID broadcast is enabled on this WLAN profile."
     ::= { fgWcWlanEntry 2 }
 
@@ -5772,7 +5772,7 @@ fgWcWlanLocalBridging OBJECT-TYPE
     SYNTAX      FnBoolState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Whether local bridging is enabled on this WLAN profile."
     ::= { fgWcWlanEntry 8 }
 
@@ -5788,7 +5788,7 @@ fgWcWlanMeshBackhaul OBJECT-TYPE
     SYNTAX      FnBoolState
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Whether mesh backhaul is enabled on this WLAN profile."
     ::= { fgWcWlanEntry 10 }
 
@@ -6919,7 +6919,7 @@ fgFcSwVdom OBJECT-TYPE
     SYNTAX      FgVdIndex
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Virtual domain the switch is part of"
     ::= { fgFcTrapObjects 1 }
 
@@ -6927,7 +6927,7 @@ fgFcSwSerial OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..32))
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Serial number of the switch"
     ::= { fgFcTrapObjects 2 }
 
@@ -6935,10 +6935,10 @@ fgFcSwName OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..32))
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Name of the switch"
     ::= { fgFcTrapObjects 3 }
-    
+
 --
 -- fortinet.fnFortiGateMib.fgServerLoadBalance
 --
@@ -6957,7 +6957,7 @@ fgServerLoadBalanceRealServerAddress OBJECT-TYPE
     SYNTAX      IpAddress
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "IP of the real server."
     ::= { fgServerLoadBalanceTrapObjects 1 }
 
@@ -6965,7 +6965,7 @@ fgServerLoadBalanceVirtualServerName OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..64))
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Name of the virual server."
     ::= { fgServerLoadBalanceTrapObjects 2 }
 
@@ -6987,7 +6987,7 @@ fgUsbModemSignalStrength OBJECT-TYPE
     SYNTAX      INTEGER { level0(0), level1(1), level2(2), level3(3), level4(4) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "3G/4G USB Modem signal Strength."
     ::= { fgUsbModemInfoObjects 1 }
 
@@ -6995,7 +6995,7 @@ fgUsbModemStatus OBJECT-TYPE
     SYNTAX      INTEGER { disconnected(0), connected(1) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         " 3G/4G USB Modem status."
     ::= { fgUsbModemInfoObjects 2 }
 
@@ -7003,7 +7003,7 @@ fgUsbModemSimState OBJECT-TYPE
     SYNTAX      INTEGER { invalid(0), valid(1) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "3G/4G USB Modem sim card status."
     ::= { fgUsbModemInfoObjects 3 }
 
@@ -7011,7 +7011,7 @@ fgUsbModemVendor OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..64))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "3G/4G USB Modem vendor name."
     ::= { fgUsbModemInfoObjects 4 }
 
@@ -7019,7 +7019,7 @@ fgUsbModemProduct OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..64))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "3G/4G USB Modem product name."
     ::= { fgUsbModemInfoObjects 5 }
 
@@ -7027,7 +7027,7 @@ fgUsbModemNetwork OBJECT-TYPE
     SYNTAX      INTEGER { network3G(0), networkLTE(1) }
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "3G/4G USB Modem network type."
     ::= { fgUsbModemInfoObjects 6 }
 
@@ -7035,7 +7035,7 @@ fgUsbModemId OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..64))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "3G/4G USB Modem identifier."
     ::= { fgUsbModemInfoObjects 7 }
 
@@ -7043,7 +7043,7 @@ fgUsbModemSimId OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..64))
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "3G/4G USB Modem sim card identifier."
     ::= { fgUsbModemInfoObjects 8 }
 
@@ -7065,7 +7065,7 @@ fgDeviceMacAddress OBJECT-TYPE
     SYNTAX      DisplayString (SIZE(0..64))
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The MAC address pertaining the Device."
     ::= { fgDeviceTrapObjects 1 }
 
@@ -7073,7 +7073,7 @@ fgDeviceCreated OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The created time pertaining the Device."
     ::= { fgDeviceTrapObjects 2 }
 
@@ -7081,7 +7081,7 @@ fgDeviceLastSeen OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The last seen time pertaining the Device."
     ::= { fgDeviceTrapObjects 3 }
 
@@ -7097,32 +7097,32 @@ fgMibConformance OBJECT IDENTIFIER
 --
 
 fgTrapVpnTunUp NOTIFICATION-TYPE
-    OBJECTS     { fnSysSerial, sysName, fgVpnTrapLocalGateway, 
+    OBJECTS     { fnSysSerial, sysName, fgVpnTrapLocalGateway,
                   fgVpnTrapRemoteGateway, fgVpnTrapPhase1Name }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates that the specified VPN tunnel has been brought up."
     ::= { fgTrapPrefix 301 }
 
 fgTrapVpnTunDown NOTIFICATION-TYPE
-    OBJECTS     { fnSysSerial, sysName, fgVpnTrapLocalGateway, 
+    OBJECTS     { fnSysSerial, sysName, fgVpnTrapLocalGateway,
                   fgVpnTrapRemoteGateway, fgVpnTrapPhase1Name }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The specified VPN tunnel has been brought down."
     ::= { fgTrapPrefix 302 }
 
 fgTrapHaSwitch NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The specified cluster member has transitioned from a slave role to a master role."
     ::= { fgTrapPrefix 401 }
 
 fgTrapHaStateChange NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial }
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Trap being sent when the HA cluster
          member changes its state"
     ::= { fgTrapPrefix 402 }
@@ -7130,42 +7130,42 @@ fgTrapHaStateChange NOTIFICATION-TYPE
 fgTrapHaHBFail NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The heartbeat device failure count has exceeded the configured threshold."
     ::= { fgTrapPrefix 403 }
 
 fgTrapHaMemberDown NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The specified device (by serial number) is moving to a down state."
     ::= { fgTrapPrefix 404 }
 
 fgTrapHaMemberUp NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A new cluster member has joined the cluster."
     ::= { fgTrapPrefix 405 }
 
 fgTrapIpsSignature NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fgIpsTrapSigId, fgIpsTrapSrcIp, fgIpsTrapSigMsg }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An IPS signature has been triggered"
     ::= { fgTrapPrefix 503 }
 
 fgTrapIpsAnomaly NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fgIpsTrapSigId, fgIpsTrapSrcIp, fgIpsTrapSigMsg }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An IPS anomaly has been detected"
     ::= { fgTrapPrefix 504 }
 
 fgTrapIpsPkgUpdate NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The IPS signature database has been updated"
     ::= { fgTrapPrefix 505 }
 
@@ -7179,49 +7179,49 @@ fgTrapIpsFailOpen NOTIFICATION-TYPE
 fgTrapAvVirus NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fgAvTrapVirName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A virus has been detected by the anti-virus engine"
     ::= { fgTrapPrefix 601 }
 
 fgTrapAvOversize NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An over-sized file has been detected by the anti-virus engine"
     ::= { fgTrapPrefix 602 }
 
 fgTrapAvPattern NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The anti-virus engine has blocked a file because it matched a configured pattern"
     ::= { fgTrapPrefix 603 }
 
 fgTrapAvFragmented NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The anti-virus engine has detected a fragmented file"
     ::= { fgTrapPrefix 604 }
 
 fgTrapAvEnterConserve NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The anti-virus engine has entered conservation mode due to low memory conditions"
     ::= { fgTrapPrefix 605 }
 
 fgTrapAvBypass NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The anti-virus engine has been bypassed due to conservation mode"
     ::= { fgTrapPrefix 606 }
 
 fgTrapAvOversizePass NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An over-sized file has been detected,
          but has been passed due to configuration"
     ::= { fgTrapPrefix 607 }
@@ -7229,7 +7229,7 @@ fgTrapAvOversizePass NOTIFICATION-TYPE
 fgTrapAvOversizeBlock NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An over-sized file has been detected
          and has been blocked"
     ::= { fgTrapPrefix 608 }
@@ -7237,77 +7237,77 @@ fgTrapAvOversizeBlock NOTIFICATION-TYPE
 fgTrapFazDisconnect NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The device has been disconnected from the FortiAnalyzer."
     ::= { fgTrapPrefix 701 }
-    
+
 fgTrapWcApUp NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fgWcApVdom, fgWcApSerial, fgWcApName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates that the specified AP is up."
     ::= { fgTrapPrefix 801 }
-    
+
 fgTrapWcApDown NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fgWcApVdom, fgWcApSerial, fgWcApName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates that the specified AP is down."
     ::= { fgTrapPrefix 802 }
 
 fgTrapFcSwUp NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fgFcSwVdom, fgFcSwSerial, fgFcSwName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates that the specified switch controller session is up."
     ::= { fgTrapPrefix 901 }
-    
+
 fgTrapFcSwDown NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fgFcSwVdom, fgFcSwSerial, fgFcSwName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates that the specified switch controller session is down."
     ::= { fgTrapPrefix 902 }
 
 fgFmTrapDeployComplete NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates when deployment of a new configuration has been completed. Used for verification by FortiManager."
     ::= { fgFmTrapPrefix 1000 }
 
 fgFmTrapDeployInProgress NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates that a configuration change was not immediate and that the change is currently in progress. Used for verification by FortiManager."
     ::= { fgFmTrapPrefix 1002 }
 
 fgFmTrapConfChange NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The device configuration has been changed by something other than the managing FortiManager device."
     ::= { fgFmTrapPrefix 1003 }
 
 fgFmTrapIfChange NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, ifName, fgManIfIp, fgManIfMask, fgManIfIp6 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trap is sent to the managing FortiManager if an interface IP is changed"
     ::= { fgFmTrapPrefix 1004 }
 
 fgTrapServerLoadBalanceRealServerDown NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, fgServerLoadBalanceRealServerAddress, fgServerLoadBalanceVirtualServerName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "One of servers in a Server Load Balance group goes down."
     ::= { fgTrapPrefix 1101 }
 
 fgTrapDeviceNew NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, ifIndex, fgVdEntIndex, fgDeviceCreated, fgDeviceLastSeen, fgDeviceMacAddress }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A new device is found."
     ::= { fgTrapPrefix 1201 }
 
@@ -7316,24 +7316,24 @@ fgTrapDeviceNew NOTIFICATION-TYPE
 --
 
 fgFmTrapGroup NOTIFICATION-GROUP
-    NOTIFICATIONS { fgFmTrapDeployComplete, fgFmTrapDeployInProgress, 
+    NOTIFICATIONS { fgFmTrapDeployComplete, fgFmTrapDeployInProgress,
                   fgFmTrapConfChange, fgFmTrapIfChange }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Traps are intended for use in conjunction with a FortiManager."
     ::= { fgMibConformance 1 }
 
 fgFmTrapObjectGroup OBJECT-GROUP
     OBJECTS     { fgManIfIp, fgManIfMask,fgManIfIp6 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "These objects support the traps in the fgFmTrapGroup."
     ::= { fgMibConformance 2 }
 
 fgAdminObjectGroup OBJECT-GROUP
     OBJECTS     { fgAdminIdleTimeout, fgAdminLcdProtection }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to administration of the device."
     ::= { fgMibConformance 3 }
 
@@ -7356,7 +7356,7 @@ fgSystemObjectGroup OBJECT-GROUP
 fgSoftwareObjectGroup OBJECT-GROUP
     OBJECTS     { fgSysVersionAv, fgSysVersionIps }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to software running on the device."
     ::= { fgMibConformance 5 }
 
@@ -7370,62 +7370,62 @@ fgHwSensorsObjectGroup OBJECT-GROUP
 
 fgHighAvailabilityObjectGroup OBJECT-GROUP
     OBJECTS     { fgHaSystemMode, fgHaGroupId, fgHaPriority, fgHaOverride,
-                  fgHaAutoSync, fgHaSchedule, fgHaGroupName, fgHaStatsSerial, 
-                  fgHaStatsCpuUsage, fgHaStatsMemUsage, 
-                  fgHaStatsNetUsage, fgHaStatsSesCount, 
-                  fgHaStatsPktCount, fgHaStatsByteCount, 
-                  fgHaStatsIdsCount, fgHaStatsAvCount, fgHaStatsHostname, 
-                  fgHaStatsSyncStatus, fgHaStatsSyncDatimeSucc, fgHaStatsSyncDatimeUnsucc, 
-                  fgHaStatsGlobalChecksum, fgHaStatsMasterSerial, 
+                  fgHaAutoSync, fgHaSchedule, fgHaGroupName, fgHaStatsSerial,
+                  fgHaStatsCpuUsage, fgHaStatsMemUsage,
+                  fgHaStatsNetUsage, fgHaStatsSesCount,
+                  fgHaStatsPktCount, fgHaStatsByteCount,
+                  fgHaStatsIdsCount, fgHaStatsAvCount, fgHaStatsHostname,
+                  fgHaStatsSyncStatus, fgHaStatsSyncDatimeSucc, fgHaStatsSyncDatimeUnsucc,
+                  fgHaStatsGlobalChecksum, fgHaStatsMasterSerial,
                   fgHaTrapMemberSerial }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to High Availability clustering of FortiGate devices."
     ::= { fgMibConformance 7 }
 
 fgVpnObjectGroup OBJECT-GROUP
-    OBJECTS     { fgVpnDialupGateway, fgVpnDialupLifetime, 
-                  fgVpnDialupTimeout, fgVpnDialupSrcBegin, 
-                  fgVpnDialupSrcEnd, fgVpnDialupDstAddr, fgVpnDialupVdom, 
-                  fgVpnDialupInOctets, fgVpnDialupOutOctets, 
-                  fgVpnTunEntPhase1Name, fgVpnTunEntPhase2Name, 
-                  fgVpnTunEntRemGwyIp, fgVpnTunEntRemGwyPort, 
-                  fgVpnTunEntLocGwyIp, fgVpnTunEntLocGwyPort, 
-                  fgVpnTunEntSelectorSrcBeginIp, 
-                  fgVpnTunEntSelectorSrcEndIp, 
-                  fgVpnTunEntSelectorSrcPort, 
-                  fgVpnTunEntSelectorDstBeginIp, 
-                  fgVpnTunEntSelectorDstEndIp, 
-                  fgVpnTunEntSelectorDstPort, fgVpnTunEntSelectorProto, 
-                  fgVpnTunEntLifeSecs, fgVpnTunEntLifeBytes, 
-                  fgVpnTunEntTimeout, fgVpnTunEntInOctets, 
-                  fgVpnTunEntOutOctets, fgVpnTunEntStatus, 
-                  fgVpnTunEntVdom, fgVpnSslState, 
-                  fgVpnSslStatsLoginUsers, fgVpnSslStatsMaxUsers, 
-                  fgVpnSslStatsActiveWebSessions, 
-                  fgVpnSslStatsMaxWebSessions, 
-                  fgVpnSslStatsActiveTunnels, fgVpnSslStatsMaxTunnels, 
-                  fgVpnSslTunnelVdom, fgVpnSslTunnelUserName, 
-                  fgVpnSslTunnelSrcIp, fgVpnSslTunnelIp, 
-                  fgVpnSslTunnelUpTime, fgVpnSslTunnelBytesIn, 
-                  fgVpnSslTunnelBytesOut, fgVpnTrapLocalGateway, 
+    OBJECTS     { fgVpnDialupGateway, fgVpnDialupLifetime,
+                  fgVpnDialupTimeout, fgVpnDialupSrcBegin,
+                  fgVpnDialupSrcEnd, fgVpnDialupDstAddr, fgVpnDialupVdom,
+                  fgVpnDialupInOctets, fgVpnDialupOutOctets,
+                  fgVpnTunEntPhase1Name, fgVpnTunEntPhase2Name,
+                  fgVpnTunEntRemGwyIp, fgVpnTunEntRemGwyPort,
+                  fgVpnTunEntLocGwyIp, fgVpnTunEntLocGwyPort,
+                  fgVpnTunEntSelectorSrcBeginIp,
+                  fgVpnTunEntSelectorSrcEndIp,
+                  fgVpnTunEntSelectorSrcPort,
+                  fgVpnTunEntSelectorDstBeginIp,
+                  fgVpnTunEntSelectorDstEndIp,
+                  fgVpnTunEntSelectorDstPort, fgVpnTunEntSelectorProto,
+                  fgVpnTunEntLifeSecs, fgVpnTunEntLifeBytes,
+                  fgVpnTunEntTimeout, fgVpnTunEntInOctets,
+                  fgVpnTunEntOutOctets, fgVpnTunEntStatus,
+                  fgVpnTunEntVdom, fgVpnSslState,
+                  fgVpnSslStatsLoginUsers, fgVpnSslStatsMaxUsers,
+                  fgVpnSslStatsActiveWebSessions,
+                  fgVpnSslStatsMaxWebSessions,
+                  fgVpnSslStatsActiveTunnels, fgVpnSslStatsMaxTunnels,
+                  fgVpnSslTunnelVdom, fgVpnSslTunnelUserName,
+                  fgVpnSslTunnelSrcIp, fgVpnSslTunnelIp,
+                  fgVpnSslTunnelUpTime, fgVpnSslTunnelBytesIn,
+                  fgVpnSslTunnelBytesOut, fgVpnTrapLocalGateway,
                   fgVpnTrapRemoteGateway, fgVpnTrapPhase1Name, fgVpnTunnelUpCount }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to Virtual Priavet Networking on FortiGate devices."
     ::= { fgMibConformance 8 }
 
 fgFirewallObjectGroup OBJECT-GROUP
-    OBJECTS     { fgFwPolPktCount, fgFwPolByteCount, fgFwUserNumber, 
-                  fgFwPolPktCountHc, fgFwPolByteCountHc, 
-                  fgFwUserAuthTimeout, fgFwUserName, fgFwUserAuth, 
-                  fgFwUserState, fgFwUserVdom, fgIpSessProto, 
-                  fgIpSessFromAddr, fgIpSessFromPort, fgIpSessToAddr, 
-                  fgIpSessToPort, fgIpSessExp, fgIpSessVdom, 
+    OBJECTS     { fgFwPolPktCount, fgFwPolByteCount, fgFwUserNumber,
+                  fgFwPolPktCountHc, fgFwPolByteCountHc,
+                  fgFwUserAuthTimeout, fgFwUserName, fgFwUserAuth,
+                  fgFwUserState, fgFwUserVdom, fgIpSessProto,
+                  fgIpSessFromAddr, fgIpSessFromPort, fgIpSessToAddr,
+                  fgIpSessToPort, fgIpSessExp, fgIpSessVdom,
                   fgIpSessNumber, fgIp6SessNumber, fgFwPol6PktCount,
                   fgFwPol6ByteCount, fgFwPolLastUsed, fgFwPol6LastUsed }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to Firewall functionality on FortiGate devices."
     ::= { fgMibConformance 9 }
 
@@ -7434,15 +7434,15 @@ fgAppServicesObjectGroup OBJECT-GROUP
                   fgApSMTPReqProcessed, fgApSMTPSpamDetected,
                   fgApPOP3ReqProcessed, fgApPOP3SpamDetected,
                   fgApIMAPReqProcessed, fgApIMAPSpamDetected,
-                  fgApNNTPReqProcessed, fgApIMUpTime, fgApIMMemUsage, 
-                  fgApIMReqProcessed, fgApSIPUpTime, fgApSIPMemUsage, 
-                  fgApSIPClientReg, fgApSIPCallHandling, fgApSIPServices, 
-                  fgApSIPOtherReq, fgAppSuNumber, fgAppSuFileScanned, 
-                  fgAppVoIPConn, fgAppVoIPCallBlocked, 
-                  fgAppP2PConnBlocked, fgAppP2PProtEntBytes, 
-                  fgAppP2PProtoEntLastReset, fgAppIMMessages, 
-                  fgAppIMFileTransfered, fgAppIMFileTxBlocked, 
-                  fgAppIMConnBlocked, 
+                  fgApNNTPReqProcessed, fgApIMUpTime, fgApIMMemUsage,
+                  fgApIMReqProcessed, fgApSIPUpTime, fgApSIPMemUsage,
+                  fgApSIPClientReg, fgApSIPCallHandling, fgApSIPServices,
+                  fgApSIPOtherReq, fgAppSuNumber, fgAppSuFileScanned,
+                  fgAppVoIPConn, fgAppVoIPCallBlocked,
+                  fgAppP2PConnBlocked, fgAppP2PProtEntBytes,
+                  fgAppP2PProtoEntLastReset, fgAppIMMessages,
+                  fgAppIMFileTransfered, fgAppIMFileTxBlocked,
+                  fgAppIMConnBlocked,
                   fgApFTPReqProcessed, fgApHTTPConnections, fgApFTPConnections,
                   fgApSMTPConnections, fgApPOP3Connections, fgApIMAPConnections,
                   fgApNNTPConnections, fgApHTTPMaxConnections,
@@ -7450,66 +7450,66 @@ fgAppServicesObjectGroup OBJECT-GROUP
                   fgApPOP3MaxConnections, fgApIMAPMaxConnections,
                   fgApNNTPMaxConnections }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to application proxy and filtering services on FortiGate devices."
     ::= { fgMibConformance 10 }
 
 fgAntivirusObjectGroup OBJECT-GROUP
-    OBJECTS     { fgAvVirusDetected, fgAvVirusBlocked, 
-                  fgAvHTTPVirusDetected, fgAvHTTPVirusBlocked, 
-                  fgAvSMTPVirusDetected, fgAvSMTPVirusBlocked, 
-                  fgAvPOP3VirusDetected, fgAvPOP3VirusBlocked, 
-                  fgAvIMAPVirusDetected, fgAvIMAPVirusBlocked, 
-                  fgAvFTPVirusDetected, fgAvFTPVirusBlocked, 
-                  fgAvIMVirusDetected, fgAvIMVirusBlocked, 
-                  fgAvNNTPVirusDetected, fgAvNNTPVirusBlocked, 
-                  fgAvOversizedDetected, fgAvOversizedBlocked, 
+    OBJECTS     { fgAvVirusDetected, fgAvVirusBlocked,
+                  fgAvHTTPVirusDetected, fgAvHTTPVirusBlocked,
+                  fgAvSMTPVirusDetected, fgAvSMTPVirusBlocked,
+                  fgAvPOP3VirusDetected, fgAvPOP3VirusBlocked,
+                  fgAvIMAPVirusDetected, fgAvIMAPVirusBlocked,
+                  fgAvFTPVirusDetected, fgAvFTPVirusBlocked,
+                  fgAvIMVirusDetected, fgAvIMVirusBlocked,
+                  fgAvNNTPVirusDetected, fgAvNNTPVirusBlocked,
+                  fgAvOversizedDetected, fgAvOversizedBlocked,
                   fgAvTrapVirName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to Antivirus services on FortiGate devices."
     ::= { fgMibConformance 11 }
 
 fgIntrusionPrevtObjectGroup OBJECT-GROUP
-    OBJECTS     { fgIpsTrapSigId, fgIpsTrapSrcIp, fgIpsTrapSigMsg, 
-                  fgIpsIntrusionsDetected, fgIpsIntrusionsBlocked, 
-                  fgIpsCritSevDetections, fgIpsHighSevDetections, 
-                  fgIpsMedSevDetections, fgIpsLowSevDetections, 
-                  fgIpsInfoSevDetections, fgIpsSignatureDetections, 
+    OBJECTS     { fgIpsTrapSigId, fgIpsTrapSrcIp, fgIpsTrapSigMsg,
+                  fgIpsIntrusionsDetected, fgIpsIntrusionsBlocked,
+                  fgIpsCritSevDetections, fgIpsHighSevDetections,
+                  fgIpsMedSevDetections, fgIpsLowSevDetections,
+                  fgIpsInfoSevDetections, fgIpsSignatureDetections,
                   fgIpsAnomalyDetections }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to Intrusion Detection and Prevention services on FortiGate devices."
     ::= { fgMibConformance 12 }
 
 fgWebFilterObjectGroup OBJECT-GROUP
-    OBJECTS     { fgWfHTTPBlocked, fgWfHTTPSBlocked, fgWfHTTPURLBlocked, 
-                  fgWfHTTPSURLBlocked, fgWfActiveXBlocked, 
-                  fgWfCookieBlocked, fgWfAppletBlocked, 
-                  fgFgWfHTTPExamined, fgFgWfHTTPSExamined, 
-                  fgFgWfHTTPAllowed, fgFgWfHTTPSAllowed, 
-                  fgFgWfHTTPBlocked, fgFgWfHTTPSBlocked, 
-                  fgFgWfHTTPLogged, fgFgWfHTTPSLogged, 
+    OBJECTS     { fgWfHTTPBlocked, fgWfHTTPSBlocked, fgWfHTTPURLBlocked,
+                  fgWfHTTPSURLBlocked, fgWfActiveXBlocked,
+                  fgWfCookieBlocked, fgWfAppletBlocked,
+                  fgFgWfHTTPExamined, fgFgWfHTTPSExamined,
+                  fgFgWfHTTPAllowed, fgFgWfHTTPSAllowed,
+                  fgFgWfHTTPBlocked, fgFgWfHTTPSBlocked,
+                  fgFgWfHTTPLogged, fgFgWfHTTPSLogged,
                   fgFgWfHTTPOverridden, fgFgWfHTTPSOverridden }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to FortiGate and FortiGuard based Web Filtering services on FortiGate devices."
     ::= { fgMibConformance 13 }
 
 fgVirtualDomainObjectGroup OBJECT-GROUP
-    OBJECTS     { fgVdNumber, fgVdMaxVdoms, fgVdEnabled, fgVdEntName, fgVdEntIndex, 
+    OBJECTS     { fgVdNumber, fgVdMaxVdoms, fgVdEnabled, fgVdEntName, fgVdEntIndex,
                   fgVdEntOpMode, fgVdTpMgmtAddrType, fgVdTpMgmtAddr,
                   fgVdEntCpuUsage, fgVdEntMemUsage, fgVdEntSesCount, fgVdEntSesRate,
                   fgVdTpMgmtMask, fgVdEntHaState }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to Virtual Firewall Domain services on FortiGate devices."
     ::= { fgMibConformance 14 }
 
 fgAdministrationObjectGroup OBJECT-GROUP
     OBJECTS     { fgAdminVdom }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to the administration of FortiGate device."
     ::= { fgMibConformance 15 }
 
@@ -7517,7 +7517,7 @@ fgIntfObjectGroup OBJECT-GROUP
     OBJECTS     { fgIntfEntVdom, fgIntfVrrpCount, fgIntfVrrpEntVrId, fgIntfVrrpEntGrpId, fgIntfVrrpEntIfName, fgIntfVrrpEntState, fgIntfVrrpEntVrIp,
                   fgIntfVlanHbCount, fgIntfVlanHbEntIfName, fgIntfVlanHbEntSerial, fgIntfVlanHbEntState }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to the interface table of FortiGate device."
     ::= { fgMibConformance 16 }
 
@@ -7531,30 +7531,30 @@ fgProcessorsObjectGroup OBJECT-GROUP
                 fgProcModMemCapacity, fgProcModMemUsage,
                 fgProcModSessionCount, fgProcModSACount }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to the processors table of FortiGate device."
     ::= { fgMibConformance 17 }
 
 fgNotificationGroup NOTIFICATION-GROUP
-    NOTIFICATIONS { fgTrapVpnTunUp, fgTrapVpnTunDown, fgTrapHaSwitch, 
-                  fgTrapHaHBFail, fgTrapHaMemberDown, fgTrapHaMemberUp, 
-                  fgTrapIpsSignature, fgTrapIpsAnomaly, 
+    NOTIFICATIONS { fgTrapVpnTunUp, fgTrapVpnTunDown, fgTrapHaSwitch,
+                  fgTrapHaHBFail, fgTrapHaMemberDown, fgTrapHaMemberUp,
+                  fgTrapIpsSignature, fgTrapIpsAnomaly,
                   fgTrapIpsPkgUpdate, fgTrapIpsFailOpen,
                   fgTrapAvVirus, fgTrapAvOversize,
-                  fgTrapAvPattern, fgTrapAvFragmented, 
-                  fgTrapAvEnterConserve, fgTrapAvBypass, 
-                  fgTrapAvOversizePass, fgTrapAvOversizeBlock, 
-                  fgTrapFazDisconnect, fgTrapWcApUp, fgTrapWcApDown, fgTrapDeviceNew, 
+                  fgTrapAvPattern, fgTrapAvFragmented,
+                  fgTrapAvEnterConserve, fgTrapAvBypass,
+                  fgTrapAvOversizePass, fgTrapAvOversizeBlock,
+                  fgTrapFazDisconnect, fgTrapWcApUp, fgTrapWcApDown, fgTrapDeviceNew,
                   fgTrapFcSwUp, fgTrapFcSwDown, fgTrapServerLoadBalanceRealServerDown }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Notifications that can be generated from a FortiGate device."
     ::= { fgMibConformance 18 }
 
 fgObsoleteNotificationsGroup NOTIFICATION-GROUP
     NOTIFICATIONS { fgTrapHaStateChange }
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Notifications that have been deprecated, but may still be generated by older models."
     ::= { fgMibConformance 19 }
 
@@ -7572,18 +7572,18 @@ fgExplicitProxyObjectGroup OBJECT-GROUP
                 fgExplicitProxyExaminedURLs, fgExplicitProxyAllowedURLs, fgExplicitProxyBlockedURLs,
                 fgExplicitProxyLoggedURLs, fgExplicitProxyOverriddenURLs }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to explicit proxy"
     ::= { fgMibConformance 20 }
 
 fgWebCacheObjectGroup OBJECT-GROUP
-    OBJECTS     { fgWebCacheUpTime, 
+    OBJECTS     { fgWebCacheUpTime,
                 fgWebCacheRAMLimit, fgWebCacheRAMUsage, fgWebCacheRAMHits,
                 fgWebCacheRAMMisses, fgWebCacheRequests, fgWebCacheBypass,
                 fgWebCacheDiskLimit, fgWebCacheDiskUsage, fgWebCacheDiskHits,
                 fgWebCacheDiskMisses }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to explicit proxy, web cache and wan optimization."
     ::= { fgMibConformance 21 }
 
@@ -7596,26 +7596,26 @@ fgWanOptObjectGroup OBJECT-GROUP
                 fgWanOptWANBytesIn, fgWanOptWANBytesOut, fgWanOptDiskLimit, fgWanOptDiskUsage,
                 fgWanOptDiskHits, fgWanOptDiskMisses }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to explicit proxy, web cache and wan optimization."
     ::= { fgMibConformance 22 }
 
 fgObsoleteAppServicesObjectGroup OBJECT-GROUP
     OBJECTS     { fgApHTTPUpTime, fgApHTTPMemUsage,
                   fgApSMTPUpTime, fgApSMTPMemUsage,
-                  fgApPOP3UpTime, fgApPOP3MemUsage, 
+                  fgApPOP3UpTime, fgApPOP3MemUsage,
                   fgApIMAPUpTime, fgApIMAPMemUsage,
                   fgApNNTPUpTime, fgApNNTPMemUsage,
                   fgApFTPUpTime, fgApFTPMemUsage }
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "Objects that have been deprecated, but may still be generated by older models."
     ::= { fgMibConformance 23 }
 
 fgSystemAdvancedObjectGroup OBJECT-GROUP
     OBJECTS     { fgSIAdvMemPageCache, fgSIAdvMemCacheActive,
                   fgSIAdvMemCacheInactive, fgSIAdvMemBuffer,
-                  fgSIAdvMemEnterKerConsThrsh, 
+                  fgSIAdvMemEnterKerConsThrsh,
                   fgSIAdvMemLeaveKerConsThrsh,
                   fgSIAdvMemEnterProxyConsThrsh,
                   fgSIAdvMemLeaveProxyConsThrsh,
@@ -7673,21 +7673,21 @@ fgWcObjectGroup OBJECT-GROUP
                   fgWcStaRadioType, fgWcStaSecurity, fgWcStaEncrypt, fgWcStaOnline
                 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to wireless controller."
     ::= { fgMibConformance 25 }
 
 fgFcObjectGroup OBJECT-GROUP
     OBJECTS     { fgFcSwVdom, fgFcSwSerial, fgFcSwName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to switch controller."
     ::= { fgMibConformance 26 }
 
 fgServerLoadBalanceObjectGroup OBJECT-GROUP
     OBJECTS     { fgServerLoadBalanceRealServerAddress, fgServerLoadBalanceVirtualServerName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to Server Load Balance group."
     ::= { fgMibConformance 27 }
 
@@ -7697,7 +7697,7 @@ fgUsbportsObjectGroup OBJECT-GROUP
                   fgUsbportManufacturer, fgUsbportProduct, fgUsbportSerial
                 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to USB device group."
     ::= { fgMibConformance 28 }
 
@@ -7705,14 +7705,14 @@ fgUsbModemInfoGroup OBJECT-GROUP
     OBJECTS     { fgUsbModemSignalStrength, fgUsbModemStatus, fgUsbModemSimState,
                fgUsbModemVendor, fgUsbModemProduct, fgUsbModemNetwork, fgUsbModemId, fgUsbModemSimId }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to USB Modem Info group."
     ::= { fgMibConformance 29 }
 
 fgDeviceObjectGroup OBJECT-GROUP
     OBJECTS     { fgDeviceMacAddress, fgDeviceCreated, fgDeviceLastSeen }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to Device group."
     ::= { fgMibConformance 30 }
 
@@ -7722,33 +7722,33 @@ fgLinkMonitorGroup OBJECT-GROUP
                   fgLinkMonitorPacketLoss, fgLinkMonitorVdom
                 }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects pertaining to Link Monitor group."
     ::= { fgMibConformance 31 }
 
 
 fgMIBCompliance MODULE-COMPLIANCE
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The compliance statement for the application MIB."
 
     MODULE      -- this module
 
         GROUP   fgFmTrapGroup
-        DESCRIPTION   
+        DESCRIPTION
               "This group is mandatory for any FortiGate device being managed by a FortiManager."
 
         GROUP   fgNotificationGroup
-        DESCRIPTION   
-              "Notifications are feature dependant. See manual for feature 
+        DESCRIPTION
+              "Notifications are feature dependant. See manual for feature
                information."
 
         GROUP   fgFmTrapObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgAdminObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgSystemObjectGroup
@@ -7756,7 +7756,7 @@ fgMIBCompliance MODULE-COMPLIANCE
               "Model and feature specific."
 
         GROUP   fgSoftwareObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgHwSensorsObjectGroup
@@ -7764,43 +7764,43 @@ fgMIBCompliance MODULE-COMPLIANCE
               "Model and feature specific."
 
         GROUP   fgHighAvailabilityObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgVpnObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgFirewallObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgAppServicesObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgAntivirusObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgIntrusionPrevtObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgWebFilterObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgVirtualDomainObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgAdministrationObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgIntfObjectGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific."
 
         GROUP   fgProcessorsObjectGroup
@@ -7856,26 +7856,26 @@ fgMIBCompliance MODULE-COMPLIANCE
 
 fg300MibCompliance MODULE-COMPLIANCE
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "The backwards compatibility compliance statement for the application MIB."
 
     MODULE      -- this module
 
         GROUP   fgObsoleteNotificationsGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Model and feature specific. May be implemented by some firmwares, but should not be relied on."
 
     ::= { fgMibConformance 101 }
 
 fgObsolteMIBCompliance MODULE-COMPLIANCE
     STATUS      deprecated
-    DESCRIPTION 
+    DESCRIPTION
         "The compliance statement for the application MIB."
 
     MODULE      -- this module
 
-        GROUP   fgObsoleteAppServicesObjectGroup 
-        DESCRIPTION   
+        GROUP   fgObsoleteAppServicesObjectGroup
+        DESCRIPTION
               "Deprecated AppService objects."
 
     ::= { fgMibConformance 102 }

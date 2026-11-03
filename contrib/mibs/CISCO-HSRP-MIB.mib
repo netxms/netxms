@@ -1,6 +1,6 @@
 -- *****************************************************************
 -- CISCO-HSRP-MIB
---   
+--
 
 -- Copyright (c) 1998-2005, 2010 by cisco Systems Inc.
 -- All rights reserved.
@@ -139,12 +139,12 @@ cHsrpConfigTimeout OBJECT-TYPE
     DESCRIPTION
         "The amount of time in minutes a row in cHsrpGrpTable can
         remain in a state other than active before being timed out."
-    DEFVAL          { 5 } 
+    DEFVAL          { 5 }
     ::= { cHsrpGlobalConfig 1 }
 -- HSRP Tables
 
 cHsrpGrpTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CHsrpGrpEntry 
+    SYNTAX          SEQUENCE OF CHsrpGrpEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -167,19 +167,19 @@ cHsrpGrpEntry OBJECT-TYPE
         The value of cHsrpGrpRowStatus may be set to 'destroy' at
         any time.
 
-        Entries may not be created via SNMP without explicitly 
-        setting cHsrpGrpRowStatus to either 'createAndGo' or 
+        Entries may not be created via SNMP without explicitly
+        setting cHsrpGrpRowStatus to either 'createAndGo' or
         'createAndWait'.
 
-        Entries can be created and modified via the management 
+        Entries can be created and modified via the management
         protocol or by the device's local management interface.
 
         A management application wishing to create an entry should
         choose the ifIndex of the interface which is to be added
         as part of an HSRP group. Also, a cHsrpGrpNumber should
-        be chosen. A group number is unique only amongst the groups 
+        be chosen. A group number is unique only amongst the groups
         on a particular interface. The value of the group number
-        appears in packets which are transmitted and received on a 
+        appears in packets which are transmitted and received on a
         LAN segment to which the router is connected. The application
         must select the group number as explained in the description
         for cHsrpGrpNumber.
@@ -189,12 +189,12 @@ cHsrpGrpEntry OBJECT-TYPE
         state.
 
         A row which is not in active state will timeout after a
-        configurable period (five minutes by default). This timeout 
+        configurable period (five minutes by default). This timeout
         period can be changed by setting cHsrpConfigTimeout."
     INDEX           {
                         ifIndex,
                         cHsrpGrpNumber
-                    } 
+                    }
     ::= { cHsrpGrpTable 1 }
 
 CHsrpGrpEntry ::= SEQUENCE {
@@ -234,7 +234,7 @@ cHsrpGrpNumber OBJECT-TYPE
         on one interface doesn't preclude using the same group
         number on a different interface. For example, there can be
         a group 1 on an Ethernet and a group 1 on Token Ring. More
-        details can be found from RFC 2281." 
+        details can be found from RFC 2281."
     ::= { cHsrpGrpEntry 1 }
 
 cHsrpGrpAuth OBJECT-TYPE
@@ -252,7 +252,7 @@ cHsrpGrpAuth OBJECT-TYPE
         security-like authentication but rather to confirm that
         what's happening is what's intended. In other words, this
         is meant for sanity checking only."
-    DEFVAL          { "cisco" } 
+    DEFVAL          { "cisco" }
     ::= { cHsrpGrpEntry 2 }
 
 cHsrpGrpPriority OBJECT-TYPE
@@ -278,7 +278,7 @@ cHsrpGrpPriority OBJECT-TYPE
         configured to preempt.  But, if there is more than one
         router which is not active, the highest priority non-active
         router becomes the standby router."
-    DEFVAL          { 100 } 
+    DEFVAL          { 100 }
     ::= { cHsrpGrpEntry 3 }
 
 cHsrpGrpPreempt OBJECT-TYPE
@@ -291,7 +291,7 @@ cHsrpGrpPreempt OBJECT-TYPE
         and attempt to become the active router. If this object is
         FALSE, the router will become the active router only if
         there is no such router (or if an active router fails)."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cHsrpGrpEntry 4 }
 
 cHsrpGrpPreemptDelay OBJECT-TYPE
@@ -310,7 +310,7 @@ cHsrpGrpPreemptDelay OBJECT-TYPE
         provide adequate routing services. The solution to this is
         to allow for a configurable delay before the router
         actually preempts the currently active router."
-    DEFVAL          { 0 } 
+    DEFVAL          { 0 }
     ::= { cHsrpGrpEntry 5 }
 
 cHsrpGrpUseConfiguredTimers OBJECT-TYPE
@@ -329,7 +329,7 @@ cHsrpGrpUseConfiguredTimers OBJECT-TYPE
 
         If this object is TRUE, the cHsrpGrpConfiguredHelloTime and
         cHsrpGrpConfiguredHoldTime will be used. If it is FALSE,
-        the Hellotime and Holdtime values are learned." 
+        the Hellotime and Holdtime values are learned."
     ::= { cHsrpGrpEntry 6 }
 
 cHsrpGrpConfiguredHelloTime OBJECT-TYPE
@@ -343,7 +343,7 @@ cHsrpGrpConfiguredHelloTime OBJECT-TYPE
         active router. Otherwise, the Hellotime learned from the
         current active router is used. All routers on a particular
         LAN segment must use the same Hellotime."
-    DEFVAL          { 3000 } 
+    DEFVAL          { 3000 }
     ::= { cHsrpGrpEntry 7 }
 
 cHsrpGrpConfiguredHoldTime OBJECT-TYPE
@@ -359,7 +359,7 @@ cHsrpGrpConfiguredHoldTime OBJECT-TYPE
         LAN segment should use the same Holdtime. Also, the
         Holdtime should be at least three times the value of the
         Hellotime and must be greater than the Hellotime."
-    DEFVAL          { 10000 } 
+    DEFVAL          { 10000 }
     ::= { cHsrpGrpEntry 8 }
 
 cHsrpGrpLearnedHelloTime OBJECT-TYPE
@@ -374,7 +374,7 @@ cHsrpGrpLearnedHelloTime OBJECT-TYPE
         Hellotime is not learned from a Hello message from the
         active router and it is not manually configured, a default
         value of 3 seconds is recommended."
-    DEFVAL          { 3000 } 
+    DEFVAL          { 3000 }
     ::= { cHsrpGrpEntry 9 }
 
 cHsrpGrpLearnedHoldTime OBJECT-TYPE
@@ -387,9 +387,9 @@ cHsrpGrpLearnedHoldTime OBJECT-TYPE
         learned from the Hello message from the active router.
         Holdtime should be learned only if the Hello message is
         authenticated. If the Holdtime is not learned and it is
-        not manually configured, a default value of 10 seconds is 
+        not manually configured, a default value of 10 seconds is
         recommended."
-    DEFVAL          { 10000 } 
+    DEFVAL          { 10000 }
     ::= { cHsrpGrpEntry 10 }
 
 cHsrpGrpVirtualIpAddr OBJECT-TYPE
@@ -402,7 +402,7 @@ cHsrpGrpVirtualIpAddr OBJECT-TYPE
         address), this value is used. Otherwise, the agent will
         attempt to discover the virtual address through a discovery
         process (which scans the hello messages)."
-    DEFVAL          { '00000000'H } 
+    DEFVAL          { '00000000'H }
     ::= { cHsrpGrpEntry 11 }
 
 cHsrpGrpUseConfigVirtualIpAddr OBJECT-TYPE
@@ -411,8 +411,8 @@ cHsrpGrpUseConfigVirtualIpAddr OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "If this object is TRUE, cHsrpGrpVirtualIpAddr was a
-        configured one. Otherwise, it indicates that 
-        cHsrpGrpVirtualIpAddr was a learned one." 
+        configured one. Otherwise, it indicates that
+        cHsrpGrpVirtualIpAddr was a learned one."
     ::= { cHsrpGrpEntry 12 }
 
 cHsrpGrpActiveRouter OBJECT-TYPE
@@ -420,7 +420,7 @@ cHsrpGrpActiveRouter OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "Ip Address of the currently active router for this group." 
+        "Ip Address of the currently active router for this group."
     ::= { cHsrpGrpEntry 13 }
 
 cHsrpGrpStandbyRouter OBJECT-TYPE
@@ -429,7 +429,7 @@ cHsrpGrpStandbyRouter OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Ip Address of the currently standby router for this
-        group." 
+        group."
     ::= { cHsrpGrpEntry 14 }
 
 cHsrpGrpStandbyState OBJECT-TYPE
@@ -437,7 +437,7 @@ cHsrpGrpStandbyState OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "The current HSRP state of this group on this interface." 
+        "The current HSRP state of this group on this interface."
     ::= { cHsrpGrpEntry 15 }
 
 cHsrpGrpVirtualMacAddr OBJECT-TYPE
@@ -457,11 +457,11 @@ cHsrpGrpVirtualMacAddr OBJECT-TYPE
         support a single Unicast Mac Address. In this case, only
         one HSRP group is allowed.
 
-        For TokenRing interfaces, the following three MAC 
+        For TokenRing interfaces, the following three MAC
         addresses are permitted (functional addresses):
                      C0:00:00:01:00:00
                      C0:00:00:02:00:00
-                     C0:00:00:04:00:00." 
+                     C0:00:00:04:00:00."
     ::= { cHsrpGrpEntry 16 }
 
 cHsrpGrpEntryRowStatus OBJECT-TYPE
@@ -471,7 +471,7 @@ cHsrpGrpEntryRowStatus OBJECT-TYPE
     DESCRIPTION
         "The control that allows modification, creation, and
         deletion of entries.  For detailed rules see the
-        DESCRIPTION for cHsrpGrpEntry." 
+        DESCRIPTION for cHsrpGrpEntry."
     ::= { cHsrpGrpEntry 17 }
 
 cHsrpGrpIpNone OBJECT-TYPE
@@ -481,9 +481,9 @@ cHsrpGrpIpNone OBJECT-TYPE
     DESCRIPTION
         "This object specifies the disable HSRP IPv4 virtual
         IP address."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cHsrpGrpEntry 18 }
- 
+
 
 -- Notifications
 
@@ -608,6 +608,3 @@ cHsrpGrpGroupSup OBJECT-GROUP
     ::= { cHsrpComplianceGroups 4 }
 
 END
-
-
-

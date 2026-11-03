@@ -1339,7 +1339,7 @@ dot1xSuppAccessCtrlWithAuth OBJECT-TYPE
         both a Supplicant and an Authenticator.
             inactive  indicates the port will not apply the
                       the Supplicant authorization state, using
-                      only the Authenticator authorization 
+                      only the Authenticator authorization
                       state to restrict access to the port.
             active    indicates the port will apply the
                       the Supplicant authorization state, as

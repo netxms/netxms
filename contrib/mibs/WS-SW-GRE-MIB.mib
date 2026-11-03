@@ -6,24 +6,24 @@
 --
 
 	WS-SW-GRE-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP, MODULE-COMPLIANCE			
-				FROM SNMPv2-CONF			
-			IpAddress, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			wsIfNumber			
-				FROM WS-SW-IF-MIB			
-			wsSwGre			
+			OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+			IpAddress, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			wsIfNumber
+				FROM WS-SW-IF-MIB
+			wsSwGre
 				FROM WS-SW-SMI;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.2.8.1
-		wsSwGreMIB MODULE-IDENTITY 
+		wsSwGreMIB MODULE-IDENTITY
 			LAST-UPDATED "200604271534Z"		-- April 27, 2006 at 15:34 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technologies"
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Symbol Technologies, Inc.
 				Customer Service
 				Postal:
@@ -33,22 +33,22 @@
 				Tel: +1. 631.738.6213
 				E-mail: support@symbol.com
 				Web: http://www.symbol.com/support"
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			REVISION "200605241654Z"		-- May 24, 2006 at 16:54 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a02"
 			REVISION "200604271543Z"		-- April 27, 2006 at 15:43 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"02a01"
 			::= { wsSwGre 1 }
 
-		
-	
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.2.8.1.1
 		wsSwGRETunnelTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwGRETunnelEntry
@@ -58,7 +58,7 @@
 				"Description."
 			::= { wsSwGreMIB 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.8.1.1.1
 		wsSwGRETunnelEntry OBJECT-TYPE
 			SYNTAX WsSwGRETunnelEntry
@@ -69,9 +69,9 @@
 			INDEX { wsIfNumber }
 			::= { wsSwGRETunnelTable 1 }
 
-		
+
 		WsSwGRETunnelEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwGRETunnelLocalIpAddr
 					IpAddress,
 				wsSwGRETunnelRemoteIpAddr
@@ -89,7 +89,7 @@
 				"Description."
 			::= { wsSwGRETunnelEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.8.1.1.1.2
 		wsSwGRETunnelRemoteIpAddr OBJECT-TYPE
 			SYNTAX IpAddress
@@ -99,7 +99,7 @@
 				"Description."
 			::= { wsSwGRETunnelEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.8.1.1.1.3
 		wsSwGRETunnelTTL OBJECT-TYPE
 			SYNTAX Unsigned32
@@ -109,39 +109,39 @@
 				"Description."
 			::= { wsSwGRETunnelEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.8.1.100
 		wsSwGreMIBConformance OBJECT IDENTIFIER ::= { wsSwGreMIB 100 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.8.1.100.1
 		wsSwGreMIBCompliances OBJECT IDENTIFIER ::= { wsSwGreMIBConformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.8.1.100.1.1
 		wsSwGreMIBCompliance MODULE-COMPLIANCE
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			MODULE -- this module
 				MANDATORY-GROUPS { wsSwGreMIBGroup }
 			::= { wsSwGreMIBCompliances 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.8.1.100.2
 		wsSwGreMIBGroups OBJECT IDENTIFIER ::= { wsSwGreMIBConformance 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.8.1.100.2.1
 		wsSwGreMIBGroup OBJECT-GROUP
 			OBJECTS { wsSwGRETunnelLocalIpAddr, wsSwGRETunnelRemoteIpAddr, wsSwGRETunnelTTL }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			::= { wsSwGreMIBGroups 1 }
 
-		
-	
+
+
 	END
 
 --

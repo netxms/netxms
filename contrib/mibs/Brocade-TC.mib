@@ -30,7 +30,7 @@ Brocade-TC DEFINITIONS ::= BEGIN
 		  Fax: +1-408-392-6656
 		  Email: support@Brocade.COM
 		  WEB: www.brocade.com"
-		
+
 
     DESCRIPTION	"The MIB module	contains all shared textual conventions
                  for Brocade specific MIBs.
@@ -42,9 +42,9 @@ Brocade-TC DEFINITIONS ::= BEGIN
 
   -- additional textual conventions
 
-  FcWwn 	::= TEXTUAL-CONVENTION		
+  FcWwn 	::= TEXTUAL-CONVENTION
      STATUS  current
-     DESCRIPTION   "The World Wide Name (WWN) of Brocade's 
+     DESCRIPTION   "The World Wide Name (WWN) of Brocade's
                     specific products and ports."
      SYNTAX  OCTET STRING (SIZE(8))
 

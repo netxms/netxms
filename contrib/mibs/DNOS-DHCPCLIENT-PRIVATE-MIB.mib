@@ -24,7 +24,7 @@ IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, IpAddress,
     Integer32, Unsigned32, Counter32, TimeTicks
                                         FROM SNMPv2-SMI
-    InterfaceIndex                      FROM IF-MIB    
+    InterfaceIndex                      FROM IF-MIB
     DisplayString                       FROM RFC1213-MIB
     dnOS                            FROM DELL-REF-MIB;
 
@@ -50,24 +50,24 @@ IMPORTS
 
     --**************************************************************************************
     agentdhcp4ClientLeaseParameters                      OBJECT IDENTIFIER ::= { fastPathDHCPClientPrivate 1 }
-    
+
     agentdhcp4ClientLeaseParametersTable OBJECT-TYPE
          SYNTAX      SEQUENCE OF Agentdhcp4ClientLeaseParametersEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "Displays DHCP Client Lease Information."
          ::= { agentdhcp4ClientLeaseParameters 1 }
-    
+
     agentdhcp4ClientLeaseParametersEntry OBJECT-TYPE
          SYNTAX      Agentdhcp4ClientLeaseParametersEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION 
+         DESCRIPTION
                      "Information about a table entry."
          INDEX       { agentdhcp4ClientInterfaceIndex }
          ::= { agentdhcp4ClientLeaseParametersTable 1 }
-         
+
     Agentdhcp4ClientLeaseParametersEntry ::= SEQUENCE {
          agentdhcp4ClientInterfaceIndex
               InterfaceIndex,
@@ -78,9 +78,9 @@ IMPORTS
          agentdhcp4ClientDhcpServerAddress
               IpAddress,
          agentdhcp4ClientState
-              INTEGER,          
+              INTEGER,
          agentdhcp4ClientTransactionID
-              DisplayString, 
+              DisplayString,
          agentdhcp4ClientLeaseTime
               TimeTicks,
          agentdhcp4ClientRenewTime
@@ -90,7 +90,7 @@ IMPORTS
          agentdhcp4ClientRetryCount
               Counter32
          }
-         
+
     agentdhcp4ClientInterfaceIndex OBJECT-TYPE
          SYNTAX      InterfaceIndex
          MAX-ACCESS  not-accessible
@@ -100,7 +100,7 @@ IMPORTS
          ::= { agentdhcp4ClientLeaseParametersEntry 1 }
 
     agentdhcp4ClientIpAddress      OBJECT-TYPE
-         SYNTAX      IpAddress 
+         SYNTAX      IpAddress
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -108,7 +108,7 @@ IMPORTS
          ::= { agentdhcp4ClientLeaseParametersEntry 2 }
 
     agentdhcp4ClientSubnetMask     OBJECT-TYPE
-         SYNTAX      IpAddress 
+         SYNTAX      IpAddress
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -116,7 +116,7 @@ IMPORTS
          ::= { agentdhcp4ClientLeaseParametersEntry 3 }
 
     agentdhcp4ClientDhcpServerAddress OBJECT-TYPE
-         SYNTAX      IpAddress 
+         SYNTAX      IpAddress
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -146,13 +146,13 @@ IMPORTS
          ::= { agentdhcp4ClientLeaseParametersEntry 5 }
 
     agentdhcp4ClientTransactionID  OBJECT-TYPE
-         SYNTAX      DisplayString 
+         SYNTAX      DisplayString
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
                      "The transaction ID of the DHCP Client ."
          ::= { agentdhcp4ClientLeaseParametersEntry 6 }
-  
+
     agentdhcp4ClientLeaseTime      OBJECT-TYPE
          SYNTAX      TimeTicks
          MAX-ACCESS  read-only
@@ -161,9 +161,9 @@ IMPORTS
                      "The time remaining since the IP address is leased by the DHCP Server.It is displayed
                      in days, hours, minutes and seconds."
          ::= { agentdhcp4ClientLeaseParametersEntry 7 }
- 
+
     agentdhcp4ClientRenewTime      OBJECT-TYPE
-         SYNTAX      TimeTicks 
+         SYNTAX      TimeTicks
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -172,7 +172,7 @@ IMPORTS
          ::= { agentdhcp4ClientLeaseParametersEntry 8 }
 
     agentdhcp4ClientRebindTime     OBJECT-TYPE
-         SYNTAX      TimeTicks 
+         SYNTAX      TimeTicks
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -181,7 +181,7 @@ IMPORTS
          ::= { agentdhcp4ClientLeaseParametersEntry 9 }
 
     agentdhcp4ClientRetryCount     OBJECT-TYPE
-         SYNTAX      Counter32 
+         SYNTAX      Counter32
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION

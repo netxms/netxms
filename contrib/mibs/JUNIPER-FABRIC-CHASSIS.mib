@@ -1,6 +1,6 @@
 --
 -- Juniper Enterprise Specific MIB: Fabric Chassis MIB
--- 
+--
 -- Copyright (c) 2012, Juniper Networks, Inc.
 -- All rights reserved.
 --
@@ -40,7 +40,7 @@ jnxFabricAnatomy MODULE-IDENTITY
     REVISION
         "201207260000Z" -- Thur July 26 00:00:00 2012 UTC
     DESCRIPTION
-        "Modified the description for JnxFabricDeviceId. Added 
+        "Modified the description for JnxFabricDeviceId. Added
          ufabric as part of JnxFabricContainersFamily."
 
     ::= { jnxDcfMibRoot 2 }
@@ -56,7 +56,7 @@ jnxFabricAnatomyTables     OBJECT IDENTIFIER ::= { jnxFabricAnatomy 2 }
 JnxFabricDeviceId ::= TEXTUAL-CONVENTION
     STATUS       current
     DESCRIPTION
-      "The device identifier assigned to the individual devices across the fabric by SFC. 
+      "The device identifier assigned to the individual devices across the fabric by SFC.
        This shall be a unique index for each of the devices constituting the fabric."
     SYNTAX	    Integer32 (1..2147483647)
 
@@ -78,7 +78,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
 
 -- Fabric Scalar Objects
 
-    jnxFabricClass OBJECT-TYPE 
+    jnxFabricClass OBJECT-TYPE
       SYNTAX	    OBJECT IDENTIFIER
       MAX-ACCESS    read-only
       STATUS	    current
@@ -100,7 +100,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The serial number of this subject, blank if unknown 
+            "The serial number of this subject, blank if unknown
             or unavailable."
       ::= { jnxFabricAnatomyScalars 3 }
 
@@ -129,7 +129,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       STATUS	    current
       DESCRIPTION
             "The value of sysUpTime when the subject was last
-            installed, up-and-running.  Zero if unknown or 
+            installed, up-and-running.  Zero if unknown or
             already up-and-running when the agent was up."
       ::= { jnxFabricAnatomyScalars 6 }
 
@@ -139,8 +139,8 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The value of sysUpTime when the fabric contents 
-            table last changed.  Zero if unknown or already 
+            "The value of sysUpTime when the fabric contents
+            table last changed.  Zero if unknown or already
             existing when the agent was up."
       ::= { jnxFabricAnatomyScalars 7 }
 
@@ -150,11 +150,11 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The value of sysUpTime when the fabric filled 
+            "The value of sysUpTime when the fabric filled
             status table last changed.  Zero if unknown or
             already at that state when the agent was up."
       ::= { jnxFabricAnatomyScalars 8 }
-      
+
 --
 -- Fabric Device Table
 --
@@ -209,7 +209,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                 "The family of container that defines this device."
       ::= { jnxFabricDeviceEntry 2 }
 
-    jnxFabricDeviceEntryClass OBJECT-TYPE 
+    jnxFabricDeviceEntryClass OBJECT-TYPE
       SYNTAX	    OBJECT IDENTIFIER
       MAX-ACCESS    read-only
       STATUS	    current
@@ -217,7 +217,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
               "The productline of the device entry."
       ::= { jnxFabricDeviceEntry 3 }
 
-    jnxFabricDeviceEntryModel OBJECT-TYPE 
+    jnxFabricDeviceEntryModel OBJECT-TYPE
       SYNTAX	    OBJECT IDENTIFIER
       MAX-ACCESS    read-only
       STATUS	    current
@@ -238,7 +238,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The serial number of this subject, blank if unknown 
+            "The serial number of this subject, blank if unknown
             or unavailable."
       ::= { jnxFabricDeviceEntry 6 }
 
@@ -276,7 +276,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       STATUS	    current
       DESCRIPTION
             "The value of sysUpTime when the subject was last
-            installed, up-and-running.  Zero if unknown or 
+            installed, up-and-running.  Zero if unknown or
             already up-and-running when the agent was up."
       ::= { jnxFabricDeviceEntry 10 }
 
@@ -286,8 +286,8 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The value of sysUpTime when the contents 
-            table last changed.  Zero if unknown or already 
+            "The value of sysUpTime when the contents
+            table last changed.  Zero if unknown or already
             existing when the agent was up."
       ::= { jnxFabricDeviceEntry 11 }
 
@@ -297,7 +297,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The value of sysUpTime when the filled 
+            "The value of sysUpTime when the filled
             status table last changed.  Zero if unknown or
             already at that state when the agent was up."
       ::= { jnxFabricDeviceEntry 12 }
@@ -385,7 +385,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
 
             The value is a bit map represented as a sum.
             If multiple bits are set, the specified
-            container(s) are located and accessible from 
+            container(s) are located and accessible from
             that set of views.
 
             The various values representing the bit positions
@@ -397,12 +397,12 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                16   leftHandSide
                32   rightHandSide
 
-            Note 1: 
+            Note 1:
             LefHandSide and rightHandSide are referred
             to based on the view from the front.
 
-            Note 2: 
-            If the specified containers are scattered 
+            Note 2:
+            If the specified containers are scattered
             around various views, the numbering is according
             to the following sequence:
                 front -> rear -> top -> bottom
@@ -410,10 +410,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
             For each view plane, the numbering sequence is
             first from left to right, and then from up to down.
 
-            Note 3: 
-            Even though the value in chassis hardware (e.g. 
+            Note 3:
+            Even though the value in chassis hardware (e.g.
             slot number) may be labelled from 0, 1, 2, and up,
-            all the indices in MIB start with 1 (not 0) 
+            all the indices in MIB start with 1 (not 0)
             according to network management convention."
       ::= { jnxFabricContainersEntry 3 }
 
@@ -428,10 +428,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       STATUS	    current
       DESCRIPTION
             "The abstraction level of the chassis or device.
-            It is enumerated from the outside to the inside, 
+            It is enumerated from the outside to the inside,
             from the outer layer to the inner layer.
-            For example, top level (i.e. level 0) refers to 
-            chassis frame, level 1 FPC slot within chassis 
+            For example, top level (i.e. level 0) refers to
+            chassis frame, level 1 FPC slot within chassis
             frame, level 2 PIC space within FPC slot."
       ::= { jnxFabricContainersEntry 4 }
 
@@ -440,9 +440,9 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The index of its next higher level container 
-            housing     this entry.  The associated 
-            jnxFabricContainersIndex in the jnxFabricContainersTable 
+            "The index of its next higher level container
+            housing     this entry.  The associated
+            jnxFabricContainersIndex in the jnxFabricContainersTable
             represents its next higher level container."
       ::= { jnxFabricContainersEntry 5 }
 
@@ -469,8 +469,8 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       STATUS	    current
       DESCRIPTION
             "The maximum number of containers of this level
-            per container of the next higher level.  
-            e.g. if there are six level 2 containers in 
+            per container of the next higher level.
+            e.g. if there are six level 2 containers in
             level 1 container, then jnxFabricContainersCount for
             level 2 is six."
       ::= { jnxFabricContainersEntry 8 }
@@ -521,10 +521,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The associated jnxFabricContainersIndex in the 
+            "The associated jnxFabricContainersIndex in the
             jnxFabricContainersTable."
       ::= { jnxFabricContentsEntry 1 }
-      
+
     jnxFabricContentsL1Index OBJECT-TYPE
       SYNTAX	    Integer32 (0..2147483647)
       MAX-ACCESS    read-only
@@ -578,7 +578,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The serial number of this subject, blank if 
+            "The serial number of this subject, blank if
             unknown or unavailable."
       ::= { jnxFabricContentsEntry 7 }
 
@@ -587,7 +587,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The revision of this subject, blank if unknown 
+            "The revision of this subject, blank if unknown
             or unavailable."
       ::= { jnxFabricContentsEntry 8 }
 
@@ -597,7 +597,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The value of sysUpTime when the subject was last 
+            "The value of sysUpTime when the subject was last
             installed, up-and-running.  Zero if unknown
             or already up-and-running when the agent was up."
       ::= { jnxFabricContentsEntry 9 }
@@ -607,7 +607,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The part number of this subject, blank if unknown 
+            "The part number of this subject, blank if unknown
             or unavailable."
       ::= { jnxFabricContentsEntry 10 }
 
@@ -661,7 +661,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
 --
 -- Fabric Filled Status Table
 --
--- This table show the empty/filled status of the container in the 
+-- This table show the empty/filled status of the container in the
 -- fabric containers table.
 --
 
@@ -702,10 +702,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The associated jnxFabricContainersIndex in the 
+            "The associated jnxFabricContainersIndex in the
             jnxFabricContainersTable."
       ::= { jnxFabricFilledEntry 1 }
-      
+
     jnxFabricFilledL1Index OBJECT-TYPE
       SYNTAX	    Integer32 (0..2147483647)
       MAX-ACCESS    read-only
@@ -779,7 +779,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
 --
 -- Fabric Operating Status Table
 --
--- This table reveals the operating status of some subjects 
+-- This table reveals the operating status of some subjects
 -- of interest in the fabric contents table.
 --
 
@@ -834,10 +834,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The associated jnxFabricContentsContainerIndex in the 
+            "The associated jnxFabricContentsContainerIndex in the
             jnxFabricContentsTable."
       ::= { jnxFabricOperatingEntry 1 }
-      
+
     jnxFabricOperatingL1Index OBJECT-TYPE
       SYNTAX	    Integer32 (0..2147483647)
       MAX-ACCESS    read-only
@@ -852,7 +852,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The level two index associated with this 
+            "The level two index associated with this
             subject.  Zero if unavailable or inapplicable."
       ::= { jnxFabricOperatingEntry 3 }
 
@@ -880,7 +880,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                           -- as a active primary
             ready(3),     -- ready to run, not running yet
             reset(4),     -- held in reset, not ready yet
-            runningAtFullSpeed(5),  
+            runningAtFullSpeed(5),
                           -- valid for fans only
             down(6),      -- down or off, for power supply
             standby(7)    -- running as a standby backup
@@ -897,7 +897,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The temperature in Celsius (degrees C) of this 
+            "The temperature in Celsius (degrees C) of this
             subject.  Zero if unavailable or inapplicable."
       ::= { jnxFabricOperatingEntry 7 }
 
@@ -906,10 +906,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The CPU utilization in percentage of this 
+            "The CPU utilization in percentage of this
             subject.  Zero if unavailable or inapplicable."
       ::= { jnxFabricOperatingEntry 8 }
-      
+
     jnxFabricOperatingISR OBJECT-TYPE
       SYNTAX	    Integer32
       MAX-ACCESS    read-only
@@ -919,7 +919,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
             spending in interrupt service routine (ISR).
             Zero if unavailable or inapplicable."
       ::= { jnxFabricOperatingEntry 9 }
-      
+
     jnxFabricOperatingDRAMSize OBJECT-TYPE
       SYNTAX	    Integer32
       MAX-ACCESS    read-only
@@ -935,17 +935,17 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       STATUS	    current
       DESCRIPTION
             "The buffer pool utilization in percentage
-            of this subject.  Zero if unavailable or 
+            of this subject.  Zero if unavailable or
             inapplicable."
       ::= { jnxFabricOperatingEntry 11 }
-      
+
     jnxFabricOperatingHeap OBJECT-TYPE
       SYNTAX	    Integer32
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The heap utilization in percentage of 
-            this subject.  Zero if unavailable or 
+            "The heap utilization in percentage of
+            this subject.  Zero if unavailable or
             inapplicable."
       ::= { jnxFabricOperatingEntry 12 }
 
@@ -956,7 +956,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       STATUS	    current
       DESCRIPTION
             "The time interval in 10-millisecond period
-            that this subject has been up and running.  
+            that this subject has been up and running.
             Zero if unavailable or inapplicable."
       ::= { jnxFabricOperatingEntry 13 }
 
@@ -966,8 +966,8 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The value of sysUpTime when this subject 
-            last restarted.  Zero if unavailable or 
+            "The value of sysUpTime when this subject
+            last restarted.  Zero if unavailable or
             inapplicable."
       ::= { jnxFabricOperatingEntry 14 }
 
@@ -977,7 +977,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The installed memory size in Megabytes 
+            "The installed memory size in Megabytes
             of this subject.  Zero if unavailable or
             inapplicable."
       ::= { jnxFabricOperatingEntry 15 }
@@ -988,7 +988,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                           -- as a active primary
             standby(2),   -- running as a standby backup
             ready(3),     -- ready to run, not running yet
-              runningAtFullSpeed(4),  
+              runningAtFullSpeed(4),
                           -- valid for fans only
             reset(5),     -- held in reset, not ready yet
             down(6),      -- down or off, for power supply
@@ -1062,7 +1062,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
 --
 -- Fabric Redundancy Information Table
 --
--- This table shows the internal configuration setting for the 
+-- This table shows the internal configuration setting for the
 -- available redundant subsystems or components in the fabric.
 --
 
@@ -1111,10 +1111,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The associated jnxFabricContentsContainerIndex in the 
+            "The associated jnxFabricContentsContainerIndex in the
             jnxFabricContentsTable."
       ::= { jnxFabricRedundancyEntry 1 }
-      
+
     jnxFabricRedundancyL1Index OBJECT-TYPE
       SYNTAX	    Integer32 (0..2147483647)
       MAX-ACCESS    read-only
@@ -1129,7 +1129,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The level two index associated with this 
+            "The level two index associated with this
             subject.  Zero if unavailable or inapplicable."
       ::= { jnxFabricRedundancyEntry 3 }
 
@@ -1236,9 +1236,9 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The timeout period in seconds, by the keepalive 
-            watchdog timer, before initiating a switch over to 
-            the backup subsystem.  Zero if unavailable or 
+            "The timeout period in seconds, by the keepalive
+            watchdog timer, before initiating a switch over to
+            the backup subsystem.  Zero if unavailable or
             inapplicable."
       ::= { jnxFabricRedundancyEntry 12 }
 
@@ -1247,7 +1247,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The elapsed time in seconds by this subject since 
+            "The elapsed time in seconds by this subject since
             receiving the last keepalive message from the other
             subsystems.  Zero if unavailable or inapplicable."
       ::= { jnxFabricRedundancyEntry 13 }
@@ -1257,9 +1257,9 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The total number of losses on keepalive messages 
+            "The total number of losses on keepalive messages
             between the master and backup subsystems as perceived
-            by this subject since the system is up and running.  
+            by this subject since the system is up and running.
             Zero if unavailable or inapplicable."
       ::= { jnxFabricRedundancyEntry 14 }
 
@@ -1281,7 +1281,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                 contents of this row exists."
         ::= { jnxFabricRedundancyEntry 16 }
 
-      
+
 --
 -- FRU (Field Replaceable Unit) Status Table
 --
@@ -1333,10 +1333,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The associated jnxFabricContentsContainerIndex in the 
+            "The associated jnxFabricContentsContainerIndex in the
             jnxFabricContentsTable."
       ::= { jnxFabricFruEntry 1 }
-      
+
     jnxFabricFruL1Index OBJECT-TYPE
       SYNTAX	    Integer32 (0..2147483647)
       MAX-ACCESS    read-only
@@ -1351,7 +1351,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The level two index associated with this 
+            "The level two index associated with this
             subject.  Zero if unavailable or inapplicable."
       ::= { jnxFabricFruEntry 3 }
 
@@ -1403,7 +1403,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       STATUS	    current
       DESCRIPTION
             "The slot number of this subject.  This is equivalent
-            to jnxFabricFruL1Index in meaning.  Zero if unavailable or 
+            to jnxFabricFruL1Index in meaning.  Zero if unavailable or
             inapplicable."
       ::= { jnxFabricFruEntry 7 }
 
@@ -1432,16 +1432,16 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The temperature in Celsius (degrees C) of this 
+            "The temperature in Celsius (degrees C) of this
             subject.  Zero if unavailable or inapplicable."
       ::= { jnxFabricFruEntry 9 }
 
     jnxFabricFruOfflineReason OBJECT-TYPE
       SYNTAX	    INTEGER {
             unknown(1),                 -- unknown or other
-            none(2),                    -- none 
-            error(3),                   -- error 
-            noPower(4),                 -- no power  
+            none(2),                    -- none
+            error(3),                   -- error
+            noPower(4),                 -- no power
             configPowerOff(5),              -- configured to power off
             configHoldInReset(6),           -- configured to hold in reset
             cliCommand(7),                  -- offlined by cli command
@@ -1526,7 +1526,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The value of sysUpTime when this subject was last 
+            "The value of sysUpTime when this subject was last
             powered off.  Zero if unavailable or inapplicable."
       ::= { jnxFabricFruEntry 11 }
 
@@ -1536,7 +1536,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       MAX-ACCESS    read-only
       STATUS	    current
       DESCRIPTION
-            "The value of sysUpTime when this subject was last 
+            "The value of sysUpTime when this subject was last
             powered on.  Zero if unavailable or inapplicable."
       ::= { jnxFabricFruEntry 12 }
 
@@ -1548,7 +1548,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       DESCRIPTION
             "The time interval in 10-millisecond period
             that this subject has been up and running
-            since the last power on time.  Zero if 
+            since the last power on time.  Zero if
             unavailable or inapplicable."
       ::= { jnxFabricFruEntry 13 }
 
@@ -1582,7 +1582,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
 --
 -- definition of chassis related traps
 --
-    -- Traps for chassis alarm conditions   
+    -- Traps for chassis alarm conditions
 
     jnxFabricPowerSupplyFailure NOTIFICATION-TYPE
       OBJECTS     { jnxFabricDeviceIndex,
@@ -1597,7 +1597,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
             "A jnxFabricPowerSupplyFailure trap signifies that
             the SNMP entity, acting in an agent role, has
             detected that the specified power supply in the
-            chassis has been in the failure (bad DC output) 
+            chassis has been in the failure (bad DC output)
             condition."
       ::= { jnxFabricChassisTraps 1 }
 
@@ -1613,8 +1613,8 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
       DESCRIPTION
             "A jnxFabricFanFailure trap signifies that the SNMP
             entity, acting in an agent role, has detected
-            that the specified cooling fan or impeller in 
-            the chassis has been in the failure (not spinning) 
+            that the specified cooling fan or impeller in
+            the chassis has been in the failure (not spinning)
             condition."
       ::= { jnxFabricChassisTraps 2 }
 
@@ -1628,8 +1628,8 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                     jnxFabricOperatingTemp }
       STATUS            current
       DESCRIPTION
-            "A jnxFabricOverTemperature trap signifies that the 
-            SNMP entity, acting in an agent role, has 
+            "A jnxFabricOverTemperature trap signifies that the
+            SNMP entity, acting in an agent role, has
             detected that the specified hardware component
             in the chassis has experienced over temperature
             condition."
@@ -1649,10 +1649,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                     jnxFabricRedundancySwitchoverReason }
       STATUS            current
       DESCRIPTION
-            "A jnxFabricRedundancySwitchover trap signifies that 
-            the SNMP entity, acting in an agent role, has 
+            "A jnxFabricRedundancySwitchover trap signifies that
+            the SNMP entity, acting in an agent role, has
             detected that the specified hardware component
-            in the chassis has experienced a redundancy 
+            in the chassis has experienced a redundancy
             switchover event defined as a change in state
             of jnxFabricRedundancyState from master to backup or
             vice versa."
@@ -1669,8 +1669,8 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                     jnxFabricFruSlot }
       STATUS            current
       DESCRIPTION
-            "A jnxFabricFruRemoval trap signifies that the SNMP 
-            entity, acting in an agent role, has detected 
+            "A jnxFabricFruRemoval trap signifies that the SNMP
+            entity, acting in an agent role, has detected
             that the specified FRU (Field Replaceable Unit)
             has been removed from the chassis."
       ::= { jnxFabricChassisTraps 5 }
@@ -1686,9 +1686,9 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                     jnxFabricFruSlot }
       STATUS            current
       DESCRIPTION
-            "A jnxFabricFruInsertion trap signifies that the SNMP 
+            "A jnxFabricFruInsertion trap signifies that the SNMP
             entity,     acting in an agent role, has detected that
-            the specified FRU (Field Replaceable Unit) has been 
+            the specified FRU (Field Replaceable Unit) has been
             inserted into the chassis."
       ::= { jnxFabricChassisTraps 6 }
 
@@ -1706,8 +1706,8 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                     jnxFabricFruLastPowerOn }
       STATUS            current
       DESCRIPTION
-            "A jnxFabricFruPowerOff trap signifies that the SNMP 
-            entity, acting in an agent role, has detected 
+            "A jnxFabricFruPowerOff trap signifies that the SNMP
+            entity, acting in an agent role, has detected
             that the specified FRU (Field Replaceable Unit)
             has been powered off in the chassis."
       ::= { jnxFabricChassisTraps 7 }
@@ -1726,9 +1726,9 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                     jnxFabricFruLastPowerOn }
       STATUS            current
       DESCRIPTION
-            "A jnxFabricFruPowerOn trap signifies that the SNMP 
+            "A jnxFabricFruPowerOn trap signifies that the SNMP
             entity,     acting in an agent role, has detected that
-            the specified FRU (Field Replaceable Unit) has been 
+            the specified FRU (Field Replaceable Unit) has been
             powered on in the chassis."
       ::= { jnxFabricChassisTraps 8 }
 
@@ -1802,7 +1802,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                 the specified FRU (Field Replaceable Unit) has
                 encountered some operational errors and gone into
                 check state in the chassis."
-        ::= { jnxFabricChassisTraps 12 }   
+        ::= { jnxFabricChassisTraps 12 }
 
     jnxFabricFEBSwitchover NOTIFICATION-TYPE
         OBJECTS         { jnxFabricDeviceIndex,
@@ -1871,7 +1871,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                  entity, acting in an agent role, has detected that
                  the specified  routing-engine/member has booted from
                  the back up root partition"
-         ::= { jnxFabricChassisTraps 16 }     
+         ::= { jnxFabricChassisTraps 16 }
 
 
     jnxFabricHighPower NOTIFICATION-TYPE
@@ -1888,7 +1888,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                  entity, acting in an agent role, has detected that
                  the specified fabric ASIC consumes more power than
                  expected"
-         ::= { jnxFabricChassisTraps 17 }     
+         ::= { jnxFabricChassisTraps 17 }
 
     -- Traps for chassis alarm cleared conditions
 
@@ -1902,10 +1902,10 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                     jnxFabricOperatingState }
       STATUS            current
       DESCRIPTION
-            "A jnxFabricPowerSupplyOK trap signifies that the 
+            "A jnxFabricPowerSupplyOK trap signifies that the
             SNMP entity, acting in an agent role, has
             detected that the specified power supply in the
-            chassis has recovered from the failure (bad DC output) 
+            chassis has recovered from the failure (bad DC output)
             condition."
       ::= { jnxFabricChassisOKTraps 1 }
 
@@ -1935,11 +1935,11 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                     jnxFabricOperatingTemp }
       STATUS            current
       DESCRIPTION
-            "A jnxFabricTemperatureOK trap signifies that the 
-            SNMP entity, acting in an agent role, has 
+            "A jnxFabricTemperatureOK trap signifies that the
+            SNMP entity, acting in an agent role, has
             detected that the specified hardware component
             in the chassis has recovered from over temperature
-            condition." 
+            condition."
       ::= { jnxFabricChassisOKTraps 3 }
 
     jnxFabricFruOK NOTIFICATION-TYPE
@@ -1959,7 +1959,7 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                 recovered from previous operational errors and it
                 is in ok state in the chassis."
         ::= { jnxFabricChassisOKTraps 4 }
-        
+
     jnxFabricHighPowerCleared NOTIFICATION-TYPE
         OBJECTS         { jnxFabricDeviceIndex,
                           jnxFabricContentsContainerIndex,
@@ -1973,6 +1973,5 @@ JnxFabricContainersFamily ::= TEXTUAL-CONVENTION
                  "A jnxFabricHighPowerCleared trap signifies that the SNMP
                  entity, acting in an agent role, has detected that
                  the specified fabric ASIC has cleared its high power condition"
-         ::= { jnxFabricChassisOKTraps 5 }         
+         ::= { jnxFabricChassisOKTraps 5 }
 END
-

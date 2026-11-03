@@ -99,7 +99,7 @@ ciscoStackMIB MODULE-IDENTITY
                  Modified moduleType to include:
                  'osm12t3e3', 'osm4GeWanGbicPlus', 'm7600Sip600',
                  'm7600Sip200', 'm7600Sip400', 'c7600ssc400',
-                 'c7600ssc600', 'esm2x10ge', 'rsp720', 'rsp720base', 
+                 'c7600ssc600', 'esm2x10ge', 'rsp720', 'rsp720base',
                  'c7600msfc4'.
 
                  Updated moduleSubType to include new hardwares:
@@ -147,7 +147,7 @@ ciscoStackMIB MODULE-IDENTITY
                  'wscac8700we'.
 
                  Modified moduleType to include:
-                 'osm4oc3PosMM', 'wsx6196rj21', 
+                 'osm4oc3PosMM', 'wsx6196rj21',
                  'wssup32ge3b', 'wsSvcIpSec1',
                  'wsx6148arj45', 'wsSvcWebVpnk9',
                  'ace106500k9', 'ace046500k9',
@@ -7426,33 +7426,33 @@ ipPermitTelnetConnectLimit OBJECT-TYPE
         SYNTAX          Unsigned32
         MAX-ACCESS      read-create
         STATUS          current
-        DESCRIPTION     "Indicates the telnet connection limit that 
-                        will be applied when accepting new telnet 
-                        connections for a specific host. A value of 
-                        zero means no limit will be applied for telnet 
+        DESCRIPTION     "Indicates the telnet connection limit that
+                        will be applied when accepting new telnet
+                        connections for a specific host. A value of
+                        zero means no limit will be applied for telnet
                         connections.
- 
+
        			Setting this object to a non-zero value will
-		        turn on the 'telnet' bit in the corresponding 
-		        ipPermitAccessType. Turnning off the 'telnet' 
+		        turn on the 'telnet' bit in the corresponding
+		        ipPermitAccessType. Turnning off the 'telnet'
 		        bit in the corresponding ipPermitAccessType will
 		        reset this ipPermitTelnetConnectLimit value to
 		        zero."
         DEFVAL          { 0 }
     	::= { ipPermitListEntry 5 }
-        
+
 ipPermitSshConnectLimit OBJECT-TYPE
         SYNTAX          Unsigned32
         MAX-ACCESS      read-create
         STATUS          current
-        DESCRIPTION     "Indicates the ssh connection limit that will 
-       			be applied when accepting new ssh connections 
-       			for a specific host. A value of zero means no 
+        DESCRIPTION     "Indicates the ssh connection limit that will
+       			be applied when accepting new ssh connections
+       			for a specific host. A value of zero means no
        			limit will be applied for ssh connections.
- 
+
        			Setting this object to a non-zero value will
-		        turn on the 'ssh' bit in the corresponding 
-		        ipPermitAccessType. Turnning off the 'ssh' bit 
+		        turn on the 'ssh' bit in the corresponding
+		        ipPermitAccessType. Turnning off the 'ssh' bit
 		        in the corresponding ipPermitAccessType will
 		        reset this ipPermitSshConnectLimit value to
 		        zero."
@@ -11647,10 +11647,10 @@ ciscoStackgMIBCompliance8 MODULE-COMPLIANCE
         DESCRIPTION   "The notificationGroup is an optional group
                       containing notifications supported on the device."
         GROUP ipPermitGroup3
-        DESCRIPTION   "The ipPermitGroup3 is an optional group containing 
-                      objects providing information about the ip permit 
+        DESCRIPTION   "The ipPermitGroup3 is an optional group containing
+                      objects providing information about the ip permit
                       connection limit for a specific host."
-        
+
         ::= { ciscoStackMIBCompliances 8 }
 
 -- units of conformance
@@ -13038,16 +13038,13 @@ notificationGroup NOTIFICATION-GROUP
         ::= { ciscoStackMIBGroups 77 }
 
 ipPermitGroup3 OBJECT-GROUP
-        OBJECTS { 
+        OBJECTS {
                 ipPermitTelnetConnectLimit,
                 ipPermitSshConnectLimit
         }
         STATUS          current
-        DESCRIPTION     "A collection of objects providing configuration 
-                        information on ip permit connection limit for a 
+        DESCRIPTION     "A collection of objects providing configuration
+                        information on ip permit connection limit for a
                         specific host."
-        ::= { ciscoStackMIBGroups 78 }         
+        ::= { ciscoStackMIBGroups 78 }
 END
-
-
-

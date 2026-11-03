@@ -179,7 +179,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "A table that contains WRED Profile Entrys."
 		::= { swWredMgmt 4 }
-		
+
   swWredProfileEntry  OBJECT-TYPE
 		SYNTAX  SwWredProfileEntry
 		MAX-ACCESS  not-accessible
@@ -188,7 +188,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		      "A list that contains WRED profile entrys."
 		INDEX   { swWredProfileIndex }
 		::= { swWredProfileTable 1 }
-		
+
 	SwWredProfileEntry ::=
 		SEQUENCE {
 		swWredProfileIndex
@@ -198,7 +198,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		swWredProfileRowStatus
 		    RowStatus
 		}
-		
+
   swWredProfileIndex OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -214,7 +214,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		STATUS  current
 		DESCRIPTION
 		      "This object indicates the profile name,The profile name can not be same."
-		::= { swWredProfileEntry 2 }   
+		::= { swWredProfileEntry 2 }
 
   swWredProfileRowStatus	OBJECT-TYPE
 	    SYNTAX      RowStatus
@@ -224,7 +224,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
 	        "This object indicates the status of this entry."
 
 	    ::= { swWredProfileEntry 3 }
-	    
+
 -- -----------------------------------------------------------------------------
 
   swWredProfileCfgTable  OBJECT-TYPE
@@ -234,8 +234,8 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "A table that contains WRED profile every parameter."
 		::= { swWredMgmt 5 }
-		
-		
+
+
   swWredProfileCfgEntry  OBJECT-TYPE
 		  SYNTAX  SwWredProfileCfgEntry
 		  MAX-ACCESS  not-accessible
@@ -244,8 +244,8 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		        "A list that contains WRED profile parameter for each profile."
 		  INDEX   { swWredProfileCfgIndex,swWredProfileCfgPacketType,swWredProfileCfgPacketColor }
 		  ::= { swWredProfileCfgTable 1 }
-		  
-		  
+
+
 	SwWredProfileCfgEntry ::=
 		SEQUENCE {
 		swWredProfileCfgIndex
@@ -253,16 +253,16 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		swWredProfileCfgPacketType
 		    INTEGER,
 		swWredProfileCfgPacketColor
-		    INTEGER, 
+		    INTEGER,
 		swWredProfileCfgMinThreshold
 		    INTEGER,
 		swWredProfileCfgMaxThreshold
 		    INTEGER,
 		swWredProfileCfgMaxDropRate
 		    INTEGER
-		}         
-		
-		
+		}
+
+
   swWredProfileCfgIndex OBJECT-TYPE
 		SYNTAX  INTEGER (1..128)
 		MAX-ACCESS  read-only
@@ -270,7 +270,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "This object indicates the profile number."
 		::= { swWredProfileCfgEntry 1 }
-		
+
 
   swWredProfileCfgPacketType OBJECT-TYPE
 		SYNTAX  INTEGER {
@@ -297,7 +297,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
     		::= { swWredProfileCfgEntry 3 }
 
 
-		
+
   swWredProfileCfgMinThreshold OBJECT-TYPE
 		SYNTAX  INTEGER (0..100)
 		MAX-ACCESS  read-write
@@ -306,8 +306,8 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		      "This object indicates the percentage of queue size
 		       to start dropping (0-100)."
 		::= { swWredProfileCfgEntry 4 }
-		
-		
+
+
   swWredProfileCfgMaxThreshold OBJECT-TYPE
 		SYNTAX  INTEGER (0..100)
 		MAX-ACCESS  read-write
@@ -316,17 +316,17 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		      "This object indicates the percentage of queue size
 		       over which WRED will drop all packets (0-100)."
 		::= { swWredProfileCfgEntry 5 }
-		  
-		  
+
+
   swWredProfileCfgMaxDropRate OBJECT-TYPE
 		SYNTAX  INTEGER (0..100)
 		MAX-ACCESS  read-write
 		STATUS  current
 		DESCRIPTION
-		      "This object indicates the drop probability that the 
+		      "This object indicates the drop probability that the
 		       percentage of queue size reaches max threshold."
 		::= { swWredProfileCfgEntry 6 }
-		
+
 
 -- -----------------------------------------------------------------------------
 
@@ -337,7 +337,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "A table that contains ports WRED profile binded."
 		::= { swWredMgmt 6 }
-		
+
 
   swWredPortProfileEntry  OBJECT-TYPE
 		SYNTAX  SwWredPortProfileEntry
@@ -347,7 +347,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		      "A list that contains port and WRED profile id."
 		INDEX   { swWredPortProfilePortIndex,swWredPortProfileClassIndex }
 		::= { swWredPortProfileTable 1 }
-		
+
 
 	SwWredPortProfileEntry ::=
 		SEQUENCE {
@@ -360,8 +360,8 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		swWredPortWeightNum
 		    INTEGER
 		}
-		
-		
+
+
   swWredPortProfilePortIndex  OBJECT-TYPE
 		SYNTAX  INTEGER (1..65535)
 		MAX-ACCESS  read-only
@@ -369,8 +369,8 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "This object indicates the port number."
 		::= { swWredPortProfileEntry 1 }
-		
-		
+
+
   swWredPortProfileClassIndex 	OBJECT-TYPE
 		SYNTAX  INTEGER (0..7)
 		MAX-ACCESS  read-only
@@ -378,8 +378,8 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "This object indicates the hardware priority queue number (0-7)."
 		::= { swWredPortProfileEntry 2 }
-		
-		
+
+
   swWredPortProfileId  OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-write
@@ -387,7 +387,7 @@ WRED-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "This object indicates profile ID that port and queue binded,
 		      the minimum value should be 1 and the maximum is depended on project."
-		::= { swWredPortProfileEntry 3 }	  	
+		::= { swWredPortProfileEntry 3 }
 
   swWredPortWeightNum  OBJECT-TYPE
 		SYNTAX  INTEGER

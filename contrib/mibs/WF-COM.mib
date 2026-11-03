@@ -26,7 +26,7 @@ IMPORTS
     FROM RFC1155-SMI;
 
 --
--- Top level sub-trees. 
+-- Top level sub-trees.
 --
 wellfleet                       OBJECT IDENTIFIER ::= { enterprises 18 }
 wfSwSeries7                    OBJECT IDENTIFIER ::= { wellfleet 3 }

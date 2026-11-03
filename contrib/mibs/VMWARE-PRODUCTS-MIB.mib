@@ -1,5 +1,5 @@
 -- **********************************************************
--- Copyright 2007-2013 VMware, Inc.  All rights reserved. 
+-- Copyright 2007-2013 VMware, Inc.  All rights reserved.
 -- **********************************************************
 
 VMWARE-PRODUCTS-MIB DEFINITIONS ::= BEGIN
@@ -23,7 +23,7 @@ vmwProducts MODULE-IDENTITY
                 "
        DESCRIPTION
                "This MIB module provides the OID identifiers
-                which are returned from SNMPv2-MIB sysObjectId for 
+                which are returned from SNMPv2-MIB sysObjectId for
                 agents in specific VMware products.
                "
        REVISION      "201301260000Z"

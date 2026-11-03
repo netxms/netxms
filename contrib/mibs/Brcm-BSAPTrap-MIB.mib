@@ -1,7 +1,7 @@
 Brcm-BSAPTrap-MIB DEFINITIONS ::= BEGIN
 
           -- Broadcom(R) Advanced Server Trap MIB
-          -- 
+          --
 
           IMPORTS
                   enterprises, OBJECT-TYPE, Counter
@@ -39,7 +39,7 @@ Brcm-BSAPTrap-MIB DEFINITIONS ::= BEGIN
         ::= { baspTrap 2 }
 
     trapCauseDirection OBJECT-TYPE
-        SYNTAX INTEGER 
+        SYNTAX INTEGER
               {
 				   adapterActive(1),
 				   adapterInactive(2),
@@ -57,7 +57,7 @@ Brcm-BSAPTrap-MIB DEFINITIONS ::= BEGIN
         ::= { baspTrap 3 }
 
     trapAdapterActivityCause OBJECT-TYPE
-        SYNTAX INTEGER 
+        SYNTAX INTEGER
               {
 				   none(1),
 				   linkChange(2),
@@ -68,7 +68,7 @@ Brcm-BSAPTrap-MIB DEFINITIONS ::= BEGIN
         STATUS    mandatory
         DESCRIPTION
             "Addition explanation for the Event trapCauseDirection.
-             This field only applies to the the adapterActive or 
+             This field only applies to the the adapterActive or
              adapterInactive values in the trapCauseDirection Event."
         ::= { baspTrap 4 }
 
@@ -78,11 +78,11 @@ Brcm-BSAPTrap-MIB DEFINITIONS ::= BEGIN
    failoverEvent TRAP-TYPE
         ENTERPRISE     baspTrap
         VARIABLES      {	trapAdapterName,
-        				 	trapTeamName, 
+        				 	trapTeamName,
         					trapCauseDirection,
         					trapAdapterActivityCause }
-        DESCRIPTION     
-            "This trap is generated to indicate that adapter Fail-Over 
+        DESCRIPTION
+            "This trap is generated to indicate that adapter Fail-Over
             event has occured"
             --#SEVERITY INFORMATIONAL
         ::= 1

@@ -1,8 +1,8 @@
 -- ****************************************************************************
 -- RADENSOLUTIONS-SMI - Raden Solutions SIA structure of management informaton
---   
+--
 -- Copyright (c) 2021 Raden Solutions
---   
+--
 -- ****************************************************************************
 
 RADENSOLUTIONS-SMI DEFINITIONS ::= BEGIN

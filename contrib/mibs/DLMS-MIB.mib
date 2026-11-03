@@ -20,13 +20,13 @@ DLMS-MIB DEFINITIONS ::= BEGIN
         MODULE-IDENTITY,
         OBJECT-TYPE,
         NOTIFICATION-TYPE,
-        Integer32            
-                    										FROM SNMPv2-SMI                                       
+        Integer32
+                    										FROM SNMPv2-SMI
         DisplayString        						FROM SNMPv2-TC
         dlink-common-mgmt								FROM DLINK-ID-REC-MIB;
-        
-		 
-    	
+
+
+
     swDlmsMIB MODULE-IDENTITY
           LAST-UPDATED "201108100000Z"
           ORGANIZATION "D-Link Corporation"
@@ -41,13 +41,13 @@ DLMS-MIB DEFINITIONS ::= BEGIN
           DESCRIPTION
 		    			"The D-Link License Management System module"
         ::= { dlink-common-mgmt 101 }
-    
-    swDlmsNotifications			OBJECT IDENTIFIER ::= { swDlmsMIB 0 }                       
+
+    swDlmsNotifications			OBJECT IDENTIFIER ::= { swDlmsMIB 0 }
     swDlmsObjects						OBJECT IDENTIFIER ::= { swDlmsMIB 1 }
     	swDlmsGeneralGroup			OBJECT IDENTIFIER ::= { swDlmsObjects 1 }
     	swDlmsLicense						OBJECT IDENTIFIER ::= { swDlmsObjects 2 }
     	swDlmsStackLicense			OBJECT IDENTIFIER ::= { swDlmsObjects 3 }
- 
+
 -- -----------------------------------------------------------------------------
 -- swDlmsGeneralGroup     OBJECT IDENTIFIER ::= { swDlmsObjects 1 }
 -- -----------------------------------------------------------------------------
@@ -60,17 +60,17 @@ DLMS-MIB DEFINITIONS ::= BEGIN
 						 swDlmsInstallStackUnitId, to be used to specify the unit ID
  						 when performing an AC installation."
         ::= { swDlmsGeneralGroup 1 }
-                
+
     swDlmsInstallStackUnitId OBJECT-TYPE
         SYNTAX  Integer32
         MAX-ACCESS read-write
         STATUS  current
         DESCRIPTION
-             "Specifies which unit of the switch stack the activation code will 
+             "Specifies which unit of the switch stack the activation code will
               be installed. If the ID equals zero, it means the current device."
 				DEFVAL { 0 }
         ::={ swDlmsGeneralGroup 2 }
-      
+
 -- -----------------------------------------------------------------------------
 -- swDlmsLicense					OBJECT IDENTIFIER ::= { swDlmsObjects 2 }
 -- -----------------------------------------------------------------------------
@@ -80,7 +80,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
         STATUS			current
         DESCRIPTION
             "This table indicates license model.
-             The table is for non-stackable device."            
+             The table is for non-stackable device."
         ::= { swDlmsLicense 1 }
 
     swDlmsLicenseModelEntry OBJECT-TYPE
@@ -99,7 +99,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
             swDlmsLicenseModelRemaining
                 DisplayString
         }
-        
+
     swDlmsLicenseModelName OBJECT-TYPE
         SYNTAX			DisplayString
         MAX-ACCESS	read-only
@@ -107,7 +107,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the license model name."
 				::= { swDlmsLicenseModelEntry 1 }
-        
+
     swDlmsLicenseModelRemaining OBJECT-TYPE
         SYNTAX			DisplayString
         MAX-ACCESS  read-only
@@ -115,7 +115,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the license remaining time."
         ::= { swDlmsLicenseModelEntry 2 }
-                   
+
 -- -----------------------------------------------------------------------------
 		swDlmsLicenseAcTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwDlmsLicenseAcEntry
@@ -157,8 +157,8 @@ DLMS-MIB DEFINITIONS ::= BEGIN
         STATUS 			current
         DESCRIPTION
             "This object indicates the AC status."
-        ::= { swDlmsLicenseAcEntry 2 }  
-  
+        ::= { swDlmsLicenseAcEntry 2 }
+
 -- -----------------------------------------------------------------------------
 -- swDlmsStackLicense					OBJECT IDENTIFIER ::= { swDlmsObjects 3 }
 -- -----------------------------------------------------------------------------
@@ -168,7 +168,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
         STATUS			current
         DESCRIPTION
             "This table indicates information about license models of devices
-             stacked with the current device.             
+             stacked with the current device.
              The table is for stackable device."
         ::= { swDlmsStackLicense 1 }
 
@@ -186,13 +186,13 @@ DLMS-MIB DEFINITIONS ::= BEGIN
     SwDlmsStackLicenseModelEntry ::=
         SEQUENCE {
         		swDlmsStackLicenseModelUnitId
-        				Integer32,	
+        				Integer32,
             swDlmsStackLicenseModelName
                 DisplayString,
             swDlmsStackLicenseModelRemaining
                 DisplayString
         }
-        
+
     swDlmsStackLicenseModelUnitId OBJECT-TYPE
         SYNTAX			Integer32
         MAX-ACCESS	read-only
@@ -201,7 +201,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
             "Specifies which unit of the switch stack.
              If the ID equals zero, it means the current device."
 				::= { swDlmsStackLicenseModelEntry 1 }
-        
+
     swDlmsStackLicenseModelName OBJECT-TYPE
         SYNTAX			DisplayString
         MAX-ACCESS	read-only
@@ -209,7 +209,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the license model name."
 				::= { swDlmsStackLicenseModelEntry 2 }
-        
+
     swDlmsStackLicenseModelRemaining OBJECT-TYPE
         SYNTAX			DisplayString
         MAX-ACCESS  read-only
@@ -217,7 +217,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the license remaining time."
         ::= { swDlmsStackLicenseModelEntry 3 }
-                   
+
 -- -----------------------------------------------------------------------------
 		swDlmsStackLicenseAcTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwDlmsStackLicenseAcEntry
@@ -225,7 +225,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
         STATUS			current
         DESCRIPTION
             "This table indicates information about activation codes of devices
-             stacked with the current device.             
+             stacked with the current device.
              The table is for stackable device."
         ::= { swDlmsStackLicense 2 }
 
@@ -268,7 +268,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
 
 -- -----------------------------------------------------------------------------
 -- swDlmsNotifications		OBJECT IDENTIFIER ::= { swDlmsMIB 0 }
--- -----------------------------------------------------------------------------  
+-- -----------------------------------------------------------------------------
 		swDlmsIllegalAc NOTIFICATION-TYPE
 				OBJECTS {
 									swDlmsInstallAc
@@ -277,7 +277,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
 				DESCRIPTION
 					"Generated when the user inputs an illegal activation code."
 				::= { swDlmsNotifications 1 }
-      
+
 		swDlmsLicenseExpired NOTIFICATION-TYPE
       OBJECTS {
         				swDlmsLicenseModelName,
@@ -298,7 +298,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
       DESCRIPTION
           "The notification is sent when a license of non-stackable device was installed successfully."
       ::= { swDlmsNotifications 3 }
-      
+
 		swDlmsLicenseExpiresIn30Days NOTIFICATION-TYPE
       OBJECTS {
         				swDlmsLicenseModelName,
@@ -308,7 +308,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
       DESCRIPTION
           "When a license of non-stackable device is going to expire, the notification is sent before 30 days."
       ::= { swDlmsNotifications 4 }
-      
+
 		swDlmsStackLicenseExpired NOTIFICATION-TYPE
       OBJECTS {
         				swDlmsStackLicenseModelUnitId,
@@ -330,7 +330,7 @@ DLMS-MIB DEFINITIONS ::= BEGIN
       DESCRIPTION
           "The notification is sent when a license of devices stacked was installed successfully."
       ::= { swDlmsNotifications 22 }
-      
+
 		swDlmsStackLicenseExpiresIn30Days NOTIFICATION-TYPE
       OBJECTS {
         				swDlmsStackLicenseModelUnitId,

@@ -21,9 +21,9 @@ UDP-Helper-MIB DEFINITIONS ::= BEGIN
         RowStatus           						FROM SNMPv2-TC
         DisplayString                   FROM RFC1213-MIB
         dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
-        
-		 
-    	
+
+
+
     swUDPHelperMIB MODULE-IDENTITY
           LAST-UPDATED "201101100000Z"
           ORGANIZATION "D-Link Corp."
@@ -32,10 +32,10 @@ UDP-Helper-MIB DEFINITIONS ::= BEGIN
           DESCRIPTION
 		    "The Structure of UDP Helper management for the proprietary enterprise."
         ::= { dlink-common-mgmt 99 }
-                           
+
     swUDPHelperMIBObjects			OBJECT IDENTIFIER ::= { swUDPHelperMIB 1 }
     swUDPHelperGeneralGroup      	OBJECT IDENTIFIER ::= { swUDPHelperMIBObjects 1 }
- 
+
 -- -----------------------------------------------------------------------------
 -- swUDPHelperCtrl                OBJECT IDENTIFIER ::= { swUDPHelperMIB 1 }
 -- -----------------------------------------------------------------------------
@@ -52,7 +52,7 @@ UDP-Helper-MIB DEFINITIONS ::= BEGIN
              disabled.
             "
         ::= { swUDPHelperGeneralGroup 1 }
-      
+
 -- -----------------------------------------------------------------------------
 -- swUDPHelperMgmt                OBJECT IDENTIFIER ::= { swUDPHelperMIB 2 }
 -- -----------------------------------------------------------------------------
@@ -83,17 +83,17 @@ UDP-Helper-MIB DEFINITIONS ::= BEGIN
             swUDPHelperPortCtrlRowStatus
                 RowStatus
         }
-        
+
     swUDPHelperPortNumber OBJECT-TYPE
         SYNTAX INTEGER
         MAX-ACCESS  not-accessible
         STATUS current
         DESCRIPTION
             "This object indicates the UDP ports that
-             UDP Helper would process. The default UDP 
-             port is NULL. The max ports numbers can be 
+             UDP Helper would process. The default UDP
+             port is NULL. The max ports numbers can be
              configured is project dependent support.
-             
+
              37: time, Time service;
              49: tacacs, Terminal Access Controller Access Control System service;
              53: dns, Domain Naming System;
@@ -101,7 +101,7 @@ UDP-Helper-MIB DEFINITIONS ::= BEGIN
              137: netbios-ns, NetBIOS Name Server;
              138: netbios-ds, NetBIOS Datagram Server."
         ::= { swUDPHelperPortCtrlEntry 1 }
-        
+
     swUDPHelperPortCtrlRowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
@@ -109,12 +109,12 @@ UDP-Helper-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the status of this entry."
         ::= { swUDPHelperPortCtrlEntry 2 }
-        
-           
+
+
 -- -----------------------------------------------------------------------------
--- swUDPHelperServerCtrlTable          
--- -----------------------------------------------------------------------------        
-                
+-- swUDPHelperServerCtrlTable
+-- -----------------------------------------------------------------------------
+
     swUDPHelperServerCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwUDPHelperServerCtrlEntry
         MAX-ACCESS  not-accessible
@@ -169,5 +169,5 @@ UDP-Helper-MIB DEFINITIONS ::= BEGIN
         ::= { swUDPHelperServerCtrlEntry 3 }
 
 
-   
+
 END

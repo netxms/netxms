@@ -3,7 +3,7 @@
 -- FILE NAME: IpMcstVlanRep.mib
 -- DATE     : 2009/06/15
 -- VERSION  : 1.01
--- PURPOSE  : To construct the MIB structure of static configuration of IP 
+-- PURPOSE  : To construct the MIB structure of static configuration of IP
 --            multicast VLAN replication function for proprietary enterprise
 -- -----------------------------------------------------------------------------
 -- MODIFICTION HISTORY:
@@ -17,7 +17,7 @@
 -- Version 1.01 2009/06/15, Phoenix Xie
 -- [New Object]
 -- Add swIpMcastInfoTable for displaying the IP multicast VLAN replication entries.
--- 
+--
 -- Version 1.00, 2008/9/28, Bob Li
 -- This is the first formal version for universal MIB definition.
 -- -----------------------------------------------------------------------------
@@ -32,15 +32,15 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
         InetAddressType, InetAddress      FROM INET-ADDRESS-MIB
         dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
 
-		
-    	
+
+
     swIpMcstVlanRepMIB MODULE-IDENTITY
           LAST-UPDATED "0906150000Z"
           ORGANIZATION "D-Link Corp."
           CONTACT-INFO
                        "http://support.dlink.com"
           DESCRIPTION
-		    "The structure of static IP multicast VLAN 
+		    "The structure of static IP multicast VLAN
 		    replication for the proprietary enterprise."
         ::= { dlink-common-mgmt 71 }
 
@@ -48,10 +48,10 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
 -- Textual Conventions
 -- -----------------------------------------------------------------------------
 
-             
+
     PortList                 ::= OCTET STRING(SIZE (0..127))
-    VlanId	             ::= INTEGER (1..4094)    
-   	
+    VlanId	             ::= INTEGER (1..4094)
+
     swIpMcstVlanRepCtrl        OBJECT IDENTIFIER ::= { swIpMcstVlanRepMIB 1 }
     swIpMcstVlanRepInfo        OBJECT IDENTIFIER ::= { swIpMcstVlanRepMIB 2 }
     swIpMcstVlanRepMgmt        OBJECT IDENTIFIER ::= { swIpMcstVlanRepMIB 3 }
@@ -71,11 +71,11 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
                "This indicates the global state of the static IP multicast VLAN replication."
         ::={ swIpMcstVlanRepCtrl 1 }
-    
+
 -- -----------------------------------------------------------------------------
 --  swIpMcstVlanRepInfo		OBJECT IDENTIFIER ::= { swIpMcstVlanRepMIB 2 }
 -- -----------------------------------------------------------------------------
-                                                                                                  	
+
 -- -----------------------------------------------------------------------------
 -- swIpMcastVlanRepInfoTable		OBJECT-TYPE ::= { swIpMcstVlanRepInfo 1 }
 -- -----------------------------------------------------------------------------
@@ -123,7 +123,7 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the destination IP Address type of
             IP Multicast VLAN Replication."
-        ::= { swIpMcastVlanRepInfoEntry 1 }	        	
+        ::= { swIpMcastVlanRepInfoEntry 1 }
 
      swIpMcstVlanRepGroupAddr OBJECT-TYPE
         SYNTAX  InetAddress
@@ -133,7 +133,7 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
             "This object indicates the destination IP Address of
             IP Multicast VLAN Replication."
         ::= { swIpMcastVlanRepInfoEntry 2 }
-        
+
       swIpMcstVlanRepSourceAddrType OBJECT-TYPE
         SYNTAX  InetAddressType
         MAX-ACCESS  not-accessible
@@ -151,7 +151,7 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
             "This object indicates the source IP Address of
             IP Multicast VLAN Replication."
         ::= { swIpMcastVlanRepInfoEntry 4 }
-                        	
+
      swIpMcstVlanRepStatus OBJECT-TYPE
        SYNTAX  INTEGER
                 {
@@ -162,9 +162,9 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates whether the (S,G) has been inserted successfully."
-        ::= { swIpMcastVlanRepInfoEntry 5 }	        	
+        ::= { swIpMcastVlanRepInfoEntry 5 }
 
-	     	
+
 -- -----------------------------------------------------------------------------
 -- swMcstVlanMgmt
 -- -----------------------------------------------------------------------------
@@ -180,7 +180,7 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
                "This indicates the TTL decrease state of the static IP multicast VLAN replication."
         ::={ swIpMcstVlanRepMgmt 1 }
-        
+
     swIpMcstVlanRepSrcMacStatus  OBJECT-TYPE
         SYNTAX  INTEGER
                 {
@@ -219,16 +219,16 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
             swIpMcstVlanRepRowStatus
                 RowStatus
             	}
-            	
+
     swIpMcstVlanRepName OBJECT-TYPE
         SYNTAX  DisplayString
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "This indicates the name of the static IP multicast 
+            "This indicates the name of the static IP multicast
              VLAN replication entry."
-        ::= { swIpMcstVlanRepEntry 1 }      	
-        
+        ::= { swIpMcstVlanRepEntry 1 }
+
     swIpMcstVlanRepSrcVID OBJECT-TYPE
         SYNTAX  VlanId
         MAX-ACCESS  read-write
@@ -237,17 +237,17 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
             "This indicates the source VLAN ID of the static IP multicast VLAN replication entry.
             The source VLAN must be in 802.1Q static VLAN list."
         ::= { swIpMcstVlanRepEntry 2 }
-        
+
     swIpMcstVlanRepRowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "This indicates the status of this entry."
-        ::= { swIpMcstVlanRepEntry 3 }	
-   
---source info   
-        
+        ::= { swIpMcstVlanRepEntry 3 }
+
+--source info
+
      swIpMcstVlanRepSrcTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwIpMcstVlanRepSrcEntry
         MAX-ACCESS  not-accessible
@@ -255,8 +255,8 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This contains information about source traffic of static IP multicast VLAN replication.
             It depends on the swIpMcstVlanRepTable."
-        ::= { swIpMcstVlanRepMgmt 4 }  	
-        
+        ::= { swIpMcstVlanRepMgmt 4 }
+
     swIpMcstVlanRepSrcEntry OBJECT-TYPE
         SYNTAX  SwIpMcstVlanRepSrcEntry
         MAX-ACCESS  not-accessible
@@ -266,7 +266,7 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
         INDEX  { swIpMcstVlanRepName,swIpMcstVlanRepGrpAddrType,swIpMcstVlanRepGrpAddrStart,
         		swIpMcstVlanRepGrpAddrEnd,swIpMcstVlanRepSrcAddrType,swIpMcstVlanRepSrcAddr}
         ::= { swIpMcstVlanRepSrcTable 1 }
-        
+
     SwIpMcstVlanRepSrcEntry ::=
         SEQUENCE {
        	   swIpMcstVlanRepGrpAddrType
@@ -282,63 +282,63 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
            swIpMcstVlanRepSrcRowStatus
                 RowStatus
             	}
-            	
-            
+
+
       swIpMcstVlanRepGrpAddrType OBJECT-TYPE
     	SYNTAX  InetAddressType
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "This indicates the type of group IP of the static IP multicast 
+            "This indicates the type of group IP of the static IP multicast
             VLAN replication entry."
-        ::= { swIpMcstVlanRepSrcEntry 1 }     	
-            
+        ::= { swIpMcstVlanRepSrcEntry 1 }
+
       swIpMcstVlanRepGrpAddrStart OBJECT-TYPE
     	SYNTAX  InetAddress
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "This indicates the starting address of the group range of the static IP multicast 
+            "This indicates the starting address of the group range of the static IP multicast
             VLAN replication entry."
-        ::= { swIpMcstVlanRepSrcEntry 2 }     		
-        
+        ::= { swIpMcstVlanRepSrcEntry 2 }
+
       swIpMcstVlanRepGrpAddrEnd OBJECT-TYPE
     	SYNTAX  InetAddress
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "This indicates the ending address of the group range of the static IP multicast 
+            "This indicates the ending address of the group range of the static IP multicast
             VLAN replication entry."
-        ::= { swIpMcstVlanRepSrcEntry 3 }     		    	
-            	
+        ::= { swIpMcstVlanRepSrcEntry 3 }
+
       swIpMcstVlanRepSrcAddrType OBJECT-TYPE
     	SYNTAX  InetAddressType
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "This indicates the type of source IP of the static IP multicast 
+            "This indicates the type of source IP of the static IP multicast
             VLAN replication entry."
-        ::= { swIpMcstVlanRepSrcEntry 4 }     	     	
-            	
+        ::= { swIpMcstVlanRepSrcEntry 4 }
+
      swIpMcstVlanRepSrcAddr OBJECT-TYPE
     	SYNTAX  InetAddress
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "This indicates the source IP address of the static IP multicast 
+            "This indicates the source IP address of the static IP multicast
             VLAN replication entry."
-        ::= { swIpMcstVlanRepSrcEntry 5 }     	
-        
+        ::= { swIpMcstVlanRepSrcEntry 5 }
+
      swIpMcstVlanRepSrcRowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "The attribute value reverts to 'other (1)' once the action has been completed."
-        ::= { swIpMcstVlanRepSrcEntry 6 }	
- 
- --destination info    
-   
+        ::= { swIpMcstVlanRepSrcEntry 6 }
+
+ --destination info
+
     swIpMcstVlanRepDstTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwIpMcstVlanRepDstEntry
         MAX-ACCESS  not-accessible
@@ -346,8 +346,8 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This contains information about destination info of static IP multicast VLAN replication.
             It depends on the swIpMcstVlanRepTable."
-        ::= { swIpMcstVlanRepMgmt 5 }  	
-        
+        ::= { swIpMcstVlanRepMgmt 5 }
+
     swIpMcstVlanRepDstEntry OBJECT-TYPE
         SYNTAX  SwIpMcstVlanRepDstEntry
         MAX-ACCESS  not-accessible
@@ -356,7 +356,7 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
             "This is an entry of the swIpMcstVlanRepDstTable."
         INDEX  { swIpMcstVlanRepName,swIpMcstVlanRepDstVID}
         ::= { swIpMcstVlanRepDstTable 1 }
-    
+
     SwIpMcstVlanRepDstEntry ::=
         SEQUENCE {
        	   swIpMcstVlanRepDstVID
@@ -373,8 +373,8 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
        DESCRIPTION
           "This indicates the destination VLAN ID of the IP multicast
           VLAN replication entry."
-        ::= { swIpMcstVlanRepDstEntry 1 } 
-    
+        ::= { swIpMcstVlanRepDstEntry 1 }
+
     swIpMcstVlanRepDstPort   OBJECT-TYPE
         SYNTAX PortList
         MAX-ACCESS read-write
@@ -383,13 +383,13 @@ IP-MCST-VLAN-REP-MIB DEFINITIONS ::= BEGIN
             "This indicates the outgoing port list of the IP multicast
             VLAN replication entry."
         ::={ swIpMcstVlanRepDstEntry 2}
-        
+
     swIpMcstVlanRepDstRowStatus OBJECT-TYPE
         SYNTAX RowStatus
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "The attribute value reverts to 'other (1)' once the action has been completed."
-        ::= { swIpMcstVlanRepDstEntry 3 }	      	
-   
+        ::= { swIpMcstVlanRepDstEntry 3 }
+
 END

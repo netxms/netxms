@@ -5,19 +5,19 @@
 --
 
 Rittal-IT-Chiller DEFINITIONS ::= BEGIN
- 
+
 	IMPORTS
 		NOTIFICATION-GROUP, OBJECT-GROUP
 		FROM SNMPv2-CONF
-		sysContact, sysName, sysDescr, sysLocation			
+		sysContact, sysName, sysDescr, sysLocation
 		FROM SNMPv2-MIB
 		enterprises, MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, Integer32
-		FROM SNMPv2-SMI		
+		FROM SNMPv2-SMI
 		DisplayString
 		FROM SNMPv2-TC;
 
 
-		
+
 rittal-IT-Chiller MODULE-IDENTITY
 
 	LAST-UPDATED	"201401171730Z" -- January 17, 2014 at 17:30 GMT
@@ -33,7 +33,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 	REVISION	"201401171730Z" -- January 17, 2014 at 17:00 GMT
 	DESCRIPTION	"
 			The numbering of traps has been changed to avoid conflicts with similar
-			devices that mounts onboard the Carel's pCOWeb adapter. Traps of IT 
+			devices that mounts onboard the Carel's pCOWeb adapter. Traps of IT
 			Chillers should be generated with OID 1.3.6.1.4.1.2606.20.2.1.120.x
 			"
 	REVISION	"201309221200Z" -- September 22, 2013 at 12:00 GMT
@@ -401,8 +401,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Back Door open alarm"
-		::= { digitalObjects 31 } 
-		
+		::= { digitalObjects 31 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.32
 	compressor-FlowRate OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -410,8 +410,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Compressor FlowRate Management"
-		::= { digitalObjects 32 }		
-		
+		::= { digitalObjects 32 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.33
 	setpoint-inv-pumps OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -419,8 +419,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Setpoint Type for Inverter pumps"
-		::= { digitalObjects 33 }		
-		
+		::= { digitalObjects 33 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.34
 	enable-pumps-redundance OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -428,8 +428,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable Pumps redundance"
-		::= { digitalObjects 34 } 
-	 
+		::= { digitalObjects 34 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.35
 	enable-chiller-redundance OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -438,7 +438,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Enable Chiller redundance"
 		::= { digitalObjects 35 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.36
 	status-in-alarm OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -447,7 +447,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Status in alarm"
 		::= { digitalObjects 36 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.37
 	compressor-recovery OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -456,7 +456,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Compressor Recovery"
 		::= { digitalObjects 37 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.38
 	enable-thermal-redundance OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -465,7 +465,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Enable Thermal redundance"
 		::= { digitalObjects 38 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.39
 	enable-multi-pumps-function OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -483,7 +483,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Enable function pumps-Offline"
 		::= { digitalObjects 40 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.41
 	enable-3way-valve OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -491,7 +491,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable 3way valve"
-		::= { digitalObjects 41 } 
+		::= { digitalObjects 41 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.1.42
 	enable-speed-up-FCM OBJECT-TYPE
@@ -500,8 +500,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable speed-up FCM"
-		::= { digitalObjects 42 } 
- 
+		::= { digitalObjects 42 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.43
 	enable-soft-start-FCM OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -509,8 +509,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable soft-start FCM"
-		::= { digitalObjects 43 }	
- 
+		::= { digitalObjects 43 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.44
 	enable-freecooling OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -518,8 +518,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable Freecooling"
-		::= { digitalObjects 44}	
- 
+		::= { digitalObjects 44}
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.45
 	enable-rot-FIFO-FC OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -527,8 +527,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable rotation FIFO Freecooling"
-		::= { digitalObjects 45} 
- 
+		::= { digitalObjects 45}
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.46
 	enable-HT-function OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -536,8 +536,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable HT-function"
-		::= { digitalObjects 46 }	
- 
+		::= { digitalObjects 46 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.47
 	enable-PID-Fc-valve OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -545,8 +545,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable PID-regulation for Freecooling valve"
-		::= { digitalObjects 47 } 
- 
+		::= { digitalObjects 47 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.48
 	enable-Fc-Thermal-Exclusion OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -554,8 +554,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable Freecooling Thermal Exclusion"
-		::= { digitalObjects 48 } 
- 
+		::= { digitalObjects 48 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.49
 	manual-Reset-Ext-Drycooler-Alarm OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -563,8 +563,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Manual Reset External Dry-cooler Alarm"
-		::= { digitalObjects 49 } 
- 
+		::= { digitalObjects 49 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.50
 	enable-static-press-Alarm OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -572,8 +572,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable static pressure Alarm"
-		::= { digitalObjects 50 } 
- 
+		::= { digitalObjects 50 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.51
 	manual-reset-static-press-Alarm OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -581,8 +581,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Manual reset static pressure Alarm"
-		::= { digitalObjects 51 } 
- 
+		::= { digitalObjects 51 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.52
 	enable-static-press-Warning OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -590,8 +590,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable static pressure Warning"
-		::= { digitalObjects 52 } 
- 
+		::= { digitalObjects 52 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.53
 	manual-reset-static-press-Warning OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -599,8 +599,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Manual reset static pressure Warning"
-		::= { digitalObjects 53 } 
- 
+		::= { digitalObjects 53 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.54
 	enable-diff-press-Alarm OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -608,8 +608,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable differential pressure Alarm"
-		::= { digitalObjects 54 } 
- 
+		::= { digitalObjects 54 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.55
 	manual-reset-diff-press-Alarm OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -618,7 +618,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Manual reset differential pressure Alarm"
 		::= { digitalObjects 55 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.56
 	enable-pressure-recovery OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -626,8 +626,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable pressure recovery"
-		::= { digitalObjects 56 }		
-	 
+		::= { digitalObjects 56 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.57
 	enable-Flow-Rate-Alarm OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -635,8 +635,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable Flow-Rate Alarm"
-		::= { digitalObjects 57 }		
-		
+		::= { digitalObjects 57 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.58
 	manual-reset-Flow-Rate-Alarm OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -644,8 +644,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Manual reset Flow-Rate Alarm"
-		::= { digitalObjects 58 }		
-		
+		::= { digitalObjects 58 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.59
 	enable-Flow-Rate-recovery OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -653,8 +653,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Enable Flow-Rate recovery"
-		::= { digitalObjects 59 }		
- 
+		::= { digitalObjects 59 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.60
 	enable-pCOWeb OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -663,7 +663,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Enable pCOWeb"
 		::= { digitalObjects 60 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.61
 	fc-single-chiller OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -671,7 +671,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Freecooling single chiller function"
-		::= { digitalObjects 61 } 
+		::= { digitalObjects 61 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.1.75
 	al-idrofrigo-pump-c-1 OBJECT-TYPE
@@ -681,7 +681,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Condensation pump 1 breaker switch alarm"
 		::= { digitalObjects 75 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.76
 	al-idrofrigo-pump-c-2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -690,7 +690,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Condensation pump 2 breaker switch alarm"
 		::= { digitalObjects 76 }
-	 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.80
 	al-idrofrigo-fl-C OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -698,8 +698,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Condensation flow switch alarm"
-		::= { digitalObjects 80 }	 
- 
+		::= { digitalObjects 80 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.100
 	c11-on OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -825,7 +825,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Discharge screw compressor 1 alarm"
 		::= { digitalObjects 148 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.149
 	disch-alarm-scw-2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -834,7 +834,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Discharge screw compressor 2 alarm"
 		::= { digitalObjects 149 }
-	 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.150
 	al-probe-inlet OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -842,8 +842,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Inlet probe alarm (broken or disconnected)"
-		::= { digitalObjects 150 }	 
-		
+		::= { digitalObjects 150 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.151
 	al-probe-amb OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -851,8 +851,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Ambient probe alarm (broken or disconnected)"
-		::= { digitalObjects 151 }			
-		
+		::= { digitalObjects 151 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.152
 	al-frigo-fl1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -860,8 +860,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Flow switch alarm (cooling alarm)"
-		::= { digitalObjects 152 } 
-		
+		::= { digitalObjects 152 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.153
 	al-idro-pump1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -869,8 +869,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Pump 1 hydraulic alarm"
-		::= { digitalObjects 153 }			
-		
+		::= { digitalObjects 153 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.154
 	al-idro-pump2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -878,8 +878,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Pump 2 hydraulic alarm"
-		::= { digitalObjects 154 }			
-	
+		::= { digitalObjects 154 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.155
 	al-idro-fl1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -888,7 +888,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Flow switch alarm (hydraulic alarm)"
 		::= { digitalObjects 155 }
-	
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.156
 	al-warning-fl1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -897,7 +897,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Flow switch alarm (warning alarm)"
 		::= { digitalObjects 156 }
-	
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.157
 	al-hi-water-temp OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -906,7 +906,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "High Temperature alarm"
 		::= { digitalObjects 157 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.158
 	al-lo-water-temp OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -915,7 +915,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Low Temperature alarm"
 		::= { digitalObjects 158 }
-	
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.159
 	al-ta-probe1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -924,7 +924,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Antifreeze/evaporator probe 1 alarm"
 		::= { digitalObjects 159 }
-	
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.160
 	al-hi-press OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -933,7 +933,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "High condensation pressure alarm"
 		::= { digitalObjects 160 }
-			
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.161
 	al-lo-press OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -941,8 +941,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Low condensation pressure alarm"
-		::= { digitalObjects 161 } 
-		
+		::= { digitalObjects 161 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.162
 	al-probe-evap-1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -950,8 +950,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Antifreeze/evaporator probe 1 alarm (broken or disconnected)"
-		::= { digitalObjects 162 } 
-		
+		::= { digitalObjects 162 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.163
 	al-probe-evap-2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -959,8 +959,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Antifreeze/evaporator probe 2 alarm (broken or disconnected)"
-		::= { digitalObjects 163 } 
-		
+		::= { digitalObjects 163 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.164
 	al-hi-press-1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -969,7 +969,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "High condensation pressure 1 alarm"
 		::= { digitalObjects 164 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.165
 	al-hi-press-2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -977,8 +977,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "High condensation pressure 2 alarm"
-		::= { digitalObjects 165 } 
-		
+		::= { digitalObjects 165 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.166
 	al-lo-press-1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -987,7 +987,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Low condensation pressure 1 alarm"
 		::= { digitalObjects 166 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.167
 	al-lo-press-2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -995,8 +995,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Low condensation pressure 2 alarm"
-		::= { digitalObjects 167 } 
-		
+		::= { digitalObjects 167 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.168
 	al-probe-tank OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1004,8 +1004,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Tank/Out probe alarm (broken or disconnected)"
-		::= { digitalObjects 168 } 
-		
+		::= { digitalObjects 168 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.169
 	off-line-1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1013,8 +1013,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Chiller 1 offline"
-		::= { digitalObjects 169 } 
-		
+		::= { digitalObjects 169 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.170
 	off-line-2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1022,8 +1022,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Chiller 2 offline"
-		::= { digitalObjects 170 } 
-		
+		::= { digitalObjects 170 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.171
 	off-line-3 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1031,8 +1031,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Chiller 3 offline"
-		::= { digitalObjects 171 } 
-		
+		::= { digitalObjects 171 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.172
 	off-line-4 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1040,8 +1040,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Chiller 4 offline"
-		::= { digitalObjects 172 } 
-		
+		::= { digitalObjects 172 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.173
 	off-line-5 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1049,8 +1049,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Chiller 5 offline"
-		::= { digitalObjects 173 } 
-		
+		::= { digitalObjects 173 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.174
 	off-line-6 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1059,7 +1059,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Chiller 6 offline"
 		::= { digitalObjects 174 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.175
 	off-line-7 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1068,7 +1068,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Chiller 7 offline"
 		::= { digitalObjects 175 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.176
 	off-line-8 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1077,7 +1077,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Chiller 8 offline"
 		::= { digitalObjects 176 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.177
 	al-ta-probe2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1086,7 +1086,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Antifreeze/evaporator probe 2 alarm"
 		::= { digitalObjects 177 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.178
 	al-sms OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1094,8 +1094,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "SMS alarm"
-		::= { digitalObjects 178 } 
-		
+		::= { digitalObjects 178 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.179
 	al-modem OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1104,7 +1104,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Modem alarm"
 		::= { digitalObjects 179 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.180
 	sms-coda-alarm OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1113,7 +1113,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "SMS coda alarm"
 		::= { digitalObjects 180 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.181
 	al-probe-fc OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1122,7 +1122,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Freecooling probe alarm (broken or disconnected)"
 		::= { digitalObjects 181 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.182
 	al-maint-pw1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1130,8 +1130,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Maintenance pump 1 alarm)"
-		::= { digitalObjects 182 } 
-		
+		::= { digitalObjects 182 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.183
 	al-maint-pw2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1139,8 +1139,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Maintenance pump 2 alarm)"
-		::= { digitalObjects 183 } 
-		
+		::= { digitalObjects 183 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.184
 	al-hi-temp-rid OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1148,8 +1148,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "High temperature alarm (redundance)"
-		::= { digitalObjects 184 } 
-		
+		::= { digitalObjects 184 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.185
 	al-q-fc-sep OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1157,8 +1157,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "DryCooler breaker switch alarm"
-		::= { digitalObjects 185 } 
-		
+		::= { digitalObjects 185 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.186
 	al-p-wat2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1166,8 +1166,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Water pressure 2 alarm"
-		::= { digitalObjects 186 } 
-		
+		::= { digitalObjects 186 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.187
 	al-p-wat1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1175,8 +1175,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Water pressure 1 alarm"
-		::= { digitalObjects 187 } 
-		
+		::= { digitalObjects 187 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.188
 	al-fault-flow-p1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1185,7 +1185,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Pump 1 flow alarm"
 		::= { digitalObjects 188 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.189
 	al-fault-flow-p2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1194,7 +1194,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Pump 2 flow alarm"
 		::= { digitalObjects 189 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.190
 	al-fault-fl1-p1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1203,7 +1203,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Pump 1 flow-switch alarm"
 		::= { digitalObjects 190 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.191
 	al-fault-fl1-p2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1221,7 +1221,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Water level warning"
 		::= { digitalObjects 192 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.193
 	al-frigo-fl-C OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1230,7 +1230,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Flow switch condensation alarm (cooling alarm)"
 		::= { digitalObjects 193 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.194
 	al-idro-pump-c-1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1248,8 +1248,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Pump 2 condensation hydraulic alarm"
 		::= { digitalObjects 195 }
-		
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.196
 	al-idro-fl-C OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1267,7 +1267,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Flow switch condensation alarm (warning alarm)"
 		::= { digitalObjects 197 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.198
 	al-foul-fl-C-p1 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1275,8 +1275,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Pump 1 condensation flow-switch alarm"
-		::= { digitalObjects 198 } 
-		
+		::= { digitalObjects 198 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.1.199
 	al-foul-fl-C-p2 OBJECT-TYPE
 		SYNTAX Integer32 (0..1)
@@ -1285,15 +1285,15 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Pump 2 condensation flow-switch alarm"
 		::= { digitalObjects 199 }
-		
-		
-		
+
+
+
 --
 -- ANALOG VARIABLES
 --
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2
-	analogObjects OBJECT IDENTIFIER		::= { rittal-IT-Chiller 2 } 
+	analogObjects OBJECT IDENTIFIER		::= { rittal-IT-Chiller 2 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.2.1
 	setpoint-antifreeze1 OBJECT-TYPE
@@ -1302,8 +1302,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Setpoint Antifreeze 1"
-		::= { analogObjects 1 } 
- 
+		::= { analogObjects 1 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.2
 	setpoint-antifreeze2 OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1311,8 +1311,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Setpoint Antifreeze 2"
-		::= { analogObjects 2 } 
- 
+		::= { analogObjects 2 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.3
 	setpoint-Compensation OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1320,8 +1320,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Setpoint Compensation"
-		::= { analogObjects 3 } 
- 
+		::= { analogObjects 3 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.4
 	hysteresis-Compensation OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1329,8 +1329,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Hysteresis Compensation"
-		::= { analogObjects 4 } 
- 
+		::= { analogObjects 4 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.5
 	max-Compensation OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1338,8 +1338,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Max. Compensation"
-		::= { analogObjects 5 } 
- 
+		::= { analogObjects 5 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.6
 	setpoint-Differential OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1347,8 +1347,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Setpoint Differential"
-		::= { analogObjects 6 } 
- 
+		::= { analogObjects 6 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.7
 	high-Limit OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1356,8 +1356,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "High Limit"
-		::= { analogObjects 7 } 
- 
+		::= { analogObjects 7 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.8
 	low-Limit OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1393,7 +1393,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Setpoint ASB Inverter pumps"
 		::= { analogObjects 11 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.12
 	setpoint-DIFF-Inverter-pumps OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1402,7 +1402,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Setpoint DIFF Inverter pumps"
 		::= { analogObjects 12 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.13
 	pressure-Out OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1410,7 +1410,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Pressure Out"
-		::= { analogObjects 13 }		
+		::= { analogObjects 13 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.2.14
 	proportional-Band-Inverter-Pumps-PID OBJECT-TYPE
@@ -1438,7 +1438,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Derivative Time Inverter Pumps PID"
 		::= { analogObjects 16 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.17
 	hysteresis-Thermal-redundance OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1446,8 +1446,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Hysteresis Thermal redundance"
-		::= { analogObjects 17 } 
- 
+		::= { analogObjects 17 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.18
 	min-Opening-3Way-Valve-Hydraulic OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1455,8 +1455,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Min. Opening 3Way Valve Hydraulic"
-		::= { analogObjects 18 } 
- 
+		::= { analogObjects 18 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.19
 	max-Opening-3Way-Valve-Hydraulic OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1464,8 +1464,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Max. Opening 3Way Valve Hydraulic"
-		::= { analogObjects 19 } 
- 
+		::= { analogObjects 19 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.20
 	proportional-Band-3Way-Valve-Hydrauli-PID OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1473,8 +1473,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Proportional Band 3Way Valve Hydraulic PID"
-		::= { analogObjects 20 } 
- 
+		::= { analogObjects 20 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.21
 	setpoint-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1482,8 +1482,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Setpoint FCM"
-		::= { analogObjects 21 } 
- 
+		::= { analogObjects 21 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.22
 	hysteresis-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1491,8 +1491,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Hysteresis FCM"
-		::= { analogObjects 22 } 
- 
+		::= { analogObjects 22 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.23
 	max-Out-Speed-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1500,8 +1500,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Max. Out Speed FCM"
-		::= { analogObjects 23 } 
- 
+		::= { analogObjects 23 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.24
 	min-Out-Speed-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1509,8 +1509,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Min. Out Speed FCM"
-		::= { analogObjects 24 } 
- 
+		::= { analogObjects 24 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.25
 	hysteresis-Cut-off-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1518,8 +1518,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Hysteresis Cut-off FCM"
-		::= { analogObjects 25 } 
- 
+		::= { analogObjects 25 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.26
 	max-Pressure-Alarm-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1527,8 +1527,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Max. Pressure Alarm FCM"
-		::= { analogObjects 26 } 
- 
+		::= { analogObjects 26 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.27
 	hysteresis-Max-Pressure-Alarm-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1536,8 +1536,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Hysteresis Max.Pressure Alarm FCM"
-		::= { analogObjects 27 } 
- 
+		::= { analogObjects 27 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.28
 	max-Out-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1545,8 +1545,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Max. Out FCM"
-		::= { analogObjects 28 } 
- 
+		::= { analogObjects 28 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.29
 	min-Pressure-Alarm-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1554,8 +1554,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Min. Pressure Alarm FCM"
-		::= { analogObjects 29 } 
- 
+		::= { analogObjects 29 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.30
 	hysteresis-Min-Pressure-Alarm-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1563,8 +1563,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Hysteresis Min.Pressure Alarm FCM"
-		::= { analogObjects 30 } 
- 
+		::= { analogObjects 30 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.31
 	min-Out-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1572,8 +1572,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Min. Out FCM"
-		::= { analogObjects 31 } 
- 
+		::= { analogObjects 31 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.32
 	delta-Freecooling OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1581,8 +1581,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Delta Freecooling"
-		::= { analogObjects 32 } 
- 
+		::= { analogObjects 32 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.33
 	hysteresis-Freecooling OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1590,8 +1590,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Hysteresis Freecooling"
-		::= { analogObjects 33 } 
- 
+		::= { analogObjects 33 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.34
 	proportional-Band-Freecooling-PID OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1599,8 +1599,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Proportional Band Freecooling PID"
-		::= { analogObjects 34 } 
- 
+		::= { analogObjects 34 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.35
 	offset-Freecooling-PID OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1608,8 +1608,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Offset Freecooling PID"
-		::= { analogObjects 35 } 
- 
+		::= { analogObjects 35 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.36
 	temperature-Overlap-Freecooling OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1618,7 +1618,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Temperature Overlap Freecooling"
 		::= { analogObjects 36 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.37
 	min-out-freecooling OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1627,7 +1627,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Min. out freecooling"
 		::= { analogObjects 37 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.38
 	neutral-zone-K-costant OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1635,8 +1635,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Neutral zone K costant"
-		::= { analogObjects 38 } 
- 
+		::= { analogObjects 38 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.39
 	neutral-zone-V-variable OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1644,8 +1644,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Neutral zone V variable"
-		::= { analogObjects 39 } 
- 
+		::= { analogObjects 39 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.40
 	proportional-Band-freecooling-Valve-PID OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1653,8 +1653,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Proportional Band freecooling Valve PID"
-		::= { analogObjects 40 } 
- 
+		::= { analogObjects 40 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.41
 	offset-Freecooling-Valve-PID OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1662,8 +1662,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Offset Freecooling Valve PID"
-		::= { analogObjects 41 } 
- 
+		::= { analogObjects 41 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.42
 	temperature-A-B OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1671,8 +1671,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Temperature A-B"
-		::= { analogObjects 42 } 
- 
+		::= { analogObjects 42 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.43
 	delta-Thermal-Excusion-Freecoling OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1690,7 +1690,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "hysteresis Thermal Excusion Freecoling"
 		::= { analogObjects 44 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.45
 	alarm-Setpoint-Static-Pressure-Hydraulic-circuit OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1699,7 +1699,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Alarm Setpoint Static Pressure Hydraulic circuit"
 		::= { analogObjects 45 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.46
 	warnig-Setpoint-Static-Pressure-Hydraulic-circuit OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1725,8 +1725,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Alarm Setpoint Flow-Rate Hydraulic circuit"
-		::= { analogObjects 48 } 
- 
+		::= { analogObjects 48 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.50
 	tempertaure-Cut-off-FCM OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1734,8 +1734,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Tempertaure Cut-off FCM"
-		::= { analogObjects 50 } 
- 
+		::= { analogObjects 50 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.59
 	set-effective OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1744,7 +1744,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Set-effective"
 		::= { analogObjects 59 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.60
 	set-fc OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1753,7 +1753,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Freecooling or drycooler Set-point"
 		::= { analogObjects 60 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.61
 	setpoint-a-us OBJECT-TYPE
 		SYNTAX Integer32 (-999..999)
@@ -1933,7 +1933,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Inlet - freecooling temperature"
 		::= { analogObjects 82 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.90
 	pp1 OBJECT-TYPE
 		SYNTAX Integer32 (0..100)
@@ -1951,8 +1951,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Pump 2 speed"
 		::= { analogObjects 91 }
- 
-	 
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.100
 	cooling-capacity OBJECT-TYPE
 		SYNTAX Integer32 (0..9999)
@@ -1970,7 +1970,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "FreeCooling Capacity"
 		::= { analogObjects 101 }
-	 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.2.102
 	total-capacity OBJECT-TYPE
 		SYNTAX Integer32 (0..9999)
@@ -1978,7 +1978,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "TotalCooling Capacity"
-		::= { analogObjects 102 }	 
+		::= { analogObjects 102 }
 
 
 
@@ -1987,7 +1987,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 --
 
 	-- 1.3.6.1.4.1.2606.20.2.1.3
-	integerObjects OBJECT IDENTIFIER	::= { rittal-IT-Chiller 3 } 
+	integerObjects OBJECT IDENTIFIER	::= { rittal-IT-Chiller 3 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.3.6
 	ip-Address1 OBJECT-TYPE
@@ -1997,7 +1997,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "IP Address 1 (XXX.xxx.xxx.xxx)"
 		::= { integerObjects 6 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.7
 	ip-Address2 OBJECT-TYPE
 		SYNTAX Integer32 (1..255)
@@ -2141,7 +2141,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "DNS (2) 4 (xxx.xxx.xxx.XXX)"
 		::= { integerObjects 22 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.26
 	ip-Address1-Out OBJECT-TYPE
 		SYNTAX Integer32 (1..255)
@@ -2150,7 +2150,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "IP Address Out 1 (XXX.xxx.xxx.xxx)"
 		::= { integerObjects 26 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.27
 	ip-Address2-Out OBJECT-TYPE
 		SYNTAX Integer32 (1..255)
@@ -2249,7 +2249,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "N chillers ON"
 		::= { integerObjects 37 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.38
 	n-pumps-ON OBJECT-TYPE
 		SYNTAX Integer32 (1..8)
@@ -2266,8 +2266,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Time Enable Pumps - Chiller Offline"
-		::= { integerObjects 39 } 
- 
+		::= { integerObjects 39 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.40
 	time-Running-Pumps-Chiller-Offline OBJECT-TYPE
 		SYNTAX Integer32 (0..9999)
@@ -2275,7 +2275,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Time Running Pumps - Chiller Offline"
-		::= { integerObjects 40 } 
+		::= { integerObjects 40 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.3.41
 	integral-Time-3Way-Valve-Hydraulic-PID OBJECT-TYPE
@@ -2284,8 +2284,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Integral Time 3Way Valve Hydraulic (PID)"
-		::= { integerObjects 41 } 
- 
+		::= { integerObjects 41 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.42
 	derivative-Time-3Way-Valve-Hydraulic-PID OBJECT-TYPE
 		SYNTAX Integer32 (0..999)
@@ -2293,8 +2293,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Derivative Time 3Way Valve Hydraulic (PID)"
-		::= { integerObjects 42 } 
- 
+		::= { integerObjects 42 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.43
 	output-Address-3Way-Valve-Hydraulic OBJECT-TYPE
 		SYNTAX Integer32 (0..6)
@@ -2302,8 +2302,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Output Address 3Way Valve Hydraulic"
-		::= { integerObjects 43 } 
- 
+		::= { integerObjects 43 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.44
 	time-Speed-Up-FCM OBJECT-TYPE
 		SYNTAX Integer32 (0..99)
@@ -2311,8 +2311,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Time Speed-Up (FCM)"
-		::= { integerObjects 44 } 
- 
+		::= { integerObjects 44 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.45
 	time-Soft-Start-FCM OBJECT-TYPE
 		SYNTAX Integer32 (0..100)
@@ -2320,7 +2320,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Time Soft-Start (FCM)"
-		::= { integerObjects 45 } 
+		::= { integerObjects 45 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.3.47
 	delay-Freecooling OBJECT-TYPE
@@ -2329,8 +2329,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Delay Freecooling"
-		::= { integerObjects 47 } 
- 
+		::= { integerObjects 47 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.48
 	integral-Time-Freeccoling-PID OBJECT-TYPE
 		SYNTAX Integer32 (0..999)
@@ -2338,8 +2338,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Integral Time Freeccoling (PID)"
-		::= { integerObjects 48 } 
- 
+		::= { integerObjects 48 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.49
 	derivative-Time-Freeccoling-PID OBJECT-TYPE
 		SYNTAX Integer32 (0..999)
@@ -2347,8 +2347,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Derivative Time Freeccoling (PID)"
-		::= { integerObjects 49 } 
- 
+		::= { integerObjects 49 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.50
 	time-Min-On-Freecooling-Chiller-timing OBJECT-TYPE
 		SYNTAX Integer32 (0..32767)
@@ -2356,8 +2356,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Time Min. On (Freecooling - Chiller timing)"
-		::= { integerObjects 50 } 
- 
+		::= { integerObjects 50 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.51
 	time-Min-Off-Freecooling-Chiller-timing OBJECT-TYPE
 		SYNTAX Integer32 (0..32767)
@@ -2419,8 +2419,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Delay Freecoolimg Thermal Exclusion"
-		::= { integerObjects 57 }		
-		
+		::= { integerObjects 57 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.58
 	n-of-alarm-External-Dry-Cooler OBJECT-TYPE
 		SYNTAX Integer32 (0..9)
@@ -2428,7 +2428,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "N of alarm (External Dry-Cooler)"
-		::= { integerObjects 58 }		
+		::= { integerObjects 58 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.3.59
 	delay-Alarm-Static-Pressure OBJECT-TYPE
@@ -2437,7 +2437,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Delay Alarm (Static Pressure)"
-		::= { integerObjects 59 } 
+		::= { integerObjects 59 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.3.60
 	n-of-Alarm-Static-Pressure OBJECT-TYPE
@@ -2446,7 +2446,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "N of Alarm (Static Pressure)"
-		::= { integerObjects 60 } 
+		::= { integerObjects 60 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.3.61
 	delay-Warning-Static-Pressure OBJECT-TYPE
@@ -2464,8 +2464,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "N of Warning (Static Pressure)"
-		::= { integerObjects 62 } 
-		
+		::= { integerObjects 62 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.63
 	n-of-Alarm-Differential-Pressure OBJECT-TYPE
 		SYNTAX Integer32 (1..10)
@@ -2473,8 +2473,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "N of Alarm (Differential Pressure)"
-		::= { integerObjects 63 } 
- 
+		::= { integerObjects 63 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.64
 	priming-Time-Hydraulic-Pressure OBJECT-TYPE
 		SYNTAX Integer32 (0..99)
@@ -2482,8 +2482,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Priming Time (Hydraulic Pressure)"
-		::= { integerObjects 64 } 
- 
+		::= { integerObjects 64 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.65
 	delay-priming-Time-Hydraulic-Pressure OBJECT-TYPE
 		SYNTAX Integer32 (0..99)
@@ -2491,8 +2491,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Delay Priming Time (Hydraulic Pressure)"
-		::= { integerObjects 65 } 
- 
+		::= { integerObjects 65 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.66
 	output-Address-Alarm-Static-Pressure OBJECT-TYPE
 		SYNTAX Integer32 (0..18)
@@ -2500,8 +2500,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Output Address Alarm (Static Pressure)"
-		::= { integerObjects 66 } 
- 
+		::= { integerObjects 66 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.67
 	n-of-Alarm-Flow-Rate OBJECT-TYPE
 		SYNTAX Integer32 (1..10)
@@ -2509,7 +2509,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "N of Alarm (Flow Rate)"
-		::= { integerObjects 67 }		
+		::= { integerObjects 67 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.3.68
 	priming-Time-Flow-Rate OBJECT-TYPE
@@ -2518,8 +2518,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION "Priming Time (Flow Rate)"
-		::= { integerObjects 68 } 
- 
+		::= { integerObjects 68 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.69
 	delay-priming-Time-Flow-Rate OBJECT-TYPE
 		SYNTAX Integer32 (0..99)
@@ -2528,7 +2528,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Delay Priming Time (Flow Rate)"
 		::= { integerObjects 69 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.70
 	bms-address-IDENT OBJECT-TYPE
 		SYNTAX Integer32 (1..200)
@@ -2536,8 +2536,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "BMS address (IDENT)"
-		::= { integerObjects 70 } 
-	
+		::= { integerObjects 70 }
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.99
 	chiller-name0 OBJECT-TYPE
 		SYNTAX Integer32 (0..9999)
@@ -2563,7 +2563,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		MAX-ACCESS read-only
 		STATUS current
 		DESCRIPTION "Current Day"
-		::= { integerObjects 123 } 
+		::= { integerObjects 123 }
 
 	-- 1.3.6.1.4.1.2606.20.2.1.3.124
 	current-month OBJECT-TYPE
@@ -2573,7 +2573,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Current Month"
 		::= { integerObjects 124 }
-	
+
 	-- 1.3.6.1.4.1.2606.20.2.1.3.125
 	current-year OBJECT-TYPE
 		SYNTAX Integer32 (0..99)
@@ -2844,7 +2844,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Condensation pump 1 breaker switch alarm"
 		::= { trapObjects 75 }
- 
+
 
 	-- 1.3.6.1.4.1.2606.20.2.1.120.76
 	-- alarm-idrofrigo-pump-c-2 NOTIFICATION-TYPE
@@ -2852,15 +2852,15 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Condensation pump 2 breaker switch alarm"
 		::= { trapObjects 76 }
-	 
-	 
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.80
 	-- alarm-idrofrigo-fl-C NOTIFICATION-TYPE
 	trap80	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Condensation flow switch alarm"
-		::= { trapObjects 80 } 
-	
+		::= { trapObjects 80 }
+
 
 	-- 1.3.6.1.4.1.2606.20.2.1.120.130
 	-- remote-on-off NOTIFICATION-TYPE
@@ -2883,195 +2883,195 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Discharge screw compressor 1 alarm"
 		::= { trapObjects 148 }
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.149
 	-- alarm-disch-scw-2 NOTIFICATION-TYPE
 	trap149	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Discharge screw compressor 2 alarm"
 		::= { trapObjects 149 }
-	 
-	 
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.150
 	-- alarm-probe-inlet NOTIFICATION-TYPE
 	trap150	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Inlet probe alarm (broken or disconnected)"
-		::= { trapObjects 150 }	 
-			
-		
+		::= { trapObjects 150 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.151
 	-- alarm-probe-amb NOTIFICATION-TYPE
 	trap151	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Ambient probe alarm (broken or disconnected)"
-		::= { trapObjects 151 }			
-	 
-		
+		::= { trapObjects 151 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.152
 	-- alarm-frigo-fl1 NOTIFICATION-TYPE
 	trap152	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Flow switch alarm (cooling alarm)"
-		::= { trapObjects 152 } 
-		
-		
+		::= { trapObjects 152 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.153
 	-- alarm-idro-pump1 NOTIFICATION-TYPE
 	trap153	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Pump 1 hydraulic alarm"
-		::= { trapObjects 153 }			
-		
-		
+		::= { trapObjects 153 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.154
 	-- alarm-idro-pump2 NOTIFICATION-TYPE
 	trap154	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Pump 2 hydraulic alarm"
-		::= { trapObjects 154 }			
-	
-	
+		::= { trapObjects 154 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.155
 	-- alarm-idro-fl1 NOTIFICATION-TYPE
 	trap155	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Flow switch alarm (hydraulic alarm)"
 		::= { trapObjects 155 }
-	
-	
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.156
 	-- alarm-warning-fl1 NOTIFICATION-TYPE
 	trap156	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Flow switch alarm (warning alarm)"
 		::= { trapObjects 156 }
-	
-	
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.157
 	-- alarm-hi-water-temp NOTIFICATION-TYPE
 	trap157	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "High Temperature alarm"
 		::= { trapObjects 157 }
-		
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.158
 	-- alarm-lo-water-temp NOTIFICATION-TYPE
 	trap158	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Low Temperature alarm"
 		::= { trapObjects 158 }
-	
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.159
 	-- alarm-ta-probe1 NOTIFICATION-TYPE
 	trap159	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Antifreeze/evaporator probe 1 alarm"
 		::= { trapObjects 159 }
-	
-	
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.160
 	-- alarm-hi-press NOTIFICATION-TYPE
 	trap160	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "High condensation pressure alarm"
 		::= { trapObjects 160 }
-			
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.161
 	-- alarm-lo-press NOTIFICATION-TYPE
 	trap161	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Low condensation pressure alarm"
-		::= { trapObjects 161 } 
-		
-		
+		::= { trapObjects 161 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.162
 	-- alarm-probe-evap-1 NOTIFICATION-TYPE
 	trap162	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Antifreeze/evaporator probe 1 alarm (broken or disconnected)"
-		::= { trapObjects 162 } 
-		
-		
+		::= { trapObjects 162 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.163
 	-- alarm-probe-evap-2 NOTIFICATION-TYPE
 	trap163	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Antifreeze/evaporator probe 2 alarm (broken or disconnected)"
-		::= { trapObjects 163 } 
-		
-		
+		::= { trapObjects 163 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.164
 	-- alarm-hi-press-1 NOTIFICATION-TYPE
 	trap164	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "High condensation pressure 1 alarm"
 		::= { trapObjects 164 }
- 
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.165
 	-- alarm-hi-press-2 NOTIFICATION-TYPE
 	trap165	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "High condensation pressure 2 alarm"
-		::= { trapObjects 165 } 
-		
-		
+		::= { trapObjects 165 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.166
 	-- alarm-lo-press-1 NOTIFICATION-TYPE
 	trap166	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Low condensation pressure 1 alarm"
 		::= { trapObjects 166 }
- 
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.167
 	-- alarm-lo-press-2 NOTIFICATION-TYPE
 	trap167	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Low condensation pressure 2 alarm"
-		::= { trapObjects 167 } 
-		
-		
+		::= { trapObjects 167 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.168
 	-- alarm-probe-tank NOTIFICATION-TYPE
 	trap168	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Tank/Out probe alarm (broken or disconnected)"
-		::= { trapObjects 168 } 
-		
-		
+		::= { trapObjects 168 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.169
 	-- alarm-off-line-1 NOTIFICATION-TYPE
 	trap169	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Chiller 1 offline"
-		::= { trapObjects 169 } 
+		::= { trapObjects 169 }
 
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.170
 	-- alarm-off-line-2 NOTIFICATION-TYPE
 	trap170	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Chiller 2 offline"
-		::= { trapObjects 170 } 
-		
+		::= { trapObjects 170 }
+
 
 	-- 1.3.6.1.4.1.2606.20.2.1.120.171
 	-- alarm-off-line-3 NOTIFICATION-TYPE
 	trap171	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Chiller 3 offline"
-		::= { trapObjects 171 } 
-		
+		::= { trapObjects 171 }
+
 
 	-- 1.3.6.1.4.1.2606.20.2.1.120.172
 	-- alarm-off-line-4 NOTIFICATION-TYPE
 	trap172	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Chiller 4 offline"
-		::= { trapObjects 172 } 
+		::= { trapObjects 172 }
 
 
 	-- 1.3.6.1.4.1.2606.20.2.1.120.173
@@ -3079,16 +3079,16 @@ rittal-IT-Chiller MODULE-IDENTITY
 	trap173	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Chiller 5 offline"
-		::= { trapObjects 173 } 
-		
-		
+		::= { trapObjects 173 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.174
 	-- alarm-off-line-6 NOTIFICATION-TYPE
 	trap174	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Chiller 6 offline"
 		::= { trapObjects 174 }
-	 
+
 
 	-- 1.3.6.1.4.1.2606.20.2.1.120.175
 	-- alarm-off-line-7 NOTIFICATION-TYPE
@@ -3097,14 +3097,14 @@ rittal-IT-Chiller MODULE-IDENTITY
 		DESCRIPTION "Chiller 7 offline"
 		::= { trapObjects 175 }
 
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.176
 	-- alarm-off-line-8 NOTIFICATION-TYPE
 	trap176	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Chiller 8 offline"
 		::= { trapObjects 176 }
-		
+
 
 	-- 1.3.6.1.4.1.2606.20.2.1.120.177
 	-- alarm-ta-probe2 NOTIFICATION-TYPE
@@ -3112,95 +3112,95 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Antifreeze/evaporator probe 2 alarm"
 		::= { trapObjects 177 }
-		
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.178
 	-- alarm-sms NOTIFICATION-TYPE
 	trap178	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "SMS alarm"
-		::= { trapObjects 178 } 
-		
-		
+		::= { trapObjects 178 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.179
 	-- alarm-modem NOTIFICATION-TYPE
 	trap179	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Modem alarm"
 		::= { trapObjects 179 }
-		
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.180
 	-- alarm-sms-coda NOTIFICATION-TYPE
 	trap180	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "SMS coda alarm"
 		::= { trapObjects 180 }
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.181
 	-- alarm-probe-fc NOTIFICATION-TYPE
 	trap181	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Freecooling probe alarm (broken or disconnected)"
 		::= { trapObjects 181 }
-		
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.182
 	-- alarm-maint-pw1 NOTIFICATION-TYPE
 	trap182	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Maintenance pump 1 alarm)"
-		::= { trapObjects 182 } 
+		::= { trapObjects 182 }
 
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.183
 	-- alarm-maint-pw2 NOTIFICATION-TYPE
 	trap183	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Maintenance pump 2 alarm)"
-		::= { trapObjects 183 } 
-		
-		
+		::= { trapObjects 183 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.184
 	-- alarm-hi-temp-rid NOTIFICATION-TYPE
 	trap184	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "High temperature alarm (redundance)"
-		::= { trapObjects 184 } 
+		::= { trapObjects 184 }
 
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.185
 	-- alarm-q-fc-sep NOTIFICATION-TYPE
 	trap185	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "DryCooler breaker switch alarm"
-		::= { trapObjects 185 } 
-		
+		::= { trapObjects 185 }
+
 
 	-- 1.3.6.1.4.1.2606.20.2.1.120.186
 	-- alarm-p-wat2 NOTIFICATION-TYPE
 	trap186	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Water pressure 2 alarm"
-		::= { trapObjects 186 } 
-		
-		
+		::= { trapObjects 186 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.187
 	-- alarm-p-wat1 NOTIFICATION-TYPE
 	trap187	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Water pressure 1 alarm"
-		::= { trapObjects 187 } 
-		
-		
+		::= { trapObjects 187 }
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.188
 	-- alarm-foult-flow-p1 NOTIFICATION-TYPE
 	trap188	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Pump 1 flow alarm"
 		::= { trapObjects 188 }
-		
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.189
 	-- alarm-foult-flow-p2 NOTIFICATION-TYPE
 	trap189	NOTIFICATION-TYPE
@@ -3208,7 +3208,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		DESCRIPTION "Pump 2 flow alarm"
 		::= { trapObjects 189 }
 
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.190
 	-- alarm-foult-fl1-p1 NOTIFICATION-TYPE
 	trap190	NOTIFICATION-TYPE
@@ -3216,7 +3216,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		DESCRIPTION "Pump 1 flow-switch alarm"
 		::= { trapObjects 190 }
 
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.191
 	-- alarm-foult-fl1-p2 NOTIFICATION-TYPE
 	trap191	NOTIFICATION-TYPE
@@ -3231,8 +3231,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Water level warning"
 		::= { trapObjects 192 }
-		
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.193
 	-- alarm-frigo-fl-C NOTIFICATION-TYPE
 	trap193	NOTIFICATION-TYPE
@@ -3240,7 +3240,7 @@ rittal-IT-Chiller MODULE-IDENTITY
 		DESCRIPTION "Flow switch condensation alarm (cooling alarm)"
 		::= { trapObjects 193 }
 
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.194
 	-- alarm-idro-pump-c-1 NOTIFICATION-TYPE
 	trap194	NOTIFICATION-TYPE
@@ -3255,8 +3255,8 @@ rittal-IT-Chiller MODULE-IDENTITY
 		STATUS current
 		DESCRIPTION "Pump 2 condensation hydraulic alarm"
 		::= { trapObjects 195 }
-		
-		
+
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.196
 	-- alarm-idro-fl-C NOTIFICATION-TYPE
 	trap196	NOTIFICATION-TYPE
@@ -3272,22 +3272,22 @@ rittal-IT-Chiller MODULE-IDENTITY
 		DESCRIPTION "Flow switch condensation alarm (warning alarm)"
 		::= { trapObjects 197 }
 
- 
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.198
 	-- alarm-foul-fl-C-p1 NOTIFICATION-TYPE
 	trap198	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Pump 1 condensation flow-switch alarm"
-		::= { trapObjects 198 } 
+		::= { trapObjects 198 }
 
-		
+
 	-- 1.3.6.1.4.1.2606.20.2.1.120.199
 	-- alarm-foul-fl-C-p2 NOTIFICATION-TYPE
 	trap199	NOTIFICATION-TYPE
 		STATUS current
 		DESCRIPTION "Pump 2 condensation flow-switch alarm"
 		::= { trapObjects 199 }
- 
+
 
 	END
 

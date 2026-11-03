@@ -112,7 +112,7 @@ bsveVrrpOperExtCriticalIpAddr OBJECT-TYPE
     DESCRIPTION "IP address of the interface that will cause a
 		     shutdown event."
     ::= { bsveVrrpOperExtEntry 1 }
- 
+
 bsveVrrpOperExtCriticalIpAddrEnabled OBJECT-TYPE
     SYNTAX      TruthValue
     MAX-ACCESS  read-write
@@ -274,4 +274,3 @@ bsveVrrpTrapStateTransition NOTIFICATION-TYPE
     ::= { bsveNotifications 1 }
 
 END
-

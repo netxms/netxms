@@ -16,7 +16,7 @@ NOKIA-IPSO-SYSTEM-MIB DEFINITIONS ::= BEGIN
 IMPORTS
 
     MODULE-IDENTITY, OBJECT-TYPE, enterprises, Integer32, Gauge32,
-    NOTIFICATION-TYPE 
+    NOTIFICATION-TYPE
             FROM SNMPv2-SMI
 --    ifIndex, ifType
 --            FROM IF-MIB
@@ -39,27 +39,27 @@ ipsoSystem MODULE-IDENTITY
 	 Postal: 313 Fairchild Drive
 	         Mountain View,
                  California, 94043"
-	
+
 --REVISION "9811080000Z"
-        DESCRIPTION 
+        DESCRIPTION
 	"Author: Alan Fransisco
 	 Revision 1.02
   	 changed ipsoChassisMBType to  DisplayString - 09.11.1998
 	 removed ipsoChassisType - 20.08.1998
-	 removed ipsoFanSpeed - 19.08.1998	 
+	 removed ipsoFanSpeed - 19.08.1998
 	 removed ipsoCardStorageCapacity and made other corrections - 12.08.1998
      	 Added Nokia Telecommunications header - 03.08.1998"
 
 
 	REVISION "9910200000Z"
-        DESCRIPTION 
+        DESCRIPTION
 	"Author: Shoba Narasimhan Panappakkam
 	 Revision 1.03
-	 Added ipsoNotificationGroup. 
-	 Added 5 system traps. - 10.20.1999"	 
+	 Added ipsoNotificationGroup.
+	 Added 5 system traps. - 10.20.1999"
 
 	REVISION "0001110000Z"
-        DESCRIPTION 
+        DESCRIPTION
 	"Author: Kripakaran karlekar
 	 Revision 1.04
 	 SMIv1 to SMIv2 MIB conversion - 11.01.2000"
@@ -92,16 +92,16 @@ ipsoProducts 	OBJECT IDENTIFIER ::= {nokiaProducts 21}
 ipsoChassisGroup OBJECT-GROUP
 	OBJECTS {
 		ipsoChassisSerialNumber,
-		ipsoChassisMBType, 
-		ipsoChassisMBRevNumber, 
-		ipsoChassisMBSerialNumber, 
+		ipsoChassisMBType,
+		ipsoChassisMBRevNumber,
+		ipsoChassisMBSerialNumber,
 		ipsoChassisTemperature,
 		ipsoCardIndex,
 		ipsoCardOperStatus
 	}
 	STATUS current
-	DESCRIPTION 
-	   "A collection of objects providing the instrumentation of 
+	DESCRIPTION
+	   "A collection of objects providing the instrumentation of
 	    ipsoChassis"
 	::= { ipsoSystem 1 }
 
@@ -189,12 +189,12 @@ IpsoCardEntry ::= SEQUENCE {
 	       enabled(1),
 	       disabled(2)
 	       }
-	MAX-ACCESS read-only 
+	MAX-ACCESS read-only
 	STATUS current
 	DESCRIPTION
 		"The operational status of this card. "
 	::= { ipsoCardEntry 2 }
- 
+
 -- IPSO Fan Group
 ipsoFanGroup OBJECT-GROUP
 	OBJECTS {
@@ -202,8 +202,8 @@ ipsoFanGroup OBJECT-GROUP
 	     ipsoFanOperStatus
 	}
 	STATUS current
-	DESCRIPTION 
-	   "A collection of objects providing the instrumentation of 
+	DESCRIPTION
+	   "A collection of objects providing the instrumentation of
 	    ipsoFanGroup"
 	::= { ipsoSystem 2 }
 
@@ -257,8 +257,8 @@ ipsoPowerSupplyGroup OBJECT-GROUP
 	      ipsoPowerSupplyOperStatus
 	}
 	STATUS current
-	DESCRIPTION 
-	   "A collection of objects providing the instrumentation of 
+	DESCRIPTION
+	   "A collection of objects providing the instrumentation of
 	    ipsoPowerSupply"
 	::= { ipsoSystem 3 }
 
@@ -329,8 +329,8 @@ ipsoConfigGroup OBJECT-GROUP
 	    ipsoConfigLogDescr
 	}
 	STATUS current
-	DESCRIPTION 
-	   "A collection of objects providing the instrumentation of 
+	DESCRIPTION
+	   "A collection of objects providing the instrumentation of
 	    ipsoConfigGroup"
 	::= { ipsoSystem 4 }
 
@@ -446,11 +446,11 @@ ipsoImageGroup OBJECT-GROUP
 		ipsoImageIndex,
 		ipsoImageVersionNumber,
 		ipsoImageSerialNumber,
-		ipsoImageTimeOfLoad 
+		ipsoImageTimeOfLoad
 	}
 	STATUS current
-	DESCRIPTION 
-	   "A collection of objects providing the instrumentation of 
+	DESCRIPTION
+	   "A collection of objects providing the instrumentation of
 	    ipsoImage Group"
 	::= { ipsoSystem 5 }
 
@@ -522,8 +522,8 @@ ipsoStorageGroup OBJECT-GROUP
 		ipsoSIMMTotal
 	}
 	STATUS current
-	DESCRIPTION 
-	   "A collection of objects providing the instrumentation of 
+	DESCRIPTION
+	   "A collection of objects providing the instrumentation of
 	    ipsoStorage Group"
 	::= { ipsoSystem 6 }
 
@@ -545,11 +545,11 @@ ipsoProcessGroup OBJECT-GROUP
 		ipsoProcessParentID,
 		ipsoProcessOwner ,
 		ipsoProcessMemory ,
-		ipsoProcessPercentCPU 
+		ipsoProcessPercentCPU
 	}
 	STATUS current
-	DESCRIPTION 
-	   "A collection of objects providing the instrumentation of 
+	DESCRIPTION
+	   "A collection of objects providing the instrumentation of
 	    ipsoProcessor Group"
 	::= { ipsoSystem 7 }
 
@@ -640,8 +640,8 @@ ipsoDiskMirrorGroup OBJECT-GROUP
 	      ipsoMirrorSetSyncPercent
 	}
 	STATUS current
-	DESCRIPTION 
-	   "A collection of objects providing the instrumentation of 
+	DESCRIPTION
+	   "A collection of objects providing the instrumentation of
 	    ipsoDiskMirroring"
 	::= { ipsoSystem 9 }
 
@@ -650,7 +650,7 @@ ipsoDiskMirrorGroup OBJECT-GROUP
 	MAX-ACCESS read-only
 	STATUS current
 	DESCRIPTION
-		"The total number of mirror sets currently configured 
+		"The total number of mirror sets currently configured
                  on the system."
 	::= { ipsoDiskMirrorGroup 1 }
 
@@ -692,7 +692,7 @@ IpsoDiskMirrorSetEntry ::= SEQUENCE {
 	MAX-ACCESS read-only
 	STATUS current
 	DESCRIPTION
-		"The source drive of the mirror set. " 
+		"The source drive of the mirror set. "
 	::= { ipsoDiskMirrorSetEntry 2 }
 
 	ipsoDiskMirrorSetDestinationDriveIndex OBJECT-TYPE
@@ -700,7 +700,7 @@ IpsoDiskMirrorSetEntry ::= SEQUENCE {
 	MAX-ACCESS read-only
 	STATUS current
 	DESCRIPTION
-		"The destination drive of the mirror set. " 
+		"The destination drive of the mirror set. "
 	::= { ipsoDiskMirrorSetEntry 3 }
 
 	ipsoDiskMirrorSetSyncPercent OBJECT-TYPE
@@ -708,7 +708,7 @@ IpsoDiskMirrorSetEntry ::= SEQUENCE {
 	MAX-ACCESS read-only
 	STATUS current
 	DESCRIPTION
-		"The percentage of the space in sync of source drive with 
+		"The percentage of the space in sync of source drive with
                  the destination drive. "
 	::= { ipsoDiskMirrorSetEntry 4 }
 
@@ -740,10 +740,10 @@ ipsoAssetGroup OBJECT-GROUP
 	}
 	STATUS current
 	DESCRIPTION
-	   "A collection of objects representing some of the basic	
+	   "A collection of objects representing some of the basic
 	    assets of the IPSO system."
 	::= { ipsoSystem 10 }
-	    
+
 	ipsoAssetChassisSerialNumber OBJECT-TYPE
         SYNTAX DisplayString
         MAX-ACCESS read-only
@@ -776,7 +776,7 @@ ipsoAssetGroup OBJECT-GROUP
                 "The CPU frequency. "
         ::= { ipsoAssetGroup 4 }
 
-        ipsoKernMaxMem  OBJECT-TYPE  
+        ipsoKernMaxMem  OBJECT-TYPE
         SYNTAX Integer32
         MAX-ACCESS read-only
         STATUS current
@@ -785,7 +785,7 @@ ipsoAssetGroup OBJECT-GROUP
         ::= { ipsoAssetGroup 5 }
 
         ipsoMotherBoardSerNum  OBJECT-TYPE
-        SYNTAX DisplayString  
+        SYNTAX DisplayString
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
@@ -793,7 +793,7 @@ ipsoAssetGroup OBJECT-GROUP
         ::= { ipsoAssetGroup 6 }
 
         ipsoMotherBoardRev  OBJECT-TYPE
-        SYNTAX DisplayString 
+        SYNTAX DisplayString
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
@@ -801,7 +801,7 @@ ipsoAssetGroup OBJECT-GROUP
         ::= { ipsoAssetGroup 7 }
 
         ipsoMotherBoardModel  OBJECT-TYPE
-        SYNTAX DisplayString 
+        SYNTAX DisplayString
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
@@ -809,7 +809,7 @@ ipsoAssetGroup OBJECT-GROUP
         ::= { ipsoAssetGroup 8 }
 
         ipsoOSRelease  OBJECT-TYPE
-        SYNTAX DisplayString 
+        SYNTAX DisplayString
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
@@ -817,7 +817,7 @@ ipsoAssetGroup OBJECT-GROUP
         ::= { ipsoAssetGroup 9 }
 
         ipsoOSVersion  OBJECT-TYPE
-        SYNTAX DisplayString 
+        SYNTAX DisplayString
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
@@ -841,7 +841,7 @@ ipsoAssetGroup OBJECT-GROUP
                  their relevant information."
         ::= { ipsoAssetGroup 12 }
 
-        
+
         ipsoAssetEntry  OBJECT-TYPE
         SYNTAX IpsoAssetEntry
         MAX-ACCESS not-accessible
@@ -866,9 +866,9 @@ IpsoAssetEntry ::= SEQUENCE {
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
-                "The index used to iterate through all packages 
+                "The index used to iterate through all packages
                  which are installed and currently running, ie, Checkpoint,
-                 ISS, etc." 
+                 ISS, etc."
         ::= { ipsoAssetEntry 1 }
 
         ipsoPkgName OBJECT-TYPE
@@ -884,7 +884,7 @@ IpsoAssetEntry ::= SEQUENCE {
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
-                "The major version number of the package. For FireWall NG, this 
+                "The major version number of the package. For FireWall NG, this
 		 displays the Build and Feature Pack information."
         ::= { ipsoAssetEntry 3 }
 
@@ -909,7 +909,7 @@ ipsoDiskDriveTable OBJECT-TYPE
         SYNTAX SEQUENCE OF IpsoDiskDriveEntry
         MAX-ACCESS not-accessible
         STATUS current
-        DESCRIPTION 
+        DESCRIPTION
                 "A table of all disk drives currently on this system. "
         ::= { ipsoAssetGroup 13 }
 
@@ -923,12 +923,12 @@ ipsoDiskDriveTable OBJECT-TYPE
         ::= { ipsoDiskDriveTable 1 }
 
 IpsoDiskDriveEntry ::= SEQUENCE {
-        ipsoDiskDriveIndex Integer32, 
+        ipsoDiskDriveIndex Integer32,
         ipsoDiskSysDriveIndex Integer32,
         ipsoDiskDriveModel DisplayString,
         ipsoDiskDriveCapacity DisplayString,
         ipsoDiskDriveLocation DisplayString
-}               
+}
 
         ipsoDiskDriveIndex OBJECT-TYPE
         SYNTAX Integer32 (1..2147483647)
@@ -936,10 +936,10 @@ IpsoDiskDriveEntry ::= SEQUENCE {
         STATUS current
         DESCRIPTION
                 "The drive index used to identify a particular row in table. "
-        ::= { ipsoDiskDriveEntry 1 } 
- 
+        ::= { ipsoDiskDriveEntry 1 }
+
         ipsoSysDiskDriveIndex OBJECT-TYPE
-        SYNTAX Integer32 (1..2147483647)  
+        SYNTAX Integer32 (1..2147483647)
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
@@ -952,7 +952,7 @@ IpsoDiskDriveEntry ::= SEQUENCE {
         STATUS current
         DESCRIPTION
                 "The model of the disk drive. "
-        ::= { ipsoDiskDriveEntry 3 } 
+        ::= { ipsoDiskDriveEntry 3 }
 
         ipsoDiskDriveCapacity OBJECT-TYPE
         SYNTAX DisplayString
@@ -976,7 +976,7 @@ ipsoLicenseGroup OBJECT-GROUP
         NoOfDaysToExpire
 	}
 	STATUS current
-	DESCRIPTION 
+	DESCRIPTION
 	   "A collection of objects sent as a part of license trap."
 	::= { ipsoSystem 11 }
 
@@ -1020,11 +1020,11 @@ ipsoNotificationGroup NOTIFICATION-GROUP
 			 systemTrapLicense
         }
 	STATUS current
-	DESCRIPTION 
-           "A collection of notifications providing the instrumentation of 
+	DESCRIPTION
+           "A collection of notifications providing the instrumentation of
             ipsoNotification"
         ::= { ipsoSystem 8 }
-     
+
     systemTraps OBJECT IDENTIFIER ::= { ipsoNotificationGroup 1 }
 
     systemTrapConfigurationChange NOTIFICATION-TYPE
@@ -1046,10 +1046,10 @@ ipsoNotificationGroup NOTIFICATION-GROUP
                       }
 	STATUS        current
 	DESCRIPTION
-                "The trap which indicates a permanent configuration change 
+                "The trap which indicates a permanent configuration change
                 which is written to the configuration file."
         ::= { systemTraps 3 }
-    
+
     systemTrapLowDiskSpace NOTIFICATION-TYPE
         OBJECTS       { hrPartitionIndex,
                         hrPartitionLabel,
@@ -1074,7 +1074,7 @@ ipsoNotificationGroup NOTIFICATION-GROUP
 	::= { systemTraps 5 }
 
     systemTrapDiskFailure NOTIFICATION-TYPE
-        OBJECTS       { 
+        OBJECTS       {
 	                 ipsoDiskDriveIndex
                       }
 	STATUS        current
@@ -1084,30 +1084,30 @@ ipsoNotificationGroup NOTIFICATION-GROUP
 	::= { systemTraps 6 }
 
     systemTrapDiskMirrorSetCreate NOTIFICATION-TYPE
-        OBJECTS       { 
+        OBJECTS       {
 	                 ipsoDiskMirrorSetIndex,
 			 ipsoDiskMirrorSetSourceDriveIndex,
-			 ipsoDiskMirrorSetDestinationDriveIndex, 
+			 ipsoDiskMirrorSetDestinationDriveIndex,
 			 ipsoDiskDriveLocation,
-			 ipsoDiskDriveLocation 
+			 ipsoDiskDriveLocation
                       }
 	STATUS        current
 	DESCRIPTION
-		"The trap which indicates that a particular mirror set has 
+		"The trap which indicates that a particular mirror set has
                  been created on the system. "
 	::= { systemTraps 7 }
 
     systemTrapDiskMirrorSetDelete NOTIFICATION-TYPE
-        OBJECTS       { 
+        OBJECTS       {
 	                 ipsoDiskMirrorSetIndex,
-			 ipsoDiskMirrorSetSourceDriveIndex, 
-			 ipsoDiskMirrorSetDestinationDriveIndex, 
+			 ipsoDiskMirrorSetSourceDriveIndex,
+			 ipsoDiskMirrorSetDestinationDriveIndex,
 			 ipsoDiskDriveLocation,
-			 ipsoDiskDriveLocation 
+			 ipsoDiskDriveLocation
                       }
 	STATUS        current
 	DESCRIPTION
-		"The trap which indicates that a particular mirror set has 
+		"The trap which indicates that a particular mirror set has
                  been deleted from the system. "
 	::= { systemTraps 8 }
 
@@ -1118,7 +1118,7 @@ ipsoNotificationGroup NOTIFICATION-GROUP
 	::= { systemTraps 9 }
 
     systemTrapDiskMirrorSyncFailure NOTIFICATION-TYPE
-        OBJECTS       { 
+        OBJECTS       {
 	                 ipsoDiskMirrorSetIndex
                       }
 	STATUS        current
@@ -1128,7 +1128,7 @@ ipsoNotificationGroup NOTIFICATION-GROUP
 	::= { systemTraps 10 }
 
     systemTrapDiskMirrorSyncSuccess NOTIFICATION-TYPE
-        OBJECTS       { 
+        OBJECTS       {
 	                 ipsoDiskMirrorSetIndex
                       }
 	STATUS        current
@@ -1138,7 +1138,7 @@ ipsoNotificationGroup NOTIFICATION-GROUP
 	::= { systemTraps 11 }
 
     systemTrapLicense NOTIFICATION-TYPE
-        OBJECTS       { 
+        OBJECTS       {
                     ipsoFeatureName,
                     ipsoDaysToExpire
                       }

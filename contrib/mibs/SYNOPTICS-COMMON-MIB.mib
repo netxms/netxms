@@ -554,7 +554,7 @@ s3CommonBoardId OBJECT-TYPE
 	m3522A(108),
 	m3513SA(109),
 	m271xSAnmm(110),
-	m2300x(114), 
+	m2300x(114),
 	m2310x(115),
 	m3299C(116),
 	m3299U(117),
@@ -572,7 +572,7 @@ s3CommonBoardId OBJECT-TYPE
 	their functionality, such as media type, interface types,
 	or power supply wattages, by plugging in different daughter
 	cards.  Other boards may identify the type of cable plugged
-	into them.  The boards that have these capabilities use 
+	into them.  The boards that have these capabilities use
 	different values for the object s3SlotModuleMda to identify
 	the changable portion of the functionality currently used.
 	Boards that do not support these capabilities typically set
@@ -780,10 +780,10 @@ s3CommonBoardPartTime OBJECT-TYPE
 	ACCESS	read-write
 	STATUS	mandatory
 	DESCRIPTION
-		"When partitioning the board for a specified time, 
+		"When partitioning the board for a specified time,
 		s3CommonBoardPartStatus must be set with
 		timedPartition(3) and this object must be supplied
-		with the duration value. If a PDU sets 
+		with the duration value. If a PDU sets
 		s3CommonBoardPartStatus and not this object, the
 		board will not be partitioned.  This value is
 		decremented while the board is partitioned
@@ -1068,10 +1068,10 @@ s3AgentBootFile OBJECT-TYPE
 	DESCRIPTION
 		"The name of the boot file that is sent to the file
 		server during boot time.  The actual boot protocol
-		used to retrieve the file is determined by 
+		used to retrieve the file is determined by
 		s3AgentBootProtocol.
 
-		This parameter will not take effect until written 
+		This parameter will not take effect until written
 		into EEPROM (s3AgentWriteEeprom) and a reset
 		(s3AgentReset) is issued. This parameter is used
 		only if the s3AgentBootMode is set to use EEPROM."
@@ -1143,7 +1143,7 @@ s3AgentFeatureLevel OBJECT-TYPE
 	DESCRIPTION
 		"Used to determine feature level of the agent.
 		The encoding of this object is of the following
-		form: xyy, where x is the major version 
+		form: xyy, where x is the major version
 		number and yy is the minor version number.  Thus,
 		feature level version 1.0 would be represented as
 		100, version 1.01 would be 101 and 1.1 would be 110.
@@ -1155,7 +1155,7 @@ s3AgentFeatureLevel OBJECT-TYPE
 		        - Basic Agent
 		  100 - 271x V3.x
 		        - Basic Agent
-		  101 - 281x V5.0 
+		  101 - 281x V5.0
 		        - Basic Agent
 		        - Dual Stack
 		  102 - 331x V4.2.0
@@ -1349,7 +1349,7 @@ s3AgentUnAuthIp OBJECT-TYPE
 		invalid community string.  This object is used
 		as a VarBind in an Authentication Trap PDU.  A get
 		request will return the last value used, and will
-		return the null address 0.0.0.0 if no 
+		return the null address 0.0.0.0 if no
 		authentication traps have been sent."
 	::= { s3AgentSw 12 }
 
@@ -1472,7 +1472,7 @@ s3AgentImageFile OBJECT-TYPE
 	DESCRIPTION
 		"The name of the agent image file that the NMM loads
 		at boot time.
-		
+
 		This parameter will not take effect until written to
 		EEPROM (s3AgentWriteEeprom) and a reset (s3AgentReset)
 		is issued.  This parameter is used only if s3AgentBootMode
@@ -1518,7 +1518,7 @@ s3AgentNetMask OBJECT-TYPE
 
 		This parameter will take effect only after a
 		restart (s3AgentRestart) is issued. This parameter
-		will not survive a reset (s3AgentReset) unless it 
+		will not survive a reset (s3AgentReset) unless it
 		is written into EEPROM (s3AgentWriteEeprom). This
 		parameter is used only if the agentBootMode is set
 		to use EEPROM.
@@ -1541,7 +1541,7 @@ s3AgentDefaultGateway OBJECT-TYPE
 
 		This parameter will take effect only after a
 		restart (s3AgentRestart) is issued.  This parameter
-		will not survive a reset (s3AgentReset) unless it 
+		will not survive a reset (s3AgentReset) unless it
 		is written into EEPROM (s3AgentWriteEeprom).  This
 		parameter is used only if the agentBootMode is set
 		to use EEPROM."
@@ -1671,7 +1671,7 @@ s3AgentTrapRcvrStatus OBJECT-TYPE
 	DESCRIPTION
 		"Setting this object to the value invalid(3) has
 		the effect of invalidating the corresponding entry
-		in the s3AgentTrapReceiverTable.  That is, it 
+		in the s3AgentTrapReceiverTable.  That is, it
 		effectively disassociates the address identified
 		with the entry by removing the entry from the table.
 		On a read the value of valid(2) should be returned
@@ -1714,7 +1714,7 @@ s3AgentTrapRcvrAgeTime OBJECT-TYPE
 -- Agent Hardware Group
 
 
--- Implementation of this group is mandatory for all 
+-- Implementation of this group is mandatory for all
 --   SynOptics Series 3000 agents
 
 
@@ -1810,7 +1810,7 @@ s3AgentBootMode OBJECT-TYPE
 
 s3AgentWriteEeprom OBJECT-TYPE
 	SYNTAX	INTEGER {
-		noWriteEeprom(1),	-- not writing EEPROM 
+		noWriteEeprom(1),	-- not writing EEPROM
 		writeEeprom(2)		-- write EEPROM
 		}
 	ACCESS	read-write
@@ -1875,7 +1875,7 @@ s3AgentDramSize OBJECT-TYPE
 	SYNTAX	INTEGER
 	ACCESS	read-only
 	STATUS	mandatory
-	DESCRIPTION		
+	DESCRIPTION
 		"The size of the DRAM of the agent in units of bytes."
 	::= { s3AgentHw 12 }
 
@@ -1936,7 +1936,7 @@ s3LocImageMajorVersion OBJECT-TYPE
 	DESCRIPTION
 		"The major software version number of the
 		locally-stored image.  This object applies only to
-		agents with valid local image.  Other agents 
+		agents with valid local image.  Other agents
 		should return zero."
 	::= { s3AgentLocImage 2 }
 
@@ -1976,7 +1976,7 @@ s3LocImageLoadMode OBJECT-TYPE
 	DESCRIPTION
 		"This indicates whether the agent should get code
 		from the network, use a local image, or try the
-		network first and then fall back to local image if 
+		network first and then fall back to local image if
 		the network boot fails. The localBoot(3) and
 		localAsBackup(4) values apply only to agents with
 		local load option. Note: on agents that have

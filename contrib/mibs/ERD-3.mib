@@ -3,7 +3,7 @@ ERD-3 DEFINITIONS ::= BEGIN
     experimental, MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
     snmpModules, mib-2, IpAddress
         FROM SNMPv2-SMI
-    DisplayString, TestAndIncr      
+    DisplayString, TestAndIncr
         FROM SNMPv2-TC
     OBJECT-GROUP, NOTIFICATION-GROUP
         FROM SNMPv2-CONF;
@@ -15,7 +15,7 @@ ERD-3 DEFINITIONS ::= BEGIN
         DESCRIPTION  "The MIB module "
 
         REVISION "200705011400Z"
-        DESCRIPTION "First version" 
+        DESCRIPTION "First version"
              ::= { experimental 120 }
 
 ipAddressEntry OBJECT IDENTIFIER ::={ nag_Erd_Snmp  4 }
@@ -36,13 +36,13 @@ ipGatewayAddress OBJECT-TYPE
 
 ipMonitoringDevice OBJECT-TYPE
         SYNTAX               IpAddress
-        MAX-ACCESS          read-write 
+        MAX-ACCESS          read-write
         STATUS              current
         DESCRIPTION         "monitoredIP"
 ::= {ipAddressEntry 3}
 
 ipForTrap OBJECT-TYPE
-        SYNTAX               IpAddress 
+        SYNTAX               IpAddress
         MAX-ACCESS          read-write
         STATUS              current
         DESCRIPTION         "ipForTrap"
@@ -57,7 +57,7 @@ resetSmartContact7 OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION         "qwerty"
-    
+
 ::= { resetsSet 1}
 
 numberOfResetPositives  OBJECT-TYPE
@@ -72,7 +72,7 @@ monitorAlarmSignalContact6  OBJECT-TYPE
     SYNTAX          INTEGER {
       sensorOn(3),
       doorIsClose (1),
-      doorIsOpen (2),       
+      doorIsOpen (2),
       sensorOff (0)
                       }
 
@@ -86,7 +86,7 @@ monitorAlarmSignal2Contact5  OBJECT-TYPE
     SYNTAX          INTEGER {
       sensorOn(3),
       doorIsClose (1),
-      doorIsOpen (2),       
+      doorIsOpen (2),
       sensorOff (0)
                       }
 
@@ -108,7 +108,7 @@ monitorVoltageSignal  OBJECT-TYPE
     SYNTAX          INTEGER {
         sensorOn(3),
         voltageIsYes (2),
-        voltageIsNo (1),       
+        voltageIsNo (1),
         sensorOff (0)
              }
     MAX-ACCESS      read-write
@@ -121,7 +121,7 @@ monitorVoltageSignal2  OBJECT-TYPE
     SYNTAX          INTEGER {
         sensorOn(3),
         voltageIsYes (2),
-        voltageIsNo (1),       
+        voltageIsNo (1),
         sensorOff (0)
              }
     MAX-ACCESS      read-write
@@ -134,7 +134,7 @@ monitorAnySensorSignal1contact2  OBJECT-TYPE
     SYNTAX          INTEGER {
         sensorOn(3),
         sensorIs_0 (1),
-        sensorIs_1 (2),       
+        sensorIs_1 (2),
         sensorOff (0)
                       }
     MAX-ACCESS      read-write
@@ -147,7 +147,7 @@ monitorAnySensorSignal2contact3  OBJECT-TYPE
     SYNTAX          INTEGER {
         sensorOn(3),
         sensorIs_0 (1),
-        sensorIs_1 (2),       
+        sensorIs_1 (2),
         sensorOff (0)
                       }
     MAX-ACCESS      read-write
@@ -160,7 +160,7 @@ monitorAnySensorSignal3contact4  OBJECT-TYPE
     SYNTAX          INTEGER {
         sensorOn(3),
         sensorIs_0 (1),
-        sensorIs_1 (2),       
+        sensorIs_1 (2),
         sensorOff (0)
                       }
     MAX-ACCESS      read-write
@@ -171,7 +171,7 @@ monitorAnySensorSignal3contact4  OBJECT-TYPE
 
 
 temperatureSensor  OBJECT-TYPE
-    SYNTAX          INTEGER 
+    SYNTAX          INTEGER
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION         "qwerty"
@@ -187,7 +187,7 @@ temperatureSensor_out  OBJECT-TYPE
  ::= { resetsSet 5 1}
 
 voltageSensorContact10  OBJECT-TYPE
-    SYNTAX          INTEGER 
+    SYNTAX          INTEGER
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION         "qwerty"
@@ -195,7 +195,7 @@ voltageSensorContact10  OBJECT-TYPE
  ::= { resetsSet 5 2}
 
 sysVoltageAlarm  OBJECT-TYPE
-    SYNTAX          INTEGER 
+    SYNTAX          INTEGER
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION         "qwerty"
@@ -211,7 +211,7 @@ voltageSensor2Contact11  OBJECT-TYPE
  ::= { resetsSet 5 4}
 
 sysVoltage2Alarm  OBJECT-TYPE
-    SYNTAX          INTEGER 
+    SYNTAX          INTEGER
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION         "qwerty"
@@ -228,7 +228,7 @@ manual_set_ON(2),
 man_off (1),
 man_on (0),
 auto_off (6),
-auto_on (5) 
+auto_on (5)
                      }
     MAX-ACCESS      read-write
     STATUS          current
@@ -283,7 +283,7 @@ commS OBJECT IDENTIFIER ::= { nag_Erd_Snmp  6 }
 
     trapMode         OBJECT-TYPE
 	SYNTAX          INTEGER {
-        once (1),      
+        once (1),
         cyclically (0)
                       }
     MAX-ACCESS      read-write
@@ -291,4 +291,3 @@ commS OBJECT IDENTIFIER ::= { nag_Erd_Snmp  6 }
     DESCRIPTION         "qwerty"
 ::= {commS 3}
 END
-

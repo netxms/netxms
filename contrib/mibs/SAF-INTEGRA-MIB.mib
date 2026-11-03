@@ -12,7 +12,7 @@ IMPORTS
           FROM SNMPv2-CONF               -- [RFC2580]
       IANAifType
           FROM IANAifType-MIB;
-	
+
 -- saf   	        OBJECT IDENTIFIER ::= { enterprises 7571 }
 -- microwaveRadio   OBJECT IDENTIFIER ::= { tehnika 1 }
 -- pointToPoint     OBJECT IDENTIFIER ::= { microwaveRadio 1 }

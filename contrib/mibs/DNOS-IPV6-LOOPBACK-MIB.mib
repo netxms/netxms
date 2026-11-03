@@ -22,7 +22,7 @@ IMPORTS
     Ipv6AddressPrefix				              FROM IPV6-TC
     agentLoopbackID			                  FROM DNOS-LOOPBACK-MIB
     dnOS                              FROM DELL-REF-MIB;
-    
+
     fastPathIpv6Loopback MODULE-IDENTITY
         LAST-UPDATED "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
         ORGANIZATION "Dell, Inc."
@@ -82,7 +82,7 @@ IMPORTS
          DESCRIPTION
                      "The prefix associated with the loopback interface. The data type
                       is used to model the Ipv6 address. It is a binary string
-                      of 16 octects in network byte-order. It specifies the IP 
+                      of 16 octects in network byte-order. It specifies the IP
                       address of loopback which will be in Ipv6 Format, generated
                       using internal interface number."
          ::= { agentLoopbackIpv6PrefixEntry 1 }
@@ -95,7 +95,7 @@ IMPORTS
                      "The length of the prefix (in bits)."
          DEFVAL { 0 }
          ::= { agentLoopbackIpv6PrefixEntry 2 }
-         
+
     agentLoopbackIpv6PrefixStatus OBJECT-TYPE
          SYNTAX       RowStatus
          MAX-ACCESS   read-create
@@ -103,7 +103,7 @@ IMPORTS
          DESCRIPTION
                      "Status of this instance.Row can be added or deleted
                      by setting the value to createAndGo/destroy
-                      
+
                      active(1)      - this Loopback instance is active
                      createAndGo(4) - set to this value to create an instance
                      destroy(6)     - set to this value to delete an instance"

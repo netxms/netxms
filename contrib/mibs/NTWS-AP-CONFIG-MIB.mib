@@ -608,7 +608,7 @@ NtwsApConfApTemplateConfigEntry ::= SEQUENCE {
 
         ntwsApConfApTemplConfBias               NtwsApBias,
         ntwsApConfApTemplConfApTimeout          Unsigned32,
-        
+
         ntwsApConfApTemplConfBlinkEnabled               TruthValue,
         ntwsApConfApTemplConfForceImageDownloadEnabled  TruthValue,
         ntwsApConfApTemplConfFirmwareUpgradeEnabled     TruthValue,
@@ -1837,7 +1837,7 @@ ntwsApConfServProfSodaRemediationAcl OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-        "Remediation page ACL to apply to the client when the 
+        "Remediation page ACL to apply to the client when the
         failure page is loaded, for this service profile."
     ::= { ntwsApConfServiceProfileEntry 40 }
 
@@ -1885,7 +1885,7 @@ ntwsApConfServProfWebPortalSessionTimeout OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Time interval, in seconds, for which a Web Portal
-        WebAAA session remains in the Deassociated state 
+        WebAAA session remains in the Deassociated state
         before being terminated automatically,
         for this service profile."
     ::= { ntwsApConfServiceProfileEntry 45 }
@@ -1895,7 +1895,7 @@ ntwsApConfServProfWebPortalAcl OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-        "Name of ACL used for filtering traffic for Web Portal 
+        "Name of ACL used for filtering traffic for Web Portal
         users during authentication, for this service profile."
     ::= { ntwsApConfServiceProfileEntry 46 }
 

@@ -7,7 +7,7 @@ IMPORTS
 		FROM FOUNDRY-SN-SWITCH-GROUP-MIB
 	DisplayString
 	  FROM FOUNDRY-SN-AGENT-MIB;
-	  
+
 brcdStackISSUMIB MODULE-IDENTITY
 	LAST-UPDATED "201603150000Z" -- March 15, 2016
 	ORGANIZATION "Brocade Communications Systems, Inc"
@@ -24,7 +24,7 @@ brcdStackISSUMIB MODULE-IDENTITY
 
 			Supported Platforms:
                    - supported on Brocade ICX platforms.
-			
+
 			Copyright 1996-2016 Brocade Communications Systems, Inc.
 			All rights reserved.
             This Brocade Communications Systems SNMP Management Information
@@ -32,7 +32,7 @@ brcdStackISSUMIB MODULE-IDENTITY
             confidential and proprietary intellectual property.
             Brocade Communications Systems retains all title and ownership
             in the Specification, including any revisions.
-			
+
 			This Specification is supplied AS IS, and Brocade Communications
             Systems makes no warranty, either express or implied, as to the
             use, operation, condition, or performance of the specification,
@@ -54,8 +54,8 @@ brcdStackISSUTableObjects  OBJECT IDENTIFIER ::= { brcdStackISSUMIB 2 }
 --
 
 brcdStackISSUGlobalUpgradeOption OBJECT-TYPE
-	SYNTAX     INTEGER { 
-			    none(0), 
+	SYNTAX     INTEGER {
+			    none(0),
 			    primary(1),
 			    secondary(2),
 			    primaryOnErrorReloadPrimary (3),
@@ -67,9 +67,9 @@ brcdStackISSUGlobalUpgradeOption OBJECT-TYPE
 	MAX-ACCESS read-write
 	STATUS     current
 	DESCRIPTION
-		"User configures the system upgrade option to initiate stack upgrade process using primary or secondary image. 
+		"User configures the system upgrade option to initiate stack upgrade process using primary or secondary image.
 		The set operation is allowed only on the active unit in stacking system or 802.1BR (SPX) system.
-		  none:    reserve state. 
+		  none:    reserve state.
 		  primary: system upgrade process using primary image
 		  secondary: system upgrade process using secondary image
 		  primaryOnErrorReloadPrimary: system upgrade process using primary image, reload from primary if upgrade fails
@@ -78,10 +78,10 @@ brcdStackISSUGlobalUpgradeOption OBJECT-TYPE
 		  secondaryOnErrorReloadSecondary: system upgrade process using secondary image, reload from secondary if upgrade fails
 		  abort: abort upgarde process. A reload is required to bring the stack back to working condition after abort is issued.
 		The default is none state"
-  	::= { brcdStackISSUGlobalObjects 1}  
+  	::= { brcdStackISSUGlobalObjects 1}
 
 brcdStackISSUGlobalUpgradeStatus OBJECT-TYPE
-	SYNTAX     INTEGER { 
+	SYNTAX     INTEGER {
 			    notUpgrading (0),
 			    unitToBeUpgraded (1),
 			    unitJoin (2),
@@ -101,18 +101,18 @@ brcdStackISSUGlobalUpgradeStatus OBJECT-TYPE
 	DESCRIPTION
 		"The state of upgrade process for a stacking or SPX system
 		The default state is in notUpgrading state"
-  	::= { brcdStackISSUGlobalObjects 2}  
+  	::= { brcdStackISSUGlobalObjects 2}
 
 
 brcdStackISSUGlobalUpgradeSystemReady OBJECT-TYPE
-			SYNTAX     INTEGER { 
-			    notReadyUpgrade(0), 
+			SYNTAX     INTEGER {
+			    notReadyUpgrade(0),
 			    ready(1)
 			  }
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
-		"The per-upgrade state of a stacking or SPX system. The system must be in ready state before 
+		"The per-upgrade state of a stacking or SPX system. The system must be in ready state before
 		the upgrade process starts. It checks the following aspects:
 		  Topology is Ring                         Yes
 		  Standby Present                          Yes
@@ -124,7 +124,7 @@ brcdStackISSUGlobalUpgradeSystemReady OBJECT-TYPE
 		  All units in ready state                 Yes
 		  Primary Image is upgrade compatible      Yes
 		  Secondary Image is upgrade compatible    Yes
-		  Startup config and Running Config Same   Yes 
+		  Startup config and Running Config Same   Yes
 		  Config mode conflict                     No
 		If one of above check fails, then system is not ready for stack upgrade"
   	::= { brcdStackISSUGlobalObjects 3}
@@ -136,7 +136,7 @@ brcdStackISSUGlobalUpgradeSystemReady OBJECT-TYPE
 	DESCRIPTION
 		"The error message of system upgrade process on a stacking or SPX system.
 		The default is null string, which means system has no error or is in no-upgrade state "
-  	::= { brcdStackISSUGlobalObjects 4} 
+  	::= { brcdStackISSUGlobalObjects 4}
 
 --
 -- Stack ISSU Table Object Section
@@ -173,7 +173,7 @@ BrcdStackISSUStatusUnitEntry ::= SEQUENCE {
 }
 
 brcdStackISSUStatusUnitIndex OBJECT-TYPE
-	SYNTAX     Integer32 
+	SYNTAX     Integer32
 	MAX-ACCESS not-accessible
 	STATUS     current
 	DESCRIPTION
@@ -182,17 +182,17 @@ brcdStackISSUStatusUnitIndex OBJECT-TYPE
 	::= { brcdStackISSUStatusUnitEntry 1 }
 
 brcdStackISSUStatusUnitSequence OBJECT-TYPE
-	SYNTAX     Integer32 
+	SYNTAX     Integer32
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
-		"The sequence of upgrade in a stacking or SPX system. if unit is PE, the 
+		"The sequence of upgrade in a stacking or SPX system. if unit is PE, the
 		sequence number is the same as attached to the CB unit in a SPX system.
 		The default is 0, which means system is in no-upgrade state"
 	::= { brcdStackISSUStatusUnitEntry 2 }
 
 brcdStackISSUStatusUnitType OBJECT-TYPE
-	SYNTAX     DisplayString 
+	SYNTAX     DisplayString
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
@@ -233,4 +233,3 @@ brcdStackISSUStatusUnitStatus OBJECT-TYPE
 	::= { brcdStackISSUStatusUnitEntry 5 }
 
 END
-

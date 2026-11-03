@@ -234,7 +234,7 @@ productIdentificationBannerMotdAckMode OBJECT-TYPE
        DESCRIPTION "If enable is selected, user will be required to acknowledge
                     the banner displayed on the console. The user would have
 		    to type 'y' or 'n' to continue to the login prompt.
-		    If n is typed, the session is terminated and no future 
+		    If n is typed, the session is terminated and no future
 		    communication is allowed on that session.
 		    However, serial connection will not get terminated
 		    if user does not enter 'y'.
@@ -332,7 +332,7 @@ envMonFanStatusEntry OBJECT-TYPE
         STATUS     current
         DESCRIPTION
                 "An entry in the fan status table, representing the status of
-                the associated fan maintained by the environmental monitor. 
+                the associated fan maintained by the environmental monitor.
                 Not Supported by Dell Modular Blade Server switches."
         INDEX   { envMonFanStatusIndex }
         ::= { envMonFanStatusTable 1 }
@@ -350,8 +350,8 @@ envMonFanStatusIndex OBJECT-TYPE
         MAX-ACCESS read-only
         STATUS     current
         DESCRIPTION
-                "Unique index for the fan being instrumented. This index is 
-                for SNMP purposes only, and has no intrinsic meaning. Not 
+                "Unique index for the fan being instrumented. This index is
+                for SNMP purposes only, and has no intrinsic meaning. Not
                 Supported by Dell Modular Blade Server switches."
         ::= { envMonFanStatusEntry 1 }
 
@@ -362,9 +362,9 @@ envMonFanStatusDescr OBJECT-TYPE
         STATUS     current
         DESCRIPTION
                 "Textual description of the fan being instrumented.
-                This description is a short textual label, suitable 
-                as a human-sensible identification for the rest of 
-                the information in the entry. Not Supported by Dell 
+                This description is a short textual label, suitable
+                as a human-sensible identification for the rest of
+                the information in the entry. Not Supported by Dell
                 Modular Blade Server switches."
         ::= { envMonFanStatusEntry 2 }
 
@@ -374,7 +374,7 @@ envMonFanState OBJECT-TYPE
 
         STATUS     current
         DESCRIPTION
-                "The mandatory  state of the fan being instrumented. 
+                "The mandatory  state of the fan being instrumented.
                 Not Supported by Dell Modular Blade Server switches."
         ::= { envMonFanStatusEntry 3 }
 
@@ -383,7 +383,7 @@ envMonFanSpeed OBJECT-TYPE
         MAX-ACCESS read-only
         STATUS     current
         DESCRIPTION
-                "Speed of the fan being instrumented. Not 
+                "Speed of the fan being instrumented. Not
                 Supported by Dell Modular Blade Server switches."
         ::= { envMonFanStatusEntry 4 }
 

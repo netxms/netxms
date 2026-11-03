@@ -29,7 +29,7 @@ fcipExtMIB MODULE-IDENTITY
        DESCRIPTION
            "The module defines management information specific to FCIP devices."
 
-       REVISION	"200906191505Z" -- Jul 06, 2009 2:37pm	
+       REVISION	"200906191505Z" -- Jul 06, 2009 2:37pm
        DESCRIPTION	"Removed duplicate entry of fcipExtendedLinkTable"
 		REVISION "201304261133Z" -- Apr 26, 2013 11:33pm
 		DESCRIPTION "Modified description for fcipext table objects"
@@ -39,36 +39,36 @@ fcipExtMIB MODULE-IDENTITY
    -- ******************************************************************
    -- Textual conventions
    --
-BrcdCompressionRatio ::= TEXTUAL-CONVENTION 
-	DISPLAY-HINT "d" 
-	STATUS current 
-	DESCRIPTION "A number indicating a compression ratio over a set of bytes. 
-		The value is defined as a set of bytes. The value is defined as 1000 * bytes(compressed) / 
-		bytes(original) rounded to the next integer value. Note that compressed sets of bytes can 
-		be larger than the corresponding uncompressed ones. Therefore, the number can be greater than 1000." 
+BrcdCompressionRatio ::= TEXTUAL-CONVENTION
+	DISPLAY-HINT "d"
+	STATUS current
+	DESCRIPTION "A number indicating a compression ratio over a set of bytes.
+		The value is defined as a set of bytes. The value is defined as 1000 * bytes(compressed) /
+		bytes(original) rounded to the next integer value. Note that compressed sets of bytes can
+		be larger than the corresponding uncompressed ones. Therefore, the number can be greater than 1000."
 	SYNTAX Unsigned32
 
    -- ******************************************************************
    -- The FCIP Link Extention Table
    --
-fcipExtendedLinkTable OBJECT-TYPE 
-	SYNTAX SEQUENCE OF FcipExtendedLinkEntry 
-	MAX-ACCESS not-accessible 
-	STATUS current 
-	DESCRIPTION "The stats of fcip tunnel compression, retransmission, packet 
-		loss, and latency details" 
-	::= { fcipExtMIB 1} 
+fcipExtendedLinkTable OBJECT-TYPE
+	SYNTAX SEQUENCE OF FcipExtendedLinkEntry
+	MAX-ACCESS not-accessible
+	STATUS current
+	DESCRIPTION "The stats of fcip tunnel compression, retransmission, packet
+		loss, and latency details"
+	::= { fcipExtMIB 1}
 
-fcipExtendedLinkEntry OBJECT-TYPE 
-	SYNTAX FcipExtendedLinkEntry 
-	MAX-ACCESS not-accessible 
-	STATUS current 
-	DESCRIPTION "A conceptual row of the FCIP Extended Link Table containing additional stats." 
-	INDEX { fcipExtendedLinkIfIndex } 
-	::= { fcipExtendedLinkTable 1 } 
+fcipExtendedLinkEntry OBJECT-TYPE
+	SYNTAX FcipExtendedLinkEntry
+	MAX-ACCESS not-accessible
+	STATUS current
+	DESCRIPTION "A conceptual row of the FCIP Extended Link Table containing additional stats."
+	INDEX { fcipExtendedLinkIfIndex }
+	::= { fcipExtendedLinkTable 1 }
 
-FcipExtendedLinkEntry ::= 
-	SEQUENCE { 
+FcipExtendedLinkEntry ::=
+	SEQUENCE {
 	 fcipExtendedLinkIfIndex InterfaceIndex,
 	 fcipExtendedLinkTcpRetransmits Counter64,
 	 fcipExtendedLinkTcpDroppedPackets Counter64,
@@ -94,98 +94,98 @@ fcipExtendedLinkIfIndex     OBJECT-TYPE
             the FCIP Tunnels running over TCP/IP."
        ::= { fcipExtendedLinkEntry 1 }
 
-fcipExtendedLinkTcpRetransmits OBJECT-TYPE 
-	SYNTAX Counter64 
-	MAX-ACCESS read-only 
-	STATUS current 
-	DESCRIPTION "Number of segments retransmitted for the tunnel." 
+fcipExtendedLinkTcpRetransmits OBJECT-TYPE
+	SYNTAX Counter64
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION "Number of segments retransmitted for the tunnel."
 	::= { fcipExtendedLinkEntry 2 }
 
-fcipExtendedLinkTcpDroppedPackets OBJECT-TYPE 
-	SYNTAX Counter64 
-	MAX-ACCESS read-only 
-	STATUS current 
+fcipExtendedLinkTcpDroppedPackets OBJECT-TYPE
+	SYNTAX Counter64
+	MAX-ACCESS read-only
+	STATUS current
 	DESCRIPTION "Number of TCP packets dropped in the tunnel. It is
 				taken from TCPtransmits value."
 	::= { fcipExtendedLinkEntry 3 }
 
-fcipExtendedLinkCompressionRatio OBJECT-TYPE 
+fcipExtendedLinkCompressionRatio OBJECT-TYPE
 	SYNTAX BrcdCompressionRatio
 	UNITS "compression ratio"
-	MAX-ACCESS read-only 
-	STATUS current 
+	MAX-ACCESS read-only
+	STATUS current
 	DESCRIPTION "Compression ratio of the tunnel in thousands."
 	::= { fcipExtendedLinkEntry 4 }
 
-fcipExtendedLinkTcpSmoothedRTT OBJECT-TYPE 
+fcipExtendedLinkTcpSmoothedRTT OBJECT-TYPE
 	SYNTAX Integer32
 	UNITS "milliseconds"
-	MAX-ACCESS read-only 
-	STATUS current 
-	DESCRIPTION "Round trip time (latency) in milliseconds for tunnel" 
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION "Round trip time (latency) in milliseconds for tunnel"
 	::= { fcipExtendedLinkEntry 5 }
 
-fcipExtendedLinkRawBytes OBJECT-TYPE 
+fcipExtendedLinkRawBytes OBJECT-TYPE
 	SYNTAX Counter64
-	MAX-ACCESS read-only 
-	STATUS current 
-	DESCRIPTION "Total number of raw bytes sent or received for the tunnel." 
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION "Total number of raw bytes sent or received for the tunnel."
 	::= { fcipExtendedLinkEntry 6 }
 
-fcipExtendedLinkCompressedBytes OBJECT-TYPE 
+fcipExtendedLinkCompressedBytes OBJECT-TYPE
 	SYNTAX Counter64
-	MAX-ACCESS read-only 
-	STATUS current 
-	DESCRIPTION "The total number of compressed bytes sent or received for the tunnel." 
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION "The total number of compressed bytes sent or received for the tunnel."
 	::= { fcipExtendedLinkEntry 7 }
 
-fcipExtendedLinkConnectedCount OBJECT-TYPE 
+fcipExtendedLinkConnectedCount OBJECT-TYPE
 	SYNTAX Counter64
-	MAX-ACCESS read-only 
-	STATUS current 
-	DESCRIPTION "TCP session connection count for the tunnel." 
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION "TCP session connection count for the tunnel."
 	::= { fcipExtendedLinkEntry 8 }
 
-fcipExtendedLinkRtxRtxTO OBJECT-TYPE 
+fcipExtendedLinkRtxRtxTO OBJECT-TYPE
 	SYNTAX Counter64
-	MAX-ACCESS read-only 
-	STATUS current 
-	DESCRIPTION "Counter of retransmit packets due to timeout for the tunnel as Slow ReTx." 
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION "Counter of retransmit packets due to timeout for the tunnel as Slow ReTx."
 	::= { fcipExtendedLinkEntry 9 }
 
-fcipExtendedLinkRtxDupAck OBJECT-TYPE 
+fcipExtendedLinkRtxDupAck OBJECT-TYPE
 	SYNTAX Counter64
-	MAX-ACCESS read-only 
-	STATUS current 
-	DESCRIPTION "Counter of retransmit packets due to duplicate acknowledgement for the tunnel as Fast ReTx." 
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION "Counter of retransmit packets due to duplicate acknowledgement for the tunnel as Fast ReTx."
 	::= { fcipExtendedLinkEntry 10 }
 
-fcipExtendedLinkDupAck OBJECT-TYPE 
+fcipExtendedLinkDupAck OBJECT-TYPE
 	SYNTAX Counter64
-	MAX-ACCESS read-only 
-	STATUS current 
-	DESCRIPTION "Counter of duplicate acknowledgement packets for the tunnel." 
+	MAX-ACCESS read-only
+	STATUS current
+	DESCRIPTION "Counter of duplicate acknowledgement packets for the tunnel."
 	::= { fcipExtendedLinkEntry 11 }
 
-fcipExtendedLinkRtt OBJECT-TYPE 
-	SYNTAX Integer32 
+fcipExtendedLinkRtt OBJECT-TYPE
+	SYNTAX Integer32
 	UNITS "milliseconds"
-	MAX-ACCESS read-only 
-	STATUS current 
+	MAX-ACCESS read-only
+	STATUS current
 	DESCRIPTION "Round trip time in milliseconds for the tunnel."
 	::= { fcipExtendedLinkEntry 12 }
 
-fcipExtendedLinkOoo OBJECT-TYPE 
+fcipExtendedLinkOoo OBJECT-TYPE
 	SYNTAX Counter64
-	MAX-ACCESS read-only 
-	STATUS current 
+	MAX-ACCESS read-only
+	STATUS current
 	DESCRIPTION "Counter of TCP out-of-order frames for the tunnel."
 	::= { fcipExtendedLinkEntry 13 }
 
-fcipExtendedLinkSlowStarts OBJECT-TYPE 
+fcipExtendedLinkSlowStarts OBJECT-TYPE
 	SYNTAX Counter64
-	MAX-ACCESS read-only 
-	STATUS current 
+	MAX-ACCESS read-only
+	STATUS current
 	DESCRIPTION "Counter of slow starts for the tunnel."
 	::= { fcipExtendedLinkEntry 14 }
 
@@ -197,7 +197,7 @@ fcipConnStatsTable OBJECT-TYPE
     SYNTAX SEQUENCE OF FcipConnStatsEntry
     MAX-ACCESS not-accessible
     STATUS current
-    DESCRIPTION "The stats of fcip tunnel compression, retransmission, packet 
+    DESCRIPTION "The stats of fcip tunnel compression, retransmission, packet
         loss, and latency details"
     ::= { fcipExtMIB 2}
 

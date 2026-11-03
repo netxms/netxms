@@ -6,7 +6,7 @@ S5-ETHERNET-COMMON-MIB DEFINITIONS ::= BEGIN
 -- 5000 Ethernet Common MIB Release 1.1.7
 -- Revision 12/21/98
 
--- Copyright 1995, 1996, 1997 Bay Networks, Inc. 
+-- Copyright 1995, 1996, 1997 Bay Networks, Inc.
 -- All rights reserved.
 -- This Bay Networks SNMP Management Information Base Specification
 -- (Specification) embodies Bay Networks' confidential and
@@ -30,7 +30,7 @@ IMPORTS
 		FROM S5-ETHERNET-MIB
 	TimeIntervalSec, SrcIndx, AttId
 		FROM S5-TCS-MIB;
- 
+
 
 
 -- SECTION 2: Configuration information
@@ -182,15 +182,15 @@ s5EnPortJabberStatus OBJECT-TYPE
 
 
 -- The System 5000 Port Extension Table
- 
+
 -- Implementation of the Port Extension Table is optional
- 
+
 s5EnPortExtTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF S5EnPortExtEntry
         ACCESS  not-accessible
         STATUS  mandatory
         DESCRIPTION
-                "An extension table to s5EnPortTable containing 
+                "An extension table to s5EnPortTable containing
                 additional information about per port
                 switchable, autonegotiating 10/100 Mbit
                 ethernet connectivity ports on a board.
@@ -199,19 +199,19 @@ s5EnPortExtTable OBJECT-TYPE
                 that do not have any ports do not have
                 any entries in this table."
         ::= { s5EnCfg 3 }
- 
+
 s5EnPortExtEntry OBJECT-TYPE
         SYNTAX  S5EnPortExtEntry
         ACCESS  not-accessible
         STATUS  mandatory
         DESCRIPTION
-                "A row in Ethernet port extension table. 
-                Entries can not be created or deleted 
+                "A row in Ethernet port extension table.
+                Entries can not be created or deleted
                 via SNMP."
         INDEX   { s5EnPortExtBrdIndx,
                   s5EnPortExtIndx }
         ::= { s5EnPortExtTable 1 }
- 
+
 S5EnPortExtEntry ::= SEQUENCE {
         s5EnPortExtBrdIndx INTEGER,
         s5EnPortExtIndx INTEGER,
@@ -225,7 +225,7 @@ S5EnPortExtEntry ::= SEQUENCE {
         s5EnPortExtActiveSpeed INTEGER,
         s5EnPortExtCurDuplexMode INTEGER
         }
- 
+
 s5EnPortExtBrdIndx OBJECT-TYPE
         SYNTAX  INTEGER (1..255)
         ACCESS  read-only
@@ -234,7 +234,7 @@ s5EnPortExtBrdIndx OBJECT-TYPE
                 "The index of the board. This corresponds to
                 the index of the slot containing the board."
         ::= { s5EnPortExtEntry 1 }
- 
+
 s5EnPortExtIndx OBJECT-TYPE
         SYNTAX  INTEGER (1..255)
         ACCESS  read-only
@@ -244,7 +244,7 @@ s5EnPortExtIndx OBJECT-TYPE
                 value ranges between 1 and index of the last
                 manageable port on the board."
         ::= { s5EnPortExtEntry 2 }
- 
+
 s5EnPortExtHwCapability OBJECT-TYPE
         SYNTAX  OCTET STRING (SIZE(1))
         ACCESS  read-only
@@ -257,7 +257,7 @@ s5EnPortExtHwCapability OBJECT-TYPE
                 is on,  the port will have multiple speed capabilities
                 while if the auto negotiation is not supported, the
                 hardware will only be capable for one speed:
- 
+
                  bit 0 - 10 BASE-T half duplex capable
                  bit 1 - 10 BASE-T full duplex capable
                  bit 2 - 100 BASE-TX half duplex capable
@@ -277,7 +277,7 @@ s5EnPortExtHwCapability OBJECT-TYPE
                 supported by the port, but which must be manually
                 configured."
         ::= { s5EnPortExtEntry 3 }
- 
+
 s5EnPortExtAutoNegAdv OBJECT-TYPE
         SYNTAX  OCTET STRING (SIZE(1))
         ACCESS  read-write
@@ -309,7 +309,7 @@ s5EnPortExtAutoNegAdv OBJECT-TYPE
                 one of the speed setting bits MUST be set in
                 accordance with s5EnPortExtHwCapability."
         ::= { s5EnPortExtEntry 4 }
- 
+
 s5EnPortExtAutoNegRcvd OBJECT-TYPE
         SYNTAX  OCTET STRING (SIZE(1))
         ACCESS  read-only
@@ -324,25 +324,25 @@ s5EnPortExtAutoNegRcvd OBJECT-TYPE
                  bit 3 - 100 BASE-TX full duplex capable
                 "
         ::= { s5EnPortExtEntry 5 }
- 
+
 s5EnPortExt10MbSegAttCfg OBJECT-TYPE
         SYNTAX  AttId
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                "The index for the segment used in case 
+                "The index for the segment used in case
                 a 10 Mbit link is established."
         ::= { s5EnPortExtEntry 6 }
- 
+
 s5EnPortExt100MbSegAttCfg OBJECT-TYPE
         SYNTAX  AttId
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
-                "The index for the segment used in case 
+                "The index for the segment used in case
                 a 100 Mbit link is established."
         ::= { s5EnPortExtEntry 7 }
- 
+
 s5EnPortExt10MbSegConnCapability OBJECT-TYPE
         SYNTAX  OCTET STRING (SIZE(8))
         ACCESS  read-only
@@ -354,7 +354,7 @@ s5EnPortExt10MbSegConnCapability OBJECT-TYPE
                 the port.  One bit is also reserved to
                 indicate if the cluster has an isolate
                 capability.
- 
+
                 The first 31 bits of the array represent
                 the backplane numbers, starting from the
                 lower order bit. Bit 32 indicates whether
@@ -363,13 +363,13 @@ s5EnPortExt10MbSegConnCapability OBJECT-TYPE
                 starting with bits in the lower order octet,
                 represent local segments that the port
                 can connect to.
- 
+
                 A bit with a value of 1 means that the
                 port is capable of  connecting to the
                 corresponding backplane segment, local segment
                 or null segment."
         ::= { s5EnPortExtEntry 8 }
- 
+
  s5EnPortExt100MbSegConnCapability OBJECT-TYPE
         SYNTAX  OCTET STRING (SIZE(8))
         ACCESS  read-only
@@ -381,7 +381,7 @@ s5EnPortExt10MbSegConnCapability OBJECT-TYPE
                 the port.  One bit is also reserved to
                 indicate if the cluster has an isolate
                 capability.
- 
+
                 The first 31 bits of the array represent
                 the backplane numbers, starting from the
                 lower order bit. Bit 32 indicates whether
@@ -390,13 +390,13 @@ s5EnPortExt10MbSegConnCapability OBJECT-TYPE
                 starting with bits in the lower order octet,
                 represent local segments that the port
                 can connect to.
- 
+
                 A bit with a value of 1 means that the
                 port is capable of  connecting to the
                 corresponding backplane segment, local segment
                 or null segment."
         ::= { s5EnPortExtEntry 9 }
- 
+
 s5EnPortExtActiveSpeed OBJECT-TYPE
         SYNTAX  INTEGER {
                 unknown(1),
@@ -412,7 +412,7 @@ s5EnPortExtActiveSpeed OBJECT-TYPE
                   bps10M(2).........10 Mbit link
                   bps100M(3)........100 Mbit link"
         ::= { s5EnPortExtEntry 10 }
- 
+
 s5EnPortExtCurDuplexMode OBJECT-TYPE
         SYNTAX  INTEGER {
                 unknown(1),
@@ -428,7 +428,7 @@ s5EnPortExtCurDuplexMode OBJECT-TYPE
                   halfDuplex(2).........half duplex mode
                   fullDuplex(3)........full duplex mode"
         ::= { s5EnPortExtEntry 11 }
- 
+
 
 
 -- SECTION 3: Statistics
@@ -830,7 +830,7 @@ s5EnSStatSegColls OBJECT-TYPE
 	ACCESS	read-only
 	STATUS	mandatory
 	DESCRIPTION
-		"A count of number of transmit collision 
+		"A count of number of transmit collision
 		events(one per packet activity) for a
 		segment (i.e., local channel or backplane
 		network)."

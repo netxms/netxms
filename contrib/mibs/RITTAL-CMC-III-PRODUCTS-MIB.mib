@@ -104,14 +104,14 @@ cmcIIIProducts   MODULE-IDENTITY
 	cmcIIIProductChassisLCP5               OBJECT IDENTIFIER ::= { cmcIIIProductChassis  9472 } -- 0x2500
 	cmcIIIProductChassisLCPMsrz            OBJECT IDENTIFIER ::= { cmcIIIProductChassis  9728 } -- 0x2600
 	cmcIIIProductChassisLCPT3              OBJECT IDENTIFIER ::= { cmcIIIProductChassis  9984 } -- 0x2700
-	cmcIIIProductChassisLCPFlush           OBJECT IDENTIFIER ::= { cmcIIIProductChassis 10240 } -- 0x2800    
+	cmcIIIProductChassisLCPFlush           OBJECT IDENTIFIER ::= { cmcIIIProductChassis 10240 } -- 0x2800
 	cmcIIIProductChassisLCP                OBJECT IDENTIFIER ::= { cmcIIIProductChassis 10496 } -- 0x2900
     cmcIIIProductChassisPSM-M16            OBJECT IDENTIFIER ::= { cmcIIIProductChassis 12288 } -- 0x3000
     cmcIIIProductChassisPSM-M32            OBJECT IDENTIFIER ::= { cmcIIIProductChassis 12544 } -- 0x3100
     cmcIIIProductChassisPSM-MID-M16        OBJECT IDENTIFIER ::= { cmcIIIProductChassis 13312 } -- 0x3400
     cmcIIIProductChassisPSM-MID-M32        OBJECT IDENTIFIER ::= { cmcIIIProductChassis 13568 } -- 0x3500
 	cmcIIIProductFireDetect                OBJECT IDENTIFIER ::= { cmcIIIProductChassis 28672 } -- 0x7000
-	cmcIIIProductFireExtinguisher          OBJECT IDENTIFIER ::= { cmcIIIProductChassis 28928 } -- 0x7100	
+	cmcIIIProductFireExtinguisher          OBJECT IDENTIFIER ::= { cmcIIIProductChassis 28928 } -- 0x7100
     cmcIIIProductChassisInternal           OBJECT IDENTIFIER ::= { cmcIIIProductChassis 32768 } -- 0x8000
     cmcIIIProductChassisVirtualTwoLevel    OBJECT IDENTIFIER ::= { cmcIIIProductChassis 61440 } -- 0xF000
     cmcIIIProductChassisVirtualAccess      OBJECT IDENTIFIER ::= { cmcIIIProductChassis 61696 } -- 0xF100

@@ -62,7 +62,7 @@
 --      from Integer32 to Unsigned32 by songhao 02718.
 -- V2.8 2011-08-30
 --      Added h3cEntityExtCpuUsageRecoverThreshold;
---      Added h3cEntityExtCpuUsageRecoverThreshold to h3cEntityExtCpuUsageThresholdNotfication and 
+--      Added h3cEntityExtCpuUsageRecoverThreshold to h3cEntityExtCpuUsageThresholdNotfication and
 --      h3cEntityExtCpuUsageThresholdRecover by shuaixiaojuan 04117.
 --      Added h3cEntityExtFirstTrapTime by duyanbing 04404.
 -- =================================================================
@@ -641,7 +641,7 @@ A3COM-HUAWEI-ENTITY-EXT-MIB DEFINITIONS ::= BEGIN
         STATUS current
         DESCRIPTION
             "The recover threshold for the CPU usage.  When the CPU usage falls down to
-            the threshold, a notification is sent.  The h3cEntityExtCpuUsageRecoverThreshold 
+            the threshold, a notification is sent.  The h3cEntityExtCpuUsageRecoverThreshold
             must be less than or equal to the h3cEntityExtCpuUsageThreshold."
         DEFVAL      { 100 }
         ::= { h3cEntityExtStateEntry 31 }

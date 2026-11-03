@@ -27,7 +27,7 @@ fdryLinkAggregationGroupMIB MODULE-IDENTITY
             configuration and statistics. Link aggregation group is a new concept
             of trunk and this MIB is replacing FOUNDRY-SN-LAG-MIB in MLX/XMR products
 			starting release 4.1.0.
-			
+
 			Copyright 1996-2008 Foundry Networks, Inc.
 			All rights reserved.
 			This Foundry Networks SNMP Management Information Base Specification
@@ -35,15 +35,15 @@ fdryLinkAggregationGroupMIB MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
-			operation, condition, or performance of the Specification.            
-			
+			operation, condition, or performance of the Specification.
+
 			"
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION
-			"convert from SMIv1 to SMIv2"            
+			"convert from SMIv1 to SMIv2"
 
    ::= { snSwitch 33 }
 
@@ -114,8 +114,8 @@ fdryLinkAggregationGroupAdminStatus OBJECT-TYPE
     MAX-ACCESS read-create
     STATUS     current
     DESCRIPTION
-         "The desired deplyed state of this LinkAggregationGroup entry. 
-         This is not the operational status. Refer to ifTable for the 
+         "The desired deplyed state of this LinkAggregationGroup entry.
+         This is not the operational status. Refer to ifTable for the
          operational status.
          deploy(1).............deploy the LAG and set to LACP active if dynamic LAG.
          deployPassive(2)..deploy the LAG and set to LACP passive if dynamic LAG.
@@ -124,7 +124,7 @@ fdryLinkAggregationGroupAdminStatus OBJECT-TYPE
                                       This is a write-only value.
          other(5)..................FI products will not support LAG deploy option.
                                       This is a write-only value.
-         In particular, a row cannot be deployed until the corresponding 
+         In particular, a row cannot be deployed until the corresponding
          instances of fdryLinkAggregationGroupIfList has been set."
     ::= { fdryLinkAggregationGroupEntry 3 }
 
@@ -145,8 +145,8 @@ fdryLinkAggregationGroupPrimaryPort OBJECT-TYPE
     DESCRIPTION
             "The primary port for the Link Aggregation Group. This must
             be set before deploying the LinkAggregateGroup unless this is
-            a keepalive LinkAggregateGroup.  Zero will be returned 
-            for primary ports not set. This object will not be used in FI 
+            a keepalive LinkAggregateGroup.  Zero will be returned
+            for primary ports not set. This object will not be used in FI
 	    products from 8.0.61 onwards"
     ::= { fdryLinkAggregationGroupEntry 5 }
 
@@ -184,7 +184,7 @@ fdryLinkAggregationGroupIfIndex OBJECT-TYPE
     DESCRIPTION
             "After deployment the operation information of a LAG entry will be
             represented in an entry in ifTable. Use this variable as the ifIndex
-            to access the entry in ifTable and ifXTable. Zero will be returned 
+            to access the entry in ifTable and ifXTable. Zero will be returned
             for LAGs not yet deployed."
     ::= { fdryLinkAggregationGroupEntry 9 }
 
@@ -279,7 +279,7 @@ fdryLinkAggregationGroupPortLacpPriority OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-            "The LACP priority value assigned to this link aggregation port. Applicable 
+            "The LACP priority value assigned to this link aggregation port. Applicable
             for dynamic and keepalive LAG only."
     DEFVAL { 1 }
     ::= { fdryLinkAggregationGroupPortEntry 1 }
@@ -329,7 +329,7 @@ fdryLinkAggregationGroupLacpPortAdminStatus OBJECT-TYPE
     DESCRIPTION
             "The current admin state of the interface.
             The testing(3) state indicates that no operational
-	    packets can be passed. 
+	    packets can be passed.
 	    (same as ifAdminStatus in MIB-II)"
     ::= { fdryLinkAggregationGroupLacpPortEntry 1 }
 
@@ -344,17 +344,17 @@ fdryLinkAggregationGroupLacpPortLinkStatus OBJECT-TYPE
     DESCRIPTION
             "The current operational state of the interface.
             The testing(3) state indicates that no operational
-	    packets can be passed. 
+	    packets can be passed.
 	    (same as ifOperStatus in MIB-II)"
     ::= { fdryLinkAggregationGroupLacpPortEntry 2 }
 
  fdryLinkAggregationGroupLacpPortLacpStatus OBJECT-TYPE
     SYNTAX  INTEGER {
-				operation(1),     
+				operation(1),
 				down(2),
 				blocked(3),
 				inactive(4),
-				pexforceup(5)				
+				pexforceup(5)
 			}
     MAX-ACCESS read-only
     STATUS     current

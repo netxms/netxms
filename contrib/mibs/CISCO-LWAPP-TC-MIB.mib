@@ -1,7 +1,7 @@
 -- *******************************************************************
 -- CISCO-LWAPP-TC-MIB.my:  Cisco LWAPP MIBs Textual Conventions
 -- March 2006, Prasanna Viswakumar
---   
+--
 -- Copyright (c) 2006-2007, 2010-2011, 2019, 2021-2022, 2024 by Cisco Systems, Inc.
 -- All rights reserved.
 -- *******************************************************************
@@ -40,10 +40,10 @@ ciscoLwappTextualConventions MODULE-IDENTITY
     DESCRIPTION
         "This module defines textual conventions used
         throughout the Cisco enterprise MIBs
-        designed for implementation on Central 
+        designed for implementation on Central
         Controllers that terminate the Light Weight
         Access Point Protocol from LWAPP Access
-        Points. 
+        Points.
 
         The relationship between CC and the LWAPP APs
         can be depicted as follows:
@@ -123,7 +123,7 @@ ciscoLwappTextualConventions MODULE-IDENTITY
 
         This is a generic protocol that defines the
         communication between the Access Points and the
-        Central Controller. 
+        Central Controller.
 
         Management Frame Protection ( MFP )
 
@@ -158,19 +158,19 @@ ciscoLwappTextualConventions MODULE-IDENTITY
 
         802.11n
 
-        802.11n builds upon previous 802.11 standards by 
-        adding MIMO (multiple-input multiple-output). MIMO 
-        uses multiple transmitter and receiver antennas to 
-        allow for increased data throughput through spatial 
+        802.11n builds upon previous 802.11 standards by
+        adding MIMO (multiple-input multiple-output). MIMO
+        uses multiple transmitter and receiver antennas to
+        allow for increased data throughput through spatial
         multiplexing and increased range.
 
-        Control/Extension Channel 
+        Control/Extension Channel
 
-        A single 802.11 channel is 20 MHz wide.  802.11n allows 
-        the use of channels of width 40 MHz by combining two 
-        20 MHz channels.  The channels are known as the primary 
-        or control channel and secondary or extension channel. 
-        Both the channels are used for transmission 
+        A single 802.11 channel is 20 MHz wide.  802.11n allows
+        the use of channels of width 40 MHz by combining two
+        20 MHz channels.  The channels are known as the primary
+        or control channel and secondary or extension channel.
+        Both the channels are used for transmission
         and reception of data.
 
         REFERENCE
@@ -179,9 +179,9 @@ ciscoLwappTextualConventions MODULE-IDENTITY
             and Physical Layer ( PHY ) Specifications.
 
         [2] Draft-obara-capwap-lwapp-00.txt, IETF Light
-            Weight Access Point Protocol. 
+            Weight Access Point Protocol.
 
-        [3] Enhanced Wireless Consortium MAC Specification, 
+        [3] Enhanced Wireless Consortium MAC Specification,
             v1.24.
 
         [4] Enhanced Wireless Consortium PHY Specification,
@@ -288,25 +288,25 @@ CLDot11ClientStatus ::= TEXTUAL-CONVENTION
 
         idle(1) - client is in idle mode.
 
-        aaaPending(2) - client's authentication is pending. 
+        aaaPending(2) - client's authentication is pending.
         Request has been sent to AAA server for authentication.
 
         authenticated(3) - client has been authenticated.
 
-        associated(4) - client is associated, but not 
-        authenticated. 
+        associated(4) - client is associated, but not
+        authenticated.
 
         powersave(5) - client is in powersave mode.
 
-        disassociated(6) - client has dissociated and not in 
+        disassociated(6) - client has dissociated and not in
         any of the 802.11 networks managed by the controller.
 
         tobedeleted(7) - client is marked for deletion.
 
-        probing(8) - state before association. The client 
-        will be removed if it does not associate. 
+        probing(8) - state before association. The client
+        will be removed if it does not associate.
 
-        excluded(9) - client has been marked as excluded after fixed 
+        excluded(9) - client has been marked as excluded after fixed
         number of authentication failures."
     SYNTAX          INTEGER  {
                         idle(1),
@@ -324,7 +324,7 @@ CLEventFrames ::= TEXTUAL-CONVENTION
     STATUS          current
     DESCRIPTION
         "This textual convention defines the possible
-        802.11 management frame subtypes. 
+        802.11 management frame subtypes.
 
         cLAssocRequestFrm - 802.11 Association Request
         frame
@@ -340,7 +340,7 @@ CLEventFrames ::= TEXTUAL-CONVENTION
 
         cLProbeRequestFrm - 802.11 Probe Request frame
 
-        cLProbeResponseFrm - 802.11 Probe Response 
+        cLProbeResponseFrm - 802.11 Probe Response
         frame
 
         cLReserved1 - Reserved for future use
@@ -390,9 +390,9 @@ CLMfpEventType ::= TEXTUAL-CONVENTION
         that the MIC carried by a particular management
         frame is invalid.
 
-        invalidSeq - The MFP validation has identified 
+        invalidSeq - The MFP validation has identified
         that a particular management frame is carrying an
-        invalid sequence number.  Note that an invalid 
+        invalid sequence number.  Note that an invalid
         sequence number error can also be detected due to an
         incorrect timestamp in the MFP information element.
         The incorrect timestamp could possibly be due to the
@@ -405,57 +405,57 @@ CLMfpEventType ::= TEXTUAL-CONVENTION
 
         unexpectedMic - The MFP validation has detected a
         management frame as carrying a MIC value when
-        protection is not enabled on the WLAN. 
+        protection is not enabled on the WLAN.
 
-        ccmpDecryptError - An MFP frame that was apparently 
-        received from a client in an AES-CCMP encrypted 
-        session was rejected by the Access Point because it 
+        ccmpDecryptError - An MFP frame that was apparently
+        received from a client in an AES-CCMP encrypted
+        session was rejected by the Access Point because it
         could not be decrypted.
 
-        ccmpInvalidMhdrIe - An MFP frame that was apparently 
-        received from a client in an AES-CCMP encrypted 
-        session was rejected by the Access Point because it 
-        contained an invalid MHDR information element, or the 
+        ccmpInvalidMhdrIe - An MFP frame that was apparently
+        received from a client in an AES-CCMP encrypted
+        session was rejected by the Access Point because it
+        contained an invalid MHDR information element, or the
         MHDR information element was not present.
 
-        ccmpInvalidReplayCtr - An MFP frame that was apparently 
-        received from a client in an AES-CCMP encrypted session 
-        was rejected by the Access Point because the replay 
+        ccmpInvalidReplayCtr - An MFP frame that was apparently
+        received from a client in an AES-CCMP encrypted session
+        was rejected by the Access Point because the replay
         counter was not valid.
 
-        tkipInvalidIcv - An MFP frame that was apparently 
-        received from a client in a TKIP encrypted session was 
-        rejected by the Access Point because it contained an 
+        tkipInvalidIcv - An MFP frame that was apparently
+        received from a client in a TKIP encrypted session was
+        rejected by the Access Point because it contained an
         invalid Integrity Check Value.
 
-        tkipInvalidMic - An MFP frame that was apparently 
-        received from a client in a TKIP encrypted session was 
-        rejected by the Access Point because the message 
+        tkipInvalidMic - An MFP frame that was apparently
+        received from a client in a TKIP encrypted session was
+        rejected by the Access Point because the message
         integrity check failed.
 
-        tkipInvalidMhdrIe - An MFP frame that was apparently 
-        received from a client in a TKIP encrypted session was 
-        rejected by the Access Point because it contained an 
-        invalid MHDR information element, or the MHDR 
+        tkipInvalidMhdrIe - An MFP frame that was apparently
+        received from a client in a TKIP encrypted session was
+        rejected by the Access Point because it contained an
+        invalid MHDR information element, or the MHDR
         information element was not present.
 
-        tkipInvalidReplayCtr - An MFP frame that was apparently 
-        received from a client in a TKIP encrypted session was 
-        rejected by the Access Point because it the replay 
+        tkipInvalidReplayCtr - An MFP frame that was apparently
+        received from a client in a TKIP encrypted session was
+        rejected by the Access Point because it the replay
         counter was not valid.
 
-        bcastDisassociationFrameRcvd - The Access Point detected 
-        a broadcast disassociation frame.  Broadcast 
-        disassociation frames are rejected by CCXv5 compliant 
+        bcastDisassociationFrameRcvd - The Access Point detected
+        a broadcast disassociation frame.  Broadcast
+        disassociation frames are rejected by CCXv5 compliant
         devices.
 
-        bcastDeauthenticationFrameRcvd - The Access Point 
-        detected a broadcast deauthentication frame.  Broadcast 
-        deauthentication frames are rejected by CCXv5 compliant 
+        bcastDeauthenticationFrameRcvd - The Access Point
+        detected a broadcast deauthentication frame.  Broadcast
+        deauthentication frames are rejected by CCXv5 compliant
         devices.
 
-        bcastActionFrameRcvd - The Access Point detected a 
-        broadcast action frame.  Broadcast action frames are 
+        bcastActionFrameRcvd - The Access Point detected a
+        broadcast action frame.  Broadcast action frames are
         rejected by CCXv5 compliant devices."
     SYNTAX          INTEGER  {
                         invalidMic(1),
@@ -480,10 +480,10 @@ CLMfpEventSource ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "The source of the MFP anomaly event.
 
-        infrastructureMfp - The source of the MFP event is 
+        infrastructureMfp - The source of the MFP event is
         an infrastructure device that implements MFP.
 
-        clientMfp - The source of the MFP event is a client 
+        clientMfp - The source of the MFP event is a client
         device that implements MFP."
     SYNTAX          INTEGER  {
                         infrastructureMfp(1),
@@ -628,13 +628,13 @@ CLDot11Band ::= TEXTUAL-CONVENTION
 
         The semantics are as follows:
 
-        band2dot4 - This value indicates that the 
+        band2dot4 - This value indicates that the
         2.4 GHz band is in use.
 
-        band5 - This value indicates that the 
+        band5 - This value indicates that the
         5 GHz band is in use.
 
-        maui-6ghz - This value indicates that the 
+        maui-6ghz - This value indicates that the
         6 GHz band is in use."
     SYNTAX          INTEGER  {
                         band2dot4(1),
@@ -648,9 +648,9 @@ CLApAssocFailureReason ::= TEXTUAL-CONVENTION
         "This textual convention defines the possible reasons
         for an AP's failure to get associated to a controller.
 
-        The semantics are as follows:  
+        The semantics are as follows:
 
-        unknown - The reason for the AP not being able to 
+        unknown - The reason for the AP not being able to
         associate is unknown.
 
         notSupported - The AP is not supported for management
@@ -691,11 +691,11 @@ CLClientPowerSaveMode ::= TEXTUAL-CONVENTION
         "This textual convention defines power management mode
         of this client.
         The possible two modes are:
-        active(1)    - The client is not in power-save mode 
+        active(1)    - The client is not in power-save mode
                        and it is actively sending or receiving
                        data.
         powersave(2) - The client is in power-save mode and it
-                       wakes up once a while to check for 
+                       wakes up once a while to check for
                        pending data."
     SYNTAX          INTEGER  {
                         active(1),
@@ -737,23 +737,23 @@ CLApDot11RadioRole ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "This textual convention defines the possible values
         of role a radio can support.
-        shutdown(0)         - This role states that the radio is 
+        shutdown(0)         - This role states that the radio is
                               shut down.
         upDownlink(1)       - This radio provides both uplink
                               and downlink access.
-        uplink(2)           - This role is applicable only for Ethernet 
+        uplink(2)           - This role is applicable only for Ethernet
                               ports. This radio provides uplink access.
         downlink(3)         - This radio provides downlink access.
                               downlink radio allows child APs to join.
         access(4)           - This radio provides the access to the
                               clients.
-        uplinkAccess(5)     - This radio role states that the radio 
+        uplinkAccess(5)     - This radio role states that the radio
                               provides the uplink access to the clients.
         downlinkAccess(6)   - This radio role states that the radio
                               provides the downlink access to
                               the clients.
-        upDownlinkAccess(7) - This radio role states that the radio 
-                              provides both uplink and downlink access 
+        upDownlinkAccess(7) - This radio role states that the radio
+                              provides both uplink and downlink access
                               to the clients.
         unknown(8)          - This radio role is unknown."
     SYNTAX          INTEGER  {
@@ -784,29 +784,29 @@ CLApMode ::= TEXTUAL-CONVENTION
     STATUS          current
     DESCRIPTION
         "This textual convention defines the working
-        mode of the AP. 
+        mode of the AP.
         local(0) -        This mode enables the access points
-                          to serve the clients.                
+                          to serve the clients.
         monitor(1) -      This mode enables the access points
-                          to monitor all of its cycles scanning                   
+                          to monitor all of its cycles scanning
                           the channels and looking for rogues.
-        remote(2) -       This mode indicates that AP is a remote 
-                          edge lightweight access point. 
+        remote(2) -       This mode indicates that AP is a remote
+                          edge lightweight access point.
         rogueDetector(3)- This mode enables the access points
                           to detect the rogue access points.
         sniffer(4) -      This mode enables the access points
                           to sniff packets in a particular channel.
-        bridge(5) -       This mode indicates that a root access point.                        
+        bridge(5) -       This mode indicates that a root access point.
                           is connected
         seConnect(6) -    This mode enables the access points
                           to join Cisco spectrum expert and
                           perform spectrum intelligence.
-        remoteBridge(7) - This mode indicates that AP is a remote 
+        remoteBridge(7) - This mode indicates that AP is a remote
                           edge lightweight access point in Bridge
                           (Flex + Mesh) mode.
-         remoteHybrid(8) - This mode is currently not used. 
+         remoteHybrid(8) - This mode is currently not used.
          sensor(9)       - This mode indicates the radio inside
-                           the access point to function as a 
+                           the access point to function as a
                            dedicated sensor."
     SYNTAX          INTEGER  {
                         local(0),
@@ -869,4 +869,3 @@ END
 
 
 -- %DNP%  MLC -Compiled MLC
-

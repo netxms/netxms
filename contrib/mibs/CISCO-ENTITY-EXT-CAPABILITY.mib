@@ -2,7 +2,7 @@
 -- CISCO-ENTITY-EXT-CAPABILITY.my:
 -- CISCO-ENTITY-EXT-MIB AGENT-CAPABILITIES
 --
--- March 2004, Lilian Jiang 
+-- March 2004, Lilian Jiang
 --
 -- Copyright (c) 2004 by Cisco Systems, Inc.
 -- All rights reserved.
@@ -33,7 +33,7 @@ ciscoEntityExtCapability MODULE-IDENTITY
 
                 E-mail: cs-lan-switch-snmp@cisco.com"
         DESCRIPTION
-                "The agent capabilities description of 
+                "The agent capabilities description of
                 CISCO-ENTITY-EXT-MIB."
         REVISION        "200709060000Z"
         DESCRIPTION
@@ -51,7 +51,7 @@ ciscoEntityExtCapCatOSV08R0301 AGENT-CAPABILITIES
     DESCRIPTION         "CISCO-ENTITY-EXT-MIB agent capabilities."
 
     SUPPORTS            CISCO-ENTITY-EXT-MIB
-        INCLUDES        { 
+        INCLUDES        {
                           ceExtPhysicalProcessorGroup,
                           ciscoEntityExtConfigRegGroup,
                           ceExtSysBootImageListGroup
@@ -70,10 +70,10 @@ ceExtCapV12R0217SXPCat6k AGENT-CAPABILITIES
                           ciscoEntityExtConfigRegGroup,
                           ceExtSysBootImageListGroup
                         }
-        VARIATION       ceExtConfigRegNext 
+        VARIATION       ceExtConfigRegNext
             ACCESS      read-only
             DESCRIPTION "read-only implementation."
-        VARIATION       ceExtSysBootImageList 
+        VARIATION       ceExtSysBootImageList
             ACCESS      read-only
             DESCRIPTION "read-only implementation."
     ::= { ciscoEntityExtCapability 2 }
@@ -84,7 +84,7 @@ ceExtCapV12R0233SXHPCat6k AGENT-CAPABILITIES
     STATUS              current
     DESCRIPTION         "CISCO-ENTITY-EXT-MIB capabilities."
 
-    SUPPORTS            CISCO-ENTITY-EXT-MIB 
+    SUPPORTS            CISCO-ENTITY-EXT-MIB
         INCLUDES        {
                           ceExtPhysicalProcessorGroup,
                           ciscoEntityExtConfigRegGroup,
@@ -93,6 +93,3 @@ ceExtCapV12R0233SXHPCat6k AGENT-CAPABILITIES
     ::= { ciscoEntityExtCapability 3 }
 
 END
-
-
-

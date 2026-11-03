@@ -17,7 +17,7 @@
 -- Version 2.03, 2009/1/13, Eli
 -- Description:
 --  [Modification]
--- Revise the DESCRIPTION of swSystemBootTime to "swSystemUpTime" from 
+-- Revise the DESCRIPTION of swSystemBootTime to "swSystemUpTime" from
 -- "systemUpTime" and to "swSystemCurrentTime" from "swSNTPCurrentTime".
 -- Notes: reported from DES3200
 --

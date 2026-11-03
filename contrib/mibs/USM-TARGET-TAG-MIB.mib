@@ -9,7 +9,7 @@ USM-TARGET-TAG-MIB DEFINITIONS ::= BEGIN
         SnmpTagValue
             FROM SNMP-TARGET-MIB
         usmUserEntry
-            FROM SNMP-USER-BASED-SM-MIB 
+            FROM SNMP-USER-BASED-SM-MIB
         MODULE-COMPLIANCE,
         OBJECT-GROUP
             FROM SNMPv2-CONF;
@@ -83,7 +83,7 @@ USM-TARGET-TAG-MIB DEFINITIONS ::= BEGIN
 
 usmTargetTagCompliances   OBJECT IDENTIFIER ::= { usmTargetTagConformance 1 }
 usmTargetTagGroups        OBJECT IDENTIFIER ::= { usmTargetTagConformance 2 }
- 
+
 usmTargetTagGroup OBJECT-GROUP
     OBJECTS {
         usmTargetTag

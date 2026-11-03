@@ -17,15 +17,15 @@
 
 -- Version 1.07, 2013/10/11, Wesley Wang
 -- [New Object]
--- Add New objects swISMVlanCustomerVlanID in swISMVlanTable and 
--- swMSMVlanCustomerVlanID in swMSMVlanTable to support multicast 
+-- Add New objects swISMVlanCustomerVlanID in swISMVlanTable and
+-- swMSMVlanCustomerVlanID in swMSMVlanTable to support multicast
 -- VLAN to work with QinQ.
 -- Notes:Requested by Wesley Wang for DGS3120 R3.10.
 --
 -- Version 1.06, 2012/04/27, Wesley Wang
 -- [New Object]
--- Add New objects swMSMVlanRepSourceAddrFromPorts in swMSMVlanTable and 
--- swISMVlanRepSourceAddrFromPorts in swISMVlanTable to support multicast 
+-- Add New objects swMSMVlanRepSourceAddrFromPorts in swMSMVlanTable and
+-- swISMVlanRepSourceAddrFromPorts in swISMVlanTable to support multicast
 -- VLAN replace source address improvement.
 -- Notes:Requested by Wesley Wang for Codebase.
 --
@@ -35,35 +35,35 @@
 -- MSM VLAN replace source address.
 -- Notes:Requested by Bruce Ge for Codebase.
 --
--- Version 1.04, 2011/3/22, Wesley Wang	   
+-- Version 1.04, 2011/3/22, Wesley Wang
 -- [New Object]
 -- Add New object swISMVlanRepSourceAddrActionType in swISMVlanTable to support
 -- ISM VLAN replace system IP address.
 -- Notes:Requested by Wesley Wang for DES3700-28-ME only.
 --
--- Version 1.03, 2011/2/25, Wesley Wang	   
+-- Version 1.03, 2011/2/25, Wesley Wang
 -- [New Object]
 -- Add swISMVlanAutoAssignVLANState and swMSMVlanAutoAssignVLANStateState to configure
--- auto assign VLAN state. 
+-- auto assign VLAN state.
 -- Notes:Requested by Wesley Wang for DES3810.
 --
 -- Version 1.02, 2010/01/11, Lina Liu
 -- [Modification]
--- 1.Correct the clerical error of swISMVlanForwardUnmactchedState to 
+-- 1.Correct the clerical error of swISMVlanForwardUnmactchedState to
 -- swISMVlanForwardUnmatchedState.
--- 2.Correct the clerical error of swMSMVlanForwardUnmactchedState to 
+-- 2.Correct the clerical error of swMSMVlanForwardUnmactchedState to
 -- swMSMVlanForwardUnmatchedState.
 -- Notes:Requested by Lina Liu for DGS3700.
 --
 -- Version 1.01, 2009/9/9, Phoenix Xie
 -- [New Object]
 -- 1.Add swISMVlanForwardUnmactchedState and swMSMVlanForwardUnmactchedState
--- in swMcastVlanCtrl to configure the forwarding state for Multicast VLAN unmatched packet. 
+-- in swMcastVlanCtrl to configure the forwarding state for Multicast VLAN unmatched packet.
 -- Notes:Requested by Phoenix Xie for DES3810.
--- 
+--
 -- Version 1.00, 2008/7/9, Kelvin Tao
 -- This is the first formal version for universal MIB definition.
--- Notes:This mib is integrate the ISMVLAN.mib.	
+-- Notes:This mib is integrate the ISMVLAN.mib.
 -- -----------------------------------------------------------------------------
 
 
@@ -76,8 +76,8 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         InetAddressType, InetAddress      FROM INET-ADDRESS-MIB
         dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
 
-		
-    	
+
+
     swMcastVlanMIB MODULE-IDENTITY
           LAST-UPDATED "201310110000Z"
           ORGANIZATION "D-Link Corp."
@@ -89,7 +89,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         ::= { dlink-common-mgmt 64 }
 
     PortList                  ::= OCTET STRING(SIZE (0..127))
-     	
+
     swMcastVlanCtrl             OBJECT IDENTIFIER ::= { swMcastVlanMIB 1 }
     swMcastVlanInfo             OBJECT IDENTIFIER ::= { swMcastVlanMIB 2 }
     swMcastVlanMgmt             OBJECT IDENTIFIER ::= { swMcastVlanMIB 3 }
@@ -121,7 +121,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
                "This indicates the global state of the MLD snooping multicast VLAN."
         ::={ swMcastVlanCtrl 2 }
-        
+
      swISMVlanForwardUnmatchedState  OBJECT-TYPE
         SYNTAX  INTEGER
                 {
@@ -131,7 +131,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-write
         STATUS current
         DESCRIPTION
-               "This indicates the IGMP snooping multicast VLAN's forwarding 
+               "This indicates the IGMP snooping multicast VLAN's forwarding
                state for Multicast VLAN unmatched packet."
         ::={ swMcastVlanCtrl 3 }
 
@@ -144,10 +144,10 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-write
         STATUS current
         DESCRIPTION
-               "This indicates the MLD snooping multicast VLAN's forwarding 
+               "This indicates the MLD snooping multicast VLAN's forwarding
                state for Multicast VLAN unmatched packet."
         ::={ swMcastVlanCtrl 4 }
-        
+
      swISMVlanAutoAssignVLANState  OBJECT-TYPE
         SYNTAX  INTEGER
                 {
@@ -175,7 +175,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
 -- -----------------------------------------------------------------------------
 -- swMcastVlanInfo
 -- -----------------------------------------------------------------------------
-    	     	
+
 -- -----------------------------------------------------------------------------
 -- swMcastVlanMgmt
 -- -----------------------------------------------------------------------------
@@ -288,8 +288,8 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         STATUS current
         DESCRIPTION
             "This indicates the untagged member ports to add to the multicast VLAN."
-        ::={ swISMVlanEntry 6}        
-    		
+        ::={ swISMVlanEntry 6}
+
     swISMVlanState OBJECT-TYPE
         SYNTAX  INTEGER{
         	enabled(1),
@@ -317,7 +317,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This is the replacement address of this multicast VLAN."
         ::= { swISMVlanEntry 9 }
-            	
+
     swISMVlanRemapPriority   OBJECT-TYPE
         SYNTAX INTEGER (-1|0..7)
         MAX-ACCESS read-create
@@ -351,7 +351,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
             of the IGMP snooping multicast VLAN entry."
         ::= { swISMVlanEntry 12 }
 
-        
+
     swISMVlanRowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
@@ -369,12 +369,12 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-create
         STATUS current
         DESCRIPTION
-            "This object specifies that swISMVlanRepSourceAddr is user 
+            "This object specifies that swISMVlanRepSourceAddr is user
 	     configured IP address or 'System' interface's primary address.
-	     If this object is 'not-replace', identifies 
+	     If this object is 'not-replace', identifies
 	     swISMVlanRepSourceAddr object does not take effect."
         ::={ swISMVlanEntry 14}
-        
+
     swISMVlanRepSourceAddrFromPorts OBJECT-TYPE
         SYNTAX INTEGER {
                    source-port(1),
@@ -384,27 +384,27 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-create
         STATUS current
         DESCRIPTION
-             "If from is specified, the user need choose the port role on which the replace 
+             "If from is specified, the user need choose the port role on which the replace
              source IP function will work. The default setting is 'both'.
-	     If 'souce_port' is chosen, source IP address of the IGMP report/leave packet 
+	     If 'souce_port' is chosen, source IP address of the IGMP report/leave packet
 	     receiving on any multicast VLAN source port will be replaced.
-             If 'member_port' is chosen, source IP address of the IGMP report/leave packet 
-             receiving on any multicast VLAN member port will be replaced. 
-	     If the option both is chosen, source IP address of the IGMP report/leave packet 
+             If 'member_port' is chosen, source IP address of the IGMP report/leave packet
+             receiving on any multicast VLAN member port will be replaced.
+	     If the option both is chosen, source IP address of the IGMP report/leave packet
 	     receiving on any port in the MVLAN will be replaced."
-        ::={ swISMVlanEntry 15}  
-        
+        ::={ swISMVlanEntry 15}
+
     swISMVlanCustomerVlanID OBJECT-TYPE
         SYNTAX INTEGER (0..4094)
         MAX-ACCESS read-create
         STATUS current
         DESCRIPTION
-            "Specify Tthe customer VALN ID carrying in IGMP query when QinQ function 
+            "Specify Tthe customer VALN ID carrying in IGMP query when QinQ function
             is enabled.
 	    If zero is specified, no customer VLAN ID will be carried in IGMP query.
 	    The default setting is zero."
-        ::={ swISMVlanEntry 16} 
-        
+        ::={ swISMVlanEntry 16}
+
 -- -----------------------------------------------------------------------------
 
     swISMVlanGroupProfTable OBJECT-TYPE
@@ -443,7 +443,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
             "This indicates the name of the IGMP snooping multicast VLAN
             group profile."
     	::= { swISMVlanGroupProfEntry 1  }
-    	
+
     swISMVlanGroupProfID	OBJECT-TYPE
 	SYNTAX  INTEGER
         MAX-ACCESS  read-only
@@ -458,9 +458,9 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-create
         STATUS   current
         DESCRIPTION
-        	"This indicates the status of this entry."		
+        	"This indicates the status of this entry."
         ::= { swISMVlanGroupProfEntry 3 }
-           	
+
 -- -----------------------------------------------------------------------------
 
     swISMVlanGroupProfAddrTable OBJECT-TYPE
@@ -502,7 +502,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
             "This is the type of multicast address as specified by
 	    object 'swISMVlanGroupProfAddrToIp'."
         ::= { swISMVlanGroupProfAddrEntry 1 }
-        
+
     swISMVlanGroupProfAddrStart	OBJECT-TYPE
     	SYNTAX      InetAddress
     	MAX-ACCESS  read-only
@@ -510,7 +510,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
     	DESCRIPTION
        		"This specifies the multicast address list for this profile."
     	::= { swISMVlanGroupProfAddrEntry 2  }
-            		
+
     swISMVlanGroupProfAddrEnd	OBJECT-TYPE
     	SYNTAX      InetAddress
     	MAX-ACCESS  read-only
@@ -518,13 +518,13 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
     	DESCRIPTION
        		"The specifies the multicast address list for this profile."
     	::= { swISMVlanGroupProfAddrEntry 3  }
-    	
+
     swISMVlanGroupProfAddrStatus	OBJECT-TYPE
         SYNTAX   RowStatus
         MAX-ACCESS read-create
         STATUS   current
         DESCRIPTION
-        	"This indicates the status of this entry."		
+        	"This indicates the status of this entry."
         ::= { swISMVlanGroupProfAddrEntry 4 }
 
 -- -----------------------------------------------------------------------------
@@ -640,7 +640,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This indicates the untagged member ports to add to the multicast VLAN."
         ::={ swMSMVlanEntry 6}
-    		
+
     swMSMVlanState OBJECT-TYPE
         SYNTAX  INTEGER{
         	enabled(1),
@@ -668,7 +668,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This is the replacement address of this multicast VLAN."
         ::= { swMSMVlanEntry 9 }
-            	
+
     swMSMVlanRemapPriority   OBJECT-TYPE
         SYNTAX INTEGER (-1|0..7)
         MAX-ACCESS read-create
@@ -720,12 +720,12 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-create
         STATUS current
         DESCRIPTION
-            "This object specifies that swMSMVlanRepSourceAddr is user 
+            "This object specifies that swMSMVlanRepSourceAddr is user
 			configured IP address or 'System' interface's IPv6 Link-Local
-			address.  This object is 'not-replace', identifies 
+			address.  This object is 'not-replace', identifies
             swMSMVlanRepSourceAddr object does not take effect."
         ::={ swMSMVlanEntry 14}
-        
+
     swMSMVlanRepSourceAddrFromPorts OBJECT-TYPE
         SYNTAX INTEGER {
                    source-port(1),
@@ -735,27 +735,27 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-create
         STATUS current
         DESCRIPTION
-            "If from is specified, the user need choose the port role on which the replace 
+            "If from is specified, the user need choose the port role on which the replace
              source IP function will work. The default setting is 'both'.
-	     If 'souce_port' is chosen, source IP address of the MLD report/done packet 
+	     If 'souce_port' is chosen, source IP address of the MLD report/done packet
 	     receiving on any multicast VLAN source port will be replaced.
-             If 'member_port' is chosen, source IP address of the MLD report/done packet 
-             receiving on any multicast VLAN member port will be replaced. 
-	     If the option both is chosen, source IP address of the MLD report/done packet 
+             If 'member_port' is chosen, source IP address of the MLD report/done packet
+             receiving on any multicast VLAN member port will be replaced.
+	     If the option both is chosen, source IP address of the MLD report/done packet
 	     receiving on any port in the MVLAN will be replaced."
-        ::={ swMSMVlanEntry 15}  
-        
+        ::={ swMSMVlanEntry 15}
+
      swMSMVlanCustomerVlanID OBJECT-TYPE
         SYNTAX INTEGER (0..4094)
         MAX-ACCESS read-create
         STATUS current
         DESCRIPTION
-            "Specify Tthe customer VALN ID carrying in MLD query when QinQ function 
+            "Specify Tthe customer VALN ID carrying in MLD query when QinQ function
             is enabled.
 	    If zero is specified, no customer VLAN ID will be carried in MLD query.
 	    The default setting is zero."
-        ::={ swMSMVlanEntry 16} 
-           
+        ::={ swMSMVlanEntry 16}
+
 -- -----------------------------------------------------------------------------
 
     swMSMVlanGroupProfTable OBJECT-TYPE
@@ -794,7 +794,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
             "This indicates the name of the MLD snooping multicast VLAN
             group profile."
     	::= { swMSMVlanGroupProfEntry 1  }
-    	
+
     swMSMVlanGroupProfID	OBJECT-TYPE
 	SYNTAX  INTEGER
         MAX-ACCESS  read-only
@@ -809,9 +809,9 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS read-create
         STATUS   current
         DESCRIPTION
-        	"This indicates the status of this entry."		
+        	"This indicates the status of this entry."
         ::= { swMSMVlanGroupProfEntry 3 }
-           	
+
 -- -----------------------------------------------------------------------------
 
     swMSMVlanGroupProfAddrTable OBJECT-TYPE
@@ -861,7 +861,7 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
     	DESCRIPTION
        		"This specifies the multicast address list for this profile."
     	::= { swMSMVlanGroupProfAddrEntry 2  }
-            		
+
     swMSMVlanGroupProfAddrEnd	OBJECT-TYPE
     	SYNTAX      InetAddress
     	MAX-ACCESS  read-only
@@ -869,13 +869,13 @@ MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
     	DESCRIPTION
        		"The specifies the multicast address list for this profile."
     	::= { swMSMVlanGroupProfAddrEntry 3  }
-    	
+
     swMSMVlanGroupProfAddrStatus	OBJECT-TYPE
         SYNTAX   RowStatus
         MAX-ACCESS read-create
         STATUS   current
         DESCRIPTION
-        	"This indicates the status of this entry."		
+        	"This indicates the status of this entry."
         ::= { swMSMVlanGroupProfAddrEntry 4 }
-        
+
 END

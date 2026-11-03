@@ -7,7 +7,7 @@ HP-ICF-SYSLOG-MIB DEFINITIONS ::= BEGIN
                  Counter32, Integer32,
                  NOTIFICATION-TYPE
                  FROM SNMPv2-SMI
-       RowStatus, 
+       RowStatus,
        TEXTUAL-CONVENTION, TimeStamp, TruthValue
                  FROM SNMPv2-TC
        InetAddressType, InetAddress
@@ -27,33 +27,33 @@ HP-ICF-SYSLOG-MIB DEFINITIONS ::= BEGIN
             8000 Foothills Blvd.
             Roseville, CA 95747"
         DESCRIPTION
-            "The MIB module for configuring and 
+            "The MIB module for configuring and
              monitoring syslog applications.
 
              The Procurve syslog application sends syslog messages."
 
        REVISION "200902180000Z"  --   February 18, 2009
        DESCRIPTION
-           "Added 'hpicfSyslogControlBindAddrIsOobm' MIB object to  
+           "Added 'hpicfSyslogControlBindAddrIsOobm' MIB object to
             'hpicfSyslogControlTable'. Add an enum for oobm in
             ''HpicfSyslogSystemModule'.
            "
 
        REVISION "200811180000Z"  --   November 18, 2008
        DESCRIPTION
-           "Add 'srcip' to the available SYNTAX for 
+           "Add 'srcip' to the available SYNTAX for
             HpicfSyslogSystemModule.
            "
 
        REVISION "200807090000Z"  --   July 9, 2008
        DESCRIPTION
-           "Add 'hpsm' to the available SYNTAX for 
+           "Add 'hpsm' to the available SYNTAX for
             HpicfSyslogSystemModule.
            "
 
        REVISION "200806260000Z"  --   June 26, 2008
        DESCRIPTION
-           "Add 'dipld' to the available SYNTAX for 
+           "Add 'dipld' to the available SYNTAX for
             HpicfSyslogSystemModule.
            "
 
@@ -65,7 +65,7 @@ HP-ICF-SYSLOG-MIB DEFINITIONS ::= BEGIN
 
        REVISION "200801250000Z"  --   April 25, 2008
        DESCRIPTION
-           "Add 'bridge' to the available SYNTAX for 
+           "Add 'bridge' to the available SYNTAX for
             HpicfSyslogSystemModule.
            "
 
@@ -279,11 +279,11 @@ HP-ICF-SYSLOG-MIB DEFINITIONS ::= BEGIN
        STATUS      current
        DESCRIPTION
            "The Index that uniquely identifies the syslog
-            application in the hpicfSyslogControlTable.  
+            application in the hpicfSyslogControlTable.
             The value of the index for a syslog application
             may not be the same across system reboots.
-            Users and applications will need to determine 
-            the index of a syslog application after system 
+            Users and applications will need to determine
+            the index of a syslog application after system
             reboots.
             Initial implementation allows integers (1..6).
            "
@@ -348,7 +348,7 @@ HP-ICF-SYSLOG-MIB DEFINITIONS ::= BEGIN
             row with MAX-ACCESS read-create have been assigned valid
             values.
             The information in each conceptual row is only persist
-            across reboots if the row status is 'active'. 
+            across reboots if the row status is 'active'.
            "
        ::= { hpicfSyslogControlEntry 5 }
 
@@ -368,7 +368,7 @@ HP-ICF-SYSLOG-MIB DEFINITIONS ::= BEGIN
    -- -------------------------------------------------------------
    -- hpicfSyslogOperations
    -- -------------------------------------------------------------
-   
+
    hpicfSyslogOperations OBJECT IDENTIFIER
                          ::= { hpicfSyslogObjects 2 }
 
@@ -493,7 +493,7 @@ HP-ICF-SYSLOG-MIB DEFINITIONS ::= BEGIN
    -- -------------------------------------------------------------
    -- hpicfSyslogPriority
    -- -------------------------------------------------------------
-   
+
    hpicfSyslogPriority             OBJECT IDENTIFIER
                          ::= { hpicfSyslogObjects 3 }
 
@@ -564,7 +564,7 @@ HP-ICF-SYSLOG-MIB DEFINITIONS ::= BEGIN
 		listed are accessed.  For example, when the first server
 		address is entered, the application
                 starts [hpicfSyslogOperationsStatus is ''started'' ].  When
-		the last server address is removed, the syslog application 
+		the last server address is removed, the syslog application
 		stops [hpicfSyslogOperationsStatus is ''stopped''].
                 The value of hpicfSyslogOperationsStatus will be the
                 new status of the syslog application after the change.
@@ -808,8 +808,7 @@ HP-ICF-SYSLOG-MIB DEFINITIONS ::= BEGIN
        GROUP  hpicfSyslogControlGroupOobm
        DESCRIPTION
             "This group is optional if there is no OOBM port
-	    on device." 
-       
+	    on device."
+
        ::= { hpicfSyslogCompliances 8 }
    END
-

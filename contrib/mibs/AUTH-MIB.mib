@@ -1,26 +1,26 @@
 -- D-Link Security Common MIB Ver 1.1                2002/02/18
 --
 -- Radius, Accounting, Authenticate
--- Remove swRadiusAuthClient(swRadiusAuthInfo) mib because RFC2618 provid already 
+-- Remove swRadiusAuthClient(swRadiusAuthInfo) mib because RFC2618 provid already
 -- Remove swRadiusAcctServer(swRadiusAccountingInfo) mib because RFC2620 provid already
 -- added swMacAuthBaseStatsInfo
 -- modified authProtocol    2003/11/10
--- modified swRadiusServerTable  2004/11/5 
+-- modified swRadiusServerTable  2004/11/5
 -- add swRadiusForceDownPortNumber, swRadiusForceDownMacAddr    2007/11/27
 
 AUTH-MIB DEFINITIONS ::= BEGIN
-    IMPORTS        
-        MODULE-IDENTITY, OBJECT-TYPE,	
+    IMPORTS
+        MODULE-IDENTITY, OBJECT-TYPE,
         Integer32, Unsigned32,Counter32,
          Counter64, TimeTicks
         										FROM SNMPv2-SMI
         TruthValue,RowStatus,MacAddress			FROM SNMPv2-TC
   	    SnmpAdminString
-     											FROM SNMP-FRAMEWORK-MIB        
+     											FROM SNMP-FRAMEWORK-MIB
         IpAddress           					FROM RFC1155-SMI
         InterfaceIndex
         										FROM IF-MIB
-        PaeControlledPortStatus					FROM IEEE8021-PAE-MIB	
+        PaeControlledPortStatus					FROM IEEE8021-PAE-MIB
         dlink-common-mgmt						FROM DLINK-ID-REC-MIB
         InetAddressType, InetAddress        FROM INET-ADDRESS-MIB;
 
@@ -30,10 +30,10 @@ AUTH-MIB DEFINITIONS ::= BEGIN
 	    CONTACT-INFO
 	        "   "
 	    DESCRIPTION
-		    "The Structure of Common Management Information for 
+		    "The Structure of Common Management Information for
 		    security functions for  devices."
-		    ::= { dlink-common-mgmt 3 }   
-		    
+		    ::= { dlink-common-mgmt 3 }
+
     swAuthenCtrl      OBJECT IDENTIFIER ::= { swAuthCtrl 1 }
     swRadiusCtrl	OBJECT IDENTIFIER ::= { swAuthCtrl 2 }
     swRadiusAuthInfo OBJECT IDENTIFIER ::= { swAuthCtrl 3 }
@@ -42,29 +42,29 @@ AUTH-MIB DEFINITIONS ::= BEGIN
     swMacAuthBaseStatsInfo  OBJECT IDENTIFIER ::= { swAuthCtrl 6 }
     swRadiusCommand   OBJECT IDENTIFIER ::= { swAuthCtrl 7 }
     swAuthenticatedPortInfo	    OBJECT IDENTIFIER ::= { swAuthCtrl 8 }
--- 
+--
 --
 --
 
 authProtocol OBJECT-TYPE
-    SYNTAX INTEGER {    
-        authProtocolNone(1),    
-        authProtocolLocal(2),        
+    SYNTAX INTEGER {
+        authProtocolNone(1),
+        authProtocolLocal(2),
         authProtocolRadius(3),
         authProtocolRadiusEap(4),
-        authProtocolRadiusChap(5),                
-        authProtocolTacacs(6)     
+        authProtocolRadiusChap(5),
+        authProtocolTacacs(6)
     }
     MAX-ACCESS read-write
     STATUS current
     DESCRIPTION
         "The authentication method used to authenticate user."
     DEFVAL { authProtocolRadiusEap }
- 	::= { swAuthenCtrl 1}       
+ 	::= { swAuthenCtrl 1}
 
 swAuthMode OBJECT-TYPE
         SYNTAX  INTEGER {
-                    portBase(1),        
+                    portBase(1),
         			macBase(2),
         			none(3)
                 }
@@ -72,7 +72,7 @@ swAuthMode OBJECT-TYPE
         STATUS  current
         DESCRIPTION
             "This object indicates the authentication mode of the device."
-        ::= { swAuthenCtrl 2} 
+        ::= { swAuthenCtrl 2}
 
 swAuthorizationState OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -83,67 +83,67 @@ swAuthorizationState OBJECT-TYPE
         STATUS  current
         DESCRIPTION
             "This object indicates the authorization status."
-        ::= { swAuthenCtrl 3 }      
+        ::= { swAuthenCtrl 3 }
 
--- 
--- swRadiusConfig 
 --
-swRadiusDeadTime OBJECT-TYPE                            
+-- swRadiusConfig
+--
+swRadiusDeadTime OBJECT-TYPE
         SYNTAX     Unsigned32
-        MAX-ACCESS read-write 
-        STATUS current
-        DESCRIPTION
-            "Specifies the number of minutes a  RADIUS server, 
-             which is not responding to authentication requests, 
-             is considered unavailable and is passed over by 
-             further requests for RADIUS authentication."     
-        DEFVAL { 1 }            
-        ::= { swRadiusCtrl 1}
-               
-swRadiusTimeout  OBJECT-TYPE
-        SYNTAX     Unsigned32    
         MAX-ACCESS read-write
         STATUS current
         DESCRIPTION
-            "Specifies the number of seconds NAS   
-             waits for a reply to a RADIUS request 
-             before retransmitting the request."                            
-        DEFVAL { 10 }
-        ::= { swRadiusCtrl 2 }        
+            "Specifies the number of minutes a  RADIUS server,
+             which is not responding to authentication requests,
+             is considered unavailable and is passed over by
+             further requests for RADIUS authentication."
+        DEFVAL { 1 }
+        ::= { swRadiusCtrl 1}
 
-swRadiusRetransmitAttempts OBJECT-TYPE
-        SYNTAX     Unsigned32   
-        MAX-ACCESS read-write   
+swRadiusTimeout  OBJECT-TYPE
+        SYNTAX     Unsigned32
+        MAX-ACCESS read-write
         STATUS current
         DESCRIPTION
-            "Specifies the number of times NAS     
-             transmits each RADIUS request to the  
+            "Specifies the number of seconds NAS
+             waits for a reply to a RADIUS request
+             before retransmitting the request."
+        DEFVAL { 10 }
+        ::= { swRadiusCtrl 2 }
+
+swRadiusRetransmitAttempts OBJECT-TYPE
+        SYNTAX     Unsigned32
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Specifies the number of times NAS
+             transmits each RADIUS request to the
              server before giving up."
-        DEFVAL { 2 }      
+        DEFVAL { 2 }
         ::= { swRadiusCtrl 3 }
-              
-               
-                
+
+
+
 swRadiusServerTable OBJECT-TYPE
-        SYNTAX SEQUENCE OF RadiusServerEntry 
+        SYNTAX SEQUENCE OF RadiusServerEntry
 		MAX-ACCESS not-accessible
         STATUS current
-        DESCRIPTION 
+        DESCRIPTION
         	" The swRadius server table "
-        ::= { swRadiusCtrl 4 }	
-        
+        ::= { swRadiusCtrl 4 }
+
 swRadiusServerEntry OBJECT-TYPE
 		SYNTAX RadiusServerEntry
         MAX-ACCESS not-accessible
         STATUS current
-        DESCRIPTION 
-        	" The entiries of raidus Server table"        		
-        INDEX  { swRadiusServerIndex }         
+        DESCRIPTION
+        	" The entiries of raidus Server table"
+        INDEX  { swRadiusServerIndex }
         ::= { swRadiusServerTable 1 }
 
-RadiusServerEntry ::= 		
+RadiusServerEntry ::=
 		SEQUENCE {
-			swRadiusServerIndex 		INTEGER,        	
+			swRadiusServerIndex 		INTEGER,
 			swRadiusServerIpAddr		IpAddress,
 			swRadiusServerKey			OCTET STRING,
 			swRadiusAuthPortNumber 	Unsigned32,
@@ -152,55 +152,55 @@ RadiusServerEntry ::=
 --			swRadiusServerAddrType   InetAddressType,
 --			swRadiusServerAddr       InetAddress
 		}
-       
+
 swRadiusServerIndex  OBJECT-TYPE
-	SYNTAX INTEGER {                                 				
+	SYNTAX INTEGER {
 	    swRadiusServerIndex-first(1),
-	    swRadiusServerIndex-second(2),                        
-	    swRadiusServerIndex-third(3)                                 
-	} 
+	    swRadiusServerIndex-second(2),
+	    swRadiusServerIndex-third(3)
+	}
 	MAX-ACCESS read-only
 	STATUS current
-	DESCRIPTION 
+	DESCRIPTION
                 "The index of the RADIUS server"
 	::= { swRadiusServerEntry 1 }
-	
-                                                                           
+
+
 swRadiusServerIpAddr    OBJECT-TYPE
-	SYNTAX IpAddress                
+	SYNTAX IpAddress
         MAX-ACCESS read-only
         STATUS obsolete
-	DESCRIPTION 
+	DESCRIPTION
                 "The IP address of the RADIUS server"
 	::= { swRadiusServerEntry 2 }
-		
+
 
 swRadiusServerKey OBJECT-TYPE
     SYNTAX OCTET STRING( SIZE(1..32))
     MAX-ACCESS	not-accessible
     STATUS current
-    DESCRIPTION 
+    DESCRIPTION
     	"The key of the RADIUS server"
     ::= { swRadiusServerEntry 3 }
-    
+
 swRadiusAuthPortNumber OBJECT-TYPE
         SYNTAX     Unsigned32
         MAX-ACCESS read-only
 	STATUS current
 	DESCRIPTION
             "The UDP destination port number to use
-	     for authentication requests to this   
-	     server."        
-	DEFVAL { 1812 }        
+	     for authentication requests to this
+	     server."
+	DEFVAL { 1812 }
 	::= { swRadiusServerEntry 4 }
 
 swRadiusAcctPortNumber OBJECT-TYPE
         SYNTAX     Unsigned32
         MAX-ACCESS read-only
 	STATUS current
-	DESCRIPTION                        
+	DESCRIPTION
             "The UDP destination port number to use
-	     for accounting requests to this      
+	     for accounting requests to this
 	     server"
 	DEFVAL { 1813 }
 	::= { swRadiusServerEntry 5 }
@@ -212,7 +212,7 @@ swRadiusServerStatus OBJECT-TYPE
     DESCRIPTION
         "The status of the RADIUS server"
     ::= { swRadiusServerEntry 6 }
- 
+
 --  swRadiusServerAddrType OBJECT-TYPE
 --          SYNTAX        InetAddressType
 --          MAX-ACCESS    read-only
@@ -230,14 +230,14 @@ swRadiusServerStatus OBJECT-TYPE
 --          DESCRIPTION
 --              "The address of the RADIUS Server."
 --          ::= { swRadiusServerEntry 10 }
-            
---                  
+
+--
 -- swRadiusAuth
 --
 
 swRadiusAuthClientIdentifier OBJECT-TYPE
         SYNTAX     OCTET STRING(SIZE (0..40))
-        MAX-ACCESS read-only       
+        MAX-ACCESS read-only
         STATUS obsolete
         DESCRIPTION
             "NAS Identifier"
@@ -248,8 +248,8 @@ swRadiusAuthClientInvalidServerAddresses OBJECT-TYPE
         MAX-ACCESS read-only
         STATUS obsolete
         DESCRIPTION
-            "Statistics infomation - the number of RADIUS 
-             Access-Response packets received from unknown 
+            "Statistics infomation - the number of RADIUS
+             Access-Response packets received from unknown
              addresses."
         ::= { swRadiusAuthInfo 2 }
 
@@ -257,10 +257,10 @@ swRadiusAuthServerTable OBJECT-TYPE
         SYNTAX SEQUENCE OF RadiusAuthServerEntry
 		MAX-ACCESS not-accessible
         STATUS obsolete
-        DESCRIPTION 
+        DESCRIPTION
         	"The authenticate table for swRadius server "
         ::= { swRadiusAuthInfo 3 }
- 
+
 swRadiusAuthServerEntry OBJECT-TYPE
         SYNTAX RadiusAuthServerEntry
         MAX-ACCESS not-accessible
@@ -270,23 +270,23 @@ swRadiusAuthServerEntry OBJECT-TYPE
         INDEX  { swRadiusAuthServerIndex }
         ::= { swRadiusAuthServerTable 1 }
 
-RadiusAuthServerEntry ::=   
+RadiusAuthServerEntry ::=
         SEQUENCE {
-            swRadiusAuthServerIndex                      Integer32, 
+            swRadiusAuthServerIndex                      Integer32,
             swRadiusAuthServerAddress                    IpAddress,
-            swRadiusAuthClientServerPortNumber           Unsigned32, 
+            swRadiusAuthClientServerPortNumber           Unsigned32,
             swRadiusAuthClientRoundTripTime              Counter32,
             swRadiusAuthClientAccessRequests             Counter32,
             swRadiusAuthClientAccessRetransmissions      Counter32,
 
-            swRadiusAuthClientAccessAccepts              Counter32,             
-            swRadiusAuthClientAccessRejects              Counter32,            
-            swRadiusAuthClientAccessChallenges           Counter32,        
+            swRadiusAuthClientAccessAccepts              Counter32,
+            swRadiusAuthClientAccessRejects              Counter32,
+            swRadiusAuthClientAccessChallenges           Counter32,
             swRadiusAuthClientMalformedAccessResponses   Counter32,
-            swRadiusAuthClientBadAuthenticators          Counter32,        
-            swRadiusAuthClientPendingRequests            Counter32,        
-            swRadiusAuthClientTimeouts                   Counter32,                                    
-            swRadiusAuthClientUnknownTypes               Counter32,   
+            swRadiusAuthClientBadAuthenticators          Counter32,
+            swRadiusAuthClientPendingRequests            Counter32,
+            swRadiusAuthClientTimeouts                   Counter32,
+            swRadiusAuthClientUnknownTypes               Counter32,
             swRadiusAuthClientPacketsDropped             Counter32
       }
 
@@ -297,7 +297,7 @@ swRadiusAuthServerIndex OBJECT-TYPE
         DESCRIPTION
             "Argument with RadiusServerIndex"
         ::= { swRadiusAuthServerEntry 1 }
-        
+
 swRadiusAuthServerAddress OBJECT-TYPE
         SYNTAX IpAddress
         MAX-ACCESS read-only
@@ -309,8 +309,8 @@ swRadiusAuthServerAddress OBJECT-TYPE
 swRadiusAuthClientServerPortNumber OBJECT-TYPE
 		SYNTAX Unsigned32
 		MAX-ACCESS read-only
-		STATUS obsolete                   
-		DESCRIPTION         
+		STATUS obsolete
+		DESCRIPTION
 			"The UDP socket port numbers"
 		DEFVAL { 1812 }
 		::= { swRadiusAuthServerEntry 3 }
@@ -318,11 +318,11 @@ swRadiusAuthClientServerPortNumber OBJECT-TYPE
 swRadiusAuthClientRoundTripTime OBJECT-TYPE
 		SYNTAX Counter32
 		MAX-ACCESS read-only
-		STATUS obsolete                   
-		DESCRIPTION         
+		STATUS obsolete
+		DESCRIPTION
 			"The counter of trip time from radius authentication"
-		::= { swRadiusAuthServerEntry 4 }		
-	
+		::= { swRadiusAuthServerEntry 4 }
+
 swRadiusAuthClientAccessRequests OBJECT-TYPE
 		SYNTAX Counter32
 		MAX-ACCESS read-only
@@ -330,7 +330,7 @@ swRadiusAuthClientAccessRequests OBJECT-TYPE
 		DESCRIPTION
 			"The counter of access requests from radius authentication"
 		::= { swRadiusAuthServerEntry 5 }
-		
+
 swRadiusAuthClientAccessRetransmissions OBJECT-TYPE
 		SYNTAX Counter32
 		MAX-ACCESS read-only
@@ -344,17 +344,17 @@ swRadiusAuthClientAccessAccepts  OBJECT-TYPE
 		MAX-ACCESS read-only
 		STATUS obsolete
 		DESCRIPTION
-			"The counter for accept times from radius authentication"		
+			"The counter for accept times from radius authentication"
 		::= { swRadiusAuthServerEntry 7 }
-		
+
 swRadiusAuthClientAccessRejects  OBJECT-TYPE
 		SYNTAX Counter32
 		MAX-ACCESS read-only
 		STATUS obsolete
-		DESCRIPTION 
+		DESCRIPTION
 			"The counter of reject from radius authentication"
 		::= { swRadiusAuthServerEntry 8 }
-		
+
 swRadiusAuthClientAccessChallenges OBJECT-TYPE
 		SYNTAX Counter32
 		MAX-ACCESS read-only
@@ -386,7 +386,7 @@ swRadiusAuthClientPendingRequests OBJECT-TYPE
 		DESCRIPTION
 			"The counter of pending requests from radius authentication"
 		::= { swRadiusAuthServerEntry 12 }
-		
+
 swRadiusAuthClientTimeouts    OBJECT-TYPE
 		SYNTAX Counter32
 		MAX-ACCESS read-only
@@ -402,14 +402,14 @@ swRadiusAuthClientUnknownTypes OBJECT-TYPE
 		DESCRIPTION
 			"The counter of unknown types from radius authentication"
 		::= { swRadiusAuthServerEntry 14 }
-       
+
 swRadiusAuthClientPacketsDropped  OBJECT-TYPE
 		SYNTAX Counter32
 		MAX-ACCESS read-only
 		STATUS obsolete
 		DESCRIPTION
 			"The counter of dropped packets "
-		::= { swRadiusAuthServerEntry 15 }   
+		::= { swRadiusAuthServerEntry 15 }
 
 --
 -- accountingConfig
@@ -420,55 +420,55 @@ swRadiusAcctUpdateInterval OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS current
     DESCRIPTION
-        "Time interval after which this Radius record   
-         should be updated and sent to an        
-         accounting server."       
+        "Time interval after which this Radius record
+         should be updated and sent to an
+         accounting server."
     ::= { swRadiusAccountingCtrl 1 }
-             
-swRadiusAcctSuppressNullUserName OBJECT-TYPE  
+
+swRadiusAcctSuppressNullUserName OBJECT-TYPE
     SYNTAX  TruthValue
     MAX-ACCESS read-write
     STATUS current
     DESCRIPTION
-        "Whether or not generate accounting        
-         records for users with null name"        
+        "Whether or not generate accounting
+         records for users with null name"
     ::= { swRadiusAccountingCtrl 2 }
-    
+
 swRadiusAcctServiceTable OBJECT-TYPE
     SYNTAX SEQUENCE OF AcctServiceEntry
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
             "Radius accounting Table"
-        ::= { swRadiusAccountingCtrl 3 }    
-    
-    
- 
+        ::= { swRadiusAccountingCtrl 3 }
+
+
+
 swRadiusAcctServiceEntry OBJECT-TYPE
 	SYNTAX AcctServiceEntry
 	MAX-ACCESS not-accessible
 	STATUS current
-	DESCRIPTION 
-		"The list of accounting services."		
-    INDEX { swRadiusAcctServiceIndex }         
-	::= { swRadiusAcctServiceTable 1 }       
-	
-AcctServiceEntry ::= 
+	DESCRIPTION
+		"The list of accounting services."
+    INDEX { swRadiusAcctServiceIndex }
+	::= { swRadiusAcctServiceTable 1 }
+
+AcctServiceEntry ::=
     SEQUENCE {
-        swRadiusAcctServiceIndex  
+        swRadiusAcctServiceIndex
         	INTEGER,
-        swRadiusAcctServiceMethod   
+        swRadiusAcctServiceMethod
         	INTEGER,
-        swRadiusAcctServiceMode 
+        swRadiusAcctServiceMode
         	INTEGER
 	}
-    
+
 swRadiusAcctServiceIndex OBJECT-TYPE
 		SYNTAX INTEGER {
                 acctServiceIndex-network(1),
                 acctServiceIndex-exec(2),
                 acctServiceIndex-system(3)
-            }				
+            }
          MAX-ACCESS read-only
          STATUS current
          DESCRIPTION
@@ -476,20 +476,20 @@ swRadiusAcctServiceIndex OBJECT-TYPE
          ::= { swRadiusAcctServiceEntry 1}
 
 swRadiusAcctServiceMethod OBJECT-TYPE
-        SYNTAX INTEGER {    
+        SYNTAX INTEGER {
                 swRadiusAcctServiceMethodNone(1),
-                swRadiusAcctServiceMethodRadius(2)               
+                swRadiusAcctServiceMethodRadius(2)
             }
         MAX-ACCESS read-write
         STATUS current
         DESCRIPTION
         	"The method of accouting service"
-        DEFVAL { 2 } 
+        DEFVAL { 2 }
         ::= { swRadiusAcctServiceEntry 2 }
-        
+
 swRadiusAcctServiceMode OBJECT-TYPE
-		SYNTAX INTEGER {    
-                radiusAcctServiceModeNone(1),    
+		SYNTAX INTEGER {
+                radiusAcctServiceModeNone(1),
                 radiusAcctServiceModeStartStop(2),
                 radiusAcctServiceModeStopOnly(3)
             }
@@ -497,31 +497,31 @@ swRadiusAcctServiceMode OBJECT-TYPE
         STATUS current
         DESCRIPTION
         	"The service mode of accounting service"
-        DEFVAL { 2 } 
-        ::= { swRadiusAcctServiceEntry 3 }    
+        DEFVAL { 2 }
+        ::= { swRadiusAcctServiceEntry 3 }
 
---       
+--
 -- swRadiusAccounting
 --
 
 swRadiusAcctClientIdentifier  OBJECT-TYPE
     SYNTAX     OCTET STRING(SIZE (0..40))
-    MAX-ACCESS read-only      
+    MAX-ACCESS read-only
     STATUS obsolete
     DESCRIPTION
         "NAS Identifier"
     ::= { swRadiusAccountingInfo 1}
-        
-swRadiusAcctClientInvalidServerAddresses OBJECT-TYPE   
+
+swRadiusAcctClientInvalidServerAddresses OBJECT-TYPE
     SYNTAX     Counter32
-    MAX-ACCESS read-only  
+    MAX-ACCESS read-only
     STATUS obsolete
     DESCRIPTION
-        "Statistics infomation - the number of RADIUS 
-         Accounting-Response packets received from unknown 
-         addresses."              
-    ::= { swRadiusAccountingInfo 2 }      
-         
+        "Statistics infomation - the number of RADIUS
+         Accounting-Response packets received from unknown
+         addresses."
+    ::= { swRadiusAccountingInfo 2 }
+
 swRadiusAcctServerTable OBJECT-TYPE
     SYNTAX SEQUENCE OF RadiusAcctServerEntry
     MAX-ACCESS not-accessible
@@ -529,34 +529,34 @@ swRadiusAcctServerTable OBJECT-TYPE
     DESCRIPTION
     	"The radius server accounting table"
 	::= { swRadiusAccountingInfo 3 }
-	
+
 swRadiusAcctServerEntry OBJECT-TYPE
 	SYNTAX RadiusAcctServerEntry
 	MAX-ACCESS not-accessible
 	STATUS obsolete
 	DESCRIPTION
-		"The list for radius accounting table" 
-	INDEX { swRadiusAcctServerIndex } 
+		"The list for radius accounting table"
+	INDEX { swRadiusAcctServerIndex }
 	::= { swRadiusAcctServerTable 1 }
-    
-        
+
+
 RadiusAcctServerEntry ::=
-    SEQUENCE {  
+    SEQUENCE {
         swRadiusAcctServerIndex					 Integer32,
-        swRadiusAcctServerAddress                IpAddress,         
-        swRadiusAcctClientServerPortNumber       Unsigned32,   
+        swRadiusAcctServerAddress                IpAddress,
+        swRadiusAcctClientServerPortNumber       Unsigned32,
         swRadiusAcctClientRoundTripTime          Counter32,
         swRadiusAcctClientRequests               Counter32,
         swRadiusAcctClientRetransmissions        Counter32,
         swRadiusAcctClientResponses              Counter32,
         swRadiusAcctClientMalformedResponses     Counter32,
         swRadiusAcctClientBadAuthenticators      Counter32,
-        swRadiusAcctClientPendingRequests        Counter32,     
+        swRadiusAcctClientPendingRequests        Counter32,
         swRadiusAcctClientTimeouts               Counter32,
         swRadiusAcctClientUnknownTypes           Counter32,
         swRadiusAcctClientPacketsDropped         Counter32
-    }       
-   
+    }
+
 swRadiusAcctServerIndex OBJECT-TYPE
 	SYNTAX Integer32
 	MAX-ACCESS read-only
@@ -572,7 +572,7 @@ swRadiusAcctServerAddress OBJECT-TYPE
 	DESCRIPTION
 		"The server address of radius accounting"
 	::= { swRadiusAcctServerEntry 2 }
-	
+
 swRadiusAcctClientServerPortNumber OBJECT-TYPE
 	SYNTAX Unsigned32
 	MAX-ACCESS read-only
@@ -581,7 +581,7 @@ swRadiusAcctClientServerPortNumber OBJECT-TYPE
 		"The UDP socket port of radius accounting "
 	DEFVAL { 1813 }
 	::= { swRadiusAcctServerEntry 3}
-	
+
 swRadiusAcctClientRoundTripTime OBJECT-TYPE
 	SYNTAX Counter32
 	MAX-ACCESS read-only
@@ -613,7 +613,7 @@ swRadiusAcctClientResponses OBJECT-TYPE
 	DESCRIPTION
 		"The counter of responses from radius accounting"
 	::= { swRadiusAcctServerEntry 7 }
-	
+
 swRadiusAcctClientMalformedResponses OBJECT-TYPE
 	SYNTAX Counter32
 	MAX-ACCESS read-only
@@ -621,7 +621,7 @@ swRadiusAcctClientMalformedResponses OBJECT-TYPE
 	DESCRIPTION
 		"The counter of Malformed response from radius accounting"
 	::= { swRadiusAcctServerEntry 8 }
-	
+
 swRadiusAcctClientBadAuthenticators OBJECT-TYPE
 	SYNTAX Counter32
 	MAX-ACCESS read-only
@@ -629,7 +629,7 @@ swRadiusAcctClientBadAuthenticators OBJECT-TYPE
 	DESCRIPTION
 		"The counter of bad authenticate for radius accounting"
 	::= { swRadiusAcctServerEntry 9 }
-	
+
 swRadiusAcctClientPendingRequests OBJECT-TYPE
 	SYNTAX Counter32
 	MAX-ACCESS read-only
@@ -637,7 +637,7 @@ swRadiusAcctClientPendingRequests OBJECT-TYPE
 	DESCRIPTION
 		"The pending counter of radius client requests"
 	::= { swRadiusAcctServerEntry 10 }
-	        
+
 swRadiusAcctClientTimeouts OBJECT-TYPE
 	SYNTAX Counter32
 	MAX-ACCESS read-only
@@ -653,7 +653,7 @@ swRadiusAcctClientUnknownTypes OBJECT-TYPE
 	DESCRIPTION
 		"The counter of unknown types from radius accounting"
 	::= { swRadiusAcctServerEntry 12 }
-	
+
 swRadiusAcctClientPacketsDropped OBJECT-TYPE
 	SYNTAX Counter32
 	MAX-ACCESS read-only
@@ -661,10 +661,10 @@ swRadiusAcctClientPacketsDropped OBJECT-TYPE
 	DESCRIPTION
 		"The counter of dropped packets from radius accounting"
 	::= { swRadiusAcctServerEntry 13 }
-	
---	
---	
---	
+
+--
+--
+--
 --
 -- ---------------------------------------------------------- --
 -- The Mac-base Authenticator State Table
@@ -695,9 +695,9 @@ swMacAuthStateEntry OBJECT-TYPE
 SwMacAuthStateEntry ::=
     SEQUENCE {
     	swPaeMacAddr
-    	    MacAddress,    
+    	    MacAddress,
         swPaePortNumber
-            InterfaceIndex,    	    
+            InterfaceIndex,
         swAuthPaeState
             INTEGER,
         swAuthBackendAuthState
@@ -714,7 +714,7 @@ swPaeMacAddr OBJECT-TYPE
         "The address associated with this Mac."
 
     ::= { swMacAuthStateEntry 1 }
-    
+
 swPaePortNumber OBJECT-TYPE
     SYNTAX      InterfaceIndex
     MAX-ACCESS  read-only
@@ -723,7 +723,7 @@ swPaePortNumber OBJECT-TYPE
         "The Port number associated with this Port."
 
     ::= { swMacAuthStateEntry 2 }
-    
+
 swAuthPaeState OBJECT-TYPE
     SYNTAX      INTEGER {
                     initialize(1),
@@ -760,8 +760,8 @@ swAuthBackendAuthState OBJECT-TYPE
         "The current state of the Backend Authentication
         state machine."
 
-    ::= { swMacAuthStateEntry  4 }    
-    
+    ::= { swMacAuthStateEntry  4 }
+
 swAuthAuthControlledPortStatus OBJECT-TYPE
     SYNTAX      PaeControlledPortStatus
     MAX-ACCESS  read-only
@@ -770,7 +770,7 @@ swAuthAuthControlledPortStatus OBJECT-TYPE
         "The current value of the controlled Port
         status parameter for the Port."
 
-    ::= { swMacAuthStateEntry  5 }    
+    ::= { swMacAuthStateEntry  5 }
 
 
 -- -----------------------------------------------------------------------------
@@ -1321,7 +1321,7 @@ SwMacAuthSessionStatsEntry ::=
         swAuthSessionUserName
             SnmpAdminString
     }
-    
+
 swAuthSessionOctetsRx OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
@@ -1429,10 +1429,10 @@ swAuthSessionUserName OBJECT-TYPE
     REFERENCE
         "9.4.4, Session User Name"
     ::= { swMacAuthSessionStatsEntry 9 }
-				
+
 -- ---------------------------------------------------------- --
 -- The swRadiusCommand
--- ---------------------------------------------------------- --	
+-- ---------------------------------------------------------- --
 
 swRadiusForceDownPortNumber OBJECT-TYPE
      SYNTAX      Unsigned32
@@ -1499,4 +1499,4 @@ swAuthenticatedPortCapabilities OBJECT-TYPE
         "Indicates the PAE functionality that this Port
         supports and that it may be managed through this MIB."
     ::= { swAuthenticatedPortCtrlEntry 2 }
-END				
+END

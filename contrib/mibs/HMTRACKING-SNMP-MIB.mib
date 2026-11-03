@@ -3,7 +3,7 @@
 -- *                                                                        *
 -- *                    Hirschmann Automation and Control GmbH              *
 -- *                                                                        *
--- *                         PLATFORM SNMP PRIVATE MIB                      * 
+-- *                         PLATFORM SNMP PRIVATE MIB                      *
 -- *                                                                        *
 -- *                                 Tracking                               *
 -- *                                                                        *
@@ -33,10 +33,10 @@ HMTRACKING-SNMP-MIB   DEFINITIONS ::= BEGIN
 IMPORTS
     MODULE-IDENTITY, OBJECT-IDENTITY,
     OBJECT-TYPE, NOTIFICATION-TYPE,
-    Integer32, TimeTicks, IpAddress		FROM SNMPv2-SMI                            
+    Integer32, TimeTicks, IpAddress		FROM SNMPv2-SMI
     RowStatus, DisplayString			FROM SNMPv2-TC
     InterfaceIndexOrZero			    FROM IF-MIB
-    hmConfiguration                     FROM HMPRIV-MGMT-SNMP-MIB; 
+    hmConfiguration                     FROM HMPRIV-MGMT-SNMP-MIB;
 
 
 hmTracking MODULE-IDENTITY
@@ -44,7 +44,7 @@ hmTracking MODULE-IDENTITY
         ORGANIZATION "Hirschmann Automation and Control GmbH"
         CONTACT-INFO
           "Customer Support
-           Postal: 
+           Postal:
            Hirschmann Automation and Control GmbH
            Stuttgarter Str. 45-51
            72654 Neckartenzlingen
@@ -59,9 +59,9 @@ hmTracking MODULE-IDENTITY
         REVISION
           "200709131200Z" -- 13 Sep 2007 12:00:00 GMT
         DESCRIPTION
-          "First release in SMIv2"     
+          "First release in SMIv2"
         ::= { hmConfiguration 15 }
-        
+
 
 hmTrackingGroup   OBJECT IDENTIFIER ::= { hmTracking 1 }
 
@@ -108,7 +108,7 @@ hmTrackId		OBJECT-TYPE
                 STATUS          current
                 DESCRIPTION     "The id of an object being tracked."
                 ::= { hmTrackingEntry 1 }
-                
+
 
 hmTrackRowStatus
 				OBJECT-TYPE
@@ -137,8 +137,8 @@ hmTrackType		OBJECT-TYPE
                 DESCRIPTION     "The kind of an object being tracked."
                 DEFVAL			{ undefined }
                 ::= { hmTrackingEntry 3 }
-                
-                
+
+
 hmTrackState	OBJECT-TYPE
                 SYNTAX          INTEGER {
                 					up(1),
@@ -149,8 +149,8 @@ hmTrackState	OBJECT-TYPE
                 DESCRIPTION     "Shows if the tracked object is currently UP or DOWN."
                 DEFVAL			{ up }
                 ::= { hmTrackingEntry 4 }
-                
-                
+
+
 hmTrackNumberOfChanges
 				OBJECT-TYPE
                 SYNTAX          Integer32
@@ -163,7 +163,7 @@ hmTrackNumberOfChanges
                       			subsystem, then this object contains a zero
                       			value."
                 DEFVAL			{ 0 }
-                ::= { hmTrackingEntry 5 }                
+                ::= { hmTrackingEntry 5 }
 
 hmTrackTimeSinceLastChange
 				OBJECT-TYPE
@@ -178,8 +178,8 @@ hmTrackTimeSinceLastChange
                       			value."
                 DEFVAL			{ 0 }
                 ::= { hmTrackingEntry 6 }
-                
-                                
+
+
 hmTrackIfNumber
 				OBJECT-TYPE
                 SYNTAX          InterfaceIndexOrZero
@@ -192,9 +192,9 @@ hmTrackIfNumber
                 				 number has been set. It cannot be written."
                 DEFVAL			{ 0 }
                 ::= { hmTrackingEntry 7 }
-                
 
-hmTrackIfLinkUpDelay		
+
+hmTrackIfLinkUpDelay
 				OBJECT-TYPE
                 SYNTAX          Integer32 (0..255)
                 UNITS			"seconds"
@@ -204,9 +204,9 @@ hmTrackIfLinkUpDelay
 								the tracked object is not considered as up."
 				DEFVAL			{ 0 }
                 ::= { hmTrackingEntry 8 }
-                
-                
-hmTrackIfLinkDownDelay		
+
+
+hmTrackIfLinkDownDelay
 				OBJECT-TYPE
                 SYNTAX          Integer32 (0..255)
                 UNITS			"seconds"
@@ -226,7 +226,7 @@ hmTrackPingIpAddress
                 DESCRIPTION     "The IP address of the router being monitored."
                 ::= { hmTrackingEntry 10 }
 
-                
+
 hmTrackPingInterval
 				OBJECT-TYPE
                 SYNTAX          Integer32 (1..10)
@@ -249,7 +249,7 @@ hmTrackPingMiss
 				DEFVAL			{ 3 }
                 ::= { hmTrackingEntry 12 }
 
-                
+
 hmTrackPingSuccess
 				OBJECT-TYPE
                 SYNTAX          Integer32 (1..10)
@@ -260,7 +260,7 @@ hmTrackPingSuccess
 								to be up."
 				DEFVAL			{ 2 }
                 ::= { hmTrackingEntry 13 }
-                
+
 hmTrackPingTimeout
 				OBJECT-TYPE
                 SYNTAX          Integer32 (10..10000)
@@ -331,7 +331,7 @@ hmTrackingApplicationTable
                 ::= { hmTrackingGroup 2 }
 
 
-hmTrackingApplicationEntry 
+hmTrackingApplicationEntry
 				OBJECT-TYPE
                 SYNTAX          HmTrackingApplicationEntry
                 MAX-ACCESS      not-accessible
@@ -347,17 +347,17 @@ HmTrackingApplicationEntry ::= SEQUENCE {
                 }
 
 
-                
-hmTrackAppId	
+
+hmTrackAppId
 				OBJECT-TYPE
                 SYNTAX          Integer32
                 MAX-ACCESS      not-accessible
                 STATUS          current
                 DESCRIPTION     "The id of an application which tracks an object."
                 ::= { hmTrackingApplicationEntry 2 }
-                
-                
-hmTrackAppName		
+
+
+hmTrackAppName
 				OBJECT-TYPE
                 SYNTAX          DisplayString (SIZE (0..255))
                 MAX-ACCESS      read-only
@@ -378,7 +378,7 @@ hmTrackLogicalInstanceTable
                 ::= { hmTrackingGroup 3 }
 
 
-hmTrackLogicalInstanceEntry 
+hmTrackLogicalInstanceEntry
 				OBJECT-TYPE
                 SYNTAX          HmTrackLogicalInstanceEntry
                 MAX-ACCESS      not-accessible

@@ -1,9 +1,9 @@
 -- *****************************************************************
 -- CISCO-IP-IF-MIB.my
---   
+--
 -- September 2002, Jayakumar Kadirvelu
 -- July 2008, Patrick R. Gili
---   
+--
 -- Copyright (c) 2002, 2008 by Cisco Systems Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -62,9 +62,9 @@ ciscoIPIfMIB MODULE-IDENTITY
         Added ciiIPIfAddressChangeNotify notification.
         Deprecated ciscoIPIfMIBCompliance and added
         ciscoIPIfMIBCompliance1.
-        Added ciscoIPIfAddressConfigurationGroup3, 
-        ciscoIPIfAddressConfigurationGroup4, 
-        ciscoIPIfNotificationGroup. 
+        Added ciscoIPIfAddressConfigurationGroup3,
+        ciscoIPIfAddressConfigurationGroup4,
+        ciscoIPIfNotificationGroup.
         Added IpAddressCatagory  TC."
     REVISION        "200210100000Z"
     DESCRIPTION
@@ -97,7 +97,7 @@ IpAddressCatagory ::= TEXTUAL-CONVENTION
     STATUS          current
     DESCRIPTION
         "Represents the IP address category.
-        single(1) - Indicates that the IP addressing 
+        single(1) - Indicates that the IP addressing
                     information for this interface,
                     has no primary/secondary category.
 
@@ -106,8 +106,8 @@ IpAddressCatagory ::= TEXTUAL-CONVENTION
                      information.
 
         secondary(3) - Indicates that this interface
-                       provides a secondary IP 
-                       addressing information. There 
+                       provides a secondary IP
+                       addressing information. There
                        may be more than one seconday
                        IP addressing information for
                        an interface."
@@ -140,15 +140,15 @@ ciiIPAddressCategoryCap OBJECT-TYPE
         secondary(2) means that each interface on the device can be
         assigned an IP address as the secondary one.
 
-        Devices which has the single(0) bit set to 1, should have 
+        Devices which has the single(0) bit set to 1, should have
         the primary(1) and secondary(2) bits set to 0.
-        Likewise devices which have the primary(1) and/or 
+        Likewise devices which have the primary(1) and/or
         secondary(2) bits set to 1, should have the single(0)
-        set to 0." 
+        set to 0."
     ::= { ciiIPAddressConfiguration 1 }
 
 ciiIPAddressTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CiiIPAddressEntry 
+    SYNTAX          SEQUENCE OF CiiIPAddressEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -167,7 +167,7 @@ ciiIPAddressEntry OBJECT-TYPE
         entity's IP addresses.
 
         The only way an entry can be created is by setting the
-        ciiIPAddressStatus object to 'create and go' and the 
+        ciiIPAddressStatus object to 'create and go' and the
         only way an entry can be destroyed is by setting the
         ciiIPAddressStatus object to 'destroy'.
 
@@ -176,7 +176,7 @@ ciiIPAddressEntry OBJECT-TYPE
     INDEX           {
                         ciiIPAddressType,
                         ciiIPAddress
-                    } 
+                    }
     ::= { ciiIPAddressTable 1 }
 
 CiiIPAddressEntry ::= SEQUENCE {
@@ -195,7 +195,7 @@ ciiIPAddressType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The type of Internet address for all the objects with SYNTAX
-        InetAddress and InetAddressPrefixLength in this entry." 
+        InetAddress and InetAddressPrefixLength in this entry."
     ::= { ciiIPAddressEntry 1 }
 
 ciiIPAddress OBJECT-TYPE
@@ -204,7 +204,7 @@ ciiIPAddress OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The IP address to which this entry's addressing
-        information pertains." 
+        information pertains."
     ::= { ciiIPAddressEntry 2 }
 
 ciiIPAddressIfIndex OBJECT-TYPE
@@ -213,9 +213,9 @@ ciiIPAddressIfIndex OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The index value which uniquely identifies the
-        interface to which this entry is applicable. 
+        interface to which this entry is applicable.
         ciiIPAddressIfIndex is the same as the ifIndex of the
-        interface associated with this ciiIPAddressEntry." 
+        interface associated with this ciiIPAddressEntry."
     ::= { ciiIPAddressEntry 3 }
 
 ciiIPAddressPrefixLength OBJECT-TYPE
@@ -224,10 +224,10 @@ ciiIPAddressPrefixLength OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The length of the prefix associated with the IP address
-        of this entry. 
+        of this entry.
         A value of zero causes all addresses to match.
-        The type of address is specified by ciiIPAddressType of 
-        this entry." 
+        The type of address is specified by ciiIPAddressType of
+        this entry."
     ::= { ciiIPAddressEntry 4 }
 
 ciiIPAddressBroadcast OBJECT-TYPE
@@ -237,8 +237,8 @@ ciiIPAddressBroadcast OBJECT-TYPE
     DESCRIPTION
         "The broadcast address associated with the
         IP address of  this entry.
-        The type of address is specified by ciiIPAddressType of 
-        this entry." 
+        The type of address is specified by ciiIPAddressType of
+        this entry."
     ::= { ciiIPAddressEntry 5 }
 
 ciiIPAddressCategory OBJECT-TYPE
@@ -248,7 +248,7 @@ ciiIPAddressCategory OBJECT-TYPE
     DESCRIPTION
         "Indicates the IP address category of this entry.
         Setting of this object has to comply with the value of
-        ciiIPAddressCategoryCap." 
+        ciiIPAddressCategoryCap."
     ::= { ciiIPAddressEntry 6 }
 
 ciiIPAddressStatus OBJECT-TYPE
@@ -259,27 +259,27 @@ ciiIPAddressStatus OBJECT-TYPE
         "This object is used to manage creation and deletion of rows
         in this table.
 
-        ciiIPAddressStatus must be set to 'creatAndGo' to create 
+        ciiIPAddressStatus must be set to 'creatAndGo' to create
         an entry and set to 'destroy' to delete an entry.
 
         The value in any column may be modified any time even the
         value of this entry rowStatus object is 'active'.
 
-        Caution has to be taken before destroying any entry. 
+        Caution has to be taken before destroying any entry.
         Example: Need to change the IP address of an interface,
         which provides sole network connectivity.
         This has to be done by destroying the entry and creating
         a new one. The device would loose network connectivity
-        after the entry is destroyed. In this case, the destroy 
+        after the entry is destroyed. In this case, the destroy
         of the old entry and the creation on the new entry
-        should be packed in the same PDU." 
+        should be packed in the same PDU."
     ::= { ciiIPAddressEntry 7 }
- 
+
 
 -- ciiIPIfAddressTable
 
 ciiIPIfAddressTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CiiIPIfAddressEntry 
+    SYNTAX          SEQUENCE OF CiiIPIfAddressEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -287,15 +287,15 @@ ciiIPIfAddressTable OBJECT-TYPE
         this entity's IP addresses. This is the enhancement of
         the ipAddrTable in IP-MIB.
         This table is same as ciiIPAddressTable accept
-        that ciiIPIfAddressIfIndex is part of the INDEX 
+        that ciiIPIfAddressIfIndex is part of the INDEX
         clause.
-        This table is used to configure an IP address on a 
+        This table is used to configure an IP address on a
         interface identified by ifIndex. Each interface can be
         configured with multiple IP addresses.
         When requested to create/delete an entry in this
         table, the agent also creates/deletes a
         correspondng entry in the ipAddrTable of rfc2011.
-        Entries in this table are created/deleted only by 
+        Entries in this table are created/deleted only by
         network managers. Agents will typically only allow
         entries to be created on a subset of ifIndex values."
     REFERENCE       "RFC 2011"
@@ -310,7 +310,7 @@ ciiIPIfAddressEntry OBJECT-TYPE
         entity's IP addresses.
 
         The only way an entry can be created is by setting the
-        ciiIPIfAddressStatus object to 'create and go' and the 
+        ciiIPIfAddressStatus object to 'create and go' and the
         only way an entry can be destroyed is by setting the
         ciiIPIfAddressStatus object to 'destroy'.
 
@@ -320,7 +320,7 @@ ciiIPIfAddressEntry OBJECT-TYPE
                         ciiIPAddressIfIndex,
                         ciiIPAddressType,
                         ciiIPAddress
-                    } 
+                    }
     ::= { ciiIPIfAddressTable 1 }
 
 CiiIPIfAddressEntry ::= SEQUENCE {
@@ -336,12 +336,12 @@ ciiIPIfAddressPrefixLength OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The length of the prefix associated with the IP address
-        of this entry. 
+        of this entry.
         A value of zero causes all addresses to match.
-        The type of address is specified by ciiIPAddressType of 
+        The type of address is specified by ciiIPAddressType of
         this entry.
         This object is same as the ciiIPAddressPrefixLength
-        object, and changes to one will affect the other." 
+        object, and changes to one will affect the other."
     ::= { ciiIPIfAddressEntry 1 }
 
 ciiIPIfAddressBroadcast OBJECT-TYPE
@@ -351,10 +351,10 @@ ciiIPIfAddressBroadcast OBJECT-TYPE
     DESCRIPTION
         "The broadcast address associated with the
         IP address of  this entry.
-        The type of address is specified by ciiIPAddressType of 
+        The type of address is specified by ciiIPAddressType of
         this entry.
-        This object is same as the ciiIPAddressBroadcast 
-        object, and changes to one will affect the other." 
+        This object is same as the ciiIPAddressBroadcast
+        object, and changes to one will affect the other."
     ::= { ciiIPIfAddressEntry 2 }
 
 ciiIPIfAddressCategory OBJECT-TYPE
@@ -366,8 +366,8 @@ ciiIPIfAddressCategory OBJECT-TYPE
         Setting of this object has to comply with the value of
         ciiIPAddressCategoryCap.
 
-        This object is same as the ciiIPAddressCategory 
-        object, and changes to one will affect the other." 
+        This object is same as the ciiIPAddressCategory
+        object, and changes to one will affect the other."
     ::= { ciiIPIfAddressEntry 3 }
 
 ciiIPIfAddressStatus OBJECT-TYPE
@@ -378,27 +378,27 @@ ciiIPIfAddressStatus OBJECT-TYPE
         "This object is used to manage creation and deletion of rows
         in this table.
 
-        ciiIPAddressStatus must be set to 'creatAndGo' to create 
+        ciiIPAddressStatus must be set to 'creatAndGo' to create
         an entry and set to 'destroy' to delete an entry.
 
         The value in any column may be modified any time even the
         value of this entry rowStatus object is 'active'.
 
-        Caution has to be taken before destroying any entry. 
+        Caution has to be taken before destroying any entry.
         Example: Need to change the IP address of an interface,
         which provides sole network connectivity.
         This has to be done by destroying the entry and creating
         a new one. The device would loose network connectivity
-        after the entry is destroyed. In this case, the destroy 
+        after the entry is destroyed. In this case, the destroy
         of the old entry and the creation on the new entry
-        should be packed in the same PDU." 
+        should be packed in the same PDU."
     ::= { ciiIPIfAddressEntry 4 }
- 
+
 
 -- IP Helper Address Configuration
 
 ciiHelperAddressTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CiiHelperAddressEntry 
+    SYNTAX          SEQUENCE OF CiiHelperAddressEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -444,7 +444,7 @@ ciiHelperAddressEntry OBJECT-TYPE
                         ciiHelperAddressVrf,
                         ciiHelperAddressType,
                         ciiHelperAddress
-                    } 
+                    }
     ::= { ciiHelperAddressTable 1 }
 
 CiiHelperAddressEntry ::= SEQUENCE {
@@ -462,7 +462,7 @@ ciiHelperAddressVrf OBJECT-TYPE
     DESCRIPTION
         "This object indicates the name assigned to the Virtual Routing
         and Forwarding (VRF) instance in which the IP helper address
-        resides." 
+        resides."
     ::= { ciiHelperAddressEntry 1 }
 
 ciiHelperAddressType OBJECT-TYPE
@@ -471,7 +471,7 @@ ciiHelperAddressType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the type of IP address indicated by the
-        corresponding instance of ciiHelperAddress." 
+        corresponding instance of ciiHelperAddress."
     ::= { ciiHelperAddressEntry 2 }
 
 ciiHelperAddress OBJECT-TYPE
@@ -479,7 +479,7 @@ ciiHelperAddress OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "This object indicates the IP helper address." 
+        "This object indicates the IP helper address."
     ::= { ciiHelperAddressEntry 3 }
 
 ciiHelperAddressStatus OBJECT-TYPE
@@ -493,7 +493,7 @@ ciiHelperAddressStatus OBJECT-TYPE
             - ciiHelperAddressStorage
 
         An implementation must not allow an EMS/NMS to modify any
-        column once the row has been activated." 
+        column once the row has been activated."
     ::= { ciiHelperAddressEntry 4 }
 
 ciiHelperAddressStorage OBJECT-TYPE
@@ -502,13 +502,13 @@ ciiHelperAddressStorage OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the memory realization of the row."
-    DEFVAL          { volatile } 
+    DEFVAL          { volatile }
     ::= { ciiHelperAddressEntry 5 }
- 
+
 
 -- Notifications
 -- None
---   
+--
 -- Conformance
 
 ciscoIPIfMIBCompliances  OBJECT IDENTIFIER
@@ -546,7 +546,7 @@ ciscoIPIfMIBCompliance MODULE-COMPLIANCE
     MIN-ACCESS      read-only
     DESCRIPTION
         "An implementation is only required if the value of
-        ciiIPAddressType in the same conceptual row is ipv4(1). 
+        ciiIPAddressType in the same conceptual row is ipv4(1).
 
         Write access is not required."
 
@@ -583,9 +583,9 @@ ciscoIPIfMIBCompliance1 MODULE-COMPLIANCE
     GROUP           ciscoIPIfAddressConfigurationGroup1
     DESCRIPTION
         "Implementation of this group is optional. But in an
-        implementaion of this mib, either 
-        ciscoIPIfAddressConfigGroup1 or 
-        ciscoIPIfAddressConfigGroup3 must be 
+        implementaion of this mib, either
+        ciscoIPIfAddressConfigGroup1 or
+        ciscoIPIfAddressConfigGroup3 must be
         implemented."
 
     GROUP           ciscoIPIfAddressConfigurationGroup2
@@ -595,9 +595,9 @@ ciscoIPIfMIBCompliance1 MODULE-COMPLIANCE
     GROUP           ciscoIPIfAddressConfigurationGroup3
     DESCRIPTION
         "Implementation of this group is optional. But in an
-        implementaion of this mib, either 
-        ciscoIPIfAddressConfigGroup1 or 
-        ciscoIPIfAddressConfigGroup3 must be 
+        implementaion of this mib, either
+        ciscoIPIfAddressConfigGroup1 or
+        ciscoIPIfAddressConfigGroup3 must be
         implemented."
 
     GROUP           ciscoIPIfAddressConfigurationGroup4
@@ -672,9 +672,9 @@ ciscoIPIfMIBCompliance2 MODULE-COMPLIANCE
     GROUP           ciscoIPIfAddressConfigurationGroup1
     DESCRIPTION
         "Implementation of this group is optional. But in an
-        implementaion of this mib, either 
-        ciscoIPIfAddressConfigGroup1 or 
-        ciscoIPIfAddressConfigGroup3 must be 
+        implementaion of this mib, either
+        ciscoIPIfAddressConfigGroup1 or
+        ciscoIPIfAddressConfigGroup3 must be
         implemented."
 
     GROUP           ciscoIPIfAddressConfigurationGroup2
@@ -684,9 +684,9 @@ ciscoIPIfMIBCompliance2 MODULE-COMPLIANCE
     GROUP           ciscoIPIfAddressConfigurationGroup3
     DESCRIPTION
         "Implementation of this group is optional. But in an
-        implementaion of this mib, either 
-        ciscoIPIfAddressConfigGroup1 or 
-        ciscoIPIfAddressConfigGroup3 must be 
+        implementaion of this mib, either
+        ciscoIPIfAddressConfigGroup1 or
+        ciscoIPIfAddressConfigGroup3 must be
         implemented."
 
     GROUP           ciscoIPIfAddressConfigurationGroup4

@@ -1,15 +1,15 @@
 FDRY-RADIUS-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-	MODULE-IDENTITY, OBJECT-TYPE, 
+	MODULE-IDENTITY, OBJECT-TYPE,
 			Unsigned32	   	FROM SNMPv2-SMI	  			-- [RFC2578]
 	RowStatus, TEXTUAL-CONVENTION		FROM SNMPv2-TC 				-- [RFC2579]
 	DisplayString		 				FROM SNMPv2-TC 		 		-- [RFC2579]
-	
+
 	InetAddressType, InetAddress		FROM INET-ADDRESS-MIB		-- [RFC 4001]
 	fdryRadius	 					   	FROM FOUNDRY-SN-ROOT-MIB	-- [snroo101]
 	;
-   
+
 fdryRadiusMIB MODULE-IDENTITY
 	LAST-UPDATED "200802250000Z"  -- 25 February 2008
 	ORGANIZATION "Foundry Networks, Inc."
@@ -22,7 +22,7 @@ fdryRadiusMIB MODULE-IDENTITY
 	DESCRIPTION
 			"The Foundry proprietary MIB module for Radius Authentication Servers
 			It has new table combines Ipv4 and Ipv6 Radius Authentication Servers configuration.
-			
+
 			Copyright 1996-2008 Foundry Networks, Inc.
 			All rights reserved.
 			This Foundry Networks SNMP Management Information Base Specification
@@ -30,15 +30,15 @@ fdryRadiusMIB MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
 			operation, condition, or performance of the Specification.
 			"
-   
+
 	REVISION 	"200802250000Z"  -- 25 February 2008
 	DESCRIPTION	"Initial version, obsoletes the earlier snRadiusServerTable."
-		  
+
 	::= { fdryRadius 1 }
 
 	--
@@ -63,7 +63,7 @@ fdryRadiusMIB MODULE-IDENTITY
 	--
 	-- Ipv4/Ipv6  Radius server table
 	--
-	
+
 fdryRadiusServerTable        OBJECT-TYPE
 	SYNTAX  SEQUENCE OF FdryRadiusServerEntry
 	MAX-ACCESS  not-accessible
@@ -81,8 +81,8 @@ fdryRadiusServerEntry        OBJECT-TYPE
 		  Reasons to go for running index Scheme than IP addresses:
 		  1.  The table will be Virtual Routing and Forwarding(VRF) independent
 			  that multiple VRFs could share the same address type and address.
-		  2.  Index with address type and address could be potentially 17 unsigned integer, parsing and finding next index takes CPU time. 
-			  The PDU gets to be huge too! 
+		  2.  Index with address type and address could be potentially 17 unsigned integer, parsing and finding next index takes CPU time.
+			  The PDU gets to be huge too!
 		  3.  IP address is just another attribute, they are supposed to be list of servers."
 	INDEX   { fdryRadiusServerIndex }
 	::= { fdryRadiusServerTable 1 }

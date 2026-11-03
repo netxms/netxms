@@ -12,7 +12,7 @@ IMPORTS
 HmEnabledStatus ::= TEXTUAL-CONVENTION
     STATUS       current
     DESCRIPTION  "Status of a feature"
-    SYNTAX       INTEGER { 
+    SYNTAX       INTEGER {
         enable(1),      -- feature is enabled
         disable(2)      -- feature is disabled
         }
@@ -159,7 +159,7 @@ hmIOModConfigDigInputLogEvent OBJECT-TYPE
          If the value is disable (2), no event log entry will be written.
          If the value is enable (1), an event log entry will be written when
          the input state changes.
-         The input state will be checked acording to the refresh interval 
+         The input state will be checked acording to the refresh interval
          entered in hmIOModConfigDigInputRefreshInterval."
       DEFVAL                           { disable }
       ::= { hmIOModConfigDigInputEntry 3 }
@@ -296,10 +296,10 @@ hmIOModConfigDigOutputSourcePort OBJECT-TYPE
       STATUS                           current
       DESCRIPTION
          "The SNMP port number being used by the input mirrored to the output.
-         This port would be the destination for the SNMP requests for 
+         This port would be the destination for the SNMP requests for
          polling the state of the input."
       DEFVAL { 161 }
-      ::= { hmIOModConfigDigOutputEntry 8 }		   
+      ::= { hmIOModConfigDigOutputEntry 8 }
 
 -- *************************************************************************
 -- Group Value
@@ -421,9 +421,9 @@ hmIOModValueDigOutputValue OBJECT-TYPE
          If the value is not-available(0), then the IO module is not plugged in,
          if the value is high(1), the output has high (+24V) value,
          if the value is low(2), the output has low (0V) value.
-         If the value is invalid (3), the output has low (0V) value and 
+         If the value is invalid (3), the output has low (0V) value and
          the IO input source is configured but can not be read.
-         If the value is not-configured (4), the output has low (0V) value and 
+         If the value is not-configured (4), the output has low (0V) value and
          has no IO input source configured."
       ::= { hmIOModValueDigOutputEntry 3 }
 
@@ -436,7 +436,7 @@ hmIOModDigInputChangeTrap NOTIFICATION-TYPE
       STATUS                           current
       DESCRIPTION
          "This trap is sent if the state of an input changes.
-         This trap is sent only when hmIOModConfigDigInputSnmpTrap is set 
+         This trap is sent only when hmIOModConfigDigInputSnmpTrap is set
          to enabled (1)."
       ::= { hmChassisEvent 16 }
 
@@ -446,7 +446,7 @@ hmIOModDigOutputChangeTrap NOTIFICATION-TYPE
       STATUS                           current
       DESCRIPTION
          "This trap is sent if the state of an input changes.
-         This trap is sent when hmIOModConfigDigOutputSnmpTrap is set 
+         This trap is sent when hmIOModConfigDigOutputSnmpTrap is set
          to enabled (1) or when the output value changes from or to invalid (3)"
       ::= { hmChassisEvent 17 }
 

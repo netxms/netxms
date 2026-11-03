@@ -119,4 +119,3 @@ bsleDot3adAggPortExtOperEnabled OBJECT-TYPE
     ::= { bsleDot3adAggPortExtEntry 3 }
 
 END
-

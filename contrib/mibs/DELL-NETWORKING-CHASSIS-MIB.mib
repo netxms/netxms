@@ -6,7 +6,7 @@
     --
 
     IMPORTS
-        MODULE-IDENTITY, OBJECT-TYPE, 
+        MODULE-IDENTITY, OBJECT-TYPE,
         Gauge32, Integer32, TimeTicks,
         Counter32, NOTIFICATION-TYPE
             FROM SNMPv2-SMI
@@ -19,14 +19,14 @@
             FROM SNMPv2-CONF
         dellNetMgmt
             FROM DELL-NETWORKING-SMI
-        DellNetProcessorModuleType, DellNetSwDate, 
+        DellNetProcessorModuleType, DellNetSwDate,
         DellNetMfgDate, DellNetCardOperStatus,
         DellNetChassisType, DellNetSystemCardType,
-        DellNetDeviceType, DellNetPEOperStatus,  
+        DellNetDeviceType, DellNetPEOperStatus,
         DellNetHundredthdB,DellNetIfType
             FROM DELL-NETWORKING-TC;
-        
-    
+
+
     dellNetChassisMib MODULE-IDENTITY
     LAST-UPDATED "201408051200Z"  -- Aug 5, 2014 12:00:00 GMT
     ORGANIZATION
@@ -41,7 +41,7 @@
     DESCRIPTION
           "First draft revision of Dell Networking OS chassis mib."
 
-           ::= { dellNetMgmt 26 }   
+           ::= { dellNetMgmt 26 }
 
 
 -- ------------------------------------------------------------
@@ -70,9 +70,9 @@
          STATUS          current
          DESCRIPTION
              "The type of system the chassis falls under."
-         ::= { dellNetSysParameter 1 } 
+         ::= { dellNetSysParameter 1 }
 
-        
+
     -- ### Chassis System  ###
 
         dellNetNumChassis     OBJECT-TYPE
@@ -98,10 +98,10 @@
     -- The chassis is a multi-slots physical box.
     -- In the chassis, there are physical slots available for
     -- plug-in cards.  There are two types of plug-in cards,
-      -- rpm cards and line cards.  
+      -- rpm cards and line cards.
 
-    -- The chassis table contains the management information of  
-    -- the chassis.This table will be available only for systems 
+    -- The chassis table contains the management information of
+    -- the chassis.This table will be available only for systems
     -- with dellNetDeviceType chassis(1)
 
         dellNetChassisTable        OBJECT-TYPE
@@ -110,17 +110,17 @@
          STATUS        current
          DESCRIPTION
                       "A list of chassis in a cluster.
-                      The chassis table contains the information of  
-                       each chassis in the cluster. 
+                      The chassis table contains the information of
+                       each chassis in the cluster.
                       "
          ::= { dellNetChassisObject 3 }
 
-        dellNetChassisEntry  OBJECT-TYPE 
-         SYNTAX        DellNetChassisEntry 
+        dellNetChassisEntry  OBJECT-TYPE
+         SYNTAX        DellNetChassisEntry
          MAX-ACCESS    not-accessible
          STATUS        current
          DESCRIPTION
-            "A list of chassis entries containing information 
+            "A list of chassis entries containing information
              for the chassis.
              "
          INDEX    { dellNetChassisIndex }
@@ -138,13 +138,13 @@
             dellNetChassisMfgDate          DellNetMfgDate,
             dellNetChassisCountryCode      DisplayString,
             dellNetChassisPPIDRev          DisplayString,
-            dellNetChassisServiceTag       DisplayString, 
+            dellNetChassisServiceTag       DisplayString,
             dellNetChassisExpServiceCode   DisplayString,
-            dellNetChassisNumSlots         Integer32, 
+            dellNetChassisNumSlots         Integer32,
             dellNetChassisNumLineCardSlots Integer32,
             dellNetChassisNumFanTrays      Integer32,
             dellNetChassisNumPowerSupplies Integer32
-        
+
         }
 
         dellNetChassisIndex    OBJECT-TYPE
@@ -152,7 +152,7 @@
          MAX-ACCESS    read-only
          STATUS        current
          DESCRIPTION
-                 "A unique index for each chassis within 
+                 "A unique index for each chassis within
                   the cluster.
                   This value is the chassisId assigned to the chassis.
                  "
@@ -260,7 +260,7 @@
          STATUS        current
          DESCRIPTION
              "Number of physical slots in the chassis for linecards."
-         ::= { dellNetChassisEntry 14 } 
+         ::= { dellNetChassisEntry 14 }
 
         dellNetChassisNumFanTrays    OBJECT-TYPE
          SYNTAX        Integer32
@@ -331,7 +331,7 @@
          ::= { dellNetCardEntry 1 }
 
         dellNetCardType    OBJECT-TYPE
-         SYNTAX        DellNetSystemCardType 
+         SYNTAX        DellNetSystemCardType
          MAX-ACCESS    read-only
          STATUS        current
          DESCRIPTION
@@ -352,7 +352,7 @@
          STATUS        current
          DESCRIPTION
              "A unique index for each card in the chassis across cluster
-              This index will be derived from the dellNetChassisIndex 
+              This index will be derived from the dellNetChassisIndex
               and dellNetCardIndex.This index would act as dellNetProcessorDeviceIndex
               in dellNetProcessorTable, dellNetCpuUtilTable and
               dellNetSwModuleTable for deviceTypes linecard,rpm and supervisor"
@@ -374,7 +374,7 @@
          DESCRIPTION
              "Temperature of the card."
          ::= { dellNetCardEntry 6 }
-        
+
         dellNetCardVendorId    OBJECT-TYPE
          SYNTAX        DisplayString
          MAX-ACCESS    read-only
@@ -407,7 +407,7 @@
              "The unit manufacturer's product
               revision"
          ::= { dellNetCardEntry 10 }
-        
+
         dellNetCardProductOrder OBJECT-TYPE
          SYNTAX        DisplayString
          MAX-ACCESS    read-only
@@ -503,7 +503,7 @@
               retrieval operation. After a manager retrieves a value
               the agent will determine when this index value will be
               made available for reuse.
-  
+
               Note that this object is not the unit number assigned by
               the management unit.
               The max number of stackable units allowed on this chassis
@@ -583,10 +583,10 @@
          DESCRIPTION
               "The unit number associated with this unit.
               The unit number can be manually assigned to stack members.
- 
+
               Note that the unit number assignment is based on
               the following factors:
- 
+
               - if the unit number is requested here, but another unit
               already uses that number, the unit changes its configured
               unit number to the lowest unassigned unit number.
@@ -651,7 +651,7 @@
          DESCRIPTION
              "The Dell Networking OS Model number for this unit."
          ::= { dellNetStackUnitEntry 7 }
- 
+
 
         dellNetStackUnitStatus  OBJECT-TYPE
          SYNTAX        INTEGER {
@@ -1008,16 +1008,16 @@
 
          ::= { dellNetSystemComponent 1 }
 
-        dellNetPEBindingEntry  OBJECT-TYPE 
+        dellNetPEBindingEntry  OBJECT-TYPE
          SYNTAX        DellNetPEBindingEntry
          MAX-ACCESS    not-accessible
          STATUS        current
          DESCRIPTION
               "A PE binding  entry binds the InterfaceIndex of the port in
               core switch to the dellNetPortExtenderIndex of Port extender
-              connected to it or provisioned to be connected. 
+              connected to it or provisioned to be connected.
               "
-          
+
          INDEX    { dellNetPEBindCascadePortIfIndex }
          ::= { dellNetPEBindingTable 1 }
 
@@ -1033,7 +1033,7 @@
          STATUS        current
          DESCRIPTION
               "This is a unique interface index of an physical interface
-              in controller bridge or or PE uplink LAG interface to which 
+              in controller bridge or or PE uplink LAG interface to which
               the port externder with dellNetPEIndex is connected or provisioned.
               "
          ::= { dellNetPEBindingEntry 1 }
@@ -1045,11 +1045,11 @@
          STATUS        current
          DESCRIPTION
               "An index that uniquely identifies a port extender
-              controlled by the controller bridge.This is an index derived 
+              controlled by the controller bridge.This is an index derived
               from the PEID and stack-unit ID of the port extender"
          ::= { dellNetPEBindingEntry 2 }
 
-        
+
     -- ### Port Extender Table ###
 
         dellNetPETable OBJECT-TYPE
@@ -1116,7 +1116,7 @@
          DESCRIPTION
               "PEID assigned for the port extender."
          ::= { dellNetPEEntry 2 }
-        
+
         dellNetPEUnitID      OBJECT-TYPE
          SYNTAX        Integer32 (1..255)
          MAX-ACCESS    read-only
@@ -1276,11 +1276,11 @@
              "The number of pluggable modules
              in the unit."
          ::= { dellNetPEEntry 21 }
- 
-    -- ## Processor Table 
+
+    -- ## Processor Table
 
     -- Each card has one or more processors.
-       -- The Processor table contains information on the  
+       -- The Processor table contains information on the
     -- processor and the memory.
 
         dellNetProcessorTable    OBJECT-TYPE
@@ -1291,20 +1291,20 @@
               "A list of Processors resident in this slot."
          ::= { dellNetSystemComponent 3 }
 
-        dellNetProcessorEntry    OBJECT-TYPE 
+        dellNetProcessorEntry    OBJECT-TYPE
          SYNTAX        DellNetProcessorEntry
          MAX-ACCESS    not-accessible
          STATUS        current
          DESCRIPTION
               "A list of Processor entries."
          INDEX    { dellNetProcessorDeviceType,
-                    dellNetProcessorDeviceIndex, 
+                    dellNetProcessorDeviceIndex,
                     dellNetProcessorIndex }
          ::= { dellNetProcessorTable 1 }
 
         DellNetProcessorEntry    ::=
          SEQUENCE {
-           
+
             dellNetProcessorDeviceType     DellNetDeviceType,
             dellNetProcessorDeviceIndex    Integer32,
             dellNetProcessorIndex          Integer32,
@@ -1322,22 +1322,22 @@
                (linecard,port extender etc..)
               "
         ::= { dellNetProcessorEntry 1 }
- 
+
         dellNetProcessorDeviceIndex        OBJECT-TYPE
          SYNTAX        Integer32
          MAX-ACCESS    not-accessible
          STATUS        current
          DESCRIPTION
-                "A unique device index within the device type." 
+                "A unique device index within the device type."
         ::= { dellNetProcessorEntry 2 }
 
         dellNetProcessorIndex    OBJECT-TYPE
          SYNTAX        Integer32
-         MAX-ACCESS    not-accessible 
+         MAX-ACCESS    not-accessible
          STATUS        current
          DESCRIPTION
               "A unique index for each Processor within the
-               device.The valid entries are 1 to the 
+               device.The valid entries are 1 to the
                value of number of processors
               "
         ::= { dellNetProcessorEntry 3 }
@@ -1444,23 +1444,23 @@
             "Total flash usage in percentage."
         ::= { dellNetCpuUtilEntry 7 }
 
-    -- ## Software Module Table 
+    -- ## Software Module Table
 
         dellNetSwModuleTable    OBJECT-TYPE
          SYNTAX        SEQUENCE OF DellNetSwModuleEntry
          MAX-ACCESS    not-accessible
          STATUS        current
          DESCRIPTION
-              "A list of software version information in 
+              "A list of software version information in
               a processor."
          ::= { dellNetSystemComponent 5 }
 
-        dellNetSwModuleEntry    OBJECT-TYPE 
+        dellNetSwModuleEntry    OBJECT-TYPE
          SYNTAX        DellNetSwModuleEntry
          MAX-ACCESS    not-accessible
          STATUS        current
          DESCRIPTION
-              "A software module entry containing version 
+              "A software module entry containing version
               number information for a particular processor."
          INDEX    { dellNetProcessorDeviceType,
                     dellNetProcessorDeviceIndex }
@@ -1570,18 +1570,18 @@
          ::= { dellNetSwModuleEntry 8 }
 
 
-    -- ### Power Supply Table 
+    -- ### Power Supply Table
 
        dellNetPowerSupplyTable    OBJECT-TYPE
         SYNTAX        SEQUENCE OF DellNetPowerSupplyEntry
         MAX-ACCESS    not-accessible
         STATUS        current
         DESCRIPTION
-            "A list of power supply resident 
+            "A list of power supply resident
             in the device."
         ::= { dellNetSystemComponent 6 }
 
-        dellNetPowerSupplyEntry    OBJECT-TYPE 
+        dellNetPowerSupplyEntry    OBJECT-TYPE
          SYNTAX        DellNetPowerSupplyEntry
          MAX-ACCESS    not-accessible
          STATUS        current
@@ -1598,13 +1598,13 @@
             dellNetPowerDeviceType               DellNetDeviceType,
             dellNetPowerDeviceIndex              Integer32,
             dellNetPowerSupplyIndex              Integer32,
-            dellNetPowerSupplyOperStatus         INTEGER,        
+            dellNetPowerSupplyOperStatus         INTEGER,
             dellNetPowerSupplyType               INTEGER,
             dellNetPowerSupplyPiecePartID        DisplayString,
             dellNetPowerSupplyPPIDRevision       DisplayString,
             dellNetPowerSupplyServiceTag         DisplayString,
             dellNetPowerSupplyExpressServiceCode DisplayString,
-            dellNetPowerSupplyUsage              Integer32 
+            dellNetPowerSupplyUsage              Integer32
         }
 
         dellNetPowerDeviceType        OBJECT-TYPE
@@ -1697,7 +1697,7 @@
              "Power usage of this Power Supply in Watts."
          ::= { dellNetPowerSupplyEntry 10 }
 
-    -- ## Fan Tray Table 
+    -- ## Fan Tray Table
 
         dellNetFanTrayTable    OBJECT-TYPE
          SYNTAX        SEQUENCE OF DellNetFanTrayEntry
@@ -1707,7 +1707,7 @@
               "A list of fan tray resident in the device."
          ::= { dellNetSystemComponent 7 }
 
-        dellNetFanTrayEntry    OBJECT-TYPE 
+        dellNetFanTrayEntry    OBJECT-TYPE
          SYNTAX        DellNetFanTrayEntry
          MAX-ACCESS    not-accessible
          STATUS        current
@@ -1728,7 +1728,7 @@
             dellNetFanTrayPiecePartID        DisplayString,
             dellNetFanTrayPPIDRevision       DisplayString,
             dellNetFanTrayServiceTag         DisplayString,
-            dellNetFanTrayExpressServiceCode DisplayString  
+            dellNetFanTrayExpressServiceCode DisplayString
          }
 
         dellNetFanDeviceType        OBJECT-TYPE
@@ -1800,7 +1800,7 @@
          DESCRIPTION
              "The fan tray's express service code."
          ::= { dellNetFanTrayEntry 8 }
-   
+
     -- ## Software Cores Table
 
        dellNetSysSwCoresTable  OBJECT-TYPE
@@ -1874,7 +1874,7 @@
             "The name of the process which generated the core."
         ::= { dellNetSysCoresEntry 5 }
 
-    -- ## Port Table 
+    -- ## Port Table
 
        dellNetSysIfTable OBJECT-TYPE
         SYNTAX        SEQUENCE OF DellNetSysIfEntry
@@ -1933,8 +1933,8 @@
         STATUS      current
         DESCRIPTION
             "The admin status of the interface.
-            The interface admin status is Up if 
-            the user has configured it to be up 
+            The interface admin status is Up if
+            the user has configured it to be up
             otherwise, the admin status is Down."
         ::= { dellNetSysIfEntry 3 }
 
@@ -1952,9 +1952,9 @@
         DESCRIPTION
             "The operational status provides further
             condition of the interface.
-            If the dellNetSysIfAdminStatus is 'up', the 
+            If the dellNetSysIfAdminStatus is 'up', the
             valid state is
-            'ready' - the card is present and 
+            'ready' - the card is present and
                     ready and the dellNetSysIfAdminStatus
                     status is 'up'.
             'portDown'    - the interface is down or not enabled.
@@ -2055,7 +2055,7 @@
           For the traps that does not have Chassis information the value will
           be -1 in the TRAP PDU.
           For Non-ON based platforms, the value is 0 based and for ON Based
-          platform it is 1 based in the Trap PDU. 
+          platform it is 1 based in the Trap PDU.
           "
      ::= {dellNetSysAlarmVariable 5 }
 
@@ -2065,12 +2065,12 @@
       STATUS       current
       DESCRIPTION
           "The FanTray ID.
-           For the traps that does not have FanTray ID the value will  
+           For the traps that does not have FanTray ID the value will
            be -1 in the TRAP PDU.
            For Non-ON based platforms, the value is 0 based and for
-           ON Based platform it is 1 based in the Trap PDU. 
+           ON Based platform it is 1 based in the Trap PDU.
           "
-      ::= {dellNetSysAlarmVariable 6 } 
+      ::= {dellNetSysAlarmVariable 6 }
 
     dellNetsysAlarmVarPsuId   OBJECT-TYPE
       SYNTAX       INTEGER
@@ -2080,21 +2080,21 @@
           "The PSU ID.
            For the traps that does not have PSU Id the value will be
            -1 in the TRAP PDU.
-           For Non-ON based platforms, the value is 0 based and for 
-           ON Based platform it is 1 based in the Trap PDU. 
+           For Non-ON based platforms, the value is 0 based and for
+           ON Based platform it is 1 based in the Trap PDU.
           "
       ::= {dellNetSysAlarmVariable 7 }
-    
+
     dellNetsysAlarmVarFanId   OBJECT-TYPE
        SYNTAX       INTEGER
        MAX-ACCESS   accessible-for-notify
        STATUS       current
        DESCRIPTION
            "The Fan ID.
-            For the traps that does not have Fan Id the 
+            For the traps that does not have Fan Id the
             value will be -1 in the TRAP PDU.
             For Non-ON based platforms, the value is 0 based and for
-            ON Based platform it is 1 based in the Trap PDU. 
+            ON Based platform it is 1 based in the Trap PDU.
             "
        ::= {dellNetSysAlarmVariable 8 }
 
@@ -2327,7 +2327,7 @@
              minor fan tray that was bad is now operational."
         ::= { dellNetSysAlarmMibNotifications 15 }
 
- 
+
     dellNetSysAlarmMajorPS      NOTIFICATION-TYPE
         OBJECTS         {   dellNetSysAlarmVarInteger,
                             dellNetSysAlarmVarString,
@@ -2398,7 +2398,7 @@
             "The agent generate this trap when
              fan is bad."
         ::= { dellNetSysAlarmMibNotifications 20 }
- 
+
 
     dellNetSysAlarmRpmPrimary   NOTIFICATION-TYPE
         OBJECTS         {   dellNetSysAlarmVarInteger,
@@ -2488,7 +2488,7 @@
              fan tray or psu is now operational."
         ::= { dellNetSysAlarmMibNotifications 26 }
 
-    
+
     dellNetSysAlarmPEUp     NOTIFICATION-TYPE
         OBJECTS         {   dellNetSysAlarmVarInteger,
                             dellNetSysAlarmVarString,
@@ -2517,7 +2517,7 @@
              PE operational status is down."
         ::= { dellNetSysAlarmMibNotifications 28 }
 
-   
+
     dellNetSysAlarmPEUnitUp     NOTIFICATION-TYPE
         OBJECTS         {   dellNetSysAlarmVarInteger,
                             dellNetSysAlarmVarString,
@@ -2545,7 +2545,7 @@
             "The driver/agent generate this trap when a
              PE Unit operational status is down."
         ::= { dellNetSysAlarmMibNotifications 30 }
-    
+
     dellNetSysAlarmExdCpuThreshold  NOTIFICATION-TYPE
         OBJECTS             {   dellNetSysAlarmVarInteger,
                                 dellNetSysAlarmVarString,
@@ -2553,13 +2553,13 @@
                                 dellNetSysAlarmVarSlot,
                                 dellNetSysAlarmVarPort,
                                 dellNetSysAlarmVarPeId
-                            }   
+                            }
         STATUS              current
-        DESCRIPTION         
+        DESCRIPTION
             "The agent generate this trap when
              cpu utilization excceded 80%."
         ::= { dellNetSysAlarmMibNotifications 31 }
-        
+
     dellNetSysAlarmClrCpuThreshold  NOTIFICATION-TYPE
         OBJECTS             {   dellNetSysAlarmVarInteger,
                                 dellNetSysAlarmVarString,
@@ -2654,7 +2654,7 @@
                             dellNetSysAlarmVarPort,
                             dellNetSysAlarmVarPeId
                         }
-        STATUS          deprecated 
+        STATUS          deprecated
         DESCRIPTION
             "The driver/agent generate this trap when a
              card is reset."
@@ -2773,7 +2773,7 @@
         STATUS                  current
         DESCRIPTION
             "The compliance statement for Dell Networking OS
-            product which implement the Dell Networking 
+            product which implement the Dell Networking
             Chassis MIB."
         MODULE    -- this module
         MANDATORY-GROUPS {

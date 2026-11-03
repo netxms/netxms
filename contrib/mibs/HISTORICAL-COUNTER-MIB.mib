@@ -34,7 +34,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
                                           FROM SNMPv2-SMI
         DateAndTime         FROM SNMPv2-TC
         dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
-        
+
     swHistoryCntMIB MODULE-IDENTITY
           LAST-UPDATED "0902170000Z"
           ORGANIZATION "D-Link Corp."
@@ -44,7 +44,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
 		    "The structure of historical counters for the proprietary
                     enterprise."
         ::= { dlink-common-mgmt 66 }
-     	
+
     swHistoryCntCtrl             OBJECT IDENTIFIER ::= { swHistoryCntMIB 1 }
     swHistoryCntInfo             OBJECT IDENTIFIER ::= { swHistoryCntMIB 2 }
     swHistoryCntMgmt             OBJECT IDENTIFIER ::= { swHistoryCntMIB 3 }
@@ -56,7 +56,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
 -- -----------------------------------------------------------------------------
 -- swHistoryCntInfo
 -- -----------------------------------------------------------------------------
-    	     	
+
     swHistoricalCounter        OBJECT IDENTIFIER ::= { swHistoryCntInfo 1 }
 
     swHistoryCntPktTable OBJECT-TYPE
@@ -90,7 +90,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
             swHistoryCntBytesTx
             	Counter64,
             swHistoryCntPktsRx
-       	        Counter64,            	
+       	        Counter64,
             swHistoryCntBytesRx
             	Counter64,
        	    swHistoryCnt64Rx
@@ -152,7 +152,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
             Note: When the swHistoryCntTime value is one-day (2), this object only
             has two values: slot1 (1) and slot2 (2)."
         ::= { swHistoryCntPktEntry 3 }
-        
+
     swHistoryCntPktsTx OBJECT-TYPE
         SYNTAX  Counter64
         MAX-ACCESS  read-only
@@ -176,7 +176,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the Rx packets."
         ::={ swHistoryCntPktEntry 6}
-    		
+
     swHistoryCntBytesRx OBJECT-TYPE
         SYNTAX  Counter64
         MAX-ACCESS  read-only
@@ -200,7 +200,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the Rx 65-127 octet packets."
         ::= { swHistoryCntPktEntry 9 }
-            	
+
     swHistoryCnt128to255Rx   OBJECT-TYPE
         SYNTAX Counter64
         MAX-ACCESS read-only
@@ -256,7 +256,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the Rx broadcast packets."
         ::= { swHistoryCntPktEntry 16 }
-        
+
      swHistoryCntStartTime OBJECT-TYPE
         SYNTAX  DateAndTime
         MAX-ACCESS  read-only
@@ -264,8 +264,8 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the start time of the slot counters."
         ::= { swHistoryCntPktEntry 17 }
-        
-        
+
+
       swHistoryCntEndTime OBJECT-TYPE
         SYNTAX  DateAndTime
         MAX-ACCESS  read-only
@@ -299,7 +299,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
             swHistoryCntJabberPktsRx
             	Counter64,
             swHistoryCntOversizePktsRx
-       	        Counter64,            	
+       	        Counter64,
             swHistoryCntUndersizePktsRx
             	Counter64,
        	    swHistoryCntAlignmentErrorsRx
@@ -315,7 +315,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
             swHistoryCntErrEndTime
       		    DateAndTime
         }
-        
+
     swHistoryCntFragmentRx OBJECT-TYPE
         SYNTAX  Counter64
         MAX-ACCESS  read-only
@@ -363,7 +363,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the Rx unknown-control packets."
         ::={ swHistoryCntErrEntry 6}
-    		
+
     swHistoryCntCollisionTx OBJECT-TYPE
         SYNTAX  Counter64
         MAX-ACCESS  read-only
@@ -379,7 +379,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the Rx dropped packets."
         ::= { swHistoryCntErrEntry 8 }
-        
+
        swHistoryCntErrStartTime OBJECT-TYPE
         SYNTAX  DateAndTime
         MAX-ACCESS  read-only
@@ -445,7 +445,7 @@ HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
             "This object indicates the memory utilization.
             The value will be between 0% and 100%."
         ::= { swHistoryUtilEntry 2 }
-        
+
    swHistoryUtilStartTime OBJECT-TYPE
         SYNTAX  DateAndTime
         MAX-ACCESS  read-only

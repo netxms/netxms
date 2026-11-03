@@ -10,11 +10,11 @@ SWDGS3120PRIMGMT-MIB    DEFINITIONS ::= BEGIN
         MODULE-IDENTITY             FROM SNMPv2-SMI
         dlink-mgmt,dlink-products   FROM DLINK-ID-REC-MIB;
 
-    
-    
-    -- 
---   DGS3120 series Product 
--- 
+
+
+    --
+--   DGS3120 series Product
+--
 
     dlink-Dgs3120Prod			OBJECT IDENTIFIER ::= { dlink-products 117 }
     dlink-Dgs3120ProdModel			OBJECT IDENTIFIER ::= { dlink-Dgs3120Prod 1 }
@@ -36,7 +36,7 @@ SWDGS3120PRIMGMT-MIB    DEFINITIONS ::= BEGIN
     dlink-Dgs3120Prod-DGS-3120-48PC-bx			OBJECT IDENTIFIER ::= { dlink-Dgs3120Prod-DGS-3120-48PC 1 }
     dlink-Dgs3120Prod-DGS-3120-24SC-DC			OBJECT IDENTIFIER ::= { dlink-Dgs3120Prod 7 }
     dlink-Dgs3120Prod-DGS-3120-24SC-DC-bx	 	OBJECT IDENTIFIER ::= { dlink-Dgs3120Prod-DGS-3120-24SC-DC 1 }
-    
+
     dlink-Dgs3120Proj			OBJECT IDENTIFIER ::= { dlink-mgmt 117 }
     dlink-Dgs3120ProjModel			OBJECT IDENTIFIER ::= { dlink-Dgs3120Proj 1 }
     dlink-Dgs3120Proj-Dgs3120-24TC			OBJECT IDENTIFIER ::= { dlink-Dgs3120ProjModel 1 }
@@ -44,7 +44,7 @@ SWDGS3120PRIMGMT-MIB    DEFINITIONS ::= BEGIN
     dlink-Dgs3120Proj-Dgs3120-24SC			OBJECT IDENTIFIER ::= { dlink-Dgs3120ProjModel 3 }
     dlink-Dgs3120Proj-Dgs3120-48TC			OBJECT IDENTIFIER ::= { dlink-Dgs3120ProjModel 4 }
     dlink-Dgs3120Proj-Dgs3120-48PC			OBJECT IDENTIFIER ::= { dlink-Dgs3120ProjModel 5 }
-    dlink-Dgs3120Proj-Dgs3120-24SC-DC		OBJECT IDENTIFIER ::= { dlink-Dgs3120ProjModel 6 }    
+    dlink-Dgs3120Proj-Dgs3120-24SC-DC		OBJECT IDENTIFIER ::= { dlink-Dgs3120ProjModel 6 }
     dlink-Dgs3120Proj-DGS-3120-24TC					OBJECT IDENTIFIER ::= { dlink-Dgs3120Proj 2 }
     dlink-Dgs3120Proj-DGS-3120-24TC-bx			OBJECT IDENTIFIER ::= { dlink-Dgs3120Proj-DGS-3120-24TC 1 }
     dlink-Dgs3120Proj-DGS-3120-24PC					OBJECT IDENTIFIER ::= { dlink-Dgs3120Proj 3 }
@@ -56,7 +56,7 @@ SWDGS3120PRIMGMT-MIB    DEFINITIONS ::= BEGIN
     dlink-Dgs3120Proj-DGS-3120-48PC					OBJECT IDENTIFIER ::= { dlink-Dgs3120Proj 6 }
     dlink-Dgs3120Proj-DGS-3120-48PC-bx			OBJECT IDENTIFIER ::= { dlink-Dgs3120Proj-DGS-3120-48PC 1 }
     dlink-Dgs3120Proj-DGS-3120-24SC-DC			OBJECT IDENTIFIER ::= { dlink-Dgs3120Proj 7 }
-    dlink-Dgs3120Proj-DGS-3120-24SC-DC-bx	 	OBJECT IDENTIFIER ::= { dlink-Dgs3120Proj-DGS-3120-24SC-DC 1 } 
-   
+    dlink-Dgs3120Proj-DGS-3120-24SC-DC-bx	 	OBJECT IDENTIFIER ::= { dlink-Dgs3120Proj-DGS-3120-24SC-DC 1 }
+
 
 END

@@ -57,7 +57,7 @@ IMPORTS
                  SYNTAX      DisplayString (SIZE(1..64))
                  MAX-ACCESS  read-write
                  STATUS      current
-                 DESCRIPTION 
+                 DESCRIPTION
                              "Create a new user.
                              When set with a non-empty string, a new user with that name will be created.
                              This object will only return an empty string.

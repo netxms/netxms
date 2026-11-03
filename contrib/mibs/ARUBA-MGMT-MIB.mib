@@ -8,7 +8,7 @@
 ARUBA-MGMT-MIB DEFINITIONS ::= BEGIN
 
 	IMPORTS
-    		MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, 
+    		MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
     		ObjectName, Integer32, Counter32, snmpModules
                     FROM SNMPv2-SMI
                 TruthValue, DisplayString, TestAndIncr, TimeStamp,
@@ -26,14 +26,14 @@ ARUBA-MGMT-MIB DEFINITIONS ::= BEGIN
                     FROM SNMPv2-CONF;
 
 
---  The arubaMgmtMIB is derived from the Aruba Enterprise MIB 
---  branch under aruba.arubaMgmt as 
---  defined under. The absolute path from root is : 
---  .iso 
---   .org.dod                                   
+--  The arubaMgmtMIB is derived from the Aruba Enterprise MIB
+--  branch under aruba.arubaMgmt as
+--  defined under. The absolute path from root is :
+--  .iso
+--   .org.dod
 --    .internet.private.enterprises
 --     .aruba.arubaMgmt
---                        
+--
 
     arubaMgmtExtensions MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
@@ -45,13 +45,13 @@ ARUBA-MGMT-MIB DEFINITIONS ::= BEGIN
             Phone:      408 227 4500
             Fax:        408 752 0626"
     DESCRIPTION
-            "A MIB module for supporting the Aruba Management 
+            "A MIB module for supporting the Aruba Management
 			 Protocol. This protocol is an extension to SNMP."
-    ::= { arubaMgmt  3 } 
+    ::= { arubaMgmt  3 }
 
  	arubaMgmtGroup		OBJECT IDENTIFIER ::= {arubaMgmtExtensions 1}
 
--- arubaMgmtGroup begin 
+-- arubaMgmtGroup begin
 
       arubaGetTable OBJECT-TYPE
          SYNTAX       OBJECT IDENTIFIER
@@ -62,7 +62,7 @@ ARUBA-MGMT-MIB DEFINITIONS ::= BEGIN
 			The object is used in the Aruba Management Protocol.
 			In a GET Table request the instance of the object
 			will contain the Table/Entry OID to be retrieved.
-			The value of the object in a GET Table response is the 
+			The value of the object in a GET Table response is the
 			table OID or Entry OID.
 			A Get request on this object returns <0.0>.
             "
@@ -75,8 +75,8 @@ ARUBA-MGMT-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
             "
 			The object is used in the Aruba Management Protocol.
-			This Object is used to specify the number of Objects 
-			to be retrieved in a GET Table request. Instance 
+			This Object is used to specify the number of Objects
+			to be retrieved in a GET Table request. Instance
 			of the Object will contain the number of Rows.
 			In the Response to the GET Table this object will
 			contain the number of Objects returned in the response.
@@ -117,10 +117,10 @@ ARUBA-MGMT-MIB DEFINITIONS ::= BEGIN
             "
 			The object is used in the Aruba Management Protocol.
 			This Object is used to give the status of the GetTable
-			request. 
-			endTable -- indicates that there are no more rows in 
+			request.
+			endTable -- indicates that there are no more rows in
 						the table.
-			moreTable -- indicates that there are some more rows 
+			moreTable -- indicates that there are some more rows
 						 in the table.
 			retrieveError -- indicates an error occurred while
 							processing the getTable request.

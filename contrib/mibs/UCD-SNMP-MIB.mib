@@ -4,7 +4,7 @@ UCD-SNMP-MIB DEFINITIONS ::= BEGIN
 --
 -- The design of this mib may seem unusual in parts, as it was
 -- designed for ease of numerical management routines.
--- 
+--
 -- In that light, most sub-sections of this mib have four common
 -- numerical oid consistencies:
 --
@@ -39,7 +39,7 @@ IMPORTS
 ucdavis MODULE-IDENTITY
     LAST-UPDATED "200209050000Z"
     ORGANIZATION "University of California, Davis"
-    CONTACT-INFO    
+    CONTACT-INFO
 	"This mib is no longer being maintained by the University of
 	 California and is now in life-support-mode and being
 	 maintained by the net-snmp project.  The best place to write
@@ -102,7 +102,7 @@ ucdExperimental       OBJECT IDENTIFIER ::= { ucdavis 13 }
 
 
 -- These are the returned values of the agent type.
--- returned to:  .iso.org.dod.internet.mgmt.mib-2.system.sysObjectID.0 
+-- returned to:  .iso.org.dod.internet.mgmt.mib-2.system.sysObjectID.0
 
 ucdSnmpAgent      OBJECT IDENTIFIER ::= { ucdavis 250 }
 hpux9             OBJECT IDENTIFIER ::= { ucdSnmpAgent 1 }
@@ -267,7 +267,7 @@ prErrFixCmd OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-	"The command that gets run when the prErrFix column is 
+	"The command that gets run when the prErrFix column is
 	 set to 1."
     ::= { prEntry 103 }
 
@@ -353,13 +353,13 @@ extErrFix OBJECT-TYPE
 	 to attempt to fix problems automatically using remote
 	 snmp operations."
     ::= { extEntry 102 }
-	
+
 extErrFixCmd OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-	"The command that gets run when the extErrFix column is 
+	"The command that gets run when the extErrFix column is
 	 set to 1."
     ::= { extEntry 103 }
 
@@ -374,17 +374,17 @@ memIndex OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Bogus Index.  This should always return the integer 0."
-    ::= { memory 1 } 
+    ::= { memory 1 }
 
 memErrorName OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Bogus Name. This should always return the string 'swap'."
-    ::= { memory 2 } 
+    ::= { memory 2 }
 
 memTotalSwap OBJECT-TYPE
     SYNTAX	Integer32
@@ -430,7 +430,7 @@ memAvailSwapTXT OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION	
+    DESCRIPTION
 	"Active virtual memory used by text."
     ::= { memory 8 }
 
@@ -499,14 +499,14 @@ memSwapError OBJECT-TYPE
     DESCRIPTION
 	"Error flag.  1 indicates very little swap space left"
     ::= { memory 100 }
-	
+
 memSwapErrorMsg OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
 	"Error message describing the Error Flag condition"
-    ::= { memory 101 } 
+    ::= { memory 101 }
 
 
 dskTable OBJECT-TYPE
@@ -549,101 +549,101 @@ dskIndex OBJECT-TYPE
     DESCRIPTION
 	"Integer reference number (row number) for the disk mib."
     ::= { dskEntry 1 }
-	
+
 dskPath OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Path where the disk is mounted."
-    ::= { dskEntry 2 } 
+    ::= { dskEntry 2 }
 
 dskDevice OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Path of the device for the partition"
-    ::= { dskEntry 3 } 
+    ::= { dskEntry 3 }
 
 dskMinimum OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Minimum space required on the disk (in kBytes) before the
          errors are triggered.  Either this or dskMinPercent is
          configured via the agent's snmpd.conf file."
-    ::= { dskEntry 4 } 
+    ::= { dskEntry 4 }
 
 dskMinPercent OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Percentage of minimum space required on the disk before the
          errors are triggered.  Either this or dskMinimum is
          configured via the agent's snmpd.conf file."
-    ::= { dskEntry 5 } 
+    ::= { dskEntry 5 }
 
 dskTotal OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Total size of the disk/partion (kBytes)"
-    ::= { dskEntry 6 } 
+    ::= { dskEntry 6 }
 
 dskAvail OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Available space on the disk"
-    ::= { dskEntry 7 } 
+    ::= { dskEntry 7 }
 
 dskUsed OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Used space on the disk"
-    ::= { dskEntry 8 } 
+    ::= { dskEntry 8 }
 
 dskPercent OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Percentage of space used on disk"
-    ::= { dskEntry 9 } 
+    ::= { dskEntry 9 }
 
 dskPercentNode OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Percentage of inodes used on disk"
-    ::= { dskEntry 10 } 
+    ::= { dskEntry 10 }
 
 dskErrorFlag OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Error flag signaling that the disk or partition is under
 	 the minimum required space configured for it."
-    ::= { dskEntry 100 } 
-     
+    ::= { dskEntry 100 }
+
 dskErrorMsg OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"A text description providing a warning and the space left
 	 on the disk."
-    ::= { dskEntry 101 } 
-     
+    ::= { dskEntry 101 }
+
 laTable OBJECT-TYPE
     SYNTAX	SEQUENCE OF LaEntry
     MAX-ACCESS	not-accessible
@@ -752,90 +752,90 @@ versionIndex OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Index to mib (always 0)"
-    ::= { version 1 } 
+    ::= { version 1 }
 
 versionTag OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"CVS tag keyword"
-    ::= { version 2 } 
-     
+    ::= { version 2 }
+
 versionDate OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Date string from RCS keyword"
-    ::= { version 3 } 
+    ::= { version 3 }
 
 versionCDate OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Date string from ctime() "
-    ::= { version 4 } 
+    ::= { version 4 }
 
 versionIdent OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Id string from RCS keyword"
-    ::= { version 5 } 
+    ::= { version 5 }
 
 versionConfigureOptions OBJECT-TYPE
     SYNTAX	DisplayString
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Options passed to the configure script when this agent was built."
-    ::= { version 6 } 
+    ::= { version 6 }
 
 versionClearCache OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-write
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Set to 1 to clear the exec cache, if enabled"
-    ::= { version 10 } 
+    ::= { version 10 }
 
 versionUpdateConfig OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-write
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Set to 1 to read-read the config file(s)."
-    ::= { version 11 } 
+    ::= { version 11 }
 
 versionRestartAgent OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-write
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Set to 1 to restart the agent."
-    ::= { version 12 } 
+    ::= { version 12 }
 
 versionSavePersistentData OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-write
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Set to 1 to force the agent to save it's persistent data immediately."
-    ::= { version 13 } 
+    ::= { version 13 }
 
 versionDoDebugging OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-write
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Set to 1 to turn debugging statements on in the agent or 0
 	 to turn it off."
-    ::= { version 20 } 
+    ::= { version 20 }
 
 
 snmperrs OBJECT IDENTIFIER ::= { ucdavis 101 }
@@ -1111,14 +1111,14 @@ ssRawContexts OBJECT-TYPE
 --     DESCRIPTION
 --         "Error flag."
 --     ::= { systemStats 100 }
--- 
+--
 -- ssErrMessage OBJECT-TYPE
 --     SYNTAX      DisplayString
 --     MAX-ACCESS  read-only
 --     STATUS      current
---     DESCRIPTION  
+--     DESCRIPTION
 --         "Error message describing the errorflag condition."
---     ::= { systemStats 101 } 
+--     ::= { systemStats 101 }
 
 
 ucdTraps OBJECT IDENTIFIER ::= { ucdavis 251 }
@@ -1128,7 +1128,7 @@ ucdStart NOTIFICATION-TYPE
     DESCRIPTION
 	""
     ::= { ucdTraps 1 }
-    
+
 ucdShutdown	NOTIFICATION-TYPE
     STATUS current
     DESCRIPTION
@@ -1137,7 +1137,7 @@ ucdShutdown	NOTIFICATION-TYPE
 
 --
 -- File Table:  monitor a list of files to check for a maximum size.
--- 
+--
 
 fileTable OBJECT-TYPE
     SYNTAX	SEQUENCE OF FileEntry
@@ -1146,7 +1146,7 @@ fileTable OBJECT-TYPE
     DESCRIPTION
 	"Table of monitored files."
     ::= { ucdavis 15 }
-    
+
 fileEntry OBJECT-TYPE
     SYNTAX	FileEntry
     MAX-ACCESS	not-accessible
@@ -1244,7 +1244,7 @@ logMatchEntry OBJECT-TYPE
 	::= { logMatchTable 1 }
 
 LogMatchEntry ::=
-	SEQUENCE { 
+	SEQUENCE {
 		logMatchIndex
 			Integer32,
 		logMatchName

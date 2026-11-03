@@ -23,7 +23,7 @@ PPPOE-MGMT-MIB DEFINITIONS ::= BEGIN
 	MODULE-IDENTITY,OBJECT-TYPE			FROM SNMPv2-SMI
 	dlink-common-mgmt					FROM DLINK-ID-REC-MIB
 	DisplayString             FROM RFC1213-MIB;
-		
+
 	swPPPoEMIB MODULE-IDENTITY
 		LAST-UPDATED "0904020000Z"
 	  	ORGANIZATION "D-Link Corp"
@@ -32,21 +32,21 @@ PPPOE-MGMT-MIB DEFINITIONS ::= BEGIN
 	  	DESCRIPTION
 	    		"The structure of PPPoE management for the proprietary enterprise."
 	  	::= {dlink-common-mgmt 79}
-	  	
-	swPPPoEMgmtCtrl      OBJECT IDENTIFIER ::= { swPPPoEMIB 1 }	  	
-	  		
+
+	swPPPoEMgmtCtrl      OBJECT IDENTIFIER ::= { swPPPoEMIB 1 }
+
 -- ********************************************************************
 --  swPPPoEMgmtCtrl               OBJECT IDENTIFIER ::= { swPPPoEMgmt 1 }
 -- ********************************************************************
     swPPPoECirIDInsertState OBJECT-TYPE
         SYNTAX  INTEGER {
-               enabled(1),  
+               enabled(1),
                disabled(2)
                }
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates the status of the PPPoE circuit ID 
+            "This object indicates the status of the PPPoE circuit ID
             insertion state of the switch."
         ::= { swPPPoEMgmtCtrl 1 }
 
@@ -58,7 +58,7 @@ PPPOE-MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS      current
         DESCRIPTION
-            "The table specifies the PPPoE circuit ID insertion function 
+            "The table specifies the PPPoE circuit ID insertion function
              specified by the port."
         ::= { swPPPoECirIDInsertPortMgmt 1 }
 
@@ -100,7 +100,7 @@ PPPOE-MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "This object indicates the PPPoE circuit ID insertion function state 
+            "This object indicates the PPPoE circuit ID insertion function state
              on the port."
         ::= { swPPPoECirIDInsertPortEntry 2 }
 
@@ -121,9 +121,8 @@ PPPOE-MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "This object indicates the user define string when the circuit ID is 
+            "This object indicates the user define string when the circuit ID is
              UDF string."
         ::= { swPPPoECirIDInsertPortEntry 4 }
-       
-END
 
+END

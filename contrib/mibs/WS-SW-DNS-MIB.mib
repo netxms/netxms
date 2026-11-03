@@ -6,24 +6,24 @@
 --
 
 	WS-SW-DNS-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP, MODULE-COMPLIANCE			
-				FROM SNMPv2-CONF			
-			IpAddress, OBJECT-TYPE, MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			DisplayString, TruthValue, RowStatus			
-				FROM SNMPv2-TC			
-			wsSwDNS			
+			OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+			IpAddress, OBJECT-TYPE, MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			DisplayString, TruthValue, RowStatus
+				FROM SNMPv2-TC
+			wsSwDNS
 				FROM WS-SW-SMI;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.2.2.1
-		wsSwDNSModule MODULE-IDENTITY 
+		wsSwDNSModule MODULE-IDENTITY
 			LAST-UPDATED "200505051121Z"		-- May 05, 2005 at 11:21 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technologies"
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Symbol Technologies, Inc.
 				Customer Service
 				Postal:
@@ -33,45 +33,45 @@
 				Tel: +1. 631.738.6213
 				E-mail: support@symbol.com
 				Web: http://www.symbol.com/support"
-			DESCRIPTION 
+			DESCRIPTION
 				"ws switchin DNS module"
 			REVISION "200605241651Z"		-- May 24, 2006 at 16:51 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a08"
 			REVISION "200601131109Z"		-- January 13, 2006 at 11:09 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a07"
 			REVISION "200509221402Z"		-- September 22, 2005 at 14:02 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a06"
 			REVISION "200505191442Z"		-- May 19, 2005 at 14:42 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a05"
 			REVISION "200505181426Z"		-- May 18, 2005 at 14:26 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a04"
 			REVISION "200505111033Z"		-- May 11, 2005 at 10:33 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a03"
 			REVISION "200505101552Z"		-- May 10, 2005 at 15:52 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a02"
 			REVISION "200505051207Z"		-- May 05, 2005 at 12:07 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a01"
 			::= { wsSwDNS 1 }
 
-		
-	
-	
+
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.1
 		wsSwDNSDomainName OBJECT IDENTIFIER ::= { wsSwDNSModule 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.1.1
 		wsSwDNSDomainNameStatic OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (0..80))
@@ -81,7 +81,7 @@
 				"static domain name"
 			::= { wsSwDNSDomainName 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.1.2
 		wsSwDNSDomainNameLookup OBJECT-TYPE
 			SYNTAX TruthValue
@@ -91,7 +91,7 @@
 				"enable/disable domain name lookup"
 			::= { wsSwDNSDomainName 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.2
 		wsSwDNSNameSvrTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsSwDNSNameSvrEntry
@@ -101,7 +101,7 @@
 				"static DNS table"
 			::= { wsSwDNSModule 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.2.1
 		wsSwDNSNameSvrEntry OBJECT-TYPE
 			SYNTAX WsSwDNSNameSvrEntry
@@ -112,9 +112,9 @@
 			INDEX { wsSwDNSNameSvrIP, wsSwDNSNameSvrType }
 			::= { wsSwDNSNameSvrTable 1 }
 
-		
+
 		WsSwDNSNameSvrEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsSwDNSNameSvrIP
 					IpAddress,
 				wsSwDNSNameSvrPriority
@@ -134,7 +134,7 @@
 				"DNS IP Address"
 			::= { wsSwDNSNameSvrEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.2.1.2
 		wsSwDNSNameSvrPriority OBJECT-TYPE
 			SYNTAX INTEGER (1..6)
@@ -144,7 +144,7 @@
 				"Description."
 			::= { wsSwDNSNameSvrEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.2.1.3
 		wsSwDNSNameSvrType OBJECT-TYPE
 			SYNTAX INTEGER
@@ -158,7 +158,7 @@
 				"Description."
 			::= { wsSwDNSNameSvrEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.2.1.4
 		wsSwDNSNameSvrRowStatus OBJECT-TYPE
 			SYNTAX RowStatus
@@ -168,40 +168,40 @@
 				"static DNS row status"
 			::= { wsSwDNSNameSvrEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.100
 		wsSwDNSComformance OBJECT IDENTIFIER ::= { wsSwDNSModule 100 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.100.1
 		wsSwDNSCompliances OBJECT IDENTIFIER ::= { wsSwDNSComformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.100.1.1
 		wsSwDNSCompliance MODULE-COMPLIANCE
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			MODULE -- this module
 				MANDATORY-GROUPS { wsSwDNSGroup }
 			::= { wsSwDNSCompliances 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.100.3
 		wsSwDNSGroups OBJECT IDENTIFIER ::= { wsSwDNSComformance 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.2.2.1.100.3.1
 		wsSwDNSGroup OBJECT-GROUP
-			OBJECTS { wsSwDNSDomainNameStatic, wsSwDNSDomainNameLookup, wsSwDNSNameSvrPriority, wsSwDNSNameSvrType, wsSwDNSNameSvrRowStatus, 
+			OBJECTS { wsSwDNSDomainNameStatic, wsSwDNSDomainNameLookup, wsSwDNSNameSvrPriority, wsSwDNSNameSvrType, wsSwDNSNameSvrRowStatus,
 				wsSwDNSNameSvrIP }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			::= { wsSwDNSGroups 1 }
 
-		
-	
+
+
 	END
 
 --

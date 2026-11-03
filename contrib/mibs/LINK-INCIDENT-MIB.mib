@@ -1,5 +1,5 @@
 --
--- Title: FICON MIB 
+-- Title: FICON MIB
 -- This is in accordance with smiv2 format.
 -- Intial version 1.0
 --
@@ -28,13 +28,13 @@ LINK-INCIDENT-MIB DEFINITIONS ::= BEGIN
 
 
     DESCRIPTION	"The MIB module	defines support for FICON in Fabos. This MIB
-		addresses link incident and link failure data for ficon 
+		addresses link incident and link failure data for ficon
 		host/devices connected to a Brocade switch"
 	REVISION "200307110000Z"    -- July 11, 2003
     DESCRIPTION	"Initial revision"
 
 	REVISION "201206040000Z"    -- June 4, 2012
-	DESCRIPTION "Added ficonSlot and ficonPort objects and 
+	DESCRIPTION "Added ficonSlot and ficonPort objects and
 			included it in all ficon traps"
     ::= { fcSwitch    50 }
 
@@ -227,7 +227,7 @@ RNIDParams ::= TEXTUAL-CONVENTION
                                    the FL port number."
     SYNTAX     OCTET STRING (SIZE (3))
 
--- { linkIncidentMIB 1 } is reserved for future usage. 
+-- { linkIncidentMIB 1 } is reserved for future usage.
 
   ficonRNID  OBJECT-IDENTITY
      STATUS  current
@@ -244,7 +244,7 @@ RNIDParams ::= TEXTUAL-CONVENTION
   ::= {	ficonRNID 1 }
 
  -- node RNID table
- -- Node information from attached node to the switch are stored 
+ -- Node information from attached node to the switch are stored
  -- in the node RNID table
 
 nodeRNIDTable  OBJECT-TYPE
@@ -252,7 +252,7 @@ nodeRNIDTable  OBJECT-TYPE
      MAX-ACCESS	 not-accessible
      STATUS	 current
      DESCRIPTION
-	"A table that contains, one entry for each Ficon RNID  
+	"A table that contains, one entry for each Ficon RNID
 	node attached to a switch."
  ::= { ficonRNID 2 }
 
@@ -260,13 +260,13 @@ nodeRNIDEntry	OBJECT-TYPE
 	SYNTAX		NodeRNIDEntry
 	MAX-ACCESS		not-accessible
 	STATUS		current
-	DESCRIPTION	"A entry containing the RNID information 
+	DESCRIPTION	"A entry containing the RNID information
 			 for a ficon node"
 	INDEX		{ nodeRNIDIndex }
   ::= {  nodeRNIDTable 1 }
 
 NodeRNIDEntry	::= SEQUENCE {
-	nodeRNIDIndex	
+	nodeRNIDIndex
 		Integer32,
 	nodeRNIDIncidentPortWWN
 		LinkWwn,
@@ -282,7 +282,7 @@ NodeRNIDEntry	::= SEQUENCE {
 		RNIDManufacturer,
 	nodeRNIDManufacturerPlant
 		RNIDManufacturerPlant,
-	nodeRNIDSequenceNumber	
+	nodeRNIDSequenceNumber
 		RNIDSequenceNumber,
 	nodeRNIDConnectedPortWWN
 		LinkWwn,
@@ -302,7 +302,7 @@ nodeRNIDIndex	OBJECT-TYPE
       STATUS	  current
       DESCRIPTION
 	 "Index into nodeRNIDTable"
-  ::= {   nodeRNIDEntry 1 }	
+  ::= {   nodeRNIDEntry 1 }
 
 nodeRNIDIncidentPortWWN	OBJECT-TYPE
 	SYNTAX		LinkWwn
@@ -369,14 +369,14 @@ nodeRNIDConnectedPortWWN	OBJECT-TYPE
   ::= {   nodeRNIDEntry 10 }
 
 nodeRNIDPortType		OBJECT-TYPE
-	SYNTAX		PortType	
+	SYNTAX		PortType
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION	"Port type (N, E, NL or virtual port) of the connected port."
   ::= {   nodeRNIDEntry 11 }
 
 nodeRNIDFormat			OBJECT-TYPE
-	SYNTAX			LinkFormat	
+	SYNTAX			LinkFormat
 	MAX-ACCESS		read-only
 	STATUS		current
 	DESCRIPTION	"Node identification data format of the connected port."
@@ -437,7 +437,7 @@ SwitchRNIDEntry	::= SEQUENCE {
 		RNIDManufacturer,
 	switchRNIDManufacturerPlant
 		RNIDManufacturerPlant,
-	switchRNIDSequenceNumber	
+	switchRNIDSequenceNumber
 		RNIDSequenceNumber,
 	switchRNIDTag
 		RNIDTagType,
@@ -549,7 +549,7 @@ lIRRTableNumEntries   OBJECT-TYPE
       MAX-ACCESS  read-only
       STATUS	  current
       DESCRIPTION
-	 "The number of entries in Link Incident Record 
+	 "The number of entries in Link Incident Record
 	  Registration (LIRR) table"
  ::= {	ficonLIRR 1 }
 
@@ -559,10 +559,10 @@ lIRRTable	OBJECT-TYPE
      MAX-ACCESS	 not-accessible
      STATUS	 current
      DESCRIPTION
-	"A table that contains, one entry for each LIRR incident 
+	"A table that contains, one entry for each LIRR incident
 	for an attached FICON device."
  ::= { ficonLIRR 2 }
- 
+
 lIRREntry	OBJECT-TYPE
 	SYNTAX		LIRREntry
 	MAX-ACCESS		not-accessible
@@ -585,7 +585,7 @@ LIRREntry	::= SEQUENCE {
 	lIRRPortType
 		PortType,
 	lIRRFormat
-		LinkFormat	
+		LinkFormat
 }
 
 lIRRIndex	OBJECT-TYPE
@@ -610,28 +610,28 @@ lIRRListenerPID	OBJECT-TYPE
   ::= {   lIRREntry 3 }
 
 lIRRRegType	OBJECT-TYPE
-	SYNTAX		RegType	
+	SYNTAX		RegType
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION	"Registration type - conditional or unconditional."
   ::= {   lIRREntry 4 }
 
 lIRRProtocol	OBJECT-TYPE
-	SYNTAX		LIRRProtocol	
+	SYNTAX		LIRRProtocol
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION	"Protocol type supported."
   ::= {   lIRREntry 5 }
 
 lIRRPortType	OBJECT-TYPE
-	SYNTAX		PortType	
+	SYNTAX		PortType
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION	"Attached port type."
   ::= {   lIRREntry 6 }
 
 lIRRFormat	OBJECT-TYPE
-	SYNTAX		LinkFormat	
+	SYNTAX		LinkFormat
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION	"Registration type - conditional or unconditional."
@@ -649,7 +649,7 @@ rLIRTableNumEntries   OBJECT-TYPE
       MAX-ACCESS  read-only
       STATUS	  current
       DESCRIPTION
-	 "The number of entries in switch Registered Link 
+	 "The number of entries in switch Registered Link
    	  Incident Report (RLIR) table"
  ::= {	ficonRLIR 1 }
 
@@ -659,7 +659,7 @@ rLIRTable	OBJECT-TYPE
      MAX-ACCESS	 not-accessible
      STATUS	 current
      DESCRIPTION
-	"A table that contains, one entry for each LIRR incident 
+	"A table that contains, one entry for each LIRR incident
 	for an attached FICON device."
  ::= { ficonRLIR  2 }
 
@@ -683,7 +683,7 @@ RLIREntry	::= SEQUENCE {
 	rLIRFabricWwn		LinkWwn,
 	rLIRLinkFailureType	RLIRLinkFailureType,
 	rLIRTimeStamp		DisplayString,
-	rLIRFormat		LinkFormat	
+	rLIRFormat		LinkFormat
 }
 
 rLIRIndex	OBJECT-TYPE
@@ -708,7 +708,7 @@ rLIRIncidentNodeWwn	OBJECT-TYPE
   ::= {   rLIREntry 3 }
 
 rLIRIncidentPortType	OBJECT-TYPE
-	SYNTAX		PortType	
+	SYNTAX		PortType
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION	"RLIR Incident port type."
@@ -765,7 +765,7 @@ rLIRTimeStamp	OBJECT-TYPE
   ::= {   rLIREntry 12 }
 
 rLIRFormat	OBJECT-TYPE
-	SYNTAX		LinkFormat	
+	SYNTAX		LinkFormat
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION	"RLIR Format."
@@ -773,7 +773,7 @@ rLIRFormat	OBJECT-TYPE
 
 -- { linkIncidentMIB 5..20 } are reserved for new mib objects in future.
 
--- Related traps 
+-- Related traps
 
 	linkIncidentMIBTraps      OBJECT-IDENTITY
       STATUS     current
@@ -785,35 +785,35 @@ rLIRFormat	OBJECT-TYPE
       DESCRIPTION "The Link Incident traps."
     ::= { linkIncidentMIBTraps 0 }
 
-   linkRNIDDeviceRegistration NOTIFICATION-TYPE 
+   linkRNIDDeviceRegistration NOTIFICATION-TYPE
         OBJECTS { nodeRNIDIndex, nodeRNIDIncidentPortWWN,
-					nodeRNIDConnectedPortWWN, 
+					nodeRNIDConnectedPortWWN,
 							nodeVfId, ficonSlot, ficonPort }
-	STATUS  current 
-        DESCRIPTION 
-            " A device registered with the switch" 
+	STATUS  current
+        DESCRIPTION
+            " A device registered with the switch"
         ::= {linkIncidentMIBTrapPrefix 1}
 
-    linkRNIDDeviceDeRegistration NOTIFICATION-TYPE 
-        OBJECTS { nodeRNIDIndex, nodeRNIDIncidentPortWWN, 
-					nodeRNIDConnectedPortWWN, 
-							nodeVfId, ficonSlot, ficonPort } 
+    linkRNIDDeviceDeRegistration NOTIFICATION-TYPE
+        OBJECTS { nodeRNIDIndex, nodeRNIDIncidentPortWWN,
+					nodeRNIDConnectedPortWWN,
+							nodeVfId, ficonSlot, ficonPort }
     STATUS  current
-	DESCRIPTION 
-            " A device de-regsitered with the switch" 
+	DESCRIPTION
+            " A device de-regsitered with the switch"
         ::= {linkIncidentMIBTrapPrefix 2}
 
     linkLIRRListenerAdded   NOTIFICATION-TYPE
-        OBJECTS {lIRRListenerPortWWN, lIRRListenerPID, 
-					lIRRIndex, nodeVfId, ficonSlot, ficonPort} 
+        OBJECTS {lIRRListenerPortWWN, lIRRListenerPID,
+					lIRRIndex, nodeVfId, ficonSlot, ficonPort}
 	STATUS  current
-        DESCRIPTION 
-            " A listener for link failure incident is added" 
+        DESCRIPTION
+            " A listener for link failure incident is added"
         ::= {linkIncidentMIBTrapPrefix 3}
 
     linkLIRRListenerRemoved NOTIFICATION-TYPE
-        OBJECTS {lIRRListenerPortWWN, lIRRListenerPID, lIRRIndex, 
-					nodeVfId, ficonSlot, ficonPort} 
+        OBJECTS {lIRRListenerPortWWN, lIRRListenerPID, lIRRIndex,
+					nodeVfId, ficonSlot, ficonPort}
     STATUS  current
         DESCRIPTION
             " A listener for link failure incident is removed"
@@ -821,13 +821,13 @@ rLIRFormat	OBJECT-TYPE
 
     linkRLIRFailureIncident  NOTIFICATION-TYPE
         OBJECTS { nodeRNIDIndex, lIRRIndex, rLIRIncidentPortWwn,
-				rLIRConnectedPortWwn, rLIRIndex, rLIRLinkFailureType, 
+				rLIRConnectedPortWwn, rLIRIndex, rLIRLinkFailureType,
 				lIRRListenerPID, nodeVfId, ficonSlot, ficonPort }
-	STATUS  current 
-        DESCRIPTION 
+	STATUS  current
+        DESCRIPTION
             " A link failure incident has occured. The value of
               lIRRIndex will be -2147483647 and lIRRListenerPID will
-              be 0 (zero) , if there is no listener for incident." 
+              be 0 (zero) , if there is no listener for incident."
         ::= {linkIncidentMIBTrapPrefix 5}
 
 END

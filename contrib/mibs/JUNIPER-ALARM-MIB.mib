@@ -1,6 +1,6 @@
 --
 -- Juniper Enterprise Specific MIB: Alarm MIB
--- 
+--
 -- Copyright (c) 2001-2003, Juniper Networks, Inc.
 -- All rights reserved.
 --
@@ -50,22 +50,22 @@ jnxAlarms MODULE-IDENTITY
 		other(1),	-- other or unknown
 		passOn(2),	-- alarms being passed on
 		cutOff(3)	-- alarms being cut off
-	}		
+	}
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION
 		"The alarm relay mode of the craft interface
 		panel for both yellow and red alarms.
 
-		Both yellow and red alarms could be cut off 
-		by a front panel Alarm Cutoff / Lamp Test 
+		Both yellow and red alarms could be cut off
+		by a front panel Alarm Cutoff / Lamp Test
 		(ACO/LT) button.
 
-		In the pass-on mode, the alarm relay will be 
+		In the pass-on mode, the alarm relay will be
 		activated to pass on the yellow or red alarms.
 		In the cut-off mode, both yellow and red alarms
-		will be cut off from the alarm relays which are 
-		normally connected to audible sirens or visual 
+		will be cut off from the alarm relays which are
+		normally connected to audible sirens or visual
 		flashing devices."
 
 
@@ -83,14 +83,14 @@ jnxAlarms MODULE-IDENTITY
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION
-		"The yellow alarm state on the craft interface 
+		"The yellow alarm state on the craft interface
 		panel.
 
-		The yellow alarm is on when there is some 
-		system warning such as maintenance alert or 
+		The yellow alarm is on when there is some
+		system warning such as maintenance alert or
 		significant temperature increase.
 
-		This yellow alarm state could be turned off 
+		This yellow alarm state could be turned off
 		by the ACO/LT (Alarm Cut Off / Lamp Test) button
 		on the front panel module."
 
@@ -102,7 +102,7 @@ jnxAlarms MODULE-IDENTITY
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION
-		"The number of currently active and non-silent 
+		"The number of currently active and non-silent
 		yellow alarms.
 
 		This object is independent of the ACO/LT (Alarm
@@ -137,12 +137,12 @@ jnxAlarms MODULE-IDENTITY
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION
-		"The red alarm indication on the craft interface 
+		"The red alarm indication on the craft interface
 		panel.
 
-		The red alarm is on when there is some system 
-		failure or power supply failure or the system 
-		is experiencing a hardware malfunction or some 
+		The red alarm is on when there is some system
+		failure or power supply failure or the system
+		is experiencing a hardware malfunction or some
 		threshold is being exceeded.
 
 		This red alarm state could be turned off by the
@@ -158,7 +158,7 @@ jnxAlarms MODULE-IDENTITY
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION
-		"The number of currently active and non-silent 
+		"The number of currently active and non-silent
 		red alarms.
 
 		This object is independent of the ACO/LT (Alarm

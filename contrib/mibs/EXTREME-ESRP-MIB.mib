@@ -70,7 +70,7 @@ EXTREME-ESRP-MIB DEFINITIONS ::= BEGIN
                         "Indicates a gateway addresses this router backs
                         up. Any gateway address can be backed up by a
                         group of routers with one as the master and the
-                        others as backup. An instance of this object 
+                        others as backup. An instance of this object
                         refers to one such group. Only the default group
                         1 is supported currently."
                 ::= { extremeEsrpEntry 2 }
@@ -82,7 +82,7 @@ EXTREME-ESRP-MIB DEFINITIONS ::= BEGIN
                 DESCRIPTION
                         "The status of this entry."
                 ::= { extremeEsrpEntry 3 }
-                
+
           extremeEsrpNetAddress OBJECT-TYPE
                 SYNTAX  ExtremeGenAddr
                 MAX-ACCESS  read-only
@@ -92,7 +92,7 @@ EXTREME-ESRP-MIB DEFINITIONS ::= BEGIN
                         is null if no address has been assigned to the
                         vlan."
                 ::= { extremeEsrpEntry 4 }
-                
+
           extremeEsrpState OBJECT-TYPE
                 SYNTAX	INTEGER {
                         neutral(1),
@@ -204,7 +204,7 @@ EXTREME-ESRP-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  not-accessible
 		STATUS current
 		DESCRIPTION
-			"This table contains ESRP information received from the ESRP 
+			"This table contains ESRP information received from the ESRP
 			 neighbors of this device."
 		::= { extremeEsrp 3 }
 
@@ -213,7 +213,7 @@ EXTREME-ESRP-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS	not-accessible
 		STATUS	current
 		DESCRIPTION
-			"Each individual entry of this table contains ESRP information 
+			"Each individual entry of this table contains ESRP information
 			of one ESRP neighbor."
 		INDEX {extremeEsrpVlanIfIndex,
                        extremeEsrpGroup,
@@ -251,7 +251,7 @@ EXTREME-ESRP-MIB DEFINITIONS ::= BEGIN
                         "Indicates a gateway addresses this router backs
                         up. Any gateway address can be backed up by a
                         group of routers with one as the master and the
-                        others as backup. An instance of this object 
+                        others as backup. An instance of this object
                         refers to one such group. Note that this object
                         is defined in addition to extremeEsrpGroup.
                         Whereas the extremeEsrpGroup refers to the group
@@ -354,7 +354,7 @@ EXTREME-ESRP-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  not-accessible
 		STATUS current
 		DESCRIPTION
-			"A table containing information on the VLANs tracked by 
+			"A table containing information on the VLANs tracked by
 			this ESRP router."
 		::= { extremeEsrp 4 }
 
@@ -447,7 +447,7 @@ EXTREME-ESRP-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  not-accessible
 		STATUS current
 		DESCRIPTION
-			"A table containing information on the ports belonging 
+			"A table containing information on the ports belonging
 			to the ESRP vlans on this router."
 		::= { extremeEsrp 6 }
 
@@ -487,4 +487,3 @@ EXTREME-ESRP-MIB DEFINITIONS ::= BEGIN
 END
 
 -- ===========================================================================
-

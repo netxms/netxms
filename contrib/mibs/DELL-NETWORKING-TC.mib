@@ -61,7 +61,7 @@ dellNetTextualConventions MODULE-IDENTITY
                 s2410p(10),                     -- Dell Networking OS S2410 10GbE switch
                 s50(11),                        -- Dell Networking OS S50 access switch
                 s50e(12),                       -- Dell Networking OS S50e access switch
-                s50v(13),                       -- Dell Networking OS S50v access switch    		    		
+                s50v(13),                       -- Dell Networking OS S50v access switch
                 s50nac(14),                     -- Dell Networking OS S50nac access switch
                 s50ndc(15),                     -- Dell Networking OS S50ndc access switch
                 s25pdc(16),                     -- Dell Networking OS S25pdc access switch
@@ -77,7 +77,7 @@ dellNetTextualConventions MODULE-IDENTITY
                 m-IOA(26),                      -- PowerEdge M I/O Aggregator bridge
                 s4820(27),                      -- Dell Networking OS S4820 access switch
                 s6000(28),                      -- Dell Networking OS S6000 access switch
-                s5000(29),                      -- Dell Networking OS S5000 access switch 
+                s5000(29),                      -- Dell Networking OS S5000 access switch
                 s-FN410S-IOA(30),               -- Dell PowerEdge FN 410S IOA
                 s-FN410T-IOA(31),               -- Dell PowerEdge FN 410T IOA
                 s-FN2210S-IOA(32),              -- Dell PowerEdge FN 2210S IOA
@@ -199,7 +199,7 @@ dellNetTextualConventions MODULE-IDENTITY
     		port04S48P4G3(73),      -- Sonoma OC48c/12c/3c 4 Ports (EG3)
     		port1610EXW16PG(74),    -- Baku Dual CAM 16 ports 10GE
     		port0810EXW8PG3(75),    -- Baku Dual CAM 8 ports
-    		
+
     		 -- CYCLONE3 Cards
     		port9001E90MH(76),      -- Athena 90 ports 10M CAM E/FE/GE (EH)
     		port1010EXW10SH(77),    -- Icarus-SFP+ 10 ports LAN/WAN 10GE SFP+ (EH)
@@ -300,7 +300,7 @@ dellNetTextualConventions MODULE-IDENTITY
     		lc04S48P4G3(72),    -- Sonoma OC48c/12c/3c 4 Ports (EG3)
     		lc1610EXW16PG(73),  -- Baku Dual CAM 16 ports
     		lc0810EXW8PG3(74),  -- Baku Dual CAM 8 ports
-    		
+
     		 -- CYCLONE3 Cards
     		lc9001E90MH(75),    -- Athena 90 ports 10M CAM E/FE/GE (EH)
     		lc1010EXW10SH(76),  -- Icarus-SFP+ 10 ports LAN/WAN 10GE SFP+ (EH)
@@ -312,13 +312,13 @@ dellNetTextualConventions MODULE-IDENTITY
     		lc1010EXW10PJ(82),  -- Erebus 10 ports 10GE XFP 40M CAM (EJ)
     		lc4010EXW40SH(83),  -- Pegasus 40 ports 10GE SFP+ 10M CAM
     		lc4010EXW40SJ(84),  -- Pegasus 40 ports 10GE SFP+ 40M CAM
-                z9500LC12(85),           
+                z9500LC12(85),
                 z9500LC36(86),
                 z9500LC48(87),
                 c9000LC24X10GCu(88),
                 c9000LC24X10GOptics(89),
-                c9000LC6X40G(90), 
-    		
+                c9000LC6X40G(90),
+
     		rpmCard(200),       -- Route Processor Card
     		rpmCardEB(201),
     		rpmCardED(202),
@@ -329,19 +329,19 @@ dellNetTextualConventions MODULE-IDENTITY
     		rpmCardEH(207),     -- Bigfoot
                 supCard(208),       -- Supervisor Card
                 sfmCard(250),       -- Switch Fabric Card
-    		
+
     		cardUnknown(259)
         }
 
 	DellNetCardOperStatus ::= TEXTUAL-CONVENTION
 	    STATUS        current
 	    DESCRIPTION
-	        "The operational status provides further condition of 
+	        "The operational status provides further condition of
 	        the card. If AdminStatus is changed to 'up', then the
 	        valid state is
 	        'ready' - the card is present and ready and operational
 	                  packets can be passed
-	        If AdminStatus is changed to 'down', the states can be 
+	        If AdminStatus is changed to 'down', the states can be
 	        as followed:
 	        'cardNotmatch'- the card does not matche what is configured
 	        'cardProblem' - the card detects hardware problems
@@ -382,11 +382,11 @@ dellNetTextualConventions MODULE-IDENTITY
     		notPresented(0),
     		cardUnknown(99),
     		lc4802E48TB(1024),  -- 48-port GE 100/1000Base-T line card with RJ45 interface (CB)
-    		lc0410EX4PB(1026),  -- 4-port 10GE LAN PHY line card with XFP optics (CB)    		    		
-    		lc4801E48PB(1027),  -- 48-port FE/GE line card with SFP optics (CB)    		   		
+    		lc0410EX4PB(1026),  -- 4-port 10GE LAN PHY line card with XFP optics (CB)
+    		lc4801E48PB(1027),  -- 48-port FE/GE line card with SFP optics (CB)
     		lc4610E46TB(1028),  -- 36-port GE 10/100/1000Base-T with RJ45 - 8-port FE/GE with SFP - 2-port 10GE with SFP+
-    		lc4802E48VB(1280),  -- 48-port GE 100/1000Base-T line card with RJ45 interface (CB) with POE    		
-    		lc4610E46VB(1284),  -- 36-port GE 10/100/1000Base-T with RJ45 and PoE - 8-port FE/GE with SFP - 2-port 10GE with SFP+        		
+    		lc4802E48VB(1280),  -- 48-port GE 100/1000Base-T line card with RJ45 interface (CB) with POE
+    		lc4610E46VB(1284),  -- 36-port GE 10/100/1000Base-T with RJ45 and PoE - 8-port FE/GE with SFP - 2-port 10GE with SFP+
     		lc0810EX8PB(2049),  -- 8-port 10GE LAN PHY line card with XFP optics (CB)
     		rpmCard(200)	-- Route Processor Card
         }
@@ -573,7 +573,7 @@ dellNetTextualConventions MODULE-IDENTITY
 			layer3PbrIngress(67),   	-- L3 Ingress multicast fib
 			layer3AclEgress(91),   		-- L3 Egress ACL
 			layer3ExtHost(121),   		-- L3 Host Table(BCM)
-			layer3ExtLPM(122)   		-- L3 Longest Prefix Match(BCM-LPM) 
+			layer3ExtLPM(122)   		-- L3 Longest Prefix Match(BCM-LPM)
 
 	    }
 
@@ -587,7 +587,7 @@ dellNetTextualConventions MODULE-IDENTITY
             for example, -7.23 dB will be represented as -723."
         SYNTAX       Integer32
 
-    
+
     DellNetDeviceType ::= TEXTUAL-CONVENTION
      STATUS      current
      DESCRIPTION
@@ -610,5 +610,5 @@ dellNetTextualConventions MODULE-IDENTITY
                     up(1),
                     down(2)
     }
- 
+
 END

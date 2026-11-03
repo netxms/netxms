@@ -10,7 +10,7 @@
 	--  This module provides authoritative
 	--  definitions for Dell EMC Networking OS10 SMI MIB.
 	--
-	
+
 	IMPORTS
 		MODULE-IDENTITY,enterprises,
 		OBJECT-IDENTITY

@@ -47,11 +47,11 @@
 -- 1.Add 'arp-spoofing(11)' and 'bpdu-tunnel(12)' in the value list of objects swACLEthernetOwner,
 --   swACLIpOwner, swACLPktContMaskOwner, swACLIpv6MaskOwner, swACLEtherRuleOwner, swACLIpRuleOwner,
 --   swACLPktContRuleOwner and swACLIpv6RuleOwner.
---   For arp spoofing and bpdu tunnel function, we need to add the two types of the owner on these objects. 
+--   For arp spoofing and bpdu tunnel function, we need to add the two types of the owner on these objects.
 -- 2.Add 'pppoe(10)','arp-spoofing(11)' and 'bpdu-tunnel(12)' in the value list of objects
 --   swACLPktContMaskOptionOwner,swACLPktContRuleOptionOwner.
---   For PPPoE circuit ID insertion, ARP spoofing and BPDU tunnel functions, we need to add the three types 
---   of the owner on these objects. 
+--   For PPPoE circuit ID insertion, ARP spoofing and BPDU tunnel functions, we need to add the three types
+--   of the owner on these objects.
 --
 -- Revision 2.11 2008/11/21 by Ronald Hsu
 -- 1.Add 'set-drop-precedence(5)' in the value list of object swACLEtherRulePermit,
@@ -206,7 +206,7 @@ ACLMGMT-MIB DEFINITIONS ::= BEGIN
     swCpuAclMaskMgmt             OBJECT IDENTIFIER ::= { swAclMgmtMIB 4 }
     swCpuAclRuleMgmt             OBJECT IDENTIFIER ::= { swAclMgmtMIB 5 }
     swAclMeteringMgmt            OBJECT IDENTIFIER ::= { swAclMgmtMIB 6 }
-    
+
 -- -----------------------------------------------------------------------------
 -- Textual Conventions
 -- -----------------------------------------------------------------------------
@@ -441,7 +441,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The name of the ACL mask entry unique to the mask list."
         ::= { swACLEthernetEntry 11 }
-        
+
     swACLEthernetVlanMask OBJECT-TYPE
         SYNTAX OCTET STRING(SIZE(2))
         MAX-ACCESS read-create
@@ -451,7 +451,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
              Valid values are from 0x0000 to 0x0FFF.
              Default value is 0x0FFF
             "
-        ::= { swACLEthernetEntry 12 }        
+        ::= { swACLEthernetEntry 12 }
 
 -- -----------------------------------------------------------------------------
 -- swACLIpTable
@@ -834,7 +834,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The name of the ACL mask entry unique to the mask list."
         ::= { swACLIpEntry 23 }
-        
+
     swACLIpVlanMask OBJECT-TYPE
         SYNTAX OCTET STRING(SIZE(2))
         MAX-ACCESS read-create
@@ -844,7 +844,7 @@ Ipv6Address ::= TEXTUAL-CONVENTION
              Valid values are from 0x0000 to 0x0FFF.
              Default value is 0x0FFF.
             "
-        ::= { swACLIpEntry 24 }           
+        ::= { swACLIpEntry 24 }
 
 -- -----------------------------------------------------------------------------
 -- swACLPktContMaskTable
@@ -1615,15 +1615,15 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The name of the ACL mask entry unique to the mask list."
         ::= { swACLPktContMaskOptionEntry 17 }
-        
+
 
 
 -- -----------------------------------------------------------------------------
 -- swACLPktContMaskOption2
 -- -----------------------------------------------------------------------------
-                
-swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }        
-                
+
+swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
+
 -- -----------------------------------------------------------------------------
 -- swACLPktContMaskOption2Table
 -- -----------------------------------------------------------------------------
@@ -1637,15 +1637,15 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
              of each incoming frame's user-defined part of the packet header
              will be examined by switch. Masks entered will be combined
              with the values the switch finds in the specified frame header fields.
-             
+
              To create a packet content field with respect to an offset, an entry in the
-             swACLPktContMaskOption2OffsetsTable must be created first. 
-             
+             swACLPktContMaskOption2OffsetsTable must be created first.
+
              On row creation, all entries in the corresponding profile defined in the
              swACLPktContMaskOption2OffsetsTable will be associated to the profile mask.
-             
+
 	         If any rule is using the profile mask the entries cannot be modified.
-	                      
+
              "
         ::= { swACLPktContMaskOption2 1 }
 
@@ -1687,40 +1687,40 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
             "The ID of the ACL mask entry, unique to the mask list. The maximum value of this object depends on the device."
         ::= { swACLPktContMaskOption2Entry 1 }
 
-        
+
     swACLPktContMaskOption2SrcMac OBJECT-TYPE
         SYNTAX  MacAddress
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "Specifies the mask for source MAC address"
-        ::= { swACLPktContMaskOption2Entry 2 }        
-        
-        
+        ::= { swACLPktContMaskOption2Entry 2 }
+
+
     swACLPktContMaskOption2DstMac OBJECT-TYPE
         SYNTAX  MacAddress
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "Specifies the mask for destination MAC address"
-        ::= { swACLPktContMaskOption2Entry 3 }   
-        
+        ::= { swACLPktContMaskOption2Entry 3 }
+
    swACLPktContMaskOption2CTag  OBJECT-TYPE
        SYNTAX  OCTET STRING (SIZE(2))
        MAX-ACCESS  read-create
        STATUS  current
        DESCRIPTION
            "Specifies the mask for customer VLAN tag, valid values are only from 0x0000 to 0xFFFF."
-       ::= { swACLPktContMaskOption2Entry 4 }        
-        
+       ::= { swACLPktContMaskOption2Entry 4 }
+
    swACLPktContMaskOption2STag  OBJECT-TYPE
        SYNTAX  OCTET STRING (SIZE(2))
        MAX-ACCESS  read-create
        STATUS  current
        DESCRIPTION
            "Specifies the mask for service VLAN tag, valid values are only from 0x0000 to 0xFFFF."
-       ::= { swACLPktContMaskOption2Entry 5 }     
-       
+       ::= { swACLPktContMaskOption2Entry 5 }
+
     swACLPktContMaskOption2Owner OBJECT-TYPE
         SYNTAX  INTEGER {
                any(1),
@@ -1759,8 +1759,8 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
         STATUS current
         DESCRIPTION
             "The name of the ACL mask entry unique to the mask list."
-        ::= { swACLPktContMaskOption2Entry 8 } 
-        
+        ::= { swACLPktContMaskOption2Entry 8 }
+
     swACLPktContMaskOption2RowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
@@ -1768,12 +1768,12 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
         DESCRIPTION
             "This object indicates the status of this entry."
         ::= { swACLPktContMaskOption2Entry 9 }
-       
+
 -- -----------------------------------------------------------------------------
 -- swACLPktContMaskOption2OffsetsTable
 -- -----------------------------------------------------------------------------
 
-    	
+
 	swACLPktContMaskOption2OffsetsTable OBJECT-TYPE
 	    SYNTAX  SEQUENCE OF SwACLPktContMaskOption2OffsetsEntry
 	    MAX-ACCESS  not-accessible
@@ -1782,11 +1782,11 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
 	        "This table contains the ACL masks for the individual packet content offset user-defined option 2 information.
 	         Entries created in this table will not set into the TCAM until a valid entry in the swACLPktContMaskOption2Table
 	         is created.
-	         
+
 	         If any rule is using the profile mask the entries cannot be modified.
 	        ."
 	    ::= { swACLPktContMaskOption2 2 }
-	
+
 	swACLPktContMaskOption2OffsetsEntry OBJECT-TYPE
 	    SYNTAX  SwACLPktContMaskOption2OffsetsEntry
 	    MAX-ACCESS  not-accessible
@@ -1795,7 +1795,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
 	        "A list of information about the individual offsets for user-defined ACL."
 	    INDEX  { swACLPktContMaskOption2OffsetsProfileID,swACLPktContMaskOption2OffsetsNum }
 	    ::= { swACLPktContMaskOption2OffsetsTable 1 }
-	
+
 	SwACLPktContMaskOption2OffsetsEntry ::=
 	    SEQUENCE {
 	    	swACLPktContMaskOption2OffsetsProfileID
@@ -1809,19 +1809,19 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
 			swACLPktContMaskOption2OffsetsMask
 				OCTET STRING,
 			swACLPktContMaskOption2OffsetsRowStatus
-				RowStatus			
+				RowStatus
 	    }
-	       
+
 	swACLPktContMaskOption2OffsetsProfileID OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "The ID of the ACL mask entry, unique to the mask list. 
+            "The ID of the ACL mask entry, unique to the mask list.
              This is the profile id to which this packet content field entry will be associated to.
             "
-        ::= { swACLPktContMaskOption2OffsetsEntry 1 }		              
-	        
+        ::= { swACLPktContMaskOption2OffsetsEntry 1 }
+
 		swACLPktContMaskOption2OffsetsNum OBJECT-TYPE
 			SYNTAX      INTEGER (1..11)
 			MAX-ACCESS  read-only
@@ -1829,7 +1829,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
 			DESCRIPTION
 				"Specifies the offset number with respect to the profile."
 			::= { swACLPktContMaskOption2OffsetsEntry 2 }
-	        
+
 		swACLPktContMaskOption2OffsetsReference OBJECT-TYPE
 			SYNTAX      INTEGER{
 			    l2(1),
@@ -1840,42 +1840,42 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
 			STATUS      current
 			DESCRIPTION
 				"Specifies the reference of the offset.
-						L2 - The offset will start counting from the byte 
+						L2 - The offset will start counting from the byte
 						     after the end of the VLAN tags (start of ether type)
-		                L3 - The offset will start counting right after the ether type field. 
-		                     The packet must have a valid L2 header and a recognizeable ether type in 
+		                L3 - The offset will start counting right after the ether type field.
+		                     The packet must have a valid L2 header and a recognizeable ether type in
 		                     order to be recognized.
-		                L4 - The offset will start counting right after the end of ip header. 
+		                L4 - The offset will start counting right after the end of ip header.
 		                     The packet must have a valid IP header in order to be recognized.
 				"
-			::= { swACLPktContMaskOption2OffsetsEntry 3 }           
-	
-	               
+			::= { swACLPktContMaskOption2OffsetsEntry 3 }
+
+
 		swACLPktContMaskOption2OffsetsValue OBJECT-TYPE
 			SYNTAX      INTEGER
 			MAX-ACCESS  read-create
 			STATUS      current
 			DESCRIPTION
 				"Specifies the amount of bytes from the reference to the packet content field"
-			::= { swACLPktContMaskOption2OffsetsEntry 4 }        		
-			 
-	
+			::= { swACLPktContMaskOption2OffsetsEntry 4 }
+
+
 		swACLPktContMaskOption2OffsetsMask OBJECT-TYPE
 			SYNTAX      OCTET STRING (SIZE(2))
 			MAX-ACCESS  read-create
 			STATUS      current
 			DESCRIPTION
 				"Specifies the mask for the packet content field"
-			::= { swACLPktContMaskOption2OffsetsEntry 5 }        				
-	
+			::= { swACLPktContMaskOption2OffsetsEntry 5 }
+
 	    swACLPktContMaskOption2OffsetsRowStatus OBJECT-TYPE
 	        SYNTAX  RowStatus
 	        MAX-ACCESS  read-create
 	        STATUS  current
 	        DESCRIPTION
 	            "This object indicates the status of this entry."
-	        ::= { swACLPktContMaskOption2OffsetsEntry 6 }		
-		
+	        ::= { swACLPktContMaskOption2OffsetsEntry 6 }
+
 
 -- -----------------------------------------------------------------------------
 -- swACLEtherRuleTable
@@ -1949,7 +1949,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
             swACLEtherRuleMaskSrcMacAddress
                 MacAddress,
             swACLEtherRuleMaskDstMacAddress
-                MacAddress                
+                MacAddress
       }
     swACLEtherRuleProfileID OBJECT-TYPE
         SYNTAX  INTEGER
@@ -2193,7 +2193,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
              When you set swACLEtherRulePort, the value of this object will automatically change to 0.
              And this object can not be set to 0."
         ::= { swACLEtherRuleEntry 20 }
-        
+
    swACLEtherRuleMatchVID OBJECT-TYPE
         SYNTAX  INTEGER (0..4094)
         MAX-ACCESS  read-create
@@ -2203,7 +2203,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
              this VLAN ID. It is applied to the specified ports configured by swACLEtherRulePort."
         ::= { swACLEtherRuleEntry 21 }
 
-        
+
     swACLEtherRuleMaskVlan OBJECT-TYPE
         SYNTAX  OCTET STRING(SIZE(2))
         MAX-ACCESS  read-create
@@ -2221,7 +2221,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
         STATUS  current
         DESCRIPTION
             "Specifies the per rule mask for the source MAC addres field as defined in swACLEtherRuleSrcMacAddress object.
-             The value of this object when not in use is the corresponding mask in the profile mask.            
+             The value of this object when not in use is the corresponding mask in the profile mask.
              Once the value of this object is modified, the per rule mask will take effect.
             "
         ::= { swACLEtherRuleEntry 23 }
@@ -2232,10 +2232,10 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
         STATUS  current
         DESCRIPTION
             "Specifies the per rule mask for the destination MAC addres field as defined in swACLEtherRuleDstMacAddress object.
-             The value of this object when not in use is the corresponding mask in the profile mask.            
+             The value of this object when not in use is the corresponding mask in the profile mask.
              Once the value of this object is modified, the per rule mask will take effect.
             "
-        ::= { swACLEtherRuleEntry 24 }        
+        ::= { swACLEtherRuleEntry 24 }
 
 -- -----------------------------------------------------------------------------
 -- swACLIpRuleTable
@@ -2329,7 +2329,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
             swACLIpRuleMaskSrcPort
                 OCTET STRING,
             swACLIpRuleMaskDstPort
-                OCTET STRING                
+                OCTET STRING
         }
 
     swACLIpRuleProfileID OBJECT-TYPE
@@ -2670,7 +2670,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
              When you set swACLIpRulePort, the value of this object will automatically change to 0.
              And this object can not be set 0."
         ::= { swACLIpRuleEntry 28 }
-        
+
     swACLIpRuleMatchVID OBJECT-TYPE
         SYNTAX  INTEGER (0..4094)
         MAX-ACCESS  read-create
@@ -2685,10 +2685,10 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
-            "Specifies the per rule mask for the VLAN as defined in swACLIpRuleVlan object. 
+            "Specifies the per rule mask for the VLAN as defined in swACLIpRuleVlan object.
             The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
-            This object is writeable only once.            
+            This object is writeable only once.
             "
         ::= { swACLIpRuleEntry 30 }
 
@@ -2700,7 +2700,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
 			"Specifies the per rule mask for the source IP address as defined in swACLIpRuleSrcIpaddress object.
 			The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
-            This object is writeable only once.            
+            This object is writeable only once.
 			"
         ::= { swACLIpRuleEntry 31 }
 
@@ -2712,7 +2712,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
 			"Specifies the per rule mask for the destination IP address as defined in swACLIpRuleMaskDstIpaddress object.
 			The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
-            This object is writeable only once.            
+            This object is writeable only once.
 			"
         ::= { swACLIpRuleEntry 32 }
 
@@ -2725,7 +2725,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
 			"Specifies the per rule mask for the L4 source port as defined in swACLIpRuleSrcPort object.
 			The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
-            This object is writeable only once.            
+            This object is writeable only once.
 			"
         ::= { swACLIpRuleEntry 33 }
 
@@ -2737,10 +2737,10 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
 			"Specifies the per rule mask for the L4 destination port as defined in swACLIpRuleDstPort object.
             The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
-            This object is writeable only once.            
+            This object is writeable only once.
             "
         ::= { swACLIpRuleEntry 34 }
-        
+
 -- -----------------------------------------------------------------------------
 -- swACLPktContRuleTable
 -- -----------------------------------------------------------------------------
@@ -3127,7 +3127,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
             swACLIpv6RuleMaskSrcPort
                 OCTET STRING,
             swACLIpv6RuleMaskDstPort
-                OCTET STRING                
+                OCTET STRING
         }
     swACLIpv6RuleProfileID OBJECT-TYPE
         SYNTAX  INTEGER
@@ -3395,7 +3395,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
         DESCRIPTION
             "Specifies the TCP/UDP destination ports range."
         ::= { swACLIpv6RuleEntry 22 }
-        
+
     swACLIpv6RuleMaskSrcIpv6Addr OBJECT-TYPE
         SYNTAX  Ipv6Address
         MAX-ACCESS  read-create
@@ -3405,7 +3405,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
             This should be a 16 byte octet string.
             The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
-            This object is writeable only once.            
+            This object is writeable only once.
             "
         ::= { swACLIpv6RuleEntry 23 }
 
@@ -3426,7 +3426,7 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
             "Specifies that the per rule mask of swACLIpv6RuleSrcPort.
             The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
-            This object is writeable only once.            
+            This object is writeable only once.
             "
         ::= { swACLIpv6RuleEntry 25 }
 
@@ -3438,9 +3438,9 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
             "Specifies the per rule mask of swACLIpv6RuleDstPort.
             The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
-            This object is writeable only once.            
+            This object is writeable only once.
             "
-        ::= { swACLIpv6RuleEntry 26 }        
+        ::= { swACLIpv6RuleEntry 26 }
 
 -- -----------------------------------------------------------------------------
 --swIBPACLEtherRuleTable
@@ -3942,9 +3942,9 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
              When you set swACLPktContRuleOptionPort, the value of this object will automatically change to 0.
              And this object can not be set 0."
         ::= { swACLPktContRuleOptionEntry 23 }
-        
-        
-        
+
+
+
 
 -- -----------------------------------------------------------------------------
 -- swACLCounterTable
@@ -4052,14 +4052,14 @@ swACLPktContMaskOption2              OBJECT IDENTIFIER ::= { swAclMaskMgmt 10 }
         DESCRIPTION
             "The number of matched red packets."
         ::= { swACLCounterEntry 7 }
-        
+
 
 -- -----------------------------------------------------------------------------
 -- swACLPktContRuleOption2
 -- -----------------------------------------------------------------------------
-                
-swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }            
-                
+
+swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
+
 -- -----------------------------------------------------------------------------
 --swACLPktContRuleOption2Table
 -- -----------------------------------------------------------------------------
@@ -4070,12 +4070,12 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
         DESCRIPTION
             "This table contains user-defined ACL information for option 2 type
             of packet contnet syntax.
-            
+
 		 	To qualify the data of a packet content field with respect to an offset, an entry in the
-		 	swACLPktContRuleOption2OffsetsTable must be created first. 
-		 	
+		 	swACLPktContRuleOption2OffsetsTable must be created first.
+
 		 	On row creation, all entries in the corresponding profile defined in the
-		 	swACLPktContRuleOption2OffsetsTable will be associated to the ACL rule.            
+		 	swACLPktContRuleOption2OffsetsTable will be associated to the ACL rule.
             "
         ::= { swACLPktContRuleOption2 1 }
 
@@ -4133,9 +4133,9 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
             swACLPktContRuleOption2MaskCTag
                 OCTET STRING,
             swACLPktContRuleOption2MaskSTag
-                OCTET STRING                                
+                OCTET STRING
         }
-        
+
     swACLPktContRuleOption2ProfileID OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  read-only
@@ -4153,8 +4153,8 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
              When row creation is set to 0, access ID is automatically assigned.
 			"
         ::= { swACLPktContRuleOption2Entry 2 }
-        
-        
+
+
     swACLPktContRuleOption2SrcMac OBJECT-TYPE
         SYNTAX  MacAddress
         MAX-ACCESS  read-create
@@ -4162,9 +4162,9 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
         DESCRIPTION
             "Specifies that the access rule will apply to only packets with
              this source MAC address."
-        ::= { swACLPktContRuleOption2Entry 3 }        
-        
-        
+        ::= { swACLPktContRuleOption2Entry 3 }
+
+
     swACLPktContRuleOption2DstMac OBJECT-TYPE
         SYNTAX  MacAddress
         MAX-ACCESS  read-create
@@ -4172,25 +4172,25 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
         DESCRIPTION
             "Specifies that the access rule will apply to only packets with
              this destination MAC address."
-        ::= { swACLPktContRuleOption2Entry 4 }   
-        
+        ::= { swACLPktContRuleOption2Entry 4 }
+
    swACLPktContRuleOption2CTag  OBJECT-TYPE
        SYNTAX  OCTET STRING (SIZE(2))
        MAX-ACCESS  read-create
        STATUS  current
        DESCRIPTION
            "Specifies the frame content of the customer VLAN tag, valid values are only from 0x0000 to 0xFFFF."
-       ::= { swACLPktContRuleOption2Entry 5 }        
-        
+       ::= { swACLPktContRuleOption2Entry 5 }
+
    swACLPktContRuleOption2STag  OBJECT-TYPE
        SYNTAX  OCTET STRING (SIZE(2))
        MAX-ACCESS  read-create
        STATUS  current
        DESCRIPTION
            "Specifies the frame content of the service VLAN tag, valid values are only from 0x0000 to 0xFFFF."
-       ::= { swACLPktContRuleOption2Entry 6 }                             
+       ::= { swACLPktContRuleOption2Entry 6 }
 
-   
+
     swACLPktContRuleOption2EnablePriority OBJECT-TYPE
         SYNTAX  INTEGER {
                enabled(1),
@@ -4336,16 +4336,16 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
              This object and swACLPktContRuleOption2Port can not be set together.
              When you set swACLPktContRuleOption2Port, the value of this object will automatically change to 0.
              And this object can not be set 0."
-        ::= { swACLPktContRuleOption2Entry 20 }      
-        
+        ::= { swACLPktContRuleOption2Entry 20 }
+
     swACLPktContRuleOption2RowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "This object indicates the status of this entry."
-        ::= { swACLPktContRuleOption2Entry 21 }      
-        
+        ::= { swACLPktContRuleOption2Entry 21 }
+
     swACLPktContRuleOption2MaskSrcMac OBJECT-TYPE
         SYNTAX  MacAddress
         MAX-ACCESS  read-create
@@ -4355,9 +4355,9 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
             The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
             "
-        ::= { swACLPktContRuleOption2Entry 22 }        
-        
-        
+        ::= { swACLPktContRuleOption2Entry 22 }
+
+
     swACLPktContRuleOption2MaskDstMac OBJECT-TYPE
         SYNTAX  MacAddress
         MAX-ACCESS  read-create
@@ -4367,8 +4367,8 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
             The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
             "
-        ::= { swACLPktContRuleOption2Entry 23 }   
-        
+        ::= { swACLPktContRuleOption2Entry 23 }
+
    swACLPktContRuleOption2MaskCTag  OBJECT-TYPE
        SYNTAX  OCTET STRING (SIZE(2))
        MAX-ACCESS  read-create
@@ -4378,8 +4378,8 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
             The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
             "
-       ::= { swACLPktContRuleOption2Entry 24 }        
-        
+       ::= { swACLPktContRuleOption2Entry 24 }
+
    swACLPktContRuleOption2MaskSTag  OBJECT-TYPE
        SYNTAX  OCTET STRING (SIZE(2))
        MAX-ACCESS  read-create
@@ -4389,11 +4389,11 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
             The value of this object when not in use is the corresponding mask in the profile mask.
             Once the value of this object is modified, the per rule mask will take effect.
             "
-       ::= { swACLPktContRuleOption2Entry 25 }       
+       ::= { swACLPktContRuleOption2Entry 25 }
 
 
 
-        
+
 -- -----------------------------------------------------------------------------
 --swACLPktContRuleOption2OffsetsTable
 -- -----------------------------------------------------------------------------
@@ -4402,11 +4402,11 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "This table contains the ACL rules for the individual packet 
-            content offset user-defined option 2 information. 
-            
-			Entries created in this table will not set into the TCAM until a 
-			valid entry in the swACLPktContMaskOption2Table is created.            
+            "This table contains the ACL rules for the individual packet
+            content offset user-defined option 2 information.
+
+			Entries created in this table will not set into the TCAM until a
+			valid entry in the swACLPktContMaskOption2Table is created.
 			"
         ::= { swACLPktContRuleOption2 2 }
 
@@ -4432,9 +4432,9 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
             swACLPktContRuleOption2OffsetsRowStatus
                 RowStatus,
       		swACLPktContRuleOption2OffsetsMask
-      			OCTET STRING                      
+      			OCTET STRING
         }
-        
+
     swACLPktContRuleOption2OffsetsProfileID OBJECT-TYPE
         SYNTAX  INTEGER
         MAX-ACCESS  read-only
@@ -4449,33 +4449,33 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
         STATUS  current
         DESCRIPTION
             "The ACL access id to which this packet content field entry will be associated."
-        ::= { swACLPktContRuleOption2OffsetsEntry 2 }        
-            
+        ::= { swACLPktContRuleOption2OffsetsEntry 2 }
+
     swACLPktContRuleOption2OffsetsNum OBJECT-TYPE
         SYNTAX  INTEGER (1..11)
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
             "The sequence number of the packet content field to qualify the packet content."
-        ::= { swACLPktContRuleOption2OffsetsEntry 3 } 
-        
+        ::= { swACLPktContRuleOption2OffsetsEntry 3 }
+
     swACLPktContRuleOption2OffsetsData OBJECT-TYPE
         SYNTAX  OCTET STRING(SIZE(2))
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "The data of the packet content field."
-        ::= { swACLPktContRuleOption2OffsetsEntry 4 }         
-        
-        
+        ::= { swACLPktContRuleOption2OffsetsEntry 4 }
+
+
     swACLPktContRuleOption2OffsetsRowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "This object indicates the status of this entry."
-        ::= { swACLPktContRuleOption2OffsetsEntry 5 }         
-        
+        ::= { swACLPktContRuleOption2OffsetsEntry 5 }
+
    swACLPktContRuleOption2OffsetsMask  OBJECT-TYPE
        SYNTAX  OCTET STRING (SIZE(2))
        MAX-ACCESS  read-create
@@ -4485,7 +4485,7 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
            The value of this object when not in use is the corresponding mask in the profile mask.
            Once the value of this object is modified, the per rule mask will take effect.
            "
-       ::= { swACLPktContRuleOption2OffsetsEntry 6 }        
+       ::= { swACLPktContRuleOption2OffsetsEntry 6 }
 
 -- -----------------------------------------------------------------------------
 -- swCpuAclEthernetTable
@@ -6334,10 +6334,8 @@ swACLPktContRuleOption2              OBJECT IDENTIFIER ::= { swAclRuleMgmt 10 }
                 DESCRIPTION
                    "Used to display total entries of the flow metering."
                 ::= { swAclMeteringMgmt 2 }
-                
-                 
-                
-                
+
+
+
+
 END
-
-

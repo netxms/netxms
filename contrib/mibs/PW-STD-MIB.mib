@@ -1231,162 +1231,162 @@
   -- End of PW Performance Interval Table
 
 
-   -- PW Performance Total Table. 
-    
-   pwPerfTotalTable  OBJECT-TYPE 
-      SYNTAX        SEQUENCE OF PwPerfTotalEntry 
-      MAX-ACCESS    not-accessible 
-      STATUS        current 
-      DESCRIPTION 
-           "This table provides per-PW Performance information from  
+   -- PW Performance Total Table.
+
+   pwPerfTotalTable  OBJECT-TYPE
+      SYNTAX        SEQUENCE OF PwPerfTotalEntry
+      MAX-ACCESS    not-accessible
+      STATUS        current
+      DESCRIPTION
+           "This table provides per-PW Performance information from
             PW start time or management application reset.
-            
+
             This table has been obsoleted from draft v.11 and a new
             table pwPerf1DayIntervalTable has been introduced.  However,
             due to better support, pwPerfTotalTable is supported in the
             place of pwPerf1DayIntervalTable."
-      ::= { pwObjects 5 } 
-    
-   pwPerfTotalEntry OBJECT-TYPE 
-      SYNTAX        PwPerfTotalEntry 
-      MAX-ACCESS    not-accessible 
-      STATUS        current 
-      DESCRIPTION 
-           "An entry in this table is created by the agent for every  
-            PW. 
-             
-            pwPerfTotalDiscontinuityTime indicates the time of the 
-            last discontinuity in any of these objects." 
-    
-      INDEX  { pwIndex } 
-      ::= { pwPerfTotalTable 1 } 
-       
-   PwPerfTotalEntry ::= SEQUENCE { 
-         pwPerfTotalInHCPackets          Counter64, 
-         pwPerfTotalInHCBytes            Counter64, 
-         pwPerfTotalOutHCPackets         Counter64, 
-         pwPerfTotalOutHCBytes           Counter64, 
-         pwPerfTotalInPackets            Counter32, 
-         pwPerfTotalInBytes              Counter32, 
-         pwPerfTotalOutPackets           Counter32, 
-         pwPerfTotalOutBytes             Counter32, 
-         pwPerfTotalDiscontinuityTime    TimeStamp 
-                           } 
-    
-   pwPerfTotalInHCPackets OBJECT-TYPE 
-      SYNTAX        Counter64 
-      MAX-ACCESS    read-only 
-      STATUS        current 
-      DESCRIPTION 
-           "High capacity counter for the total number of packets  
-            received by the PW (from the PSN).  
-            This is the 64 bit version of pwPerfTotalInPackets, if  
-            pwPerfTotalInHCPackets is supported according to the 
-            rules spelled out in RFC2863." 
-      ::= { pwPerfTotalEntry 1 } 
-    
-   pwPerfTotalInHCBytes OBJECT-TYPE 
-      SYNTAX        Counter64 
-      MAX-ACCESS    read-only 
-      STATUS        current 
-      DESCRIPTION 
-           "High capacity counter for the total number of bytes 
-            received by the PW (from the PSN).  
-            This is the 64 bit version of pwPerfTotalInBytes, if  
-            pwPerfTotalInHCBytes is supported according to the  
-            rules spelled out in RFC2863." 
-      ::= { pwPerfTotalEntry 2 } 
-    
-   pwPerfTotalOutHCPackets OBJECT-TYPE 
-      SYNTAX        Counter64 
-      MAX-ACCESS    read-only 
-      STATUS        current 
-      DESCRIPTION 
-           "High capacity counter for the total number of packets  
-            forwarded by the PW (to the PSN). 
-            This is the 64 bit version of pwPerfTotalOutPackets,  
-            if pwPerfTotalOutHCPackets is supported according to  
-            the rules spelled out in RFC2863." 
-      ::= { pwPerfTotalEntry 3 } 
-    
-   pwPerfTotalOutHCBytes OBJECT-TYPE 
-      SYNTAX        Counter64 
-      MAX-ACCESS    read-only 
-      STATUS        current 
-      DESCRIPTION 
-           "High capacity counter for the total number of bytes  
-            forwarded by the PW (to the PSN). 
-            This is the 64 bit version of pwPerfTotalOutBytes,  
-            if pwPerfTotalOutHCBytes is supported according to  
-            the rules spelled out in RFC2863." 
-      ::= { pwPerfTotalEntry 4 } 
-    
-   pwPerfTotalInPackets OBJECT-TYPE 
-      SYNTAX        Counter32 
-      MAX-ACCESS    read-only 
-      STATUS        current 
-      DESCRIPTION 
-          "This value represents the total number of packets received  
-           by this PW.  
+      ::= { pwObjects 5 }
 
-           It MUST be equal to the least significant 32 bits of  
-           pwPerfTotalInHCPackets if pwPerfTotalInHCPackets  
-           is supported according to the rules spelled out in  
-           RFC2863." 
-      ::= { pwPerfTotalEntry 5 } 
-    
-   pwPerfTotalInBytes OBJECT-TYPE 
-      SYNTAX        Counter32 
-      MAX-ACCESS    read-only 
-      STATUS        current 
-      DESCRIPTION 
-          "This value represents the total number of bytes received  
-           by this PW.  
-           It MUST be equal to the least significant 32 bits of  
-           if pwPerfTotalInHCBytes is supported according to 
-           the rules spelled out in RFC2863." 
-      ::= { pwPerfTotalEntry 6 } 
-    
-   pwPerfTotalOutPackets OBJECT-TYPE 
-      SYNTAX        Counter32 
-      MAX-ACCESS    read-only 
-      STATUS        current 
-      DESCRIPTION 
-          "This value represents the total number of packets sent by  
-           this PW.  
-           It MUST be equal to the least significant 32 bits of  
-           pwPerfTotalOutHCPackets if pwPerfTotalOutHCPackets 
-           is supported according to the rules spelled out in  
-           RFC2863." 
-      ::= { pwPerfTotalEntry 7 } 
-    
-   pwPerfTotalOutBytes OBJECT-TYPE 
-      SYNTAX        Counter32 
-      MAX-ACCESS    read-only 
-      STATUS        current 
-      DESCRIPTION 
-          "This value represents the total number of bytes sent by  
-           this PW. 
-           It MUST be equal to the least significant 32  
-           bits of pwPerfTotalOutHCBytes 
-           if pwPerfTotalOutHCBytes is supported according to 
-           the rules spelled out in RFC2863." 
-      ::= { pwPerfTotalEntry 8 } 
-    
-   pwPerfTotalDiscontinuityTime OBJECT-TYPE 
-      SYNTAX      TimeStamp 
-      MAX-ACCESS  read-only 
-      STATUS      current 
-      DESCRIPTION 
-          "The value of sysUpTime on the most recent occasion at 
-           which any one or more of this row Counter32 or 
-           Counter64 suffered a discontinuity. If no such 
-           discontinuities have occurred since the last re- 
-           initialization of the local management subsystem, then 
-           this object contains a zero value." 
-      ::= { pwPerfTotalEntry 9 } 
-    
-   -- End of PW Perf Total Table 
+   pwPerfTotalEntry OBJECT-TYPE
+      SYNTAX        PwPerfTotalEntry
+      MAX-ACCESS    not-accessible
+      STATUS        current
+      DESCRIPTION
+           "An entry in this table is created by the agent for every
+            PW.
+
+            pwPerfTotalDiscontinuityTime indicates the time of the
+            last discontinuity in any of these objects."
+
+      INDEX  { pwIndex }
+      ::= { pwPerfTotalTable 1 }
+
+   PwPerfTotalEntry ::= SEQUENCE {
+         pwPerfTotalInHCPackets          Counter64,
+         pwPerfTotalInHCBytes            Counter64,
+         pwPerfTotalOutHCPackets         Counter64,
+         pwPerfTotalOutHCBytes           Counter64,
+         pwPerfTotalInPackets            Counter32,
+         pwPerfTotalInBytes              Counter32,
+         pwPerfTotalOutPackets           Counter32,
+         pwPerfTotalOutBytes             Counter32,
+         pwPerfTotalDiscontinuityTime    TimeStamp
+                           }
+
+   pwPerfTotalInHCPackets OBJECT-TYPE
+      SYNTAX        Counter64
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION
+           "High capacity counter for the total number of packets
+            received by the PW (from the PSN).
+            This is the 64 bit version of pwPerfTotalInPackets, if
+            pwPerfTotalInHCPackets is supported according to the
+            rules spelled out in RFC2863."
+      ::= { pwPerfTotalEntry 1 }
+
+   pwPerfTotalInHCBytes OBJECT-TYPE
+      SYNTAX        Counter64
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION
+           "High capacity counter for the total number of bytes
+            received by the PW (from the PSN).
+            This is the 64 bit version of pwPerfTotalInBytes, if
+            pwPerfTotalInHCBytes is supported according to the
+            rules spelled out in RFC2863."
+      ::= { pwPerfTotalEntry 2 }
+
+   pwPerfTotalOutHCPackets OBJECT-TYPE
+      SYNTAX        Counter64
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION
+           "High capacity counter for the total number of packets
+            forwarded by the PW (to the PSN).
+            This is the 64 bit version of pwPerfTotalOutPackets,
+            if pwPerfTotalOutHCPackets is supported according to
+            the rules spelled out in RFC2863."
+      ::= { pwPerfTotalEntry 3 }
+
+   pwPerfTotalOutHCBytes OBJECT-TYPE
+      SYNTAX        Counter64
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION
+           "High capacity counter for the total number of bytes
+            forwarded by the PW (to the PSN).
+            This is the 64 bit version of pwPerfTotalOutBytes,
+            if pwPerfTotalOutHCBytes is supported according to
+            the rules spelled out in RFC2863."
+      ::= { pwPerfTotalEntry 4 }
+
+   pwPerfTotalInPackets OBJECT-TYPE
+      SYNTAX        Counter32
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION
+          "This value represents the total number of packets received
+           by this PW.
+
+           It MUST be equal to the least significant 32 bits of
+           pwPerfTotalInHCPackets if pwPerfTotalInHCPackets
+           is supported according to the rules spelled out in
+           RFC2863."
+      ::= { pwPerfTotalEntry 5 }
+
+   pwPerfTotalInBytes OBJECT-TYPE
+      SYNTAX        Counter32
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION
+          "This value represents the total number of bytes received
+           by this PW.
+           It MUST be equal to the least significant 32 bits of
+           if pwPerfTotalInHCBytes is supported according to
+           the rules spelled out in RFC2863."
+      ::= { pwPerfTotalEntry 6 }
+
+   pwPerfTotalOutPackets OBJECT-TYPE
+      SYNTAX        Counter32
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION
+          "This value represents the total number of packets sent by
+           this PW.
+           It MUST be equal to the least significant 32 bits of
+           pwPerfTotalOutHCPackets if pwPerfTotalOutHCPackets
+           is supported according to the rules spelled out in
+           RFC2863."
+      ::= { pwPerfTotalEntry 7 }
+
+   pwPerfTotalOutBytes OBJECT-TYPE
+      SYNTAX        Counter32
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION
+          "This value represents the total number of bytes sent by
+           this PW.
+           It MUST be equal to the least significant 32
+           bits of pwPerfTotalOutHCBytes
+           if pwPerfTotalOutHCBytes is supported according to
+           the rules spelled out in RFC2863."
+      ::= { pwPerfTotalEntry 8 }
+
+   pwPerfTotalDiscontinuityTime OBJECT-TYPE
+      SYNTAX      TimeStamp
+      MAX-ACCESS  read-only
+      STATUS      current
+      DESCRIPTION
+          "The value of sysUpTime on the most recent occasion at
+           which any one or more of this row Counter32 or
+           Counter64 suffered a discontinuity. If no such
+           discontinuities have occurred since the last re-
+           initialization of the local management subsystem, then
+           this object contains a zero value."
+      ::= { pwPerfTotalEntry 9 }
+
+   -- End of PW Perf Total Table
 
   -- Error counter scalar
 
@@ -1647,7 +1647,7 @@
           issued for just a single cross-connect entry, then
           the instance identifier (and values) of the two
           pwOperStatus objects MUST be identical.
-             The varbind fdryPwServiceType, specifies the 
+             The varbind fdryPwServiceType, specifies the
           service that originated this notification.
              The varbind snAgGblTrapMessage displays the corresponding
           SYSLOG content for this notification, which is more descriptive.
@@ -1686,7 +1686,7 @@
           issued for just a single cross-connect entry, then
           the instance identifier (and values) of the two
           pwOperStatus objects MUST be the identical.
-             The varbind fdryPwServiceType, specifies the 
+             The varbind fdryPwServiceType, specifies the
           service that originated this notification.
              The varbind snAgGblTrapMessage displays the corresponding
           SYSLOG content for this notification, which is more descriptive.
@@ -1717,7 +1717,7 @@
           For VPLS PW, name is the VPLS instance name.
           For VLL PW, it is the VLL instance name. Similarly, for VLL-Local PW,
           it is the VLL-Local's instance name.
-             The varbind fdryPwServiceType, specifies the 
+             The varbind fdryPwServiceType, specifies the
           service that originated this notification.
          "
          --#TYPE "Foundry Trap: MPLS Pseudo-Wire Deleted"
@@ -2237,20 +2237,20 @@
           total running performance parameters."
      ::= { pwGroups 10 }
 
-   pwPeformanceTotalGroup OBJECT-GROUP  
-      OBJECTS { 
-               pwPerfTotalInPackets, 
-               pwPerfTotalInBytes, 
-               pwPerfTotalOutPackets, 
-               pwPerfTotalOutBytes 
-             } 
-                 
-      STATUS  current 
-      DESCRIPTION 
-          "Collection of 32 bits objects needed for PW running total  
-           performance collection." 
-      ::= { pwGroups 11 } 
-    
+   pwPeformanceTotalGroup OBJECT-GROUP
+      OBJECTS {
+               pwPerfTotalInPackets,
+               pwPerfTotalInBytes,
+               pwPerfTotalOutPackets,
+               pwPerfTotalOutBytes
+             }
+
+      STATUS  current
+      DESCRIPTION
+          "Collection of 32 bits objects needed for PW running total
+           performance collection."
+      ::= { pwGroups 11 }
+
   pwPerformanceIntervalGeneralGroup OBJECT-GROUP
      OBJECTS {
               pwTimeElapsed,
@@ -2360,4 +2360,3 @@
      ::= { pwGroups 18 }
 
   END
-  

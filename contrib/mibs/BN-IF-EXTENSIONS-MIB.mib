@@ -89,4 +89,3 @@ bnIfExtnPort OBJECT-TYPE
 	::= { bnIfExtnEntry 3 }
 
 END
-

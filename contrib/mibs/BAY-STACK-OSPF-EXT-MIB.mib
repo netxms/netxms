@@ -45,7 +45,7 @@ bayStackOspfExtMib MODULE-IDENTITY
     DESCRIPTION "v4:  Fix range of bsoeOspfIfExtPrimaryMd5Key."
 
     REVISION "200510200000Z" -- 20 October 2005
-    DESCRIPTION "v3:  Added bsoeOspfIfExtType and bsoeOspfNbrExtTable." 
+    DESCRIPTION "v3:  Added bsoeOspfIfExtType and bsoeOspfNbrExtTable."
 
     REVISION "200510110000Z" -- 11 October 2005
     DESCRIPTION "v2:  Added bsoeApplyRedistribute."
@@ -125,7 +125,7 @@ bsoeOspfIfIpAddress OBJECT-TYPE
     STATUS      current
     DESCRIPTION "The IP address of this OSPF interface."
     ::= { bsoeOspfIfExtEntry 1 }
- 
+
 bsoeOspfAddressLessIf OBJECT-TYPE
     SYNTAX      Integer32 (0..2147483647)
     MAX-ACCESS  not-accessible
@@ -146,7 +146,7 @@ bsoeOspfIfExtAdvertiseWhenDown OBJECT-TYPE
                  than by ifIndex)."
     DEFVAL { false }
     ::= { bsoeOspfIfExtEntry 3 }
- 
+
 bsoeOspfIfExtPrimaryMd5Key OBJECT-TYPE
     SYNTAX      Integer32 (0..255)
     MAX-ACCESS  read-write
@@ -229,7 +229,7 @@ bsoeMessageDigestAddressLessIf OBJECT-TYPE
            IP  Addresses,  and  the corresponding value of
            ifIndex for interfaces having no IP Address."
     ::= { bsoeMessageDigestEntry 2 }
- 
+
 bsoeMessageDigestIndex OBJECT-TYPE
     SYNTAX      Integer32 (1..255)
     MAX-ACCESS  not-accessible
@@ -355,7 +355,7 @@ bsoeOspfVirtIfExtAreaId OBJECT-TYPE
     DESCRIPTION "The  Transit  Area  that  the   Virtual   Link
                  traverses.  By definition, this is not 0.0.0.0"
     ::= { bsoeOspfVirtIfExtEntry 1 }
- 
+
 bsoeOspfVirtIfExtNeighbor OBJECT-TYPE
     SYNTAX      RouterID
     MAX-ACCESS  not-accessible
@@ -429,7 +429,7 @@ bsoeVirtIfMessageDigestNeighbor OBJECT-TYPE
     STATUS      current
     DESCRIPTION "The Router ID of the Virtual Neighbor."
     ::= { bsoeVirtIfMessageDigestEntry 2 }
- 
+
 bsoeVirtIfMessageDigestIndex OBJECT-TYPE
     SYNTAX      Integer32 (1..255)
     MAX-ACCESS  not-accessible
@@ -471,4 +471,3 @@ bsoeVirtIfMessageDigestRowStatus OBJECT-TYPE
 -- -------------------------------------------------------------
 
 END
-

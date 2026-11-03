@@ -36,22 +36,22 @@ sunPlatMIB MODULE-IDENTITY
     CONTACT-INFO    "Sun Microsystems, Inc
                      4150 Network Circle
                      Santa Clara, CA 95054
-                     
+
                      1-800-555-9SUN or
                      1-650-960-1300
-                     
+
                      http://www.sun.com"
     DESCRIPTION
-        "SUN-PLATFORM-MIB.mib Version 1.19 
+        "SUN-PLATFORM-MIB.mib Version 1.19
          Copyright 2003, by Sun Microsystems, Inc.
          All rights reserved. Use is subject to license terms.
-        
+
          The SUN-PLATFORM-MIB provides extensions to the ENTITY-MIB (RFC2737)
          where each entity modelled in the system is represented by
          means of extensions to the entPhysicalTable. Certain of the
          attributes in the entPhysicalTable are applicable to the model
          presented by the SUN-PLATFORM-MIB and are explained below:
-         
+
          The entries in the entPhysicalTable have the following significance
          with respect to the SUN-PLATFORM-MIB model:
 
@@ -66,7 +66,7 @@ sunPlatMIB MODULE-IDENTITY
          entPhysicalMfgName         vendorName, M.3100, sec. 5.70
          entPhysicalAlias           userLabel, M.3100, sec. 5.69
 
-         
+
          Part of this MIB module is an SNMP version of the Generic Network
          Information Model (NIM) presented in ITU-T M.3100. This information
          is further extended by attributes derived from the CIM v2.5 Schema.
@@ -74,13 +74,13 @@ sunPlatMIB MODULE-IDENTITY
          The containment hierarchy is modelled using the ENTITY-MIB (RFC2737)
          where each entity modelled in the system is represented by
          means of extensions to the entPhysicalTable.
-         
+
          Where an entity is an instance of a managed object class which is
-         sub-classed from another, the attributes of each class are modelled 
-         in a separate table extension. For example for an entity with an 
-         entPhysicalClass of module(9), which corresponds to a Circuit Pack, 
-         sub-classed from Equipment, an entry will exist in the 
-         sunPlatEquipmentTable, with additional attributes in the 
+         sub-classed from another, the attributes of each class are modelled
+         in a separate table extension. For example for an entity with an
+         entPhysicalClass of module(9), which corresponds to a Circuit Pack,
+         sub-classed from Equipment, an entry will exist in the
+         sunPlatEquipmentTable, with additional attributes in the
          sunPlatCircuitPackTable.
 
          References are made to the following recommendations/revisions:
@@ -134,14 +134,14 @@ sunPlatMIB MODULE-IDENTITY
 -- (2) sunPlatMIBLogicalObjects
 -- The following groups are extensions to the entLogicalTable in the
 -- ENTITY-MIB
---        (1)  Logical Class Table extension 
+--        (1)  Logical Class Table extension
 --        (2)  Unitary Computer System Table extension
 --        (3)  Unitary Computer System Initial Load Info Table extension
 -- (3) sunPlatMIBLogs
 -- The following controls the logging of notifications.
 --        (1)  Log Table
 --        (2)  Log Record Table
--- The following extends the trap log entry table with additional 
+-- The following extends the trap log entry table with additional
 -- information application to alarms and object creation/deletion.
 --        (3)  Additional Log Record Entry Table extension
 -- The following extends the trap log entry table with alarm specific
@@ -276,7 +276,7 @@ SunPlatEquipmentHolderPower ::= TEXTUAL-CONVENTION
         powerOff(3),
         powerOn(4)
     }
-	
+
 -- Circuit Pack Textual Convention
 
 SunPlatCircuitPackAvailabilityStatus ::= TEXTUAL-CONVENTION
@@ -423,7 +423,7 @@ SunPlatProbableCause ::= TEXTUAL-CONVENTION
             outOfCPUCycles(154),
             sfwrEnvironmentProblem(155),
             sfwrDownloadFailure(156),
-            lossOfRealTime(157), 
+            lossOfRealTime(157),
         -- A processing error alarm to be issued if the system detects that
         -- it has lost the time in the real time clock but the clock itself
         -- is working. This could happen e.g. during a power cut in a small
@@ -560,9 +560,9 @@ SunPlatSensorType ::= TEXTUAL-CONVENTION
 SunPlatBaseUnits ::= TEXTUAL-CONVENTION
     STATUS current
     DESCRIPTION
-        "Physical values are represented in the units obtained by 
-         (sunPlatBaseUnits * 10 raised to the power of sunPlatExponent). For 
-         example, if sunPlatBaseUnits is volts(6) and sunPlatExponent is -6, 
+        "Physical values are represented in the units obtained by
+         (sunPlatBaseUnits * 10 raised to the power of sunPlatExponent). For
+         example, if sunPlatBaseUnits is volts(6) and sunPlatExponent is -6,
          then the units of the values returned are microVolts."
     SYNTAX INTEGER {
         other(1),
@@ -636,10 +636,10 @@ SunPlatBaseUnits ::= TEXTUAL-CONVENTION
 SunPlatRateUnits ::= TEXTUAL-CONVENTION
     STATUS current
     DESCRIPTION
-        "If sunPlatRateUnits is set to a value other than none(1), 
-         then the units specified by sunPlatBaseUnits are further 
+        "If sunPlatRateUnits is set to a value other than none(1),
+         then the units specified by sunPlatBaseUnits are further
          qualified as rate units. For example, if sunPlatBaseUnits
-         is set to degC(3), and sunPlatRateUnits is set to perSecond(4), 
+         is set to degC(3), and sunPlatRateUnits is set to perSecond(4),
          then the value represented has the units degC/Second."
     SYNTAX INTEGER {
         none(1),
@@ -739,7 +739,7 @@ SunPlatWatchdogMonitoredEntity ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "An enumeration of possible entities that may be monitored by a
         watchdog as defined for CIM_Watchdog"
-    REFERENCE 
+    REFERENCE
         "CIM Schema v2.5, CIM_Watchdog.MonitoredEntity"
     SYNTAX INTEGER {
         unknown(1),
@@ -824,7 +824,7 @@ SunPlatUnitaryComputerSystemPowerState ::= TEXTUAL-CONVENTION
         softOff(10),
         reset(11)
     }
-       
+
 SunPlatUnitaryComputerSystemApplicableSetting ::= TEXTUAL-CONVENTION
     STATUS current
     DESCRIPTION
@@ -868,8 +868,8 @@ SunPlatLogicalStatus ::= TEXTUAL-CONVENTION
         lostComm (12),
         stopped (13)
     }
-        
-        
+
+
 -- General Textual Conventions
 
 SunPlatIndex ::= TEXTUAL-CONVENTION
@@ -926,7 +926,7 @@ sunPlatEquipmentEntry OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "An entry in the NIM Equipment table.  Each entry
-         of this table represents a piece of equipment within the 
+         of this table represents a piece of equipment within the
          network element of the type specified by entPhysicalClass."
     AUGMENTS { entPhysicalEntry }
     ::= { sunPlatEquipmentTable 1 }
@@ -1017,7 +1017,7 @@ sunPlatEquipmentHolderEntry OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "An entry in the NIM Equipment-Holder table.  Each
-         entry of this table represents a component within the 
+         entry of this table represents a component within the
          network element that accepts a replaceable Circuit Pack."
     INDEX { entPhysicalIndex }
     ::= { sunPlatEquipmentHolderTable 1 }
@@ -1079,7 +1079,7 @@ sunPlatCircuitPackTable OBJECT-TYPE
         "The NIM Circuit-Pack table.  This table augments
          the entPhysicalTable to provide the attributes defined for
          circuitPack under M.3100, sec. 3.2.1.
-         
+
          It is valid for an entPhysicalClass of module(9)."
     REFERENCE
         "M.3100 sec. 3.2.1"
@@ -1092,7 +1092,7 @@ sunPlatCircuitPackEntry OBJECT-TYPE
     DESCRIPTION
         "An entry in the NIM Circuit-Pack table.  Each
          entry of this table represents a piece of equipment within
-         the network element that is inserted into and removed from 
+         the network element that is inserted into and removed from
          an Equipment-Holder."
     INDEX { entPhysicalIndex }
     ::= { sunPlatCircuitPackTable 1 }
@@ -1124,7 +1124,7 @@ sunPlatCircuitPackAvailabilityStatus OBJECT-TYPE
     REFERENCE
         "X.731, sec. 8.1.2.3"
     ::= { sunPlatCircuitPackEntry 2 }
-        
+
 sunPlatCircuitPackReplaceable OBJECT-TYPE
     SYNTAX      TruthValue
     MAX-ACCESS  read-only
@@ -1193,7 +1193,7 @@ sunPlatSensorTable OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
-        "The Sun Platform Sensor Table extension. This table augments the 
+        "The Sun Platform Sensor Table extension. This table augments the
          entPhysicalTable to provide the attributes common to all sensors.
 
          The sunPlatSensorTable is valid for the entPhysicalClass value of
@@ -1369,9 +1369,9 @@ sunPlatNumericSensorBaseUnits OBJECT-TYPE
         "The base unit of the values returned by this Sensor, as per
          CIM_NumericSensor.BaseUnits.
 
-         Physical values are represented in the units obtained by 
-         (sunPlatBaseUnits * 10 raised to the power of sunPlatExponent). For 
-         example, if sunPlatBaseUnits is volts(6) and sunPlatExponent is -6, 
+         Physical values are represented in the units obtained by
+         (sunPlatBaseUnits * 10 raised to the power of sunPlatExponent). For
+         example, if sunPlatBaseUnits is volts(6) and sunPlatExponent is -6,
          then the units of the values returned are microVolts."
     REFERENCE
         "CIM v2.5 Schema, CIM_NumericSensor.BaseUnits"
@@ -1393,10 +1393,10 @@ sunPlatNumericSensorRateUnits OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
-        "If sunPlatRateUnits is set to a value other than none(1), 
-         then the units specified by sunPlatBaseUnits are further 
+        "If sunPlatRateUnits is set to a value other than none(1),
+         then the units specified by sunPlatBaseUnits are further
          qualified as rate units. For example, if sunPlatBaseUnits
-         is set to degC(3), and sunPlatRateUnits is set to perSecond(4), 
+         is set to degC(3), and sunPlatRateUnits is set to perSecond(4),
          then the value represented has the units degC/Second. This is as
          defined for CIM_NumericSensor.RateUnits"
     REFERENCE
@@ -1551,7 +1551,7 @@ sunPlatNumericSensorRestoreDefaultThresholds OBJECT-TYPE
         "Writing to this attribute resets the sensors thresholds to the
         default settings."
     ::= { sunPlatNumericSensorEntry 16 }
-    
+
 -- Discrete sensor table
 
 sunPlatDiscreteSensorTable OBJECT-TYPE
@@ -1563,7 +1563,7 @@ sunPlatDiscreteSensorTable OBJECT-TYPE
         entPhysicalClass of sensor(8) and a sunPlatSensorClass of
         discrete(3)."
     ::= { sunPlatMIBPhysicalObjects 9 }
-    
+
 sunPlatDiscreteSensorEntry OBJECT-TYPE
     SYNTAX SunPlatDiscreteSensorEntry
     MAX-ACCESS not-accessible
@@ -1578,7 +1578,7 @@ sunPlatDiscreteSensorEntry OBJECT-TYPE
 SunPlatDiscreteSensorEntry ::= SEQUENCE {
         sunPlatDiscreteSensorCurrent            SunPlatIndex
     }
-    
+
 sunPlatDiscreteSensorCurrent OBJECT-TYPE
     SYNTAX SunPlatIndex
     MAX-ACCESS read-only
@@ -1657,7 +1657,7 @@ sunPlatFanTable OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
-        "The Sun Platform Fan Table extension. This table augments the 
+        "The Sun Platform Fan Table extension. This table augments the
          entPhysicalTable to provide the attributes common to all fans and
          cooling devices.
 
@@ -1695,7 +1695,7 @@ sunPlatAlarmTable OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
-        "The Sun Platform Alarm Table extension. This table augments the 
+        "The Sun Platform Alarm Table extension. This table augments the
          entPhysicalTable to provide indications of alarm states.
 
          The sunPlatAlarmTable is valid for the sunPlatPhysicalClass value of
@@ -1757,7 +1757,7 @@ sunPlatWatchdogTable OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
-        "The Sun Platform Watchdog Table extension. This table augments the 
+        "The Sun Platform Watchdog Table extension. This table augments the
          entPhysicalTable to provide information about a watchdog timer.
 
          The sunPlatWatchdogTable is valid for the sunPlatPhysicalClass value of
@@ -2071,7 +2071,7 @@ sunPlatInitialLoadInfoDesiredValue OBJECT-TYPE
         sunPlatUnitaryComputerSystemApplySettings to a value of
         specifiedSettings(2) will cause these values to be applied."
     ::= { sunPlatInitialLoadInfoEntry 4 }
-        
+
 -- ***************************************************************************
 -- *                           sunPlatMIBLogs                                *
 -- ***************************************************************************
@@ -2087,14 +2087,14 @@ sunPlatLogTable OBJECT-TYPE
 
          It is used to maintain a currentProblemList for each managed
          object as per M.3100, sec. 5.22.
-         
+
          The management system creates entries in this table to
-         specify which types of traps, from which managed object, 
+         specify which types of traps, from which managed object,
          should be logged.
 
          Deleting an entry in this table deletes all entries in
          the corresponding log.
-         
+
          There are separate logs for each notification type/managed object."
     ::= { sunPlatMIBLogs 1 }
 
@@ -2123,7 +2123,7 @@ sunPlatLogType OBJECT-TYPE
     DESCRIPTION
         "The type of notifications stored in this log.
 
-         For currentProblemList alarm entries, the sunPlatLogType is set to 
+         For currentProblemList alarm entries, the sunPlatLogType is set to
          the sunPlatLogRecordManagedObjectInstance OID value."
     ::= { sunPlatLogEntry 1 }
 
@@ -2202,9 +2202,9 @@ sunPlatLogRecordEntry OBJECT-TYPE
          Entries in this table are created automatically but
          can be deleted by the management system.
 
-         currentProblemList entries are augmented by the 
+         currentProblemList entries are augmented by the
          sunPlatLogRecordAdditionalEntry and sunPlatLogRecordAlarmEntry tables.
-         They are automatically deleted when the associated alarm condition 
+         They are automatically deleted when the associated alarm condition
          is cleared.
 
          Entries that represent object creation/deletion alarm log types
@@ -2402,7 +2402,7 @@ sunPlatLogRecordAlarmSpecificProblem OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "An optional textual description which provides additional
-         information concerning the cause of this notification.         
+         information concerning the cause of this notification.
 
          If more than one specific problem is described in this object, the
          problem descriptions are separated by CR LF characters.
@@ -2441,7 +2441,7 @@ sunPlatLogRecordChangeEntry OBJECT-TYPE
     DESCRIPTION
         "Information about the attribute/state change specific
          attributes of a single trap in the log.
-         
+
          Each of the fields will be present according to the type
          of the attribute changed. State changes will be indicated
          using the sunPlatLogRecordChangeNewInteger and
@@ -2682,7 +2682,7 @@ sunPlatNotificationCorrelatedNotifications OBJECT-TYPE
         "A list of sunPlatNotificationEventIDs which are correlated to this
         notification, separated by commas."
     ::= { sunPlatMIBTrapData 17 }
-    
+
 
 -- MIB Notifications
 
@@ -2814,7 +2814,7 @@ sunPlatStateChange NOTIFICATION-TYPE
          enumerations of type INTEGER, the old and new states are passed in
          sunPlatNotificationOldInteger and sunPlatNotificationNewInteger
          respectively.
-         
+
          This is as defined in X.721, sec. 13.14."
     REFERENCE
         "X.721, sec. 13.14"
@@ -2834,7 +2834,7 @@ sunPlatAttributeChangeInteger NOTIFICATION-TYPE
         "Indicates that attribute identified by sunPlatNotificationChangedOID
          has changed from the value in sunPlatNotificationOldInteger to the
          value in sunPlatNotificationNewInteger.
-         
+
          This is as defined in X.721, sec. 13.1."
     REFERENCE
         "X.721, sec. 13.1"
@@ -2854,7 +2854,7 @@ sunPlatAttributeChangeString NOTIFICATION-TYPE
         "Indicates that attribute identified by sunPlatNotificationChangedOID
          has changed from the value in sunPlatNotificationOldString to the
          value in sunPlatNotificationNewString.
-         
+
          This is as defined in X.721, sec. 13.1."
     REFERENCE
         "X.721, sec.13.1"
@@ -2874,7 +2874,7 @@ sunPlatAttributeChangeOID NOTIFICATION-TYPE
         "Indicates that attribute identified by sunPlatNotificationChangedOID
          has changed from the value in sunPlatNotificationOldOID to the
          value in sunPlatNotificationNewOID.
-         
+
          This is as defined in X.721, sec. 13.1."
     REFERENCE
         "X.721, sec. 13.1"
@@ -2899,7 +2899,7 @@ sunPlatQualityOfServiceAlarm NOTIFICATION-TYPE
     REFERENCE
         "X.721, sec.13.11"
 ::= { sunPlatMIBTrapPrefix 11 }
-              
+
 sunPlatIndeterminateAlarm NOTIFICATION-TYPE
     OBJECTS { sunPlatNotificationEventId,
               sunPlatNotificationTime,
@@ -2959,7 +2959,7 @@ sunPlatCompliance MODULE-COMPLIANCE
 -- *                        sunPlatMIBObjectGroups                           *
 -- ***************************************************************************
 
-sunPlatGeneralGroup OBJECT-GROUP 
+sunPlatGeneralGroup OBJECT-GROUP
     OBJECTS {
         sunPlatStartTime
     }
@@ -2997,7 +2997,7 @@ sunPlatEquipmentHolderGroup OBJECT-GROUP
         "The collection of objects which are used to represent attributes of
         platform components with an entPhysicalClass of container(5)."
     ::= { sunPlatMIBObjectGroups 3 }
-  
+
 sunPlatCircuitPackGroup OBJECT-GROUP
     OBJECTS {
         sunPlatCircuitPackType,
@@ -3014,7 +3014,7 @@ sunPlatCircuitPackGroup OBJECT-GROUP
 sunPlatPhysicalGroup OBJECT-GROUP
     OBJECTS {
         sunPlatPhysicalClass
-    } 
+    }
     STATUS current
     DESCRIPTION
         "The collection of objects representing attributes of platform
@@ -3071,7 +3071,7 @@ sunPlatNumericSensorGroup OBJECT-GROUP
         sunPlatSensorClass of numeric(2)."
     ::= { sunPlatMIBObjectGroups 8 }
 
-sunPlatDiscreteSensorGroup OBJECT-GROUP 
+sunPlatDiscreteSensorGroup OBJECT-GROUP
     OBJECTS {
         sunPlatDiscreteSensorCurrent,
         sunPlatDiscreteSensorStatesInterpretation,
@@ -3129,7 +3129,7 @@ sunPlatPowerSupplyGroup OBJECT-GROUP
     ::= { sunPlatMIBObjectGroups 13 }
 
 sunPlatBatteryGroup OBJECT-GROUP
-    OBJECTS {   
+    OBJECTS {
         sunPlatBatteryStatus
     }
     STATUS current
@@ -3282,4 +3282,3 @@ sunPlatNotificationsGroup NOTIFICATION-GROUP
     ::= { sunPlatMIBNotifGroups 1 }
 
 END
-

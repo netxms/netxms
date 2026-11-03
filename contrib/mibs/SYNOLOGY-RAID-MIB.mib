@@ -18,8 +18,8 @@ synoRaid MODULE-IDENTITY
     DESCRIPTION
         "Second draft."
     ::= { synology 3 }
-    
-synology	 OBJECT IDENTIFIER 
+
+synology	 OBJECT IDENTIFIER
 	::= { enterprises 6574 }
 
 raidTable OBJECT-TYPE

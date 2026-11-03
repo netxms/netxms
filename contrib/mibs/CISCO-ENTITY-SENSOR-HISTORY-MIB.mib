@@ -1,11 +1,11 @@
 -- *****************************************************************
 -- CISCO-ENTITY-SENSOR-HISTORY-MIB.my
---   
+--
 -- February 2011, Padmanaban Venkatesan
---   
+--
 -- Copyright (c) 2011 by Cisco Systems Inc.
 -- All rights reserved.
---   
+--
 -- *****************************************************************
 
 CISCO-ENTITY-SENSOR-HISTORY-MIB DEFINITIONS ::= BEGIN
@@ -46,7 +46,7 @@ ciscoEntitySensorHistoryMIB MODULE-IDENTITY
             E-mail: cs-snmp@cisco.com"
     DESCRIPTION
         "This MIB module defines objects that describe collections and
-        measurement information for each sensor supporting historical 
+        measurement information for each sensor supporting historical
         data collection.  The sensor measurement either represents a
         measured value or a SMA (Simple Moving Average) value for a
         specified interval rate over a period of time.
@@ -54,10 +54,10 @@ ciscoEntitySensorHistoryMIB MODULE-IDENTITY
         This MIB module defines two tables relating to sensor measured
         value, including:
 
-            o ceshCollectionTable - contains data describing a  
+            o ceshCollectionTable - contains data describing a
                   collection of historic data for a sensor.
 
-            o ceshCollectionIntervalTable - contains zero or more rows 
+            o ceshCollectionIntervalTable - contains zero or more rows
                   containing historic data for a sensor
 
         The figure below illustrates the relationship between these two
@@ -90,10 +90,10 @@ ciscoEntitySensorHistoryMIB MODULE-IDENTITY
         +----------------------------------------------+   |      |
         | ceshCollectionIntervalTable                  |   |      |
         | +------------------------------------------+ |   |      |
-        | | ceshCollectionIntervalEntry              | |   |      |    
+        | | ceshCollectionIntervalEntry              | |   |      |
         | |   entPhysicalIndex = 3                   |<----+      |
         | |   ceshCollectionIntervalTime = 60        | |   |      |
-        | |   ceshCollectionIntervalNumber = 1       | |   |      |    
+        | |   ceshCollectionIntervalNumber = 1       | |   |      |
         | |   ceshCollectionIntervalSensorValue = 54 | |   |      |
         | |   ceshCollectionIntervalTimeStamp = 1    | |   |      |
         | +------------------------------------------+ |   |      |
@@ -102,23 +102,23 @@ ciscoEntitySensorHistoryMIB MODULE-IDENTITY
         |            ....................             <----+      |
         |                                              |   |      |
         | +------------------------------------------+ |   |      |
-        | | ceshCollectionIntervalEntry              | |   |      |    
+        | | ceshCollectionIntervalEntry              | |   |      |
         | |   entPhysicalIndex = 3                   |<----+      |
         | |   ceshCollectionIntervalTime = 60        | |          |
-        | |   ceshCollectionIntervalNumber = 60      | |          | 
+        | |   ceshCollectionIntervalNumber = 60      | |          |
         | |   ceshCollectionIntervalSensorValue = 54 | |          |
         | |   ceshCollectionIntervalTimeStamp = 60   | |          |
         | +------------------------------------------+ |          |
         |                                              |          |
         | +------------------------------------------+ |          |
-        | | ceshCollectionIntervalEntry              | |          |    
+        | | ceshCollectionIntervalEntry              | |          |
         | |   entPhysicalIndex = 3                   |<-----------+
         | |   ceshCollectionIntervalTime = 3660      | |
-        | |   ceshCollectionIntervalNumber = 1       | |               
+        | |   ceshCollectionIntervalNumber = 1       | |
         | |   ceshCollectionIntervalSensorValue = 54 | |
         | |   ceshCollectionIntervalTimeStamp = 60   | |
         | +------------------------------------------+ |
-        +----------------------------------------------+ 
+        +----------------------------------------------+
 
         If the system samples a sensor every minute for one collection
         and every hour for another, then the ceshCollectionTable
@@ -137,13 +137,13 @@ SensorHistoryCollectionAlgorithm ::= TEXTUAL-CONVENTION
         that describing the method used to collect historic data for a
         sensor.
 
-        'other'          - The implementation of the MIB module using 
-                           this textual convention does not recognize  
+        'other'          - The implementation of the MIB module using
+                           this textual convention does not recognize
                            the historic data collection algorithm.
-        'unknown'        - The system is not able to ascertain the 
+        'unknown'        - The system is not able to ascertain the
                            historic data collection algorithm.
         'measured'       - A raw value.
-        'simpleAverage'  - The system collects a simple moving average 
+        'simpleAverage'  - The system collects a simple moving average
                            of the values sampled from the sensor."
     SYNTAX          INTEGER  {
                         other(1),
@@ -159,7 +159,7 @@ ciscoEntitySensorHistoryMIBConform  OBJECT IDENTIFIER
 
 
 ceshCollectionTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeshCollectionEntry 
+    SYNTAX          SEQUENCE OF CeshCollectionEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -179,7 +179,7 @@ ceshCollectionEntry OBJECT-TYPE
         "Each entry in the ceshCollectionTable contains collection
         attributes describing the collection.
 
-        For each supported sensor, the system creates a row 
+        For each supported sensor, the system creates a row
         for each prescribed collection.  This creation process happens
         at startup and following the insertion of a FRU containing
         sensors.
@@ -190,7 +190,7 @@ ceshCollectionEntry OBJECT-TYPE
     INDEX           {
                         entPhysicalIndex,
                         ceshCollectionIntervalTime
-                    } 
+                    }
     ::= { ceshCollectionTable 1 }
 
 CeshCollectionEntry ::= SEQUENCE {
@@ -209,7 +209,7 @@ ceshCollectionIntervalTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the length of the sampling interval for
-        the collection." 
+        the collection."
     ::= { ceshCollectionEntry 1 }
 
 ceshCollectionIntervals OBJECT-TYPE
@@ -219,7 +219,7 @@ ceshCollectionIntervals OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the number of intervals for which data
-        has been collected." 
+        has been collected."
     ::= { ceshCollectionEntry 2 }
 
 ceshCollectionInvalidIntervals OBJECT-TYPE
@@ -233,7 +233,7 @@ ceshCollectionInvalidIntervals OBJECT-TYPE
         ceshCollectionIntervals, for which no data is available.
 
         The value of this column will typically be '0', except in
-        certain circumstances when some intervals are not available." 
+        certain circumstances when some intervals are not available."
     ::= { ceshCollectionEntry 3 }
 
 ceshCollectionMaxIntervals OBJECT-TYPE
@@ -243,7 +243,7 @@ ceshCollectionMaxIntervals OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the maximum number of intervals
-        maintained for the collection." 
+        maintained for the collection."
     ::= { ceshCollectionEntry 4 }
 
 ceshCollectionElapsedTime OBJECT-TYPE
@@ -253,7 +253,7 @@ ceshCollectionElapsedTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the time that has elapsed since the
-        beginning of the current interval." 
+        beginning of the current interval."
     ::= { ceshCollectionEntry 5 }
 
 ceshCollectionAlgorithm OBJECT-TYPE
@@ -262,13 +262,13 @@ ceshCollectionAlgorithm OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the algorithm used in collecting historic
-        data from the corresponding sensor." 
+        data from the corresponding sensor."
     ::= { ceshCollectionEntry 6 }
- 
+
 
 
 ceshCollectionIntervalTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeshCollectionIntervalEntry 
+    SYNTAX          SEQUENCE OF CeshCollectionIntervalEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -303,7 +303,7 @@ ceshCollectionIntervalEntry OBJECT-TYPE
                         entPhysicalIndex,
                         ceshCollectionIntervalTime,
                         ceshCollectionIntervalNumber
-                    } 
+                    }
     ::= { ceshCollectionIntervalTable 1 }
 
 CeshCollectionIntervalEntry ::= SEQUENCE {
@@ -321,7 +321,7 @@ ceshCollectionIntervalNumber OBJECT-TYPE
         interval.  The interval identified by the value '1' represents
         the most recent interval, and the interval identified by the
         value (n) represents the interval immediately preceding the
-        interval identified by the value (n-1)." 
+        interval identified by the value (n-1)."
     ::= { ceshCollectionIntervalEntry 1 }
 
 ceshCollectionIntervalSensorValue OBJECT-TYPE
@@ -333,11 +333,11 @@ ceshCollectionIntervalSensorValue OBJECT-TYPE
         physical entity during the interval.
 
         To correctly display or interpret this variable's value, you
-        must also know the sensor's type, scale, and precision 
+        must also know the sensor's type, scale, and precision
         indicated by the corresponding entry in the entPhySensorTable
         (defined by the ENTITY-SENSOR-MIB) or entSensorValueTable
         (defined by the CISCO-ENTITY-SENSOR-MIB)."
-    REFERENCE       "RFC3433" 
+    REFERENCE       "RFC3433"
     ::= { ceshCollectionIntervalEntry 2 }
 
 ceshCollectionIntervalTimeStamp OBJECT-TYPE
@@ -346,9 +346,9 @@ ceshCollectionIntervalTimeStamp OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object indicates the value of sysUpTime when the system
-        sampled the corresponding sensor." 
+        sampled the corresponding sensor."
     ::= { ceshCollectionIntervalEntry 3 }
- 
+
 
 ciscoEntitySensorHistoryMIBCompliances  OBJECT IDENTIFIER
     ::= { ciscoEntitySensorHistoryMIBConform 1 }
@@ -397,75 +397,3 @@ ceshCollectionIntervalGroup OBJECT-GROUP
     ::= { ciscoEntitySensorHistoryMIBGroups 2 }
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

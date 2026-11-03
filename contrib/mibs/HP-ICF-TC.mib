@@ -28,7 +28,7 @@ HP-ICF-TC DEFINITIONS ::= BEGIN
         DESCRIPTION  "Added multiple transceiver types."
 
         REVISION     "200402182305Z"  -- February 18, 2004
-        DESCRIPTION  "Added gigabitEthernetESP and tenGigabitEthernetCX 
+        DESCRIPTION  "Added gigabitEthernetESP and tenGigabitEthernetCX
                       type for HpSwitchPortType."
 
         REVISION     "200011030717Z"  -- November 3, 2000
@@ -113,7 +113,7 @@ HP-ICF-TC DEFINITIONS ::= BEGIN
                         xFP-SFP-PLUS-DA5  (155),
                         xFP-SFP-PLUS-DA7  (156),
                         xFP-SFP-PLUS-DA10 (157),
-                        tenGbE-K (158) 
+                        tenGbE-K (158)
                     }
 
 END

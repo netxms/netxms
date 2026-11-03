@@ -30,33 +30,33 @@ sniDesktopMgmt OBJECT IDENTIFIER   ::= { sniExtensions 3 }
 sniDeskTrap         OBJECT IDENTIFIER   ::= { sniDesktopMgmt 2 }
 
 
--- GROUP: "SNI Desktop-Version" 
+-- GROUP: "SNI Desktop-Version"
 sniTrapAgentVersionInformation  OBJECT IDENTIFIER ::= { sniDeskTrap 1 }
 -- Description: ""
 -- Class: "SNI DESKTRAP|VERION-INFORMATION|1.0 US"
 
 sniTrapAgentPurpose     OBJECT-TYPE
-	SYNTAX  DisplayString 
+	SYNTAX  DisplayString
 	ACCESS  read-only
 	STATUS  mandatory
 	DESCRIPTION     "Purpose of the SNI Desktop-Trap-Agent"
 	::= { sniTrapAgentVersionInformation 1 }
 
 sniTrapAgentVersion     OBJECT-TYPE
-	SYNTAX  DisplayString 
+	SYNTAX  DisplayString
 	ACCESS  read-only
 	STATUS  mandatory
 	DESCRIPTION     "Version of the SNI Desktop-Trap-Agent"
 	::= { sniTrapAgentVersionInformation 2 }
 
 sniTrapAgentDeskInfoVersion     OBJECT-TYPE
-	SYNTAX  DisplayString 
+	SYNTAX  DisplayString
 	ACCESS  read-only
 	STATUS  mandatory
 	DESCRIPTION     "Version of SNI Deskinfo"
 	::= { sniTrapAgentVersionInformation 3 }
 
--- GROUP: "SNI Desktop-Trap-Parameter" 
+-- GROUP: "SNI Desktop-Trap-Parameter"
 sniTrapAgentTrapParameter       OBJECT IDENTIFIER ::= { sniDeskTrap 2 }
 -- Description: ""
 -- Class: "SNI DESKTRAP|TRAP-PARAMETER|1.0 US"
@@ -67,7 +67,7 @@ sniTrapDesktop     OBJECT-TYPE
 	STATUS          mandatory
 	DESCRIPTION         "Desktopname"
 	::= {sniTrapAgentTrapParameter 1 }
- 
+
 sniTrapTimeInt  OBJECT-TYPE
 	SYNTAX          INTEGER
 	ACCESS          not-accessible
@@ -84,36 +84,36 @@ sniTrapTimeStr  OBJECT-TYPE
 
 sniTrapAgentStatus      OBJECT-TYPE
 	SYNTAX  INTEGER {
-		st-unknown ( 0 ), 
+		st-unknown ( 0 ),
 		st-ok ( 1 ),
 		st-warning ( 2 ),
 		st-critical ( 3 )
-			}  
+			}
 	ACCESS  not-accessible
 	STATUS  mandatory
 	DESCRIPTION     ""
 	::= { sniTrapAgentTrapParameter 4 }
 
 sniTrapAgentType        OBJECT-TYPE
-	SYNTAX  INTEGER { 
+	SYNTAX  INTEGER {
 		t-alert ( 1 ),
 		t-event ( 2 ),
 		t-info ( 3 )
-			}  
+			}
 	ACCESS  not-accessible
 	STATUS  mandatory
 	DESCRIPTION     ""
 	::= { sniTrapAgentTrapParameter 5 }
 
 sniTrapAgentEventName   OBJECT-TYPE
-	SYNTAX  DisplayString 
+	SYNTAX  DisplayString
 	ACCESS  not-accessible
 	STATUS  mandatory
 	DESCRIPTION     ""
 	::= { sniTrapAgentTrapParameter 6 }
 
 sniTrapAgentEventText   OBJECT-TYPE
-	SYNTAX  DisplayString 
+	SYNTAX  DisplayString
 	ACCESS  not-accessible
 	STATUS  mandatory
 	DESCRIPTION     ""
@@ -127,7 +127,7 @@ sniTrapAgentTimeBIAS  OBJECT-TYPE
 	::= {sniTrapAgentTrapParameter 8 }
 
 sniTrapAgentSystemStatus  OBJECT-TYPE
-	SYNTAX  INTEGER { 
+	SYNTAX  INTEGER {
 		st-unknown ( 0 ),
 		st-ok ( 1 ),
 		st-warning ( 2 ),
@@ -139,7 +139,7 @@ sniTrapAgentSystemStatus  OBJECT-TYPE
 	::= {sniTrapAgentTrapParameter 9 }
 
 sniTrapAgentClassStatus  OBJECT-TYPE
-	SYNTAX  INTEGER { 
+	SYNTAX  INTEGER {
 		st-unknown ( 0 ),
 		st-ok ( 1 ),
 		st-warning ( 2 ),
@@ -163,7 +163,7 @@ sniTrapError            TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  WARNING
 	--#TIMEINDEX 1
-	::= 1 
+	::= 1
 
 -- 1xxx   = SMART
 sniSmartOK              TRAP-TYPE
@@ -176,7 +176,7 @@ sniSmartOK              TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  NORMAL
 	--#TIMEINDEX 1
-	::= 1001 
+	::= 1001
 
 sniSmartWarning         TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -200,7 +200,7 @@ sniSmartError           TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  CRITICAL
 	--#TIMEINDEX 1
-	::= 1003 
+	::= 1003
 
 -- 2xxx    = Cover open/closed
 sniCoverClosed                TRAP-TYPE
@@ -213,7 +213,7 @@ sniCoverClosed                TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  NORMAL
 	--#TIMEINDEX 1
-	::= 2001 
+	::= 2001
 
 sniCoverOpened                TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -225,7 +225,7 @@ sniCoverOpened                TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  CRITICAL
 	--#TIMEINDEX 1
-	::= 2003 
+	::= 2003
 
 -- 3xxx    = Cover sensor
 sniCoverSensorincorporated  TRAP-TYPE
@@ -238,7 +238,7 @@ sniCoverSensorincorporated  TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  NORMAL
 	--#TIMEINDEX 1
-	::= 3001 
+	::= 3001
 
 sniCoverSensorMissing         TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -590,7 +590,7 @@ sniFreeDiskSpaceOK             TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  NORMAL
 	--#TIMEINDEX 1
-	::= 21001 
+	::= 21001
 
 sniFreeDiskSpaceWarning         TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -614,7 +614,7 @@ sniFreeDiskSpaceError           TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  CRITICAL
 	--#TIMEINDEX 1
-	::= 21003 
+	::= 21003
 
 -- 22xxx   = Memory changes
 sniMemoryChangesOK             TRAP-TYPE
@@ -627,7 +627,7 @@ sniMemoryChangesOK             TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  NORMAL
 	--#TIMEINDEX 1
-	::= 22001 
+	::= 22001
 
 sniMemoryChangesWarning         TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -651,7 +651,7 @@ sniMemoryChangesError           TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  CRITICAL
 	--#TIMEINDEX 1
-	::= 22003 
+	::= 22003
 
 -- 23xxx   = Device changes
 sniDeviceChangesOK             TRAP-TYPE
@@ -664,7 +664,7 @@ sniDeviceChangesOK             TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  NORMAL
 	--#TIMEINDEX 1
-	::= 23001 
+	::= 23001
 
 sniDeviceChangesWarning         TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -688,7 +688,7 @@ sniDeviceChangesError           TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  CRITICAL
 	--#TIMEINDEX 1
-	::= 23003 
+	::= 23003
 
 --  24xxx    = Voltage/Fan/Temperature
 sniAOLVoltage_Fan_TemperatureCritical     TRAP-TYPE
@@ -1065,7 +1065,7 @@ sniFreeSystemDiskSpaceOK             TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  NORMAL
 	--#TIMEINDEX 1
-	::= 56001 
+	::= 56001
 
 sniFreeSystemDiskSpaceWarning         TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -1089,7 +1089,7 @@ sniFreeSystemDiskSpaceError           TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  CRITICAL
 	--#TIMEINDEX 1
-	::= 56003 
+	::= 56003
 
 -- 57xxx   = Lease expiration
 sniLeaseExpirationOK             TRAP-TYPE
@@ -1102,7 +1102,7 @@ sniLeaseExpirationOK             TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  NORMAL
 	--#TIMEINDEX 1
-	::= 57001 
+	::= 57001
 
 sniLeaseExpirationWarning         TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -1126,7 +1126,7 @@ sniLeaseExpirationError           TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  CRITICAL
 	--#TIMEINDEX 1
-	::= 57003 
+	::= 57003
 
 -- 58xxx   = Processor change
 sniProcessorChangeOK             TRAP-TYPE
@@ -1139,7 +1139,7 @@ sniProcessorChangeOK             TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  NORMAL
 	--#TIMEINDEX 1
-	::= 58001 
+	::= 58001
 
 sniProcessorChangeWarning             TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -1151,7 +1151,7 @@ sniProcessorChangeWarning             TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  WARNING
 	--#TIMEINDEX 1
-	::= 58002 
+	::= 58002
 
 sniProcessorChangeError             TRAP-TYPE
 	ENTERPRISE      sniDesktopMgmt
@@ -1163,7 +1163,7 @@ sniProcessorChangeError             TRAP-TYPE
 	--#ARGUMENTS { 0 }
     --#SEVERITY  CRITICAL
 	--#TIMEINDEX 1
-	::= 58003 
+	::= 58003
 
 
 END

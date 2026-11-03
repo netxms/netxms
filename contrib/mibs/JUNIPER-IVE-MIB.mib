@@ -1,14 +1,14 @@
 JUNIPER-IVE-MIB DEFINITIONS ::= BEGIN
-        IMPORTS 
+        IMPORTS
         	NOTIFICATION-TYPE, MODULE-IDENTITY, enterprises
         		FROM SNMPv2-SMI
         	NetworkAddress
         		FROM RFC1155-SMI;
-        
+
 juniper-ive MODULE-IDENTITY
     LAST-UPDATED "200203250000Z"
     ORGANIZATION "Juniper"
-    CONTACT-INFO    
+    CONTACT-INFO
 	 "Internet: https://www.juniper.net/cm/index.jsp"
     DESCRIPTION
 	"This file defines the private Juniper Networks MIB extensions."
@@ -21,25 +21,25 @@ logFullPercent OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Percentage of log file full"
-    ::= { juniper-ive 1 } 
+    ::= { juniper-ive 1 }
 
 signedInWebUsers OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Number of Signed-In Web Users"
-    ::= { juniper-ive 2 } 
+    ::= { juniper-ive 2 }
 
 signedInMailUsers OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Number of Signed-In Mail Users"
-    ::= { juniper-ive 3 } 
+    ::= { juniper-ive 3 }
 
 blockedIP OBJECT-TYPE
     SYNTAX      NetworkAddress
@@ -72,7 +72,7 @@ productVersion OBJECT-TYPE
     DESCRIPTION
         "IVE System Software Version"
     ::= { juniper-ive 7 }
-    
+
 fileName OBJECT-TYPE
     SYNTAX      OCTET STRING
     MAX-ACCESS  accessible-for-notify
@@ -80,119 +80,119 @@ fileName OBJECT-TYPE
     DESCRIPTION
         "File name"
     ::= { juniper-ive 8 }
-    
+
 meetingUserCount OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	accessible-for-notify
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"the number of concurrent meeting users"
-    ::= { juniper-ive 9 } 
+    ::= { juniper-ive 9 }
 
-    
+
 iveCpuUtil OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The CPU Utilization of the IVE system"
-    ::= { juniper-ive 10 } 
+    ::= { juniper-ive 10 }
 
 iveMemoryUtil OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Memory Utilization of the IVE system"
-    ::= { juniper-ive 11 } 
+    ::= { juniper-ive 11 }
 
 iveConcurrentUsers OBJECT-TYPE
     SYNTAX	Counter32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of Users Logged In for the IVE Node"
-    ::= { juniper-ive 12 } 
+    ::= { juniper-ive 12 }
 
 clusterConcurrentUsers OBJECT-TYPE
     SYNTAX       Counter32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of Users Logged In for the Cluster"
-    ::= { juniper-ive 13 } 
+    ::= { juniper-ive 13 }
 
 iveTotalHits OBJECT-TYPE
-    SYNTAX      Counter64	
+    SYNTAX      Counter64
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of hits to the IVE since last reboot"
-    ::= { juniper-ive 14 } 
+    ::= { juniper-ive 14 }
 
 iveFileHits OBJECT-TYPE
-    SYNTAX      Counter64	
+    SYNTAX      Counter64
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of File hits to the IVE since last reboot"
-    ::= { juniper-ive 15 } 
+    ::= { juniper-ive 15 }
 
 iveWebHits OBJECT-TYPE
-    SYNTAX      Counter64	
+    SYNTAX      Counter64
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of hits via the Web Interface since the last reboot"
-    ::= { juniper-ive 16 } 
+    ::= { juniper-ive 16 }
 
 iveAppletHits OBJECT-TYPE
-    SYNTAX      Counter64	
+    SYNTAX      Counter64
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of applet hits to the IVE  since last reboot"
-    ::= { juniper-ive 17 } 
+    ::= { juniper-ive 17 }
 
 ivetermHits OBJECT-TYPE
-    SYNTAX      Counter64	
+    SYNTAX      Counter64
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of terminal hits to the IVE since last reboot"
-    ::= { juniper-ive 18 } 
+    ::= { juniper-ive 18 }
 
 iveSAMHits OBJECT-TYPE
-    SYNTAX      Counter64	
+    SYNTAX      Counter64
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of SAM(Secure Application manager)hits of since last reboot"
-    ::= { juniper-ive 19 } 
+    ::= { juniper-ive 19 }
 
 iveNCHits OBJECT-TYPE
-    SYNTAX      Counter64	
+    SYNTAX      Counter64
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of NC(Network Connect) hits of since last reboot"
-    ::= { juniper-ive 20 } 
+    ::= { juniper-ive 20 }
 
 meetingHits OBJECT-TYPE
-    SYNTAX      Counter64	
+    SYNTAX      Counter64
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Total number of Meeting hits of since last reboot"
-    ::= { juniper-ive 21 } 
+    ::= { juniper-ive 21 }
 
 meetingCount OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	accessible-for-notify
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"the number of concurrent meetings"
-    ::= { juniper-ive 22 } 
+    ::= { juniper-ive 22 }
 
 logName OBJECT-TYPE
     SYNTAX      OCTET STRING
@@ -206,25 +206,25 @@ iveSwapUtil OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"The Swap Utilization of the IVE system"
-    ::= { juniper-ive 24 } 
+    ::= { juniper-ive 24 }
 
 diskFullPercent OBJECT-TYPE
     SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Percentage of disk space full"
-    ::= { juniper-ive 25 } 
+    ::= { juniper-ive 25 }
 
 blockedIPList OBJECT-TYPE
     SYNTAX	SEQUENCE OF IPEntry
     MAX-ACCESS	read-only
     STATUS	current
-    DESCRIPTION  
+    DESCRIPTION
 	"Table of 10 most recently blocked IPs"
-    ::= { juniper-ive 26 } 
+    ::= { juniper-ive 26 }
 
 ipEntry OBJECT-TYPE
     SYNTAX      IPEntry
@@ -241,7 +241,7 @@ IPEntry	::= SEQUENCE {
 }
 
 ipIndex OBJECT-TYPE
-    SYNTAX      Integer32 
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -295,7 +295,7 @@ ocspResponderURL OBJECT-TYPE
     DESCRIPTION
         "Name of an OCSP Responder"
     ::= { juniper-ive 31 }
- 
+
 fanDescription OBJECT-TYPE
     SYNTAX      OCTET STRING
     MAX-ACCESS  accessible-for-notify
@@ -322,9 +322,9 @@ raidDescription OBJECT-TYPE
 
 iveTraps OBJECT IDENTIFIER ::= { juniper-ive 251 }
 
--- iveTraps.1 and iveTraps.2 are loaded incorrectly in HP OpenView 
+-- iveTraps.1 and iveTraps.2 are loaded incorrectly in HP OpenView
 -- so avoid defining them
-    
+
 iveLogNearlyFull NOTIFICATION-TYPE
     OBJECTS { logFullPercent, logName }
     STATUS	current
@@ -344,7 +344,7 @@ iveMaxConcurrentUsersSignedIn NOTIFICATION-TYPE
     DESCRIPTION
 	"Maximum number of concurrent users signed in"
     ::= { iveTraps 6 }
-    
+
 iveTooManyFailedLoginAttempts NOTIFICATION-TYPE
     OBJECTS { blockedIP }
     STATUS	current
@@ -376,7 +376,7 @@ iveReboot NOTIFICATION-TYPE
     DESCRIPTION
 	"IVE reboot"
     ::= { iveTraps 11 }
-    
+
 archiveServerUnreachable NOTIFICATION-TYPE
     STATUS	current
     DESCRIPTION
@@ -388,15 +388,15 @@ archiveServerLoginFailed NOTIFICATION-TYPE
     DESCRIPTION
 	"Could not login into archive server. Verify FTP username and password."
     ::= { iveTraps 13 }
-    
-archiveFileTransferFailed NOTIFICATION-TYPE   
+
+archiveFileTransferFailed NOTIFICATION-TYPE
     OBJECTS { fileName }
     STATUS	current
     DESCRIPTION
 	"Could not store file on archive server"
     ::= { iveTraps 14 }
-    
-    
+
+
 meetingUserLimit NOTIFICATION-TYPE
     OBJECTS { meetingUserCount }
     STATUS	current
@@ -478,19 +478,19 @@ iveFanNotify NOTIFICATION-TYPE
     DESCRIPTION
 	"The status of the fans has changed"
     ::= { iveTraps 26 }
-    
+
 ivePowerSupplyNotify NOTIFICATION-TYPE
     OBJECTS { psDescription }
     STATUS	current
     DESCRIPTION
 	"The status of the power supplies has changed"
     ::= { iveTraps 27 }
-    
+
 iveRaidNotify NOTIFICATION-TYPE
     OBJECTS { raidDescription }
     STATUS	current
     DESCRIPTION
 	"The status of the RAID has changed"
     ::= { iveTraps 28 }
-    
+
 END

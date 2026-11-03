@@ -5,32 +5,32 @@
 -- Reference:
 -- Version: V2.06
 -- History:
---       
+--
 -- =================================================================
 
         HUAWEI-BRAS-SRVCFG-EAP-MIB DEFINITIONS ::= BEGIN
- 
+
           IMPORTS
-                hwBRASMib                     
+                hwBRASMib
                         FROM HUAWEI-MIB
-                InterfaceIndex, ifDescr                  
-                        FROM IF-MIB                     
-                IpAddress, Integer32, OBJECT-TYPE, MODULE-IDENTITY, NOTIFICATION-TYPE                       
-                        FROM SNMPv2-SMI  
-                VlanIdOrNone, VlanId     
-                        FROM Q-BRIDGE-MIB   
-                RowStatus, MacAddress, TruthValue, DisplayString                        
+                InterfaceIndex, ifDescr
+                        FROM IF-MIB
+                IpAddress, Integer32, OBJECT-TYPE, MODULE-IDENTITY, NOTIFICATION-TYPE
+                        FROM SNMPv2-SMI
+                VlanIdOrNone, VlanId
+                        FROM Q-BRIDGE-MIB
+                RowStatus, MacAddress, TruthValue, DisplayString
                         FROM SNMPv2-TC
                 MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
                         FROM SNMPv2-CONF
                 EnabledStatus
                         FROM P-BRIDGE-MIB;
-        
-                hwBRASSrvcfgEap MODULE-IDENTITY 
+
+                hwBRASSrvcfgEap MODULE-IDENTITY
                         LAST-UPDATED "201306080907Z"
-                        ORGANIZATION 
+                        ORGANIZATION
                             "Huawei Technologies Co.,Ltd."
-                      CONTACT-INFO 
+                      CONTACT-INFO
                        "Huawei Industrial Base
   Bantian, Longgang
    Shenzhen 518129
@@ -38,39 +38,39 @@
    Website: http://www.huawei.com
    Email: support@huawei.com
  "
-            
-                DESCRIPTION 
+
+                DESCRIPTION
                         "The MIB contains objects of module SRVCFG."
 
                 REVISION     "201306080907Z"
-                DESCRIPTION   " V1.00, Inital version. "   
+                DESCRIPTION   " V1.00, Inital version. "
 
                 REVISION     "200908091850Z"
-                DESCRIPTION   " V1.00, Inital version. "   
+                DESCRIPTION   " V1.00, Inital version. "
 
                  REVISION     "200908091850Z"
-                DESCRIPTION   " V1.00, Inital version. "  
-                 
+                DESCRIPTION   " V1.00, Inital version. "
+
                  REVISION     "201307121850Z"
-                DESCRIPTION   " V2.02, Inital version. "   
- 
+                DESCRIPTION   " V2.02, Inital version. "
+
                  REVISION     "201308071850Z"
-                DESCRIPTION   " V2.03, Inital version. "   
+                DESCRIPTION   " V2.03, Inital version. "
 
                  REVISION     "201310241850Z"
-                DESCRIPTION   " V2.04, Inital version. "  
-                
+                DESCRIPTION   " V2.04, Inital version. "
+
                  REVISION     "201311281850Z"
-                DESCRIPTION   " V2.05, Inital version. "  
+                DESCRIPTION   " V2.05, Inital version. "
 
                 REVISION     "201311281850Z"
-                DESCRIPTION   " V2.06, Inital version. "  
+                DESCRIPTION   " V2.06, Inital version. "
 
                 ::= { hwBRASMib 4 }
 
-        
+
         hwSrvcfgEapMibObjects OBJECT IDENTIFIER ::= { hwBRASSrvcfgEap 1 }
-                                        
+
         hwDot1xSystemConfigTable OBJECT-TYPE
             SYNTAX SEQUENCE OF HwDot1xSystemConfigEntry
             MAX-ACCESS not-accessible
@@ -78,7 +78,7 @@
             DESCRIPTION
                 "The table describes 802.1x configuration information of template."
             ::= { hwSrvcfgEapMibObjects 1 }
-        
+
         hwDot1xSystemConfigEntry OBJECT-TYPE
             SYNTAX HwDot1xSystemConfigEntry
             MAX-ACCESS not-accessible
@@ -87,9 +87,9 @@
                 "Description."
             INDEX { hwDot1xTemplateIndex }
             ::= { hwDot1xSystemConfigTable 1 }
-        
+
         HwDot1xSystemConfigEntry ::=
-            SEQUENCE { 
+            SEQUENCE {
                 hwDot1xTemplateIndex
                     Integer32,
                 hwDot1xHandshakeSwitch
@@ -103,17 +103,17 @@
                 hwDot1xEAPEndPapChap
                     INTEGER,
                 hwDot1xIfSendEAPSIMParameter
-                    TruthValue,                    
+                    TruthValue,
                 hwDot1xRowStatus
-                    RowStatus,                   
-                hwDot1xAuthenticationTimeout 
+                    RowStatus,
+                hwDot1xAuthenticationTimeout
                     Integer32,
                 hwDot1xRequestCount
-                    Integer32,   
+                    Integer32,
                 hwDot1xRequestInterval
-                    Integer32,   
+                    Integer32,
                 hwDot1xReauthenticationTimeout
-                    Integer32              
+                    Integer32
 
              }
 
@@ -133,7 +133,7 @@
                 "Handshake switch."
             DEFVAL { close }
             ::= { hwDot1xSystemConfigEntry 2 }
-        
+
         hwDot1xHandshakeCount OBJECT-TYPE
             SYNTAX Integer32 (0..10)
             MAX-ACCESS read-write
@@ -142,7 +142,7 @@
                 "Max handshake times."
             DEFVAL { 3 }
             ::= { hwDot1xSystemConfigEntry 3 }
-        
+
         hwDot1xHandshakeInterval OBJECT-TYPE
             SYNTAX Integer32 (1..1800)
             MAX-ACCESS read-write
@@ -179,19 +179,19 @@
             MAX-ACCESS read-write
             STATUS current
             DESCRIPTION
-                "Whether to send parameter of eap-sim."            
+                "Whether to send parameter of eap-sim."
             DEFVAL { false }
             ::= { hwDot1xSystemConfigEntry 7 }
-        
+
             hwDot1xRowStatus OBJECT-TYPE
                 SYNTAX RowStatus
                 MAX-ACCESS read-create
                 STATUS current
                 DESCRIPTION
-                    " 
                     "
-                ::= { hwDot1xSystemConfigEntry 8 }   
-  
+                    "
+                ::= { hwDot1xSystemConfigEntry 8 }
+
         hwDot1xAuthenticationTimeout OBJECT-TYPE
             SYNTAX Integer32(1..300)
             MAX-ACCESS read-write
@@ -224,7 +224,7 @@
                 "Re-authentication interval in seconds."
             ::= { hwDot1xSystemConfigEntry 12 }
 
-        
+
         hwDot1xGlobal OBJECT-TYPE
             SYNTAX     EnabledStatus
             MAX-ACCESS read-write
@@ -232,49 +232,49 @@
             DESCRIPTION
                 "The Global 802.1x configuration. Enable this before you want to enable
                 other interfaces 802.1x authentication."
-            DEFVAL { disable }            
-            ::= { hwSrvcfgEapMibObjects 2 }        
-            
+            DEFVAL { disable }
+            ::= { hwSrvcfgEapMibObjects 2 }
+
         hwDot1xAuthenMethod OBJECT-TYPE
             SYNTAX     INTEGER
             {
              chap(1),
-             pap(2),                                                           
+             pap(2),
              eap(3)
             }
             MAX-ACCESS read-write
             STATUS current
             DESCRIPTION
                 "Specify system authentication method."
-            DEFVAL { chap }            
-            ::= { hwSrvcfgEapMibObjects 3 }     
-            
+            DEFVAL { chap }
+            ::= { hwSrvcfgEapMibObjects 3 }
+
         hwDot1xDhcpTrigger OBJECT-TYPE
             SYNTAX     EnabledStatus
             MAX-ACCESS read-write
             STATUS current
             DESCRIPTION
                 "Trigger system authentication when receiving DHCP packet(s)."
-            DEFVAL { disable }            
-            ::= { hwSrvcfgEapMibObjects 4 }     
-            
+            DEFVAL { disable }
+            ::= { hwSrvcfgEapMibObjects 4 }
+
         hwDot1xHandshake  OBJECT-TYPE
             SYNTAX     EnabledStatus
             MAX-ACCESS read-write
             STATUS current
             DESCRIPTION
                 "Shake hand of 802.1x."
-            DEFVAL { disable }            
-            ::= { hwSrvcfgEapMibObjects 5 }     
-            
+            DEFVAL { disable }
+            ::= { hwSrvcfgEapMibObjects 5 }
+
         hwDot1xQuietPeriod  OBJECT-TYPE
             SYNTAX     EnabledStatus
             MAX-ACCESS read-write
             STATUS current
             DESCRIPTION
                 "Enable quiet period function."
-            DEFVAL { disable }            
-            ::= { hwSrvcfgEapMibObjects 6 }                                             
+            DEFVAL { disable }
+            ::= { hwSrvcfgEapMibObjects 6 }
 
         hwDot1xRetry  OBJECT-TYPE
             SYNTAX     Integer32 (1..10)
@@ -282,9 +282,9 @@
             STATUS current
             DESCRIPTION
                 "Specify maximal request times."
-            DEFVAL { 2 }            
-            ::= { hwSrvcfgEapMibObjects 7 }         
-            
+            DEFVAL { 2 }
+            ::= { hwSrvcfgEapMibObjects 7 }
+
 
         hwDot1xTimerHandshakePeriod  OBJECT-TYPE
             SYNTAX     Integer32 (5..7200)
@@ -292,8 +292,8 @@
             STATUS current
             DESCRIPTION
                 "Value of handshake interval with 802.1x supplicant."
-            DEFVAL { 120 }            
-            ::= { hwSrvcfgEapMibObjects 8 }     
+            DEFVAL { 120 }
+            ::= { hwSrvcfgEapMibObjects 8 }
 
         hwDot1xTimerQuietPeriod  OBJECT-TYPE
             SYNTAX     Integer32 (1..3600)
@@ -301,46 +301,46 @@
             STATUS current
             DESCRIPTION
                 "Interval following failed authentication."
-            DEFVAL { 60 }            
-            ::= { hwSrvcfgEapMibObjects 9 }     
-                
-            
+            DEFVAL { 60 }
+            ::= { hwSrvcfgEapMibObjects 9 }
+
+
         hwDot1xTimerServerTimeout  OBJECT-TYPE
             SYNTAX     Integer32 (1..120)
             MAX-ACCESS read-write
             STATUS current
             DESCRIPTION
                 "Value of server timeout."
-            DEFVAL { 30 }            
-            ::= { hwSrvcfgEapMibObjects 10 }         
-            
+            DEFVAL { 30 }
+            ::= { hwSrvcfgEapMibObjects 10 }
+
         hwDot1xTimerClientTimeout  OBJECT-TYPE
             SYNTAX     Integer32 (1..120)
             MAX-ACCESS read-write
             STATUS current
             DESCRIPTION
                 "Value of Client timeout."
-            DEFVAL { 5 }            
-            ::= { hwSrvcfgEapMibObjects 11 }     
-                
+            DEFVAL { 5 }
+            ::= { hwSrvcfgEapMibObjects 11 }
+
         hwDot1xTimerTxPeriod  OBJECT-TYPE
             SYNTAX     Integer32 (1..120)
             MAX-ACCESS read-write
             STATUS current
             DESCRIPTION
                 "Interval between identity requests."
-            DEFVAL { 30 }            
-            ::= { hwSrvcfgEapMibObjects 12 }         
-            
+            DEFVAL { 30 }
+            ::= { hwSrvcfgEapMibObjects 12 }
+
          hwDot1xReauthenPeriod  OBJECT-TYPE
             SYNTAX     Integer32 (60..7200)
             MAX-ACCESS read-write
             STATUS current
             DESCRIPTION
                 "Reauthenticate period."
-            DEFVAL { 3600 }            
-            ::= { hwSrvcfgEapMibObjects 13 }                                                                
-     
+            DEFVAL { 3600 }
+            ::= { hwSrvcfgEapMibObjects 13 }
+
         hwDot1xPortConfigTable OBJECT-TYPE
             SYNTAX SEQUENCE OF HwDot1xPortConfigEntry
             MAX-ACCESS not-accessible
@@ -348,7 +348,7 @@
             DESCRIPTION
                 "The table describes 802.1x configuration information of template."
             ::= { hwSrvcfgEapMibObjects 14 }
-        
+
         hwDot1xPortConfigEntry OBJECT-TYPE
             SYNTAX HwDot1xPortConfigEntry
             MAX-ACCESS not-accessible
@@ -357,9 +357,9 @@
                 "An entry in the 802.1x configuration table."
             INDEX { hwDot1xPortIndex }
             ::= { hwDot1xPortConfigTable 1 }
-        
+
         HwDot1xPortConfigEntry ::=
-            SEQUENCE { 
+            SEQUENCE {
                 hwDot1xPortIndex
                     Integer32,
                 hwDot1xPortSwitch
@@ -373,15 +373,15 @@
                 hwDot1xPortMethod
                     INTEGER,
                 hwDot1xPortReauthen
-                    EnabledStatus, 
+                    EnabledStatus,
                 hwDot1xMacByPass
                     EnabledStatus,
                 hwDot1xModemVersion
-                    DisplayString,                        
+                    DisplayString,
                 hwDot1xForceDomain
-                    DisplayString,  
+                    DisplayString,
                 hwDot1xAuthStatus
-                    TruthValue,   
+                    TruthValue,
                 hwDot1xPortRowStatus
                     RowStatus,
                 hwDot1xMacByPassMacAuthFirst
@@ -407,8 +407,8 @@
             DESCRIPTION
                 "Whether to enable 802.1x on this interface."
             DEFVAL { disable }
-            ::= { hwDot1xPortConfigEntry 2 }       
-        
+            ::= { hwDot1xPortConfigEntry 2 }
+
         hwDot1xPortGuestVlan OBJECT-TYPE
             SYNTAX VlanIdOrNone
             MAX-ACCESS read-create
@@ -439,7 +439,7 @@
                 "Specify port authenticated status."
             DEFVAL { auto }
             ::= { hwDot1xPortConfigEntry 5 }
-    
+
         hwDot1xPortMethod OBJECT-TYPE
             SYNTAX INTEGER
                 {
@@ -452,7 +452,7 @@
                 "Specify port controlled method."
             DEFVAL { mac }
             ::= { hwDot1xPortConfigEntry 6 }
-    
+
         hwDot1xPortReauthen OBJECT-TYPE
             SYNTAX EnabledStatus
             MAX-ACCESS read-create
@@ -461,16 +461,16 @@
                 "Enable periodic reauthentication of the client."
             DEFVAL { disable }
             ::= { hwDot1xPortConfigEntry 7 }
-            
+
         hwDot1xMacByPass OBJECT-TYPE
             SYNTAX     EnabledStatus
             MAX-ACCESS read-create
             STATUS current
             DESCRIPTION
                 "Enable dot1x-macbypass function."
-            DEFVAL { disable }            
-            ::= { hwDot1xPortConfigEntry 8 }  
-            
+            DEFVAL { disable }
+            ::= { hwDot1xPortConfigEntry 8 }
+
        hwDot1xModemVersion  OBJECT-TYPE
            SYNTAX     DisplayString
            MAX-ACCESS read-only
@@ -478,15 +478,15 @@
            DESCRIPTION
              "Specify version of modem at this port."
              ::= { hwDot1xPortConfigEntry 9 }
-           
+
        hwDot1xForceDomain OBJECT-TYPE
            SYNTAX DisplayString (SIZE (1..128))
            MAX-ACCESS read-write
            STATUS current
            DESCRIPTION
                 "                "
-           ::= { hwDot1xPortConfigEntry 10 }  
-             
+           ::= { hwDot1xPortConfigEntry 10 }
+
        hwDot1xAuthStatus OBJECT-TYPE
            SYNTAX TruthValue
            MAX-ACCESS read-only
@@ -494,26 +494,26 @@
            DESCRIPTION
                 "authenticate status."
            DEFVAL { close }
-           ::= { hwDot1xPortConfigEntry 11 } 
-            
+           ::= { hwDot1xPortConfigEntry 11 }
+
        hwDot1xPortRowStatus OBJECT-TYPE
                 SYNTAX RowStatus
                 MAX-ACCESS read-create
                 STATUS current
                 DESCRIPTION
-                    " 
+                    "
                     "
                 ::= { hwDot1xPortConfigEntry 12 }
-                
+
        hwDot1xMacByPassMacAuthFirst OBJECT-TYPE
                 SYNTAX EnabledStatus
                 MAX-ACCESS read-create
                 STATUS current
                 DESCRIPTION
-                    " 
                     "
-                ::= { hwDot1xPortConfigEntry 13 } 
-       
+                    "
+                ::= { hwDot1xPortConfigEntry 13 }
+
 
        hwUserAccessLimit OBJECT-TYPE
             SYNTAX Integer32(1..128)
@@ -523,7 +523,7 @@
                 "Specify maximal on-line user number per VAP."
             DEFVAL { 128 }
             ::= { hwDot1xPortConfigEntry 14 }
-        
+
        hwDot1xTriggerDhcpbind  OBJECT-TYPE
             SYNTAX EnabledStatus
             MAX-ACCESS read-create
@@ -540,7 +540,7 @@
             DESCRIPTION
                  "Failure times before adding to the quiet table."
             DEFVAL { 3 }
-            ::= { hwSrvcfgEapMibObjects 15 }  
+            ::= { hwSrvcfgEapMibObjects 15 }
 
        hwDot1xSessionDisplayByPortTable OBJECT-TYPE
             SYNTAX SEQUENCE OF HwDot1xSessionDisplayByPortEntry
@@ -549,7 +549,7 @@
             DESCRIPTION
                 "The table displays the infomations of the online users according to the port."
             ::= { hwSrvcfgEapMibObjects 16 }
-        
+
         hwDot1xSessionDisplayByPortEntry OBJECT-TYPE
             SYNTAX HwDot1xSessionDisplayByPortEntry
             MAX-ACCESS not-accessible
@@ -558,29 +558,29 @@
                 "An entry in the port display table."
             INDEX { hwDot1xSessDispByPortIndex, hwDot1xSessDispByPortUserIndex }
             ::= { hwDot1xSessionDisplayByPortTable 1 }
-        
+
         HwDot1xSessionDisplayByPortEntry ::=
-            SEQUENCE { 
+            SEQUENCE {
                 hwDot1xSessDispByPortIndex
-                    Integer32,    
+                    Integer32,
                 hwDot1xSessDispByPortUserIndex
-                    Integer32,  
+                    Integer32,
                 hwDot1xSessDispByPortIfName
-                    DisplayString, 
+                    DisplayString,
                 hwDot1xSessDispByPortUserMac
-                    MacAddress,  
+                    MacAddress,
                 hwDot1xSessDispByPortUserState
-                    TruthValue, 
+                    TruthValue,
                 hwDot1xSessDispByPortUserVlanId
-                    Integer32,  
+                    Integer32,
                 hwDot1xSessDispByPortUserQinqId
-                    Integer32, 
+                    Integer32,
                 hwDot1xSessDispByPortTemplateIndex
-                    Integer32,  
+                    Integer32,
                 hwDot1xSessDispByPortHandShakeSwitch
-                    TruthValue,    
+                    TruthValue,
                 hwDot1xSessDispByPortReauth
-                    TruthValue             
+                    TruthValue
              }
 
        hwDot1xSessDispByPortIndex OBJECT-TYPE
@@ -590,7 +590,7 @@
             DESCRIPTION
                 "The Index of port Interface."
             ::= { hwDot1xSessionDisplayByPortEntry 1 }
-        
+
        hwDot1xSessDispByPortUserIndex OBJECT-TYPE
             SYNTAX Integer32(0..49151)
             MAX-ACCESS not-accessible
@@ -598,23 +598,23 @@
             DESCRIPTION
                 "The Index of User."
             ::= { hwDot1xSessionDisplayByPortEntry 2 }
-       
+
         hwDot1xSessDispByPortIfName OBJECT-TYPE
             SYNTAX DisplayString
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
                 "The interface name of the online user."
-            ::= { hwDot1xSessionDisplayByPortEntry 3 } 
-                 
+            ::= { hwDot1xSessionDisplayByPortEntry 3 }
+
         hwDot1xSessDispByPortUserMac OBJECT-TYPE
             SYNTAX MacAddress
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
                 "The mac of the user online."
-            ::= { hwDot1xSessionDisplayByPortEntry 4 }    
-    
+            ::= { hwDot1xSessionDisplayByPortEntry 4 }
+
         hwDot1xSessDispByPortUserState OBJECT-TYPE
             SYNTAX TruthValue
             MAX-ACCESS read-only
@@ -622,7 +622,7 @@
             DESCRIPTION
                 "The authenticate status of the user online."
             DEFVAL { close }
-            ::= { hwDot1xSessionDisplayByPortEntry 5 } 
+            ::= { hwDot1xSessionDisplayByPortEntry 5 }
 
         hwDot1xSessDispByPortUserVlanId OBJECT-TYPE
             SYNTAX Integer32(1..4094)
@@ -630,16 +630,16 @@
             STATUS current
             DESCRIPTION
                 "The vlan Id of the user."
-            ::= { hwDot1xSessionDisplayByPortEntry 6 }  
-            
+            ::= { hwDot1xSessionDisplayByPortEntry 6 }
+
         hwDot1xSessDispByPortUserQinqId OBJECT-TYPE
             SYNTAX Integer32(1..4094)
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
                 "The Qinq Id of the user."
-            ::= { hwDot1xSessionDisplayByPortEntry 7 }   
-            
+            ::= { hwDot1xSessionDisplayByPortEntry 7 }
+
         hwDot1xSessDispByPortTemplateIndex OBJECT-TYPE
             SYNTAX Integer32(1..256)
             MAX-ACCESS read-only
@@ -656,7 +656,7 @@
                 "The HandShake Switch of the user online."
             DEFVAL { close }
             ::= { hwDot1xSessionDisplayByPortEntry 9 }
-            
+
         hwDot1xSessDispByPortReauth OBJECT-TYPE
             SYNTAX TruthValue
             MAX-ACCESS read-only
@@ -673,7 +673,7 @@
             DESCRIPTION
                 "The table displays the infomations of the online users according to the Slot."
             ::= { hwSrvcfgEapMibObjects 17 }
-        
+
         hwDot1xSessionDisplayBySlotEntry OBJECT-TYPE
             SYNTAX HwDot1xSessionDisplayBySlotEntry
             MAX-ACCESS not-accessible
@@ -682,29 +682,29 @@
                 "An entry in the Slot display table."
             INDEX { hwDot1xSessDispBySlotIndex, hwDot1xSessDispBySlotUserIndex }
             ::= { hwDot1xSessionDisplayBySlotTable 1 }
-        
+
         HwDot1xSessionDisplayBySlotEntry ::=
-            SEQUENCE { 
+            SEQUENCE {
                 hwDot1xSessDispBySlotIndex
-                    Integer32,  
+                    Integer32,
                 hwDot1xSessDispBySlotUserIndex
-                    Integer32, 
+                    Integer32,
                 hwDot1xSessDispBySlotIfName
-                    DisplayString,   
+                    DisplayString,
                 hwDot1xSessDispBySlotUserMac
-                    MacAddress,  
+                    MacAddress,
                 hwDot1xSessDispBySlotUserState
-                    TruthValue, 
+                    TruthValue,
                 hwDot1xSessDispBySlotUserVlanId
-                    Integer32,  
+                    Integer32,
                 hwDot1xSessDispBySlotUserQinqId
-                    Integer32, 
+                    Integer32,
                 hwDot1xSessDispBySlotTemplateIndex
-                    Integer32,  
+                    Integer32,
                 hwDot1xSessDispBySlotHandShakeSwitch
-                    TruthValue,    
+                    TruthValue,
                 hwDot1xSessDispBySlotReauth
-                    TruthValue             
+                    TruthValue
              }
 
         hwDot1xSessDispBySlotIndex OBJECT-TYPE
@@ -714,7 +714,7 @@
             DESCRIPTION
                 "The Index of Slot."
             ::= { hwDot1xSessionDisplayBySlotEntry 1 }
-              
+
         hwDot1xSessDispBySlotUserIndex OBJECT-TYPE
             SYNTAX Integer32(0..49151)
             MAX-ACCESS not-accessible
@@ -729,16 +729,16 @@
             STATUS current
             DESCRIPTION
                 "The interface name of the online user."
-            ::= { hwDot1xSessionDisplayBySlotEntry 3 }    
-            
+            ::= { hwDot1xSessionDisplayBySlotEntry 3 }
+
         hwDot1xSessDispBySlotUserMac OBJECT-TYPE
             SYNTAX MacAddress
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
                 "The mac of the user online."
-            ::= { hwDot1xSessionDisplayBySlotEntry 4 }    
-    
+            ::= { hwDot1xSessionDisplayBySlotEntry 4 }
+
         hwDot1xSessDispBySlotUserState OBJECT-TYPE
             SYNTAX TruthValue
             MAX-ACCESS read-only
@@ -746,7 +746,7 @@
             DESCRIPTION
                 "The authenticate status of the user online."
             DEFVAL { close }
-            ::= { hwDot1xSessionDisplayBySlotEntry 5 } 
+            ::= { hwDot1xSessionDisplayBySlotEntry 5 }
 
         hwDot1xSessDispBySlotUserVlanId OBJECT-TYPE
             SYNTAX Integer32(1..4094)
@@ -754,16 +754,16 @@
             STATUS current
             DESCRIPTION
                 "The vlan Id of the user."
-            ::= { hwDot1xSessionDisplayBySlotEntry 6 }  
-            
+            ::= { hwDot1xSessionDisplayBySlotEntry 6 }
+
         hwDot1xSessDispBySlotUserQinqId OBJECT-TYPE
             SYNTAX Integer32(1..4094)
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
                 "The Qinq Id of the user."
-            ::= { hwDot1xSessionDisplayBySlotEntry 7 }   
-            
+            ::= { hwDot1xSessionDisplayBySlotEntry 7 }
+
         hwDot1xSessDispBySlotTemplateIndex OBJECT-TYPE
             SYNTAX Integer32(1..256)
             MAX-ACCESS read-only
@@ -780,7 +780,7 @@
                 "The HandShake Switch of the user online."
             DEFVAL { close }
             ::= { hwDot1xSessionDisplayBySlotEntry 9 }
-            
+
         hwDot1xSessDispBySlotReauth OBJECT-TYPE
             SYNTAX TruthValue
             MAX-ACCESS read-only
@@ -797,7 +797,7 @@
             DESCRIPTION
                 "The table displays the infomations of the online users according to the Mac."
             ::= { hwSrvcfgEapMibObjects 18 }
-        
+
         hwDot1xSessionDisplayByMacEntry OBJECT-TYPE
             SYNTAX HwDot1xSessionDisplayByMacEntry
             MAX-ACCESS not-accessible
@@ -806,53 +806,53 @@
                 "An entry in the Mac display table."
             INDEX { hwDot1xSessDispByMacUserMac }
             ::= { hwDot1xSessionDisplayByMacTable 1 }
-        
+
         HwDot1xSessionDisplayByMacEntry ::=
-            SEQUENCE { 
+            SEQUENCE {
                 hwDot1xSessDispByMacUserIndex
-                    Integer32, 
+                    Integer32,
                 hwDot1xSessDispByMacIfName
                     DisplayString,
                 hwDot1xSessDispByMacUserMac
-                    MacAddress,  
+                    MacAddress,
                 hwDot1xSessDispByMacUserState
-                    TruthValue, 
+                    TruthValue,
                 hwDot1xSessDispByMacUserVlanId
-                    Integer32,  
+                    Integer32,
                 hwDot1xSessDispByMacUserQinqId
-                    Integer32, 
+                    Integer32,
                 hwDot1xSessDispByMacTemplateIndex
-                    Integer32,  
+                    Integer32,
                 hwDot1xSessDispByMacHandShakeSwitch
-                    TruthValue,    
+                    TruthValue,
                 hwDot1xSessDispByMacReauth
-                    TruthValue             
+                    TruthValue
              }
-           
+
         hwDot1xSessDispByMacUserIndex OBJECT-TYPE
             SYNTAX Integer32(0..49151)
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
                 "The index of the user."
-            ::= { hwDot1xSessionDisplayByMacEntry 1 }  
-        
+            ::= { hwDot1xSessionDisplayByMacEntry 1 }
+
         hwDot1xSessDispByMacIfName OBJECT-TYPE
             SYNTAX DisplayString
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
                 "The interface name of the online user."
-            ::= { hwDot1xSessionDisplayByMacEntry 2 } 
-    
+            ::= { hwDot1xSessionDisplayByMacEntry 2 }
+
         hwDot1xSessDispByMacUserMac OBJECT-TYPE
             SYNTAX MacAddress
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
                 "The mac of the user online."
-            ::= { hwDot1xSessionDisplayByMacEntry 3 }  
-              
+            ::= { hwDot1xSessionDisplayByMacEntry 3 }
+
         hwDot1xSessDispByMacUserState OBJECT-TYPE
             SYNTAX TruthValue
             MAX-ACCESS read-only
@@ -860,7 +860,7 @@
             DESCRIPTION
                 "The authenticate status of the user online."
             DEFVAL { close }
-            ::= { hwDot1xSessionDisplayByMacEntry 4 } 
+            ::= { hwDot1xSessionDisplayByMacEntry 4 }
 
         hwDot1xSessDispByMacUserVlanId OBJECT-TYPE
             SYNTAX Integer32(1..4094)
@@ -868,16 +868,16 @@
             STATUS current
             DESCRIPTION
                 "The vlan Id of the user."
-            ::= { hwDot1xSessionDisplayByMacEntry 5 }  
-            
+            ::= { hwDot1xSessionDisplayByMacEntry 5 }
+
         hwDot1xSessDispByMacUserQinqId OBJECT-TYPE
             SYNTAX Integer32(1..4094)
             MAX-ACCESS read-only
             STATUS current
             DESCRIPTION
                 "The Qinq Id of the user."
-            ::= { hwDot1xSessionDisplayByMacEntry 6 }   
-            
+            ::= { hwDot1xSessionDisplayByMacEntry 6 }
+
         hwDot1xSessDispByMacTemplateIndex OBJECT-TYPE
             SYNTAX Integer32(1..256)
             MAX-ACCESS read-only
@@ -894,7 +894,7 @@
                 "The HandShake Switch of the user online."
             DEFVAL { close }
             ::= { hwDot1xSessionDisplayByMacEntry 8 }
-            
+
         hwDot1xSessDispByMacReauth OBJECT-TYPE
             SYNTAX TruthValue
             MAX-ACCESS read-only
@@ -903,7 +903,7 @@
                 "The Reauthenticate status of the user online."
             DEFVAL { close }
             ::= { hwDot1xSessionDisplayByMacEntry 9 }
-  
+
         hwPacketStatisticsTable OBJECT-TYPE
             SYNTAX SEQUENCE OF HwPacketStatisticsEntry
             MAX-ACCESS not-accessible
@@ -911,7 +911,7 @@
             DESCRIPTION
                 "The table displays the packet statistics of the Slot."
             ::= { hwSrvcfgEapMibObjects 19 }
-        
+
         hwPacketStatisticsEntry OBJECT-TYPE
             SYNTAX HwPacketStatisticsEntry
             MAX-ACCESS not-accessible
@@ -920,31 +920,31 @@
                 "An entry in the table of packet statistics display ."
             INDEX { hwSlotIndex }
             ::= { hwPacketStatisticsTable 1 }
-         
+
         HwPacketStatisticsEntry ::=
-            SEQUENCE {  
+            SEQUENCE {
                 hwSlotIndex
-                    Integer32, 
+                    Integer32,
                 hwEapReqID
-                    Integer32, 
+                    Integer32,
                 hwEapRespID
                     Integer32,
                 hwEapReqChallenge
-                    Integer32,  
+                    Integer32,
                 hwEapRespChallenge
-                    Integer32, 
+                    Integer32,
                 hwEapSuccess
-                    Integer32,  
+                    Integer32,
                 hwEapFailure
-                    Integer32, 
+                    Integer32,
                 hwEapStart
-                    Integer32,  
+                    Integer32,
                 hwEapLogOff
-                    Integer32,    
+                    Integer32,
                 hwEapKey
-                    Integer32             
+                    Integer32
              }
-   
+
         hwSlotIndex OBJECT-TYPE
             SYNTAX Integer32 (1..16)
             MAX-ACCESS read-only
@@ -961,7 +961,7 @@
             DESCRIPTION
                 "EAP_REQ/ID"
             ::= { hwPacketStatisticsEntry 2 }
-             
+
         hwEapRespID OBJECT-TYPE
             SYNTAX Integer32 (0..4294967295)
             MAX-ACCESS read-only
@@ -1026,21 +1026,21 @@
                 "EAP_KEY"
             ::= { hwPacketStatisticsEntry 10 }
 
- 
-    
+
+
 --
 -- Traps Identifier
 --
         hwSrvcfgEapMibTraps OBJECT IDENTIFIER ::= { hwBRASSrvcfgEap 2 }
-        
+
             hwSrvcfgEapMaxUserAlarm NOTIFICATION-TYPE
-                   OBJECTS { ifDescr } 
-                   STATUS current     
-                   DESCRIPTION 
+                   OBJECTS { ifDescr }
+                   STATUS current
+                   DESCRIPTION
                            "The number of ahthenticate users is reached the max number. "
                    ::= { hwSrvcfgEapMibTraps 1 }
 
-        hwSrvcfgEapMibUserLimitTraps OBJECT IDENTIFIER ::= { hwBRASSrvcfgEap 3 }    
+        hwSrvcfgEapMibUserLimitTraps OBJECT IDENTIFIER ::= { hwBRASSrvcfgEap 3 }
         hwEapTrapOid OBJECT IDENTIFIER ::= { hwSrvcfgEapMibUserLimitTraps 1 }
 
         hwEapUserPortMaxNumThreshold OBJECT-TYPE
@@ -1085,59 +1085,59 @@
 
         hwEapTrapsDefine OBJECT IDENTIFIER ::= { hwSrvcfgEapMibUserLimitTraps 2 }
         hwEapTraps OBJECT IDENTIFIER ::= { hwEapTrapsDefine 0 }
-        
-        hwEapUserPortMaxNum NOTIFICATION-TYPE 
+
+        hwEapUserPortMaxNum NOTIFICATION-TYPE
             OBJECTS { ifDescr, hwEapUserPortMaxNumThreshold }
             STATUS current
             DESCRIPTION
                 "
                 1 Notice/Trap name:  Reach the eap port user threshold
-                2 Notice/Trap generation cause:  the number of the online eap user in this port reaches the threshold 
-                
+                2 Notice/Trap generation cause:  the number of the online eap user in this port reaches the threshold
+
                 "
             ::= { hwEapTraps 1 }
 
-        hwEapUserPortMaxNumResume NOTIFICATION-TYPE 
+        hwEapUserPortMaxNumResume NOTIFICATION-TYPE
             OBJECTS { ifDescr, hwEapUserPortMaxNumThresholdResume }
             STATUS current
             DESCRIPTION
                 "
                 1 Notice/Trap name:  under the eap port user threshold
-                2 Notice/Trap generation cause:  the number of the online eap user in this port is under the threshold 
-                
+                2 Notice/Trap generation cause:  the number of the online eap user in this port is under the threshold
+
                 "
             ::= { hwEapTraps 2 }
 
-       hwEapUserSlotMaxNum NOTIFICATION-TYPE 
+       hwEapUserSlotMaxNum NOTIFICATION-TYPE
             OBJECTS { hwEapUserSlot,hwEapUserSlotMaxNumThreshold }
             STATUS current
             DESCRIPTION
                 "
                 1 Notice/Trap name:  Reach the eap slot user threshold
-                2 Notice/Trap generation cause:  the number of the online eap user in this slot reaches the threshold 
+                2 Notice/Trap generation cause:  the number of the online eap user in this slot reaches the threshold
 
                 "
-            ::= { hwEapTraps 3 } 
+            ::= { hwEapTraps 3 }
 
-        hwEapUserTotalMaxNum NOTIFICATION-TYPE 
+        hwEapUserTotalMaxNum NOTIFICATION-TYPE
             OBJECTS { hwEapUserTotalMaxNumThreshold }
             STATUS current
             DESCRIPTION
                 "
                 1 Notice/Trap name:  Reach the eap total user threshold
-                2 Notice/Trap generation cause:  the number of the online eap user in this device reaches the threshold 
+                2 Notice/Trap generation cause:  the number of the online eap user in this device reaches the threshold
 
                 "
-            ::= { hwEapTraps 4 } 
+            ::= { hwEapTraps 4 }
 
      --  ============== conformance information ==============
         hwSrvcfgEapConformance OBJECT IDENTIFIER ::= { hwBRASSrvcfgEap 4 }
         hwSrvcfgEapCompliances OBJECT IDENTIFIER ::= { hwSrvcfgEapConformance 1 }
-        
+
         hwSrvcfgEapCompliance MODULE-COMPLIANCE
                STATUS      current
                DESCRIPTION
-                   "The compliance statement for systems supporting 
+                   "The compliance statement for systems supporting
                 the this module."
 
                MODULE      -- this module
@@ -1145,67 +1145,67 @@
                    {
                        hwDot1xSystemConfigGroup,
                        hwDot1xPortConfigGroup
-                   }  
-                                              
-              ::= { hwSrvcfgEapCompliances 1 }  
-              
-          
-        --  ============== groups ==============  
-        hwDot1xSystemConfigGroups OBJECT IDENTIFIER ::= { hwSrvcfgEapConformance 2 } 
-        
+                   }
+
+              ::= { hwSrvcfgEapCompliances 1 }
+
+
+        --  ============== groups ==============
+        hwDot1xSystemConfigGroups OBJECT IDENTIFIER ::= { hwSrvcfgEapConformance 2 }
+
         hwDot1xSystemConfigGroup OBJECT-GROUP
-            OBJECTS { 
+            OBJECTS {
                 hwDot1xTemplateIndex,
                 hwDot1xHandshakeSwitch,
                 hwDot1xHandshakeCount,
                 hwDot1xHandshakeInterval,
                 hwDot1xIfEAPEnd,
                 hwDot1xEAPEndPapChap,
-                hwDot1xIfSendEAPSIMParameter,                    
+                hwDot1xIfSendEAPSIMParameter,
                 hwDot1xRowStatus
-             }       
+             }
             STATUS current
-            DESCRIPTION 
+            DESCRIPTION
                 "The Dot1x System Config group."
             ::= { hwDot1xSystemConfigGroups 1 }
-            
+
 
         hwDot1xPortConfigGroup OBJECT-GROUP
-            OBJECTS { 
-                hwDot1xGlobal, hwDot1xAuthenMethod, hwDot1xDhcpTrigger, hwDot1xHandshake, hwDot1xQuietPeriod, 
-                hwDot1xRetry, hwDot1xTimerHandshakePeriod, hwDot1xTimerQuietPeriod, hwDot1xTimerServerTimeout, 
-                hwDot1xTimerClientTimeout, hwDot1xTimerTxPeriod, hwDot1xReauthenPeriod, hwDot1xPortSwitch, 
-                hwDot1xPortGuestVlan, hwDot1xPortMaxUser, hwDot1xPortControl, hwDot1xPortMethod, 
+            OBJECTS {
+                hwDot1xGlobal, hwDot1xAuthenMethod, hwDot1xDhcpTrigger, hwDot1xHandshake, hwDot1xQuietPeriod,
+                hwDot1xRetry, hwDot1xTimerHandshakePeriod, hwDot1xTimerQuietPeriod, hwDot1xTimerServerTimeout,
+                hwDot1xTimerClientTimeout, hwDot1xTimerTxPeriod, hwDot1xReauthenPeriod, hwDot1xPortSwitch,
+                hwDot1xPortGuestVlan, hwDot1xPortMaxUser, hwDot1xPortControl, hwDot1xPortMethod,
                 hwDot1xPortReauthen, hwDot1xMacByPass, hwDot1xModemVersion, hwDot1xQuietFailTimes, hwDot1xMacByPassMacAuthFirst,
                 hwUserAccessLimit,hwDot1xTriggerDhcpbind
-             }       
+             }
             STATUS current
-            DESCRIPTION 
+            DESCRIPTION
                 "The Dot1x Port Config group."
             ::= { hwDot1xSystemConfigGroups 2 }
-                
-                
+
+
         hwDot1xPortTrapGroup NOTIFICATION-GROUP
             NOTIFICATIONS { hwSrvcfgEapMaxUserAlarm }
             STATUS current
-            DESCRIPTION 
+            DESCRIPTION
                 "The Dot1x's Notification group."
-            ::= { hwDot1xSystemConfigGroups 3 } 
-            
+            ::= { hwDot1xSystemConfigGroups 3 }
+
         hwEapTrapsNotificationGroup NOTIFICATION-GROUP
             NOTIFICATIONS { hwEapUserPortMaxNum, hwEapUserPortMaxNumResume, hwEapUserSlotMaxNum, hwEapUserTotalMaxNum }
             STATUS current
-            DESCRIPTION 
+            DESCRIPTION
                 "This object indicates the Eap Trap group."
             ::= { hwDot1xSystemConfigGroups 4 }
-            
-            
+
+
         hwEapTrapOidGroup OBJECT-GROUP
             OBJECTS { hwEapUserPortMaxNumThreshold, hwEapUserPortMaxNumThresholdResume, hwEapUserSlot, hwEapUserSlotMaxNumThreshold, hwEapUserTotalMaxNumThreshold }
             STATUS current
-            DESCRIPTION 
+            DESCRIPTION
                 "This object indicates the Eap Trap group."
             ::= { hwDot1xSystemConfigGroups 5 }
-                
-        --  ============== conformance information define end ==============                   
+
+        --  ============== conformance information define end ==============
         END

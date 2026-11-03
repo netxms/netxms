@@ -532,4 +532,3 @@ cswNotificationGroup NOTIFICATION-GROUP
     ::=  { cswStackWiseMIBGroups 2 }
 
 END
-

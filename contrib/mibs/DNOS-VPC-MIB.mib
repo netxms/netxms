@@ -1,7 +1,7 @@
 DNOS-VPC-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, 
+    MODULE-IDENTITY, OBJECT-TYPE,
     Integer32, Unsigned32, IpAddress     FROM SNMPv2-SMI
     TruthValue, RowStatus, MacAddress    FROM SNMPv2-TC
     InterfaceIndex                       FROM IF-MIB
@@ -19,7 +19,7 @@ IMPORTS
         "201401200000Z"  -- 20 January 2014 12:00:00 GMT
     DESCRIPTION
         "Initial version."
-       
+
     ::= { dnOS 200 }
 
 --**************************************************************************************
@@ -195,10 +195,10 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
 
     agentPeerConfigRowIndex   OBJECT-TYPE
          SYNTAX      Unsigned32(1..1)
-         MAX-ACCESS  not-accessible 
+         MAX-ACCESS  not-accessible
          STATUS      obsolete
          DESCRIPTION
-                     "Index." 
+                     "Index."
          ::= { agentPeerConfigEntry 1 }
 
      agentPeerIpAddr OBJECT-TYPE
@@ -210,7 +210,7 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
                       configuration is used by the dual control plane detection
                       protocol (DCPDP) on the VPC switches.
 
-                      NOTE: In order to set value for the object, need to set values for agentPeerIpAddr, 
+                      NOTE: In order to set value for the object, need to set values for agentPeerIpAddr,
                       agentSourceIpAddr, agentPeerRowStatus objects simultaneously.
                       To reset the object to the default state, the agentPeerRowStatus object should be used."
           ::= { agentPeerConfigEntry 2 }
@@ -224,7 +224,7 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
                       the source IP by the dual control plane detection protocol (DCPDP)
                       on the VPC switches.
 
-                      NOTE: In order to set value for the object, need to set values for agentPeerIpAddr, 
+                      NOTE: In order to set value for the object, need to set values for agentPeerIpAddr,
                       agentSourceIpAddr, agentPeerRowStatus objects simultaneously.
                       To reset the object to the default state, the agentPeerRowStatus object should be used."
           ::= { agentPeerConfigEntry 3 }
@@ -238,7 +238,7 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
                       the DCPDP messages.
                       Configurable range is 1 to 65535. Default value is 50000.
 
-                      NOTE: In order to set value for the object, need to set values for agentPeerIpAddr, 
+                      NOTE: In order to set value for the object, need to set values for agentPeerIpAddr,
                       agentSourceIpAddr, agentPeerRowStatus, agentDcpdpUdpPort objects simultaneously.
                       To reset the object to the default state, the agentPeerRowStatus object should be used."
           ::= { agentPeerConfigEntry 4 }
@@ -308,12 +308,12 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
 
     agentVpcDomainIndex   OBJECT-TYPE
          SYNTAX      Unsigned32(1..255)
-         MAX-ACCESS  read-write 
+         MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "VPC Domain ID."
           ::= { agentVpcDomainConfigEntry 1 }
-	 		  		  
+
     agentVpcDomainKeepalivePriority OBJECT-TYPE
          SYNTAX      Unsigned32(1..255)
          MAX-ACCESS  read-write
@@ -385,18 +385,18 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "To configure the MAC address for the VPC domain. This mac-address 
-                     is used in the LACP PDUs and STP BPDUs 
-                     that are sent out on VPC member ports. For the VPC domain to use 
-                     the manually configured VPC MAC address, it should be manually 
-                     configured on both the VPC peers and should be the same. If VPC 
-                     is configured on only one of the VPC peers or is configured 
-                     different on VPC peers, auto-generated MAC address is used. 
-                     The specified MAC address should be a unicast MAC address in 
-                     <aa:bb:cc:dd:ee:ff> format and should not be equal to the 
-                     MAC address of either primary VPC or secondary VPC device.  
-                     The manually configured VPC MAC address is used instead of 
-                     auto-generated VPC MAC address only if the VPC feature is 
+                     "To configure the MAC address for the VPC domain. This mac-address
+                     is used in the LACP PDUs and STP BPDUs
+                     that are sent out on VPC member ports. For the VPC domain to use
+                     the manually configured VPC MAC address, it should be manually
+                     configured on both the VPC peers and should be the same. If VPC
+                     is configured on only one of the VPC peers or is configured
+                     different on VPC peers, auto-generated MAC address is used.
+                     The specified MAC address should be a unicast MAC address in
+                     <aa:bb:cc:dd:ee:ff> format and should not be equal to the
+                     MAC address of either primary VPC or secondary VPC device.
+                     The manually configured VPC MAC address is used instead of
+                     auto-generated VPC MAC address only if the VPC feature is
                      re-enabled after configuring the VPC MAC address.
                      "
 
@@ -408,10 +408,10 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "To configure the system priority for the VPC domain. This is used 
-                      in the LACP PDUs sent out on VPC member ports. System-priority 
-                      should be configured same on both the VPC peers. If the configured 
-                      VPC system priority is different on VPC peers, then VPC will not 
+                     "To configure the system priority for the VPC domain. This is used
+                      in the LACP PDUs sent out on VPC member ports. System-priority
+                      should be configured same on both the VPC peers. If the configured
+                      VPC system priority is different on VPC peers, then VPC will not
                       come up. The default priority value is 32767.
                       "
           ::= { agentVpcDomainConfigEntry 7 }
@@ -422,7 +422,7 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
          STATUS      current
          DESCRIPTION
                      "To configure the DCPDP transmission interval.
-                      NOTE: In order to set value for the object, need to set values for DCPDP 
+                      NOTE: In order to set value for the object, need to set values for DCPDP
                       transmission interval and reception timeout simultaneously."
           ::= { agentVpcDomainConfigEntry 8 }
 
@@ -432,10 +432,10 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
          STATUS      current
          DESCRIPTION
                      "To configure the DCPDP reception timeout.
-                      NOTE: In order to set value for the object, need to set values for DCPDP 
+                      NOTE: In order to set value for the object, need to set values for DCPDP
                       transmission interval and reception timeout simultaneously."
-          ::= { agentVpcDomainConfigEntry 9 }		  
-		  
+          ::= { agentVpcDomainConfigEntry 9 }
+
      agentVpcDomainPeerIpAddr OBJECT-TYPE
          SYNTAX      IpAddress
          MAX-ACCESS  read-write
@@ -445,8 +445,8 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
                       configuration is used by the dual control plane detection
                       protocol (DCPDP) on the VPC switches.
 
-                      NOTE: In order to set value for the object, need to set values for 
-                      IP address of the peer MLAG switch and destination IP of the DCPDP 
+                      NOTE: In order to set value for the object, need to set values for
+                      IP address of the peer MLAG switch and destination IP of the DCPDP
                       message simultaneously."
           ::= { agentVpcDomainConfigEntry 10 }
 
@@ -459,8 +459,8 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
                       the source IP by the dual control plane detection protocol (DCPDP)
                       on the VPC switches.
 
-                      NOTE: In order to set value for the object, need to set values for 
-                      IP address of the peer MLAG switch and destination IP of the DCPDP 
+                      NOTE: In order to set value for the object, need to set values for
+                      IP address of the peer MLAG switch and destination IP of the DCPDP
                       message simultaneously."
           ::= { agentVpcDomainConfigEntry 11 }
 
@@ -473,9 +473,9 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
                       the DCPDP messages.
                       Configurable range is 1 to 65535. Default value is 50000.
 
-                      NOTE: In order to set value for the object, need to set values for 
-                      IP address of the peer MLAG switch, destination IP of the DCPDP 
-                      message and UDP port on which the MLAG switch listens to the 
+                      NOTE: In order to set value for the object, need to set values for
+                      IP address of the peer MLAG switch, destination IP of the DCPDP
+                      message and UDP port on which the MLAG switch listens to the
                       DCPDP messages simultaneously."
           ::= { agentVpcDomainConfigEntry 12 }
 
@@ -486,7 +486,7 @@ agentVpcConfigGroup 			 OBJECT IDENTIFIER ::= { fastPathVpc 1 }
          DESCRIPTION
                        "Status of VPC Domain."
           ::= { agentVpcDomainConfigEntry 13 }
-		  
+
 --**************************************************************************************
 -- agentVpcPeerKeepAliveStatsGroup
 --
@@ -798,9 +798,9 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
                         DISABLE:   In this state, the VPC interfaces, if any are shut down.
                         LISTEN:    The keepalive does not advertise any packets.
                         READY:     The keepalive component starts sending keepalive messages periodically with the state as READY.
-                        PRIMARY:   Traffic over VPC interfaces is allowed to be forwarded. 
+                        PRIMARY:   Traffic over VPC interfaces is allowed to be forwarded.
                                    The keepalive protocol continues to advertise keepalive messages with the state as PRIMARY.
-                        SECONDARY: Traffic over VPC interfaces is allowed to be forwarded. 
+                        SECONDARY: Traffic over VPC interfaces is allowed to be forwarded.
                                    The keepalive protocol continues to advertise keepalive messages with the state as SECONDARY."
              ::= { agentVpcStatusGroup 9 }
 
@@ -837,7 +837,7 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
              ::= { agentVpcStatusGroup 13 }
 
     agentVpcSelfMemberStatusTable      OBJECT-TYPE
-          SYNTAX        SEQUENCE OF AgentVpcSelfMemberStatusEntry 
+          SYNTAX        SEQUENCE OF AgentVpcSelfMemberStatusEntry
           MAX-ACCESS    not-accessible
           STATUS        current
           DESCRIPTION
@@ -848,9 +848,9 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
           SYNTAX        AgentVpcSelfMemberStatusEntry
           MAX-ACCESS    not-accessible
           STATUS        current
-          DESCRIPTION    
+          DESCRIPTION
                         "VPC self member port status entry."
-          INDEX         { agentVpcSelfMemberStatusVpcId, 
+          INDEX         { agentVpcSelfMemberStatusVpcId,
                           agentVpcSelfMemberStatusIntfId }
              ::= { agentVpcSelfMemberStatusTable 1 }
 
@@ -867,7 +867,7 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
           SYNTAX        Unsigned32 (1..63)
           MAX-ACCESS    read-only
           STATUS        current
-          DESCRIPTION   
+          DESCRIPTION
                         "VPC Id."
              ::= { agentVpcSelfMemberStatusEntry 1 }
 
@@ -875,23 +875,23 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
           SYNTAX        InterfaceIndex
           MAX-ACCESS    read-only
           STATUS        current
-          DESCRIPTION   
+          DESCRIPTION
                         "Interface Id."
              ::= { agentVpcSelfMemberStatusEntry 2 }
 
     agentVpcSelfMemberStatusIntfState  OBJECT-TYPE
           SYNTAX        INTEGER {
                           up   (1),
-                          down (2) 
+                          down (2)
                         }
           MAX-ACCESS    read-only
           STATUS        current
-          DESCRIPTION   
+          DESCRIPTION
                         "VPC self member interface status."
              ::= { agentVpcSelfMemberStatusEntry 3 }
 
     agentVpcPeerMemberStatusTable       OBJECT-TYPE
-         SYNTAX      SEQUENCE OF AgentVpcPeerMemberStatusEntry 
+         SYNTAX      SEQUENCE OF AgentVpcPeerMemberStatusEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -902,9 +902,9 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
          SYNTAX      AgentVpcPeerMemberStatusEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION    
+         DESCRIPTION
                      "VPC peer member port status entry."
-         INDEX       { agentVpcPeerMemberStatusVpcId, 
+         INDEX       { agentVpcPeerMemberStatusVpcId,
                        agentVpcPeerMemberStatusIntfId }
              ::= { agentVpcPeerMemberStatusTable 1 }
 
@@ -921,7 +921,7 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
           SYNTAX        Unsigned32 (1..63)
           MAX-ACCESS    read-only
           STATUS        current
-          DESCRIPTION   
+          DESCRIPTION
                         "VPC Id."
              ::= { agentVpcPeerMemberStatusEntry 1 }
 
@@ -929,23 +929,23 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
           SYNTAX        InterfaceIndex
           MAX-ACCESS    read-only
           STATUS        current
-          DESCRIPTION   
+          DESCRIPTION
                         "Interface Id."
              ::= { agentVpcPeerMemberStatusEntry 2 }
 
     agentVpcPeerMemberStatusIntfState  OBJECT-TYPE
           SYNTAX        INTEGER {
                           up   (1),
-                          down (2) 
+                          down (2)
                         }
           MAX-ACCESS    read-only
           STATUS        current
-          DESCRIPTION   
+          DESCRIPTION
                         "VPC peer member interface status."
              ::= { agentVpcPeerMemberStatusEntry 3 }
 
      agentVpcStatusTable        OBJECT-TYPE
-         SYNTAX      SEQUENCE OF AgentVpcStatusEntry 
+         SYNTAX      SEQUENCE OF AgentVpcStatusEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -956,7 +956,7 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
          SYNTAX         AgentVpcStatusEntry
          MAX-ACCESS     not-accessible
          STATUS         current
-         DESCRIPTION    
+         DESCRIPTION
                       "VPC status entry."
           INDEX    {agentVpcStatusId}
           ::= {  agentVpcStatusTable 1 }
@@ -976,7 +976,7 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
           SYNTAX        Unsigned32 (1..63)
           MAX-ACCESS    read-only
           STATUS        current
-          DESCRIPTION   
+          DESCRIPTION
                         "VPC Id."
              ::= {agentVpcStatusEntry 1}
 
@@ -1012,16 +1012,16 @@ agentVpcStatusGroup           OBJECT IDENTIFIER ::= { fastPathVpc 4 }
           DESCRIPTION
                         "The following states of a VPC port-channel interface mean:
                          DISABLE:  The state of a port-channel before VPC functionality is enabled on it.
-                         WAIT:     The VPC port-channel 'waits' for the VPC functionality 
+                         WAIT:     The VPC port-channel 'waits' for the VPC functionality
                                    to be enabled on a port-channel of the peer switch.
-                         ERROR:    After VPC is enabled on a port-channel of both peer switches, 
-                                   the DOT3AD component checks to see if all entry criteria are met 
-                                   for the port-channel to be operational. 
-                         ACTIVE:   If the entry criteria are satisfied, then the VPC interface is set 
-                                   to ACTIVE and is operationally enabled. 
+                         ERROR:    After VPC is enabled on a port-channel of both peer switches,
+                                   the DOT3AD component checks to see if all entry criteria are met
+                                   for the port-channel to be operational.
+                         ACTIVE:   If the entry criteria are satisfied, then the VPC interface is set
+                                   to ACTIVE and is operationally enabled.
                                    Traffic is now allowed to flow through the VPC member ports.
-                         INACTIVE: If links connected to the VPC member ports are down, 
-                                   then the VPC interface is set to INACTIVE on the switch. 
+                         INACTIVE: If links connected to the VPC member ports are down,
+                                   then the VPC interface is set to INACTIVE on the switch.
                                    The VPC will remain ACTIVE on the peer switch."
              ::= {agentVpcStatusEntry 4}
 END

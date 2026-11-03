@@ -34,13 +34,13 @@ snWireless MODULE-IDENTITY
 			4980 Great America Parkway,
 			Santa Clara, CA 95054
 			Email: support@foundrynet.com
-			Phone: 1-877-TURBO-CALL"    
+			Phone: 1-877-TURBO-CALL"
 	DESCRIPTION
 			""
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION
 			"convert from SMIv1 to SMIv2"
-   ::= {snSwitch  23}	
+   ::= {snSwitch  23}
 
 -- textual conventions
 
@@ -95,7 +95,7 @@ wgIfTable OBJECT-TYPE
 	DESCRIPTION
 		"WiFi Interface Table."
 	::= { snWireless 2 }
-	
+
 wgIfEntry OBJECT-TYPE
 	SYNTAX WgIfEntry
 	MAX-ACCESS not-accessible
@@ -522,5 +522,3 @@ wgVpnPTPolicyPortList OBJECT-TYPE
 	::= { wgVpnPTPolicyEntry 2 }
 
 END
-
-

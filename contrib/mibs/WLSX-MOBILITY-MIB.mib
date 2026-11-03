@@ -3,8 +3,8 @@
 WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
-              
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
+
        MODULE-IDENTITY,
        OBJECT-TYPE,
        snmpModules,
@@ -42,7 +42,7 @@ WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
 		wlsxEnterpriseMibModules
 			FROM ARUBA-MIB;
 
-   wlsxMobilityMIB MODULE-IDENTITY 
+   wlsxMobilityMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -78,7 +78,7 @@ WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
    wlsxMobilityHAFARevocationStatsGroup     			OBJECT IDENTIFIER ::= { wlsxMobilityMIB 6 }
 -- The above group deals with MobileIP HA-FA revocation messages exchange statistics
 
-   wlsxMobilityDomainTable  OBJECT-TYPE 
+   wlsxMobilityDomainTable  OBJECT-TYPE
          SYNTAX       SEQUENCE OF WlsxMobilityDomainEntry
          MAX-ACCESS   not-accessible
          STATUS       current
@@ -97,7 +97,7 @@ WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
 			INDEX { mobilityDomainName }
 		::= { wlsxMobilityDomainTable 1 }
 
-		WlsxMobilityDomainEntry ::= 
+		WlsxMobilityDomainEntry ::=
 		SEQUENCE {
 			mobilityDomainName			DisplayString,
 			mobilityDomainIsExclusive	ArubaEnableValue,
@@ -128,7 +128,7 @@ WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
 		    "Row status object used to indicate the status of the row"
 		::= { wlsxMobilityDomainEntry 3 }
 
-   wlsxMobilityHomeAgentTable  OBJECT-TYPE 
+   wlsxMobilityHomeAgentTable  OBJECT-TYPE
          SYNTAX       SEQUENCE OF WlsxMobilityHomeAgentEntry
          MAX-ACCESS   not-accessible
          STATUS       current
@@ -147,7 +147,7 @@ WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
 			INDEX { mobilityHomeAgentSubnet, mobilityHomeAgentMask, mobilityHomeAgentIp }
 		::= { wlsxMobilityHomeAgentTable 1 }
 
-		WlsxMobilityHomeAgentEntry ::= 
+		WlsxMobilityHomeAgentEntry ::=
 		SEQUENCE {
 			mobilityHomeAgentSubnet			IpAddress,
 			mobilityHomeAgentMask			IpAddress,
@@ -187,7 +187,7 @@ WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
 			"Vlan of the home agent"
 		::= { wlsxMobilityHomeAgentEntry 4 }
 
-   wlsxMobilityHostTable  OBJECT-TYPE 
+   wlsxMobilityHostTable  OBJECT-TYPE
          SYNTAX       SEQUENCE OF WlsxMobilityHostEntry
          MAX-ACCESS   not-accessible
          STATUS       current
@@ -206,7 +206,7 @@ WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
 			INDEX { mobilityHostMac }
 		::= { wlsxMobilityHostTable 1 }
 
-		WlsxMobilityHostEntry ::= 
+		WlsxMobilityHostEntry ::=
 		SEQUENCE {
 			mobilityHostMac				MacAddress,
 			mobilityHostIp				IpAddress,
@@ -342,7 +342,7 @@ WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
             "
 			This describes the number of mobility clients with <No Mobility Service>
-			
+
             "
         ::= { wlsxMobilityProxyStatsGroup 6 }
 
@@ -714,7 +714,7 @@ WLSX-MOBILITY-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			This describes the number of Registration revocation request sent 
+			This describes the number of Registration revocation request sent
             "
         ::= { wlsxMobilityHAFARevocationStatsGroup  1 }
 

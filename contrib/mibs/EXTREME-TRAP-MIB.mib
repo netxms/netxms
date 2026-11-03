@@ -7,8 +7,8 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
 		extremeSlotModuleInsertedType	FROM EXTREME-SYSTEM-MIB
 		extremeSlotModuleState		FROM EXTREME-SYSTEM-MIB
         extremePowerSupplyNumber, extremeFanNumber
-					 	FROM EXTREME-SYSTEM-MIB	
-		extremeCurrentTemperature	FROM EXTREME-SYSTEM-MIB	
+					 	FROM EXTREME-SYSTEM-MIB
+		extremeCurrentTemperature	FROM EXTREME-SYSTEM-MIB
         extremeEsrpGroup, extremeEsrpState,
 		extremeEsrpNetAddress  FROM EXTREME-ESRP-MIB
         extremeEsrpActivePorts, extremeEsrpInternalActivePorts
@@ -29,12 +29,12 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
 	      STATUS current
               DESCRIPTION
                           "A overheat trap indicates that the on board
-                          tempature sensor has reported a overheat 
+                          tempature sensor has reported a overheat
                           condition.  System will shutdown until unit has
 			  suficiently cooled such that operation may begin
                           again.  A cold start trap will be issued when
                           the unit has come back on line."
-              ::= {extremeV1Traps 6} 
+              ::= {extremeV1Traps 6}
 
           extremeFanfailed NOTIFICATION-TYPE
               OBJECTS   { sysUpTime, sysDescr, extremeFanNumber }
@@ -52,7 +52,7 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
               DESCRIPTION
                           "A fan has transitioned out of a failure state and
                           is now operating correctly."
-              ::= {extremeV1Traps 8} 
+              ::= {extremeV1Traps 8}
 
           extremeInvalidLoginAttempt NOTIFICATION-TYPE
               OBJECTS   { sysUpTime, sysDescr }
@@ -60,7 +60,7 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
               DESCRIPTION
                 "A user attempted to login to console or by telnet but was
                  refused access due to incorrect username or password"
-              ::= {extremeV1Traps 9} 
+              ::= {extremeV1Traps 9}
 
           extremePowerSupplyFail NOTIFICATION-TYPE
               OBJECTS   { sysUpTime, sysDescr, extremePowerSupplyNumber }
@@ -68,15 +68,15 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
               DESCRIPTION
                 "One or more sources of power to this agent has failed.
                  Presumably a redundant power-supply has taken over."
-              ::= {extremeV1Traps 10} 
+              ::= {extremeV1Traps 10}
 
           extremePowerSupplyGood NOTIFICATION-TYPE
               OBJECTS   { sysUpTime, sysDescr, extremePowerSupplyNumber }
 	      STATUS current
               DESCRIPTION
-                 "One or more previously bad sources of power to this agent 
+                 "One or more previously bad sources of power to this agent
                  has come back to life without causing an agent restart."
-              ::= {extremeV1Traps 11} 
+              ::= {extremeV1Traps 11}
 
           extremeRpsAlarm NOTIFICATION-TYPE
               OBJECTS   { sysUpTime, sysDescr }
@@ -84,7 +84,7 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
               DESCRIPTION
                           "Attached Redundant Power Supply device is indicating
                            an alarm condition."
-              ::= {extremeV1Traps 12} 
+              ::= {extremeV1Traps 12}
 
           extremeRpsNoAlarm NOTIFICATION-TYPE
               OBJECTS   { sysUpTime, sysDescr }
@@ -92,7 +92,7 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
               DESCRIPTION
                           "Attached Redundant Power Supply device is no longer
                            indicating an alarm condition."
-              ::= {extremeV1Traps 13} 
+              ::= {extremeV1Traps 13}
 
 --
 -- SmartTrap definition
@@ -101,34 +101,34 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
                 OBJECTS   { sysUpTime, sysDescr }
 	        STATUS current
         	DESCRIPTION
-                "Signifies that the value of one of the object identifiers 
-                (or the value of an object below that in the MIB tree) 
-                defined in the extremeSmartTrapRulesTable has changed, 
-                and hence a new entry has been created in the 
-                extremeSmartTrapInstanceTable. Such a trap is sent 
-                at most once every thirty seconds if one or more entry 
-                was created in the last thirty seconds." 
-              ::= {extremeV1Traps 14} 
+                "Signifies that the value of one of the object identifiers
+                (or the value of an object below that in the MIB tree)
+                defined in the extremeSmartTrapRulesTable has changed,
+                and hence a new entry has been created in the
+                extremeSmartTrapInstanceTable. Such a trap is sent
+                at most once every thirty seconds if one or more entry
+                was created in the last thirty seconds."
+              ::= {extremeV1Traps 14}
 
 --
 -- Traps for Black Diamond
 --
 	extremeModuleStateChanged NOTIFICATION-TYPE
-		OBJECTS { sysUpTime, extremeSlotNumber, 
-                            extremeSlotModuleConfiguredType, 
-                            extremeSlotModuleInsertedType, 
+		OBJECTS { sysUpTime, extremeSlotNumber,
+                            extremeSlotModuleConfiguredType,
+                            extremeSlotModuleInsertedType,
                             extremeSlotModuleState }
 	        STATUS current
 		DESCRIPTION
-		"Signifies that the value of the extremeSlotModuleState for 
+		"Signifies that the value of the extremeSlotModuleState for
 		the specified extremeSlotNumber has changed."
-              ::= {extremeV1Traps 15} 
+              ::= {extremeV1Traps 15}
 
 --	extremeModuleOverheat TRAP-TYPE
 --		ENTERPRISE  extremenetworks
 --		VARIABLES {sysUpTime, extremeSlotNumber }
 --		DESCRIPTION
---		"Signifies that the temperature sensor on the module 
+--		"Signifies that the temperature sensor on the module
 --		inside this slot has reported an Overheat condition."
 --	::= 16
 
@@ -150,7 +150,7 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
                 "The server load balancer has activated a group of virtual
                 servers that it normally would not activate.  This may be
                 due to the failure of another server load balancer."
-                
+
         ::= {extremeV1Traps 18}
 
         extremeSlbUnitRemoved NOTIFICATION-TYPE
@@ -184,7 +184,5 @@ EXTREME-TRAP-MIB DEFINITIONS ::= BEGIN
 	the configured timeout period and this neighbor entry is aged
 	out by the device."
         ::= {extremeV1Traps 21}
-        
+
 END
-
-

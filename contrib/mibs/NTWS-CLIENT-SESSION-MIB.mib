@@ -331,7 +331,7 @@ ntwsClSessClientSessPortOrNum OBJECT-TYPE
         "Port number.
         Obsoleted by ntwsClSessClientSessApNum."
     ::= { ntwsClSessClientSessionEntry 12 }
-    
+
 ntwsClSessClientSessVlanTag OBJECT-TYPE
     SYNTAX      Unsigned32
     MAX-ACCESS  read-only
@@ -616,7 +616,7 @@ ntwsClSessClientSessStatsMacAddress OBJECT-TYPE
     DESCRIPTION
         "Client MAC address."
     ::= { ntwsClSessClientSessionStatisticsEntry 1 }
-    
+
 ntwsClSessClientSessStatsUniPktIn OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
@@ -953,7 +953,7 @@ ntwsClientSessClientSessionTableGroupRev2 OBJECT-GROUP
                  ntwsClSessClientSessApSerialNum,
                  ntwsClSessClientSessRadioNum,
 
-                 ntwsClSessClientSessAuthServer,    
+                 ntwsClSessClientSessAuthServer,
                  ntwsClSessClientSessVlanTag,
                  ntwsClSessClientSessTimeStamp,
                  ntwsClSessClientSessSsid,

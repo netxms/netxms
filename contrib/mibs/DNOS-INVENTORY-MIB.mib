@@ -15,7 +15,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
     IMPORTS
         MODULE-IDENTITY, OBJECT-TYPE, Integer32, Gauge32, Counter32,
         Unsigned32, TimeTicks, NOTIFICATION-TYPE  FROM SNMPv2-SMI
-        TEXTUAL-CONVENTION, DisplayString, 
+        TEXTUAL-CONVENTION, DisplayString,
         RowStatus                                 FROM SNMPv2-TC
         MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
                                                   FROM SNMPv2-CONF
@@ -26,11 +26,11 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         ORGANIZATION "Dell, Inc."
         CONTACT-INFO ""
         DESCRIPTION
-            "This MIB defines the objects used for FastPath to 
-            configure and report information and status of units, 
+            "This MIB defines the objects used for FastPath to
+            configure and report information and status of units,
             slots and supported cards."
-        
-        -- Revision history.	  
+
+        -- Revision history.
         REVISION
             "201310150000Z" -- 15 Oct 2013 12:00:00 GMT
         DESCRIPTION
@@ -51,21 +51,21 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "200305261930Z" -- Thu Jun 26 19:30:54 2003 GMT
         DESCRIPTION
             "Initial version."
- 
+
         ::= { dnOS 13 }
 
     AgentInventoryUnitPreference ::= TEXTUAL-CONVENTION
         STATUS      current
         DESCRIPTION
-            "Indicates the preference the unit has for being the 
-            management unit in the stack.  If the value is 0, it 
+            "Indicates the preference the unit has for being the
+            management unit in the stack.  If the value is 0, it
             indicates the unit is disabled for management."
         SYNTAX  INTEGER {
                  disabled(0),
                  unsassigned(1),
                  assigned(2)
                  }
-        
+
     AgentInventoryUnitType ::= TEXTUAL-CONVENTION
         DISPLAY-HINT "x"
         STATUS      current
@@ -96,7 +96,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "Initiates STK copy from management unit to all other management capable units in
             the stack."
         ::= { agentInventoryStackGroup 1 }
-    
+
     agentInventoryStackReload OBJECT-TYPE
         SYNTAX      INTEGER {
                     enable(1),
@@ -107,7 +107,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Initiates stack reload."
         ::= { agentInventoryStackGroup 2 }
-        
+
     agentInventoryStackMaxUnitNumber OBJECT-TYPE
         SYNTAX      Unsigned32
         MAX-ACCESS  read-only
@@ -126,7 +126,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "Indicates the current status of an STK copy from management unit to all other 
+            "Indicates the current status of an STK copy from management unit to all other
             management capable units inthe stack."
         ::= { agentInventoryStackGroup 4 }
 
@@ -193,7 +193,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "TODO"
         INDEX          { agentInventorySupportedUnitIndex }
         ::= { agentInventorySupportedUnitTable 1 }
-         
+
     AgentInventorySupportedUnitEntry ::=
         SEQUENCE {
          agentInventorySupportedUnitIndex
@@ -215,7 +215,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The unit identifier associated with the supported unit."
         ::= { agentInventorySupportedUnitEntry 1 }
-        
+
     agentInventorySupportedUnitModelIdentifier OBJECT-TYPE
         SYNTAX      DisplayString
         MAX-ACCESS  read-only
@@ -269,7 +269,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "Each Instance corresponds with a different unit managed by this agent."
         INDEX          { agentInventoryUnitNumber }
         ::= { agentInventoryUnitTable 1 }
-         
+
     AgentInventoryUnitEntry ::=
         SEQUENCE {
          agentInventoryUnitNumber
@@ -343,12 +343,12 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-create
         STATUS      current
         DESCRIPTION
-            "Allows setting the unit number associated with this unit.  This number must 
-            be less than the value returned by agentInventoryStackMaxUnitNumber. Setting 
-            this object to a non-zero value will initate unit renumbering. The switch will 
-            be reset to perform unit renumbering and the configuration of switch interfaces 
+            "Allows setting the unit number associated with this unit.  This number must
+            be less than the value returned by agentInventoryStackMaxUnitNumber. Setting
+            this object to a non-zero value will initate unit renumbering. The switch will
+            be reset to perform unit renumbering and the configuration of switch interfaces
             will be cleared. If the unit being renumbered is the manager of the stack, then
-            all the switches in the stack will be reset to perform Manager unit renumbering 
+            all the switches in the stack will be reset to perform Manager unit renumbering
             and the configuration of Manager switch interfaces will be cleared."
         ::= { agentInventoryUnitEntry 2 }
 
@@ -378,11 +378,11 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-create
         STATUS      current
         DESCRIPTION
-            "Indicates whether the unit is a Management Unit, a Stack Unit, or has 
+            "Indicates whether the unit is a Management Unit, a Stack Unit, or has
             been configured to be a Management Unit.
-            
-            Setting this object to mgmtUnit(1) initiates transfer of the 
-            management functionality to the specified stack unit. Object values 
+
+            Setting this object to mgmtUnit(1) initiates transfer of the
+            management functionality to the specified stack unit. Object values
             stackUnit(2) and mgmtUnassigned(3) cannot be set."
         ::= { agentInventoryUnitEntry 6 }
 
@@ -456,7 +456,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "The version of code running on this unit. If the unit is not 
+            "The version of code running on this unit. If the unit is not
             detected then the code version is an empty string."
         ::= { agentInventoryUnitEntry 12 }
 
@@ -465,9 +465,9 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "The version of code that is currently stored in FLASH 
-            memory on the unit. This code will execute after the unit 
-            is reset. If the unit is not detected then this object will 
+            "The version of code that is currently stored in FLASH
+            memory on the unit. This code will execute after the unit
+            is reset. If the unit is not detected then this object will
             return an empty string."
         ::= { agentInventoryUnitEntry 13 }
 
@@ -508,21 +508,21 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Reload a specific unit in the stack."
          ::= { agentInventoryUnitEntry 17 }
-    
+
     agentInventoryUnitRowStatus OBJECT-TYPE
         SYNTAX      RowStatus
         MAX-ACCESS  read-create
         STATUS      current
         DESCRIPTION
             "The status of this unit instance.  Creation of new instances requires the object
-            agentInventoryUnitSupportedUnitIndex to be set at the same time to indicate the type 
+            agentInventoryUnitSupportedUnitIndex to be set at the same time to indicate the type
             of of unit to pre-configure.
-            
+
             active(1)      - This instance is active.
             createAndGo(4) - Creates a new instance.
             destroy(6)     - Removes this instance."
         ::= { agentInventoryUnitEntry 18 }
-    
+
     agentInventoryUnitSerialNumber OBJECT-TYPE
         SYNTAX      DisplayString
         MAX-ACCESS  read-only
@@ -603,12 +603,12 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "Configures the standby status of this unit.  The Management unit may not be 
-             configured.  A unit that is standby_cfg(3) may be set to uassigned(1) to clear 
+            "Configures the standby status of this unit.  The Management unit may not be
+             configured.  A unit that is standby_cfg(3) may be set to uassigned(1) to clear
              standby configuration.  A unit that is standby_opr(2) may NOT be set to
              unassigned(1)."
         ::= { agentInventoryUnitEntry 26 }
-        
+
     agentInventoryUnitSFSTransferStatus OBJECT-TYPE
         SYNTAX      INTEGER {
                     noAction(1),
@@ -621,7 +621,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
 			If SFS transfer is in progress for a particular unit status will be inProgress(2),otherwise status will
 			be noAction(1)."
         ::= { agentInventoryUnitEntry 27 }
-		
+
     agentInventoryUnitSFSLastAttemptStatus OBJECT-TYPE
         SYNTAX      INTEGER {
                     none(1),
@@ -632,22 +632,22 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "Status parameter to indicate whether the last synchronization attempt 
-             succeeded or failed.If SFS is initated for a particular unit and if it 
-             completes successfully this object will return success(2),if SFS operation 
-             failed lasttime for this unit,this object will return failure(3).if SFS did 
+            "Status parameter to indicate whether the last synchronization attempt
+             succeeded or failed.If SFS is initated for a particular unit and if it
+             completes successfully this object will return success(2),if SFS operation
+             failed lasttime for this unit,this object will return failure(3).if SFS did
              not initiate for this unit,this object will retunrn none(1). If activation of
-             the image failed because the underlying bootcode version is older than the minimum boot 
+             the image failed because the underlying bootcode version is older than the minimum boot
              code version specified in the image, this object returns min-bootcode-version-not-met(4)"
         ::= { agentInventoryUnitEntry 28 }
 
     agentInventoryUnitStackTemplateId OBJECT-TYPE
-        SYNTAX      Unsigned32 
+        SYNTAX      Unsigned32
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "The active stack template ID on a specific unit in the stack. When setting this object, 
-             the startup config is deleted regardless of whether the unit affected is the mgmt unit or not. 
+            "The active stack template ID on a specific unit in the stack. When setting this object,
+             the startup config is deleted regardless of whether the unit affected is the mgmt unit or not.
              The unit is rebooted after the template ID has been set."
         ::= { agentInventoryUnitEntry 29 }
 
@@ -692,7 +692,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Index into the supported stack template table."
         ::= { agentInventorySupportedUnitStmEntry 1 }
-        
+
     agentInventorySupportedUnitStmTemplateId OBJECT-TYPE
         SYNTAX      Unsigned32
         MAX-ACCESS  read-only
@@ -745,7 +745,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "TODO"
         INDEX          { agentInventoryUnitNumber, agentInventorySlotNumber }
         ::= { agentInventorySlotTable 1 }
-         
+
     AgentInventorySlotEntry ::=
         SEQUENCE {
          agentInventorySlotNumber
@@ -803,7 +803,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "Indicates whether this card is administratively enabled or 
+            "Indicates whether this card is administratively enabled or
             disabled."
         ::= { agentInventorySlotEntry 5 }
 
@@ -812,7 +812,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "Indicates the inserted card type. Will return 0 if the slot is 
+            "Indicates the inserted card type. Will return 0 if the slot is
             not full."
         ::= { agentInventorySlotEntry 6 }
 
@@ -835,7 +835,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION
             "Indicates the different capabilities this slot has.
-            
+
             pluggable(0)   - This slot can contain pluggable cards.
             power-down(1)  - Power to this slot can be controlled through the object
                              agentInventorySlotPowerMode
@@ -870,7 +870,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "Contains information related to a specific Card Type."
         INDEX          { agentInventoryCardIndex }
         ::= { agentInventoryCardTypeTable 1 }
-         
+
     AgentInventoryCardTypeEntry ::=
         SEQUENCE {
          agentInventoryCardIndex
@@ -921,7 +921,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
 
     agentInventoryComponentGroup                  OBJECT IDENTIFIER ::= { fastPathInventory 5 }
-    
+
 
     --**************************************************************************************
     -- agentInventoryComponentTable
@@ -944,7 +944,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "Contains information related to a specific Components."
         INDEX          { agentInventoryComponentIndex }
         ::= { agentInventoryComponentTable 1 }
-         
+
     AgentInventoryComponentEntry ::=
         SEQUENCE {
          agentInventoryComponentIndex
@@ -1012,7 +1012,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The unit number associated with stack unit ."
         ::= { agentInventorySFSGroup 1 }
- 
+
     agentInventorySFS OBJECT-TYPE
         SYNTAX      INTEGER {
                      enable(1),
@@ -1034,7 +1034,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Controls whether downgrading the image on the stack member is allowed or not if the firmware version of manager is older to firmware version of stack member"
         ::= { agentInventorySFSGroup 3 }
-        
+
     agentInventorySFSTrap OBJECT-TYPE
         SYNTAX      INTEGER {
                      enable(1),
@@ -1043,9 +1043,9 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "Controls sending of traps during Stack firmware synchronization operation"            
+            "Controls sending of traps during Stack firmware synchronization operation"
         ::= { agentInventorySFSGroup 4 }
-       
+
     --**************************************************************************************
     -- agentInventoryStmGroup
     --
@@ -1075,7 +1075,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "Stack Template Entry."
         INDEX          { agentInventoryStmIndex }
         ::= { agentInventoryStmTable 1 }
-         
+
     AgentInventoryStmEntry ::=
         SEQUENCE {
          agentInventoryStmIndex
@@ -1093,7 +1093,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Index into the stack template table."
         ::= { agentInventoryStmEntry 1 }
-        
+
     agentInventoryStmTemplateId OBJECT-TYPE
         SYNTAX      Unsigned32
         MAX-ACCESS  read-only
@@ -1131,7 +1131,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "Contains information related to a specific Stack Port."
         INDEX          { agentInventoryStackPortIndex }
         ::= { agentInventoryStackPortTable 1 }
-         
+
     AgentInventoryStackPortEntry ::=
         SEQUENCE {
          agentInventoryStackPortIndex
@@ -1179,7 +1179,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The name of the Stack Port for this instance."
         ::= { agentInventoryStackPortEntry 3 }
-    
+
     agentInventoryStackPortConfiguredStackMode OBJECT-TYPE
         SYNTAX      INTEGER {
                      stack(1),
@@ -1191,7 +1191,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "Configured mode of the Stack Port.  Changes to this
             value happen only after a reset of the switch."
         ::= { agentInventoryStackPortEntry 4 }
-    
+
     agentInventoryStackPortRunningStackMode OBJECT-TYPE
         SYNTAX      INTEGER {
                      stack(1),
@@ -1202,7 +1202,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Currently operational mode of the Stack Port."
         ::= { agentInventoryStackPortEntry 5 }
-    
+
     agentInventoryStackPortLinkStatus OBJECT-TYPE
         SYNTAX      INTEGER {
                      up(1),
@@ -1214,7 +1214,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "Link status of the Stack Port.  Ports which are in ethernet
             mode will return a status of down(2)."
         ::= { agentInventoryStackPortEntry 6 }
-    
+
     agentInventoryStackPortLinkSpeed OBJECT-TYPE
         SYNTAX      Gauge32
         MAX-ACCESS  read-only
@@ -1232,26 +1232,26 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
             "Approximate data rate on the stacking port. Measured in Gb/s.
             Ports which are in ethernet mode will return 0."
         ::= { agentInventoryStackPortEntry 8 }
-        
+
     agentInventoryStackPortErrorRate OBJECT-TYPE
         SYNTAX      Counter32
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "Approximate error rate on the stack port. Measured in Errors 
+            "Approximate error rate on the stack port. Measured in Errors
             per Second.  Ports which are in ethernet mode will return 0."
         ::= { agentInventoryStackPortEntry 9 }
-        
+
     agentInventoryStackPortTotalErrors OBJECT-TYPE
         SYNTAX      Counter32
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "Number of errors since boot. The counter may wrap. Ports 
+            "Number of errors since boot. The counter may wrap. Ports
             which are in ethernet mode will return 0."
         ::= { agentInventoryStackPortEntry 10 }
 
-        
+
     --**************************************************************************************
     -- agentInventory   Traps
     --
@@ -1268,7 +1268,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
                 }
         STATUS  current
         DESCRIPTION
-            "Sent when a card is inserted which is a different type than 
+            "Sent when a card is inserted which is a different type than
             what the slot was configured for."
          ::= { agentInventoryTraps 1 }
 
@@ -1280,7 +1280,7 @@ DNOS-INVENTORY-MIB DEFINITIONS ::= BEGIN
                 }
         STATUS  current
         DESCRIPTION
-            "Sent when a card is inserted which is of a type that is not 
+            "Sent when a card is inserted which is of a type that is not
             supported by the slot."
          ::= { agentInventoryTraps 2 }
 
@@ -1322,7 +1322,7 @@ agentInventorySFSComplete NOTIFICATION-TYPE
             "Sent when Stack Firmware Synchronization operation is complete on a Stack Member."
          ::= { agentInventoryTraps 6 }
 
-		 
+
 agentInventorySFSFail NOTIFICATION-TYPE
         OBJECTS {
 			agentInventoryStackUnitNumber
@@ -1374,7 +1374,7 @@ fastPathInventoryCompliance2 MODULE-COMPLIANCE
             "Implementation of the agentInventoryUnitTable is only mandatory
             on systems which support the capability of managing multiple units
             in a stack."
-    
+
     ::= { fastPathInventoryCompliances 2 }
 
 -- MIB groupings
@@ -1390,7 +1390,7 @@ fastPathInventorySupportedUnitGroup    OBJECT-GROUP
             "The collection of objects which are used to represent
             multiple units in the stack."
     ::= { fastPathInventoryGroups 1 }
-    
+
 fastPathInventoryUnitGroup    OBJECT-GROUP
     OBJECTS {
                  agentInventoryUnitNumber,
@@ -1448,7 +1448,7 @@ fastPathInventoryCardGroup    OBJECT-GROUP
     ::= { fastPathInventoryGroups 4 }
 
 fastPathInventoryNotificationsGroup NOTIFICATION-GROUP
-    NOTIFICATIONS { 
+    NOTIFICATIONS {
                         agentInventoryCardMismatch,
                         agentInventoryCardUnsupported
                   }

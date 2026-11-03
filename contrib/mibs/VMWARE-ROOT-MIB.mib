@@ -1,5 +1,5 @@
 -- **********************************************************
--- Copyright 2007-2010 VMware, Inc.  All rights reserved. 
+-- Copyright 2007-2010 VMware, Inc.  All rights reserved.
 -- **********************************************************
 
 VMWARE-ROOT-MIB DEFINITIONS ::= BEGIN
@@ -31,10 +31,10 @@ vmware MODULE-IDENTITY
 
        REVISION      "200707300000Z"
        DESCRIPTION
-               "The initial revision. Prior version was released in 
+               "The initial revision. Prior version was released in
                 SMIv1 format as VMWARE-ROOT-MIB."
        ::= { enterprises 6876 }
-  
+
 
 -- The parent oid of snmpv1 traps when sent in snmpv2/v3
 -- vmwNotifications OBJECT IDENTIFIER ::= { vmware 0 }
@@ -109,7 +109,7 @@ DESCRIPTION
 vmwDocumentation OBJECT-IDENTITY
 STATUS  current
 DESCRIPTION
-    "Used in product documentation, examples." 
+    "Used in product documentation, examples."
 ::= { vmware 750 }
 
 vmwObsolete OBJECT-IDENTITY

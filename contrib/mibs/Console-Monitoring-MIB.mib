@@ -100,7 +100,7 @@ consMonCmdEntry        OBJECT-TYPE
 
 
 ConsMonCmdEntry ::=
-	SEQUENCE 
+	SEQUENCE
 	{
 	    consMonCmdIndex                   INTEGER,
 	    consMonCmd                        DisplayString,
@@ -169,7 +169,7 @@ consMonOutEntry        OBJECT-TYPE
 
 
 ConsMonOutEntry ::=
-	SEQUENCE 
+	SEQUENCE
 	{
 	    consMonOutCmdIndex                INTEGER,
 	    consMonOutLineNo                  INTEGER,

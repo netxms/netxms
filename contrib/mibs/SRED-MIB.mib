@@ -16,7 +16,7 @@
 -- -----------------------------------------------------------------------------
 -- Version 2.02, 2009/2/16, Green Zhu
 -- [Modification]
--- 1. Obsolete sw8021pColorMapCtrlTable, swDscpTrustPortCtrlTable and swDscpMapCtrlTable 
+-- 1. Obsolete sw8021pColorMapCtrlTable, swDscpTrustPortCtrlTable and swDscpMapCtrlTable
 --    based on "D-Link Switch Series CLI QoS Commands Rev 0.51".
 -- Requested by Green Zhu for project DES3500.
 -- ----------------------------------------------------------------------------
@@ -65,7 +65,7 @@ SRED-MIB DEFINITIONS ::= BEGIN
     STATUS  current
     DESCRIPTION
           "This object enables\disables the Simple RED state of the device."
-    DEFVAL { disabled }      
+    DEFVAL { disabled }
     ::= { swSredCtrl 1 }
 
 -- -----------------------------------------------------------------------------
@@ -111,7 +111,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the drop count at low threshold."
 		::= { swSredDropCounterEntry 2 }
-		
+
   swSredHighDropCounter OBJECT-TYPE
 		SYNTAX  Counter32
 		MAX-ACCESS  read-only
@@ -119,7 +119,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the drop count at high threshold."
 		::= { swSredDropCounterEntry 3 }
-				
+
 -- -----------------------------------------------------------------------------
   swSredCtrlTable  OBJECT-TYPE
 		SYNTAX  SEQUENCE OF SwSredCtrlEntry
@@ -170,7 +170,7 @@ swSredDropCounterTable OBJECT-TYPE
 		MAX-ACCESS  read-only
 		STATUS  current
 		DESCRIPTION
-		      "This object indicates the hardware CoS queues the 
+		      "This object indicates the hardware CoS queues the
 		      config sred command will apply to."
 		::= { swSredCtrlEntry 2 }
 
@@ -181,7 +181,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the low threshold that specifies
 		      the percentage of space utilized."
-		DEFVAL { 30 }      
+		DEFVAL { 30 }
 		::= { swSredCtrlEntry 3 }
 
   swSredCtrlThresholdHigh OBJECT-TYPE
@@ -191,7 +191,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the high threshold that specifies
 		      the percentage of queue space utilized."
-		DEFVAL { 50 }      
+		DEFVAL { 50 }
 		::= { swSredCtrlEntry 4 }
 
   swSredCtrlDropRateLow OBJECT-TYPE
@@ -200,7 +200,7 @@ swSredDropCounterTable OBJECT-TYPE
 		STATUS  current
 		DESCRIPTION
 		      "This object indicates the probabilistic drop rate if above the low threshold."
-		DEFVAL { 1 } 
+		DEFVAL { 1 }
 		::= { swSredCtrlEntry 5 }
 
   swSredCtrlDropRateHigh OBJECT-TYPE
@@ -209,9 +209,9 @@ swSredDropCounterTable OBJECT-TYPE
 		STATUS  current
 		DESCRIPTION
 		      "This object indicates the probabilistic drop rate if above the high threshold."
-		DEFVAL { 1 } 
+		DEFVAL { 1 }
 		::= { swSredCtrlEntry 6 }
-		
+
   swSredCtrlDropGreenState OBJECT-TYPE
 		SYNTAX  INTEGER {
 			enabled(1),
@@ -221,19 +221,19 @@ swSredDropCounterTable OBJECT-TYPE
 		STATUS  current
 		DESCRIPTION
 		      "This object indicates the drop green state.
-		      
-		      Setting this state to be disabled means probabilistic 
-		      drop red colored packets if the queue depth is above 
-		      the low threshold, and probabilistic drop yellow 
-		      colored packets if the queue depth is above the high 
+
+		      Setting this state to be disabled means probabilistic
+		      drop red colored packets if the queue depth is above
+		      the low threshold, and probabilistic drop yellow
+		      colored packets if the queue depth is above the high
 		      threshold.
-		      
-		      Setting this state to be enabled means probabilistic drop 
-		      yellow and red colored packets if the queue depth is 
-		      above the low threshold, and probabilistic drop green 
-		      colored packets if the queue depth is above the high 
+
+		      Setting this state to be enabled means probabilistic drop
+		      yellow and red colored packets if the queue depth is
+		      above the low threshold, and probabilistic drop green
+		      colored packets if the queue depth is above the high
 		      threshold."
-		DEFVAL { disabled } 
+		DEFVAL { disabled }
 		::= { swSredCtrlEntry 7 }
 -- ----------------------------------------------------------------------------
   sw8021pColorMapCtrlTable  OBJECT-TYPE
@@ -263,7 +263,7 @@ swSredDropCounterTable OBJECT-TYPE
                 sw8021pColorMapCtrlColor
                     INTEGER
 		}
-		
+
   sw8021pColorMapCtrlPortIndex OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -271,7 +271,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the port number."
 		::= { sw8021pColorMapCtrlEntry 1 }
-		
+
   sw8021pColorMapCtrlPriorityIndex OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -280,7 +280,7 @@ swSredDropCounterTable OBJECT-TYPE
 		      "This object indicates the source priority of
 		      incoming packets."
 		::= { sw8021pColorMapCtrlEntry 2 }
-			
+
   sw8021pColorMapCtrlColor OBJECT-TYPE
 		SYNTAX  INTEGER {
 			green(1),
@@ -292,7 +292,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the source priority of
 		      incoming packets."
-		::= { sw8021pColorMapCtrlEntry 3 }	
+		::= { sw8021pColorMapCtrlEntry 3 }
 
 -- ----------------------------------------------------------------------------
   swDscpTrustPortCtrlTable  OBJECT-TYPE
@@ -320,7 +320,7 @@ swSredDropCounterTable OBJECT-TYPE
                 swDscpTrustPortCtrlState
                     INTEGER
 		}
-		
+
   swDscpTrustPortCtrlPortIndex OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -328,7 +328,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the port number."
 		::= { swDscpTrustPortCtrlEntry 1 }
-			
+
   swDscpTrustPortCtrlState OBJECT-TYPE
 		SYNTAX  INTEGER {
 			enabled(1),
@@ -341,7 +341,7 @@ swSredDropCounterTable OBJECT-TYPE
 		      trusted state on a selected port."
 		DEFVAL { disabled }
 		::= { swDscpTrustPortCtrlEntry 2 }
-						
+
 -- ----------------------------------------------------------------------------
   swDscpMapCtrlTable  OBJECT-TYPE
 		SYNTAX  SEQUENCE OF SwDscpMapCtrlEntry
@@ -376,7 +376,7 @@ swSredDropCounterTable OBJECT-TYPE
                 swDscpMapCtrlColor
                     INTEGER
 		}
-		
+
   swDscpMapCtrlPortIndex OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -384,7 +384,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the port number."
 		::= { swDscpMapCtrlEntry 1 }
-			
+
   swDscpMapCtrlDscpIndex OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -392,7 +392,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the source DSCP incoming packet."
 		::= { swDscpMapCtrlEntry 2 }
-				
+
   swDscpMapCtrl8021pPriority OBJECT-TYPE
 		SYNTAX  INTEGER(0..7)
 		MAX-ACCESS  read-write
@@ -411,7 +411,7 @@ swSredDropCounterTable OBJECT-TYPE
 		      56-63	7
 		      "
 		::= { swDscpMapCtrlEntry 3 }
-		
+
   swDscpMapCtrlNewDscp OBJECT-TYPE
 		SYNTAX  INTEGER(0..63)
 		MAX-ACCESS  read-write
@@ -419,7 +419,7 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object indicates the new DSCP map on each port."
 		::= { swDscpMapCtrlEntry 4 }
-	
+
   swDscpMapCtrlColor OBJECT-TYPE
 		SYNTAX  INTEGER {
 			green(1),
@@ -431,5 +431,5 @@ swSredDropCounterTable OBJECT-TYPE
 		DESCRIPTION
 		      "This object maps the color for packets on each port."
 		::= { swDscpMapCtrlEntry 5 }
-										
+
 END

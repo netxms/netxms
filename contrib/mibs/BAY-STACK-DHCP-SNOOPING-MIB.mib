@@ -233,4 +233,3 @@ bsDhcpSnoopingBindingRowStatus OBJECT-TYPE
     ::= { bsDhcpSnoopingBindingEntry 7 }
 
 END
-

@@ -1,8 +1,8 @@
 -- **************************************************************************
 -- NETXMS-MIB - MIB file for NetXMS network management system
---   
+--
 -- Copyright (c) 2021-2026 Raden Solutions
---   
+--
 -- **************************************************************************
 
 NETXMS-MIB DEFINITIONS ::= BEGIN

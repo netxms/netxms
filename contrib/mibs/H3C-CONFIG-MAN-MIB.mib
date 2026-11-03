@@ -50,7 +50,7 @@ IMPORTS
     OBJECT-TYPE, MODULE-IDENTITY, NOTIFICATION-TYPE
         FROM SNMPv2-SMI
     InetAddressType, InetAddress
-        FROM INET-ADDRESS-MIB  
+        FROM INET-ADDRESS-MIB
     DisplayString, TruthValue, RowStatus, TEXTUAL-CONVENTION
         FROM SNMPv2-TC;
 
@@ -459,7 +459,7 @@ h3cCfgLogCmdSrcAddress OBJECT-TYPE
         is 'virtual'.
 
         Other, the value of 0.0.0.0.
-        
+
         This object is replaced by for it only support IPv4."
     ::= { h3cCfgLogEntry 10 }
 
@@ -533,7 +533,7 @@ h3cCfgLogCmdSrcAddrVPNName OBJECT-TYPE
     DESCRIPTION
         "The VPN instance of this operation uses."
     ::= { h3cCfgLogEntry 17 }
-    
+
 h3cCfgLogServerAddrType OBJECT-TYPE
     SYNTAX InetAddressType
     MAX-ACCESS read-only
@@ -703,7 +703,7 @@ h3cCfgOperateServerAddress OBJECT-TYPE
          or startup2net , the ip address of the ftp/tftp server from/to
         which to download/upload must be specified.
         Values of 0.0.0.0 or FF.FF.FF.FF are not permitted.
-        
+
         This object is replaced by h3cFlhOperSrvAddr for it only support IPv4."
     ::= { h3cCfgOperateEntry 5 }
 

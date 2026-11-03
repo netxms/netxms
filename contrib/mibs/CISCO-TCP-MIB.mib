@@ -5,7 +5,7 @@
 --
 -- Copyright (c) 1994-2000, 2001 by cisco Systems, Inc.
 -- All rights reserved.
--- 
+--
 -- *****************************************************************
 --
 
@@ -95,7 +95,7 @@ CiscoTcpConnEntry ::=
 		ciscoTcpConnSRTT		Integer32,
 		ciscoTcpConnRto			Integer32,
 		ciscoTcpConnRetransPkts		Counter32,
-		ciscoTcpConnFastRetransPkts	Counter32 
+		ciscoTcpConnFastRetransPkts	Counter32
 	}
 
 ciscoTcpConnInBytes OBJECT-TYPE
@@ -168,7 +168,7 @@ ciscoTcpConnFastRetransPkts OBJECT-TYPE
 	DESCRIPTION
 		"The total number of packets retransmitted using an advanced
 		algorithm such as Fast Retransmit or Selective Acknowledgement
-		- that is, the number of TCP segments transmitted containing 
+		- that is, the number of TCP segments transmitted containing
 		one or more previously transmitted octets."
 	::= { ciscoTcpConnEntry 8 }
 
@@ -179,7 +179,7 @@ ciscoTcpConnRto OBJECT-TYPE
 	STATUS     current
 	DESCRIPTION
 		"The current value used by a TCP implementation for the
-		retransmission timeout."  
+		retransmission timeout."
 	::= { ciscoTcpConnEntry 9 }
 
 ciscoTcpMIBTraps OBJECT IDENTIFIER ::= { ciscoTcpMIB 2 }
@@ -195,7 +195,7 @@ ciscoTcpMIBGroups	OBJECT IDENTIFIER ::= { ciscoTcpMIBConformance 2 }
 -- compliance statement
 
 ciscoTcpMIBCompliance MODULE-COMPLIANCE
-	STATUS  deprecated -- suceeded by ciscoTcpMIBComplianceRev1	
+	STATUS  deprecated -- suceeded by ciscoTcpMIBComplianceRev1
 	DESCRIPTION
 		"The compliance statement for entities which implement
 		the Cisco TCP MIB"
@@ -223,7 +223,7 @@ ciscoTcpMIBGroup OBJECT-GROUP
 		ciscoTcpConnElapsed,
 		ciscoTcpConnSRTT
 	}
-	STATUS  deprecated -- succeeded by ciscoTcpMIBGroupRev1	
+	STATUS  deprecated -- succeeded by ciscoTcpMIBGroupRev1
 	DESCRIPTION
 		"A collection of objects providing TCP connection
 		monitoring."
@@ -246,5 +246,5 @@ ciscoTcpMIBGroupRev1 OBJECT-GROUP
                 "A collection of objects providing TCP connection
                 monitoring."
         ::= { ciscoTcpMIBGroups 2 }
-	
+
 END

@@ -2,7 +2,7 @@
    WLSR-AP-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
 
        MODULE-IDENTITY,
        OBJECT-TYPE,
@@ -30,7 +30,7 @@
 		wlsrEnterpriseMibModules
 			FROM ARUBA-MIB;
 
-   wlsrMIB MODULE-IDENTITY 
+   wlsrMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -53,32 +53,32 @@
    wlsrAirMonitorGroup   	OBJECT IDENTIFIER ::= { wlsrMIB 4 }
    wlsrTrapsGroup         	OBJECT IDENTIFIER ::= { wlsrMIB 100 }
 
-   -- wlsrConfigGroup contains objects to describe the Current AP 
+   -- wlsrConfigGroup contains objects to describe the Current AP
    -- Configuration.
 
 -- wlsrConfigTable contains all the configuration data of an AP.
 -- Each row in the table will represent a wifi interface.
 
-   wlsrConfigTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrConfigEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrConfigTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrConfigEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		 Table will list the configuration data of a wifi interface.
 		"
-      ::= { wlsrConfigGroup 1 } 
+      ::= { wlsrConfigGroup 1 }
 
-     wlsrConfigEntry OBJECT-TYPE 
-	  SYNTAX       WlsrConfigEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsrConfigEntry OBJECT-TYPE
+	  SYNTAX       WlsrConfigEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "
 			 A Wifi configuration entry
 			 "
 	  INDEX { wlsrBSSID }
-      ::= { wlsrConfigTable 1 } 
+      ::= { wlsrConfigTable 1 }
 
      WlsrConfigEntry ::=
      SEQUENCE {
@@ -111,7 +111,7 @@
      }
 
      wlsrBSSID OBJECT-TYPE
-         SYNTAX       MacAddress 
+         SYNTAX       MacAddress
          MAX-ACCESS   not-accessible
          STATUS       current
          DESCRIPTION
@@ -147,7 +147,7 @@
         ::= { wlsrConfigEntry 3 }
 
      wlsrCurrentChannel OBJECT-TYPE
-        SYNTAX      INTEGER (1..165) 
+        SYNTAX      INTEGER (1..165)
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -157,7 +157,7 @@
         ::= { wlsrConfigEntry 4 }
 
      wlsrTxPower OBJECT-TYPE
-        SYNTAX      Integer32 
+        SYNTAX      Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -210,8 +210,8 @@
          STATUS       current
          DESCRIPTION
             "
-			This object shall specify the number of TU that a station shall 
-			use for scheduling Beacon transmissions. This value is transmitted 
+			This object shall specify the number of TU that a station shall
+			use for scheduling Beacon transmissions. This value is transmitted
 			in Beacon and Probe Response frames.
             "
         ::= { wlsrConfigEntry 9 }
@@ -288,12 +288,12 @@
 
 
      wlsrLMSAddress OBJECT-TYPE
-        SYNTAX      IpAddress 
+        SYNTAX      IpAddress
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the IP Address of the Local 
+			This attribute indicates the IP Address of the Local
 			switch that the AP is connected to.
             "
         ::= { wlsrConfigEntry 14 }
@@ -336,7 +336,7 @@
         ::= { wlsrConfigEntry 17 }
 
      wlsrAgeout OBJECT-TYPE
-        SYNTAX      Integer32	
+        SYNTAX      Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -420,12 +420,12 @@
         ::= { wlsrConfigEntry 24 }
 
      wlsrRegDomain OBJECT-TYPE
-        SYNTAX      Integer32 
+        SYNTAX      Integer32
          MAX-ACCESS   read-only
          STATUS       deprecated
          DESCRIPTION
             "
-			This Object represents the configured Regulatory Domain this AP 
+			This Object represents the configured Regulatory Domain this AP
 			will adhere to.
 			1 -- US
 			2 -- JAPAN
@@ -449,7 +449,7 @@
         ::= { wlsrConfigEntry 25 }
 
      wlsrCountryCode OBJECT-TYPE
-        SYNTAX      DisplayString (SIZE(0..64)) 
+        SYNTAX      DisplayString (SIZE(0..64))
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -487,7 +487,7 @@
 
 -- wlsrStatsGroup All the Statistics stored by the Access Point.
 
--- Channel Statistics Group contains all the statistics related to 
+-- Channel Statistics Group contains all the statistics related to
 -- a channel.
 
 -- wlsrChannelStatsTable will contain all the Aggregate statistics collected
@@ -495,25 +495,25 @@
 
    wlsrStatsChannelGroup   	OBJECT IDENTIFIER ::= { wlsrStatsGroup 3 }
 
-   wlsrChannelStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrChannelStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrChannelStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrChannelStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		Table contains the Channel Statistics.
 		"
-	
-      ::= { wlsrStatsChannelGroup 1 } 
 
-     wlsrChannelStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrChannelStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsrStatsChannelGroup 1 }
+
+     wlsrChannelStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrChannelStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Channel Statistics Table"
 	  INDEX { wlsrChStatsChannel}
-      ::= { wlsrChannelStatsTable 1 } 
+      ::= { wlsrChannelStatsTable 1 }
 
      WlsrChannelStatsEntry ::=
      SEQUENCE {
@@ -532,7 +532,7 @@
 		 wlsrChStatsFrameNonUnicastRate		Integer32   ,
 		 wlsrChStatsFrameBandwidthRate		Integer32   ,
 		 wlsrChStatsFrameFragmentationRate	Integer32   ,
-		 wlsrChStatsMonitoredTime			TimeTicks   
+		 wlsrChStatsMonitoredTime			TimeTicks
 
      }
 
@@ -547,31 +547,31 @@
         ::= { wlsrChannelStatsEntry 1 }
 
      wlsrChStatsNumAPs OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the number of APs using this 
+			This attribute indicates the number of APs using this
 			channel.
             "
         ::= { wlsrChannelStatsEntry 2 }
 
 
      wlsrChStatsNumStations OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the number of stations using this 
+			This attribute indicates the number of stations using this
 			channel.
             "
         ::= { wlsrChannelStatsEntry 3 }
 
 
      wlsrChStatsTotPkts OBJECT-TYPE
-         SYNTAX       Counter32 
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -582,7 +582,7 @@
         ::= { wlsrChannelStatsEntry 4 }
 
      wlsrChStatsTotBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -593,7 +593,7 @@
         ::= { wlsrChannelStatsEntry 5 }
 
      wlsrChStatsTotRetryPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -604,40 +604,40 @@
         ::= { wlsrChannelStatsEntry 6 }
 
      wlsrChStatsTotFragmentedPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the total Fragmented Packets observed on 
+			This attribute indicates the total Fragmented Packets observed on
 			this channel.
             "
         ::= { wlsrChannelStatsEntry 7 }
 
      wlsrChStatsTotPhyErrPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the total Physical Error Packets observed 
-			on this channel. 
+			This attribute indicates the total Physical Error Packets observed
+			on this channel.
 			"
         ::= { wlsrChannelStatsEntry 8 }
 
      wlsrChStatsTotMacErrPkts OBJECT-TYPE
-         SYNTAX       Counter32 
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the total Mac errors packets observed on 
+			This attribute indicates the total Mac errors packets observed on
 			this channel.
             "
         ::= { wlsrChannelStatsEntry 9 }
 
      wlsrChStatsFrameErrorRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -647,7 +647,7 @@
         ::= { wlsrChannelStatsEntry 10 }
 
      wlsrChStatsFrameRetryRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -657,7 +657,7 @@
         ::= { wlsrChannelStatsEntry 11 }
 
      wlsrChStatsFrameLowSpeedRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -667,7 +667,7 @@
         ::= { wlsrChannelStatsEntry 12 }
 
      wlsrChStatsFrameNonUnicastRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -677,7 +677,7 @@
         ::= { wlsrChannelStatsEntry 13 }
 
      wlsrChStatsFrameBandwidthRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -687,7 +687,7 @@
         ::= { wlsrChannelStatsEntry 14 }
 
      wlsrChStatsFrameFragmentationRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -697,7 +697,7 @@
         ::= { wlsrChannelStatsEntry 15 }
 
      wlsrChStatsMonitoredTime OBJECT-TYPE
-         SYNTAX       TimeTicks 
+         SYNTAX       TimeTicks
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -709,27 +709,27 @@
 -- This table breaks down the channel statistics observed into different
 -- rate categories.
 
-   wlsrChannelRateStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrChannelRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrChannelRateStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrChannelRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per channel Packet and Byte Counts
 		but represented in terms of rate categories.
 		"
-	
-      ::= { wlsrStatsChannelGroup 2 } 
 
-     wlsrChannelRateStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrChannelRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsrStatsChannelGroup 2 }
+
+     wlsrChannelRateStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrChannelRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Channel Rate Statistics."
 	  INDEX { wlsrChStatsChannel}
-      ::= { wlsrChannelRateStatsTable 1 } 
-	
+      ::= { wlsrChannelRateStatsTable 1 }
+
      WlsrChannelRateStatsEntry ::=
      SEQUENCE {
 		 wlsrChStatsTotPktsAt1Mbps			Counter32  ,
@@ -753,12 +753,12 @@
 		 wlsrChStatsTotPktsAt48Mbps			Counter32  ,
 		 wlsrChStatsTotBytesAt48Mbps		Counter32  ,
 		 wlsrChStatsTotPktsAt54Mbps			Counter32 ,
-		 wlsrChStatsTotBytesAt54Mbps		Counter32 
+		 wlsrChStatsTotBytesAt54Mbps		Counter32
 
      }
 
      wlsrChStatsTotPktsAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -769,7 +769,7 @@
         ::= { wlsrChannelRateStatsEntry 1 }
 
      wlsrChStatsTotBytesAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -780,7 +780,7 @@
         ::= { wlsrChannelRateStatsEntry 2 }
 
      wlsrChStatsTotPktsAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -791,7 +791,7 @@
         ::= { wlsrChannelRateStatsEntry 3 }
 
      wlsrChStatsTotBytesAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -802,7 +802,7 @@
         ::= { wlsrChannelRateStatsEntry 4 }
 
      wlsrChStatsTotPktsAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -813,7 +813,7 @@
         ::= { wlsrChannelRateStatsEntry 5 }
 
      wlsrChStatsTotBytesAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -824,7 +824,7 @@
         ::= { wlsrChannelRateStatsEntry 6 }
 
      wlsrChStatsTotPktsAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -835,7 +835,7 @@
         ::= { wlsrChannelRateStatsEntry 7 }
 
      wlsrChStatsTotBytesAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -846,7 +846,7 @@
         ::= { wlsrChannelRateStatsEntry 8 }
 
      wlsrChStatsTotPktsAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -857,7 +857,7 @@
         ::= { wlsrChannelRateStatsEntry 9 }
 
      wlsrChStatsTotBytesAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -868,7 +868,7 @@
         ::= { wlsrChannelRateStatsEntry 10 }
 
      wlsrChStatsTotPktsAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -879,7 +879,7 @@
         ::= { wlsrChannelRateStatsEntry 11 }
 
      wlsrChStatsTotBytesAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -890,7 +890,7 @@
         ::= { wlsrChannelRateStatsEntry 12 }
 
      wlsrChStatsTotPktsAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -901,7 +901,7 @@
         ::= { wlsrChannelRateStatsEntry 13 }
 
      wlsrChStatsTotBytesAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -912,7 +912,7 @@
         ::= { wlsrChannelRateStatsEntry 14 }
 
      wlsrChStatsTotPktsAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -923,7 +923,7 @@
         ::= { wlsrChannelRateStatsEntry 15 }
 
      wlsrChStatsTotBytesAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -934,7 +934,7 @@
         ::= { wlsrChannelRateStatsEntry 16 }
 
      wlsrChStatsTotPktsAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -945,7 +945,7 @@
         ::= { wlsrChannelRateStatsEntry 17 }
 
      wlsrChStatsTotBytesAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -956,7 +956,7 @@
         ::= { wlsrChannelRateStatsEntry 18 }
 
      wlsrChStatsTotPktsAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -967,7 +967,7 @@
         ::= { wlsrChannelRateStatsEntry 19 }
 
      wlsrChStatsTotBytesAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -978,7 +978,7 @@
         ::= { wlsrChannelRateStatsEntry 20 }
 
      wlsrChStatsTotPktsAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -989,7 +989,7 @@
         ::= { wlsrChannelRateStatsEntry 21 }
 
      wlsrChStatsTotBytesAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1000,28 +1000,28 @@
         ::= { wlsrChannelRateStatsEntry 22 }
 
 -- This table breaks down the channel statistics observed based on the
--- Destination Address Types. 
+-- Destination Address Types.
 
-   wlsrChannelDATypeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrChannelDATypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrChannelDATypeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrChannelDATypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per channel Packet and Byte Counts
-		but broken down in terms of Destination Address Type. 
+		but broken down in terms of Destination Address Type.
 		"
-      ::= { wlsrStatsChannelGroup 3 } 
+      ::= { wlsrStatsChannelGroup 3 }
 
-     wlsrChannelDATypeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrChannelDATypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsrChannelDATypeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrChannelDATypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Channel Statistics based on the Address Type."
 	  INDEX { wlsrChStatsChannel}
-      ::= { wlsrChannelDATypeStatsTable 1 } 
-	
+      ::= { wlsrChannelDATypeStatsTable 1 }
+
      WlsrChannelDATypeStatsEntry ::=
      SEQUENCE {
 		 wlsrChStatsTotDABroadcastPkts		Counter32  ,
@@ -1029,99 +1029,99 @@
 		 wlsrChStatsTotDAMulticastPkts		Counter32  ,
 		 wlsrChStatsTotDAMulticastBytes		Counter32  ,
 		 wlsrChStatsTotDAUnicastPkts			Counter32  ,
-		 wlsrChStatsTotDAUnicastBytes		Counter32  
+		 wlsrChStatsTotDAUnicastBytes		Counter32
 
      }
 
      wlsrChStatsTotDABroadcastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Broadcast packets 
+			 This attribute indicates the total number of Broadcast packets
 			 observed on this channel.
             "
         ::= { wlsrChannelDATypeStatsEntry 1 }
 
      wlsrChStatsTotDABroadcastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Broadcast Bytes 
+			 This attribute indicates the total number of Broadcast Bytes
 			 observed on this channel.
             "
         ::= { wlsrChannelDATypeStatsEntry 2 }
 
      wlsrChStatsTotDAMulticastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Multicast packets 
+			 This attribute indicates the total number of Multicast packets
 			 observed on this channel.
             "
         ::= { wlsrChannelDATypeStatsEntry 3 }
 
      wlsrChStatsTotDAMulticastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Multicast Bytes 
+			 This attribute indicates the total number of Multicast Bytes
 			 observed on this channel.
             "
         ::= { wlsrChannelDATypeStatsEntry 4 }
 
      wlsrChStatsTotDAUnicastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Unicast packets 
+			 This attribute indicates the total number of Unicast packets
 			 observed on this channel.
             "
         ::= { wlsrChannelDATypeStatsEntry 5 }
 
      wlsrChStatsTotDAUnicastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Unicast Bytes 
+			 This attribute indicates the total number of Unicast Bytes
 			 observed on this channel.
             "
         ::= { wlsrChannelDATypeStatsEntry 6 }
 
 -- This table breaks down the channel statistics observed based on the
--- the Type of the Packet. 
+-- the Type of the Packet.
 
-   wlsrChannelFrameTypeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrChannelFrameTypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrChannelFrameTypeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrChannelFrameTypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per channel Packet and Byte Counts
-		but broken down into different Frame Types. 
+		but broken down into different Frame Types.
 		"
-      ::= { wlsrStatsChannelGroup 4 } 
+      ::= { wlsrStatsChannelGroup 4 }
 
-     wlsrChannelFrameTypeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrChannelFrameTypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsrChannelFrameTypeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrChannelFrameTypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Channel Statistics based on Frame Type."
 	  INDEX { wlsrChStatsChannel}
-      ::= { wlsrChannelFrameTypeStatsTable 1 } 
-	
+      ::= { wlsrChannelFrameTypeStatsTable 1 }
+
      WlsrChannelFrameTypeStatsEntry ::=
      SEQUENCE {
 		 wlsrChStatsTotMgmtPkts		Counter32  ,
@@ -1129,99 +1129,99 @@
 		 wlsrChStatsTotCtrlPkts		Counter32  ,
 		 wlsrChStatsTotCtrlBytes	Counter32  ,
 		 wlsrChStatsTotDataPkts		Counter32  ,
-		 wlsrChStatsTotDataBytes	Counter32  
+		 wlsrChStatsTotDataBytes	Counter32
 
      }
 
      wlsrChStatsTotMgmtPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Management packets 
+			 This attribute indicates the total number of Management packets
 			 observed on this channel.
             "
         ::= { wlsrChannelFrameTypeStatsEntry 1 }
 
      wlsrChStatsTotMgmtBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Management Bytes 
+			 This attribute indicates the total number of Management Bytes
 			 observed on this channel.
             "
         ::= { wlsrChannelFrameTypeStatsEntry 2 }
 
      wlsrChStatsTotCtrlPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Control packets 
+			 This attribute indicates the total number of Control packets
 			 observed on this channel.
             "
         ::= { wlsrChannelFrameTypeStatsEntry 3 }
 
      wlsrChStatsTotCtrlBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Control Bytes 
+			 This attribute indicates the total number of Control Bytes
 			 observed on this channel.
             "
         ::= { wlsrChannelFrameTypeStatsEntry 4 }
 
      wlsrChStatsTotDataPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Data packets 
+			 This attribute indicates the total number of Data packets
 			 observed on this channel.
             "
         ::= { wlsrChannelFrameTypeStatsEntry 5 }
 
      wlsrChStatsTotDataBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total number of Data Bytes 
+			 This attribute indicates the total number of Data Bytes
 			 observed on this channel.
             "
         ::= { wlsrChannelFrameTypeStatsEntry 6 }
 
--- This table breaks down the channel statistics observed into packet size 
+-- This table breaks down the channel statistics observed into packet size
 -- buckets.
 
-   wlsrChannelPktSizeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrChannelPktSizeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrChannelPktSizeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrChannelPktSizeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per channel Packet and Byte Counts
-		but broken down into different Packet Sizes. 
+		but broken down into different Packet Sizes.
 		"
-      ::= { wlsrStatsChannelGroup 5 } 
+      ::= { wlsrStatsChannelGroup 5 }
 
-     wlsrChannelPktSizeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrChannelPktSizeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsrChannelPktSizeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrChannelPktSizeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Channel Statistics based on the packet sizes."
 	  INDEX { wlsrChStatsChannel}
-      ::= { wlsrChannelPktSizeStatsTable 1 } 
-	
+      ::= { wlsrChannelPktSizeStatsTable 1 }
+
      WlsrChannelPktSizeStatsEntry ::=
      SEQUENCE {
 		 wlsrChStatsPkts63Bytes		Counter32  ,
@@ -1229,12 +1229,12 @@
 		 wlsrChStatsPkts128To255		Counter32  ,
 		 wlsrChStatsPkts256To511		Counter32  ,
 		 wlsrChStatsPkts512To1023	Counter32  ,
-		 wlsrChStatsPkts1024To1518	Counter32  
+		 wlsrChStatsPkts1024To1518	Counter32
 
      }
 
      wlsrChStatsPkts63Bytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1245,7 +1245,7 @@
         ::= { wlsrChannelPktSizeStatsEntry 1 }
 
      wlsrChStatsPkts64To127 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1256,7 +1256,7 @@
         ::= { wlsrChannelPktSizeStatsEntry 2 }
 
      wlsrChStatsPkts128To255 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1267,7 +1267,7 @@
         ::= { wlsrChannelPktSizeStatsEntry 3 }
 
      wlsrChStatsPkts256To511 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1278,7 +1278,7 @@
         ::= { wlsrChannelPktSizeStatsEntry 4 }
 
      wlsrChStatsPkts512To1023 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1289,7 +1289,7 @@
         ::= { wlsrChannelPktSizeStatsEntry 5 }
 
      wlsrChStatsPkts1024To1518 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1300,7 +1300,7 @@
         ::= { wlsrChannelPktSizeStatsEntry 6 }
 
 
--- Station Statistics Group contains all the statistics related to 
+-- Station Statistics Group contains all the statistics related to
 -- a Station.
 
 -- wlsrStaStatsTable will contain all the Aggregate statistics collected
@@ -1308,25 +1308,25 @@
 
    wlsrStatsStaGroup   	OBJECT IDENTIFIER ::= { wlsrStatsGroup 4 }
 
-   wlsrStaStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrStaStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrStaStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrStaStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-		 This Table contains all the Aggregate statistics collected for a 
+		 This Table contains all the Aggregate statistics collected for a
 		 station.
 		"
-      ::= { wlsrStatsStaGroup 1 } 
+      ::= { wlsrStatsStaGroup 1 }
 
-     wlsrStaStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrStaStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsrStaStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrStaStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Statistics."
 	  INDEX { wlsrStaAddress}
-      ::= { wlsrStaStatsTable 1 } 
+      ::= { wlsrStaStatsTable 1 }
 
      WlsrStaStatsEntry ::=
      SEQUENCE {
@@ -1355,12 +1355,12 @@
 		 wlsrStaFrameRetryErrorRate			Integer32   ,
 		 wlsrStaFrameBandwidthRate			Integer32   ,
 		 wlsrStaFrameFragmentationRate		Integer32   ,
-		 wlsrStaFrameHighBandwidthRate		Integer32   
+		 wlsrStaFrameHighBandwidthRate		Integer32
 
      }
 
      wlsrStaAddress OBJECT-TYPE
-         SYNTAX       MacAddress 
+         SYNTAX       MacAddress
          MAX-ACCESS   not-accessible
          STATUS       current
          DESCRIPTION
@@ -1368,9 +1368,9 @@
 			Mac Address of the Station connected to this Access Point.
             "
         ::= { wlsrStaStatsEntry 1 }
-		 
+
      wlsrStaTxPkts OBJECT-TYPE
-         SYNTAX       Counter32 
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1381,7 +1381,7 @@
         ::= { wlsrStaStatsEntry 2 }
 
      wlsrStaTxBytes OBJECT-TYPE
-         SYNTAX       Counter32 
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1392,7 +1392,7 @@
         ::= { wlsrStaStatsEntry 3 }
 
      wlsrStaRxPkts OBJECT-TYPE
-         SYNTAX       Counter32 
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1403,7 +1403,7 @@
         ::= { wlsrStaStatsEntry 4 }
 
      wlsrStaRxBytes OBJECT-TYPE
-         SYNTAX       Counter32 
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1414,51 +1414,51 @@
         ::= { wlsrStaStatsEntry 5 }
 
      wlsrStaTxRetryPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the Retry Packets transmitted by the 
+			This attribute indicates the Retry Packets transmitted by the
 			station
             "
         ::= { wlsrStaStatsEntry 6 }
 
      wlsrStaRxRetryPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the Retry Packets received from the 
+			This attribute indicates the Retry Packets received from the
 			station
             "
         ::= { wlsrStaStatsEntry 7 }
 
      wlsrStaTxFragmentedPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the Fragmented Packets transmitted by the 
+			This attribute indicates the Fragmented Packets transmitted by the
 			station.
             "
         ::= { wlsrStaStatsEntry 8 }
 
      wlsrStaRxFragmentedPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the Fragmented Packets Received from the 
+			This attribute indicates the Fragmented Packets Received from the
 			station.
             "
         ::= { wlsrStaStatsEntry 9 }
 
      wlsrStaReceiveErrPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1469,52 +1469,52 @@
         ::= { wlsrStaStatsEntry 10 }
 
      wlsrStaTxTotSignal OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			The attribute indicates the total transmitted signal computed for 
+			The attribute indicates the total transmitted signal computed for
 			this station.
             "
         ::= { wlsrStaStatsEntry 11 }
 
      wlsrStaTxSignalPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicates the total Signal Packets transmitted by 
+			This attribute indicates the total Signal Packets transmitted by
 			this station.
             "
         ::= { wlsrStaStatsEntry 12 }
 
      wlsrStaTxCurSignal OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicate the stations current transmit signal 
+			This attribute indicate the stations current transmit signal
 			strength.
             "
         ::= { wlsrStaStatsEntry 13 }
 
      wlsrStaTxHighSignal OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			This attribute indicate the stations high transmit signal 
+			This attribute indicate the stations high transmit signal
 			strength.
             "
         ::= { wlsrStaStatsEntry 14 }
 
-		 
+
      wlsrStaRxTotNoise OBJECT-TYPE
-         SYNTAX       Counter32 
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       deprecated
          DESCRIPTION
@@ -1524,7 +1524,7 @@
         ::= { wlsrStaStatsEntry 15 }
 
      wlsrStaRxNoisePkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       deprecated
          DESCRIPTION
@@ -1534,7 +1534,7 @@
         ::= { wlsrStaStatsEntry 16 }
 
      wlsrStaRxCurrentNoise OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       deprecated
          DESCRIPTION
@@ -1544,7 +1544,7 @@
         ::= { wlsrStaStatsEntry 17 }
 
      wlsrStaRxHighNoise OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       deprecated
          DESCRIPTION
@@ -1554,7 +1554,7 @@
         ::= { wlsrStaStatsEntry 18 }
 
      wlsrStaRxLowNoise OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       deprecated
          DESCRIPTION
@@ -1564,7 +1564,7 @@
         ::= { wlsrStaStatsEntry 19 }
 
      wlsrStaFrameRetryRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1574,7 +1574,7 @@
         ::= { wlsrStaStatsEntry 20 }
 
      wlsrStaFrameLowSpeedRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1584,7 +1584,7 @@
         ::= { wlsrStaStatsEntry 21 }
 
      wlsrStaFrameNonUnicastRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1594,7 +1594,7 @@
         ::= { wlsrStaStatsEntry 22 }
 
      wlsrStaFrameRetryErrorRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1604,7 +1604,7 @@
         ::= { wlsrStaStatsEntry 23 }
 
      wlsrStaFrameBandwidthRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1614,7 +1614,7 @@
         ::= { wlsrStaStatsEntry 24 }
 
      wlsrStaFrameFragmentationRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1624,7 +1624,7 @@
         ::= { wlsrStaStatsEntry 25 }
 
      wlsrStaFrameHighBandwidthRate OBJECT-TYPE
-         SYNTAX       Integer32 
+         SYNTAX       Integer32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -1636,27 +1636,27 @@
 -- This table breaks down the Station statistics into different
 -- rate categories.
 
-   wlsrStaRateStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrStaRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrStaRateStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrStaRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per channel Packet and Byte Counts
 		but represented in terms of rate categories.
 		"
-	
-      ::= { wlsrStatsStaGroup 2 } 
 
-     wlsrStaRateStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrStaRateStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsrStatsStaGroup 2 }
+
+     wlsrStaRateStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrStaRateStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	" Station Rate Stats Table"
 	  INDEX { wlsrStaAddress}
-      ::= { wlsrStaRateStatsTable 1 } 
-	
+      ::= { wlsrStaRateStatsTable 1 }
+
      WlsrStaRateStatsEntry ::=
      SEQUENCE {
 		 wlsrStaTxPktsAt1Mbps			Counter32  ,
@@ -1702,518 +1702,518 @@
 		 wlsrStaRxPktsAt48Mbps			Counter32  ,
 		 wlsrStaRxBytesAt48Mbps			Counter32  ,
 		 wlsrStaRxPktsAt54Mbps			Counter32  ,
-		 wlsrStaRxBytesAt54Mbps			Counter32 
+		 wlsrStaRxBytesAt54Mbps			Counter32
 
 
      }
 
      wlsrStaTxPktsAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 1Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 1 }
 
      wlsrStaTxBytesAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 1Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 2 }
 
      wlsrStaTxPktsAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 2Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 3 }
 
      wlsrStaTxBytesAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 2Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 4 }
 
      wlsrStaTxPktsAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 5Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 5 }
 
      wlsrStaTxBytesAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 5Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 6 }
 
      wlsrStaTxPktsAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 11Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 7 }
 
      wlsrStaTxBytesAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 11Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 8 }
 
      wlsrStaTxPktsAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 6Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 9 }
 
      wlsrStaTxBytesAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 6Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 10 }
 
      wlsrStaTxPktsAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 12Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 11 }
 
      wlsrStaTxBytesAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 12Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 12 }
 
      wlsrStaTxPktsAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 18Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 13 }
 
      wlsrStaTxBytesAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 18Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 14 }
 
      wlsrStaTxPktsAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 24Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 15 }
 
      wlsrStaTxBytesAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 24Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 16 }
 
      wlsrStaTxPktsAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 36Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 17 }
 
      wlsrStaTxBytesAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 36Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 18 }
 
      wlsrStaTxPktsAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 48Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 19 }
 
      wlsrStaTxBytesAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 48Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 20 }
 
      wlsrStaTxPktsAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Transmitted by the 
+			 This attribute indicates the number of Packets Transmitted by the
 			 station at 54Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 21 }
 
      wlsrStaTxBytesAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Transmitted by the 
+			 This attribute indicates the number of Octets Transmitted by the
 			 station at 54Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 22 }
 
      wlsrStaRxPktsAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 1Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 23 }
 
      wlsrStaRxBytesAt1Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 1Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 24 }
 
      wlsrStaRxPktsAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 2Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 25 }
 
      wlsrStaRxBytesAt2Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 2Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 26 }
 
      wlsrStaRxPktsAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 5Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 27 }
 
      wlsrStaRxBytesAt5Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 5Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 28 }
 
      wlsrStaRxPktsAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 11Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 29 }
 
      wlsrStaRxBytesAt11Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 11Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 30 }
 
      wlsrStaRxPktsAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 6Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 31 }
 
      wlsrStaRxBytesAt6Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 6Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 32 }
 
      wlsrStaRxPktsAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 12Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 33 }
 
      wlsrStaRxBytesAt12Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 12Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 34 }
 
      wlsrStaRxPktsAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 18Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 35 }
 
      wlsrStaRxBytesAt18Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 18Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 36 }
 
      wlsrStaRxPktsAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 24Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 37 }
 
      wlsrStaRxBytesAt24Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 24Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 38 }
 
      wlsrStaRxPktsAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 36Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 39 }
 
      wlsrStaRxBytesAt36Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 36Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 40 }
 
      wlsrStaRxPktsAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 48Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 41 }
 
      wlsrStaRxBytesAt48Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 48Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 42 }
 
      wlsrStaRxPktsAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Packets Received by the 
+			 This attribute indicates the number of Packets Received by the
 			 station at 54Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 43 }
 
      wlsrStaRxBytesAt54Mbps OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Octets Received by the 
+			 This attribute indicates the number of Octets Received by the
 			 station at 54Mbps rate.
             "
         ::= { wlsrStaRateStatsEntry 44 }
 
 -- This table breaks down the Station statistics based on the
--- Destination Address Types. 
+-- Destination Address Types.
 
-   wlsrStaDATypeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrStaDATypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrStaDATypeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrStaDATypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per channel Packet and Byte Counts
-		but broken down in terms of Destination Address Type. 
+		but broken down in terms of Destination Address Type.
 		"
-      ::= { wlsrStatsStaGroup 3 } 
+      ::= { wlsrStatsStaGroup 3 }
 
-     wlsrStaDATypeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrStaDATypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsrStaDATypeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrStaDATypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Statistics based on the Destination Address Type."
 	  INDEX { wlsrStaAddress}
-      ::= { wlsrStaDATypeStatsTable 1 } 
-	
+      ::= { wlsrStaDATypeStatsTable 1 }
+
      WlsrStaDATypeStatsEntry ::=
      SEQUENCE {
 		 wlsrStaTxDABroadcastPkts		Counter32  ,
@@ -2221,99 +2221,99 @@
 		 wlsrStaTxDAMulticastPkts		Counter32  ,
 		 wlsrStaTxDAMulticastBytes		Counter32  ,
 		 wlsrStaTxDAUnicastPkts			Counter32  ,
-		 wlsrStaTxDAUnicastBytes		Counter32  
+		 wlsrStaTxDAUnicastBytes		Counter32
 
      }
 
      wlsrStaTxDABroadcastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Broadcast packets 
+			 This attribute indicates the number of Broadcast packets
 			 transmitted by this Station.
             "
         ::= { wlsrStaDATypeStatsEntry 1 }
 
      wlsrStaTxDABroadcastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Broadcast Bytes 
+			 This attribute indicates the number of Broadcast Bytes
 			 transmitted by this Station.
             "
         ::= { wlsrStaDATypeStatsEntry 2 }
 
      wlsrStaTxDAMulticastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Multicast packets 
+			 This attribute indicates the number of Multicast packets
 			 transmitted by this station.
             "
         ::= { wlsrStaDATypeStatsEntry 3 }
 
      wlsrStaTxDAMulticastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of Multicast Bytes 
+			 This attribute indicates the number of Multicast Bytes
 			 transmitted by this station.
             "
         ::= { wlsrStaDATypeStatsEntry 4 }
 
      wlsrStaTxDAUnicastPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total of Unicast packets 
+			 This attribute indicates the total of Unicast packets
 			 transmitted by this station.
             "
         ::= { wlsrStaDATypeStatsEntry 5 }
 
      wlsrStaTxDAUnicastBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the total of Unicast Bytes 
+			 This attribute indicates the total of Unicast Bytes
 			 transmitted by this station.
             "
         ::= { wlsrStaDATypeStatsEntry 6 }
 
 -- This table breaks down the Station statistics based on the
--- the Type of the Packet. 
+-- the Type of the Packet.
 
-   wlsrStaFrameTypeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrStaFrameTypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrStaFrameTypeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrStaFrameTypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per channel Packet and Byte Counts
-		but broken down into different Frame Types. 
+		but broken down into different Frame Types.
 		"
-      ::= { wlsrStatsStaGroup 4 } 
+      ::= { wlsrStatsStaGroup 4 }
 
-     wlsrStaFrameTypeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrStaFrameTypeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsrStaFrameTypeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrStaFrameTypeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Frame Type Stats Entry."
 	  INDEX { wlsrStaAddress}
-      ::= { wlsrStaFrameTypeStatsTable 1 } 
-	
+      ::= { wlsrStaFrameTypeStatsTable 1 }
+
      WlsrStaFrameTypeStatsEntry ::=
      SEQUENCE {
 		 wlsrStaTxMgmtPkts		Counter32  ,
@@ -2327,165 +2327,165 @@
 		 wlsrStaRxCtrlPkts		Counter32  ,
 		 wlsrStaRxCtrlBytes		Counter32  ,
 		 wlsrStaRxDataPkts		Counter32  ,
-		 wlsrStaRxDataBytes		Counter32  
+		 wlsrStaRxDataBytes		Counter32
 
      }
 
      wlsrStaTxMgmtPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the Transmitted Management packets 
+			 This attribute indicates the Transmitted Management packets
 			 from a station.
             "
         ::= { wlsrStaFrameTypeStatsEntry 1 }
 
      wlsrStaTxMgmtBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the Transmitted Management Bytes 
+			 This attribute indicates the Transmitted Management Bytes
 			 from a station
             "
         ::= { wlsrStaFrameTypeStatsEntry 2 }
 
      wlsrStaTxCtrlPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the Transmitted Control packets 
+			 This attribute indicates the Transmitted Control packets
 			 from a station
             "
         ::= { wlsrStaFrameTypeStatsEntry 3 }
 
      wlsrStaTxCtrlBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the Transmitted Control Bytes 
+			 This attribute indicates the Transmitted Control Bytes
 			 from a station
             "
         ::= { wlsrStaFrameTypeStatsEntry 4 }
 
      wlsrStaTxDataPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the Transmitted Data packets 
+			 This attribute indicates the Transmitted Data packets
 			 from a station
             "
         ::= { wlsrStaFrameTypeStatsEntry 5 }
 
      wlsrStaTxDataBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the Transmitted Data Bytes 
+			 This attribute indicates the Transmitted Data Bytes
 			 observed on this channel.
             "
         ::= { wlsrStaFrameTypeStatsEntry 6 }
 
      wlsrStaRxMgmtPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Management packets 
+			 This attribute indicates the number of received Management packets
 			 at a station.
             "
         ::= { wlsrStaFrameTypeStatsEntry 7 }
 
      wlsrStaRxMgmtBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Management Bytes 
+			 This attribute indicates the number of received Management Bytes
 			 at a station.
             "
         ::= { wlsrStaFrameTypeStatsEntry 8 }
 
      wlsrStaRxCtrlPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Control packets 
+			 This attribute indicates the number of received Control packets
 			 at a station.
             "
         ::= { wlsrStaFrameTypeStatsEntry 9 }
 
      wlsrStaRxCtrlBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Control Bytes 
+			 This attribute indicates the number of received Control Bytes
 			 at a station.
             "
         ::= { wlsrStaFrameTypeStatsEntry 10 }
 
      wlsrStaRxDataPkts OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Data packets 
+			 This attribute indicates the number of received Data packets
 			 at a station.
             "
         ::= { wlsrStaFrameTypeStatsEntry 11 }
 
      wlsrStaRxDataBytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of received Data Bytes 
+			 This attribute indicates the number of received Data Bytes
 			 at a station.
             "
         ::= { wlsrStaFrameTypeStatsEntry 12 }
 
--- This table breaks down the Station statistics received or transmitted by a 
--- station into packet size buckets. 
+-- This table breaks down the Station statistics received or transmitted by a
+-- station into packet size buckets.
 
-   wlsrStaPktSizeStatsTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrStaPktSizeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrStaPktSizeStatsTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrStaPktSizeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 		This table contains all the per channel Packet and Byte Counts
-		but broken down into different Packet Sizes. 
+		but broken down into different Packet Sizes.
 		"
-      ::= { wlsrStatsStaGroup 5 } 
+      ::= { wlsrStatsStaGroup 5 }
 
-     wlsrStaPktSizeStatsEntry OBJECT-TYPE 
-	  SYNTAX       WlsrStaPktSizeStatsEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsrStaPktSizeStatsEntry OBJECT-TYPE
+	  SYNTAX       WlsrStaPktSizeStatsEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Station Packet Size Stats."
 	  INDEX { wlsrStaAddress}
-      ::= { wlsrStaPktSizeStatsTable 1 } 
-	
+      ::= { wlsrStaPktSizeStatsTable 1 }
+
      WlsrStaPktSizeStatsEntry ::=
      SEQUENCE {
 		 wlsrStaTxPkts63Bytes		Counter32  ,
@@ -2499,171 +2499,171 @@
 		 wlsrStaRxPkts128To255		Counter32  ,
 		 wlsrStaRxPkts256To511		Counter32  ,
 		 wlsrStaRxPkts512To1023	Counter32  ,
-		 wlsrStaRxPkts1024To1518	Counter32  
+		 wlsrStaRxPkts1024To1518	Counter32
 
      }
 
      wlsrStaTxPkts63Bytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were less than 64 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 1 }
 
      wlsrStaTxPkts64To127 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 64 and 127 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 2 }
 
      wlsrStaTxPkts128To255 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 128 and 255 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 3 }
 
      wlsrStaTxPkts256To511 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 256 and 511 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 4 }
 
      wlsrStaTxPkts512To1023 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 512 and 1023 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 5 }
 
      wlsrStaTxPkts1024To1518 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets transmitted by the 
+			 This attribute indicates the number of packets transmitted by the
 			 station that were between 1024 and 1518 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 6 }
 
      wlsrStaRxPkts63Bytes OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were less than 64 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 7 }
 
      wlsrStaRxPkts64To127 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 64 and 127 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 8 }
 
      wlsrStaRxPkts128To255 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 128 and 255 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 9 }
 
      wlsrStaRxPkts256To511 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 256 and 511 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 10 }
 
      wlsrStaRxPkts512To1023 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 512 and 1023 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 11 }
 
      wlsrStaRxPkts1024To1518 OBJECT-TYPE
-         SYNTAX       Counter32  
+         SYNTAX       Counter32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			 This attribute indicates the number of packets Received by the 
+			 This attribute indicates the number of packets Received by the
 			 station that were between 1024 and 1518 bytes long.
             "
         ::= { wlsrStaPktSizeStatsEntry 12 }
 
 -- Air Monitor Access Point List Table. On an Air monitor this table lists all
--- the Access Points the AM is monitoring. On an Access Point, this table 
+-- the Access Points the AM is monitoring. On an Access Point, this table
 -- contains itself.
 
-   wlsrAirMonitorApListTable  OBJECT-TYPE 
-	  SYNTAX       SEQUENCE OF WlsrAirMonitorApListEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+   wlsrAirMonitorApListTable  OBJECT-TYPE
+	  SYNTAX       SEQUENCE OF WlsrAirMonitorApListEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This table contains all the Access Points monitored by the AM.
 		"
-      ::= { wlsrAirMonitorGroup 1 } 
+      ::= { wlsrAirMonitorGroup 1 }
 
-     wlsrAirMonitorApListEntry OBJECT-TYPE 
-	  SYNTAX       WlsrAirMonitorApListEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+     wlsrAirMonitorApListEntry OBJECT-TYPE
+	  SYNTAX       WlsrAirMonitorApListEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Ap List Entry"
 	  INDEX { wlsrAmApBSSID}
-      ::= { wlsrAirMonitorApListTable 1 } 
-	
+      ::= { wlsrAirMonitorApListTable 1 }
+
      WlsrAirMonitorApListEntry ::=
      SEQUENCE {
 		 wlsrAmApBSSID		MacAddress  ,
 		 wlsrAmSSID			DisplayString ,
 		 wlsrAmChannel		INTEGER ,
-		 wlsrAmPhysicalType	INTEGER , 
+		 wlsrAmPhysicalType	INTEGER ,
 		 wlsrAmAccessPointType		INTEGER ,
 		 wlsrAmRAPType				INTEGER,
 		 wlsrAmRSSI				Integer32,
@@ -2674,7 +2674,7 @@
      }
 
      wlsrAmApBSSID OBJECT-TYPE
-         SYNTAX       MacAddress  
+         SYNTAX       MacAddress
          MAX-ACCESS   not-accessible
          STATUS       current
          DESCRIPTION
@@ -2684,7 +2684,7 @@
         ::= { wlsrAirMonitorApListEntry 1 }
 
      wlsrAmSSID OBJECT-TYPE
-         SYNTAX       DisplayString(SIZE(0..62))  
+         SYNTAX       DisplayString(SIZE(0..62))
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -2694,7 +2694,7 @@
         ::= { wlsrAirMonitorApListEntry 2 }
 
      wlsrAmChannel OBJECT-TYPE
-         SYNTAX       INTEGER(1..165)  
+         SYNTAX       INTEGER(1..165)
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -2756,10 +2756,10 @@
          DESCRIPTION
             "
 				Access point Receiver Signal Strength Indicator.
-				
+
             "
         ::= { wlsrAirMonitorApListEntry 7 }
-		
+
      wlsrAmMonitoredTime OBJECT-TYPE
          SYNTAX       TimeTicks
          MAX-ACCESS   read-only
@@ -2777,7 +2777,7 @@
          DESCRIPTION
             "
 				Access point Inactivity Time.
-				
+
             "
         ::= { wlsrAirMonitorApListEntry 9 }
 
@@ -2790,9 +2790,9 @@
          STATUS       current
          DESCRIPTION
             "
-				The attributes indicates whether Load balancing is enabled 
+				The attributes indicates whether Load balancing is enabled
 				for this access point.
-				
+
             "
         ::= { wlsrAirMonitorApListEntry 10 }
 
@@ -2813,7 +2813,7 @@ wlsrTargetApBSSID OBJECT-TYPE
             "
 				This Object is used in the traps to indicate the BSSID of the
 				Access Point, for which we are raising the trap. If an
-				Air Monitor is sending the trap then this will indicate 
+				Air Monitor is sending the trap then this will indicate
 				AP. If an Access Point is sending the trap, then it will point
 				to itself.
             "
@@ -2827,7 +2827,7 @@ wlsrTargetApSSID OBJECT-TYPE
             "
 				This Object is used in the traps to indicate the SSID of the
 				Access Point, for which we are raising the trap. If an
-				Air Monitor is sending the trap then this will indicate 
+				Air Monitor is sending the trap then this will indicate
 				AP. If an Access Point is sending the trap, then it will point
 				to itself.
             "
@@ -2841,7 +2841,7 @@ wlsrTargetApChannel OBJECT-TYPE
             "
 				This Object is used in the traps to indicate the Channel of the
 				Access Point, for which we are raising the trap. If an
-				Air Monitor is sending the trap then this will indicate 
+				Air Monitor is sending the trap then this will indicate
 				AP. If an Access Point is sending the trap, then it will point
 				to itself.
             "
@@ -2930,7 +2930,7 @@ wlsrMatchedMac OBJECT-TYPE
 ::= { wlsrTrapObjectsGroup 9 }
 
 wlsrMatchedIp OBJECT-TYPE
-        SYNTAX      IpAddress 
+        SYNTAX      IpAddress
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -2968,7 +2968,7 @@ wlsrRSSI OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used in the traps to indicate the 
+				This Object is used in the traps to indicate the
 				Signal Strength Indicator.
 			"
 ::= { wlsrTrapObjectsGroup 13 }
@@ -2979,7 +2979,7 @@ wlsrRogueInfoURL OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used to point to the WEBGUI Rogue AP information 
+				This Object is used to point to the WEBGUI Rogue AP information
 				URL.
 			"
 ::= { wlsrTrapObjectsGroup 14 }
@@ -2990,28 +2990,28 @@ wlsrInterferingAPInfoURL OBJECT-TYPE
          STATUS       current
          DESCRIPTION
             "
-				This Object is used to point to the WEBGUI Rogue interfering 
+				This Object is used to point to the WEBGUI Rogue interfering
 				AP information URL.
 			"
 ::= { wlsrTrapObjectsGroup 15 }
 
 
-wlsrUnsecureApDetected NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
-	         wlsrLocation, wlsrCurrentChannel, wlsrMatchedMac, 
+wlsrUnsecureApDetected NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
+	         wlsrLocation, wlsrCurrentChannel, wlsrMatchedMac,
 			 wlsrMatchedIp, wlsrRogueInfoURL}
     STATUS  current
     DESCRIPTION
 		"
 			This trap indicates that an Unsecure Access Point is detected
-			by an Air Monitor located at wlsrLocation on channel 
-			wlsrCurrentChannel. The AP is declared unsecure, because we 
+			by an Air Monitor located at wlsrLocation on channel
+			wlsrCurrentChannel. The AP is declared unsecure, because we
 			matched it to the wlsrMatchedMac/wlsrMatchedIp.
 
 		"
     ::= { wlsrTrapsGroup 1001 }
 
-wlsrStaImpersonation NOTIFICATION-TYPE        
+wlsrStaImpersonation NOTIFICATION-TYPE
 	OBJECTS {wlsrNodeMac, wlsrLocation}
     STATUS  current
     DESCRIPTION
@@ -3020,8 +3020,8 @@ wlsrStaImpersonation NOTIFICATION-TYPE
 			a Station impersonation.
 		"
     ::= { wlsrTrapsGroup 1002 }
-wlsrReservedChannelViolation NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrReservedChannelViolation NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 				wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3033,19 +3033,19 @@ wlsrReservedChannelViolation NOTIFICATION-TYPE
     ::= { wlsrTrapsGroup 1003 }
 
 
-wlsrValidSSIDViolation NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrValidSSIDViolation NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			  wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-		This trap indicates that an Access Point violating Valid SSID is 
+		This trap indicates that an Access Point violating Valid SSID is
 		detected by an AP at wlsrLocation.
 		"
     ::= { wlsrTrapsGroup 1004 }
 
-wlsrChannelMisconfiguration NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrChannelMisconfiguration NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3056,8 +3056,8 @@ wlsrChannelMisconfiguration NOTIFICATION-TYPE
     ::= { wlsrTrapsGroup 1005 }
 
 
-wlsrOUIMisconfiguration NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrOUIMisconfiguration NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3068,8 +3068,8 @@ wlsrOUIMisconfiguration NOTIFICATION-TYPE
     ::= { wlsrTrapsGroup 1006 }
 
 
-wlsrSSIDMisconfiguration NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrSSIDMisconfiguration NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3079,8 +3079,8 @@ wlsrSSIDMisconfiguration NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1007 }
 
-wlsrShortPreableMisconfiguration NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrShortPreableMisconfiguration NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3091,8 +3091,8 @@ wlsrShortPreableMisconfiguration NOTIFICATION-TYPE
     ::= { wlsrTrapsGroup 1008 }
 
 
-wlsrWPAMisconfiguration NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrWPAMisconfiguration NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3103,8 +3103,8 @@ wlsrWPAMisconfiguration NOTIFICATION-TYPE
     ::= { wlsrTrapsGroup 1009 }
 
 
-wlsrAdhocNetworkDetected NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrAdhocNetworkDetected NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3115,8 +3115,8 @@ wlsrAdhocNetworkDetected NOTIFICATION-TYPE
     ::= { wlsrTrapsGroup 1010 }
 
 
-wlsrStaPolicyViolation NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrNodeMac, 
+wlsrStaPolicyViolation NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrNodeMac,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3126,8 +3126,8 @@ wlsrStaPolicyViolation NOTIFICATION-TYPE
     ::= { wlsrTrapsGroup 1011 }
 
 
-wlsrRepeatWEPIVViolation NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrRepeatWEPIVViolation NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3136,8 +3136,8 @@ wlsrRepeatWEPIVViolation NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1012 }
 
-wlsrWeakWEPIVViolation NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrWeakWEPIVViolation NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3146,163 +3146,163 @@ wlsrWeakWEPIVViolation NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1013 }
 
-wlsrChannelInterferenceDetected NOTIFICATION-TYPE        
+wlsrChannelInterferenceDetected NOTIFICATION-TYPE
 	OBJECTS {wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation has detected a channel interference on
 			wlsrCurrentChannel.
 		"
     ::= { wlsrTrapsGroup 1014 }
 
-wlsrAPInterferenceDetected NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrAPInterferenceDetected NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation has detected an AP interference on
 			wlsrCurrentChannel.
 		"
     ::= { wlsrTrapsGroup 1015 }
 
-wlsrStaInterferenceDetected NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, wlsrNodeMac, 
+wlsrStaInterferenceDetected NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, wlsrNodeMac,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation has detected a Station interference on
 			wlsrCurrentChannel.
 		"
     ::= { wlsrTrapsGroup 1016 }
 
-wlsrFrameRetryRateExceeded NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrFrameRetryRateExceeded NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation is reporting that an AP wlsrTargetApBSSID has exceeded
 			an upper threshold for Frame Retry Rate for AP wlsrTargetApBSSID.
 		"
     ::= { wlsrTrapsGroup 1017 }
 
-wlsrFrameReceiveErrorRateExceeded NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrFrameReceiveErrorRateExceeded NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			 wlsrTargetApChannel, wlsrLocation}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation is reporting that an AP wlsrTargetApBSSID has exceeded
-			an upper threshold for Frame Receive Error Rate for AP 
+			an upper threshold for Frame Receive Error Rate for AP
 			wlsrTargetApBSSID.
 		"
     ::= { wlsrTrapsGroup 1018 }
 
-wlsrFrameFragmentationRateExceeded NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrFrameFragmentationRateExceeded NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			 wlsrTargetApChannel, wlsrLocation}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation is reporting that an AP wlsrTargetApBSSID has exceeded
-			an upper threshold for Frame Fragmentation Rate for AP 
+			an upper threshold for Frame Fragmentation Rate for AP
 			wlsrTargetApBSSID.
 		"
     ::= { wlsrTrapsGroup 1019 }
 
-wlsrFrameBandWidthRateExceeded NOTIFICATION-TYPE        
-	OBJECTS {wlsrNodeMac, wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrFrameBandWidthRateExceeded NOTIFICATION-TYPE
+	OBJECTS {wlsrNodeMac, wlsrTargetApBSSID, wlsrTargetApSSID,
 			 wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation is reporting that a station wlsrStaAddress has exceeded
-			the allocated Bandwidth rate. 
+			the allocated Bandwidth rate.
 		"
     ::= { wlsrTrapsGroup 1020 }
 
 
-wlsrFrameLowSpeedRateExceeded NOTIFICATION-TYPE        
-	OBJECTS {wlsrNodeMac, wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrFrameLowSpeedRateExceeded NOTIFICATION-TYPE
+	OBJECTS {wlsrNodeMac, wlsrTargetApBSSID, wlsrTargetApSSID,
 			 wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation is reporting that a station wlsrStaAddress has exceeded
-			the Low speed rate. 
+			the Low speed rate.
 		"
     ::= { wlsrTrapsGroup 1021 }
 
-wlsrFrameNonUnicastRateExceeded NOTIFICATION-TYPE        
-	OBJECTS {wlsrNodeMac, wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrFrameNonUnicastRateExceeded NOTIFICATION-TYPE
+	OBJECTS {wlsrNodeMac, wlsrTargetApBSSID, wlsrTargetApSSID,
 			 wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation is reporting that a station wlsrStaAddress has exceeded
-			the Non Unicast traffic rate. 
+			the Non Unicast traffic rate.
 		"
     ::= { wlsrTrapsGroup 1022 }
 
-wlsrLoadbalancingEnabled NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrLoadbalancingEnabled NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			 wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
-			wlsrLocation is reporting that an AP with BSSID wlsrTargetApBSSID 
+			This trap indicates that an AM/AP located at
+			wlsrLocation is reporting that an AP with BSSID wlsrTargetApBSSID
 			has enabled Load balancing.
 		"
     ::= { wlsrTrapsGroup 1023 }
 
-wlsrChannelFrameRetryRateExceeded NOTIFICATION-TYPE        
+wlsrChannelFrameRetryRateExceeded NOTIFICATION-TYPE
 	OBJECTS {wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation is reporting that it exceeded an upper threshold
-			for Frame Retry Rate. 
+			for Frame Retry Rate.
 		"
     ::= { wlsrTrapsGroup 1024 }
 
-wlsrChannelFrameFragmentationRateExceeded NOTIFICATION-TYPE        
+wlsrChannelFrameFragmentationRateExceeded NOTIFICATION-TYPE
 	OBJECTS {wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation is reporting that it exceeded an upper threshold
-			for Frame Fragmentation Rate. 
+			for Frame Fragmentation Rate.
 		"
     ::= { wlsrTrapsGroup 1025 }
 
 
-wlsrChannelFrameErrorRateExceeded NOTIFICATION-TYPE        
+wlsrChannelFrameErrorRateExceeded NOTIFICATION-TYPE
 	OBJECTS {wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
+			This trap indicates that an AM/AP located at
 			wlsrLocation is reporting that it exceeded an upper threshold
-			for Frame Error Rate. 
+			for Frame Error Rate.
 		"
     ::= { wlsrTrapsGroup 1026 }
 
-wlsrSignatureMatch NOTIFICATION-TYPE        
+wlsrSignatureMatch NOTIFICATION-TYPE
 	OBJECTS {wlsrSignatureName, wlsrSourceMac,wlsrRSSI,
 			 wlsrLocation}
     STATUS  current
@@ -3312,7 +3312,7 @@ wlsrSignatureMatch NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1027 }
 
-wlsrChannelRateAnomaly NOTIFICATION-TYPE        
+wlsrChannelRateAnomaly NOTIFICATION-TYPE
 	OBJECTS {wlsrFrameType, wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3323,40 +3323,40 @@ wlsrChannelRateAnomaly NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1028 }
 
-wlsrNodeRateAnomaly NOTIFICATION-TYPE        
+wlsrNodeRateAnomaly NOTIFICATION-TYPE
 	OBJECTS {wlsrFrameType, wlsrNodeMac, wlsrRSSI,
 			 wlsrLocation}
     STATUS  current
     DESCRIPTION
 		"
 		This trap indicates that an AP/AM at wlsrLocation detected
-		frames of type wlsrFrameType transmitted by node wlsrNodeMac 
+		frames of type wlsrFrameType transmitted by node wlsrNodeMac
 		which exceeds the configured IDS rate threshold.
 		"
     ::= { wlsrTrapsGroup 1029 }
 
-wlsrEAPRateAnomaly NOTIFICATION-TYPE        
+wlsrEAPRateAnomaly NOTIFICATION-TYPE
 	OBJECTS {wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-		This trap indicates that the number of EAP Handshake packets received 
-		by an AP/AM at wlsrLocation exceeds the configured IDS EAP Handshake 
+		This trap indicates that the number of EAP Handshake packets received
+		by an AP/AM at wlsrLocation exceeds the configured IDS EAP Handshake
 		rate.
 		"
     ::= { wlsrTrapsGroup 1030 }
 
-wlsrSignalAnomaly NOTIFICATION-TYPE        
+wlsrSignalAnomaly NOTIFICATION-TYPE
 	OBJECTS {wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
 		"
-		This trap indicates that an AP/AM at wlsrLocation detected a Signal 
+		This trap indicates that an AP/AM at wlsrLocation detected a Signal
 		Anomaly on wlsrCurrentChannel.
 		"
     ::= { wlsrTrapsGroup 1031 }
 
-wlsrSequenceNumberAnomaly NOTIFICATION-TYPE        
+wlsrSequenceNumberAnomaly NOTIFICATION-TYPE
 	OBJECTS {wlsrSourceMac, wlsrRSSI, wlsrLocation}
     STATUS  current
     DESCRIPTION
@@ -3367,7 +3367,7 @@ wlsrSequenceNumberAnomaly NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1032 }
 
-wlsrDisconnectStationAttack NOTIFICATION-TYPE        
+wlsrDisconnectStationAttack NOTIFICATION-TYPE
 	OBJECTS {wlsrFrameType, wlsrSourceMac, wlsrRSSI, wlsrLocation}
     STATUS  current
     DESCRIPTION
@@ -3376,41 +3376,41 @@ wlsrDisconnectStationAttack NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1033 }
 
-wlsrApFloodAttack NOTIFICATION-TYPE        
+wlsrApFloodAttack NOTIFICATION-TYPE
 	OBJECTS {wlsrLocation}
     STATUS  current
     DESCRIPTION
 		"
-		This trap is triggered when the number of spurious AP's detected by 
+		This trap is triggered when the number of spurious AP's detected by
 		an AP/AM at wlsrLocation exceeds the configured IDS threshold.
 		"
     ::= { wlsrTrapsGroup 1034 }
 
-wlsrAdhocNetwork NOTIFICATION-TYPE        
-	OBJECTS {wlsrSourceMac, wlsrTargetApBSSID, wlsrTargetApSSID, wlsrRSSI, 
+wlsrAdhocNetwork NOTIFICATION-TYPE
+	OBJECTS {wlsrSourceMac, wlsrTargetApBSSID, wlsrTargetApSSID, wlsrRSSI,
 			 wlsrLocation}
     STATUS  current
     DESCRIPTION
 		"
-		This trap indicates that an AP/AM at wlsrLocation detected an Adhoc 
+		This trap indicates that an AP/AM at wlsrLocation detected an Adhoc
 		Network. Node wlsrSourceMac is connected to an adhoc AP
 		wlsrTargetApBSSID with wlsrTargetApSSID ssid.
 		"
     ::= { wlsrTrapsGroup 1035 }
 
-wlsrWirelessBridge NOTIFICATION-TYPE        
-	OBJECTS {wlsrTransmitterMac, wlsrReceiverMac, wlsrRSSI, 
+wlsrWirelessBridge NOTIFICATION-TYPE
+	OBJECTS {wlsrTransmitterMac, wlsrReceiverMac, wlsrRSSI,
 			 wlsrLocation}
     STATUS  current
     DESCRIPTION
 		"
-		This trap indicates that an AP/AM at wlsrLocation detected a Wireless 
-		Bridge. The detected bridge is between wlsrSourceMac and 
+		This trap indicates that an AP/AM at wlsrLocation detected a Wireless
+		Bridge. The detected bridge is between wlsrSourceMac and
 		wlsrReceiverMac.
 		"
     ::= { wlsrTrapsGroup 1036 }
 
-wlsrInvalidMacOUI NOTIFICATION-TYPE        
+wlsrInvalidMacOUI NOTIFICATION-TYPE
 	OBJECTS {wlsrAddressType, wlsrNodeMac,wlsrRSSI,
 			 wlsrLocation}
     STATUS  current
@@ -3422,20 +3422,20 @@ wlsrInvalidMacOUI NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1037 }
 
-wlsrLoadbalancingDisabled NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrLoadbalancingDisabled NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			 wlsrTargetApChannel, wlsrLocation}
     STATUS  current
     DESCRIPTION
 		"
-			This trap indicates that an AM/AP located at 
-			wlsrLocation is reporting that an AP with BSSID wlsrTargetApBSSID 
+			This trap indicates that an AM/AP located at
+			wlsrLocation is reporting that an AP with BSSID wlsrTargetApBSSID
 			has disabled Load balancing.
 		"
     ::= { wlsrTrapsGroup 1038 }
 
-wlsrWEPMisconfiguration NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrWEPMisconfiguration NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3446,7 +3446,7 @@ wlsrWEPMisconfiguration NOTIFICATION-TYPE
     ::= { wlsrTrapsGroup 1039 }
 
 
-wlsrStaRepeatWEPIVViolation NOTIFICATION-TYPE        
+wlsrStaRepeatWEPIVViolation NOTIFICATION-TYPE
 	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, wlsrNodeMac,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
@@ -3457,7 +3457,7 @@ wlsrStaRepeatWEPIVViolation NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1040 }
 
-wlsrStaWeakWEPIVViolation NOTIFICATION-TYPE        
+wlsrStaWeakWEPIVViolation NOTIFICATION-TYPE
 	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, wlsrNodeMac,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
@@ -3468,22 +3468,22 @@ wlsrStaWeakWEPIVViolation NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1041 }
 
-wlsrStaAssociatedToUnsecureAp NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrStaAssociatedToUnsecureAp NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 	         wlsrLocation, wlsrCurrentChannel, wlsrNodeMac, wlsrRogueInfoURL}
     STATUS  current
     DESCRIPTION
 		"
 			This trap indicates that a station with wlsrNodeMac associated
 			with an Unsecure Access Point wlsrTargetApBSSID. This is detected
-			by an Air Monitor located at wlsrLocation on channel 
-			wlsrCurrentChannel. 
+			by an Air Monitor located at wlsrLocation on channel
+			wlsrCurrentChannel.
 
 		"
     ::= { wlsrTrapsGroup 1042 }
 
-wlsrAdhocNetworkBridgeDetected NOTIFICATION-TYPE        
-	OBJECTS {wlsrSourceMac, wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrAdhocNetworkBridgeDetected NOTIFICATION-TYPE
+	OBJECTS {wlsrSourceMac, wlsrTargetApBSSID, wlsrTargetApSSID,
 			wlsrLocation, wlsrCurrentChannel}
     STATUS  current
     DESCRIPTION
@@ -3493,19 +3493,17 @@ wlsrAdhocNetworkBridgeDetected NOTIFICATION-TYPE
 		"
     ::= { wlsrTrapsGroup 1043 }
 
-wlsrInterferingApDetected NOTIFICATION-TYPE        
-	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID, 
+wlsrInterferingApDetected NOTIFICATION-TYPE
+	OBJECTS {wlsrTargetApBSSID, wlsrTargetApSSID,
 	         wlsrLocation, wlsrCurrentChannel, wlsrInterferingAPInfoURL}
     STATUS  current
     DESCRIPTION
 		"
 			This trap indicates that an Interfering Access Point is detected
-			by an Air Monitor located at wlsrLocation on channel 
-			wlsrCurrentChannel. 
+			by an Air Monitor located at wlsrLocation on channel
+			wlsrCurrentChannel.
 
 		"
     ::= { wlsrTrapsGroup 1044 }
 
 END
-
-

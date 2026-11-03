@@ -418,7 +418,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "A number that uniquely specifies this critical error 
+            "A number that uniquely specifies this critical error
             description.  The entries will be in order of occurrence
             with the most recent entry first."
         ::= { cpqHeCriticalErrorEntry 1 }
@@ -821,7 +821,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ::= { cpqHeAsr 8 }
 
     cpqHeAsrRebootLimit OBJECT-TYPE
-        SYNTAX  INTEGER 
+        SYNTAX  INTEGER
         ACCESS  read-write
         STATUS  mandatory
         DESCRIPTION
@@ -893,7 +893,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         STATUS  mandatory
         DESCRIPTION
             "The baud rate to be used by the firmware pager and console.
-            The value zero (0) indicates this setting is undefined.  If the 
+            The value zero (0) indicates this setting is undefined.  If the
             variable is not supported, a value of -1 will be returned."
         ::= { cpqHeAsr 14 }
 
@@ -1452,7 +1452,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             failed(4)
               A non-redundant fan is not operating properly."
         ::= { cpqHeFltTolFanEntry 9 }
- 
+
     cpqHeFltTolFanHotPlug OBJECT-TYPE
         SYNTAX  INTEGER {
             other(1),
@@ -1552,7 +1552,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 
     cpqHeTemperatureIndex OBJECT-TYPE
         SYNTAX  INTEGER
-        ACCESS  read-only 
+        ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
             "A number that uniquely specifies this temperature sensor
@@ -1678,11 +1678,11 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
               If a critical(15) temperature sensor reaches its threshold,
               the cpqHeTemperatureCondition will be set to failed(4)
               and the system will shutdown.
-              
+
             noreaction(16)
-              this value will be defined when a threshold value is zero and 
-              system will not react on those sensor as those threshold 
-              sensors are meant for display purpose only."              
+              this value will be defined when a threshold value is zero and
+              system will not react on those sensor as those threshold
+              sensors are meant for display purpose only."
 
         ::= { cpqHeTemperatureEntry 7 }
 
@@ -2011,7 +2011,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 --
 --  The cpqHeFltTolPwrSupply group contains management information about fault
 --  tolerant power supplies.
--- 
+--
 --  Implementation of the cpqHeFltTolPwrSupply group is mandatory for all
 --  agents that support the Server Health MIB.
 --
@@ -2099,7 +2099,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "The system chassis number." 
+            "The system chassis number."
         ::= { cpqHeFltTolPowerSupplyEntry 1 }
 
     cpqHeFltTolPowerSupplyBay OBJECT-TYPE
@@ -2170,7 +2170,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             nvramInvalid(15),
             calibrationTableInvalid(16)
             }
-        ACCESS  read-only 
+        ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
             "The status of the power supply."
@@ -2331,7 +2331,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             vauxhighwarning(14),
             vauxlowwarning(15)
             }
-        ACCESS  read-only 
+        ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
             "The Error condition of the power supply."
@@ -2340,7 +2340,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 -- ****************************************************************************
 --   Health MIB Integrated Remote Console (IRC) Group
 --   ================================================
--- 
+--
 -- The compaq enterprise               (1.3.6.1.4.1.232)
 --      cpqHealth Group                (1.3.6.1.4.1.232.6)
 --       cpqHeComponent Group          (1.3.6.1.4.1.232.6.2)
@@ -2478,7 +2478,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         STATUS  mandatory
         DESCRIPTION
             "This value specifies the severity of the event log entry.
-            A caution or critical entry can have it's severity 
+            A caution or critical entry can have it's severity
             lowered by setting this variable to the repaired state."
         ::= { cpqHeEventLogEntry 2 }
 
@@ -2573,7 +2573,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 --       cpqHeComponent Group          (1.3.6.1.4.1.232.6.2)
 --        cpqHeMgmtDisplay Group       (1.3.6.1.4.1.232.6.2.12)
 --
--- **************************************************************************** 
+-- ****************************************************************************
 
 --  The cpqHeMgmtDisplay group maintains information about the Management
 --  Display device.
@@ -2750,7 +2750,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             other(1),
             absent(2),
             present(3)
-            } 
+            }
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
@@ -2840,7 +2840,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         SYNTAX  INTEGER {
             other(1),
             none(2),
-            onLineSpare(3),           
+            onLineSpare(3),
             mirrored(4),               -- deprecated
             advancedEcc(5),
             mirroredSingleBoard(6),
@@ -2895,25 +2895,25 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             xor(8)
               This system is configured for Advanced Memory Protection
               using the XOR engine.
-              
+
             lockStep(9)
-              This system is configured for LockStep type of 
+              This system is configured for LockStep type of
               Advanced Memory Protection.
 
             onLineSpareChannel(10)
-              This system is configured for Online Spare Channel Advanced 
+              This system is configured for Online Spare Channel Advanced
 	      Memory Protection.
 
             onLineSpareRank(11)
-              This system is configured for Online Spare Rank Advanced 
+              This system is configured for Online Spare Rank Advanced
 	      Memory Protection.
 
             mirroringIntrasocket(12)
-              This system is configured for Mirrored Intrasocket Advanced 
+              This system is configured for Mirrored Intrasocket Advanced
 	      Memory Protection between memory of single processor or board.
 
             mirroringIntersocket(13)
-              This system is configured for Mirrored Intersocket Advanced 
+              This system is configured for Mirrored Intersocket Advanced
 	      Memory Protection between memory of two processors or boards."
         ::= { cpqHeResilientMemory 1 }
 
@@ -2941,11 +2941,11 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
                     Bit 7:     Online Channel Spare
                     Bit 6:     LockStep
                     Bit 5:     XOR
-                    Bit 4:     Mirrored Memory with dual memory boards 
-                    Bit 3:     Mirrored Memory within a single memory board 
+                    Bit 4:     Mirrored Memory with dual memory boards
+                    Bit 3:     Mirrored Memory within a single memory board
                     Bit 2:     Advanced ECC
                     Bit 1:     Mirrored (deprecated)
-                    Bit 0:     Online Spare" 
+                    Bit 0:     Online Spare"
         ::= { cpqHeResilientMemory 2 }
 
     cpqHeResilientMemStatus OBJECT-TYPE
@@ -2962,9 +2962,9 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             xorNoFaults(10),
             xorWithFaults(11),
             advancedEcc(12),
-            advancedEccWithFaults(13),            
+            advancedEccWithFaults(13),
             lockStep(14),
-            lockStepWithFaults(15)            
+            lockStepWithFaults(15)
             }
         ACCESS  read-only
         STATUS  mandatory
@@ -3019,7 +3019,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             advancedEcc(12)
               The system is protected by Advanced Memory Protection in the
               Advanced ECC mode.
-              
+
             advancedEccWithFaults(13)
               The system is protected by Advanced Memory Protection in the
               Advanced ECC mode. One or more DIMM faults have been detected.
@@ -3027,10 +3027,10 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             lockStep(14)
               The system is protected by Advanced Memory Protection in the
               Lock Step mode.
-              
+
             localStepWithFaults(15)
               The system is protected by Advanced Memory Protection in the
-              Lock Step mode. One or more DIMM faults have been detected."              
+              Lock Step mode. One or more DIMM faults have been detected."
         ::= { cpqHeResilientMemory 3 }
 
     cpqHeResilientMemCondition OBJECT-TYPE
@@ -3100,7 +3100,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 
     cpqHeResilientMemOsMemSize OBJECT-TYPE
         SYNTAX  INTEGER
-        ACCESS  read-only 
+        ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
             "This value specifies the size of memory as seen by the Operating
@@ -3124,7 +3124,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ::= { cpqHeResilientMemory 8 }
 
     cpqHeResilientMemRivState OBJECT-TYPE
-        SYNTAX  INTEGER { 
+        SYNTAX  INTEGER {
             other(1),
             inactive(2),
             rebuilding(3),
@@ -3305,10 +3305,10 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 
                  raidDimmError(13)
                    The board or cartridge has a raid Dimm error.
-                   
+
                  lockstep(14)
                    The board or cartridge is configured for LockStep.
-                   
+
                  lockstepDimmError(15)
                    The board or cartridge has a lockStep Dimm error."
         ::= { cpqHeResMemBoardEntry 3 }
@@ -3459,7 +3459,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
     cpqHeResMemModuleEntry OBJECT-TYPE
         SYNTAX  CpqHeResMemModuleEntry
         ACCESS  not-accessible
-        STATUS  mandatory 
+        STATUS  mandatory
         DESCRIPTION
             "A memory module description."
         INDEX   { cpqHeResMemBoardIndex, cpqHeResMemModuleIndex }
@@ -3692,7 +3692,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "The online status of the Advanced Memory Protection board or 
+            "The online status of the Advanced Memory Protection board or
               cartridge or riser.
 
             The following status values are supported:
@@ -3915,7 +3915,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "This value specifies the operational memory frequency for 
+            "This value specifies the operational memory frequency for
             this board or Cartridge or riser in MHz."
         ::= { cpqHeResMem2BoardEntry 13 }
 
@@ -3924,7 +3924,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "This value specifies the operational memory voltage for 
+            "This value specifies the operational memory voltage for
             this board or Cartridge or riser in millivolts."
         ::= { cpqHeResMem2BoardEntry 14 }
 
@@ -3952,7 +3952,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
     cpqHeResMem2ModuleEntry OBJECT-TYPE
         SYNTAX  CpqHeResMem2ModuleEntry
         ACCESS  not-accessible
-        STATUS  mandatory 
+        STATUS  mandatory
         DESCRIPTION
             "A memory module description."
         INDEX   { cpqHeResMem2Module }
@@ -3990,7 +3990,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "This will represent the unique memory DIMM on 
+            "This will represent the unique memory DIMM on
               memory board or cartridge or riser. "
         ::= { cpqHeResMem2ModuleEntry 1 }
 
@@ -4040,7 +4040,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             A size of 0 indicates the module is not present."
         ::= { cpqHeResMem2ModuleEntry 6 }
 
-    cpqHeResMem2ModuleType OBJECT-TYPE 
+    cpqHeResMem2ModuleType OBJECT-TYPE
         SYNTAX  INTEGER {
                 other(1),
                 board(2),
@@ -4048,7 +4048,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
                 cpqDoubleWidthModule(4),
                 simm(5),
                 pcmcia(6),
-                compaq-specific(7), 
+                compaq-specific(7),
                 dimm(8),
                 smallOutlineDimm(9),
                 rimm(10),
@@ -4161,7 +4161,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "The memory module maximum frequency in MHz.  The value zero 
+            "The memory module maximum frequency in MHz.  The value zero
              (0) will be given if the module frequency cannot be determined."
         ::= { cpqHeResMem2ModuleEntry 14 }
 
@@ -4342,7 +4342,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-             "This indicates whether the DIMM slot is populated with an HP 
+             "This indicates whether the DIMM slot is populated with an HP
               Smart Memory DIMM.
 
               The following values are supported:
@@ -4351,9 +4351,9 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
                    HP SmartMemory not supported in this device.
 
                  notHPSmartMemory(2):
-                   HP SmartMemory is NOT installed in DIMM slot (includes 
+                   HP SmartMemory is NOT installed in DIMM slot (includes
                    the case where the DIMM slot is not populated).
- 
+
                  isHPSmartMemory(3):
                    HP SmartMemory is installed in DIMM slot."
 
@@ -4364,7 +4364,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-             "This provides the minimum voltage needed for the module to 
+             "This provides the minimum voltage needed for the module to
               operate, in millivolts."
         ::= { cpqHeResMem2ModuleEntry 23 }
 
@@ -4387,7 +4387,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 --        cpqHePowerMeter Group        (1.3.6.1.4.1.232.6.2.15)
 --
 --  The cpqHePowerMeter group describes the Server's power consumption read
---  
+--
 --
 --  Implementation of the cpqHePowerMeter group is mandatory for all
 --  platform that support Power Meter.
@@ -4396,14 +4396,14 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 
     cpqHePowerMeterSupport OBJECT-TYPE
         SYNTAX  INTEGER {
-            other(1), 
+            other(1),
             supported(2),
-            unsupported(3)            
+            unsupported(3)
         }
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "This value specifies whether Power Meter is supported  
+            "This value specifies whether Power Meter is supported
              by this Server .
 
              The following values are supported:
@@ -4421,14 +4421,14 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 
     cpqHePowerMeterStatus OBJECT-TYPE
         SYNTAX  INTEGER {
-            other(1), 
+            other(1),
             present(2),
-            absent(3)            
+            absent(3)
         }
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            "This value specifies whether Power Meter reading is supported  
+            "This value specifies whether Power Meter reading is supported
              by this Server .
 
              The following values are supported:
@@ -4450,7 +4450,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         STATUS  mandatory
         DESCRIPTION
             " This is the current Power Meter reading in Watts.
-              This value shows the most recent power reading if available. 
+              This value shows the most recent power reading if available.
               On systems without Power Meter support, this value will be -1."
         ::= { cpqHePowerMeter 3 }
 
@@ -4459,8 +4459,8 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         ACCESS  read-only
         STATUS  mandatory
         DESCRIPTION
-            " This is the previous Power Meter reading in Watts. 
-              This value shows previous power reading if available. 
+            " This is the previous Power Meter reading in Watts.
+              This value shows previous power reading if available.
               On systems without Power Meter support, this value will be -1."
         ::= { cpqHePowerMeter 4 }
 
@@ -4789,7 +4789,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
 
     cpqHeThermalCpuFanFailed TRAP-TYPE
         ENTERPRISE compaq
-        DESCRIPTION 
+        DESCRIPTION
             "The CPU fan status has been set to failed.
 
              A processor fan is not operating normally.  The server will be
@@ -4882,7 +4882,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#TYPE "Server Power Supply Degraded (6014)"
         --#SUMMARY "The server power supply status has become degraded."
         --#ARGUMENTS {}
-        --#SEVERITY CRITICAL 
+        --#SEVERITY CRITICAL
         --#TIMEINDEX 99
         --#STATE   DEGRADED
 
@@ -4926,7 +4926,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE   DEGRADED
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY MEMORY
-        
+
         ::= 6016
 
     cpqHe3ThermalTempFailed TRAP-TYPE
@@ -4945,8 +4945,8 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE  DEGRADED
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY THERMAL
-        --#ACTION "Check the system for hardware failures and verify the environment is properly cooled."        
-                
+        --#ACTION "Check the system for hardware failures and verify the environment is properly cooled."
+
         ::= 6017
 
     cpqHe3ThermalTempDegraded TRAP-TYPE
@@ -4967,8 +4967,8 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE   DEGRADED
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY THERMAL
-        --#ACTION "Check the system for hardware failures and verify the environment is properly cooled." 
-        
+        --#ACTION "Check the system for hardware failures and verify the environment is properly cooled."
+
         ::= 6018
 
     cpqHe3ThermalTempOk TRAP-TYPE
@@ -4988,7 +4988,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY THERMAL
-        
+
         ::= 6019
 
     cpqHe3ThermalSystemFanFailed TRAP-TYPE
@@ -5009,8 +5009,8 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE   DEGRADED
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY FAN
-        --#ACTION "Replace the failed fan."       
-        
+        --#ACTION "Replace the failed fan."
+
         ::= 6020
 
     cpqHe3ThermalSystemFanDegraded TRAP-TYPE
@@ -5030,7 +5030,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY FAN
         --#ACTION "Replace the failing fan."
-        
+
         ::= 6021
 
     cpqHe3ThermalSystemFanOk TRAP-TYPE
@@ -5050,7 +5050,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY FAN
-        
+
         ::= 6022
 
     cpqHe3ThermalCpuFanFailed TRAP-TYPE
@@ -5071,7 +5071,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY FAN
         --#ACTION "Replace the failed CPU fan."
-        
+
         ::= 6023
 
     cpqHe3ThermalCpuFanOk TRAP-TYPE
@@ -5091,7 +5091,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY FAN
-        
+
         ::= 6024
 
     cpqHe3AsrConfirmation TRAP-TYPE
@@ -5113,7 +5113,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY ASR
 	    --#LIFECYCLE
-        
+
         ::= 6025
 
     cpqHe3ThermalConfirmation TRAP-TYPE
@@ -5133,7 +5133,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY THERMAL
-        
+
         ::= 6026
 
     cpqHe3PostError TRAP-TYPE
@@ -5143,7 +5143,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             "One or more POST errors occurred.
 
              Power On Self-Test (POST) errors occur during the server
-             restart process. Details of the POST error messages can 
+             restart process. Details of the POST error messages can
              be found in Integrated Management Log "
 
         --#TYPE "POST Errors Occurred (6027)"
@@ -5155,7 +5155,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY LOGS
         --#ACTION "Refer to the Integrated Management Log for details on the POST error."
-        
+
         ::= 6027
 
     cpqHe3FltTolPwrSupplyDegraded TRAP-TYPE
@@ -5174,7 +5174,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY POWER
         --#ACTION "Check the system for a power supply failure. Replace the power supply."
-        
+
         ::= 6028
 
 -- Deprecated in 6.20 trap 6056 is the replacement
@@ -5253,7 +5253,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY POWER
         --#ACTION "Check the system power supplies for a failure."
-        
+
         ::= 6032
 
     cpqHe3FltTolPowerSupplyInserted TRAP-TYPE
@@ -5273,7 +5273,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY POWER
         --#LIFECYCLE
-        
+
         ::= 6033
 
     cpqHe3FltTolPowerSupplyRemoved TRAP-TYPE
@@ -5293,7 +5293,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY POWER
         --#LIFECYCLE
-        
+
         ::= 6034
 
     cpqHe3FltTolFanDegraded TRAP-TYPE
@@ -5313,7 +5313,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY FAN
         --#ACTION "Replace the failing fan."
-        
+
         ::= 6035
 
     cpqHe3FltTolFanFailed TRAP-TYPE
@@ -5333,7 +5333,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY FAN
         --#ACTION "Replace the failed fan."
-        
+
         ::= 6036
 
     cpqHe3FltTolFanRedundancyLost TRAP-TYPE
@@ -5344,7 +5344,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
             specified chassis."
 
         --#TYPE "Fan Redundancy Lost (6037)"
-        --#SUMMARY "The fans are no longer redundant on chassis %d." 
+        --#SUMMARY "The fans are no longer redundant on chassis %d."
         --#ARGUMENTS {2}
         --#SEVERITY MAJOR
         --#TIMEINDEX 99
@@ -5352,7 +5352,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY FAN
         --#ACTION "Check the system fans for a failure."
-                
+
         ::= 6037
 
     cpqHe3FltTolFanInserted TRAP-TYPE
@@ -5372,7 +5372,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY FAN
         --#LIFECYCLE
-        
+
         ::= 6038
 
     cpqHe3FltTolFanRemoved TRAP-TYPE
@@ -5392,7 +5392,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY FAN
         --#LIFECYCLE
-        
+
         ::= 6039
 
     cpqHe3TemperatureFailed TRAP-TYPE
@@ -5413,8 +5413,8 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE  DEGRADED
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY THERMAL
-        --#ACTION "Check the system for hardware failures and verify the environment is properly cooled."        
-        
+        --#ACTION "Check the system for hardware failures and verify the environment is properly cooled."
+
         ::= 6040
 
     cpqHe3TemperatureDegraded TRAP-TYPE
@@ -5438,7 +5438,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY THERMAL
         --#ACTION "Check the system for hardware failures and verify the environment is properly cooled."
-        
+
         ::= 6041
 
     cpqHe3TemperatureOk TRAP-TYPE
@@ -5460,7 +5460,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY THERMAL
-        
+
         ::= 6042
 
     cpqHe3PowerConverterDegraded TRAP-TYPE
@@ -5480,7 +5480,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY POWER
         --#ACTION "Check for a failing power converter or for a failed power converter in a redundant pair. Replace the power converter."
-        
+
 
         ::= 6043
 
@@ -5501,7 +5501,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY POWER
         --#ACTION "Replace the failed power converter."
-        
+
         ::= 6044
 
     cpqHe3PowerConverterRedundancyLost TRAP-TYPE
@@ -5519,7 +5519,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE   DEGRADED
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY POWER
-        --#ACTION "Check the power converters in the system for a failure in a redundant pair. Replace the power converter."  
+        --#ACTION "Check the power converters in the system for a failure in a redundant pair. Replace the power converter."
 
 
         ::= 6045
@@ -5541,7 +5541,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#TIMEINDEX 99
         --#STATE   NONOPERATIONAL
         --#SIMPLE_SEVERITY CRITICAL
-        --#HWSTATUS_CATEGORY MEMORY      
+        --#HWSTATUS_CATEGORY MEMORY
         --#ACTION "Refer to the Integrated Management Log for details on the error. Replace the cache module."
 
 
@@ -5568,7 +5568,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY MEMORY
         --#ACTION "Schedule server down-time to replace the faulty memory."
-        
+
         ::= 6047
 
 -- New for rev 5.10.
@@ -5591,7 +5591,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY POWER
-        
+
         ::= 6048
 
 -- New for rev 5.10.  Deprecated cpqHe3FltTolPowerSupplyDegraded
@@ -5615,7 +5615,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY POWER
         --#ACTION "Replace the failing power supply."
-        
+
         ::= 6049
 
 -- New for rev 5.10.  Deprecated cpqHe3FltTolPowerSupplyFailed
@@ -5639,7 +5639,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY POWER
         --#ACTION "Replace the failed power supply."
-                
+
         ::= 6050
 
 -- New for rev 5.40.
@@ -5663,7 +5663,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY MEMORY
         --#ACTION "Replace the faulty memory."
-                
+
         ::= 6051
 
 -- New for rev 5.50.
@@ -5687,7 +5687,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY MEMORY
         --#ACTION "Replace the faulty memory."
-                
+
         ::= 6052
 
 -- New traps added for 6.20.
@@ -5712,7 +5712,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY MEMORY
         --#ACTION "Replace the faulty memory."
-        
+
         ::= 6053
 
     cpqHe3FltTolPowerRedundancyRestored TRAP-TYPE
@@ -5730,7 +5730,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY POWER
-        
+
         ::= 6054
 
     cpqHe3FltTolFanRedundancyRestored TRAP-TYPE
@@ -5748,7 +5748,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY FAN
-        
+
         ::= 6055
 
 -- Updated for 6.20 trap replaced 6029
@@ -5777,7 +5777,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
     cpqHeResMemBoardRemoved TRAP-TYPE
         ENTERPRISE compaq
         VARIABLES  { sysName, cpqHoTrapFlags, cpqHeResMemBoardSlotIndex }
-        DESCRIPTION 
+        DESCRIPTION
            "Memory board or cartridge removed.
 
            An Advanced Memory Protection sub-system board or cartridge has
@@ -5853,7 +5853,7 @@ CPQHLTH-MIB DEFINITIONS ::= BEGIN
         --#TIMEINDEX 99
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
-        --#HWSTATUS_CATEGORY NONE        
+        --#HWSTATUS_CATEGORY NONE
         ::= 6060
 
 cpqHeManagementProcInReset TRAP-TYPE
@@ -5875,7 +5875,7 @@ cpqHeManagementProcInReset TRAP-TYPE
         --#STATE   DEGRADED
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY MANAGEMENTPROCESSOR
-        
+
         ::= 6061
 
     cpqHeManagementProcReady TRAP-TYPE
@@ -5897,7 +5897,7 @@ cpqHeManagementProcInReset TRAP-TYPE
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY MANAGEMENTPROCESSOR
-        
+
         ::= 6062
 
     cpqHeManagementProcFailedReset TRAP-TYPE
@@ -5906,7 +5906,7 @@ cpqHeManagementProcInReset TRAP-TYPE
         DESCRIPTION
             "The Management processor failed reset
 
-             The management processor was not successfully reset and is not 
+             The management processor was not successfully reset and is not
              operational.
 
              User action: Reset the management procesessor again or re-flash
@@ -5921,15 +5921,15 @@ cpqHeManagementProcInReset TRAP-TYPE
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY MANAGEMENTPROCESSOR
         --#ACTION "Reset the management procesessor again or re-flash the management processor firmware."
-                
+
         ::= 6063
 
 -- Updated for 8.20 trap replaced 6056
     cpqHe5CorrMemReplaceMemModule TRAP-TYPE
         ENTERPRISE compaq
-        VARIABLES  { sysName, cpqHoTrapFlags, cpqHeResMem2BoardNum, 
-                     cpqHeResMem2CpuNum, cpqHeResMem2RiserNum, 
-                     cpqHeResMem2ModuleNum, cpqHeResMem2ModulePartNo, 
+        VARIABLES  { sysName, cpqHoTrapFlags, cpqHeResMem2BoardNum,
+                     cpqHeResMem2CpuNum, cpqHeResMem2RiserNum,
+                     cpqHeResMem2ModuleNum, cpqHeResMem2ModulePartNo,
                      cpqHeResMem2ModuleSize, cpqSiServerSystemId }
         DESCRIPTION
             "Corrected \ uncorrected Memory Errors Detected
@@ -5946,14 +5946,14 @@ cpqHeManagementProcInReset TRAP-TYPE
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY MEMORY
         --#ACTION "Replace the failing memory module."
-        
+
         ::= 6064
 
 -- Updated for 8.20 trap replaced 6057
     cpqHe5ResMemBoardRemoved TRAP-TYPE
         ENTERPRISE compaq
         VARIABLES  { sysName, cpqHoTrapFlags, cpqHeResMem2BoardSlotNum, cpqHeResMem2BoardCpuNum, cpqHeResMem2BoardRiserNum }
-        DESCRIPTION 
+        DESCRIPTION
            "Memory board or cartridge or riser removed.
 
            An Advanced Memory Protection sub-system board or cartridge or riser has
@@ -5971,7 +5971,7 @@ cpqHeManagementProcInReset TRAP-TYPE
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY MEMORY
-        --#LIFECYCLE   
+        --#LIFECYCLE
         ::= 6065
 
 -- Updated for 8.20 trap replaced 6058
@@ -5981,7 +5981,7 @@ cpqHeManagementProcInReset TRAP-TYPE
         DESCRIPTION
            "Memory board or cartridge or riser inserted.
 
-           An Advanced Memory Protection sub-system board or cartridge or riser 
+           An Advanced Memory Protection sub-system board or cartridge or riser
            Has been inserted into the system. Value 0 for CPU means memory is not processor based.
 
            User Action: None."
@@ -5994,7 +5994,7 @@ cpqHeManagementProcInReset TRAP-TYPE
         --#STATE OPERATIONAL
         --#SIMPLE_SEVERITY OK
         --#HWSTATUS_CATEGORY MEMORY
-        --#LIFECYCLE  
+        --#LIFECYCLE
         ::= 6066
 
 -- Updated for 8.20 trap replaced 6059
@@ -6016,8 +6016,8 @@ cpqHeManagementProcInReset TRAP-TYPE
         --#TIMEINDEX 99
         --#STATE DEGRADED
         --#SIMPLE_SEVERITY CRITICAL
-        --#HWSTATUS_CATEGORY MEMORY     
-        --#ACTION "Replace the indicated board, cartridge, or riser."           
+        --#HWSTATUS_CATEGORY MEMORY
+        --#ACTION "Replace the indicated board, cartridge, or riser."
         ::= 6067
 
 -- Added for 8.20
@@ -6041,7 +6041,7 @@ cpqHeManagementProcInReset TRAP-TYPE
         --#SIMPLE_SEVERITY MAJOR
         --#HWSTATUS_CATEGORY MEMORY
         --#ACTION "Replace the faulty memory."
-        
+
         ::= 6068
 
 -- New for rev 8.30.
@@ -6064,7 +6064,7 @@ cpqHeManagementProcInReset TRAP-TYPE
         --#SIMPLE_SEVERITY CRITICAL
         --#HWSTATUS_CATEGORY POWER
         --#ACTION "Check the power source for the specified power supply."
-        
+
         ::= 6069
 
 END

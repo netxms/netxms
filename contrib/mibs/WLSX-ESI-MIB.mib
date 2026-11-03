@@ -3,7 +3,7 @@
 WLSX-ESI-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
 
        MODULE-IDENTITY,
        OBJECT-TYPE,
@@ -36,7 +36,7 @@ WLSX-ESI-MIB DEFINITIONS ::= BEGIN
 		wlsxEnterpriseMibModules
 			FROM ARUBA-MIB;
 
-   wlsxESIMIB MODULE-IDENTITY 
+   wlsxESIMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -47,7 +47,7 @@ WLSX-ESI-MIB DEFINITIONS ::= BEGIN
 			Fax:		408 752 0626"
        DESCRIPTION
            "This MIB module defines MIB objects which provide
-            information about the External Services Interface (ESI) in the 
+            information about the External Services Interface (ESI) in the
 			Aruba controller."
        REVISION        "202008141745Z"
        DESCRIPTION
@@ -56,7 +56,7 @@ WLSX-ESI-MIB DEFINITIONS ::= BEGIN
 
    wlsxESIConfigGroup     	OBJECT IDENTIFIER ::= { wlsxESIMIB 1 }
 
-   wlsxESIServerTable  OBJECT-TYPE 
+   wlsxESIServerTable  OBJECT-TYPE
          SYNTAX       SEQUENCE OF WlsxESIServerEntry
          MAX-ACCESS   not-accessible
          STATUS       current
@@ -75,7 +75,7 @@ WLSX-ESI-MIB DEFINITIONS ::= BEGIN
 			INDEX { esiServerName }
 		::= { wlsxESIServerTable 1 }
 
-		WlsxESIServerEntry ::= 
+		WlsxESIServerEntry ::=
 		SEQUENCE {
 			esiServerName			DisplayString,
 			esiServerGroup			DisplayString,
@@ -129,7 +129,7 @@ WLSX-ESI-MIB DEFINITIONS ::= BEGIN
 		STATUS		current
 		DESCRIPTION
 			"
-			 The untrusted IP address of this server, or 0.0.0.0 if it is 
+			 The untrusted IP address of this server, or 0.0.0.0 if it is
 			 not set
 			 "
 		::= { wlsxESIServerEntry 5 }

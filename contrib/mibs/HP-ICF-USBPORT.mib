@@ -32,7 +32,7 @@ HP-ICF-USBPORT DEFINITIONS ::= BEGIN
       STATUS      current
       DESCRIPTION "hpicfUSBPortStatus control whether of not
                    the USB port is enabled.
-                      notPresent(0)  - USBPort is not present 
+                      notPresent(0)  - USBPort is not present
                       enabled(1)  - USBPort Enabled.
                       disabled(2) - USBPort Disabled.
                   "
@@ -48,7 +48,7 @@ HP-ICF-USBPORT DEFINITIONS ::= BEGIN
      OBJECT IDENTIFIER ::= { hpicfUSBPortConformance 1 }
 
    hpicfUSBPortBaseGroup OBJECT-GROUP
-      OBJECTS     { 
+      OBJECTS     {
                    hpicfUSBPortStatus
                   }
       STATUS      current
@@ -69,6 +69,6 @@ HP-ICF-USBPORT DEFINITIONS ::= BEGIN
          MANDATORY-GROUPS { hpicfUSBPortBaseGroup }
       ::= { hpicfUSBPortCompliances 1 }
 
-   
+
 
    END

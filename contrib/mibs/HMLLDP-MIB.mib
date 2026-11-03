@@ -3,7 +3,7 @@
 -- *                                                                        *
 -- *                  Hirschmann Automation and Control GmbH                *
 -- *                                                                        *
--- *                         PLATFORM SNMP PRIVATE MIB                      * 
+-- *                         PLATFORM SNMP PRIVATE MIB                      *
 -- *                                                                        *
 -- *                                   LLDP                                 *
 -- *                                                                        *
@@ -32,7 +32,7 @@ HMLLDP-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, Integer32, Counter32
         FROM SNMPv2-SMI
-    hmConfiguration                     
+    hmConfiguration
         FROM HMPRIV-MGMT-SNMP-MIB;
 
 
@@ -41,7 +41,7 @@ hmLLDP MODULE-IDENTITY
     ORGANIZATION "Hirschmann Automation and Control GmbH"
         CONTACT-INFO
           "Customer Support
-           Postal: 
+           Postal:
            Hirschmann Automation and Control GmbH
            Stuttgarter Str. 45-51
            72654 Neckartenzlingen
@@ -51,7 +51,7 @@ hmLLDP MODULE-IDENTITY
            E-Mail: hicomcenter@hirschmann.com"
         DESCRIPTION
           "The Hirschmann Private LLDP MIB definitions for Platform devices."
-          
+
     REVISION        "200411220000Z" -- November 22, 2004
     DESCRIPTION
             "Published as is."
@@ -70,10 +70,10 @@ hmLLDPAdminStatus OBJECT-TYPE
 		DESCRIPTION
 			"DURABLE:
 			 Enables/disables the IEEE802.1AB functionality
-		     on this device. 
-		     If disabled(2), the LLDP protocol is inactive, 
+		     on this device.
+		     If disabled(2), the LLDP protocol is inactive,
 		     but the LLDP MIBs can be accessed."
-    DEFVAL      { 1 }		     
+    DEFVAL      { 1 }
 	::= { hmLLDPConfig 1 }
 
 hmLLDPInterfaceTable   OBJECT-TYPE
@@ -98,7 +98,7 @@ HmLLDPIfEntry ::= SEQUENCE {
 		 hmLLDPIfaceID	   				Integer32,
 		 hmLLDPIfaceHirmaMode		  	INTEGER,
 		 hmLLDPIfaceFDBMode			  	INTEGER,
-         hmLLDPIfaceMaxNeighbors		Integer32		 
+         hmLLDPIfaceMaxNeighbors		Integer32
 		 }
 
 hmLLDPIfaceGroupID	 OBJECT-TYPE
@@ -117,10 +117,10 @@ hmLLDPIfaceID	OBJECT-TYPE
 		 DESCRIPTION
 			 "index to identify an interface within an interface card."
 		 ::= { hmLLDPIfEntry 2 }
-		 
+
 hmLLDPIfaceHirmaMode	OBJECT-TYPE
-	    SYNTAX INTEGER { 
-	       txOnly(1), 
+	    SYNTAX INTEGER {
+	       txOnly(1),
 	       rxOnly(2),
 	       txAndRx(3),
 	       disabled(4)
@@ -129,17 +129,17 @@ hmLLDPIfaceHirmaMode	OBJECT-TYPE
 		 STATUS 	 current
 		 DESCRIPTION
                 " Configure Hirschmann LLDP on this physical port.
-                 If an IEEE802.1AB capable device not manufactured by Hirschmann 
-                 is connected to a port, 
+                 If an IEEE802.1AB capable device not manufactured by Hirschmann
+                 is connected to a port,
                  hmLLDPIfaceHirmaMode should be set to disabled (4) for this port."
-    DEFVAL      { 3 }                
+    DEFVAL      { 3 }
 	 ::= { hmLLDPIfEntry 3 }
-	 
+
 hmLLDPIfaceFDBMode	OBJECT-TYPE
-	    SYNTAX INTEGER { 
+	    SYNTAX INTEGER {
 	       lldpOnly(1),
 	       macOnly(2),
-	       both(3),	       
+	       both(3),
 	       autoDetect(4)
 	    }
 		 MAX-ACCESS 	 read-write
@@ -152,10 +152,10 @@ hmLLDPIfaceFDBMode	OBJECT-TYPE
 				  If configured to both(3), both received LLDP messages
                   and learned mac addresses out of the switch's forwarding database (FDB)
                   will be used to populate the LLDP-MIB's remTable.
-				  If configured to autoDetect(4) and LLDP messages are received on this port, 
+				  If configured to autoDetect(4) and LLDP messages are received on this port,
 				  this mode will behave like lldpOnly(1), otherwise it will behave like macOnly(2)."
-    DEFVAL      { 1 }                
-	 ::= { hmLLDPIfEntry 4 }	 
+    DEFVAL      { 1 }
+	 ::= { hmLLDPIfEntry 4 }
 
 hmLLDPIfaceMaxNeighbors	OBJECT-TYPE
 	     SYNTAX Integer32 (1..50)
@@ -164,7 +164,7 @@ hmLLDPIfaceMaxNeighbors	OBJECT-TYPE
 		 DESCRIPTION
                 " Configure Hirschmann LLDP on this physical port.
                  This value limits the number of entries in the remTable for this port."
-    DEFVAL      { 10 }                
+    DEFVAL      { 10 }
 	 ::= { hmLLDPIfEntry 5 }
 
 
@@ -188,7 +188,7 @@ hmLLDPStatsIfEntry	 OBJECT-TYPE
 HmLLDPStatsIfEntry ::= SEQUENCE {
 		 hmLLDPStatsIfaceGroupID 			Integer32,
 		 hmLLDPStatsIfaceID	   				Integer32,
-		 hmLLDPStatsIfaceTotalFDBEntryCount Counter32,		 
+		 hmLLDPStatsIfaceTotalFDBEntryCount Counter32,
 		 hmLLDPStatsIfaceTotalEntryCount	Counter32,
 		 hmLLDPStatsIfaceIEEEEntryCount 	Counter32,
 		 hmLLDPStatsIfaceHirmaEntryCount	Counter32,
@@ -219,7 +219,7 @@ hmLLDPStatsIfaceTotalFDBEntryCount	OBJECT-TYPE
 	    DESCRIPTION
             "The total number of learned entries in the forwarding database (FDB) for this port."
 		 ::= { hmLLDPStatsIfEntry 3 }
-		 
+
 hmLLDPStatsIfaceTotalEntryCount	OBJECT-TYPE
 	    SYNTAX        Counter32
 	    MAX-ACCESS    read-only
@@ -227,24 +227,24 @@ hmLLDPStatsIfaceTotalEntryCount	OBJECT-TYPE
 	    DESCRIPTION
             "The total number of remote connections in the LLDP MIB's remTable for this port."
 		::= { hmLLDPStatsIfEntry 4 }
-	 
+
 hmLLDPStatsIfaceIEEEEntryCount	OBJECT-TYPE
 	    SYNTAX        Counter32
 	    MAX-ACCESS    read-only
 	    STATUS        current
 	    DESCRIPTION
-            "The number of remote connections in the LLDP MIB's remTable for this port 
+            "The number of remote connections in the LLDP MIB's remTable for this port
              that were detected because an LLDP message from an IEEE source was received."
-		::= { hmLLDPStatsIfEntry 5 }	 
+		::= { hmLLDPStatsIfEntry 5 }
 
 hmLLDPStatsIfaceHirmaEntryCount	OBJECT-TYPE
 	    SYNTAX        Counter32
 	    MAX-ACCESS    read-only
 	    STATUS        current
 	    DESCRIPTION
-            "The number of remote connections in the LLDP MIB's remTable for this port 
+            "The number of remote connections in the LLDP MIB's remTable for this port
             that were detected because an LLDP message from an Hirschmann source was received."
-	 	::= { hmLLDPStatsIfEntry 6 }	 
+	 	::= { hmLLDPStatsIfEntry 6 }
 
 hmLLDPStatsIfaceFDBEntryCount	OBJECT-TYPE
 	    SYNTAX        Counter32
@@ -253,6 +253,6 @@ hmLLDPStatsIfaceFDBEntryCount	OBJECT-TYPE
 	    DESCRIPTION
             "The number of remote connections in the LLDP MIB's remTable for this port
             that were detected in the forwarding database (FDB) for this port."
-	 	::= { hmLLDPStatsIfEntry 7 }	 
+	 	::= { hmLLDPStatsIfEntry 7 }
 
 END

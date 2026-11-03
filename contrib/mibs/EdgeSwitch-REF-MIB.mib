@@ -21,15 +21,15 @@ IMPORTS
     MODULE-IDENTITY                     FROM SNMPv2-SMI
     TEXTUAL-CONVENTION                  FROM SNMPv2-TC
     enterprises                         FROM RFC1155-SMI;
-    
+
     broadcom MODULE-IDENTITY
         LAST-UPDATED "200705230000Z" -- 23 May 2007 12:00:00 GMT
         ORGANIZATION "Broadcom Inc"
         CONTACT-INFO ""
         DESCRIPTION
           ""
-           
-        -- Revision history.      
+
+        -- Revision history.
         REVISION
           "200705230000Z" -- 23 May 2007 12:00:00 GMT
         DESCRIPTION
@@ -42,12 +42,12 @@ IMPORTS
           "200302061200Z" -- 6 February 2003 12:00:00 GMT
         DESCRIPTION
           "Updated for release"
-          
+
     ::= {  enterprises 4413 }
 
  broadcomProducts         OBJECT IDENTIFIER ::= { broadcom 1 }
  fastPath                 OBJECT IDENTIFIER ::= { broadcomProducts 1 }
-    
+
 -- New Textual Conventions
 AgentPortMask ::= TEXTUAL-CONVENTION
    STATUS  current
@@ -62,12 +62,12 @@ AgentPortMask ::= TEXTUAL-CONVENTION
         value of this object.  If that bit has a value of '1'
         then that port is included in the set of ports; the port
         is not included if its bit has a value of '0'
-             
-        When setting this value, the system will ignore 
-        configuration for ports not between the first and last 
-        valid ports.  Configuration of any port numbers between 
-        this range that are not valid ports return a failure 
-        message, but will still apply configuration for valid 
+
+        When setting this value, the system will ignore
+        configuration for ports not between the first and last
+        valid ports.  Configuration of any port numbers between
+        this range that are not valid ports return a failure
+        message, but will still apply configuration for valid
         ports."
    SYNTAX  OCTET STRING
 

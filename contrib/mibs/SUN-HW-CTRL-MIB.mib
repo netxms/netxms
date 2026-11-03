@@ -26,10 +26,10 @@ sunHwCtrlMIB MODULE-IDENTITY
     CONTACT-INFO    "Sun Microsystems, Inc
                      4150 Network Circle
                      Santa Clara, CA 95054
-                     
+
                      1-800-555-9SUN or
                      1-650-960-1300
-                     
+
                      http://www.sun.com"
     DESCRIPTION
         "SUN-HW-CTRL-MIB.mib Version 1.1
@@ -38,12 +38,12 @@ sunHwCtrlMIB MODULE-IDENTITY
 
          This MIB allows controls for all Sun platform devices using
          Integrated Lights Out Management."
-        
-    REVISION  
+
+    REVISION
         "201001040000Z" -- January 04, 2010
     DESCRIPTION
         "Modified handling of TPM parameters."
-    REVISION  
+    REVISION
         "200908200000Z" -- August 20, 2009
     DESCRIPTION
         "Add TPM parameters."

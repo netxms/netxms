@@ -1,13 +1,13 @@
 FDRY-SNTP-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-	MODULE-IDENTITY, OBJECT-TYPE, 
+	MODULE-IDENTITY, OBJECT-TYPE,
 			Integer32, Unsigned32	   	FROM SNMPv2-SMI	  			-- [RFC2578]
 	RowStatus							FROM SNMPv2-TC 				-- [RFC2579]
 	InetAddressType, InetAddress		FROM INET-ADDRESS-MIB		-- [RFC 4001]
 	fdrySntp	 					   	FROM FOUNDRY-SN-ROOT-MIB 	-- [snroo101]
 	;
-   
+
 fdrySntpMIB MODULE-IDENTITY
 	LAST-UPDATED "200802250000Z"  -- 25 February 2008
 	ORGANIZATION "Foundry Networks, Inc."
@@ -20,7 +20,7 @@ fdrySntpMIB MODULE-IDENTITY
 	DESCRIPTION
 			"The Foundry proprietary MIB module for Simple Network Time Protocol(SNTP)
 			It has new table combines Ipv4 and Ipv6 Simple Network Time Protocol server configuration.
-			
+
 			Copyright 1996-2008 Foundry Networks, Inc.
 			All rights reserved.
 			This Foundry Networks SNMP Management Information Base Specification
@@ -28,15 +28,15 @@ fdrySntpMIB MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
 			operation, condition, or performance of the Specification.
 			"
-   
+
 	REVISION 	"200802250000Z"  -- 25 February 2008
 	DESCRIPTION	"Initial version, obsoletes the earlier snNTPServerTable."
-		  
+
 	::= { fdrySntp 1 }
 
 	--
@@ -48,7 +48,7 @@ fdrySntpMIB MODULE-IDENTITY
 	--
 	-- Ipv4/Ipv6  SNTP server table
 	--
-	
+
 	fdrySntpServerTable			 OBJECT-TYPE
 		SYNTAX  SEQUENCE OF FdrySntpServerTable
 		MAX-ACCESS  not-accessible
@@ -56,7 +56,7 @@ fdrySntpMIB MODULE-IDENTITY
 		DESCRIPTION
 			  "Simple Network Time Protocol(SNTP) server table."
 		::= { fdrySntpServer 1 }
-	
+
 	fdrySntpServerEntry			 OBJECT-TYPE
 		SYNTAX  FdrySntpServerTable
 		MAX-ACCESS  not-accessible
@@ -66,13 +66,13 @@ fdrySntpMIB MODULE-IDENTITY
 			  	Reasons to go for running index Scheme than IP addresses:
 				1.	The table will be Virtual Routing and Forwarding(VRF) independent
 					that multiple VRFs could share the same address type and address.
-				2.	Index with address type and address could be potentially 17 unsigned integer, parsing and finding next index takes CPU time. 
-					The PDU gets to be huge too! 
+				2.	Index with address type and address could be potentially 17 unsigned integer, parsing and finding next index takes CPU time.
+					The PDU gets to be huge too!
 				3. 	IP address is just another attribute, they are supposed to be list of servers."
-				
+
 		INDEX   { fdrySntpServerIndex }
 		::= { fdrySntpServerTable 1 }
-	
+
 	FdrySntpServerTable ::= SEQUENCE {
 		fdrySntpServerIndex
 			Unsigned32,
@@ -93,7 +93,7 @@ fdrySntpMIB MODULE-IDENTITY
 		DESCRIPTION
 			  "The index to the SNTP server Table. Maximum 3 Sntp servers are supported."
 		::= { fdrySntpServerEntry 1 }
-	
+
 	fdrySntpServerAddrType 			 OBJECT-TYPE
 		SYNTAX  InetAddressType
 		MAX-ACCESS  read-create
@@ -102,7 +102,7 @@ fdrySntpMIB MODULE-IDENTITY
 			  "SNTP server IP address Type. Supported address types are ipv4(1) and ipv6(2)"
 		DEFVAL  { ipv4 }
 		::= { fdrySntpServerEntry 2 }
-	
+
 	fdrySntpServerAddr 			 OBJECT-TYPE
 		SYNTAX  InetAddress
 		MAX-ACCESS  read-create
@@ -110,7 +110,7 @@ fdrySntpMIB MODULE-IDENTITY
 		DESCRIPTION
 			  "SNTP server IP address."
 		::= { fdrySntpServerEntry 3 }
-	
+
 	fdrySntpServerVersion		 OBJECT-TYPE
 		SYNTAX  Integer32 (1..4)
 		MAX-ACCESS  read-create
@@ -119,7 +119,7 @@ fdrySntpMIB MODULE-IDENTITY
 			"SNTP server version."
 		DEFVAL  { 3 }
 		::= { fdrySntpServerEntry 4 }
-	
+
 	fdrySntpServerRowStatus		 OBJECT-TYPE
 		SYNTAX  RowStatus
 		MAX-ACCESS  read-create
@@ -133,7 +133,3 @@ fdrySntpMIB MODULE-IDENTITY
 		::= { fdrySntpServerEntry 5 }
 
 END
-
-
-
-

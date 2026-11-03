@@ -33,12 +33,12 @@ ipsoProducts MODULE-IDENTITY
 	 Postal: 313 Fairchild Drive
 	         Mountain View,
                  California, 94043"
-	
+
 	DESCRIPTION
 		"The root of the OID sub-tree assigned to IPSO products"
 
 	REVISION "9812020000Z"
-        DESCRIPTION 
+        DESCRIPTION
 		" Revision 1.02
 		  Added newer and more comprehensive
                   IP and VPN product OIDs. - 14.12.1998
@@ -46,7 +46,7 @@ ipsoProducts MODULE-IDENTITY
 		  Added ipsoIP3xx - 28.01.1999"
 
 	REVISION "0001140000Z"
-        DESCRIPTION 
+        DESCRIPTION
 		"MIB converted from SMIv1 to SMIv2 format
 		Revision 1.03 - 14.01.2000"
 
@@ -54,9 +54,9 @@ ipsoProducts MODULE-IDENTITY
         DESCRIPTION
                 "Added ipsoSosSystem for Ramp MIBs.
                 Revision 1.5 - 17.07.2001"
-		
+
 	::=  { nokiaProducts 21 }
-	
+
 nokia			OBJECT IDENTIFIER ::= { enterprises 94 }
 nokiaProducts		OBJECT IDENTIFIER ::= { nokia 1 }
 --ipsoProducts		OBJECT IDENTIFIER ::= { nokiaProducts 21 }

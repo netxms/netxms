@@ -31,7 +31,7 @@
                 aiEnterpriseMibModules
                         FROM ARUBA-MIB;
 
-   aiMIB MODULE-IDENTITY 
+   aiMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -86,7 +86,7 @@ ArubaPhyType ::= TEXTUAL-CONVENTION
 						wired(5),
                         dot11ax6ghz(6)
 					  }
-        
+
 ArubaHTMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -107,7 +107,7 @@ ArubaHTMode ::= TEXTUAL-CONVENTION
                         he160(12),
                         he80plus80(13)
 					  }
-        
+
 ArubaHTExtChannel ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -117,7 +117,7 @@ ArubaHTExtChannel ::= TEXTUAL-CONVENTION
 						above(2),
 						below(3)
 					  }
-        
+
 ArubaMonEncryptionType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -163,7 +163,7 @@ ArubaMonAuthAlgorithm ::= TEXTUAL-CONVENTION
 						suiteb(11),
 						owe(12)
 					  }
-                      
+
 ArubaSwitchRole ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -173,7 +173,7 @@ ArubaSwitchRole ::= TEXTUAL-CONVENTION
 						local(2),
 						backupconductor(3)
 					  }
-          
+
 ArubaSupportStatus ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -182,7 +182,7 @@ ArubaSupportStatus ::= TEXTUAL-CONVENTION
 		 				unsupported(1),
 						supported(2)
 					  }
-         
+
 ArubaActiveState ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -191,7 +191,7 @@ ArubaActiveState ::= TEXTUAL-CONVENTION
 		 				active(1),
 						inactive(2)
 					  }
-          
+
 ArubaACLDomain ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -205,7 +205,7 @@ ArubaACLDomain ::= TEXTUAL-CONVENTION
 						host(4),
 						network(5)
 					  }
-           
+
 ArubaACLNetworkServiceType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -217,7 +217,7 @@ ArubaACLNetworkServiceType ::= TEXTUAL-CONVENTION
 						udp(4),
 						protocol(5)
 					  }
-            
+
 ArubaACLAction ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -229,7 +229,7 @@ ArubaACLAction ::= TEXTUAL-CONVENTION
 						dstNAT(4),
 						redirect(5)
 					  }
-             
+
 ArubaDaysOfWeek ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -243,7 +243,7 @@ ArubaDaysOfWeek ::= TEXTUAL-CONVENTION
 						fri(6),
 						sat(7)
 					  }
-              
+
 ArubaAuthenticationMethods ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -262,7 +262,7 @@ ArubaAuthenticationMethods ::= TEXTUAL-CONVENTION
 						via-vpn(28),
 						other(255)
 					  }
-     
+
 ArubaSubAuthenticationMethods ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -307,7 +307,7 @@ ArubaEncryptionType ::= TEXTUAL-CONVENTION
                         wpa3-sae-aes(21),
                         wpa3-aes-gcmp-256(22)
 					  }
-     
+
 ArubaUserForwardMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -332,7 +332,7 @@ ArubaRogueApType ::= TEXTUAL-CONVENTION
 						knownInterfering(6),
 						suspectedUnsecure(7)
 					 }
-          
+
 ArubaAPMatchType ::= TEXTUAL-CONVENTION
    STATUS	  current
    DESCRIPTION
@@ -376,7 +376,7 @@ ArubaStationType ::= TEXTUAL-CONVENTION
 						interfering(2),
 		 				dos(3)
 					 }
-          
+
 ArubaEncryptionMethods ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -413,13 +413,13 @@ ArubaEncryptionMethods ::= TEXTUAL-CONVENTION
 		 				md5(1),
 						sha(2)
 					  }
-  
+
 ArubaVlanValidRange	::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
 		"Represents the Valid Vlan Id Range."
 	SYNTAX		INTEGER(1..4095)
-  
+
 ArubaPortMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -428,7 +428,7 @@ ArubaPortMode ::= TEXTUAL-CONVENTION
 					access(1),
 					dot1q(2)
 				}
-  
+
 ArubaDot1dState ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -440,7 +440,7 @@ ArubaDot1dState ::= TEXTUAL-CONVENTION
 					learning(4),
 					forwarding(5)
 				}
-  
+
 ArubaPoeState ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -451,7 +451,7 @@ ArubaPoeState ::= TEXTUAL-CONVENTION
 					enabledCisco(3),
                                         notAvailable(4)
 				}
- 
+
 ArubaCardType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -476,7 +476,7 @@ ArubaCardType ::= TEXTUAL-CONVENTION
 					reserved2(15),
 					sw620(16)
 				}
- 
+
 ArubaESIServerMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -488,7 +488,7 @@ ArubaESIServerMode ::= TEXTUAL-CONVENTION
 					routed(2),
 					nat(3)
 				}
- 
+
 ArubaESIServerStatus ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -561,7 +561,7 @@ ArubaAddressType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
 		"
-		Address Type. 
+		Address Type.
 		"
 	SYNTAX       INTEGER{
 		 				srcAddress(1),
@@ -573,7 +573,7 @@ ArubaBlackListReason ::= TEXTUAL-CONVENTION
 	STATUS		obsolete
 	DESCRIPTION
 		"
-		Black List Reason 
+		Black List Reason
 		**NOTE: this textual convention is obsoleted and replaced by
 		ArubaDenyListReason.
 		"
@@ -594,7 +594,7 @@ ArubaDBType ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
 		"
-		DataBase Type. 
+		DataBase Type.
 		"
 	SYNTAX       INTEGER {
 		 				mssql(1),
@@ -606,7 +606,7 @@ ArubaVrrpState ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
 		"
-		DataBase Type. 
+		DataBase Type.
 		"
 	SYNTAX       INTEGER {
 						initialize(1),
@@ -643,9 +643,9 @@ ArubaPortSpeed ::= TEXTUAL-CONVENTION
 		"
 		Port Speed.
 		"
-	SYNTAX		INTEGER { speed10Mbps(1), 
-						  speed100Mbps(2), 
-						  speed1000Mbps(3), 
+	SYNTAX		INTEGER { speed10Mbps(1),
+						  speed100Mbps(2),
+						  speed1000Mbps(3),
 						  speedAuto(4),
 						  speed10Gbps(5)
 						}
@@ -656,8 +656,8 @@ ArubaPortDuplex ::= TEXTUAL-CONVENTION
 		"
 		Port Duplexity.
 		"
-	SYNTAX		INTEGER { half(1), 
-						  full(2), 
+	SYNTAX		INTEGER { half(1),
+						  full(2),
 						  auto(3)
 						}
 
@@ -667,9 +667,9 @@ ArubaPortType ::= TEXTUAL-CONVENTION
 		"
 		Port Type.
 		"
-	SYNTAX		INTEGER { fastethernet(1), 
+	SYNTAX		INTEGER { fastethernet(1),
 						  gigabitethernet(2),
-						  xgigabitethernet(3) 
+						  xgigabitethernet(3)
 						}
 
 ArubaEnet1Mode ::= TEXTUAL-CONVENTION
@@ -683,7 +683,7 @@ ArubaEnet1Mode ::= TEXTUAL-CONVENTION
 						notApplicable(4),
 						split(5)
 					  }
- 
+
 ArubaUnprovisionedStatus ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -692,7 +692,7 @@ ArubaUnprovisionedStatus ::= TEXTUAL-CONVENTION
 		 				yes(1),
 						no(2)
 					  }
- 
+
 ArubaMonitorMode ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -703,19 +703,19 @@ ArubaMonitorMode ::= TEXTUAL-CONVENTION
 						none(2),
 						mixed(3)
 					  }
- 
+
 ArubaConfigurationState ::= TEXTUAL-CONVENTION
 	STATUS		current
-	DESCRIPTION	
+	DESCRIPTION
 		"Configuration Transfer Types."
 	SYNTAX		INTEGER {
 					success(1),
 					error(2)
 				}
- 
+
 ArubaConfigurationChangeType ::= TEXTUAL-CONVENTION
 	STATUS		current
-	DESCRIPTION	
+	DESCRIPTION
 		"Configuration Change Types."
 	SYNTAX		INTEGER {
 					create(1),
@@ -747,7 +747,7 @@ ArubaCallStates ::= TEXTUAL-CONVENTION
 				aborted(14),
 				blocked(15)
 			}
-   
+
 ArubaVoipProtocol ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -755,10 +755,10 @@ ArubaVoipProtocol ::= TEXTUAL-CONVENTION
 		  VoIP protocol used
 		"
 	SYNTAX		INTEGER {
-			sccp(1), 
-			svp(2), 
-			vocera(3), 
-			sip(9), ua(11) 
+			sccp(1),
+			svp(2),
+			vocera(3),
+			sip(9), ua(11)
 	}
 
 ArubaVoipRegState ::= TEXTUAL-CONVENTION
@@ -768,11 +768,11 @@ ArubaVoipRegState ::= TEXTUAL-CONVENTION
 		  VoIP registered state
 		"
 	SYNTAX		INTEGER {
-			unknown(0), 
-			registering(1), 
-			unregistering(2), 
-			challenge(3), 
-			registered(4), 
+			unknown(0),
+			registering(1),
+			unregistering(2),
+			challenge(3),
+			registered(4),
 			unregistered(5)
 	}
 
@@ -783,7 +783,7 @@ ArubaVoiceCdrDirection ::= TEXTUAL-CONVENTION
 		  VoIP CDR direction
 		"
 	SYNTAX		INTEGER {
-			og(0), 
+			og(0),
 			ic(1)
 	}
 
@@ -799,7 +799,7 @@ ArubaVoiceCacBit ::= TEXTUAL-CONVENTION
 			cacHandRsrvThresholdReached(2),
 			cacPeakCapacityReached(3)
 	}
-	
+
 ArubaMeshRole ::= TEXTUAL-CONVENTION
 	STATUS		current
 	DESCRIPTION
@@ -808,7 +808,7 @@ ArubaMeshRole ::= TEXTUAL-CONVENTION
 		"
 	SYNTAX		INTEGER {
 			nonmesh(0),
-			point(1), 
+			point(1),
 			portal(2)
 	}
 
@@ -862,7 +862,7 @@ ArubaUSBStatus ::= TEXTUAL-CONVENTION
 		"
 	SYNTAX		INTEGER {
 			unknown(0),
-			notPresent(1), 
+			notPresent(1),
 			inactive(2),
 			active(3)
 	}
@@ -904,7 +904,7 @@ ArubaAPMasterStatus ::= TEXTUAL-CONVENTION
 		"
 	SYNTAX		INTEGER {
 			up(1),
-			down(2), 
+			down(2),
 			move(3)
 	}
 
@@ -983,7 +983,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
    aiManagedInfoGroup         OBJECT IDENTIFIER ::= { aiMIB 3 }
 
 
-   aiVirtualControllerKey  OBJECT-TYPE 
+   aiVirtualControllerKey  OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
          STATUS       current
@@ -991,7 +991,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             "Unique Virtual Controller key"
         ::= { aiInfoGroup 1 }
 
-   aiVirtualControllerName  OBJECT-TYPE 
+   aiVirtualControllerName  OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
          STATUS       current
@@ -999,7 +999,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             "Virtual Controller name"
         ::= { aiInfoGroup 2 }
 
-   aiVirtualControllerOrganization  OBJECT-TYPE 
+   aiVirtualControllerOrganization  OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
          STATUS       current
@@ -1007,7 +1007,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             "Virtual Controller organization"
         ::= { aiInfoGroup 3 }
 
-   aiVirtualControllerVersion  OBJECT-TYPE 
+   aiVirtualControllerVersion  OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
          STATUS       current
@@ -1016,7 +1016,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
         ::= { aiInfoGroup 4 }
 
    aiVirtualControllerIPAddress OBJECT-TYPE
-       SYNTAX      IpAddress 
+       SYNTAX      IpAddress
        MAX-ACCESS  read-only
        STATUS      current
        DESCRIPTION
@@ -1024,7 +1024,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        ::= { aiInfoGroup 5 }
 
    aiMasterIPAddress OBJECT-TYPE
-       SYNTAX      IpAddress 
+       SYNTAX      IpAddress
        MAX-ACCESS  read-only
        STATUS      obsolete
        DESCRIPTION
@@ -1033,18 +1033,18 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                 aiConductorIPAddress"
        ::= { aiInfoGroup 6 }
 
-   aiWlanSSIDTable  OBJECT-TYPE 
+   aiWlanSSIDTable  OBJECT-TYPE
          SYNTAX       SEQUENCE OF AiWlanSSIDEntry
          MAX-ACCESS   not-accessible
          STATUS       current
          DESCRIPTION
             ""
         ::= { aiInfoGroup 7 }
-   
-   aiWlanSSIDEntry OBJECT-TYPE 
+
+   aiWlanSSIDEntry OBJECT-TYPE
        SYNTAX      AiWlanSSIDEntry
-       MAX-ACCESS  not-accessible       
-       STATUS       current 
+       MAX-ACCESS  not-accessible
+       STATUS       current
        DESCRIPTION
           " "
           INDEX { aiSSIDIndex }
@@ -1077,7 +1077,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 
    aiSSIDStatus OBJECT-TYPE
        SYNTAX      INTEGER {
-                        enable(0), 
+                        enable(0),
                         disable(1)
                     }
        MAX-ACCESS  read-only
@@ -1086,17 +1086,17 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             "Indicates the whether the SSID is enabled(0) or disabled(1)"
        ::= { aiWlanSSIDEntry 3 }
 
-   aiSSIDClientNum   OBJECT-TYPE       
-        SYNTAX      Integer32       
-        MAX-ACCESS  read-only       
-        STATUS      current       
-        DESCRIPTION            
-            "Client Number of per SSID"       
+   aiSSIDClientNum   OBJECT-TYPE
+        SYNTAX      Integer32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Client Number of per SSID"
         ::= { aiWlanSSIDEntry 4 }
 
    aiSSIDHide OBJECT-TYPE
        SYNTAX      INTEGER {
-                        enable(1), 
+                        enable(1),
                         disable(0)
                     }
        MAX-ACCESS  read-only
@@ -1105,18 +1105,18 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             "Indicates the whether the SSID is hide enabled(1) or disabled(0)"
             ::= { aiWlanSSIDEntry 5 }
 
-   aiMeshTable  OBJECT-TYPE 
+   aiMeshTable  OBJECT-TYPE
          SYNTAX       SEQUENCE OF AiMeshEntry
          MAX-ACCESS   not-accessible
          STATUS       current
          DESCRIPTION
             ""
         ::= { aiInfoGroup 15 }
-   
-   aiMeshEntry OBJECT-TYPE 
+
+   aiMeshEntry OBJECT-TYPE
        SYNTAX      AiMeshEntry
-       MAX-ACCESS  not-accessible       
-       STATUS       current 
+       MAX-ACCESS  not-accessible
+       STATUS       current
        DESCRIPTION
           " "
           INDEX { aiMeshIndex }
@@ -1150,7 +1150,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        DESCRIPTION
             "Mesh Point Mac Address"
        ::= { aiMeshEntry 2 }
-  
+
    aiMeshPortalMac OBJECT-TYPE
        SYNTAX      DisplayString
        MAX-ACCESS  read-only
@@ -1215,7 +1215,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             "IP Address of AP where virtual controller software is active
             "
        ::= { aiInfoGroup 16 }
-    
+
    aiAccessPointTable  OBJECT-TYPE
         SYNTAX       SEQUENCE OF AiAccessPointEntry
         MAX-ACCESS   not-accessible
@@ -1234,8 +1234,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
           " "
        INDEX { aiAPMACAddress }
         ::= { aiAccessPointTable 1 }
-	   
-    AiAccessPointEntry ::= 
+
+    AiAccessPointEntry ::=
     SEQUENCE {
         aiAPMACAddress      MacAddress,
         aiAPName            DisplayString,
@@ -1249,11 +1249,11 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
         aiAPTotalMemory     Integer32,
         aiAPStatus          INTEGER,
         aiAPHwopmode        INTEGER,
-        aiAPRole            DisplayString 
+        aiAPRole            DisplayString
    }
 
    aiAPMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -1269,7 +1269,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        ::= { aiAccessPointEntry 2 }
 
    aiAPIPAddress OBJECT-TYPE
-       SYNTAX      IpAddress 
+       SYNTAX      IpAddress
        MAX-ACCESS  read-only
        STATUS      current
        DESCRIPTION
@@ -1342,7 +1342,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        DESCRIPTION
             "Indicates the Access Point Status"
        ::= { aiAccessPointEntry 11 }
-   
+
    aiAPHwopmode OBJECT-TYPE
         SYNTAX      INTEGER {
                         default(0),
@@ -1360,7 +1360,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
         DESCRIPTION
              "AP HW OPMODE"
         ::= { aiAccessPointEntry 12 }
-    
+
    aiAPRole OBJECT-TYPE
         SYNTAX      DisplayString
         MAX-ACCESS  read-only
@@ -1369,24 +1369,24 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                "AP State"
         ::= { aiAccessPointEntry 13 }
 
-    aiRadioTable  OBJECT-TYPE 
+    aiRadioTable  OBJECT-TYPE
        SYNTAX       SEQUENCE OF AiRadioEntry
-       MAX-ACCESS   not-accessible              
-       STATUS       current 
-       DESCRIPTION 
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
                 "This table contains all radios of all access points
                 connected to the virtual controller. This table is
                 indexed by Access Point MAC Address and radio number"
-       ::= { aiStateGroup 2 } 
+       ::= { aiStateGroup 2 }
 
-   aiRadioEntry OBJECT-TYPE 
-       SYNTAX       AiRadioEntry 
-       MAX-ACCESS   not-accessible            
-       STATUS       current 
-       DESCRIPTION 
+   aiRadioEntry OBJECT-TYPE
+       SYNTAX       AiRadioEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
              " "
           INDEX { aiRadioAPMACAddress, aiRadioIndex }
-       ::= { aiRadioTable 1 } 
+       ::= { aiRadioTable 1 }
 
    AiRadioEntry ::=
    SEQUENCE {
@@ -1415,7 +1415,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
    }
 
    aiRadioAPMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -1432,7 +1432,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 
 
    aiRadioMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -1594,33 +1594,33 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        DESCRIPTION
             "Client Number of per Radio"
       ::= { aiRadioEntry 21 }
-   
+
    aiRadioMode    OBJECT-TYPE
-       SYNTAX       DisplayString 
+       SYNTAX       DisplayString
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
             "Radio state of AP - access/monitor"
       ::= { aiRadioEntry 22 }
-   
-   aiWlanTable  OBJECT-TYPE 
-       SYNTAX       SEQUENCE OF AiWlanEntry
-       MAX-ACCESS   not-accessible              
-       STATUS       current 
-       DESCRIPTION 
-                "This table contains all BSSIDs active on this virtual
-                controller. This table is indexed by Access Point MAC 
-                Address and a WLAN Index"
-       ::= { aiStateGroup 3 } 
 
-   aiWlanEntry OBJECT-TYPE 
-       SYNTAX       AiWlanEntry 
-       MAX-ACCESS   not-accessible            
-       STATUS       current 
-       DESCRIPTION 
+   aiWlanTable  OBJECT-TYPE
+       SYNTAX       SEQUENCE OF AiWlanEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+                "This table contains all BSSIDs active on this virtual
+                controller. This table is indexed by Access Point MAC
+                Address and a WLAN Index"
+       ::= { aiStateGroup 3 }
+
+   aiWlanEntry OBJECT-TYPE
+       SYNTAX       AiWlanEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
              " "
           INDEX { aiWlanAPMACAddress, aiWlanIndex }
-       ::= { aiWlanTable 1 } 
+       ::= { aiWlanTable 1 }
 
    AiWlanEntry ::=
    SEQUENCE {
@@ -1637,7 +1637,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
    }
 
    aiWlanAPMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -1662,7 +1662,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
       ::= { aiWlanEntry 3 }
 
    aiWlanMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -1716,27 +1716,27 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        DESCRIPTION
             "Received data bytes"
       ::= { aiWlanEntry 10 }
-   
-   aiClientTable  OBJECT-TYPE 
+
+   aiClientTable  OBJECT-TYPE
        SYNTAX       SEQUENCE OF AiClientEntry
-       MAX-ACCESS   not-accessible              
-       STATUS       current 
-       DESCRIPTION 
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
                 "This table contains information about all clients
                 connected to the virtual controller. When a client roams
-                from one access point to another, all counters in this 
+                from one access point to another, all counters in this
                 table are reset to 0. aiClientUptime also get reset on a
                 mobility event"
-       ::= { aiStateGroup 4 } 
+       ::= { aiStateGroup 4 }
 
-   aiClientEntry OBJECT-TYPE 
-       SYNTAX       AiClientEntry 
-       MAX-ACCESS   not-accessible            
-       STATUS       current 
-       DESCRIPTION 
+   aiClientEntry OBJECT-TYPE
+       SYNTAX       AiClientEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
              " "
           INDEX { aiClientMACAddress }
-       ::= { aiClientTable 1 } 
+       ::= { aiClientTable 1 }
 
    AiClientEntry ::=
    SEQUENCE {
@@ -1761,7 +1761,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
    }
 
    aiClientMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -1769,7 +1769,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
       ::= { aiClientEntry 1 }
 
    aiClientWlanMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -1777,7 +1777,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
       ::= { aiClientEntry 2 }
 
    aiClientIPAddress OBJECT-TYPE
-       SYNTAX      IpAddress 
+       SYNTAX      IpAddress
        MAX-ACCESS  read-only
        STATUS      current
        DESCRIPTION
@@ -1786,7 +1786,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 
 
    aiClientAPIPAddress OBJECT-TYPE
-       SYNTAX      IpAddress 
+       SYNTAX      IpAddress
        MAX-ACCESS  read-only
        STATUS      current
        DESCRIPTION
@@ -1906,7 +1906,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             "The HT mode of this Client"
        ::= { aiClientEntry 18 }
 
---- Begining of voice client location entry       
+--- Begining of voice client location entry
 
    aiVoiceClientTable  OBJECT-TYPE
        SYNTAX       SEQUENCE OF AiVoiceClientEntry
@@ -1920,14 +1920,14 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        SYNTAX       AiVoiceClientEntry
        MAX-ACCESS   not-accessible
        STATUS       current
-       DESCRIPTION 
+       DESCRIPTION
             "Entry of a voice client"
            INDEX        { aiClientMac }
        ::= { aiVoiceClientTable 1}
-   
+
    AiVoiceClientEntry ::=
    SEQUENCE {
-        aiClientMac      MacAddress, 
+        aiClientMac      MacAddress,
         aiClientIP       IpAddress,
         aiClientAPMac    MacAddress,
         aiClientAPName   DisplayString
@@ -1949,7 +1949,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        DESCRIPTION
             "IP address of voice client"
        ::= { aiVoiceClientEntry 2 }
-   
+
    aiClientAPMac  OBJECT-TYPE
         SYNTAX      MacAddress
         MAX-ACCESS  read-only
@@ -1970,22 +1970,22 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 --- End of voice client location entry
 
 --- Begin of Interfer AP entry
-   aiInterferAccessPointTable  OBJECT-TYPE 
+   aiInterferAccessPointTable  OBJECT-TYPE
     SYNTAX       SEQUENCE OF AiInterferAccessPointEntry
-    MAX-ACCESS   not-accessible              
-    STATUS       current 
-    DESCRIPTION 
+    MAX-ACCESS   not-accessible
+    STATUS       current
+    DESCRIPTION
              "This contains all interfer access points infomation"
-    ::= { aiInfoGroup 8 } 
+    ::= { aiInfoGroup 8 }
 
-   aiInterferAccessPointEntry OBJECT-TYPE 
-       SYNTAX       AiInterferAccessPointEntry 
-       MAX-ACCESS   not-accessible            
-       STATUS       current 
-       DESCRIPTION 
+   aiInterferAccessPointEntry OBJECT-TYPE
+       SYNTAX       AiInterferAccessPointEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
              " "
           INDEX { aiInterferAPIndex }
-       ::= { aiInterferAccessPointTable 1 } 
+       ::= { aiInterferAccessPointTable 1 }
 
    AiInterferAccessPointEntry ::=
    SEQUENCE {
@@ -1998,7 +1998,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
         aiInterferAPAvgSnr          Integer32,
         aiInterferAPType            DisplayString
    }
-    
+
     aiInterferAPIndex OBJECT-TYPE
        SYNTAX      Integer32
        MAX-ACCESS  read-only
@@ -2022,7 +2022,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        DESCRIPTION
             "Interfer Access Point ESSID"
        ::= { aiInterferAccessPointEntry 3 }
-       
+
     aiInterferAPChannel OBJECT-TYPE
        SYNTAX      DisplayString
        MAX-ACCESS  read-only
@@ -2030,7 +2030,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        DESCRIPTION
             "Interfer Access Point Channel"
        ::= { aiInterferAccessPointEntry 4 }
-   
+
     aiInterferAPPhyType OBJECT-TYPE
        SYNTAX      DisplayString
        MAX-ACCESS  read-only
@@ -2047,7 +2047,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             "Interfer Access Point Encryption"
        ::= { aiInterferAccessPointEntry 6 }
 
-       
+
     aiInterferAPAvgSnr OBJECT-TYPE
        SYNTAX      Integer32
        MAX-ACCESS  read-only
@@ -2065,9 +2065,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
        ::= { aiInterferAccessPointEntry 8 }
 
 --- End of Interfer AP entry
-   
-   aiManagedModeSinceLastSync OBJECT-TYPE 
-         SYNTAX       DisplayString 
+
+   aiManagedModeSinceLastSync OBJECT-TYPE
+         SYNTAX       DisplayString
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -2092,8 +2092,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object is used in the traps to indicate 
+			"
+            This object is used in the traps to indicate
             the wired MAC address of an access point, for which the trap is being raised.
         			"
 	::= {aiTrapObjectsGroup 1 }
@@ -2103,8 +2103,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object is used in the traps to indicate 
+			"
+            This object is used in the traps to indicate
             the IP address of an access point, for which the trap is being raised.
         			"
 	::= {aiTrapObjectsGroup 2 }
@@ -2114,7 +2114,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the BSSID of the
             access point, for which the trap is being raised.
         			"
@@ -2125,7 +2125,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the SSID of the
           access point, for which the trap is being raised.
         			"
@@ -2136,7 +2136,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the BSSID of the
             access point, for which we are raising the trap. If an
             Air Monitor is sending the trap then this will indicate
@@ -2150,7 +2150,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the SSID of the
           access point, for which the trap is being raised. If an
           Air Monitor is sending the trap then this will indicate
@@ -2164,7 +2164,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the channel of the
           access point, for which the trap is being raised. If an
           wlsxr monitor is sending the trap then this will indicate
@@ -2178,7 +2178,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           a node.
         			"
@@ -2189,7 +2189,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           the source.
         			"
@@ -2200,7 +2200,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           the receiver.
         			"
@@ -2211,7 +2211,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           the transmitter.
         			"
@@ -2222,7 +2222,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the MAC address of
           the receiver.
         			"
@@ -2233,7 +2233,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Signal to Noise
           ratio.
         			"
@@ -2244,7 +2244,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Signature Name.
         			"
 	::= {aiTrapObjectsGroup 14 }
@@ -2254,7 +2254,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Frame Type
         			"
 	::= {aiTrapObjectsGroup 15 }
@@ -2264,7 +2264,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Address type.
         			"
 	::= {aiTrapObjectsGroup 16 }
@@ -2274,7 +2274,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Location of the AP.
         			"
 	::= {aiTrapObjectsGroup 17 }
@@ -2284,7 +2284,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Current Channel.
         			"
 	::= {aiTrapObjectsGroup 18 }
@@ -2294,7 +2294,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the AP Transmit Power.
         			"
 	::= {aiTrapObjectsGroup 19 }
@@ -2304,7 +2304,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the MAC address
         			"
 	::= {aiTrapObjectsGroup 20 }
@@ -2314,7 +2314,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the IP address
         			"
 	::= {aiTrapObjectsGroup 21 }
@@ -2324,7 +2324,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used to point to the WEBUI Rogue AP information URL.
         			"
 	::= {aiTrapObjectsGroup 22 }
@@ -2334,7 +2334,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the VLAN Id.
         			"
 	::= {aiTrapObjectsGroup 23 }
@@ -2344,7 +2344,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the admin status of
             VLAN.
         			"
@@ -2355,7 +2355,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the admin status of
             VLAN.
         			"
@@ -2366,7 +2366,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Authentication Server used for Authentication.
         			"
@@ -2377,7 +2377,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Authentication Server Timeout.
         			"
@@ -2388,7 +2388,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
            Slot in which this card is present.
         			"
@@ -2399,7 +2399,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Temperature Value.
         			"
@@ -2410,7 +2410,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Process name.
         			"
@@ -2421,7 +2421,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             Fan Number.
         			"
@@ -2432,7 +2432,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             type of Voltage.
         			"
@@ -2443,7 +2443,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
             voltage value in Float.
         			"
@@ -2454,7 +2454,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             The Reason for which a station is black listed.
             **NOTE: this object is obsoleted and replaced by
             wlsxTrapStationDenyListReason.
@@ -2467,7 +2467,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify a spoofed IP address.
         			"
 	::= {aiTrapObjectsGroup 35 }
@@ -2477,7 +2477,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify an old MAC address.
         			"
 	::= {aiTrapObjectsGroup 36 }
@@ -2487,7 +2487,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify a New MAC address.
         			"
 	::= {aiTrapObjectsGroup 37 }
@@ -2497,7 +2497,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify name of the database.
         			"
 	::= {aiTrapObjectsGroup 38 }
@@ -2507,7 +2507,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify name of the database user.
         			"
 	::= {aiTrapObjectsGroup 39 }
@@ -2517,8 +2517,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object is used in a trap to identify the IpAddress of the 
+			"
+            This object is used in a trap to identify the IpAddress of the
             Database.
         			"
 	::= {aiTrapObjectsGroup 40 }
@@ -2528,7 +2528,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in a trap to identify the port of the user.
         			"
 	::= {aiTrapObjectsGroup 41 }
@@ -2538,7 +2538,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object contains the Virtual Router Identifier.
         			"
 	::= {aiTrapObjectsGroup 42 }
@@ -2548,7 +2548,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object contains the Master IP address.
         			"
 	::= {aiTrapObjectsGroup 43 }
@@ -2558,7 +2558,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the VRRP Operational state.
         			"
 	::= {aiTrapObjectsGroup 44 }
@@ -2568,7 +2568,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the External Services Interface (ESI) Server
             Group name
         			"
@@ -2579,7 +2579,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the External Services Interface (ESI) Server
             Name
         			"
@@ -2590,7 +2590,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the External Services Interface (ESI) Server
             IP address
         			"
@@ -2601,8 +2601,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents number of the days remaining prior to a 
+			"
+            This object represents number of the days remaining prior to a
             license expiry.
         			"
 	::= {aiTrapObjectsGroup 48 }
@@ -2612,8 +2612,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents the controller IP address. 
+			"
+            This object represents the controller IP address.
         			"
 	::= {aiTrapObjectsGroup 49 }
 
@@ -2622,8 +2622,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents the Role of the controller. 
+			"
+            This object represents the Role of the controller.
         			"
 	::= {aiTrapObjectsGroup 50 }
 
@@ -2632,7 +2632,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents IP address of the User.
         			"
 	::= {aiTrapObjectsGroup 51 }
@@ -2642,7 +2642,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents MAC address of the User.
         			"
 	::= {aiTrapObjectsGroup 52 }
@@ -2652,7 +2652,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the user name.
         			"
 	::= {aiTrapObjectsGroup 53 }
@@ -2662,7 +2662,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Authentication method of the user.
         			"
 	::= {aiTrapObjectsGroup 54 }
@@ -2672,7 +2672,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Authentication method of the user.
         			"
 	::= {aiTrapObjectsGroup 55 }
@@ -2682,7 +2682,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the radio number.
         			"
 	::= {aiTrapObjectsGroup 56 }
@@ -2692,8 +2692,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-			This object is used to point to the WEBGUI Rogue AP information 
+			"
+			This object is used to point to the WEBGUI Rogue AP information
 			URL.
         			"
 	::= {aiTrapObjectsGroup 57 }
@@ -2703,8 +2703,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-			This object is used to point to the WEBGUI Rogue interfering 
+			"
+			This object is used to point to the WEBGUI Rogue interfering
 			AP information URL.
         			"
 	::= {aiTrapObjectsGroup 58 }
@@ -2714,7 +2714,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the
            port number.
         			"
@@ -2725,7 +2725,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in all the enterprise traps to indicate the
            the time when the trap is generated on the controller.
         			"
@@ -2736,8 +2736,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents the Trap host. 
+			"
+            This object represents the Trap host.
         			"
 	::= {aiTrapObjectsGroup 61 }
 
@@ -2746,8 +2746,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents the Trap host port. 
+			"
+            This object represents the Trap host port.
         			"
 	::= {aiTrapObjectsGroup 62 }
 
@@ -2756,7 +2756,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the ID of the configuration, to be used in traps.
         			"
 	::= {aiTrapObjectsGroup 63 }
@@ -2766,7 +2766,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the URL from which the transfer should happen.
         			"
 	::= {aiTrapObjectsGroup 64 }
@@ -2776,7 +2776,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents  the transfer type, upload or download.
         			"
 	::= {aiTrapObjectsGroup 65 }
@@ -2786,7 +2786,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents state of the configuration transfer.
         			"
 	::= {aiTrapObjectsGroup 66 }
@@ -2796,7 +2796,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the reason for the update failure.
         			"
 	::= {aiTrapObjectsGroup 67 }
@@ -2806,7 +2806,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This variable represents the AMAPI object which is the reason for the the update failure.
         			"
 	::= {aiTrapObjectsGroup 68 }
@@ -2816,8 +2816,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents type of the configuration change. 
+			"
+            This object represents type of the configuration change.
         			"
 	::= {aiTrapObjectsGroup 69 }
 
@@ -2826,7 +2826,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This variable represents the AMAPI object corresponding to the global configuration change.
         			"
 	::= {aiTrapObjectsGroup 70 }
@@ -2836,7 +2836,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents generation number of a table. Used in the MMS, to keep track of the table content changes.
         			"
 	::= {aiTrapObjectsGroup 71 }
@@ -2846,7 +2846,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the license ID.
         			"
 	::= {aiTrapObjectsGroup 72 }
@@ -2856,7 +2856,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the Confidence Level as a percentage
         			"
 	::= {aiTrapObjectsGroup 73 }
@@ -2866,7 +2866,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This variable indicates any licenses that are not present during a configuration update
         			"
 	::= {aiTrapObjectsGroup 74 }
@@ -2876,7 +2876,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents  the number of CDRs in buffer.
         			"
 	::= {aiTrapObjectsGroup 75 }
@@ -2886,7 +2886,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the tunnel ID.
         			"
 	::= {aiTrapObjectsGroup 76 }
@@ -2896,7 +2896,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the tunnel Status.
         			"
 	::= {aiTrapObjectsGroup 77 }
@@ -2906,7 +2906,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the tunnel up reason.
         			"
 	::= {aiTrapObjectsGroup 78 }
@@ -2916,7 +2916,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the tunnel down reason.
         			"
 	::= {aiTrapObjectsGroup 79 }
@@ -2926,7 +2926,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object represents the AP Serial Number.
         			"
 	::= {aiTrapObjectsGroup 80 }
@@ -2936,7 +2936,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object represents the Time in String format.
         			"
 	::= {aiTrapObjectsGroup 81 }
@@ -2946,10 +2946,10 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             This object represents the master IP address.
             **NOTE: this object is obsoleted and replaced by
-            wlsxTrapConductorIp 
+            wlsxTrapConductorIp
         			"
 	::= {aiTrapObjectsGroup 82 }
 
@@ -2958,7 +2958,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Local IP address.
         			"
 	::= {aiTrapObjectsGroup 83 }
@@ -2968,7 +2968,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             This object represents the master controller name.
             **NOTE: this object is obsoleted and replaced by
             wlsxTrapConductorName
@@ -2980,7 +2980,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the local controller name.
         			"
 	::= {aiTrapObjectsGroup 85 }
@@ -2990,7 +2990,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the IP address of the AP's primary controller.
         			"
 	::= {aiTrapObjectsGroup 86 }
@@ -3000,7 +3000,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the IP address of the AP's backup controller.
         			"
 	::= {aiTrapObjectsGroup 87 }
@@ -3010,7 +3010,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Spoofed Frame Type
         			"
 	::= {aiTrapObjectsGroup 88 }
@@ -3020,7 +3020,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the type of association
         			"
 	::= {aiTrapObjectsGroup 89 }
@@ -3030,7 +3030,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the IP address of a device seen by an AP.
         			"
 	::= {aiTrapObjectsGroup 90 }
@@ -3040,7 +3040,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object represents the MAC address of a device seen by an AP.
         			"
 	::= {aiTrapObjectsGroup 91 }
@@ -3050,7 +3050,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the Ip Address of a Voice client.
         			"
 	::= {aiTrapObjectsGroup 92 }
@@ -3060,7 +3060,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the MAC address of a Voice client.
         			"
 	::= {aiTrapObjectsGroup 93 }
@@ -3070,7 +3070,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Name of the AP.
         			"
 	::= {aiTrapObjectsGroup 94 }
@@ -3080,7 +3080,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the AP Mode.
         			"
 	::= {aiTrapObjectsGroup 95 }
@@ -3090,7 +3090,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Previous Channel.
         			"
 	::= {aiTrapObjectsGroup 96 }
@@ -3100,7 +3100,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Previous Secondary Channel.
         			"
 	::= {aiTrapObjectsGroup 97 }
@@ -3110,7 +3110,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate previous AP Transmit Power.
         			"
 	::= {aiTrapObjectsGroup 98 }
@@ -3120,7 +3120,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the APs Current Mode.
         			"
 	::= {aiTrapObjectsGroup 99 }
@@ -3130,7 +3130,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the APs Previous Mode.
         			"
 	::= {aiTrapObjectsGroup 100 }
@@ -3140,7 +3140,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This Object represents the APs Previous Mode.
         			"
 	::= {aiTrapObjectsGroup 101 }
@@ -3150,7 +3150,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
           This object is used in the traps to indicate the Current Secondary Channel.
         			"
 	::= {aiTrapObjectsGroup 102 }
@@ -3160,8 +3160,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
-            This object represents type of the configuration change. 
+			"
+            This object represents type of the configuration change.
         			"
 	::= {aiTrapObjectsGroup 103 }
 
@@ -3170,7 +3170,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             IP address of the controller to which the AP is
             (or was most recently) registered.
         			"
@@ -3181,7 +3181,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             Status of the AP as seen by the master when the status changes.
             **NOTE: this object is obsoleted and replaced by
             wlsxTrapApConductorStatus
@@ -3193,7 +3193,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the name of the trustpoint.
         			"
 	::= {aiTrapObjectsGroup 106 }
@@ -3203,7 +3203,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object is used in the traps to indicate the name of the crl.
         			"
 	::= {aiTrapObjectsGroup 107 }
@@ -3213,7 +3213,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		MAX-ACCESS	accessible-for-notify
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This object represents the number of occurrence of this trap.
         			"
 	::= {aiTrapObjectsGroup 108 }
@@ -3268,7 +3268,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                     "
     ::= {aiTrapObjectsGroup 138 }
 
-    wlsxTrapAuthServerAddress OBJECT-TYPE 
+    wlsxTrapAuthServerAddress OBJECT-TYPE
         SYNTAX      IpAddress
         MAX-ACCESS  accessible-for-notify
         STATUS      current
@@ -3279,7 +3279,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                     "
     ::= {aiTrapObjectsGroup 139 }
 
-    wlsxTrapPortalServerName OBJECT-TYPE 
+    wlsxTrapPortalServerName OBJECT-TYPE
         SYNTAX      DisplayString(SIZE(0..64))
         MAX-ACCESS  accessible-for-notify
         STATUS      current
@@ -3290,7 +3290,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                     "
     ::= {aiTrapObjectsGroup 140 }
 
-    wlsxTrapPortalServerAddress OBJECT-TYPE 
+    wlsxTrapPortalServerAddress OBJECT-TYPE
         SYNTAX      DisplayString(SIZE(0..64))
         MAX-ACCESS  accessible-for-notify
         STATUS      current
@@ -3301,7 +3301,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                     "
     ::= {aiTrapObjectsGroup 141 }
 
-    wlsxTrapPortalServerDownReason OBJECT-TYPE 
+    wlsxTrapPortalServerDownReason OBJECT-TYPE
         SYNTAX      ArubaPortalServerDownReason
         MAX-ACCESS  accessible-for-notify
         STATUS      current
@@ -3316,7 +3316,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
         MAX-ACCESS      accessible-for-notify
         STATUS          obsolete
         DESCRIPTION
-                    "                       
+                    "
             This object is used in the traps to indicate the
             type of Blacklist reason.
             **NOTE: this object is obsoleted and replaced by
@@ -3329,7 +3329,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
         MAX-ACCESS      accessible-for-notify
         STATUS          current
         DESCRIPTION
-                    "                       
+                    "
             This object represents plug in or plug out status of an USB device.
                                 "
     ::= {aiTrapObjectsGroup 147 }
@@ -3339,7 +3339,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
         MAX-ACCESS      accessible-for-notify
         STATUS          current
         DESCRIPTION
-                    "                       
+                    "
             This object represents vendor ID or product ID of an USB device.
                                 "
     ::= {aiTrapObjectsGroup 148 }
@@ -3349,7 +3349,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
          MAX-ACCESS  accessible-for-notify
          STATUS      current
          DESCRIPTION
-                 "           
+                 "
                  This object represents the reason for the authentication failure.
                          "
     ::= {aiTrapObjectsGroup 155 }
@@ -3410,7 +3410,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             MAX-ACCESS  accessible-for-notify
             STATUS      current
             DESCRIPTION
-                    "           
+                    "
             This object represents HT-Mode Information.
                 "
         ::= {aiTrapObjectsGroup 161 }
@@ -3420,7 +3420,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             MAX-ACCESS  accessible-for-notify
             STATUS      current
             DESCRIPTION
-                    "           
+                    "
             This object represents Band Information.
                     "
         ::= {aiTrapObjectsGroup 162 }
@@ -3430,7 +3430,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             MAX-ACCESS  accessible-for-notify
             STATUS      current
             DESCRIPTION
-                    "           
+                    "
             This object represents Previous HT-Mode Information.
                     "
         ::= {aiTrapObjectsGroup 163 }
@@ -3440,7 +3440,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             MAX-ACCESS  accessible-for-notify
             STATUS      current
             DESCRIPTION
-                    "           
+                    "
             This object represents Prev Band Information.
                     "
         ::= {aiTrapObjectsGroup 164 }
@@ -3450,7 +3450,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
             MAX-ACCESS  accessible-for-notify
             STATUS      current
             DESCRIPTION
-                    "           
+                    "
             This object represents Secondary Channel.
                     "
         ::= {aiTrapObjectsGroup 165 }
@@ -3480,7 +3480,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
              MAX-ACCESS  accessible-for-notify
              STATUS      current
              DESCRIPTION
-                 "           
+                 "
                  This object is used in the traps to indicate the IPv6 address
                  "
          ::= {aiTrapObjectsGroup 168 }
@@ -3493,8 +3493,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that a node is exceeding the threshold set for 
+			"
+            This trap indicates that a node is exceeding the threshold set for
             the frame type.
         	"
 	::= {aiTrapDefinitionsGroup 1003 }
@@ -3503,7 +3503,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapUserIpAddress,wlsxTrapUserPhyAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a new user was created.
         	"
 	::= {aiTrapDefinitionsGroup 1014 }
@@ -3512,7 +3512,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapUserIpAddress,wlsxTrapUserPhyAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a user was deleted.
         	"
 	::= {aiTrapDefinitionsGroup 1015 }
@@ -3523,7 +3523,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapUserRole}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a user is Authenticated.
         	"
 	::= {aiTrapDefinitionsGroup 1016 }
@@ -3532,7 +3532,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapUserIpAddress,wlsxTrapUserPhyAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a user is Deauthenticated.
         	"
 	::= {aiTrapDefinitionsGroup 1017 }
@@ -3541,7 +3541,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapUserName, wlsxTrapUserIpAddress,wlsxTrapUserPhyAddress,wlsxTrapAuthServerName,wlsxTrapAuthServerAddress,wlsxTrapAPBSSID,wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a user authentication has failed.
         	"
 	::= {aiTrapDefinitionsGroup 1018 }
@@ -3550,7 +3550,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapUserName, wlsxTrapUserIpAddress,wlsxTrapUserPhyAddress,wlsxTrapAuthServerName,wlsxTrapAuthServerAddress,wlsxTrapAPBSSID,wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the authentication server request timed out.
         	"
 	::= {aiTrapDefinitionsGroup 1019 }
@@ -3559,7 +3559,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapAuthServerName,wlsxTrapAuthServerTimeout}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the authentication server timed out.
         	"
 	::= {aiTrapDefinitionsGroup 1020 }
@@ -3568,7 +3568,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapAuthServerName, wlsxTrapAuthServerAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an authentication server is up.
         	"
 	::= {aiTrapDefinitionsGroup 1021 }
@@ -3577,7 +3577,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapAPMacAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that an access point up.
         	"
 	::= {aiTrapDefinitionsGroup 1040 }
@@ -3586,7 +3586,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapAPMacAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             A Trap which indicates that an access point down.
         	"
 	::= {aiTrapDefinitionsGroup 1041 }
@@ -3596,8 +3596,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
-            This trap indicates that an access point at Location 
+			"
+            This trap indicates that an access point at Location
             wlsxTrapAPLocation has changed the channel.
         	"
 	::= {aiTrapDefinitionsGroup 1043 }
@@ -3607,8 +3607,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                                 wlsxTrapStationBlackListReasonStr}
 		STATUS		obsolete
 		DESCRIPTION
-			"			
-            This trap indicates that the station is black listed. 
+			"
+            This trap indicates that the station is black listed.
             **NOTE: this notification is obsoleted and replaced by
             wlsxNStationAddedToDenyList.
         	"
@@ -3618,8 +3618,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapNodeMac}
 		STATUS		obsolete
 		DESCRIPTION
-			"			
-            This trap indicates that the station is removed from the black list. 
+			"
+            This trap indicates that the station is removed from the black list.
             **NOTE: this notification is obsoleted and replaced by
             wlsxNStationRemovedFromDenyList
         	"
@@ -3632,8 +3632,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                 wlsxTrapAPPhyType, wlsxTrapAPHTMode}
 		STATUS		current
 		DESCRIPTION
-			"			
-            A Trap which indicates changes in the Radio attributes of an 
+			"
+            A Trap which indicates changes in the Radio attributes of an
             access point.
         	"
 	::= {aiTrapDefinitionsGroup 1049 }
@@ -3656,7 +3656,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
                 This trap indicates that a previously detected access point, classified as Rogue,
                 is no longer present in the network.
 			"
@@ -3667,7 +3667,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM detected Station Impersonation.
 			"
 	::= {aiTrapDefinitionsGroup 1055 }
@@ -3678,7 +3678,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 				This trap indicates that an AM detected an access point
 				which is violating the Reserved Channel configuration.
 			"
@@ -3690,9 +3690,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP has detected an access point is violating 
-            Valid SSID configuration by using an SSID that is reserved for use by a valid AP only. 
+			"
+			This trap indicates that an AP has detected an access point is violating
+            Valid SSID configuration by using an SSID that is reserved for use by a valid AP only.
 			"
 	::= {aiTrapDefinitionsGroup 1057 }
 
@@ -3702,9 +3702,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected an access point that has a channel misconfiguration 
-            because it is using a channel that is not valid.   
+			"
+			This trap indicates that an AP detected an access point that has a channel misconfiguration
+            because it is using a channel that is not valid.
 			"
 	::= {aiTrapDefinitionsGroup 1058 }
 
@@ -3714,7 +3714,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an access point that has an OUI misconfiguration because
             it is using an OUI that is not valid.
 			"
@@ -3726,7 +3726,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an access point that has an SSID misconfiguration because it is using
             an SSID that is not valid.
 			"
@@ -3738,7 +3738,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an access point has bad Short preamble
 			configuration.
 			"
@@ -3750,7 +3750,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an access point that is misconfigured because it is not using WPA.
 			"
 	::= {aiTrapDefinitionsGroup 1062 }
@@ -3761,7 +3761,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected an Ad hoc
 			network.
 			"
@@ -3773,7 +3773,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that a previously detected Ad hoc Network is no
             longer present in the network.
 			"
@@ -3785,7 +3785,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that Protection was enforced because a valid station's association to a non-valid access point violated Valid Station policy.
 	                "
 	::= {aiTrapDefinitionsGroup 1065 }
@@ -3796,7 +3796,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 		    This trap indicates that an AP detected that a valid access point is using the same WEP initialization vector in consecutive packets.
 			"
 	::= {aiTrapDefinitionsGroup 1066 }
@@ -3807,7 +3807,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel, wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that a valid access point is using a Weak WEP initialization vector.
 	"
 	::= {aiTrapDefinitionsGroup 1067 }
@@ -3817,7 +3817,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP has detected channel interference.
 			"
 	::= {aiTrapDefinitionsGroup 1068 }
@@ -3827,9 +3827,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that a previously detected channel interference
-            is no longer present. 
+            is no longer present.
 			"
 	::= {aiTrapDefinitionsGroup 1069 }
 
@@ -3839,7 +3839,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP has detected interference for an access point.
 			"
 	::= {aiTrapDefinitionsGroup 1070 }
@@ -3850,9 +3850,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that the previously detected interference for an access point
-            is no longer present. 
+            is no longer present.
 			"
 	::= {aiTrapDefinitionsGroup 1071 }
 
@@ -3863,7 +3863,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP has detected interference for a station.
 			"
 	::= {aiTrapDefinitionsGroup 1072 }
@@ -3875,9 +3875,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that the previously detected interference for a station
-            is no longer present. 
+            is no longer present.
 			"
 	::= {aiTrapDefinitionsGroup 1073 }
 
@@ -3887,7 +3887,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that an access point has exceeded the configured upper threshold for Frame Retry Rate.
 			"
 	::= {aiTrapDefinitionsGroup 1074 }
@@ -3898,7 +3898,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapTargetAPChannel,wlsxTrapAPLocation,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that an access point has exceeded the configured upper threshold for Frame Receive Error Rate.
 			"
 	::= {aiTrapDefinitionsGroup 1075 }
@@ -3909,7 +3909,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapTargetAPChannel,wlsxTrapAPLocation,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that an access point exceeded the configured upper threshold for Frame Fragmentation Rate.
 			"
 	::= {aiTrapDefinitionsGroup 1076 }
@@ -3921,8 +3921,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected that a station or access point has exceeded the configured upper threshold for Bandwidth rate. 
+			"
+			This trap indicates that an AP detected that a station or access point has exceeded the configured upper threshold for Bandwidth rate.
 			"
 	::= {aiTrapDefinitionsGroup 1077 }
 
@@ -3933,8 +3933,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected that a station has exceeded the configured upper threshold for Low speed rate. 
+			"
+			This trap indicates that an AP detected that a station has exceeded the configured upper threshold for Low speed rate.
 			"
 	::= {aiTrapDefinitionsGroup 1078 }
 
@@ -3945,8 +3945,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected that a station has exceeded the configured upper threshold for Non Unicast traffic rate. 
+			"
+			This trap indicates that an AP detected that a station has exceeded the configured upper threshold for Non Unicast traffic rate.
 			"
 	::= {aiTrapDefinitionsGroup 1079 }
 
@@ -3956,8 +3956,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM is reporting that an AP 
+			"
+			This trap indicates that an AM is reporting that an AP
 			has enabled Load balancing.
 			"
 	::= {aiTrapDefinitionsGroup 1080 }
@@ -3968,7 +3968,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM is reporting that an AP
 			has enabled Load balancing.
 			"
@@ -3979,8 +3979,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP has detected that the configured upper threshold for Frame Retry Rate was exceeded on a channel. 
+			"
+			This trap indicates that an AP has detected that the configured upper threshold for Frame Retry Rate was exceeded on a channel.
 			"
 	::= {aiTrapDefinitionsGroup 1082 }
 
@@ -3989,8 +3989,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP has detected that the configured upper threshold for Frame Fragmentation Rate was exceeded on a channel. 
+			"
+			This trap indicates that an AP has detected that the configured upper threshold for Frame Fragmentation Rate was exceeded on a channel.
 			"
 	::= {aiTrapDefinitionsGroup 1083 }
 
@@ -3999,8 +3999,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP has detected that the configured upper threshold for Frame Receive Error Rate was exceeded on a channel. 
+			"
+			This trap indicates that an AP has detected that the configured upper threshold for Frame Receive Error Rate was exceeded on a channel.
 			"
 	::= {aiTrapDefinitionsGroup 1084 }
 
@@ -4011,7 +4011,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match in a frame from an access point.
 			"
 	::= {aiTrapDefinitionsGroup 1085 }
@@ -4022,7 +4022,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match in a frame from a Station.
 			"
 	::= {aiTrapDefinitionsGroup 1086 }
@@ -4033,8 +4033,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected frames on a channel which 
+			"
+			This trap indicates that an AP detected frames on a channel which
             exceed the configured IDS rate threshold.
 	"
 	::= {aiTrapDefinitionsGroup 1087 }
@@ -4046,8 +4046,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected frames transmitted or received by an 
+			"
+			This trap indicates that an AP detected frames transmitted or received by an
             access point, which exceed the configured IDS rate threshold.
 	"
 	::= {aiTrapDefinitionsGroup 1088 }
@@ -4058,8 +4058,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected frames transmitted or received by a 
+			"
+			This trap indicates that an AP detected frames transmitted or received by a
             node, which exceed the configured IDS rate threshold.
 			"
 	::= {aiTrapDefinitionsGroup 1089 }
@@ -4069,8 +4069,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the rate of EAP Handshake packets 
+			"
+			This trap indicates that the rate of EAP Handshake packets
             received by an AP has exceeded the configured IDS EAP Handshake rate threshold.
 	"
 	::= {aiTrapDefinitionsGroup 1090 }
@@ -4080,7 +4080,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 		    This trap indicates that an AM detected a Signal Anomaly.
 			"
 	::= {aiTrapDefinitionsGroup 1091 }
@@ -4091,10 +4091,10 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM received packets from an AP
-			which exceeds the acceptable sequence number difference. 
-            The acceptable sequence number difference is an IDS configuration 
+			which exceeds the acceptable sequence number difference.
+            The acceptable sequence number difference is an IDS configuration
             object.
 	"
 	::= {aiTrapDefinitionsGroup 1092 }
@@ -4105,10 +4105,10 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM received packets from a Node
-			which exceeds the acceptable sequence number difference. 
-            The acceptable sequence number difference is an IDS configuration 
+			which exceeds the acceptable sequence number difference.
+            The acceptable sequence number difference is an IDS configuration
             object.
 	"
 	::= {aiTrapDefinitionsGroup 1093 }
@@ -4119,8 +4119,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM detected a station Disconnect 
+			"
+			This trap indicates that an AM detected a station Disconnect
             attack.
 	"
 	::= {aiTrapDefinitionsGroup 1094 }
@@ -4130,8 +4130,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the number of potential fake APs detected by 
+			"
+			This trap indicates that the number of potential fake APs detected by
 			an AP has exceeded the configured IDS threshold. This is the total number of fake APs observed across all bands.
                         "
 	::= {aiTrapDefinitionsGroup 1095 }
@@ -4143,8 +4143,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM detected an Ad hoc 
+			"
+			This trap indicates that an AM detected an Ad hoc
 			Network. An Station is connected to an ad hoc AP.
 			"
 	::= {aiTrapDefinitionsGroup 1096 }
@@ -4155,7 +4155,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a Wireless Bridge when a WDS frame was seen between the transmitter and receiver addresses.
 			"
 	::= {aiTrapDefinitionsGroup 1097 }
@@ -4167,7 +4167,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an invalid MAC OUI in the BSSID of a frame.  An invalid MAC OUI suggests that the frame may be spoofed.
 			"
 	::= {aiTrapDefinitionsGroup 1098 }
@@ -4178,7 +4178,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an invalid MAC OUI in the SRC or DST address of a frame. An invalid MAC OUI suggests that the frame may be spoofed.
 			"
 	::= {aiTrapDefinitionsGroup 1099 }
@@ -4189,7 +4189,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an access point that is misconfigured because it does not have Privacy enabled.
 			"
 	::= {aiTrapDefinitionsGroup 1100 }
@@ -4201,7 +4201,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that a valid station is using the same WEP initialization vector in consecutive packets.
 			"
 	::= {aiTrapDefinitionsGroup 1101 }
@@ -4213,7 +4213,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that a valid station is using a Weak WEP initialization vector.
 			"
 	::= {aiTrapDefinitionsGroup 1102 }
@@ -4225,7 +4225,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapRogueInfoURL,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM detected a client associated
 			with a Rogue access point.
 			"
@@ -4237,8 +4237,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapNodeMac}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that a previously detected rogue access point 
+			"
+			This trap indicates that a previously detected rogue access point
             association is no longer present.
 			"
 	::= {aiTrapDefinitionsGroup 1104 }
@@ -4250,7 +4250,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected an Ad hoc
 			network that is bridging to a wired network
 			"
@@ -4263,9 +4263,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapInterferingAPInfoURL,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected an access point classified as Interfering. The access point 
-            is declared Interfering because it is neither authorized or classified as Rogue. 
+			"
+			This trap indicates that an AP detected an access point classified as Interfering. The access point
+            is declared Interfering because it is neither authorized or classified as Rogue.
 			"
 	::= {aiTrapDefinitionsGroup 1106 }
 
@@ -4273,7 +4273,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             An enterprise version of cold start trap, which contains the controller time stamp.
         	"
 	::= {aiTrapDefinitionsGroup 1111 }
@@ -4282,7 +4282,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             An enterprise version of warm start trap, which contains the controller time stamp.
         	"
 	::= {aiTrapDefinitionsGroup 1112 }
@@ -4293,7 +4293,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected AP Impersonation because the number of beacons seen has exceeded the expected number by the configured percentage threshold.
             The expected number is calculated based on the Beacon Interval Field in the Beacon frame.
 			"
@@ -4303,7 +4303,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapAuthServerName, wlsxTrapAuthServerAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an authentication server is down.
         	"
 	::= {aiTrapDefinitionsGroup 1115 }
@@ -4315,9 +4315,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected a station
-		        that is bridging from a wireless network 
+		        that is bridging from a wireless network
                         to a wired network
 			"
 	::= {aiTrapDefinitionsGroup 1129 }
@@ -4329,7 +4329,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Netstumbler from an access point.
 	"
 	::= {aiTrapDefinitionsGroup 1134 }
@@ -4340,7 +4340,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Netstumbler from a Station.
 	"
 	::= {aiTrapDefinitionsGroup 1135 }
@@ -4352,7 +4352,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for ASLEAP from an access point.
 	"
 	::= {aiTrapDefinitionsGroup 1136 }
@@ -4363,7 +4363,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for ASLEAP from a Station.
 	"
 	::= {aiTrapDefinitionsGroup 1137 }
@@ -4375,7 +4375,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for AirJack from an access point.
 	"
 	::= {aiTrapDefinitionsGroup 1138 }
@@ -4386,7 +4386,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for AirJack from a Station.
 	"
 	::= {aiTrapDefinitionsGroup 1139 }
@@ -4398,7 +4398,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Null-Probe-Response from an access point.
 	"
 	::= {aiTrapDefinitionsGroup 1140 }
@@ -4409,7 +4409,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Null-Probe-Response from a Station.
 	"
 	::= {aiTrapDefinitionsGroup 1141 }
@@ -4421,7 +4421,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Deauth-Broadcast from an access point.
 	"
 	::= {aiTrapDefinitionsGroup 1142 }
@@ -4432,7 +4432,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Deauth-Broadcast from a Station.
 	"
 	::= {aiTrapDefinitionsGroup 1143 }
@@ -4443,7 +4443,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP is detecting an access point that is bridging from a wireless network
             to a wired network.
 			"
@@ -4456,7 +4456,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP is detecting a station that is bridging from a wireless network
             to a wired network.
 			"
@@ -4468,7 +4468,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected an Ad hoc
 			network that is bridging to a wired network
 			"
@@ -4481,7 +4481,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AM has detected an Ad hoc
 			network that is bridging to a wired network
 			"
@@ -4494,8 +4494,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM detected a station disconnect 
+			"
+			This trap indicates that an AM detected a station disconnect
             attack.
 	"
 	::= {aiTrapDefinitionsGroup 1148 }
@@ -4506,8 +4506,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AM detected a station Disconnect 
+			"
+			This trap indicates that an AM detected a station Disconnect
             attack.
 	"
 	::= {aiTrapDefinitionsGroup 1149 }
@@ -4520,9 +4520,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		STATUS		current
 		DESCRIPTION
 			"			This trap indicates that an access point, classified as Suspected Rogue, has been
-                detected by a Controller. The AP is suspected to be rogue, 
-                with the supplied confidence level, because it was matched to 
-                the wired MAC address. 
+                detected by a Controller. The AP is suspected to be rogue,
+                with the supplied confidence level, because it was matched to
+                the wired MAC address.
 			"
 	::= {aiTrapDefinitionsGroup 1150 }
 
@@ -4531,8 +4531,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber}
 		STATUS		current
 		DESCRIPTION
-			"			
-		This trap indicates that a previously detected access point, classified Suspected 
+			"
+		This trap indicates that a previously detected access point, classified Suspected
                 Rogue, is either no longer present in the network or
                 has changed its state.
 			"
@@ -4544,7 +4544,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	    This trap indicates that an AP detected an access point that supports HT Greenfield mode.
 	"
 	::= {aiTrapDefinitionsGroup 1157 }
@@ -4555,7 +4555,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	    This trap indicates that an AP is detecting an access point with the HT 40MHz intolerance setting.
 	"
 	::= {aiTrapDefinitionsGroup 1158 }
@@ -4567,7 +4567,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 		This trap indicates that the system is detecting an HT 40MHz Intolerance setting from a Station.
 	"
 	::= {aiTrapDefinitionsGroup 1159 }
@@ -4576,7 +4576,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapESIServerGrpName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that all authentication servers is a server group are brought back in service.
         	"
 	::= {aiTrapDefinitionsGroup 1160 }
@@ -4588,8 +4588,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected an ad hoc 
+			"
+			This trap indicates that an AP detected an ad hoc
 			network where a station is connected to an ad hoc access point.
 			"
 	::= {aiTrapDefinitionsGroup 1161 }
@@ -4601,7 +4601,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an ad hoc
 			network that is bridging to a wired network.
 			"
@@ -4614,7 +4614,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an ad hoc
 			network that is bridging to a wired network.
 			"
@@ -4626,8 +4626,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the number of potential fake clients detected by 
+			"
+			This trap indicates that the number of potential fake clients detected by
 			an AP has exceeded the configured IDS threshold. This is the total number of fake clients observed across all bands.
 	"
 	::= {aiTrapDefinitionsGroup 1170 }
@@ -4640,7 +4640,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 		    This trap indicates that an AP detected an unencrypted data frame between a valid client and an access point.
 			"
 	::= {aiTrapDefinitionsGroup 1171 }
@@ -4652,7 +4652,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an ad hoc network using a valid/protected SSID.
 	"
 	::= {aiTrapDefinitionsGroup 1172 }
@@ -4665,7 +4665,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected that one of its virtual APs is being spoofed using MAC spoofing.
 	"
 	::= {aiTrapDefinitionsGroup 1173 }
@@ -4678,8 +4678,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected a client trying to associate to one of its BSSIDs on the wrong channel.  This can be a sign that the BSSID is 
+			"
+			This trap indicates that an AP detected a client trying to associate to one of its BSSIDs on the wrong channel.  This can be a sign that the BSSID is
             being spoofed in order to fool the client into thinking the AP is operating on another channel.
 			"
 	::= {aiTrapDefinitionsGroup 1174 }
@@ -4691,7 +4691,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP has determined that a client is under Disconnect Attack because the rate of Assoc/Reassoc Response packets
             received by that client exceeds the configured threshold.
 	"
@@ -4704,7 +4704,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP that had previously detected a client association to a Rogue access point is no longer detecting that association.
 			"
 	::= {aiTrapDefinitionsGroup 1176 }
@@ -4716,7 +4716,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an Omerta attack.
 	"
 	::= {aiTrapDefinitionsGroup 1177 }
@@ -4728,7 +4728,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a TKIP replay attack. If successful this could be the precursor to more
 			advanced attacks.
 	"
@@ -4741,7 +4741,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a ChopChop attack.
 	"
 	::= {aiTrapDefinitionsGroup 1179 }
@@ -4753,7 +4753,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a FATA-Jack attack.
 	"
 	::= {aiTrapDefinitionsGroup 1180 }
@@ -4765,7 +4765,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an invalid source and destination combination.
 	"
 	::= {aiTrapDefinitionsGroup 1181 }
@@ -4778,7 +4778,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a misassociation between a valid client and an unsafe AP.
 			"
 	::= {aiTrapDefinitionsGroup 1182 }
@@ -4790,8 +4790,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected a malformed HT Information Element. This can be the result of a misbehaving wireless driver or it may be an indication of a new wireless attack. 
+			"
+			This trap indicates that an AP detected a malformed HT Information Element. This can be the result of a misbehaving wireless driver or it may be an indication of a new wireless attack.
 			"
 	::= {aiTrapDefinitionsGroup 1183 }
 
@@ -4802,7 +4802,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a malformed association request with a NULL SSID.
 	"
 	::= {aiTrapDefinitionsGroup 1184 }
@@ -4814,8 +4814,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an AP detected a management frame with a malformed information element. The declared length of the element is larger than the entire frame containing the element. This may be used to corrupt or crash wireless drivers. 
+			"
+			This trap indicates that an AP detected a management frame with a malformed information element. The declared length of the element is larger than the entire frame containing the element. This may be used to corrupt or crash wireless drivers.
 	"
 	::= {aiTrapDefinitionsGroup 1185 }
 
@@ -4826,7 +4826,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a key in an EAPOL Key message with a specified length greater than the length of the entire message.
 	"
 	::= {aiTrapDefinitionsGroup 1186 }
@@ -4837,7 +4837,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an unusually large duration in a wireless frame. This may be an attempt to block other devices from transmitting.
 	"
 	::= {aiTrapDefinitionsGroup 1187 }
@@ -4850,7 +4850,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapSnr,wlsxTrapAPBand,wlsxTrapTargetAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a beacon on one channel advertising another channel. This could be an attempt to lure clients away from a valid AP.
 	"
 	::= {aiTrapDefinitionsGroup 1188 }
@@ -4862,7 +4862,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an authentication frame with
             either a bad algorithm (similar to Fata-Jack) or a bad transaction.
 	"
@@ -4873,8 +4873,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the rate of CTS packets 
+			"
+			This trap indicates that the rate of CTS packets
             received by an AP exceeds the configured IDS threshold.
 			"
 	::= {aiTrapDefinitionsGroup 1190 }
@@ -4884,8 +4884,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that the rate of RTS packets 
+			"
+			This trap indicates that the rate of RTS packets
             received by an AP exceeds the configured IDS threshold.
 			"
 	::= {aiTrapDefinitionsGroup 1191 }
@@ -4895,8 +4895,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-				This trap indicates that an unauthorized access point is connected to the wired network. The access point is 
+			"
+				This trap indicates that an unauthorized access point is connected to the wired network. The access point is
                 classified as Rogue by the system.
 			"
 	::= {aiTrapDefinitionsGroup 1192 }
@@ -4906,7 +4906,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
                 This trap indicates that a previously detected access point, classified as Rogue,
                 is either no longer present in the network or it changed its state.
 			"
@@ -4917,8 +4917,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an access point has been classified as a Neighbor by the system. 
+			"
+			This trap indicates that an access point has been classified as a Neighbor by the system.
 			"
 	::= {aiTrapDefinitionsGroup 1194 }
 
@@ -4927,9 +4927,9 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-			This trap indicates that an access point has been classified as Interfering by the system. The access point 
-            is declared Interfering because it is not authorized, nor has it been classified as a Rogue. 
+			"
+			This trap indicates that an access point has been classified as Interfering by the system. The access point
+            is declared Interfering because it is not authorized, nor has it been classified as a Rogue.
 			"
 	::= {aiTrapDefinitionsGroup 1195 }
 
@@ -4938,10 +4938,10 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapConfidenceLevel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-		This trap indicates that an access point, classified as Suspected Rogue, is 
-                detected by the system. The AP is suspected to be rogue 
-                with the supplied confidence level. 
+			"
+		This trap indicates that an access point, classified as Suspected Rogue, is
+                detected by the system. The AP is suspected to be rogue
+                with the supplied confidence level.
 			"
 	::= {aiTrapDefinitionsGroup 1196 }
 
@@ -4950,8 +4950,8 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
-		This trap indicates that a previously detected access point, classified as Suspected 
+			"
+		This trap indicates that a previously detected access point, classified as Suspected
                 Rogue, is either no longer present in the network or
                 has changed its state.
 			"
@@ -4964,7 +4964,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapSnr,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
         This trap indicates that an attempt has been made to deny service to
         the source address by spoofing a block ACK add request that sets a
         sequence number window outside the currently used window.
@@ -4979,7 +4979,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapTargetAPSSID,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
         This trap indicates that a new AP has appeared immediately following a client probe request.
         This is indicative of the Hotspotter tool or similar that attempts to trap clients with a fake
         hotspot or other wireless network.
@@ -4994,7 +4994,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match in a frame.
 			"
 	::= {aiTrapDefinitionsGroup 1200 }
@@ -5007,7 +5007,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Netstumbler in a frame.
 	"
 	::= {aiTrapDefinitionsGroup 1201 }
@@ -5020,7 +5020,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for ASLEAP in a frame.
 	"
 	::= {aiTrapDefinitionsGroup 1202 }
@@ -5033,7 +5033,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Airjack in a frame.
 	"
 	::= {aiTrapDefinitionsGroup 1203 }
@@ -5046,7 +5046,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Null-Probe-Response in a frame.
 	"
 	::= {aiTrapDefinitionsGroup 1204 }
@@ -5059,7 +5059,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Deauth-Broadcast in a frame.
 	"
 	::= {aiTrapDefinitionsGroup 1205 }
@@ -5072,7 +5072,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Disassoc-Broadcast in a frame.
 	"
 	::= {aiTrapDefinitionsGroup 1206 }
@@ -5085,7 +5085,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a signature match for Wellenreiter in a frame.
 	"
 	::= {aiTrapDefinitionsGroup 1207 }
@@ -5096,7 +5096,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain an access point by disconnecting its client.
       	"
 	::= {aiTrapDefinitionsGroup 1208 }
@@ -5107,7 +5107,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain a client by disconnecting it from the AP that it is associated with.
       	"
 	::= {aiTrapDefinitionsGroup 1209 }
@@ -5119,7 +5119,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain an access point by disrupting traffic to its client on the wired interface.
       	"
 	::= {aiTrapDefinitionsGroup 1210 }
@@ -5131,7 +5131,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain a client by disrupting traffic to it on the wired interface.
       	"
 	::= {aiTrapDefinitionsGroup 1211 }
@@ -5143,7 +5143,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain an access point by disrupting traffic to its client on the wired interface.
       	"
 	::= {aiTrapDefinitionsGroup 1212 }
@@ -5155,7 +5155,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPRadioNumber,wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain a client by disrupting traffic to it on the wired interface.
       	"
 	::= {aiTrapDefinitionsGroup 1213 }
@@ -5168,7 +5168,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                 wlsxTrapAPBand,wlsxTrapTargetAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP has attempted to contain an access point by moving a client that is attempting to associate to it to a tarpit.
       	"
 	::= {aiTrapDefinitionsGroup 1214 }
@@ -5182,7 +5182,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                 wlsxTrapAPPrevHTMode,wlsxTrapAPPrevPhyType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP changed its channel.
       	"
 	::= {aiTrapDefinitionsGroup 1216 }
@@ -5193,7 +5193,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP changed its transmit power level.
       	"
 	::= {aiTrapDefinitionsGroup 1217 }
@@ -5204,7 +5204,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 	This trap indicates that an AP changed its mode from AP to APMonitor or vice versa.
       	"
 	::= {aiTrapDefinitionsGroup 1218 }
@@ -5216,7 +5216,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapUserAttributeChangeType}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the user entry attributes have changed.
         	"
 	::= {aiTrapDefinitionsGroup 1219 }
@@ -5228,7 +5228,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected a Power Save DoS attack.
 			"
 	::= {aiTrapDefinitionsGroup 1220 }
@@ -5238,7 +5238,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapApMasterStatus}
 		STATUS		obsolete
 		DESCRIPTION
-			"			
+			"
             This trap indicates that the status of the AP as seen by
             the master controller has changed.
             **NOTE: this notification is obsoleted and replaced by
@@ -5253,7 +5253,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPLocation,wlsxTrapAPChannel,wlsxTrapAPBand}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
 			This trap indicates that an AP detected an ad hoc network node using a valid/protected SSID.
 	"
 	::= {aiTrapDefinitionsGroup 1222 }
@@ -5264,7 +5264,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                 wlsxTrapAuthServerAddress}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that a management user authentication has failed.
         	"
 	::= {aiTrapDefinitionsGroup 1224 }
@@ -5297,7 +5297,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
          This trap indicates that the authentication server accounting timed out.
         	"
 	::= {aiTrapDefinitionsGroup 1256 }
@@ -5307,7 +5307,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPName,wlsxTrapPortalServerDownReason}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
          This trap indicates that the portal server is down.
         	"
 	::= {aiTrapDefinitionsGroup 1259 }
@@ -5317,7 +5317,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
          This trap indicates that the portal server is up.
         	"
 	::= {aiTrapDefinitionsGroup 1260 }
@@ -5327,7 +5327,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 				wlsxTrapAPMacAddress, wlsxTrapAPName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
          The trap represents a IAP voice client location update.
         	"
 	::= {aiTrapDefinitionsGroup 1262 }
@@ -5362,7 +5362,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                 wlsxTrapPortNumber}
         STATUS      current
         DESCRIPTION
-            "           
+            "
             This trap indicates that loop is detected on AP's secure jack port.
             "
     ::= {aiTrapDefinitionsGroup 1271 }
@@ -5372,7 +5372,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                 wlsxTrapPortNumber}
         STATUS      current
         DESCRIPTION
-            "           
+            "
             This trap indicates that broadcast storm is detected on AP's secure jack port.
             "
     ::= {aiTrapDefinitionsGroup 1272 }
@@ -5381,7 +5381,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapAuthServerName}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that clearpass server is not valid when using the CA to verity the server for download-role.
         	"
 	::= {aiTrapDefinitionsGroup 1274 }
@@ -5390,7 +5390,7 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
 		OBJECTS {wlsxTrapTime, wlsxTrapAPMacAddress,wlsxTrapAPName,wlsxTrapUSBVendorProductID,wlsxTrapUSBVendorProductID,wlsxTrapAPUSBStatus}
 		STATUS		current
 		DESCRIPTION
-			"			
+			"
             This trap indicates that an USB device is plugged in or out to an AP.
         	"
 	::= {aiTrapDefinitionsGroup 1277 }
@@ -5401,22 +5401,22 @@ ArubaAPConductorStatus ::= TEXTUAL-CONVENTION
                 wlsxTrapEssid}
         STATUS      current
         DESCRIPTION
-            "           
+            "
             This trap indicates the client is rejected by the max client count.
             "
     ::= {aiTrapDefinitionsGroup 1284 }
-  
+
     wlsxClientPskAuthenticationFailed NOTIFICATION-TYPE
         OBJECTS {wlsxTrapTime, wlsxTrapUserPhyAddress,wlsxTrapAuthFailureReason,
                 wlsxTrapAPBSSID,wlsxTrapAPMacAddress,wlsxTrapAPName,
                 wlsxTrapEssid}
         STATUS      current
         DESCRIPTION
-            "           
+            "
             This trap indicates the client PSK Authentication Failed.
             "
     ::= {aiTrapDefinitionsGroup 1285 }
-        
+
         wlsxNStationAddedToDenyList NOTIFICATION-TYPE
                 OBJECTS {wlsxTrapTime, wlsxTrapNodeMac,wlsxTrapStationDenyListReasonStr,
                                 wlsxTrapStationDenyListReason}

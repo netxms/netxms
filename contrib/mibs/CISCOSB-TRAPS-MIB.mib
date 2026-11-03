@@ -20,7 +20,7 @@ rndNotifications MODULE-IDENTITY
 				San Jose , CA 95134-1706
 				USA
 
-				
+
 				Website:  Cisco Small Business Support Community <http://www.cisco.com/go/smallbizsupport>"
 
                 DESCRIPTION
@@ -762,7 +762,7 @@ rlApBackplanePortResolutionTrap NOTIFICATION-TYPE
     DESCRIPTION
         "Informational trap indicating about backplane ethernet port resolution."
     ::=  { rndNotifications 247 }
-    
+
 -- Sfp
 sfpPortPresent NOTIFICATION-TYPE
     OBJECTS   { rndErrorDesc, rndErrorSeverity }
@@ -770,27 +770,26 @@ sfpPortPresent NOTIFICATION-TYPE
     DESCRIPTION
         "Informational trap indicating that gbic is now present on port (X)."
     ::=  { rndNotifications 248}
-        
+
 sfpPortNotPresent NOTIFICATION-TYPE
     OBJECTS   { rndErrorDesc, rndErrorSeverity }
     STATUS  current
     DESCRIPTION
         "Informational trap indicating that gbic is not present anymore on port (X)."
-    ::=  { rndNotifications 249 }    
-    
+    ::=  { rndNotifications 249 }
+
 sfpPortLoss NOTIFICATION-TYPE
     OBJECTS   { rndErrorDesc, rndErrorSeverity }
     STATUS  current
     DESCRIPTION
         "Informational trap indicating that loss Diagnosed on port (X)."
-    ::=  { rndNotifications 250} 
+    ::=  { rndNotifications 250}
 
 sfpPortNotLoss NOTIFICATION-TYPE
     OBJECTS   { rndErrorDesc, rndErrorSeverity }
     STATUS  current
     DESCRIPTION
         "Informational trap indicating that loss isn't active anymore on port (X)."
-    ::=  { rndNotifications 251 }     
+    ::=  { rndNotifications 251 }
 
 END
-

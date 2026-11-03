@@ -1,7 +1,7 @@
 -- ******************************************************************
 -- CISCO-ENTITY-PFE-MIB
 --
--- This module is used for maintaining the performance history for 
+-- This module is used for maintaining the performance history for
 -- Packet Forwarding Engine(PFE) processors.
 --
 -- Aug 2002, Jaime Colom
@@ -13,13 +13,13 @@
 
 CISCO-ENTITY-PFE-MIB DEFINITIONS ::= BEGIN
 
-IMPORTS 
+IMPORTS
     Unsigned32,
     Gauge32,
     MODULE-IDENTITY,
     OBJECT-TYPE,
     NOTIFICATION-TYPE      FROM SNMPv2-SMI
-    MODULE-COMPLIANCE, 
+    MODULE-COMPLIANCE,
     NOTIFICATION-GROUP,
     OBJECT-GROUP           FROM SNMPv2-CONF
     TEXTUAL-CONVENTION,
@@ -42,11 +42,11 @@ ciscoEntityPfeMib MODULE-IDENTITY
 
         E-mail: cs-snmp@cisco.com"
     DESCRIPTION
-        "The Packet Forwarding Engine technology are Cisco developed 
-        Network Processors, which accelerates certain features in 
+        "The Packet Forwarding Engine technology are Cisco developed
+        Network Processors, which accelerates certain features in
         order to provide better network performance.
 
-        An agent uses this MIB to monitor the performance history 
+        An agent uses this MIB to monitor the performance history
         on any active PFE pipeline listed in the ENTITY-MIB (RFC 2737)
         entPhysicalTable. This monitoring is via measurement periods
         of actual, 1-minute, 5-minutes and 15-minutes.
@@ -56,35 +56,35 @@ ciscoEntityPfeMib MODULE-IDENTITY
         vious 1 minute and 5 minute respectively.
 
         For the 15-minute period, the performance statistics are
-        accumulated in fifteen minute intervals.  At any one time, 
-        an agent maintains one current (incomplete) interval and up 
-        to 96 completed intervals (24 hours worth).  Fewer than 96 
-        intervals of data will be available if the agent has been 
-        restarted within the last 24 hours. In addition, there is a 
+        accumulated in fifteen minute intervals.  At any one time,
+        an agent maintains one current (incomplete) interval and up
+        to 96 completed intervals (24 hours worth).  Fewer than 96
+        intervals of data will be available if the agent has been
+        restarted within the last 24 hours. In addition, there is a
         rolling 24-hour total of each performance statistic.
 
         There is no requirement for an agent to ensure fixed rela-
-        tionship between the start of a fifteen minute interval and 
-        any wall clock; however some agents may align the fifteen 
+        tionship between the start of a fifteen minute interval and
+        any wall clock; however some agents may align the fifteen
         minute intervals with quarter hours."
 
-    REVISION        "200211271600Z" 
+    REVISION        "200211271600Z"
     DESCRIPTION
-        "Initial version of this MIB module."    
+        "Initial version of this MIB module."
     ::= { ciscoMgmt 265 }
 
-	
+
 CurrentUtilization ::= TEXTUAL-CONVENTION
     STATUS  current
     DESCRIPTION
-        "A percentage value that represent the actual utilization 
+        "A percentage value that represent the actual utilization
         performance measurement."
     SYNTAX  Gauge32 (0..100)
 
 CurrentEfficiency ::= TEXTUAL-CONVENTION
     STATUS  current
     DESCRIPTION
-        "A percentage value that represents the actual efficiency 
+        "A percentage value that represents the actual efficiency
         performance measurement."
     SYNTAX  Gauge32 (0..100)
 
@@ -92,19 +92,19 @@ IntervalUtilization ::= TEXTUAL-CONVENTION
     STATUS  current
     DESCRIPTION
         "A percentage value that represents the utilization perfor-
-        mance measurement in a previous 15 minute measurement 
+        mance measurement in a previous 15 minute measurement
         interval. In the case where the agent has no valid data
-        available for a particular interval the corresponding object 
-        instance is not available and upon a retrieval request a 
-        corresponding error message shall be returned to indicate 
-        that this instance does not exist (for example, a 
-        noSuchObject error for SNMPv1 and a noSuchInstance for 
+        available for a particular interval the corresponding object
+        instance is not available and upon a retrieval request a
+        corresponding error message shall be returned to indicate
+        that this instance does not exist (for example, a
+        noSuchObject error for SNMPv1 and a noSuchInstance for
         SNMPv2 GET operation).
 
-        In a system supporting a history of n intervals with 
-        IntervalUtilization(1) and IntervalUtilization(n) the most 
+        In a system supporting a history of n intervals with
+        IntervalUtilization(1) and IntervalUtilization(n) the most
         and least recent intervals respectively, the following proce-
-        dure is used to update the intervals at end of a 15 minute 
+        dure is used to update the intervals at end of a 15 minute
         interval:
            - discard the value of IntervalUtilization(n)
            - the value of IntervalUtilization(i) becomes that
@@ -117,18 +117,18 @@ IntervalEfficiency ::= TEXTUAL-CONVENTION
     STATUS  current
     DESCRIPTION
         "A percentage value that represents the efficiency
-        performance measurement in a previous 15 minute measurement 
+        performance measurement in a previous 15 minute measurement
         interval. In the case where the agent has no valid data
-        available for a particular interval the corresponding object 
-        instance is not available and upon a retrieval request a 
-        corresponding error message shall be returned to indicate 
-        that this instance does not exist (for example, a 
-        noSuchObject error for SNMPv1 and a noSuchInstance for 
+        available for a particular interval the corresponding object
+        instance is not available and upon a retrieval request a
+        corresponding error message shall be returned to indicate
+        that this instance does not exist (for example, a
+        noSuchObject error for SNMPv1 and a noSuchInstance for
         SNMPv2 GET operation).
 
-        In a system supporting a history of n intervals with 
-        IntervalEfficiency(1) and IntervalEfficiency(n) the most and 
-        least recent intervals respectively, the following procedure 
+        In a system supporting a history of n intervals with
+        IntervalEfficiency(1) and IntervalEfficiency(n) the most and
+        least recent intervals respectively, the following procedure
         is used to update the intervals at end of a 15 minute inter-
         val:
            - discard the value of IntervalEfficiency(n)
@@ -163,16 +163,16 @@ EventType ::= TEXTUAL-CONVENTION
    DESCRIPTION
        "Type of action to execute when an event occurs.
 
-       'none'     Neither log an entry in the cePfeHistTable, nor  
+       'none'     Neither log an entry in the cePfeHistTable, nor
                   sent out an SNMP notification.
 
        'log'      Create a cePfeHistTable entry, but do not sent out
                   an SNMP notification.
 
-       'notify'   Sent out an SNMP notification, but do not create a 
+       'notify'   Sent out an SNMP notification, but do not create a
                   log entry in the cePfeHistTable.
 
-       'logAndNotify' Both create a log entry in the cePfeHistTable 
+       'logAndNotify' Both create a log entry in the cePfeHistTable
                       and sent out an SNMP notification."
    SYNTAX  INTEGER {
        none(1),
@@ -188,45 +188,45 @@ HistEventType ::= TEXTUAL-CONVENTION
 
         'thldUtilizationEvent'
                    This event is generated if the
-                   cePfePerfCurrentUtilization, at the time of 
-                   sampling, becomes greater than or equal to the 
+                   cePfePerfCurrentUtilization, at the time of
+                   sampling, becomes greater than or equal to the
                    cePfePerfThldUtilization.
 
         'thldEfficiencyEvent'
-                   This event is generated if the 
-                   cePfePerfCurrentEfficiency, at the time of 
-                   sampling, becomes less than or equal to the 
+                   This event is generated if the
+                   cePfePerfCurrentEfficiency, at the time of
+                   sampling, becomes less than or equal to the
                    cePfePerfThldEfficiency.
 
         'thld1MinUtilizationEvent'
-                   This event is generated if the 
-                   cePfePerfCurrent1MinUtilization, at the time of 
-                   sampling, becomes greater than or equal to the 
+                   This event is generated if the
+                   cePfePerfCurrent1MinUtilization, at the time of
+                   sampling, becomes greater than or equal to the
                    cePfePerfThld1MinUtilization.
 
         'thld1MinEfficiencyEvent'
-                   This event is generated if the 
-                   cePfePerfCurrent1MinEfficiency, at the time of 
-                   sampling, becomes less than or equal to the 
+                   This event is generated if the
+                   cePfePerfCurrent1MinEfficiency, at the time of
+                   sampling, becomes less than or equal to the
                    cePfePerfThld1MinEfficiency.
 
         'thld5MinUtilizationEvent'
-                   This event is generated if the 
-                   cePfePerfCurrent5MinUtilization, at the time of 
-                   sampling, becomes greater than or equal to the 
+                   This event is generated if the
+                   cePfePerfCurrent5MinUtilization, at the time of
+                   sampling, becomes greater than or equal to the
                    cePfePerfThld5MinUtilization.
 
         'thld5MinEfficiencyEvent'
-                   This event is generated if the 
-                   cePfePerfCurrent5MinEfficiency, at the time of 
-                   sampling, becomes less than or equal to the 
+                   This event is generated if the
+                   cePfePerfCurrent5MinEfficiency, at the time of
+                   sampling, becomes less than or equal to the
                    cePfePerfThld5MinEfficiency.
 
         'restartEvent'
-                  This event is generated every time the processor 
+                  This event is generated every time the processor
                   gets restarted."
-    SYNTAX  INTEGER { 
-        thldUtilizationEvent(1), 
+    SYNTAX  INTEGER {
+        thldUtilizationEvent(1),
         thldEfficiencyEvent(2),
         thld1MinUtilizationEvent(3),
         thld1MinEfficiencyEvent(4),
@@ -247,27 +247,27 @@ cePfeMIBConformance     OBJECT IDENTIFIER ::= { ciscoEntityPfeMib 2 }
 cePfePerformance   OBJECT IDENTIFIER ::= { cePfeMIBObjects 1 }
 cePfeHistory       OBJECT IDENTIFIER ::= { cePfeMIBObjects 2 }
 
-		
+
 cePfePerfConfigTable OBJECT-TYPE
     SYNTAX     SEQUENCE OF CePfePerfConfigEntry
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-        "This table contains configuration information on a PFE 
+        "This table contains configuration information on a PFE
         pipeline."
     ::= { cePfePerformance 1 }
-		
+
 cePfePerfConfigEntry OBJECT-TYPE
     SYNTAX     CePfePerfConfigEntry
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-        "An entry will exist for each entry in the entPhysicalTable 
+        "An entry will exist for each entry in the entPhysicalTable
         that correspond to an active PFE pipeline."
     INDEX  { entPhysicalIndex }
     ::= { cePfePerfConfigTable 1 }
-		
-CePfePerfConfigEntry ::= SEQUENCE { 
+
+CePfePerfConfigEntry ::= SEQUENCE {
         cePfePerfConfigTimeElapsed                Unsigned32,
         cePfePerfConfigValidIntervals             Unsigned32,
         cePfePerfConfigThldUtilization            Percentage,
@@ -284,9 +284,9 @@ cePfePerfConfigTimeElapsed OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS  current
     DESCRIPTION
-        "The number of seconds that have elapsed since the beginning 
-        of the current 15 min interval. If for some reason, such as 
-        an adjustment in the system's time-of-day clock, the current 
+        "The number of seconds that have elapsed since the beginning
+        of the current 15 min interval. If for some reason, such as
+        an adjustment in the system's time-of-day clock, the current
         interval exceeds the maximum value, the agent will return the
         maximum value."
     ::= { cePfePerfConfigEntry 1 }
@@ -296,11 +296,11 @@ cePfePerfConfigValidIntervals OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS  current
     DESCRIPTION
-        "The number of completed 15 min intervals for which valid 
-        PFE performance data has been collected. The value 
+        "The number of completed 15 min intervals for which valid
+        PFE performance data has been collected. The value
         will be 96 unless the interface was brought online within the
-        last 24 hours, in which case the value will be the number of 
-        completed 15 minute intervals since the PFE pipeline has 
+        last 24 hours, in which case the value will be the number of
+        completed 15 minute intervals since the PFE pipeline has
         been online."
     ::= { cePfePerfConfigEntry 2 }
 
@@ -309,7 +309,7 @@ cePfePerfConfigThldUtilization OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-        "This object contains the threshold value for the 
+        "This object contains the threshold value for the
         cePfePerfCurrentUtilization object. If during the last 5
         second measurement period the cePfePerfCurrentUtilization
         object becomes greater than or equal to this threshold value,
@@ -322,32 +322,32 @@ cePfePerfConfigThldUtilization OBJECT-TYPE
         rated."
     DEFVAL { 0 }
     ::= { cePfePerfConfigEntry 3 }
-		
+
 cePfePerfConfigThldEfficiency OBJECT-TYPE
     SYNTAX     Percentage
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-        "This object contains the threshold value for the 
-        cePfePerfCurrentEffciency object. If during the last 5 
+        "This object contains the threshold value for the
+        cePfePerfCurrentEffciency object. If during the last 5
         second measurement period the cePfePerfCurrentEfficiency
         object becomes less than or equal to this threshold value,
         an event of type 'thldEfficiencyEvent' will be genera-
         ted.
 
         Value of zero indicates that no comparison is being made
-        between the cePfePerfCurrentEfficiency object value and 
+        between the cePfePerfCurrentEfficiency object value and
         the threshold value, therefore no event action will be gene-
         rated."
     DEFVAL { 0 }
     ::= { cePfePerfConfigEntry 4 }
-		
+
 cePfePerfConfigThld1MinUtilization OBJECT-TYPE
     SYNTAX     Percentage
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-        "This object contains the threshold value for the 
+        "This object contains the threshold value for the
         cePfePerfCurrent1MinUtilization object. If during the last 1
         minute measurement period the cePfePerfCurrent1MinUtilization
         object becomes greater than or equal to this threshold value,
@@ -360,32 +360,32 @@ cePfePerfConfigThld1MinUtilization OBJECT-TYPE
         rated."
     DEFVAL { 0 }
     ::= { cePfePerfConfigEntry 5 }
-		
+
 cePfePerfConfigThld1MinEfficiency OBJECT-TYPE
     SYNTAX     Percentage
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-        "This object contains the threshold value for the 
-        cePfePerfCurrent1MinEfficiency object. If during the last 1 
+        "This object contains the threshold value for the
+        cePfePerfCurrent1MinEfficiency object. If during the last 1
         minute measurement period the cePfePerfCurrent1MinEfficiency
         object becomes less than or equal to this threshold value,
         an event of type 'thld1MinEfficiencyEvent' will be genera-
         ted.
 
         Value of zero indicates that no comparison is being made
-        between the cePfePerfCurrent1MinEfficiency object value and 
+        between the cePfePerfCurrent1MinEfficiency object value and
         the threshold value, therefore no event action will be gene-
         rated."
     DEFVAL { 0 }
     ::= { cePfePerfConfigEntry 6 }
-		
+
 cePfePerfConfigThld5MinUtilization OBJECT-TYPE
     SYNTAX     Percentage
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-        "This object contains the threshold value for the 
+        "This object contains the threshold value for the
         cePfePerfCurrent5MinUtilization object. If during the last 5
         minute measurement period the cePfePerfCurrent5MinUtilization
         object becomes greater than or equal to this threshold value,
@@ -398,36 +398,36 @@ cePfePerfConfigThld5MinUtilization OBJECT-TYPE
         rated."
     DEFVAL { 0 }
     ::= { cePfePerfConfigEntry 7 }
-		
+
 cePfePerfConfigThld5MinEfficiency OBJECT-TYPE
     SYNTAX     Percentage
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-        "This object contains the threshold value for the 
-        cePfePerfCurrent5MinEfficiency object. If during the last 5 
+        "This object contains the threshold value for the
+        cePfePerfCurrent5MinEfficiency object. If during the last 5
         minute measurement period the cePfePerfCurrent5MinEfficiency
         object becomes less than or equal to this threshold value,
         an event of type 'thld5MinEfficiencyEvent' will be genera-
         ted.
 
         Value of zero indicates that no comparison is being made
-        between the cePfePerfCurrent5MinEfficiency object value and 
+        between the cePfePerfCurrent5MinEfficiency object value and
         the threshold value, therefore no event action will be gene-
         rated."
     DEFVAL { 0 }
     ::= { cePfePerfConfigEntry 8 }
-		
+
 
 cePfePerfCurrentTable OBJECT-TYPE
     SYNTAX     SEQUENCE OF CePfePerfCurrentEntry
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-        "This table maintains PFE current running performance, which 
+        "This table maintains PFE current running performance, which
         are collected at various measurement periods."
     ::= { cePfePerformance 2 }
-		
+
 cePfePerfCurrentEntry OBJECT-TYPE
     SYNTAX     CePfePerfCurrentEntry
     MAX-ACCESS not-accessible
@@ -437,8 +437,8 @@ cePfePerfCurrentEntry OBJECT-TYPE
         a particular PFE pipeline."
     AUGMENTS  { cePfePerfConfigEntry }
     ::= { cePfePerfCurrentTable 1 }
-		
-CePfePerfCurrentEntry ::= SEQUENCE { 
+
+CePfePerfCurrentEntry ::= SEQUENCE {
     cePfePerfCurrentUtilization        CurrentUtilization,
     cePfePerfCurrentEfficiency         CurrentEfficiency,
     cePfePerfCurrent1MinUtilization    CurrentUtilization,
@@ -452,36 +452,36 @@ cePfePerfCurrentUtilization OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-        "This object provides the actual PFE percentage utilization. 
+        "This object provides the actual PFE percentage utilization.
         It is determined by the number of new work contexts + feedback
-        contexts divided by total number of contexts that can be 
+        contexts divided by total number of contexts that can be
         supported by the PFE pipeline."
     ::= { cePfePerfCurrentEntry 1 }
-		
+
 cePfePerfCurrentEfficiency OBJECT-TYPE
     SYNTAX     CurrentEfficiency
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-        "This object provides the actual PFE percentage efficiency. 
-        It is determined by the total number of contexts per second 
-        divided by maximum theoretical contexts per second supported 
-        by the PFE pipeline. Under normal conditions, this number will 
-        be 100 and when efficiency starts degrading, it will start 
+        "This object provides the actual PFE percentage efficiency.
+        It is determined by the total number of contexts per second
+        divided by maximum theoretical contexts per second supported
+        by the PFE pipeline. Under normal conditions, this number will
+        be 100 and when efficiency starts degrading, it will start
         going down until it reaches zero."
     ::= { cePfePerfCurrentEntry 2 }
-		
+
 cePfePerfCurrent1MinUtilization OBJECT-TYPE
     SYNTAX     CurrentUtilization
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-        "This object provides the PFE percentage utilization over the 
+        "This object provides the PFE percentage utilization over the
         previous 1 minute period. It is determined by the number of new
-        work contexts + feedback contexts divided by total number of 
+        work contexts + feedback contexts divided by total number of
         contexts that can be supported by the PFE pipeline."
     ::= { cePfePerfCurrentEntry 3 }
-		
+
 cePfePerfCurrent1MinEfficiency OBJECT-TYPE
     SYNTAX     CurrentEfficiency
     MAX-ACCESS read-only
@@ -489,9 +489,9 @@ cePfePerfCurrent1MinEfficiency OBJECT-TYPE
     DESCRIPTION
         "This object provides the PFE percentage efficiency over the
         previous 1 minute period. It is determined by the totalnumber
-        of contexts per second divided by maximum theoretical contexts 
-        per second supported by the PFE pipeline. Under normal 
-        conditions, this number will be 100 and when efficiency starts 
+        of contexts per second divided by maximum theoretical contexts
+        per second supported by the PFE pipeline. Under normal
+        conditions, this number will be 100 and when efficiency starts
         degrading, it will start going down until it reaches zero."
     ::= { cePfePerfCurrentEntry 4 }
 
@@ -500,36 +500,36 @@ cePfePerfCurrent5MinUtilization OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-        "This object provides the PFE percentage utilization over the 
-        previous 5 minutes period. It is determined by the number of 
-        new work contexts + feedback contexts divided by total number 
+        "This object provides the PFE percentage utilization over the
+        previous 5 minutes period. It is determined by the number of
+        new work contexts + feedback contexts divided by total number
         of contexts that can be supported by the PFE pipeline."
     ::= { cePfePerfCurrentEntry 5 }
-		
+
 cePfePerfCurrent5MinEfficiency OBJECT-TYPE
     SYNTAX     CurrentEfficiency
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-        "This object provides the PFE percentage efficiency over the 
+        "This object provides the PFE percentage efficiency over the
         previous 5 minutes period. It is determined by the total number
-        of contexts per second divided by maximum theoretical contexts 
-        per second supported by the PFE pipeline. Under normal 
-        conditions, this number will be 100 and when efficiency starts 
+        of contexts per second divided by maximum theoretical contexts
+        per second supported by the PFE pipeline. Under normal
+        conditions, this number will be 100 and when efficiency starts
         degrading, it will start going down until it reaches zero."
     ::= { cePfePerfCurrentEntry 6 }
 
-		
+
 cePfePerfIntervalTable OBJECT-TYPE
     SYNTAX     SEQUENCE OF CePfePerfIntervalEntry
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-        "This table contains performance statistics for completed 
+        "This table contains performance statistics for completed
         15 minutes intervals, specifically up to 96 such intervals
         over a 24 hours of operation."
     ::= { cePfePerformance 3 }
-		
+
 cePfePerfIntervalEntry OBJECT-TYPE
     SYNTAX     CePfePerfIntervalEntry
     MAX-ACCESS not-accessible
@@ -539,8 +539,8 @@ cePfePerfIntervalEntry OBJECT-TYPE
         a particular PFE pipeline at a specific interval."
     INDEX  { entPhysicalIndex, cePfePerfIntervalNumber }
     ::= { cePfePerfIntervalTable 1 }
-		
-CePfePerfIntervalEntry ::= SEQUENCE { 
+
+CePfePerfIntervalEntry ::= SEQUENCE {
     cePfePerfIntervalNumber             Unsigned32,
     cePfePerfIntervalUtilization        IntervalUtilization,
     cePfePerfIntervalEfficiency         IntervalEfficiency
@@ -551,12 +551,12 @@ cePfePerfIntervalNumber OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-        "An interval number between 1 and 96, where 1 is the most 
-        recently completed 15 min interval and 96 is the 15 min 
-        interval completed 23 hours and 45 minutes prior to interval 
+        "An interval number between 1 and 96, where 1 is the most
+        recently completed 15 min interval and 96 is the 15 min
+        interval completed 23 hours and 45 minutes prior to interval
         1."
     ::= { cePfePerfIntervalEntry 1 }
-		
+
 cePfePerfIntervalUtilization OBJECT-TYPE
     SYNTAX     IntervalUtilization
     MAX-ACCESS read-only
@@ -565,7 +565,7 @@ cePfePerfIntervalUtilization OBJECT-TYPE
         "The percentage of processor utilization by the PFE pipeline
         during this completed 15 min interval."
     ::= { cePfePerfIntervalEntry 2 }
-		
+
 cePfePerfIntervalEfficiency OBJECT-TYPE
     SYNTAX     IntervalEfficiency
     MAX-ACCESS read-only
@@ -576,22 +576,22 @@ cePfePerfIntervalEfficiency OBJECT-TYPE
         this number will be 100 and when efficiency starts degrading,
         it will start going down until it reaches zero."
     ::= { cePfePerfIntervalEntry 3 }
-		
+
 
 cePfePerfTotalTable OBJECT-TYPE
     SYNTAX     SEQUENCE OF CePfePerfTotalEntry
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-        "This table contains the running utilization and efficiency 
-        of the PFE pipeline for the 24 hour period preceding the 
+        "This table contains the running utilization and efficiency
+        of the PFE pipeline for the 24 hour period preceding the
         current interval. If the agent was restarted less than 24
         hours ago, i.e., when there are less than 96 intervals in the
         cePfePerfIntervalTable, it will contain the running utiliza-
         tion and efficiency up to the last collected 15 minute inter-
         val."
     ::= { cePfePerformance 4 }
-		
+
 cePfePerfTotalEntry OBJECT-TYPE
     SYNTAX     CePfePerfTotalEntry
     MAX-ACCESS not-accessible
@@ -602,12 +602,12 @@ cePfePerfTotalEntry OBJECT-TYPE
         cePfePerfIntervalTable."
     INDEX  { entPhysicalIndex }
     ::= { cePfePerfTotalTable 1 }
-		
-CePfePerfTotalEntry ::= SEQUENCE { 
+
+CePfePerfTotalEntry ::= SEQUENCE {
     cePfePerfTotalUtilization             TotalUtilization,
     cePfePerfTotalEfficiency              TotalEfficiency
     }
-				
+
 cePfePerfTotalUtilization OBJECT-TYPE
     SYNTAX     TotalUtilization
     MAX-ACCESS read-only
@@ -616,18 +616,18 @@ cePfePerfTotalUtilization OBJECT-TYPE
         "The running utilization by the PFE pipeline for the prece-
         ding 24 hrs."
     ::= { cePfePerfTotalEntry 1 }
-		
+
 cePfePerfTotalEfficiency OBJECT-TYPE
     SYNTAX     TotalEfficiency
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
         "The running efficiency by the PFE pipeline for the preceding
-        24 hrs. Under normal conditions, this number will be 100 and 
+        24 hrs. Under normal conditions, this number will be 100 and
         when efficiency starts degrading, it will start going down
         until it reaches zero."
     ::= { cePfePerfTotalEntry 2 }
-		
+
 cePfeHistNotifiesEnable OBJECT-TYPE
     SYNTAX 	EventType
     MAX-ACCESS  read-write
@@ -644,11 +644,11 @@ cePfeHistTableSize OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-        "This object specifies the number of entries that the 
-        cePfeHistTable can contain.  When a event is generated, and 
-        the capacity of the cePfeHistTable has reached the value 
-        specified by this object, then the agent deletes the oldest 
-        entity in order to accommodate the new entry. A value of '0' 
+        "This object specifies the number of entries that the
+        cePfeHistTable can contain.  When a event is generated, and
+        the capacity of the cePfeHistTable has reached the value
+        specified by this object, then the agent deletes the oldest
+        entity in order to accommodate the new entry. A value of '0'
         prevents any history from being retained."
     DEFVAL { 0 }
     ::= { cePfeHistory 2}
@@ -659,12 +659,12 @@ cePfeHistTableLastIndex OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "This object specifies the value of the cePfeHistIndex object
-        corresponding to the last entry added to the table by the 
+        corresponding to the last entry added to the table by the
         agent. It will return zero if there are no entries in the
         table.
 
-        If the management client uses the notifications defined by 
-        this module, then it can poll this object to determine 
+        If the management client uses the notifications defined by
+        this module, then it can poll this object to determine
         whether it has missed a notification sent by the agent."
     DEFVAL { 0 }
     ::= { cePfeHistory 3}
@@ -674,22 +674,22 @@ cePfeHistTable OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-        "This table contains a history of events generated by the 
+        "This table contains a history of events generated by the
         agent."
     ::= { cePfeHistory 4 }
-		
+
 cePfeHistEntry OBJECT-TYPE
     SYNTAX     CePfeHistEntry
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-        "An entry will exist for each event that has occured while 
-        cePfeHistNotifiesEnable object is set to 'log(2)' or 
+        "An entry will exist for each event that has occured while
+        cePfeHistNotifiesEnable object is set to 'log(2)' or
         'logAndNotify(4)'."
     INDEX  { cePfeHistIndex }
     ::= { cePfeHistTable 1 }
-		
-CePfeHistEntry ::= SEQUENCE { 
+
+CePfeHistEntry ::= SEQUENCE {
     cePfeHistIndex                   Unsigned32,
     cePfeHistEntPhysIndex            PhysicalIndex,
     cePfeHistType                    HistEventType,
@@ -698,31 +698,31 @@ CePfeHistEntry ::= SEQUENCE {
     cePfeHistRestartReason           DisplayString,
     cePfeHistTimeStamp               TimeStamp
     }
-				
+
 cePfeHistIndex OBJECT-TYPE
     SYNTAX     Unsigned32 (1..4294967295)
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-        "An integer value uniquely identifying the entry in the table. 
+        "An integer value uniquely identifying the entry in the table.
         The value of this object starts at '1' and monotonically
         increases for each event condition transition monitored by the
-        agent.  If the value of this object is '4294967295', the agent 
-        will reset the index to '1' upon monitoring the next event 
+        agent.  If the value of this object is '4294967295', the agent
+        will reset the index to '1' upon monitoring the next event
         condition transition."
     ::= { cePfeHistEntry 1 }
-		
+
 cePfeHistEntPhysIndex OBJECT-TYPE
     SYNTAX     PhysicalIndex
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-        "The value in this object is equal to the value of the 
+        "The value in this object is equal to the value of the
         entPhysicalIndex, from the Physical Entity Table (RFC 2037),
-        that is associated with the PFE pipeline that has caused 
+        that is associated with the PFE pipeline that has caused
         this event."
     ::= { cePfeHistEntry 2 }
-		
+
 cePfeHistType OBJECT-TYPE
     SYNTAX     HistEventType
     MAX-ACCESS read-only
@@ -730,7 +730,7 @@ cePfeHistType OBJECT-TYPE
     DESCRIPTION
         "This object describes the type of event that has occurred."
     ::= { cePfeHistEntry 3 }
-		
+
 cePfeHistThld OBJECT-TYPE
     SYNTAX     Percentage
     MAX-ACCESS read-only
@@ -738,7 +738,7 @@ cePfeHistThld OBJECT-TYPE
     DESCRIPTION
         "The configured value of the specific threshold."
     ::= { cePfeHistEntry 4 }
-		
+
 cePfeHistValue OBJECT-TYPE
     SYNTAX     Percentage
     MAX-ACCESS read-only
@@ -747,7 +747,7 @@ cePfeHistValue OBJECT-TYPE
         "The actual value of the specific performance objects, at the
         time of the sample, which is related to the threshold event."
     ::= { cePfeHistEntry 5 }
-		
+
 cePfeHistRestartReason OBJECT-TYPE
     SYNTAX     DisplayString
     MAX-ACCESS read-only
@@ -755,7 +755,7 @@ cePfeHistRestartReason OBJECT-TYPE
     DESCRIPTION
         "The reason for which the PFE pipeline has restarted."
     ::= { cePfeHistEntry 6 }
-		
+
 cePfeHistTimeStamp OBJECT-TYPE
     SYNTAX     TimeStamp
     MAX-ACCESS read-only
@@ -764,7 +764,7 @@ cePfeHistTimeStamp OBJECT-TYPE
         "This object specifies the value of the sysUpTime object at
         the time the event was generated."
     ::= { cePfeHistEntry 7 }
-		
+
 
 -- Notification Information Definitions
 
@@ -778,12 +778,12 @@ cePfeHistThldEvent NOTIFICATION-TYPE
     STATUS	current
     DESCRIPTION
         "This notification is generated when a threshold event has
-        occurred and the cePfeHistNotifiesEnable is set to 
+        occurred and the cePfeHistNotifiesEnable is set to
         'notify (3)' or 'logAndNotify(4)'.
 
         After generating this notification, another such notifica-
-        tion will not be sent out until the sample value has fallen 
-        below the threshold value." 
+        tion will not be sent out until the sample value has fallen
+        below the threshold value."
     ::= { cePfeMIBNotifications 1 }
 
 cePfeHistRestartEvent NOTIFICATION-TYPE
@@ -794,14 +794,14 @@ cePfeHistRestartEvent NOTIFICATION-TYPE
     STATUS	current
     DESCRIPTION
         "This notification is generated when a restart event has
-        occurred and the cePfeHistNotifiesEnable is set to 
-        'notifyp (3)' or 'logAndNotify(4)'." 
+        occurred and the cePfeHistNotifiesEnable is set to
+        'notifyp (3)' or 'logAndNotify(4)'."
     ::= { cePfeMIBNotifications 2 }
 
 -- Conformance Information Definition
 cePfeMIBCompliances  OBJECT IDENTIFIER ::= { cePfeMIBConformance 1 }
 cePfeMIBGroups       OBJECT IDENTIFIER ::= { cePfeMIBConformance 2 }
-		
+
 
 cePfeMIBPerformanceCompliance MODULE-COMPLIANCE
     STATUS     current
@@ -812,7 +812,7 @@ cePfeMIBPerformanceCompliance MODULE-COMPLIANCE
     MODULE  -- this module
     MANDATORY-GROUPS { cePfeMIBPerformanceGroup,
                        cePfeMIBCurrentGroup,
-                       cePfeMIBHistGroup, 
+                       cePfeMIBHistGroup,
                        cePfeMIBHistEventGroup }
 
     GROUP  cePfeMIBIntervalGroup
@@ -824,7 +824,7 @@ cePfeMIBPerformanceCompliance MODULE-COMPLIANCE
         "This group is optional."
 
     ::= { cePfeMIBCompliances 1 }
-		
+
 
 cePfeMIBPerformanceGroup OBJECT-GROUP
     OBJECTS  {
@@ -879,7 +879,7 @@ cePfeMIBTotalGroup OBJECT-GROUP
     }
     STATUS     current
     DESCRIPTION
-        "The collection of objects which are used to manage the 
+        "The collection of objects which are used to manage the
         threshold configuration for the PFE pipeline performance."
     ::= { cePfeMIBGroups 4 }
 
@@ -894,7 +894,7 @@ cePfeMIBHistGroup OBJECT-GROUP
     }
     STATUS     current
     DESCRIPTION
-        "The collection of objects which are used to manage the 
+        "The collection of objects which are used to manage the
         threshold configuration for the PFE pipeline performance."
     ::= { cePfeMIBGroups 5 }
 
@@ -905,7 +905,7 @@ cePfeMIBHistEventGroup NOTIFICATION-GROUP
     }
     STATUS     current
     DESCRIPTION
-        "The collection of objects which are used to generate a 
+        "The collection of objects which are used to generate a
         threshold event for the PFE pipeline performance."
     ::= { cePfeMIBGroups 6 }
 END

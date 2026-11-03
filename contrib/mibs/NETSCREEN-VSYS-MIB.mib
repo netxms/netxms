@@ -1,5 +1,5 @@
 -- This module defines enterprise MIBs for Virtual Systems
--- 
+--
 -- Copyright (c) 1999-2004, Juniper Networks, Inc.
 -- All rights reserved.
 
@@ -21,7 +21,7 @@ netscreenVsysMibModule MODULE-IDENTITY
     CONTACT-INFO
         "Customer Support
 
-         1194 North Mathilda Avenue 
+         1194 North Mathilda Avenue
          Sunnyvale, California 94089-1206
          USA
 
@@ -94,5 +94,3 @@ nsVsysCfgName OBJECT-TYPE
     ::= { nsVsysCfgEntry 2 }
 
 END
-
-

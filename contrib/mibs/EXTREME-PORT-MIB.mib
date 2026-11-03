@@ -9,8 +9,8 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 extremeAgent            FROM EXTREME-BASE-MIB
                 Counter64               FROM SNMPv2-SMI
 		extremeVlanIfIndex	FROM EXTREME-VLAN-MIB
-                Counter32, TimeTicks    FROM SNMPv2-SMI 
-                IpAddress               FROM SNMPv2-SMI 
+                Counter32, TimeTicks    FROM SNMPv2-SMI
+                IpAddress               FROM SNMPv2-SMI
                 MacAddress              FROM SNMPv2-TC
                 DisplayString           FROM RFC1213-MIB;
 
@@ -29,12 +29,12 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  not-accessible
 		STATUS deprecated
 		DESCRIPTION
-                      "A table of bindings between a master port 
-                        and its load-sharing slaves: create/delete 
-                        entries here to add/delete a port to/from a 
-                        load-sharing group. Default is empty table. 
-                        There are restrictions on what row creates 
-                        will be accepted by each device - see Summit 
+                      "A table of bindings between a master port
+                        and its load-sharing slaves: create/delete
+                        entries here to add/delete a port to/from a
+                        load-sharing group. Default is empty table.
+                        There are restrictions on what row creates
+                        will be accepted by each device - see Summit
                         release notes for details."
 	::= { extremePort 1 }
 
@@ -45,15 +45,15 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
                       "A binding between a master port and one
                        of its load-sharing slave ports."
-                INDEX { extremePortLoadshareMasterIfIndex, 
-                        extremePortLoadshareSlaveIfIndex } 
+                INDEX { extremePortLoadshareMasterIfIndex,
+                        extremePortLoadshareSlaveIfIndex }
 	::= { extremePortLoadshareTable 1 }
 
 	ExtremePortLoadshareEntry ::= SEQUENCE {
-                extremePortLoadshareMasterIfIndex INTEGER, 
+                extremePortLoadshareMasterIfIndex INTEGER,
                 extremePortLoadshareSlaveIfIndex INTEGER,
    		extremePortLoadshareGrouping	INTEGER,
-                extremePortLoadshareStatus RowStatus 
+                extremePortLoadshareStatus RowStatus
 	}
 
 	extremePortLoadshareMasterIfIndex OBJECT-TYPE
@@ -73,8 +73,8 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 STATUS deprecated
                 DESCRIPTION
                       "The ifIndex value which identifies the
-                       port which is a member of a loadsharing 
-                       group controlled by 
+                       port which is a member of a loadsharing
+                       group controlled by
                         extremePortLoadshareMasterIfIndex."
         ::= { extremePortLoadshareEntry 2 }
 
@@ -106,8 +106,8 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
 		STATUS deprecated
 		DESCRIPTION
                       "A table of Extreme link configuration
-                        and status information. Contains a row 
-                        for only those ports that are capable of 
+                        and status information. Contains a row
+                        for only those ports that are capable of
                         operating in Summitlink-mode."
 	::= { extremePort 2 }
 
@@ -126,7 +126,7 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 extremePortSummitlinkOperMode INTEGER,
                 extremePortSummitlinkState INTEGER,
                 extremePortSummitlinkRejectReason INTEGER
-        } 
+        }
 
         extremePortSummitlinkAdminMode OBJECT-TYPE
                 SYNTAX INTEGER { ethernetOnly(1), summitlinkOnly(2) }
@@ -147,7 +147,7 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                       "Actual Operating mode."
                 DEFVAL { ethernetOnly }
         ::= { extremePortSummitlinkEntry 2 }
- 
+
         extremePortSummitlinkState OBJECT-TYPE
                 SYNTAX INTEGER { up(1), down(2) }
                 MAX-ACCESS  read-only
@@ -163,8 +163,8 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 MAX-ACCESS  read-only
                 STATUS deprecated
                 DESCRIPTION
-                     "If a Summitlink connection has been attempted 
-                        and failed to reach the up(1) state, this 
+                     "If a Summitlink connection has been attempted
+                        and failed to reach the up(1) state, this
                         indicates the potential source of the failure."
         ::= { extremePortSummitlinkEntry 4 }
 
@@ -177,12 +177,12 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  not-accessible
 		STATUS current
 		DESCRIPTION
-                      "A table of bindings between a master port 
-                        and its load-sharing slaves: create/delete 
-                        entries here to add/delete a port to/from a 
-                        load-sharing group. Default is empty table. 
-                        There are restrictions on what row creates 
-                        will be accepted by each device - see Summit 
+                      "A table of bindings between a master port
+                        and its load-sharing slaves: create/delete
+                        entries here to add/delete a port to/from a
+                        load-sharing group. Default is empty table.
+                        There are restrictions on what row creates
+                        will be accepted by each device - see Summit
                         release notes for details."
 	::= { extremePort 3 }
 
@@ -193,15 +193,15 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
                       "A binding between a master port and one
                        of its load-sharing slave ports."
-                INDEX { extremePortLoadshare2MasterIfIndex, 
-                        extremePortLoadshare2SlaveIfIndex } 
+                INDEX { extremePortLoadshare2MasterIfIndex,
+                        extremePortLoadshare2SlaveIfIndex }
 	::= { extremePortLoadshare2Table 1 }
 
 	ExtremePortLoadshare2Entry ::= SEQUENCE {
-                extremePortLoadshare2MasterIfIndex INTEGER, 
+                extremePortLoadshare2MasterIfIndex INTEGER,
                 extremePortLoadshare2SlaveIfIndex  INTEGER,
    		extremePortLoadshare2Algorithm	   INTEGER,
-                extremePortLoadshare2Status        RowStatus 
+                extremePortLoadshare2Status        RowStatus
 	}
 
 	extremePortLoadshare2MasterIfIndex OBJECT-TYPE
@@ -221,7 +221,7 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 STATUS current
                 DESCRIPTION
                       "The ifIndex value which identifies the
-                       port which is a member of a loadsharing 
+                       port which is a member of a loadsharing
                        group controlled by extremePortLoadshare2MasterIfIndex."
         ::= { extremePortLoadshare2Entry 2 }
 
@@ -275,7 +275,7 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
 	ExtremePortRateShapeEntry ::= SEQUENCE {
    		extremePortRateShapePortType	  INTEGER,
 		extremePortRateShapeLoopbackTag   INTEGER,
-                extremePortRateShapeStatus        RowStatus 
+                extremePortRateShapeStatus        RowStatus
 	}
 
 	extremePortRateShapePortType OBJECT-TYPE
@@ -286,7 +286,7 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 MAX-ACCESS  read-create
                 STATUS current
                 DESCRIPTION
-                      "Whether a loopback or rate limited port." 
+                      "Whether a loopback or rate limited port."
         ::= { extremePortRateShapeEntry 1 }
 
 	extremePortRateShapeLoopbackTag OBJECT-TYPE
@@ -335,26 +335,26 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 extremePortUtilizationAvgTxBw        INTEGER,
                 extremePortUtilizationAvgRxBw        INTEGER,
                 extremePortUtilizationPeakTxBw       INTEGER,
-                extremePortUtilizationPeakRxBw       INTEGER 
+                extremePortUtilizationPeakRxBw       INTEGER
         }
 
         extremePortUtilizationAvgTxBw  OBJECT-TYPE
                 SYNTAX  INTEGER
-                MAX-ACCESS  read-only  
+                MAX-ACCESS  read-only
                 STATUS current
                 DESCRIPTION
                    "The reported average bandwidth in the txmit direction. When displayed
                     it shows as an Integer value i.e 99.99% is displayed as 9999."
                 ::= {extremePortUtilizationEntry 1 }
 
-                
+
         extremePortUtilizationAvgRxBw	OBJECT-TYPE
                 SYNTAX	INTEGER
-        	MAX-ACCESS  read-only  
+        	MAX-ACCESS  read-only
                 STATUS current
                 DESCRIPTION
                  "The reported average bandwidth in the receive direction. When displayed
-                    it shows as an Integer value i.e 99.99% is displayed as 9999." 
+                    it shows as an Integer value i.e 99.99% is displayed as 9999."
                 ::= {extremePortUtilizationEntry 2 }
 
         extremePortUtilizationPeakTxBw  OBJECT-TYPE
@@ -432,8 +432,8 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
 		STATUS current
 		DESCRIPTION
                       "A table of Extreme Xenpak Module Vendor Name
-                        and type information. Contains a row 
-                        for only those ports that are part of 
+                        and type information. Contains a row
+                        for only those ports that are part of
                         Xenpak module ."
 	::= { extremePort 7 }
 
@@ -448,17 +448,17 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
 
         ExtremePortXenpakVendorEntry ::=  SEQUENCE {
                 extremePortXenpakVendorName DisplayString
-        } 
+        }
 
       	extremePortXenpakVendorName OBJECT-TYPE
                 SYNTAX  DisplayString (SIZE(0..22))
                 MAX-ACCESS  read-only
                 STATUS current
                 DESCRIPTION
-                      "A human-readable string representing Vendor name 
+                      "A human-readable string representing Vendor name
                         of this module.
                         This string should be the same for all entries
-                        having the same Xenpak module: 
+                        having the same Xenpak module:
                         this entry may not be modified."
 	::= { extremePortXenpakVendorEntry 1 }
 
@@ -493,7 +493,7 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 extremePortIngressStatsPortHighPriBytes   Counter64,
                 extremePortIngressStatsPortLowPriBytes    Counter64,
                 extremePortIngressStatsPortDroppedBytes   Counter64,
-                extremePortIngressStatsTxXoff             Counter64 
+                extremePortIngressStatsTxXoff             Counter64
         }
 
 
@@ -504,7 +504,7 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                         disabled(3),
                         notPresent(4)
 		}
-                MAX-ACCESS  read-only  
+                MAX-ACCESS  read-only
                 STATUS current
                 DESCRIPTION
                    "The current status of the link. Ready indicates the port is ready
@@ -513,14 +513,14 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                    means the link is not present at this port."
                 ::= {extremePortIngressPortStatsEntry 1 }
 
-                
+
         extremePortIngressStatsPortHighPriBytes	OBJECT-TYPE
                 SYNTAX	Counter64
-        	MAX-ACCESS  read-only  
+        	MAX-ACCESS  read-only
                 STATUS current
                 DESCRIPTION
                  "The sum of all per queue CIR counts for this port, which indicates the
-                 bytes forwarded for high-priority packets." 
+                 bytes forwarded for high-priority packets."
                 ::= {extremePortIngressPortStatsEntry 2 }
 
         extremePortIngressStatsPortLowPriBytes  OBJECT-TYPE
@@ -539,7 +539,7 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 DESCRIPTION
                  "The total number of bytes dropped for this port."
                 ::= {extremePortIngressPortStatsEntry 4 }
-                
+
         extremePortIngressStatsTxXoff  OBJECT-TYPE
                 SYNTAX  Counter64
                 MAX-ACCESS  read-only
@@ -548,18 +548,18 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                  "The number of XOFF Flow Control packets sent from this port due to
                  receive traffic congestion."
                 ::= {extremePortIngressPortStatsEntry 5 }
-                
+
 
 --
 -- Per Queue Ingress Statistics Table
---        
+--
 
         extremePortIngressStatsQueueTable	OBJECT-TYPE
 		SYNTAX	SEQUENCE OF ExtremePortIngressQueueStatsEntry
 		MAX-ACCESS  not-accessible
 		STATUS current
 		DESCRIPTION
-		    "Port ingress statistics are returned for ingress queues. 
+		    "Port ingress statistics are returned for ingress queues.
                     This table contains a list of counters for each ingress
                     queue."
 		::= { extremePortIngressStats 2 }
@@ -580,11 +580,11 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 extremePortIngressStatsQueueLowPriBytes    Counter64,
                 extremePortIngressStatsQueuePercentDropped INTEGER
         }
-        
+
 
         extremePortIngressStatsQueueIndex  OBJECT-TYPE
                 SYNTAX  INTEGER
-                MAX-ACCESS  read-only  
+                MAX-ACCESS  read-only
                 STATUS current
                 DESCRIPTION
                    "The ingress queue being queried."
@@ -592,11 +592,11 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
 
         extremePortIngressStatsQueueHighPriBytes	OBJECT-TYPE
                 SYNTAX	Counter64
-        	MAX-ACCESS  read-only  
+        	MAX-ACCESS  read-only
                 STATUS current
                 DESCRIPTION
                  "The sum of all per queue CIR counts for this queue, which indicates the
-                 bytes forwarded for high-priority packets." 
+                 bytes forwarded for high-priority packets."
                 ::= {extremePortIngressQueueStatsEntry 2 }
 
         extremePortIngressStatsQueueLowPriBytes  OBJECT-TYPE
@@ -617,7 +617,7 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                  number of bytes input to this queue."
                 ::= {extremePortIngressQueueStatsEntry 4 }
 
-                
+
 
 --
 -- Per Port Egress Rate Limit Table
@@ -643,30 +643,30 @@ EXTREME-PORT-MIB DEFINITIONS ::= BEGIN
                 extremePortEgressRateLimitType               INTEGER,
                 extremePortEgressRateLimitValue              INTEGER
         }
-        
+
         extremePortEgressRateLimitType  OBJECT-TYPE
                 SYNTAX  INTEGER {
 			percentage(1),
 			kbps(2),
                         mbps(3)
 		}
-                MAX-ACCESS  read-only  
+                MAX-ACCESS  read-only
                 STATUS current
                 DESCRIPTION
-                   "The type of the current egress rate setting. A value of 1 
+                   "The type of the current egress rate setting. A value of 1
                    signifies that the egress rate limit value is represented by
-                   a percentage of the maximum configurable port bandwidth. A value 
+                   a percentage of the maximum configurable port bandwidth. A value
                    of 2 or 3 signifies the rate is configured in Kbps or Mbps
                    respectively."
                 ::= {extremePortEgressRateLimitEntry 1 }
 
-                
+
         extremePortEgressRateLimitValue	OBJECT-TYPE
                 SYNTAX	INTEGER
-        	MAX-ACCESS  read-only  
+        	MAX-ACCESS  read-only
                 STATUS current
                 DESCRIPTION
-                 "The configured egress rate value." 
+                 "The configured egress rate value."
                 ::= {extremePortEgressRateLimitEntry 2 }
 
 --
@@ -713,7 +713,7 @@ extremeWiredClientState OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
-        "This attribute shall indicate the current state of the client. 
+        "This attribute shall indicate the current state of the client.
          The attribute is enumerated as follows:
 
         1 - Authenticated - client is authenticated.
@@ -765,7 +765,7 @@ extremeWiredClientIP OBJECT-TYPE
         "IP Address of the wired client."
     ::= { extremeWiredClientEntry 7 }
 
-        
+
 
 END
 -- ============================================================================
@@ -775,4 +775,3 @@ END
 --
 -- Extreme Virtual Chassis objects
 --
-

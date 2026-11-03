@@ -241,9 +241,9 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
                    "If this object is set to 'valid', the remainder
                    of the intruder objects contain information about
                    an authentication failure.  The Security LED on
-                   the device will blink if this flag is set to 
+                   the device will blink if this flag is set to
                    'valid'.  The intruder objects will not be
-                   overwritten as long as this flag is set to 
+                   overwritten as long as this flag is set to
                    'valid'.  Setting this flag to 'invalid' will turn
                    off the Security LED if there are no other
                    current violations, and will allow the intruder
@@ -339,7 +339,7 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
            ::= { icfCommunityEntry 2 }
 
        icfCommunityReadView OBJECT-TYPE
-           SYNTAX     INTEGER { 
+           SYNTAX     INTEGER {
                           none(1),
                           discovery(2),
                           restricted(3),
@@ -370,7 +370,7 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
            ::= { icfCommunityEntry 3 }
 
        icfCommunityWriteView OBJECT-TYPE
-           SYNTAX     INTEGER { 
+           SYNTAX     INTEGER {
                           none(1),
                           discovery(2),
                           restricted(3),
@@ -531,7 +531,7 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
                         IP authorized manager address."
            INDEX       { icfAuthIPMgrIndex }
             ::= { icfAuthIPMgrTable 1 }
-       
+
        IcfAuthIPMgrEntry ::=
            SEQUENCE {
                 icfAuthIPMgrIndex            Integer32,
@@ -557,19 +557,19 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
        icfAuthIPMgrAddress OBJECT-TYPE
            SYNTAX      IpAddress
            MAX-ACCESS  read-create
-           STATUS      deprecated 
+           STATUS      deprecated
            DESCRIPTION "**************deprecated*********************
                         The IP address of the authorized manager for
                         this entry.
                         This object is deprecated new object icfAuthIPMgr
                         InetAddress has been defined to hold version neutral
-                        address type."  
+                        address type."
            ::= { icfAuthIPMgrEntry 2 }
 
        icfAuthIPMgrMask OBJECT-TYPE
            SYNTAX      IpAddress
            MAX-ACCESS  read-create
-           STATUS      deprecated 
+           STATUS      deprecated
            DESCRIPTION "**************deprecated**********************
                         This object qualifies the value of the
                         corresponding instance of icfAuthIPMgrAddress.
@@ -586,7 +586,7 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
                             manager(2)
                         }
            MAX-ACCESS  read-create
-           STATUS      current 
+           STATUS      current
            DESCRIPTION "This object defines the access level for a
                         given manager.  Operator allows for read only
                         access, and Manager allows for read/write
@@ -604,7 +604,7 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
            SYNTAX      InetAddressType
            MAX-ACCESS  read-create
            STATUS      current
-           DESCRIPTION "Specifies the type of address stored in 
+           DESCRIPTION "Specifies the type of address stored in
                         icfAuthIPMgrInetAddress object."
            ::= { icfAuthIPMgrEntry 6 }
 
@@ -621,7 +621,7 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
            SYNTAX      InetAddressType
            MAX-ACCESS  read-create
            STATUS      current
-           DESCRIPTION "Specifies the type of IP Mask stored in  
+           DESCRIPTION "Specifies the type of IP Mask stored in
                         icfAuthIPMgrInetAddrMask object."
            ::= { icfAuthIPMgrEntry 8 }
 
@@ -646,7 +646,7 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
                             tftp(6)
                         }
            MAX-ACCESS  read-create
-           STATUS      current 
+           STATUS      current
            DESCRIPTION "This object defines the access method for a
                         given manager.  The different access methods are
                         all, ssh, telnet, web, snmp, tftp"
@@ -752,18 +752,18 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
                          icfAuthIPMgrAccess,
                          icfAuthIPMgrStatus
                        }
-           STATUS      deprecated 
+           STATUS      deprecated
            DESCRIPTION "***************** deprecated ******************
                        A collection of objects for granting or denying
                        access to specific IP addresses for HTTP, telnet,
                        and TFTP.
-                       This Group object has been deprecated and a new 
-                       group object has been defined with name 
+                       This Group object has been deprecated and a new
+                       group object has been defined with name
                        icfAuthIPMgrInetGroup."
            ::= { icfSecurityGroups 14 }
 
        icfAuthIPMgrInetGroup OBJECT-GROUP
-           OBJECTS     { icfAuthIPMgrInetAddrType, 
+           OBJECTS     { icfAuthIPMgrInetAddrType,
                          icfAuthIPMgrInetAddress,
                          icfAuthIPMgrInetAddrMaskType,
                          icfAuthIPMgrInetAddrMask
@@ -771,7 +771,6 @@ HP-ICF-SECURITY DEFINITIONS ::= BEGIN
            STATUS      current
            DESCRIPTION "A collection of objects for granting or denying
                        access to specific IP addresses for HTTP, telnet,
-                       and TFTP." 
+                       and TFTP."
            ::= { icfSecurityGroups 15 }
        END
-

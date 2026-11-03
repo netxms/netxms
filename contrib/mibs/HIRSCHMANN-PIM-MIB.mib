@@ -3,7 +3,7 @@
 -- *                                                                        *
 -- *                  Hirschmann Automation and Control GmbH                *
 -- *                                                                        *
--- *                         PLATFORM SNMP PRIVATE MIB                      * 
+-- *                         PLATFORM SNMP PRIVATE MIB                      *
 -- *                                                                        *
 -- *                               Platform4 PIM                            *
 -- *                                                                        *
@@ -50,7 +50,7 @@ hmPIMMIB MODULE-IDENTITY
         ORGANIZATION "Hirschmann Automation and Control GmbH"
         CONTACT-INFO
           "Customer Support
-           Postal: 
+           Postal:
            Hirschmann Automation and Control GmbH
            Stuttgarter Str. 45-51
            72654 Neckartenzlingen
@@ -60,7 +60,7 @@ hmPIMMIB MODULE-IDENTITY
            E-Mail: hicomcenter@hirschmann.com"
         DESCRIPTION
           "The Hirschmann Private Platform4 PIM MIB definitions for Platform devices."
-          
+
     REVISION     "200602061200Z" -- 06 Feb 2006 12:00:00 GMT
     DESCRIPTION
             "Initial version, published as RFC 2934."

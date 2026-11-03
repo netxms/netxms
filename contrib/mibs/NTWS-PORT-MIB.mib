@@ -99,7 +99,7 @@ ntwsPortConfigTable OBJECT-TYPE
         SYNTAX          SEQUENCE OF NtwsPortConfigEntry
         MAX-ACCESS      not-accessible
         STATUS          current
-        DESCRIPTION     
+        DESCRIPTION
                 "Port configuration table"
         ::= { ntwsPortDataObjects 1 }
 
@@ -110,7 +110,7 @@ ntwsPortConfigEntry OBJECT-TYPE
         DESCRIPTION
                 "Port configuration entry"
         INDEX   { ntwsPortConfigPortNumber }
-        ::= { ntwsPortConfigTable 1 }        
+        ::= { ntwsPortConfigTable 1 }
 
 NtwsPortConfigEntry ::= SEQUENCE {
         ntwsPortConfigPortNumber          NtwsPhysPortNumber,
@@ -143,7 +143,7 @@ ntwsPortConfigPoeMode     OBJECT-TYPE
         MAX-ACCESS      read-only
         STATUS          current
         DESCRIPTION
-                "Indicates whether this port is configured to 
+                "Indicates whether this port is configured to
                  supply PoE (Power over Ethernet)."
         ::= { ntwsPortConfigEntry 3 }
 
@@ -187,7 +187,7 @@ ntwsPortConfigGroup OBJECT-GROUP
         OBJECTS {
                  ntwsPortConfigPortMode,
                  ntwsPortConfigPoeMode,
-                 ntwsPortConfigTrunkMaster     
+                 ntwsPortConfigTrunkMaster
                 }
         STATUS      current
         DESCRIPTION

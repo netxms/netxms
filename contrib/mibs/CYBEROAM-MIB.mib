@@ -43,7 +43,7 @@ elitecore	MODULE-IDENTITY
 									http://www.cyberoam.com
 						E-mail:	info@cyberoam.com
 						"
-	  DESCRIPTION		
+	  DESCRIPTION
 						"
 						This MIB module defines MIB objects	which provide
 					        mechanisms to remotely configure the parameters used
@@ -216,7 +216,7 @@ memoryPercentUsage  OBJECT-TYPE
     STATUS			current
     DESCRIPTION		"% usage of main memory"
     ::= { memoryStatus 2 }
- 
+
 swapCapacity  OBJECT-TYPE
     SYNTAX			Gauge32
     MAX-ACCESS		read-only
@@ -250,8 +250,8 @@ httpHits OBJECT-TYPE
     MAX-ACCESS		read-only
     STATUS			current
     DESCRIPTION		" "
-    ::= { sysStatus 7 }    
-    
+    ::= { sysStatus 7 }
+
 ftpHits OBJECT-TYPE
     SYNTAX			Counter64
     MAX-ACCESS		read-only
@@ -461,7 +461,7 @@ supportSubStatus OBJECT-TYPE
     ::= { liSupport 1 }
 
 supportExpiryDate OBJECT-TYPE
-    SYNTAX			DateAndTime	
+    SYNTAX			DateAndTime
     MAX-ACCESS		read-only
     STATUS			current
     DESCRIPTION		" "
@@ -477,7 +477,7 @@ avSubStatus OBJECT-TYPE
     ::= { liAntivirus 1 }
 
 avExpiryDate OBJECT-TYPE
-    SYNTAX			DateAndTime	
+    SYNTAX			DateAndTime
     MAX-ACCESS		read-only
     STATUS			current
     DESCRIPTION		" "
@@ -541,7 +541,7 @@ highCpuUsage NOTIFICATION-TYPE
 
 highDiskUsage OBJECT IDENTIFIER ::=  { sysAlerts 2 }
 highMemUsage OBJECT IDENTIFIER ::=  { sysAlerts 3 }
- 
+
 highConfDiskUsage NOTIFICATION-TYPE
     STATUS			current
     DESCRIPTION		""
@@ -649,7 +649,3 @@ serviceFail NOTIFICATION-TYPE
     ::= { cscAlerts 2 }
 
 END
-
-
-
-

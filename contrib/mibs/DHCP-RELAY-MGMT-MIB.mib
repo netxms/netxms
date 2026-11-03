@@ -33,9 +33,9 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
         MacAddress, RowStatus           FROM SNMPv2-TC
         DisplayString                   FROM RFC1213-MIB
         dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
-        
-		 
-    	
+
+
+
     swDHCPRelayMIB MODULE-IDENTITY
           LAST-UPDATED "200808040000Z"
           ORGANIZATION "D-Link Corp."
@@ -90,7 +90,7 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
              exceeded, the switch will drop the DHCP packet.
             "
         ::= { swDHCPRelayCtrl 3 }
-        
+
 -- -----------------------------------------------------------------------------
 -- swDHCPRelayInfo                OBJECT IDENTIFIER ::= { swDHCPRelayMIB 2 }
 -- -----------------------------------------------------------------------------
@@ -192,7 +192,7 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates DHCP relay option 82 policy."
         ::= { swDHCPRelayOption82 3 }
-        
+
 	swDHCPRelayOption82RemoteIDType OBJECT-TYPE
         SYNTAX  INTEGER {
                default(1),
@@ -215,8 +215,8 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
             is set to default, the value will be the MAC address of the device, and this object cannot
             be modified. If swDHCPRelayOption82RemoteIDType is set to user-defined, a new value can
             be written to this object."
-        ::= { swDHCPRelayOption82 5 }        
-        
+        ::= { swDHCPRelayOption82 5 }
+
 -- -----------------------------------------------------------------------------
 --  swDHCPRelayOption60
 -- -----------------------------------------------------------------------------
@@ -350,7 +350,7 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 --         STATUS  current
 --         DESCRIPTION
 --             "This object indicates match state of this entry.
---             
+--
 --              exact(1): means the option 60 string in the packet must full
 --             	match with the specified string.
 --              partial(2): means the option 60 string in the packet only need
@@ -393,7 +393,7 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 --         DESCRIPTION
 --             "This object indicates default mode that has no option 61 matching rules.
 
---              relay (1): means to relay the packet to the IP address which is specified 
+--              relay (1): means to relay the packet to the IP address which is specified
 --             	by swDHCPRelayOption61DefRelayIp.
 --              drop (2): means to drop the packet.
 --             "
@@ -455,7 +455,7 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 --         STATUS  current
 --         DESCRIPTION
 --             "This object indicates client type of this entry.
---             
+--
 --              mac (1): means the client-ID which is the MAC address of client.
 --              string (2): means the client-ID which is specified string by administrator.
 --             "
@@ -467,12 +467,12 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 --         STATUS  current
 --         DESCRIPTION
 --             "This object indicates string of this entry.
---             
+--
 --              When swDHCPRelayOption61ClientType is mac(1), the format of this
 --              object should be XX-XX-XX-XX-XX-XX (MAC address).
 --             "
 --         ::= { swDHCPRelayOption61Entry 2 }
---         
+--
 --      swDHCPRelayOption61Mode OBJECT-TYPE
 --         SYNTAX  INTEGER {
 --                relay(1),
@@ -482,8 +482,8 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 --         STATUS  current
 --         DESCRIPTION
 --             "This object indicates mode of this entry.
---             
---              relay (1): means to relay the packet to the IP address which is specified 
+--
+--              relay (1): means to relay the packet to the IP address which is specified
 --             	by swDHCPRelayOption61RelayIp.
 --              drop (2): means to drop the packet.
 --             "
@@ -495,7 +495,7 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 --         STATUS  current
 --         DESCRIPTION
 --             "This object indicates the IP address of relay server.
---             
+--
 --              Pay attention to when swDHCPRelayOption61Mode is:
 --              relay (1): this object must be set together.
 --              drop (2): this object can not be set, and it always returns '0.0.0.0'.
@@ -509,5 +509,5 @@ DHCP-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
 --         DESCRIPTION
 --             "This object indicates the status of this entry."
 --         ::= { swDHCPRelayOption61Entry 5 }
-        
+
 END

@@ -1719,7 +1719,7 @@ diffServRandomDropNextFree OBJECT-TYPE
        "This object contains an unused value for diffServRandomDropId,
        or a zero to indicate that none exist."
     ::= { diffServAlgDrop 3 }
-    
+
 diffServRandomDropTable OBJECT-TYPE
     SYNTAX       SEQUENCE OF DiffServRandomDropEntry
     MAX-ACCESS   not-accessible

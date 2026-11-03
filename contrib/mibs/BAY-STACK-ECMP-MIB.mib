@@ -83,7 +83,7 @@ bsEcmpConfigRoutingProtocol OBJECT-TYPE
     STATUS      current
     DESCRIPTION ""
     ::= { bsEcmpConfigEntry 1 }
- 
+
 bsEcmpConfigMaxPath OBJECT-TYPE
     SYNTAX      Integer32 (1..4)
     MAX-ACCESS  read-write
@@ -97,4 +97,3 @@ bsEcmpConfigMaxPath OBJECT-TYPE
 -- -------------------------------------------------------------
 
 END
-

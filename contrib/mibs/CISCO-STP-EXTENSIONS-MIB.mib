@@ -1,7 +1,7 @@
 -- *****************************************************************
--- CISCO-STP-EXTENSIONS-MIB 
+-- CISCO-STP-EXTENSIONS-MIB
 --
--- August 1997, Fei Xu 
+-- August 1997, Fei Xu
 --
 -- Copyright (c) 1997, 1998-2004, 2005 by Cisco Systems, Inc.
 -- All rights reserved.
@@ -9,39 +9,39 @@
 CISCO-STP-EXTENSIONS-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-        MODULE-IDENTITY, 
-        OBJECT-TYPE, 
+        MODULE-IDENTITY,
+        OBJECT-TYPE,
         Counter32,
-        Integer32, 
+        Integer32,
         Unsigned32,
-        NOTIFICATION-TYPE             
+        NOTIFICATION-TYPE
                            FROM SNMPv2-SMI
 
-        MODULE-COMPLIANCE, 
+        MODULE-COMPLIANCE,
         OBJECT-GROUP,
-        NOTIFICATION-GROUP                       
+        NOTIFICATION-GROUP
                            FROM SNMPv2-CONF
-        TruthValue, 
-        TimeStamp, 
+        TruthValue,
+        TimeStamp,
         DisplayString,
         RowStatus,
-        TEXTUAL-CONVENTION                              
+        TEXTUAL-CONVENTION
                            FROM SNMPv2-TC
 
-        vlanTrunkPortEntry, 
-        VlanIndex,  
-        vtpVlanEntry, 
-        vtpVlanEditEntry         
+        vlanTrunkPortEntry,
+        VlanIndex,
+        vtpVlanEntry,
+        vtpVlanEditEntry
                            FROM CISCO-VTP-MIB
 
-        dot1dStpPortEntry                        
+        dot1dStpPortEntry
                            FROM BRIDGE-MIB
 
-        ciscoMgmt                                
+        ciscoMgmt
                            FROM CISCO-SMI;
 
 ciscoStpExtensionsMIB MODULE-IDENTITY
-    LAST-UPDATED    "200512200000Z" 
+    LAST-UPDATED    "200512200000Z"
     ORGANIZATION    "Cisco Systems, Inc."
     CONTACT-INFO
             "       Cisco Systems
@@ -59,85 +59,85 @@ ciscoStpExtensionsMIB MODULE-IDENTITY
             the 802.1D Spanning Tree Protocol (STP)."
 
     REVISION    "200512200000Z"
-    DESCRIPTION 
+    DESCRIPTION
             "Added bit value rstp(5) to stpxSMSTPortStatus and
             dispute(4) to stpxRPVSTPortStatus."
     REVISION    "200504120000Z"
-    DESCRIPTION 
+    DESCRIPTION
             "Changed the description clauses of stpxMSTMaxHopCount
             and stpxMSTInstanceRemainingHopCount.
             Added StpxMSTConfigurationDigest textual convention.
-            Deprecated stpxMSTGroup3 and added the following groups: 
+            Deprecated stpxMSTGroup3 and added the following groups:
                 stpxRSTPTransmitHoldCountGroup,
                 stpxSMSTPortMSTModeGroup, stpxSMSTMaxHopCountGroup,
                 stpxSMSTConfigDigestGroup and stpxMSTGroup4.
             Added bit dispute(4) into the BITS syntax of
             stpxSMSTPortStatus.
-            Deprecated stpxMIBCompliance11 and added 
+            Deprecated stpxMIBCompliance11 and added
             stpxMIBCompliance12."
 
     REVISION    "200407210000Z"
     DESCRIPTION "Added stpxPathCostOperModeGroup
-                 and changed the decription of 
+                 and changed the decription of
                  stpxSpanningTreePathCostMode."
 
     REVISION        "200404080000Z"
     DESCRIPTION
             "Added stpxSMSTInstanceCISTGroup.
             Added 3 new bit values into the BITS syntax
-            of stpxNotificationEnable: 
-            inconsistency(2), rootInconsistency(3), 
+            of stpxNotificationEnable:
+            inconsistency(2), rootInconsistency(3),
             and loopInconsistency(4)."
 
     REVISION        "200401140000Z"
     DESCRIPTION
-            "Deprecated stpxMSTGroup2 and 
+            "Deprecated stpxMSTGroup2 and
             stpxPreferredMSTInstancesGroup.
-            Added stpxMSTGroup3, stpxSMSTGroup, 
+            Added stpxMSTGroup3, stpxSMSTGroup,
             stpxSMSTInstanceGroup, stpxSMSTInstanceEditGroup,
-            stpxSMSTPortStatusGroup, stpxSMSTPortHelloTimeGroup. 
+            stpxSMSTPortStatusGroup, stpxSMSTPortHelloTimeGroup.
             Added one new value master(7) to stpxMSTPortRoleValue
-            and stpxRSTPPortRoleValue. Added 2 new unused bit 
-            value into the BITS syntax of stpxRPVSTPortStatus." 
+            and stpxRSTPPortRoleValue. Added 2 new unused bit
+            value into the BITS syntax of stpxRPVSTPortStatus."
 
     REVISION        "200310230000Z"
-    DESCRIPTION 
-            "Added stpxExtendedSysIDGroup,  
-            stpxNotificationEnableGroup, and 
+    DESCRIPTION
+            "Added stpxExtendedSysIDGroup,
+            stpxNotificationEnableGroup, and
             stpxFastStartOperModeGroup."
 
     REVISION        "200207110000Z"
-    DESCRIPTION 
+    DESCRIPTION
             "Added Rapid Spanning Tree Protocol support.
             Added stpxUplinkFastOperEnabled and
             stpxBackboneFastOperEnabled objects.
-            Replaced stpxMSTPortAdminLinkType, 
-            stpxMSTPortOperLinkType, 
-            stpxMSTPortProtocolMigration 
+            Replaced stpxMSTPortAdminLinkType,
+            stpxMSTPortOperLinkType,
+            stpxMSTPortProtocolMigration
             with stpxRSTPPortAdminLinkType,
-            stpxRSTPPortOperLinkType and 
+            stpxRSTPPortOperLinkType and
             stpxRSTPPortProtocolMigration
             defined in stpxRSTPPortTable.
             Replaced stpxMSTPortRoleTable with
             stpxRSTPPortRoleTable. Added stpxRPVSTPortTable."
 
     REVISION        "200112060000Z"
-    DESCRIPTION 
-            "Added per port Bpdu Guard and Bpdu Filter 
+    DESCRIPTION
+            "Added per port Bpdu Guard and Bpdu Filter
             mode configuration support. Modified the
             description of stpxUplinkFastEnabled and
             stpxUplinkStationLearningGenRate for MST
-            support. " 
+            support. "
 
     REVISION        "200109140000Z"
     DESCRIPTION
             "Added MST support, Loop Guard Global Default mode
             support and Fast Start Global Default mode support.
-            Deprecated stpxFastStartPortEnable and 
+            Deprecated stpxFastStartPortEnable and
             stpxLoopGuardConfigEnabled objects. Changed description
             of stpxUplinkFastEnabled, stpxUplinkFastTransitions,
-            stpxUplinkStationLearningGenRate, 
-            stpxUplinkStationLearningFrames objects for MST support." 
+            stpxUplinkStationLearningGenRate,
+            stpxUplinkStationLearningFrames objects for MST support."
 
     REVISION        "200106200000Z"
     DESCRIPTION
@@ -220,10 +220,10 @@ stpxUplinkFastEnabled OBJECT-TYPE
     DESCRIPTION
             "An indication of whether the UplinkFast capability is
              administratively enabled on the device.
- 
+
              If the platform does not support configuration of this
-             object when the object value of stpxSpanningTreeType is 
-             mst(4), then this object is not instantiated." 
+             object when the object value of stpxSpanningTreeType is
+             mst(4), then this object is not instantiated."
     ::= { stpxUplinkFastObjects 1 }
 
 stpxUplinkFastTransitions OBJECT-TYPE
@@ -235,15 +235,15 @@ stpxUplinkFastTransitions OBJECT-TYPE
             "The cumulative number of UplinkFast transitions (from
             the STP 'Blocking' state directly to the STP 'Forwarding'
             state).  All transitions are included in this counter,
-            irrespective of the instance of the Spanning Tree 
+            irrespective of the instance of the Spanning Tree
             Protocol on which they occur.
 
-            If the platform supports the stpxUplinkFastOperEnabled 
-            object, then this object is not instantiated when the 
+            If the platform supports the stpxUplinkFastOperEnabled
+            object, then this object is not instantiated when the
             object value of stpxUplinkFastOperEnabled is false(2).
-            If the platform does not support the 
-            stpxUplinkFastOperEnabled object, then this object is 
-            not instantiated when the object value of 
+            If the platform does not support the
+            stpxUplinkFastOperEnabled object, then this object is
+            not instantiated when the object value of
             stpxSpanningTreeType is mst(4)."
     ::= { stpxUplinkFastObjects 2 }
 
@@ -257,7 +257,7 @@ stpxUplinkStationLearningGenRate OBJECT-TYPE
             device will generate in each 100 milli-second period after
             a UplinkFast transition.  By configuring this object, the
             network administrator can limit the rate at which
-            station-learning frames are generated.  
+            station-learning frames are generated.
 
             If the platform does not support configuration of this
             object when the object value of stpxSpanningTreeType is
@@ -276,12 +276,12 @@ stpxUplinkStationLearningFrames OBJECT-TYPE
             irrespective of the instance of the Spanning Tree Protocol
             on which the UplinkFast transition occurred.
 
-            If the platform supports the stpxUplinkFastOperEnabled 
-            object, then this object is not instantiated when the 
+            If the platform supports the stpxUplinkFastOperEnabled
+            object, then this object is not instantiated when the
             object value of stpxUplinkFastOperEnabled is false(2).
-            If the platform does not support the 
-            stpxUplinkFastOperEnabled object, then this object is 
-            not instantiated when the object value of 
+            If the platform does not support the
+            stpxUplinkFastOperEnabled object, then this object is
+            not instantiated when the object value of
             stpxSpanningTreeType is mst(4)."
     ::= { stpxUplinkFastObjects 4 }
 
@@ -290,7 +290,7 @@ stpxUplinkFastOperEnabled OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-            "An indication of whether the UplinkFast capability is 
+            "An indication of whether the UplinkFast capability is
             operationally enabled on the device."
     ::= { stpxUplinkFastObjects 5 }
 
@@ -308,8 +308,8 @@ stpxPreferredVlansTable OBJECT-TYPE
             preferred on which VLAN trunk ports.  The preferred
             VLANs on a trunk port have a lower Path Cost value
             compared with the VLANs on the trunk not in the
-            preferred list. If the value of stpxSpanningTreeType 
-            is neither pvstPlus(1) nor rapidPvstPlus(5), the 
+            preferred list. If the value of stpxSpanningTreeType
+            is neither pvstPlus(1) nor rapidPvstPlus(5), the
             configuration in this table has no effect. "
     ::= { stpxVlanObjects 1 }
 
@@ -355,83 +355,83 @@ stpxPreferredVlansMap OBJECT-TYPE
             vlanTrunkPortSetSerialNo."
     ::= { stpxPreferredVlansEntry 1 }
 
-stpxPreferredVlansMap2k OBJECT-TYPE 
-    SYNTAX     OCTET STRING (SIZE (0..128)) 
-    MAX-ACCESS read-write 
-    STATUS     current 
-    DESCRIPTION 
-            "A string of octets containing one bit per VLAN for VLANS 
+stpxPreferredVlansMap2k OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE (0..128))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "A string of octets containing one bit per VLAN for VLANS
             with VlanIndex values of 1024 through 2047 in the management
-            domain on this trunk port.  The first octet corresponds to 
-            VLANs with VlanIndex values of 1024 through 1031; 
-            the second octet to VLANs 1032 through 1039; etc. 
-            The most significant bit of each octet corresponds to the 
-            lowest value VlanIndex in that octet. 
+            domain on this trunk port.  The first octet corresponds to
+            VLANs with VlanIndex values of 1024 through 1031;
+            the second octet to VLANs 1032 through 1039; etc.
+            The most significant bit of each octet corresponds to the
+            lowest value VlanIndex in that octet.
 
-            For each VLAN, if it is preferred on this trunk port, then 
-            the bit corresponding to that VLAN is set to '1'. 
-            The default value is 128 bytes of zeros. 
+            For each VLAN, if it is preferred on this trunk port, then
+            the bit corresponding to that VLAN is set to '1'.
+            The default value is 128 bytes of zeros.
 
-            To avoid conflicts between overlapping partial updates by 
+            To avoid conflicts between overlapping partial updates by
             multiple managers, i.e., updates which modify only a portion
             of an instance of this object (e.g., enable/disable a single
             VLAN on the trunk port), any SNMP Set operation accessing an
-            instance of this object should also write the value of 
-            vlanTrunkPortSetSerialNo." 
-    ::= { stpxPreferredVlansEntry 2 } 
+            instance of this object should also write the value of
+            vlanTrunkPortSetSerialNo."
+    ::= { stpxPreferredVlansEntry 2 }
 
-stpxPreferredVlansMap3k OBJECT-TYPE 
-    SYNTAX     OCTET STRING (SIZE (0..128)) 
-    MAX-ACCESS read-write 
-    STATUS     current 
-    DESCRIPTION 
-            "A string of octets containing one bit per VLAN for VLANS 
+stpxPreferredVlansMap3k OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE (0..128))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "A string of octets containing one bit per VLAN for VLANS
             with VlanIndex values of 2048 through 3071 in the management
-            domain on this trunk port.  The first octet corresponds to 
-            VLANs with VlanIndex values of 2048 through 2055; 
-            the second octet to VLANs 2056 through 2063; etc. 
-            The most significant bit of each octet corresponds to the 
-            lowest value VlanIndex in that octet. 
+            domain on this trunk port.  The first octet corresponds to
+            VLANs with VlanIndex values of 2048 through 2055;
+            the second octet to VLANs 2056 through 2063; etc.
+            The most significant bit of each octet corresponds to the
+            lowest value VlanIndex in that octet.
 
-            For each VLAN, if it is preferred on this trunk port, then 
-            the bit corresponding to that VLAN is set to '1'. 
-            The default value is 128 bytes of zeros. 
+            For each VLAN, if it is preferred on this trunk port, then
+            the bit corresponding to that VLAN is set to '1'.
+            The default value is 128 bytes of zeros.
 
-            To avoid conflicts between overlapping partial updates by 
+            To avoid conflicts between overlapping partial updates by
             multiple managers, i.e., updates which modify only a portion
             of an instance of this object (e.g., enable/disable a single
             VLAN on the trunk port), any SNMP Set operation accessing an
-            instance of this object should also write the value of 
-            vlanTrunkPortSetSerialNo." 
-    ::= { stpxPreferredVlansEntry 3 } 
+            instance of this object should also write the value of
+            vlanTrunkPortSetSerialNo."
+    ::= { stpxPreferredVlansEntry 3 }
 
-stpxPreferredVlansMap4k OBJECT-TYPE 
-    SYNTAX     OCTET STRING (SIZE (0..128)) 
-    MAX-ACCESS read-write 
-    STATUS     current 
-    DESCRIPTION 
-            "A string of octets containing one bit per VLAN for VLANS 
+stpxPreferredVlansMap4k OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE (0..128))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "A string of octets containing one bit per VLAN for VLANS
             with VlanIndex values of 3072 through 4095 in the management
-            domain on this trunk port.  The first octet corresponds to 
-            VLANs with VlanIndex values of 3072 through 3079; 
-            the second octet to VLANs 3080 through 3087; etc. 
-            The most significant bit of each octet corresponds to the 
-            lowest value VlanIndex in that octet. 
+            domain on this trunk port.  The first octet corresponds to
+            VLANs with VlanIndex values of 3072 through 3079;
+            the second octet to VLANs 3080 through 3087; etc.
+            The most significant bit of each octet corresponds to the
+            lowest value VlanIndex in that octet.
 
-            For each VLAN, if it is preferred on this trunk port, then 
-            the bit corresponding to that VLAN is set to '1'. 
-            The default value is 128 bytes of zeros. 
+            For each VLAN, if it is preferred on this trunk port, then
+            the bit corresponding to that VLAN is set to '1'.
+            The default value is 128 bytes of zeros.
 
-            To avoid conflicts between overlapping partial updates by 
+            To avoid conflicts between overlapping partial updates by
             multiple managers, i.e., updates which modify only a portion
             of an instance of this object (e.g., enable/disable a single
             VLAN on the trunk port), any SNMP Set operation accessing an
-            instance of this object should also write the value of 
-            vlanTrunkPortSetSerialNo." 
-    ::= { stpxPreferredVlansEntry 4 } 
+            instance of this object should also write the value of
+            vlanTrunkPortSetSerialNo."
+    ::= { stpxPreferredVlansEntry 4 }
 
 --
--- Spanning Tree Protocol PVST+ VLAN Configuration 
+-- Spanning Tree Protocol PVST+ VLAN Configuration
 --
 
 stpxPVSTVlanTable OBJECT-TYPE
@@ -439,8 +439,8 @@ stpxPVSTVlanTable OBJECT-TYPE
         MAX-ACCESS    not-accessible
         STATUS        current
         DESCRIPTION   "A list of Virtual LAN entries containing
-                      information for Spanning Tree PVST+ protocol. 
-                      An entry will exist for each VLAN existing on 
+                      information for Spanning Tree PVST+ protocol.
+                      An entry will exist for each VLAN existing on
                       the device."
         ::= { stpxVlanObjects 2 }
 
@@ -448,7 +448,7 @@ stpxPVSTVlanEntry OBJECT-TYPE
         SYNTAX        StpxPVSTVlanEntry
         MAX-ACCESS    not-accessible
         STATUS        current
-        DESCRIPTION   "An entry containing Spanning Tree PVST+ Protocol 
+        DESCRIPTION   "An entry containing Spanning Tree PVST+ Protocol
                       information for a particular Virtual LAN."
         INDEX         { stpxPVSTVlanIndex }
         ::= { stpxPVSTVlanTable 1 }
@@ -463,7 +463,7 @@ StpxPVSTVlanEntry ::=
 
 stpxPVSTVlanIndex OBJECT-TYPE
         SYNTAX        VlanIndex
-        MAX-ACCESS    not-accessible 
+        MAX-ACCESS    not-accessible
         STATUS        current
         DESCRIPTION   "An index value that uniquely identifies the
                       Virtual LAN associated with this information."
@@ -476,33 +476,33 @@ stpxPVSTVlanEnable OBJECT-TYPE
                                }
         MAX-ACCESS    read-write
         STATUS        current
-        DESCRIPTION   "Indicates whether Spanning Tree PVST+  
-                      Protocol is enabled for this Virtual LAN. If 
-                      Spanning Tree PVST+ Protocol is not supported 
-                      on this VLAN, then notApplicable(3) will be 
-                      returned while retrieving the object value for 
+        DESCRIPTION   "Indicates whether Spanning Tree PVST+
+                      Protocol is enabled for this Virtual LAN. If
+                      Spanning Tree PVST+ Protocol is not supported
+                      on this VLAN, then notApplicable(3) will be
+                      returned while retrieving the object value for
                       this VLAN.
 
                       If the device only supports a single global
-                      Spanning Tree PVST+ Protocol enable/disable 
-                      for all the existing VLANs, then the object 
+                      Spanning Tree PVST+ Protocol enable/disable
+                      for all the existing VLANs, then the object
                       value assigned to this VLAN will be applied
                       to the object values of all the instances
                       in this table which do not have the value
                       of notApplicable(3).
 
-                      If the value of stpxSpanningTreeType is neither 
-                      pvstPlus(1) nor rapidPvstPlus(5), then the value 
-                      of stpxPVSTVlanEnable for this VLAN can not be 
+                      If the value of stpxSpanningTreeType is neither
+                      pvstPlus(1) nor rapidPvstPlus(5), then the value
+                      of stpxPVSTVlanEnable for this VLAN can not be
                       changed."
         DEFVAL { enabled }
         ::= { stpxPVSTVlanEntry 2 }
- 
+
 
 --
 --  Objects to support Cisco's Shared Spanning Tree Protocol (SSTP).
 --
- 
+
 stpxInconsistencyTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF StpxInconsistencyEntry
     MAX-ACCESS  not-accessible
@@ -516,7 +516,7 @@ stpxInconsistencyTable OBJECT-TYPE
                 inconsistency where different switches have different
                 PVIDs for the same link."
     ::= { stpxInconsistencyObjects 1 }
- 
+
 stpxInconsistencyEntry OBJECT-TYPE
     SYNTAX      StpxInconsistencyEntry
     MAX-ACCESS  not-accessible
@@ -526,13 +526,13 @@ stpxInconsistencyEntry OBJECT-TYPE
                 inconsistency is currently in effect."
     INDEX { stpxVlanIndex, stpxPortIndex }
     ::= { stpxInconsistencyTable 1 }
- 
+
 StpxInconsistencyEntry ::= SEQUENCE {
         stpxVlanIndex          VlanIndex,
         stpxPortIndex          Integer32,
         stpxInconsistentState  BITS
 }
- 
+
 stpxVlanIndex OBJECT-TYPE
     SYNTAX      VlanIndex
     MAX-ACCESS  not-accessible
@@ -551,7 +551,7 @@ stpxPortIndex OBJECT-TYPE
     REFERENCE
                "dot1dBasePort is defined in RFC1493."
     ::= { stpxInconsistencyEntry 2 }
- 
+
 stpxInconsistentState OBJECT-TYPE
     SYNTAX      BITS {
                      typeInconsistent(0), -- a port-type inconsistency
@@ -582,20 +582,20 @@ stpxBackboneFastEnabled OBJECT-TYPE
             "An indication of whether the BackboneFast capability is
              administratively enabled on the device."
     ::= { stpxBackboneFastObjects 1 }
- 
+
 stpxBackboneFastInInferiorBPDUs OBJECT-TYPE
     SYNTAX     Counter32
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-            "The number of inferior BPDUs received by the switch 
+            "The number of inferior BPDUs received by the switch
              since the stpxBackboneFastOperEnabled has
-             become true(1). If the value of 
-             stpxBackboneFastOperEnabled is false(2), then this 
+             become true(1). If the value of
+             stpxBackboneFastOperEnabled is false(2), then this
              mib object will have a value of 0."
 
     ::= { stpxBackboneFastObjects 2 }
- 
+
 stpxBackboneFastInRLQRequestPDUs OBJECT-TYPE
     SYNTAX     Counter32
     MAX-ACCESS read-only
@@ -607,7 +607,7 @@ stpxBackboneFastInRLQRequestPDUs OBJECT-TYPE
              false(2), then this mib object will have a value of 0."
 
     ::= { stpxBackboneFastObjects 3 }
- 
+
 stpxBackboneFastInRLQResponsePDUs OBJECT-TYPE
     SYNTAX     Counter32
     MAX-ACCESS read-only
@@ -618,7 +618,7 @@ stpxBackboneFastInRLQResponsePDUs OBJECT-TYPE
              true(1). If the value of stpxBackboneFastOperEnabled is
              false(2), then this mib object will have a value of 0."
     ::= { stpxBackboneFastObjects 4 }
- 
+
 stpxBackboneFastOutRLQRequestPDUs OBJECT-TYPE
     SYNTAX     Counter32
     MAX-ACCESS read-only
@@ -630,7 +630,7 @@ stpxBackboneFastOutRLQRequestPDUs OBJECT-TYPE
              false(2), then this mib object will have a value of 0."
 
     ::= { stpxBackboneFastObjects 5 }
- 
+
 stpxBackboneFastOutRLQResponsePDUs OBJECT-TYPE
     SYNTAX     Counter32
     MAX-ACCESS read-only
@@ -651,7 +651,7 @@ stpxBackboneFastOperEnabled OBJECT-TYPE
             "An indication of whether the BackboneFast capability is
             operationally enabled on the device."
     ::= { stpxBackboneFastObjects 7 }
- 
+
 --
 -- STP Root Guard Capability
 --
@@ -696,23 +696,23 @@ stpxRootGuardConfigEnabled OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-            "An indication of whether the RootGuard capability is 
+            "An indication of whether the RootGuard capability is
             enabled on this port or not. This configuration will be
-            applied to all Spanning Tree instances in which this port 
+            applied to all Spanning Tree instances in which this port
             exists."
     DEFVAL { false }
     ::= { stpxRootGuardConfigEntry 2 }
- 
+
 stpxRootInconsistencyTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF StpxRootInconsistencyEntry
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
                 "A table containing a list of the bridge ports for which
-                a particular Spanning Tree instance has been found 
-                to have an root-inconsistency. The agent creates a new 
-                entry in this table whenever it detects a new 
-                root-inconsistency, and deletes entries 
+                a particular Spanning Tree instance has been found
+                to have an root-inconsistency. The agent creates a new
+                entry in this table whenever it detects a new
+                root-inconsistency, and deletes entries
                 when/soon after the inconsistency is no longer present."
     ::= { stpxRootGuardObjects 2 }
 
@@ -721,8 +721,8 @@ stpxRootInconsistencyEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-                "A Spanning Tree instance on a particular port for 
-                which a Spanning Tree root-inconsistency is currently 
+                "A Spanning Tree instance on a particular port for
+                which a Spanning Tree root-inconsistency is currently
                 in effect."
     INDEX { stpxRootInconsistencyIndex, stpxRootInconsistencyPortIndex }
     ::= { stpxRootInconsistencyTable 1 }
@@ -740,7 +740,7 @@ stpxRootInconsistencyIndex OBJECT-TYPE
     DESCRIPTION
              "The Spanning Tree instance id, such as the VLAN id
              of the VLAN if the object value of stpxSpanningTreeType
-             is pvstPlus(1) or rapidPvstPlus(5)." 
+             is pvstPlus(1) or rapidPvstPlus(5)."
     ::= { stpxRootInconsistencyEntry 1 }
 
 stpxRootInconsistencyPortIndex OBJECT-TYPE
@@ -760,14 +760,14 @@ stpxRootInconsistencyState OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-                "Indicates whether the port on a particular Spanning 
-                 Tree instance is currently in root-inconsistent 
+                "Indicates whether the port on a particular Spanning
+                 Tree instance is currently in root-inconsistent
                  state or not."
     ::= { stpxRootInconsistencyEntry  3 }
 
 
 --
--- stpxSpanningTreeObjects 
+-- stpxSpanningTreeObjects
 --
 
 stpxSpanningTreeType  OBJECT-TYPE
@@ -795,12 +795,12 @@ stpxSpanningTreeType  OBJECT-TYPE
                with IEEE 802.1w Rapid Spanning Tree Protocol
                (RSTP).
 
-        rapidPvstPlus -- IEEE 802.1w Rapid Spanning Tree 
+        rapidPvstPlus -- IEEE 802.1w Rapid Spanning Tree
                 Protocol (RSTP) for all vlans in PVST+.
 
-        When the value of this MIB object gets changed, the 
-        network connectivity would be affected and the 
-        connectivity to this device would also be lost 
+        When the value of this MIB object gets changed, the
+        network connectivity would be affected and the
+        connectivity to this device would also be lost
         temporarily."
     DEFVAL  { pvstPlus }
      ::= { stpxSpanningTreeObjects 1}
@@ -815,8 +815,8 @@ stpxSpanningTreePathCostMode    OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-        "Indicates the administrative  spanning tree path cost mode 
-         configured on device." 
+        "Indicates the administrative  spanning tree path cost mode
+         configured on device."
 
    DEFVAL  { short }
    ::= { stpxSpanningTreeObjects 2 }
@@ -831,7 +831,7 @@ stpxLongStpPortPathCostTable OBJECT-TYPE
         configuration when stpxSpanningTreePathCostOperMode is
         long(2).
 
-        If the value of stpxSpanningTreePathCostOperMode is 
+        If the value of stpxSpanningTreePathCostOperMode is
         short(1), this table is not instantiated."
     ::= { stpxSpanningTreeObjects 3 }
 
@@ -862,7 +862,7 @@ stpxLongStpPortPathCost OBJECT-TYPE
           path cost in 32 bits value range when the
           stpxSpanningTreePathCostOperMode is long(2).
 
-          If the stpxSpanningTreePathCostOperMode is short(1), this 
+          If the stpxSpanningTreePathCostOperMode is short(1), this
           MIB object is not instantiated."
     ::= { stpxLongStpPortPathCostEntry 1}
 
@@ -871,7 +871,7 @@ stpxExtendedSysIDAdminEnabled OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-          "Indicates whether Extended System ID feature 
+          "Indicates whether Extended System ID feature
            is administratively enabled on the device or not."
     REFERENCE
                "IEEE 802.1t."
@@ -882,7 +882,7 @@ stpxExtendedSysIDOperEnabled OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-          "Indicates whether Extended System ID feature 
+          "Indicates whether Extended System ID feature
            is operationaly enabled on the device or not.
 
            If the value of this object is true(1), then
@@ -908,7 +908,7 @@ stpxNotificationEnable OBJECT-TYPE
     STATUS      current
     DESCRIPTION
          "Indicates whether a specified notification is enabled or not.
-         If a bit corresponding to a notification is set to 1, then 
+         If a bit corresponding to a notification is set to 1, then
          the specified notification can be generated.
 
          newRoot -- the newRoot notification as defined in BRIDGE-MIB.
@@ -918,10 +918,10 @@ stpxNotificationEnable OBJECT-TYPE
 
          inconsistency -- the stpxInconsistencyUpdate notification.
 
-         rootInconsistency -- the stpxRootInconsistencyUpdate 
+         rootInconsistency -- the stpxRootInconsistencyUpdate
                               notification.
 
-         loopInconsistency -- the stpxLoopInconsistencyUpdate 
+         loopInconsistency -- the stpxLoopInconsistencyUpdate
                               notification."
     ::= { stpxSpanningTreeObjects 6 }
 
@@ -937,7 +937,7 @@ stpxSpanningTreePathCostOperMode    OBJECT-TYPE
     DESCRIPTION
         "Indicate the operational spanning tree path cost mode
         on device. This mode applies to all instances of the Spanning
-        Tree protocol running on the device. 
+        Tree protocol running on the device.
 
         When the value of this MIB object gets changed, the path cost
         of all ports will be reassigned to the default path cost
@@ -967,17 +967,17 @@ stpxMISTPInstanceNumber  OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-       "The number of MISTP instances, that are supported by the device 
+       "The number of MISTP instances, that are supported by the device
        when the value of stpxSpanningTreeType is either mistp(2)
        or mistpPvstPlus(3)."
      ::= { stpxMISTPObjects 1}
 
 
--- When stpxSpanningTreeType is modified from a value of 'pvstPlus' to 
--- either 'mistp' or 'mistpPvstPlus', the agent will create a fixed  
+-- When stpxSpanningTreeType is modified from a value of 'pvstPlus' to
+-- either 'mistp' or 'mistpPvstPlus', the agent will create a fixed
 -- number (specified in stpxMISTPInstanceNumber) of MISTP instances in
--- this table. When stpxSpanningTreeType is changed to 'pvstPlus', the 
--- agent will delete all the MISTP instances from this table and also 
+-- this table. When stpxSpanningTreeType is changed to 'pvstPlus', the
+-- agent will delete all the MISTP instances from this table and also
 -- all the MIB objects associated with them.
 
 stpxMISTPInstanceTable OBJECT-TYPE
@@ -985,11 +985,11 @@ stpxMISTPInstanceTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-          "This table contains one entry for each instance of MISTP and 
+          "This table contains one entry for each instance of MISTP and
           it contains stpxMISTPInstanceNumber entries, numbered from 1
           to stpxMISTPInstanceNumber.
 
-          This table is only instantiated when the value of 
+          This table is only instantiated when the value of
           stpxSpanningTreeType is mistp(2) or mistpPvstPlus(3)."
      ::= {stpxMISTPObjects 2 }
 
@@ -998,7 +998,7 @@ stpxMISTPInstanceEntry OBJECT-TYPE
       MAX-ACCESS  not-accessible
       STATUS      current
       DESCRIPTION
-          "A conceptual row containing the status of the MISTP 
+          "A conceptual row containing the status of the MISTP
           instance."
       INDEX  { stpxMISTPInstanceIndex }
       ::= { stpxMISTPInstanceTable 1 }
@@ -1025,18 +1025,18 @@ stpxMISTPInstanceEnable  OBJECT-TYPE
       SYNTAX        TruthValue
       MAX-ACCESS    read-write
       STATUS        current
-      DESCRIPTION 
+      DESCRIPTION
           "This object indicates whether the MISTP protocol is currently
           enabled on the MISTP instance.
-      
+
           If this object is set to
              'true'    - the MISTP protocol will run on this instance.
-                        
-             'false'   - the MISTP protocol will stop running on this 
+
+             'false'   - the MISTP protocol will stop running on this
                          instance.
           "
-      DEFVAL { true }     
-      ::= {stpxMISTPInstanceEntry 2 }     
+      DEFVAL { true }
+      ::= {stpxMISTPInstanceEntry 2 }
 
 stpxMISTPInstanceVlansMapped OBJECT-TYPE
     SYNTAX     OCTET STRING (SIZE (0..128))
@@ -1068,8 +1068,8 @@ stpxMISTPInstanceVlansMapped2k OBJECT-TYPE
 
             For each VLAN, if it is mapped to this MISTP instance,
             then the bit corresponding to that VLAN is set to '1'.
-            
-            This object is only instantiated on devices with 
+
+            This object is only instantiated on devices with
             support for VlanIndex up to 4095."
     ::= {stpxMISTPInstanceEntry 4 }
 
@@ -1089,7 +1089,7 @@ stpxMISTPInstanceVlansMapped3k OBJECT-TYPE
             For each VLAN, if it is mapped to this MISTP instance,
             then the bit corresponding to that VLAN is set to '1'.
 
-            This object is only instantiated on devices with 
+            This object is only instantiated on devices with
             support for VlanIndex up to 4095."
     ::= {stpxMISTPInstanceEntry 5 }
 
@@ -1109,7 +1109,7 @@ stpxMISTPInstanceVlansMapped4k OBJECT-TYPE
             For each VLAN, if it is mapped to this MISTP instance,
             then the bit corresponding to that VLAN is set to '1'.
 
-            This object is only instantiated on devices with 
+            This object is only instantiated on devices with
             support for VlanIndex up to 4095."
     ::= {stpxMISTPInstanceEntry 6 }
 
@@ -1120,9 +1120,9 @@ stpxVlanMISTPInstMapTable OBJECT-TYPE
       STATUS      current
       DESCRIPTION
         "A table containing the MISTP Instance Index of the VLANs for a
-        particular management domain. 
+        particular management domain.
 
-        This table is only instantiated when the value of  
+        This table is only instantiated when the value of
         stpxSpanningTreeType is mistp(2) or mistpPvstPlus(3)."
     ::= { stpxMISTPObjects 3 }
 
@@ -1131,7 +1131,7 @@ stpxVlanMISTPInstMapEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-        "A conceptual row containing the MISTP Instance Index of the 
+        "A conceptual row containing the MISTP Instance Index of the
         VLAN for a particular management domain."
      AUGMENTS   { vtpVlanEntry  }
     ::= { stpxVlanMISTPInstMapTable 1 }
@@ -1146,9 +1146,9 @@ stpxVlanMISTPInstMapInstIndex OBJECT-TYPE
     STATUS      current
     DESCRIPTION
          "The MISTP instance, to which the corresponding vlan is mapped.
-         If this value of this mib object is 0,  the corresponding vlan 
+         If this value of this mib object is 0,  the corresponding vlan
          is not configured to be mapped to any MISTP instance and all
-         the ports under this VLAN remain in blocking state." 
+         the ports under this VLAN remain in blocking state."
     ::= { stpxVlanMISTPInstMapEntry 1}
 
 stpxVlanMISTPInstMapEditTable OBJECT-TYPE
@@ -1156,11 +1156,11 @@ stpxVlanMISTPInstMapEditTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-        "A table containing the MISTP related information for the VLANs 
+        "A table containing the MISTP related information for the VLANs
         in the Edit Buffers for a particular management domain.
-        
+
         This table is only instantiated when when the value of
-        stpxSpanningTreeType is mistp(2) or mistpPvstPlus(3)." 
+        stpxSpanningTreeType is mistp(2) or mistpPvstPlus(3)."
     ::= { stpxMISTPObjects 4 }
 
 stpxVlanMISTPInstMapEditEntry OBJECT-TYPE
@@ -1168,7 +1168,7 @@ stpxVlanMISTPInstMapEditEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-        "Information about one VLAN mapping to one instance 
+        "Information about one VLAN mapping to one instance
         in the Edit Buffer for a particular management domain."
      AUGMENTS   { vtpVlanEditEntry  }
     ::= { stpxVlanMISTPInstMapEditTable 1 }
@@ -1182,10 +1182,10 @@ stpxVlanMISTPInstMapEditInstIndex OBJECT-TYPE
     MAX-ACCESS  read-create
     STATUS      current
     DESCRIPTION
-         "The MISTP instance, to which the corresponding vlan would be 
+         "The MISTP instance, to which the corresponding vlan would be
           mapped. The value of this mib object is from 0 to the value of
           stpxMISTPInstanceNumber. If setting the value of this object
-          to 0, the corresponding vlan will not be mapped to a MISTP 
+          to 0, the corresponding vlan will not be mapped to a MISTP
           instance and all the ports under this VLAN will be moved into
           the blocking state."
     ::= { stpxVlanMISTPInstMapEditEntry 1 }
@@ -1199,10 +1199,10 @@ stpxPreferredMISTPInstancesTable OBJECT-TYPE
             are preferred on which  trunk ports.  The preferred
             MISTP instances on a trunk port have a lower Path Cost value
             compared with the MISTP instances on the trunk not in the
-            preferred list. 
+            preferred list.
 
             This table is only instantiated when the value of
-            stpxSpanningTreeType is mistp(2) or mistpPvstPlus(3)." 
+            stpxSpanningTreeType is mistp(2) or mistpPvstPlus(3)."
     ::= { stpxMISTPObjects 5 }
 
 stpxPreferredMISTPInstancesEntry OBJECT-TYPE
@@ -1225,13 +1225,13 @@ stpxPreferredMISTPInstancesMap OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-            "A string of octets containing one bit per MISTP instances 
+            "A string of octets containing one bit per MISTP instances
             in the management domain on this trunk port. The first octet
-            corresponds to MISTP instances with InstIndex values of 1 
+            corresponds to MISTP instances with InstIndex values of 1
             through 8; the second octet to MISTP instances 9 through 16;
-            etc. The most significant bit of each octet corresponds to 
-            the lowest value instanceIndex in that octet. The number of 
-            bits for this mib object will be determined by the value of 
+            etc. The most significant bit of each octet corresponds to
+            the lowest value instanceIndex in that octet. The number of
+            bits for this mib object will be determined by the value of
             stpxMISTPInstanceNumber.
 
             For each instance, if it is preferred on this trunk port,
@@ -1241,8 +1241,8 @@ stpxPreferredMISTPInstancesMap OBJECT-TYPE
             To avoid conflicts between overlapping partial updates by
             multiple managers, i.e., updates which modify only a portion
             of an instance of this object (e.g., enable/disable a single
-            instance on the trunk port), any SNMP Set operation 
-            accessing an instance of this object should also write the 
+            instance on the trunk port), any SNMP Set operation
+            accessing an instance of this object should also write the
             value of vlanTrunkPortSetSerialNo."
 
     ::= { stpxPreferredMISTPInstancesEntry 1 }
@@ -1265,7 +1265,7 @@ stpxLoopGuardConfigEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-                "A bridge port for which Spanning Tree LoopGuard 
+                "A bridge port for which Spanning Tree LoopGuard
                 capability can be configured."
     INDEX { stpxLoopGuardConfigPortIndex }
     ::= { stpxLoopGuardConfigTable 1 }
@@ -1290,28 +1290,28 @@ stpxLoopGuardConfigPortIndex OBJECT-TYPE
 stpxLoopGuardConfigEnabled OBJECT-TYPE
     SYNTAX     TruthValue
     MAX-ACCESS read-write
-    STATUS     deprecated 
+    STATUS     deprecated
     DESCRIPTION
-            "An indication of whether the LoopGuard capability is 
+            "An indication of whether the LoopGuard capability is
             enabled on this port or not. This configuration will be
-            applied to all the Spanning Tree instances in which this 
+            applied to all the Spanning Tree instances in which this
             port exists.
 
             In order to support additional Loop Guard config mode
-            (default) as defined in stpxLoopGuardConfigMode other 
-            than enable (true(1)) or disable (false(2)) as defined 
-            in this object, stpxLoopGuardConfigMode object needs to 
+            (default) as defined in stpxLoopGuardConfigMode other
+            than enable (true(1)) or disable (false(2)) as defined
+            in this object, stpxLoopGuardConfigMode object needs to
             be used.
 
             When the stpxLoopGuardConfigMode object has the value of
-            enable(1), the value of stpxLoopGuardConfigEnabled for 
-            the same instance will be true(1). When the 
-            stpxLoopGuardConfigMode object has the value of disable(2), 
-            the value of stpxLoopGuardConfigEnabled for the same 
-            instance will be false(2). When the stpxLoopGuardConfigMode 
-            object has the value of default(3), the value of 
-            stpxLoopGuardConfigEnabled for the same instance will 
-            depend on the object value of 
+            enable(1), the value of stpxLoopGuardConfigEnabled for
+            the same instance will be true(1). When the
+            stpxLoopGuardConfigMode object has the value of disable(2),
+            the value of stpxLoopGuardConfigEnabled for the same
+            instance will be false(2). When the stpxLoopGuardConfigMode
+            object has the value of default(3), the value of
+            stpxLoopGuardConfigEnabled for the same instance will
+            depend on the object value of
             stpxLoopGuardGlobalDefaultMode."
     DEFVAL { false }
     ::= { stpxLoopGuardConfigEntry 2 }
@@ -1320,26 +1320,26 @@ stpxLoopGuardConfigEnabled OBJECT-TYPE
 stpxLoopGuardConfigMode OBJECT-TYPE
     SYNTAX     INTEGER {
                         enable(1),
-                        disable(2), 
-                        default(3)  
+                        disable(2),
+                        default(3)
                }
     MAX-ACCESS read-write
-    STATUS     current 
+    STATUS     current
     DESCRIPTION
-               "Indicates the mode of Loop Guard Feature on this 
-               port. This configuration will be applied to all 
-               the Spanning Tree instances in which this port 
+               "Indicates the mode of Loop Guard Feature on this
+               port. This configuration will be applied to all
+               the Spanning Tree instances in which this port
                exists.
 
-               enable -- the Loop Guard feature is enabled on this 
-                         port. 
+               enable -- the Loop Guard feature is enabled on this
+                         port.
 
-               disable -- the Loop Guard feature is disabled on this 
-                         port.  
+               disable -- the Loop Guard feature is disabled on this
+                         port.
 
                default -- whether the Loop Guard feature is enabled
-                          or not on this port depends on the object 
-                          value of stpxLoopGuardGlobalDefaultMode." 
+                          or not on this port depends on the object
+                          value of stpxLoopGuardGlobalDefaultMode."
     ::= { stpxLoopGuardConfigEntry 3 }
 
 stpxLoopInconsistencyTable OBJECT-TYPE
@@ -1363,7 +1363,7 @@ stpxLoopInconsistencyEntry OBJECT-TYPE
                 "A Spanning Tree instance on a particular port for
                 which a Spanning Tree loop-inconsistency is currently
                 in effect."
-    INDEX { stpxLoopInconsistencyIndex, 
+    INDEX { stpxLoopInconsistencyIndex,
             stpxLoopInconsistencyPortIndex }
     ::= { stpxLoopInconsistencyTable 1 }
 
@@ -1380,7 +1380,7 @@ stpxLoopInconsistencyIndex OBJECT-TYPE
     DESCRIPTION
             "The Spanning Tree instance id, such as the VLAN id
              of the VLAN if the object value of stpxSpanningTreeType
-             is pvstPlus(1) or rapidPvstPlus(5)." 
+             is pvstPlus(1) or rapidPvstPlus(5)."
     ::= { stpxLoopInconsistencyEntry 1 }
 
 stpxLoopInconsistencyPortIndex OBJECT-TYPE
@@ -1399,8 +1399,8 @@ stpxLoopInconsistencyState OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-                "Indicates whether the port on a particular Spanning 
-                 Tree instance is currently in loop-inconsistent 
+                "Indicates whether the port on a particular Spanning
+                 Tree instance is currently in loop-inconsistent
                  state or not."
     ::= { stpxLoopInconsistencyEntry  3 }
 
@@ -1408,12 +1408,12 @@ stpxLoopGuardGlobalDefaultMode OBJECT-TYPE
     SYNTAX      INTEGER {
                          enable(1),
                          disable(2)
-                } 
+                }
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-                "Indicates the global default config mode of LoopGuard 
-                feature on the device."  
+                "Indicates the global default config mode of LoopGuard
+                feature on the device."
     ::= { stpxLoopGuardObjects 3 }
 
 
@@ -1428,14 +1428,14 @@ stpxFastStartBpduGuardEnable OBJECT-TYPE
         DESCRIPTION   "Indicates the global default mode of the Bpdu
                       Guard feature on the device.
 
-                      On platforms that does not support per port 
+                      On platforms that does not support per port
                       Bpdu Guard configuration as indicated by
                       the object stpxFastStartPortBpduGuardMode,
-                      if  the value of this object is set to true(1), 
-                      and the Fast Start Feature is operationally 
-                      enabled on a port, then that port will be 
+                      if  the value of this object is set to true(1),
+                      and the Fast Start Feature is operationally
+                      enabled on a port, then that port will be
                       immediately disabled when the system receives
-                      a BPDU from that port." 
+                      a BPDU from that port."
         DEFVAL { false }
      ::= { stpxFastStartObjects 1 }
 
@@ -1443,16 +1443,16 @@ stpxFastStartBpduFilterEnable OBJECT-TYPE
         SYNTAX        TruthValue
         MAX-ACCESS    read-write
         STATUS        current
-        DESCRIPTION   "Indicates the global default mode of the Bpdu 
+        DESCRIPTION   "Indicates the global default mode of the Bpdu
                       Filter feature on the device.
 
-                      On platforms that does not support per port 
+                      On platforms that does not support per port
                       Bpdu Filter configuration as indicated by
                       the object stpxFastStartPortBpduFilterMode,
-                      if  the value of this object is set to true(1), 
-                      and the Fast Start Feature is operationally 
-                      enabled on a port, then no BPDUs will be 
-                      transmitted on this port."   
+                      if  the value of this object is set to true(1),
+                      and the Fast Start Feature is operationally
+                      enabled on a port, then no BPDUs will be
+                      transmitted on this port."
         DEFVAL { false }
         ::= { stpxFastStartObjects 2 }
 
@@ -1480,7 +1480,7 @@ StpxFastStartPortEntry ::= SEQUENCE {
     stpxFastStartPortIndex Integer32,
     stpxFastStartPortEnable   TruthValue,
     stpxFastStartPortMode  INTEGER,
-    stpxFastStartPortBpduGuardMode INTEGER, 
+    stpxFastStartPortBpduGuardMode INTEGER,
     stpxFastStartPortBpduFilterMode INTEGER
 }
 
@@ -1498,13 +1498,13 @@ stpxFastStartPortIndex OBJECT-TYPE
 stpxFastStartPortEnable OBJECT-TYPE
     SYNTAX     TruthValue
     MAX-ACCESS read-write
-    STATUS     deprecated 
+    STATUS     deprecated
     DESCRIPTION
                "Indicates whether the port is operating in spantree
                fast start mode.  A port with fast start enabled is
                immediately put in spanning tree forwarding state when
-               that port is detected by the Spanning Tree, rather 
-               than starting in blocking state which is the normal 
+               that port is detected by the Spanning Tree, rather
+               than starting in blocking state which is the normal
                operation.
 
                In order to support additional Fast Start enable mode
@@ -1517,11 +1517,11 @@ stpxFastStartPortEnable OBJECT-TYPE
                enable(1) or enableForTrunk(3), the value of
                stpxFastStartPortEnable for the same instance
                will be true(1). When the stpxFastStartPortMode
-               has the value of disable(2), the value of 
-               stpxFastStartPortEnable for the same instance will be 
-               false(2). When the stpxFastStartPortMode has the value 
-               of default(4), the value of stpxFastStartPortEnable for 
-               the same instance depends on the object value of 
+               has the value of disable(2), the value of
+               stpxFastStartPortEnable for the same instance will be
+               false(2). When the stpxFastStartPortMode has the value
+               of default(4), the value of stpxFastStartPortEnable for
+               the same instance depends on the object value of
                stpxFastStartGlobalDefaultMode."
     DEFVAL { false }
     ::= { stpxFastStartPortEntry 2 }
@@ -1529,36 +1529,36 @@ stpxFastStartPortEnable OBJECT-TYPE
 stpxFastStartPortMode OBJECT-TYPE
     SYNTAX     INTEGER {
                         enable(1),
-                        disable(2), 
+                        disable(2),
                         enableForTrunk(3),
-                        default(4)  
+                        default(4)
                }
     MAX-ACCESS read-write
-    STATUS     current 
+    STATUS     current
     DESCRIPTION
-               "Indicates the mode of Fast Start Feature on the 
-               port. A port with fast start enabled is immediately 
+               "Indicates the mode of Fast Start Feature on the
+               port. A port with fast start enabled is immediately
                put in spanning tree forwarding state when the port
-               is detected by the Spanning Tree, rather than 
-               starting in blocking state which is the normal 
+               is detected by the Spanning Tree, rather than
+               starting in blocking state which is the normal
                operation.
 
-               enable -- the fast start feature is enabled on this 
-                         port but will only take effect when the 
-                         object value of its 
-                         vlanTrunkPortDynamicStatus as specified 
+               enable -- the fast start feature is enabled on this
+                         port but will only take effect when the
+                         object value of its
+                         vlanTrunkPortDynamicStatus as specified
                          in CISCO-VTP-MIB is notTrunking(2).
 
-               disable -- the fast start feature is disabled on this 
-                         port.  
-  
-               enableForTrunk -- the fast start feature is enabled 
-                         on this port and will take effect 
-                         regardless of the object value of 
+               disable -- the fast start feature is disabled on this
+                         port.
+
+               enableForTrunk -- the fast start feature is enabled
+                         on this port and will take effect
+                         regardless of the object value of
                          its vlanTrunkPortDynamicStatus.
 
                default -- whether the fast start feature is enabled
-                          or not on this port depends on the object 
+                          or not on this port depends on the object
                           value of stpxFastStartGlobalDefaultMode."
     ::= { stpxFastStartPortEntry 3 }
 
@@ -1572,23 +1572,23 @@ stpxFastStartPortBpduGuardMode OBJECT-TYPE
     STATUS     current
     DESCRIPTION
                "Indicates the mode of Bpdu Guard Feature on the
-               port. A port with Bpdu Guard enabled is 
-               immediately disabled when the system 
-               receives a BPDU from that port. 
+               port. A port with Bpdu Guard enabled is
+               immediately disabled when the system
+               receives a BPDU from that port.
 
                enable -- the Bpdu Guard feature is enabled on this
-                         port. 
+                         port.
 
                disable -- the Bpdu Guard feature is disabled on this
                          port.
- 
+
                default -- whether the Bpdu Guard feature is enabled
                           or not on this port depends on the object
-                          value of stpxFastStartBpduGuardEnable. If 
+                          value of stpxFastStartBpduGuardEnable. If
                           the value of stpxFastStartBpduGuardEnable
-                          is true(1) and Fast Start feature is also 
+                          is true(1) and Fast Start feature is also
                           enabled operationally on this port, then
-                          this port is immediately disabled when 
+                          this port is immediately disabled when
                           the system receives a BPDU from this port."
     DEFVAL { default }
     ::= { stpxFastStartPortEntry 4 }
@@ -1603,22 +1603,22 @@ stpxFastStartPortBpduFilterMode OBJECT-TYPE
     STATUS     current
     DESCRIPTION
                "Indicates the mode of Bpdu Filter Feature on the
-               port. The system will not transmit BPDUs on a port 
+               port. The system will not transmit BPDUs on a port
                with Bpdu Filter feature enabled.
 
-               enable -- the Bpdu Filter feature is enabled on this 
-                         port. 
+               enable -- the Bpdu Filter feature is enabled on this
+                         port.
 
                disable -- the Bpdu Filter feature is disabled on this
                           port.
-  
+
                default -- whether the Bpdu Filter feature is enabled
                           or not on this port depends on the object
                           value of stpxFastStartBpduFilterEnable. If
                           the value of stpxFastStartBpduFilterEnable
                           is true(1) and Fast Start feature is also
                           enabled operationally on this port, then
-                          no BPDUs will be transmitted on this port." 
+                          no BPDUs will be transmitted on this port."
     DEFVAL { default }
     ::= { stpxFastStartPortEntry 5 }
 
@@ -1630,9 +1630,9 @@ stpxFastStartGlobalDefaultMode OBJECT-TYPE
                }
     MAX-ACCESS    read-write
     STATUS        current
-    DESCRIPTION   
-               "Indicates the global default mode of the Fast 
-               Start feature on the device."  
+    DESCRIPTION
+               "Indicates the global default mode of the Fast
+               Start feature on the device."
     DEFVAL { disable }
     ::= { stpxFastStartObjects 4 }
 
@@ -1640,18 +1640,18 @@ stpxFastStartOperModeTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF StpxFastStartOperModeEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
-         "A table containing a list of the bridge ports 
+    DESCRIPTION
+         "A table containing a list of the bridge ports
          for a particular Spanning Tree Instance."
     ::= { stpxFastStartObjects 5 }
-    
+
 stpxFastStartOperModeEntry OBJECT-TYPE
     SYNTAX      StpxFastStartOperModeEntry
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-         "An entry with port fast start oper mode 
-         information on a bridge port for a particular 
+         "An entry with port fast start oper mode
+         information on a bridge port for a particular
          Spanning Tree Instance."
     INDEX { stpxFastStartOperModeInstIndex,
             stpxFastStartOperModePortIndex }
@@ -1660,7 +1660,7 @@ stpxFastStartOperModeEntry OBJECT-TYPE
 StpxFastStartOperModeEntry ::= SEQUENCE {
     stpxFastStartOperModeInstIndex  Integer32,
     stpxFastStartOperModePortIndex  Integer32,
-    stpxFastStartOperMode  INTEGER 
+    stpxFastStartOperMode  INTEGER
 }
 
 stpxFastStartOperModeInstIndex OBJECT-TYPE
@@ -1668,7 +1668,7 @@ stpxFastStartOperModeInstIndex OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-        "The Spanning Tree instance id, such as the VLAN id 
+        "The Spanning Tree instance id, such as the VLAN id
         of the VLAN if the object value of stpxSpanningTreeType
         is pvstPlus(1)."
     ::= { stpxFastStartOperModeEntry 1 }
@@ -1692,7 +1692,7 @@ stpxFastStartOperMode OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-        "Indicates the fast start operational status of the 
+        "Indicates the fast start operational status of the
         port on a particular Spanning Tree Instance."
    ::= { stpxFastStartOperModeEntry 3 }
 
@@ -1707,7 +1707,7 @@ stpxBpduSkewingDetectionEnable OBJECT-TYPE
                "Indicates whether BPDU skewing detection feature
                is enabled or not on the system. If this object has
                the value of true(1), then the system will detect
-               whether BPDUs received by any port on any Spanning 
+               whether BPDUs received by any port on any Spanning
                Tree instance are processed at an interval longer
                than the object value of dot1dStpHelloTime in the
                BIRDGE-MIB of the Spanning Tree instance."
@@ -1719,20 +1719,20 @@ stpxBpduSkewingTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-                "A table containing a list of the bridge ports for 
-                which a particular Spanning Tree instance has been 
-                detected to have BPDU skewing occurred since the 
+                "A table containing a list of the bridge ports for
+                which a particular Spanning Tree instance has been
+                detected to have BPDU skewing occurred since the
                 object value of stpxBpduSkewingDetectionEnable was
                 last changed to true(1).
 
                 The agent creates a new entry in this table whenever
-                a port in a particular Spanning Tree instance is 
-                detected to be BPDU skewed since the object value of 
-                stpxBpduSkewingDetectionEnable object is changed to 
-                true(1). The agent deletes all the entries in this 
-                table when the object value of 
+                a port in a particular Spanning Tree instance is
+                detected to be BPDU skewed since the object value of
+                stpxBpduSkewingDetectionEnable object is changed to
+                true(1). The agent deletes all the entries in this
+                table when the object value of
                 stpxBpduSkewingDetectionEnable is changed to false(2)
-                or the object value of stpxSpanningTreeType is 
+                or the object value of stpxSpanningTreeType is
                 changed."
     ::= { stpxBpduSkewingObjects 2 }
 
@@ -1756,13 +1756,13 @@ StpxBpduSkewingEntry ::= SEQUENCE {
 }
 
 stpxBpduSkewingInstanceIndex OBJECT-TYPE
-    SYNTAX      Integer32 (0..65535) 
+    SYNTAX      Integer32 (0..65535)
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-             "The Spanning Tree instance id, such as the VLAN id 
-             of the VLAN if the object value of stpxSpanningTreeType 
-             is pvstPlus(1)." 
+             "The Spanning Tree instance id, such as the VLAN id
+             of the VLAN if the object value of stpxSpanningTreeType
+             is pvstPlus(1)."
     ::= { stpxBpduSkewingEntry 1 }
 
 stpxBpduSkewingPortIndex OBJECT-TYPE
@@ -1814,44 +1814,44 @@ stpxMSTMaxInstanceNumber  OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      deprecated
     DESCRIPTION
-       "The maximum MST (Multiple Spanning Tree) instance id, 
+       "The maximum MST (Multiple Spanning Tree) instance id,
        that can be supported by the device for Cisco proprietary
        implementation of the MST Protocol.
 
-       This object is deprecated and replaced by 
+       This object is deprecated and replaced by
        stpxSMSTMaxInstanceID."
     ::= { stpxMSTObjects 1}
 
 stpxMSTRegionName OBJECT-TYPE
-    SYNTAX      DisplayString (SIZE(0..32))  
+    SYNTAX      DisplayString (SIZE(0..32))
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-       "The operational MST region name."  
+       "The operational MST region name."
     ::= { stpxMSTObjects 2}
 
 stpxMSTRegionRevision OBJECT-TYPE
-    SYNTAX      Integer32 (1..65535) 
+    SYNTAX      Integer32 (1..65535)
     MAX-ACCESS  read-only
     STATUS      deprecated
     DESCRIPTION
        "The operational MST region version.
 
-       This object is deprecated and replaced by 
-       stpxSMSTRegionRevision."  
-    ::= { stpxMSTObjects 3 } 
+       This object is deprecated and replaced by
+       stpxSMSTRegionRevision."
+    ::= { stpxMSTObjects 3 }
 
 stpxMSTInstanceTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF StpxMSTInstanceEntry
     MAX-ACCESS  not-accessible
-    STATUS      deprecated 
+    STATUS      deprecated
     DESCRIPTION
        "This table contains MST instance information with
-       one entry for an MST instance within the range of 
-       0 to the object value of stpxMSTMaxInstanceNumber. 
-       
-       This table is deprecated and replaced by 
-       stpxSMSTInstanceTable." 
+       one entry for an MST instance within the range of
+       0 to the object value of stpxMSTMaxInstanceNumber.
+
+       This table is deprecated and replaced by
+       stpxSMSTInstanceTable."
     ::= {stpxMSTObjects 4 }
 
 stpxMSTInstanceEntry OBJECT-TYPE
@@ -1859,7 +1859,7 @@ stpxMSTInstanceEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      deprecated
     DESCRIPTION
-       "A conceptual row containing the MST instance 
+       "A conceptual row containing the MST instance
        information."
     INDEX  { stpxMSTInstanceIndex }
     ::= { stpxMSTInstanceTable 1 }
@@ -1874,16 +1874,16 @@ StpxMSTInstanceEntry ::= SEQUENCE {
 }
 
 stpxMSTInstanceIndex OBJECT-TYPE
-    SYNTAX      Integer32 (0..256) 
+    SYNTAX      Integer32 (0..256)
     MAX-ACCESS  not-accessible
     STATUS      deprecated
     DESCRIPTION
-       "An integer that uniquely identifies an MST instance 
+       "An integer that uniquely identifies an MST instance
        within the range of 0 to the object value of
        stpxMSTMaxInstanceNumber.
 
-       This object is deprecated and replaced by 
-       stpxSMSTInstanceIndex." 
+       This object is deprecated and replaced by
+       stpxSMSTInstanceIndex."
     ::= {stpxMSTInstanceEntry 1 }
 
 stpxMSTInstanceVlansMapped OBJECT-TYPE
@@ -1897,10 +1897,10 @@ stpxMSTInstanceVlansMapped OBJECT-TYPE
        15; etc.  The most significant bit of each octet
        corresponds to the lowest value VlanIndex in that octet.
 
-       For each VLAN, if it is mapped to this MST instance, 
+       For each VLAN, if it is mapped to this MST instance,
        then the bit corresponding to that VLAN is set to '1'.
 
-       This object is deprecated and replaced by 
+       This object is deprecated and replaced by
        stpxSMSTInstanceVlansMapped1k2k."
     ::= {stpxMSTInstanceEntry 2 }
 
@@ -1917,10 +1917,10 @@ stpxMSTInstanceVlansMapped2k OBJECT-TYPE
         octet corresponds to the lowest value VlanIndex in that
         octet.
 
-        For each VLAN, if it is mapped to this MST instance, 
+        For each VLAN, if it is mapped to this MST instance,
         then the bit corresponding to that VLAN is set to '1'.
 
-        This object is deprecated and replaced by 
+        This object is deprecated and replaced by
        stpxSMSTInstanceVlansMapped1k2k."
     ::= {stpxMSTInstanceEntry 3 }
 
@@ -1937,10 +1937,10 @@ stpxMSTInstanceVlansMapped3k OBJECT-TYPE
        octet corresponds to the lowest value VlanIndex in that
        octet.
 
-       For each VLAN, if it is mapped to this MST instance, 
+       For each VLAN, if it is mapped to this MST instance,
        then the bit corresponding to that VLAN is set to '1'.
 
-       This object is deprecated and replaced by 
+       This object is deprecated and replaced by
        stpxSMSTInstanceVlansMapped3k4k."
     ::= {stpxMSTInstanceEntry 4 }
 
@@ -1957,7 +1957,7 @@ stpxMSTInstanceVlansMapped4k OBJECT-TYPE
        octet corresponds to the lowest value VlanIndex in that
        octet.
 
-       For each VLAN, if it is mapped to this MST instance, 
+       For each VLAN, if it is mapped to this MST instance,
        then the bit corresponding to that VLAN is set to '1'.
 
        This object is deprecated and replaced by
@@ -1977,7 +1977,7 @@ stpxMSTInstanceRemainingHopCount OBJECT-TYPE
         This object is only instantiated when the object value of
         stpxSpanningTreeType is mst(4).
 
-        This object is deprecated and replaced by 
+        This object is deprecated and replaced by
         stpxSMSTInstanceRemainingHopCount."
     ::= {stpxMSTInstanceEntry 6 }
 
@@ -1986,68 +1986,68 @@ stpxMSTRegionEditBufferStatus OBJECT-TYPE
                          released(1),
                          acquiredBySnmp(2),
                          acquiredByNonSnmp(3)
-               }   
+               }
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-       "Indicates the current ownership status of the unique 
-        Region Config Edit Buffer. 
+       "Indicates the current ownership status of the unique
+        Region Config Edit Buffer.
 
-        released -- the Edit Buffer can be acquired by any of 
-                    the SNMP management stations. 
+        released -- the Edit Buffer can be acquired by any of
+                    the SNMP management stations.
 
         acquiredBySnmp -- the Edit Buffer is acquired by
-                    any of the SNMP management stations. 
+                    any of the SNMP management stations.
 
-        acquiredByNonSnmp -- the Edit Buffer is acquired by the 
-                    non-SNMP users managing the device." 
+        acquiredByNonSnmp -- the Edit Buffer is acquired by the
+                    non-SNMP users managing the device."
     ::= { stpxMSTObjects 5 }
 
 stpxMSTRegionEditBufferOperation OBJECT-TYPE
     SYNTAX     INTEGER  {
                          other(1), -- read-only
                          acquire(2),
-                         releaseWithForce(3), 
+                         releaseWithForce(3),
                          commit(4),
                          rollBack(5)
-               }   
+               }
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-            "Indicates the operation that is performed on the Region 
+            "Indicates the operation that is performed on the Region
             Config Edit Buffer.
 
-            other --   none of the following operations.  
+            other --   none of the following operations.
 
-            acquire -- acquire the Edit Buffer. This operation can 
-                       only be performed when the object 
+            acquire -- acquire the Edit Buffer. This operation can
+                       only be performed when the object
                        stpxMSTRegionEditBufferStatus has the value of
-                       released(1). After the successful operation of 
+                       released(1). After the successful operation of
                        this action, the stpxMSTRegionEditBufferStatus
-                       will be changed to acquiredBySnmp(2). 
-                        
+                       will be changed to acquiredBySnmp(2).
+
             releaseWithForce -- release the Edit Buffer acquired by
                        non-SNMP users with force and discard the changes
-                       in the Edit Buffer. This operation can only be 
-                       performed when the object 
-                       stpxMSTRegionEditBufferStatus has the value of 
+                       in the Edit Buffer. This operation can only be
+                       performed when the object
+                       stpxMSTRegionEditBufferStatus has the value of
                        acquiredByNonSnmp(2).
 
             commit --  commit the changes in the Edit Buffer
-                       and release the Edit Buffer. The successful 
+                       and release the Edit Buffer. The successful
                        operation of this action will make the changes
                        in the Edit Buffer effective on the device.
-                       This operation can only be performed when the 
-                       object stpxMSTRegionEditBufferStatus has the 
+                       This operation can only be performed when the
+                       object stpxMSTRegionEditBufferStatus has the
                        value of acquiredBySnmp(3).
-             
+
             rollBack -- discard the changes in the Edit Buffer
-                       and release the Edit Buffer. This operation can 
-                       only be performed when the object 
-                       stpxMSTRegionEditBufferStatus has the value 
+                       and release the Edit Buffer. This operation can
+                       only be performed when the object
+                       stpxMSTRegionEditBufferStatus has the value
                        of acquiredBySnmp(3).
 
-            This object always returns other(1) when it is read."  
+            This object always returns other(1) when it is read."
     ::= { stpxMSTObjects 6 }
 
 
@@ -2056,10 +2056,10 @@ stpxMSTRegionEditName OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-       "The MST region name in the Edit Buffer. 
+       "The MST region name in the Edit Buffer.
 
-       This object is only instantiated when the 
-       stpxMSTRegionEditBufferStatus has the value of 
+       This object is only instantiated when the
+       stpxMSTRegionEditBufferStatus has the value of
        acquiredBySnmp(2)."
      ::= { stpxMSTObjects 7 }
 
@@ -2069,7 +2069,7 @@ stpxMSTRegionEditRevision OBJECT-TYPE
     STATUS      deprecated
     DESCRIPTION
        "The MST region version in the Edit Buffer. This object is
-       only instantiated when the stpxMSTRegionEditBufferStatus 
+       only instantiated when the stpxMSTRegionEditBufferStatus
        has the value of acquiredBySnmp(2).
 
        This object is deprecated and replaced by
@@ -2081,15 +2081,15 @@ stpxMSTInstanceEditTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      deprecated
     DESCRIPTION
-       "This table contains MST instance information in the 
+       "This table contains MST instance information in the
        Edit Buffer with one entry for each MST
-       instance numbered from 0 to stpxMSTMaxInstanceNumber. 
+       instance numbered from 0 to stpxMSTMaxInstanceNumber.
 
-       This table is only instantiated when the 
+       This table is only instantiated when the
        stpxMSTRegionEditBufferStatus has the value of
        acquiredBySnmp(2).
 
-       This table is deprecated and replaced by 
+       This table is deprecated and replaced by
        stpxSMSTInstanceEditTable."
      ::= { stpxMSTObjects 9 }
 
@@ -2098,7 +2098,7 @@ stpxMSTInstanceEditEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      deprecated
     DESCRIPTION
-       "A conceptual row containing MST instance information 
+       "A conceptual row containing MST instance information
        in the Edit Buffer."
     INDEX  { stpxMSTInstanceEditIndex }
     ::= { stpxMSTInstanceEditTable 1 }
@@ -2112,18 +2112,18 @@ StpxMSTInstanceEditEntry ::= SEQUENCE {
 }
 
 stpxMSTInstanceEditIndex OBJECT-TYPE
-    SYNTAX      Integer32 (0..256) 
+    SYNTAX      Integer32 (0..256)
     MAX-ACCESS  not-accessible
     STATUS      deprecated
     DESCRIPTION
-       "An integer that uniquely identifies an MST instance 
+       "An integer that uniquely identifies an MST instance
        from 0 to the object value of stpxMSTMaxInstanceNumber.
 
-       The instances of this table entry with 
-       stpxMSTInstanceEditIndex of zero can not be 
+       The instances of this table entry with
+       stpxMSTInstanceEditIndex of zero can not be
        modified.
 
-       This object is deprecated and replaced by 
+       This object is deprecated and replaced by
        stpxSMSTInstanceEditIndex."
     ::= {stpxMSTInstanceEditEntry 1 }
 
@@ -2138,15 +2138,15 @@ stpxMSTInstanceEditVlansMap OBJECT-TYPE
        15; etc.  The most significant bit of each octet
        corresponds to the lowest value VlanIndex in that octet.
 
-       For each VLAN, if it is mapped to this MST instance, 
-       then the bit corresponding to that VLAN is set to 
-       '1'. Each VLAN can only be mapped to one unique MST 
+       For each VLAN, if it is mapped to this MST instance,
+       then the bit corresponding to that VLAN is set to
+       '1'. Each VLAN can only be mapped to one unique MST
        instance in the range from 1 to stpxMSTMaxInstanceNumber.
-       If the bit corresponding to a VLAN is changed from '1' 
-       to '0', then that VLAN will be automatically mapped to 
+       If the bit corresponding to a VLAN is changed from '1'
+       to '0', then that VLAN will be automatically mapped to
        MST instance 0 by the device.
 
-       This object is deprecated and replaced by 
+       This object is deprecated and replaced by
        stpxSMSTInstanceEditVlansMap1k2k."
     ::= {stpxMSTInstanceEditEntry 2 }
 
@@ -2167,11 +2167,11 @@ stpxMSTInstanceEditVlansMap2k OBJECT-TYPE
        then the bit corresponding to that VLAN is set to
        '1'. Each VLAN can only be mapped to one unique MST
        instance in the range from 1 to stpxMSTMaxInstanceNumber.
-       If the bit corresponding to a VLAN is changed from '1' 
-       to '0', then that VLAN will be automatically mapped to 
+       If the bit corresponding to a VLAN is changed from '1'
+       to '0', then that VLAN will be automatically mapped to
        MST instance 0 by the device.
 
-       This object is deprecated and replaced by 
+       This object is deprecated and replaced by
        stpxSMSTInstanceEditVlansMap1k2k."
     ::= {stpxMSTInstanceEditEntry 3 }
 
@@ -2192,11 +2192,11 @@ stpxMSTInstanceEditVlansMap3k OBJECT-TYPE
         then the bit corresponding to that VLAN is set to
         '1'. Each VLAN can only be mapped to one unique MST
         instance in the range from 1 to stpxMSTMaxInstanceNumber.
-        If the bit corresponding to a VLAN is changed from '1' 
-        to '0', then that VLAN will be automatically mapped to 
+        If the bit corresponding to a VLAN is changed from '1'
+        to '0', then that VLAN will be automatically mapped to
         MST instance 0 by the device.
 
-        This object is deprecated and replaced by 
+        This object is deprecated and replaced by
         stpxSMSTInstanceEditVlansMap3k4k."
     ::= {stpxMSTInstanceEditEntry 4 }
 
@@ -2217,8 +2217,8 @@ stpxMSTInstanceEditVlansMap4k OBJECT-TYPE
        then the bit corresponding to that VLAN is set to
        '1'. Each VLAN can only be mapped to one unique MST
        instance in the range from 1 to stpxMSTMaxInstanceNumber.
-       If the bit corresponding to a VLAN is changed from '1' 
-       to '0', then that VLAN will be automatically mapped to 
+       If the bit corresponding to a VLAN is changed from '1'
+       to '0', then that VLAN will be automatically mapped to
        MST instance 0 by the device.
 
        This object is deprecated and replaced by
@@ -2231,11 +2231,11 @@ stpxPreferredMSTInstancesTable OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS     deprecated
     DESCRIPTION
-       "The table containing indications of which MST instances 
+       "The table containing indications of which MST instances
        are preferred on which  trunk ports.  The preferred
        MST instances on a trunk port have a lower Path Cost value
        compared with the MST instances on the trunk not in the
-       preferred list." 
+       preferred list."
     ::= { stpxMSTObjects 10 }
 
 stpxPreferredMSTInstancesEntry OBJECT-TYPE
@@ -2243,7 +2243,7 @@ stpxPreferredMSTInstancesEntry OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS     deprecated
     DESCRIPTION
-       "An entry indicating which MST instances are preferred on 
+       "An entry indicating which MST instances are preferred on
        a specific trunk port."
     AUGMENTS   { vlanTrunkPortEntry }
     ::= { stpxPreferredMSTInstancesTable 1 }
@@ -2257,25 +2257,25 @@ stpxPreferredMSTInstancesMap OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     deprecated
     DESCRIPTION
-       "A string of octets containing one bit per MST instances 
-       on this trunk port.  The first octet corresponds to MST 
-       instances of 0 through 7; the second octet to MST instances 
-       8 through 15; etc. The most significant bit of each octet 
-       corresponds to the lowest MST instance value in that octet. 
-       The number of bits for this mib object will be determined 
+       "A string of octets containing one bit per MST instances
+       on this trunk port.  The first octet corresponds to MST
+       instances of 0 through 7; the second octet to MST instances
+       8 through 15; etc. The most significant bit of each octet
+       corresponds to the lowest MST instance value in that octet.
+       The number of bits for this mib object will be determined
        by the value of stpxMSTMaxInstanceNumber.
 
-       For each instance, if it is preferred on this trunk port, 
+       For each instance, if it is preferred on this trunk port,
        then the bit corresponding to that instance is set to '1'."
     ::= { stpxPreferredMSTInstancesEntry 1 }
 
 stpxMSTPortTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF StpxMSTPortEntry
     MAX-ACCESS  not-accessible
-    STATUS      deprecated 
+    STATUS      deprecated
     DESCRIPTION
-       "A table containing port information for the MST 
-        Protocol on all the bridge ports existing on the 
+       "A table containing port information for the MST
+        Protocol on all the bridge ports existing on the
         system."
 
     ::= { stpxMSTObjects 11 }
@@ -2283,7 +2283,7 @@ stpxMSTPortTable OBJECT-TYPE
 stpxMSTPortEntry OBJECT-TYPE
     SYNTAX      StpxMSTPortEntry
     MAX-ACCESS  not-accessible
-    STATUS      deprecated 
+    STATUS      deprecated
     DESCRIPTION
                 "An entry with port information for the MST Protocol
                 on a bridge port."
@@ -2301,7 +2301,7 @@ StpxMSTPortEntry ::= SEQUENCE {
 stpxMSTPortIndex OBJECT-TYPE
     SYNTAX      Integer32 (1..65535)
     MAX-ACCESS  not-accessible
-    STATUS      deprecated 
+    STATUS      deprecated
     DESCRIPTION
        "The value of dot1dBasePort (i.e. dot1dBridge.1.4)
         for the bridge port."
@@ -2313,33 +2313,33 @@ stpxMSTPortAdminLinkType OBJECT-TYPE
     SYNTAX     INTEGER {
                         pointToPoint(1),
                         shared(2),
-                        auto(3) 
+                        auto(3)
                }
     MAX-ACCESS read-write
-    STATUS     deprecated 
+    STATUS     deprecated
     DESCRIPTION
-       "Indicates the administrative link type configuration of 
-       a bridge port for the MST protocol. 
+       "Indicates the administrative link type configuration of
+       a bridge port for the MST protocol.
 
        pointToPoint -- the port is administratively configured to
                be connected to a point-to-point link.
 
        shared -- the port is administratively configured to be
-               connected to a shared medium. 
+               connected to a shared medium.
 
-       auto -- the administrative configuration of the port's 
+       auto -- the administrative configuration of the port's
                link type depends on link duplex of the port.
-               If the port link is full-duplex, the administrative 
-               link type configuration on this port will be taken 
-               as pointTopoint(1). If the port link is half-duplex, 
+               If the port link is full-duplex, the administrative
+               link type configuration on this port will be taken
+               as pointTopoint(1). If the port link is half-duplex,
                the administrative link type configuration on this
                port will be taken as shared(2).
 
        This configuration of this object only takes effect when the
        stpxSpanningTreeType is mst(4) or rapidPvstPlus(5).
-       stpxMSTPortAdminLinkType is deprecated and replaced 
+       stpxMSTPortAdminLinkType is deprecated and replaced
        with stpxRSTPPortAdminLinkType."
-    DEFVAL { auto } 
+    DEFVAL { auto }
     ::= { stpxMSTPortEntry 2 }
 
 stpxMSTPortOperLinkType OBJECT-TYPE
@@ -2349,7 +2349,7 @@ stpxMSTPortOperLinkType OBJECT-TYPE
                         other(3)
                }
     MAX-ACCESS read-only
-    STATUS     deprecated 
+    STATUS     deprecated
     DESCRIPTION
        "Indicates the operational link type of a bridge port
        for the MST protocol.
@@ -2357,13 +2357,13 @@ stpxMSTPortOperLinkType OBJECT-TYPE
        pointToPoint -- the port is operationally connected to
                a point-to-point link.
 
-       shared -- the port is operationally connected to 
+       shared -- the port is operationally connected to
                a shared medium.
 
        other -- none of the above.
- 
+
        This object is only instantiated when the object value of
-       stpxSpanningTreeType is mst(4).  stpxMSTPortOperLinkType 
+       stpxSpanningTreeType is mst(4).  stpxMSTPortOperLinkType
        is deprecated and replaced with stpxRSTPPortOperLinkType."
     ::= { stpxMSTPortEntry 3 }
 
@@ -2372,17 +2372,17 @@ stpxMSTPortProtocolMigration OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     deprecated
     DESCRIPTION
-       "The protocol migration control on this port. When the 
-       object value of  stpxSpanningTreeType is mst(4) or 
-       rapidPvstPlus(5), setting true(1) to this object forces 
-       the device to try using version 2 BPDUs on this port. 
-       When the object value of stpxSpanningTreeType is neither 
-       mst(4) nor rapidPvstPlus(5), setting true(1) to this 
-       object has no effect. Setting false(2) to this object has 
+       "The protocol migration control on this port. When the
+       object value of  stpxSpanningTreeType is mst(4) or
+       rapidPvstPlus(5), setting true(1) to this object forces
+       the device to try using version 2 BPDUs on this port.
+       When the object value of stpxSpanningTreeType is neither
+       mst(4) nor rapidPvstPlus(5), setting true(1) to this
+       object has no effect. Setting false(2) to this object has
        no effect. This object always returns false(2) when read.
-       stpxMSTPortProtocolMigration is deprecated and 
+       stpxMSTPortProtocolMigration is deprecated and
        replaced with stpxRSTPPortProtocolMigration."
-    REFERENCE 
+    REFERENCE
        "IEEE 802.1w clause 14.8.2.4, 17.26."
     ::= { stpxMSTPortEntry 4 }
 
@@ -2391,66 +2391,66 @@ stpxMSTPortStatus OBJECT-TYPE
                      edge(0),
                      boundary(1),
                      pvst(2),
-                     stp(3) 
+                     stp(3)
                }
     MAX-ACCESS read-only
-    STATUS     deprecated 
+    STATUS     deprecated
     DESCRIPTION
-       "Indicates the operational status of the port for the 
-       MST protocol. 
+       "Indicates the operational status of the port for the
+       MST protocol.
 
        edge -- this port is an edge port for the MST region.
 
-       boundary -- this port is a boundary port for the 
+       boundary -- this port is a boundary port for the
                MST region.
 
-       pvst --  this port is connected to a PVST/PVST+ bridge.   
- 
+       pvst --  this port is connected to a PVST/PVST+ bridge.
+
        stp -- this port is connected to a Single Spanning
-               Tree bridge. 
-  
+               Tree bridge.
+
        This object is only instantiated when the object value
        of stpxSpanningTreeType is mst(4).
 
-       This object is deprecated and replaced by 
+       This object is deprecated and replaced by
        stpxSMSTPortStatus."
    ::= { stpxMSTPortEntry 5 }
 
 stpxMSTPortRoleTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF StpxMSTPortRoleEntry
     MAX-ACCESS  not-accessible
-    STATUS      deprecated 
+    STATUS      deprecated
     DESCRIPTION
-       "A table containing a list of the bridge ports for a 
-       particular MST instance.  This table is only instantiated 
-       when the stpxSpanningTreeType is mst(4). 
+       "A table containing a list of the bridge ports for a
+       particular MST instance.  This table is only instantiated
+       when the stpxSpanningTreeType is mst(4).
 
-       This table is deprecated and replaced with 
-       stpxRSTPPortRoleTable."  
+       This table is deprecated and replaced with
+       stpxRSTPPortRoleTable."
     ::= { stpxMSTObjects 12 }
 
 stpxMSTPortRoleEntry OBJECT-TYPE
     SYNTAX      StpxMSTPortRoleEntry
     MAX-ACCESS  not-accessible
-    STATUS      deprecated 
+    STATUS      deprecated
     DESCRIPTION
        "An entry containing the port role information for the MST
        protocol on a port for a particular MST instance existing
-       on the system." 
-    INDEX { stpxMSTPortRoleInstanceIndex, 
+       on the system."
+    INDEX { stpxMSTPortRoleInstanceIndex,
             stpxMSTPortRolePortIndex }
     ::= { stpxMSTPortRoleTable 1 }
 
 StpxMSTPortRoleEntry ::= SEQUENCE {
     stpxMSTPortRoleInstanceIndex Integer32,
     stpxMSTPortRolePortIndex Integer32,
-    stpxMSTPortRoleValue     INTEGER 
+    stpxMSTPortRoleValue     INTEGER
 }
 
 stpxMSTPortRoleInstanceIndex OBJECT-TYPE
     SYNTAX      Integer32 (0..256)
     MAX-ACCESS  not-accessible
-    STATUS      deprecated 
+    STATUS      deprecated
     DESCRIPTION
        "The MST instance id within the range of 0 to
        stpxMSTMaxInstanceNumber."
@@ -2459,7 +2459,7 @@ stpxMSTPortRoleInstanceIndex OBJECT-TYPE
 stpxMSTPortRolePortIndex OBJECT-TYPE
     SYNTAX      Integer32 (1..65535)
     MAX-ACCESS  not-accessible
-    STATUS      deprecated 
+    STATUS      deprecated
     DESCRIPTION
        "The value of dot1dBasePort (i.e. dot1dBridge.1.4)
        for the bridge port."
@@ -2469,7 +2469,7 @@ stpxMSTPortRolePortIndex OBJECT-TYPE
 
 stpxMSTPortRoleValue OBJECT-TYPE
     SYNTAX      INTEGER {
-                         disabled(1), 
+                         disabled(1),
                          root(2),
                          designated(3),
                          alternate(4),
@@ -2478,26 +2478,26 @@ stpxMSTPortRoleValue OBJECT-TYPE
                          master(7)
                 }
     MAX-ACCESS  read-only
-    STATUS      deprecated 
+    STATUS      deprecated
     DESCRIPTION
        "Indicates the port role on a particular MST instance
-       for the MST protocol. 
+       for the MST protocol.
 
-       disabled --  this port has no role on this MST instance. 
+       disabled --  this port has no role on this MST instance.
 
        root -- this port has the role of root port on this MST
-                   instance. 
+                   instance.
 
-       designated -- this port has the role of designated 
+       designated -- this port has the role of designated
                    port on this MST instance.
 
        alternate -- this port has the role of alternate port
                    on this MST instance.
 
-       backUp -- this port has the role of backup port on this  
+       backUp -- this port has the role of backup port on this
                    MST instance.
 
-       boundary -- this port has the role of boundary port on 
+       boundary -- this port has the role of boundary port on
                    this MST instance.
 
        master -- this port has the role of master port on
@@ -2509,7 +2509,7 @@ stpxMSTMaxHopCount OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      deprecated
     DESCRIPTION
-        "The maximum number of hops for the MST region. 
+        "The maximum number of hops for the MST region.
 
         This object will take on value of 40 if the object value
         of stpxSMSTMaxHopCount is greater than 40.
@@ -2528,8 +2528,8 @@ stpxRSTPPortTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-       "A table containing port information for the RSTP 
-        Protocol on all the bridge ports existing in the 
+       "A table containing port information for the RSTP
+        Protocol on all the bridge ports existing in the
         system."
     ::= { stpxRSTPObjects 1 }
 
@@ -2565,31 +2565,31 @@ stpxRSTPPortAdminLinkType OBJECT-TYPE
     SYNTAX     INTEGER {
                         pointToPoint(1),
                         shared(2),
-                        auto(3) 
+                        auto(3)
                }
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-       "Indicates the administrative link type configuration of 
-       a bridge port for the RSTP protocol. 
+       "Indicates the administrative link type configuration of
+       a bridge port for the RSTP protocol.
 
        pointToPoint -- the port is administratively configured to
                be connected to a point-to-point link.
 
        shared -- the port is administratively configured to be
-               connected to a shared medium. 
+               connected to a shared medium.
 
-       auto -- the administrative configuration of the port's 
+       auto -- the administrative configuration of the port's
                link type depends on link duplex of the port.
-               If the port link is full-duplex, the administrative 
-               link type configuration on this port will be taken 
-               as pointTopoint(1). If the port link is half-duplex, 
+               If the port link is full-duplex, the administrative
+               link type configuration on this port will be taken
+               as pointTopoint(1). If the port link is half-duplex,
                the administrative link type configuration on this
                port will be taken as shared(2).
 
        This configuration of this object only takes effect when the
-       stpxSpanningTreeType is mst(4) or rapidPvstPlus(5)." 
-    DEFVAL { auto } 
+       stpxSpanningTreeType is mst(4) or rapidPvstPlus(5)."
+    DEFVAL { auto }
     ::= { stpxRSTPPortEntry 2 }
 
 stpxRSTPPortOperLinkType OBJECT-TYPE
@@ -2607,13 +2607,13 @@ stpxRSTPPortOperLinkType OBJECT-TYPE
        pointToPoint -- the port is operationally connected to
                a point-to-point link.
 
-       shared -- the port is operationally connected to 
+       shared -- the port is operationally connected to
                a shared medium.
 
        other -- none of the above.
- 
+
        This object is only instantiated when the object value of
-       stpxSpanningTreeType is mst(4) or rapidPvstPlus(5)." 
+       stpxSpanningTreeType is mst(4) or rapidPvstPlus(5)."
     ::= { stpxRSTPPortEntry 3 }
 
 stpxRSTPPortProtocolMigration OBJECT-TYPE
@@ -2621,16 +2621,16 @@ stpxRSTPPortProtocolMigration OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-       "The protocol migration control on this port. When the 
-       object value of  stpxSpanningTreeType is mst(4) or 
-       rapidPvstPlus(5), setting true(1) to this object forces 
-       the device to try using version 2 BPDUs on this port. 
-       When the object value of stpxSpanningTreeType is neither 
-       mst(4) nor rapidPvstPlus(5), setting true(1) to 
-       this object has no effect. Setting false(2) to this 
-       object has no effect. This object always returns 
+       "The protocol migration control on this port. When the
+       object value of  stpxSpanningTreeType is mst(4) or
+       rapidPvstPlus(5), setting true(1) to this object forces
+       the device to try using version 2 BPDUs on this port.
+       When the object value of stpxSpanningTreeType is neither
+       mst(4) nor rapidPvstPlus(5), setting true(1) to
+       this object has no effect. Setting false(2) to this
+       object has no effect. This object always returns
        false(2) when read."
-    REFERENCE 
+    REFERENCE
        "IEEE 802.1w clause 14.8.2.4, 17.26."
     ::= { stpxRSTPPortEntry 4 }
 
@@ -2640,10 +2640,10 @@ stpxRSTPPortRoleTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-       "A table containing a list of the bridge ports for a 
-       particular Spanning Tree instance.  This table is 
-       only instantiated when the stpxSpanningTreeType is mst(4) 
-       or rapidPvstPlus(5)."  
+       "A table containing a list of the bridge ports for a
+       particular Spanning Tree instance.  This table is
+       only instantiated when the stpxSpanningTreeType is mst(4)
+       or rapidPvstPlus(5)."
     ::= { stpxRSTPObjects 2 }
 
 stpxRSTPPortRoleEntry OBJECT-TYPE
@@ -2652,15 +2652,15 @@ stpxRSTPPortRoleEntry OBJECT-TYPE
     STATUS      current
     DESCRIPTION
        "An entry containing the port role information for the RSTP
-       protocol on a port for a particular Spanning Tree instance." 
-    INDEX { stpxRSTPPortRoleInstanceIndex, 
+       protocol on a port for a particular Spanning Tree instance."
+    INDEX { stpxRSTPPortRoleInstanceIndex,
             stpxRSTPPortRolePortIndex }
     ::= { stpxRSTPPortRoleTable 1 }
 
 StpxRSTPPortRoleEntry ::= SEQUENCE {
     stpxRSTPPortRoleInstanceIndex Integer32,
     stpxRSTPPortRolePortIndex Integer32,
-    stpxRSTPPortRoleValue     INTEGER 
+    stpxRSTPPortRoleValue     INTEGER
 }
 
 stpxRSTPPortRoleInstanceIndex OBJECT-TYPE
@@ -2668,8 +2668,8 @@ stpxRSTPPortRoleInstanceIndex OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-       "The Spanning Tree instance id, it can either be a 
-       VLAN number if the stpxSpanningTreeType is rapidPvstPlus(5) 
+       "The Spanning Tree instance id, it can either be a
+       VLAN number if the stpxSpanningTreeType is rapidPvstPlus(5)
        or an MST instance id if the stpxSpanningTreeType is mst(4)."
     ::= { stpxRSTPPortRoleEntry 1 }
 
@@ -2686,7 +2686,7 @@ stpxRSTPPortRolePortIndex OBJECT-TYPE
 
 stpxRSTPPortRoleValue OBJECT-TYPE
     SYNTAX      INTEGER {
-                         disabled(1), 
+                         disabled(1),
                          root(2),
                          designated(3),
                          alternate(4),
@@ -2697,32 +2697,32 @@ stpxRSTPPortRoleValue OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-       "Indicates the port role on a particular Spanning Tree 
-       instance for the RSTP protocol. 
+       "Indicates the port role on a particular Spanning Tree
+       instance for the RSTP protocol.
 
        disabled --  this port has no role in this Spanning
-                   Tree instance. 
+                   Tree instance.
 
        root -- this port has the role of root port in this
-                   Spanning Tree instance. 
+                   Spanning Tree instance.
 
-       designated -- this port has the role of designated 
+       designated -- this port has the role of designated
                    port in this Spanning Tree instance.
 
        alternate -- this port has the role of alternate port
                    in this Spanning Tree instance.
 
-       backUp -- this port has the role of backup port in this  
+       backUp -- this port has the role of backup port in this
                    Spanning Tree instance.
 
-       boundary -- this port has the role of boundary port in 
+       boundary -- this port has the role of boundary port in
                    this Spanning Tree instance.
 
        master -- this port has the role of master port in
                    this Spanning Tree instance.
 
        This object could have a value of 'boundary' or 'master'
-       only when the object value of stpxSpanningTreeType is mst(4)." 
+       only when the object value of stpxSpanningTreeType is mst(4)."
     ::= { stpxRSTPPortRoleEntry  3 }
 
 stpxRSTPTransmitHoldCount OBJECT-TYPE
@@ -2741,7 +2741,7 @@ stpxRPVSTPortTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-       "A table containing a list of the bridge ports 
+       "A table containing a list of the bridge ports
         for a particular Spanning Tree Instance.
         This table is only instantiated when the object value
         of stpxSpanningTreeType is rapidPvstPlus(5)."
@@ -2752,8 +2752,8 @@ stpxRPVSTPortEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-                "An entry with port status information on a 
-                 bridge port for a particular Spanning Tree 
+                "An entry with port status information on a
+                 bridge port for a particular Spanning Tree
                  Instance."
     INDEX { stpxRPVSTPortVlanIndex,
             stpxRPVSTPortIndex }
@@ -2788,13 +2788,13 @@ stpxRPVSTPortStatus OBJECT-TYPE
                      edge(0),
                      unused1(1),
                      unused2(2),
-                     stp(3), 
-                     dispute(4) 
+                     stp(3),
+                     dispute(4)
                }
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-       "Indicates the operational status of the port for the 
+       "Indicates the operational status of the port for the
         Rapid PVST+ protocol.
 
        edge -- this port is an edge port for the RST region.
@@ -2809,7 +2809,7 @@ stpxRPVSTPortStatus OBJECT-TYPE
        dispute -- this port, as a designated port, received an
                inferior BPDU with a designated role and the
                learning bit being set."
-  
+
    ::= { stpxRPVSTPortEntry 3 }
 
 --
@@ -2817,7 +2817,7 @@ stpxRPVSTPortStatus OBJECT-TYPE
 -- This group of objects is for the management
 -- of IEEE Multiple Spanning Tree, i.e., Standard MST
 -- (SMST). Objects in this group replace some of the
--- objects in stpxMSTObjects which are for the the 
+-- objects in stpxMSTObjects which are for the the
 -- managment of the Cisco proprietary implementation
 -- of the Multiple Spanning Tree (MST).
 --
@@ -2827,8 +2827,8 @@ stpxSMSTMaxInstances  OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-       "The maximum number of MST instances that can be 
-       supported by the device for IEEE MST." 
+       "The maximum number of MST instances that can be
+       supported by the device for IEEE MST."
     ::= { stpxSMSTObjects 1 }
 
 stpxSMSTMaxInstanceID OBJECT-TYPE
@@ -2836,11 +2836,11 @@ stpxSMSTMaxInstanceID OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-       "The maximum MST instance ID that can be supported 
-       by the device for IEEE MST." 
+       "The maximum MST instance ID that can be supported
+       by the device for IEEE MST."
     ::= { stpxSMSTObjects 2 }
 
-stpxSMSTRegionRevision OBJECT-TYPE  
+stpxSMSTRegionRevision OBJECT-TYPE
     SYNTAX      Unsigned32
     MAX-ACCESS  read-only
     STATUS      current
@@ -2849,15 +2849,15 @@ stpxSMSTRegionRevision OBJECT-TYPE
     ::= { stpxSMSTObjects 3 }
 
 stpxSMSTRegionEditRevision OBJECT-TYPE
-    SYNTAX      Unsigned32  
+    SYNTAX      Unsigned32
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-       "The MST region version in the Edit Buffer for IEEE 
+       "The MST region version in the Edit Buffer for IEEE
        MST.
 
-       This object is only instantiated when the 
-       stpxMSTRegionEditBufferStatus has the value of 
+       This object is only instantiated when the
+       stpxMSTRegionEditBufferStatus has the value of
        acquiredBySnmp(2)."
      ::= { stpxSMSTObjects 4 }
 
@@ -2875,7 +2875,7 @@ stpxSMSTInstanceEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-       "A conceptual row containing the MST instance 
+       "A conceptual row containing the MST instance
        information for IEEE MST."
     INDEX  { stpxSMSTInstanceIndex }
     ::= { stpxSMSTInstanceTable 1 }
@@ -2894,7 +2894,7 @@ stpxSMSTInstanceIndex OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-       "The MST instance ID, the value of which is in the range 
+       "The MST instance ID, the value of which is in the range
        from 0 to stpxSMSTMaxInstanceID."
     ::= {stpxSMSTInstanceEntry 1 }
 
@@ -2913,7 +2913,7 @@ stpxSMSTInstanceVlansMapped1k2k OBJECT-TYPE
        For each VLAN, if it is mapped to this MST instance,
        then the bit corresponding to that VLAN is set to '1'.
        If the length of this string is less than 256 octets,
-       any 'missing' octets are assumed to contain the value 
+       any 'missing' octets are assumed to contain the value
        of zero."
     ::= {stpxSMSTInstanceEntry 2 }
 
@@ -2933,35 +2933,35 @@ stpxSMSTInstanceVlansMapped3k4k OBJECT-TYPE
        For each VLAN, if it is mapped to this MST instance,
        then the bit corresponding to that VLAN is set to '1'.
        If the length of this string is less than 256 octets,
-       any 'missing' octets are assumed to contain the value 
+       any 'missing' octets are assumed to contain the value
        of zero."
     ::= {stpxSMSTInstanceEntry 3 }
 
 stpxSMSTInstanceRemainingHopCount OBJECT-TYPE
-    SYNTAX     Integer32 (-1..2147483647)  
+    SYNTAX     Integer32 (-1..2147483647)
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
         "The remaining hop count for this MST instance. If this object
         value is not applicable on an MST instance, then the value
-        retrieved for this object for that MST instance will be -1. 
+        retrieved for this object for that MST instance will be -1.
 
         This object is only instantiated when the object value of
         stpxSpanningTreeType is mst(4)."
     ::= {stpxSMSTInstanceEntry 4 }
 
 stpxSMSTInstanceCISTRegionalRoot OBJECT-TYPE
-    SYNTAX  OCTET STRING (SIZE (8)) 
+    SYNTAX  OCTET STRING (SIZE (8))
     MAX-ACCESS  read-only
     STATUS  current
     DESCRIPTION
-            "Indicates the Bridge Identifier (refer to BridgeId 
-            defined in BRIDGE-MIB) of CIST (Common and Internal 
+            "Indicates the Bridge Identifier (refer to BridgeId
+            defined in BRIDGE-MIB) of CIST (Common and Internal
             Spanning Tree) Regional Root for the MST region.
 
             This object is only instantiated when the object value of
             stpxSpanningTreeType is mst(4) and stpxSMSTInstanceIndex
-            is 0." 
+            is 0."
     REFERENCE
             "IEEE 802.1S-2002: Section 13.9."
     ::= { stpxSMSTInstanceEntry 5 }
@@ -2973,13 +2973,13 @@ stpxSMSTInstanceCISTIntRootCost OBJECT-TYPE
     DESCRIPTION
             "Indicates the CIST Internal Root Path Cost, i.e., the
             path cost to the CIST Regional Root as specified by the
-            corresponding stpxSMSTInstanceCISTRegionalRoot for the 
+            corresponding stpxSMSTInstanceCISTRegionalRoot for the
             MST region.
 
             This object is only instantiated when the object value of
             stpxSpanningTreeType is mst(4) and stpxSMSTInstanceIndex
-            is 0." 
-    REFERENCE 
+            is 0."
+    REFERENCE
             "IEEE 802.1S-2002: Section 13.9."
     ::= { stpxSMSTInstanceEntry 6 }
 
@@ -2988,8 +2988,8 @@ stpxSMSTInstanceEditTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-       "This table contains MST instance information in the 
-       Edit Buffer. 
+       "This table contains MST instance information in the
+       Edit Buffer.
 
        This table is only instantiated when the object value
        of  stpxMSTRegionEditBufferStatus has the value of
@@ -3001,10 +3001,10 @@ stpxSMSTInstanceEditEntry OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-       "A conceptual row containing MST instance information 
+       "A conceptual row containing MST instance information
        in the Edit Buffer.
 
-       The total number of entries in this table has to be 
+       The total number of entries in this table has to be
        less than or equal to the object value of stpxSMSTMaxInstances."
     INDEX  { stpxSMSTInstanceEditIndex }
     ::= { stpxSMSTInstanceEditTable 1 }
@@ -3022,9 +3022,9 @@ stpxSMSTInstanceEditIndex OBJECT-TYPE
     STATUS      current
     DESCRIPTION
        "The MST instance ID, the value of which is in the range from
-       0 to stpxSMSTMaxInstanceID. 
+       0 to stpxSMSTMaxInstanceID.
 
-       The instances of this table entry with 
+       The instances of this table entry with
        stpxSMSTInstanceEditIndex of zero is automatically
        created by the device and can not modified."
     ::= {stpxSMSTInstanceEditEntry 1 }
@@ -3041,19 +3041,19 @@ stpxSMSTInstanceEditVlansMap1k2k OBJECT-TYPE
        15; etc.  The most significant bit of each octet
        corresponds to the lowest value VlanIndex in that octet.
 
-       For each VLAN, if it is mapped to this MST instance, 
-       then the bit corresponding to that VLAN is set to 
-       '1'. Each VLAN can only be mapped to one unique MST 
+       For each VLAN, if it is mapped to this MST instance,
+       then the bit corresponding to that VLAN is set to
+       '1'. Each VLAN can only be mapped to one unique MST
        instance with the range from 0 to stpxSMSTMaxInstanceNumber.
-       If the bit corresponding to a VLAN is changed from '1' 
-       to '0', then that VLAN will be automatically mapped to 
-       SMST instance 0 by the device. If the bit corresponding 
-       to a VLAN is changed from '0' to '1', then that VLAN will 
-       be automatically removed from the MST instance this VLAN was 
-       previously mapped to. If the length of this string is 
-       less than 256 octets, any 'missing' octets are assumed to 
+       If the bit corresponding to a VLAN is changed from '1'
+       to '0', then that VLAN will be automatically mapped to
+       SMST instance 0 by the device. If the bit corresponding
+       to a VLAN is changed from '0' to '1', then that VLAN will
+       be automatically removed from the MST instance this VLAN was
+       previously mapped to. If the length of this string is
+       less than 256 octets, any 'missing' octets are assumed to
        contain the value of zero."
-    ::= {stpxSMSTInstanceEditEntry 2 } 
+    ::= {stpxSMSTInstanceEditEntry 2 }
 
 stpxSMSTInstanceEditVlansMap3k4k OBJECT-TYPE
     SYNTAX     OCTET STRING (SIZE (0..256))
@@ -3076,8 +3076,8 @@ stpxSMSTInstanceEditVlansMap3k4k OBJECT-TYPE
        SMST instance 0 by the device. If the bit corresponding
        to a VLAN is changed from '0' to '1', then that VLAN will
        be automatically removed from the MST instance this VLAN was
-       previously mapped to. If the length of this string is 
-       less than 256 octets, any 'missing' octets are assumed to 
+       previously mapped to. If the length of this string is
+       less than 256 octets, any 'missing' octets are assumed to
        contain the value of zero."
     ::= {stpxSMSTInstanceEditEntry 3 }
 
@@ -3086,15 +3086,15 @@ stpxSMSTInstanceEditRowStatus OBJECT-TYPE
     MAX-ACCESS read-create
     STATUS     current
     DESCRIPTION
-       "This object controls the creation and deletion of a row 
+       "This object controls the creation and deletion of a row
        in stpxSMSTInstanceEditTable.
 
        When creating an entry in this table, 'createAndGo' method
        is used and the value of this object is set to 'active'.
-       Deactivation of an 'active' entry is not allowed.  When 
-       deleting an entry in this table, 'destroy' method is used. 
-       Once a row becomes active, value in any other column 
-       within such a row may be modified. When a row is active, 
+       Deactivation of an 'active' entry is not allowed.  When
+       deleting an entry in this table, 'destroy' method is used.
+       Once a row becomes active, value in any other column
+       within such a row may be modified. When a row is active,
        setting the instance of stpxSMSTInstanceEditVlansMap1k2k
        stpxSMSTInstanceEditVlansMap3k4k for the same MST instance
        both to the value of zero length can not be allowed."
@@ -3103,20 +3103,20 @@ stpxSMSTInstanceEditRowStatus OBJECT-TYPE
 stpxSMSTPortTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF StpxSMSTPortEntry
     MAX-ACCESS  not-accessible
-    STATUS      current 
+    STATUS      current
     DESCRIPTION
-       "A table containing port information for the MST 
-       Protocol on all the bridge ports existing on the 
+       "A table containing port information for the MST
+       Protocol on all the bridge ports existing on the
        system.
 
-       This table is only instantiated when the object 
+       This table is only instantiated when the object
        value of stpxSpanningTreeType is mst(4)"
     ::= { stpxSMSTObjects 7 }
 
 stpxSMSTPortEntry OBJECT-TYPE
     SYNTAX      StpxSMSTPortEntry
     MAX-ACCESS  not-accessible
-    STATUS      current 
+    STATUS      current
     DESCRIPTION
        "An entry with port information for the MST protocol
        on a bridge port."
@@ -3136,7 +3136,7 @@ StpxSMSTPortEntry ::= SEQUENCE {
 stpxSMSTPortIndex OBJECT-TYPE
     SYNTAX      Integer32 (1..65535)
     MAX-ACCESS  not-accessible
-    STATUS      current 
+    STATUS      current
     DESCRIPTION
        "The value of dot1dBasePort (i.e. dot1dBridge.1.4)
         for the bridge port."
@@ -3149,23 +3149,23 @@ stpxSMSTPortStatus OBJECT-TYPE
                      edge(0),
                      boundary(1),
                      pvst(2),
-                     stp(3), 
+                     stp(3),
                      dispute(4),
                      rstp(5)
                }
     MAX-ACCESS read-only
-    STATUS     current 
+    STATUS     current
     DESCRIPTION
-       "Indicates the operational status of the port for the 
-       MST protocol. 
+       "Indicates the operational status of the port for the
+       MST protocol.
 
        edge -- this port is an edge port for the MST region.
 
-       boundary -- this port is a boundary port for the 
+       boundary -- this port is a boundary port for the
                MST region.
 
-       pvst --  this port is connected to a PVST/PVST+ bridge.   
- 
+       pvst --  this port is connected to a PVST/PVST+ bridge.
+
        stp -- this port is connected to a Single Spanning
                Tree bridge.
 
@@ -3173,48 +3173,48 @@ stpxSMSTPortStatus OBJECT-TYPE
                inferior BPDU with a designated role and the
                learning bit being set.
 
-       rstp -- this port is connected to a RSTP bridge or an 
+       rstp -- this port is connected to a RSTP bridge or an
                MST bridge in a different MST region."
    ::= { stpxSMSTPortEntry 2 }
 
 stpxSMSTPortAdminHelloTime OBJECT-TYPE
-    SYNTAX      Unsigned32 
+    SYNTAX      Unsigned32
     UNITS       "hundredth of seconds"
     MAX-ACCESS  read-write
-    STATUS      current 
+    STATUS      current
     DESCRIPTION
-        "The adminitratively configured hello time in hundredth 
-        of seconds on a port for IEEE MST. The granularity 
-        of this timer is 1 second. An agent may return a badValue 
-        error if a set is attempted to a value which is not a 
+        "The adminitratively configured hello time in hundredth
+        of seconds on a port for IEEE MST. The granularity
+        of this timer is 1 second. An agent may return a badValue
+        error if a set is attempted to a value which is not a
         whole number of seconds. This object value of zero
-        means the hello time is not specifically configured on 
+        means the hello time is not specifically configured on
         this port and object value of stpxSMSTPortConfigedHelloTime
-        retrieved for this port will take on the value of 
-        dot1dStpBridgeHelloTime defined in BRIDGE-MIB."  
+        retrieved for this port will take on the value of
+        dot1dStpBridgeHelloTime defined in BRIDGE-MIB."
     ::= { stpxSMSTPortEntry 3 }
 
 stpxSMSTPortConfigedHelloTime OBJECT-TYPE
-    SYNTAX      Unsigned32 
+    SYNTAX      Unsigned32
     UNITS       "hundredth of seconds"
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-        "Indicates the effective configuration of the hello time on 
-        a port."   
+        "Indicates the effective configuration of the hello time on
+        a port."
     ::= { stpxSMSTPortEntry 4 }
 
 stpxSMSTPortOperHelloTime OBJECT-TYPE
-    SYNTAX      Integer32 (-1..2147483647) 
+    SYNTAX      Integer32 (-1..2147483647)
     UNITS       "hundredth of seconds"
     MAX-ACCESS  read-only
     STATUS  current
     DESCRIPTION
-        "The operational hello time in hundredth of seconds on a 
+        "The operational hello time in hundredth of seconds on a
         port for IEEE MST. If this object value is not
         applicable on a port, then the value retrieved on that
-        port will be -1."  
-    ::= { stpxSMSTPortEntry 5 } 
+        port will be -1."
+    ::= { stpxSMSTPortEntry 5 }
 
 stpxSMSTPortAdminMSTMode OBJECT-TYPE
     SYNTAX     INTEGER {
@@ -3225,11 +3225,11 @@ stpxSMSTPortAdminMSTMode OBJECT-TYPE
     STATUS  current
     DESCRIPTION
         "The desired MST mode of this port.
- 
+
         preStandard -- this port is administratively configured to
             transmit pre-standard, i.e. pre IEEE MST, BPDUs.
 
-        auto -- the BPDU transmission mode of this port is based 
+        auto -- the BPDU transmission mode of this port is based
             on automatic detection of neighbor ports."
     ::= { stpxSMSTPortEntry 6 }
 
@@ -3246,10 +3246,10 @@ stpxSMSTPortOperMSTMode OBJECT-TYPE
 
         unknown -- the operational mode is currently unknown.
 
-        preStandard -- this port is currently operating in 
+        preStandard -- this port is currently operating in
             pre-standard MSTP BPDU transmission mode.
 
-        standard -- this port is currently operating in IEEE MST 
+        standard -- this port is currently operating in IEEE MST
             BPDU transmission mode."
     ::= { stpxSMSTPortEntry 7 }
 
@@ -3282,26 +3282,26 @@ stpxSMSTConfigPreStandardDigest OBJECT-TYPE
 --
 -- Notifications
 --
- 
+
 stpxNotificationsPrefix OBJECT IDENTIFIER ::= { stpxNotifications 0 }
- 
+
 stpxInconsistencyUpdate NOTIFICATION-TYPE
     OBJECTS     { stpxInconsistentState }
     STATUS      current
     DESCRIPTION
              "A stpxPortInconsistencyUpdate notification is sent by a
-              bridge when an instance of stpxInconsistentState is 
+              bridge when an instance of stpxInconsistentState is
               created or destroyed.  That is, when an inconsistency is
-              discovered in the VLAN's Spanning Tree for a particular 
-              port, or when such an inconsistency disappears.  Note 
+              discovered in the VLAN's Spanning Tree for a particular
+              port, or when such an inconsistency disappears.  Note
               that the trap is not sent if the port transitions between
               different types of inconsistency.
- 
+
               The stpxInconsistentState value indicates the type of
-              inconsistency which now exists/no longer exists for the 
+              inconsistency which now exists/no longer exists for the
               relevant VLAN on the relevant port."
     ::= { stpxNotificationsPrefix 1}
- 
+
 stpxRootInconsistencyUpdate NOTIFICATION-TYPE
     OBJECTS     { stpxRootInconsistencyState, stpxSpanningTreeType }
     STATUS      current
@@ -3309,14 +3309,14 @@ stpxRootInconsistencyUpdate NOTIFICATION-TYPE
              "A stpxRootInconsistencyUpdate notification is sent by a
               bridge when an instance of stpxRootInconsistencyState
               is created or destroyed. That is, when an
-              root-inconsistency is discovered in the VLAN's or 
-              instance's Spanning Tree for a particular port, or when 
-              such an root-inconsistency disappears. For creation, the 
+              root-inconsistency is discovered in the VLAN's or
+              instance's Spanning Tree for a particular port, or when
+              such an root-inconsistency disappears. For creation, the
               value of stpxRootInconsistencyState in the notification is
               true(1); for deletion, the value is false(2).
-    
+
               The object value of stpxSpanningTreeType indicates
-              which Spanning Tree protocol is running when an instance 
+              which Spanning Tree protocol is running when an instance
               of stpxRootInconsistencyState is created or destroyed.  "
     ::= { stpxNotificationsPrefix 2}
 
@@ -3327,16 +3327,16 @@ stpxLoopInconsistencyUpdate NOTIFICATION-TYPE
              "A stpxLoopInconsistencyUpdate notification is sent by a
               bridge when an instance of stpxLoopInconsistencyState
               is created or destroyed. That is, when an
-              loop-inconsistency is discovered in the VLAN's or 
-              instance's Spanning Tree for a particular port, or when 
-              such an loop-inconsistency disappears. For creation, 
-              the value of stpxLoopInconsistencyState in the 
-              notification is true(1); for deletion, the value is 
+              loop-inconsistency is discovered in the VLAN's or
+              instance's Spanning Tree for a particular port, or when
+              such an loop-inconsistency disappears. For creation,
+              the value of stpxLoopInconsistencyState in the
+              notification is true(1); for deletion, the value is
               false(2).
 
               The object value of stpxSpanningTreeType indicates
               which Spanning Tree protocol is running when an instance
-              of stpxLoopInconsistencyState is created or 
+              of stpxLoopInconsistencyState is created or
               destroyed."
     ::= { stpxNotificationsPrefix 3}
 
@@ -3346,7 +3346,7 @@ stpxLoopInconsistencyUpdate NOTIFICATION-TYPE
 
 stpxMIBConformance
                    OBJECT IDENTIFIER ::= { ciscoStpExtensionsMIB 3 }
-stpxMIBCompliances 
+stpxMIBCompliances
                    OBJECT IDENTIFIER ::= { stpxMIBConformance 1 }
 stpxMIBGroups
                    OBJECT IDENTIFIER ::= { stpxMIBConformance 2 }
@@ -3355,29 +3355,29 @@ stpxMIBGroups
 -- compliance statements
 
 stpxMIBCompliance MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
     MODULE  -- this module
             -- no MANDATORY-GROUPS
 
-        GROUP        stpxUplinkGroup 
+        GROUP        stpxUplinkGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the UplinkFast capability."
 
         GROUP        stpxPreferredVlansGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the Preferred VLANs capability."
-       
+
         GROUP        stpxNotificationsGroup
-        DESCRIPTION   "The notifications which a STP extension 
+        DESCRIPTION   "The notifications which a STP extension
                       implementation required to implement."
 
     ::= { stpxMIBCompliances 1 }
 
 stpxMIBCompliance2 MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -3399,12 +3399,12 @@ stpxMIBCompliance2 MODULE-COMPLIANCE
         GROUP        stpxBackboneGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the BackboneFast capability."
- 
+
 
     ::= { stpxMIBCompliances 2 }
 
 stpxMIBCompliance3 MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -3441,17 +3441,17 @@ stpxMIBCompliance3 MODULE-COMPLIANCE
                      between 1024 and 4095."
 
         GROUP        stpxSpanningTreeGroup
-        DESCRIPTION  "This group must be implemented by the entities 
+        DESCRIPTION  "This group must be implemented by the entities
                       that support MISTP and PVSTP+"
 
         GROUP        stpxMISTPGroup
-        DESCRIPTION  "This group must be implemented by the entities 
+        DESCRIPTION  "This group must be implemented by the entities
                       that support MISTP."
 
     ::= { stpxMIBCompliances 3 }
 
 stpxMIBCompliance4 MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -3488,11 +3488,11 @@ stpxMIBCompliance4 MODULE-COMPLIANCE
                      between 1024 and 4095."
 
         GROUP        stpxSpanningTreeGroup
-        DESCRIPTION  "This group must be implemented by the entities 
+        DESCRIPTION  "This group must be implemented by the entities
                      that support MISTP and PVSTP+"
 
         GROUP        stpxMISTPGroup
-        DESCRIPTION  "This group must be implemented by the entities 
+        DESCRIPTION  "This group must be implemented by the entities
                      that support MISTP."
 
         GROUP        stpxLongPathCostModeGroup
@@ -3502,7 +3502,7 @@ stpxMIBCompliance4 MODULE-COMPLIANCE
     ::= { stpxMIBCompliances 4 }
 
 stpxMIBCompliance5 MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -3553,14 +3553,14 @@ stpxMIBCompliance5 MODULE-COMPLIANCE
 
         GROUP        stpxPVSTVlanGroup
         DESCRIPTION  "This group is optional for implementations
-                      of the Spanning Tree PVST+ Protocol VLAN 
+                      of the Spanning Tree PVST+ Protocol VLAN
                       configuration."
 
         GROUP        stpxMISTPGroup2
         DESCRIPTION  "This group is optional for implementations
                       that support MISTP with the range of VlanIndex
                       up to 4095."
-     
+
         GROUP        stpxLoopGuardGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the LoopGuard capability."
@@ -3568,7 +3568,7 @@ stpxMIBCompliance5 MODULE-COMPLIANCE
         GROUP        stpxLoopInconsistencyNotificationsGroup
         DESCRIPTION  "The notifications which a STP extension
                      implementation is required to implement."
-    
+
         GROUP        stpxFastStartGroup
         DESCRIPTION  "This stpxFastStartGroup is an optional group
                      containing objects providing information about
@@ -3578,7 +3578,7 @@ stpxMIBCompliance5 MODULE-COMPLIANCE
 
 
 stpxMIBCompliance6 MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -3592,7 +3592,7 @@ stpxMIBCompliance6 MODULE-COMPLIANCE
         GROUP        stpxSstpGroup
         DESCRIPTION  "This group is optional for implementations of
                      Cisco's Shared Spanning Tree Protocol (SSTP)."
- 
+
         GROUP        stpxPreferredVlansGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the Preferred VLANs capability."
@@ -3633,22 +3633,22 @@ stpxMIBCompliance6 MODULE-COMPLIANCE
 
         GROUP        stpxPVSTVlanGroup
         DESCRIPTION  "This group is optional for implementations
-                      of the Spanning Tree PVST+ Protocol VLAN 
+                      of the Spanning Tree PVST+ Protocol VLAN
                       configuration."
 
         GROUP        stpxMISTPGroup2
         DESCRIPTION  "This group is optional for implementations
                       that support MISTP with the range of VlanIndex
                       up to 4095."
-     
+
         GROUP        stpxLoopInconsistencyNotificationsGroup
         DESCRIPTION  "The notifications which a STP extension
                      implementation is required to implement."
-   
-        GROUP        stpxBpduSkewingGroup 
+
+        GROUP        stpxBpduSkewingGroup
         DESCRIPTION  "This is an optional group for implementations of
                      Spanning Tree BPDU Skewing feature."
-  
+
         GROUP        stpxFastStartGroup2
         DESCRIPTION  "This stpxFastStartGroup is an optional group
                      containing objects providing information about
@@ -3657,12 +3657,12 @@ stpxMIBCompliance6 MODULE-COMPLIANCE
         GROUP        stpxLoopGuardGroup2
         DESCRIPTION  "This group is optional for implementations
                      of the LoopGuard capability."
- 
+
         GROUP        stpxMSTGroup
-        DESCRIPTION  "This group is optional for implementation of 
+        DESCRIPTION  "This group is optional for implementation of
                      Multiple Spanning Tree Protocol feature."
-      
-        GROUP        stpxPreferredMSTInstancesGroup 
+
+        GROUP        stpxPreferredMSTInstancesGroup
         DESCRIPTION  "This group is optional for implementations
                      of Preferred MST Instance Map feature."
 
@@ -3670,7 +3670,7 @@ stpxMIBCompliance6 MODULE-COMPLIANCE
 
 
 stpxMIBCompliance7 MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -3684,7 +3684,7 @@ stpxMIBCompliance7 MODULE-COMPLIANCE
         GROUP        stpxSstpGroup
         DESCRIPTION  "This group is optional for implementations of
                      Cisco's Shared Spanning Tree Protocol (SSTP)."
- 
+
         GROUP        stpxPreferredVlansGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the Preferred VLANs capability."
@@ -3725,22 +3725,22 @@ stpxMIBCompliance7 MODULE-COMPLIANCE
 
         GROUP        stpxPVSTVlanGroup
         DESCRIPTION  "This group is optional for implementations
-                      of the Spanning Tree PVST+ Protocol VLAN 
+                      of the Spanning Tree PVST+ Protocol VLAN
                       configuration."
 
         GROUP        stpxMISTPGroup2
         DESCRIPTION  "This group is optional for implementations
                       that support MISTP with the range of VlanIndex
                       up to 4095."
-     
+
         GROUP        stpxLoopInconsistencyNotificationsGroup
         DESCRIPTION  "The notifications which a STP extension
                      implementation is required to implement."
-   
-        GROUP        stpxBpduSkewingGroup 
+
+        GROUP        stpxBpduSkewingGroup
         DESCRIPTION  "This is an optional group for implementations of
                      Spanning Tree BPDU Skewing feature."
-  
+
         GROUP        stpxFastStartGroup2
         DESCRIPTION  "This stpxFastStartGroup is an optional group
                      containing objects providing information about
@@ -3749,12 +3749,12 @@ stpxMIBCompliance7 MODULE-COMPLIANCE
         GROUP        stpxLoopGuardGroup2
         DESCRIPTION  "This group is optional for implementations
                      of the LoopGuard capability."
- 
-        GROUP        stpxPreferredMSTInstancesGroup 
+
+        GROUP        stpxPreferredMSTInstancesGroup
         DESCRIPTION  "This group is optional for implementations
                      of Preferred MST Instance Map feature."
 
-        GROUP        stpxFastStartGroup3 
+        GROUP        stpxFastStartGroup3
         DESCRIPTION  "This group is optional for implementations
                      of Bpdu Guard and Bpdu Filter feature."
 
@@ -3764,23 +3764,23 @@ stpxMIBCompliance7 MODULE-COMPLIANCE
 
         GROUP        stpxBackboneGroup2
         DESCRIPTION  "This group is optional for implementations
-                     of BackboneFast feature." 
- 
+                     of BackboneFast feature."
+
         GROUP        stpxMSTGroup2
         DESCRIPTION  "This group is optional for implementation of
                      Multiple Spanning Tree Protocol feature."
 
         GROUP        stpxRSTPGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid Spanning Tree Protocol feature." 
+                     Rapid Spanning Tree Protocol feature."
 
         GROUP        stpxRPVSTGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid PVST+ feature." 
+                     Rapid PVST+ feature."
     ::= { stpxMIBCompliances 7 }
 
 stpxMIBCompliance8 MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -3794,7 +3794,7 @@ stpxMIBCompliance8 MODULE-COMPLIANCE
         GROUP        stpxSstpGroup
         DESCRIPTION  "This group is optional for implementations of
                      Cisco's Shared Spanning Tree Protocol (SSTP)."
- 
+
         GROUP        stpxPreferredVlansGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the Preferred VLANs capability."
@@ -3835,22 +3835,22 @@ stpxMIBCompliance8 MODULE-COMPLIANCE
 
         GROUP        stpxPVSTVlanGroup
         DESCRIPTION  "This group is optional for implementations
-                      of the Spanning Tree PVST+ Protocol VLAN 
+                      of the Spanning Tree PVST+ Protocol VLAN
                       configuration."
 
         GROUP        stpxMISTPGroup2
         DESCRIPTION  "This group is optional for implementations
                       that support MISTP with the range of VlanIndex
                       up to 4095."
-     
+
         GROUP        stpxLoopInconsistencyNotificationsGroup
         DESCRIPTION  "The notifications which a STP extension
                      implementation is required to implement."
-   
-        GROUP        stpxBpduSkewingGroup 
+
+        GROUP        stpxBpduSkewingGroup
         DESCRIPTION  "This is an optional group for implementations of
                      Spanning Tree BPDU Skewing feature."
-  
+
         GROUP        stpxFastStartGroup2
         DESCRIPTION  "This stpxFastStartGroup is an optional group
                      containing objects providing information about
@@ -3859,12 +3859,12 @@ stpxMIBCompliance8 MODULE-COMPLIANCE
         GROUP        stpxLoopGuardGroup2
         DESCRIPTION  "This group is optional for implementations
                      of the LoopGuard capability."
- 
-        GROUP        stpxPreferredMSTInstancesGroup 
+
+        GROUP        stpxPreferredMSTInstancesGroup
         DESCRIPTION  "This group is optional for implementations
                      of Preferred MST Instance Map feature."
 
-        GROUP        stpxFastStartGroup3 
+        GROUP        stpxFastStartGroup3
         DESCRIPTION  "This group is optional for implementations
                      of Bpdu Guard and Bpdu Filter feature."
 
@@ -3874,139 +3874,23 @@ stpxMIBCompliance8 MODULE-COMPLIANCE
 
         GROUP        stpxBackboneGroup2
         DESCRIPTION  "This group is optional for implementations
-                     of BackboneFast feature." 
- 
+                     of BackboneFast feature."
+
         GROUP        stpxMSTGroup2
         DESCRIPTION  "This group is optional for implementation of
                      Multiple Spanning Tree Protocol feature."
 
         GROUP        stpxRSTPGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid Spanning Tree Protocol feature." 
+                     Rapid Spanning Tree Protocol feature."
 
         GROUP        stpxRPVSTGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid PVST+ feature." 
+                     Rapid PVST+ feature."
 
         GROUP        stpxExtendedSysIDGroup
         DESCRIPTION  "This group is mandatory for implementation of
-                     Extended System ID feature." 
-
-        GROUP        stpxNotificationEnableGroup
-        DESCRIPTION "This group is mandatory for implementation of
-                     control on the generation of Spanning Tree
-                     notifications."
-
-        GROUP        stpxFastStartOperModeGroup
-        DESCRIPTION "This group is mandatory for implementation of
-                     Spanning Tree Port Fast Start Oper Mode feature." 
-
-    ::= { stpxMIBCompliances 8 }
-
-stpxMIBCompliance9 MODULE-COMPLIANCE
-    STATUS  deprecated 
-    DESCRIPTION
-            "The compliance statement for entities which implement
-            Cisco STP Extensions MIB."
-    MODULE  -- this module
-            -- no MANDATORY-GROUPS
-
-        GROUP        stpxUplinkGroup
-        DESCRIPTION  "This group is mandatory for implementations
-                     of the UplinkFast capability."
-
-        GROUP        stpxSstpGroup
-        DESCRIPTION  "This group is optional for implementations of
-                     Cisco's Shared Spanning Tree Protocol (SSTP)."
- 
-        GROUP        stpxPreferredVlansGroup
-        DESCRIPTION  "This group is mandatory for implementations
-                     of the Preferred VLANs capability."
-
-        GROUP        stpxNotificationsGroup
-        DESCRIPTION   "The notifications which a STP extension
-                      implementation required to implement."
-
-        GROUP        stpxBackboneGroup
-        DESCRIPTION  "This group is mandatory for implementations
-                     of the BackboneFast capability."
-
-        GROUP        stpxRootGuardGroup
-        DESCRIPTION  "This group is mandatory for implementations
-                     of the RootGuard capability."
-
-        GROUP        stpxRootInconsistencyNotificationsGroup
-        DESCRIPTION  "The notifications which a STP extension
-                      implementation required to implement."
-
-        GROUP        stpx4kVlanGroup
-        DESCRIPTION  "This group must be implemented by the
-                     entities which support the range of VlanIndex
-                     between 1024 and 4095."
-
-        GROUP        stpxSpanningTreeGroup
-        DESCRIPTION  "This group must be implemented by the entities
-                     that support MISTP and PVSTP+"
-
-        GROUP        stpxMISTPGroup
-        DESCRIPTION  "This group must be implemented by the entities
-                     that support MISTP."
-
-        GROUP        stpxLongPathCostModeGroup
-        DESCRIPTION  "This group must be implemented by the entities
-                      that support 32 bits spannning tree path cost
-                      value."
-
-        GROUP        stpxPVSTVlanGroup
-        DESCRIPTION  "This group is optional for implementations
-                      of the Spanning Tree PVST+ Protocol VLAN 
-                      configuration."
-
-        GROUP        stpxMISTPGroup2
-        DESCRIPTION  "This group is optional for implementations
-                      that support MISTP with the range of VlanIndex
-                      up to 4095."
-     
-        GROUP        stpxLoopInconsistencyNotificationsGroup
-        DESCRIPTION  "The notifications which a STP extension
-                     implementation is required to implement."
-   
-        GROUP        stpxBpduSkewingGroup 
-        DESCRIPTION  "This is an optional group for implementations of
-                     Spanning Tree BPDU Skewing feature."
-  
-        GROUP        stpxFastStartGroup2
-        DESCRIPTION  "This stpxFastStartGroup is an optional group
-                     containing objects providing information about
-                     Spanning Tree Port Fast Start feature."
-
-        GROUP        stpxLoopGuardGroup2
-        DESCRIPTION  "This group is optional for implementations
-                     of the LoopGuard capability."
- 
-        GROUP        stpxFastStartGroup3 
-        DESCRIPTION  "This group is optional for implementations
-                     of Bpdu Guard and Bpdu Filter feature."
-
-        GROUP        stpxUplinkGroup2
-        DESCRIPTION  "This group is optional for implementations
-                     of UplinkFast feature."
-
-        GROUP        stpxBackboneGroup2
-        DESCRIPTION  "This group is optional for implementations
-                     of BackboneFast feature." 
- 
-        GROUP        stpxRSTPGroup
-        DESCRIPTION  "This group is optional for implementation of
-                     Rapid Spanning Tree Protocol feature." 
-
-        GROUP        stpxRPVSTGroup
-        DESCRIPTION  "This group is optional for implementation of
-                     Rapid PVST+ feature." 
-
-        GROUP        stpxExtendedSysIDGroup
-        DESCRIPTION  "This group is mandatory for implementation of
-                     Extended System ID feature." 
+                     Extended System ID feature."
 
         GROUP        stpxNotificationEnableGroup
         DESCRIPTION "This group is mandatory for implementation of
@@ -4017,17 +3901,133 @@ stpxMIBCompliance9 MODULE-COMPLIANCE
         DESCRIPTION "This group is mandatory for implementation of
                      Spanning Tree Port Fast Start Oper Mode feature."
 
-        GROUP        stpxMSTGroup3 
-        DESCRIPTION "This group is mandatory for implementation of  
+    ::= { stpxMIBCompliances 8 }
+
+stpxMIBCompliance9 MODULE-COMPLIANCE
+    STATUS  deprecated
+    DESCRIPTION
+            "The compliance statement for entities which implement
+            Cisco STP Extensions MIB."
+    MODULE  -- this module
+            -- no MANDATORY-GROUPS
+
+        GROUP        stpxUplinkGroup
+        DESCRIPTION  "This group is mandatory for implementations
+                     of the UplinkFast capability."
+
+        GROUP        stpxSstpGroup
+        DESCRIPTION  "This group is optional for implementations of
+                     Cisco's Shared Spanning Tree Protocol (SSTP)."
+
+        GROUP        stpxPreferredVlansGroup
+        DESCRIPTION  "This group is mandatory for implementations
+                     of the Preferred VLANs capability."
+
+        GROUP        stpxNotificationsGroup
+        DESCRIPTION   "The notifications which a STP extension
+                      implementation required to implement."
+
+        GROUP        stpxBackboneGroup
+        DESCRIPTION  "This group is mandatory for implementations
+                     of the BackboneFast capability."
+
+        GROUP        stpxRootGuardGroup
+        DESCRIPTION  "This group is mandatory for implementations
+                     of the RootGuard capability."
+
+        GROUP        stpxRootInconsistencyNotificationsGroup
+        DESCRIPTION  "The notifications which a STP extension
+                      implementation required to implement."
+
+        GROUP        stpx4kVlanGroup
+        DESCRIPTION  "This group must be implemented by the
+                     entities which support the range of VlanIndex
+                     between 1024 and 4095."
+
+        GROUP        stpxSpanningTreeGroup
+        DESCRIPTION  "This group must be implemented by the entities
+                     that support MISTP and PVSTP+"
+
+        GROUP        stpxMISTPGroup
+        DESCRIPTION  "This group must be implemented by the entities
+                     that support MISTP."
+
+        GROUP        stpxLongPathCostModeGroup
+        DESCRIPTION  "This group must be implemented by the entities
+                      that support 32 bits spannning tree path cost
+                      value."
+
+        GROUP        stpxPVSTVlanGroup
+        DESCRIPTION  "This group is optional for implementations
+                      of the Spanning Tree PVST+ Protocol VLAN
+                      configuration."
+
+        GROUP        stpxMISTPGroup2
+        DESCRIPTION  "This group is optional for implementations
+                      that support MISTP with the range of VlanIndex
+                      up to 4095."
+
+        GROUP        stpxLoopInconsistencyNotificationsGroup
+        DESCRIPTION  "The notifications which a STP extension
+                     implementation is required to implement."
+
+        GROUP        stpxBpduSkewingGroup
+        DESCRIPTION  "This is an optional group for implementations of
+                     Spanning Tree BPDU Skewing feature."
+
+        GROUP        stpxFastStartGroup2
+        DESCRIPTION  "This stpxFastStartGroup is an optional group
+                     containing objects providing information about
+                     Spanning Tree Port Fast Start feature."
+
+        GROUP        stpxLoopGuardGroup2
+        DESCRIPTION  "This group is optional for implementations
+                     of the LoopGuard capability."
+
+        GROUP        stpxFastStartGroup3
+        DESCRIPTION  "This group is optional for implementations
+                     of Bpdu Guard and Bpdu Filter feature."
+
+        GROUP        stpxUplinkGroup2
+        DESCRIPTION  "This group is optional for implementations
+                     of UplinkFast feature."
+
+        GROUP        stpxBackboneGroup2
+        DESCRIPTION  "This group is optional for implementations
+                     of BackboneFast feature."
+
+        GROUP        stpxRSTPGroup
+        DESCRIPTION  "This group is optional for implementation of
+                     Rapid Spanning Tree Protocol feature."
+
+        GROUP        stpxRPVSTGroup
+        DESCRIPTION  "This group is optional for implementation of
+                     Rapid PVST+ feature."
+
+        GROUP        stpxExtendedSysIDGroup
+        DESCRIPTION  "This group is mandatory for implementation of
+                     Extended System ID feature."
+
+        GROUP        stpxNotificationEnableGroup
+        DESCRIPTION "This group is mandatory for implementation of
+                     control on the generation of Spanning Tree
+                     notifications."
+
+        GROUP        stpxFastStartOperModeGroup
+        DESCRIPTION "This group is mandatory for implementation of
+                     Spanning Tree Port Fast Start Oper Mode feature."
+
+        GROUP        stpxMSTGroup3
+        DESCRIPTION "This group is mandatory for implementation of
                      Multiple Spanning Tree Protocol on the device."
 
         GROUP       stpxSMSTGroup
-        DESCRIPTION "This group is mandatory for implementation of  
+        DESCRIPTION "This group is mandatory for implementation of
                     supporting IEEE MST on the device."
 
-        GROUP       stpxSMSTInstanceGroup 
-        DESCRIPTION "This group is mandatory for implementation of 
-                    supporting MST instance information for 
+        GROUP       stpxSMSTInstanceGroup
+        DESCRIPTION "This group is mandatory for implementation of
+                    supporting MST instance information for
                     IEEE MST on the device."
 
         GROUP       stpxSMSTInstanceEditGroup
@@ -4036,19 +4036,19 @@ stpxMIBCompliance9 MODULE-COMPLIANCE
                     IEEE MST on the device."
 
         GROUP       stpxSMSTPortStatusGroup
-        DESCRIPTION "This group is mandatory for implementation of 
+        DESCRIPTION "This group is mandatory for implementation of
                     port status information for Multiple Spanning
                     Tree Protocol on the device."
 
         GROUP       stpxSMSTPortHelloTimeGroup
-        DESCRIPTION "This group is mandatory for implementation of 
-                    port hello time information for IEEE MST 
+        DESCRIPTION "This group is mandatory for implementation of
+                    port hello time information for IEEE MST
                     on the device."
 
     ::= { stpxMIBCompliances 9 }
 
 stpxMIBCompliance10 MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -4062,7 +4062,7 @@ stpxMIBCompliance10 MODULE-COMPLIANCE
         GROUP        stpxSstpGroup
         DESCRIPTION  "This group is optional for implementations of
                      Cisco's Shared Spanning Tree Protocol (SSTP)."
- 
+
         GROUP        stpxPreferredVlansGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the Preferred VLANs capability."
@@ -4103,22 +4103,22 @@ stpxMIBCompliance10 MODULE-COMPLIANCE
 
         GROUP        stpxPVSTVlanGroup
         DESCRIPTION  "This group is optional for implementations
-                      of the Spanning Tree PVST+ Protocol VLAN 
+                      of the Spanning Tree PVST+ Protocol VLAN
                       configuration."
 
         GROUP        stpxMISTPGroup2
         DESCRIPTION  "This group is optional for implementations
                       that support MISTP with the range of VlanIndex
                       up to 4095."
-     
+
         GROUP        stpxLoopInconsistencyNotificationsGroup
         DESCRIPTION  "The notifications which a STP extension
                      implementation is required to implement."
-   
-        GROUP        stpxBpduSkewingGroup 
+
+        GROUP        stpxBpduSkewingGroup
         DESCRIPTION  "This is an optional group for implementations of
                      Spanning Tree BPDU Skewing feature."
-  
+
         GROUP        stpxFastStartGroup2
         DESCRIPTION  "This stpxFastStartGroup is an optional group
                      containing objects providing information about
@@ -4127,8 +4127,8 @@ stpxMIBCompliance10 MODULE-COMPLIANCE
         GROUP        stpxLoopGuardGroup2
         DESCRIPTION  "This group is optional for implementations
                      of the LoopGuard capability."
- 
-        GROUP        stpxFastStartGroup3 
+
+        GROUP        stpxFastStartGroup3
         DESCRIPTION  "This group is optional for implementations
                      of Bpdu Guard and Bpdu Filter feature."
 
@@ -4138,19 +4138,19 @@ stpxMIBCompliance10 MODULE-COMPLIANCE
 
         GROUP        stpxBackboneGroup2
         DESCRIPTION  "This group is optional for implementations
-                     of BackboneFast feature." 
- 
+                     of BackboneFast feature."
+
         GROUP        stpxRSTPGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid Spanning Tree Protocol feature." 
+                     Rapid Spanning Tree Protocol feature."
 
         GROUP        stpxRPVSTGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid PVST+ feature." 
+                     Rapid PVST+ feature."
 
         GROUP        stpxExtendedSysIDGroup
         DESCRIPTION  "This group is mandatory for implementation of
-                     Extended System ID feature." 
+                     Extended System ID feature."
 
         GROUP        stpxNotificationEnableGroup
         DESCRIPTION "This group is mandatory for implementation of
@@ -4161,17 +4161,17 @@ stpxMIBCompliance10 MODULE-COMPLIANCE
         DESCRIPTION "This group is mandatory for implementation of
                      Spanning Tree Port Fast Start Oper Mode feature."
 
-        GROUP        stpxMSTGroup3 
-        DESCRIPTION "This group is mandatory for implementation of  
+        GROUP        stpxMSTGroup3
+        DESCRIPTION "This group is mandatory for implementation of
                      Multiple Spanning Tree Protocol on the device."
 
         GROUP       stpxSMSTGroup
-        DESCRIPTION "This group is mandatory for implementation of  
+        DESCRIPTION "This group is mandatory for implementation of
                     supporting IEEE MST on the device."
 
-        GROUP       stpxSMSTInstanceGroup 
-        DESCRIPTION "This group is mandatory for implementation of 
-                    supporting MST instance information for 
+        GROUP       stpxSMSTInstanceGroup
+        DESCRIPTION "This group is mandatory for implementation of
+                    supporting MST instance information for
                     IEEE MST on the device."
 
         GROUP       stpxSMSTInstanceEditGroup
@@ -4180,13 +4180,13 @@ stpxMIBCompliance10 MODULE-COMPLIANCE
                     IEEE MST on the device."
 
         GROUP       stpxSMSTPortStatusGroup
-        DESCRIPTION "This group is mandatory for implementation of 
+        DESCRIPTION "This group is mandatory for implementation of
                     port status information for Multiple Spanning
                     Tree Protocol on the device."
 
         GROUP       stpxSMSTPortHelloTimeGroup
-        DESCRIPTION "This group is mandatory for implementation of 
-                    port hello time information for IEEE MST 
+        DESCRIPTION "This group is mandatory for implementation of
+                    port hello time information for IEEE MST
                     on the device."
 
         GROUP       stpxSMSTInstanceCISTGroup
@@ -4197,7 +4197,7 @@ stpxMIBCompliance10 MODULE-COMPLIANCE
     ::= { stpxMIBCompliances 10 }
 
 stpxMIBCompliance11 MODULE-COMPLIANCE
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -4211,7 +4211,7 @@ stpxMIBCompliance11 MODULE-COMPLIANCE
         GROUP        stpxSstpGroup
         DESCRIPTION  "This group is optional for implementations of
                      Cisco's Shared Spanning Tree Protocol (SSTP)."
- 
+
         GROUP        stpxPreferredVlansGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the Preferred VLANs capability."
@@ -4252,22 +4252,22 @@ stpxMIBCompliance11 MODULE-COMPLIANCE
 
         GROUP        stpxPVSTVlanGroup
         DESCRIPTION  "This group is optional for implementations
-                      of the Spanning Tree PVST+ Protocol VLAN 
+                      of the Spanning Tree PVST+ Protocol VLAN
                       configuration."
 
         GROUP        stpxMISTPGroup2
         DESCRIPTION  "This group is optional for implementations
                       that support MISTP with the range of VlanIndex
                       up to 4095."
-     
+
         GROUP        stpxLoopInconsistencyNotificationsGroup
         DESCRIPTION  "The notifications which a STP extension
                      implementation is required to implement."
-   
-        GROUP        stpxBpduSkewingGroup 
+
+        GROUP        stpxBpduSkewingGroup
         DESCRIPTION  "This is an optional group for implementations of
                      Spanning Tree BPDU Skewing feature."
-  
+
         GROUP        stpxFastStartGroup2
         DESCRIPTION  "This stpxFastStartGroup is an optional group
                      containing objects providing information about
@@ -4276,8 +4276,8 @@ stpxMIBCompliance11 MODULE-COMPLIANCE
         GROUP        stpxLoopGuardGroup2
         DESCRIPTION  "This group is optional for implementations
                      of the LoopGuard capability."
- 
-        GROUP        stpxFastStartGroup3 
+
+        GROUP        stpxFastStartGroup3
         DESCRIPTION  "This group is optional for implementations
                      of Bpdu Guard and Bpdu Filter feature."
 
@@ -4287,19 +4287,19 @@ stpxMIBCompliance11 MODULE-COMPLIANCE
 
         GROUP        stpxBackboneGroup2
         DESCRIPTION  "This group is optional for implementations
-                     of BackboneFast feature." 
- 
+                     of BackboneFast feature."
+
         GROUP        stpxRSTPGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid Spanning Tree Protocol feature." 
+                     Rapid Spanning Tree Protocol feature."
 
         GROUP        stpxRPVSTGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid PVST+ feature." 
+                     Rapid PVST+ feature."
 
         GROUP        stpxExtendedSysIDGroup
         DESCRIPTION  "This group is mandatory for implementation of
-                     Extended System ID feature." 
+                     Extended System ID feature."
 
         GROUP        stpxNotificationEnableGroup
         DESCRIPTION "This group is mandatory for implementation of
@@ -4310,17 +4310,17 @@ stpxMIBCompliance11 MODULE-COMPLIANCE
         DESCRIPTION "This group is mandatory for implementation of
                      Spanning Tree Port Fast Start Oper Mode feature."
 
-        GROUP        stpxMSTGroup3 
-        DESCRIPTION "This group is mandatory for implementation of  
+        GROUP        stpxMSTGroup3
+        DESCRIPTION "This group is mandatory for implementation of
                      Multiple Spanning Tree Protocol on the device."
 
         GROUP       stpxSMSTGroup
-        DESCRIPTION "This group is mandatory for implementation of  
+        DESCRIPTION "This group is mandatory for implementation of
                     supporting IEEE MST on the device."
 
-        GROUP       stpxSMSTInstanceGroup 
-        DESCRIPTION "This group is mandatory for implementation of 
-                    supporting MST instance information for 
+        GROUP       stpxSMSTInstanceGroup
+        DESCRIPTION "This group is mandatory for implementation of
+                    supporting MST instance information for
                     IEEE MST on the device."
 
         GROUP       stpxSMSTInstanceEditGroup
@@ -4329,13 +4329,13 @@ stpxMIBCompliance11 MODULE-COMPLIANCE
                     IEEE MST on the device."
 
         GROUP       stpxSMSTPortStatusGroup
-        DESCRIPTION "This group is mandatory for implementation of 
+        DESCRIPTION "This group is mandatory for implementation of
                     port status information for Multiple Spanning
                     Tree Protocol on the device."
 
         GROUP       stpxSMSTPortHelloTimeGroup
-        DESCRIPTION "This group is mandatory for implementation of 
-                    port hello time information for IEEE MST 
+        DESCRIPTION "This group is mandatory for implementation of
+                    port hello time information for IEEE MST
                     on the device."
 
         GROUP       stpxSMSTInstanceCISTGroup
@@ -4351,7 +4351,7 @@ stpxMIBCompliance11 MODULE-COMPLIANCE
     ::= { stpxMIBCompliances 11 }
 
 stpxMIBCompliance12 MODULE-COMPLIANCE
-    STATUS  current 
+    STATUS  current
     DESCRIPTION
             "The compliance statement for entities which implement
             Cisco STP Extensions MIB."
@@ -4365,7 +4365,7 @@ stpxMIBCompliance12 MODULE-COMPLIANCE
         GROUP        stpxSstpGroup
         DESCRIPTION  "This group is optional for implementations of
                      Cisco's Shared Spanning Tree Protocol (SSTP)."
- 
+
         GROUP        stpxPreferredVlansGroup
         DESCRIPTION  "This group is mandatory for implementations
                      of the Preferred VLANs capability."
@@ -4406,22 +4406,22 @@ stpxMIBCompliance12 MODULE-COMPLIANCE
 
         GROUP        stpxPVSTVlanGroup
         DESCRIPTION  "This group is optional for implementations
-                      of the Spanning Tree PVST+ Protocol VLAN 
+                      of the Spanning Tree PVST+ Protocol VLAN
                       configuration."
 
         GROUP        stpxMISTPGroup2
         DESCRIPTION  "This group is optional for implementations
                       that support MISTP with the range of VlanIndex
                       up to 4095."
-     
+
         GROUP        stpxLoopInconsistencyNotificationsGroup
         DESCRIPTION  "The notifications which a STP extension
                      implementation is required to implement."
-   
-        GROUP        stpxBpduSkewingGroup 
+
+        GROUP        stpxBpduSkewingGroup
         DESCRIPTION  "This is an optional group for implementations of
                      Spanning Tree BPDU Skewing feature."
-  
+
         GROUP        stpxFastStartGroup2
         DESCRIPTION  "This stpxFastStartGroup is an optional group
                      containing objects providing information about
@@ -4430,8 +4430,8 @@ stpxMIBCompliance12 MODULE-COMPLIANCE
         GROUP        stpxLoopGuardGroup2
         DESCRIPTION  "This group is optional for implementations
                      of the LoopGuard capability."
- 
-        GROUP        stpxFastStartGroup3 
+
+        GROUP        stpxFastStartGroup3
         DESCRIPTION  "This group is optional for implementations
                      of Bpdu Guard and Bpdu Filter feature."
 
@@ -4441,23 +4441,23 @@ stpxMIBCompliance12 MODULE-COMPLIANCE
 
         GROUP        stpxBackboneGroup2
         DESCRIPTION  "This group is optional for implementations
-                     of BackboneFast feature." 
- 
+                     of BackboneFast feature."
+
         GROUP        stpxRSTPGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid Spanning Tree Protocol feature." 
+                     Rapid Spanning Tree Protocol feature."
 
         GROUP        stpxRSTPTransmitHoldCountGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid Spanning Tree Protocol feature." 
+                     Rapid Spanning Tree Protocol feature."
 
         GROUP        stpxRPVSTGroup
         DESCRIPTION  "This group is optional for implementation of
-                     Rapid PVST+ feature." 
+                     Rapid PVST+ feature."
 
         GROUP        stpxExtendedSysIDGroup
         DESCRIPTION  "This group is mandatory for implementation of
-                     Extended System ID feature." 
+                     Extended System ID feature."
 
         GROUP        stpxNotificationEnableGroup
         DESCRIPTION "This group is mandatory for implementation of
@@ -4469,20 +4469,20 @@ stpxMIBCompliance12 MODULE-COMPLIANCE
                      Spanning Tree Port Fast Start Oper Mode feature."
 
         GROUP        stpxMSTGroup4
-        DESCRIPTION "This group is mandatory for implementation of  
+        DESCRIPTION "This group is mandatory for implementation of
                      Multiple Spanning Tree Protocol on the device."
 
         GROUP       stpxSMSTGroup
-        DESCRIPTION "This group is mandatory for implementation of  
+        DESCRIPTION "This group is mandatory for implementation of
                     supporting IEEE MST on the device."
 
         GROUP       stpxSMSTMaxHopCountGroup
-        DESCRIPTION "This group is mandatory for implementation of  
+        DESCRIPTION "This group is mandatory for implementation of
                     maximum hop count configuration on the device."
 
-        GROUP       stpxSMSTInstanceGroup 
-        DESCRIPTION "This group is mandatory for implementation of 
-                    supporting MST instance information for 
+        GROUP       stpxSMSTInstanceGroup
+        DESCRIPTION "This group is mandatory for implementation of
+                    supporting MST instance information for
                     IEEE MST on the device."
 
         GROUP       stpxSMSTInstanceEditGroup
@@ -4491,13 +4491,13 @@ stpxMIBCompliance12 MODULE-COMPLIANCE
                     IEEE MST on the device."
 
         GROUP       stpxSMSTPortStatusGroup
-        DESCRIPTION "This group is mandatory for implementation of 
+        DESCRIPTION "This group is mandatory for implementation of
                     port status information for Multiple Spanning
                     Tree Protocol on the device."
 
         GROUP       stpxSMSTPortHelloTimeGroup
-        DESCRIPTION "This group is mandatory for implementation of 
-                    port hello time information for IEEE MST 
+        DESCRIPTION "This group is mandatory for implementation of
+                    port hello time information for IEEE MST
                     on the device."
 
         GROUP       stpxSMSTInstanceCISTGroup
@@ -4583,7 +4583,7 @@ stpxRootInconsistencyNotificationsGroup NOTIFICATION-GROUP
     NOTIFICATIONS { stpxRootInconsistencyUpdate }
     STATUS        current
     DESCRIPTION
-            "The notifications which a STP root guard 
+            "The notifications which a STP root guard
               implementation is required to implement."
     ::= { stpxMIBGroups 7 }
 
@@ -4606,7 +4606,7 @@ stpxSpanningTreeGroup OBJECT-GROUP
 
 stpxMISTPGroup  OBJECT-GROUP
     OBJECTS {   stpxMISTPInstanceNumber,
-                stpxMISTPInstanceEnable, 
+                stpxMISTPInstanceEnable,
                 stpxVlanMISTPInstMapInstIndex,
                 stpxVlanMISTPInstMapEditInstIndex,
                 stpxPreferredMISTPInstancesMap }
@@ -4614,7 +4614,7 @@ stpxMISTPGroup  OBJECT-GROUP
     DESCRIPTION
             "A collection objects managing the information of
              MISTP feature."
-    ::= { stpxMIBGroups 10 }   
+    ::= { stpxMIBGroups 10 }
 
 stpxLongPathCostModeGroup OBJECT-GROUP
     OBJECTS {   stpxSpanningTreePathCostMode,
@@ -4629,8 +4629,8 @@ stpxPVSTVlanGroup OBJECT-GROUP
      OBJECTS {  stpxPVSTVlanEnable }
      STATUS  current
      DESCRIPTION
-             "A collection of objects managing the information 
-             of Spanning Tree PVST+ protocol VLAN configuration." 
+             "A collection of objects managing the information
+             of Spanning Tree PVST+ protocol VLAN configuration."
      ::= { stpxMIBGroups 12 }
 
 stpxMISTPGroup2 OBJECT-GROUP
@@ -4642,16 +4642,16 @@ stpxMISTPGroup2 OBJECT-GROUP
      DESCRIPTION
              "A collection objects managing the information of
              MISTP instances to VLAN mapping with the range of
-             VlanIndex up to 4095." 
+             VlanIndex up to 4095."
      ::= { stpxMIBGroups 13 }
 
 stpxLoopGuardGroup OBJECT-GROUP
     OBJECTS { stpxLoopGuardConfigEnabled,
               stpxLoopInconsistencyState
             }
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
-            "A collection of objects to support LoopGuard 
+            "A collection of objects to support LoopGuard
             capabilities."
     ::= { stpxMIBGroups 14 }
 
@@ -4659,7 +4659,7 @@ stpxLoopInconsistencyNotificationsGroup NOTIFICATION-GROUP
     NOTIFICATIONS { stpxLoopInconsistencyUpdate }
     STATUS        current
     DESCRIPTION
-            "The notifications which a STP LoopGuard 
+            "The notifications which a STP LoopGuard
               implementation is required to implement."
     ::= { stpxMIBGroups 15 }
 
@@ -4667,7 +4667,7 @@ stpxFastStartGroup OBJECT-GROUP
     OBJECTS { stpxFastStartBpduGuardEnable,
               stpxFastStartBpduFilterEnable,
               stpxFastStartPortEnable }
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
             "A collection of objects to support Spanning Tree Port
             Fast Start feature."
@@ -4686,24 +4686,24 @@ stpxBpduSkewingGroup OBJECT-GROUP
 
 stpxFastStartGroup2 OBJECT-GROUP
     OBJECTS { stpxFastStartBpduGuardEnable,
-              stpxFastStartBpduFilterEnable, 
+              stpxFastStartBpduFilterEnable,
               stpxFastStartPortMode,
-              stpxFastStartGlobalDefaultMode 
+              stpxFastStartGlobalDefaultMode
             }
     STATUS  current
     DESCRIPTION
-            "An optional group with a collection of objects to 
+            "An optional group with a collection of objects to
             support Fast Start global default mode on the device."
     ::= { stpxMIBGroups 18 }
 
 stpxLoopGuardGroup2 OBJECT-GROUP
-    OBJECTS { stpxLoopInconsistencyState, 
+    OBJECTS { stpxLoopInconsistencyState,
               stpxLoopGuardConfigMode,
-              stpxLoopGuardGlobalDefaultMode 
+              stpxLoopGuardGlobalDefaultMode
             }
     STATUS  current
     DESCRIPTION
-            "An optional group with a collection of objects to 
+            "An optional group with a collection of objects to
             support Loop Guard global default mode on the device."
     ::= { stpxMIBGroups 19 }
 
@@ -4727,22 +4727,22 @@ stpxMSTGroup OBJECT-GROUP
               stpxMSTPortAdminLinkType,  -- deprecated
               stpxMSTPortOperLinkType,   -- deprecated
               stpxMSTPortProtocolMigration,  -- deprecated
-              stpxMSTPortStatus,  
+              stpxMSTPortStatus,
               stpxMSTPortRoleValue,  -- deprecated
               stpxMSTMaxHopCount -- deprecated
                 }
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
-            "An optional group with a collection of objects to 
+            "An optional group with a collection of objects to
             support Multiple Spanning Tree Protocol on the device."
     ::= { stpxMIBGroups 20 }
 
 stpxPreferredMSTInstancesGroup OBJECT-GROUP
-    OBJECTS { stpxPreferredMSTInstancesMap } 
+    OBJECTS { stpxPreferredMSTInstancesMap }
     STATUS  deprecated
     DESCRIPTION
             "An optional group with a collection of objects to
-            support Preferred MST Instance Map feature for Multiple 
+            support Preferred MST Instance Map feature for Multiple
             Spanning Tree Protocol on the device."
         ::= { stpxMIBGroups 21 }
 
@@ -4753,7 +4753,7 @@ stpxFastStartGroup3 OBJECT-GROUP
     STATUS  current
     DESCRIPTION
             "An optional group with a collection of objects to
-            support per port Bpdu Guard and Bpdu Filter mode 
+            support per port Bpdu Guard and Bpdu Filter mode
             configuration on the device."
     ::= { stpxMIBGroups 22 }
 
@@ -4769,7 +4769,7 @@ stpxBackboneGroup2 OBJECT-GROUP
     OBJECTS { stpxBackboneFastOperEnabled }
     STATUS  current
     DESCRIPTION
-            "An optional group with a collection of objects to 
+            "An optional group with a collection of objects to
             manage the BackboneFast capability."
     ::= { stpxMIBGroups 24 }
 
@@ -4794,9 +4794,9 @@ stpxMSTGroup2 OBJECT-GROUP
               stpxMSTPortStatus, -- deprecated
               stpxMSTMaxHopCount -- deprecated
             }
-    STATUS  deprecated 
+    STATUS  deprecated
     DESCRIPTION
-            "An optional group with a collection of objects to 
+            "An optional group with a collection of objects to
             support Multiple Spanning Tree Protocol on the device."
     ::= { stpxMIBGroups 25 }
 
@@ -4804,7 +4804,7 @@ stpxRSTPGroup OBJECT-GROUP
     OBJECTS { stpxRSTPPortAdminLinkType,
               stpxRSTPPortOperLinkType,
               stpxRSTPPortProtocolMigration,
-              stpxRSTPPortRoleValue  
+              stpxRSTPPortRoleValue
             }
     STATUS  current
     DESCRIPTION
@@ -4813,7 +4813,7 @@ stpxRSTPGroup OBJECT-GROUP
     ::= { stpxMIBGroups 26 }
 
 stpxRPVSTGroup OBJECT-GROUP
-    OBJECTS { 
+    OBJECTS {
              stpxRPVSTPortStatus
             }
     STATUS  current
@@ -4823,13 +4823,13 @@ stpxRPVSTGroup OBJECT-GROUP
     ::= { stpxMIBGroups 27 }
 
 stpxExtendedSysIDGroup OBJECT-GROUP
-    OBJECTS { 
+    OBJECTS {
              stpxExtendedSysIDAdminEnabled,
              stpxExtendedSysIDOperEnabled
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects to manage the 
+            "A collection of objects to manage the
             Extended System ID capability."
    ::= { stpxMIBGroups 28 }
 
@@ -4837,16 +4837,16 @@ stpxNotificationEnableGroup OBJECT-GROUP
     OBJECTS { stpxNotificationEnable }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing control on the 
-            generation of Spanning Tree notifications." 
+            "A collection of objects providing control on the
+            generation of Spanning Tree notifications."
     ::= { stpxMIBGroups 29 }
 
 stpxFastStartOperModeGroup OBJECT-GROUP
     OBJECTS { stpxFastStartOperMode }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing Spanning Tree 
-            Port Fast Start Operatioanl information on a port." 
+            "A collection of objects providing Spanning Tree
+            Port Fast Start Operatioanl information on a port."
     ::= { stpxMIBGroups 30 }
 
 stpxMSTGroup3 OBJECT-GROUP
@@ -4859,7 +4859,7 @@ stpxMSTGroup3 OBJECT-GROUP
             }
     STATUS  deprecated
     DESCRIPTION
-            "A collection of objects providing support 
+            "A collection of objects providing support
             for Multiple Spanning Tree Protocol on the device."
     ::= { stpxMIBGroups 31 }
 
@@ -4884,7 +4884,7 @@ stpxSMSTInstanceGroup OBJECT-GROUP
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing support for 
+            "A collection of objects providing support for
             MST instance information for IEEE MST on the device."
     ::= { stpxMIBGroups 33 }
 
@@ -4896,7 +4896,7 @@ stpxSMSTInstanceEditGroup OBJECT-GROUP
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing support for MST 
+            "A collection of objects providing support for MST
             instance edit information for IEEE MST on the device."
     ::= { stpxMIBGroups 34 }
 
@@ -4906,7 +4906,7 @@ stpxSMSTPortStatusGroup OBJECT-GROUP
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing support for  
+            "A collection of objects providing support for
             port status information for MST Protocol on the
             device."
     ::= { stpxMIBGroups 35 }
@@ -4919,34 +4919,34 @@ stpxSMSTPortHelloTimeGroup OBJECT-GROUP
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing support for per 
+            "A collection of objects providing support for per
             port hello time information for IEEE MST on the device."
     ::= { stpxMIBGroups 36 }
 
 stpxSMSTInstanceCISTGroup OBJECT-GROUP
-    OBJECTS { 
+    OBJECTS {
               stpxSMSTInstanceCISTRegionalRoot,
               stpxSMSTInstanceCISTIntRootCost
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing information about 
-            Common and Internal Spanning Tree (CIST) for IEEE 
+            "A collection of objects providing information about
+            Common and Internal Spanning Tree (CIST) for IEEE
             MST on the device."
-    ::= { stpxMIBGroups 37 }  
+    ::= { stpxMIBGroups 37 }
 
 stpxPathCostOperModeGroup OBJECT-GROUP
-    OBJECTS { 
+    OBJECTS {
               stpxSpanningTreePathCostOperMode
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing information about 
+            "A collection of objects providing information about
              operational spanning tree path cost mode."
-    ::= { stpxMIBGroups 38 }  
+    ::= { stpxMIBGroups 38 }
 
 stpxRSTPTransmitHoldCountGroup OBJECT-GROUP
-    OBJECTS { 
+    OBJECTS {
               stpxRSTPTransmitHoldCount
             }
     STATUS  current
@@ -4963,7 +4963,7 @@ stpxSMSTPortMSTModeGroup OBJECT-GROUP
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing information for port 
+            "A collection of objects providing information for port
             MST mode configuration on the device."
     ::= { stpxMIBGroups 40 }
 
@@ -4973,7 +4973,7 @@ stpxSMSTMaxHopCountGroup OBJECT-GROUP
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing information for 
+            "A collection of objects providing information for
             configuration of IEEE MST maximum hop count."
     ::= { stpxMIBGroups 41 }
 
@@ -4997,7 +4997,7 @@ stpxMSTGroup4 OBJECT-GROUP
             }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing support 
+            "A collection of objects providing support
             for Multiple Spanning Tree Protocol on the device."
     ::= { stpxMIBGroups 43 }
 

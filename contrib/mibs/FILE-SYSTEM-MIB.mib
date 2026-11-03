@@ -792,7 +792,7 @@
 			image-to-file(7),
 			config-to-file(8),
 			log-to-file(9),
-			prom-to-file(10)			
+			prom-to-file(10)
                 }
 		MAX-ACCESS  read-write
 		STATUS      current
@@ -862,7 +862,7 @@
 	             If it is not specified, it refers to the current drive
 	             specified by swFSDriveChangeDriveID."
         ::= { swFSCopyCtrl 5 }
-        
+
 	swFSCopyConfigID     OBJECT-TYPE
 		SYNTAX INTEGER
 		MAX-ACCESS  read-write
@@ -870,17 +870,17 @@
 		DESCRIPTION
 			"Specifies the specific configuration to copied."
 		::= { swFSCopyCtrl 6 }
-		
+
         swFSCopyImageID	    OBJECT-TYPE
-		SYNTAX INTEGER  
+		SYNTAX INTEGER
 		MAX-ACCESS  read-write
 		STATUS      current
 		DESCRIPTION
 			"Specifies the specific firmware image to copied."
 		::= { swFSCopyCtrl 7 }
 
-        
-        
+
+
 
 -- -----------------------------------------------------------------------------
 -- swFSMoveCtrl

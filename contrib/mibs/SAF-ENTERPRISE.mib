@@ -8,7 +8,7 @@ IMPORTS
          OBJECT-IDENTITY
             FROM SNMPv2-SMI;
 
-	
+
 -- saf   	            OBJECT IDENTIFIER ::=   { enterprises 7571 }
 saf    MODULE-IDENTITY
        LAST-UPDATED "201708120000Z" -- 08 dec 2017

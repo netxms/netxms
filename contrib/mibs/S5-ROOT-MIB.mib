@@ -48,7 +48,7 @@ IMPORTS
                 OBJECT IDENTIFIER ::= { s5Traps 7 }
      remoteLoginTrap    -- Remote Login
                 OBJECT IDENTIFIER ::= { s5Traps 8 }
-     
+
 -- Major 5000 MIB branches
   s5Chassis	OBJECT IDENTIFIER ::= { series5000 3 }
   s5Agent	OBJECT IDENTIFIER ::= { series5000 4 }
@@ -63,5 +63,3 @@ IMPORTS
   s5AtmTop	OBJECT IDENTIFIER ::= { series5000 14 }
   s5IfExt	OBJECT IDENTIFIER ::= { series5000 15 }
 END
-
-

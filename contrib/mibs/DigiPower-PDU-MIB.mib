@@ -1,4 +1,4 @@
-        
+
 DigiPower-PDU-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
@@ -258,14 +258,14 @@ pdu01Identify OBJECT-TYPE
 	DESCRIPTION
 		"Indicate PDU identify."
 	::= { pdu01Entry 20 }
-	
+
 pdu01DelayOn OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
 	ACCESS read-write
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu01Entry 21 }	
+	::= { pdu01Entry 21 }
 
 pdu01DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -273,7 +273,7 @@ pdu01DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu01Entry 22 }	
+	::= { pdu01Entry 22 }
 
 -- PDU02 --
 
@@ -444,7 +444,7 @@ pdu02DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu02Entry 21 }	
+	::= { pdu02Entry 21 }
 
 pdu02DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -452,8 +452,8 @@ pdu02DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu02Entry 22 }	
-	
+	::= { pdu02Entry 22 }
+
 -- PDU03 --
 
 pdu03Entry OBJECT IDENTIFIER	::= { pduTable 3 }
@@ -624,7 +624,7 @@ pdu03DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu03Entry 21 }	
+	::= { pdu03Entry 21 }
 
 pdu03DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -632,8 +632,8 @@ pdu03DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu03Entry 22 }	
-	
+	::= { pdu03Entry 22 }
+
 -- PDU04 --
 
 pdu04Entry OBJECT IDENTIFIER	::= { pduTable 4 }
@@ -803,7 +803,7 @@ pdu04DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu04Entry 21 }	
+	::= { pdu04Entry 21 }
 
 pdu04DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -811,8 +811,8 @@ pdu04DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu04Entry 22 }	
-	
+	::= { pdu04Entry 22 }
+
 -- PDU05 --
 
 pdu05Entry OBJECT IDENTIFIER	::= { pduTable 5 }
@@ -982,7 +982,7 @@ pdu05DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu05Entry 21 }	
+	::= { pdu05Entry 21 }
 
 pdu05DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -990,8 +990,8 @@ pdu05DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu05Entry 22 }	
-	
+	::= { pdu05Entry 22 }
+
 -- PDU06 --
 
 pdu06Entry OBJECT IDENTIFIER	::= { pduTable 6 }
@@ -1162,7 +1162,7 @@ pdu06DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu06Entry 21 }	
+	::= { pdu06Entry 21 }
 
 pdu06DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -1170,8 +1170,8 @@ pdu06DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu06Entry 22 }	
-	
+	::= { pdu06Entry 22 }
+
 -- PDU07 --
 
 pdu07Entry OBJECT IDENTIFIER	::= { pduTable 7 }
@@ -1342,7 +1342,7 @@ pdu07DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu07Entry 21 }	
+	::= { pdu07Entry 21 }
 
 pdu07DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -1350,8 +1350,8 @@ pdu07DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu07Entry 22 }	
-	
+	::= { pdu07Entry 22 }
+
 -- PDU08 --
 
 pdu08Entry OBJECT IDENTIFIER	::= { pduTable 8 }
@@ -1522,7 +1522,7 @@ pdu08DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu08Entry 21 }	
+	::= { pdu08Entry 21 }
 
 pdu08DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -1530,8 +1530,8 @@ pdu08DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu08Entry 22 }	
-	
+	::= { pdu08Entry 22 }
+
 -- PDU09 --
 
 pdu09Entry OBJECT IDENTIFIER	::= { pduTable 9 }
@@ -1702,7 +1702,7 @@ pdu09DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu09Entry 21 }	
+	::= { pdu09Entry 21 }
 
 pdu09DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -1710,8 +1710,8 @@ pdu09DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu09Entry 22 }	
-	
+	::= { pdu09Entry 22 }
+
 -- PDU10 --
 
 pdu10Entry OBJECT IDENTIFIER	::= { pduTable 10 }
@@ -1882,7 +1882,7 @@ pdu10DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu10Entry 21 }	
+	::= { pdu10Entry 21 }
 
 pdu10DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -1890,8 +1890,8 @@ pdu10DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu10Entry 22 }	
-	
+	::= { pdu10Entry 22 }
+
 -- PDU11 --
 
 pdu11Entry OBJECT IDENTIFIER	::= { pduTable 11 }
@@ -2062,7 +2062,7 @@ pdu11DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu11Entry 21 }	
+	::= { pdu11Entry 21 }
 
 pdu11DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -2070,8 +2070,8 @@ pdu11DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu11Entry 22 }	
-	
+	::= { pdu11Entry 22 }
+
 -- PDU12 --
 
 pdu12Entry OBJECT IDENTIFIER	::= { pduTable 12 }
@@ -2242,7 +2242,7 @@ pdu12DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu12Entry 21 }	
+	::= { pdu12Entry 21 }
 
 pdu12DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -2250,8 +2250,8 @@ pdu12DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu12Entry 22 }	
-	
+	::= { pdu12Entry 22 }
+
 -- PDU13 --
 
 pdu13Entry OBJECT IDENTIFIER	::= { pduTable 13 }
@@ -2422,7 +2422,7 @@ pdu13DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu13Entry 21 }	
+	::= { pdu13Entry 21 }
 
 pdu13DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -2430,8 +2430,8 @@ pdu13DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu13Entry 22 }	
-	
+	::= { pdu13Entry 22 }
+
 -- PDU14 --
 
 pdu14Entry OBJECT IDENTIFIER	::= { pduTable 14 }
@@ -2602,7 +2602,7 @@ pdu14DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu14Entry 21 }	
+	::= { pdu14Entry 21 }
 
 pdu14DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -2610,8 +2610,8 @@ pdu14DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu14Entry 22 }	
-	
+	::= { pdu14Entry 22 }
+
 -- PDU15 --
 
 pdu15Entry OBJECT IDENTIFIER	::= { pduTable 15 }
@@ -2782,7 +2782,7 @@ pdu15DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu15Entry 21 }	
+	::= { pdu15Entry 21 }
 
 pdu15DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -2790,8 +2790,8 @@ pdu15DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu15Entry 22 }	
-	
+	::= { pdu15Entry 22 }
+
 -- PDU16 --
 
 pdu16Entry OBJECT IDENTIFIER	::= { pduTable 16 }
@@ -2962,7 +2962,7 @@ pdu16DelayOn OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet On delay time. Unit is second "
-	::= { pdu16Entry 21 }	
+	::= { pdu16Entry 21 }
 
 pdu16DelayOff OBJECT-TYPE
 	SYNTAX      DisplayString (SIZE (0..32))
@@ -2970,8 +2970,8 @@ pdu16DelayOff OBJECT-TYPE
 	STATUS mandatory
 	DESCRIPTION
 		"Indicate PDU Outlet Off delay time. Unit is second "
-	::= { pdu16Entry 22 }	
-	
+	::= { pdu16Entry 22 }
+
 
 -- ENV Threshold information --
 
@@ -2982,7 +2982,7 @@ tempLower OBJECT-TYPE
 	DESCRIPTION
 		"Indicate temperature lower threshold"
 	::= { envthreshold 42 }
-	
+
 tempUpper OBJECT-TYPE
 	SYNTAX INTEGER (1..16)
 	ACCESS read-write
@@ -2990,7 +2990,7 @@ tempUpper OBJECT-TYPE
 	DESCRIPTION
 		"Indicate temperature upper threshold"
 	::= { envthreshold 43 }
-	
+
 humidityLower OBJECT-TYPE
 	SYNTAX INTEGER (1..16)
 	ACCESS read-write
@@ -2998,7 +2998,7 @@ humidityLower OBJECT-TYPE
 	DESCRIPTION
 		"Indicate humidity lower threshold"
 	::= { envthreshold 44 }
-	
+
 humidityLower OBJECT-TYPE
 	SYNTAX INTEGER (1..16)
 	ACCESS read-write
@@ -3006,7 +3006,7 @@ humidityLower OBJECT-TYPE
 	DESCRIPTION
 		"Indicate humidity upper threshold"
 	::= { envthreshold 45 }
-	
+
 --dev traps ----------------------------------------------------------------
 
 --pdu01TrapEntry TRAP-TYPE
@@ -3026,21 +3026,21 @@ humidityLower OBJECT-TYPE
 
 devOutOfThreshold1 TRAP-TYPE
 	ENTERPRISE digipower
-	DESCRIPTION 
+	DESCRIPTION
 		"WARNING: DEV current out of threshold 1."
  ::= 105
 
 
 devOutOfThreshold2 TRAP-TYPE
 	ENTERPRISE digipower
-	DESCRIPTION 
+	DESCRIPTION
 		"CRITICAL: DEV current out of threshold 2."
  ::= 106
 
 
 --devCommunicationLost TRAP-TYPE
 --	ENTERPRISE digipower
---	DESCRIPTION 
+--	DESCRIPTION
 --		"CRITICAL: DEV Communication lost."
 -- ::= 107
 
@@ -3051,4 +3051,3 @@ devBackToNormal TRAP-TYPE
  ::= 108
 
 END
-

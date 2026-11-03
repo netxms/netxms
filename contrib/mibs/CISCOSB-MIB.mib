@@ -199,7 +199,7 @@ switch001 MODULE-IDENTITY
                 San Jose , CA 95134-1706
                 USA
 
-                
+
                 Website:  Cisco Small Business Support Community <http://www.cisco.com/go/smallbizsupport>"
 
                 DESCRIPTION
@@ -709,7 +709,7 @@ rlVoipSnoop  OBJECT IDENTIFIER ::= { switch001 213 }
 
 rlDhcpv6  OBJECT IDENTIFIER ::= { switch001 214}
 
-rlIpv6Fhs  OBJECT IDENTIFIER ::= { switch001 215} 
+rlIpv6Fhs  OBJECT IDENTIFIER ::= { switch001 215}
 
 rlInventoryEnt  OBJECT IDENTIFIER ::= { switch001 217}
 
@@ -720,4 +720,3 @@ rndEndOfMibGroup   OBJECT IDENTIFIER ::= { switch001 1000  }
 -- see CISCOSB-ENDOFMIB-MIB.MIB
 
 END
-

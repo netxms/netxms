@@ -1,12 +1,12 @@
 -- *****************************************************************
 -- ciscoEntityCapabilities MIB
---   
+--
 -- AGENT-CAPABILITIES mib for ENTITY-MIB
---   
+--
 -- June 2002, Subra Hegde
---   
+--
 -- Copyright(c) 2002-2014 by Cisco Systems Inc.
---   
+--
 -- *****************************************************************
 
 CISCO-ENTITY-CAPABILITY DEFINITIONS ::= BEGIN
@@ -48,22 +48,22 @@ ciscoEntityCapability MODULE-IDENTITY
     REVISION        "200903240000Z"
     DESCRIPTION
         "Added ciscoEntityCapabilityGssV03R01
-        agent capabilities for Global Site 
+        agent capabilities for Global Site
         Selector(GSS) release 3.1(0)."
     REVISION        "200807030000Z"
     DESCRIPTION
         "Added ciscoEntityCapc4710aceVA1R700 agent
-        capabilities for ACE 4710 Application Control Engine 
+        capabilities for ACE 4710 Application Control Engine
         Appliance.
 
-        Changed CISCO-ENTITY-MIB to ENTITY-MIB in the DESCRIPTION 
+        Changed CISCO-ENTITY-MIB to ENTITY-MIB in the DESCRIPTION
         clause for ciscoEntityCapability.
 
         Changed the SUPPORT clause for ciscoEntityCapabilityV2R00,
         ciscoEntityCapV12R0111bEXCat6K, ciscoEntityCapV12R0214SXCat6K,
         ciscoEntityCapCatOSV08R0101, ciscoEntityCapabilityV20CRS1,
-        ciscoEntityCapabilityACSWV03R000 agent capabilities to 
-        ENTITY-MIB from CISCO-ENTITY-MIB and modified the 
+        ciscoEntityCapabilityACSWV03R000 agent capabilities to
+        ENTITY-MIB from CISCO-ENTITY-MIB and modified the
         DESCRIPTION clause accordingly."
     REVISION        "200611160000Z"
     DESCRIPTION
@@ -72,7 +72,7 @@ ciscoEntityCapability MODULE-IDENTITY
     REVISION        "200605260000Z"
     DESCRIPTION
         "Added ciscoEntityCapabilityACSWV03R000 agent
-        capabilities for Cisco Application Control 
+        capabilities for Cisco Application Control
         Engine (ACE)."
     REVISION        "200603240000Z"
     DESCRIPTION
@@ -337,7 +337,7 @@ ciscoEntityCapabilityIOSXRV3R4 AGENT-CAPABILITIES
     ::= { ciscoEntityCapability 7 }
 
 ciscoEntityCapc4710aceVA1R700 AGENT-CAPABILITIES
-    PRODUCT-RELEASE "ACSW (Application Control Software) A1(7) for 
+    PRODUCT-RELEASE "ACSW (Application Control Software) A1(7) for
                     ACE 4710 Application Control Engine Appliance."
     STATUS          current
     DESCRIPTION

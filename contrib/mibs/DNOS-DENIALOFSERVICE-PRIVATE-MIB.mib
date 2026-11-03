@@ -32,7 +32,7 @@ IMPORTS
            LAST-UPDATED "201101260000Z" -- 26 January 2011 12:00:00 GMT
            ORGANIZATION "Dell, Inc."
            CONTACT-INFO ""
- 
+
      DESCRIPTION
           "The Broadcom Private MIB for DNOS Denial of Service."
 
@@ -53,7 +53,7 @@ IMPORTS
     -- agentSwitchDenialOfServiceGroup
     --
     --**************************************************************************************
-    
+
     agentSwitchDenialOfServiceGroup          OBJECT IDENTIFIER ::= { fastPathDenialOfService 1 }
 
 
@@ -65,8 +65,8 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the SIP=DIP Denial of Service 
-                     protection feature."                
+                     "Enables or Disables the SIP=DIP Denial of Service
+                     protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 1 }
 
@@ -78,11 +78,11 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the SMAC=DMAC Denial of Service 
-                     protection feature."                
+                     "Enables or Disables the SMAC=DMAC Denial of Service
+                     protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 9 }
-         
+
     agentSwitchDenialOfServiceFirstFragMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -91,19 +91,19 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the First Fragment Denial of Service 
+                     "Enables or Disables the First Fragment Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 2 }
-         
+
     agentSwitchDenialOfServiceTCPHdrSize OBJECT-TYPE
-         SYNTAX      Integer32 (0..255) 
+         SYNTAX      Integer32 (0..255)
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
                      "Configures the Minimum allowed TCP Header size.
                      This is active if the First Fragment Denial of Service
-                     protection feature is enabled."                    
+                     protection feature is enabled."
          DEFVAL { 20 }
          ::= { agentSwitchDenialOfServiceGroup 3 }
 
@@ -115,7 +115,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the TCP Fragment Denial of Service 
+                     "Enables or Disables the TCP Fragment Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 4 }
@@ -128,11 +128,11 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the TCP Offset Denial of Service 
+                     "Enables or Disables the TCP Offset Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 10 }
-         
+
     agentSwitchDenialOfServiceTCPFlagMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -141,7 +141,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the TCP Flag Denial of Service 
+                     "Enables or Disables the TCP Flag Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 5 }
@@ -154,7 +154,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the TCP Flag and Sequence Denial of Service 
+                     "Enables or Disables the TCP Flag and Sequence Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 11 }
@@ -167,7 +167,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the TCP Syn Denial of Service 
+                     "Enables or Disables the TCP Syn Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 14 }
@@ -180,7 +180,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the TCP Syn and Fin Denial of Service 
+                     "Enables or Disables the TCP Syn and Fin Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 15 }
@@ -193,11 +193,11 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the TCP Fin and Urg and Psh Denial of Service 
+                     "Enables or Disables the TCP Fin and Urg and Psh Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 16 }
-         
+
     agentSwitchDenialOfServiceL4PortMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -206,7 +206,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the L4 Port Denial of Service 
+                     "Enables or Disables the L4 Port Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 6 }
@@ -219,7 +219,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the TCP Port Denial of Service 
+                     "Enables or Disables the TCP Port Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 12 }
@@ -232,11 +232,11 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the UDP Port Denial of Service 
+                     "Enables or Disables the UDP Port Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 13 }
-         
+
     agentSwitchDenialOfServiceICMPMode OBJECT-TYPE
          SYNTAX      INTEGER {
                      enable(1),
@@ -245,7 +245,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the ICMP Denial of Service 
+                     "Enables or Disables the ICMP Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 7 }
@@ -258,13 +258,13 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the ICMPv6 Denial of Service 
+                     "Enables or Disables the ICMPv6 Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 20 }
 
     agentSwitchDenialOfServiceICMPSize OBJECT-TYPE
-         SYNTAX      Integer32 (0..16376) 
+         SYNTAX      Integer32 (0..16376)
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
@@ -275,7 +275,7 @@ IMPORTS
          ::= { agentSwitchDenialOfServiceGroup 8 }
 
     agentSwitchDenialOfServiceICMPv6Size OBJECT-TYPE
-         SYNTAX      Integer32 (0..1023) 
+         SYNTAX      Integer32 (0..1023)
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
@@ -293,10 +293,10 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Enables or Disables the ICMP Fragment Denial of Service 
+                     "Enables or Disables the ICMP Fragment Denial of Service
                      protection feature."
          DEFVAL { disable }
          ::= { agentSwitchDenialOfServiceGroup 19 }
-                                                  
+
 
 END

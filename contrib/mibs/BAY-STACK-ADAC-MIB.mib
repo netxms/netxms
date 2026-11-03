@@ -281,7 +281,7 @@ bsAdacPortTaggedFramesTagging OBJECT-TYPE
          ports which have Auto-Detection enabled (bsAdacPortAdminEnable is
          set to true(1)), and which are running in Tagged-Frames operational
          mode (bsAdacOperatingMode is set to taggedFrames(3)).
-	 
+
          A value of tagAll(1) means that the Telephony ports will have
          the tagging enabled on all frames.
 
@@ -326,7 +326,7 @@ bsAdacPortOperEnable OBJECT-TYPE
         "This object indicates whether Auto-Detection is operationally enabled on port.
 	 A value of true(1) indicates that it is enabled, while a value of false(2)
          indicates that it is disabled.
-	 
+
 	 Note a value of false(2) for this object and a value of true(1) for
 	 bsAdacPortAdminEnable indicates that Auto-Detection (and implicitly
 	 Auto-Configuration) is not operational due to some condition such as
@@ -353,7 +353,7 @@ bsAdacPortLldpDetectionEnable OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-        "true (1) Auto-Detection of Nortel IP Phones based on 802.1ab 
+        "true (1) Auto-Detection of Nortel IP Phones based on 802.1ab
 	 is enabled on this interface.
 
          false (2) Auto-Detection of Nortel IP Phones based on 802.1ab
@@ -374,7 +374,7 @@ bsAdacMacAddrRangeTable OBJECT-TYPE
     DESCRIPTION
         "A table of objects that display and control the attributes of
          the MAC Address ranges supported by ADAC.
-         Overlapping ranges are not allowed and the attempts to create an 
+         Overlapping ranges are not allowed and the attempts to create an
          entry that overlaps an existing entry will fail."
     ::= { bsAdacObjects 3 }
 

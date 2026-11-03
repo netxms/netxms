@@ -1,10 +1,10 @@
 -- ArubaOS 8.11.1.2_87606
--- vim:set ts=4 sw=4: 
+-- vim:set ts=4 sw=4:
 WLSX-RS-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
-       
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
+
        MODULE-IDENTITY,
        OBJECT-TYPE,
        snmpModules,
@@ -64,7 +64,7 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
 		wlsxEnterpriseMibModules
 			FROM ARUBA-MIB;
 
-   wlsxRSMIB MODULE-IDENTITY 
+   wlsxRSMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -89,24 +89,24 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
 
 -- Wired Ports
 
-   wlsxRemoteWiredPortTable  OBJECT-TYPE 
+   wlsxRemoteWiredPortTable  OBJECT-TYPE
 	  SYNTAX       SEQUENCE OF RemotePortEntry
 	  MAX-ACCESS   not-accessible
       STATUS       current
-      DESCRIPTION 
+      DESCRIPTION
 	  	"
 			This table enumerates the ports on the device
 		"
-      ::= { wlsxRemoteAccessPointPortGroup 1 } 
+      ::= { wlsxRemoteAccessPointPortGroup 1 }
 
-   wlsxRemotePortEntry OBJECT-TYPE 
+   wlsxRemotePortEntry OBJECT-TYPE
 	  SYNTAX       RemotePortEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Wired Port Entry"
 	  INDEX { wlanAPMacAddress, remotePortNumber }
-      ::= { wlsxRemoteWiredPortTable 1 } 
+      ::= { wlsxRemoteWiredPortTable 1 }
 
    RemotePortEntry ::=
      SEQUENCE {
@@ -312,24 +312,24 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
 
 -- USB
 
-   wlsxRemoteUSBTable  OBJECT-TYPE 
+   wlsxRemoteUSBTable  OBJECT-TYPE
 	  SYNTAX       SEQUENCE OF USBEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
 			This table enumerates the ports on the device
 		"
-      ::= { wlsxRemoteAccessPointUSBGroup 1 } 
+      ::= { wlsxRemoteAccessPointUSBGroup 1 }
 
-   wlsxUSBEntry OBJECT-TYPE 
+   wlsxUSBEntry OBJECT-TYPE
 	  SYNTAX       USBEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "Wired Port Entry"
 	  INDEX {wlanAPMacAddress, usbDevNumber}
-      ::= { wlsxRemoteUSBTable 1 } 
+      ::= { wlsxRemoteUSBTable 1 }
 
    USBEntry ::=
      SEQUENCE {
@@ -444,7 +444,7 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
                         RSSI
               "
           ::= { wlsxUSBEntry 9 }
-  
+
         usbNetworkServiceLevel OBJECT-TYPE
            SYNTAX       DisplayString
            MAX-ACCESS   read-only
@@ -454,7 +454,7 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
                       Network Service Level
               "
           ::= { wlsxUSBEntry 10 }
-  
+
         usbFirmwareVersion OBJECT-TYPE
            SYNTAX       DisplayString
            MAX-ACCESS   read-only
@@ -464,7 +464,7 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
                         Firmware Version
               "
           ::= { wlsxUSBEntry 11 }
-  
+
         usbEsnNumber OBJECT-TYPE
            SYNTAX       DisplayString
            MAX-ACCESS   read-only
@@ -474,7 +474,7 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
                         ESN Number
               "
           ::= { wlsxUSBEntry 12 }
-  
+
         usbifOperStatus OBJECT-TYPE
            SYNTAX       ArubaOperStateValue
            MAX-ACCESS   read-only
@@ -491,40 +491,40 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
            STATUS       current
            DESCRIPTION
               "
-                Received Unicast Packets        
+                Received Unicast Packets
               "
           ::= { wlsxUSBEntry 14 }
-  
+
         usbifInUcastOctets OBJECT-TYPE
            SYNTAX       Counter64
            MAX-ACCESS   read-only
            STATUS       current
            DESCRIPTION
               "
-                  Received Bytes                      
+                  Received Bytes
               "
           ::= { wlsxUSBEntry 15 }
-  
+
         usbifOutUcastPkts OBJECT-TYPE
            SYNTAX       Counter64
            MAX-ACCESS   read-only
            STATUS       current
            DESCRIPTION
               "
-                Transmitted Unicast Packets     
+                Transmitted Unicast Packets
               "
           ::= { wlsxUSBEntry 16 }
- 
+
         usbifOutUcastOctets OBJECT-TYPE
            SYNTAX       Counter64
            MAX-ACCESS   read-only
            STATUS       current
            DESCRIPTION
               "
-                Transmitted Bytes       
+                Transmitted Bytes
               "
           ::= { wlsxUSBEntry 17 }
-  
+
         usbifInErrors OBJECT-TYPE
            SYNTAX       Counter64
            MAX-ACCESS   read-only
@@ -703,25 +703,25 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
             "
             ::= { wlsxRemoteWiredUserStatsEntry 12 }
 
-   wlsxLldpNeighborTable  OBJECT-TYPE 
+   wlsxLldpNeighborTable  OBJECT-TYPE
 	  SYNTAX       SEQUENCE OF LldpNeighborEntry
 	  MAX-ACCESS   not-accessible
       STATUS       current
-      DESCRIPTION 
+      DESCRIPTION
 	  	"
 			This table enumerates the LLDP neighbors discovered by the
 			access point.
 		"
-      ::= { wlsxRemoteAccessPointPortGroup 3 } 
+      ::= { wlsxRemoteAccessPointPortGroup 3 }
 
-   wlsxLldpNeighborEntry OBJECT-TYPE 
+   wlsxLldpNeighborEntry OBJECT-TYPE
 	  SYNTAX       LldpNeighborEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "LLDP Neighbor Entry"
 	  INDEX { wlanAPMacAddress, remotePortNumber, lldpNeighborIndex }
-      ::= { wlsxLldpNeighborTable 1 } 
+      ::= { wlsxLldpNeighborTable 1 }
 
    LldpNeighborEntry ::=
      SEQUENCE {
@@ -837,27 +837,27 @@ WLSX-RS-MIB DEFINITIONS ::= BEGIN
             "
        ::= { wlsxLldpNeighborEntry 10 }
 
-   wlsxLldpNeighborManAddrTable  OBJECT-TYPE 
+   wlsxLldpNeighborManAddrTable  OBJECT-TYPE
 	  SYNTAX       SEQUENCE OF LldpNeighborManAddrEntry
 	  MAX-ACCESS   not-accessible
       STATUS       current
-      DESCRIPTION 
+      DESCRIPTION
 	  	"
-			This table enumerates the LLDP neighbor management address 
+			This table enumerates the LLDP neighbor management address
 			discovered by the access point.
 		"
-      ::= { wlsxRemoteAccessPointPortGroup 4 } 
+      ::= { wlsxRemoteAccessPointPortGroup 4 }
 
-   wlsxLldpNeighborManAddrEntry OBJECT-TYPE 
+   wlsxLldpNeighborManAddrEntry OBJECT-TYPE
 	  SYNTAX       LldpNeighborManAddrEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              "LLDP Neighbor Entry"
-	  INDEX { wlanAPMacAddress, remotePortNumber, lldpNeighborIndex, 
+	  INDEX { wlanAPMacAddress, remotePortNumber, lldpNeighborIndex,
 	         lldpNeighborManAddrIndex
 			}
-      ::= { wlsxLldpNeighborManAddrTable 1 } 
+      ::= { wlsxLldpNeighborManAddrTable 1 }
 
    LldpNeighborManAddrEntry ::=
      SEQUENCE {

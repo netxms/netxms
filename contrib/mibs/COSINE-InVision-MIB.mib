@@ -1,5 +1,5 @@
 COSINE-InVision-MIB DEFINITIONS ::= BEGIN
- 
+
    IMPORTS
         MODULE-IDENTITY, OBJECT-TYPE, Counter32, Gauge32, Counter64,
         Integer32, TimeTicks, mib-2, enterprises,
@@ -12,8 +12,8 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
         csModules, csOrionMIB, csInVisionMIB FROM COSINE-GLOBAL-REG
         csOrionRestoreSlotIndex, csOrionBladeType FROM COSINE-ORION-MIB
         csOrionRestoreNumVRs, csOrionSystemIpAddress FROM COSINE-ORION-MIB;
- 
- 
+
+
    cosineInVisionMod MODULE-IDENTITY
         LAST-UPDATED "9911231355Z"
         ORGANIZATION "Cosine Communication Co."
@@ -23,7 +23,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
                     1200 Bridge Parkway
                     Redwood City, CA  94065
                     US
- 
+
                     650-637-4777
                     ljou@cosinecom.com"
         DESCRIPTION
@@ -40,7 +40,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
 --              Groups in the InVision Private MIB
 --
 ------------------------------------------------------------------------------
- 
+
    csInVisionEvents               OBJECT IDENTIFIER ::= { csInVisionMIB 1 }
    csInVisionBladeInfo            OBJECT IDENTIFIER ::= { csInVisionMIB 2 }
    csInVisionObjects              OBJECT IDENTIFIER ::= { csInVisionMIB 3 }
@@ -83,7 +83,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
                  to a particular Blade."
       INDEX   { csInVisionBladeSlotLocation }
       ::= { csInVisionBladeTable 1 }
- 
+
     CsInVisionBladeEntry ::=
         SEQUENCE {
         csInVisionBladeSlotLocation
@@ -115,7 +115,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
                 "Slot Location of the Blade in the InVision database."
         ::= { csInVisionBladeEntry 1 }
- 
+
     csInVisionBladeDescr OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (0..255))
         MAX-ACCESS  read-only
@@ -125,7 +125,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
                    blade.  This string should include the name of the
                    manufacturer and the product name."
         ::= { csInVisionBladeEntry 2 }
- 
+
     csInVisionBladeType OBJECT-TYPE
         SYNTAX INTEGER{
                 process                 (1),
@@ -161,7 +161,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
                   "The current state of this blade."
         ::= { csInVisionBladeEntry 4 }
- 
+
     csInVisionBladeEnginesNumb OBJECT-TYPE
         SYNTAX  Integer32
         MAX-ACCESS read-only
@@ -169,7 +169,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
                   "The number of engines on the blade."
         ::= { csInVisionBladeEntry 5 }
- 
+
     csInVisionBladePortNumb OBJECT-TYPE
         SYNTAX  Integer32 (0..200)
         MAX-ACCESS  read-only
@@ -178,7 +178,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
                   "The number of ports on this blade (note, process
                    blades have no ports)."
         ::= { csInVisionBladeEntry 6 }
- 
+
     csInVisionBladeSerialNumb OBJECT-TYPE
         SYNTAX  DisplayString
         MAX-ACCESS  read-only
@@ -197,7 +197,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
                   "A textual string containing information about the
                    hardware revision version."
         ::= { csInVisionBladeEntry 8 }
- 
+
     csInVisionBladeSwVer OBJECT-TYPE
         SYNTAX  DisplayString
         MAX-ACCESS  read-only
@@ -206,7 +206,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
                   "A textual string containing information about the
                    software revision version."
         ::= { csInVisionBladeEntry 9 }
- 
+
     csInVisionBladeReset OBJECT-TYPE
         SYNTAX  INTEGER {
                 none    (1),
@@ -254,7 +254,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
    ::= { csInVisionEventsInfo 3 }
 
    csInVisionVRRestoreSuccess NOTIFICATION-TYPE   -- This can be combined togather with next trap
---    by passing one more parameter as status 
+--    by passing one more parameter as status
       OBJECTS { csOrionRestoreNumVRs }
       STATUS  current
       DESCRIPTION
@@ -263,7 +263,7 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
    ::= { csInVisionEventsInfo 4 }
 
    csInVisionVRRestoreFail NOTIFICATION-TYPE   -- This can be combined togather with previous trap
---    by passing one more parameter as status 
+--    by passing one more parameter as status
       OBJECTS { csOrionRestoreNumVRs }
       STATUS  current
       DESCRIPTION
@@ -300,4 +300,4 @@ COSINE-InVision-MIB DEFINITIONS ::= BEGIN
                 "A csInVisionFailToUnRegisterForTrap Inform PDU signifies that SMS Trap Server failed to unregister for trap with device."
    ::= { csInVisionEventsInfo 9 }
 
-END 
+END

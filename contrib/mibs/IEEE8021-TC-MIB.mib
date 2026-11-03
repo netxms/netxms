@@ -129,8 +129,8 @@ IEEE8021PbbIngressEgress ::= TEXTUAL-CONVENTION
 IEEE8021PriorityCodePoint ::= TEXTUAL-CONVENTION
     STATUS       current
     DESCRIPTION
-        "Bridge ports may encode or decode the PCP value of the 
-        frames that traverse the port. This textual convention 
+        "Bridge ports may encode or decode the PCP value of the
+        frames that traverse the port. This textual convention
         names the possible encoding and decoding schemes that
         the port may use.  The priority and drop_eligible
         parameters are encoded in the Priority Code Point (PCP)
@@ -378,4 +378,3 @@ IEEE8021PriorityValue ::= TEXTUAL-CONVENTION
     SYNTAX      Unsigned32 (0..7)
 
 END
-

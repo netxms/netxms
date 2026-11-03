@@ -11,7 +11,7 @@ IMPORTS
 	  FROM FOUNDRY-SN-AGENT-MIB
 	InterfaceIndexOrZero
 	  FROM IF-MIB;
-	  
+
 brcdSPXMIB MODULE-IDENTITY
 	LAST-UPDATED "201505120000Z" -- May 12, 2015
 	ORGANIZATION "Brocade Communications Systems, Inc"
@@ -29,7 +29,7 @@ brcdSPXMIB MODULE-IDENTITY
 
 			Supported Platforms:
                    - supported on FastIron ICX7750/ICX7450 platforms.
-			
+
 			Copyright 1996-2015 Brocade Communications Systems, Inc.
 			All rights reserved.
             This Brocade Communications Systems SNMP Management Information
@@ -37,7 +37,7 @@ brcdSPXMIB MODULE-IDENTITY
             confidential and proprietary intellectual property.
             Brocade Communications Systems retains all title and ownership
             in the Specification, including any revisions.
-			
+
 			This Specification is supplied AS IS, and Brocade Communications
             Systems makes no warranty, either express or implied, as to the
             use, operation, condition, or performance of the specification,
@@ -60,8 +60,8 @@ brcdSPXTableObjects  OBJECT IDENTIFIER ::= { brcdSPXMIB 2 }
 --
 
 brcdSPXGlobalConfigCBState OBJECT-TYPE
-	SYNTAX     INTEGER { 
-			  none(0), 
+	SYNTAX     INTEGER {
+			  none(0),
 			  enabled(1),
 			  disabled(2)
 			}
@@ -70,15 +70,15 @@ brcdSPXGlobalConfigCBState OBJECT-TYPE
 	DESCRIPTION
 		"Configure CB (Control Bridge) state for 802.1BR feature on the global level.
 		The set operation is allowed only on CB device.
-		 none: reserve state. 
+		 none: reserve state.
 		 enable: 802.1BR is enable on CB.
 		 disable: 802.1BR is disable on CB.
 		The none state will be displayed if it is not a CB device"
 	::= { brcdSPXGlobalObjects 1}
 
 brcdSPXGlobalConfigPEState OBJECT-TYPE
-	SYNTAX     INTEGER { 
-			  none(0), 
+	SYNTAX     INTEGER {
+			  none(0),
 			  enabled(1),
 			  disabled(2)
 			}
@@ -90,7 +90,7 @@ brcdSPXGlobalConfigPEState OBJECT-TYPE
 		 none: reserve state
 		 enable: 802.1BR is enabled on PE.
 		 disable: 802.1BR is disabled on PE.
-		 Note that enabling/disabling PE takes effect only after system is saved 
+		 Note that enabling/disabling PE takes effect only after system is saved
 		 configure and reloaded. The none state will be displayed if it is not a PE device"
 	::= { brcdSPXGlobalObjects 2}
 
@@ -103,9 +103,9 @@ brcdSPXGlobalConfigZeroTouchEnable OBJECT-TYPE
 	STATUS     current
 	DESCRIPTION
 		"Configure CB (Control Bridge) Zero Touch feature for 802.1BR on the global level.
-		The Zero Touch feature discovers new PE capable units, assigns them IDs, 
+		The Zero Touch feature discovers new PE capable units, assigns them IDs,
 		defines SPX-ports/lags, and finally converts them to PE mode to join the SPX system.
-		The set operation is allowed only on CB device. 
+		The set operation is allowed only on CB device.
 		none: reserve state, Zero touch feature is not enabled on CB
 		enabled: Zero touch feature is enabled on CB.
 		The none state will be displayed if it is not a CB device.
@@ -113,33 +113,33 @@ brcdSPXGlobalConfigZeroTouchEnable OBJECT-TYPE
 	::= { brcdSPXGlobalObjects 3}
 
 brcdSPXGlobalConfigZeroTouchDeny OBJECT-TYPE
-	SYNTAX    INTEGER { 
-			  none (0), 
+	SYNTAX    INTEGER {
+			  none (0),
 			  deny (1)
 			}
 	MAX-ACCESS read-write
 	STATUS     current
 	DESCRIPTION
 	"Configure CB (Control Bridge) Zero Touch for 802.1BR on the global level.
-	The Zero Touch feature discovers new PE capable units, assigns them IDs, 
+	The Zero Touch feature discovers new PE capable units, assigns them IDs,
 	defines SPX-ports/lags, and finally converts them to PE mode to join the SPX system.
 	The set operation is allowed on CB or PE standalone device.
-	none: neutral, receive packets only. 
- 	deny: Zero touch is disabled and the device will not be discovered by zero-touch 
+	none: neutral, receive packets only.
+ 	deny: Zero touch is disabled and the device will not be discovered by zero-touch
  	and spx secure-setup on other CB units.
 	The default state is none"
 	::= { brcdSPXGlobalObjects 4}
 
 brcdSPXGlobalConfigAllowPEMovement OBJECT-TYPE
-	SYNTAX    INTEGER { 
+	SYNTAX    INTEGER {
 			  none(0),
 			  enabled(1)
 			}
 	MAX-ACCESS read-write
 	STATUS     current
 	DESCRIPTION
-	"Configure CB (Control Bridge) allow PE (Port Extender) movement for 802.1BR feature 
-	on the global level.It allows the user to move PE unit without changing its unit ID.	
+	"Configure CB (Control Bridge) allow PE (Port Extender) movement for 802.1BR feature
+	on the global level.It allows the user to move PE unit without changing its unit ID.
 	The set operation is allowed only on CB device or PE standalone device.
 	none: reserve state, PE movement state is disable.
 	enabled: PE movement state is enable on a device.
@@ -153,7 +153,7 @@ brcdSPXGlobalConfigAllowPEMovement OBJECT-TYPE
 
 --
 -- SPX configuration unit Table
--- Use this table to display CB and PE units in a SPX system 
+-- Use this table to display CB and PE units in a SPX system
 -- and configure SPX related information for each PE unit on CB device
 --
 
@@ -229,7 +229,7 @@ brcdSPXConfigUnitPEName OBJECT-TYPE
 		"A list of interface indices which are the port membership
          of a SPX LAG group on PE. Each interface index is a 32-bit integer
          in big endian order. It returns NULL if PE SPX LAG does not exist.
-         Note that the maximum PE SPX LAG on a PE unit is 2. Each SPX LAG group 
+         Note that the maximum PE SPX LAG on a PE unit is 2. Each SPX LAG group
          contains up to 16 ports."
 	::= { brcdSPXConfigUnitEntry 5 }
 
@@ -241,10 +241,10 @@ brcdSPXConfigUnitPEName OBJECT-TYPE
 		"A list of interface indices which are the port membership
          of a SPX LAG group on PE. Each interface index is a 32-bit integer
          in big endian order. It returns NULL if PE SPX LAG does not exist.
-         Note that the maximum PE SPX LAG on a PE unit is 2. Each SPX LAG group 
+         Note that the maximum PE SPX LAG on a PE unit is 2. Each SPX LAG group
          contains up to 16 ports."
 	::= { brcdSPXConfigUnitEntry 6 }
-	
+
 brcdSPXConfigUnitRowStatus OBJECT-TYPE
 	SYNTAX     INTEGER {
 				 other(1),
@@ -322,11 +322,11 @@ BrcdSPXOperUnitEntry ::= SEQUENCE {
 	brcdSPXOperUnitDescription            DisplayString,
 	brcdSPXOperUnitImgVer                 DisplayString,
 	brcdSPXOperUnitBuildlVer              DisplayString
-  
+
 }
-	
+
 brcdSPXOperUnitIndex OBJECT-TYPE
-	SYNTAX     Integer32 
+	SYNTAX     Integer32
 	MAX-ACCESS not-accessible
 	STATUS     current
 	DESCRIPTION
@@ -370,8 +370,8 @@ brcdSPXOperUnitPriority OBJECT-TYPE
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
-		"The priority in Active/backup election on CB units. 
-		PE unit doesn't have priority, and 0 as default value." 
+		"The priority in Active/backup election on CB units.
+		PE unit doesn't have priority, and 0 as default value."
 	::= { brcdSPXOperUnitEntry 5 }
 
 brcdSPXOperUnitState OBJECT-TYPE
@@ -444,7 +444,7 @@ brcdSPXCBSPXPortPort OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the configured CB SPX port. 
+		"The IfIndex for the configured CB SPX port.
 		CB unit can have multiple SPX ports per unit. "
 	::= { brcdSPXCBSPXPortEntry 1 }
 
@@ -453,10 +453,10 @@ brcdSPXCBSPXPortPEGroup OBJECT-TYPE
 	MAX-ACCESS  read-write
 	STATUS     current
 	DESCRIPTION
-		"The name of IfIndex for the configured CB SPX port. 
+		"The name of IfIndex for the configured CB SPX port.
 		It is an optional field"
 	::= { brcdSPXCBSPXPortEntry 2 }
-	
+
 brcdSPXCBSPXPortRowStatus OBJECT-TYPE
 	SYNTAX     INTEGER {
 				 other(1),
@@ -515,11 +515,11 @@ brcdSPXCBSPXLagPrimaryPort OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS     current
 	DESCRIPTION
-		"The LAG primary port for the configured CB SPX LAG. This primary 
-		port is the smallest port in the CB SPX LAG group. CB unit can have 
+		"The LAG primary port for the configured CB SPX LAG. This primary
+		port is the smallest port in the CB SPX LAG group. CB unit can have
 		multiple SPX LAGs per unit."
 	::= { brcdSPXCBSPXLagEntry 1 }
-	
+
 brcdSPXCBSPXLagLagIflist OBJECT-TYPE
 	SYNTAX OCTET STRING
 	MAX-ACCESS read-write
@@ -530,16 +530,16 @@ brcdSPXCBSPXLagLagIflist OBJECT-TYPE
          in big endian order. It returns NULL if CB SPX Lag does not exist.
          Note that each CB SPX LAG group contains up to 16 ports."
 	::= { brcdSPXCBSPXLagEntry 2 }
-	
+
 brcdSPXCBSPXLagPEGroup OBJECT-TYPE
 	SYNTAX		DisplayString (SIZE (0..32))
 	MAX-ACCESS  read-write
 	STATUS     current
 	DESCRIPTION
-		"The name of SPX LAG for the configured CB SPX LAG. 
+		"The name of SPX LAG for the configured CB SPX LAG.
 		It is an optional field"
 	::= { brcdSPXCBSPXLagEntry 3 }
-	
+
 brcdSPXCBSPXLagRowStatus OBJECT-TYPE
 	SYNTAX     INTEGER {
 				 other(1),
@@ -567,7 +567,7 @@ brcdSPXCBSPXLagRowStatus OBJECT-TYPE
 --
 -- SPX PE group Table
 -- Use this table to display CB SPX port and all PE units attached to this SPX port
--- And SPX port on other end if it is a ring topology 
+-- And SPX port on other end if it is a ring topology
 --
 
 brcdSPXPEGroupTable OBJECT-TYPE
@@ -599,7 +599,7 @@ brcdSPXPEGroupCBSPXPort OBJECT-TYPE
 	MAX-ACCESS not-accessible
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the CB SPX port which is connected 
+		"The IfIndex for the CB SPX port which is connected
 		to a group of PE units"
 	::= { brcdSPXPEGroupEntry 1 }
 
@@ -608,10 +608,10 @@ brcdSPXPEGroupPEGroup OBJECT-TYPE
 	MAX-ACCESS  read-only
 	STATUS     current
 	DESCRIPTION
-		"The name of IfIndex for the configured CB SPX port. 
+		"The name of IfIndex for the configured CB SPX port.
 		It is an optional field"
 	::= { brcdSPXPEGroupEntry 2 }
-	
+
 brcdSPXPEGroupPEIdList OBJECT-TYPE
 	SYNTAX     DisplayString
 	MAX-ACCESS read-only
@@ -625,14 +625,11 @@ brcdSPXPEGroupCBSPXEndPort OBJECT-TYPE
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the CB SPX port which is connected 
-		to a group of PE units. This CB SPX port is at other end 
+		"The IfIndex for the CB SPX port which is connected
+		to a group of PE units. This CB SPX port is at other end
 		if it is a ring topology. It returns 0 if it is a chain topology
 		and there is no the end port."
 	::= { brcdSPXPEGroupEntry 4 }
-		
-	
+
+
 END
-
-
- 

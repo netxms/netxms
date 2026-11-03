@@ -56,7 +56,7 @@ IMPORTS
           critical(5),
           internet(6),
           network(7),
-          invalid(8) 
+          invalid(8)
     }
 
 -- fastpath route policy name table. We create a Route-map statement through this table.
@@ -75,7 +75,7 @@ IMPORTS
       STATUS      current
       DESCRIPTION
           "Each entry in this table corresponds to a route-map statement"
-      INDEX {fastpathRoutePolicyName,fastpathRoutePolicyStmtActionType,fastpathRoutePolicySequence}                 
+      INDEX {fastpathRoutePolicyName,fastpathRoutePolicyStmtActionType,fastpathRoutePolicySequence}
     ::= { fastpathRoutePolicyNameTable 1 }
 
    FastpathRoutePolicyNameEntry::= SEQUENCE {
@@ -157,12 +157,12 @@ FastpathRoutePolicyStatementEntry::= SEQUENCE {
     fastpathRoutePolicyStmtSetDefaultIpNextHopList    DisplayString,
     fastpathRoutePolicyStmtSetDefaultIpNextHopDelList DisplayString,
     fastpathRoutePolicyStmtSetIpPrecedence            FastpathRoutePolicyStmtIpPrecedence,
-    fastpathRoutePolicyStmtSetIntfNull0               TruthValue   
+    fastpathRoutePolicyStmtSetIntfNull0               TruthValue
   }
 
  fastpathRoutePolicyStmtName OBJECT-TYPE
      SYNTAX      DisplayString (SIZE(1..31))
-     MAX-ACCESS  not-accessible 
+     MAX-ACCESS  not-accessible
      STATUS  current
      DESCRIPTION
          "The name of a Route Map."
@@ -170,7 +170,7 @@ FastpathRoutePolicyStatementEntry::= SEQUENCE {
 
   fastpathRoutePolicyStmtSeqNum OBJECT-TYPE
     SYNTAX      Unsigned32
-    MAX-ACCESS  not-accessible 
+    MAX-ACCESS  not-accessible
     STATUS  current
     DESCRIPTION
         "Route Maps are linked together using sequence numbers.
@@ -181,7 +181,7 @@ FastpathRoutePolicyStatementEntry::= SEQUENCE {
 
   fastpathRoutePolicyStmtAction OBJECT-TYPE
     SYNTAX      FastpathRoutePolicyAction
-    MAX-ACCESS  not-accessible 
+    MAX-ACCESS  not-accessible
     STATUS  current
     DESCRIPTION
         "The action associated with this route-map statement.
@@ -210,7 +210,7 @@ FastpathRoutePolicyStatementEntry::= SEQUENCE {
          up to a maximum of 16 IPV4 ACLs can be included.This
          list is used to delete already configured match list
          of IPv4 ACLs in route-map statement.Earlier this list
-         should have configured through MIB object 
+         should have configured through MIB object
          fastpathRoutePolicyStmtMatchIpv4AclList  "
     ::= { fastpathRoutePolicyStatementEntry 5 }
 
@@ -231,7 +231,7 @@ FastpathRoutePolicyStatementEntry::= SEQUENCE {
     DESCRIPTION
         "The string containing a list of MAC ACLs. This
          list contains upto 16 MAC ACL names that can be
-         included in a match statement. This MIB object is 
+         included in a match statement. This MIB object is
          used to delete MAC ACL lists matched in a route-map
          statement via fastpathRoutePolicyStmtMatchMacAclList. "
     ::= { fastpathRoutePolicyStatementEntry 7 }
@@ -304,15 +304,15 @@ FastpathRoutePolicyStatementEntry::= SEQUENCE {
         "IP Precedence value to be remarked. This is specified through
          set clause in route-map statement. In order to remove configured precedence value,
          use invalid(8) option. "
-    ::= { fastpathRoutePolicyStatementEntry 14 } 
-  
+    ::= { fastpathRoutePolicyStatementEntry 14 }
+
    fastpathRoutePolicyStmtSetIntfNull0 OBJECT-TYPE
          SYNTAX      TruthValue
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Specifying null0 as an interface in a route-map 
-                      statement" 
+                     "Specifying null0 as an interface in a route-map
+                      statement"
    ::= { fastpathRoutePolicyStatementEntry 15 }
 
 --******************************************************************************
@@ -339,11 +339,11 @@ fastpathRoutePolicyIfEntry OBJECT-TYPE
 FastpathRoutePolicyIfEntry::= SEQUENCE {
     fastpathRoutePolicyIfIndex      InterfaceIndex,
     fastpathRoutePolicyIfName       DisplayString,
-    fastpathRoutePolicyIfRowStatus  RowStatus 
+    fastpathRoutePolicyIfRowStatus  RowStatus
   }
 
   fastpathRoutePolicyIfIndex OBJECT-TYPE
-     SYNTAX     InterfaceIndex 
+     SYNTAX     InterfaceIndex
      MAX-ACCESS  read-create
      STATUS  current
      DESCRIPTION

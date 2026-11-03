@@ -1,9 +1,9 @@
 -- *****************************************************************
 -- CISCO-VLAN-IFTABLE-RELATIONSHIP-CAPABILITY.my:
 -- Cisco CISCO-VLAN-IFTABLE-RELATIONSHIP-MIB AGENT-CAPABILITIES
---   
+--
 -- Aug 2003, Jayakumar Kadirvelu
---   
+--
 -- Copyright (c) 2003, 2004, 2006, 2013 by Cisco Systems Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -86,5 +86,3 @@ ciscoVlanIfTableRelCapNxOSV6R0202PN7K AGENT-CAPABILITIES
     ::= { ciscoVlanIfTableRelCapability 3 }
 
 END
-
-

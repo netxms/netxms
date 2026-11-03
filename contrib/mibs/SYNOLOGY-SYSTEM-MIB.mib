@@ -5,7 +5,7 @@ IMPORTS
 				FROM SNMPv2-CONF
 	enterprises, MODULE-IDENTITY, OBJECT-TYPE, Integer32
 				FROM SNMPv2-SMI;
-				
+
 synoSystem MODULE-IDENTITY
     LAST-UPDATED "201309110000Z"
     ORGANIZATION "www.synology.com"
@@ -17,9 +17,9 @@ synoSystem MODULE-IDENTITY
     REVISION     "201309110000Z"
     DESCRIPTION
         "Second draft."
-    ::= { synology 1 }		
+    ::= { synology 1 }
 
-synology	 OBJECT IDENTIFIER 
+synology	 OBJECT IDENTIFIER
 	::= { enterprises 6574 }
 
 systemStatus OBJECT-TYPE

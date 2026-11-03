@@ -1,5 +1,5 @@
 -- **********************************************************
--- Copyright 2008-2012 VMware, Inc.  All rights reserved. 
+-- Copyright 2008-2012 VMware, Inc.  All rights reserved.
 -- **********************************************************
 
 VMWARE-AGENTCAP-MIB DEFINITIONS ::= BEGIN
@@ -25,18 +25,18 @@ vmwAgentCapabilityMIB MODULE-IDENTITY
    DESCRIPTION
      "This module defines agent capabilities for deployed VMware agents by release. "
 
-   REVISION     "201210030000Z"  
+   REVISION     "201210030000Z"
    DESCRIPTION
          "Capabilities for VMware ESX OP agent added."
 
-   REVISION     "201207130000Z"  
+   REVISION     "201207130000Z"
    DESCRIPTION
          "Capabilities for VMware ESX 5.1 agent added."
 
-   REVISION     "201010180000Z"  
+   REVISION     "201010180000Z"
    DESCRIPTION
          "Capabilities for VMware ESX 5.0 added."
-   REVISION     "200810270000Z"  
+   REVISION     "200810270000Z"
    DESCRIPTION
          "Capabilities for VMware ESX 4.0 added."
         ::= { vmwareAgentCapabilities 1 }
@@ -47,33 +47,33 @@ vmwEsxCapability OBJECT IDENTIFIER ::= {  vmwAgentCapabilityMIB 1 }
 -- ESX 5.5 and follow up patch releases
 --
 
-vmwESX55 AGENT-CAPABILITIES 
-  PRODUCT-RELEASE 
-     "5.5.x"  
+vmwESX55 AGENT-CAPABILITIES
+  PRODUCT-RELEASE
+     "5.5.x"
   STATUS  current
   DESCRIPTION
-     "Release 5.5 for VMware ESXi supports SNMPv1, SNMPv2c, and SNMPv3 with a stand-alone snmpd process. 
+     "Release 5.5 for VMware ESXi supports SNMPv1, SNMPv2c, and SNMPv3 with a stand-alone snmpd process.
 
      This release features support for monitoring multiple IP Stacks. The standard IP-MIB, UDP-MIB, and TCP-MIB
-     may be used with a context set to the IP Stack Name as found in ENTITY-MIB entLogicalTable 
+     may be used with a context set to the IP Stack Name as found in ENTITY-MIB entLogicalTable
      or via command: esxcli network ip netstack list
      An example using net-snmp's snmpwalk command:: snmpwalk -v2c -n defaultTcpipStack ip
 
      No vDR instrumentation is yet available.
 
-     This agent supports read-only protocol operations. This implies that configuring the SNMPv3 Agent 
+     This agent supports read-only protocol operations. This implies that configuring the SNMPv3 Agent
      can not be done via SET operations. Hence IETF standard SNMPv3 agent configuration mibs are not provided.
-     The SNMPv3 protocol is fully supported once configured via the CLI command interface (esxcli system snmp) 
-     command set or vCenter Server host profiles. Lastly this SNMP agent provides one read-only view of 
+     The SNMPv3 protocol is fully supported once configured via the CLI command interface (esxcli system snmp)
+     command set or vCenter Server host profiles. Lastly this SNMP agent provides one read-only view of
      the entire system to which all SNMPv3 users configured are assigned.
      "
-  REFERENCE 
+  REFERENCE
      "http://www.vmware.com/products"
 
      -- RFC 3418
      SUPPORTS SNMPv2-MIB
-     INCLUDES { 
-         snmpGroup, 
+     INCLUDES {
+         snmpGroup,
          systemGroup,
          snmpCommunityGroup,
          snmpBasicNotificationsGroup,
@@ -105,14 +105,14 @@ vmwESX55 AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- RFC 3412
      SUPPORTS SNMP-MPD-MIB
-     INCLUDES { 
+     INCLUDES {
         snmpMPDGroup
      }
 
      -- ********************* ************ ************ *************** ***
      -- RFC 2863
      SUPPORTS IF-MIB
-     INCLUDES { 
+     INCLUDES {
          ifGeneralInformationGroup,
          linkUpDownNotificationsGroup
      }
@@ -120,9 +120,9 @@ vmwESX55 AGENT-CAPABILITIES
      VARIATION ifAdminStatus
      ACCESS read-only
      DESCRIPTION "Agent provides read-only view of administrative state for each physical interface.
-                  ESX virtual switches support changing administrative state 
+                  ESX virtual switches support changing administrative state
                   of physical network interfaces (nics) up or down. For example the command:
-                  esxcli network nic [up|down] -n vmnic0 
+                  esxcli network nic [up|down] -n vmnic0
                   Virtual vmware interfaces (ifType 238) also support changing administratie state:
                   network ip interface set --enabled [yes|no] -i vmk0
                  "
@@ -139,12 +139,12 @@ vmwESX55 AGENT-CAPABILITIES
      ACCESS not-implemented
      DESCRIPTION "This counter always returns 0."
 
-     -- ifRcvAddressGroup is interface/media specific 
+     -- ifRcvAddressGroup is interface/media specific
      VARIATION ifRcvAddressStatus
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
-     VARIATION ifRcvAddressType 
+     VARIATION ifRcvAddressType
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
@@ -152,10 +152,10 @@ vmwESX55 AGENT-CAPABILITIES
      -- RFC 4293
      -- supports SNMPv2/3 Contexts for multiple instances
      SUPPORTS IP-MIB
-     INCLUDES { 
-         ipSystemStatsGroup,   
+     INCLUDES {
+         ipSystemStatsGroup,
          ipAddressGroup,
-         ipNetToPhysicalGroup, 
+         ipNetToPhysicalGroup,
          ipDefaultRouterGroup,
          icmpStatsGroup,
          ipSystemStatsHCOctetGroup,
@@ -177,8 +177,8 @@ vmwESX55 AGENT-CAPABILITIES
      -- RFC 4292
      -- supports SNMPv2/3 Contexts for multiple instances
      SUPPORTS IP-FORWARD-MIB
-     INCLUDES { 
-         inetForwardCidrRouteGroup          
+     INCLUDES {
+         inetForwardCidrRouteGroup
      }
 
      -- ********************* ************ ************ *************** ***
@@ -190,8 +190,8 @@ vmwESX55 AGENT-CAPABILITIES
      -- ACCESS not-implemented, use udpHCInDatagrams
      -- VARIATION udpOutDatagrams
      -- ACCESS not-implemented, use udpHCOutDatagrams
-     INCLUDES { 
-        udpBaseGroup, 
+     INCLUDES {
+        udpBaseGroup,
         udpEndpointGroup
      }
 
@@ -199,8 +199,8 @@ vmwESX55 AGENT-CAPABILITIES
      -- RFC 4022
      -- supports SNMPv2/3 Contexts for multiple instances
      SUPPORTS TCP-MIB
-     INCLUDES { 
-         tcpBaseGroup, 
+     INCLUDES {
+         tcpBaseGroup,
          tcpConnectionGroup,
          tcpListenerGroup
      }
@@ -208,7 +208,7 @@ vmwESX55 AGENT-CAPABILITIES
      -- RFC 2790
      -- NOTE: For storage larger than Integer32 (Terabyte) this agent will report INT_MAX
      SUPPORTS HOST-RESOURCES-MIB
-     INCLUDES { 
+     INCLUDES {
             hrSystemGroup,
             hrStorageGroup, -- visorfs "ramdisks" are not reported
             hrDeviceGroup,
@@ -217,7 +217,7 @@ vmwESX55 AGENT-CAPABILITIES
             hrSWInstalledGroup  -- updates once an hour
      }
 
-     VARIATION  hrSystemNumUsers 
+     VARIATION  hrSystemNumUsers
      ACCESS read-only
      DESCRIPTION "Value reports number of active ESX Shell sessions"
 
@@ -229,7 +229,7 @@ vmwESX55 AGENT-CAPABILITIES
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
-     VARIATION hrSystemInitialLoadDevice 
+     VARIATION hrSystemInitialLoadDevice
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
@@ -237,7 +237,7 @@ vmwESX55 AGENT-CAPABILITIES
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
-     VARIATION hrStorageSize 
+     VARIATION hrStorageSize
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
@@ -248,7 +248,7 @@ vmwESX55 AGENT-CAPABILITIES
     -- hrDeviceStatus reports unknown for: cpu. pnic either running/unknown.
     --               disk reports running, warning, down, unknown
     -- device error counters do not account for all failure cases
-    
+
      VARIATION hrSWOSIndex
      ACCESS not-implemented
      DESCRIPTION "No operatingSystem entry exists in hrSWRunGroup hrSWRunTable"
@@ -260,26 +260,26 @@ vmwESX55 AGENT-CAPABILITIES
      VARIATION  hrFSLastPartialBackupDate
      ACCESS not-implemented
      DESCRIPTION "is not implemented"
-         
+
      VARIATION hrPrinterStatus
      ACCESS not-implemented
-     DESCRIPTION "is not implemented"     
+     DESCRIPTION "is not implemented"
 
      VARIATION hrPrinterDetectedErrorState
      ACCESS not-implemented
-     DESCRIPTION "is not implemented"          
+     DESCRIPTION "is not implemented"
 
 
      -- ********************* ************ ************ *************** ***
      -- RFC 4133
      SUPPORTS ENTITY-MIB
-     INCLUDES { 
+     INCLUDES {
         entityPhysicalGroup,
         entityPhysical2Group,
         entityPhysical3Group,
         entityGeneralGroup
      }
-     -- VARIATION entityNotificationsGroup  
+     -- VARIATION entityNotificationsGroup
      -- ACCESS not-implemented
      -- VARIATION entityMappingGroup
      -- ACCESS not-implemented
@@ -287,7 +287,7 @@ vmwESX55 AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- REVISION 200810150000Z
      SUPPORTS IEEE8021-BRIDGE-MIB
-     INCLUDES { 
+     INCLUDES {
         ieee8021BridgeBaseBridgeGroup,
         ieee8021BridgeBasePortGroup,
         ieee8021BridgeTpPortGroup
@@ -298,7 +298,7 @@ vmwESX55 AGENT-CAPABILITIES
      -- virtual switch uplinks (physical ports) do perform do mac learning and will
      -- not report in FDB/forwarding tables
      SUPPORTS IEEE8021-Q-BRIDGE-MIB
-     INCLUDES { 
+     INCLUDES {
         ieee8021QBridgeBaseGroup,
         ieee8021QBridgeVlanGroup,
         ieee8021QBridgeVlanStaticGroup,
@@ -310,13 +310,13 @@ vmwESX55 AGENT-CAPABILITIES
      }
      -- VARATION ieee8021QBridgeVlanCurrentUntaggedPorts
      -- Reports count of 0 if only untagged vlan access (vid 0) is defined
-     
+
      -- ********************* ************ ************ *************** ***
      -- REVISION 200706200000Z
      -- VDS link aggregations are not reported this release, issue PR 859941
      -- only VSS, traditional vswitch, nic teams are reported entries
      SUPPORTS IEEE8023-LAG-MIB
-     INCLUDES { 
+     INCLUDES {
         dot3adAggGroup,
         dot3adAggPortGroup,
         dot3adTablesLastChangedGroup,
@@ -326,19 +326,19 @@ vmwESX55 AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- REVISION 200906080000Z
      SUPPORTS LLDP-V2-MIB
-     INCLUDES { 
+     INCLUDES {
         lldpV2ConfigGroup,
         lldpV2ConfigTxGroup,
         lldpV2StatsTxGroup,
         lldpV2LocSysGroup,
-        lldpV2ConfigRxGroup, 
+        lldpV2ConfigRxGroup,
         lldpV2StatsRxGroup,
         lldpV2RemSysGroup,
         lldpV2NotificationsGroup
      }
 
      -- ********************* ************ ************ *************** ***
-     -- REVISION 201008020000Z 
+     -- REVISION 201008020000Z
      SUPPORTS VMWARE-SYSTEM-MIB
      INCLUDES {
          vmwSystemGroup
@@ -348,7 +348,7 @@ vmwESX55 AGENT-CAPABILITIES
      INCLUDES {
          vmwResourceGroup
      }
-     -- REVISION 201006220000Z 
+     -- REVISION 201006220000Z
      SUPPORTS VMWARE-VMINFO-MIB
      INCLUDES {
          vmwVmInfoGroup,
@@ -362,7 +362,7 @@ vmwESX55 AGENT-CAPABILITIES
      SUPPORTS VMWARE-ENV-MIB
      INCLUDES {
          vmwEnvAlertGroup,
-         vmwESXEnvNotificationGroup2 
+         vmwESXEnvNotificationGroup2
      }
 
      -- REVISION 201008200000Z
@@ -370,32 +370,32 @@ vmwESX55 AGENT-CAPABILITIES
      INCLUDES {
         vmwCimOmNotificationGroup
      }
-     
+
    ::= { vmwEsxCapability 5 }
 
 --
 -- ESX 5.1 and follow up patch releases
 --
 
-vmwESX51x AGENT-CAPABILITIES 
-  PRODUCT-RELEASE 
-     "5.1.x"  
+vmwESX51x AGENT-CAPABILITIES
+  PRODUCT-RELEASE
+     "5.1.x"
   STATUS  current
   DESCRIPTION
-     "Release 5.1.x for VMware ESXi supports SNMPv1, SNMPv2c, and SNMPv3 with a stand-alone snmpd process. 
-      This agent supports read-only protocol operations. This implies that configuring the SNMPv3 Agent 
+     "Release 5.1.x for VMware ESXi supports SNMPv1, SNMPv2c, and SNMPv3 with a stand-alone snmpd process.
+      This agent supports read-only protocol operations. This implies that configuring the SNMPv3 Agent
       can not be done via SET operations. Hence IETF standard SNMPv3 agent configuration mibs are not provided.
-      SNMPv3 protocol is fully supported once configured via the CLI command interface (esxcli system snmp) 
-      command set or host profiles. Lastly this SNMP agent provides one read-only view of 
+      SNMPv3 protocol is fully supported once configured via the CLI command interface (esxcli system snmp)
+      command set or host profiles. Lastly this SNMP agent provides one read-only view of
       the entire system to which all SNMPv3 users configured are assigned.
      "
-  REFERENCE 
+  REFERENCE
      "http://www.vmware.com/products"
 
      -- RFC 3418
      SUPPORTS SNMPv2-MIB
-     INCLUDES { 
-         snmpGroup, 
+     INCLUDES {
+         snmpGroup,
          systemGroup,
          snmpCommunityGroup,
          snmpBasicNotificationsGroup,
@@ -428,7 +428,7 @@ vmwESX51x AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- RFC 2863
      SUPPORTS IF-MIB
-     INCLUDES { 
+     INCLUDES {
          ifGeneralInformationGroup,
          linkUpDownNotificationsGroup
      }
@@ -436,9 +436,9 @@ vmwESX51x AGENT-CAPABILITIES
      VARIATION ifAdminStatus
      ACCESS read-only
      DESCRIPTION "Agent provides read-only view of administrative state for each physical interface.
-                  ESX virtual switches support changing administrative state 
+                  ESX virtual switches support changing administrative state
                   of physical network interfaces (nics) up or down. For example the command:
-                  esxcli network nic [up|down] -n vmnic0 
+                  esxcli network nic [up|down] -n vmnic0
                   Virtual vmware interfaces (ifType 238) also support changing administratie state:
                   network ip interface set --enabled [yes|no] -i vmk0
                  "
@@ -455,22 +455,22 @@ vmwESX51x AGENT-CAPABILITIES
      ACCESS not-implemented
      DESCRIPTION "This counter always returns 0."
 
-     -- ifRcvAddressGroup is interface/media specific 
+     -- ifRcvAddressGroup is interface/media specific
      VARIATION ifRcvAddressStatus
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
-     VARIATION ifRcvAddressType 
+     VARIATION ifRcvAddressType
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
      -- ********************* ************ ************ *************** ***
      -- RFC 4293
      SUPPORTS IP-MIB
-     INCLUDES { 
-         ipSystemStatsGroup,   
+     INCLUDES {
+         ipSystemStatsGroup,
          ipAddressGroup,
-         ipNetToPhysicalGroup, 
+         ipNetToPhysicalGroup,
          ipDefaultRouterGroup,
          icmpStatsGroup,
          ipSystemStatsHCOctetGroup,
@@ -491,8 +491,8 @@ vmwESX51x AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- RFC 4292
      SUPPORTS IP-FORWARD-MIB
-     INCLUDES { 
-         inetForwardCidrRouteGroup          
+     INCLUDES {
+         inetForwardCidrRouteGroup
      }
 
      -- ********************* ************ ************ *************** ***
@@ -503,16 +503,16 @@ vmwESX51x AGENT-CAPABILITIES
      -- ACCESS not-implemented, use udpHCInDatagrams
      -- VARIATION udpOutDatagrams
      -- ACCESS not-implemented, use udpHCOutDatagrams
-     INCLUDES { 
-        udpBaseGroup, 
+     INCLUDES {
+        udpBaseGroup,
         udpEndpointGroup
      }
 
      -- ********************* ************ ************ *************** ***
      -- RFC 4022
      SUPPORTS TCP-MIB
-     INCLUDES { 
-         tcpBaseGroup, 
+     INCLUDES {
+         tcpBaseGroup,
          tcpConnectionGroup,
          tcpListenerGroup
      }
@@ -520,7 +520,7 @@ vmwESX51x AGENT-CAPABILITIES
      -- RFC 2790
      -- NOTE: For storage larger than Integer32 (Terabyte) this agent will report INT_MAX
      SUPPORTS HOST-RESOURCES-MIB
-     INCLUDES { 
+     INCLUDES {
             hrSystemGroup,
             hrStorageGroup, -- visorfs "ramdisks" are not reported
             hrDeviceGroup,
@@ -529,7 +529,7 @@ vmwESX51x AGENT-CAPABILITIES
             hrSWInstalledGroup  -- updates once an hour
      }
 
-     VARIATION  hrSystemNumUsers 
+     VARIATION  hrSystemNumUsers
      ACCESS read-only
      DESCRIPTION "Value reports number of active ESX Shell sessions"
 
@@ -541,7 +541,7 @@ vmwESX51x AGENT-CAPABILITIES
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
-     VARIATION hrSystemInitialLoadDevice 
+     VARIATION hrSystemInitialLoadDevice
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
@@ -549,7 +549,7 @@ vmwESX51x AGENT-CAPABILITIES
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
-     VARIATION hrStorageSize 
+     VARIATION hrStorageSize
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
@@ -560,7 +560,7 @@ vmwESX51x AGENT-CAPABILITIES
     -- hrDeviceStatus reports unknown for: cpu. pnic either running/unknown.
     --               disk reports running, warning, down, unknown
     -- device error counters do not account for all failure cases
-    
+
      VARIATION hrSWOSIndex
      ACCESS not-implemented
      DESCRIPTION "No operatingSystem entry exists in hrSWRunGroup hrSWRunTable"
@@ -572,26 +572,26 @@ vmwESX51x AGENT-CAPABILITIES
      VARIATION  hrFSLastPartialBackupDate
      ACCESS not-implemented
      DESCRIPTION "is not implemented"
-         
+
      VARIATION hrPrinterStatus
      ACCESS not-implemented
-     DESCRIPTION "is not implemented"     
+     DESCRIPTION "is not implemented"
 
      VARIATION hrPrinterDetectedErrorState
      ACCESS not-implemented
-     DESCRIPTION "is not implemented"          
+     DESCRIPTION "is not implemented"
 
 
      -- ********************* ************ ************ *************** ***
      -- RFC 4133
      SUPPORTS ENTITY-MIB
-     INCLUDES { 
+     INCLUDES {
         entityPhysicalGroup,
         entityPhysical2Group,
         entityPhysical3Group,
         entityGeneralGroup
      }
-     -- VARIATION entityNotificationsGroup  
+     -- VARIATION entityNotificationsGroup
      -- ACCESS not-implemented
      -- VARIATION entityMappingGroup
      -- ACCESS not-implemented
@@ -599,7 +599,7 @@ vmwESX51x AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- REVISION 200810150000Z
      SUPPORTS IEEE8021-BRIDGE-MIB
-     INCLUDES { 
+     INCLUDES {
         ieee8021BridgeBaseBridgeGroup,
         ieee8021BridgeBasePortGroup,
         ieee8021BridgeTpPortGroup
@@ -610,7 +610,7 @@ vmwESX51x AGENT-CAPABILITIES
      -- virtual switch uplinks (physical ports) do perform do mac learning and will
      -- not report in FDB/forwarding tables
      SUPPORTS IEEE8021-Q-BRIDGE-MIB
-     INCLUDES { 
+     INCLUDES {
         ieee8021QBridgeBaseGroup,
         ieee8021QBridgeVlanGroup,
         ieee8021QBridgeVlanStaticGroup,
@@ -622,13 +622,13 @@ vmwESX51x AGENT-CAPABILITIES
      }
      -- VARATION ieee8021QBridgeVlanCurrentUntaggedPorts
      -- Reports count of 0 if only untagged vlan access (vid 0) is defined
-     
+
      -- ********************* ************ ************ *************** ***
      -- REVISION 200706200000Z
      -- VDS link aggregations are not reported this release, issue PR 859941
      -- only VSS, traditional vswitch, nic teams are reported entries
      SUPPORTS IEEE8023-LAG-MIB
-     INCLUDES { 
+     INCLUDES {
         dot3adAggGroup,
         dot3adAggPortGroup,
         dot3adTablesLastChangedGroup,
@@ -638,19 +638,19 @@ vmwESX51x AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- REVISION 200906080000Z
      SUPPORTS LLDP-V2-MIB
-     INCLUDES { 
+     INCLUDES {
         lldpV2ConfigGroup,
         lldpV2ConfigTxGroup,
         lldpV2StatsTxGroup,
         lldpV2LocSysGroup,
-        lldpV2ConfigRxGroup, 
+        lldpV2ConfigRxGroup,
         lldpV2StatsRxGroup,
         lldpV2RemSysGroup,
         lldpV2NotificationsGroup
      }
 
      -- ********************* ************ ************ *************** ***
-     -- REVISION 201008020000Z 
+     -- REVISION 201008020000Z
      SUPPORTS VMWARE-SYSTEM-MIB
      INCLUDES {
          vmwSystemGroup
@@ -660,7 +660,7 @@ vmwESX51x AGENT-CAPABILITIES
      INCLUDES {
          vmwResourceGroup
      }
-     -- REVISION 201006220000Z 
+     -- REVISION 201006220000Z
      SUPPORTS VMWARE-VMINFO-MIB
      INCLUDES {
          vmwVmInfoGroup,
@@ -674,7 +674,7 @@ vmwESX51x AGENT-CAPABILITIES
      SUPPORTS VMWARE-ENV-MIB
      INCLUDES {
          vmwEnvAlertGroup,
-         vmwESXEnvNotificationGroup2 
+         vmwESXEnvNotificationGroup2
      }
 
      -- REVISION 201008200000Z
@@ -682,23 +682,23 @@ vmwESX51x AGENT-CAPABILITIES
      INCLUDES {
         vmwCimOmNotificationGroup
      }
-     
+
    ::= { vmwEsxCapability 4 }
 
 
-vmwESX50x AGENT-CAPABILITIES 
-  PRODUCT-RELEASE 
+vmwESX50x AGENT-CAPABILITIES
+  PRODUCT-RELEASE
      "5.0.x"
   STATUS  current
   DESCRIPTION
      "Release 5.0.x for VMware ESXi. The SNMPv1/v2c agent is a subsystem in the hostd process"
-  REFERENCE 
+  REFERENCE
      "http://www.vmware.com/products"
 
      -- RFC 3418
      SUPPORTS SNMPv2-MIB
-     INCLUDES { 
-         snmpGroup, 
+     INCLUDES {
+         snmpGroup,
          systemGroup,
          snmpCommunityGroup,
          snmpBasicNotificationsGroup,
@@ -731,7 +731,7 @@ vmwESX50x AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- RFC 2863
      SUPPORTS IF-MIB
-     INCLUDES { 
+     INCLUDES {
          ifGeneralInformationGroup,
          linkUpDownNotificationsGroup
      }
@@ -739,7 +739,7 @@ vmwESX50x AGENT-CAPABILITIES
      VARIATION ifAdminStatus
      ACCESS read-only
      DESCRIPTION "Agent provides read-only view of administrative state for each physical interface.
-                  Note: ESX virtual switches now may support changing administrative state 
+                  Note: ESX virtual switches now may support changing administrative state
                   of physical network interfaces (nics) up or down."
 
      VARIATION ifLinkUpDownTrapEnable
@@ -754,18 +754,18 @@ vmwESX50x AGENT-CAPABILITIES
      ACCESS not-implemented
      DESCRIPTION "This counter always returns 0."
 
-     -- ifRcvAddressGroup is interface/media specific 
+     -- ifRcvAddressGroup is interface/media specific
      VARIATION ifRcvAddressStatus
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
-     VARIATION ifRcvAddressType 
+     VARIATION ifRcvAddressType
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
      -- RFC 2790
      SUPPORTS HOST-RESOURCES-MIB
-     INCLUDES { 
+     INCLUDES {
             hrSystemGroup,
             hrStorageGroup, -- visorfs "ramdisks" are not reported
             hrDeviceGroup,
@@ -774,7 +774,7 @@ vmwESX50x AGENT-CAPABILITIES
             hrSWInstalledGroup  -- updates once an hour
      }
 
-     VARIATION  hrSystemNumUsers 
+     VARIATION  hrSystemNumUsers
      ACCESS read-only
      DESCRIPTION "Value reports number of active login sessions in host agent (hostd)"
 
@@ -789,7 +789,7 @@ vmwESX50x AGENT-CAPABILITIES
     -- hrDeviceStatus reports unknown for: cpu. pnic either running/unknown.
     --               disk reports running, warning, down, unknown
     -- device error counters do not account for all failure cases
-    
+
      VARIATION hrSWOSIndex
      ACCESS not-implemented
      DESCRIPTION "No operatingSystem entry exists in hrSWRunGroup hrSWRunTable"
@@ -801,20 +801,20 @@ vmwESX50x AGENT-CAPABILITIES
      VARIATION  hrFSLastPartialBackupDate
      ACCESS not-implemented
      DESCRIPTION "is not implemented"
-         
+
      VARIATION hrPrinterStatus
      ACCESS not-implemented
-     DESCRIPTION "is not implemented"     
+     DESCRIPTION "is not implemented"
 
      VARIATION hrPrinterDetectedErrorState
      ACCESS not-implemented
-     DESCRIPTION "is not implemented"          
+     DESCRIPTION "is not implemented"
 
      VARIATION  hrSystemDate
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
-     VARIATION hrSystemInitialLoadDevice 
+     VARIATION hrSystemInitialLoadDevice
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
@@ -822,17 +822,17 @@ vmwESX50x AGENT-CAPABILITIES
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
-     VARIATION hrStorageSize 
+     VARIATION hrStorageSize
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
 
      VARIATION  hrSWRunStatus
      ACCESS read-only
      DESCRIPTION "agent provides read only access"
-               
+
      -- ********************* ************ ************ *************** ***
 
-     -- REVISION 201008020000Z 
+     -- REVISION 201008020000Z
      SUPPORTS VMWARE-SYSTEM-MIB
      INCLUDES {
          vmwSystemGroup
@@ -842,7 +842,7 @@ vmwESX50x AGENT-CAPABILITIES
      INCLUDES {
          vmwResourceGroup
      }
-     -- REVISION 201006220000Z 
+     -- REVISION 201006220000Z
      SUPPORTS VMWARE-VMINFO-MIB
      INCLUDES {
          vmwVmInfoGroup,
@@ -861,23 +861,23 @@ vmwESX50x AGENT-CAPABILITIES
    ::= { vmwEsxCapability 3 }
 
 
--- 
+--
 --
 --
 
-vmwESX41x AGENT-CAPABILITIES 
-  PRODUCT-RELEASE 
+vmwESX41x AGENT-CAPABILITIES
+  PRODUCT-RELEASE
      "4.1.x"
   STATUS  current
   DESCRIPTION
      "Release 4.1.x for VMware ESX, the SNMP agent is now a subsystem in the hostd process on ESXi."
-  REFERENCE 
+  REFERENCE
      "http://www.vmware.com/products"
 
      -- RFC 3418
      SUPPORTS SNMPv2-MIB
-     INCLUDES { 
-         snmpGroup, 
+     INCLUDES {
+         snmpGroup,
          systemGroup,
          snmpCommunityGroup,
          snmpBasicNotificationsGroup,
@@ -910,7 +910,7 @@ vmwESX41x AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- RFC 2863
      SUPPORTS IF-MIB
-     INCLUDES { 
+     INCLUDES {
          ifGeneralInformationGroup,
          linkUpDownNotificationsGroup
      }
@@ -918,7 +918,7 @@ vmwESX41x AGENT-CAPABILITIES
      VARIATION ifAdminStatus
      ACCESS read-only
      DESCRIPTION "Agent provides read-only view of administrative state for each interface.
-                  ESX virtual layer 2 switches may support changing administrative state 
+                  ESX virtual layer 2 switches may support changing administrative state
                   of physical network interfaces (nics)."
 
      VARIATION ifLinkUpDownTrapEnable
@@ -933,12 +933,12 @@ vmwESX41x AGENT-CAPABILITIES
      ACCESS not-implemented
      DESCRIPTION "This counter always returns 0."
 
-     -- ifRcvAddressGroup is interface/media specific 
+     -- ifRcvAddressGroup is interface/media specific
      VARIATION ifRcvAddressStatus
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
-     VARIATION ifRcvAddressType 
+     VARIATION ifRcvAddressType
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
@@ -972,23 +972,23 @@ vmwESX41x AGENT-CAPABILITIES
 
    ::= { vmwEsxCapability 2 }
 
--- 
+--
 --
 --
 
-vmwESX40x AGENT-CAPABILITIES 
-  PRODUCT-RELEASE 
+vmwESX40x AGENT-CAPABILITIES
+  PRODUCT-RELEASE
      "4.0.x"
   STATUS  current
   DESCRIPTION
      "Release 4.0.x for VMware ESX. The SNMP agent is now part of the hostd process"
-  REFERENCE 
+  REFERENCE
      "http://www.vmware.com/products"
 
      -- RFC 3418
      SUPPORTS SNMPv2-MIB
-     INCLUDES { 
-         snmpGroup, 
+     INCLUDES {
+         snmpGroup,
          systemGroup,
          snmpCommunityGroup,
          snmpBasicNotificationsGroup,
@@ -1021,7 +1021,7 @@ vmwESX40x AGENT-CAPABILITIES
      -- ********************* ************ ************ *************** ***
      -- RFC 2863
      SUPPORTS IF-MIB
-     INCLUDES { 
+     INCLUDES {
          ifGeneralInformationGroup,
          linkUpDownNotificationsGroup
      }
@@ -1176,7 +1176,7 @@ vmwESX40x AGENT-CAPABILITIES
      ACCESS not-implemented
      DESCRIPTION "Performance counters not implemented."
 
-     VARIATION ifPromiscuousMode 
+     VARIATION ifPromiscuousMode
      ACCESS not-implemented
      DESCRIPTION "Performance counters not implemented."
 
@@ -1340,12 +1340,12 @@ vmwESX40x AGENT-CAPABILITIES
      ACCESS not-implemented
      DESCRIPTION "Required if Performance counters are implemented."
 
-     -- ifRcvAddressGroup is interface/media specific 
+     -- ifRcvAddressGroup is interface/media specific
      VARIATION ifRcvAddressStatus
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
-     VARIATION ifRcvAddressType 
+     VARIATION ifRcvAddressType
      ACCESS not-implemented
      DESCRIPTION "Required if media specific mib modules are implemented."
 
@@ -1381,4 +1381,3 @@ vmwESX40x AGENT-CAPABILITIES
    ::= { vmwEsxCapability 1 }
 
 END
-

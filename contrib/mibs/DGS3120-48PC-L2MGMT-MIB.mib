@@ -75,7 +75,7 @@
 -- Description:
 --  [Modification]
 --    Delete swL2PortSecurityMgmt nodes, it's supported by swPortSecMIB.
- 
+
 -- Version 1.01, 2010/02/23, Robinson Yan
 -- Description:
 --  [Modification]
@@ -94,12 +94,12 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DisplayString,RowStatus,TruthValue		FROM SNMPv2-TC
         Counter						FROM RFC1155-SMI
 		--PortList								FROM Q-BRIDGE-MIB
-		AgentNotifyLevel						FROM DLINK-ID-REC-MIB       
-       TEXTUAL-CONVENTION  
-                  FROM SNMPv2-TC      
+		AgentNotifyLevel						FROM DLINK-ID-REC-MIB
+       TEXTUAL-CONVENTION
+                  FROM SNMPv2-TC
 	    dlink-Dgs3120Proj-DGS-3120-48PC-bx     	          	 			FROM SWDGS3120PRIMGMT-MIB
 		swPortSecPortIndex						FROM PORT-SECURITY-MIB;
-	    
+
 	  swL2MgmtMIB MODULE-IDENTITY
 	    LAST-UPDATED "201308211006Z"
 	    ORGANIZATION "D-Link Corp."
@@ -108,18 +108,18 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 		    "The Structure of Layer 2 Network Management Information."
         ::= { dlink-Dgs3120Proj-DGS-3120-48PC-bx 2 }
-        
+
 	MacAddress ::= OCTET STRING (SIZE (6))    -- a 6 octet address
                                                   -- in the
                                                   -- "canonical"
-                                                  -- order, copy from RFC1493        
+                                                  -- order, copy from RFC1493
 
 		VlanId					::= INTEGER (1..4094)
-    	PortList                ::= OCTET STRING(SIZE (0..127))    
- 
-		
+    	PortList                ::= OCTET STRING(SIZE (0..127))
+
+
     swL2DevMgmt                 OBJECT IDENTIFIER ::= { swL2MgmtMIB 1 }
-    swL2VLANMgmt                OBJECT IDENTIFIER ::= { swL2MgmtMIB 2 }    
+    swL2VLANMgmt                OBJECT IDENTIFIER ::= { swL2MgmtMIB 2 }
     swL2PortMgmt                OBJECT IDENTIFIER ::= { swL2MgmtMIB 3 }
 --	swL2DhcpRelayMgmt			OBJECT IDENTIFIER ::= { swL2MgmtMIB 8 }
     swL2TrunkMgmt               OBJECT IDENTIFIER ::= { swL2MgmtMIB 9 }
@@ -131,11 +131,11 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
     swL2MgmtMIBTraps            OBJECT IDENTIFIER ::= { swL2MgmtMIB 100 }
 
 
--- 
+--
 -- ***********************************************************
--- 
+--
 -- Textual Conventions
--- 
+--
 -- ***********************************************************
      IANAifMauAutoNegCapBits ::= TEXTUAL-CONVENTION
        STATUS       current
@@ -197,7 +197,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 
 -- -----------------------------------------------------------------------------
     swL2DevCtrl             OBJECT IDENTIFIER ::= { swL2DevMgmt 2 }
-        
+
     swL2DevCtrlSnmpTrapState OBJECT-TYPE
     	SYNTAX	INTEGER {
     		enabled(1),
@@ -207,7 +207,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
     	STATUS	current
     	DESCRIPTION
     		"This object controls the SNMP trap status."
-    	::= { swL2DevCtrl 5 }    
+    	::= { swL2DevCtrl 5 }
 
     swL2DevCtrlCleanAllStatisticCounter OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -220,15 +220,15 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
             "When the object is set to active, all statistical counters will
              be cleared. If set to normal, no action will occur."
         ::= { swL2DevCtrl 6 }
-    
+
     swL2DevCtrlVlanIdOfFDBTbl OBJECT-TYPE
         SYNTAX      VlanId
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "Indicates the VLAN ID to which the Dot1dTpFdbTable belongs;  
+            "Indicates the VLAN ID to which the Dot1dTpFdbTable belongs;
              The default value is the DEFAULT_VLAN_ID of the system."
-        ::= { swL2DevCtrl 7 }                    
+        ::= { swL2DevCtrl 7 }
 
     swL2MACNotifyState OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -240,26 +240,26 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
            "This object can enable or disable MAC Notification."
-        ::= { swL2DevCtrl 8 }        
+        ::= { swL2DevCtrl 8 }
 
     swL2MACNotifyHistorySize OBJECT-TYPE
 	    SYNTAX  INTEGER (1..500)
 	    MAX-ACCESS  read-write
 	    STATUS  current
 	    DESCRIPTION
-        "This object indicates the history size of MAC addresses in the MAC Address table. 
+        "This object indicates the history size of MAC addresses in the MAC Address table.
 	         The default value is 1."
-    ::= { swL2DevCtrl 9 }        
-        
+    ::= { swL2DevCtrl 9 }
+
     swL2MACNotifyInterval OBJECT-TYPE
 	    SYNTAX  INTEGER (1..2147483647)
 	    MAX-ACCESS  read-write
 	    STATUS  current
 	    DESCRIPTION
-	        "This object indicates the time interval, in seconds, that will trigger 
+	        "This object indicates the time interval, in seconds, that will trigger
 	         MAC notification messages."
-	    ::= { swL2DevCtrl 10 }    
-	
+	    ::= { swL2DevCtrl 10 }
+
 	swL2DevCtrlAsymVlanState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -269,13 +269,13 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object enables or disables asymmetric VLANs 
+            "This object enables or disables asymmetric VLANs
              during the runtime of the system."
-        ::= { swL2DevCtrl 13 }   
-    
+        ::= { swL2DevCtrl 13 }
+
 -- -----------------------------------------------------------------------------
-    swL2DevCtrlTelnet   OBJECT IDENTIFIER ::= { swL2DevCtrl 14 }     
-        
+    swL2DevCtrlTelnet   OBJECT IDENTIFIER ::= { swL2DevCtrl 14 }
+
     swL2DevCtrlTelnetState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -286,8 +286,8 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object controls the Telnet status."
-        ::= { swL2DevCtrlTelnet 1 } 
-        
+        ::= { swL2DevCtrlTelnet 1 }
+
     swL2DevCtrlTelnetTcpPort OBJECT-TYPE
         SYNTAX  INTEGER (1..65535)
         MAX-ACCESS  read-write
@@ -295,21 +295,21 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object designates TCP ports.
              When Telnet is disabled, this object is not accessible."
-        ::= { swL2DevCtrlTelnet 2 }                
-                   
+        ::= { swL2DevCtrlTelnet 2 }
+
 -- -----------------------------------------------------------------------------
     swL2DevCtrlManagementVlanId OBJECT-TYPE
         SYNTAX  VlanId
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object controls which previously created VLANs are included 
+            "This object controls which previously created VLANs are included
              in the System IP Interface."
-        ::= { swL2DevCtrl 16 }              
+        ::= { swL2DevCtrl 16 }
 
 -- -----------------------------------------------------------------------------
-    swL2DevCtrlWeb   OBJECT IDENTIFIER ::= { swL2DevCtrl 17 }     
-        
+    swL2DevCtrlWeb   OBJECT IDENTIFIER ::= { swL2DevCtrl 17 }
+
     swL2DevCtrlWebState OBJECT-TYPE
         SYNTAX  INTEGER {
  	       enabled(1),
@@ -319,8 +319,8 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object controls the Web status."
-        ::= { swL2DevCtrlWeb 1 } 
-        
+        ::= { swL2DevCtrlWeb 1 }
+
     swL2DevCtrlWebTcpPort OBJECT-TYPE
         SYNTAX  INTEGER (1..65535)
         MAX-ACCESS  read-write
@@ -329,7 +329,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
             "This object designates TCP ports.
              When Web is disabled, this object is not accessible."
         ::= { swL2DevCtrlWeb 2 }
-  
+
      swL2DevCtrlLLDPState OBJECT-TYPE
         SYNTAX  INTEGER {
                enabled(1),
@@ -338,18 +338,18 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Specifies the state of the LLDP function. 
-             When this function is enabled, the switch can start to transmit 
+            "Specifies the state of the LLDP function.
+             When this function is enabled, the switch can start to transmit
              LLDP packets and receive and process the LLDP packets.
-	     The specific function of each port will depend on the per port 
+	     The specific function of each port will depend on the per port
 	     LLDP setting.
-	     For the advertisement of LLDP packets, the switch announces the 
+	     For the advertisement of LLDP packets, the switch announces the
 	     information to its neighbor through ports. For receiving
-	     LLDP packets, the switch will learn the information from the LLDP 
+	     LLDP packets, the switch will learn the information from the LLDP
 	     packets advertised from the neighbor in the neighbor table.
 	    "
         ::= { swL2DevCtrl 18 }
-        
+
      swL2DevCtrlLLDPForwardMessageState OBJECT-TYPE
         SYNTAX  INTEGER{
                  enabled(1),
@@ -358,10 +358,10 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS   current
         DESCRIPTION
-             "When lldp is disabled and lldp forward_message's are enabled, the 
+             "When lldp is disabled and lldp forward_message's are enabled, the
               LLDP Data Unit packets received by the switch will be forwarded. "
         DEFVAL  {disabled}
-       ::={swL2DevCtrl 19}   		
+       ::={swL2DevCtrl 19}
 
      swL2DevCtrlIpAutoconfig OBJECT-TYPE
     	SYNTAX	INTEGER {
@@ -373,7 +373,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
     	DESCRIPTION
     		"This object controls the IP auto configuration state."
     	::= { swL2DevCtrl 20 }
-    	
+
 -- -----------------------------------------------------------------------------
      swL2DevCtrlCFM   OBJECT IDENTIFIER ::= { swL2DevCtrl 21 }
 
@@ -432,7 +432,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the CFM state by port."
         ::= { swL2DevCtrlCFMPortEntry 2 }
-        	
+
       swL2DevCtrlVLANTrunkState  OBJECT-TYPE
         SYNTAX  INTEGER
                 {
@@ -444,9 +444,9 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
                "This indicates the global state of the VLAN trunking feature of the device."
         ::={swL2DevCtrl 22}
-        
+
 -- -----------------------------------------------------------------------------
-	
+
      swL2DevCtrlLLDPExtPortSubTypeTable OBJECT-TYPE
         SYNTAX          SEQUENCE OF SwL2DevCtrlLLDPExtPortSubTypeEntry
         MAX-ACCESS      not-accessible
@@ -454,22 +454,22 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The table is used to configure the subtype of Port ID TLV for ports."
         ::= { swL2DevCtrl 24}
-	
+
      swL2DevCtrlLLDPExtPortSubTypeEntry OBJECT-TYPE
         SYNTAX          SwL2DevCtrlLLDPExtPortSubTypeEntry
         MAX-ACCESS      not-accessible
         STATUS          current
-        DESCRIPTION            
+        DESCRIPTION
             "An entry contains the information of subtype of Port ID TLV on a port."
         INDEX   { swL2PortInfoPortIndex }
         ::= { swL2DevCtrlLLDPExtPortSubTypeTable 1 }
 
-     SwL2DevCtrlLLDPExtPortSubTypeEntry ::= 
-     	SEQUENCE {		
-		swL2DevCtrlLLDPExtPortSubType 	
+     SwL2DevCtrlLLDPExtPortSubTypeEntry ::=
+     	SEQUENCE {
+		swL2DevCtrlLLDPExtPortSubType
 			INTEGER
     	}
-    		         
+
      swL2DevCtrlLLDPExtPortSubType OBJECT-TYPE
         SYNTAX          INTEGER {
             localPortNumber(1),
@@ -480,12 +480,12 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object represents how to encode the port ID in Port ID TLV.
             localPortNumber - The 'port ID' will be encoded with local port number.
-            macAddress(2) -The 'port ID' will be encoded with MAC address. 
+            macAddress(2) -The 'port ID' will be encoded with MAC address.
             "
-        ::= { swL2DevCtrlLLDPExtPortSubTypeEntry 1 } 	
+        ::= { swL2DevCtrlLLDPExtPortSubTypeEntry 1 }
 
-        
--- -----------------------------------------------------------------------------    
+
+-- -----------------------------------------------------------------------------
     swL2DevAlarm             OBJECT IDENTIFIER ::= { swL2DevMgmt 3 }
 
     swL2DevAlarmNewRoot OBJECT-TYPE
@@ -510,14 +510,14 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object determines whether or not to send a trap message when 
-             the switch topology changes. If the object is enabled (3), the Topology Change 
-             trap is sent by the device when any of its configured ports transition from 
-             the Learning state to the Forwarding state, or from the Forwarding state to 
-             the Blocking state. For the same port transition, the device does not send the            
+            "This object determines whether or not to send a trap message when
+             the switch topology changes. If the object is enabled (3), the Topology Change
+             trap is sent by the device when any of its configured ports transition from
+             the Learning state to the Forwarding state, or from the Forwarding state to
+             the Blocking state. For the same port transition, the device does not send the
              trap if this object value is disabled or in another state."
         ::= { swL2DevAlarm 2 }
-        
+
     swL2DevAlarmLinkChange OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -527,9 +527,9 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object determines whether or not to send a trap message when the link              
-              changes. If the object is enabled (3), the Link Change trap is sent by 
-             the device when any of its port links change. The device does not send the 
+            "This object determines whether or not to send a trap message when the link
+              changes. If the object is enabled (3), the Link Change trap is sent by
+             the device when any of its port links change. The device does not send the
              trap if this object value is disabled or in another state."
         ::= { swL2DevAlarm 3 }
 
@@ -584,7 +584,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates if the advertisement is active or not."
         ::= { swL2VlanStaticEntry 2 }
-  
+
     swL2PVIDAutoAssignmentState OBJECT-TYPE
     	SYNTAX	INTEGER {
     		enabled(1),
@@ -594,18 +594,18 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
     	STATUS current
     	DESCRIPTION
     		"This object controls the PVID auto assignment state.
-    		 If 'Auto-assign PVID' is disabled, the PVID can only be changed 
-    		 by PVID configuration (user changes explicitly). The VLAN 
-    		 configuration will not automatically change the PVID. 
+    		 If 'Auto-assign PVID' is disabled, the PVID can only be changed
+    		 by PVID configuration (user changes explicitly). The VLAN
+    		 configuration will not automatically change the PVID.
 
-		 If 'Auto-assign PVID' is enabled, the PVID will be changed by PVID or VLAN configuration. When a user configures 
-		 a port to VLAN X's untagged membership, this port's PVID 
-		 will be updated with VLAN X. Using the VLAN list command, 
-		 PVID is updated as the last item of the VLAN list. When a user removes 
-		 a port from the untagged membership of the PVID's VLAN, the 
+		 If 'Auto-assign PVID' is enabled, the PVID will be changed by PVID or VLAN configuration. When a user configures
+		 a port to VLAN X's untagged membership, this port's PVID
+		 will be updated with VLAN X. Using the VLAN list command,
+		 PVID is updated as the last item of the VLAN list. When a user removes
+		 a port from the untagged membership of the PVID's VLAN, the
 		 port's PVID will be assigned 'default VLAN'."
     	::= { swL2VLANMgmt 2 }
-    
+
     swL2VlanPortInfoTable OBJECT-TYPE
         SYNTAX      SEQUENCE OF SwL2VlanPortInfoEntry
         MAX-ACCESS  not-accessible
@@ -631,7 +631,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
                  VlanId,
             swL2VlanPortInfoPortRole
                 INTEGER
-        }	
+        }
     swL2VlanPortInfoPortIndex OBJECT-TYPE
 	    SYNTAX  INTEGER (0..65535)
 	    MAX-ACCESS  read-only
@@ -639,21 +639,21 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "The port index."
     	::= { swL2VlanPortInfoEntry 1 }
-    	        
+
     swL2VlanPortInfoVid OBJECT-TYPE
-	    SYNTAX   VlanId 
+	    SYNTAX   VlanId
 	    MAX-ACCESS  read-only
 	    STATUS  current
 	    DESCRIPTION
 	        "The VLAN ID assigned to a special port"
-    	::= { swL2VlanPortInfoEntry 2 }    
-    
+    	::= { swL2VlanPortInfoEntry 2 }
+
     swL2VlanPortInfoPortRole OBJECT-TYPE
 	    SYNTAX  INTEGER {
-	       other(1),          
-               untagged(2),            
+	       other(1),
+               untagged(2),
                tagged(3),
-               dynamic(4),                        
+               dynamic(4),
                forbidden(5)
               }
 	    MAX-ACCESS  read-only
@@ -692,7 +692,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
             swL2SubnetVLANRowStatus
                 RowStatus
         }
-        	
+
     swL2SubnetVLANIPAddress OBJECT-TYPE
 	    SYNTAX  IpAddress
 	    MAX-ACCESS  read-only
@@ -700,7 +700,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "This object indicates the IP address."
     	::= { swL2SubnetVLANEntry 1 }
-    	
+
     swL2SubnetVLANIPMask OBJECT-TYPE
 	    SYNTAX   IpAddress
 	    MAX-ACCESS  read-only
@@ -716,7 +716,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "This object indicates the VLAN ID."
     	::= { swL2SubnetVLANEntry 3 }
-    	
+
     swL2SubnetVLANPriority OBJECT-TYPE
 	    SYNTAX   INTEGER (0..7)
 	    MAX-ACCESS  read-create
@@ -757,7 +757,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
             swL2VlanPrecedenceClassification
                 INTEGER
         }
-        	
+
     swL2VlanPrecedencePortIndex OBJECT-TYPE
 	    SYNTAX  INTEGER (0..65535)
 	    MAX-ACCESS  read-only
@@ -765,7 +765,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "This object indicates the port index."
     	::= { swL2VlanPrecedenceEntry 1 }
-    	
+
     swL2VlanPrecedenceClassification OBJECT-TYPE
 	    SYNTAX   INTEGER{
 	             mac-based(1),
@@ -776,7 +776,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "This object indicates the VLAN classification precedence."
     	::= { swL2VlanPrecedenceEntry 2 }
- 
+
 	swL2NniGvrpBpduAddress OBJECT-TYPE
 	   SYNTAX  INTEGER {
 	   		dot1d(1),
@@ -787,7 +787,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	   DESCRIPTION
 	"Specifies the GVRP's BPDU MAC address of the NNI port with Q-in-Q status."
 	   ::= { swL2VLANMgmt 6 }
-                                               	
+
 -- -----------------------------------------------------------------------------
 --  swL2PortMgmt            OBJECT IDENTIFIER ::= { swL2MgmtMIB 3 }
 -- -----------------------------------------------------------------------------
@@ -809,7 +809,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         INDEX   { swL2PortInfoPortIndex,swL2PortInfoMediumType }
         ::= { swL2PortInfoTable 1 }
 
-    SwL2PortInfoEntry ::= 
+    SwL2PortInfoEntry ::=
         SEQUENCE {
             swL2PortInfoPortIndex
                 INTEGER,
@@ -824,7 +824,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
             swL2PortInfoNwayStatus
                 INTEGER,
             swL2PortInfoErrorDisabled
-                INTEGER 
+                INTEGER
         }
 
     swL2PortInfoPortIndex OBJECT-TYPE
@@ -835,11 +835,11 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	        "This object indicates the module's port number.(1..Max port
 	        number in the module)"
     	::= { swL2PortInfoEntry 1 }
-    	
+
     swL2PortInfoMediumType OBJECT-TYPE
         SYNTAX INTEGER{
         	copper(1),
-        	fiber(2)        	
+        	fiber(2)
         }
         MAX-ACCESS read-only
         STATUS current
@@ -915,13 +915,13 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         ::= { swL2PortInfoEntry 6 }
 
     swL2PortInfoErrorDisabled OBJECT-TYPE
-        SYNTAX  INTEGER {             
+        SYNTAX  INTEGER {
                none(0),
                storm(1),
                stp-lbd(2),
                ctp-lbd(3),
                ddm(4),
-               bpdu-protection(5),              
+               bpdu-protection(5),
                oam-unidirectional-link(6),
                power-saving(7),
                port-security(8),
@@ -932,7 +932,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the blocking type of this port."
         ::= { swL2PortInfoEntry 8 }
-        
+
 -- -----------------------------------------------------------------------------
 
     swL2PortCtrlTable OBJECT-TYPE
@@ -952,7 +952,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         INDEX  { swL2PortCtrlPortIndex,swL2PortCtrlMediumType}
         ::= { swL2PortCtrlTable 1 }
 
-    SwL2PortCtrlEntry ::= 
+    SwL2PortCtrlEntry ::=
         SEQUENCE {
             swL2PortCtrlPortIndex
                 INTEGER,
@@ -976,7 +976,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
                   INTEGER,
             swL2PortCtrlAutoSpeedDowngradeState
 	        INTEGER
-            
+
             }
 
     swL2PortCtrlPortIndex OBJECT-TYPE
@@ -987,18 +987,18 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
             "This object indicates the module's port number.(1..Max port
             number in the module)"
         ::= { swL2PortCtrlEntry 1 }
-        
+
     swL2PortCtrlMediumType OBJECT-TYPE
         SYNTAX INTEGER{
         	copper(1),
-        	fiber(2)        	
+        	fiber(2)
         }
         MAX-ACCESS read-only
         STATUS current
         DESCRIPTION
         	"Indicates the medium type of the port number."
         ::={ swL2PortCtrlEntry 2 }
-             
+
     swL2PortCtrlUnitIndex OBJECT-TYPE
         SYNTAX  INTEGER (0..65535)
         MAX-ACCESS  read-only
@@ -1045,14 +1045,14 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
                enabled(3)
                }
         MAX-ACCESS  read-write
-        STATUS  current 
+        STATUS  current
         DESCRIPTION
             "The flow control mechanism is different between full duplex
-            mode and half duplex mode. For half duplex mode, the jamming 
-            signal is asserted. For full duplex mode, the IEEE 802.3x flow 
+            mode and half duplex mode. For half duplex mode, the jamming
+            signal is asserted. For full duplex mode, the IEEE 802.3x flow
             control function sends PAUSE frames and receives PAUSE frames."
         ::= { swL2PortCtrlEntry 6 }
-        
+
     swL2PortCtrlLearningState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -1063,8 +1063,8 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object decides if the port is locked or not."
-        ::= { swL2PortCtrlEntry 7 } 
-    
+        ::= { swL2PortCtrlEntry 7 }
+
     swL2PortCtrlMACNotifyState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -1075,11 +1075,11 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object sets each port's MAC notification state."
-        ::= { swL2PortCtrlEntry 8 }    
+        ::= { swL2PortCtrlEntry 8 }
 
 --    swL2PortCtrlMulticastfilter OBJECT-TYPE
 --        SYNTAX  INTEGER {
---    		   other(0), 
+--    		   other(0),
 --               forward-all-groups(1),
 --               forward-unregistered-groups(2),
 --               filter-unregistered-groups(3)
@@ -1088,7 +1088,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object controls the multicast port filtering mode for a specified port. "   
+--            "This object controls the multicast port filtering mode for a specified port. "
 --          ::= { swL2PortCtrlEntry 9 }
 
            swL2PortCtrlMDIXState OBJECT-TYPE
@@ -1124,17 +1124,17 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object configures the switch's jumbo frame settings."   
+            "This object configures the switch's jumbo frame settings."
         ::= { swL2PortMgmt 3 }
-          
+
     swL2PortCtrlJumboFrameMaxSize OBJECT-TYPE
-        SYNTAX  INTEGER 
+        SYNTAX  INTEGER
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "This object describes how many bytes the max jumbo frame is."   
-        ::= { swL2PortMgmt 4 }                
-    
+            "This object describes how many bytes the max jumbo frame is."
+        ::= { swL2PortMgmt 4 }
+
 -- -----------------------------------------------------------------------------
 -- swL2PortCounterCtrlTable
 -- -----------------------------------------------------------------------------
@@ -1145,7 +1145,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "A table that is used to clear counter information about every port."
         ::= { swL2PortMgmt 6 }
-        
+
     swL2PortCounterCtrlEntry OBJECT-TYPE
         SYNTAX  SwL2PortCounterCtrlEntry
         MAX-ACCESS  not-accessible
@@ -1155,14 +1155,14 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         INDEX   { swL2PortCounterCtrlPortIndex }
         ::= { swL2PortCounterCtrlTable 1 }
 
-    SwL2PortCounterCtrlEntry ::= 
+    SwL2PortCounterCtrlEntry ::=
         SEQUENCE {
             swL2PortCounterCtrlPortIndex
                 INTEGER,
             swL2PortCounterClearCtrl
             	INTEGER
         }
-        
+
     swL2PortCounterCtrlPortIndex OBJECT-TYPE
         SYNTAX  INTEGER (0..65535)
         MAX-ACCESS  read-only
@@ -1171,7 +1171,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         	"This object indicates the module's port number.(1..Max port
         	number in the module)"
     ::= { swL2PortCounterCtrlEntry 1 }
-    
+
     swL2PortCounterClearCtrl OBJECT-TYPE
         SYNTAX  INTEGER {
         	other(1),
@@ -1187,7 +1187,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 -- swL2PortSfpInformationTable
 -- -----------------------------------------------------------------------------
     swL2PortSfpInfoTable OBJECT-TYPE
-        SYNTAX  SEQUENCE OF SwL2PortSfpInfoEntry 
+        SYNTAX  SEQUENCE OF SwL2PortSfpInfoEntry
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
@@ -1195,7 +1195,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         ::= { swL2PortMgmt 11 }
 
     swL2PortSfpInfoEntry OBJECT-TYPE
-        SYNTAX  SwL2PortSfpInfoEntry 
+        SYNTAX  SwL2PortSfpInfoEntry
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
@@ -1203,13 +1203,13 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         INDEX   { swL2PortSfpInfoPortIndex }
         ::= { swL2PortSfpInfoTable 1 }
 
-    SwL2PortSfpInfoEntry ::= 
+    SwL2PortSfpInfoEntry ::=
         SEQUENCE {
-            swL2PortSfpInfoPortIndex 
+            swL2PortSfpInfoPortIndex
                 INTEGER,
            swL2PortSfpInfoConnectType
            	DisplayString,
-           swL2PortSfpInfoVendorName 
+           swL2PortSfpInfoVendorName
 	        DisplayString,
            swL2PortSfpInfoVendorPN
 		DisplayString,
@@ -1323,29 +1323,29 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object indicates if the DHCP relay function is enabled or 
+--            "This object indicates if the DHCP relay function is enabled or
 --            disabled."
 --        ::= { swL2DhcpRelayMgmt 1 }
---        
+--
 --    swL2DhcpRelayHopCount OBJECT-TYPE
 --        SYNTAX  INTEGER (1..16)
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object indicates the maximum number of router hops that 
+--            "This object indicates the maximum number of router hops that
 --             DHCP packets can cross."
 --        ::= { swL2DhcpRelayMgmt 2 }
---        
+--
 --    swL2DhcpRelayTimeThreshold OBJECT-TYPE
 --        SYNTAX  INTEGER (0..65535)
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
 --            "This object indicates the minimum time in seconds within which
---            the switch must relay the DHCP request. If this time is 
+--            the switch must relay the DHCP request. If this time is
 --            exceeded, the switch will drop the DHCP packet."
 --        ::= { swL2DhcpRelayMgmt 3 }
---    
+--
 --    swL2DhcpRelayOption82State OBJECT-TYPE
 --        SYNTAX  INTEGER {
 --               other(1),
@@ -1355,11 +1355,11 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object indicates if the DHCP relay agent information option 82 
+--            "This object indicates if the DHCP relay agent information option 82
 --            function is enabled or disabled."
 --        ::= { swL2DhcpRelayMgmt 4 }
---    
---    swL2DhcpRelayOption82Check OBJECT-TYPE 
+--
+--    swL2DhcpRelayOption82Check OBJECT-TYPE
 --        SYNTAX  INTEGER {
 --               other(1),
 --               disabled(2),
@@ -1368,10 +1368,10 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object indicates if the checking mechanism of DHCP relay agent 
+--            "This object indicates if the checking mechanism of DHCP relay agent
 --            information option 82 is enabled or disabled."
 --        ::= { swL2DhcpRelayMgmt 5 }
---        
+--
 --    swL2DhcpRelayOption82Policy OBJECT-TYPE
 --        SYNTAX  INTEGER {
 --               replace(1),
@@ -1381,12 +1381,12 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object indicates the reforwarding policy of the DHCP relay agent 
+--            "This object indicates the reforwarding policy of the DHCP relay agent
 --            information option 82.
---            
+--
 --            replace (1)  - replace the exiting option 82 field in messages.
 --            drop (2)     - discard messages with an existing option 82 field.
---            keep (3)     - retain the existing option 82 field messages."             
+--            keep (3)     - retain the existing option 82 field messages."
 --        ::= { swL2DhcpRelayMgmt 6 }
 --
 --    swL2DhcpRelayCtrlTable OBJECT-TYPE
@@ -1408,14 +1408,14 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 --        INDEX  { swL2DhcpRelayCtrlInterfaceName,  swL2DhcpRelayCtrlServer}
 --        ::= { swL2DhcpRelayCtrlTable 1 }
 --
---    SwL2DhcpRelayCtrlEntry ::= 
+--    SwL2DhcpRelayCtrlEntry ::=
 --        SEQUENCE {
 --            swL2DhcpRelayCtrlInterfaceName
 --                DisplayString,
 --            swL2DhcpRelayCtrlServer
 --                IpAddress,
 --            swL2DhcpRelayCtrlState
---                INTEGER    
+--                INTEGER
 --        }
 --
 --    swL2DhcpRelayCtrlInterfaceName OBJECT-TYPE
@@ -1425,7 +1425,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 --        DESCRIPTION
 --            "The name of the IP interface."
 --        ::= { swL2DhcpRelayCtrlEntry 1 }
---        
+--
 --    swL2DhcpRelayCtrlServer OBJECT-TYPE
 --        SYNTAX IpAddress
 --        MAX-ACCESS  read-only
@@ -1444,15 +1444,15 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 --        STATUS  current
 --        DESCRIPTION
 --            "This object indicates the status of this entry.
--- 
+--
 --            other (1) - This entry is currently in use but the conditions
 --                under which it will remain so are different from each of
 --                the following values.
 --            invalid (2) - Writing this value to the object will remove the
 --                corresponding entry from the table.
 --            valid (3) - This entry resides in the table."
---        ::= { swL2DhcpRelayCtrlEntry 3 }	
---		
+--        ::= { swL2DhcpRelayCtrlEntry 3 }
+--
 --
 -- -----------------------------------------------------------------------------
 --  swL2TrunkMgmt           OBJECT IDENTIFIER ::= { swL2MgmtMIB 9 }
@@ -1472,7 +1472,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "Current active number of entries in the trunk configuration 
+            "Current active number of entries in the trunk configuration
             table."
         ::= { swL2TrunkMgmt 2 }
 
@@ -1489,11 +1489,11 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "A list of information about each logical port trunk group." 
+            "A list of information about each logical port trunk group."
         INDEX  { swL2TrunkIndex }
         ::= { swL2TrunkCtrlTable 1 }
 
-    SwL2TrunkCtrlEntry ::= 
+    SwL2TrunkCtrlEntry ::=
         SEQUENCE {
             swL2TrunkIndex
                 INTEGER,
@@ -1504,7 +1504,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
             swL2TrunkFloodingPort
                 INTEGER,
             swL2TrunkType
-                INTEGER,        
+                INTEGER,
             swL2TrunkState
                 RowStatus
         }
@@ -1514,7 +1514,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "The index number of the logical port trunk group. The trunk group 
+            "The index number of the logical port trunk group. The trunk group
              number depends on the existence of unit and module."
         ::= { swL2TrunkCtrlEntry 1 }
 
@@ -1524,10 +1524,10 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the master port number of the port trunk
-            entry. When using Port Trunking, you cannot configure the other 
+            entry. When using Port Trunking, you cannot configure the other
             ports of the group except the master port.
             Their configuration must be the same as the master port (e.g. speed,
-            duplex, enabled/disabled, flow control, and so on)." 
+            duplex, enabled/disabled, flow control, and so on)."
         ::= { swL2TrunkCtrlEntry 3 }
 
     swL2TrunkMember OBJECT-TYPE
@@ -1546,10 +1546,10 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "The object indicates the flooding port number of the port trunk
-            entry. The first port of the Trunk group is implicitly configured to 
-            be the flooding port." 
+            entry. The first port of the Trunk group is implicitly configured to
+            be the flooding port."
         ::= { swL2TrunkCtrlEntry 5 }
-    
+
     swL2TrunkType OBJECT-TYPE
         SYNTAX  INTEGER {
                 other(1),
@@ -1561,9 +1561,9 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the type of trunk group.
             static: is a static trunk group
-            lacp: is a LACP trunk group. "   			
-        ::= { swL2TrunkCtrlEntry 6 }          
-    
+            lacp: is a LACP trunk group. "
+        ::= { swL2TrunkCtrlEntry 6 }
+
     swL2TrunkState OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
@@ -1571,7 +1571,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
              "This object indicates the status of this entry."
         ::= { swL2TrunkCtrlEntry 7 }
-        
+
     swL2TrunkAlgorithm OBJECT-TYPE
         SYNTAX  INTEGER {
                 other(1),
@@ -1588,10 +1588,10 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object configures part of the packet examined by the 
-            switch when selecting the egress port for transmitting 
+            "This object configures part of the packet examined by the
+            switch when selecting the egress port for transmitting
             load-sharing data."
-        ::= { swL2TrunkMgmt 4 }    	    
+        ::= { swL2TrunkMgmt 4 }
 
     swL2TrunkLACPPortTable  OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL2TrunkLACPPortEntry
@@ -1601,7 +1601,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
             "This table specifies which ports are grouped together (this can be up to 8 ports)
             into a single logical link."
         ::= { swL2TrunkMgmt 5 }
-        
+
     swL2TrunkLACPPortEntry   OBJECT-TYPE
         SYNTAX  SwL2TrunkLACPPortEntry
         MAX-ACCESS  not-accessible
@@ -1612,7 +1612,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         INDEX  { swL2TrunkLACPPortIndex }
         ::= { swL2TrunkLACPPortTable 1 }
 
-    SwL2TrunkLACPPortEntry ::= 
+    SwL2TrunkLACPPortEntry ::=
         SEQUENCE {
             swL2TrunkLACPPortIndex
                 INTEGER,
@@ -1623,7 +1623,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
     swL2TrunkLACPPortIndex OBJECT-TYPE
         SYNTAX  INTEGER (0..65535)
         MAX-ACCESS  read-only
-        STATUS  current 
+        STATUS  current
         DESCRIPTION
             "The index of logical port LACP. "
         ::= { swL2TrunkLACPPortEntry 1 }
@@ -1636,7 +1636,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "The state of a logical port LACP."       
+            "The state of a logical port LACP."
         ::= { swL2TrunkLACPPortEntry 2 }
 
     swL2TrunkVLANTable  OBJECT-TYPE
@@ -1682,19 +1682,19 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The state of the logical port VLAN trunk."
         ::= { swL2TrunkVLANEntry 2 }
-        
+
 -- -----------------------------------------------------------------------------
---  swPortMirrorPackage   	           OBJECT IDENTIFIER ::= { swL2MgmtMIB 10 }           
+--  swPortMirrorPackage   	           OBJECT IDENTIFIER ::= { swL2MgmtMIB 10 }
 -- -----------------------------------------------------------------------------
-	
+
 	swL2MirrorLogicTargetPort OBJECT-TYPE
         SYNTAX  INTEGER (0..65535)
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates which switch port will sniff another 
-	     port. A trunk port member cannot be configured as a target 
-	     snooping port. The port number is the sequential (logical) 
+            "This object indicates which switch port will sniff another
+	     port. A trunk port member cannot be configured as a target
+	     snooping port. The port number is the sequential (logical)
  	     number, which is also applied to the bridge MIB, etc."
         ::= { swL2MirrorMgmt 1 }
 
@@ -1705,10 +1705,10 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This represents the port where ingress packets will be sniffed."
         ::= { swL2MirrorMgmt 2 }
-        
+
     swL2MirrorPortSourceEgress OBJECT-TYPE
         SYNTAX  PortList
-        MAX-ACCESS  read-write 
+        MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
             "This represents the port where egress packets will be sniffed."
@@ -1724,8 +1724,8 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the port mirroring state.
- 
-            other (1) - this entry is currently in use but the conditions 
+
+            other (1) - this entry is currently in use but the conditions
                 under which it will remain so are different from each of the
                 following values.
             disabled (2) - After writing this value to the object, the
@@ -1776,7 +1776,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
              the value of n depends on detail project.
             "
         ::= { swL2MirrorGroupEntry 1 }
-        
+
     swL2MirrorGroupRowStatus OBJECT-TYPE
         SYNTAX      RowStatus
         MAX-ACCESS  read-create
@@ -1784,7 +1784,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object manages this mirror group entry."
         ::= { swL2MirrorGroupEntry 2 }
-        
+
     swL2MirrorGroupState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -1796,7 +1796,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the mirror group state."
         ::= { swL2MirrorGroupEntry 3 }
-        
+
     swL2MirrorGroupLogicTargetPort OBJECT-TYPE
         SYNTAX  INTEGER (0..65535)
         MAX-ACCESS  read-create
@@ -1812,7 +1812,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the mirror group ingress source ports."
         ::= { swL2MirrorGroupEntry 5 }
-        
+
     swL2MirrorGroupPortSourceEngress OBJECT-TYPE
         SYNTAX  PortList
         MAX-ACCESS  read-create
@@ -1823,7 +1823,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 
 -- -----------------------------------------------------------------------------
 --  swL2IGMPMgmt           OBJECT IDENTIFIER ::= { swL2MgmtMIB 11 }
--- -----------------------------------------------------------------------------		
+-- -----------------------------------------------------------------------------
     swL2IGMPAccessAuthTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL2IGMPAccessAuthEntry
         MAX-ACCESS  not-accessible
@@ -1879,7 +1879,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "This table specifies that the port can just forward traffic to the 
+            "This table specifies that the port can just forward traffic to the
             specific port list."
         ::= { swL2TrafficSegMgmt 1 }
 
@@ -1888,12 +1888,12 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "A list of information which specifies the port with its traffic 
+            "A list of information which specifies the port with its traffic
             forwarding list."
         INDEX  { swL2TrafficSegPort }
         ::= { swL2TrafficSegTable 1 }
 
-    SwL2TrafficSegEntry ::= 
+    SwL2TrafficSegEntry ::=
         SEQUENCE {
             swL2TrafficSegPort
                 INTEGER,
@@ -1908,7 +1908,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The port number of the logical port."
         ::= { swL2TrafficSegEntry 1 }
-        
+
     swL2TrafficSegForwardPorts OBJECT-TYPE
         SYNTAX PortList
         MAX-ACCESS  read-write
@@ -1916,7 +1916,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The port list where a specific port can forward traffic."
         ::= { swL2TrafficSegEntry 2 }
-   
+
 -- ----------------------------------------------------------------------------
 --  swL2MulticastFilterMode	OBJECT IDENTIFIER ::= { swL2MgmtMIB 17 }
 -- ----------------------------------------------------------------------------
@@ -1927,7 +1927,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
      	DESCRIPTION
 		" A table that contains information about the VLAN multicast filter mode."
 	::={swL2MulticastFilterMode 1}
-     
+
      swL2MulticastFilterModeVlanEntry OBJECT-TYPE
      	SYNTAX SwL2MulticastFilterModeVlanEntry
      	MAX-ACCESS not-accessible
@@ -1936,7 +1936,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
      		"A list of multicast filter mode information for each VLAN. "
      	INDEX {swL2MulticastFilterVid}
      	::={swL2MulticastFilterModeVlanTable 1}
-     
+
      SwL2MulticastFilterModeVlanEntry ::=
      	SEQUENCE{
      	swL2MulticastFilterVid
@@ -1944,7 +1944,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
      	swL2MulticastFilterVlanMode
      		INTEGER
      	}
- 
+
      swL2MulticastFilterVid OBJECT-TYPE
     	SYNTAX INTEGER(1..65535)
     	MAX-ACCESS read-only
@@ -1952,20 +1952,20 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
     	DESCRIPTION
     		"Indicates the VID for each VLAN."
 	::={swL2MulticastFilterModeVlanEntry 1}
-	
+
     swL2MulticastFilterVlanMode OBJECT-TYPE
     	SYNTAX INTEGER{
     	forward-all-groups(1),
     	forward-unregistered-groups(2),
     	filter-unregistered-groups(3)
-    	} 
+    	}
     	MAX-ACCESS read-write
     	STATUS current
     	DESCRIPTION
     		"Specifies the multicast filter mode for each VLAN."
     	::={swL2MulticastFilterModeVlanEntry 2}
-    
- 
+
+
 -- ------------------------------------------------------------------------
 --  swL2DhcpLocalRelayMgmt        OBJECT IDENTIFIER ::= { swL2MgmtMIB 24 }
 -- ------------------------------------------------------------------------
@@ -1990,7 +1990,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	 		"This table is used to manage the DHCP local relay status
 	 		for each VLAN."
 	    ::={ swL2DhcpLocalRelayMgmt 2}
-	
+
 	    swL2DhcpLocalRelayVLANEntry OBJECT-TYPE
 	    SYNTAX SwL2DhcpLocalRelayVLANEntry
 	    MAX-ACCESS not-accessible
@@ -2006,7 +2006,7 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
 	swL2DhcpLocalRelayVLANID
      	    INTEGER,
      	swL2DhcpLocalRelayVLANState
-     	    INTEGER		
+     	    INTEGER
      }
 
   swL2DhcpLocalRelayVLANID OBJECT-TYPE
@@ -2029,40 +2029,40 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
           "This object indicates the status of the DHCP relay function
           of the VLAN."
       ::= { swL2DhcpLocalRelayVLANEntry 2 }
-        
+
 -- -----------------------------------------------------------------------------
 --  Layer 2  Trap
 -- -----------------------------------------------------------------------------
-     
-        
-	swL2Notify	OBJECT IDENTIFIER ::= { swL2MgmtMIBTraps 1 }  
-	  
-	swL2NotifyMgmt		OBJECT IDENTIFIER ::= { swL2Notify 1 }  
-	swL2NotifyPrefix	OBJECT IDENTIFIER ::= { swL2Notify 2 }  
-	
-	swL2NotifFirmware OBJECT IDENTIFIER ::= { swL2NotifyPrefix 0 }  
-	
 
-	
+
+	swL2Notify	OBJECT IDENTIFIER ::= { swL2MgmtMIBTraps 1 }
+
+	swL2NotifyMgmt		OBJECT IDENTIFIER ::= { swL2Notify 1 }
+	swL2NotifyPrefix	OBJECT IDENTIFIER ::= { swL2Notify 2 }
+
+	swL2NotifFirmware OBJECT IDENTIFIER ::= { swL2NotifyPrefix 0 }
+
+
+
 -- -----------------------------------------------------------------------------
 --	swL2NotifyMgmt
 -- -----------------------------------------------------------------------------
     swL2macNotificationSeverity OBJECT-TYPE
-        SYNTAX  AgentNotifyLevel 
+        SYNTAX  AgentNotifyLevel
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
             "Indicates the level of macNotification detection."
         ::= { swL2NotifyMgmt 1 }
-        
+
     swL2PortSecurityViolationSeverity OBJECT-TYPE
-        SYNTAX  AgentNotifyLevel 
+        SYNTAX  AgentNotifyLevel
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
             "Indicates the level of PortSecurityViolation detection."
-        ::= { swL2NotifyMgmt 2 }         
- 
+        ::= { swL2NotifyMgmt 2 }
+
 
 -- -----------------------------------------------------------------------------
 --	swL2NotifFirmware OBJECT IDENTIFIER ::= { swL2NotifyPrefix 0 }
@@ -2071,30 +2071,30 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         OBJECTS {
               		swL2macNotifyInfo
         		}
-        STATUS  current        		
-        DESCRIPTION
-            " This trap indicates the MAC address variations in the address table . "            
-        ::= { swL2NotifFirmware 1 }	
-
-    swL2PortSecurityViolationTrap NOTIFICATION-TYPE
-        OBJECTS { 
-        			swPortSecPortIndex,
-        		  	swL2PortSecurityViolationMac        					
-                }        
         STATUS  current
         DESCRIPTION
-            "When the port_security trap is enabled, new MAC addresses that violate 
-            the pre-defined port security configuration will trigger trap messages 
-            to be sent out."              
-        ::= { swL2NotifFirmware 2 } 
-         
+            " This trap indicates the MAC address variations in the address table . "
+        ::= { swL2NotifFirmware 1 }
+
+    swL2PortSecurityViolationTrap NOTIFICATION-TYPE
+        OBJECTS {
+        			swPortSecPortIndex,
+        		  	swL2PortSecurityViolationMac
+                }
+        STATUS  current
+        DESCRIPTION
+            "When the port_security trap is enabled, new MAC addresses that violate
+            the pre-defined port security configuration will trigger trap messages
+            to be sent out."
+        ::= { swL2NotifFirmware 2 }
+
 -- -----------------------------------------------------------------------------
 --	notificationBidings
 -- -----------------------------------------------------------------------------
-	 
+
 
     swl2NotificationBidings OBJECT IDENTIFIER ::= { swL2NotifyPrefix 1 }
-                
+
     swL2macNotifyInfo   OBJECT-TYPE
         SYNTAX  OCTET STRING(SIZE (0..1024))
         MAX-ACCESS  read-only
@@ -2102,13 +2102,13 @@ DGS3120-48PC-L2MGMT-MIB	DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates information about the last time the system rebooted."
         ::= { swl2NotificationBidings 1 }
-       
+
     swL2PortSecurityViolationMac OBJECT-TYPE
         SYNTAX  MacAddress
         MAX-ACCESS  accessible-for-notify
         STATUS  current
         DESCRIPTION
             "This object indicates the MAC address that violated the port security configuration."
-        ::= { swl2NotificationBidings 2 } 
-        
+        ::= { swl2NotificationBidings 2 }
+
   END

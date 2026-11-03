@@ -97,4 +97,3 @@ bsmfAllowedAddressRowStatus OBJECT-TYPE
     ::= { bsmfAllowedAddressEntry 2 }
 
 END
-

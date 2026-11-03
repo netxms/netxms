@@ -140,7 +140,7 @@ dlbRdo3StatsEntry ::=
         dlbRdo3RxNoise                      Integer32,
         dlbRdo3RxLastSnr0                   Integer32,
         dlbRdo3RxLastSnr1                   Integer32
-}        
+}
 
 dlbRdo3Endpoint OBJECT-TYPE
     SYNTAX      Integer32

@@ -10,7 +10,7 @@ IMPORTS
 apache2-mib MODULE-IDENTITY
     LAST-UPDATED "200402180000Z"
     ORGANIZATION "Esteban Pizzini"
-    CONTACT-INFO    
+    CONTACT-INFO
 	 " Esteban Pizzini
 	   ep@fibertel.com.ar"
     DESCRIPTION
@@ -48,7 +48,7 @@ serverBuilt OBJECT-TYPE
        DESCRIPTION
            "Apache build datetime"
        ::= { apache2MIBInformation 3 }
-      
+
 serverRestart OBJECT-TYPE
        SYNTAX      DisplayString
        MAX-ACCESS  read-write
@@ -97,7 +97,7 @@ totalServerPorts OBJECT-TYPE
         DESCRIPTION
                 "Total ports listened by Apache"
       ::= { apache2MIBInformation 9}
-      
+
 --
 -- Tabla de puertos escuchados (implementada en serverListenPorts.c)
 --
@@ -291,6 +291,5 @@ serverStopNotification NOTIFICATION-TYPE
     DESCRIPTION
 	"Server Shutting down"
     ::= { apache2MIBNotifications 4 }
-      
-END
 
+END

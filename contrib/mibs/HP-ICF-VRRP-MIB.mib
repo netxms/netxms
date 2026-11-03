@@ -16,7 +16,7 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
         hpSwitch
             FROM HP-ICF-OID;
 
-    hpicfVrrpMIB MODULE-IDENTITY 
+    hpicfVrrpMIB MODULE-IDENTITY
         LAST-UPDATED "200802200000Z"  -- February 22, 2008
 	ORGANIZATION "Hewlett Packard Company,
                       Procurve Networking Business"
@@ -37,12 +37,12 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
                       hpicfVrrpStatsNearFailovers."
 
         REVISION     "200708220000Z"  -- AUGUST 22, 2007
-        DESCRIPTION  "Added hpicfVrrpVrPreemptDelayTime to the 
+        DESCRIPTION  "Added hpicfVrrpVrPreemptDelayTime to the
                       hpicfVrrpOperEntry object."
 
         REVISION      "200507140000Z"  -- July 14, 2005
         DESCRIPTION   "Initial revision."
-        
+
         ::= { hpSwitch 31 }
 
 -- **********************************************************************
@@ -103,9 +103,9 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-create
         STATUS      current
         DESCRIPTION "This object denotes whether this VR has been
-                    designated as an owner or as a backup. On VR 
-                    creation, this field is set to uninitialized. 
-                    The user cannot set the value of this object to 
+                    designated as an owner or as a backup. On VR
+                    creation, this field is set to uninitialized.
+                    The user cannot set the value of this object to
                     uninitialized."
         DEFVAL      { uninitialized }
         ::= { hpicfVrrpOperEntry 1 }
@@ -114,9 +114,9 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
         SYNTAX      TruthValue
         MAX-ACCESS  read-create
         STATUS      current
-        DESCRIPTION "This object, when set to TRUE, would enable the 
-                    Master Preemption mode wherein a virtual router 
-                    even though an owner will not preempt a lower 
+        DESCRIPTION "This object, when set to TRUE, would enable the
+                    Master Preemption mode wherein a virtual router
+                    even though an owner will not preempt a lower
                     priority Backup."
         DEFVAL      { false }
         ::= { hpicfVrrpOperEntry 2 }
@@ -125,20 +125,20 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
         SYNTAX      TruthValue
         MAX-ACCESS  read-create
         STATUS      current
-        DESCRIPTION "This object, when set to TRUE, would serve as 
+        DESCRIPTION "This object, when set to TRUE, would serve as
                     trigger to enable a virtual router owner to take
-                    control of its IP address. When this value is read 
+                    control of its IP address. When this value is read
                     it always returns FALSE."
         DEFVAL      { false }
         ::= { hpicfVrrpOperEntry 3 }
 
     hpicfVrrpVrPreemptDelayTime OBJECT-TYPE
-        SYNTAX      Integer32(0..600)  
+        SYNTAX      Integer32(0..600)
         MAX-ACCESS  read-create
         STATUS      current
-        DESCRIPTION "This object specifies the time that the owner 
-                     virtual router will wait before taking control of 
-                     its virtual IP address. A value of 0 indicates 
+        DESCRIPTION "This object specifies the time that the owner
+                     virtual router will wait before taking control of
+                     its virtual IP address. A value of 0 indicates
                      that that the pre-empt delay timer is not active"
         DEFVAL      { 0 }
         ::= { hpicfVrrpOperEntry 4 }
@@ -197,7 +197,7 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-create
         STATUS      current
         DESCRIPTION "The subnet mask to be used in conjunction with
-                    the 'vrrpAssoIpAddr' object to uniquely identify 
+                    the 'vrrpAssoIpAddr' object to uniquely identify
                     a subnet."
 	DEFVAL      { '00000000'H } -- 0.0.0.0
         ::= { hpicfVrrpAssoIpAddrEntry 1 }
@@ -295,7 +295,7 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "This object reports the number of near failovers
                      for backup virtual routers.  A near failover occurs
-                     when a backup virtual router has not received an 
+                     when a backup virtual router has not received an
                      advertisement packet from the master virtual router
                      for two advertisement intervals."
         DEFVAL      { 0 }
@@ -353,7 +353,7 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
                       hpicfVrrpVrPreemptDelayTime,
                       hpicfVrrpAssoIpMask }
         STATUS      current
-        DESCRIPTION "A collection of HP proprietary objects to support 
+        DESCRIPTION "A collection of HP proprietary objects to support
                     VRRP configuration on HP routers."
         ::= { hpicfVrrpMIBGroups 1 }
 
@@ -361,7 +361,7 @@ HP-ICF-VRRP-MIB DEFINITIONS ::= BEGIN
         OBJECTS     { hpicfVrrpTrackRowStatus,
                       hpicfVrrpVrControl }
         STATUS      current
-        DESCRIPTION "A collection of HP proprietary objects to support 
+        DESCRIPTION "A collection of HP proprietary objects to support
                     VRRP configuration on HP routers."
         ::= { hpicfVrrpMIBGroups 2 }
 END

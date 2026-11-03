@@ -32,11 +32,11 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
     hwLocal                     OBJECT IDENTIFIER ::= { huawei 1 }
         quidway                 OBJECT IDENTIFIER ::= { hwLocal 1 }
         hwTrans                 OBJECT IDENTIFIER ::= { hwLocal 2 }
-        
+
         hwInternetProtocol      OBJECT IDENTIFIER ::= { hwLocal 3 }
             rmonExtend          OBJECT IDENTIFIER ::= { hwInternetProtocol 4 }
                 performance     OBJECT IDENTIFIER ::= { rmonExtend 4 }
-        
+
         hwNovellProtocol        OBJECT IDENTIFIER ::= { hwLocal 4 }
     hwProducts                  OBJECT IDENTIFIER ::= { huawei 2 }
         atm                     OBJECT IDENTIFIER ::= { hwProducts 1 }
@@ -91,7 +91,7 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
         netManager              OBJECT IDENTIFIER ::= { hwProducts 15 }
         iNet                    OBJECT IDENTIFIER ::= { hwProducts 16 }
         ne80                    OBJECT IDENTIFIER ::= { hwProducts 17 }
-        
+
         wireIn                  OBJECT IDENTIFIER ::= { hwProducts 18 }
             wireInScp           OBJECT IDENTIFIER ::= { wireIn 1 }
             wireInSdp           OBJECT IDENTIFIER ::= { wireIn 2 }
@@ -112,9 +112,9 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
             cdmaInSmp           OBJECT IDENTIFIER ::= { cdmaIn 3 }
             cdmaInSsp           OBJECT IDENTIFIER ::= { cdmaIn 4 }
             cdmaInIP            OBJECT IDENTIFIER ::= { cdmaIn 5 }
-            
+
         acdIn                   OBJECT IDENTIFIER ::= { hwProducts 21 }
-        
+
         esr                     OBJECT IDENTIFIER ::= { hwProducts 22 }
             radium8750          OBJECT IDENTIFIER ::= { esr 2 }
             isn8850             OBJECT IDENTIFIER ::= { esr 3 }
@@ -122,7 +122,7 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
             esrV5R3             OBJECT IDENTIFIER ::= { esr 6 }
             esrV5R58850         OBJECT IDENTIFIER ::= { esr 7 }
             esrV5R58825         OBJECT IDENTIFIER ::= { esr 8 }
-            
+
         lanSw                   OBJECT IDENTIFIER ::= { hwProducts 23 }
             lswCommon           OBJECT IDENTIFIER ::= { lanSw 1 }
             s8016               OBJECT IDENTIFIER ::= { lanSw 11 }
@@ -177,15 +177,15 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
             e026                OBJECT IDENTIFIER ::= { lanSw 69 }
             e026-SI             OBJECT IDENTIFIER ::= { lanSw 70 }
             e050                OBJECT IDENTIFIER ::= { lanSw 71 }
-            s2326P-SI           OBJECT IDENTIFIER ::= { lanSw 72 } 
-            s2326P-EI           OBJECT IDENTIFIER ::= { lanSw 73 } 
-            s2318P-SI           OBJECT IDENTIFIER ::= { lanSw 74 } 
-            s2318P-EI           OBJECT IDENTIFIER ::= { lanSw 75 } 
-            s2309P-SI           OBJECT IDENTIFIER ::= { lanSw 76 } 
-            s2309P-EI           OBJECT IDENTIFIER ::= { lanSw 77 } 
-            s3352P-SI           OBJECT IDENTIFIER ::= { lanSw 78 } 
-            s3352P-EI           OBJECT IDENTIFIER ::= { lanSw 79 } 
-            s3328TP-SI          OBJECT IDENTIFIER ::= { lanSw 80 } 
+            s2326P-SI           OBJECT IDENTIFIER ::= { lanSw 72 }
+            s2326P-EI           OBJECT IDENTIFIER ::= { lanSw 73 }
+            s2318P-SI           OBJECT IDENTIFIER ::= { lanSw 74 }
+            s2318P-EI           OBJECT IDENTIFIER ::= { lanSw 75 }
+            s2309P-SI           OBJECT IDENTIFIER ::= { lanSw 76 }
+            s2309P-EI           OBJECT IDENTIFIER ::= { lanSw 77 }
+            s3352P-SI           OBJECT IDENTIFIER ::= { lanSw 78 }
+            s3352P-EI           OBJECT IDENTIFIER ::= { lanSw 79 }
+            s3328TP-SI          OBJECT IDENTIFIER ::= { lanSw 80 }
             s3328TP-EI          OBJECT IDENTIFIER ::= { lanSw 81 }
             s3328TP-EI-24S      OBJECT IDENTIFIER ::= { lanSw 82 }
             s3328TP-SI-24S      OBJECT IDENTIFIER ::= { lanSw 83 }
@@ -203,7 +203,7 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
             s5328C-EI           OBJECT IDENTIFIER ::= { lanSw 95 }
             s5328C-EI-24S       OBJECT IDENTIFIER ::= { lanSw 96 }
             s5352C-EI           OBJECT IDENTIFIER ::= { lanSw 97 }
-            
+
             s5324TP-SI          OBJECT IDENTIFIER ::= { lanSw 98 }
             s5348TP-SI          OBJECT IDENTIFIER ::= { lanSw 99 }
             s5324TP-PWR-SI      OBJECT IDENTIFIER ::= { lanSw 100 }
@@ -236,12 +236,12 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
         ne20                    OBJECT IDENTIFIER ::= { hwProducts 29 }
         ne20s                   OBJECT IDENTIFIER ::= { hwProducts 30 }
         ne40                    OBJECT IDENTIFIER ::= { hwProducts 31 }
-        
+
         wcdma                   OBJECT IDENTIFIER ::= { hwProducts 32 }
             sgsn                OBJECT IDENTIFIER ::= { wcdma 1 }
 
         mlsr                    OBJECT IDENTIFIER ::= { hwProducts 33 }
-        
+
         dslw                    OBJECT IDENTIFIER ::= { hwProducts 34 }
             dlswNode            OBJECT IDENTIFIER ::= { dslw 1 }
             dlswTConn           OBJECT IDENTIFIER ::= { dslw 2 } -- information about this DLSw
@@ -256,7 +256,7 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
 
         as                      OBJECT IDENTIFIER ::= { hwProducts 36 }
         p3                      OBJECT IDENTIFIER ::= { hwProducts 37 }
-        
+
         iad                     OBJECT IDENTIFIER ::= { hwProducts 38 }
             iad132              OBJECT IDENTIFIER ::= { iad 1 }
 
@@ -295,15 +295,15 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
         ar18-34                 OBJECT IDENTIFIER ::= { hwProducts 61 }
 
         ne5000                  OBJECT IDENTIFIER ::= { hwProducts 62 }
-            ne5000SysOid        OBJECT IDENTIFIER ::= { ne5000 2 }      
+            ne5000SysOid        OBJECT IDENTIFIER ::= { ne5000 2 }
             ne5000oem       OBJECT IDENTIFIER ::= { ne5000SysOid 1 }
             ne80E           OBJECT IDENTIFIER ::= { ne5000SysOid 2 }
             ne5000E         OBJECT IDENTIFIER ::= { ne5000SysOid 3 }
             ne5000EMulti    OBJECT IDENTIFIER ::= { ne5000SysOid 4 }
             ne40E           OBJECT IDENTIFIER ::= { ne5000SysOid 5 }
-            ne5000E-BTB     OBJECT IDENTIFIER ::= { ne5000SysOid 6 } 
-            ne40E-4         OBJECT IDENTIFIER ::= { ne5000SysOid 7 } 
-            ne40E-X3        OBJECT IDENTIFIER ::= { ne5000SysOid 8 } 
+            ne5000E-BTB     OBJECT IDENTIFIER ::= { ne5000SysOid 6 }
+            ne40E-4         OBJECT IDENTIFIER ::= { ne5000SysOid 7 }
+            ne40E-X3        OBJECT IDENTIFIER ::= { ne5000SysOid 8 }
             ne40E-X8        OBJECT IDENTIFIER ::= { ne5000SysOid 9 }
             ne40E-X16        OBJECT IDENTIFIER ::= { ne5000SysOid 10 }
 
@@ -316,17 +316,17 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
         --e026                    OBJECT IDENTIFIER ::= { hwProducts 69 }
         --e026-SI                 OBJECT IDENTIFIER ::= { hwProducts 70 }
         --e050                    OBJECT IDENTIFIER ::= { hwProducts 71 }
-        ua5000ipm               OBJECT IDENTIFIER ::= { hwProducts 72 } 
-        rm9000                  OBJECT IDENTIFIER ::= { hwProducts 73 } 
-        hwIMAPNorthbound        OBJECT IDENTIFIER ::= { hwProducts 74 } 
+        ua5000ipm               OBJECT IDENTIFIER ::= { hwProducts 72 }
+        rm9000                  OBJECT IDENTIFIER ::= { hwProducts 73 }
+        hwIMAPNorthbound        OBJECT IDENTIFIER ::= { hwProducts 74 }
         hwBITS                  OBJECT IDENTIFIER ::= { hwProducts 75 }
         hwPv8                   OBJECT IDENTIFIER ::= { hwProducts 76 }
         eudemon500              OBJECT IDENTIFIER ::= { hwProducts 77 }
         ua5000IpmB              OBJECT IDENTIFIER ::= { hwProducts 78 }
         ua5000ApmB              OBJECT IDENTIFIER ::= { hwProducts 79 }
         ma5600                  OBJECT IDENTIFIER ::= { hwProducts 80 }
-        softx3000UC             OBJECT IDENTIFIER ::= { hwProducts 81 }  
-        hwOSTA                  OBJECT IDENTIFIER ::= { hwProducts 82 }  
+        softx3000UC             OBJECT IDENTIFIER ::= { hwProducts 81 }
+        hwOSTA                  OBJECT IDENTIFIER ::= { hwProducts 82 }
         secpath1800F            OBJECT IDENTIFIER ::= { hwProducts 83 }
         eudemon2300             OBJECT IDENTIFIER ::= { hwProducts 84 }
         ma5100V600              OBJECT IDENTIFIER ::= { hwProducts 85 }
@@ -344,33 +344,33 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
             cX200C              OBJECT IDENTIFIER ::= { msp 9 }
             cX200D              OBJECT IDENTIFIER ::= { msp 10 }
             cX200D-EA           OBJECT IDENTIFIER ::= { msp 11 }
-            cX200D-MC           OBJECT IDENTIFIER ::= { msp 12 }                       
+            cX200D-MC           OBJECT IDENTIFIER ::= { msp 12 }
             cX600-4             OBJECT IDENTIFIER ::= { msp 13 }
             cX380-PBT           OBJECT IDENTIFIER ::= { msp 14 }
             cX380-ME            OBJECT IDENTIFIER ::= { msp 15 }
-            cX200D-EA-MC        OBJECT IDENTIFIER ::= { msp 16 } 
+            cX200D-EA-MC        OBJECT IDENTIFIER ::= { msp 16 }
             cX600-X3            OBJECT IDENTIFIER ::= { msp 17 }
         ne20E                   OBJECT IDENTIFIER ::= { hwProducts 88 }
             ne20E-4             OBJECT IDENTIFIER ::= { ne20E 1 }
             ne20E-8             OBJECT IDENTIFIER ::= { ne20E 2 }
 
 
-        me60             OBJECT IDENTIFIER ::= { hwProducts 89}       
-        
-        eudemon300       OBJECT IDENTIFIER ::= { hwProducts 113} 
-        eudemonVPN3900   OBJECT IDENTIFIER ::= { hwProducts 114} 
-        eudemonEVPN5900  OBJECT IDENTIFIER ::= { hwProducts 115} 
-        eudemon100E      OBJECT IDENTIFIER ::= { hwProducts 116} 
-        eudemon200E      OBJECT IDENTIFIER ::= { hwProducts 117} 
-        eudemon200S      OBJECT IDENTIFIER ::= { hwProducts 118} 
+        me60             OBJECT IDENTIFIER ::= { hwProducts 89}
 
-        svn3000          OBJECT IDENTIFIER ::= { hwProducts 124} 
-        usg5000          OBJECT IDENTIFIER ::= { hwProducts 125} 
-        usg9000          OBJECT IDENTIFIER ::= { hwProducts 126} 
-        eudemon200s      OBJECT IDENTIFIER ::= { hwProducts 127} 
-        sig1000          OBJECT IDENTIFIER ::= { hwProducts 129} 
-        sig9280          OBJECT IDENTIFIER ::= { hwProducts 130} 
-        sig2000          OBJECT IDENTIFIER ::= { hwProducts 131} 
+        eudemon300       OBJECT IDENTIFIER ::= { hwProducts 113}
+        eudemonVPN3900   OBJECT IDENTIFIER ::= { hwProducts 114}
+        eudemonEVPN5900  OBJECT IDENTIFIER ::= { hwProducts 115}
+        eudemon100E      OBJECT IDENTIFIER ::= { hwProducts 116}
+        eudemon200E      OBJECT IDENTIFIER ::= { hwProducts 117}
+        eudemon200S      OBJECT IDENTIFIER ::= { hwProducts 118}
+
+        svn3000          OBJECT IDENTIFIER ::= { hwProducts 124}
+        usg5000          OBJECT IDENTIFIER ::= { hwProducts 125}
+        usg9000          OBJECT IDENTIFIER ::= { hwProducts 126}
+        eudemon200s      OBJECT IDENTIFIER ::= { hwProducts 127}
+        sig1000          OBJECT IDENTIFIER ::= { hwProducts 129}
+        sig9280          OBJECT IDENTIFIER ::= { hwProducts 130}
+        sig2000          OBJECT IDENTIFIER ::= { hwProducts 131}
         s9300            OBJECT IDENTIFIER ::= { hwProducts 170}
         ptn              OBJECT IDENTIFIER ::= { hwProducts 182}
            ptn2900          OBJECT IDENTIFIER ::= { ptn 1 }
@@ -381,9 +381,9 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
            ssp3000          OBJECT IDENTIFIER ::= { ssp 3 }
 
 
-        
+
     huaweiExperimental          OBJECT IDENTIFIER ::= { huawei 4 }
-    
+
     huaweiMgmt                  OBJECT IDENTIFIER ::= { huawei 5 }
         hwAcl                   OBJECT IDENTIFIER ::= { huaweiMgmt 1 }
         hwAaa                   OBJECT IDENTIFIER ::= { huaweiMgmt 2 }
@@ -391,16 +391,16 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
         hwPortal                OBJECT IDENTIFIER ::= { huaweiMgmt 4 }
         hwRadius                OBJECT IDENTIFIER ::= { huaweiMgmt 5 }
         hwVlan                  OBJECT IDENTIFIER ::= { huaweiMgmt 6 }
-        
+
         hwDhcp                  OBJECT IDENTIFIER ::= { huaweiMgmt 7 }
             hwDHCPRelayMib          OBJECT IDENTIFIER ::= { hwDhcp 1 }
             hwDHCPServerMib         OBJECT IDENTIFIER ::= { hwDhcp 2 }
-        
+
         hwVprn                  OBJECT IDENTIFIER ::= { huaweiMgmt 8 }
         hwFr                    OBJECT IDENTIFIER ::= { huaweiMgmt 9 }
         hwAtmCmRm               OBJECT IDENTIFIER ::= { huaweiMgmt 10 }
         hwCes                   OBJECT IDENTIFIER ::= { huaweiMgmt 11 }
-        
+
         hwMpls                  OBJECT IDENTIFIER ::= { huaweiMgmt 12 }
             hwMplsLsr           OBJECT IDENTIFIER ::= { hwMpls 1 }
             hwMplsLdp           OBJECT IDENTIFIER ::= { hwMpls 2 }
@@ -410,12 +410,12 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
             hwMplsLsp           OBJECT IDENTIFIER ::= { hwMpls 6 }
             hwMplsOam           OBJECT IDENTIFIER ::= { hwMpls 7 }
             hwPw                OBJECT IDENTIFIER ::= { hwMpls 8 }
-            
+
         hwRouteManagement       OBJECT IDENTIFIER ::= { huaweiMgmt 13 }
             hwRouteManagementUrm OBJECT IDENTIFIER ::= { hwRouteManagement 1 }
             hwRouteManagementMrm OBJECT IDENTIFIER ::= { hwRouteManagement 2 }
             hwRouteManagementRpm OBJECT IDENTIFIER ::= { hwRouteManagement 3 }
-            
+
         hwEthernetPort           OBJECT IDENTIFIER ::= { huaweiMgmt 14 }
         hwVTP                    OBJECT IDENTIFIER ::= { huaweiMgmt 15 }
         hwMam                    OBJECT IDENTIFIER ::= { huaweiMgmt 16 }
@@ -431,7 +431,7 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
             hwBRASMib            OBJECT IDENTIFIER ::= { hwDatacomm 40 }
         hwImps                   OBJECT IDENTIFIER ::= { huaweiMgmt 26 }
 
-       
+
     huaweiUtility                OBJECT IDENTIFIER ::= { huawei 6 }
         hwEnvironment            OBJECT IDENTIFIER ::= { huaweiUtility 1 }
         hwPower                  OBJECT IDENTIFIER ::= { huaweiUtility 2 }
@@ -453,7 +453,7 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
         hwUcl                    OBJECT IDENTIFIER ::= { huaweiUtility 18 }
         hwAtmSvc                 OBJECT IDENTIFIER ::= { huaweiUtility 19 }
         hwVPRing                 OBJECT IDENTIFIER ::= { huaweiUtility 20 }
-        
+
         hwTest                   OBJECT IDENTIFIER ::= { huaweiUtility 21 }
             hwTestCommon         OBJECT IDENTIFIER ::= { hwTest 1 }
             hwNTest              OBJECT IDENTIFIER ::= { hwTest 2 }
@@ -465,24 +465,22 @@ HUAWEI-MIB DEFINITIONS ::= BEGIN
         hwAti                    OBJECT IDENTIFIER ::= { huaweiUtility 27 }
         hwDslamNtv               OBJECT IDENTIFIER ::= { huaweiUtility 28 }
         hwServerMon              OBJECT IDENTIFIER ::= { huaweiUtility 29 }
-        hwSyntrap                OBJECT IDENTIFIER ::= { huaweiUtility 30 } 
+        hwSyntrap                OBJECT IDENTIFIER ::= { huaweiUtility 30 }
         hwAdsl                   OBJECT IDENTIFIER ::= { huaweiUtility 31 }
         hwVdsl                   OBJECT IDENTIFIER ::= { huaweiUtility 32 }
-        hwHdsl                   OBJECT IDENTIFIER ::= { huaweiUtility 33 } 
-        hwDeha                   OBJECT IDENTIFIER ::= { huaweiUtility 34 } 
-        hwSyslog                 OBJECT IDENTIFIER ::= { huaweiUtility 35 } 
-        hwVoip                   OBJECT IDENTIFIER ::= { huaweiUtility 36 } 
-        hwVrp                    OBJECT IDENTIFIER ::= { huaweiUtility 37 } 
-        hwMus                    OBJECT IDENTIFIER ::= { huaweiUtility 38 } 
-        hwDns                    OBJECT IDENTIFIER ::= { huaweiUtility 39 } 
-        hwNetTest                OBJECT IDENTIFIER ::= { huaweiUtility 40 } 
-        hwMs                     OBJECT IDENTIFIER ::= { huaweiUtility 41 } 
-        hwPITP                   OBJECT IDENTIFIER ::= { huaweiUtility 42 } 
-        hwDslamMacPool           OBJECT IDENTIFIER ::= { huaweiUtility 43 } 
-        hwDslamPPPoA             OBJECT IDENTIFIER ::= { huaweiUtility 44 } 
-        hwDslamPvcProtocol       OBJECT IDENTIFIER ::= { huaweiUtility 45 } 
-        hwDslamIpoa              OBJECT IDENTIFIER ::= { huaweiUtility 46 } 
-        hwLicense                OBJECT IDENTIFIER ::= { huaweiUtility 47 } 
+        hwHdsl                   OBJECT IDENTIFIER ::= { huaweiUtility 33 }
+        hwDeha                   OBJECT IDENTIFIER ::= { huaweiUtility 34 }
+        hwSyslog                 OBJECT IDENTIFIER ::= { huaweiUtility 35 }
+        hwVoip                   OBJECT IDENTIFIER ::= { huaweiUtility 36 }
+        hwVrp                    OBJECT IDENTIFIER ::= { huaweiUtility 37 }
+        hwMus                    OBJECT IDENTIFIER ::= { huaweiUtility 38 }
+        hwDns                    OBJECT IDENTIFIER ::= { huaweiUtility 39 }
+        hwNetTest                OBJECT IDENTIFIER ::= { huaweiUtility 40 }
+        hwMs                     OBJECT IDENTIFIER ::= { huaweiUtility 41 }
+        hwPITP                   OBJECT IDENTIFIER ::= { huaweiUtility 42 }
+        hwDslamMacPool           OBJECT IDENTIFIER ::= { huaweiUtility 43 }
+        hwDslamPPPoA             OBJECT IDENTIFIER ::= { huaweiUtility 44 }
+        hwDslamPvcProtocol       OBJECT IDENTIFIER ::= { huaweiUtility 45 }
+        hwDslamIpoa              OBJECT IDENTIFIER ::= { huaweiUtility 46 }
+        hwLicense                OBJECT IDENTIFIER ::= { huaweiUtility 47 }
 END
-
-

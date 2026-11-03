@@ -25,7 +25,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         IpAddress               FROM SNMPv2-SMI
         RowStatus,DisplayString               FROM SNMPv2-TC
         dlink-common-mgmt       FROM DLINK-ID-REC-MIB
-        Ipv6Address			  	FROM IPV6-TC; 
+        Ipv6Address			  	FROM IPV6-TC;
 
     swDNSResolverMIB MODULE-IDENTITY
         LAST-UPDATED "0905150000Z"
@@ -138,7 +138,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DNS resolver static name server table index."
         ::= { swDNSResStaticNameSrvEntry 1 }
-        
+
     swDNSResStaticNameSrvRowStatus OBJECT-TYPE
         SYNTAX      RowStatus
         MAX-ACCESS  read-create
@@ -146,7 +146,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the status of this entry."
         ::= { swDNSResStaticNameSrvEntry 2 }
-        
+
     swDNSResStaticNameSrvIPaddr OBJECT-TYPE
         SYNTAX      IpAddress
         MAX-ACCESS  read-create
@@ -154,7 +154,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DNS resolver static name server IP address."
         ::= { swDNSResStaticNameSrvEntry 3 }
-        
+
     swDNSResStaticNameSrvPriority OBJECT-TYPE
         SYNTAX      INTEGER {
                                primary(1),
@@ -166,7 +166,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
             "This object indicates the DNS resolver static name server priority, primary name
             server or secondary name server."
         ::= { swDNSResStaticNameSrvEntry 4 }
-        
+
 -- -----------------------------------------------------------------------------
 -- swDNSResDynamicNameSrvTable
 -- -----------------------------------------------------------------------------
@@ -212,7 +212,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DNS resolver dynamic name server IP address."
         ::= { swDNSResDynamicNameSrvEntry 2 }
-        
+
     swDNSResDynamicNameSrvPriority OBJECT-TYPE
         SYNTAX      INTEGER {
                                primary(1),
@@ -227,8 +227,8 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
 
 -- -----------------------------------------------------------------------------
 -- swDNSResIPv6NameSrv
--- -----------------------------------------------------------------------------                  
-	swDNSResStaticIPv6NameSrvTable OBJECT-TYPE       
+-- -----------------------------------------------------------------------------
+	swDNSResStaticIPv6NameSrvTable OBJECT-TYPE
         SYNTAX          SEQUENCE OF SwDNSResStaticIPv6NameSrvEntry
         MAX-ACCESS      not-accessible
         STATUS          current
@@ -250,7 +250,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
             swDNSResStaticIPv6NameSrvIndex
                 INTEGER,
             swDNSResStaticIPv6NameSrvaddr
-                Ipv6Address,         
+                Ipv6Address,
             swDNSResStaticIPv6NameSrvIntfName
                 DisplayString,
 			swDNSResStaticIPv6NameSrvPriority
@@ -266,7 +266,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DNS resolver static name server table index."
         ::= { swDNSResStaticIPv6NameSrvEntry 1 }
-                
+
     swDNSResStaticIPv6NameSrvaddr OBJECT-TYPE
         SYNTAX      Ipv6Address
         MAX-ACCESS  read-create
@@ -274,15 +274,15 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the the DNS resolver static name server IP address."
         ::= { swDNSResStaticIPv6NameSrvEntry 2 }
-                           
+
     swDNSResStaticIPv6NameSrvIntfName  OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This node is used to specify the interface name 
+            "This node is used to specify the interface name
              when swDNSResStaticIPv6NameSrvaddr is a link local address. "
-        ::= { swDNSResStaticIPv6NameSrvEntry 3 }	
+        ::= { swDNSResStaticIPv6NameSrvEntry 3 }
 
     swDNSResStaticIPv6NameSrvPriority OBJECT-TYPE
         SYNTAX      INTEGER {
@@ -294,8 +294,8 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DNS resolver static name server priority, primary name
             server or secondary name server."
-        ::= { swDNSResStaticIPv6NameSrvEntry 4 }  
-        
+        ::= { swDNSResStaticIPv6NameSrvEntry 4 }
+
     swDNSResStaticIPv6NameSrvRowStatus OBJECT-TYPE
         SYNTAX      RowStatus
         MAX-ACCESS  read-create
@@ -303,7 +303,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object manages this entry."
         ::= { swDNSResStaticIPv6NameSrvEntry 100 }
-  
+
 -- -----------------------------------------------------------------------------
 -- swDNSResHost
 -- -----------------------------------------------------------------------------
@@ -352,7 +352,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DNS resolver static host table index."
         ::= { swDNSResStaticHostEntry 1 }
-        
+
     swDNSResStaticHostRowStatus OBJECT-TYPE
         SYNTAX      RowStatus
         MAX-ACCESS  read-create
@@ -360,7 +360,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the status of this entry."
         ::= { swDNSResStaticHostEntry 2 }
-        
+
     swDNSResStaticHostName OBJECT-TYPE
         SYNTAX      DnsName
         MAX-ACCESS  read-create
@@ -383,16 +383,16 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the the DNS resolver static host IPv6 address.
             Note: current IPv6 doesn't support VRF."
-        ::= { swDNSResStaticHostEntry 6 }     
+        ::= { swDNSResStaticHostEntry 6 }
 
     swDNSResStaticHostIPv6IntfName  OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This node is used to specify the interface name 
+            "This node is used to specify the interface name
              when swDNSResStaticHostIPv6addr is a link local address. "
-        ::= { swDNSResStaticHostEntry 7 }	
+        ::= { swDNSResStaticHostEntry 7 }
 
 -- -----------------------------------------------------------------------------
 -- swDNSResDynamicHostTable
@@ -439,7 +439,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DNS resolver dynamic host index."
         ::= { swDNSResDynamicHostEntry 1 }
-       
+
     swDNSResDynamicHostName OBJECT-TYPE
         SYNTAX      DnsName
         MAX-ACCESS  read-only
@@ -455,7 +455,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the DNS resolver dynamic host IP address."
         ::= { swDNSResDynamicHostEntry 3 }
-        
+
     swDNSResDynamicHostTTL OBJECT-TYPE
         SYNTAX      DnsTime
         MAX-ACCESS  read-only
@@ -476,7 +476,7 @@ DNSResolver-MIB DEFINITIONS ::= BEGIN
 			 Setting this value to 'start' will execute the clear action,
 			 Once cleared, the value returns to 'other'."
         ::= { swDNSResDynamicHostEntry 5 }
-	
+
 swDNSResDynamicHostIPv6addr OBJECT-TYPE
         SYNTAX      Ipv6Address
         MAX-ACCESS  read-create
@@ -491,7 +491,7 @@ swDNSResDynamicHostIPv6addr OBJECT-TYPE
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This node is used to specify the interface name 
+            "This node is used to specify the interface name
              when swDNSResDynamicHostIPv6addr is a link local address. "
         ::= { swDNSResDynamicHostEntry 8 }
 

@@ -6,7 +6,7 @@ IMPORTS
 
    pwe3
        FROM FOUNDRY-SN-ROOT-MIB
-       
+
    MODULE-COMPLIANCE, OBJECT-GROUP
        FROM SNMPv2-CONF                   -- [RFC2580]
 
@@ -59,7 +59,7 @@ pwEnetStdMIB MODULE-IDENTITY
 
 
       ::= { pwe3 4 }
-      -- ::= { transmission XXXX }  
+      -- ::= { transmission XXXX }
                           -- RFC Editor: Please replace
                           -- XXXX with IANA assigned value.
                           -- See IANA considerations section.
@@ -377,7 +377,7 @@ pwEnetModuleFullCompliance MODULE-COMPLIANCE
    DESCRIPTION "Write access and values other than zero are
                 required only for implementations that support
                 modeling the Ethernet PW in the Etherlike-MIB."
-   
+
    OBJECT       pwEnetRowStatus
    SYNTAX       INTEGER { active(1), notInService(2),
                             notReady(3) }
@@ -476,5 +476,3 @@ pwEnetStatsGroup OBJECT-GROUP
    ::= { pwEnetGroups 2 }
 
 END
-
-

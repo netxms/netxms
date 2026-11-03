@@ -1,5 +1,5 @@
 -- This module defines enterprise MIBs for VPN tunnel monitoring
--- 
+--
 -- Copyright (c) 1999-2004, Juniper Networks, Inc.
 -- All rights reserved.
 
@@ -22,7 +22,7 @@ netscreenVpnMonMibModule MODULE-IDENTITY
     CONTACT-INFO
         "Customer Support
 
-         1194 North Mathilda Avenue 
+         1194 North Mathilda Avenue
          Sunnyvale, California 94089-1206
          USA
 
@@ -531,5 +531,3 @@ nsVpnMonIfInfo OBJECT-TYPE
     ::= { nsVpnMonEntry 42 }
 
 END
-
-

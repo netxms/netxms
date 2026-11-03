@@ -14,7 +14,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
 -- Specification.
 
     IMPORTS
-        MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, 
+        MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
         TimeTicks, Unsigned32
                                             FROM SNMPv2-SMI
         MacAddress,TEXTUAL-CONVENTION,DateAndTime
@@ -44,7 +44,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    agentAuthMgrGlobalConfigGroup
     --**************************************************************************************
-    
+
     agentAuthMgrGlobalConfigGroup                      OBJECT IDENTIFIER ::= { fastPathAuthMgr 1 }
 
     agentAuthMgrAdminMode OBJECT-TYPE
@@ -63,11 +63,11 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    agentAuthMgrInterfaceConfigGroup
     --**************************************************************************************
-    
+
     agentAuthMgrInterfaceConfigGroup                 OBJECT IDENTIFIER ::= { fastPathAuthMgr 2 }
 
     agentAuthMgrInterfaceConfigMethodTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF AgentAuthMgrInterfaceConfigMethodEntry  
+         SYNTAX      SEQUENCE OF AgentAuthMgrInterfaceConfigMethodEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -75,7 +75,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          ::= { agentAuthMgrInterfaceConfigGroup 1 }
 
     agentAuthMgrInterfaceConfigMethodEntry OBJECT-TYPE
-         SYNTAX     AgentAuthMgrInterfaceConfigMethodEntry 
+         SYNTAX     AgentAuthMgrInterfaceConfigMethodEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -84,18 +84,18 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          ::= { agentAuthMgrInterfaceConfigMethodTable 1 }
 
     AgentAuthMgrInterfaceConfigMethodEntry ::= SEQUENCE {
-                         agentAuthMgrIfIndex 
+                         agentAuthMgrIfIndex
                            InterfaceIndex,
-                          methodIndex 
+                          methodIndex
                            Unsigned32,
-                         agentAuthMgrMethodOrder 
-                            INTEGER, 
-                         agentAuthMgrMethodPriority 
-                            INTEGER 
+                         agentAuthMgrMethodOrder
+                            INTEGER,
+                         agentAuthMgrMethodPriority
+                            INTEGER
            }
 
     agentAuthMgrIfIndex   OBJECT-TYPE
-         SYNTAX      InterfaceIndex 
+         SYNTAX      InterfaceIndex
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -103,11 +103,11 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          ::= { agentAuthMgrInterfaceConfigMethodEntry 1 }
 
     methodIndex OBJECT-TYPE
-         SYNTAX     Unsigned32 
-         MAX-ACCESS not-accessible 
+         SYNTAX     Unsigned32
+         MAX-ACCESS not-accessible
          STATUS      current
          DESCRIPTION
-                     "The index of the configuration method." 
+                     "The index of the configuration method."
 
          ::= { agentAuthMgrInterfaceConfigMethodEntry 2 }
 
@@ -121,7 +121,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The authentication methods allowed for order configuration." 
+                     "The authentication methods allowed for order configuration."
          DEFVAL { undefined }
 
          ::= { agentAuthMgrInterfaceConfigMethodEntry 3 }
@@ -136,14 +136,14 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The authentication methods allowed for priority configuration." 
+                     "The authentication methods allowed for priority configuration."
          DEFVAL { undefined }
 
          ::= { agentAuthMgrInterfaceConfigMethodEntry 4 }
 
 
     agentAuthMgrInterfaceConfigTimerTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF AgentAuthMgrInterfaceConfigTimerEntry  
+         SYNTAX      SEQUENCE OF AgentAuthMgrInterfaceConfigTimerEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -152,7 +152,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
 
 
     agentAuthMgrInterfaceConfigTimerEntry OBJECT-TYPE
-         SYNTAX     AgentAuthMgrInterfaceConfigTimerEntry 
+         SYNTAX     AgentAuthMgrInterfaceConfigTimerEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -161,13 +161,13 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          ::= { agentAuthMgrInterfaceConfigTimerTable 1 }
 
     AgentAuthMgrInterfaceConfigTimerEntry ::= SEQUENCE {
-                         agentAuthMgrTimerIfIndex 
+                         agentAuthMgrTimerIfIndex
                            InterfaceIndex,
                          agentAuthMgrRestart
                            Unsigned32
            }
     agentAuthMgrTimerIfIndex   OBJECT-TYPE
-         SYNTAX      InterfaceIndex 
+         SYNTAX      InterfaceIndex
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -187,11 +187,11 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    agentAuthMgrInterfaceStatusGroup
     --**************************************************************************************
-    
+
     agentAuthMgrInterfaceStatusGroup                 OBJECT IDENTIFIER ::= { fastPathAuthMgr 3 }
 
     agentAuthMgrInterfaceStatusTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF AgentAuthMgrInterfaceStatusMethodEntry  
+         SYNTAX      SEQUENCE OF AgentAuthMgrInterfaceStatusMethodEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -199,7 +199,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          ::= { agentAuthMgrInterfaceStatusGroup 1 }
 
     agentAuthMgrInterfaceStatusEntry OBJECT-TYPE
-         SYNTAX     AgentAuthMgrInterfaceStatusMethodEntry 
+         SYNTAX     AgentAuthMgrInterfaceStatusMethodEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -208,10 +208,10 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          ::= { agentAuthMgrInterfaceStatusTable 1 }
 
     AgentAuthMgrInterfaceStatusMethodEntry ::= SEQUENCE {
-                         agentAuthMgrStatusMethodOrder 
-                            INTEGER, 
-                         agentAuthMgrStatusMethodPriority 
-                            INTEGER 
+                         agentAuthMgrStatusMethodOrder
+                            INTEGER,
+                         agentAuthMgrStatusMethodPriority
+                            INTEGER
            }
 
     agentAuthMgrStatusMethodOrder OBJECT-TYPE
@@ -224,7 +224,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "The authentication methods allowed for order configuration." 
+                     "The authentication methods allowed for order configuration."
          DEFVAL { undefined }
 
          ::= { agentAuthMgrInterfaceStatusEntry 1 }
@@ -239,7 +239,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "The authentication methods allowed for priority configuration." 
+                     "The authentication methods allowed for priority configuration."
          DEFVAL { undefined }
 
          ::= { agentAuthMgrInterfaceStatusEntry 2 }
@@ -329,7 +329,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
                 MAX-ACCESS  read-only
                 STATUS      current
                 DESCRIPTION
-                        "The method using which the client is authenticated." 
+                        "The method using which the client is authenticated."
                 ::={ agentAuthMgrClientStatusEntry 5}
 
 
@@ -402,7 +402,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
                 MAX-ACCESS       read-only
                 STATUS           current
                 DESCRIPTION
-                        "The method using which the client is authenticated." 
+                        "The method using which the client is authenticated."
                 ::= { agentAuthMgrPortAuthHistoryResultEntry 5 }
 
 
@@ -447,7 +447,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          SYNTAX      AgentAuthMgrPortAuthHistoryResultClearEntry
          MAX-ACCESS  not-accessible
          STATUS      current
-         DESCRIPTION "Represents to clear the authentication manager authentication results for an 
+         DESCRIPTION "Represents to clear the authentication manager authentication results for an
                       authentication manager authentication history table."
          INDEX       { agentAuthMgrAuthHistoryResultIfIndex }
          ::= {agentAuthMgrPortAuthHistoryResultClearTable 1 }
@@ -482,7 +482,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
 
 
 --**************************************************************************************
--- agentAuthMgrAuthStatsGroup -> Contains MIB objects displaying Authentication Manager 
+-- agentAuthMgrAuthStatsGroup -> Contains MIB objects displaying Authentication Manager
 --                               statistics per interface
 --**************************************************************************************
     agentAuthMgrAuthStatsGroup OBJECT IDENTIFIER ::= { fastPathAuthMgr 6 }
@@ -524,10 +524,10 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
                      mab(2),
                      captivePortal(3)
                  }
-         MAX-ACCESS     not-accessible 
+         MAX-ACCESS     not-accessible
          STATUS      current
          DESCRIPTION
-                     "The index of the authentication method for which statistics are reviewed." 
+                     "The index of the authentication method for which statistics are reviewed."
 
          ::= { agentAuthMgrPortStatsEntry 2 }
 
@@ -536,7 +536,7 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
                 MAX-ACCESS       read-only
                 STATUS           current
                 DESCRIPTION
-                        "Specifies the number of successful authentications events 
+                        "Specifies the number of successful authentications events
                          of specified method on specified port."
                 ::= { agentAuthMgrPortStatsEntry 3 }
 
@@ -604,8 +604,8 @@ DNOS-AUTHENTICATION-MANAGER-MIB DEFINITIONS ::= BEGIN
          ::= { agentAuthMgrTrapsConfigGroup 1 }
 
 --**************************************************************************************
--- Auth Mgr Traps 
--- 
+-- Auth Mgr Traps
+--
 --**************************************************************************************
     fastpathAuthMgrTraps OBJECT IDENTIFIER ::= { fastPathAuthMgr 0 }
 

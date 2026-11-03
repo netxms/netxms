@@ -45,39 +45,39 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     ::= { dnOS 38 }
 
 
-   -- 
+   --
    -- ***********************************************************
-   -- 
+   --
    -- Textual Conventions
-   -- 
+   --
    -- ***********************************************************
-   
+
     CpCaptivePortalIntfCapabilitiesMap ::= TEXTUAL-CONVENTION
         STATUS      current
         DESCRIPTION
                 "Description of the interface capabilities.
-    
+
                 The bit 'other(0)' indicates that the interface has capabilities
                 other than those listed below.
-   
+
                 The bit 'sessionTimeout(1)' indicates that the interface supports timeout
                 when traffic is not received or sent within the idle timeout period.
- 
+
                 The bit 'idleTimeout(2)' indicates that the interface supports timeout
                 when traffic is not received or sent within the idle timeout period.
-    
-                The bit 'maxBytesReceivedCounter(3)' indicates that the interface 
+
+                The bit 'maxBytesReceivedCounter(3)' indicates that the interface
                 supports displaying the number of bytes received from each client.
-    
-                The bit 'maxBytesTransmittedCounter(4)' indicates that the interface 
+
+                The bit 'maxBytesTransmittedCounter(4)' indicates that the interface
                 supports displaying the number of bytes transmittted from each client.
 
-                The bit 'maxPacketsReceivedCounter(5)' indicates that the interface 
+                The bit 'maxPacketsReceivedCounter(5)' indicates that the interface
                 supports displaying the number of packets received from each client.
-    
-                The bit 'maxPacketsTransmittedCounter(6)' indicates that the interface 
+
+                The bit 'maxPacketsTransmittedCounter(6)' indicates that the interface
                 supports displaying the number of packets transmitted from each client.
-    
+
                 The bit 'clientRoaming(7)' indicates that the interfacesupports client
                 roaming.  This is supported by wireless interfaces only"
         SYNTAX  BITS {
@@ -95,13 +95,13 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
    --**************************************************************************************
    --    cpConfigGroup
    --**************************************************************************************
-   
+
    cpConfigGroup                      OBJECT IDENTIFIER ::= { fastPathCaptivePortal 1 }
 
     --**************************************************************************************
     --    cpGlobalConfigGroup
     --**************************************************************************************
-    
+
     cpGlobalConfigGroup                      OBJECT IDENTIFIER ::= { cpConfigGroup 1 }
 
     cpAdminMode OBJECT-TYPE
@@ -121,8 +121,8 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The additional captive portal authentication server port for 
-                     HTTP web connection. The HTTP port default is 0 which denotes 
+                     "The additional captive portal authentication server port for
+                     HTTP web connection. The HTTP port default is 0 which denotes
                      no specific port and the default port (80) is used."
          DEFVAL { 0 }
          ::= { cpGlobalConfigGroup 2 }
@@ -156,7 +156,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The length of time to maintain an authentication session from a client. 
+                     "The length of time to maintain an authentication session from a client.
                      This time is measured from when a client initiates an authentication request.
                      The value is represented in seconds."
          DEFVAL { 300 }
@@ -295,9 +295,9 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Whether the captive portal should redirect newly authenticated 
-                     clients to the configured URL. If this mode is disabled, the 
-                     default locale specific welcome page is used. If enabled, the 
+                     "Whether the captive portal should redirect newly authenticated
+                     clients to the configured URL. If this mode is disabled, the
+                     default locale specific welcome page is used. If enabled, the
                      client is redirected to a configured URL."
          DEFVAL { disable }
          ::= { cpCaptivePortalEntry 7 }
@@ -307,7 +307,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The URL to which the newly authenticated client is redirected 
+                     "The URL to which the newly authenticated client is redirected
                      if cpCaptivePortalURLRedirectMode is enabled."
          ::= { cpCaptivePortalEntry 8 }
 
@@ -316,7 +316,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The session timeout. After this limit has been reached the user 
+                     "The session timeout. After this limit has been reached the user
                      will be disconnected. If this value is set to 0, no timeout is enforced.
                      This value is represented in seconds."
          DEFVAL { 0 }
@@ -327,8 +327,8 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The idle timeout of the session. After this limit has been reached the user 
-                     will be disconnected. If this value is set to 0, no timeout is enforced. 
+                     "The idle timeout of the session. After this limit has been reached the user
+                     will be disconnected. If this value is set to 0, no timeout is enforced.
                      This value is represented in seconds."
          DEFVAL { 0 }
          ::= { cpCaptivePortalEntry 10 }
@@ -338,7 +338,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The RADIUS authentication server name assigned to this captive portal configuration. 
+                     "The RADIUS authentication server name assigned to this captive portal configuration.
                      RADIUS server name may only contain alphanumeric plus dash, underline, and space characters."
          ::= { cpCaptivePortalEntry 11 }
 
@@ -347,8 +347,8 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The maximum bandwidth, in bytes per second, that a client can transmit traffic 
-                     when using Captive Portal. This setting limits the bandwidth at which the client 
+                     "The maximum bandwidth, in bytes per second, that a client can transmit traffic
+                     when using Captive Portal. This setting limits the bandwidth at which the client
                      can send data into the network. If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes (however; converted & stored as bits/sec)."
          DEFVAL { 0 }
@@ -359,8 +359,8 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The maximum bandwidth, in bytes per second, that a client can receive traffic 
-                     when using Captive Portal. This setting limits the bandwidth at which the client 
+                     "The maximum bandwidth, in bytes per second, that a client can receive traffic
+                     when using Captive Portal. This setting limits the bandwidth at which the client
                      can receive data from the network. If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes (however; converted & stored as bits/sec)."
          DEFVAL { 0 }
@@ -373,7 +373,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
                      "The maximum input octets (bytes) allowed for the session.
                      After this limit has been reached the user will be disconnected.
-                     If this value is set to 0, no rate limiting is enforced. 
+                     If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes."
          DEFVAL { 0 }
          ::= { cpCaptivePortalEntry 14 }
@@ -385,7 +385,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
                      "The maximum Output octets (bytes) allowed for the session.
                      After this limit has been reached the user will be disconnected.
-                     If this value is set to 0, no rate limiting is enforced. 
+                     If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes."
          DEFVAL { 0 }
          ::= { cpCaptivePortalEntry 15 }
@@ -397,7 +397,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
                      "The maximum input/output octets (bytes) allowed for the session.
                      After this limit has been reached the user will be disconnected.
-                     If this value is set to 0, no rate limiting is enforced. 
+                     If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes."
          DEFVAL { 0 }
          ::= { cpCaptivePortalEntry 16 }
@@ -419,11 +419,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          ::= { cpCaptivePortalEntry 17 }
 
     cpCaptivePortalRowStatus OBJECT-TYPE
-         SYNTAX      RowStatus 
+         SYNTAX      RowStatus
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The captive portal instance status. 
+                     "The captive portal instance status.
 
                      Supported values:
                      active(1)      - This status is displayed after a valid Captive Portal instance is created.
@@ -434,7 +434,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    cpLocalUserDatabaseGroup
     --**************************************************************************************
-    
+
     cpLocalUserDatabaseGroup            OBJECT IDENTIFIER ::= { cpConfigGroup 3 }
 
     -- ---------------------------------
@@ -442,11 +442,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     -- ---------------------------------
 
     cpLocalUserGroupTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpLocalUserGroupEntry  
+         SYNTAX      SEQUENCE OF CpLocalUserGroupEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-                     "A table of group definitions for the local users. This database is 
+                     "A table of group definitions for the local users. This database is
                      used by captive portal instances and local users if the verification mode is set to LOCAL."
          ::= { cpLocalUserDatabaseGroup 1 }
 
@@ -485,11 +485,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          ::= { cpLocalUserGroupEntry 2 }
 
     cpLocalUserGroupRowStatus OBJECT-TYPE
-         SYNTAX      RowStatus 
+         SYNTAX      RowStatus
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The user group entry status. 
+                     "The user group entry status.
 
                      Supported values:
                      active(1)      - This status is displayed after a valid user group is created.
@@ -502,11 +502,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     -- ---------------------------------
 
     cpLocalUserTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpLocalUserEntry  
+         SYNTAX      SEQUENCE OF CpLocalUserEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-                     "A table of user definitions for the local database. This database is 
+                     "A table of user definitions for the local database. This database is
                      used by a captive portal instance if its verification mode is set to LOCAL."
          ::= { cpLocalUserDatabaseGroup 2 }
 
@@ -569,21 +569,21 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          ::= { cpLocalUserEntry 3 }
 
     cpLocalUserSessionTimeout OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The session timeout in seconds. After this limit is reached, the user is disconnected. 
+                     "The session timeout in seconds. After this limit is reached, the user is disconnected.
                      If this value is set to 0, the default value for the captive portal is used."
          DEFVAL { 0 }
          ::= { cpLocalUserEntry 4 }
 
     cpLocalUserIdleTimeout OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The idle timeout of the session in seconds. After this limit is reached, the user is disconnected. 
+                     "The idle timeout of the session in seconds. After this limit is reached, the user is disconnected.
                      If this value is set to 0, the default value for the captive portal is used."
          DEFVAL { 0 }
          ::= { cpLocalUserEntry 5 }
@@ -593,8 +593,8 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The maximum bandwidth, in bytes per second, that the user can transmit traffic 
-                     when using Captive Portal. This setting limits the bandwidth at which the user 
+                     "The maximum bandwidth, in bytes per second, that the user can transmit traffic
+                     when using Captive Portal. This setting limits the bandwidth at which the user
                      can send data into the network. If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes (however; converted & stored as bits/sec)."
          DEFVAL { 0 }
@@ -605,9 +605,9 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "The maximum bandwidth, in bytes per second, that the user can receive traffic 
-                     when using Captive Portal. This setting limits the bandwidth at which the user 
-                     can receive data from the network. If this value is set to 0, no rate limiting is enforced. 
+                     "The maximum bandwidth, in bytes per second, that the user can receive traffic
+                     when using Captive Portal. This setting limits the bandwidth at which the user
+                     can receive data from the network. If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes (however; converted & stored as bits/sec)."
          DEFVAL { 0 }
          ::= { cpLocalUserEntry 7 }
@@ -619,7 +619,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
                      "The maximum input octets (bytes) allowed for the session.
                      After this limit has been reached the user will be disconnected.
-                     If this value is set to 0, no rate limiting is enforced. 
+                     If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes."
          DEFVAL { 0 }
          ::= { cpLocalUserEntry 8 }
@@ -631,7 +631,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
                      "The maximum Output octets (bytes) allowed for the session.
                      After this limit has been reached the user will be disconnected.
-                     If this value is set to 0, no rate limiting is enforced. 
+                     If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes."
          DEFVAL { 0 }
          ::= { cpLocalUserEntry 9 }
@@ -643,17 +643,17 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
                      "The maximum input/output octets (bytes) allowed for the session.
                      After this limit has been reached the user will be disconnected.
-                     If this value is set to 0, no rate limiting is enforced. 
+                     If this value is set to 0, no rate limiting is enforced.
                      This value is represented in bytes."
          DEFVAL { 0 }
          ::= { cpLocalUserEntry 10 }
 
     cpLocalUserRowStatus OBJECT-TYPE
-         SYNTAX      RowStatus 
+         SYNTAX      RowStatus
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The user entry status. 
+                     "The user entry status.
 
                      Supported values:
                      active(1)      - This status is displayed after a valid user is created.
@@ -666,7 +666,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     -- ---------------------------------
 
     cpLocalUserGroupAssociationTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpLocalUserGroupAssociationEntry  
+         SYNTAX      SEQUENCE OF CpLocalUserGroupAssociationEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -708,18 +708,18 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          ::= { cpLocalUserGroupAssociationEntry 2 }
 
     cpLocalUserGroupAssociationRowStatus OBJECT-TYPE
-         SYNTAX      RowStatus 
+         SYNTAX      RowStatus
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The local user to user group association entry status. 
+                     "The local user to user group association entry status.
 
                      Supported values:
-                     active(1)      - This status is displayed after a valid association 
+                     active(1)      - This status is displayed after a valid association
                                       between a local user and a user group is created.
-                     createAndGo(4) - Set to this value to create a new association 
+                     createAndGo(4) - Set to this value to create a new association
                                       between a local user and a user group.
-                     destroy(6)     - Set to this value to remove an existing association 
+                     destroy(6)     - Set to this value to remove an existing association
                                       between a local user and a user group."
          ::= { cpLocalUserGroupAssociationEntry 3 }
 
@@ -727,11 +727,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    cpInterfaceAssociationGroup
     --**************************************************************************************
-    
+
     cpInterfaceAssociationGroup            OBJECT IDENTIFIER ::= { cpConfigGroup 4 }
 
     cpInterfaceAssociationTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpInterfaceAssociationEntry  
+         SYNTAX      SEQUENCE OF CpInterfaceAssociationEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -757,7 +757,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
            }
 
     cpIntfAssociationCPID OBJECT-TYPE
-         SYNTAX      Unsigned32 
+         SYNTAX      Unsigned32
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -765,7 +765,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          ::= { cpInterfaceAssociationEntry 1 }
 
     cpIntfAssociationIfIndex OBJECT-TYPE
-         SYNTAX      InterfaceIndex 
+         SYNTAX      InterfaceIndex
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -777,14 +777,14 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-create
          STATUS      current
          DESCRIPTION
-                     "The Captive Portal instance to interface association status. 
+                     "The Captive Portal instance to interface association status.
 
                      Supported values:
-                     active(1)      - This status is displayed after a valid association 
+                     active(1)      - This status is displayed after a valid association
                                       between a Captive Portal instance and an interface is created.
-                     createAndGo(4) - Set to this value to create a new association 
+                     createAndGo(4) - Set to this value to create a new association
                                       between a Captive Portal instance and an interface.
-                     destroy(6)     - Set to this value to remove an existing association 
+                     destroy(6)     - Set to this value to remove an existing association
                                       between a Captive Portal instance and an interface."
          ::= { cpInterfaceAssociationEntry 3 }
 
@@ -792,13 +792,13 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
    --**************************************************************************************
    --    cpStatusGroup
    --**************************************************************************************
-   
+
    cpStatusGroup                      OBJECT IDENTIFIER ::= { fastPathCaptivePortal 2 }
 
     --**************************************************************************************
     --    cpCaptivePortalGlobalStatusGroup
     --**************************************************************************************
-    
+
     cpCaptivePortalGlobalStatusGroup            OBJECT IDENTIFIER ::= { cpStatusGroup 1 }
 
     cpCaptivePortalOperStatus OBJECT-TYPE
@@ -815,7 +815,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          ::= { cpCaptivePortalGlobalStatusGroup 1 }
 
     cpCaptivePortalOperDisabledReason OBJECT-TYPE
-         SYNTAX      INTEGER { 
+         SYNTAX      INTEGER {
                      none(0),
                      adminDisabled(1),
                      noIPAddress(2),
@@ -897,11 +897,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    cpCaptivePortalInstanceStatusGroup
     --**************************************************************************************
-    
+
     cpCaptivePortalInstanceStatusGroup            OBJECT IDENTIFIER ::= { cpStatusGroup 2 }
 
     cpCaptivePortalInstanceStatusTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpCaptivePortalInstanceStatusEntry  
+         SYNTAX      SEQUENCE OF CpCaptivePortalInstanceStatusEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -921,9 +921,9 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
                         cpCaptivePortalInstanceOperStatus
                            INTEGER,
                         cpCaptivePortalInstanceOperDisabledReason
-                           INTEGER,                       
+                           INTEGER,
                         cpCaptivePortalInstanceBlockStatus
-                           INTEGER,                                                 
+                           INTEGER,
                         cpCaptivePortalInstanceAuthUserCount
                            Integer32
            }
@@ -966,9 +966,9 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Block or unblock the captive portal instance for authentications 
+                     "Block or unblock the captive portal instance for authentications
                       using the following values:
-                      
+
                       blockPending(0)    - Set to this value to block the captive portal instance for authentications.
                                            After setting this value, the status displayed is blocked(1).
                       notBlockPending(2) - Set to this value to unblock the captive portal instance for authentications.
@@ -988,11 +988,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    cpCaptivePortalIntfStatusGroup
     --**************************************************************************************
-    
+
     cpCaptivePortalIntfStatusGroup            OBJECT IDENTIFIER ::= { cpStatusGroup 3 }
 
     cpCaptivePortalIntfStatusTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpCaptivePortalIntfStatusEntry  
+         SYNTAX      SEQUENCE OF CpCaptivePortalIntfStatusEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -1061,7 +1061,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "Indication of whether the captive portal instance interface is 
+                     "Indication of whether the captive portal instance interface is
                      currently blocked for authentications."
          DEFVAL { notBlocked }
          ::= { cpCaptivePortalIntfStatusEntry 4 }
@@ -1078,15 +1078,15 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    cpCaptivePortalIntfDatabaseGroup
     --**************************************************************************************
-    
+
     cpCaptivePortalIntfDatabaseGroup            OBJECT IDENTIFIER ::= { cpStatusGroup 4 }
 
     cpCaptivePortalIntfDatabaseTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpCaptivePortalIntfDatabaseEntry  
+         SYNTAX      SEQUENCE OF CpCaptivePortalIntfDatabaseEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-                     "A table of definitions for interfaces that are captive portal capable. 
+                     "A table of definitions for interfaces that are captive portal capable.
                      This table identifies services that are provided on this interface."
          ::= { cpCaptivePortalIntfDatabaseGroup 1 }
 
@@ -1105,7 +1105,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
            }
 
     cpCaptivePortalIntfCapabilities OBJECT-TYPE
-         SYNTAX      CpCaptivePortalIntfCapabilitiesMap 
+         SYNTAX      CpCaptivePortalIntfCapabilitiesMap
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
@@ -1116,11 +1116,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    cpCaptivePortalClientStatusGroup
     --**************************************************************************************
-    
+
     cpCaptivePortalClientStatusGroup            OBJECT IDENTIFIER ::= { cpStatusGroup 5 }
 
     cpCaptivePortalClientStatusTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpCaptivePortalClientStatusEntry  
+         SYNTAX      SEQUENCE OF CpCaptivePortalClientStatusEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -1142,15 +1142,15 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
                          cpCaptivePortalClientIpAddress
                            IpAddress,
                          cpCaptivePortalClientUserName
-                           DisplayString,                                      
+                           DisplayString,
                          cpCaptivePortalClientProtocolMode
-                           INTEGER,                                      
+                           INTEGER,
                          cpCaptivePortalClientVerificationMode
-                           INTEGER,                                      
+                           INTEGER,
                          cpCaptivePortalClientAssocIfIndex
-                           InterfaceIndex,                                      
+                           InterfaceIndex,
                          cpCaptivePortalClientCPID
-                           Integer32,                                      
+                           Integer32,
                          cpCaptivePortalClientSessionTime
                            TimeTicks,
                          cpCaptivePortalClientSwitchMacAddress
@@ -1158,7 +1158,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
                          cpCaptivePortalClientSwitchIpAddress
                            IpAddress,
                          cpCaptivePortalClientSwitchType
-                           INTEGER,                                      
+                           INTEGER,
                          cpCaptivePortalClientDeauthAction
                            INTEGER
            }
@@ -1272,7 +1272,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "This is an action object. Setting this object to start will initiate the 
+                     "This is an action object. Setting this object to start will initiate the
                      deauthentication of authenticated client. Read on this object will always return none."
          ::= { cpCaptivePortalClientStatusEntry 12 }
 
@@ -1282,7 +1282,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     -- ------------------------------------
 
     cpCaptivePortalClientStatisticsTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpCaptivePortalClientStatisticsEntry  
+         SYNTAX      SEQUENCE OF CpCaptivePortalClientStatisticsEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -1345,11 +1345,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    cpCaptivePortalIntfClientAssocGroup
     --**************************************************************************************
-    
+
     cpCaptivePortalIntfClientAssocGroup          OBJECT IDENTIFIER ::= { cpStatusGroup 6 }
 
     cpCaptivePortalIntfClientAssocTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpCaptivePortalIntfClientAssocEntry  
+         SYNTAX      SEQUENCE OF CpCaptivePortalIntfClientAssocEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -1370,7 +1370,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
                         cpCaptivePortalIntfClientIfIndex
                            InterfaceIndex,
                         cpCaptivePortalIntfClientAssocMacAddress
-                           MacAddress,                           
+                           MacAddress,
                         cpCaptivePortalIntfClientAssocRowStatus
                            RowStatus
            }
@@ -1392,11 +1392,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          ::= { cpCaptivePortalIntfClientAssocEntry 2 }
 
     cpCaptivePortalIntfClientAssocRowStatus OBJECT-TYPE
-         SYNTAX      RowStatus 
+         SYNTAX      RowStatus
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "This specifies the row-status of this entry. For a valid entry, 
+                     "This specifies the row-status of this entry. For a valid entry,
                      the row-status will return active(1). This is the only supported value."
          ::= { cpCaptivePortalIntfClientAssocEntry 3 }
 
@@ -1404,11 +1404,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
     --**************************************************************************************
     --    cpCaptivePortalInstanceClientAssocGroup
     --**************************************************************************************
-    
+
     cpCaptivePortalInstanceClientAssocGroup          OBJECT IDENTIFIER ::= { cpStatusGroup 7 }
 
     cpCaptivePortalInstanceClientAssocTable OBJECT-TYPE
-         SYNTAX      SEQUENCE OF CpCaptivePortalInstanceClientAssocEntry  
+         SYNTAX      SEQUENCE OF CpCaptivePortalInstanceClientAssocEntry
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
@@ -1427,9 +1427,9 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
 
     CpCaptivePortalInstanceClientAssocEntry ::= SEQUENCE {
                         cpCaptivePortalInstanceClientAssocInstanceId
-                           Integer32,                           
+                           Integer32,
                         cpCaptivePortalInstanceClientAssocMacAddress
-                           MacAddress,                           
+                           MacAddress,
                         cpCaptivePortalInstanceClientAssocRowStatus
                            RowStatus
            }
@@ -1451,11 +1451,11 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          ::= { cpCaptivePortalInstanceClientAssocEntry 2 }
 
     cpCaptivePortalInstanceClientAssocRowStatus OBJECT-TYPE
-         SYNTAX      RowStatus 
+         SYNTAX      RowStatus
          MAX-ACCESS  read-only
          STATUS      current
          DESCRIPTION
-                     "This specifies the row-status of this entry. For a valid entry, 
+                     "This specifies the row-status of this entry. For a valid entry,
                      the row-status will return active(1). This is the only supported value."
          ::= { cpCaptivePortalInstanceClientAssocEntry 3 }
 
@@ -1474,9 +1474,9 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "This object enables/disables the global Captive Portal trap mode. 
-                     If this object is disabled, the Captive Portal Client Authentication Failure traps, 
-                     Client Connection traps, Client Database Full traps, and Client Disconnection traps 
+                     "This object enables/disables the global Captive Portal trap mode.
+                     If this object is disabled, the Captive Portal Client Authentication Failure traps,
+                     Client Connection traps, Client Database Full traps, and Client Disconnection traps
                      are not sent regardless of their setting."
          DEFVAL      { disable }
          ::= { cpTrapsConfig 1 }
@@ -1540,7 +1540,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
        OBJECTS { cpCaptivePortalClientMacAddress,cpCaptivePortalClientIpAddress,cpCaptivePortalClientCPID,cpCaptivePortalClientAssocIfIndex,cpCaptivePortalClientSwitchMacAddress,cpCaptivePortalClientUserName }
        STATUS  current
        DESCRIPTION
-          "A cpClientAuthenticationFailure trap signifies that the SNMP entity, 
+          "A cpClientAuthenticationFailure trap signifies that the SNMP entity,
           acting in an agent role, has detected a client authentication failure."
        ::= { cpTraps 1 }
 
@@ -1548,7 +1548,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
        OBJECTS { cpCaptivePortalClientMacAddress,cpCaptivePortalClientAssocIfIndex,cpCaptivePortalClientIpAddress,cpCaptivePortalClientCPID,cpCaptivePortalClientSwitchMacAddress }
        STATUS  current
        DESCRIPTION
-          "A cpClientConnect trap signifies that the SNMP entity, 
+          "A cpClientConnect trap signifies that the SNMP entity,
           acting in an agent role, has detected a client connection."
        ::= { cpTraps 2 }
 
@@ -1556,7 +1556,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
        OBJECTS { cpCaptivePortalClientMacAddress }
        STATUS  current
        DESCRIPTION
-          "A cpClientDatabaseFull trap signifies that the SNMP entity, 
+          "A cpClientDatabaseFull trap signifies that the SNMP entity,
           acting in an agent role, has detected that client authentication database is full."
        ::= { cpTraps 3 }
 
@@ -1564,7 +1564,7 @@ DNOS-CAPTIVE-PORTAL-MIB DEFINITIONS ::= BEGIN
        OBJECTS { cpCaptivePortalClientMacAddress,cpCaptivePortalClientAssocIfIndex,cpCaptivePortalClientIpAddress,cpCaptivePortalClientCPID,cpCaptivePortalClientSwitchMacAddress }
        STATUS  current
        DESCRIPTION
-          "A cpClientDisconnect trap signifies that the SNMP entity, 
+          "A cpClientDisconnect trap signifies that the SNMP entity,
           acting in an agent role, has detected a client disconnection."
        ::= { cpTraps 4 }
 

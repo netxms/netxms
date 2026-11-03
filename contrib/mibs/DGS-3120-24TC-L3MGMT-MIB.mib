@@ -69,14 +69,14 @@
 -- Description:
 -- [New Object]
 -- 1. Add swL3IpCtrlDhcpv6ClientState and swL3Ipv6AddressCtrlAddressType objects.
--- 
+--
 -- Version 0.02, 2010/04/06, Easion Tang
 -- Description:
 --  [Modification]
 --    Delete swL3RelayMgmt nodes, it's not supported by DGS-3120.
 
 -- Version 0.01
--- 2010/1/25 
+-- 2010/1/25
 -- Built by Kevin Wang.
 -- *****************************************************************************
 
@@ -113,12 +113,12 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --    swL3RelayMgmt           OBJECT IDENTIFIER ::= { swL3MgmtMIB 3 }
     swL3OspfLsdbMgmt        OBJECT IDENTIFIER ::= { swL3MgmtMIB 13 }
     swL3VrrpOperMgmt        OBJECT IDENTIFIER ::= { swL3MgmtMIB 14 }
-    
+
     swL3IpCtrlMgmt          OBJECT IDENTIFIER ::= { swL3IpMgmt 1 }
     swL3IpFdbMgmt           OBJECT IDENTIFIER ::= { swL3IpMgmt 2 }
 --    swL3IpFilterMgmt        OBJECT IDENTIFIER ::= { swL3IpMgmt 3 }
     swL3IpMcastMgmt         OBJECT IDENTIFIER ::= { swL3IpMgmt 6 }
- 
+
 --    swL3RelayBootpMgmt      OBJECT IDENTIFIER ::= { swL3RelayMgmt 2 }
 --    swL3RelayDnsMgmt        OBJECT IDENTIFIER ::= { swL3RelayMgmt 3 }
     swL3OspfECMPMgmt       OBJECT IDENTIFIER ::= { swL3MgmtMIB 15 }
@@ -155,7 +155,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
              "This object indicates if the Routing Information Protocol (RIP)
              version 2 function is enabled or disabled."
          ::= { swL3DevCtrl 1 }
-        
+
       swL3DevCtrlOSPFState OBJECT-TYPE
           SYNTAX  INTEGER {
                other(1),
@@ -167,7 +167,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
              "This object indicates OSPF protocol is enabled or disabled."
          ::= { swL3DevCtrl 2 }
-        
+
     swL3DevCtrlDVMRPState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -240,7 +240,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        DESCRIPTION
 --            "This object indicates the IPv6 function state of the device."
 --        ::= { swL3IpCtrlMgmt 2 }
-                
+
     swL3IpCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3IpCtrlEntry
         MAX-ACCESS  not-accessible
@@ -258,7 +258,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         INDEX  { swL3IpCtrlInterfaceName }
         ::= { swL3IpCtrlTable 1 }
 
-    SwL3IpCtrlEntry ::= 
+    SwL3IpCtrlEntry ::=
         SEQUENCE {
             swL3IpCtrlInterfaceName
                 DisplayString,
@@ -271,25 +271,25 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             swL3IpCtrlVlanName
                 DisplayString,
             swL3IpCtrlProxyArp
-                INTEGER, 
+                INTEGER,
             swL3IpCtrlSecondary
-                TruthValue,                   
+                TruthValue,
             swL3IpCtrlMode
                 INTEGER,
             swL3IpCtrlAdminState
-                INTEGER,    
+                INTEGER,
             swL3IpCtrlIpv4AdminState
                 INTEGER,
 --            swL3IpCtrlIpv4OperState
---                INTEGER,    
+--                INTEGER,
             swL3IpCtrlIpv6AdminState
                 INTEGER,
 --            swL3IpCtrlIpv6OperState
---                INTEGER, 
+--                INTEGER,
             swL3IpCtrlIpv6LinkLocalAddress
             	Ipv6Address,
             swL3IpCtrlIpv6LinkLocalPrefixLen
-                INTEGER,                   
+                INTEGER,
             swL3IpCtrlState
                 RowStatus,
             swL3IpCtrlIpv6LinkLocalAutoState
@@ -299,7 +299,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             swL3IpCtrlDhcpv6ClientState
             	INTEGER ,
             swL3IpCtrlIpDirectedBroadcastState
-            	INTEGER,	
+            	INTEGER,
             swL3IpCtrlIpDhcpOption12State
             	INTEGER,
             swL3IpCtrlIpDhcpOption12HostName
@@ -311,7 +311,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
        	    swL3IpCtrlDhcpv6ClientRapidCommit
                 TruthValue
         }
-        
+
     swL3IpCtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-only
@@ -328,7 +328,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             "This object uniquely identifies the IP interface number in the
             swL3IpCtrlTable."
         ::= { swL3IpCtrlEntry 2 }
-        
+
     swL3IpCtrlIpAddr OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-write
@@ -337,7 +337,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             "The IP address of the interface. This object only can take the
             value of the unicast IP address."
         ::= { swL3IpCtrlEntry 3 }
-        
+
     swL3IpCtrlIpSubnetMask OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-write
@@ -351,7 +351,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates the IP control entry's VLAN name. The 
+            "This object indicates the IP control entry's VLAN name. The
             VLAN name in each entry must be unique in the IP Control Table."
         ::= { swL3IpCtrlEntry 5 }
 
@@ -374,19 +374,19 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             "When this is true(1), the IP address is the secondary IP.  When
             false(2), the IP address is the primary IP."
         ::= { swL3IpCtrlEntry 7 }
-                
+
     swL3IpCtrlMode OBJECT-TYPE
         SYNTAX  INTEGER {
                 other(1),
                 bootp(3),
                 dhcp(4)
-                }                
+                }
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "This object indicates the IP operation mode. 
+            "This object indicates the IP operation mode.
 
-            other(1) - This entry is currently in use but the conditions under 
+            other(1) - This entry is currently in use but the conditions under
                 which it will remain are determined by each of the following values.
             bootp(3) -  The IP address will be set automatically from a BOOTP
                 server.
@@ -419,7 +419,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 
 --    swL3IpCtrlIpv4OperState OBJECT-TYPE
 --        SYNTAX  INTEGER {
---               other(1),	
+--               other(1),
 --               disabled(2)
 --                }
 --        MAX-ACCESS  read-only
@@ -429,9 +429,9 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --             If the swL3IpCtrlIpv4State is disabled, disabled(2) will be displayed.
 --             Otherwise, it will be set as other(1)."
 --        ::= { swL3IpCtrlEntry 11 }
-        
+
     swL3IpCtrlIpv6AdminState OBJECT-TYPE
-        SYNTAX  INTEGER {	
+        SYNTAX  INTEGER {
                enabled(1),
                disabled(2)
                 }
@@ -444,17 +444,17 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 
 --    swL3IpCtrlIpv6OperState OBJECT-TYPE
 --        SYNTAX  INTEGER {
---               other(1),	
+--               other(1),
 --               disabled(2)
 --                }
 --        MAX-ACCESS  read-only
 --        STATUS  current
 --        DESCRIPTION
---            "The current IPv6 operational state of the IP interface. 
+--            "The current IPv6 operational state of the IP interface.
 --          If the swL3IpCtrlIpv6State is disabled, disabled(2) will be displayed.
 --          Otherwise, it will be set as other(1)."
 --     ::= { swL3IpCtrlEntry 13 }
-        
+
     swL3IpCtrlIpv6LinkLocalAddress  OBJECT-TYPE
         SYNTAX  Ipv6Address
         MAX-ACCESS  read-only
@@ -470,17 +470,17 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The IPv6 prefix length for this IPv6 link local address."
         ::= { swL3IpCtrlEntry 15 }
-                
+
     swL3IpCtrlState OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
             "This variable displays the status of the entry. The status is used
-            for creating, modifying, and deleting instances of the objects 
+            for creating, modifying, and deleting instances of the objects
             in this table."
         ::= { swL3IpCtrlEntry 16 }
-        
+
     swL3IpCtrlIpv6LinkLocalAutoState OBJECT-TYPE
         SYNTAX  INTEGER {
                other(1),
@@ -491,8 +491,8 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "The state of the IPv6 link local auto."
-        ::= { swL3IpCtrlEntry 17 } 
-        
+        ::= { swL3IpCtrlEntry 17 }
+
    swL3IpCtrlLocalProxyArp OBJECT-TYPE
         SYNTAX  INTEGER {
                enabled(1),
@@ -502,7 +502,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates enable/disable of the local proxy ARP function for IPv4."
-        ::= { swL3IpCtrlEntry 18 }   
+        ::= { swL3IpCtrlEntry 18 }
 
    swL3IpCtrlDhcpv6ClientState OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -514,7 +514,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The state of the Dhcpv6 Client."
         ::= { swL3IpCtrlEntry 20 }
-    
+
     swL3IpCtrlIpDirectedBroadcastState OBJECT-TYPE
         SYNTAX  INTEGER {
                enabled(1),
@@ -525,7 +525,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The state of the IP Directed Broadcast."
         ::= { swL3IpCtrlEntry 21 }
-        
+
     swL3IpCtrlIpDhcpOption12State   OBJECT-TYPE
         SYNTAX  INTEGER {
 			enabled(1),
@@ -534,23 +534,23 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-             "Enable or disable insertion of option 12 in the DHCPDISCOVER and 
+             "Enable or disable insertion of option 12 in the DHCPDISCOVER and
              DHCPREQUEST message."
         ::= { swL3IpCtrlEntry 22 }
-     
+
      swL3IpCtrlIpDhcpOption12HostName    OBJECT-TYPE
         SYNTAX  DisplayString(SIZE (0..63))
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Specify the host name to be inserted in the DHCPDISCOVER and 
-             DHCPREQUEST message. The specified host name must start with a 
-             letter, end with a letter or digit, and have only letters, digits, 
-             and hyphen as interior characters; the maximal length is 63. By 
+            "Specify the host name to be inserted in the DHCPDISCOVER and
+             DHCPREQUEST message. The specified host name must start with a
+             letter, end with a letter or digit, and have only letters, digits,
+             and hyphen as interior characters; the maximal length is 63. By
              default, the host name is empty.
-             When set an empty host name, means to clear the host name setting and 
+             When set an empty host name, means to clear the host name setting and
              use the default value to encode option 12."
-        ::= { swL3IpCtrlEntry 23}  
+        ::= { swL3IpCtrlEntry 23}
 
     swL3IpCtrlIpv6AutoConfigState OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -580,7 +580,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             "When this is true(1), Allows the two-message exchange method for
 	     address assignment."
         ::= { swL3IpCtrlEntry 30 }
-             
+
     swL3Ipv6CtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3Ipv6CtrlEntry
         MAX-ACCESS  not-accessible
@@ -598,36 +598,36 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         INDEX  { swL3Ipv6CtrlInterfaceName }
         ::= { swL3Ipv6CtrlTable 1 }
 
-    SwL3Ipv6CtrlEntry ::= 
+    SwL3Ipv6CtrlEntry ::=
         SEQUENCE {
             swL3Ipv6CtrlInterfaceName
                 DisplayString,
             swL3Ipv6CtrlMaxReassmblySize
-                INTEGER,   
+                INTEGER,
             swL3Ipv6CtrlNsRetransTimer
                 Unsigned32,
 --            swL3Ipv6CtrlRsState
 --                INTEGER,
             swL3Ipv6CtrlRaState
-                INTEGER, 
+                INTEGER,
             swL3Ipv6CtrlRaMinRtrAdvInterval
             	INTEGER,
             swL3Ipv6CtrlRaMaxRtrAdvInterval
-            	INTEGER,	                
-            swL3Ipv6CtrlRaLifeTime  
-                INTEGER, 
-            swL3Ipv6CtrlRaReachableTime   
-                INTEGER, 
-            swL3Ipv6CtrlRaRetransTime   
-                Unsigned32, 
+            	INTEGER,
+            swL3Ipv6CtrlRaLifeTime
+                INTEGER,
+            swL3Ipv6CtrlRaReachableTime
+                INTEGER,
+            swL3Ipv6CtrlRaRetransTime
+                Unsigned32,
             swL3Ipv6CtrlRaHopLimit
-            	INTEGER,  
+            	INTEGER,
             swL3Ipv6CtrlRaManagedFlag
             	INTEGER,
             swL3Ipv6CtrlRaOtherConfigFlag
-            	INTEGER		 
+            	INTEGER
         }
-        
+
     swL3Ipv6CtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-only
@@ -643,7 +643,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Maximum Reassembly Size of the IP interface."
         ::= { swL3Ipv6CtrlEntry 2 }
-        
+
     swL3Ipv6CtrlNsRetransTimer  OBJECT-TYPE
         SYNTAX  Unsigned32 (0..4294967295)
         MAX-ACCESS  read-write
@@ -680,10 +680,10 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "The minimum time allowed between sending unsolicited multicast Router 
-             Advertisements from the interface. The unit is set in seconds.             
+            "The minimum time allowed between sending unsolicited multicast Router
+             Advertisements from the interface. The unit is set in seconds.
              It must be no less than 3 seconds and no greater than .75 * MaxRtrAdvInterval.
-             Default value: 0.33 * MaxRtrAdvInterval"     
+             Default value: 0.33 * MaxRtrAdvInterval"
         ::= { swL3Ipv6CtrlEntry 6 }
 
     swL3Ipv6CtrlRaMaxRtrAdvInterval  OBJECT-TYPE
@@ -691,11 +691,11 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "The maximum time allowed between sending unsolicited multicast Router 
+            "The maximum time allowed between sending unsolicited multicast Router
             Advertisements from the interface. The unit is set in seconds."
-        DEFVAL {600}    
+        DEFVAL {600}
         ::= { swL3Ipv6CtrlEntry 7 }
-        
+
     swL3Ipv6CtrlRaLifeTime  OBJECT-TYPE
         SYNTAX  INTEGER (0..9000)
         MAX-ACCESS  read-write
@@ -709,7 +709,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the amount of time that a node can consider a neighboring 
+            "Indicates the amount of time that a node can consider a neighboring
              node reachable after receiving a reachability confirmation."
         ::= { swL3Ipv6CtrlEntry 9 }
 
@@ -718,7 +718,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the amount of time between retransmissions of neighbor 
+            "Indicates the amount of time between retransmissions of neighbor
              solicited messages.
              The unit is set in millisecond."
         ::= { swL3Ipv6CtrlEntry 10 }
@@ -728,7 +728,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the default value of the hop limit field in the IPv6 header for 
+            "Indicates the default value of the hop limit field in the IPv6 header for
              packets sent by hosts that receive this RA message."
         ::= { swL3Ipv6CtrlEntry 11 }
 
@@ -740,11 +740,11 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "When enabled, it indicates that hosts receiving this RA must use a 
-             stateful address configuration protocol to obtain an address in the addition 
+            "When enabled, it indicates that hosts receiving this RA must use a
+             stateful address configuration protocol to obtain an address in the addition
              to the addresses derived from the stateless address configuration."
         ::= { swL3Ipv6CtrlEntry 12 }
- 
+
     swL3Ipv6CtrlRaOtherConfigFlag OBJECT-TYPE
         SYNTAX  INTEGER {
                enabled(1),
@@ -753,10 +753,10 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "When enabled, it indicates that hosts receiving this RA must use a stateful 
+            "When enabled, it indicates that hosts receiving this RA must use a stateful
              address configuration protocol to obtain an on-link address configuration information."
-        ::= { swL3Ipv6CtrlEntry 13 } 
-        
+        ::= { swL3Ipv6CtrlEntry 13 }
+
     swL3Ipv6AddressCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3Ipv6AddressCtrlEntry
         MAX-ACCESS  not-accessible
@@ -773,8 +773,8 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             "A list of information about a specific IPv6 address."
         INDEX  { swL3Ipv6AddressCtrlInterfaceName, swL3Ipv6Address, swL3Ipv6AddressCtrlPrefixLen }
         ::= { swL3Ipv6AddressCtrlTable 1 }
-        
-    SwL3Ipv6AddressCtrlEntry ::= 
+
+    SwL3Ipv6AddressCtrlEntry ::=
         SEQUENCE {
             swL3Ipv6AddressCtrlInterfaceName
             	DisplayString,
@@ -793,8 +793,8 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             swL3Ipv6AddressCtrlState
                 RowStatus,
             swL3Ipv6AddressCtrlAddressType
-            	INTEGER     
-            }        
+            	INTEGER
+            }
 
     swL3Ipv6AddressCtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
@@ -802,15 +802,15 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the name of the IP interface. "
-        ::= { swL3Ipv6AddressCtrlEntry 1 }   
-        
+        ::= { swL3Ipv6AddressCtrlEntry 1 }
+
     swL3Ipv6Address OBJECT-TYPE
         SYNTAX   Ipv6Address
         MAX-ACCESS read-only
         STATUS   current
         DESCRIPTION
            "Specify the IPv6 address."
-        ::= { swL3Ipv6AddressCtrlEntry 2 }  
+        ::= { swL3Ipv6AddressCtrlEntry 2 }
 
     swL3Ipv6AddressCtrlPrefixLen OBJECT-TYPE
         SYNTAX  INTEGER
@@ -818,27 +818,27 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "Indicates the prefix length of this IPv6 address."
-        ::= { swL3Ipv6AddressCtrlEntry 3 }  
-        
+        ::= { swL3Ipv6AddressCtrlEntry 3 }
+
     swL3Ipv6AddressCtrlPreferredLifeTime  OBJECT-TYPE
         SYNTAX  Unsigned32 (0..4294967294)
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the number of seconds that an address, based on the specified prefix, 
-             using the stateless address configuration, remains in preferred state.  
+            "Indicates the number of seconds that an address, based on the specified prefix,
+             using the stateless address configuration, remains in preferred state.
              For an infinite valid lifetime, the value can be set to 0xffffffff."
-        ::= { swL3Ipv6AddressCtrlEntry 4 }  
-        
+        ::= { swL3Ipv6AddressCtrlEntry 4 }
+
     swL3Ipv6AddressCtrlValidLifeTime  OBJECT-TYPE
         SYNTAX  Unsigned32 (0..4294967294)
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "Indicates the number of seconds that an address, based on the specified prefix, 
-             using the stateless address configuration, remains valid.  
+            "Indicates the number of seconds that an address, based on the specified prefix,
+             using the stateless address configuration, remains valid.
              For an infinite valid lifetime, the value can be set to 0xffffffff."
-        ::= { swL3Ipv6AddressCtrlEntry 5 }             
+        ::= { swL3Ipv6AddressCtrlEntry 5 }
 
     swL3Ipv6AddressCtrlOnLinkFlag OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -848,9 +848,9 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
-            "When enabled, the address implied by the specified prefix is available 
+            "When enabled, the address implied by the specified prefix is available
              on the link where the RA message is received."
-        ::= { swL3Ipv6AddressCtrlEntry 6 } 
+        ::= { swL3Ipv6AddressCtrlEntry 6 }
 
     swL3Ipv6AddressCtrlAutonomousFlag OBJECT-TYPE
         SYNTAX  INTEGER {
@@ -861,7 +861,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "When enabled, the specified prefix will be used to create an autonomous address configuration."
-        ::= { swL3Ipv6AddressCtrlEntry 7 } 
+        ::= { swL3Ipv6AddressCtrlEntry 7 }
 
     swL3Ipv6AddressCtrlState OBJECT-TYPE
         SYNTAX  RowStatus
@@ -869,38 +869,38 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This variable displays the status of the entry. The status is used
-            for creating, modifying, and deleting instances of the objects 
+            for creating, modifying, and deleting instances of the objects
             in this table."
         ::= { swL3Ipv6AddressCtrlEntry 8 }
-    
+
     swL3Ipv6AddressCtrlAddressType OBJECT-TYPE
         SYNTAX  INTEGER {
 			manual(1),
 			dhcpv6(2),
 			stateless(3)
-		}    
+		}
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
 		"This object indicates the type of the IPv6 address.
-		
+
  		 manual(1): the IPv6 address is configured by user.
 		 dhcpv6(2): the IPv6 address is assigned by DHCPv6 server.
 		 stateless(3): the IPv6 address is assigned by router advertisement."
-        ::= { swL3Ipv6AddressCtrlEntry 9 }   
-        
-     swL3IpCtrlAllIpIfState OBJECT-TYPE                                       
+        ::= { swL3Ipv6AddressCtrlEntry 9 }
+
+     swL3IpCtrlAllIpIfState OBJECT-TYPE
     	SYNTAX  INTEGER {
-    	   other(1),                                                 
-           enabled(2),                                                
-           disabled(3)                                                
-           }                                                          
-    	MAX-ACCESS  read-write                                            
-    	STATUS  current                                                   
-    	DESCRIPTION                                                       
+    	   other(1),
+           enabled(2),
+           disabled(3)
+           }
+    	MAX-ACCESS  read-write
+    	STATUS  current
+    	DESCRIPTION
         	"This object indicates all interface function state of the device."
-    	::= { swL3IpCtrlMgmt 7 }       
-       
+    	::= { swL3IpCtrlMgmt 7 }
+
      swL3LoopBackIpCtrlTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3LoopBackIpCtrlEntry
         MAX-ACCESS  not-accessible
@@ -918,7 +918,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         INDEX  { swL3LoopBackIpCtrlInterfaceName }
         ::= { swL3LoopBackIpCtrlTable 1 }
 
-    SwL3LoopBackIpCtrlEntry ::= 
+    SwL3LoopBackIpCtrlEntry ::=
         SEQUENCE {
             swL3LoopBackIpCtrlInterfaceName
                 DisplayString,
@@ -927,13 +927,13 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 	    swL3LoopBackIpCtrlIpAddr
                 IpAddress,
             swL3LoopBackIpCtrlIpSubnetMask
-                IpAddress,                  
+                IpAddress,
             swL3LoopBackIpCtrlAdminState
                 INTEGER,
             swL3LoopBackIpCtrlRowStatus
                 RowStatus
         }
-        
+
     swL3LoopBackIpCtrlInterfaceName OBJECT-TYPE
         SYNTAX  DisplayString (SIZE (1..12))
         MAX-ACCESS  read-only
@@ -950,7 +950,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             "This object uniquely identifies the loopback IP interface number in the
             swL3LoopBackIpCtrlTable."
         ::= { swL3LoopBackIpCtrlEntry 2 }
-        
+
     swL3LoopBackIpCtrlIpAddr OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-create
@@ -959,7 +959,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             "The IP address of the loopback interface. This object only can take the
             value of the unicast IP address."
         ::= { swL3LoopBackIpCtrlEntry 3 }
-        
+
     swL3LoopBackIpCtrlIpSubnetMask OBJECT-TYPE
         SYNTAX  IpAddress
         MAX-ACCESS  read-create
@@ -985,9 +985,9 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This variable displays the status of the entry. The status is used
-            for creating, modifying, and deleting instances of the objects 
+            for creating, modifying, and deleting instances of the objects
             in this table."
-        ::= { swL3LoopBackIpCtrlEntry 6 }  
+        ::= { swL3LoopBackIpCtrlEntry 6 }
 
 -- ********************************************************************
 --  swL3IpFdbMgmt           OBJECT IDENTIFIER ::= { swL3IpMgmt 2 }
@@ -1008,12 +1008,12 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "Information about a specific IP address for which the bridge 
+            "Information about a specific IP address for which the bridge
             has some forwarding and/or filtering information."
         INDEX  { swL3IpFdbInfoIpAddr }
         ::= { swL3IpFdbInfoTable 1 }
 
-    SwL3IpFdbInfoEntry ::= 
+    SwL3IpFdbInfoEntry ::=
         SEQUENCE {
 --            swL3IpFdbInfoRdIndex
 --                INTEGER,
@@ -1032,7 +1032,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  read-only
 --        STATUS  current
 --        DESCRIPTION
---            "The object indicates the IP routing domain index, and should 
+--            "The object indicates the IP routing domain index, and should
 --            be associated with one of swL3IpDomainStatsIndex."
 --        ::= { swL3IpFdbInfoEntry 1 }
 
@@ -1050,18 +1050,18 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "A IP net mask for this interface for which the switch has 
+            "A IP net mask for this interface for which the switch has
             forwarding and/or filtering information."
         ::= { swL3IpFdbInfoEntry 2 }
-        
+
     swL3IpFdbInfoPort OBJECT-TYPE
         SYNTAX  INTEGER(0..65535)
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
             "Either the value '0', or the port number of the port on which
-            packets having an IP address equal to the value of the 
-            corresponding instance of swL3IpFdbInfoIpAddr has been seen. A 
+            packets having an IP address equal to the value of the
+            corresponding instance of swL3IpFdbInfoIpAddr has been seen. A
             value of '0' indicates that the port number has not been learned
             but that switch does have some forwarding/filtering information
             about this address."
@@ -1076,7 +1076,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-            "The status of this entry."            
+            "The status of this entry."
         ::= { swL3IpFdbInfoEntry 4 }
 
 -- ********************************************************************
@@ -1210,10 +1210,10 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             "The timeout period in minutes for aging out dynamically learned
             arp information."
         ::= { swL3IpMgmt 4 }
-        
+
   -- ********************************************************************
 --  swL3IpStaticRouteTable        OBJECT IDENTIFIER ::= { swL3IpMgmt 5 }
--- ********************************************************************  
+-- ********************************************************************
     swL3IpStaticRouteTable OBJECT-TYPE
         SYNTAX   SEQUENCE OF SwL3IpStaticRouteEntry
         MAX-ACCESS not-accessible
@@ -1236,7 +1236,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             swL3IpStaticRouteNextHop
             }
         ::= { swL3IpStaticRouteTable 1 }
-    
+
     SwL3IpStaticRouteEntry ::=
         SEQUENCE {
             swL3IpStaticRouteDest
@@ -1256,24 +1256,24 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
              swL3IpStaticRouteInterfaceName
                 DisplayString
         }
-    
+
     swL3IpStaticRouteDest OBJECT-TYPE
         SYNTAX   IpAddress
         MAX-ACCESS read-only
         STATUS   current
         DESCRIPTION
            "The destination IP address of this route.
-    
+
            This object may not take a Multicast (Class  D)
            address value.
-    
+
            Any assignment (implicit or  otherwise)  of  an
            instance  of  this  object to a value x must be
            rejected if the bitwise logical-AND of  x  with
            the  value of the corresponding instance of the
            swL3IpStaticRouteMask object is not equal to x."
         ::= { swL3IpStaticRouteEntry 1 }
-    
+
     swL3IpStaticRouteMask OBJECT-TYPE
         SYNTAX   IpAddress
         MAX-ACCESS read-only
@@ -1284,14 +1284,14 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
            the value  in  the  swL3IpStaticRouteDest  field.
            For those  systems  that  do  not support arbitrary
            subnet masks, an agent constructs the value  of
-           the  swL3IpStaticRouteMask  by  reference to the IP 
+           the  swL3IpStaticRouteMask  by  reference to the IP
            Address Class.
-    
+
            Any assignment (implicit or  otherwise)  of  an
            instance  of  this  object to a value x must be
            rejected if the bitwise logical-AND of  x  with
            the  value of the corresponding instance of the
-           swL3IpStaticRouteDest object is not equal to 
+           swL3IpStaticRouteDest object is not equal to
            swL3IpStaticRouteDest."
         ::= { swL3IpStaticRouteEntry 2 }
 
@@ -1307,7 +1307,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
             "The routing state for  this  route.The value SHOULD be
             primary(1) or backup(2)."
         ::= { swL3IpStaticRouteEntry 3 }
-        
+
     swL3IpStaticRouteNextHop OBJECT-TYPE
         SYNTAX   IpAddress
         MAX-ACCESS read-only
@@ -1316,7 +1316,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
            "On remote routes, the address of the next sys-
            tem en route; Otherwise, 0.0.0.0."
         ::= { swL3IpStaticRouteEntry 4 }
-    
+
     swL3IpStaticRouteMetric OBJECT-TYPE
         SYNTAX   INTEGER (1..65535)
         MAX-ACCESS read-create
@@ -1337,7 +1337,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the status of this entry.
- 
+
             other(1) - this entry is currently in use but the conditions
                 under which it will remain so are different from each of
                 the following values.
@@ -1364,7 +1364,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION
              "Specifies the name of the IP interface."
         ::={ swL3IpStaticRouteEntry 8}
- 
+
 -- -----------------------------------------------------------------------------
 --  swL3IpMcastMgmt     OBJECT IDENTIFIER ::= { swL3IpMgmt 6 }
 -- -----------------------------------------------------------------------------
@@ -1440,7 +1440,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --  swL3IpStaticRouteTunnelTable         OBJECT IDENTIFIER ::= { swL3IpMgmt 7 }
 -- -----------------------------------------------------------------------------
    swL3IpStaticRouteTunnelTable OBJECT-TYPE
-        SYNTAX   SEQUENCE OF SwL3IpStaticRouteTunnelEntry 
+        SYNTAX   SEQUENCE OF SwL3IpStaticRouteTunnelEntry
         MAX-ACCESS not-accessible
         STATUS   current
         DESCRIPTION
@@ -1458,16 +1458,16 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         INDEX {
             swL3IpStaticRouteDest,
             swL3IpStaticRouteMask,
-		   swL3IpStaticRouteTunnelInterfaceName 
+		   swL3IpStaticRouteTunnelInterfaceName
             }
         ::= { swL3IpStaticRouteTunnelTable 1 }
 
     SwL3IpStaticRouteTunnelEntry ::=
         SEQUENCE {
             swL3IpStaticRouteTunnelInterfaceName
-	    	DisplayString,       
-             swL3IpStaticRouteTunnelRowStatus 
-                RowStatus 
+	    	DisplayString,
+             swL3IpStaticRouteTunnelRowStatus
+                RowStatus
         }
 
     swL3IpStaticRouteTunnelInterfaceName OBJECT-TYPE
@@ -1476,7 +1476,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the name of the IP tunnel interface."
-        ::= { swL3IpStaticRouteTunnelEntry 1 }   
+        ::= { swL3IpStaticRouteTunnelEntry 1 }
 
     swL3IpStaticRouteTunnelRowStatus OBJECT-TYPE
         SYNTAX   RowStatus
@@ -1484,7 +1484,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "This object indicates the status of this entry."
-        ::= { swL3IpStaticRouteTunnelEntry 2 }   
+        ::= { swL3IpStaticRouteTunnelEntry 2 }
 
 -- ********************************************************************
 --  swL3RelayDnsMgmt        OBJECT IDENTIFIER ::= { swL3RelayMgmt 3 }
@@ -1499,10 +1499,10 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object indicates DNS Relay function is enabled or 
+--            "This object indicates DNS Relay function is enabled or
 --            disabled."
 --        ::= { swL3RelayDnsMgmt 1 }
---        
+--
 --    swL3RelayDnsPrimaryServer OBJECT-TYPE
 --        SYNTAX  IpAddress
 --        MAX-ACCESS  read-write
@@ -1510,7 +1510,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        DESCRIPTION
 --            "This object indicates the address of the primary DNS server."
 --        ::= { swL3RelayDnsMgmt 2 }
---        
+--
 --    swL3RelayDnsSecondaryServer OBJECT-TYPE
 --        SYNTAX  IpAddress
 --        MAX-ACCESS  read-write
@@ -1518,7 +1518,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        DESCRIPTION
 --            "This object indicates the address of the secondary DNS server."
 --        ::= { swL3RelayDnsMgmt 3 }
---    
+--
 --    swL3RelayDnsCacheState OBJECT-TYPE
 --        SYNTAX  INTEGER {
 --               other(1),
@@ -1528,10 +1528,10 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object indicates DNS Relay cache is enabled or 
+--            "This object indicates DNS Relay cache is enabled or
 --            disabled."
 --        ::= { swL3RelayDnsMgmt 4 }
---        
+--
 --    swL3RelayDnsStaticTableState OBJECT-TYPE
 --        SYNTAX  INTEGER {
 --               other(1),
@@ -1541,10 +1541,10 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  read-write
 --        STATUS  current
 --        DESCRIPTION
---            "This object indicates DNS Relay static table is enabled or 
+--            "This object indicates DNS Relay static table is enabled or
 --            disabled."
 --        ::= { swL3RelayDnsMgmt 5 }
---        
+--
 --    swL3RelayDnsCtrlTable OBJECT-TYPE
 --        SYNTAX  SEQUENCE OF SwL3RelayDnsCtrlEntry
 --        MAX-ACCESS  not-accessible
@@ -1558,19 +1558,19 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        MAX-ACCESS  not-accessible
 --        STATUS  current
 --        DESCRIPTION
---            "A list of information display the current DNS relay static 
+--            "A list of information display the current DNS relay static
 --            table."
 --        INDEX  { swL3RelayDnsCtrlDomainName,  swL3RelayDnsCtrlIpAddr}
 --        ::= { swL3RelayDnsCtrlTable 1 }
 --
---    SwL3RelayDnsCtrlEntry ::= 
+--    SwL3RelayDnsCtrlEntry ::=
 --        SEQUENCE {
 --            swL3RelayDnsCtrlDomainName
 --                DisplayString,
 --            swL3RelayDnsCtrlIpAddr
 --                IpAddress,
 --            swL3RelayDnsCtrlState
---                INTEGER    
+--                INTEGER
 --        }
 --
 --    swL3RelayDnsCtrlDomainName OBJECT-TYPE
@@ -1580,7 +1580,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        DESCRIPTION
 --            "The domain name of the entry."
 --        ::= { swL3RelayDnsCtrlEntry 1 }
---        
+--
 --    swL3RelayDnsCtrlIpAddr OBJECT-TYPE
 --        SYNTAX IpAddress
 --        MAX-ACCESS  read-only
@@ -1599,7 +1599,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
 --        STATUS  current
 --        DESCRIPTION
 --            "This object indicates the status of this entry.
--- 
+--
 --            other(1) - this entry is currently in use but the conditions
 --                under which it will remain so are different from each of
 --                the following values.
@@ -1779,7 +1779,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
      	DESCRIPTION
      		"Use route map to change attributes of imported route."
      	::= { swL3RouteRedistriEntry 6 }
- 
+
 
 -- ********************************************************************
 --  swL3OspfHostTable          OBJECT IDENTIFIER ::= { swL3MgmtMIB 6 }
@@ -1860,7 +1860,7 @@ DGS-3120-24TC-L3MGMT-MIB DEFINITIONS ::= BEGIN
            'invalid' has the effect of rendering it inoperative. The internal
            effect (row removal) is implementation dependent."
         ::= { swL3OspfHostEntry 5 }
- 
+
 
 -- ********************************************************************
 --  swL3ospfVirtIfTable          OBJECT IDENTIFIER ::= { swL3MgmtMIB 7 }
@@ -2140,7 +2140,7 @@ SwL3OspfIfEntry ::=
         swL3ospfIfAuthKeyID
         	INTEGER,
         swL3ospfIfPassiveMode
-        	INTEGER,	
+        	INTEGER,
 --        swL3ospfIfStatus
 --            RowStatus
 	swL3ospfIfMetric
@@ -2475,7 +2475,7 @@ SwL3OspfIfEntry ::=
 -- swL3RoutePreference	    OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
 -- *******************************************************************
 swL3RoutePreference	OBJECT IDENTIFIER ::= { swL3MgmtMIB 9 }
-	
+
 	swL3RoutePreferenceRIP OBJECT-TYPE
         SYNTAX  INTEGER (1..999)
         MAX-ACCESS  read-write
@@ -2651,7 +2651,7 @@ SwL3ospfAreaEntry ::=
            rendering it inoperative.  The internal  effect
            (row removal) is implementation dependent."
        ::= { swL3ospfAreaEntry 6 }
-        
+
 -- -----------------------------------------------------------------------------
 -- The DVMRP Interface Table
 -- -----------------------------------------------------------------------------
@@ -2678,13 +2678,13 @@ swL3dvmrpInterfaceEntry OBJECT-TYPE
 
 SwL3dvmrpInterfaceEntry ::= SEQUENCE {
     swL3dvmrpInterfaceIfIndex            Integer32,
-    swL3dvmrpInterfaceLocalAddress       IpAddress,    
+    swL3dvmrpInterfaceLocalAddress       IpAddress,
     swL3dvmrpInterfaceMetric             Integer32,
     swL3dvmrpInterfaceProbe              Integer32,
-    swL3dvmrpInterfaceNbrTimeout         Integer32,   
+    swL3dvmrpInterfaceNbrTimeout         Integer32,
     swL3dvmrpInterfaceStatus             RowStatus,
     swL3dvmrpInterfaceRcvBadPkts         Counter32,
-    swL3dvmrpInterfaceRcvBadRoutes       Counter32    
+    swL3dvmrpInterfaceRcvBadRoutes       Counter32
 }
 
 swL3dvmrpInterfaceIfIndex OBJECT-TYPE
@@ -2716,7 +2716,7 @@ swL3dvmrpInterfaceMetric OBJECT-TYPE
             calculate distance vectors."
     DEFVAL     { 1 }
     ::= { swL3dvmrpInterfaceEntry 3 }
-    
+
 swL3dvmrpInterfaceProbe OBJECT-TYPE
     SYNTAX     Integer32 (1..65535)
     MAX-ACCESS read-create
@@ -2725,7 +2725,7 @@ swL3dvmrpInterfaceProbe OBJECT-TYPE
             "Probe distribution interval."
     DEFVAL     { 10 }
     ::= { swL3dvmrpInterfaceEntry 4 }
-    
+
 swL3dvmrpInterfaceNbrTimeout OBJECT-TYPE
     SYNTAX     Integer32 (1..65535)
     MAX-ACCESS read-create
@@ -3108,7 +3108,7 @@ SwL3OspfExternalLsdbEntry ::=
  SwL3VrrpOperEntry ::=
      SEQUENCE {
      	 swL3VrrpOperIfIndex
-     	     Integer32,	
+     	     Integer32,
          swL3VrrpOperVrId
              VrId,
          swL3VrrpOperVirtualMacAddr
@@ -3495,7 +3495,7 @@ swL3OspfECMPState      OBJECT-TYPE
 
 -- -----------------------------------------------------------------------------
 --  swL3OspfDefInfoOrigMgmt       OBJECT IDENTIFIER ::= { swL3MgmtMIB 18 }
--- -----------------------------------------------------------------------------      		
+-- -----------------------------------------------------------------------------
 	swL3OspfDefInfoOriginate      OBJECT-TYPE
 	        SYNTAX  INTEGER {
 	                         always(1),
@@ -3508,7 +3508,7 @@ swL3OspfECMPState      OBJECT-TYPE
 	            "This object indicates if OSPF default external route is originated."
 	        DEFVAL{none}
 	        ::={swL3OspfDefInfoOrigMgmt 1}
-	
+
 	swL3OspfDefInfoOrigMetricType      OBJECT-TYPE
 	        SYNTAX  INTEGER {
 	                         type-1(1),
@@ -3520,7 +3520,7 @@ swL3OspfECMPState      OBJECT-TYPE
 	            "This object indicates the metric type of default external route originated by OSPF."
 	        DEFVAL{type-2}
 	       ::={swL3OspfDefInfoOrigMgmt 2}
-	
+
 	swL3OspfDefInfoOrigMetric      OBJECT-TYPE
 	        SYNTAX  INTEGER (1..65535)
 	        MAX-ACCESS  read-write
@@ -3591,18 +3591,18 @@ swL3OspfECMPState      OBJECT-TYPE
 -- -----------------------------------------------------------------------------
 --  swL3Route6RedistriTable          OBJECT IDENTIFIER ::= { swL3MgmtMIB 20 }
 -- -----------------------------------------------------------------------------
-    
+
     swL3Route6RedistriTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwL3Route6RedistriEntry
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            "IPv6 Route redistribution allows routers on the network that are 
-            running different routing protocols to exchange routing 
+            "IPv6 Route redistribution allows routers on the network that are
+            running different routing protocols to exchange routing
             information. This is accomplished by comparing the routes stored
             in the varios routers' routing tables and assigning appropriate
-            metrics. This information is then exchanged among the various 
-            routers according to the individual routers current routing 
+            metrics. This information is then exchanged among the various
+            routers according to the individual routers current routing
             protocol."
         ::= { swL3MgmtMIB 20 }
 
@@ -3615,7 +3615,7 @@ swL3OspfECMPState      OBJECT-TYPE
         INDEX  { swL3Route6RedistriSrcProtocol, swL3Route6RedistriDstProtocol}
         ::= { swL3Route6RedistriTable 1 }
 
-    SwL3Route6RedistriEntry ::= 
+    SwL3Route6RedistriEntry ::=
         SEQUENCE {
             swL3Route6RedistriSrcProtocol
                 INTEGER,
@@ -3641,7 +3641,7 @@ swL3OspfECMPState      OBJECT-TYPE
         DESCRIPTION
             "Allows the selection of the protocol of the source device."
         ::= { swL3Route6RedistriEntry 1 }
-        
+
     swL3Route6RedistriDstProtocol OBJECT-TYPE
         SYNTAX  INTEGER {
                     ripng(1),
@@ -3652,7 +3652,7 @@ swL3OspfECMPState      OBJECT-TYPE
         DESCRIPTION
             "Allows the selection of the protocol of the destination device."
         ::= { swL3Route6RedistriEntry 2 }
-        
+
     swL3Route6RedistriType OBJECT-TYPE
         SYNTAX  INTEGER {
                     type-1(1),
@@ -3662,16 +3662,16 @@ swL3OspfECMPState      OBJECT-TYPE
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
-            "Allows the selection of one of the methods for calculating 
+            "Allows the selection of one of the methods for calculating
             the metric value."
         ::= { swL3Route6RedistriEntry 3 }
-        
+
     swL3Route6RedistriMetric OBJECT-TYPE
         SYNTAX  Unsigned32
         MAX-ACCESS  read-create
         STATUS  current
         DESCRIPTION
-            "Allows the entry of an OSPFv3 interface cost. This is analogous 
+            "Allows the entry of an OSPFv3 interface cost. This is analogous
             to a Hop Count in the RIPng routing protocol. The value '0'
             indicates default value."
         ::= { swL3Route6RedistriEntry 4 }
@@ -3685,5 +3685,3 @@ swL3OspfECMPState      OBJECT-TYPE
         ::= { swL3Route6RedistriEntry 5 }
 
 END
-
-

@@ -41,7 +41,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Average of past 5 secs cpu load."
 		::= { zldSystem 3 }
-		
+
 	sysCPU1MinUsage OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -49,7 +49,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Average of past 1 min cpu load."
 		::= { zldSystem 4 }
-		
+
 	sysCPU5MinUsage OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -57,7 +57,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Average of past 5 min cpu load."
 		::= { zldSystem 5 }
-		
+
 	sysSessionNum OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -73,7 +73,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 			"Device FLASH Usage."
 		::= { zldSystem 7 }
-		
+
 	-- ZyWALL ZLD IpSec VPN
 	vpnIpSecTotalThroughput	OBJECT-TYPE
 		SYNTAX	INTEGER
@@ -88,26 +88,26 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
-			"A list of VPN tunnel entries. The number depends on product 
+			"A list of VPN tunnel entries. The number depends on product
 			definition."
 		::= { zldIpSecVPN 2 }
-	
+
 	vpnTunnelEntry OBJECT-TYPE
 		SYNTAX  VPNTunnelEntry
 		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
-        		"An entry containing comment the information for on a particular 
+        		"An entry containing comment the information for on a particular
                          configured VPN tunnel."
 		INDEX   { vpnTunnelIndex }
 		::= { vpnTunnelTable 1 }
-	
+
 	VPNTunnelEntry ::= SEQUENCE {
 		vpnTunnelName 	DisplayString,
 		vpnIKEName  	DisplayString,
 		vpnTunnelSPI	DisplayString
 		}
-	
+
 	vpnTunnelName OBJECT-TYPE
 		SYNTAX	DisplayString
 		MAX-ACCESS  read-only
@@ -133,7 +133,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
                 ::= { vpnTunnelEntry 3 }
 
 	vpnTunnelDisconnected NOTIFICATION-TYPE
-		OBJECTS {vpnTunnelName, vpnIKEName, 
+		OBJECTS {vpnTunnelName, vpnIKEName,
                          vpnTunnelSPI }
 		STATUS	current
 		DESCRIPTION
@@ -145,7 +145,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
-			"A list of VPN tunnel entries. The number depends on product 
+			"A list of VPN tunnel entries. The number depends on product
 			definition."
 		::= { zldIpSecVPN 4 }
 
@@ -154,11 +154,11 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
-        		"An entry containing comment the information for on a particular 
+        		"An entry containing comment the information for on a particular
                          configured VPN tunnel."
 		INDEX   { vpnIndex }
 		::= { vpnStatus 1 }
-	
+
 	VPNStatusEntry ::= SEQUENCE {
 		vpnIndex			Integer32,
 		vpnConnectionName 	DisplayString,
@@ -227,7 +227,7 @@ ZYXEL-ZYWALL-ZLD-COMMON-MIB DEFINITIONS ::= BEGIN
 		MAX-ACCESS  not-accessible
 		STATUS  current
 		DESCRIPTION
-			"A list of VPN connection counters." 
+			"A list of VPN connection counters."
 		::= { zldIpSecVPN 5 }
 
 	vpnConnectionTotal OBJECT-TYPE

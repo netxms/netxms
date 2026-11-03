@@ -29,7 +29,7 @@ IMPORTS
                         ""
                 ::= { mqxKernel 2 }
 
-        MqxRevision ::= SEQUENCE { 
+        MqxRevision ::= SEQUENCE {
             mqxRevKernel INTEGER,
             mqxRevPSP INTEGER,
             mqxRevIO INTEGER,
@@ -92,7 +92,7 @@ IMPORTS
                         ""
                 ::= { mqxKernel 5 }
 
-        MqxCPU ::= SEQUENCE { 
+        MqxCPU ::= SEQUENCE {
             mqxCPUType INTEGER,
             mqxCPUEndian INTEGER,
             mqxCPUAddressing INTEGER
@@ -138,7 +138,7 @@ IMPORTS
                         ""
                 ::= { mqxKernel 7 }
 
-        MqxConfig ::= SEQUENCE { 
+        MqxConfig ::= SEQUENCE {
             mqxConfigFloatingPointIO INTEGER,
             mqxConfigInlineMacros INTEGER,
             mqxConfigKernelLogging INTEGER,
@@ -286,7 +286,7 @@ IMPORTS
                 INDEX { mqxTaskID}
                 ::= { mqxTaskTable 1 }
 
-        MqxTaskEntry ::= SEQUENCE { 
+        MqxTaskEntry ::= SEQUENCE {
             mqxTaskID INTEGER,
             mqxTaskCreator INTEGER,
             mqxTaskName DisplayString,
@@ -347,7 +347,7 @@ IMPORTS
                         ""
                 ::= { mqxTaskEntry 6 }
 
-        MqxTaskSched ::= SEQUENCE { 
+        MqxTaskSched ::= SEQUENCE {
             mqxTaskSchedPriority INTEGER,
             mqxTaskSchedHomePriority INTEGER,
             mqxTaskSchedPolicy INTEGER,
@@ -410,7 +410,7 @@ IMPORTS
                         ""
                 ::= { mqxTaskEntry 9 }
 
-        MqxTaskIO ::= SEQUENCE { 
+        MqxTaskIO ::= SEQUENCE {
             mqxTaskIOstdin DisplayString,
             mqxTaskIOstdout DisplayString,
             mqxTaskIOstderr DisplayString
@@ -448,7 +448,7 @@ IMPORTS
                         ""
                 ::= { mqxTaskEntry 10 }
 
-        MqxTaskFlag ::= SEQUENCE { 
+        MqxTaskFlag ::= SEQUENCE {
             mqxTaskFlagFloatingPoint INTEGER,
             mqxTaskFlagLoggingEnabled INTEGER,
             mqxTaskFlagWatchdogEnabled INTEGER,

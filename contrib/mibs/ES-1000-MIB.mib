@@ -89,7 +89,7 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
       psPortFail              (9),
       psSR                    (10),
       psLR                    (11),
-   
+
       psPortBypassedLipF7     (12), -- H_port only
       psPortBypassedLipF8     (13), -- H_port only
       psPortBypassedOSError   (14), -- H_port and B_Port
@@ -121,21 +121,21 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
 
    Es1000LoopStatus ::= INTEGER {
       loop-DOWN            (1),     -- DOWN
-      loop-LIP             (2),     -- LIP   
-      loop-LISM            (3),     -- LISM  
-      loop-LIFA            (4),     -- LIFA  
-      loop-LIPA            (5),     -- LIPA  
-      loop-LIHA            (6),     -- LIHA  
-      loop-LISA            (7),     -- LISA  
-      loop-LIRP            (8),     -- LIRP  
-      loop-LILP            (9),     -- LILP  
-      loop-FAN             (10),    -- FAN   
+      loop-LIP             (2),     -- LIP
+      loop-LISM            (3),     -- LISM
+      loop-LIFA            (4),     -- LIFA
+      loop-LIPA            (5),     -- LIPA
+      loop-LIHA            (6),     -- LIHA
+      loop-LISA            (7),     -- LISA
+      loop-LIRP            (8),     -- LIRP
+      loop-LILP            (9),     -- LILP
+      loop-FAN             (10),    -- FAN
       loop-ACTIVE          (11),    -- ACTIVE
-      loop-READY           (12)     -- READY 
+      loop-READY           (12)     -- READY
    }
 
    Es1000LoopMasterWWN ::= OCTET STRING (SIZE (8))
-   
+
    Es1000LoopPortALPA ::= OCTET STRING (SIZE (0..126))
 
    -- Groups in ES-1000 MIB
@@ -145,7 +145,7 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
    es1000Comp     OBJECT IDENTIFIER ::= { es-1000 2 }
 
    es1000Port     OBJECT IDENTIFIER ::= { es-1000 3 }
-   
+
    es1000Loop     OBJECT IDENTIFIER ::= { es-1000 4 }
 
    es1000Acct     OBJECT IDENTIFIER ::= { es-1000 5 }
@@ -596,7 +596,7 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
       SYNTAX               TruthValue
       ACCESS               read-only
       STATUS               mandatory
-      DESCRIPTION          "Indicates whether switching mode is 
+      DESCRIPTION          "Indicates whether switching mode is
     enabled. If enabled, each pair of communicating H_Ports may share
     the 100 Mbyte bandwidth. If not enabled, all devices on the loop
     share the 100 Mbyte bandwidth available on the loop."
@@ -622,7 +622,7 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
       SYNTAX               Es1000LoopPortEntry
       ACCESS               not-accessible
       STATUS               mandatory
-      DESCRIPTION          "An entry containing the ALPA information 
+      DESCRIPTION          "An entry containing the ALPA information
     for the H_Port."
       INDEX                { es1000LoopPortIndex }
    ::= { es1000LoopPortTable 1 }
@@ -876,7 +876,7 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
       ACCESS               read-only
       STATUS               mandatory
       DESCRIPTION          "This object counts the number of
-    Class 3 frames received by this B_Port from its attached 
+    Class 3 frames received by this B_Port from its attached
     E_Port."
    ::= { es1000AcctBportEntry 18 }
 
@@ -982,7 +982,7 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
       SYNTAX               Counter
       ACCESS               read-only
       STATUS               mandatory
-      DESCRIPTION          "This object presents the Bps 
+      DESCRIPTION          "This object presents the Bps
     transmission rate for this B_Port."
    ::= { es1000AcctBportEntry 30 }
 
@@ -990,7 +990,7 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
       SYNTAX               Counter
       ACCESS               read-only
       STATUS               mandatory
-      DESCRIPTION          "This object presents the Bps 
+      DESCRIPTION          "This object presents the Bps
     reception rate for this B_Port."
    ::= { es1000AcctBportEntry 31 }
 
@@ -1319,7 +1319,7 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
       SYNTAX               Counter
       ACCESS               read-only
       STATUS               mandatory
-      DESCRIPTION          "This object presents the Bps 
+      DESCRIPTION          "This object presents the Bps
     transmission rate for this H_Port."
    ::= { es1000AcctHportEntry 20 }
 
@@ -1327,7 +1327,7 @@ ES-1000-MIB DEFINITIONS ::= BEGIN
       SYNTAX               Counter
       ACCESS               read-only
       STATUS               mandatory
-      DESCRIPTION          "This object presents the Bps 
+      DESCRIPTION          "This object presents the Bps
     reception rate for this H_Port."
    ::= { es1000AcctHportEntry 21 }
 

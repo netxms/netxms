@@ -19,8 +19,8 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
                 DESCRIPTION "Extreme Stackable MIB objects"
         ::= { extremeAgent 33 }
 
--- 
--- Stack Detection Scalar 
+--
+-- Stack Detection Scalar
 --
 	extremeStackDetection OBJECT-TYPE
              SYNTAX TruthValue
@@ -57,11 +57,11 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 
 	ExtremeStackMemberEntry ::= SEQUENCE {
 	     extremeStackMemberSlotId		INTEGER,
-	     extremeStackMemberType	        OBJECT IDENTIFIER,	
+	     extremeStackMemberType	        OBJECT IDENTIFIER,
 	     extremeStackMemberOperStatus	INTEGER,
 	     extremeStackMemberRole		INTEGER,
 	     extremeStackMemberEntPhysicalIndex INTEGER,
-	     extremeStackMemberMACAddress       MacAddress,	
+	     extremeStackMemberMACAddress       MacAddress,
 	     extremeStackMemberCurImageVersion  DisplayString,
 	     extremeStackMemberPriImageVersion  DisplayString,
 	     extremeStackMemberSecImageVersion  DisplayString,
@@ -72,7 +72,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     extremeStackMemberStackPriority	INTEGER,
 	     extremeStackMemberMgmtIpAddress	IpAddress,
 	     extremeStackMemberSysLocation      DisplayString,
-             extremeStackMemberAutoConfig	TruthValue, 	  
+             extremeStackMemberAutoConfig	TruthValue,
 	     extremeStackMemberStackStatus	INTEGER
 	}
 
@@ -102,7 +102,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
-		"The operational status of the stack member. When the stack 
+		"The operational status of the stack member. When the stack
 	comes up, if there is a vector mismatch namely license mismatch or
 	platform mismatch between the master and the member, the member
 	remains in the mismatch state. Further communication with the member
@@ -122,7 +122,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     	   ::= { extremeStackMemberEntry 4 }
 
 	extremeStackMemberEntPhysicalIndex OBJECT-TYPE
-	     SYNTAX INTEGER 
+	     SYNTAX INTEGER
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
@@ -131,7 +131,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     	   ::= { extremeStackMemberEntry 5 }
 
 	extremeStackMemberMACAddress OBJECT-TYPE
-	     SYNTAX MacAddress 
+	     SYNTAX MacAddress
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
@@ -139,7 +139,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     	   ::= { extremeStackMemberEntry 6 }
 
 	extremeStackMemberCurImageVersion OBJECT-TYPE
-	     SYNTAX DisplayString (SIZE(0..255)) 
+	     SYNTAX DisplayString (SIZE(0..255))
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
@@ -147,7 +147,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     	   ::= { extremeStackMemberEntry 7 }
 
 	extremeStackMemberPriImageVersion OBJECT-TYPE
-	     SYNTAX DisplayString (SIZE(0..255)) 
+	     SYNTAX DisplayString (SIZE(0..255))
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
@@ -155,7 +155,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     	   ::= { extremeStackMemberEntry 8 }
 
 	extremeStackMemberSecImageVersion OBJECT-TYPE
-	     SYNTAX DisplayString (SIZE(0..255)) 
+	     SYNTAX DisplayString (SIZE(0..255))
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
@@ -163,7 +163,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     	   ::= { extremeStackMemberEntry 9 }
 
 	extremeStackMemberBootRomVersion OBJECT-TYPE
-	     SYNTAX DisplayString (SIZE(0..255)) 
+	     SYNTAX DisplayString (SIZE(0..255))
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
@@ -171,7 +171,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     	   ::= { extremeStackMemberEntry 10 }
 
 	extremeStackMemberCurConfig OBJECT-TYPE
-	     SYNTAX DisplayString (SIZE(0..255)) 
+	     SYNTAX DisplayString (SIZE(0..255))
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
@@ -201,24 +201,24 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     	   ::= { extremeStackMemberEntry 13 }
 
 	extremeStackMemberStackPriority OBJECT-TYPE
-	     SYNTAX INTEGER 
+	     SYNTAX INTEGER
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
 		"The stack priority of the stack member. The stack priority is
-	used for the master election algorithm. The member with the highest 
+	used for the master election algorithm. The member with the highest
 	priority comes up as the master. If there are more than one switch with
 	highest priority, the member with the least MAC among them comes up as
 	the master"
 	     	   ::= { extremeStackMemberEntry 14 }
 
 	extremeStackMemberMgmtIpAddress OBJECT-TYPE
-	     SYNTAX IpAddress 
+	     SYNTAX IpAddress
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
 		"The fallback mgmt ip address which was configured through CLI
-	for this stack member. This ipaddress can be used to communicate with 
+	for this stack member. This ipaddress can be used to communicate with
 	this member, if it comes up as the master. The ipaddress is associated
 	with the vlan configured"
 	     	   ::= { extremeStackMemberEntry 15 }
@@ -239,15 +239,15 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     STATUS 	current
 	     DESCRIPTION
 		   " This field provides the information whether the config
-	of the stack member is autogenerated(true) or not(false)" 
+	of the stack member is autogenerated(true) or not(false)"
 	     	   ::= { extremeStackMemberEntry 17 }
-			
+
 
 	extremeStackMemberStackStatus OBJECT-TYPE
 	     SYNTAX INTEGER {
 		enable  (1),
 		disable (2)
-	     } 
+	     }
 	     MAX-ACCESS read-write
 	     STATUS current
 	     DESCRIPTION
@@ -300,17 +300,17 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	     	   ::= { extremeStackingPortEntry 1 }
 
 	extremeStackingPortRemoteMac OBJECT-TYPE
-	     SYNTAX MacAddress 
+	     SYNTAX MacAddress
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
-		"The Mac address of the remote system, this stacking port 
+		"The Mac address of the remote system, this stacking port
 	is connected to. The value of the mac address will be 00:00:00:00:00:00
 	if the stacking link is not active."
 	     	   ::= { extremeStackingPortEntry 2 }
 
 	extremeStackingPortLinkSpeed OBJECT-TYPE
-	     SYNTAX Unsigned32 
+	     SYNTAX Unsigned32
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
@@ -321,8 +321,8 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 	extremeStackingPortLinkStatus OBJECT-TYPE
 	     SYNTAX INTEGER {
 		up (1),
-		down  (2) 
-	    } 
+		down  (2)
+	    }
 	     MAX-ACCESS read-only
 	     STATUS current
 	     DESCRIPTION
@@ -342,7 +342,7 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
             STATUS  current
             DESCRIPTION
                     "The extremeStackMemberOverheat notification is generated
-                     when the temperature of the stack member reaches the 
+                     when the temperature of the stack member reaches the
 		threshold temperature"
                 ::= { extremeStackTrapsPrefix 1 }
 
@@ -350,8 +350,8 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
             OBJECTS { extremeStackMemberSlotId, extremeStackMemberOperStatus}
             STATUS  current
             DESCRIPTION
-                    "The extremeStackMemberStatusChanged notification is 
-		generated when the operational status of the stack member 
+                    "The extremeStackMemberStatusChanged notification is
+		generated when the operational status of the stack member
 		changes"
                 ::= { extremeStackTrapsPrefix 2 }
 
@@ -360,10 +360,10 @@ EXTREME-STACKING-MIB DEFINITIONS ::= BEGIN
 		extremeStackingPortLinkSpeed, extremeStackingPortLinkStatus}
             STATUS  current
             DESCRIPTION
-                    "The extremeStackingPortStatusChanged notification is 
-		generated when the operational status of the stacking port 
+                    "The extremeStackingPortStatusChanged notification is
+		generated when the operational status of the stacking port
 		changes"
                 ::= { extremeStackTrapsPrefix 3 }
 
 
-END	
+END

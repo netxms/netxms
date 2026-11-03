@@ -21,11 +21,11 @@
 --  clauses in the NASA FAR Supplement and other corresponding
 --  governmental regulations.
 --
--- 
-  
--- 
---                PROPRIETARY NOTICE 
--- 
+--
+
+--
+--                PROPRIETARY NOTICE
+--
 -- This software is an unpublished work subject to a confidentiality agreement
 -- and is protected by copyright and trade secret law.  Unauthorized copying,
 -- redistribution or other use of this work is prohibited.
@@ -33,7 +33,7 @@
 -- The above notice of copyright on this source code product does not indicate
 -- any actual or intended publication of such source code.
 --
--- 
+--
 
 
 SR-AGENT-INFO-MIB DEFINITIONS ::= BEGIN
@@ -62,8 +62,8 @@ srAgentInfo MODULE-IDENTITY
 
 		Email: support@snmp.com"
 	DESCRIPTION
-		"A MIB module to identify what kind of agent 
-		 is running and on what operating system 
+		"A MIB module to identify what kind of agent
+		 is running and on what operating system
 		 flavor."
 	::= { snmpResearchMIBs 46 }
 
@@ -88,7 +88,7 @@ srAgentInfoOSFlavor OBJECT-TYPE
 	::= { srAgentInfo 2 }
 
 srAgentInfoGroups   OBJECT IDENTIFIER ::= { srAgentInfo 10 }
- 
+
 srAgentInfoInitialGroup OBJECT-GROUP
     OBJECTS {
         srAgentInfoDescr,

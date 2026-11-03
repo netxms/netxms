@@ -515,4 +515,3 @@ RowPointer ::= TEXTUAL-CONVENTION
 -- ::= { 0 0 }
 
 END
-

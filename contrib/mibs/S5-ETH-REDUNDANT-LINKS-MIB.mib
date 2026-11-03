@@ -24,7 +24,7 @@ S5-ETH-REDUNDANT-LINKS-MIB DEFINITIONS ::= BEGIN
 -- Imports
 
 IMPORTS
-	OBJECT-TYPE 
+	OBJECT-TYPE
 		FROM RFC-1212
 	s5EnCfg
 		FROM S5-ETHERNET-MIB
@@ -42,7 +42,7 @@ s5EnRedun		OBJECT IDENTIFIER ::= { s5EnCfg 2 }
 
 -- SECTION 2: Redundant Port Information
 
--- Redundant Port Table 
+-- Redundant Port Table
 
 s5EnRedPortTable OBJECT-TYPE
 	SYNTAX	SEQUENCE OF S5EnRedPortEntry
@@ -61,7 +61,7 @@ s5EnRedPortTable OBJECT-TYPE
 		link status to provide the required redundancy.
 
 		Ports that are not capable of supporting redundancy do
-		not have an entry in this table." 
+		not have an entry in this table."
 	::= { s5EnRedun 1 }
 
 s5EnRedPortEntry OBJECT-TYPE
@@ -161,7 +161,7 @@ s5EnRedPortRedundMode OBJECT-TYPE
 	ACCESS	read-write
 	STATUS	mandatory
 	DESCRIPTION
-		"The redundancy mode of the port. 
+		"The redundancy mode of the port.
 
 		The values when written change the redundancy
 		mode, and when read report the redundancy mode:
@@ -303,12 +303,12 @@ s5EnRedPortRemFltSelectMode OBJECT-TYPE
 	STATUS	mandatory
 	DESCRIPTION
 		"This mode specifies the set of local fault events
-		which will cause a switchover. The values are: 
+		which will cause a switchover. The values are:
 		  synoptics(1)..The SynOptics Tx Remote Fault events
-		                consist of auto-partition and NM (network 
+		                consist of auto-partition and NM (network
 		                management) partition events in addition to
 		                the standard events.
-		  standard(2)...The standard events are link-off for 
+		  standard(2)...The standard events are link-off for
 		                all ports, and low light, jabber, Rx invalid idle,
 		                Tx dark, and Tx remote fault  (for diagnostics)
  		                for ports with transmit remote fault
@@ -363,7 +363,7 @@ s5EnRedPortCompanionBrdNum OBJECT-TYPE
 	STATUS	mandatory
 	DESCRIPTION
 		"The index of the slot containing the board of the
-		other port in the redundant pair. 
+		other port in the redundant pair.
 
 		If the port (whose slot-port identity is given by
 		the instance) is hardware-redundant capable, this
@@ -387,11 +387,11 @@ s5EnRedPortCompanionPortNum OBJECT-TYPE
 
 		If the port (whose slot-port identity is given by
 		the instance) is hardware-redundant capable, this object
-		has the value of the port number of the (potential) 
-		redundant companion, even if the port is in standalone 
-		mode. This allows the network manager to determine 
+		has the value of the port number of the (potential)
+		redundant companion, even if the port is in standalone
+		mode. This allows the network manager to determine
 		the identity of the potential companion, which is fixed
-		by the hardware of the board. 
+		by the hardware of the board.
 
 		Changing this object is permitted only when creating a
 		software-redundant pair."
@@ -408,7 +408,7 @@ s5EnRedPortSwitchoverStatus OBJECT-TYPE
 		"The switchover status of the port (and its companion).
 		The following values can be written:
 		  timedSwitchover(2)...cause a timed switchover
-		                       (see value of 
+		                       (see value of
 		                       s5EnRedPortSwitchoverTime)
 
 		The following values reflect the switchover

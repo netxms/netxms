@@ -75,7 +75,7 @@ bayStackStatsIfIndex OBJECT-TYPE
     STATUS      current
     DESCRIPTION "ifIndex value of the interface."
     ::= { bayStackStatsIfEntry 1 }
- 
+
 bayStackStatsIfNoResourcesPktsDropped OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
@@ -119,7 +119,7 @@ bayStackStatsUnitIndex OBJECT-TYPE
     STATUS      current
     DESCRIPTION "Unit number."
     ::= { bayStackStatsUnitEntry 1 }
- 
+
 bayStackStatsUnitNoResourcesPktsDropped OBJECT-TYPE
     SYNTAX      Counter64
     MAX-ACCESS  read-only
@@ -130,4 +130,3 @@ bayStackStatsUnitNoResourcesPktsDropped OBJECT-TYPE
     ::= { bayStackStatsUnitEntry 2 }
 
 END
-

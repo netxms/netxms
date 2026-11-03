@@ -175,7 +175,7 @@ mplsLspPrimaryTimeUp OBJECT-TYPE
     STATUS     current
     DESCRIPTION
         "The total time in 10-millisecond units that this
-         LSP's primary path has been operational. The 
+         LSP's primary path has been operational. The
          percentage contribution of the primary
          path to the operational time is given by
          (mplsLspPrimaryTimeUp/mplsLspTimeUp * 100) %."
@@ -249,7 +249,7 @@ OBJECTS { mplsLspName,
           mplsPathName } -- LspPath
 STATUS current
 DESCRIPTION
-     "An mplsLspUp trap signifies that the 
+     "An mplsLspUp trap signifies that the
      specified LSP is up. The current active
      path for the LSP is mplsPathName."
 --#TYPE "Foundry Trap: MPLS LSP Up"
@@ -265,7 +265,7 @@ OBJECTS { mplsLspName,
           mplsPathName } -- LspPath
 STATUS current
 DESCRIPTION
-     "An mplsLspDown trap signifies that the 
+     "An mplsLspDown trap signifies that the
      specified LSP is down, because the current
      active path mplsPathName went down."
 --#TYPE "Foundry Trap: MPLS LSP Down"
@@ -282,9 +282,9 @@ OBJECTS { mplsLspName,
 STATUS current
 DESCRIPTION
      "An mplsLspChange trap signifies that the
-     the specified LSP has switched traffic to 
+     the specified LSP has switched traffic to
      the new active path 'toLspPath'. The LSP maintains
-     up state before and after the switch over" 
+     up state before and after the switch over"
 --#TYPE "Foundry Trap: MPLS LSP Change"
 --#SUMMARY "LSP %s switches to new active path %s."
 --#ARGUMENTS { 0, 1 }

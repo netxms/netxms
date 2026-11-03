@@ -123,4 +123,3 @@ POLICY-ROUTE-MIB DEFINITIONS ::= BEGIN
         ::= { swPolicyRouteEntry 5 }
 
 END
-  

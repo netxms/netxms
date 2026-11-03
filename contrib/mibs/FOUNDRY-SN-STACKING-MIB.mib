@@ -26,7 +26,7 @@ snStacking MODULE-IDENTITY
 			"
 			Management Information for stacking system
 			configuration and operational status.
-			
+
 			Copyright 1996-2008 Foundry Networks, Inc.
 			All rights reserved.
 			This Foundry Networks SNMP Management Information Base Specification
@@ -34,10 +34,10 @@ snStacking MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
-			operation, condition, or performance of the Specification.			
+			operation, condition, or performance of the Specification.
 			"
 	REVISION     "200805050000Z" -- May 5, 2008
 	DESCRIPTION
@@ -57,8 +57,8 @@ snStackingTableObjects  OBJECT IDENTIFIER ::= { snStacking 2 }
 --
 
 snStackingGlobalConfigState OBJECT-TYPE
-	SYNTAX     INTEGER { 
-			  none(0), 
+	SYNTAX     INTEGER {
+			  none(0),
 			  enabled(1),
 			  disabled(2)
 			}
@@ -77,16 +77,16 @@ snStackingGlobalMacAddress OBJECT-TYPE
 	STATUS     current
 	DESCRIPTION
 		"Management MAC address of the stacking system.
-		This is available to change management MAC address of stack 
-		for administrative purpose. It is strongly recommended that this 
-		command should be used with upmost caution to prevent duplicate 
+		This is available to change management MAC address of stack
+		for administrative purpose. It is strongly recommended that this
+		command should be used with upmost caution to prevent duplicate
 		MAC address and must reboot the system to take an effect.
-		It is mutually exclusive from enabling the persistent MAC timer. 
+		It is mutually exclusive from enabling the persistent MAC timer.
 		Enter zero MAC address to remove the configured MAC address"
 	::= { snStackingGlobalObjects 2 }
 
 snStackingGlobalPersistentMacTimerState OBJECT-TYPE
-	SYNTAX     INTEGER { 
+	SYNTAX     INTEGER {
 			  enabled(0),
 			  disabled(1)
 			}
@@ -94,26 +94,26 @@ snStackingGlobalPersistentMacTimerState OBJECT-TYPE
 	STATUS     current
 	DESCRIPTION
 		"Configure persistent MAC timer state for stacking feature on the global level.
-		 enable: the persistent MAC timer is active and configured. The persistent MAC 
+		 enable: the persistent MAC timer is active and configured. The persistent MAC
 					  timer is set as the default timer (60 minutes)
 		 disable: deactivate the persistent MAC timer. It will stop the use of persistent MAC
 					  address and use new active stack unit's base MAC address "
 	::= { snStackingGlobalObjects 3}
-	
+
 snStackingGlobalPersistentMacTimer OBJECT-TYPE
 	SYNTAX     Integer32
 	MAX-ACCESS read-write
 	STATUS     current
 	DESCRIPTION
 		"Persistent MAC timer in minutes for the stacking system
-		Number of minutes to retain original active stack unit's base MAC address in event of 
-		active unit crash or removal. This timer is triggered when new active unit is elected. 
-		When timer expires, new active unit will change stacking MAC to its own base MAC 
+		Number of minutes to retain original active stack unit's base MAC address in event of
+		active unit crash or removal. This timer is triggered when new active unit is elected.
+		When timer expires, new active unit will change stacking MAC to its own base MAC
 		address and advertise its own base MAC address to management VLAN to update the
-		ARP table of peers. If you decide to use new active unit's MAC address, one must enter 
+		ARP table of peers. If you decide to use new active unit's MAC address, one must enter
 		this timer again to reactivate the persistent MAC.
 				  0 - keep it forever.
-				  5  to 6000 - valid value range. 
+				  5  to 6000 - valid value range.
 				  60 - default value."
 	::= { snStackingGlobalObjects 4 }
 
@@ -138,7 +138,7 @@ snStackingGlobalMode OBJECT-TYPE
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
-		"The stacking mode of the system. 
+		"The stacking mode of the system.
 		stackingMode: the system has been installed STK EEPROM, and it is in stacking mode.
 		nonStackingMode:the system has not been installed STK EEPROM, and it is not in stacking mode.
 		"
@@ -152,7 +152,7 @@ snStackingGlobalMixedMode OBJECT-TYPE
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
-		"The mixed stacking mode of the system. 
+		"The mixed stacking mode of the system.
 		mixedStackingMode: the system is in a mixed stacking mode (heterogeneous stacking).
 		classicStackingMode: the system is not in a mixed stacking mode (homogeneous stacking).
 		"
@@ -171,11 +171,11 @@ snStackingGlobalHighestPriority OBJECT-TYPE
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
-		"The highest stack priority that can be configured in the stacking system. 0 as default value 
+		"The highest stack priority that can be configured in the stacking system. 0 as default value
 		for no-stacking device"
 	::= { snStackingGlobalObjects 9 }
 
-	
+
 --
 -- Stacking system Table Object Section
 --
@@ -236,12 +236,12 @@ snStackingConfigUnitIndex OBJECT-TYPE
 	MAX-ACCESS  read-write
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the configured stacking port. If no 
-		stacking port is configured, it will be displayed zero 
-		and the first  two 10G ports as the default stacking ports. 
+		"The IfIndex for the configured stacking port. If no
+		stacking port is configured, it will be displayed zero
+		and the first  two 10G ports as the default stacking ports.
 		Enter zero to remove the configured stacking port. "
 	::= { snStackingConfigUnitEntry 3 }
-	
+
 snStackingConfigUnitRowStatus OBJECT-TYPE
 	SYNTAX     INTEGER {
 				 other(1),
@@ -311,7 +311,7 @@ snStackingConfigUnitState OBJECT-TYPE
 	DESCRIPTION
 		"First connect port for a peripheral unit in a mixed stacking system.  A peripheral
 		unit can have up to two connect ports that is is conected to. They are suggested
-		neighbor linking ports. Thus, they could be code units' periport/trunk or peripheral 
+		neighbor linking ports. Thus, they could be code units' periport/trunk or peripheral
 		units' stacking port. It returns 0 if connect port does not exist."
 	::= { snStackingConfigUnitEntry 9 }
 
@@ -322,11 +322,11 @@ snStackingConfigUnitState OBJECT-TYPE
 	DESCRIPTION
 		"second connect port for a peripheral unit in a mixed stacking system.  A peripheral
 		unit can have up to two connect ports that is is conected to. They are suggested
-		neighbor linking ports. Thus, they could be code units' periport/trunk or peripheral 
+		neighbor linking ports. Thus, they could be code units' periport/trunk or peripheral
 		units' stacking port. It returns 0 if connect port does not exist."
 	::= { snStackingConfigUnitEntry 10 }
 
-	
+
 --
 -- Stacking operation unit Table
 -- Use this table to display stacking related information for each operational unit
@@ -364,11 +364,11 @@ SnStackingOperUnitEntry ::= SEQUENCE {
 	snStackingOperUnitNeighbor2             Integer32,
 	snStackingOperUnitImgVer                 DisplayString,
 	snStackingOperUnitBuildlVer               DisplayString
-  
+
 }
 
 snStackingOperUnitIndex OBJECT-TYPE
-	SYNTAX     Integer32 
+	SYNTAX     Integer32
 	MAX-ACCESS not-accessible
 	STATUS     current
 	DESCRIPTION
@@ -472,7 +472,7 @@ snStackingOperUnitPriority OBJECT-TYPE
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
-	"Stacking neighbor unit (left) number. 
+	"Stacking neighbor unit (left) number.
 	If there is no neighbor unit, then it returns 0."
 
 	::= { snStackingOperUnitEntry 11 }
@@ -482,10 +482,10 @@ snStackingOperUnitPriority OBJECT-TYPE
 	MAX-ACCESS read-only
 	STATUS     current
 	DESCRIPTION
-	"Stacking neighbor unit (left) number. 
+	"Stacking neighbor unit (left) number.
 	If there is no neighbor unit, then it returns 0."
 	::= { snStackingOperUnitEntry 12 }
-	
+
 snStackingOperUnitImgVer OBJECT-TYPE
 	SYNTAX		DisplayString (SIZE (0..32))
 	MAX-ACCESS read-only
@@ -547,10 +547,10 @@ snStackingConfigStackTrunkUnit OBJECT-TYPE
 	MAX-ACCESS  not-accessible
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the first (primary) port of the configured stack trunk. 
-		There are two ports per stack trunk. In some case, a physical port may contain 
-		more than one port, e.g. one 40G (1/2/2) for ICX6610 has 4x10G ports. 
-		It returns 0 if the port does not exist." 
+		"The IfIndex for the first (primary) port of the configured stack trunk.
+		There are two ports per stack trunk. In some case, a physical port may contain
+		more than one port, e.g. one 40G (1/2/2) for ICX6610 has 4x10G ports.
+		It returns 0 if the port does not exist."
 	::= { snStackingConfigStackTrunkEntry 2 }
 
  snStackingConfigStackTrunkPort2 OBJECT-TYPE
@@ -558,12 +558,12 @@ snStackingConfigStackTrunkUnit OBJECT-TYPE
 	MAX-ACCESS  not-accessible
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the second port of the configured stack trunk. 
-		There are two ports per stack trunk. In some case, a physical port may contain 
-		more than one logical port, e.g. one 40G (1/2/2) for ICX6610 has 4x10G ports. 
-		It returns 0 if the port does not exist." 
+		"The IfIndex for the second port of the configured stack trunk.
+		There are two ports per stack trunk. In some case, a physical port may contain
+		more than one logical port, e.g. one 40G (1/2/2) for ICX6610 has 4x10G ports.
+		It returns 0 if the port does not exist."
 	::= { snStackingConfigStackTrunkEntry 3 }
-	
+
 snStackingConfigStackTrunkRowStatus OBJECT-TYPE
 	SYNTAX     INTEGER {
 				 other(1),
@@ -592,10 +592,10 @@ snStackingConfigStackTrunkRowStatus OBJECT-TYPE
 	MAX-ACCESS  read-only
 	STATUS     current
 	DESCRIPTION
-		" Number of logical ports for the first (primary) port of the configured stack trunk. 
-		In some case, a physical port may contain more than one logical port, 
-		e.g. one 40G (1/2/2) for ICX6610 has 4x10G ports.  It returns 0 if the port 
-		does not exist." 
+		" Number of logical ports for the first (primary) port of the configured stack trunk.
+		In some case, a physical port may contain more than one logical port,
+		e.g. one 40G (1/2/2) for ICX6610 has 4x10G ports.  It returns 0 if the port
+		does not exist."
 	::= { snStackingConfigStackTrunkEntry 5 }
 
  snStackingConfigStackTrunkNumPort2 OBJECT-TYPE
@@ -603,10 +603,10 @@ snStackingConfigStackTrunkRowStatus OBJECT-TYPE
 	MAX-ACCESS  read-only
 	STATUS     current
 	DESCRIPTION
-		" Number of logical ports for the second port of the configured stack trunk. 
-		In some case, a physical port may contain more than one logical port, 
-		e.g. one 40G (1/2/2) for ICX6610 has 4x10G ports.  It returns 0 if the port 
-		does not exist." 
+		" Number of logical ports for the second port of the configured stack trunk.
+		In some case, a physical port may contain more than one logical port,
+		e.g. one 40G (1/2/2) for ICX6610 has 4x10G ports.  It returns 0 if the port
+		does not exist."
 	::= { snStackingConfigStackTrunkEntry 6 }
 
 --
@@ -650,10 +650,10 @@ snStackingConfigPeriPortUnit OBJECT-TYPE
 	MAX-ACCESS  not-accessible
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the configured mixed stacking peripheral port. 
+		"The IfIndex for the configured mixed stacking peripheral port.
 		It is up to eight peripheral ports per unit. "
 	::= { snStackingConfigPeriPortEntry 2 }
-	
+
 snStackingConfigPeriPortRowStatus OBJECT-TYPE
 	SYNTAX     INTEGER {
 				 other(1),
@@ -721,8 +721,8 @@ snStackingConfigPeriTrunkUnit OBJECT-TYPE
 	MAX-ACCESS  not-accessible
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the first port of the configured mixed stacking peripheral trunk. 
-		There are two ports per peripheral trunk. It is up to four peripheral trunks per unit." 
+		"The IfIndex for the first port of the configured mixed stacking peripheral trunk.
+		There are two ports per peripheral trunk. It is up to four peripheral trunks per unit."
 	::= { snStackingConfigPeriTrunkEntry 2 }
 
  snStackingConfigPeriTrunkPort2 OBJECT-TYPE
@@ -730,10 +730,10 @@ snStackingConfigPeriTrunkUnit OBJECT-TYPE
 	MAX-ACCESS  not-accessible
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the second port of the configured mixed stacking peripheral trunk. 
-		There are two ports per peripheral trunk. It is up to four peripheral trunks per unit." 
+		"The IfIndex for the second port of the configured mixed stacking peripheral trunk.
+		There are two ports per peripheral trunk. It is up to four peripheral trunks per unit."
 	::= { snStackingConfigPeriTrunkEntry 3 }
-	
+
 snStackingConfigPeriTrunkRowStatus OBJECT-TYPE
 	SYNTAX     INTEGER {
 				 other(1),
@@ -798,17 +798,17 @@ snStackingNeighborPortUnit OBJECT-TYPE
 	MAX-ACCESS  not-accessible
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the stack port on this unit. 
+		"The IfIndex for the stack port on this unit.
 		It is up to ten stack ports and peripheral ports per unit. "
 	::= { snStackingNeighborPortEntry 2 }
-	
+
  snStackingNeighborPortNeighborPort OBJECT-TYPE
 	SYNTAX		InterfaceIndexOrZero
 	MAX-ACCESS  read-only
 	STATUS     current
 	DESCRIPTION
-		"The IfIndex for the neighbor port of  the stack port on this unit. 
+		"The IfIndex for the neighbor port of  the stack port on this unit.
 		It returns 0 if neighbor port does not exist for this stack port. "
 	::= { snStackingNeighborPortEntry 3 }
-	
+
 END

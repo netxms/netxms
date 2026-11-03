@@ -1,5 +1,5 @@
 -- This module defines enterprise MIBs for interface configuration
--- 
+--
 -- Copyright (c) 1999-2004, Juniper Networks, Inc.
 -- All rights reserved.
 
@@ -21,7 +21,7 @@ netscreenInterfaceMibModule MODULE-IDENTITY
     CONTACT-INFO
         "Customer Support
 
-         1194 North Mathilda Avenue 
+         1194 North Mathilda Avenue
          Sunnyvale, California 94089-1206
          USA
 
@@ -684,5 +684,3 @@ nsIfMonIfInfo OBJECT-TYPE
     ::= { nsIfMonEntry 13 }
 
 END
-
-

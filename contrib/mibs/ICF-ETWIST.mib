@@ -30,8 +30,8 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
                      8000 Foothills Blvd.
                      Roseville, CA 95747"
             DESCRIPTION
-                    "This MIB module describes devices in the HP 
-                    Integrated Communication Facility product 
+                    "This MIB module describes devices in the HP
+                    Integrated Communication Facility product
                     line."
 
             REVISION     "200011032220Z"  -- November 3, 2000
@@ -164,7 +164,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
                    cause this object to be updated, and the previous
                    value overwritten. A management entity may
                    retrieve more detailed error information than that
-                   implied by the pdu's ErrorStatus, especially in 
+                   implied by the pdu's ErrorStatus, especially in
                    the case of a genErr."
            ::= { icfCommon 1 }
 
@@ -175,8 +175,8 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   This is the encrypted password for the device. The 
-                   algorithm used for the encryption process is HP 
+                   This is the encrypted password for the device. The
+                   algorithm used for the encryption process is HP
                    proprietary. Third party vendor support is provided
                    by not setting a password on the device, and using
                    the community name 'public'."
@@ -194,14 +194,14 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   When the reset object is set to to 'warm' it 
-                   results in a 'warm' reset, which does not clear 
+                   When the reset object is set to to 'warm' it
+                   results in a 'warm' reset, which does not clear
                    the parameters in NOVRAM to factory defaults. When
                    set to 'cold', it results in NOVRAM being set to
-                   factory defaults. When this object is set, the 
-                   agent replies, dallies a short time to allow the 
+                   factory defaults. When this object is set, the
+                   agent replies, dallies a short time to allow the
                    reply to be emitted from the device, then performs
-                   the reset.  When read, this object always returns 
+                   the reset.  When read, this object always returns
                    0."
            ::= { icfCommon 3 }
 
@@ -215,8 +215,8 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   Self test is invoked by setting this flag to 
-                   'stExecute. When the object changes to 
+                   Self test is invoked by setting this flag to
+                   'stExecute. When the object changes to
                    'stSuccess', the test has completed successfully.
                    Icf devices will 'hard-fail' if the test does not
                    succeed."
@@ -230,34 +230,34 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
                    "********* THIS OBJECT IS OBSOLETE *********
 
                    This object allows a set of objects to be locked.
-                   The lock is only assured by the 'cooperation' of 
-                   other management entities; they must wait until 
-                   the lock is cleared (to value zero) prior to 
-                   setting the lock. When this object is set to a 
-                   management entity's IP address, if no other 
+                   The lock is only assured by the 'cooperation' of
+                   other management entities; they must wait until
+                   the lock is cleared (to value zero) prior to
+                   setting the lock. When this object is set to a
+                   management entity's IP address, if no other
                    management entity has previously set the lock, the
-                   set will succeed.  Otherwise, an error (BadValue) 
+                   set will succeed.  Otherwise, an error (BadValue)
                    will be returned. It is the responsibility of the
-                   owning management entity to clear the lock when 
-                   the transactions complete. To protect against a 
-                   management entity failure during a locked 
-                   transaction, the agent is NOT responsible for 
-                   verifying which management entity is performing 
-                   transactions on locked objects; thus, any 
-                   management entity can clear this object at any 
-                   time. The agent does not do anything with this 
+                   owning management entity to clear the lock when
+                   the transactions complete. To protect against a
+                   management entity failure during a locked
+                   transaction, the agent is NOT responsible for
+                   verifying which management entity is performing
+                   transactions on locked objects; thus, any
+                   management entity can clear this object at any
+                   time. The agent does not do anything with this
                    object except disallow multiple sets of different
-                   IP addresses (unless the object has been cleared 
-                   to zero). This means management entities can use 
+                   IP addresses (unless the object has been cleared
+                   to zero). This means management entities can use
                    this for locking any valid transactions on defined
                    sets of objects.  This object can also be used on
                    IPX networks by specifying the low 4 bytes of the
                    station address for the IpAddress."
            -- INDEX  { INTEGER (1..3)
                       -- pollResponse(1), -  lock pollResponse object
-                      -- mapObjects(2),   -  lock mapAddress, 
+                      -- mapObjects(2),   -  lock mapAddress,
                                           -- mapState, and mapPort
-                      -- eventGroup(3)    -  lock all objects in 
+                      -- eventGroup(3)    -  lock all objects in
                                           -- event group
                      -- }
            ::= { icfCommon 5 }
@@ -276,9 +276,9 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   Flag indicating whether device should respond to 
-                   multicast SNMP PDUs. When set 'true', the device 
-                   will respond to multicast SNMP PDU's. Otherwise, 
+                   Flag indicating whether device should respond to
+                   multicast SNMP PDUs. When set 'true', the device
+                   will respond to multicast SNMP PDU's. Otherwise,
                    the response is discarded."
            ::= { discovery 1 }
 
@@ -306,9 +306,9 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   When this object is set a map address search 
-                   begins. If the address is detected on only one 
-                   port, then the mapPort object is set to the port 
+                   When this object is set a map address search
+                   begins. If the address is detected on only one
+                   port, then the mapPort object is set to the port
                    number on which the address was detected.
 
                    This object is obsolete.  This functionality has
@@ -328,12 +328,12 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   This object will be set to 'psNone' if the 
+                   This object will be set to 'psNone' if the
                    address set in the mapAddress object has not been
                    received on any of the device's interface/ports.
                    It will be set to 'psSingle' if the mapAddress has
                    been detected on only one interface/port. It will
-                   be set to 'psMany' if the mapAddress has been 
+                   be set to 'psMany' if the mapAddress has been
                    detected on more than one interface/port.
 
                    This object is obsolete.  This functionality has
@@ -349,7 +349,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   The port number on which the map address was 
+                   The port number on which the map address was
                    detected. If map state is 'psNone' or 'psMany'
                    then this object is not valid.
 
@@ -409,7 +409,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { evtIndex }
            ::= { icfEvent 2 }
 
-       EvtEntry ::= 
+       EvtEntry ::=
            SEQUENCE {
                evtIndex                        INTEGER,
                evtArm                          Integer32,
@@ -457,11 +457,11 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   This object arms and disarms events. Events are 
+                   This object arms and disarms events. Events are
                    implicitly rearmed, that is, once an event occurs,
-                   it is rearmed.  Sets to the intrusionEvent 
-                   instance of this object are ignored, since 
-                   intrusion events are actually armed through the 
+                   it is rearmed.  Sets to the intrusionEvent
+                   instance of this object are ignored, since
+                   intrusion events are actually armed through the
                    hubSecPtAlarmEnable object."
            ::= { evtTable 2 }
 
@@ -487,7 +487,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { evthIndex }
            ::= { icfEvent 3 }
 
-       EvtThresholdEntry ::= 
+       EvtThresholdEntry ::=
            SEQUENCE {
                evthIndex                       Integer32,
                evthArm                         Integer32,
@@ -519,7 +519,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   This object arms and disarms events. The 
+                   This object arms and disarms events. The
                    notification node, the associated event object,
                    threshold, hysteresis, and time interval should
                    all be set before an event is armed. The objects
@@ -560,7 +560,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   The threshold against which the variable 
+                   The threshold against which the variable
                    specified in evthObject is tested over the time
                    interval specified in the evthTimeInterval  When
                    the threshold is met or exceeded, the event is
@@ -620,7 +620,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
 
                    If this object is set to the MAC address of a
                    node to link test in the same PDU that sets
-                   linkTestRepetitions to a nonzero value, the link 
+                   linkTestRepetitions to a nonzero value, the link
                    test performed will use IEEE 802 Test frames.
 
                    Note that setting more than one of
@@ -741,7 +741,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { icf8023MacIndex }
            ::= { icfCommon 9 }
 
-       Icf8023MacEntry ::= 
+       Icf8023MacEntry ::=
            SEQUENCE {
                icf8023MacIndex                 Integer32,
                icf8023MacInBroadcastPkts       Counter32,
@@ -1107,7 +1107,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { hubPortIndex }
            ::= { icfHub 3 }
 
-       HubPortEntry ::= 
+       HubPortEntry ::=
            SEQUENCE {
                hubPortIndex                    Integer32,
                hubPortPktFragments             Counter32,
@@ -1213,7 +1213,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
 
                    Each port maintains the MAC address of the node
                    currently attached to it. This address is valid
-                   only when the port state flag is set to 
+                   only when the port state flag is set to
                    'psSingle'."
            ::= { hubPortTable 7 }
 
@@ -1327,7 +1327,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { hubAddressIndex }
            ::= { icfHub 6 }
 
-       HubAddressEntry ::= 
+       HubAddressEntry ::=
            SEQUENCE {
                hubAddressIndex                 Integer32,
                hubAddressChunk                 OCTET STRING
@@ -1335,7 +1335,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
 
        hubAddressIndex OBJECT-TYPE
            SYNTAX     Integer32 (1..52)
-           MAX-ACCESS read-only           
+           MAX-ACCESS read-only
            STATUS     obsolete
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
@@ -1346,7 +1346,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
 
        hubAddressChunk OBJECT-TYPE
            SYNTAX     OCTET STRING (SIZE (408))
-           MAX-ACCESS read-only           
+           MAX-ACCESS read-only
            STATUS     obsolete
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
@@ -1380,7 +1380,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
 
                    A value of EMPTY in the Port field indicates an
                    unused (i.e.  aged out) entry in the table.  When
-                   the EOL (End Of List) bit is set in the Port 
+                   the EOL (End Of List) bit is set in the Port
                    field, that entry is the last entry in the table.
                    It is possible for EOL to be seen in any entry.
                    EOL (0x4000) and EMPTY (0x8000) are bit masks
@@ -1725,7 +1725,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
                    "********* THIS OBJECT IS OBSOLETE *********
 
                    This object controls the forwarding nature of the
-                   bridge. In the Learning state the bridge will 
+                   bridge. In the Learning state the bridge will
                    learn new MAC addresses, and it ages out older MAC
                    addresses. Statically configured addresses are
                    discarded (they do not age). In the Secure state,
@@ -1757,7 +1757,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { addressIndex }
            ::= { icfBridge 3 }
 
-       AddressEntry ::= 
+       AddressEntry ::=
            SEQUENCE {
                addressIndex                    Integer32,
                addressChunk                    OCTET STRING
@@ -1786,7 +1786,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
                    the address table.  Each chunk can be interpreted
                    as an array of 41 records of the form:
 
-                       { macAddress[6bytes], port number[2bytes], 
+                       { macAddress[6bytes], port number[2bytes],
                          permanence[2bytes] }.
 
                          Address         Port          Perm
@@ -1798,7 +1798,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
                    04  000000000000  1              Dynamic(0x0000)
                    05  080009009876  EMPTY(0x8000)  Dynamic(0x0000)
                    06  080009004567  EMPTY(0x8000)  Static(0x0008)
-                   07  080009041d08    
+                   07  080009041d08
                            ...           ...           ...
                    40  080009005678  EOL(0x4000)    Permanent(0x0000)
 
@@ -1833,7 +1833,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { brgPortIndex }
            ::= { icfBridge 4 }
 
-       BrgPortEntry ::= 
+       BrgPortEntry ::=
            SEQUENCE {
                brgPortIndex                    Integer32,
                brgPortCacheHits                Counter32,
@@ -1902,13 +1902,13 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
 
        -- Bridge Wildcard Group
        --
-       -- The wildcard objects constitute a super-object. 
+       -- The wildcard objects constitute a super-object.
        -- To arm or redefine a wildcard filter, all 5 wildcard
        -- objects (i.e. Filter, Mask, Offset, UserOffset, and Arm)
        -- must be present and adjacent to each other within an SNMP
        -- PDU.  There is no requirement on the ordering of the
        -- objects within the PDU.
-       -- 
+       --
        -- To disarm a wildcard filter, only the arm object is needed.
        -- When the Arm object is set to OFF, any other adjacent
        -- wildcard objects are ignored.
@@ -1925,7 +1925,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { wildcardIndex }
            ::= { icfBridge 5 }
 
-       WildcardEntry ::= 
+       WildcardEntry ::=
            SEQUENCE {
                wildcardIndex                   Integer32,
                wildcardFilter                  OCTET STRING,
@@ -2005,7 +2005,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
                    The following would be an illegal pair:
                        filter: 01110000 00000000 00000000 00000000
                        mask:   10010000 00000000 00000000 00000000
-                       AND'ed: 00010000 00000000 00000000 00000000  
+                       AND'ed: 00010000 00000000 00000000 00000000
                                ( != filter)"
            ::= { wildcardTable 2 }
 
@@ -2096,7 +2096,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
 
                    Example A corresponds to a UserOffset/Offset pair
                    such as 0/0 (4n/4n).  Example B represents a pair
-                   such as 0/1 (4n/4n+1).  Example C is 0/2 
+                   such as 0/1 (4n/4n+1).  Example C is 0/2
                    (4n/4n+2). Finally, example D is 2/3 (4n+2/4n+3).
 
                    If any of the above constraints is not honored,
@@ -2142,7 +2142,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            DESCRIPTION
                    "********* THIS OBJECT IS OBSOLETE *********
 
-                   The time since the last topology change. see: 
+                   The time since the last topology change. see:
                    IEEE 802.1(d) 6.8.1.1.3(2), 4.5.3.12"
            ::= { stp 2 }
 
@@ -2317,7 +2317,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX   { stpPortIndex }
            ::= { stp 15 }
 
-       StpPortEntry ::= 
+       StpPortEntry ::=
            SEQUENCE {
                stpPortIndex                    Integer32,
                stpPortState                    Integer32,
@@ -2467,7 +2467,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { hdlcErrorIndex }
            ::= { icfBridge 7 }
 
-       HdlcErrorEntry ::= 
+       HdlcErrorEntry ::=
            SEQUENCE {
                hdlcErrorIndex                  Integer32,
                hdlcErrorIndications            Counter32,
@@ -2648,7 +2648,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { hdlcLocalIndex }
            ::= { icfBridge 8 }
 
-       HdlcLocalEntry ::= 
+       HdlcLocalEntry ::=
            SEQUENCE {
                hdlcLocalIndex                  Integer32,
                hdlcLocalResetRequests          Counter32,
@@ -2809,7 +2809,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { hdlcRemoteIndex }
            ::= { icfBridge 9 }
 
-       HdlcRemoteEntry ::= 
+       HdlcRemoteEntry ::=
            SEQUENCE {
                hdlcRemoteIndex                 Integer32,
                hdlcRemoteResetRequests         Counter32,
@@ -3018,7 +3018,7 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            --INDEX    { x25Index }
            ::= { icfBridge 10 }
 
-       X25Entry ::= 
+       X25Entry ::=
            SEQUENCE {
                x25Index                        Integer32,
                x25T1Timer                      TimeTicks,
@@ -4697,4 +4697,3 @@ ICF-ETWIST DEFINITIONS ::= BEGIN
            ::= { icfETGroups 26 }
 
        END
-

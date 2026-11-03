@@ -81,7 +81,7 @@ safAlarmActiveLastChanged OBJECT-TYPE
    SYNTAX      TimeTicks
    MAX-ACCESS  read-only
    STATUS      current
-   DESCRIPTION 
+   DESCRIPTION
    "The value of sysUpTime at the time of the last
     creation, deletion or modification of an entry in
     the safAlarmTable(s).
@@ -144,8 +144,8 @@ safAlarmActiveIndex OBJECT-TYPE
    SYNTAX OBJECT IDENTIFIER
    MAX-ACCESS read-only
    STATUS     current
-   DESCRIPTION "Object, which raises an alarm. Indicates 
-         specific object, which raises an alarm. This should 
+   DESCRIPTION "Object, which raises an alarm. Indicates
+         specific object, which raises an alarm. This should
 		 refer to interfaces or Object class and instance."
    ::= { safAlarmActiveEntry 2 }
 
@@ -181,7 +181,7 @@ safAlarmActiveIndex OBJECT-TYPE
    SYNTAX Integer32
    MAX-ACCESS read-only
    STATUS     current
-   DESCRIPTION "The identifier of the threshold attribute 
+   DESCRIPTION "The identifier of the threshold attribute
          that caused the notification."
    ::= { safAlarmActiveEntry 7 }
 
@@ -189,9 +189,9 @@ safAlarmActiveIndex OBJECT-TYPE
    SYNTAX Integer32
    MAX-ACCESS read-only
    STATUS     current
-   DESCRIPTION "The value of the gauge or counter which crossed 
-         the threshold. This may be different from the threshold 
-		 value if, for example, the gauge may only take on 
+   DESCRIPTION "The value of the gauge or counter which crossed
+         the threshold. This may be different from the threshold
+		 value if, for example, the gauge may only take on
 		 descrete values."
    ::= { safAlarmActiveEntry 8 }
 
@@ -213,14 +213,14 @@ safAlarmActiveIndex OBJECT-TYPE
    SYNTAX SnmpAdminString
    MAX-ACCESS read-only
    STATUS     current
-   DESCRIPTION "Alarm information interpreted in user friendly 
+   DESCRIPTION "Alarm information interpreted in user friendly
          text. For example, 'Ethernet interface'."
    ::= { safAlarmActiveEntry 11 }
 
 safAlarmNotifications OBJECT IDENTIFIER ::= { safAlarmMIB 0 }
 
 safAlarmActiveState NOTIFICATION-TYPE
-   OBJECTS { 
+   OBJECTS {
 --             safAlarmActiveIndex,
              safAlarmActiveManagedObj,
              safAlarmActiveDateAndTime,
@@ -236,10 +236,10 @@ safAlarmActiveState NOTIFICATION-TYPE
    ::= { safAlarmNotifications 2 }
 
 safAlarmActiveTState NOTIFICATION-TYPE
-   OBJECTS { 
+   OBJECTS {
 --             safAlarmActiveIndex,
              safAlarmActiveManagedObj,
-             safAlarmActiveDateAndTime,       
+             safAlarmActiveDateAndTime,
              safAlarmActiveEventType,
              safAlarmActiveProbableCause,
              safAlarmActivePerceivedSeverity,
@@ -272,7 +272,7 @@ safAlarmCompliance MODULE-COMPLIANCE
     DESCRIPTION "The compliance statement for SNMP engine which
                  implements the SAF Tehnika alarms."
     MODULE -- this module
-      MANDATORY-GROUPS { 
+      MANDATORY-GROUPS {
                 safAlarmActiveGroup,
                 safAlarmNotificationsGroup }
     ::= { safAlarmCompliances 1 }
@@ -297,7 +297,7 @@ safAlarmActiveGroup OBJECT-GROUP
    STATUS   current
    DESCRIPTION "Active Alarm list group."
    ::= { safAlarmGroups 1}
-   
+
 safAlarmNotificationsGroup NOTIFICATION-GROUP
    NOTIFICATIONS { safAlarmActiveState, safAlarmActiveTState, safAlarmClearState }
    STATUS        deprecated

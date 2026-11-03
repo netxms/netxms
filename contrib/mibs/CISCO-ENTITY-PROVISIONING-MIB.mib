@@ -170,21 +170,21 @@ ceProvContainerDetected OBJECT-TYPE
 
 -- MIB Notification Definitions
 
-ceProvMIBNotificationsPrefix OBJECT IDENTIFIER ::= 
+ceProvMIBNotificationsPrefix OBJECT IDENTIFIER ::=
     { ciscoEntityProvMIB 2 }
 
-ceProvMIBNotifications OBJECT IDENTIFIER ::= 
+ceProvMIBNotifications OBJECT IDENTIFIER ::=
     { ceProvMIBNotificationsPrefix 0 }
 
 -- MIB Conformance Statements
 
-ceProvMIBConformance OBJECT IDENTIFIER ::= 
+ceProvMIBConformance OBJECT IDENTIFIER ::=
     { ciscoEntityProvMIB 3 }
 
-ceProvMIBCompliances OBJECT IDENTIFIER ::= 
+ceProvMIBCompliances OBJECT IDENTIFIER ::=
     { ceProvMIBConformance 1 }
 
-ceProvMIBGroups OBJECT IDENTIFIER ::= 
+ceProvMIBGroups OBJECT IDENTIFIER ::=
     { ceProvMIBConformance 2 }
 
 -- Compliance

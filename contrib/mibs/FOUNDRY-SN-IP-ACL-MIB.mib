@@ -13,7 +13,7 @@ IMPORTS
 		FROM FOUNDRY-SN-IP-MIB
 	PortQosTC, FdryVlanIdOrNoneTC
 		FROM FOUNDRY-SN-SWITCH-GROUP-MIB;
-		
+
 snAgAcl MODULE-IDENTITY
 	LAST-UPDATED "200909300000Z" -- September 30, 2009
 	ORGANIZATION "Foundry Networks, Inc"
@@ -34,45 +34,45 @@ snAgAcl MODULE-IDENTITY
 			intellectual property. Foundry Networks retains all
 			title and ownership in the Specification, including any
 			revisions.
-			
+
 			This Specification is supplied AS IS, and Foundry Networks makes
 			no warranty, either express or implied, as to the use,
-			operation, condition, or performance of the Specification.			
-			"            
+			operation, condition, or performance of the Specification.
+			"
 	REVISION     "200909300000Z" -- September 30, 2009
 	DESCRIPTION
 			""
    ::= {router 2 15}
 
 	--  Textual Conventions
-	
-	SnRowStatus ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+
+	SnRowStatus ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"The status of a given row in the table."
 	SYNTAX  INTEGER {other(1), valid(2), delete(3), create(4)}
 
-	Action ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	Action ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"The action to be taken on the packet after filtering is done."
 	SYNTAX  INTEGER { deny(0), permit(1) }
 
-	TruthVal ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	TruthVal ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"Boolean value."
 	SYNTAX  INTEGER { false (0), true (1)  }
 
-	FdryClauseIndexTC ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	FdryClauseIndexTC ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"One-based clause index value within a given ACL number."
 	SYNTAX  Unsigned32
 
-	AclNumber ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	AclNumber ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"The Access control list number for an entry.
 		The standard Access list is in the range <1..99>.
 		The extended Access list is in the range <100-199>.
@@ -81,34 +81,34 @@ snAgAcl MODULE-IDENTITY
 		The L2 Access list is in the range <400-499>."
 	SYNTAX  INTEGER (1..499)
 
-	AclNameString ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	AclNameString ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"The optional name for a given access-list. In general, the ACL number
 		for a named ACL is in the range of 200 and 399."
 	SYNTAX  OCTET STRING (SIZE (0..255))
 
-	Operator ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	Operator ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"The operation used within a given ACL filter to determine permit or deny."
 	SYNTAX  INTEGER { eq(0), neq(1), lt(2), gt(3), range(4), undefined(7) }
 
-	IpProtocol ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	IpProtocol ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"The IP protocol number on which ACL can be applied.
 		0=IP, 1=ICMP, 2=IGMP, 6=TCP, 17=UDP, 88=IGRP, 89=OSPF"
 	SYNTAX  INTEGER {ip(0), icmp(1), igmp(2), tcp(6), udp(17), igrp(88), ospf(89)}
 
-	PrecedenceValue ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	PrecedenceValue ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"The IP precedence value on which ACL can be applied."
 	SYNTAX  INTEGER {
 				routine(0),
 				priority(1),
-				immediate(2), 
+				immediate(2),
 				flash(3),
 				flashoverride(4),
 				critical(5),
@@ -117,9 +117,9 @@ snAgAcl MODULE-IDENTITY
 				undefined(8)
 				}
 
-	TosValue ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	TosValue ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"The IP TOS value on which ACL can be applied."
 	SYNTAX  INTEGER {
 				normal(0),
@@ -141,9 +141,9 @@ snAgAcl MODULE-IDENTITY
 				undefined(16)
 			}
 
-	Direction ::= TEXTUAL-CONVENTION 
-	STATUS      current 
-	DESCRIPTION 
+	Direction ::= TEXTUAL-CONVENTION
+	STATUS      current
+	DESCRIPTION
 		"The packet flow direction within an interface for which ACL needs to be applied."
 	SYNTAX  INTEGER { inbound(0), outbound(1) }
 
@@ -197,9 +197,9 @@ SnAgAclEntry ::= SEQUENCE {
 		AclNumber,
 	snAgAclName
 		DisplayString,
-	snAgAclAction              
+	snAgAclAction
 		Action,
-	snAgAclProtocol            
+	snAgAclProtocol
 		IpProtocol,
 	snAgAclSourceIp
 		IpAddress,
@@ -287,7 +287,7 @@ snAgAclName		OBJECT-TYPE
 	::= { snAgAclEntry 3 }
 
 snAgAclAction	OBJECT-TYPE
-	SYNTAX		Action 
+	SYNTAX		Action
 	MAX-ACCESS  read-write
 	STATUS		current
 	DESCRIPTION
@@ -409,13 +409,13 @@ snAgAclPrecedence	OBJECT-TYPE
 	STATUS		current
 	DESCRIPTION
 		"This refers to IP precedence value in the range <0-7>
-		critical(5), 
-		flash(3), 
-		flash-override(4), 
-		immediate(2), 
-		internet(6), 
-		network(7), 
-		priority(1), 
+		critical(5),
+		flash(3),
+		flash-override(4),
+		immediate(2),
+		internet(6),
+		network(7),
+		priority(1),
 		routine(0)"
 		::= { snAgAclEntry 16 }
 
@@ -607,14 +607,14 @@ snAgAclIcmpCode   OBJECT-TYPE
 		----------------------
 		1 = Address mask reply"
 	::= { snAgAclEntry 30 }
-	
+
 snAgAclParameters   OBJECT-TYPE
-	SYNTAX		BITS { 
+	SYNTAX		BITS {
 		matchFragmentedPackets (0),
 		matchNonFragmentedPackets (1),
 		matchTcpSynSetPackets (2),
 		permitFailedRPFCheckPackets (3),
-		mirrorPermitPackets (4), 
+		mirrorPermitPackets (4),
 		sendPermitPacketsToSflowCollector (5),
 		dscpMappingFlagSet (6),
 		dscpMarkingFlagSet (7)
@@ -655,8 +655,8 @@ snAgAclBindToPortEntry       OBJECT-TYPE
 	STATUS	current
 	DESCRIPTION
 		"An entry in the ACL-binding-to-port table."
-	INDEX   { 
-			   snAgAclPortNum, 
+	INDEX   {
+			   snAgAclPortNum,
 			   snAgAclPortBindDirection
 			}
 	::= { snAgAclBindToPortTable 1 }
@@ -769,7 +769,7 @@ snAgAclIfBindIndex      OBJECT-TYPE
 	DESCRIPTION
 		"Binding-to port num, either physical port or virtual interface."
 	::= { snAgAclIfBindEntry 1 }
- 
+
 snAgAclIfBindDirection   OBJECT-TYPE
 	SYNTAX		Direction
 	MAX-ACCESS  read-only
@@ -802,13 +802,13 @@ snAgAclIfBindVifPortList   OBJECT-TYPE
 	DESCRIPTION
 		"This object specifies the port list for binding virtual interface.
 		 Each port index is an ifIndex, if there are consecutive 4 or more
-		 ifIndex then, they will be encoded like below. 
-		 
+		 ifIndex then, they will be encoded like below.
+
 		 Encoding and decoding scheme is range based: Each range prefix with
 		 0000 (2 octets) where 0000 is not valid ifIndex. Next 2 octets
 		 indicates lower range ifIndex, followed by 2 octets of higher range
 		 ifIndex. Individual(non range) ones will be displayed as it is.
-		 
+
 		 Ex: port list: 0001..0005 0015 0032..0047
 		 Port list in PDU:  0000 0001 0005 000f 0000 0020 002f."
 	::= { snAgAclIfBindEntry 5 }
@@ -1018,7 +1018,7 @@ agAclAccntRaclTotalSWHitCountCnt    OBJECT-TYPE
 		"Receive-ACL cumulative software hit counter. Not used for other ACL kind.
 		The value returned is per ACL, instead of per filter within the ACL."
 	::= { agAclAccntEntry 15 }
-	
+
 --
 -- L2 ACL Next Clause Table
 --
@@ -1028,10 +1028,10 @@ fdryL2AclNextClauseTable	OBJECT-TYPE
 	MAX-ACCESS	not-accessible
 	STATUS		current
 	DESCRIPTION
-		"This read-only table contains the list of next lowest available clause index that 
+		"This read-only table contains the list of next lowest available clause index that
 		can be used for creating a new instance in the fdryL2AclTable.
 		The clause index values will not change as a result of switchovers or hitless upgrades,
-		but may change as a result of a device reload (though the relative order of persistent 
+		but may change as a result of a device reload (though the relative order of persistent
 		entries would remain the same).
 		"
 	::= { snAgAcl 6 }
@@ -1058,7 +1058,7 @@ fdryL2AclNextClauseIndex	OBJECT-TYPE
 		"The next lowest available clause index for a given ACL number. The maximum value
 		of this object is the configured maximum number of clauses for a L2 ACL."
 	::= { fdryL2AclNextClauseEntry 1 }
-	
+
 --
 -- L2 ACL Configuration Table
 --
@@ -1068,7 +1068,7 @@ fdryL2AclTable	OBJECT-TYPE
 	MAX-ACCESS	not-accessible
 	STATUS		current
 	DESCRIPTION
-		"Table of Layer 2 Access Control Lists. Layer 2 ACLs filter traffic 
+		"Table of Layer 2 Access Control Lists. Layer 2 ACLs filter traffic
 		based on any of the following fields:
 		- Source MAC address and source MAC mask
 		- Destination MAC address and destination MAC mask
@@ -1076,11 +1076,11 @@ fdryL2AclTable	OBJECT-TYPE
 		- Ethernet type.
 		For a given ACL number, one can have 64 (default) to 256 clauses.
 		The clause index values will not change as a result of switchovers or hitless upgrades,
-		but may change as a result of a device reload (though the relative order of persistent 
+		but may change as a result of a device reload (though the relative order of persistent
 		entries would remain the same).
 		"
 	::= { snAgAcl 7 }
-	
+
 
 fdryL2AclEntry	OBJECT-TYPE
 	SYNTAX		FdryL2AclEntry
@@ -1141,13 +1141,13 @@ fdryL2AclClauseIndex	OBJECT-TYPE
 		"The index of the clause within a given ACL number.
 		During row creation, the clause index value should match
 		with the next available clause index for a given ACL number.
-		It is advisable to first do a Get operation on the 
+		It is advisable to first do a Get operation on the
 		fdryL2AclNextClauseTable for a given ACL number, and use
 		the value of fdryL2AclNextClauseIndex returned by the agent."
 	::= { fdryL2AclEntry 2 }
 
 fdryL2AclAction	OBJECT-TYPE
-	SYNTAX		Action 
+	SYNTAX		Action
 	MAX-ACCESS	read-create
 	STATUS		current
 	DESCRIPTION
@@ -1170,13 +1170,13 @@ fdryL2AclSourceMacMask	OBJECT-TYPE
 	STATUS		current
 	DESCRIPTION
 		"Optional Source MAC address mask.
-		For Set operation, this object can only be used in 
+		For Set operation, this object can only be used in
 		conjunction with fdryL2AclSourceMac.
 		By default,  it matches with any source MAC within a packet.
 		it matches with any source MAC within a packet.
-		To match on the first two bytes of the address 
+		To match on the first two bytes of the address
 		aabb.ccdd.eeff, use the mask ffff.0000.0000. In this case,
-		the clause matches all source MAC addresses that contain 
+		the clause matches all source MAC addresses that contain
 		'aabb' as the first two bytes and any values in the
 		remaining bytes of the MAC address."
 	DEFVAL  { '000000000000'H }
@@ -1187,7 +1187,7 @@ fdryL2AclDestinationMac	OBJECT-TYPE
 	MAX-ACCESS	read-create
 	STATUS		current
 	DESCRIPTION
-		"Optional destination MAC address. 
+		"Optional destination MAC address.
 		By default, it matches with any destination MAC within a packet."
 	DEFVAL  { '000000000000'H }
 	::= { fdryL2AclEntry 6 }
@@ -1198,12 +1198,12 @@ fdryL2AclDestinationMacMask	OBJECT-TYPE
 	STATUS		current
 	DESCRIPTION
 		"Optional destination MAC address mask.
-		For Set operation, this object can only be used in 
+		For Set operation, this object can only be used in
 		conjunction with fdryL2AclDestinationMac.
 		By default, it matches with any destination MAC within a packet.
-		To match on the first two bytes of the address 
+		To match on the first two bytes of the address
 		aabb.ccdd.eeff, use the mask ffff.0000.0000. In this case,
-		the clause matches all destination MAC addresses that contain 
+		the clause matches all destination MAC addresses that contain
 		'aabb' as the first two bytes and any values in the
 		remaining bytes of the MAC address."
 	DEFVAL  { '000000000000'H }
@@ -1236,13 +1236,13 @@ fdryL2AclDot1pPriority 	OBJECT-TYPE
 	MAX-ACCESS	read-create
 	STATUS		current
 	DESCRIPTION
-		"The priority option assigns traffic that matches the ACL to a 
-		hardware forwarding queue. In addition to changing the internal 
-		forwarding priority, if the outgoing interface is an 802.1q interface, 
+		"The priority option assigns traffic that matches the ACL to a
+		hardware forwarding queue. In addition to changing the internal
+		forwarding priority, if the outgoing interface is an 802.1q interface,
 		this option maps the specified priority to its equivalent 802.1p (QoS)
-		priority and marks the packet with the new 802.1p priority. 
-		This option is applicable for inbound ACLs only. 
-		   This object is not supported in RX, where it always returns 
+		priority and marks the packet with the new 802.1p priority.
+		This option is applicable for inbound ACLs only.
+		   This object is not supported in RX, where it always returns
 		enum value invalid.
 		NOTE: fdryL2AclDot1pPriority following fdryL2AclDot1pPriorityForce
 		cannot be used together in an ACL entry."
@@ -1254,11 +1254,11 @@ fdryL2AclDot1pPriorityForce 	OBJECT-TYPE
 	MAX-ACCESS	read-create
 	STATUS		current
 	DESCRIPTION
-		"The priority-force option assigns packets of outgoing traffic 
-		that match the ACL to a specific hardware forwarding queue, 
-		even though the incoming packet may be assigned to another queue. 
+		"The priority-force option assigns packets of outgoing traffic
+		that match the ACL to a specific hardware forwarding queue,
+		even though the incoming packet may be assigned to another queue.
 		This option is applicable for inbound ACLs only.
-		   This object is not supported in RX, where it always returns 
+		   This object is not supported in RX, where it always returns
 		enum value invalid.
 		NOTE: fdryL2AclDot1pPriority following fdryL2AclDot1pPriorityForce
 		cannot be used together in an ACL entry."
@@ -1274,10 +1274,10 @@ fdryL2AclDot1pPriorityMapping 	OBJECT-TYPE
 		This option does not change the packets forwarding priority through
 		the device or mark the packet. This keyword is applicable for both
 		inbound and outbound ACLs.
-		   This object is not supported in RX, where it always returns 		
-		enum value invalid."		
+		   This object is not supported in RX, where it always returns
+		enum value invalid."
 	DEFVAL  { level0 }
-	::= { fdryL2AclEntry 12 }	
+	::= { fdryL2AclEntry 12 }
 
 fdryL2AclMirrorPackets OBJECT-TYPE
 	SYNTAX		TruthValue
@@ -1294,7 +1294,7 @@ fdryL2AclLogEnable	OBJECT-TYPE
 	STATUS		current
 	DESCRIPTION
 		"Optional parameter to enable logging only when deny clause
-		is specified. Note that traffic denied by implicit deny mechanism is not 
+		is specified. Note that traffic denied by implicit deny mechanism is not
 		subject to logging. The implicit deny kicks in when the traffic
 		does not match any of the clauses and there is no 'permit any any'
 		clause specified at the end."
@@ -1313,7 +1313,7 @@ fdryL2AclRowStatus	OBJECT-TYPE
 		be rejected during row creation. As part of row creation, we
 		support only appending to this table. Row insertion may not
 		be supported.
-		  Setting this object to destroy(6) removes the associated filter 
+		  Setting this object to destroy(6) removes the associated filter
 		from the router. Other values in the enumeration are not used.
 		"
 	::= { fdryL2AclEntry 15 }
@@ -1327,7 +1327,7 @@ fdryL2AclIfBindTable   OBJECT-TYPE
 	MAX-ACCESS  not-accessible
 	STATUS		current
 	DESCRIPTION
-		"Table of L2 ACL binding to port. 
+		"Table of L2 ACL binding to port.
 		- One cannot bind Layer 2 ACLs and Layer 3 ACLs to the same port.
 		However, one can configure a port to use Layer 2 ACLs, and
 		another port on the same device to use Layer 3 ACLs.
@@ -1386,6 +1386,6 @@ fdryL2AclIfBindRowStatus      OBJECT-TYPE
 		Setting this object to destroy(6) unbinds this L2 ACL from the port.
 		Other values in the enumeration are not used."
 	::= { fdryL2AclIfBindEntry 3 }
-	
-	
+
+
 END

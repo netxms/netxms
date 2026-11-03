@@ -118,7 +118,7 @@ dlbAthBeaconMissInterrupts OBJECT-TYPE
     DESCRIPTION
         "Beacon miss interrupts."
     ::= { dlbAthStatsEntry 3 }
- 
+
 dlbAthRecvOverrunInterrupts OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -150,7 +150,7 @@ dlbAthTxManagementFrames OBJECT-TYPE
     DESCRIPTION
         "Transmitted management frames."
     ::= { dlbAthStatsEntry 7 }
- 
+
 dlbAthTxFramesDiscQueueDepth OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -182,7 +182,7 @@ dlbAthTxEncapsulationFailed OBJECT-TYPE
     DESCRIPTION
         "Transmit encapsulation failed."
     ::= { dlbAthStatsEntry 11 }
- 
+
 dlbAthTxFailedNoNode OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -230,7 +230,7 @@ dlbAthTxFailedXmitFiltered OBJECT-TYPE
     DESCRIPTION
         "Transmissions failed due to filtered packets."
     ::= { dlbAthStatsEntry 17 }
- 
+
 dlbAthShortOnchipTxRetries OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -246,7 +246,7 @@ dlbAthLongOnchipTxRetries OBJECT-TYPE
     DESCRIPTION
         "Long on-chip transmission retries."
     ::= { dlbAthStatsEntry 19 }
- 
+
 dlbAthTxFailedBogusXmitRate OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -254,7 +254,7 @@ dlbAthTxFailedBogusXmitRate OBJECT-TYPE
     DESCRIPTION
         "Transmissions failed due to bogus transmission rate."
     ::= { dlbAthStatsEntry 20 }
- 
+
 dlbAthTxFramesNoAckMarked OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -270,7 +270,7 @@ dlbAthTxFramesRtsEnabled OBJECT-TYPE
     DESCRIPTION
         "Transmitted frames with RTS enabled."
     ::= { dlbAthStatsEntry 22 }
- 
+
 dlbAthTxFramesCtsEnabled OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -310,7 +310,7 @@ dlbAthRxFailedDescOverrun OBJECT-TYPE
     DESCRIPTION
         "Receptions failed due to desc overrun."
     ::= { dlbAthStatsEntry 27 }
- 
+
 dlbAthRxFailedBadCrc OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -358,7 +358,7 @@ dlbAthRxSetupFailedNoSkbuff OBJECT-TYPE
     DESCRIPTION
         "Reception setup failed due to no space in skbuff buffer."
     ::= { dlbAthStatsEntry 33 }
- 
+
 dlbAthRxManagementFrames OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -366,7 +366,7 @@ dlbAthRxManagementFrames OBJECT-TYPE
     DESCRIPTION
         "Received management frames."
     ::= { dlbAthStatsEntry 34 }
- 
+
 dlbAthRxControlFrames OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -374,7 +374,7 @@ dlbAthRxControlFrames OBJECT-TYPE
     DESCRIPTION
         "Received control frames."
     ::= { dlbAthStatsEntry 35 }
- 
+
 dlbAthNoSkbuffForBeacon OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -422,7 +422,7 @@ dlbAthRateControlChecks OBJECT-TYPE
     DESCRIPTION
         "Rate control checks."
     ::= { dlbAthStatsEntry 41 }
- 
+
 dlbAthRateCtrlRaisedXmitRate OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -438,7 +438,7 @@ dlbAthRateCtrlDroppedXmitRate OBJECT-TYPE
     DESCRIPTION
         "Rate control dropped transmission rate."
     ::= { dlbAthStatsEntry 43 }
- 
+
 dlbAthRssiOfLastAck OBJECT-TYPE
     SYNTAX      Gauge32
     MAX-ACCESS  read-only
@@ -692,7 +692,7 @@ dlbAthSwitchedDefaultRxAntenna OBJECT-TYPE
     DESCRIPTION
         "Number of times default/RX antenna was switched."
     ::= { dlbAthAntennaStatsEntry 1 }
- 
+
 dlbAthTxUsedAlternateAntenna OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
@@ -849,7 +849,7 @@ DlbAthDot11StatsEntry ::=
         dlbAthDot11SnoopMcastPass        Counter32,
         dlbAthDot11SnoopMcastDrop        Counter32
     }
-    
+
 dlbAthDot11RxBadVersion OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only

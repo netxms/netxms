@@ -22,7 +22,7 @@ IMPORTS
         FROM SNMPv2-CONF
     sysName
         FROM SNMPv2-MIB
-    Integer32, MODULE-IDENTITY, NOTIFICATION-TYPE, OBJECT-TYPE, 
+    Integer32, MODULE-IDENTITY, NOTIFICATION-TYPE, OBJECT-TYPE,
     enterprises
         FROM SNMPv2-SMI
     DisplayString, TEXTUAL-CONVENTION
@@ -30,9 +30,9 @@ IMPORTS
 
 fortinet MODULE-IDENTITY
     LAST-UPDATED "201501140000Z"
-    ORGANIZATION 
+    ORGANIZATION
         "Fortinet Technologies, Inc."
-    CONTACT-INFO 
+    CONTACT-INFO
         "Technical Support
          email: support@fortinet.com
          http://www.fortinet.com
@@ -67,22 +67,22 @@ fortinet MODULE-IDENTITY
     DESCRIPTION
         "Registered FortiScanMib OID"
     REVISION    "200905200000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "MIB module for Fortinet network devices."
     REVISION    "200811190000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Registered FortiWebMib OID"
     REVISION    "200810210000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Added SMI comments"
     REVISION    "200806250000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Adjusted fnAdmin tree to start at .1"
     REVISION    "200806160000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Spelling corrections."
     REVISION    "200804170000Z"
-    DESCRIPTION 
+    DESCRIPTION
         "Initial version of fortinet core MIB."
     ::= { enterprises 12356 }  -- assigned by IANA
 
@@ -93,7 +93,7 @@ fortinet MODULE-IDENTITY
 
 FnBoolState ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Boolean data type representing enabled/disabled"
     SYNTAX      INTEGER {
         disabled (1),
@@ -102,7 +102,7 @@ FnBoolState ::= TEXTUAL-CONVENTION
 
 FnLanguage ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Enumerated type for user interface languages"
     SYNTAX      INTEGER {
         english (1),
@@ -119,13 +119,13 @@ FnLanguage ::= TEXTUAL-CONVENTION
 FnIndex ::= TEXTUAL-CONVENTION
     DISPLAY-HINT "d"
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Data type for table index values"
     SYNTAX      Integer32 (0..2147483647)
 
 FnSessionProto ::= TEXTUAL-CONVENTION
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Data type for session protocols"
     SYNTAX      INTEGER {
         ip (0),
@@ -191,7 +191,7 @@ fnSysSerial OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Device serial number. This is the same serial number as given
         in the ENTITY-MIB tables for the base entity."
     ::= { fnSystem 1 }
@@ -205,7 +205,7 @@ fnMgmtLanguage OBJECT-TYPE
     SYNTAX      FnLanguage
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Language used for administration interfaces"
     ::= { fnMgmt 1 }
 
@@ -215,7 +215,7 @@ fnAdminNumber OBJECT-TYPE
     SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The number of admin accounts in fnAdminTable"
     ::= { fnAdmin 1 }
 
@@ -223,7 +223,7 @@ fnAdminTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF FnAdminEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A table of administrator accounts on the device. This table is
         intended to be extended with platform specific information."
     ::= { fnAdmin 2 }
@@ -232,7 +232,7 @@ fnAdminEntry OBJECT-TYPE
     SYNTAX      FnAdminEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An entry containing information applicable to a particular admin account"
     INDEX       { fnAdminIndex }
     ::= { fnAdminTable 1 }
@@ -249,7 +249,7 @@ fnAdminIndex OBJECT-TYPE
     SYNTAX      Integer32 (1..2147483647)
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An index uniquely defining an administrator account within the fnAdminTable"
     ::= { fnAdminEntry 1 }
 
@@ -257,7 +257,7 @@ fnAdminName OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The user-name of the specified administrator account"
     ::= { fnAdminEntry 2 }
 
@@ -265,7 +265,7 @@ fnAdminAddrType OBJECT-TYPE
     SYNTAX      InetAddressType
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The type of address stored in fnAdminAddr, in compliance with INET-ADDRESS-MIB"
     ::= { fnAdminEntry 3 }
 
@@ -273,7 +273,7 @@ fnAdminAddr OBJECT-TYPE
     SYNTAX      InetAddress
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The address prefix identifying where the administrator account can
         be used from, typically an IPv4 address. The address type/format is
         determined by fnAdminAddrType."
@@ -283,7 +283,7 @@ fnAdminMask OBJECT-TYPE
     SYNTAX      InetAddressPrefixLength
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The address prefix length (or network mask) applied to the fgAdminAddr
         to determine the subnet or host the administrator can access the device from"
     ::= { fnAdminEntry 5 }
@@ -301,7 +301,7 @@ fnGenTrapMsg OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  accessible-for-notify
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Generic message associated with an event. The content will
         depend on the nature of the trap."
     ::= { fnTrapObjects 1 }
@@ -309,21 +309,21 @@ fnGenTrapMsg OBJECT-TYPE
 fnTrapCpuThreshold NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates that the CPU usage has exceeded the configured threshold."
     ::= { fnTrapsPrefix 101 }
 
 fnTrapMemThreshold NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates memory usage has exceeded the configured threshold."
     ::= { fnTrapsPrefix 102 }
 
 fnTrapLogDiskThreshold NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Log disk usage has exceeded the configured threshold. Only available
         on devices with log disks."
     ::= { fnTrapsPrefix 103 }
@@ -331,7 +331,7 @@ fnTrapLogDiskThreshold NOTIFICATION-TYPE
 fnTrapTempHigh NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A temperature sensor on the device has exceeded its threshold.
         Not all devices have thermal sensors. See manual for specifications."
     ::= { fnTrapsPrefix 104 }
@@ -339,7 +339,7 @@ fnTrapTempHigh NOTIFICATION-TYPE
 fnTrapVoltageOutOfRange NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Power levels have fluctuated outside of normal levels. Not all devices
         have voltage monitoring instrumentation. See manual for specifications."
     ::= { fnTrapsPrefix 105 }
@@ -347,7 +347,7 @@ fnTrapVoltageOutOfRange NOTIFICATION-TYPE
 fnTrapPowerSupplyFailure NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Power supply failure detected. Not available on all models. Available
         on some devices which support redundant power supplies. See manual
         for specifications."
@@ -356,7 +356,7 @@ fnTrapPowerSupplyFailure NOTIFICATION-TYPE
 fnTrapAmcIfBypassMode NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "An AMC interface entered bypass mode. Available on models with an AMC
         expansion slot. Used with the ASM-CX4 and ASM-FX2 cards."
     ::= { fnTrapsPrefix 107 }
@@ -364,7 +364,7 @@ fnTrapAmcIfBypassMode NOTIFICATION-TYPE
 fnTrapFanFailure NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "A fan failure has been detected. Not all devices have fan sensors.
         See manual for specifications."
     ::= { fnTrapsPrefix 108 }
@@ -372,14 +372,14 @@ fnTrapFanFailure NOTIFICATION-TYPE
 fnTrapIpChange NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName, ifIndex }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Indicates that the IP address of the specified interface has been changed."
     ::= { fnTrapsPrefix 201 }
 
 fnTrapTest NOTIFICATION-TYPE
     OBJECTS     { fnSysSerial, sysName }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Trap sent for diagnostic purposes by an administrator."
     ::= { fnTrapsPrefix 999 }
 
@@ -391,72 +391,72 @@ fnMIBConformance OBJECT IDENTIFIER ::= { fnCoreMib 10 }
 fnSystemComplianceGroup OBJECT-GROUP
     OBJECTS     { fnSysSerial }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects relating to the physical device."
     ::= { fnMIBConformance 1 }
 
 fnMgmtComplianceGroup OBJECT-GROUP
     OBJECTS     { fnMgmtLanguage }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Objects relating the management of a device."
     ::= { fnMIBConformance 2 }
 
 fnAdminComplianceGroup OBJECT-GROUP
-    OBJECTS     { fnAdminNumber, fnAdminName, fnAdminAddrType, 
+    OBJECTS     { fnAdminNumber, fnAdminName, fnAdminAddrType,
                   fnAdminAddr, fnAdminMask }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Administration access control objects."
     ::= { fnMIBConformance 3 }
 
 fnTrapsComplianceGroup NOTIFICATION-GROUP
-    NOTIFICATIONS { fnTrapCpuThreshold, fnTrapMemThreshold, 
-                  fnTrapLogDiskThreshold, fnTrapTempHigh, 
-                  fnTrapVoltageOutOfRange, fnTrapPowerSupplyFailure, 
+    NOTIFICATIONS { fnTrapCpuThreshold, fnTrapMemThreshold,
+                  fnTrapLogDiskThreshold, fnTrapTempHigh,
+                  fnTrapVoltageOutOfRange, fnTrapPowerSupplyFailure,
                   fnTrapAmcIfBypassMode, fnTrapFanFailure,
                   fnTrapIpChange, fnTrapTest }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Event notifications"
     ::= { fnMIBConformance 4 }
 
 fnNotifObjectsComplianceGroup OBJECT-GROUP
     OBJECTS     { fnGenTrapMsg }
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "Object identifiers used in notifications"
     ::= { fnMIBConformance 5 }
 
 fnMIBCompliance MODULE-COMPLIANCE
     STATUS      current
-    DESCRIPTION 
+    DESCRIPTION
         "The compliance statement for the application MIB."
 
     MODULE      -- this module
 
         GROUP   fnSystemComplianceGroup
-        DESCRIPTION   
+        DESCRIPTION
               "This group is mandatory for all Fortinet network appliances
               supporting this MIB."
 
         GROUP   fnMgmtComplianceGroup
-        DESCRIPTION   
+        DESCRIPTION
               "This group is optional for devices that do not support common
               management interface options such as multiple languages."
 
         GROUP   fnAdminComplianceGroup
-        DESCRIPTION   
+        DESCRIPTION
               "This group should be accessible on any device supporting
               administrator authentication."
 
         GROUP   fnTrapsComplianceGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Traps are optional. Not all models support all traps. Consult
               product literature to see which traps are supported."
 
         GROUP   fnNotifObjectsComplianceGroup
-        DESCRIPTION   
+        DESCRIPTION
               "Object identifiers used in notifications. Objects are required
               if their containing trap is implemented."
 

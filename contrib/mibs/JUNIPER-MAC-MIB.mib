@@ -1,6 +1,6 @@
 --
 -- Juniper Enterprise Specific MIB: Ethernet MAC MIB
--- 
+--
 -- Copyright (c) 2002-2003, Juniper Networks, Inc.
 -- All rights reserved.
 --
@@ -17,7 +17,7 @@ IMPORTS
         FROM SNMPv2-TC
     ifIndex
         FROM IF-MIB
-    jnxMibs 
+    jnxMibs
         FROM JUNIPER-SMI;
 
 jnxMac MODULE-IDENTITY
@@ -44,7 +44,7 @@ jnxMac MODULE-IDENTITY
 JnxVlanIndex ::= TEXTUAL-CONVENTION
     STATUS      current
     DESCRIPTION
-        "A value used to index per-VLAN tables. A values of 0 
+        "A value used to index per-VLAN tables. A values of 0
         is not permitted. The value of 4095 is reserved
         for untagged interfaces; if the value is between 1 and
         4094 inclusive, it represents an IEEE 802.1Q VLAN-ID with
@@ -65,7 +65,7 @@ JnxVlanIndex ::= TEXTUAL-CONVENTION
 -- Mac Statistics table contains statistics information on the entity's
 -- GE PIC.
 -- The stats (inoctets, inframes, outoctets, outpframes)
--- are the stats value for each src mac address and vlan id 
+-- are the stats value for each src mac address and vlan id
 -- by mac learning process on ethernet ports.
 
 -- The order of index is "ifIndex, jnxVlanIndex, jnxSourceMacAddress"

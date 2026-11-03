@@ -8,16 +8,16 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       OBJECT-GROUP, MODULE-COMPLIANCE
          FROM SNMPv2-CONF
       hpicfCommon
-         FROM HP-ICF-OID 
+         FROM HP-ICF-OID
       InetAddressType, InetAddress
          FROM INET-ADDRESS-MIB
        TruthValue
              FROM SNMPv2-TC;
- 
+
 
    hpSntpConfigMod MODULE-IDENTITY
-      
-      LAST-UPDATED "200902131230Z"  -- February 13, 2009 
+
+      LAST-UPDATED "200902131230Z"  -- February 13, 2009
       ORGANIZATION "Hewlett-Packard Company
                     Network Infrastructure Solutions"
       CONTACT-INFO "Hewlett-Packard Company
@@ -30,23 +30,23 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       DESCRIPTION  "Increased the range of 'hpSntpInetServerAuthKeyId' and
                     'hpSntpAuthenticationKeyId' MIB objects."
 
-      REVISION     "200811260239Z"  -- November 26 2008  
-      DESCRIPTION  "Added Objects for supporting Authentication in 
+      REVISION     "200811260239Z"  -- November 26 2008
+      DESCRIPTION  "Added Objects for supporting Authentication in
                     unicast and broadcast mode."
 
       REVISION     "200011030239Z"  -- November 3, 2000
       DESCRIPTION  "Initial version of thie MIB module."
-      
+
       ::= { hpicfCommon 8 }
 
    hpSntpConfig   OBJECT IDENTIFIER      ::= { hpSntpConfigMod 1 }
    hpTimeSyncMethodMod OBJECT IDENTIFIER ::= { hpSntpConfigMod 2 }
    hpSntpStatistics   OBJECT IDENTIFIER  ::= { hpSntpConfigMod 4 }
 
--- ----------------------------------------------------------------------   
+-- ----------------------------------------------------------------------
 -- Global TimeSyncMethod
 -- ----------------------------------------------------------------------
-  
+
    hpTimeSyncMethod OBJECT-TYPE
       SYNTAX      INTEGER {
                       none(1),
@@ -58,9 +58,9 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       DESCRIPTION "Method to be used for time synchronization."
       ::= { hpTimeSyncMethodMod 1 }
 
--- ----------------------------------------------------------------------  
--- SNTP Statistics data 
--- ----------------------------------------------------------------------   
+-- ----------------------------------------------------------------------
+-- SNTP Statistics data
+-- ----------------------------------------------------------------------
 
    hpSntpStatsRcvdPkts OBJECT-TYPE
      SYNTAX       Counter32
@@ -84,10 +84,10 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
      ::= { hpSntpStatistics 3}
 
 
--- ----------------------------------------------------------------------   
+-- ----------------------------------------------------------------------
 -- SNTP client configuration parameters
 -- ----------------------------------------------------------------------
-      
+
    hpSntpConfigMode OBJECT-TYPE
       SYNTAX      INTEGER {
                       disabled(1),
@@ -103,7 +103,7 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       SYNTAX      Integer32 (30..65535)
       MAX-ACCESS  read-write
       STATUS      current
-      DESCRIPTION "Period of time (in seconds) between succesive attempts to 
+      DESCRIPTION "Period of time (in seconds) between succesive attempts to
                   perform an update via SNTP"
       ::= { hpSntpConfig 2 }
 
@@ -115,7 +115,7 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       SYNTAX      SEQUENCE OF HpSntpServerEntry
       MAX-ACCESS  not-accessible
       STATUS      deprecated
-      DESCRIPTION "### DEPRECATED ### A table containing trusted SNTP servers 
+      DESCRIPTION "### DEPRECATED ### A table containing trusted SNTP servers
                   to be queried in unicast mode"
       ::= { hpSntpConfig 3 }
 
@@ -123,7 +123,7 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       SYNTAX      HpSntpServerEntry
       MAX-ACCESS  not-accessible
       STATUS      deprecated
-      DESCRIPTION "### DEPRECATED ### A trusted server and its expected version 
+      DESCRIPTION "### DEPRECATED ### A trusted server and its expected version
                   number"
       INDEX       { hpSntpServerAddress }
       ::= { hpSntpConfigServerTable 1 }
@@ -136,7 +136,7 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
          hpSntpServerRowStatus      RowStatus
 
       }
-      
+
    hpSntpServerAddress OBJECT-TYPE
       SYNTAX      IpAddress
       MAX-ACCESS  not-accessible
@@ -169,7 +169,7 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       SYNTAX      SEQUENCE OF HpSntpInetServerEntry
       MAX-ACCESS  not-accessible
       STATUS      current
-      DESCRIPTION "A table containing trusted IPv4 and IPv6 SNTP servers to be 
+      DESCRIPTION "A table containing trusted IPv4 and IPv6 SNTP servers to be
                    queried in unicast mode"
       ::= { hpSntpConfig 4 }
 
@@ -188,14 +188,14 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       SEQUENCE {
          hpSntpInetServerPriority       Integer32,
          hpSntpInetServerAddressType    InetAddressType,
-         hpSntpInetServerAddress        InetAddress,         
+         hpSntpInetServerAddress        InetAddress,
          hpSntpInetServerVersion        Integer32,
          hpSntpInetServerRowStatus      RowStatus,
          hpSntpInetServerAuthKeyId      Unsigned32,
          hpSntpInetServerRowStatus      RowStatus,
 	 hpSntpInetServerIsOobm         TruthValue
       }
-      
+
    hpSntpInetServerPriority OBJECT-TYPE
       SYNTAX      Integer32 (1..65535)
       MAX-ACCESS  not-accessible
@@ -215,8 +215,8 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       MAX-ACCESS  not-accessible
       STATUS      current
       DESCRIPTION "Ip Address (of a trusted SNTP server) to which this entry's
-                   addressing information pertains. hpSntpInetServerAddress is 
-                   always interpreted within the context of     
+                   addressing information pertains. hpSntpInetServerAddress is
+                   always interpreted within the context of
                    hpSntpInetServerAddressType"
       ::= { hpSntpInetServerEntry 3 }
 
@@ -251,12 +251,12 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       STATUS      current
       DESCRIPTION "The key identifier associated with the
                    SNTP server specified by this instance.Its an index
-                   to the  hpSntpAuthenticationKeyTable.The value identifies 
-                   the row in the hpSntpAuthenticationKeyTable where the 
+                   to the  hpSntpAuthenticationKeyTable.The value identifies
+                   the row in the hpSntpAuthenticationKeyTable where the
                    authentication key can be found. The value '0' indicates
-                   that the key Id is disassociated from the SNTP server."                  
+                   that the key Id is disassociated from the SNTP server."
       ::= { hpSntpInetServerEntry 7 }
-    
+
 -- --------------------------------------------------------------------------
 -- SNTP client authentication parameters
 -- --------------------------------------------------------------------------
@@ -275,10 +275,10 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       ::= { hpSntpConfig 5 }
 
 -- -------------------------------------------------------------------------
--- SNTP server Authentication table 
+-- SNTP server Authentication table
 -- --------------------------------------------------------------------------
    hpSntpAuthenticationKeyTable OBJECT-TYPE
-     SYNTAX SEQUENCE OF HpSntpAuthenticationKeyEntry	
+     SYNTAX SEQUENCE OF HpSntpAuthenticationKeyEntry
      MAX-ACCESS   not-accessible
      STATUS       current
      DESCRIPTION "A table containing entries of authentication key-id.
@@ -289,13 +289,13 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
     SYNTAX      HpSntpAuthenticationKeyEntry
     MAX-ACCESS  not-accessible
     STATUS      current
-    DESCRIPTION "An authentication key entry comprising key-identifiers 
-                 as key-id, key-value, authentication mode(MD5), and 
+    DESCRIPTION "An authentication key entry comprising key-identifiers
+                 as key-id, key-value, authentication mode(MD5), and
                  status of the key-id if it is trusted or not."
     INDEX        {  hpSntpAuthenticationKeyId }
     ::= { hpSntpAuthenticationKeyTable 1 }
 
-   HpSntpAuthenticationKeyEntry ::= 
+   HpSntpAuthenticationKeyEntry ::=
      SEQUENCE {
         hpSntpAuthenticationKeyId        Unsigned32,
         hpSntpAuthenticationKeyAuthMode  INTEGER,
@@ -305,8 +305,8 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
        }
 
    hpSntpAuthenticationKeyId OBJECT-TYPE
-     SYNTAX       Unsigned32(1..4294967295) 
-     MAX-ACCESS   not-accessible 
+     SYNTAX       Unsigned32(1..4294967295)
+     MAX-ACCESS   not-accessible
      STATUS       current
      DESCRIPTION  "A unique identifier for the authentication key."
      ::= { hpSntpAuthenticationKeyEntry 1 }
@@ -324,12 +324,12 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
      ::= { hpSntpAuthenticationKeyEntry 2 }
 
    hpSntpAuthenticationKeyValue OBJECT-TYPE
-     SYNTAX       OCTET STRING (SIZE(1..32))	
+     SYNTAX       OCTET STRING (SIZE(1..32))
      MAX-ACCESS   read-create
      STATUS       current
 
-     DESCRIPTION "A unique string that serves as the key-value for generating 
-                   the message digest sent in the SNTP packet. A read on 
+     DESCRIPTION "A unique string that serves as the key-value for generating
+                   the message digest sent in the SNTP packet. A read on
                    this object will return a Empty string."
      ::= { hpSntpAuthenticationKeyEntry 3 }
 
@@ -337,7 +337,7 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
      SYNTAX      TruthValue
      MAX-ACCESS  read-create
      STATUS      current
-     DESCRIPTION "This object is used to configure the status of the 
+     DESCRIPTION "This object is used to configure the status of the
                   authentication key as trusted.If the key-id/keyvalue is
                   not trusted then the packet is not trusted.By default
                   the key-id/keyvalue is not trusted. "
@@ -348,12 +348,12 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
      MAX-ACCESS   read-create
      STATUS       current
      DESCRIPTION "The row status for this SNTP authentication
-                  key instance.The Key-id is the index and 
+                  key instance.The Key-id is the index and
                   it cannot to edited."
 ::= { hpSntpAuthenticationKeyEntry 5 }
 
 -- --------------------------------------------------------------------------
--- SNTP UNICAST statistics table 
+-- SNTP UNICAST statistics table
 -- --------------------------------------------------------------------------
    hpSntpServerStatisticsTable OBJECT-TYPE
      SYNTAX        SEQUENCE OF HpSntpServerStatisticsEntry
@@ -364,10 +364,10 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
      ::= { hpSntpConfig 7 }
 
    hpSntpServerStatisticsEntry OBJECT-TYPE
-     SYNTAX       HpSntpServerStatisticsEntry	
+     SYNTAX       HpSntpServerStatisticsEntry
      MAX-ACCESS   not-accessible
      STATUS       current
-     DESCRIPTION "A statistics entry per SNTP server." 
+     DESCRIPTION "A statistics entry per SNTP server."
      AUGMENTS {hpSntpInetServerEntry}
 ::= { hpSntpServerStatisticsTable 1 }
 
@@ -376,19 +376,19 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
     SEQUENCE {
               hpSntpServerStatisticsAuthFailedPkts Counter32
              }
-  
+
    hpSntpServerStatisticsAuthFailedPkts OBJECT-TYPE
     SYNTAX      Counter32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION "This object indicates the number of packets
-                 that have failed the authentication check with 
+                 that have failed the authentication check with
                  this server instance."
     ::= { hpSntpServerStatisticsEntry 1 }
 
 
 -- --------------------------------------------------------------------------
--- SNTP BROADCAST parameters 
+-- SNTP BROADCAST parameters
 -- --------------------------------------------------------------------------
   hpSntpBroadcastServerTable OBJECT-TYPE
     SYNTAX SEQUENCE OF HpSntpBroadcastServerEntry
@@ -405,20 +405,20 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
    DESCRIPTION  "An entry comprising a preferred broadcast server address
                 and statistics information with respect to server."
    INDEX     {
-                    hpSntpBroadcastServerAddress     
+                    hpSntpBroadcastServerAddress
              }
    ::= { hpSntpBroadcastServerTable 1 }
 
-   HpSntpBroadcastServerEntry ::= 
+   HpSntpBroadcastServerEntry ::=
      SEQUENCE {
                 hpSntpBroadcastServerAddress  IpAddress,
-                hpSntpBroadcastServerStatisticsAuthFailedPkts Counter32 
+                hpSntpBroadcastServerStatisticsAuthFailedPkts Counter32
               }
 
   hpSntpBroadcastServerAddress OBJECT-TYPE
       SYNTAX      IpAddress
-      MAX-ACCESS  not-accessible 
-      STATUS      current 
+      MAX-ACCESS  not-accessible
+      STATUS      current
       DESCRIPTION "Ip Address of a preferred broadcast SNTP server."
       ::= { hpSntpBroadcastServerEntry 1 }
 
@@ -433,7 +433,7 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
 -- --------------------------------------------------------------------------
 -- Compliance Information
 -- --------------------------------------------------------------------------
-   
+
    hpSntpConfigConformance
       OBJECT IDENTIFIER ::= { hpSntpConfigMod 3 }
 
@@ -475,7 +475,7 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
          DESCRIPTION       "Implementation of this group is mandatory for
                            devices that implement multiple time
                            synchronization protocols."
-      ::= { hpSntpConfigCompliances 2 } 
+      ::= { hpSntpConfigCompliances 2 }
 
    hpSntpInetConfigComplianceOobm MODULE-COMPLIANCE
       STATUS         current
@@ -488,15 +488,15 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
                            SNTP with OOBM."
       ::= { hpSntpConfigCompliances 3 }
 
-  
+
    hpSntpAuthenticationConfigCompliance MODULE-COMPLIANCE
        STATUS         current
        DESCRIPTION    "The compliance statement for devices implementing
                        the hpSntpConfig MIB."
-      
+
        MODULE
           MANDATORY-GROUPS  {  hpSntpInetServerConfigGroup }
- 
+
        GROUP           hpSntpAuthenticationKeyIdConfigGroup
           DESCRIPTION   "This group is required if a device implemnets
                            the SNTP client in broadcast mode only."
@@ -542,13 +542,13 @@ HP-SNTPclientConfiguration-MIB DEFINITIONS ::= BEGIN
       STATUS      current
       DESCRIPTION " This group defines SNTP authentication related information.
                     It includes  Key-Identifier, Key-Value, flag to indicate
-                    whether the information is trusted or not and authentication 
+                    whether the information is trusted or not and authentication
                     mode(MD5) currently supported."
       ::= { hpSntpConfigGroups 5 }
 
 
    hpSntpInetServerOobmGroup OBJECT-GROUP
-      OBJECTS     { hpSntpInetServerIsOobm, 
+      OBJECTS     { hpSntpInetServerIsOobm,
                     hpSntpInetServerAddress }
       STATUS      current
       DESCRIPTION "A collection of objects for configuring the

@@ -58,15 +58,15 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 	iomegaNASNotifications	OBJECT IDENTIFIER
 		::=  {  iomegaNAS  8  }
 
-	deviceDescr	OBJECT-TYPE	
-		SYNTAX			DisplayString  ( SIZE ( 0 .. 255  ) ) 
+	deviceDescr	OBJECT-TYPE
+		SYNTAX			DisplayString  ( SIZE ( 0 .. 255  ) )
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"Description of this device."
 		DEFVAL			{ "Iomega NAS BOX" }
 		::=  {  iomegaNASInfo  1  }
 
-	deviceName	OBJECT-TYPE	
+	deviceName	OBJECT-TYPE
 		SYNTAX			DisplayString
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -108,7 +108,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		}
 
 
-	ioIndex	OBJECT-TYPE	
+	ioIndex	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		not-accessible
 		STATUS			current
@@ -116,7 +116,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  1  }
 
 
-	diskName	OBJECT-TYPE	
+	diskName	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -124,7 +124,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  2  }
 
 
-	ioMgrs	OBJECT-TYPE	
+	ioMgrs	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -132,7 +132,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  3  }
 
 
-	ioMgws	OBJECT-TYPE	
+	ioMgws	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -140,7 +140,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  4  }
 
 
-	ioReqrs	OBJECT-TYPE	
+	ioReqrs	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -148,7 +148,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  5  }
 
 
-	ioReqws	OBJECT-TYPE	
+	ioReqws	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -156,7 +156,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  6  }
 
 
-	ioKbrs	OBJECT-TYPE	
+	ioKbrs	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -164,7 +164,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  7  }
 
 
-	ioKbws	OBJECT-TYPE	
+	ioKbws	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -172,7 +172,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  8  }
 
 
-	ioAvgQueue	OBJECT-TYPE	
+	ioAvgQueue	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -180,7 +180,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  9  }
 
 
-	ioAvgWait	OBJECT-TYPE	
+	ioAvgWait	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -188,7 +188,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  10  }
 
 
-	ioAvgSvc	OBJECT-TYPE	
+	ioAvgSvc	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -196,7 +196,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  11  }
 
 
-	ioAvgUtil	OBJECT-TYPE	
+	ioAvgUtil	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -204,7 +204,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  ioEntry  12  }
 
 
-	ioCpuTime	OBJECT-TYPE	
+	ioCpuTime	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -234,7 +234,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		}
 
 
-	bkupIndex	OBJECT-TYPE	
+	bkupIndex	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		not-accessible
 		STATUS			current
@@ -242,7 +242,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  bkupEntry  1  }
 
 
-	bkupClient	OBJECT-TYPE	
+	bkupClient	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -250,7 +250,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  bkupEntry  2  }
 
 
-	bkupltStatus	OBJECT-TYPE	
+	bkupltStatus	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -258,7 +258,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  bkupEntry  3  }
 
 
-	bkupTotalSpace	OBJECT-TYPE	
+	bkupTotalSpace	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -290,15 +290,15 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		}
 
 
-	conIndex	OBJECT-TYPE	
-		SYNTAX			Integer32  ( -2147483648 .. 2147483647  ) 
+	conIndex	OBJECT-TYPE
+		SYNTAX			Integer32  ( -2147483648 .. 2147483647  )
 		MAX-ACCESS		not-accessible
 		STATUS			current
 		DESCRIPTION		"Index for entry"
 		::=  {  conEntry  1  }
 
 
-	conCount	OBJECT-TYPE	
+	conCount	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -307,7 +307,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  conEntry  2  }
 
 
-	conProtocol	OBJECT-TYPE	
+	conProtocol	OBJECT-TYPE
 		SYNTAX			DisplayString
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -317,7 +317,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 	mediaService	OBJECT IDENTIFIER
 		::=  {  iomegaNASFunctionStatus  4  }
 
-	raidStatus	OBJECT-TYPE	
+	raidStatus	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -329,8 +329,8 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 	FAULTED"
 		::=  {  iomegaNASStorage  1  }
 
-	raidLevel	OBJECT-TYPE	
-		SYNTAX			Integer32  ( -2147483648 .. 2147483647  ) 
+	raidLevel	OBJECT-TYPE
+		SYNTAX			Integer32  ( -2147483648 .. 2147483647  )
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"Raid level(5/10)"
@@ -359,15 +359,15 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		}
 
 
-	diskIndex	OBJECT-TYPE	
-		SYNTAX			Integer32  ( -2147483648 .. 2147483647  ) 
+	diskIndex	OBJECT-TYPE
+		SYNTAX			Integer32  ( -2147483648 .. 2147483647  )
 		MAX-ACCESS		not-accessible
 		STATUS			current
 		DESCRIPTION		"Index of disk entry"
 		::=  {  diskEntry  1  }
 
 
-	diskID	OBJECT-TYPE	
+	diskID	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -375,7 +375,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  diskEntry  2  }
 
 
-	diskSize	OBJECT-TYPE	
+	diskSize	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -383,7 +383,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  diskEntry  3  }
 
 
-	diskStatus	OBJECT-TYPE	
+	diskStatus	OBJECT-TYPE
 		SYNTAX			OCTET STRING
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -417,7 +417,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		}
 
 
-	usbIndex	OBJECT-TYPE	
+	usbIndex	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		not-accessible
 		STATUS			current
@@ -425,23 +425,23 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  usbEntry  1  }
 
 
-	usbManufacture	OBJECT-TYPE	
-		SYNTAX			DisplayString  ( SIZE ( 0 .. 255  ) ) 
+	usbManufacture	OBJECT-TYPE
+		SYNTAX			DisplayString  ( SIZE ( 0 .. 255  ) )
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"Manufucture of the device"
 		::=  {  usbEntry  2  }
 
 
-	usbModel	OBJECT-TYPE	
-		SYNTAX			DisplayString  ( SIZE ( 0 .. 255  ) ) 
+	usbModel	OBJECT-TYPE
+		SYNTAX			DisplayString  ( SIZE ( 0 .. 255  ) )
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"Model of the USB device"
 		::=  {  usbEntry  3  }
 
 
-	usbType	OBJECT-TYPE	
+	usbType	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -470,7 +470,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		}
 
 
-	fanIndex	OBJECT-TYPE	
+	fanIndex	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		not-accessible
 		STATUS			current
@@ -478,7 +478,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  fanEntry  1  }
 
 
-	fanName	OBJECT-TYPE	
+	fanName	OBJECT-TYPE
 		SYNTAX			DisplayString
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -486,7 +486,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  fanEntry  2  }
 
 
-	fanValue	OBJECT-TYPE	
+	fanValue	OBJECT-TYPE
 		SYNTAX			Gauge32
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -515,7 +515,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		}
 
 
-	tempIndex	OBJECT-TYPE	
+	tempIndex	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		not-accessible
 		STATUS			current
@@ -523,7 +523,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  tempEntry  1  }
 
 
-	tempName	OBJECT-TYPE	
+	tempName	OBJECT-TYPE
 		SYNTAX			DisplayString
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -531,7 +531,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  tempEntry  2  }
 
 
-	tempValue	OBJECT-TYPE	
+	tempValue	OBJECT-TYPE
 		SYNTAX			Gauge32
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -560,7 +560,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		}
 
 
-	voltIndex	OBJECT-TYPE	
+	voltIndex	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		not-accessible
 		STATUS			current
@@ -568,7 +568,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  voltEntry  1  }
 
 
-	voltName	OBJECT-TYPE	
+	voltName	OBJECT-TYPE
 		SYNTAX			DisplayString
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -576,21 +576,21 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		::=  {  voltEntry  2  }
 
 
-	voltValue	OBJECT-TYPE	
+	voltValue	OBJECT-TYPE
 		SYNTAX			Gauge32
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"The voltage in mV"
 		::=  {  voltEntry  3  }
 
-	eventID	OBJECT-TYPE	
+	eventID	OBJECT-TYPE
 		SYNTAX			DisplayString
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"ID of the event"
 		::=  {  iomegaNASEvent  1  }
 
-	eventText	OBJECT-TYPE	
+	eventText	OBJECT-TYPE
 		SYNTAX			DisplayString
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -603,35 +603,35 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 		DESCRIPTION		"An Error EventMonitorTrap is generated in response to a user-specified event. Details can be found in Variables data."
 		::=  {  iomegaNASNotifications  1  }
 
-	dns0	OBJECT-TYPE	
+	dns0	OBJECT-TYPE
 		SYNTAX			IpAddress
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"The first DNS server"
 		::=  {  netConfig  1  }
 
-	dns1	OBJECT-TYPE	
+	dns1	OBJECT-TYPE
 		SYNTAX			IpAddress
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"Backup DNS server"
 		::=  {  netConfig  2  }
 
-	wins0	OBJECT-TYPE	
+	wins0	OBJECT-TYPE
 		SYNTAX			IpAddress
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"The first wins server"
 		::=  {  netConfig  3  }
 
-	wins1	OBJECT-TYPE	
+	wins1	OBJECT-TYPE
 		SYNTAX			IpAddress
 		MAX-ACCESS		read-only
 		STATUS			current
 		DESCRIPTION		"Backup wins server"
 		::=  {  netConfig  4  }
 
-	raEnabled	OBJECT-TYPE	
+	raEnabled	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		read-only
 		STATUS			current
@@ -640,7 +640,7 @@ IOMEGANAS-MIB	DEFINITIONS ::= BEGIN
 1	Enable"
 		::=  {  remoteAccess  1  }
 
-	mediaServiceEnabled	OBJECT-TYPE	
+	mediaServiceEnabled	OBJECT-TYPE
 		SYNTAX			Integer32
 		MAX-ACCESS		read-only
 		STATUS			current

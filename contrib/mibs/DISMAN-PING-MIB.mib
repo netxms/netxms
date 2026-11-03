@@ -1040,7 +1040,7 @@ IMPORTS
             supported."
 
         OBJECT pingCtlSourceAddressType
-        SYNTAX  InetAddressType 
+        SYNTAX  InetAddressType
         MIN-ACCESS  read-only
         DESCRIPTION
             "This object is not required by implementations that
@@ -1074,7 +1074,7 @@ IMPORTS
             this option is not supported."
 
         OBJECT pingResultsIpTargetAddressType
-        SYNTAX  InetAddressType 
+        SYNTAX  InetAddressType
         DESCRIPTION
             "An implementation is only required to
             support IPv4 and IPv6 addresses."

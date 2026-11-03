@@ -35,8 +35,8 @@ IANA-ITU-ALARM-TC-MIB DEFINITIONS ::= BEGIN
          REVISION    "200409090000Z"
          DESCRIPTION
              "Initial version, published as RFC 3877."
-             
-        ::= { mib-2 119 } 
+
+        ::= { mib-2 119 }
 
 
    IANAItuProbableCause ::= TEXTUAL-CONVENTION

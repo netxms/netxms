@@ -33,9 +33,9 @@ agentSntpClientMIB MODULE-IDENTITY
         "200705230000Z" -- 23 May 2007 12:00:00 GMT
     DESCRIPTION
         "Dell branding related changes."
-    REVISION    
+    REVISION
         "200312181629Z"  -- Fri Dec 18 16:29 GMT 2003
-    DESCRIPTION 
+    DESCRIPTION
         "Initial version of this MIB module."
     ::= { dnOS 17 }
 

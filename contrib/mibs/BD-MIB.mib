@@ -14,7 +14,7 @@ BD-MIB DEFINITIONS ::= BEGIN
             fcSwitch, bcsiModules
             FROM Brocade-REG-MIB
 
-            swVfId 
+            swVfId
             FROM SW-MIB;
 
 
@@ -29,13 +29,13 @@ BD-MIB DEFINITIONS ::= BEGIN
                         Fax: +1-408-392-6656
                         Email: support@Brocade.COM
                         WEB: www.brocade.com"
-                        
+
             DESCRIPTION     "The MIB module is for Brocade's Bottleneck detection feature.Copyright (c) 1996-2003 Brocade Communications Systems, Inc. All rights reserved."
 			REVISION    "201404101146Z" -- Apr 10, 2014 11:46am
 			DESCRIPTION     "Added slotPort object in bdStatsEntry and included it
 							in bdTrap and bdClearTrap."
             ::=        { fcSwitch 51 }
-            
+
 	BdType             ::= TEXTUAL-CONVENTION
 	STATUS  current
         DESCRIPTION   "BD type"
@@ -63,7 +63,7 @@ BD-MIB DEFINITIONS ::= BEGIN
 	SYNTAX      TruthValue
 	MAX-ACCESS     read-only
 	STATUS             current
-	DESCRIPTION     "This object gives the status of bottleneck detection feature 
+	DESCRIPTION     "This object gives the status of bottleneck detection feature
 					 if enabled in the switch. The value of this OID if true(1) or false(2)."
 	::= { bdConfig 1 }
 
@@ -73,8 +73,8 @@ BD-MIB DEFINITIONS ::= BEGIN
 	MAX-ACCESS     read-only
 	STATUS             current
 	DESCRIPTION     "This object is the severity threshold for latency bottleneck.
-					This threshold indicates the percentage of one-second intervals 
-					affected by latency conditions within a specified time window. 
+					This threshold indicates the percentage of one-second intervals
+					affected by latency conditions within a specified time window.
 					The value of this OID is between 0 and 1."
     ::= { bdConfig 2 }
 
@@ -82,9 +82,9 @@ BD-MIB DEFINITIONS ::= BEGIN
 	SYNTAX            DisplayString(SIZE(1..5))
 	MAX-ACCESS     read-only
 	STATUS             current
-	DESCRIPTION     "This object is the severity threshold for congestion bottleneck. 
-					This threshold indicates the percentage of one-second intervals 
-					affected by congestion conditions within a specified time window. 
+	DESCRIPTION     "This object is the severity threshold for congestion bottleneck.
+					This threshold indicates the percentage of one-second intervals
+					affected by congestion conditions within a specified time window.
 					The value of this OID is between 0 and 1"
 	::= { bdConfig 3 }
 
@@ -93,9 +93,9 @@ BD-MIB DEFINITIONS ::= BEGIN
 	UNITS           "seconds"
 	MAX-ACCESS     read-only
 	STATUS             current
-	DESCRIPTION     "The minimum number of seconds between consecutive alerts. 
-					The value assigned to this parameter applies to both latency and 
-					congestion monitoring. In this duration, there will not be 
+	DESCRIPTION     "The minimum number of seconds between consecutive alerts.
+					The value assigned to this parameter applies to both latency and
+					congestion monitoring. In this duration, there will not be
 					any traps sent."
 	::= { bdConfig 4 }
 
@@ -104,8 +104,8 @@ BD-MIB DEFINITIONS ::= BEGIN
 	UNITS           "seconds"
 	MAX-ACCESS     read-only
 	STATUS             current
-	DESCRIPTION     "The time window in seconds over which the percentage of seconds 
-					affected by bottleneck conditions is computed and compared 
+	DESCRIPTION     "The time window in seconds over which the percentage of seconds
+					affected by bottleneck conditions is computed and compared
 					with the threshold."
 	::= { bdConfig 5 }
 
@@ -113,8 +113,8 @@ BD-MIB DEFINITIONS ::= BEGIN
 	SYNTAX            DisplayString(SIZE(1..5))
 	MAX-ACCESS     accessible-for-notify
 	STATUS             current
-	DESCRIPTION     "This is the severity threshold for latency or congestion 
-					bottleneck. This is accessible only for traps. This object is 
+	DESCRIPTION     "This is the severity threshold for latency or congestion
+					bottleneck. This is accessible only for traps. This object is
 					one of the variable binding in bdTrap and bdClearTrap."
 	::= { bdConfig 6 }
 
@@ -124,15 +124,15 @@ BD-MIB DEFINITIONS ::= BEGIN
 	SYNTAX		BdType
 	MAX-ACCESS	accessible-for-notify
 	STATUS		current
-	DESCRIPTION     "This is the type of bottleneck.This is accessible only for 
-					traps. This object is one of the variable binding in bdTrap and 
+	DESCRIPTION     "This is the type of bottleneck.This is accessible only for
+					traps. This object is one of the variable binding in bdTrap and
 					bdClearTrap. This can have a value of congestion(1) or  latency(2)."
 	::= { bdConfig 7 }
 
-	
+
 
 	bdNumOfEntries            OBJECT-TYPE
-	SYNTAX                       Integer32 
+	SYNTAX                       Integer32
 	MAX-ACCESS     read-only
 	STATUS             current
         DESCRIPTION     "Number of rows in the stats table."
@@ -143,8 +143,8 @@ BD-MIB DEFINITIONS ::= BEGIN
 	MAX-ACCESS     not-accessible
 	STATUS             current
 	DESCRIPTION     "The table of stats entries represents both types of bottleneck.
-					Each sample in the stats is taken every 10 seconds.The maximum 
-					number of entries for each port, each type 
+					Each sample in the stats is taken every 10 seconds.The maximum
+					number of entries for each port, each type
 					[congestion/latency] is 30."
 	::= { bdStats 2 }
 
@@ -157,7 +157,7 @@ BD-MIB DEFINITIONS ::= BEGIN
 	::= { bdStatsTable 1 }
 
 
-            
+
 
 
 	BdStatsEntry     ::= SEQUENCE {
@@ -174,7 +174,7 @@ BD-MIB DEFINITIONS ::= BEGIN
 	SYNTAX                        SwPortIndex
 	MAX-ACCESS     read-only
 	STATUS             current
-	DESCRIPTION     "This object represents the user port indices of bottleneck 
+	DESCRIPTION     "This object represents the user port indices of bottleneck
 					monitored ports like F-port, E-port, L-port, FCOE-port."
 	::= { bdStatsEntry 1 }
 
@@ -184,7 +184,7 @@ BD-MIB DEFINITIONS ::= BEGIN
 	MAX-ACCESS     read-only
 	STATUS             current
 	DESCRIPTION     "This object represents the sample time in Unix time format.
-					Ex:1265259069 The above Unix time is equal to 
+					Ex:1265259069 The above Unix time is equal to
 					Thu, 04 Feb 2010 04:51:09 GMT ."
 	::= { bdStatsEntry 2 }
 
@@ -192,7 +192,7 @@ BD-MIB DEFINITIONS ::= BEGIN
 	SYNTAX            BdType
 	MAX-ACCESS     read-only
 	STATUS             current
-	DESCRIPTION     "This object represents the bottleneck type. The value of 
+	DESCRIPTION     "This object represents the bottleneck type. The value of
 					this object can be congestion(1) or latency(2)."
 	::= { bdStatsEntry 3 }
 
@@ -200,8 +200,8 @@ BD-MIB DEFINITIONS ::= BEGIN
 	SYNTAX            DisplayString(SIZE(1..5))
 	MAX-ACCESS     read-only
 	STATUS             current
-	DESCRIPTION     "This sample is average of 10 samples collected every second. 
-					If the sample has not been taken yet then bdStatsValue10SecsSample 
+	DESCRIPTION     "This sample is average of 10 samples collected every second.
+					If the sample has not been taken yet then bdStatsValue10SecsSample
 					return -1."
 	::= { bdStatsEntry 4 }
 
@@ -209,8 +209,8 @@ BD-MIB DEFINITIONS ::= BEGIN
 	SYNTAX            DisplayString(SIZE(1..5))
 	MAX-ACCESS     read-only
 	STATUS             current
-	DESCRIPTION     "This sample is average of 60 samples collected every second. 
-					If the sample has not been taken yet then bdStatsValue60SecsSample 
+	DESCRIPTION     "This sample is average of 60 samples collected every second.
+					If the sample has not been taken yet then bdStatsValue60SecsSample
 					return -1."
 	::= { bdStatsEntry 5 }
 
@@ -218,8 +218,8 @@ BD-MIB DEFINITIONS ::= BEGIN
 	SYNTAX         DisplayString(SIZE(1..5))
 	MAX-ACCESS     read-only
 	STATUS             current
-	DESCRIPTION     "This sample is average of 300 samples collected every second. 
-					If the sample has not been taken yet then bdStatsValue300SecsSample 
+	DESCRIPTION     "This sample is average of 300 samples collected every second.
+					If the sample has not been taken yet then bdStatsValue300SecsSample
 					return -1."
 	::= { bdStatsEntry 6 }
 
@@ -231,34 +231,34 @@ BD-MIB DEFINITIONS ::= BEGIN
 					monitored ports like F-port, E-port, L-port, FCOE-port."
 	::= { bdStatsEntry 7 }
 
-	bdAggrStats OBJECT-TYPE        
-	SYNTAX            DisplayString(SIZE(1..12))     
+	bdAggrStats OBJECT-TYPE
+	SYNTAX            DisplayString(SIZE(1..12))
 	MAX-ACCESS     accessible-for-notify
-	STATUS             current     
-	DESCRIPTION     "This object represents the aggregrate stats value. 
-					This value is the sum of all the samples divided by average 
-					window and multiplied by 100.This is accessible only for traps. 
-					This obejct is one of the variable binding in bdTrap and 
+	STATUS             current
+	DESCRIPTION     "This object represents the aggregrate stats value.
+					This value is the sum of all the samples divided by average
+					window and multiplied by 100.This is accessible only for traps.
+					This obejct is one of the variable binding in bdTrap and
 					bdClearTrap."
 	::= { bdStats 3 }
 
-	bdAbsoluteValue OBJECT-TYPE        
+	bdAbsoluteValue OBJECT-TYPE
 	SYNTAX            INTEGER (1..1000)
 	MAX-ACCESS     accessible-for-notify
-	STATUS          current     
+	STATUS          current
 	DESCRIPTION     "This object represents the absolute value of bdAggrStats.
-					It is the number of affected seconds. This object is accessible 
-					only for traps and it is one of the variable binding in 
+					It is the number of affected seconds. This object is accessible
+					only for traps and it is one of the variable binding in
 					bdTrap and bdClearTrap."
 	::= { bdStats 4 }
 
-	bdAvgFrameSize OBJECT-TYPE        
+	bdAvgFrameSize OBJECT-TYPE
 	SYNTAX         Unsigned32
 	MAX-ACCESS     accessible-for-notify
-	STATUS          current     
-	DESCRIPTION     "This object represents the average size in bytes of all frames 
+	STATUS          current
+	DESCRIPTION     "This object represents the average size in bytes of all frames
 					that were transmitted on the ports during the averaging window.
-					This object is accessible only for traps and it is one of the 
+					This object is accessible only for traps and it is one of the
 					variable binding in bdTrap and bdClearTrap."
 	::= { bdStats 5 }
 
@@ -278,7 +278,7 @@ BD-MIB DEFINITIONS ::= BEGIN
 	STATUS current
 	DESCRIPTION     "trap to be send for bottleneck detection."
 	::= { bdTraps 1 }
-            
+
 	bdClearTrap     NOTIFICATION-TYPE
 	OBJECTS            {
                                     userPortNumber,
@@ -295,4 +295,3 @@ BD-MIB DEFINITIONS ::= BEGIN
 	DESCRIPTION     "trap to be send for bottleneck clearance."
 	::= { bdTraps 2 }
 END
-

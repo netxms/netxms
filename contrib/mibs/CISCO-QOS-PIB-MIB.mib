@@ -1769,7 +1769,7 @@ qosPIBCompliance MODULE-COMPLIANCE
     STATUS current
     DESCRIPTION
         "The compliance statement for the QOS Policy Derived MIB."
-    MODULE        
+    MODULE
     MANDATORY-GROUPS {
         qosDevicePibIncarnationTableGroup,
         qosDeviceAttributeTableGroup,

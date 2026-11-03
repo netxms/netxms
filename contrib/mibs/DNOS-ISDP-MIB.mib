@@ -16,7 +16,7 @@ DNOS-ISDP-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, Integer32, Unsigned32,Counter32       FROM SNMPv2-SMI
     TEXTUAL-CONVENTION, TimeStamp                                       FROM SNMPv2-TC
-    dnOS                                                            FROM DELL-REF-MIB   
+    dnOS                                                            FROM DELL-REF-MIB
     DisplayString                                                       FROM RFC1213-MIB;
 
     fastPathIsdp MODULE-IDENTITY
@@ -490,12 +490,12 @@ agentIsdpGlobalAdvertiseV2 OBJECT-TYPE
     ::= { agentIsdpGlobal 8 }
 
 agentIsdpGlobalDeviceIdFormatCpb  OBJECT-TYPE
-    SYNTAX     BITS { 
-                 serialNumber(1), 
+    SYNTAX     BITS {
+                 serialNumber(1),
                  macAddress(2),
                  other (4),
-                 hostName(8) 
-               } 
+                 hostName(8)
+               }
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
@@ -516,12 +516,12 @@ agentIsdpGlobalDeviceIdFormatCpb  OBJECT-TYPE
     ::= { agentIsdpGlobal 9 }
 
 agentIsdpGlobalDeviceIdFormat  OBJECT-TYPE
-    SYNTAX     INTEGER { 
-                 serialNumber(1), 
+    SYNTAX     INTEGER {
+                 serialNumber(1),
                  macAddress(2),
                  other(3),
-                 hostName(4) 
-               } 
+                 hostName(4)
+               }
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
@@ -529,18 +529,18 @@ agentIsdpGlobalDeviceIdFormat  OBJECT-TYPE
         corresponding instance of agentIsdpGlobalDeviceId. User can only
         specify the formats which the device is capable of as
         denoted in agentIsdpGlobalDeviceIdFormatCpb object.
-        
-        serialNumber(1) indicates that the value of agentIsdpGlobalDeviceId 
+
+        serialNumber(1) indicates that the value of agentIsdpGlobalDeviceId
         object is in the form of an ASCII string contain the device
-        serial number. 
-        
-        macAddress(2) indicates that the value of agentIsdpGlobalDeviceId 
+        serial number.
+
+        macAddress(2) indicates that the value of agentIsdpGlobalDeviceId
         object is in the form of Layer 2 MAC address.
 
         other(3) indicates that the value of agentIsdpGlobalDeviceId object
         is in the form of a platform specific ASCII string contain
         info that identifies the device. For example: ASCII string
-        contains serialNumber appended/prepened with system name. 
+        contains serialNumber appended/prepened with system name.
 
         hostName(4) indicates that the value of agentIsdpGlobalDeviceIdFormat
         object is in system Host Name format."

@@ -1,15 +1,15 @@
 -- *****************************************************************
 -- CISCO-ENTITY-EXT-MIB.my
---   
+--
 -- Cisco Extension to ENTITY-MIB(RFC2737)
---   
+--
 -- April 2001, A S Kiran Koushik
 -- May  2004, Arul Mozhi
 -- Mar  2015, Neha Jagtap
---   
+--
 -- Copyright (c) 2001-2018 by cisco Systems Inc.
 -- All rights reserved.
---   
+--
 -- *****************************************************************
 
 CISCO-ENTITY-EXT-MIB DEFINITIONS ::= BEGIN
@@ -59,7 +59,7 @@ ciscoEntityExtMIB MODULE-IDENTITY
         "This MIB is an extension of the ENTITY-MIB
         specified in RFC2737.
 
-        This MIB module contains  Cisco-defined  extensions 
+        This MIB module contains  Cisco-defined  extensions
         to the  entityPhysicalTable to represent information
         related to entities of class module(entPhysicalClass
         = 'module') which have a Processor.
@@ -72,14 +72,14 @@ ciscoEntityExtMIB MODULE-IDENTITY
         This module is the entry point for external
         applications like SNMP Manager, CLI, FTP etc.
 
-        Line card is an interface card         with at least a 
-        Processor and RAM. This might be referred to as 
+        Line card is an interface card         with at least a
+        Processor and RAM. This might be referred to as
         Service Module in some cisco products.
 
-        A configuration register is  a 16 bit 
+        A configuration register is  a 16 bit
         software register.
-        The configuration register is mainly used to 
-        check for instructions on where to find the Cisco 
+        The configuration register is mainly used to
+        check for instructions on where to find the Cisco
         Operating System software.
         Some other functions of configuration register are:
          - To select a boot source and default boot filename.
@@ -87,7 +87,7 @@ ciscoEntityExtMIB MODULE-IDENTITY
          - To control broadcast addresses.
          - To set the console terminal baud rate.
          - To load operating software from Flash memory.
-         - To allow us to manually boot the system using the 
+         - To allow us to manually boot the system using the
            boot command at the bootstrap program prompt.
 
         Booting is the process of initializing the
@@ -105,7 +105,7 @@ ciscoEntityExtMIB MODULE-IDENTITY
     REVISION        "201409120000Z"
     DESCRIPTION
         "Changed the description ceExtEntDoorOpenNotif to
-        include ceExtEntDoorOpenNotif instead 
+        include ceExtEntDoorOpenNotif instead
         of ceExtEntDoorCloseNotif."
     REVISION        "201403270000Z"
     DESCRIPTION
@@ -130,12 +130,12 @@ ciscoEntityExtMIB MODULE-IDENTITY
         A port can be configured to act as multiple interfaces.
         Ex: One Hundred GigE port can act as 10 TenGigE interface
         Breakout is the term that can be used to define this behaviour.
-        Alternatively slice term is also used. 
+        Alternatively slice term is also used.
 
-        When a breakout config is applied on the interface, the base 
-        interface will be replaced with multiple breakout interfaces. 
-        Reference to the base interface will be removed from the system 
-        and breakout interface will be made available. Vice versa will 
+        When a breakout config is applied on the interface, the base
+        interface will be replaced with multiple breakout interfaces.
+        Reference to the base interface will be removed from the system
+        and breakout interface will be made available. Vice versa will
         happen when breakout config will be removed from the system."
     REVISION        "201308050000Z"
     DESCRIPTION
@@ -202,20 +202,20 @@ ConfigRegisterValue ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "An Integer containing the value of config register.
 
-        The definition of individual bits from right to left 
+        The definition of individual bits from right to left
         when set are as follows:
 
-        00 to        
+        00 to
         03                Boot Fields(Refer below for
                        explanation).
 
-        04 to 
+        04 to
         05                Not Used.
 
-        06                Causes system software to ignore the 
+        06                Causes system software to ignore the
                        contents of NVRAM.
 
-        07                Enable the original equipment 
+        07                Enable the original equipment
                        manufacturer (OEM) bit.
 
         08                The Break function is disabled.
@@ -224,20 +224,20 @@ ConfigRegisterValue ::= TEXTUAL-CONVENTION
 
         10                Broadcast based on 0.0.0.0 IP address.
 
-        11 to 
+        11 to
         12                Defines the console baud rate as below:
                        Bits 11 & 12 unset: 9600 baud(default),
                        Bit 11 set & 12 unset: 4800 baud,
                        Bit 11 unset & 12 set: 1200 baud,
                        Bit 11 set & 12 set: 2400 baud
 
-        13                Boots default Flash software if 
+        13                Boots default Flash software if
                        network boot fails.
 
-        14                IP broadcasts do not have network 
+        14                IP broadcasts do not have network
                        numbers.
 
-        15                Enables diagnostic messages and ignores 
+        15                Enables diagnostic messages and ignores
                        the contents of NVRAM.
 
 
@@ -247,24 +247,24 @@ ConfigRegisterValue ::= TEXTUAL-CONVENTION
         Value(in hex)        Description
         ------------    -----------
         00                On powerup or reload, the system
-                       remains at the ROM monitor prompt 
-                       (rommon>), awaiting a user command 
-                       to boot the system manually by means 
+                       remains at the ROM monitor prompt
+                       (rommon>), awaiting a user command
+                       to boot the system manually by means
                        of the rommon boot command.
 
         01                On powerup or reload, the system loads
-                       the system image found in onboard 
+                       the system image found in onboard
                        Flash memory.
 
         02 to                On powerup or reload, the system loads
-        0F                the system image specified by 
+        0F                the system image specified by
                        ceExtSysBootImageList.
                        It tries to boot the
-                       image in the order in which 
-                       the image names are entered in 
-                       ceExtSysBootImageList. If 
+                       image in the order in which
+                       the image names are entered in
+                       ceExtSysBootImageList. If
                        it cannot boot any image in the
-                       ceExtSysBootImageList, it 
+                       ceExtSysBootImageList, it
                        stays in ROM monitor mode."
     SYNTAX          OCTET STRING (SIZE (2))
 
@@ -272,7 +272,7 @@ BootImageList ::= TEXTUAL-CONVENTION
     STATUS          current
     DESCRIPTION
         "This contains a list of  boot images,
-        each separated by the ';' (semi-colon) character.  
+        each separated by the ';' (semi-colon) character.
         The following provides a syntax for parsing a single
         boot image list item.
 
@@ -285,7 +285,7 @@ BootImageList ::= TEXTUAL-CONVENTION
             tftp, ftp, rcp, mop.
 
         The following is en example containing two boot image
-        names:  
+        names:
            disk0:c7100-ik2s-mz;tftp://dirt/c7100-ik2s-mz
 
         If the filename is not  specified, then the
@@ -303,7 +303,7 @@ BootImageList ::= TEXTUAL-CONVENTION
 -- ceExtPhysicalProcessorTable
 
 ceExtPhysicalProcessorTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeExtPhysicalProcessorEntry 
+    SYNTAX          SEQUENCE OF CeExtPhysicalProcessorEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -322,14 +322,14 @@ ceExtPhysicalProcessorEntry OBJECT-TYPE
         a corresponding entPhysicalTable entry of class
         module(entPhysicalClass = 'module').
 
-        A processor module or line card which 
+        A processor module or line card which
         has a processor will have an entry in
         this table.
 
         A processor module or line card having
         multiple processors and is a SMP(Symmetric
-        multi processor) system will have only 
-        one entry corresponding to all the processors 
+        multi processor) system will have only
+        one entry corresponding to all the processors
         since the resources defined below are shared.
 
         A processor module or line card having
@@ -340,7 +340,7 @@ ceExtPhysicalProcessorEntry OBJECT-TYPE
         or module insertion.
 
         Entries are removed when the module is reset or removed."
-    INDEX           { entPhysicalIndex } 
+    INDEX           { entPhysicalIndex }
     ::= { ceExtPhysicalProcessorTable 1 }
 
 CeExtPhysicalProcessorEntry ::= SEQUENCE {
@@ -362,7 +362,7 @@ ceExtProcessorRam OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Total number of bytes of RAM available on the
-        Processor." 
+        Processor."
     ::= { ceExtPhysicalProcessorEntry 1 }
 
 ceExtNVRAMSize OBJECT-TYPE
@@ -374,8 +374,8 @@ ceExtNVRAMSize OBJECT-TYPE
         "Total number of bytes of NVRAM in the entity.
 
         A value of 0 for this object means the entity
-        does not support NVRAM or NVRAM information 
-        is not available." 
+        does not support NVRAM or NVRAM information
+        is not available."
     ::= { ceExtPhysicalProcessorEntry 2 }
 
 ceExtNVRAMUsed OBJECT-TYPE
@@ -385,7 +385,7 @@ ceExtNVRAMUsed OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Number of bytes of NVRAM in use. This object
-        is irrelevant if ceExtNVRAMSize is 0." 
+        is irrelevant if ceExtNVRAMSize is 0."
     ::= { ceExtPhysicalProcessorEntry 3 }
 
 ceExtProcessorRamOverflow OBJECT-TYPE
@@ -397,7 +397,7 @@ ceExtProcessorRamOverflow OBJECT-TYPE
         "This object represents the upper 32-bit of ceExtProcessorRam.
         This object needs to be supported only if the available RAM
         bytes exceeds 32-bit, otherwise this object value would be set
-        to 0." 
+        to 0."
     ::= { ceExtPhysicalProcessorEntry 4 }
 
 ceExtHCProcessorRam OBJECT-TYPE
@@ -408,7 +408,7 @@ ceExtHCProcessorRam OBJECT-TYPE
     DESCRIPTION
         "This object represents the total number of bytes of RAM
         available on the Processor. This object is a 64-bit version
-        of ceExtProcessorRam." 
+        of ceExtProcessorRam."
     ::= { ceExtPhysicalProcessorEntry 5 }
 
 ceExtNVRAMSizeOverflow OBJECT-TYPE
@@ -420,7 +420,7 @@ ceExtNVRAMSizeOverflow OBJECT-TYPE
         "This object represents the upper 32-bit of ceExtNVRAMSize.
         This object needs to be supported only if the available NVRAM
         bytes exceeds 32-bit, otherwise this object value would be set
-        to 0." 
+        to 0."
     ::= { ceExtPhysicalProcessorEntry 6 }
 
 ceExtHCNVRAMSize OBJECT-TYPE
@@ -433,7 +433,7 @@ ceExtHCNVRAMSize OBJECT-TYPE
         available on the Processor. This object is a 64-bit version
         of ceExtNVRAMSize."
     ::= { ceExtPhysicalProcessorEntry 7 }
- 
+
 ceExtNVRAMUsedOverflow OBJECT-TYPE
     SYNTAX          Unsigned32
     UNITS           "bytes"
@@ -443,7 +443,7 @@ ceExtNVRAMUsedOverflow OBJECT-TYPE
         "This object represents the upper 32-bit of ceExtNVRAMUsed.
         This object needs to be supported only if the used NVRAM
         bytes exceeds 32-bit, otherwise this object value would be set
-        to 0." 
+        to 0."
     ::= { ceExtPhysicalProcessorEntry 8 }
 
 ceExtHCNVRAMUsed OBJECT-TYPE
@@ -454,11 +454,11 @@ ceExtHCNVRAMUsed OBJECT-TYPE
     DESCRIPTION
         "This object represents the number of bytes of NVRAM used
         on the Processor. This object is a 64-bit version of
-        ceExtHCNVRAMUsed." 
+        ceExtHCNVRAMUsed."
     ::= { ceExtPhysicalProcessorEntry 9 }
 
 ceExtConfigRegTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeExtConfigRegEntry 
+    SYNTAX          SEQUENCE OF CeExtConfigRegEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -479,9 +479,9 @@ ceExtConfigRegEntry OBJECT-TYPE
         Entries are created by the agent at the system power-up
         or module insertion.
 
-        Entries are removed when the module is reset or 
+        Entries are removed when the module is reset or
         removed."
-    INDEX           { entPhysicalIndex } 
+    INDEX           { entPhysicalIndex }
     ::= { ceExtConfigRegTable 1 }
 
 CeExtConfigRegEntry ::= SEQUENCE {
@@ -497,7 +497,7 @@ ceExtConfigRegister OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The value of configuration register with which
-        the processor module booted." 
+        the processor module booted."
     ::= { ceExtConfigRegEntry 1 }
 
 ceExtConfigRegNext OBJECT-TYPE
@@ -506,9 +506,9 @@ ceExtConfigRegNext OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The value of configuration register in the
-        processor module at next reboot. Just after 
-        the reboot this has the same value as 
-        ceExtConfigRegister." 
+        processor module at next reboot. Just after
+        the reboot this has the same value as
+        ceExtConfigRegister."
     ::= { ceExtConfigRegEntry 2 }
 
 ceExtSysBootImageList OBJECT-TYPE
@@ -518,7 +518,7 @@ ceExtSysBootImageList OBJECT-TYPE
     DESCRIPTION
         "The list of system boot images which
         can be used for booting."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { ceExtConfigRegEntry 3 }
 
 ceExtKickstartImageList OBJECT-TYPE
@@ -528,14 +528,14 @@ ceExtKickstartImageList OBJECT-TYPE
     DESCRIPTION
         "The list of system kickstart images which
         can be used for booting."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { ceExtConfigRegEntry 4 }
- 
+
 
 -- ceExtEntityLEDTable
 
 ceExtEntityLEDTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeExtEntityLEDEntry 
+    SYNTAX          SEQUENCE OF CeExtEntityLEDEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -548,12 +548,12 @@ ceExtEntityLEDEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An entry (conceptual row) in the ceExtEntityLEDTable,
-        containing information about an LED on an entity, identified by 
+        containing information about an LED on an entity, identified by
         entPhysicalIndex."
     INDEX           {
                         entPhysicalIndex,
                         ceExtEntityLEDType
-                    } 
+                    }
     ::= { ceExtEntityLEDTable 1 }
 
 CeExtEntityLEDEntry ::= SEQUENCE {
@@ -574,15 +574,15 @@ ceExtEntityLEDType OBJECT-TYPE
     DESCRIPTION
         "The type of LED on this entity.
         'status' - indicates the entity status.
-        'system' - indicates the overall system status. 
+        'system' - indicates the overall system status.
         'active' - the redundancy status of a module, for e.g.
-                   supervisor module. 
-        'power'  - indicates sufficient power availability for all 
+                   supervisor module.
+        'power'  - indicates sufficient power availability for all
                    modules.
         'battery'- indicates the battery status."
     REFERENCE
         "Cisco MDS 9500 Series Hardware Installation Guide,
-        Product Overview." 
+        Product Overview."
     ::= { ceExtEntityLEDEntry 1 }
 
 ceExtEntityLEDColor OBJECT-TYPE
@@ -598,14 +598,14 @@ ceExtEntityLEDColor OBJECT-TYPE
         "The color of the LED."
     REFERENCE
         "Cisco MDS 9500 Series Multilayer Switches, Product
-        Overview." 
+        Overview."
     ::= { ceExtEntityLEDEntry 2 }
- 
+
 
 -- ceExtEntityPhysicalTable
 
 ceExtEntPhysicalTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeExtEntPhysicalEntry 
+    SYNTAX          SEQUENCE OF CeExtEntPhysicalEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -622,9 +622,9 @@ ceExtEntPhysicalEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An entry (conceptual row) in the 'ceExtEntPhysicalTable',
-        containing additional information about a physical entity, 
+        containing additional information about a physical entity,
         identified by 'entPhysicalIndex'."
-    AUGMENTS           { entPhysicalEntry  } 
+    AUGMENTS           { entPhysicalEntry  }
     ::= { ceExtEntPhysicalTable 1 }
 
 CeExtEntPhysicalEntry ::= SEQUENCE {
@@ -637,23 +637,23 @@ ceEntPhysicalSecondSerialNum OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the vendor-specific second
-        serial number string for the physical entity. 
+        serial number string for the physical entity.
         The first serial number string of the physical
-        entity is represented in the value of corresponding 
+        entity is represented in the value of corresponding
         instance of the 'entPhysicalSerialNum' object.
 
         On the first instantiation of an physical entity, the value
-        of this object is the correct vendor-assigned second 
-        serial number, if this information is available to the agent. 
+        of this object is the correct vendor-assigned second
+        serial number, if this information is available to the agent.
 
-        If the second serial number is unknown or non-existent, then 
+        If the second serial number is unknown or non-existent, then
         the value of this object will be a zero-length string instead.
 
         Note that implementations which can correctly identify the
-        second serial numbers of all installed physical entities do 
-        not need to provide write access to this object. 
-        Agents which cannot provide non-volatile storage for the 
-        second serial number strings are not required to implement 
+        second serial numbers of all installed physical entities do
+        not need to provide write access to this object.
+        Agents which cannot provide non-volatile storage for the
+        second serial number strings are not required to implement
         write access for this object.
 
         Not every physical component will have a serial number, or
@@ -665,17 +665,17 @@ ceEntPhysicalSecondSerialNum OBJECT-TYPE
         zero-length string.
 
         If write access is implemented for an instance of
-        'ceEntPhysicalSecondSerialNum', and a value is written into 
+        'ceEntPhysicalSecondSerialNum', and a value is written into
         the instance, the agent must retain the supplied value in the
-        'ceEntPhysicalSecondSerialNum' instance associated with the 
+        'ceEntPhysicalSecondSerialNum' instance associated with the
         same physical entity for as long as that entity remains
         instantiated. This includes instantiations across all re-
         initializations/reboots of the network management system,
         including those which result in a change of the physical
         entity's entPhysicalIndex value."
-    DEFVAL          { "" } 
+    DEFVAL          { "" }
     ::= { ceExtEntPhysicalEntry 1 }
- 
+
 
 ceExtNotificationControlObjects  OBJECT IDENTIFIER
     ::= { ciscoEntityExtMIBObjects 5 }
@@ -687,15 +687,15 @@ ceExtEntDoorNotifEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object controls the generation of
-        ceExtEntDoorCloseNotif and ceExtEntDoorOpenNotif 
-        notifications as follows: 
+        ceExtEntDoorCloseNotif and ceExtEntDoorOpenNotif
+        notifications as follows:
         'true(1)' -  the generation of ceExtEntDoorCloseNotif
-                     and ceExtEntDoorOpenNotif  
-                     notifications are enabled. 
+                     and ceExtEntDoorOpenNotif
+                     notifications are enabled.
         'false(2)' - the generation of ceExtEntDoorCloseNotif
-                     and ceExtEntDoorOpenNotif  
+                     and ceExtEntDoorOpenNotif
                      notifications are disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { ceExtNotificationControlObjects 1 }
 
 ceExtEntBreakOutPortNotifEnable OBJECT-TYPE
@@ -712,7 +712,7 @@ ceExtEntBreakOutPortNotifEnable OBJECT-TYPE
         'false(2)' - the generation of ceExtBreakOutPortInserted
                            and ceExtBreakOutPortRemoved
                            notifications is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { ceExtNotificationControlObjects 2 }
 
 ceExtEntUsbModemNotifEnable OBJECT-TYPE
@@ -729,12 +729,12 @@ ceExtEntUsbModemNotifEnable OBJECT-TYPE
         'false(2)' - the generation of ceExtUSBModemPlugOutNotif
                            and ceExtUSBModemPlugOutNotif
                            notifications is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { ceExtNotificationControlObjects 3 }
 -- ceExtUSBModemTable
 
 ceExtUSBModemTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CeExtUSBModemEntry 
+    SYNTAX          SEQUENCE OF CeExtUSBModemEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -747,9 +747,9 @@ ceExtUSBModemEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An entry (conceptual row) in the ceExtUSBModemTable,
-        containing information about an USB MODEM on an entity, 
+        containing information about an USB MODEM on an entity,
         identified by entPhysicalIndex."
-    INDEX           { entPhysicalIndex } 
+    INDEX           { entPhysicalIndex }
     ::= { ceExtUSBModemTable 1 }
 
 CeExtUSBModemEntry ::= SEQUENCE {
@@ -766,7 +766,7 @@ ceExtUSBModemIMEI OBJECT-TYPE
     DESCRIPTION
         "The International Mobile Equipment Identifier (IMEI) of the
         USB-MODEM"
-    REFERENCE       "RFC 6155" 
+    REFERENCE       "RFC 6155"
     ::= { ceExtUSBModemEntry 1 }
 
 ceExtUSBModemIMSI OBJECT-TYPE
@@ -776,7 +776,7 @@ ceExtUSBModemIMSI OBJECT-TYPE
     DESCRIPTION
         "The International Mobile Subscriber Identifier(IMSI) -
         for a GSM USB MODEM."
-    REFERENCE       "RFC 4186" 
+    REFERENCE       "RFC 4186"
     ::= { ceExtUSBModemEntry 2 }
 
 ceExtUSBModemServiceProvider OBJECT-TYPE
@@ -784,7 +784,7 @@ ceExtUSBModemServiceProvider OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "The Service Provider name for a USB MODEM." 
+        "The Service Provider name for a USB MODEM."
     ::= { ceExtUSBModemEntry 3 }
 
 ceExtUSBModemSignalStrength OBJECT-TYPE
@@ -792,9 +792,9 @@ ceExtUSBModemSignalStrength OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "The signal strength of the USB MODEM." 
+        "The signal strength of the USB MODEM."
     ::= { ceExtUSBModemEntry 4 }
- 
+
 
 -- Notifications
 
@@ -864,7 +864,7 @@ ceExtUSBModemPlugInNotif NOTIFICATION-TYPE
     DESCRIPTION
         "The ceExtUSBModemPlugInNotif notification indicates that
         a USB MODEM was inserted. The varbind for this notification
-        indicates the entPhysicalDescr of the inserted USB MODEM, 
+        indicates the entPhysicalDescr of the inserted USB MODEM,
         and the entPhysicalIndex of the USB MODEM's container."
    ::= { ciscoEntityExtMIBNotifications 5 }
 
@@ -976,7 +976,7 @@ ciscoEntityExtMIBComplianceRev2 MODULE-COMPLIANCE
     GROUP           ciscoExtEntityPhysicalGroup
     DESCRIPTION
         "This group is an optional group containing an object
-        which provides additional information about the 
+        which provides additional information about the
         physical entity."
     ::= { ciscoEntityExtMIBCompliances 3 }
 
@@ -1012,7 +1012,7 @@ ciscoEntityExtMIBComplianceRev3 MODULE-COMPLIANCE
     GROUP           ciscoExtEntityPhysicalGroup
     DESCRIPTION
         "This group is an optional group containing an object
-        which provides additional information about the 
+        which provides additional information about the
         physical entity."
 
     GROUP           ceExtPhyProcessorOverflowGroup
@@ -1037,7 +1037,7 @@ ciscoEntityExtMIBComplianceRev4 MODULE-COMPLIANCE
     GROUP           ciscoEntityExtConfigRegGroup
     DESCRIPTION
         "The ciscoEntityExtConfigRegGroup is an
-        optional group containing objects providing 
+        optional group containing objects providing
         information about configuration register."
 
     GROUP           ceExtSysBootImageListGroup
@@ -1177,7 +1177,7 @@ ciscoEntityExtMIBComplianceRev5 MODULE-COMPLIANCE
     ::= { ciscoEntityExtMIBCompliances 6 }
 
 ciscoEntityExtMIBComplianceRev6 MODULE-COMPLIANCE
-    STATUS          current 
+    STATUS          current
     DESCRIPTION
         "Compliance for SNMP Entities which support modules
         with CPU, NVRAM and configuration register."
@@ -1421,24 +1421,24 @@ ceExtUsbModemNotifControlGroup OBJECT-GROUP
     ::= { ciscoEntityExtMIBGroups 15 }
 
 ceExtNVRAMOverflowGroup OBJECT-GROUP
-    OBJECTS         { 
+    OBJECTS         {
                         ceExtNVRAMSizeOverflow,
                         ceExtNVRAMUsedOverflow
                     }
     STATUS          current
     DESCRIPTION
-        "The collection of objects providing Overflow (upper 32-bit) objects 
+        "The collection of objects providing Overflow (upper 32-bit) objects
         for processor NVRAM information."
     ::= { ciscoEntityExtMIBGroups 16 }
 
 ceExtHCNVRAMGroup OBJECT-GROUP
-    OBJECTS         { 
-                        ceExtHCNVRAMSize, 
+    OBJECTS         {
+                        ceExtHCNVRAMSize,
                         ceExtHCNVRAMUsed
                     }
     STATUS          current
     DESCRIPTION
-        "The collection of objects providing High Capacity (HC) objects 
+        "The collection of objects providing High Capacity (HC) objects
         for processor NVRAM information."
     ::= { ciscoEntityExtMIBGroups 17 }
 

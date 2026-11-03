@@ -11,8 +11,8 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
          CONTACT-INFO "Hewlett Packard Company
                        8000 Foothills Blvd.
                        Roseville, CA 95747"
-         DESCRIPTION  "This MIB module describes devices in the HP 
-                      Integrated Communication Facility product 
+         DESCRIPTION  "This MIB module describes devices in the HP
+                      Integrated Communication Facility product
                       line."
 
          REVISION     "200904080000Z" -- Apr 08, 2009
@@ -71,34 +71,34 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
          DESCRIPTION  "Added definitions for 2626C and 2650C"
 
 
-         REVISION     "200705210000Z"  -- May 21, 2007 
-         DESCRIPTION  "Revised definitions for J8766A and 
+         REVISION     "200705210000Z"  -- May 21, 2007
+         DESCRIPTION  "Revised definitions for J8766A and
 	               J8988A devices."
 
-         REVISION     "200704300000Z"  -- April 30, 2007 
+         REVISION     "200704300000Z"  -- April 30, 2007
          DESCRIPTION  "Added definitions for all 2610 products."
 
-         REVISION     "200704170000Z"  -- April 17, 2006 
+         REVISION     "200704170000Z"  -- April 17, 2006
          DESCRIPTION  "Added hpicfProviderBridge node and branch."
 
-         REVISION     "200610310000Z"  -- October 31, 2006 
+         REVISION     "200610310000Z"  -- October 31, 2006
          DESCRIPTION  "Added hpicfCommonSecurity node and branch."
 
-         REVISION     "200609251200Z"  -- Sept 25, 2006 
+         REVISION     "200609251200Z"  -- Sept 25, 2006
          DESCRIPTION  "Cleaned up definition of J8715 Chassis."
 
-         REVISION     "200609081200Z"  -- Sept 8, 2006 
+         REVISION     "200609081200Z"  -- Sept 8, 2006
          DESCRIPTION  "Added definitions for ESP blades."
 
-         REVISION     "200608221200Z"  -- Aug 22, 2006 
+         REVISION     "200608221200Z"  -- Aug 22, 2006
          DESCRIPTION  "Added definitions for hpicfL3MacConfigMIB."
 
          REVISION     "200608040000Z"  -- August 04, 2006
          DESCRIPTION  "Added definition for hpicfInstMonMIB."
 
          REVISION     "200607271200Z"  -- July 27, 2006
-         DESCRIPTION  "Added definitions for J9032A, J9031A, 
-	               J8768A, J8765B, J9033A, J9036A, J9037A, 
+         DESCRIPTION  "Added definitions for J9032A, J9031A,
+	               J8768A, J8765B, J9033A, J9036A, J9037A,
 		       J8766A and J8988A devices."
 
          REVISION     "200607260000Z"  -- July 26, 2006
@@ -137,9 +137,9 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
 
          REVISION     "200503081530Z"  -- March  08, 2005
          DESCRIPTION  "Added definition for hpSwitchModuleJ8762A,
-                      hpSwitch2600n8PPortSlot, updated definition 
+                      hpSwitch2600n8PPortSlot, updated definition
                       for J8474A, updated hpSwitchJ8433A,
-                      updated hpSwitchJ8474A, and updated 
+                      updated hpSwitchJ8474A, and updated
                       hpSwitchModuleJ8433A."
 
          REVISION     "200502250041Z"  -- February 24, 2005
@@ -157,13 +157,13 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
          DESCRIPTION  "Added definitions for more WAN products."
 
          REVISION     "200409021030Z"  -- September 02, 2004
-         DESCRIPTION  "Added definitions for hpSwitchModuleJ4905A, 
-                       hpSwitchModuleJ4906A, hpSwitchModuleJ8433A, 
+         DESCRIPTION  "Added definitions for hpSwitchModuleJ4905A,
+                       hpSwitchModuleJ4906A, hpSwitchModuleJ8433A,
                        hpSwitchModuleJ8474A, and hpicfJumboMIB."
-         
+
          REVISION     "200408091030Z"  -- August 09, 2004
          DESCRIPTION  "Added ProCurve 6400cl-6XG and 6410cl-6XG."
-         
+
          REVISION     "200407282043Z"  -- July 28, 2004
          DESCRIPTION  "Added definitions for J8718A and J8719A."
 
@@ -172,26 +172,26 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
 
 
          REVISION     "200403310050Z"  -- March 31, 2004
-         DESCRIPTION  "Added ProCurve 2650-CR and 2626-CR Switch 
+         DESCRIPTION  "Added ProCurve 2650-CR and 2626-CR Switch
                        definitions."
 
          REVISION     "200402122115Z"  -- February 12, 2004
-         DESCRIPTION  "Added definition for 10Gig CX4, 
+         DESCRIPTION  "Added definition for 10Gig CX4,
                        ESP port and WAN Products"
-	 
+
          REVISION     "200401201855Z"  -- January 20, 2004
          DESCRIPTION  "Added definitions for J8161A, J4907A, J8162A,
                        J4820B, J4821B, and J4878B."
 
          REVISION     "200312291705Z"  -- December 29, 2003
-         DESCRIPTION  "Added definitions for J4905A and J4906A Switch 
+         DESCRIPTION  "Added definitions for J4905A and J4906A Switch
                        definitions."
 
          REVISION     "200306091617Z"  -- June 9, 2003
          DESCRIPTION  "Added definitions for wireless products."
 
          REVISION     "200304101118Z"  -- April 10, 2003
-         DESCRIPTION  "Added ProCurve 2650-PWR and 2626-PWR Switch 
+         DESCRIPTION  "Added ProCurve 2650-PWR and 2626-PWR Switch
                        definitions."
 
 	      REVISION     "200302041716Z"  -- February 04, 2003
@@ -210,7 +210,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
          DESCRIPTION  "Added new Procurve Switch definitions"
 
          REVISION     "9909030004Z"  -- September 3, 1999
-         DESCRIPTION  "Added definition for ProCurve Routing 
+         DESCRIPTION  "Added definition for ProCurve Routing
                       Switch products."
 
          REVISION     "9809240004Z"  -- September 24, 1998
@@ -366,7 +366,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpicfFtrCo                OBJECT IDENTIFIER ::= { hpSwitch 46 }
     hpicfMldMIB               OBJECT IDENTIFIER ::= { hpSwitch 48 }
     hpicfScriptMIB            OBJECT IDENTIFIER ::= { hpSwitch 51 }
-    hpicfUSBPortMIB           OBJECT IDENTIFIER ::= { hpSwitch 53 }  
+    hpicfUSBPortMIB           OBJECT IDENTIFIER ::= { hpSwitch 53 }
     hpicfFanMIB               OBJECT IDENTIFIER ::= { hpSwitch 54 }
     hpicfPsMIB                OBJECT IDENTIFIER ::= { hpSwitch 55 }
     hpicfSavepowerMIB         OBJECT IDENTIFIER ::= { hpSwitch 56 }
@@ -420,7 +420,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
 
     bridge1010 OBJECT-IDENTITY
         STATUS      current
-        DESCRIPTION "The authoritative identifier for the 
+        DESCRIPTION "The authoritative identifier for the
                     HP 28673A 10:10 LAN Bridge."
         ::= { bridge 1 }
 
@@ -951,7 +951,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         DESCRIPTION "The authoritative identifier for a port
                     module slot in an HP Switch 6108."
         ::= { hpicfSlots 14 }
-    
+
     hpSwitch2824PortSlot OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for a port
@@ -979,7 +979,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpSwitch3324PortSlot OBJECT-IDENTITY
 	STATUS      current
 	DESCRIPTION "The authoritative identifier for a port
-		    module slot in an HP Switch 3400cl-24G or 
+		    module slot in an HP Switch 3400cl-24G or
 		    HP Switch 3400cl-48G."
         ::= { hpicfSlots 19 }
 
@@ -1485,7 +1485,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "Proprietary internal, GMII port."
         ::= { hpicfMAUTypes 11 }
-    
+
     hpicfMauType10GigBaseCX4 OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "Proprietary 10Gig CX4, full-duplex."
@@ -1515,7 +1515,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "Proprietary 1000Base Generic, full-duplex."
         ::= { hpicfMAUTypes 17 }
-    
+
     hpicfMauType10GigBaseGEN OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "Proprietary 10Gig Generic, full-duplex."
@@ -1827,7 +1827,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         DESCRIPTION "The authoritative identifier for the
                     HP J4903A Switch 2824."
         ::= { hpEtherSwitch 31 }
-    
+
     hpSwitchJ4904A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
@@ -1996,7 +1996,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
                     HP J8693A Switch 3500yl-48G-PWR."
         ::= { hpEtherSwitch 59 }
 
-    
+
     hpSwitchJ8992A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
@@ -2402,29 +2402,29 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         DESCRIPTION "The authoritative identifier for the
                     HP J4878A 4x MiniGBIC Module."
         ::= { hpSwitchJ4819A 3 }
-    
+
     hpSwitchModuleJ4852A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4852A 12-port 100-FX MTRJ" 
+                    HP J4852A 12-port 100-FX MTRJ"
         ::= { hpSwitchJ4819A 4 }
 
     hpSwitchModuleJ8161A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J8161A 24-port 10/100Base-TX PoE Module." 
+                    HP J8161A 24-port 10/100Base-TX PoE Module."
         ::= { hpSwitchJ4819A 5 }
 
     hpSwitchModuleJ4907A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4907A Gig-T/GBIC xl Module." 
+                    HP J4907A Gig-T/GBIC xl Module."
         ::= { hpSwitchJ4819A 6 }
 
     hpSwitchModuleJ8162A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J8162A XL Access Controller Module." 
+                    HP J8162A XL Access Controller Module."
         ::= { hpSwitchJ4819A 7 }
 
     hpSwitchPortModuleJ4820B OBJECT-IDENTITY
@@ -2448,20 +2448,20 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpSwitchModuleJ9001A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J9001A Wireless Services xl Module." 
+                    HP J9001A Wireless Services xl Module."
         ::= { hpSwitchJ4819A 11 }
 
     hpSwitchModuleJ9003A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J9003A Redundant Wireless Services xl Module." 
+                    HP J9003A Redundant Wireless Services xl Module."
         ::= { hpSwitchJ4819A 12 }
 
     hpSwitchModuleJ8988A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J8988A 10-GbE X2 xl module."
-        ::= { hpSwitchJ4819A 13 }  
+        ::= { hpSwitchJ4819A 13 }
 
     -- different pseudo cards for Switch 2524/2512 family
 
@@ -2475,7 +2475,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpSwitchModuleJ4813A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4813A 24-port 10/100Base-TX + 2 Gig 
+                    HP J4813A 24-port 10/100Base-TX + 2 Gig
                     module"
         ::= { hpSwitchJ4813A 1 }
 
@@ -2484,13 +2484,13 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpSwitchModuleJ4862A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4862A 24-port 10/100Base-TX" 
+                    HP J4862A 24-port 10/100Base-TX"
         ::= { hpSwitchJ4865A 1 }
 
     hpSwitchModuleJ4863A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4863A 6-port 100/1000Base-TX" 
+                    HP J4863A 6-port 100/1000Base-TX"
         ::= { hpSwitchJ4865A 2 }
 
     hpSwitchModuleJ4864A OBJECT-IDENTITY
@@ -2502,31 +2502,31 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpSwitchModuleJ4862B OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4862B 24-port 10/100Base-TX" 
+                    HP J4862B 24-port 10/100Base-TX"
         ::= { hpSwitchJ4865A 4 }
 
     hpSwitchModuleJ4893A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4893A 6-port Mini-GBIC module" 
+                    HP J4893A 6-port Mini-GBIC module"
         ::= { hpSwitchJ4865A 5 }
 
     hpSwitchModuleJ4892A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4892A 12-port 100-FX MTRJ" 
+                    HP J4892A 12-port 100-FX MTRJ"
         ::= { hpSwitchJ4865A 6 }
-    
+
     hpSwitchModuleJ4908A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J489XA 20-port 10/100/1000Base-TX + 2 Mini-GBIC" 
+                    HP J489XA 20-port 10/100/1000Base-TX + 2 Mini-GBIC"
         ::= { hpSwitchJ4865A 7 }
-    
+
     hpSwitchModuleJ4903A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4903A 24-port 10/100/1000Base-TX" 
+                    HP J4903A 24-port 10/100/1000Base-TX"
         ::= { hpSwitchJ4903A 1 }
 
     hpSwitchModuleJ8434A OBJECT-IDENTITY
@@ -2544,17 +2544,17 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpSwitchModuleJ4904A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J4904A 48-port 10/100/1000Base-TX" 
+                    HP J4904A 48-port 10/100/1000Base-TX"
         ::= { hpSwitchJ4904A 1 }
-    
-    -- psuedo cards for the 3400/6400 family        
-    
+
+    -- psuedo cards for the 3400/6400 family
+
     hpSwitchModuleJ4905A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    HP J4905A Switch 3400cl-24G."
         ::= { hpSwitchJ4905A 1 }
-    
+
     hpSwitchModuleJ4906A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
@@ -2578,7 +2578,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         DESCRIPTION "The authoritative identifier for the
 		    HP J8701A 24 port Gig-T."
         ::= { hpSwitchJ8697A 1 }
-    
+
     hpSwitchModuleJ8702A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
@@ -2684,7 +2684,7 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
    hpSwitchModuleJ9307A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J9307A 24-Port 10/100/1000 PoE+ zl Module."                    
+                    HP J9307A 24-Port 10/100/1000 PoE+ zl Module."
         ::= { hpSwitchJ8697A 19 }
 
    hpSwitchModuleJ9308A OBJECT-IDENTITY
@@ -2693,11 +2693,11 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
                     HP J9308A 20-Port 10/100/1000 PoE+ with
                     4-Port SFP zl Module."
         ::= { hpSwitchJ8697A 20 }
- 
+
    hpSwitchModuleJ9478A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J9478A 24-Port 10/100 PoE+ zl Module."                    
+                    HP J9478A 24-Port 10/100 PoE+ zl Module."
         ::= { hpSwitchJ8697A 21 }
 
    hpSwitchModuleJ9309A OBJECT-IDENTITY
@@ -2713,67 +2713,67 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J8765A 10/100 module."
-        ::= { hpSwitchJ8770A 1 }  
+        ::= { hpSwitchJ8770A 1 }
 
     hpSwitchModuleJ8764A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J8764A 10/100/1000 module."
-        ::= { hpSwitchJ8770A 2 }        
+        ::= { hpSwitchJ8770A 2 }
 
     hpSwitchModuleJ8776A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J8776A miniGBIC module."
-        ::= { hpSwitchJ8770A 3 }  
+        ::= { hpSwitchJ8770A 3 }
 
     hpSwitchModuleJ8763A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J8763A 100FX module."
-        ::= { hpSwitchJ8770A 4 } 
-	 
+        ::= { hpSwitchJ8770A 4 }
+
     hpSwitchModuleJ8768A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J8768A Gig-T vl module."
-        ::= { hpSwitchJ8770A 5 }  
+        ::= { hpSwitchJ8770A 5 }
 
     hpSwitchModuleJ9033A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J9033A Gig-T/SFP vl module."
-        ::= { hpSwitchJ8770A 6 }  
+        ::= { hpSwitchJ8770A 6 }
 
     hpSwitchModuleJ8766A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    ProCurve J8766A 10-GbE X2 vl module."
-        ::= { hpSwitchJ8770A 10 }  
+        ::= { hpSwitchJ8770A 10 }
 
     hpSwitchModuleJ9021A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    HP J9021A Switch 2810-24G."
-        ::= { hpSwitchJ9021A 1 }  
+        ::= { hpSwitchJ9021A 1 }
 
     hpSwitchModuleJ9022A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    HP J9022A Switch 2810-48G."
-        ::= { hpSwitchJ9022A 1 }  
+        ::= { hpSwitchJ9022A 1 }
 
     hpSwitchModuleJ9019A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    HP J9019A Switch 2510-24A."
-        ::= { hpSwitchJ9019A 1 }  
+        ::= { hpSwitchJ9019A 1 }
 
     hpSwitchModuleJ9020A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
 		    HP J9020A Switch 2510-48A."
-        ::= { hpSwitchJ9020A 1 }  
+        ::= { hpSwitchJ9020A 1 }
 
     hpSwitchModuleJ9085A OBJECT-IDENTITY
         STATUS      current
@@ -2822,31 +2822,31 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpSwitchModuleJ9147A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    J9147A HP ProCurve 2910al-48G Switch" 
+                    J9147A HP ProCurve 2910al-48G Switch"
         ::= { hpSwitchJ9147A 1 }
 
     hpSwitchModuleJ9145A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    J9145A HP ProCurve 2910al-24G Switch" 
+                    J9145A HP ProCurve 2910al-24G Switch"
         ::= { hpSwitchJ9145A 1 }
 
     hpSwitchModuleJ9148A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    J9148A HP ProCurve 2910al-48G-PoE+ Switch" 
+                    J9148A HP ProCurve 2910al-48G-PoE+ Switch"
         ::= { hpSwitchJ9148A 1 }
 
     hpSwitchModuleJ9146A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    J9146A HP ProCurve 2910al-24G-PoE+ Switch" 
+                    J9146A HP ProCurve 2910al-24G-PoE+ Switch"
         ::= { hpSwitchJ9146A 1 }
 
     hpSwitchModuleJ9149A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    ProCurve J9149A 10-GbE 2-port CX4" 
+                    ProCurve J9149A 10-GbE 2-port CX4"
         ::= { hpSwitchJ9146A 2 }
 
     hpSwitchModuleJ9008A OBJECT-IDENTITY
@@ -2858,9 +2858,9 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpSwitchModuleJ9165A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    ProCurve J9165A 10-GbE 1-port passive CX4" 
+                    ProCurve J9165A 10-GbE 1-port passive CX4"
         ::= { hpSwitchJ9146A 4 }
-    
+
     hpSwitchModuleJ9137A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
@@ -2917,86 +2917,86 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpWANRouters          OBJECT IDENTIFIER ::= { hpicfWAN 1 }
     hpWANModules          OBJECT IDENTIFIER ::= { hpicfWAN 2 }
 
-    -- WAN Routers 
+    -- WAN Routers
 
     hpSRJ8751A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J8751A Secure Router 7001dl." 
+                    HP J8751A Secure Router 7001dl."
         ::= { hpWANRouters 1 }
 
     hpSRJ8752A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J8752A Secure Router 7102dl." 
+                    HP J8752A Secure Router 7102dl."
         ::= { hpWANRouters 2 }
 
     hpSRJ8753A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J8753A Secure Router 7203dl." 
+                    HP J8753A Secure Router 7203dl."
         ::= { hpWANRouters 3 }
 
     hpSRJ8754A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP J8754A Secure Router 7306dl." 
-        ::= { hpWANRouters 4 }    
+                    HP J8754A Secure Router 7306dl."
+        ::= { hpWANRouters 4 }
 
    -- WAN Modules
 
    hpSRmoduleJ8451A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 1 x T1 module." 
+                    HP ProCurve SR dl 1 x T1 module."
         ::= { hpWANModules 1 }
 
    hpSRmoduleJ8452A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 1 x T1 + DSX-1 module." 
+                    HP ProCurve SR dl 1 x T1 + DSX-1 module."
         ::= { hpWANModules 2 }
 
    hpSRmoduleJ8453A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 2 x T1 module." 
+                    HP ProCurve SR dl 2 x T1 module."
         ::= { hpWANModules 3 }
 
    hpSRmoduleJ8454A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 1 x E1 module." 
+                    HP ProCurve SR dl 1 x E1 module."
         ::= { hpWANModules 4 }
 
    hpSRmoduleJ8455A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 1 x E1 + G.703 module." 
+                    HP ProCurve SR dl 1 x E1 + G.703 module."
         ::= { hpWANModules 5 }
 
    hpSRmoduleJ8456A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 2 x E1 module." 
+                    HP ProCurve SR dl 2 x E1 module."
         ::= { hpWANModules 6 }
 
    hpSRmoduleJ8457A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 2 x ISDN BRI S/T module." 
+                    HP ProCurve SR dl 2 x ISDN BRI S/T module."
         ::= { hpWANModules 7 }
 
    hpSRmoduleJ8458A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 1 x Serial module." 
+                    HP ProCurve SR dl 1 x Serial module."
         ::= { hpWANModules 8 }
 
    hpSRmoduleJ8459A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 1 x ADSL2+ Annex A module." 
+                    HP ProCurve SR dl 1 x ADSL2+ Annex A module."
         ::= { hpWANModules 9 }
 
    hpSRmoduleJ8759A OBJECT-IDENTITY
@@ -3008,49 +3008,49 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
    hpSRmoduleJ8460A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl ISDN BRI U backup." 
+                    HP ProCurve SR dl ISDN BRI U backup."
         ::= { hpWANModules 11 }
 
    hpSRmoduleJ8461A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl ISDN BRI S/T backup." 
+                    HP ProCurve SR dl ISDN BRI S/T backup."
         ::= { hpWANModules 12 }
 
    hpSRmoduleJ8462A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl Analog Modem backup." 
+                    HP ProCurve SR dl Analog Modem backup."
         ::= { hpWANModules 13 }
 
    hpSRmoduleJ8463A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl 8 x T1/E1 wide module." 
+                    HP ProCurve SR dl 8 x T1/E1 wide module."
         ::= { hpWANModules 14 }
 
    hpSRmoduleJ8464A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl DS-3 wide module." 
+                    HP ProCurve SR dl DS-3 wide module."
         ::= { hpWANModules 15 }
 
    hpSRmoduleJ8465A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR dl HSSI wide  module." 
+                    HP ProCurve SR dl HSSI wide  module."
         ::= { hpWANModules 16 }
 
    hpSRmoduleJ8471A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR 7100/7200 IPSec module." 
+                    HP ProCurve SR 7100/7200 IPSec module."
         ::= { hpWANModules 17 }
 
    hpSRmoduleJ8472A OBJECT-IDENTITY
         STATUS      current
         DESCRIPTION "The authoritative identifier for the
-                    HP ProCurve SR 7300 series IPSec module." 
+                    HP ProCurve SR 7300 series IPSec module."
         ::= { hpWANModules 18 }
 
 -- Accessories for 7300 series WAN Secure Router
@@ -3058,26 +3058,26 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
     hpSRPowerSupply8756A OBJECT-IDENTITY
         STATUS            current
         DESCRIPTION "The authoritative identifier for the
-                    HP J8754A Secure Router 7306dl powersupply." 
-        ::= { hpSRJ8754A 1 }    
+                    HP J8754A Secure Router 7306dl powersupply."
+        ::= { hpSRJ8754A 1 }
 
     hpManagementModuleJ9092A OBJECT-IDENTITY
         STATUS            current
         DESCRIPTION "The authoritative identifier for the
-                    HP J9092A 8200zl Management Module." 
-        ::= { hpSwitchJ9091A 1 }    
+                    HP J9092A 8200zl Management Module."
+        ::= { hpSwitchJ9091A 1 }
 
     hpFabricModuleJ9093A OBJECT-IDENTITY
         STATUS            current
         DESCRIPTION "The authoritative identifier for the
-                    HP J9093A 8200zl Fabric Module." 
-        ::= { hpSwitchJ9091A 2 }    
-        
+                    HP J9093A 8200zl Fabric Module."
+        ::= { hpSwitchJ9091A 2 }
+
     hpSSMModuleJ8784A OBJECT-IDENTITY
         STATUS            current
         DESCRIPTION "The authoritative identifier for the
-                    HP J8784A 8212zl System Support Module." 
-        ::= { hpSwitchJ9091A 3 }    
+                    HP J8784A 8212zl System Support Module."
+        ::= { hpSwitchJ9091A 3 }
 
     -- different cards for the 6600 family
 
@@ -3118,4 +3118,3 @@ HP-ICF-OID DEFINITIONS ::= BEGIN
         ::= { hpSwitchJ9265A 6 }
 
 END
-

@@ -347,4 +347,3 @@ bspePethPsePortCurrentStatusNotification NOTIFICATION-TYPE
     ::= { bspeNotifications 1 }
 
 END
-

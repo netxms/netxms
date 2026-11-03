@@ -14,8 +14,8 @@ IMPORTS
         CONTACT-INFO ""
         DESCRIPTION
           "The MIB definitions for Quality of Service - iSCSI Flow Acceleration Flex package."
-          
-        -- Revision history.	  
+
+        -- Revision history.
         REVISION
           "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
         DESCRIPTION
@@ -111,7 +111,7 @@ agentIscsiFlowAccelerationTargetConfigTable OBJECT-TYPE
     STATUS   current
     DESCRIPTION
        "The table for configuration of iSCSI target TCP port number,
-        IP address, and name.  It is indexed by 
+        IP address, and name.  It is indexed by
         agentIscsiFlowAccelerationTargetConfigTcpPort and
         agentIscsiFlowAccelerationTargetConfigAddr."
     ::= {  fastPathIscsiFlowAcceleration 2 }
@@ -122,7 +122,7 @@ agentIscsiFlowAccelerationTargetConfigEntry OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "Row in the iSCSI Target configuration table."
-    INDEX  { agentIscsiFlowAccelerationTargetConfigTcpPort, 
+    INDEX  { agentIscsiFlowAccelerationTargetConfigTcpPort,
              agentIscsiFlowAccelerationTargetConfigAddr}
     ::= { agentIscsiFlowAccelerationTargetConfigTable 1 }
 
@@ -168,7 +168,7 @@ agentIscsiFlowAccelerationTargetConfigStatus OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "The status of the target. It's used to add/delete a target.
-        
+
         active(1)      - this ACL instance is active
         createAndGo(4) - set to this value to create an instance
         destroy(6)     - set to this value to delete an instance"
@@ -247,7 +247,7 @@ agentIscsiFlowAccelerationSessionUpTime OBJECT-TYPE
     SYNTAX      Unsigned32
     MAX-ACCESS  read-only
     STATUS      current
-    DESCRIPTION       
+    DESCRIPTION
         "Time elapsed since the session was detected, in seconds."
     ::= { agentIscsiFlowAccelerationSessionEntry 6 }
 
@@ -257,7 +257,7 @@ agentIscsiFlowAccelerationConnectionTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-       "A table that contains iSCSI connections. 
+       "A table that contains iSCSI connections.
         It is indexed as assigned by system."
     ::= { fastPathIscsiFlowAcceleration 4 }
 
@@ -335,7 +335,7 @@ agentIscsiFlowAccelerationConnectionSessionIndex OBJECT-TYPE
     STATUS      current
     DESCRIPTION
         "The index of the session associated with this connection.
-        Refers to the index of agentIscsiFlowAccelerationSessionIndex in 
+        Refers to the index of agentIscsiFlowAccelerationSessionIndex in
         agentIscsiFlowAccelerationSessionTable."
     ::= { agentIscsiFlowAccelerationConnectionEntry 7 }
 

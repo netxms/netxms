@@ -1,4 +1,4 @@
--- HP Enterprise Switch UDP Forwarder configuration MIB 
+-- HP Enterprise Switch UDP Forwarder configuration MIB
 
 HP-ICF-UDP-FORWARD DEFINITIONS ::= BEGIN
 
@@ -54,8 +54,8 @@ hpicfUdpFwdServersTable  OBJECT-TYPE
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-                "This table contains a list of UDP Server Address and 
-                 associated port numbers for which forwarding 
+                "This table contains a list of UDP Server Address and
+                 associated port numbers for which forwarding
                  is enabled."
         ::= { hpicfUdpFwdObjects 2}
 
@@ -84,7 +84,7 @@ hpicfUdpFwdVlanId OBJECT-TYPE
         SYNTAX      VlanId
         MAX-ACCESS  not-accessible
         STATUS      current
-        DESCRIPTION "The VLAN index which uniquely identifies a row  
+        DESCRIPTION "The VLAN index which uniquely identifies a row
                     in this table."
         ::= { hpicfUdpFwdServersEntry 1 }
 
@@ -108,9 +108,9 @@ hpicfUdpFwdServerAddress OBJECT-TYPE
         MAX-ACCESS  read-create
         STATUS      current
         DESCRIPTION " This object contains the server IP address. The
-                  type of address specified by this object is 
-              indicated by the corresponding instance of the 
-              hpicfUdpFwdServerAddressType. 
+                  type of address specified by this object is
+              indicated by the corresponding instance of the
+              hpicfUdpFwdServerAddressType.
 
                     An attempt to create a row in which the length
                     of this object is not consistent with the type
@@ -132,7 +132,7 @@ hpicfUdpFwdRowStatus  OBJECT-TYPE
         SYNTAX      RowStatus
         MAX-ACCESS  read-create
         STATUS      current
-        DESCRIPTION "Status of table row."              
+        DESCRIPTION "Status of table row."
         ::= { hpicfUdpFwdServersEntry 6 }
 
 
@@ -151,18 +151,18 @@ hpicfUdpFwdGroups      OBJECT IDENTIFIER ::= { hpicfUdpFwdConformance 2 }
 hpicfUdpFwdCompliance MODULE-COMPLIANCE
         STATUS      current
         DESCRIPTION "
-                A compliance statement for HP Routing switches with UDP 
+                A compliance statement for HP Routing switches with UDP
                 packet forwarding"
         MODULE
         MANDATORY-GROUPS {  hpicfUdpFwdCfgGroup,
                             hpicfUdpFwdServerTableGroup }
 
         GROUP       hpicfUdpFwdCfgGroup
-        DESCRIPTION "A Collection of Object(s) that allow  
+        DESCRIPTION "A Collection of Object(s) that allow
                      configuration of UDP Forwarder"
 
         GROUP       hpicfUdpFwdServerTableGroup
-        DESCRIPTION "A Collection of Object(s) that allow  
+        DESCRIPTION "A Collection of Object(s) that allow
                      configuration of Server Addresses"
 
         ::= { hpicfUdpFwdCompliances 1 }
@@ -175,7 +175,7 @@ hpicfUdpFwdCfgGroup OBJECT-GROUP
         ::= { hpicfUdpFwdGroups 1 }
 
 hpicfUdpFwdServerTableGroup OBJECT-GROUP
-        OBJECTS     { 
+        OBJECTS     {
                       hpicfUdpFwdVlanId,
                       hpicfUdpFwdServerAddressType,
                       hpicfUdpFwdServerAddress,
@@ -187,4 +187,3 @@ hpicfUdpFwdServerTableGroup OBJECT-GROUP
         ::= { hpicfUdpFwdGroups 2 }
 
 END
-

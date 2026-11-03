@@ -84,7 +84,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "Enable/disable auto join on stack. This variable 
+        DESCRIPTION "Enable/disable auto join on stack. This variable
                     is only valid for candidate switch."
         ::= { hpSwitchStackConfig 5 }
 
@@ -95,7 +95,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
                     }
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION "Enable/disable auto grab on stack. This variable 
+        DESCRIPTION "Enable/disable auto grab on stack. This variable
                     is only valid if 'hpSwitchStackAdminStatus' has been
                     set to 'command-switch'."
         ::= { hpSwitchStackConfig 6 }
@@ -154,7 +154,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
         SYNTAX      RowStatus
         MAX-ACCESS  read-create
         STATUS      current
-        DESCRIPTION "The status of a stack member entry."          
+        DESCRIPTION "The status of a stack member entry."
         ::= { hpSwitchStackConfigMemberEntry 4 }
 
     -- Status support for Stacking
@@ -169,7 +169,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
         ::= { hpStackStats 1 }
 
     hpStackStatsMembersNum OBJECT-TYPE
-        SYNTAX      Integer32 (0..32)           
+        SYNTAX      Integer32 (0..32)
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION "Number of members switches that have joined this
@@ -178,7 +178,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
         ::= { hpStackStats 2 }
 
     hpStackStatsMembersUnreachable OBJECT-TYPE
-        SYNTAX      Integer32 (0..32)           
+        SYNTAX      Integer32 (0..32)
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION "The number of unreachable member switches. This
@@ -187,7 +187,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
         ::= { hpStackStats 3 }
 
     hpStackStatsMemberID OBJECT-TYPE
-        SYNTAX      Integer32 (0..32)          
+        SYNTAX      Integer32 (0..32)
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION "The number by which member switch is known on the
@@ -309,7 +309,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
     hpSwitchDiscoveryConfig OBJECT IDENTIFIER ::=
         { hpSwitchVirtualStackMib 5 }
 
-    hpSwitchDiscoveryAdminStatus  OBJECT-TYPE 
+    hpSwitchDiscoveryAdminStatus  OBJECT-TYPE
         SYNTAX      INTEGER {
                         enable(1),
                         disable(2)
@@ -448,7 +448,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
     hpSwitchVirtualStackMibGroups
         OBJECT IDENTIFIER ::= {  hpSwitchVirtualStackMibConformance 2}
 
-    hpSwitchVirtualStackMibCompliance MODULE-COMPLIANCE 
+    hpSwitchVirtualStackMibCompliance MODULE-COMPLIANCE
         STATUS      current
         DESCRIPTION "The compliance statement for devices implementing the
                     HP Stack Mib."
@@ -491,7 +491,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
                       hpStackStatsMemberOperStatus
                     }
 	STATUS      current
-        DESCRIPTION "A collection of objects for determining state 
+        DESCRIPTION "A collection of objects for determining state
                     and status of a stack."
         ::= { hpSwitchVirtualStackMibGroups 2 }
 
@@ -500,10 +500,10 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
                       hpSwitchDiscoveryTransmissionInterval
                     }
         STATUS      current
-        DESCRIPTION "A collection of objects for configuring the 
+        DESCRIPTION "A collection of objects for configuring the
                     state of the stack discovery protocol."
         ::= { hpSwitchVirtualStackMibGroups 3 }
-       
+
     hpDiscoverStatsGroup OBJECT-GROUP
         OBJECTS     { hpDiscoverStatsCandidateMacAddr,
                       hpDiscoverStatsCandidateSystemName,
@@ -516,7 +516,7 @@ HP-SwitchStack-MIB DEFINITIONS ::= BEGIN
                     }
         STATUS      current
         DESCRIPTION "A collection of objects for viewing the
-                    discovered devices by the stack discovery 
+                    discovered devices by the stack discovery
                     protocol."
         ::= { hpSwitchVirtualStackMibGroups 4 }
 

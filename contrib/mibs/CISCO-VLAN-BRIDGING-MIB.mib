@@ -34,17 +34,17 @@ ciscoVlanBridgingMIB MODULE-IDENTITY
     DESCRIPTION
             "Deprecate cvbStpForwardingMap and define
              cvbStpForwardingMap2k to support up to 2k
-             bridge ports." 
+             bridge ports."
     REVISION        "9609120000Z"
     DESCRIPTION
             "Initial version of this MIB module."
     ::= { ciscoMgmt 56 }
 
 
-ciscoVlanBridgingMIBObjects 
+ciscoVlanBridgingMIBObjects
     OBJECT IDENTIFIER ::= { ciscoVlanBridgingMIB 1 }
 
-cvbStp 
+cvbStp
     OBJECT IDENTIFIER ::= { ciscoVlanBridgingMIBObjects 1 }
 
 
@@ -60,7 +60,7 @@ cvbStpTable OBJECT-TYPE
            "This table contains device STP status information
             for each VLAN."
     ::= { cvbStp  1 }
- 
+
 
 cvbStpEntry OBJECT-TYPE
     SYNTAX  CiscoVlanStpEntry
@@ -70,7 +70,7 @@ cvbStpEntry OBJECT-TYPE
            "Device STP status for specified VLAN."
     INDEX         { vtpVlanIndex }
     ::= { cvbStpTable  1 }
- 
+
 
 CiscoVlanStpEntry ::=
     SEQUENCE {
@@ -84,7 +84,7 @@ cvbStpForwardingMap OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS  deprecated
     DESCRIPTION
-           "An indication of which ports are forwarding by spanning 
+           "An indication of which ports are forwarding by spanning
             tree for the specified VLAN. The octet string contains
             one bit per port on the bridge for the specified VLAN.
 
@@ -94,7 +94,7 @@ cvbStpForwardingMap OBJECT-TYPE
             through 16, etc.   Within each octet, the most
             significant bit represents the lowest numbered
             port, and the least significant bit represents the
-            highest numbered port. 
+            highest numbered port.
 
             The bit value interpretation is related to RFC 1493
             dot1dStpPortState values is as follows:
@@ -103,13 +103,13 @@ cvbStpForwardingMap OBJECT-TYPE
                    nonexistent"
 
     ::= { cvbStpEntry 2 }
- 
+
 cvbStpForwardingMap2k OBJECT-TYPE
-    SYNTAX  CiscoPortList 
+    SYNTAX  CiscoPortList
     MAX-ACCESS  read-only
     STATUS  current
     DESCRIPTION
-           "An indication of which ports are forwarding by spanning 
+           "An indication of which ports are forwarding by spanning
             tree for the specified VLAN. The octet string contains
             one bit per port on the bridge for the specified VLAN.
             This object has STP status information of up to 2k ports
@@ -121,7 +121,7 @@ cvbStpForwardingMap2k OBJECT-TYPE
             through 16, etc.   Within each octet, the most
             significant bit represents the lowest numbered
             port, and the least significant bit represents the
-            highest numbered port. 
+            highest numbered port.
 
             The bit value interpretation is related to RFC 1493
             dot1dStpPortState values is as follows:
@@ -136,7 +136,7 @@ cvbStpForwardingMap2k OBJECT-TYPE
 
 ciscoVlanBridgingMIBConformance
     OBJECT IDENTIFIER ::= { ciscoVlanBridgingMIB 3 }
-ciscoVlanBridgingMIBCompliances 
+ciscoVlanBridgingMIBCompliances
     OBJECT IDENTIFIER ::= { ciscoVlanBridgingMIBConformance 1 }
 ciscoVlanBridgingMIBGroups
     OBJECT IDENTIFIER ::= { ciscoVlanBridgingMIBConformance 2 }
@@ -168,18 +168,18 @@ ciscoVlanBridgingMIBGroup OBJECT-GROUP
     OBJECTS { cvbStpForwardingMap }
     STATUS  deprecated
     DESCRIPTION
-            "A collection of objects providing the STP status 
-            information of up to 1k ports with the port number 
-            from 1 to 1024." 
+            "A collection of objects providing the STP status
+            information of up to 1k ports with the port number
+            from 1 to 1024."
     ::= { ciscoVlanBridgingMIBGroups 1 }
 
 ciscoVlanBridgingMIBGroup2 OBJECT-GROUP
     OBJECTS { cvbStpForwardingMap2k }
     STATUS  current
     DESCRIPTION
-            "A collection of objects providing the STP status 
-            information of up to 2k ports with the port number 
-            from 1 to 2048." 
+            "A collection of objects providing the STP status
+            information of up to 2k ports with the port number
+            from 1 to 2048."
     ::= { ciscoVlanBridgingMIBGroups 2 }
 
 

@@ -2143,7 +2143,7 @@ nlMatrixTopNControlMatrixIndex OBJECT-TYPE
         nlMatrixTopNControlStatus object is equal to active(1)."
     ::= { nlMatrixTopNControlEntry 2 }
 
--- 
+--
 -- this object is cloned from HC-RMON-MIB.my
 -- that version is now commented out
 --

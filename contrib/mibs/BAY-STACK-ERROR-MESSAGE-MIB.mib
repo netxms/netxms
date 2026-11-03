@@ -84,4 +84,3 @@ bsemErrorMessageString OBJECT-TYPE
     ::= { bsemErrorMessageEntry 4 }
 
 END
-

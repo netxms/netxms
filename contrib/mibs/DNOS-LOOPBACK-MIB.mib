@@ -21,7 +21,7 @@ IMPORTS
                                           FROM SNMPv2-TC
     InetAddressIPv4			                  FROM INET-ADDRESS-MIB
     dnOS                              FROM DELL-REF-MIB;
-    
+
     fastPathLoopback MODULE-IDENTITY
         LAST-UPDATED "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
         ORGANIZATION "Dell, Inc."

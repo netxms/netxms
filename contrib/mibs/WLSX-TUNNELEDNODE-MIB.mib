@@ -3,8 +3,8 @@
 WLSX-TUNNELEDNODE-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
-       
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
+
        MODULE-IDENTITY,
        OBJECT-TYPE,
        snmpModules,
@@ -40,10 +40,10 @@ WLSX-TUNNELEDNODE-MIB DEFINITIONS ::= BEGIN
                         Santa Clara, CA 95054
             E-mail:     aruba-ext-eng-reg@hpe.com
             Phone:      408 227 4500
-            Fax:        408 752 0626" 
+            Fax:        408 752 0626"
        DESCRIPTION
            "This MIB module defines MIB objects which provide
-            information about the Controller Transport Service (Cts) in the 
+            information about the Controller Transport Service (Cts) in the
 			Aruba controller."
        REVISION        "202008141745Z"
        DESCRIPTION
@@ -83,7 +83,7 @@ WLSX-TUNNELEDNODE-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS  current
         DESCRIPTION
-            " 
+            "
             MAC address of the Tunneled Node
             "
         ::= { wlsxTunneledNodeRequestEntry 1 }

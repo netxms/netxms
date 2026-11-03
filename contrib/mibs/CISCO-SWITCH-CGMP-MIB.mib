@@ -13,16 +13,16 @@ CISCO-SWITCH-CGMP-MIB DEFINITIONS ::= BEGIN
 IMPORTS
         TEXTUAL-CONVENTION,
         RowStatus,
-        MacAddress                      
+        MacAddress
             FROM SNMPv2-TC
         MODULE-IDENTITY,
-        OBJECT-TYPE                      
-            FROM SNMPv2-SMI        
+        OBJECT-TYPE
+            FROM SNMPv2-SMI
         dot1dBasePort
             FROM BRIDGE-MIB
-        ciscoMgmt                        
+        ciscoMgmt
             FROM CISCO-SMI
-        MODULE-COMPLIANCE, OBJECT-GROUP  
+        MODULE-COMPLIANCE, OBJECT-GROUP
             FROM SNMPv2-CONF;
 
 ciscoSwitchCgmpMIB MODULE-IDENTITY
@@ -40,7 +40,7 @@ ciscoSwitchCgmpMIB MODULE-IDENTITY
 
                 Email: cs-ipmulticast@cisco.com"
         DESCRIPTION
-                "Switch-side Cisco Group Management Protocol MIB for  
+                "Switch-side Cisco Group Management Protocol MIB for
                  Layer 2 Switch devices."
         REVISION        "9805070000Z"
         DESCRIPTION
@@ -66,11 +66,11 @@ SCgmpVlanIndex ::= TEXTUAL-CONVENTION
 --
 -- Switch side Cisco Group Management Protocol (CGMP) objects
 --
--- CGMP provides a mechanism for Layer2-only switches to populate 
+-- CGMP provides a mechanism for Layer2-only switches to populate
 -- destination port lists for multicast groups. Multicast routers
 -- will relay Internet Group Managment Protocol (IGMP) messages
 -- to switches using CGMP. This allows switches to constrain multicast
--- traffic to only those ports that have indicated their membership 
+-- traffic to only those ports that have indicated their membership
 -- in a given group.
 --
 
@@ -111,7 +111,7 @@ sCgmpRouterHoldTime OBJECT-TYPE
                  a network. A switch that receives a CGMP message will save
                  the information and set a timer equal to this router hold
                  time. When the router hold time expires, the switch will
-                 remove the Router entry from CGMP. The default value 
+                 remove the Router entry from CGMP. The default value
                  is 300 seconds."
 
         ::= { sCgmpInfo 3 }
@@ -120,30 +120,30 @@ sCgmpRouterTable OBJECT-TYPE
         SYNTAX SEQUENCE OF SCgmpRouterEntry
         MAX-ACCESS not-accessible
         STATUS current
-        DESCRIPTION                   
+        DESCRIPTION
                 "List of Router entries present on the switch."
 
-        ::= { sCgmpInfo 4 } 
+        ::= { sCgmpInfo 4 }
 
 sCgmpRouterEntry OBJECT-TYPE
         SYNTAX SCgmpRouterEntry
         MAX-ACCESS not-accessible
         STATUS current
-        DESCRIPTION                         
+        DESCRIPTION
                 "Entry containing multicast router information for
                 a particular router. These entries are created when a
                 router sends a CGMP join for itself on a particular
                 vlan. Entries may be removed when a router entry's
-                sCgmpRouterHoldTime expires, or when explicitly 
+                sCgmpRouterHoldTime expires, or when explicitly
                 removed by a user."
 
         INDEX { sCgmpRouterVlanIndex, dot1dBasePort, sCgmpRouterMacAddress}
 
-        ::= { sCgmpRouterTable 1 } 
+        ::= { sCgmpRouterTable 1 }
 
 SCgmpRouterEntry ::= SEQUENCE {
                 sCgmpRouterVlanIndex
-                SCgmpVlanIndex,                
+                SCgmpVlanIndex,
                 sCgmpRouterMacAddress
                 MacAddress,
                 sCgmpRouterEntryStatus
@@ -154,10 +154,10 @@ sCgmpRouterVlanIndex OBJECT-TYPE
         SYNTAX SCgmpVlanIndex
         MAX-ACCESS not-accessible
         STATUS current
-        DESCRIPTION     
-                "An index value that uniquely identifies the 
+        DESCRIPTION
+                "An index value that uniquely identifies the
                 vlan on which the router identified by this router entry
-                is located. This value may be the same as used in the 
+                is located. This value may be the same as used in the
                 CISCO-VLAN-MEMBERSHIP-MIB and the CISCO-VTP-MIB for
                 the same given vlan, if VTP is present and in use
                 on the switch."
@@ -168,8 +168,8 @@ sCgmpRouterMacAddress OBJECT-TYPE
         SYNTAX MacAddress
         MAX-ACCESS not-accessible
         STATUS current
-        DESCRIPTION     
-                "An 802 MAC Address in canonical format. This is the 
+        DESCRIPTION
+                "An 802 MAC Address in canonical format. This is the
                 MAC address of the router itself."
 
         ::= { sCgmpRouterEntry 3 }
@@ -178,30 +178,30 @@ sCgmpRouterEntryStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS read-write
         STATUS current
-        DESCRIPTION 
+        DESCRIPTION
                 "This object is used by a management station to
-                 delete the row entry in sCgmpRouterTable following 
+                 delete the row entry in sCgmpRouterTable following
                  the RowStatus textual convention. The managment
                  station may remove this entry by setting destroy (6).
-                 Entries may not be created. Entries removed may 
+                 Entries may not be created. Entries removed may
                  reappear in normal CGMP operation when the router
                  sends another self join."
 
         ::= { sCgmpRouterEntry 4 }
 
 
--- Notifications 
+-- Notifications
 
 -- none
 
 
 -- Conformance
 
-ciscoSwitchCgmpMIBConformance  OBJECT IDENTIFIER ::= 
+ciscoSwitchCgmpMIBConformance  OBJECT IDENTIFIER ::=
                                 { ciscoSwitchCgmpMIB 3 }
-ciscoSwitchCgmpMIBCompliances  OBJECT IDENTIFIER ::= 
+ciscoSwitchCgmpMIBCompliances  OBJECT IDENTIFIER ::=
                                 { ciscoSwitchCgmpMIBConformance 1 }
-ciscoSwitchCgmpMIBGroups       OBJECT IDENTIFIER ::= 
+ciscoSwitchCgmpMIBGroups       OBJECT IDENTIFIER ::=
                                 { ciscoSwitchCgmpMIBConformance 2 }
 
 -- Compliance
@@ -218,7 +218,7 @@ ciscoSwitchCgmpMIBCompliance MODULE-COMPLIANCE
         MIN-ACCESS read-only
         DESCRIPTION "Write access not required"
 
-        ::= { ciscoSwitchCgmpMIBCompliances 1 } 
+        ::= { ciscoSwitchCgmpMIBCompliances 1 }
 
 -- Units of Conformance
 
@@ -226,7 +226,7 @@ sCgmpGroup OBJECT-GROUP
         OBJECTS {
                 sCgmpEnable,
                 sCgmpFastLeaveEnable,
-                sCgmpRouterHoldTime,                
+                sCgmpRouterHoldTime,
                 sCgmpRouterEntryStatus
                 }
         STATUS current
@@ -236,4 +236,3 @@ sCgmpGroup OBJECT-GROUP
 
 
 END
-

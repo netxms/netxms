@@ -18,14 +18,14 @@
 -- This is the first formal version for universal MIB definition.
 -- -----------------------------------------------------------------------------
 
-SUBNETVLAN-MIB DEFINITIONS ::= BEGIN     
+SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
 
 	IMPORTS
 	    MODULE-IDENTITY, OBJECT-TYPE, Integer32, IpAddress
 	        FROM SNMPv2-SMI
 	    RowStatus
 	        FROM SNMPv2-TC
-	    dlink-common-mgmt	
+	    dlink-common-mgmt
 	        FROM DLINK-ID-REC-MIB;
 
      swSubnetVlanMIB MODULE-IDENTITY
@@ -37,12 +37,12 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
 		    "The Subnet (Policy-based) VLAN module MIB for
                     the proprietary enterprise."
         ::= { dlink-common-mgmt 75 }
- 
+
 -- -----------------------------------------------------------------------------
 -- TEXTUAL-CONVENTION
 -- -----------------------------------------------------------------------------
 	VlanId		::= INTEGER (1..4094)
-	
+
 	Ipv6Address ::= TEXTUAL-CONVENTION
 		DISPLAY-HINT "2x:"
 		STATUS       current
@@ -64,7 +64,7 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
 -- -----------------------------------------------------------------------------
 -- swMcastVlanInfo
 -- -----------------------------------------------------------------------------
-    	     	
+
 -- -----------------------------------------------------------------------------
 -- swMcastVlanMgmt
 -- -----------------------------------------------------------------------------
@@ -93,7 +93,7 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
             swVlanPrecedenceClassification
                 INTEGER
         }
-        	
+
     swVlanPrecedencePortIndex OBJECT-TYPE
 	    SYNTAX  INTEGER (0..65535)
 	    MAX-ACCESS  read-only
@@ -101,7 +101,7 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "This object indicates the port index."
     	::= { swVlanPrecedenceEntry 1 }
-    	
+
     swVlanPrecedenceClassification OBJECT-TYPE
 	    SYNTAX   INTEGER{
 	             macBased(1),
@@ -143,7 +143,7 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
             swSubnetVLANRowStatus
                 RowStatus
         }
-        	
+
     swSubnetVLANIPAddress OBJECT-TYPE
 	    SYNTAX  IpAddress
 	    MAX-ACCESS  read-only
@@ -151,7 +151,7 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "This object indicates the IP address."
     	::= { swSubnetVLANEntry 1 }
-    	
+
     swSubnetVLANIPMask OBJECT-TYPE
 	    SYNTAX   IpAddress
 	    MAX-ACCESS  read-only
@@ -167,7 +167,7 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "This object indicates the VLAN ID."
     	::= { swSubnetVLANEntry 3 }
-    	
+
     swSubnetVLANPriority OBJECT-TYPE
 	    SYNTAX   INTEGER (0..7)
 	    MAX-ACCESS  read-create
@@ -184,15 +184,15 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
 	        "This object indicates the status of this entry."
     	::= { swSubnetVLANEntry 5 }
 
-                                        	
+
      swSubnetVLANIPv6Table OBJECT-TYPE
       SYNTAX      SEQUENCE OF SwSubnetVLANIPv6Entry
       MAX-ACCESS  not-accessible
       STATUS      current
       DESCRIPTION
           "This table contains subnet VLAN IPv6 entry information."
-      ::= { swSubnetVlanMgmt 3 }  
- 
+      ::= { swSubnetVlanMgmt 3 }
+
     swSubnetVLANIPv6Entry OBJECT-TYPE
         SYNTAX      SwSubnetVLANIPv6Entry
         MAX-ACCESS  not-accessible
@@ -201,7 +201,7 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
             "This object indicates subnet VLAN IPv6 entry information."
         INDEX   { swSubnetVLANIPv6Address,swSubnetVLANIPv6PrefixLength}
         ::= { swSubnetVLANIPv6Table 1 }
- 
+
     SwSubnetVLANIPv6Entry ::=
       SEQUENCE {
           swSubnetVLANIPv6Address
@@ -215,7 +215,7 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
           swSubnetVLANIPv6RowStatus
               RowStatus
       }
-  
+
    swSubnetVLANIPv6Address OBJECT-TYPE
 	    SYNTAX  Ipv6Address
 	    MAX-ACCESS  read-only
@@ -223,15 +223,15 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "This object indicates the IPv6 address."
     	::= { swSubnetVLANIPv6Entry 1 }
-    	
+
     swSubnetVLANIPv6PrefixLength OBJECT-TYPE
-	    SYNTAX   INTEGER 
+	    SYNTAX   INTEGER
 	    MAX-ACCESS  read-only
 	    STATUS  current
 	    DESCRIPTION
 	        "This object indicates the IPv6 prefix length."
     	::= { swSubnetVLANIPv6Entry 2 }
- 
+
      swSubnetVLANIPv6VID OBJECT-TYPE
 	    SYNTAX  VlanId
 	    MAX-ACCESS  read-create
@@ -239,7 +239,7 @@ SUBNETVLAN-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "This object indicates the VLAN ID."
     	::= { swSubnetVLANIPv6Entry 3 }
-    	
+
     swSubnetVLANIPv6Priority OBJECT-TYPE
 	    SYNTAX   INTEGER (0..7)
 	    MAX-ACCESS  read-create

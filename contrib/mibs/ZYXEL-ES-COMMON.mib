@@ -28,19 +28,19 @@ IMPORTS
 	esConformance			FROM ZYXEL-ES-SMI;
 
 esSysInfo MODULE-IDENTITY
-	LAST-UPDATED	"201009200000Z"    
-	ORGANIZATION "Enterprise Solution ZyXEL"     
+	LAST-UPDATED	"201009200000Z"
+	ORGANIZATION "Enterprise Solution ZyXEL"
 	CONTACT-INFO
-		""	   
+		""
 	DESCRIPTION
 		"The subtree for system information"
 	::= { esMgmt 1 }
 
 esSysMgmt MODULE-IDENTITY
-	LAST-UPDATED	"201009060000Z" 
-	ORGANIZATION "Enterprise Solution ZyXEL"     
+	LAST-UPDATED	"201009060000Z"
+	ORGANIZATION "Enterprise Solution ZyXEL"
 	CONTACT-INFO
-		""	   
+		""
 	DESCRIPTION
 		"The subtree for basic system management"
 	::= { esMgmt 2 }
@@ -175,15 +175,15 @@ sysHwMinorVersion OBJECT-TYPE
 	DESCRIPTION
 		"The minor version of hardware platform."
 	::= { esSysInfo 14 }
-	
+
 sysHwVersionString OBJECT-TYPE
 	SYNTAX		DisplayString
 	MAX-ACCESS	read-only
 	STATUS		current
 	DESCRIPTION
 		"The detail hardware version."
-	::= { esSysInfo 15 }    
-	
+	::= { esSysInfo 15 }
+
 sysCountryCode OBJECT-TYPE
 	SYNTAX		DisplayString
 	MAX-ACCESS	read-only
@@ -233,8 +233,8 @@ MgmtAlarmStatus ::= TEXTUAL-CONVENTION
 		sysVoltageRangeError(3)
 	}
 
-sysMgmtReboot OBJECT-TYPE   
-	SYNTAX  INTEGER {  
+sysMgmtReboot OBJECT-TYPE
+	SYNTAX  INTEGER {
 		running(0),
 		reboot (1)
 	}
@@ -246,7 +246,7 @@ sysMgmtReboot OBJECT-TYPE
 	::= { esSysMgmt 1 }
 
 sysMgmtConfigSave OBJECT-TYPE
-	SYNTAX  INTEGER {  
+	SYNTAX  INTEGER {
 		running(0),
 		save (1)
 	}
@@ -258,11 +258,11 @@ sysMgmtConfigSave OBJECT-TYPE
 	::= { esSysMgmt 2 }
 
 sysMgmtRestoreDefaultConfig OBJECT-TYPE
-	SYNTAX  INTEGER {  
+	SYNTAX  INTEGER {
 		running(0),
 		restore (1)
-	}                       
-	
+	}
+
 	MAX-ACCESS	read-write
 	STATUS		current
 	DESCRIPTION
@@ -421,4 +421,3 @@ esSysMgmtGroup OBJECT-GROUP
 	::= { esBasicGroups 2 }
 
 END
-

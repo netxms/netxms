@@ -3,15 +3,15 @@
 -- File: 1.21-02
 -- Previous:1.21-01
 -- Date: 01-03-2013
--- Revision : Added new PD State 
+-- Revision : Added new PD State
 -- Revision : For Battery Type Description
 -- Revision : For PRL and SRL description changes for RAID Level
 -- Revision : Description changed for hostName
 -- Revision : Added Description for Trap Attributes "OldState" and "NewState" for PDTraps and VDTraps.
 -- Revision : Added Support for SSD Devices.
 -- Revision : Changed only the versioning for MIB.
--- Revision : Replaced LSI Logic Corporation with LSI Corporation                                    
--- Revision : Removed VDDiskCachePolicy Unchanged option. 
+-- Revision : Replaced LSI Logic Corporation with LSI Corporation
+-- Revision : Removed VDDiskCachePolicy Unchanged option.
 -- Revision : tParentIndex description has been updated
 -- Revision : Temperature unit added in the description of enclosureTemperature, and spareType description has been updated
 -- Revision : pdtInserted Trap description has been updated. Trap CATEGORY has been changed to "Error Events".
@@ -152,11 +152,11 @@ adapterPropertiesTable               OBJECT-TYPE
 -- Estatoah Falls start	  17/03/2008
 	  ssdSMARTerEnabled 	 INTEGER,
 -- Estatoah Falls end	  17/03/2008
-   sasAddr                 DisplayString,          
+   sasAddr                 DisplayString,
 	auxilaryPowerPresent DisplayString,
 	ddLifeCurveStatus DisplayString,
 	ddSSDLifeLeft DisplayString,
-	dDStatus DisplayString     
+	dDStatus DisplayString
     }
 
 -- defines for each attribute in AdapterEntry
@@ -195,7 +195,7 @@ cacheFlushInterval                     OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Cache flush interval in seconds for this adapter."
     ::= { adapterPropertiesEntry 5 }
-    
+
 clusterState                     OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -257,7 +257,7 @@ spinupDriveCount                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Maximum number of drives to spin up at one time for this adapter."
     ::= { adapterPropertiesEntry 14 }
-    
+
 coercionMode                OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -285,7 +285,7 @@ multipathSupport                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Multipath is supported or not supported on this adapter.Values: not supported(0),supported(1)"
     ::= { adapterPropertiesEntry 18 }
-    
+
 -- Estatoah Falls start	  17/03/2008
 ssdSMARTerEnabled            OBJECT-TYPE
     SYNTAX                      INTEGER
@@ -293,9 +293,9 @@ ssdSMARTerEnabled            OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Copyback to SSD on SMART error. Values Enabled(0),Disabled(1)"
     ::= { adapterPropertiesEntry 19 }
-  
--- Estatoah Falls end	  17/03/2008    
-    
+
+-- Estatoah Falls end	  17/03/2008
+
 sasAddr		            OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -308,7 +308,7 @@ auxilaryPowerPresent					OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Presence of Auxilary Power"
-    ::= { adapterPropertiesEntry 21 } 
+    ::= { adapterPropertiesEntry 21 }
 
 ddLifeCurveStatus					OBJECT-TYPE
     SYNTAX                      DisplayString
@@ -332,14 +332,14 @@ dDStatus					OBJECT-TYPE
     ::= { adapterPropertiesEntry 24 }
 
 
-    
+
 --------------start adp info-------------------------------------
 adapterInfoTable                    OBJECT-TYPE
     SYNTAX                      SEQUENCE OF AdapterInfoEntry
     ACCESS                      not-accessible
     STATUS                      optional
     DESCRIPTION                 "A List of adapter Entries containing Information/Properties about the adapters."
-    
+
     ::= { adapterDetails 3 }
 
     adapterInfoEntry                OBJECT-TYPE
@@ -473,7 +473,7 @@ firmwareVersion                 OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Firmware version Format->(Firmware Package Version:Version:Date:Time)"
     ::= { adapterInfoEntry 14 }
-    
+
 driverVersion                 OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -557,7 +557,7 @@ devInterfaceType                 OBJECT-TYPE
     ::= { adapterInfoEntry 27 }
 
 
---------------end adp info          
+--------------end adp info
 --------------start adp support info
 adapterSupportInfoTable                    OBJECT-TYPE
     SYNTAX                      SEQUENCE OF AdapterSupportInfoEntry
@@ -593,10 +593,10 @@ adapterSupportInfoTable                    OBJECT-TYPE
 			supportAllowMixInEnclosure            INTEGER,
 			supportAllowMixInVD       INTEGER,
 			supportAllowSataInCluster  INTEGER,
--- Estatoah Falls start	  17/03/2008	
+-- Estatoah Falls start	  17/03/2008
 			allowSSDMixInLD INTEGER,
 			allowMixSSDHDDInLD INTEGER
--- Estatoah Falls end	  17/03/2008			
+-- Estatoah Falls end	  17/03/2008
         }
 
 -- defines for each attribute in AdapterEntry
@@ -633,13 +633,13 @@ supportMaxLDs                 OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Maximum number of Logical Drive's supported for this Adapter."
-    ::= { adapterSupportInfoEntry 5 }     
+    ::= { adapterSupportInfoEntry 5 }
 supportHardwarePresent                 OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Supported Hardware on this adapter. bbu(1),alarm(2),nvram(3),uart(4). For multiple hardware support a comma delimited list will appear."
-    ::= { adapterSupportInfoEntry 6 }     
+    ::= { adapterSupportInfoEntry 6 }
 supportMaxConcurrentCmds                 OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -708,7 +708,7 @@ supportAllowSataInCluster              OBJECT-TYPE
     DESCRIPTION                 "SataInCluster support. Values: notSupported(0), supported(1)"
     ::= { adapterSupportInfoEntry 17 }
 
--- Estatoah Falls start	  17/03/2008	    
+-- Estatoah Falls start	  17/03/2008
 
 allowSSDMixInLD              OBJECT-TYPE
     SYNTAX                      INTEGER
@@ -723,8 +723,8 @@ allowMixSSDHDDInLD              OBJECT-TYPE
     STATUS                      mandatory
     DESCRIPTION                 "allow SSD/HDD mix within an LD.allow(1), not allow(0)"
     ::= { adapterSupportInfoEntry 19 }
-    
--- Estatoah Falls end	  17/03/2008	
+
+-- Estatoah Falls end	  17/03/2008
 
 --------------end adp info
 --------------start adp operations support info
@@ -964,7 +964,7 @@ vdOpAdpID                     OBJECT-TYPE
     STATUS                      mandatory
     DESCRIPTION                 "Unique adapter ID"
     ::= { vdOperationSupportEntry 1 }
-    
+
 readPolicy                     OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -1106,18 +1106,18 @@ firmwareStatus                OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "condition of battery in following order:
-                                 packMissing(0/1)           
-                                 voltageLow(0/1)            
-                                 temperatureHigh(0/1)       
-                                 chargeActive(0/1)          
-                                 dischargeActive(0/1)       
-                                 learnCycleRequested(0/1)   
-                                 learnCycleActive(0/1)      
-                                 learnCycleFailed(0/1)      
-                                 learnCycleTimeout(0/1)     
+                                 packMissing(0/1)
+                                 voltageLow(0/1)
+                                 temperatureHigh(0/1)
+                                 chargeActive(0/1)
+                                 dischargeActive(0/1)
+                                 learnCycleRequested(0/1)
+                                 learnCycleActive(0/1)
+                                 learnCycleFailed(0/1)
+                                 learnCycleTimeout(0/1)
                                  i2cErrorsDetected(0/1)
-                                 Only enabled(1) values will be shown"     
-    
+                                 Only enabled(1) values will be shown"
+
     ::= { bbuEntry 8 }
 voltage                OBJECT-TYPE
     SYNTAX                      INTEGER
@@ -1282,9 +1282,9 @@ pdEntry                     OBJECT-TYPE
 	    pdSerialNumber		DisplayString,
             diskType             INTEGER,
             partnerDevId  INTEGER,
--- Estatoah Falls start	  17/03/2008		    
+-- Estatoah Falls start	  17/03/2008
 	        mediatype INTEGER,
--- Estatoah Falls end	            
+-- Estatoah Falls end
 	    oemCertified   INTEGER,
 		pdTemperature		INTEGER,
 		piType			INTEGER,
@@ -1467,7 +1467,7 @@ pdFwversion						OBJECT-TYPE
 	STATUS					optional
 	DESCRIPTION				"Physical drive firmware version"
 	::= { pdEntry 26 }
-	
+
 pdSerialNumber                    OBJECT-TYPE
     SYNTAX			    DisplayString
     ACCESS                      read-only
@@ -1486,11 +1486,11 @@ partnerDevId                    OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
-    DESCRIPTION                 "If drive is in an enclosure with dual paths,This is Partner Device ID.				 
+    DESCRIPTION                 "If drive is in an enclosure with dual paths,This is Partner Device ID.
                                  In all other cases INVALID(-1)"
     ::= { pdEntry 29 }
 
--- Estatoah Falls start	  17/03/2008		    
+-- Estatoah Falls start	  17/03/2008
 
 mediatype                    OBJECT-TYPE
     SYNTAX                      INTEGER
@@ -1507,7 +1507,7 @@ oemCertified                    OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Indicates whether device is certified(0) or not(1)"
     ::= { pdEntry 31 }
-	
+
 pdTemperature                OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -1617,7 +1617,7 @@ vdEntry                     OBJECT-TYPE
             numDrives       INTEGER,
             spanDepth       INTEGER,
             initState       INTEGER,
-            currentCachePolicy     INTEGER,  
+            currentCachePolicy     INTEGER,
             operationProgress      DisplayString,
 			vdAdpID         INTEGER
         }
@@ -1687,7 +1687,7 @@ prl                       OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
-    DESCRIPTION                 "Primay raid level. Values: 0(RAID-0), 1(RAID-1), 3(RAID-3), 4(RAID-4), 5(RAID-5), 6(RAID-6),15(Single Disk or JBOD), 
+    DESCRIPTION                 "Primay raid level. Values: 0(RAID-0), 1(RAID-1), 3(RAID-3), 4(RAID-4), 5(RAID-5), 6(RAID-6),15(Single Disk or JBOD),
 				17(RAID-1E/10), 21(RAID-5E), 31(Concatenation),37(RAID-5EEE)"
     ::= { vdEntry 11 }
 rLQ                       OBJECT-TYPE
@@ -1779,7 +1779,7 @@ vdSpanEntry                     OBJECT-TYPE
             vdsArrayRef           INTEGER,
             spAdpId           INTEGER
         }
-        
+
 spanID                       OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -2345,7 +2345,7 @@ tsTemperature                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Current temperature in degree Centigrade"
     ::= { enclosureTSEntry 4 }
-    
+
 ----------------------
 enclosureAlarmInfo                      OBJECT IDENTIFIER ::= {enclosure 6}
 
@@ -2468,7 +2468,7 @@ simStatus                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Number of Logical Drives Configured on this Adapter."
     ::= { enclosureSIMEntry 3 }
-    
+
 --------------------------------------------------------------------------------
 -- Topology Information.
 --------------------------------------------------------------------------------
@@ -2529,8 +2529,8 @@ deviceType                OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Type of device attached to this phy NO_DEVICE = 0, IOC(1), EDGE_EXPANDER(2), FANOUT_EXPANDER(3),END_DEVICE(4)"
-    ::= { phyEntry 3 }  
-    
+    ::= { phyEntry 3 }
+
 phyID                OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -2611,8 +2611,8 @@ tDeviceId                OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Device ID."
-    ::= { tDeviceEntry 3 }  
-    
+    ::= { tDeviceEntry 3 }
+
 tDeviceType                OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -2633,7 +2633,7 @@ tNumPhy                OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Total no of Phy present in this device"
     ::= { tDeviceEntry 6 }
-    
+
 tSASAddr                             OBJECT-TYPE
     SYNTAX                      DisplayString
     ACCESS                      read-only
@@ -2647,7 +2647,7 @@ tDevDescription                             OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Detailed description of the Device."
     ::= { tDeviceEntry 8 }
-    
+
 ------------------------------Traps------------------------------
 lsi-SAS-Traps                      OBJECT IDENTIFIER ::= {megaRAID-SAS-IR 6}
 
@@ -2701,7 +2701,7 @@ atTemperature            OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Temperature Exceeded"
     ::= { lsi-SAS-Traps 1007 }
-    
+
 devLife					OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
@@ -2714,71 +2714,71 @@ atWarningLevel            OBJECT-TYPE
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Warning Level"
-    ::= { lsi-SAS-Traps 1009 }   
-    
+    ::= { lsi-SAS-Traps 1009 }
+
 atErrorLevel            OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Error Level"
-    ::= { lsi-SAS-Traps 1010 }      
-	
+    ::= { lsi-SAS-Traps 1010 }
+
 
 throttle				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Throttle"
-    ::= { lsi-SAS-Traps 1011 }      
-	
+    ::= { lsi-SAS-Traps 1011 }
+
 
 percentThrottle				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Percent Throttle"
-    ::= { lsi-SAS-Traps 1012 }      
+    ::= { lsi-SAS-Traps 1012 }
 
 pciSlotAvailPower				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "PCI Slot Avail Power"
-    ::= { lsi-SAS-Traps 1013 }      
-	
+    ::= { lsi-SAS-Traps 1013 }
+
 
 flags				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Flags SENSOR(1)|SLOT(2)"
-    ::= { lsi-SAS-Traps 1014 }      
-	
+    ::= { lsi-SAS-Traps 1014 }
+
 
 sensorOrSlot				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Sensor Or Slot depending on the value of thr Flag"
-    ::= { lsi-SAS-Traps 1015 }      
-	
+    ::= { lsi-SAS-Traps 1015 }
+
 
 currTemp				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Current Temp"
-    ::= { lsi-SAS-Traps 1016 }      
-	
+    ::= { lsi-SAS-Traps 1016 }
+
 
 thresholdTemp				OBJECT-TYPE
     SYNTAX                      INTEGER
     ACCESS                      read-only
     STATUS                      optional
     DESCRIPTION                 "Threshold Temp"
-    ::= { lsi-SAS-Traps 1017 }      
-	
-	
+    ::= { lsi-SAS-Traps 1017 }
+
+
 	-- Following are the VD trap vars
 
 vdNum                 OBJECT-TYPE
@@ -2821,7 +2821,7 @@ vdOldState            OBJECT-TYPE
 
 
 
-	
+
 
 -- Following are the PD trap vars
 
@@ -2867,17 +2867,17 @@ pdSenseData  			  OBJECT-TYPE
     STATUS                      optional
     DESCRIPTION                 "Sence Data."
     ::= { lsi-SAS-Traps 1207 }
-      
 
-	  
-	  
-	  
+
+
+
+
 -- Following are the trap definitions
 
 irAdpAlarmStateEnabled TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
         DESCRIPTION "Alarm has been enabled by user for Adapter $1"
@@ -2887,7 +2887,7 @@ irAdpAlarmStateEnabled TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
     --#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL    
+	--#STATE OPERATIONAL
     ::= 7001
 
 irAdpBGIRateChanged TRAP-TYPE
@@ -2897,14 +2897,14 @@ irAdpBGIRateChanged TRAP-TYPE
         atRate,
         atAdpNumber
         }
-    DESCRIPTION "Background initialization rate changed to $1 for Adapter $2" 
+    DESCRIPTION "Background initialization rate changed to $1 for Adapter $2"
     --#TYPE "LSI SAS-IR Trap: Background Initialization Rate Changed"
 	--#SUMMARY "Background Initialization Rate changed to %d for Adapter %d"
 	--#ARGUMENTS {0,1}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 7002
 irAdpCacheDiscarded TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
@@ -2934,7 +2934,7 @@ irAdpCacheRebootCantRecover TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 7004
 irAdpCacheRebootRecover TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
@@ -2942,7 +2942,7 @@ irAdpCacheRebootRecover TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Cache data recovered successfully for Adapter $1" 
+    DESCRIPTION "Cache data recovered successfully for Adapter $1"
     --#TYPE "LSI SAS-IR Trap:Cache Recovered"
 	--#SUMMARY "Cache Data Recovered for Adapter %d"
 	--#ARGUMENTS {0}
@@ -2974,14 +2974,14 @@ irAdpCCRateChanged TRAP-TYPE
         atRate,
         atAdpNumber
         }
-    DESCRIPTION "Consistency Check rate changed to $1 for Adapter $2" 
+    DESCRIPTION "Consistency Check rate changed to $1 for Adapter $2"
     --#TYPE "LSI SAS-IR Trap: Consistency Check Rate changed"
 	--#SUMMARY "Consistency Check Rate changed to %d for Adapter %d"
 	--#ARGUMENTS {0,1}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 7007
 irAdpFlashBadImage TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
@@ -2989,7 +2989,7 @@ irAdpFlashBadImage TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Flash downloaded image corrupted for Adapter $1" 
+    DESCRIPTION "Flash downloaded image corrupted for Adapter $1"
     --#TYPE "LSI SAS-IR Trap: Flash Download Image corrupted"
 	--#SUMMARY "Flash download image corrupted for Adapter %d"
 	--#ARGUMENTS {0}
@@ -3004,7 +3004,7 @@ irAdpFlashEraseError TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Flash erase error for Adapter $1" 
+    DESCRIPTION "Flash erase error for Adapter $1"
     --#TYPE "LSI SAS-IR Trap: Flash Erase Error"
 	--#SUMMARY "Flash erase error for Adapter %d"
 	--#ARGUMENTS {0}
@@ -3057,7 +3057,7 @@ irAdpFlashImage TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 7012
 irAdpFlashOK TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
@@ -3080,14 +3080,14 @@ irAdpFlashProgramError TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Flash programming error for Adapter $1" 
+    DESCRIPTION "Flash programming error for Adapter $1"
     --#TYPE "LSI SAS-IR Trap: Flash programming Error"
 	--#SUMMARY "Flash programming error for Adapter %d"
 	--#ARGUMENTS {0}
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 7014
 irAdpFlashProgramTimeout TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
@@ -3104,7 +3104,7 @@ irAdpFlashProgramTimeout TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 7015
-    
+
 irAdpLogCleared TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
     VARIABLES
@@ -3135,7 +3135,7 @@ irAdpLogWrapped TRAP-TYPE
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
     ::= 7017
-    
+
 irAdpPatrolReadComplete TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
     VARIABLES
@@ -3187,7 +3187,7 @@ irAdpPatrolReadStarted TRAP-TYPE
         {
         atAdpNumber
         }
-    DESCRIPTION "Patrol Read started for Adapter $1" 
+    DESCRIPTION "Patrol Read started for Adapter $1"
     --#TYPE "LSI SAS-IR Trap: Patrol Read Started"
 	--#SUMMARY "Patrol Read started for Adapter %d"
 	--#ARGUMENTS {0}
@@ -3209,7 +3209,7 @@ irAdpShutdown TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 7022
 irAdpHibernate TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
@@ -3276,11 +3276,11 @@ irAdpPRRateChanged TRAP-TYPE
     ::= 7026
 irAdpAlarmStateDisabled TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
-    DESCRIPTION "Alarm has been disabled by user for Adapter $1" 
+    DESCRIPTION "Alarm has been disabled by user for Adapter $1"
     --#TYPE "LSI SAS-IR Trap: Alarm disabled"
 	--#SUMMARY "Alarm disabled by user for Adapter %d"
 	--#ARGUMENTS {0}
@@ -3291,8 +3291,8 @@ irAdpAlarmStateDisabled TRAP-TYPE
     ::= 7027
 irAdpConfigCleared TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Configuration cleared for Adapter $1"
@@ -3318,12 +3318,12 @@ irAdpReconRateChanged TRAP-TYPE
 	--#SEVERITY INFORMATIONAL
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
-	--#STATE OPERATIONAL 
+	--#STATE OPERATIONAL
     ::= 7029
 irAdpDefault TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Factory defaults restored for Adapter $1"
@@ -3334,12 +3334,12 @@ irAdpDefault TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7030   
+    ::= 7030
 
 irAdpThresholdsExceededCritical TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     atSensorNum,
     atThreshold,
@@ -3353,12 +3353,12 @@ irAdpThresholdsExceededCritical TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7031   
+    ::= 7031
 
 irAdpThresholdsExceededWarning TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     atSensorNum,
     atThreshold,
@@ -3372,12 +3372,12 @@ irAdpThresholdsExceededWarning TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7032   
+    ::= 7032
 
 irAdpBRMFailed TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Backup Rail Monitor has failed for Adapter $1"
@@ -3388,12 +3388,12 @@ irAdpBRMFailed TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7033   
+    ::= 7033
 
 irAdpSSDLifeExhausted TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     pdSlotNo,
     pdID,
@@ -3409,12 +3409,12 @@ irAdpSSDLifeExhausted TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7034   
+    ::= 7034
 
 irAdpSSDLifeWarning TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     pdSlotNo,
     pdID,
@@ -3430,12 +3430,12 @@ irAdpSSDLifeWarning TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7035   
-   
+    ::= 7035
+
 irAdpSSDThrottlingRemoved TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     pdSlotNo,
     pdID,
@@ -3449,12 +3449,12 @@ irAdpSSDThrottlingRemoved TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7036   
+    ::= 7036
 
 irAdpSSDThrottlingOccuring TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     pdSlotNo,
     pdID,
@@ -3468,12 +3468,12 @@ irAdpSSDThrottlingOccuring TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7037   
+    ::= 7037
 
 irAdpPowerThrottlingRemoved TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     percentThrottle,
     pciSlotAvailPower
@@ -3486,12 +3486,12 @@ irAdpPowerThrottlingRemoved TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7038   
+    ::= 7038
 
 irAdpPowerThrottlingOccuring TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     percentThrottle,
     pciSlotAvailPower
@@ -3504,12 +3504,12 @@ irAdpPowerThrottlingOccuring TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7039   
-   
+    ::= 7039
+
 irAdpDFFTempExceededWarning TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     flags,
     sensorOrSlot,
@@ -3525,12 +3525,12 @@ irAdpDFFTempExceededWarning TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Warning Events"
 	--#STATE OPERATIONAL
-    ::= 7040   
+    ::= 7040
 
 irAdpDFFTempExceededCritical TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber,
     flags,
     sensorOrSlot,
@@ -3546,7 +3546,7 @@ irAdpDFFTempExceededCritical TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7041   
+    ::= 7041
 
 
 ---------------vd trap----------
@@ -4078,7 +4078,7 @@ irPdtPredictiveThresholdExceed TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-	::= 7219		
+	::= 7219
 
 irPdSSDSecurityLocked TRAP-TYPE
 	ENTERPRISE lsi-SAS-Traps
@@ -4092,7 +4092,7 @@ irPdSSDSecurityLocked TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-	::= 7220		
+	::= 7220
 
 irPdSSDSecurityUnlocked TRAP-TYPE
 	ENTERPRISE lsi-SAS-Traps
@@ -4106,13 +4106,13 @@ irPdSSDSecurityUnlocked TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-	::= 7221		
-	
+	::= 7221
+
 ---------------bbu trap----------
 irBbuPresent TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery Present for Adapter %d"
@@ -4123,11 +4123,11 @@ irBbuPresent TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7301   
+    ::= 7301
 irBbuNotPresent TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery Not Present for Adapter $1"
@@ -4138,11 +4138,11 @@ irBbuNotPresent TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-	::= 7302   
+	::= 7302
 irBbuNewBattery TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "New Battery for Adapter $1"
@@ -4153,13 +4153,13 @@ irBbuNewBattery TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7303   
+    ::= 7303
 irBbuReplaced TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
-    }  
+    }
     DESCRIPTION "Battery replaced for Adapter $1"
     --#TYPE "LSI SAS-IR Trap: Battery replaced"
 	--#SUMMARY "Battery has been replaced for Adapter %d"
@@ -4168,13 +4168,13 @@ irBbuReplaced TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7304   
+    ::= 7304
 irBbuTempHigh TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
-    }  
+    }
     DESCRIPTION "Battery temperature high for Adapter $1"
     --#TYPE "LSI SAS-IR Trap: Battery temperature high"
 	--#SUMMARY "Battery Temperature is high for Adapter %d"
@@ -4183,13 +4183,13 @@ irBbuTempHigh TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7305   
+    ::= 7305
 irBbuVoltageLow TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
-    } 
+    }
     DESCRIPTION "Battery voltage low for Adapter $1"
     --#TYPE "LSI SAS-IR Trap: Battery voltage low"
 	--#SUMMARY "Battery Voltage low for Adapter %d"
@@ -4198,11 +4198,11 @@ irBbuVoltageLow TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7306   
+    ::= 7306
 irBbuCharging TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery started charging for Adapter $1"
@@ -4213,11 +4213,11 @@ irBbuCharging TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7307   
+    ::= 7307
 irBbuDisCharging TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery is discharging for Adapter $1"
@@ -4228,11 +4228,11 @@ irBbuDisCharging TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7308   
+    ::= 7308
 irBbuTempNormal TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery temperature is normal for Adapter $1"
@@ -4243,11 +4243,11 @@ irBbuTempNormal TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7309   
+    ::= 7309
 irBbuReplace TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery needs replacement, SOH Bad for Adapter $1"
@@ -4258,11 +4258,11 @@ irBbuReplace TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7310   
+    ::= 7310
 irBbuRelearnStarted TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn started for Adapter $1"
@@ -4273,11 +4273,11 @@ irBbuRelearnStarted TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7311   
+    ::= 7311
 irBbuRelearnProgress TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn in progress for Adapter $1"
@@ -4288,11 +4288,11 @@ irBbuRelearnProgress TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7312   
+    ::= 7312
 irBbuRelearnComplete TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn completed for Adapter $1"
@@ -4303,11 +4303,11 @@ irBbuRelearnComplete TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7313   
+    ::= 7313
 irBbuRelearnTimeout TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn timed out for Adapter $1"
@@ -4318,11 +4318,11 @@ irBbuRelearnTimeout TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7314   
+    ::= 7314
 irBbuRelearnPending TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn pending: Battery is under charge for Adapter $1"
@@ -4333,11 +4333,11 @@ irBbuRelearnPending TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7315   
+    ::= 7315
 irBbuRelearnPostponed TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery relearn postponed for Adapter $1"
@@ -4348,11 +4348,11 @@ irBbuRelearnPostponed TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7316   
+    ::= 7316
 irBbuRemoved TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Battery removed for Adapter $1"
@@ -4363,11 +4363,11 @@ irBbuRemoved TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7317   
+    ::= 7317
 irBbuCapacityLow TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Current capacity of the battery is below threshold for Adapter $1"
@@ -4378,11 +4378,11 @@ irBbuCapacityLow TRAP-TYPE
 	--#GENERIC 6
 	--#CATEGORY "Error Events"
 	--#STATE OPERATIONAL
-    ::= 7318   
+    ::= 7318
 irBbuCapacityAbove TRAP-TYPE
     ENTERPRISE lsi-SAS-Traps
-    VARIABLES 
-    { 
+    VARIABLES
+    {
     atAdpNumber
     }
     DESCRIPTION "Current capacity of the battery is above threshold for Adapter $1"

@@ -1,12 +1,12 @@
 
 POLYCOM-RMX-MIB DEFINITIONS ::= BEGIN
 
-IMPORTS  
+IMPORTS
 TRAP-TYPE          FROM RFC-1215
 DateAndTime        FROM SNMPv2-TC
   MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
     enterprises   , Unsigned32
-    FROM SNMPv2-SMI ; 
+    FROM SNMPv2-SMI ;
 
 polycom MODULE-IDENTITY
   LAST-UPDATED  "200703140000Z"
@@ -15,8 +15,8 @@ polycom MODULE-IDENTITY
 
   DESCRIPTION
 "This is RMX MCU MIB"
-  ::= { enterprises 13885 }  
-    
+  ::= { enterprises 13885 }
+
 nsdProducts	         OBJECT IDENTIFIER ::= { polycom    9}
 rmx                      OBJECT IDENTIFIER ::= { nsdProducts 1}
 
@@ -31,7 +31,7 @@ rmxTraps	         OBJECT IDENTIFIER ::= { rmxNotify 0 }
 rmxProducts	         OBJECT IDENTIFIER ::= { rmx 10 }
 rmx2000	                 OBJECT IDENTIFIER ::= { rmxProducts 1 }
 rmx4000					 OBJECT IDENTIFIER ::= { rmxProducts 2 }
--- PUT HERE MORE PRODUCTS...  
+-- PUT HERE MORE PRODUCTS...
 -- sample : rmx8000	                 OBJECT IDENTIFIER ::= { rmxProducts 8 }
 
 
@@ -54,7 +54,7 @@ rmxCurrentStatus OBJECT-TYPE
 ::= { rmxMib1General 1 }
 
 
- 
+
 ----------------------------------------------------------
 --   Trap Group
 --   All RMX traps have severity major (3).
@@ -65,35 +65,35 @@ rmxAlarmDescription OBJECT-TYPE
 	MAX-ACCESS  accessible-for-notify
 	STATUS  current
    	DESCRIPTION	"Active alarm description"
-::= {rmxMib1EventsParams 1 }  
+::= {rmxMib1EventsParams 1 }
 
 rmxActiveAlarmDateAndTime OBJECT-TYPE
 	SYNTAX  DateAndTime
 	MAX-ACCESS  accessible-for-notify
 	STATUS  current
    	DESCRIPTION	"Active alarm date and time"
-::= {rmxMib1EventsParams 2 } 
+::= {rmxMib1EventsParams 2 }
 
 rmxActiveAlarmIndex OBJECT-TYPE
 	SYNTAX  Unsigned32
 	MAX-ACCESS  accessible-for-notify
 	STATUS  current
    	DESCRIPTION	"Active alarm table unique index number"
-::= {rmxMib1EventsParams 3 } 
+::= {rmxMib1EventsParams 3 }
 
 rmxActiveAlarmListName OBJECT-TYPE
 	SYNTAX  OCTET STRING (SIZE (0..255))
 	MAX-ACCESS  accessible-for-notify
 	STATUS  current
    	DESCRIPTION	"The alarmListName value of this entery."
-::= {rmxMib1EventsParams 4 } 
+::= {rmxMib1EventsParams 4 }
 
 rmxActiveAlarmRmxStatus OBJECT-TYPE
 	SYNTAX  RmxStatus
 	MAX-ACCESS  accessible-for-notify
 	STATUS  current
    	DESCRIPTION	"The current status of the RMX"
-::= {rmxMib1EventsParams 5 } 
+::= {rmxMib1EventsParams 5 }
 
 
 ------------------------------------------------------------------------------
@@ -101,7 +101,7 @@ rmxActiveAlarmRmxStatus OBJECT-TYPE
 ------------------------------------------------------------------------------
 
 
-   
+
 
 
 rmxNoLicensingAlarmFault  NOTIFICATION-TYPE
@@ -109,7 +109,7 @@ rmxNoLicensingAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "License not found"
-             ::= { rmxTraps 5001 } 
+             ::= { rmxTraps 5001 }
 
 
 
@@ -118,7 +118,7 @@ rmxNoLicensingAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "License not found"
-             ::= { rmxTraps 15001 } 
+             ::= { rmxTraps 15001 }
 
 
 
@@ -127,7 +127,7 @@ rmxNoMeetingRoomAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Resource process did not receive the Meeting Room list during startup."
-             ::= { rmxTraps 5002 } 
+             ::= { rmxTraps 5002 }
 
 
 
@@ -136,7 +136,7 @@ rmxNoMeetingRoomAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Resource process did not receive the Meeting Room list during startup."
-             ::= { rmxTraps 15002 } 
+             ::= { rmxTraps 15002 }
 
 
 
@@ -145,7 +145,7 @@ rmxNoIpServiceParamsAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No IP Network Services defined"
-             ::= { rmxTraps 5003 } 
+             ::= { rmxTraps 5003 }
 
 
 
@@ -154,7 +154,7 @@ rmxNoIpServiceParamsAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No IP Network Services defined"
-             ::= { rmxTraps 15003 } 
+             ::= { rmxTraps 15003 }
 
 
 
@@ -163,7 +163,7 @@ rmxTaskTerminatedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Task terminated"
-             ::= { rmxTraps 5004 } 
+             ::= { rmxTraps 5004 }
 
 
 
@@ -172,7 +172,7 @@ rmxTaskTerminatedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Task terminated"
-             ::= { rmxTraps 15004 } 
+             ::= { rmxTraps 15004 }
 
 
 
@@ -181,7 +181,7 @@ rmxCfgChangedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "System Configuration modified"
-             ::= { rmxTraps 5005 } 
+             ::= { rmxTraps 5005 }
 
 
 
@@ -190,7 +190,7 @@ rmxCfgChangedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "System Configuration modified"
-             ::= { rmxTraps 15005 } 
+             ::= { rmxTraps 15005 }
 
 
 
@@ -199,7 +199,7 @@ rmxCfgInvalidAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Invalid System Configuration"
-             ::= { rmxTraps 5006 } 
+             ::= { rmxTraps 5006 }
 
 
 
@@ -208,7 +208,7 @@ rmxCfgInvalidAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Invalid System Configuration"
-             ::= { rmxTraps 15006 } 
+             ::= { rmxTraps 15006 }
 
 
 
@@ -217,7 +217,7 @@ rmxDebugModeAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DEBUG mode enabled"
-             ::= { rmxTraps 5007 } 
+             ::= { rmxTraps 5007 }
 
 
 
@@ -226,7 +226,7 @@ rmxDebugModeAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DEBUG mode enabled"
-             ::= { rmxTraps 15007 } 
+             ::= { rmxTraps 15007 }
 
 
 
@@ -235,7 +235,7 @@ rmxLowProcessMemoryAlertAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Low Processing Memory"
-             ::= { rmxTraps 5008 } 
+             ::= { rmxTraps 5008 }
 
 
 
@@ -244,7 +244,7 @@ rmxLowProcessMemoryAlertAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Low Processing Memory"
-             ::= { rmxTraps 15008 } 
+             ::= { rmxTraps 15008 }
 
 
 
@@ -253,7 +253,7 @@ rmxLowSystemMemoryAlertAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Low system Memory"
-             ::= { rmxTraps 5009 } 
+             ::= { rmxTraps 5009 }
 
 
 
@@ -262,7 +262,7 @@ rmxLowSystemMemoryAlertAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Low system Memory"
-             ::= { rmxTraps 15009 } 
+             ::= { rmxTraps 15009 }
 
 
 
@@ -271,7 +271,7 @@ rmxSystemCpuUsageAlertAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "High system CPU usage"
-             ::= { rmxTraps 5010 } 
+             ::= { rmxTraps 5010 }
 
 
 
@@ -280,7 +280,7 @@ rmxSystemCpuUsageAlertAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "High system CPU usage"
-             ::= { rmxTraps 15010 } 
+             ::= { rmxTraps 15010 }
 
 
 
@@ -289,7 +289,7 @@ rmxTestErrorAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Used for testing the Active Alarms mechanism"
-             ::= { rmxTraps 5011 } 
+             ::= { rmxTraps 5011 }
 
 
 
@@ -298,7 +298,7 @@ rmxTestErrorAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Used for testing the Active Alarms mechanism"
-             ::= { rmxTraps 15011 } 
+             ::= { rmxTraps 15011 }
 
 
 
@@ -307,7 +307,7 @@ rmxSipSecuredCommunicationFailedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Secured SIP communication failed"
-             ::= { rmxTraps 5012 } 
+             ::= { rmxTraps 5012 }
 
 
 
@@ -316,7 +316,7 @@ rmxSipSecuredCommunicationFailedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Secured SIP communication failed"
-             ::= { rmxTraps 15012 } 
+             ::= { rmxTraps 15012 }
 
 
 
@@ -325,7 +325,7 @@ rmxBadFileAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "File error"
-             ::= { rmxTraps 5013 } 
+             ::= { rmxTraps 5013 }
 
 
 
@@ -334,7 +334,7 @@ rmxBadFileAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "File error"
-             ::= { rmxTraps 15013 } 
+             ::= { rmxTraps 15013 }
 
 
 
@@ -343,7 +343,7 @@ rmxHighCpuUsageProcessAlertAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "High CPU utilization"
-             ::= { rmxTraps 5014 } 
+             ::= { rmxTraps 5014 }
 
 
 
@@ -352,7 +352,7 @@ rmxHighCpuUsageProcessAlertAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "High CPU utilization"
-             ::= { rmxTraps 15014 } 
+             ::= { rmxTraps 15014 }
 
 
 
@@ -361,7 +361,7 @@ rmxIdleDeadlineReachedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Process idle"
-             ::= { rmxTraps 5016 } 
+             ::= { rmxTraps 5016 }
 
 
 
@@ -370,7 +370,7 @@ rmxIdleDeadlineReachedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Process idle"
-             ::= { rmxTraps 15016 } 
+             ::= { rmxTraps 15016 }
 
 
 
@@ -379,7 +379,7 @@ rmxStartupConditionConfigurationAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Internal System configuration during startup"
-             ::= { rmxTraps 5017 } 
+             ::= { rmxTraps 5017 }
 
 
 
@@ -388,7 +388,7 @@ rmxStartupConditionConfigurationAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Internal System configuration during startup"
-             ::= { rmxTraps 15017 } 
+             ::= { rmxTraps 15017 }
 
 
 
@@ -397,7 +397,7 @@ rmxRestoringDefaultFactoryAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Restoring Factory Defaults. Default system settings will be restored once Reset is completed"
-             ::= { rmxTraps 5018 } 
+             ::= { rmxTraps 5018 }
 
 
 
@@ -406,7 +406,7 @@ rmxRestoringDefaultFactoryAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Restoring Factory Defaults. Default system settings will be restored once Reset is completed"
-             ::= { rmxTraps 15018 } 
+             ::= { rmxTraps 15018 }
 
 
 
@@ -415,7 +415,7 @@ rmxIpVersionChangedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP Version has been changed"
-             ::= { rmxTraps 5019 } 
+             ::= { rmxTraps 5019 }
 
 
 
@@ -424,7 +424,7 @@ rmxIpVersionChangedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP Version has been changed"
-             ::= { rmxTraps 15019 } 
+             ::= { rmxTraps 15019 }
 
 
 
@@ -433,7 +433,7 @@ rmxNoServiceFoundInDbAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP Network Service not found"
-             ::= { rmxTraps 5050 } 
+             ::= { rmxTraps 5050 }
 
 
 
@@ -442,7 +442,7 @@ rmxNoServiceFoundInDbAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP Network Service not found"
-             ::= { rmxTraps 15050 } 
+             ::= { rmxTraps 15050 }
 
 
 
@@ -451,7 +451,7 @@ rmxNoConnectionWithCsAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No response from Central Signaling"
-             ::= { rmxTraps 5052 } 
+             ::= { rmxTraps 5052 }
 
 
 
@@ -460,7 +460,7 @@ rmxNoConnectionWithCsAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No response from Central Signaling"
-             ::= { rmxTraps 15052 } 
+             ::= { rmxTraps 15052 }
 
 
 
@@ -469,7 +469,7 @@ rmxCsComponentFatalAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Central signaling component failure"
-             ::= { rmxTraps 5053 } 
+             ::= { rmxTraps 5053 }
 
 
 
@@ -478,7 +478,7 @@ rmxCsComponentFatalAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Central signaling component failure"
-             ::= { rmxTraps 15053 } 
+             ::= { rmxTraps 15053 }
 
 
 
@@ -487,7 +487,7 @@ rmxCsNotConfiguredAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Missing Central Signaling configuration"
-             ::= { rmxTraps 5054 } 
+             ::= { rmxTraps 5054 }
 
 
 
@@ -496,7 +496,7 @@ rmxCsNotConfiguredAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Missing Central Signaling configuration"
-             ::= { rmxTraps 15054 } 
+             ::= { rmxTraps 15054 }
 
 
 
@@ -505,7 +505,7 @@ rmxCsServiceStateFailAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Central Signaling indicating Faulty status"
-             ::= { rmxTraps 5055 } 
+             ::= { rmxTraps 5055 }
 
 
 
@@ -514,7 +514,7 @@ rmxCsServiceStateFailAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Central Signaling indicating Faulty status"
-             ::= { rmxTraps 15055 } 
+             ::= { rmxTraps 15055 }
 
 
 
@@ -523,7 +523,7 @@ rmxCsStartupFailedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Central Signaling startup failure"
-             ::= { rmxTraps 5056 } 
+             ::= { rmxTraps 5056 }
 
 
 
@@ -532,7 +532,7 @@ rmxCsStartupFailedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Central Signaling startup failure"
-             ::= { rmxTraps 15056 } 
+             ::= { rmxTraps 15056 }
 
 
 
@@ -541,7 +541,7 @@ rmxDuplicateIpCsMngmntAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP addresses of Signaling Host and Control Unit are the same"
-             ::= { rmxTraps 5058 } 
+             ::= { rmxTraps 5058 }
 
 
 
@@ -550,7 +550,7 @@ rmxDuplicateIpCsMngmntAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP addresses of Signaling Host and Control Unit are the same"
-             ::= { rmxTraps 15058 } 
+             ::= { rmxTraps 15058 }
 
 
 
@@ -559,7 +559,7 @@ rmxIpServiceDeletedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP Network Service deleted"
-             ::= { rmxTraps 5059 } 
+             ::= { rmxTraps 5059 }
 
 
 
@@ -568,7 +568,7 @@ rmxIpServiceDeletedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP Network Service deleted"
-             ::= { rmxTraps 15059 } 
+             ::= { rmxTraps 15059 }
 
 
 
@@ -577,7 +577,7 @@ rmxIpServiceChangedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP Network Service configuration modified"
-             ::= { rmxTraps 5060 } 
+             ::= { rmxTraps 5060 }
 
 
 
@@ -586,7 +586,7 @@ rmxIpServiceChangedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IP Network Service configuration modified"
-             ::= { rmxTraps 15060 } 
+             ::= { rmxTraps 15060 }
 
 
 
@@ -595,7 +595,7 @@ rmxCsRecoveryStatusAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Central Signaling indicating Recovery status"
-             ::= { rmxTraps 5061 } 
+             ::= { rmxTraps 5061 }
 
 
 
@@ -604,7 +604,7 @@ rmxCsRecoveryStatusAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Central Signaling indicating Recovery status"
-             ::= { rmxTraps 15061 } 
+             ::= { rmxTraps 15061 }
 
 
 
@@ -613,7 +613,7 @@ rmxExternalAlertCsAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Alarm generated by a Central Signaling component"
-             ::= { rmxTraps 5062 } 
+             ::= { rmxTraps 5062 }
 
 
 
@@ -622,7 +622,7 @@ rmxExternalAlertCsAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Alarm generated by a Central Signaling component"
-             ::= { rmxTraps 15062 } 
+             ::= { rmxTraps 15062 }
 
 
 
@@ -631,7 +631,7 @@ rmxProductActivationFailureAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Product activation failure"
-             ::= { rmxTraps 5100 } 
+             ::= { rmxTraps 5100 }
 
 
 
@@ -640,7 +640,7 @@ rmxProductActivationFailureAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Product activation failure"
-             ::= { rmxTraps 15100 } 
+             ::= { rmxTraps 15100 }
 
 
 
@@ -649,7 +649,7 @@ rmxNoManagementIpInterfaceAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Management Network not configured"
-             ::= { rmxTraps 5101 } 
+             ::= { rmxTraps 5101 }
 
 
 
@@ -658,7 +658,7 @@ rmxNoManagementIpInterfaceAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Management Network not configured"
-             ::= { rmxTraps 15101 } 
+             ::= { rmxTraps 15101 }
 
 
 
@@ -667,7 +667,7 @@ rmxNoTimeConfigurationAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Error reading MCU time"
-             ::= { rmxTraps 5102 } 
+             ::= { rmxTraps 5102 }
 
 
 
@@ -676,7 +676,7 @@ rmxNoTimeConfigurationAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Error reading MCU time"
-             ::= { rmxTraps 15102 } 
+             ::= { rmxTraps 15102 }
 
 
 
@@ -685,7 +685,7 @@ rmxMplStartupFailureAuthenticationNotReceivedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MPL startup failure. Authentication not received."
-             ::= { rmxTraps 5103 } 
+             ::= { rmxTraps 5103 }
 
 
 
@@ -694,7 +694,7 @@ rmxMplStartupFailureAuthenticationNotReceivedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MPL startup failure. Authentication not received."
-             ::= { rmxTraps 15103 } 
+             ::= { rmxTraps 15103 }
 
 
 
@@ -703,7 +703,7 @@ rmxMplStartupFailureMngmntIpCnfgNotReceivedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MPL startup failure. Management Network configuration not received."
-             ::= { rmxTraps 5104 } 
+             ::= { rmxTraps 5104 }
 
 
 
@@ -712,7 +712,7 @@ rmxMplStartupFailureMngmntIpCnfgNotReceivedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MPL startup failure. Management Network configuration not received."
-             ::= { rmxTraps 15104 } 
+             ::= { rmxTraps 15104 }
 
 
 
@@ -721,7 +721,7 @@ rmxNoDnsConfigurationAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DNS not configured in IP Network Service"
-             ::= { rmxTraps 5105 } 
+             ::= { rmxTraps 5105 }
 
 
 
@@ -730,7 +730,7 @@ rmxNoDnsConfigurationAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DNS not configured in IP Network Service"
-             ::= { rmxTraps 15105 } 
+             ::= { rmxTraps 15105 }
 
 
 
@@ -739,7 +739,7 @@ rmxDnsRegistraionFailedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to register with DNS server"
-             ::= { rmxTraps 5106 } 
+             ::= { rmxTraps 5106 }
 
 
 
@@ -748,7 +748,7 @@ rmxDnsRegistraionFailedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to register with DNS server"
-             ::= { rmxTraps 15106 } 
+             ::= { rmxTraps 15106 }
 
 
 
@@ -757,7 +757,7 @@ rmxFailedToOpenApacheConfigurationFileAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to open Apache server configuration file"
-             ::= { rmxTraps 5107 } 
+             ::= { rmxTraps 5107 }
 
 
 
@@ -766,7 +766,7 @@ rmxFailedToOpenApacheConfigurationFileAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to open Apache server configuration file"
-             ::= { rmxTraps 15107 } 
+             ::= { rmxTraps 15107 }
 
 
 
@@ -775,7 +775,7 @@ rmxFailedToSaveApacheConfigurationFileAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to save Apache server configuration file"
-             ::= { rmxTraps 5108 } 
+             ::= { rmxTraps 5108 }
 
 
 
@@ -784,7 +784,7 @@ rmxFailedToSaveApacheConfigurationFileAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to save Apache server configuration file"
-             ::= { rmxTraps 15108 } 
+             ::= { rmxTraps 15108 }
 
 
 
@@ -793,7 +793,7 @@ rmxPatchedVersionAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "The software contains patch(es)"
-             ::= { rmxTraps 5109 } 
+             ::= { rmxTraps 5109 }
 
 
 
@@ -802,7 +802,7 @@ rmxPatchedVersionAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "The software contains patch(es)"
-             ::= { rmxTraps 15109 } 
+             ::= { rmxTraps 15109 }
 
 
 
@@ -811,7 +811,7 @@ rmxPrivateVersionAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "A private version is loaded"
-             ::= { rmxTraps 5110 } 
+             ::= { rmxTraps 5110 }
 
 
 
@@ -820,7 +820,7 @@ rmxPrivateVersionAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "A private version is loaded"
-             ::= { rmxTraps 15110 } 
+             ::= { rmxTraps 15110 }
 
 
 
@@ -829,7 +829,7 @@ rmxNtpSyncFailureAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "NTP synchronization failure"
-             ::= { rmxTraps 5111 } 
+             ::= { rmxTraps 5111 }
 
 
 
@@ -838,7 +838,7 @@ rmxNtpSyncFailureAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "NTP synchronization failure"
-             ::= { rmxTraps 15111 } 
+             ::= { rmxTraps 15111 }
 
 
 
@@ -847,7 +847,7 @@ rmxIllegalTimeAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Invalid date and time"
-             ::= { rmxTraps 5112 } 
+             ::= { rmxTraps 5112 }
 
 
 
@@ -856,7 +856,7 @@ rmxIllegalTimeAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Invalid date and time"
-             ::= { rmxTraps 15112 } 
+             ::= { rmxTraps 15112 }
 
 
 
@@ -865,7 +865,7 @@ rmxExternalNtpServersFailureAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "External NTP servers failure"
-             ::= { rmxTraps 5113 } 
+             ::= { rmxTraps 5113 }
 
 
 
@@ -874,7 +874,7 @@ rmxExternalNtpServersFailureAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "External NTP servers failure"
-             ::= { rmxTraps 15113 } 
+             ::= { rmxTraps 15113 }
 
 
 
@@ -883,7 +883,7 @@ rmxRunningVersionMismatchesCurrentVersionAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Fallback version is being used"
-             ::= { rmxTraps 5114 } 
+             ::= { rmxTraps 5114 }
 
 
 
@@ -892,7 +892,7 @@ rmxRunningVersionMismatchesCurrentVersionAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Fallback version is being used"
-             ::= { rmxTraps 15114 } 
+             ::= { rmxTraps 15114 }
 
 
 
@@ -901,7 +901,7 @@ rmxIdeNotInDmaModeAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DMA not supported by IDE device"
-             ::= { rmxTraps 5115 } 
+             ::= { rmxTraps 5115 }
 
 
 
@@ -910,7 +910,7 @@ rmxIdeNotInDmaModeAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DMA not supported by IDE device"
-             ::= { rmxTraps 15115 } 
+             ::= { rmxTraps 15115 }
 
 
 
@@ -919,7 +919,7 @@ rmxBadEthernetSettingsAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Incorrect Ethernet Settings"
-             ::= { rmxTraps 5116 } 
+             ::= { rmxTraps 5116 }
 
 
 
@@ -928,7 +928,7 @@ rmxBadEthernetSettingsAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Incorrect Ethernet Settings"
-             ::= { rmxTraps 15116 } 
+             ::= { rmxTraps 15116 }
 
 
 
@@ -937,7 +937,7 @@ rmxSmartReportErrorsOnHdAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Smart Report found errors on hard disk"
-             ::= { rmxTraps 5117 } 
+             ::= { rmxTraps 5117 }
 
 
 
@@ -946,7 +946,7 @@ rmxSmartReportErrorsOnHdAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Smart Report found errors on hard disk"
-             ::= { rmxTraps 15117 } 
+             ::= { rmxTraps 15117 }
 
 
 
@@ -955,7 +955,7 @@ rmxIllegalMcuVersionAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Invalid MCU Version"
-             ::= { rmxTraps 5118 } 
+             ::= { rmxTraps 5118 }
 
 
 
@@ -964,7 +964,7 @@ rmxIllegalMcuVersionAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Invalid MCU Version"
-             ::= { rmxTraps 15118 } 
+             ::= { rmxTraps 15118 }
 
 
 
@@ -973,7 +973,7 @@ rmxDebugCfgExistAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DEBUG mode flags in use"
-             ::= { rmxTraps 5119 } 
+             ::= { rmxTraps 5119 }
 
 
 
@@ -982,7 +982,7 @@ rmxDebugCfgExistAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DEBUG mode flags in use"
-             ::= { rmxTraps 15119 } 
+             ::= { rmxTraps 15119 }
 
 
 
@@ -991,7 +991,7 @@ rmxInstallingNewVersionAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Version upgrade is in progress"
-             ::= { rmxTraps 5120 } 
+             ::= { rmxTraps 5120 }
 
 
 
@@ -1000,7 +1000,7 @@ rmxInstallingNewVersionAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Version upgrade is in progress"
-             ::= { rmxTraps 15120 } 
+             ::= { rmxTraps 15120 }
 
 
 
@@ -1009,7 +1009,7 @@ rmxSshEnabledAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "SSH is enabled"
-             ::= { rmxTraps 5121 } 
+             ::= { rmxTraps 5121 }
 
 
 
@@ -1018,7 +1018,7 @@ rmxSshEnabledAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "SSH is enabled"
-             ::= { rmxTraps 15121 } 
+             ::= { rmxTraps 15121 }
 
 
 
@@ -1027,7 +1027,7 @@ rmxFailedToValidateCertificateAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Error in certificate file."
-             ::= { rmxTraps 5122 } 
+             ::= { rmxTraps 5122 }
 
 
 
@@ -1036,7 +1036,7 @@ rmxFailedToValidateCertificateAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Error in certificate file."
-             ::= { rmxTraps 15122 } 
+             ::= { rmxTraps 15122 }
 
 
 
@@ -1045,7 +1045,7 @@ rmxCertificateExpiredAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Certificate has expired."
-             ::= { rmxTraps 5123 } 
+             ::= { rmxTraps 5123 }
 
 
 
@@ -1054,7 +1054,7 @@ rmxCertificateExpiredAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Certificate has expired."
-             ::= { rmxTraps 15123 } 
+             ::= { rmxTraps 15123 }
 
 
 
@@ -1063,7 +1063,7 @@ rmxCertificateCommonNameErrorAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Certificate host name does not match the RMX host name."
-             ::= { rmxTraps 5124 } 
+             ::= { rmxTraps 5124 }
 
 
 
@@ -1072,7 +1072,7 @@ rmxCertificateCommonNameErrorAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Certificate host name does not match the RMX host name."
-             ::= { rmxTraps 15124 } 
+             ::= { rmxTraps 15124 }
 
 
 
@@ -1081,7 +1081,7 @@ rmxCertificateNotValidYetAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Certificate not yet valid."
-             ::= { rmxTraps 5125 } 
+             ::= { rmxTraps 5125 }
 
 
 
@@ -1090,7 +1090,7 @@ rmxCertificateNotValidYetAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Certificate not yet valid."
-             ::= { rmxTraps 15125 } 
+             ::= { rmxTraps 15125 }
 
 
 
@@ -1099,7 +1099,7 @@ rmxCertificateGoingToBeExpiredAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Certificate is about to expire."
-             ::= { rmxTraps 5126 } 
+             ::= { rmxTraps 5126 }
 
 
 
@@ -1108,7 +1108,7 @@ rmxCertificateGoingToBeExpiredAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Security mode failed. Certificate is about to expire."
-             ::= { rmxTraps 15126 } 
+             ::= { rmxTraps 15126 }
 
 
 
@@ -1117,7 +1117,7 @@ rmxProductTypeMismatchAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Product Type mismatch. System is restarting."
-             ::= { rmxTraps 5127 } 
+             ::= { rmxTraps 5127 }
 
 
 
@@ -1126,7 +1126,7 @@ rmxProductTypeMismatchAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Product Type mismatch. System is restarting."
-             ::= { rmxTraps 15127 } 
+             ::= { rmxTraps 15127 }
 
 
 
@@ -1135,7 +1135,7 @@ rmxUnknownCpuSlotIdAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "CPU slot ID not identified"
-             ::= { rmxTraps 5128 } 
+             ::= { rmxTraps 5128 }
 
 
 
@@ -1144,7 +1144,7 @@ rmxUnknownCpuSlotIdAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "CPU slot ID not identified"
-             ::= { rmxTraps 15128 } 
+             ::= { rmxTraps 15128 }
 
 
 
@@ -1153,7 +1153,7 @@ rmxNoFipsTestResultFromEncryptionkeyserverAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "FIPS 140 test result not received"
-             ::= { rmxTraps 5129 } 
+             ::= { rmxTraps 5129 }
 
 
 
@@ -1162,7 +1162,7 @@ rmxNoFipsTestResultFromEncryptionkeyserverAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "FIPS 140 test result not received"
-             ::= { rmxTraps 15129 } 
+             ::= { rmxTraps 15129 }
 
 
 
@@ -1171,7 +1171,7 @@ rmxFipsFailureWithinEncryptionkeyserverAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "FIPS 140 failure"
-             ::= { rmxTraps 5130 } 
+             ::= { rmxTraps 5130 }
 
 
 
@@ -1180,7 +1180,7 @@ rmxFipsFailureWithinEncryptionkeyserverAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "FIPS 140 failure"
-             ::= { rmxTraps 15130 } 
+             ::= { rmxTraps 15130 }
 
 
 
@@ -1189,7 +1189,7 @@ rmxHttpsDisabledInJitcAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "The system has been configured for JITC mode, but communication is not secured until a TLS certificate is installed and the MCU is set to Secured communication."
-             ::= { rmxTraps 5131 } 
+             ::= { rmxTraps 5131 }
 
 
 
@@ -1198,7 +1198,7 @@ rmxHttpsDisabledInJitcAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "The system has been configured for JITC mode, but communication is not secured until a TLS certificate is installed and the MCU is set to Secured communication."
-             ::= { rmxTraps 15131 } 
+             ::= { rmxTraps 15131 }
 
 
 
@@ -1207,7 +1207,7 @@ rmxBackupOfCdrFilesIsRequiredAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Backup of CDR files is required"
-             ::= { rmxTraps 5140 } 
+             ::= { rmxTraps 5140 }
 
 
 
@@ -1216,7 +1216,7 @@ rmxBackupOfCdrFilesIsRequiredAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Backup of CDR files is required"
-             ::= { rmxTraps 15140 } 
+             ::= { rmxTraps 15140 }
 
 
 
@@ -1225,7 +1225,7 @@ rmxNoMusicSourceAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Music file error"
-             ::= { rmxTraps 5150 } 
+             ::= { rmxTraps 5150 }
 
 
 
@@ -1234,7 +1234,7 @@ rmxNoMusicSourceAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Music file error"
-             ::= { rmxTraps 15150 } 
+             ::= { rmxTraps 15150 }
 
 
 
@@ -1243,7 +1243,7 @@ rmxSwitchNotLoadedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "SWITCH not responding"
-             ::= { rmxTraps 5151 } 
+             ::= { rmxTraps 5151 }
 
 
 
@@ -1252,7 +1252,7 @@ rmxSwitchNotLoadedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "SWITCH not responding"
-             ::= { rmxTraps 15151 } 
+             ::= { rmxTraps 15151 }
 
 
 
@@ -1261,7 +1261,7 @@ rmxNoIsdnServiceParamsAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No ISDN/PSTN Network Services defined"
-             ::= { rmxTraps 5152 } 
+             ::= { rmxTraps 5152 }
 
 
 
@@ -1270,7 +1270,7 @@ rmxNoIsdnServiceParamsAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No ISDN/PSTN Network Services defined"
-             ::= { rmxTraps 15152 } 
+             ::= { rmxTraps 15152 }
 
 
 
@@ -1279,7 +1279,7 @@ rmxModuleDoesNotExistAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card not found"
-             ::= { rmxTraps 5153 } 
+             ::= { rmxTraps 5153 }
 
 
 
@@ -1288,7 +1288,7 @@ rmxModuleDoesNotExistAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card not found"
-             ::= { rmxTraps 15153 } 
+             ::= { rmxTraps 15153 }
 
 
 
@@ -1297,7 +1297,7 @@ rmxNoDefaultIsdnServiceAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No default ISDN/PSTN Network Service defined in ISDN/PSTN Network Services list"
-             ::= { rmxTraps 5154 } 
+             ::= { rmxTraps 5154 }
 
 
 
@@ -1306,7 +1306,7 @@ rmxNoDefaultIsdnServiceAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No default ISDN/PSTN Network Service defined in ISDN/PSTN Network Services list"
-             ::= { rmxTraps 15154 } 
+             ::= { rmxTraps 15154 }
 
 
 
@@ -1315,7 +1315,7 @@ rmxExternalAlertEmbAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Alarm generated by an internal component"
-             ::= { rmxTraps 5155 } 
+             ::= { rmxTraps 5155 }
 
 
 
@@ -1324,7 +1324,7 @@ rmxExternalAlertEmbAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Alarm generated by an internal component"
-             ::= { rmxTraps 15155 } 
+             ::= { rmxTraps 15155 }
 
 
 
@@ -1333,7 +1333,7 @@ rmxVersionInstallProgressAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Software upgrade in component"
-             ::= { rmxTraps 5156 } 
+             ::= { rmxTraps 5156 }
 
 
 
@@ -1342,7 +1342,7 @@ rmxVersionInstallProgressAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Software upgrade in component"
-             ::= { rmxTraps 15156 } 
+             ::= { rmxTraps 15156 }
 
 
 
@@ -1351,7 +1351,7 @@ rmxVersionIpmcInstallProgressAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IPMC software upgrade in component"
-             ::= { rmxTraps 5157 } 
+             ::= { rmxTraps 5157 }
 
 
 
@@ -1360,7 +1360,7 @@ rmxVersionIpmcInstallProgressAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "IPMC software upgrade in component"
-             ::= { rmxTraps 15157 } 
+             ::= { rmxTraps 15157 }
 
 
 
@@ -1369,7 +1369,7 @@ rmxVoltageProblemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Voltage problem"
-             ::= { rmxTraps 5200 } 
+             ::= { rmxTraps 5200 }
 
 
 
@@ -1378,7 +1378,7 @@ rmxVoltageProblemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Voltage problem"
-             ::= { rmxTraps 15200 } 
+             ::= { rmxTraps 15200 }
 
 
 
@@ -1387,7 +1387,7 @@ rmxTemperatureMajorProblemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Temperature Level Major"
-             ::= { rmxTraps 5201 } 
+             ::= { rmxTraps 5201 }
 
 
 
@@ -1396,7 +1396,7 @@ rmxTemperatureMajorProblemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Temperature Level Major"
-             ::= { rmxTraps 15201 } 
+             ::= { rmxTraps 15201 }
 
 
 
@@ -1405,7 +1405,7 @@ rmxTemperatureCriticalProblemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Temperature Level Critical"
-             ::= { rmxTraps 5202 } 
+             ::= { rmxTraps 5202 }
 
 
 
@@ -1414,7 +1414,7 @@ rmxTemperatureCriticalProblemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Temperature Level Critical"
-             ::= { rmxTraps 15202 } 
+             ::= { rmxTraps 15202 }
 
 
 
@@ -1423,7 +1423,7 @@ rmxFailureProblemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card failure"
-             ::= { rmxTraps 5203 } 
+             ::= { rmxTraps 5203 }
 
 
 
@@ -1432,7 +1432,7 @@ rmxFailureProblemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card failure"
-             ::= { rmxTraps 15203 } 
+             ::= { rmxTraps 15203 }
 
 
 
@@ -1441,7 +1441,7 @@ rmxPowerOffProblemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Power off"
-             ::= { rmxTraps 5204 } 
+             ::= { rmxTraps 5204 }
 
 
 
@@ -1450,7 +1450,7 @@ rmxPowerOffProblemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Power off"
-             ::= { rmxTraps 15204 } 
+             ::= { rmxTraps 15204 }
 
 
 
@@ -1459,7 +1459,7 @@ rmxOtherProblemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Unspecified problem"
-             ::= { rmxTraps 5205 } 
+             ::= { rmxTraps 5205 }
 
 
 
@@ -1468,7 +1468,7 @@ rmxOtherProblemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Unspecified problem"
-             ::= { rmxTraps 15205 } 
+             ::= { rmxTraps 15205 }
 
 
 
@@ -1477,7 +1477,7 @@ rmxNoConnectionWithCardAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card not responding"
-             ::= { rmxTraps 5206 } 
+             ::= { rmxTraps 5206 }
 
 
 
@@ -1486,7 +1486,7 @@ rmxNoConnectionWithCardAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card not responding"
-             ::= { rmxTraps 15206 } 
+             ::= { rmxTraps 15206 }
 
 
 
@@ -1495,7 +1495,7 @@ rmxUnitNotRespondingAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Unit not responding"
-             ::= { rmxTraps 5207 } 
+             ::= { rmxTraps 5207 }
 
 
 
@@ -1504,7 +1504,7 @@ rmxUnitNotRespondingAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Unit not responding"
-             ::= { rmxTraps 15207 } 
+             ::= { rmxTraps 15207 }
 
 
 
@@ -1513,7 +1513,7 @@ rmxMediaIpConfigurationFailureAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to configure the Media card IP address"
-             ::= { rmxTraps 5208 } 
+             ::= { rmxTraps 5208 }
 
 
 
@@ -1522,7 +1522,7 @@ rmxMediaIpConfigurationFailureAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to configure the Media card IP address"
-             ::= { rmxTraps 15208 } 
+             ::= { rmxTraps 15208 }
 
 
 
@@ -1531,7 +1531,7 @@ rmxCardFolderMountingFailedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to mount Card folder"
-             ::= { rmxTraps 5209 } 
+             ::= { rmxTraps 5209 }
 
 
 
@@ -1540,7 +1540,7 @@ rmxCardFolderMountingFailedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to mount Card folder"
-             ::= { rmxTraps 15209 } 
+             ::= { rmxTraps 15209 }
 
 
 
@@ -1549,7 +1549,7 @@ rmxCardStartupFailureAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Could not complete MPM Card startup procedure"
-             ::= { rmxTraps 5211 } 
+             ::= { rmxTraps 5211 }
 
 
 
@@ -1558,7 +1558,7 @@ rmxCardStartupFailureAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Could not complete MPM Card startup procedure"
-             ::= { rmxTraps 15211 } 
+             ::= { rmxTraps 15211 }
 
 
 
@@ -1567,7 +1567,7 @@ rmxRtmIsdnStartupFailureAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Could not complete RTM ISDN Card startup procedure"
-             ::= { rmxTraps 5212 } 
+             ::= { rmxTraps 5212 }
 
 
 
@@ -1576,7 +1576,7 @@ rmxRtmIsdnStartupFailureAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Could not complete RTM ISDN Card startup procedure"
-             ::= { rmxTraps 15212 } 
+             ::= { rmxTraps 15212 }
 
 
 
@@ -1585,7 +1585,7 @@ rmxRtmIsdnStartupProblemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "RTM ISDN card startup procedure error"
-             ::= { rmxTraps 5213 } 
+             ::= { rmxTraps 5213 }
 
 
 
@@ -1594,7 +1594,7 @@ rmxRtmIsdnStartupProblemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "RTM ISDN card startup procedure error"
-             ::= { rmxTraps 15213 } 
+             ::= { rmxTraps 15213 }
 
 
 
@@ -1603,7 +1603,7 @@ rmxNoConnectionWithRtmIsdnAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No response from RTM ISDN card"
-             ::= { rmxTraps 5214 } 
+             ::= { rmxTraps 5214 }
 
 
 
@@ -1612,7 +1612,7 @@ rmxNoConnectionWithRtmIsdnAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No response from RTM ISDN card"
-             ::= { rmxTraps 15214 } 
+             ::= { rmxTraps 15214 }
 
 
 
@@ -1621,7 +1621,7 @@ rmxRedAlarmAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Red Alarm"
-             ::= { rmxTraps 5215 } 
+             ::= { rmxTraps 5215 }
 
 
 
@@ -1630,7 +1630,7 @@ rmxRedAlarmAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Red Alarm"
-             ::= { rmxTraps 15215 } 
+             ::= { rmxTraps 15215 }
 
 
 
@@ -1639,7 +1639,7 @@ rmxYellowAlarmAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Yellow Alarm"
-             ::= { rmxTraps 5216 } 
+             ::= { rmxTraps 5216 }
 
 
 
@@ -1648,7 +1648,7 @@ rmxYellowAlarmAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Yellow Alarm"
-             ::= { rmxTraps 15216 } 
+             ::= { rmxTraps 15216 }
 
 
 
@@ -1657,7 +1657,7 @@ rmxDChannelNotEstablishedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "D channel cannot be established"
-             ::= { rmxTraps 5217 } 
+             ::= { rmxTraps 5217 }
 
 
 
@@ -1666,7 +1666,7 @@ rmxDChannelNotEstablishedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "D channel cannot be established"
-             ::= { rmxTraps 15217 } 
+             ::= { rmxTraps 15217 }
 
 
 
@@ -1675,7 +1675,7 @@ rmxCardsConfigEventAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card configuration event"
-             ::= { rmxTraps 5218 } 
+             ::= { rmxTraps 5218 }
 
 
 
@@ -1684,7 +1684,7 @@ rmxCardsConfigEventAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card configuration event"
-             ::= { rmxTraps 15218 } 
+             ::= { rmxTraps 15218 }
 
 
 
@@ -1693,7 +1693,7 @@ rmxCardsWrongFileModeAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Cards wrong file's mode"
-             ::= { rmxTraps 5219 } 
+             ::= { rmxTraps 5219 }
 
 
 
@@ -1702,7 +1702,7 @@ rmxCardsWrongFileModeAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Cards wrong file's mode"
-             ::= { rmxTraps 15219 } 
+             ::= { rmxTraps 15219 }
 
 
 
@@ -1711,7 +1711,7 @@ rmxCardsFlashAccessProblemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card failed to switch to Enhanced Security Mode"
-             ::= { rmxTraps 5220 } 
+             ::= { rmxTraps 5220 }
 
 
 
@@ -1720,7 +1720,7 @@ rmxCardsFlashAccessProblemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Card failed to switch to Enhanced Security Mode"
-             ::= { rmxTraps 15220 } 
+             ::= { rmxTraps 15220 }
 
 
 
@@ -1729,7 +1729,7 @@ rmxRtmLanOrIsdnMissingAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No RTM-LAN or RTM-ISDN installed. One of these cards must be installed in the RMX 4000"
-             ::= { rmxTraps 5221 } 
+             ::= { rmxTraps 5221 }
 
 
 
@@ -1738,7 +1738,7 @@ rmxRtmLanOrIsdnMissingAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No RTM-LAN or RTM-ISDN installed. One of these cards must be installed in the RMX 4000"
-             ::= { rmxTraps 15221 } 
+             ::= { rmxTraps 15221 }
 
 
 
@@ -1747,7 +1747,7 @@ rmxNoLanConnectionAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No LAN connection"
-             ::= { rmxTraps 5222 } 
+             ::= { rmxTraps 5222 }
 
 
 
@@ -1756,7 +1756,7 @@ rmxNoLanConnectionAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No LAN connection"
-             ::= { rmxTraps 15222 } 
+             ::= { rmxTraps 15222 }
 
 
 
@@ -1765,7 +1765,7 @@ rmxCanNotEstablishConnectionWithSipRegistrarAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to connect to SIP registrar"
-             ::= { rmxTraps 5300 } 
+             ::= { rmxTraps 5300 }
 
 
 
@@ -1774,7 +1774,7 @@ rmxCanNotEstablishConnectionWithSipRegistrarAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to connect to SIP registrar"
-             ::= { rmxTraps 15300 } 
+             ::= { rmxTraps 15300 }
 
 
 
@@ -1783,7 +1783,7 @@ rmxSipRegistrationLimitReachedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "SIP registrations limit reached"
-             ::= { rmxTraps 5301 } 
+             ::= { rmxTraps 5301 }
 
 
 
@@ -1792,7 +1792,7 @@ rmxSipRegistrationLimitReachedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "SIP registrations limit reached"
-             ::= { rmxTraps 15301 } 
+             ::= { rmxTraps 15301 }
 
 
 
@@ -1801,7 +1801,7 @@ rmxFailedToAccessDnsServerAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to access DNS server"
-             ::= { rmxTraps 5350 } 
+             ::= { rmxTraps 5350 }
 
 
 
@@ -1810,7 +1810,7 @@ rmxFailedToAccessDnsServerAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to access DNS server"
-             ::= { rmxTraps 15350 } 
+             ::= { rmxTraps 15350 }
 
 
 
@@ -1819,7 +1819,7 @@ rmxNoIndDnsSuccessAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DNS configuration error"
-             ::= { rmxTraps 5351 } 
+             ::= { rmxTraps 5351 }
 
 
 
@@ -1828,7 +1828,7 @@ rmxNoIndDnsSuccessAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "DNS configuration error"
-             ::= { rmxTraps 15351 } 
+             ::= { rmxTraps 15351 }
 
 
 
@@ -1837,7 +1837,7 @@ rmxFailedToInitFileSystemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to initialize the file system"
-             ::= { rmxTraps 5400 } 
+             ::= { rmxTraps 5400 }
 
 
 
@@ -1846,7 +1846,7 @@ rmxFailedToInitFileSystemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to initialize the file system"
-             ::= { rmxTraps 15400 } 
+             ::= { rmxTraps 15400 }
 
 
 
@@ -1855,7 +1855,7 @@ rmxBadFileSystemAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "The Log file system is disabled"
-             ::= { rmxTraps 5401 } 
+             ::= { rmxTraps 5401 }
 
 
 
@@ -1864,7 +1864,7 @@ rmxBadFileSystemAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "The Log file system is disabled"
-             ::= { rmxTraps 15401 } 
+             ::= { rmxTraps 15401 }
 
 
 
@@ -1873,7 +1873,7 @@ rmxBadHardDiskAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Hard disk error"
-             ::= { rmxTraps 5402 } 
+             ::= { rmxTraps 5402 }
 
 
 
@@ -1882,7 +1882,7 @@ rmxBadHardDiskAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Hard disk error"
-             ::= { rmxTraps 15402 } 
+             ::= { rmxTraps 15402 }
 
 
 
@@ -1891,7 +1891,7 @@ rmxBackupOfLogFilesIsRequiredAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Backup of log files is required"
-             ::= { rmxTraps 5403 } 
+             ::= { rmxTraps 5403 }
 
 
 
@@ -1900,7 +1900,7 @@ rmxBackupOfLogFilesIsRequiredAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Backup of log files is required"
-             ::= { rmxTraps 15403 } 
+             ::= { rmxTraps 15403 }
 
 
 
@@ -1909,7 +1909,7 @@ rmxBackupOfAuditFilesIsRequiredAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Backup of audit files is required"
-             ::= { rmxTraps 5430 } 
+             ::= { rmxTraps 5430 }
 
 
 
@@ -1918,7 +1918,7 @@ rmxBackupOfAuditFilesIsRequiredAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Backup of audit files is required"
-             ::= { rmxTraps 15430 } 
+             ::= { rmxTraps 15430 }
 
 
 
@@ -1927,7 +1927,7 @@ rmxFailedToFillActionRedirectionAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Action redirection failure"
-             ::= { rmxTraps 5450 } 
+             ::= { rmxTraps 5450 }
 
 
 
@@ -1936,7 +1936,7 @@ rmxFailedToFillActionRedirectionAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Action redirection failure"
-             ::= { rmxTraps 15450 } 
+             ::= { rmxTraps 15450 }
 
 
 
@@ -1945,7 +1945,7 @@ rmxFailedConfigUserListInLinuxAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to configure the Users list in Linux"
-             ::= { rmxTraps 5500 } 
+             ::= { rmxTraps 5500 }
 
 
 
@@ -1954,7 +1954,7 @@ rmxFailedConfigUserListInLinuxAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to configure the Users list in Linux"
-             ::= { rmxTraps 15500 } 
+             ::= { rmxTraps 15500 }
 
 
 
@@ -1963,7 +1963,7 @@ rmxInsufficientResourcesAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Insufficient resources"
-             ::= { rmxTraps 5550 } 
+             ::= { rmxTraps 5550 }
 
 
 
@@ -1972,7 +1972,7 @@ rmxInsufficientResourcesAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Insufficient resources"
-             ::= { rmxTraps 15550 } 
+             ::= { rmxTraps 15550 }
 
 
 
@@ -1981,7 +1981,7 @@ rmxPortConfigurationChangedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Port configuration was modified"
-             ::= { rmxTraps 5551 } 
+             ::= { rmxTraps 5551 }
 
 
 
@@ -1990,7 +1990,7 @@ rmxPortConfigurationChangedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Port configuration was modified"
-             ::= { rmxTraps 15551 } 
+             ::= { rmxTraps 15551 }
 
 
 
@@ -1999,7 +1999,7 @@ rmxNoUtilizableUnitForAudioControllerAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No usable unit for audio controller"
-             ::= { rmxTraps 5552 } 
+             ::= { rmxTraps 5552 }
 
 
 
@@ -2008,7 +2008,7 @@ rmxNoUtilizableUnitForAudioControllerAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No usable unit for audio controller"
-             ::= { rmxTraps 15552 } 
+             ::= { rmxTraps 15552 }
 
 
 
@@ -2017,7 +2017,7 @@ rmxAllocationModeChangedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Allocation mode was modified"
-             ::= { rmxTraps 5553 } 
+             ::= { rmxTraps 5553 }
 
 
 
@@ -2026,7 +2026,7 @@ rmxAllocationModeChangedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Allocation mode was modified"
-             ::= { rmxTraps 15553 } 
+             ::= { rmxTraps 15553 }
 
 
 
@@ -2035,7 +2035,7 @@ rmxProcessTerminatedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Process terminated"
-             ::= { rmxTraps 5601 } 
+             ::= { rmxTraps 5601 }
 
 
 
@@ -2044,7 +2044,7 @@ rmxProcessTerminatedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Process terminated"
-             ::= { rmxTraps 15601 } 
+             ::= { rmxTraps 15601 }
 
 
 
@@ -2053,7 +2053,7 @@ rmxResetMcuByTerminalAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Terminal initiated MCU reset"
-             ::= { rmxTraps 5602 } 
+             ::= { rmxTraps 5602 }
 
 
 
@@ -2062,7 +2062,7 @@ rmxResetMcuByTerminalAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Terminal initiated MCU reset"
-             ::= { rmxTraps 15602 } 
+             ::= { rmxTraps 15602 }
 
 
 
@@ -2071,7 +2071,7 @@ rmxResetMcuByOperatorAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "User initiated MCU reset"
-             ::= { rmxTraps 5603 } 
+             ::= { rmxTraps 5603 }
 
 
 
@@ -2080,7 +2080,7 @@ rmxResetMcuByOperatorAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "User initiated MCU reset"
-             ::= { rmxTraps 15603 } 
+             ::= { rmxTraps 15603 }
 
 
 
@@ -2089,7 +2089,7 @@ rmxResetMcuInternalAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Internal MCU reset"
-             ::= { rmxTraps 5604 } 
+             ::= { rmxTraps 5604 }
 
 
 
@@ -2098,7 +2098,7 @@ rmxResetMcuInternalAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Internal MCU reset"
-             ::= { rmxTraps 15604 } 
+             ::= { rmxTraps 15604 }
 
 
 
@@ -2107,7 +2107,7 @@ rmxResetMcuAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MCU reset"
-             ::= { rmxTraps 5605 } 
+             ::= { rmxTraps 5605 }
 
 
 
@@ -2116,7 +2116,7 @@ rmxResetMcuAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MCU reset"
-             ::= { rmxTraps 15605 } 
+             ::= { rmxTraps 15605 }
 
 
 
@@ -2125,7 +2125,7 @@ rmxResetMcuDiagnosticsAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MCU Reset to enable Diagnostics mode"
-             ::= { rmxTraps 5606 } 
+             ::= { rmxTraps 5606 }
 
 
 
@@ -2134,7 +2134,7 @@ rmxResetMcuDiagnosticsAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MCU Reset to enable Diagnostics mode"
-             ::= { rmxTraps 15606 } 
+             ::= { rmxTraps 15606 }
 
 
 
@@ -2143,7 +2143,7 @@ rmxProcessStartupFailedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Startup process failure"
-             ::= { rmxTraps 5607 } 
+             ::= { rmxTraps 5607 }
 
 
 
@@ -2152,7 +2152,7 @@ rmxProcessStartupFailedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Startup process failure"
-             ::= { rmxTraps 15607 } 
+             ::= { rmxTraps 15607 }
 
 
 
@@ -2161,7 +2161,7 @@ rmxSystemInSafeModeAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Automatic reset is unavailable in Safe Mode"
-             ::= { rmxTraps 5608 } 
+             ::= { rmxTraps 5608 }
 
 
 
@@ -2170,7 +2170,7 @@ rmxSystemInSafeModeAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Automatic reset is unavailable in Safe Mode"
-             ::= { rmxTraps 15608 } 
+             ::= { rmxTraps 15608 }
 
 
 
@@ -2179,7 +2179,7 @@ rmxGuiSystemConfigIsIllegalAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "GUI System configuration file is invalid xml file"
-             ::= { rmxTraps 5609 } 
+             ::= { rmxTraps 5609 }
 
 
 
@@ -2188,7 +2188,7 @@ rmxGuiSystemConfigIsIllegalAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "GUI System configuration file is invalid xml file"
-             ::= { rmxTraps 15609 } 
+             ::= { rmxTraps 15609 }
 
 
 
@@ -2197,7 +2197,7 @@ rmxFileSystemFailedToScanAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "File system scan failure"
-             ::= { rmxTraps 5650 } 
+             ::= { rmxTraps 5650 }
 
 
 
@@ -2206,7 +2206,7 @@ rmxFileSystemFailedToScanAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "File system scan failure"
-             ::= { rmxTraps 15650 } 
+             ::= { rmxTraps 15650 }
 
 
 
@@ -2215,7 +2215,7 @@ rmxFileSystemOverflowAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "File system space shortage"
-             ::= { rmxTraps 5651 } 
+             ::= { rmxTraps 5651 }
 
 
 
@@ -2224,7 +2224,7 @@ rmxFileSystemOverflowAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "File system space shortage"
-             ::= { rmxTraps 15651 } 
+             ::= { rmxTraps 15651 }
 
 
 
@@ -2233,7 +2233,7 @@ rmxHardDiskFailureAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Hard disk error"
-             ::= { rmxTraps 5652 } 
+             ::= { rmxTraps 5652 }
 
 
 
@@ -2242,7 +2242,7 @@ rmxHardDiskFailureAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Hard disk error"
-             ::= { rmxTraps 15652 } 
+             ::= { rmxTraps 15652 }
 
 
 
@@ -2251,7 +2251,7 @@ rmxCpuIpcmSoftwareIsNotUpdatedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "CPU IPMC software was not updated."
-             ::= { rmxTraps 5690 } 
+             ::= { rmxTraps 5690 }
 
 
 
@@ -2260,7 +2260,7 @@ rmxCpuIpcmSoftwareIsNotUpdatedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "CPU IPMC software was not updated."
-             ::= { rmxTraps 15690 } 
+             ::= { rmxTraps 15690 }
 
 
 
@@ -2269,7 +2269,7 @@ rmxNewVersionInstalledAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "A new version was installed. Reset the system."
-             ::= { rmxTraps 5700 } 
+             ::= { rmxTraps 5700 }
 
 
 
@@ -2278,7 +2278,7 @@ rmxNewVersionInstalledAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "A new version was installed. Reset the system."
-             ::= { rmxTraps 15700 } 
+             ::= { rmxTraps 15700 }
 
 
 
@@ -2287,7 +2287,7 @@ rmxNewActivationKeyLoadedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "A new activation key was loaded. Reset the system."
-             ::= { rmxTraps 5701 } 
+             ::= { rmxTraps 5701 }
 
 
 
@@ -2296,7 +2296,7 @@ rmxNewActivationKeyLoadedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "A new activation key was loaded. Reset the system."
-             ::= { rmxTraps 15701 } 
+             ::= { rmxTraps 15701 }
 
 
 
@@ -2305,7 +2305,7 @@ rmxInsufficientUdpPortsAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Insufficient UDP Ports"
-             ::= { rmxTraps 5751 } 
+             ::= { rmxTraps 5751 }
 
 
 
@@ -2314,7 +2314,7 @@ rmxInsufficientUdpPortsAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Insufficient UDP Ports"
-             ::= { rmxTraps 15751 } 
+             ::= { rmxTraps 15751 }
 
 
 
@@ -2323,7 +2323,7 @@ rmxUsersListCorruptedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to open Users list file"
-             ::= { rmxTraps 5800 } 
+             ::= { rmxTraps 5800 }
 
 
 
@@ -2332,7 +2332,7 @@ rmxUsersListCorruptedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to open Users list file"
-             ::= { rmxTraps 15800 } 
+             ::= { rmxTraps 15800 }
 
 
 
@@ -2341,7 +2341,7 @@ rmxDefaultUserExistsAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Polycom default User exists. For security reasons, it is recommended to delete this User and create your own User."
-             ::= { rmxTraps 5801 } 
+             ::= { rmxTraps 5801 }
 
 
 
@@ -2350,7 +2350,7 @@ rmxDefaultUserExistsAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Polycom default User exists. For security reasons, it is recommended to delete this User and create your own User."
-             ::= { rmxTraps 15801 } 
+             ::= { rmxTraps 15801 }
 
 
 
@@ -2359,7 +2359,7 @@ rmxSupportOperatorIllegalInFederalModeAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "User Name  SUPPORT cannot be used in Enhanced Security Mode"
-             ::= { rmxTraps 5802 } 
+             ::= { rmxTraps 5802 }
 
 
 
@@ -2368,7 +2368,7 @@ rmxSupportOperatorIllegalInFederalModeAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "User Name  SUPPORT cannot be used in Enhanced Security Mode"
-             ::= { rmxTraps 15802 } 
+             ::= { rmxTraps 15802 }
 
 
 
@@ -2377,7 +2377,7 @@ rmxIsdnServicesConfigurationChangedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "ISDN/PSTN Network Services configuration changed"
-             ::= { rmxTraps 5900 } 
+             ::= { rmxTraps 5900 }
 
 
 
@@ -2386,7 +2386,7 @@ rmxIsdnServicesConfigurationChangedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "ISDN/PSTN Network Services configuration changed"
-             ::= { rmxTraps 15900 } 
+             ::= { rmxTraps 15900 }
 
 
 
@@ -2395,7 +2395,7 @@ rmxNoIsdnPstnLicensingAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No License for ISDN/PSTN. Please activate the RTM ISDN card through Polycom website"
-             ::= { rmxTraps 5901 } 
+             ::= { rmxTraps 5901 }
 
 
 
@@ -2404,7 +2404,7 @@ rmxNoIsdnPstnLicensingAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No License for ISDN/PSTN. Please activate the RTM ISDN card through Polycom website"
-             ::= { rmxTraps 15901 } 
+             ::= { rmxTraps 15901 }
 
 
 
@@ -2413,7 +2413,7 @@ rmxNoRtmIsdnCardAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "RTM ISDN card not found"
-             ::= { rmxTraps 5902 } 
+             ::= { rmxTraps 5902 }
 
 
 
@@ -2422,7 +2422,7 @@ rmxNoRtmIsdnCardAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "RTM ISDN card not found"
-             ::= { rmxTraps 15902 } 
+             ::= { rmxTraps 15902 }
 
 
 
@@ -2431,7 +2431,7 @@ rmxNoClockSourceAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No clock source"
-             ::= { rmxTraps 5903 } 
+             ::= { rmxTraps 5903 }
 
 
 
@@ -2440,7 +2440,7 @@ rmxNoClockSourceAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No clock source"
-             ::= { rmxTraps 15903 } 
+             ::= { rmxTraps 15903 }
 
 
 
@@ -2449,7 +2449,7 @@ rmxSingleClockSourceAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Single clock source"
-             ::= { rmxTraps 5904 } 
+             ::= { rmxTraps 5904 }
 
 
 
@@ -2458,7 +2458,7 @@ rmxSingleClockSourceAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Single clock source"
-             ::= { rmxTraps 15904 } 
+             ::= { rmxTraps 15904 }
 
 
 
@@ -2467,7 +2467,7 @@ rmxGkmngrAvfWrongMcuConfigAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MCU is not configured for AVF gatekeeper mode"
-             ::= { rmxTraps 5950 } 
+             ::= { rmxTraps 5950 }
 
 
 
@@ -2476,7 +2476,7 @@ rmxGkmngrAvfWrongMcuConfigAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "MCU is not configured for AVF gatekeeper mode"
-             ::= { rmxTraps 15950 } 
+             ::= { rmxTraps 15950 }
 
 
 
@@ -2485,7 +2485,7 @@ rmxGateKeeperErrorAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Gatekeeper failure"
-             ::= { rmxTraps 5951 } 
+             ::= { rmxTraps 5951 }
 
 
 
@@ -2494,7 +2494,7 @@ rmxGateKeeperErrorAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Gatekeeper failure"
-             ::= { rmxTraps 15951 } 
+             ::= { rmxTraps 15951 }
 
 
 
@@ -2503,7 +2503,7 @@ rmxCanNotEstablishConnectionWithApplicationServerAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to connect to application server"
-             ::= { rmxTraps 6000 } 
+             ::= { rmxTraps 6000 }
 
 
 
@@ -2512,7 +2512,7 @@ rmxCanNotEstablishConnectionWithApplicationServerAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to connect to application server"
-             ::= { rmxTraps 16000 } 
+             ::= { rmxTraps 16000 }
 
 
 
@@ -2521,7 +2521,7 @@ rmxSystemConfigurationAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Configuration of external database did not complete."
-             ::= { rmxTraps 6001 } 
+             ::= { rmxTraps 6001 }
 
 
 
@@ -2530,7 +2530,7 @@ rmxSystemConfigurationAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Configuration of external database did not complete."
-             ::= { rmxTraps 16001 } 
+             ::= { rmxTraps 16001 }
 
 
 
@@ -2539,7 +2539,7 @@ rmxExternalDbCertificateErrorAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Error in external database certificate"
-             ::= { rmxTraps 6002 } 
+             ::= { rmxTraps 6002 }
 
 
 
@@ -2548,7 +2548,7 @@ rmxExternalDbCertificateErrorAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Error in external database certificate"
-             ::= { rmxTraps 16002 } 
+             ::= { rmxTraps 16002 }
 
 
 
@@ -2557,7 +2557,7 @@ rmxIvrServiceListMissingDefaultServiceAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No default IVR Service in IVR Services list"
-             ::= { rmxTraps 6050 } 
+             ::= { rmxTraps 6050 }
 
 
 
@@ -2566,7 +2566,7 @@ rmxIvrServiceListMissingDefaultServiceAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "No default IVR Service in IVR Services list"
-             ::= { rmxTraps 16050 } 
+             ::= { rmxTraps 16050 }
 
 
 
@@ -2575,7 +2575,7 @@ rmxCanNotCreateDefaultProfileAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to create Default Profile"
-             ::= { rmxTraps 6051 } 
+             ::= { rmxTraps 6051 }
 
 
 
@@ -2584,7 +2584,7 @@ rmxCanNotCreateDefaultProfileAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to create Default Profile"
-             ::= { rmxTraps 16051 } 
+             ::= { rmxTraps 16051 }
 
 
 
@@ -2593,7 +2593,7 @@ rmxNoReadMrDbReqRecievedFromRsrcAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Resource process failed to request the Meeting Room list during startup."
-             ::= { rmxTraps 6052 } 
+             ::= { rmxTraps 6052 }
 
 
 
@@ -2602,7 +2602,7 @@ rmxNoReadMrDbReqRecievedFromRsrcAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Resource process failed to request the Meeting Room list during startup."
-             ::= { rmxTraps 16052 } 
+             ::= { rmxTraps 16052 }
 
 
 
@@ -2611,7 +2611,7 @@ rmxFailedToConnectRecordingLinkAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to connect to recording device"
-             ::= { rmxTraps 6053 } 
+             ::= { rmxTraps 6053 }
 
 
 
@@ -2620,7 +2620,7 @@ rmxFailedToConnectRecordingLinkAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to connect to recording device"
-             ::= { rmxTraps 16053 } 
+             ::= { rmxTraps 16053 }
 
 
 
@@ -2629,7 +2629,7 @@ rmxRecordingLinkDisconnecedUnexpectedlyAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Recording device has disconnected unexpectedly"
-             ::= { rmxTraps 6054 } 
+             ::= { rmxTraps 6054 }
 
 
 
@@ -2638,7 +2638,7 @@ rmxRecordingLinkDisconnecedUnexpectedlyAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Recording device has disconnected unexpectedly"
-             ::= { rmxTraps 16054 } 
+             ::= { rmxTraps 16054 }
 
 
 
@@ -2647,7 +2647,7 @@ rmxSystemBasedModeNotIntializedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to initialize system base mode"
-             ::= { rmxTraps 6055 } 
+             ::= { rmxTraps 6055 }
 
 
 
@@ -2656,7 +2656,7 @@ rmxSystemBasedModeNotIntializedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failed to initialize system base mode"
-             ::= { rmxTraps 16055 } 
+             ::= { rmxTraps 16055 }
 
 
 
@@ -2665,7 +2665,7 @@ rmxConfEncryptionErrorAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Conference Encryption Error"
-             ::= { rmxTraps 6056 } 
+             ::= { rmxTraps 6056 }
 
 
 
@@ -2674,7 +2674,7 @@ rmxConfEncryptionErrorAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Conference Encryption Error"
-             ::= { rmxTraps 16056 } 
+             ::= { rmxTraps 16056 }
 
 
 
@@ -2683,7 +2683,7 @@ rmxSnmpAgentInitFailedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failure in initialization of SNMP agent."
-             ::= { rmxTraps 6100 } 
+             ::= { rmxTraps 6100 }
 
 
 
@@ -2692,7 +2692,7 @@ rmxSnmpAgentInitFailedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Failure in initialization of SNMP agent."
-             ::= { rmxTraps 16100 } 
+             ::= { rmxTraps 16100 }
 
 
 
@@ -2701,7 +2701,7 @@ rmxRestoreSucceededAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Restore Succeeded"
-             ::= { rmxTraps 6200 } 
+             ::= { rmxTraps 6200 }
 
 
 
@@ -2710,7 +2710,7 @@ rmxRestoreSucceededAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Restore Succeeded"
-             ::= { rmxTraps 16200 } 
+             ::= { rmxTraps 16200 }
 
 
 
@@ -2719,7 +2719,7 @@ rmxRestoreFailedAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Restore Failed"
-             ::= { rmxTraps 6201 } 
+             ::= { rmxTraps 6201 }
 
 
 
@@ -2728,7 +2728,7 @@ rmxRestoreFailedAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Restore Failed"
-             ::= { rmxTraps 16201 } 
+             ::= { rmxTraps 16201 }
 
 
 
@@ -2737,7 +2737,7 @@ rmxEncryptionServerErrorAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Encryption Server Error. Failed to generate the encryption key"
-             ::= { rmxTraps 7010 } 
+             ::= { rmxTraps 7010 }
 
 
 
@@ -2746,7 +2746,7 @@ rmxEncryptionServerErrorAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Encryption Server Error. Failed to generate the encryption key"
-             ::= { rmxTraps 17010 } 
+             ::= { rmxTraps 17010 }
 
 
 
@@ -2755,7 +2755,7 @@ rmxExchangeServerConnectionErrorAlarmFault  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Unable to connect to Exchange Server."
-             ::= { rmxTraps 7050 } 
+             ::= { rmxTraps 7050 }
 
 
 
@@ -2764,6 +2764,6 @@ rmxExchangeServerConnectionErrorAlarmClear  NOTIFICATION-TYPE
              STATUS  current
              DESCRIPTION
              "Unable to connect to Exchange Server."
-             ::= { rmxTraps 17050 } 
+             ::= { rmxTraps 17050 }
 
 END

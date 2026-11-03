@@ -78,7 +78,7 @@ Q-IN-Q-MIB DEFINITIONS ::= BEGIN
     swQinQInfo            OBJECT IDENTIFIER ::= { swQinQMIB 2 }
     swQinQPortMgmt        OBJECT IDENTIFIER ::= { swQinQMIB 3 }
     swQinQMgmt            OBJECT IDENTIFIER ::= { swQinQMIB 4 }
-	
+
 -- -----------------------------------------------------------------------------
 -- swQinQCtrl            OBJECT IDENTIFIER ::= { swQinQMIB 1 }
 -- -----------------------------------------------------------------------------
@@ -700,7 +700,7 @@ swQinQRuleInnerVid OBJECT-TYPE
     DESCRIPTION
 	"Specifies the packet's inner VID range."
     ::={ swQinQRuleEntry 11 }
-	
+
 swQinQRuleOuterVid OBJECT-TYPE
     SYNTAX DisplayString
     MAX-ACCESS read-create
@@ -753,7 +753,7 @@ swQinQRuleSpvidOperation OBJECT-TYPE
     	"The 'add' action indicates to add a tag for the assigned SP-VLAN
     	before the C-VLAN tag. If there is S-TAG in the packet, this rule
     	will not take effect.
-    	
+
     	The 'replace' action indicates to replace the C-VLAN in the tag by
     	the SP-VLAN. If there is no C-TAG in the packet, this rule will not
     	take effect."

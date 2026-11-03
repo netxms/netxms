@@ -1,9 +1,9 @@
 -- *****************************************************************
 -- CISCO-ENTITY-SENSOR-RFC-CAPABILITY.my:
 -- Cisco ENTITY-SENSOR-MIB AGENT-CAPABILITIES
---   
+--
 -- January 2005, Seth Wang
---   
+--
 -- Copyright (c) 2005, 2006, 2008 by Cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
@@ -40,12 +40,12 @@ ciscoEntitySensorRfcCapability MODULE-IDENTITY
     REVISION        "200802080000Z"
     DESCRIPTION
         "Added cEntSensorRfcCapc4710aceVA1R70
-        agent capabilities for ACE 4710 Application 
+        agent capabilities for ACE 4710 Application
         Control Engine Appliance."
     REVISION        "200605310000Z"
     DESCRIPTION
         "Added cEntSensorRfcCapACSWV03R000 for
-        Application Control Engine(ACE) Service 
+        Application Control Engine(ACE) Service
         Module."
     REVISION        "200501310000Z"
     DESCRIPTION
@@ -66,7 +66,7 @@ cEntSensorRfcCapCatOSV08R0501 AGENT-CAPABILITIES
 
 cEntSensorRfcCapACSWV03R000 AGENT-CAPABILITIES
     PRODUCT-RELEASE "ACSW (Application Control Software) 3.0
-                    for Application Control Engine(ACE) 
+                    for Application Control Engine(ACE)
                     Service Module."
     STATUS          current
     DESCRIPTION
@@ -78,7 +78,7 @@ cEntSensorRfcCapACSWV03R000 AGENT-CAPABILITIES
 
 cEntSensorRfcCapc4710aceVA1R70 AGENT-CAPABILITIES
     PRODUCT-RELEASE "ACSW (Application Control Software) A1(7)
-                    for ACE 4710 Application Control Engine 
+                    for ACE 4710 Application Control Engine
                     Appliance."
     STATUS          current
     DESCRIPTION

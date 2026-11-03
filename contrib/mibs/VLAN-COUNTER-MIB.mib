@@ -26,8 +26,8 @@ VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
                                         FROM SNMPv2-SMI
         RowStatus                       FROM SNMPv2-TC
         dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
-		
-    	
+
+
     swVLANCounterMIB MODULE-IDENTITY
           LAST-UPDATED "200810280000Z"
           ORGANIZATION "D-Link Corp."
@@ -38,7 +38,7 @@ VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
         ::= { dlink-common-mgmt 65 }
 
     PortList                ::= OCTET STRING(SIZE (0..127))
-    
+
     swVLANCounterCtrl               OBJECT IDENTIFIER ::= { swVLANCounterMIB 1 }
     swVLANCounterInfo               OBJECT IDENTIFIER ::= { swVLANCounterMIB 2 }
     swVLANCounterMgmt               OBJECT IDENTIFIER ::= { swVLANCounterMIB 3 }
@@ -50,7 +50,7 @@ VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
 -- -----------------------------------------------------------------------------
 -- swVLANCounterInfo
 -- -----------------------------------------------------------------------------
-	
+
 -- -----------------------------------------------------------------------------
 -- swVLANCounterMgmt
 -- -----------------------------------------------------------------------------
@@ -104,7 +104,7 @@ VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS  current
         DESCRIPTION
-        "This object indicates the port number. 
+        "This object indicates the port number.
         If the port number is 0, it indicates that the rule belongs to the vlan."
     ::= { swVLANCounterEntry 2 }
 
@@ -120,7 +120,7 @@ VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the type of packet."
     	::= { swVLANCounterEntry 3 }
-    	
+
     swVLANCounterLevel OBJECT-TYPE
         SYNTAX INTEGER {
                packet(1),
@@ -147,7 +147,7 @@ VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "This object indicates the rate statistics."
     	::= { swVLANCounterEntry 6 }
-	
+
     swVLANCounterRowStatus OBJECT-TYPE
         SYNTAX  RowStatus
         MAX-ACCESS  read-create
@@ -157,7 +157,7 @@ VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
         ::= { swVLANCounterEntry 7 }
 
 -- -----------------------------------------------------------------------------
-    
+
 
     swVLANCounterClearTable OBJECT-TYPE
         SYNTAX  SEQUENCE OF SwVLANCounterClearEntry
@@ -175,13 +175,13 @@ VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
             "A list with the swVLANCounterClearTable."
         INDEX   { swVLANCounterVID,swVLANCounterPort }
         ::= { swVLANCounterClearTable 1 }
-        
+
     SwVLANCounterClearEntry ::=
         SEQUENCE {
             swVLANCounterClearAction
             	INTEGER
         }
-          	   
+
     swVLANCounterClearAction OBJECT-TYPE
         SYNTAX  INTEGER{
                 other(1),
@@ -191,9 +191,9 @@ VLAN-COUNTER-MIB DEFINITIONS ::= BEGIN
         STATUS  current
         DESCRIPTION
             "Used to clear the statistics on the specified VLAN.
-            
+
             Setting this value to 'start' will execute the clear action,
             Once cleared, the value returns to 'other'."
         ::= { swVLANCounterClearEntry 1 }
-             	
+
 END

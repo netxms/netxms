@@ -27,8 +27,8 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
         DisplayString,MacAddress        FROM SNMPv2-TC
         dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
 
-		
-    	
+
+
     swPortSecMIB MODULE-IDENTITY
           LAST-UPDATED "200804240000Z"
           ORGANIZATION "D-Link Corp."
@@ -59,7 +59,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
                  the pre-defined port security configuration, traps will be sent out
                  and the relevant information will be logged into the system."
             ::= { swPortSecCtrl 1 }
-            
+
  	swPortSecSysMaxLernAddr OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-write
@@ -74,7 +74,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 -- -----------------------------------------------------------------------------
 -- swPortSecInfo
 -- -----------------------------------------------------------------------------
-    	     	
+
 -- -----------------------------------------------------------------------------
 -- swPortSecMgmt
 -- -----------------------------------------------------------------------------
@@ -93,7 +93,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		       without learned source addresses are discarded (e.g. dropped) and no more new
 		       addresses can be learned on this port."
 		::= { swPortSecMgmtByPort 1 }
-	
+
 	swPortSecPortEntry OBJECT-TYPE
 		SYNTAX  SwPortSecPortEntry
 		MAX-ACCESS  not-accessible
@@ -102,7 +102,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		      "A list of information contained in the swPortSecPortTable."
 		INDEX   { swPortSecPortIndex }
 		::= { swPortSecPortTable 1 }
-	
+
 	SwPortSecPortEntry ::=
 		SEQUENCE {
 		  swPortSecPortIndex
@@ -116,7 +116,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		  swPortSecPortClearCtrl
 		      INTEGER
 		}
-	
+
 	swPortSecPortIndex OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  not-accessible
@@ -124,7 +124,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "Indicates the secured port to lock address learning."
 		::= { swPortSecPortEntry 1 }
-	
+
 	swPortSecPortMaxLernAddr OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-write
@@ -134,7 +134,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
                       The max entry range is (0..N). The value N means the max number and  is
 	              determined by the project itself."
 		::= { swPortSecPortEntry 2 }
-	
+
 	swPortSecPortLockAddrMode OBJECT-TYPE
 		SYNTAX  INTEGER {
 		           permanent(1),
@@ -151,7 +151,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		       In deleteOnReset (3) mode, locked addresses never age out unless the system
 		       restarts which will prevent port movement or intrusion."
 		::= { swPortSecPortEntry 3 }
-	
+
 	swPortSecPortAdmState OBJECT-TYPE
 		SYNTAX  INTEGER {
 		          enabled(1),
@@ -162,7 +162,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "Indicates the administration state of the locking address."
 		::= { swPortSecPortEntry 4 }
-		
+
 	swPortSecPortClearCtrl  OBJECT-TYPE
 		SYNTAX INTEGER  {
 			other(1),
@@ -178,7 +178,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 
 -- -----------------------------------------------------------------------------
         swPortSecMgmtByVLAN             OBJECT IDENTIFIER ::= { swPortSecMgmt 2 }
-        
+
 	swPortSecVLANTable OBJECT-TYPE
 		SYNTAX  SEQUENCE OF SwPortSecVLANEntry
 		MAX-ACCESS  not-accessible
@@ -191,7 +191,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		       without learned source addresses are discarded (e.g. dropped) and no more new
 		       addresses can be learned on this VLAN."
 		::= { swPortSecMgmtByVLAN 1 }
-	
+
 	swPortSecVLANEntry OBJECT-TYPE
 		SYNTAX  SwPortSecVLANEntry
 		MAX-ACCESS  not-accessible
@@ -200,7 +200,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		      "A list of information contained in the swPortSecVLANTable."
 		INDEX   { swPortSecVLANID }
 		::= { swPortSecVLANTable 1 }
-	
+
 	SwPortSecVLANEntry ::=
 		SEQUENCE {
 		  swPortSecVLANID
@@ -210,7 +210,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		  swPortSecVLANClearCtrl
 		      INTEGER
 		}
-	
+
 	swPortSecVLANID OBJECT-TYPE
 		SYNTAX  INTEGER (1..4094)
 		MAX-ACCESS  not-accessible
@@ -218,7 +218,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "Indicates the secured VLAN to lock address learning."
 		::= { swPortSecVLANEntry 1 }
-	
+
 	swPortSecVLANMaxLernAddr OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-write
@@ -226,28 +226,28 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "Indicates allowable number of addresses to be learned on this VLAN.
                       A value of -1 means no-limit. The default value is no-limit.
-                      
+
                       The max entry range is (0..N). The value N means the max number and is
 	              determined by the project itself."
 		::= { swPortSecVLANEntry 2 }
-	
+
 	swPortSecVLANClearCtrl  OBJECT-TYPE
 		SYNTAX INTEGER  {
-			other(1),	
+			other(1),
 			start(2)
         		}
 		MAX-ACCESS  read-write
 		STATUS      current
 		DESCRIPTION
 			"Used to clear port security entries by VLAN.
-			 Setting this value to 'start' will execute the clear action. 
+			 Setting this value to 'start' will execute the clear action.
 			 Once cleared, the value returns to 'other'.
                         "
         	::= { swPortSecVLANEntry 3 }
 
 -- -----------------------------------------------------------------------------
         swPortSecMgmtByVLANOnPort             OBJECT IDENTIFIER ::= { swPortSecMgmt 3 }
-        
+
 	swPortSecVLANOnPortTable OBJECT-TYPE
 		SYNTAX  SEQUENCE OF SwPortSecVLANOnPortEntry
 		MAX-ACCESS  not-accessible
@@ -261,7 +261,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		       without learned source addresses are discarded (e.g. dropped) and no more new
 		       addresses can be learned on this VLAN from the special port."
 		::= { swPortSecMgmtByVLANOnPort 1 }
-	
+
 	swPortSecVLANOnPortEntry OBJECT-TYPE
 		SYNTAX  SwPortSecVLANOnPortEntry
 		MAX-ACCESS  not-accessible
@@ -270,7 +270,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		      "A list of information contained in the swPortSecVLANOnPortTable."
 		INDEX   { swPortSecPortIndex,swPortSecVLANID }
 		::= { swPortSecVLANOnPortTable 1 }
-	
+
 	SwPortSecVLANOnPortEntry ::=
 		SEQUENCE {
 		  swPortSecVLANOnPortMaxLernAddr
@@ -278,7 +278,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		  swPortSecVLANOnPortAddCtrl
 		      INTEGER
 		}
-	
+
 	swPortSecVLANOnPortMaxLernAddr OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-write
@@ -288,11 +288,11 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
                       from the special port.
                       A value of -1 means no-limit. The default value is no-limit.
                       Only VLANs with limitations will be displayed in this table.
-                      
+
                       The max entry range is (0..N). The value N means the max number and is
 	              determined by the project itself."
 		::= { swPortSecVLANOnPortEntry 1 }
-	
+
 	swPortSecVLANOnPortAddCtrl  OBJECT-TYPE
 		SYNTAX INTEGER  {
 			other(1),
@@ -305,13 +305,13 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
                             When user gets this object, it always returns other(1).
                          add (2):
 			    Used to configure the VLAN limit from the special port.
-			    
+
 			    If 'add' is selected, swPortSecVLANOnPortMaxLernAddr must be set to a valid value except -1.
                         "
         	::= { swPortSecVLANOnPortEntry 2 }
 -- -----------------------------------------------------------------------------
         swPortSecMgmtByVLANOnPortClearCtrl             OBJECT IDENTIFIER ::= { swPortSecMgmtByVLANOnPort 2 }
-         
+
  	swPortSecMgmtByVLANOnPortClearPort  OBJECT-TYPE
 		SYNTAX INTEGER
 		MAX-ACCESS  read-write
@@ -340,7 +340,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
                             When user gets this object, it always returns other(1).
                          start(2):
 			    Used to clear port security entries by VLAN on the special port."
-        	::= { swPortSecMgmtByVLANOnPortClearCtrl 3 }       	
+        	::= { swPortSecMgmtByVLANOnPortClearCtrl 3 }
 -- -----------------------------------------------------------------------------
 
 	swPortSecEntriesTable OBJECT-TYPE
@@ -350,7 +350,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "This table is used to show port security entries."
 		::= { swPortSecMgmt 4 }
-	
+
 	swPortSecEntriesEntry OBJECT-TYPE
 		SYNTAX  SwPortSecEntriesEntry
 		MAX-ACCESS  not-accessible
@@ -359,7 +359,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		      "A list of information contained in the swPortSecEntriesTable."
 		INDEX   { swPortSecMac,swPortSecVID }
 		::= { swPortSecEntriesTable 1 }
-	
+
 	SwPortSecEntriesEntry ::=
 		SEQUENCE {
 		  swPortSecMac
@@ -370,8 +370,8 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
                       INTEGER,
                   swPortSecDelCtrl
                       INTEGER
-		}	
-	
+		}
+
         swPortSecMac OBJECT-TYPE
                 SYNTAX  MacAddress
                 MAX-ACCESS  read-only
@@ -379,15 +379,15 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
                 DESCRIPTION
                      "Specifies a MAC address."
                 ::= { swPortSecEntriesEntry 1 }
-                
+
 	swPortSecVID OBJECT-TYPE
 		SYNTAX	INTEGER (1..4094)
 		MAX-ACCESS  read-only
 		STATUS  current
 		DESCRIPTION
 		      "Indicates the VLAN ID."
-		::= { swPortSecEntriesEntry 2 }	
-	
+		::= { swPortSecEntriesEntry 2 }
+
          swPortSecPort OBJECT-TYPE
 		SYNTAX  INTEGER
 		MAX-ACCESS  read-only
@@ -395,7 +395,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 		DESCRIPTION
 		      "Indicates the port."
 		::= { swPortSecEntriesEntry 3 }
- 	
+
 
          swPortSecDelCtrl  OBJECT-TYPE
 		SYNTAX INTEGER  {
@@ -408,7 +408,7 @@ PORT-SECURITY-MIB DEFINITIONS ::= BEGIN
 			"Used to delete this port security entry.
 			 Setting this value to 'start' will execute the delete action.
 			 Once deleted, the value returns to 'other'."
-                ::= { swPortSecEntriesEntry 4 }    	
-        	
+                ::= { swPortSecEntriesEntry 4 }
+
 
 END

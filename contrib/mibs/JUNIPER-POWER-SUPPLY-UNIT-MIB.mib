@@ -42,7 +42,7 @@ jnxPsuMIB MODULE-IDENTITY
     DESCRIPTION
             "Added new OIDs for power budget statistics which gives details of
             Power reserved for Chassis and the Total power allocated to Chassis
-            including for each FPC. 
+            including for each FPC.
             Added new Table jnxPsuFpcPowerTable which gives the Priority
             assigned and Power allocated to each FPC."
     REVISION  "201010270000Z" -- Oct 27 00:00:00 2010 UTC
@@ -56,7 +56,7 @@ jnxPsuNotifications     OBJECT IDENTIFIER ::= { jnxPsuMIB 1 }
 jnxPsuObjects           OBJECT IDENTIFIER ::= { jnxPsuMIB 2 }
 
 --**********************************************************************
--- PSU Scalar Objects 
+-- PSU Scalar Objects
 --**********************************************************************
 
 jnxPsuScalars           OBJECT IDENTIFIER ::= { jnxPsuObjects 1 }
@@ -83,7 +83,7 @@ jnxPsuAvailableMaxPowerSupply OBJECT-TYPE
     MAX-ACCESS    read-only
     STATUS        current
     DESCRIPTION
-        "Gives the total maximum power that the System can supply from the 
+        "Gives the total maximum power that the System can supply from the
         available online units in Watts."
     ::= { jnxPsuScalars 3 }
 
@@ -139,7 +139,7 @@ jnxPsuChassisPowerConsumed OBJECT-TYPE
     STATUS        current
     DESCRIPTION
         "Total power consumed by the entire system rounded to the nearest integer.
-         This is calculated using the PowerFactor, Current and Voltage values 
+         This is calculated using the PowerFactor, Current and Voltage values
          of each PSU that is online and connected to the System."
     ::= { jnxPsuScalars 9 }
 
@@ -148,7 +148,7 @@ jnxPsuTemperatureInflow OBJECT-TYPE
     MAX-ACCESS    read-only
     STATUS        current
     DESCRIPTION
-        "Average inflow temperature calculated from all 
+        "Average inflow temperature calculated from all
         the available input sensors on the master RE."
 
     ::= { jnxPsuScalars 10 }
@@ -158,7 +158,7 @@ jnxPsuTemperatureOutflow OBJECT-TYPE
     MAX-ACCESS    read-only
     STATUS        current
     DESCRIPTION
-        "Average outflow temperature calculated from all 
+        "Average outflow temperature calculated from all
         the available output sensors on the master RE."
     ::= { jnxPsuScalars 11 }
 
@@ -187,7 +187,7 @@ jnxPsuTemperatureOutflowSamples OBJECT-TYPE
 --**********************************************************************
 
 jnxPsuTable  OBJECT-TYPE
-    SYNTAX        SEQUENCE OF JnxPsuEntry 
+    SYNTAX        SEQUENCE OF JnxPsuEntry
     MAX-ACCESS    not-accessible
     STATUS        current
     DESCRIPTION   "A list of power entries for each PSU component."
@@ -205,8 +205,8 @@ jnxPsuEntry    OBJECT-TYPE
 
     ::= { jnxPsuTable 1 }
 
-JnxPsuEntry ::= 
-    SEQUENCE { 
+JnxPsuEntry ::=
+    SEQUENCE {
         jnxPsuAvgPower    INTEGER,
         jnxPsuMaxPower    INTEGER,
         jnxPsuMode        INTEGER,
@@ -217,15 +217,15 @@ jnxPsuAvgPower   	OBJECT-TYPE
     SYNTAX        INTEGER
     MAX-ACCESS    read-only
     STATUS        current
-    DESCRIPTION   "Buffer that contains the average power used, in Watts 
+    DESCRIPTION   "Buffer that contains the average power used, in Watts
                   for each component."
     ::= { jnxPsuEntry 1 }
-                 
+
 jnxPsuMaxPower   	OBJECT-TYPE
     SYNTAX        INTEGER
     MAX-ACCESS    read-only
     STATUS        current
-    DESCRIPTION   "Buffer that contains the max power available, in Watts 
+    DESCRIPTION   "Buffer that contains the max power available, in Watts
                   for each component."
     ::= { jnxPsuEntry 2 }
 
@@ -314,7 +314,7 @@ jnxPsuOutletEntry OBJECT-TYPE
                    jnxContentsL3Index }
      ::= { jnxPsuOutletTable 1 }
 
-JnxPsuOutletEntry ::= 
+JnxPsuOutletEntry ::=
     SEQUENCE {
 	jnxPsuOutletName                     DisplayString,
 	jnxPsuOutletDescription              DisplayString,
@@ -331,7 +331,7 @@ jnxPsuOutletName  OBJECT-TYPE
     SYNTAX        DisplayString(SIZE (0..15))
     MAX-ACCESS    read-only
     STATUS        current
-    DESCRIPTION   "Outlet name associated to the power supply unit for 
+    DESCRIPTION   "Outlet name associated to the power supply unit for
                    each PSU Component."
     ::= { jnxPsuOutletEntry 1 }
 
@@ -339,7 +339,7 @@ jnxPsuOutletDescription	OBJECT-TYPE
     SYNTAX        DisplayString(SIZE (0..63))
     MAX-ACCESS    read-only
     STATUS        current
-    DESCRIPTION   "Outlet description associated to the power supply unit for 
+    DESCRIPTION   "Outlet description associated to the power supply unit for
                    each PSU Component."
     ::= { jnxPsuOutletEntry 2 }
 
@@ -349,14 +349,14 @@ jnxPsuOutletAvgPower OBJECT-TYPE
     STATUS        current
     DESCRIPTION   "Buffer that contains the average power used, in Watts for each component."
     ::= { jnxPsuOutletEntry 3 }
-		 
+
 jnxPsuOutletMaxPower OBJECT-TYPE
     SYNTAX        INTEGER
     MAX-ACCESS    read-only
     STATUS        current
     DESCRIPTION   "Buffer that contains the maximum power available, in Watts for each component."
     ::= { jnxPsuOutletEntry 4 }
-		 
+
 jnxPsuOutletCurrent OBJECT-TYPE
     SYNTAX        INTEGER
     MAX-ACCESS    read-only
@@ -364,7 +364,7 @@ jnxPsuOutletCurrent OBJECT-TYPE
     DESCRIPTION   "PSU output current in milliamps rounded to the nearest
                   integer."
     ::= { jnxPsuOutletEntry 5 }
-                  
+
 jnxPsuOutletStatus  OBJECT-TYPE
     SYNTAX        INTEGER {
                       off(0),
@@ -385,8 +385,8 @@ jnxPsuOutletVoltage OBJECT-TYPE
 
 --
 -- NOTE: jnxPsuOutletPowerFactorValue does NOT return the traditional
--- "power factor", defined as real power in watts divided by apparent 
--- power in volt-amperes.  Instead it returns "efficiency" which is  
+-- "power factor", defined as real power in watts divided by apparent
+-- power in volt-amperes.  Instead it returns "efficiency" which is
 -- defined as power output divided by power input.
 --
 jnxPsuOutletPowerFactorValue OBJECT-TYPE
@@ -397,23 +397,23 @@ jnxPsuOutletPowerFactorValue OBJECT-TYPE
 
                   Algorithm for calculation of Power Factor is below.
                   For PowerOut values that fall in between 618.93W and 915.24W,
-                  say 700W, the appropriate PF ranges from 0.910191 & 
+                  say 700W, the appropriate PF ranges from 0.910191 &
                   0.917994. Following linear equation could help deduce a
                   fairly accurate input power value.
- 
-                  Linear equation y = mx + b (where m is the slope and b is 
+
+                  Linear equation y = mx + b (where m is the slope and b is
                   the Y intercept)
 
                   Slope m = (y2 - y1) / (x2 - x1)
                   Y intercept  b = y - mx
- 
+
                   Plugging it all together for our example:
- 
+
                   m = (915.24 - 618.93) / (0.917994 - 0.910191) = 37973.86
                   b = 915.24 - (37973.86 * 0.917994) = -33944.5
- 
+
                   for 700W (y), our efficiency (x) would then be:
- 
+
                   x = (700 - (-33944.5)) / 37973.86 = 0.912326 = 91%
 
                   PowerIn = 700W /0.912326 = 767.26W "
@@ -427,9 +427,9 @@ jnxPsuOutletPowerConsumed OBJECT-TYPE
     DESCRIPTION   "Power Consumed by each outlet units in Watts."
     ::= { jnxPsuOutletEntry 11 }
 
-                  
+
 --**********************************************************************
--- FPC Power allocated information 
+-- FPC Power allocated information
 --**********************************************************************
 
 jnxPsuFpcPowerTable OBJECT-TYPE
@@ -437,7 +437,7 @@ jnxPsuFpcPowerTable OBJECT-TYPE
     MAX-ACCESS    not-accessible
     STATUS        current
     DESCRIPTION   "A list of entries for each FPC(Flexible PIC Concentrator)
-                   giving it's assigned priority and power being allocated. 
+                   giving it's assigned priority and power being allocated.
                    More information on FPCs can be found in JUNIPER-MIB."
     ::= { jnxPsuObjects 5 }
 
@@ -457,7 +457,7 @@ JnxPsuFpcPowerEntry ::=
             jnxPsuFpcPowerPriority               INTEGER,
             jnxPsuFpcPowerAllocated              INTEGER
           }
-      
+
 jnxPsuFpcPowerPriority OBJECT-TYPE
      SYNTAX         INTEGER
      MAX-ACCESS     read-only

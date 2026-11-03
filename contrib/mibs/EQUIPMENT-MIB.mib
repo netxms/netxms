@@ -62,7 +62,7 @@
 -- 2. add notifications swExternalAlarm.
 --
 -- Version 2.01, 2007/10/24, Scott
--- Modify the descriptions of "swPowerStatus", "swPowerStatusChg", 
+-- Modify the descriptions of "swPowerStatus", "swPowerStatusChg",
 -- "swPowerFailure", and "swPowerRecover" to detail each cases.
 --
 -- Version 2.00, 2007/03/27, Yedda
@@ -137,7 +137,7 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION     "A entry of Power information values."
         INDEX           { swPowerUnitIndex , swPowerID}
         ::= { swPowerTable 1 }
- 
+
     SwPowerEntry ::= SEQUENCE {
     			swPowerUnitIndex		      INTEGER,
                 swPowerID	                  INTEGER,
@@ -208,7 +208,7 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
 					swFanStatus				  INTEGER,
 					swFanPostion				INTEGER,
 					swFanNumber					INTEGER,
-					swFanSpeed					INTEGER					
+					swFanSpeed					INTEGER
                 }
 
     swFanUnitIndex OBJECT-TYPE
@@ -241,14 +241,14 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
         STATUS current
         DESCRIPTION
             "Indicates the current fan status.
-             speed-0     : If Fan function is normal and the Fan does not spin 
+             speed-0     : If Fan function is normal and the Fan does not spin
 	                       due to the temperature isn't reach the threshold,
                            status of Fan is Speed 0.
-             speed-low   : Fan spin using the lowest speed.	
-             speed-middle: Fan spin using the middle speed.	     		   
-             speed-high  : Fan spin using the highest speed."		          
+             speed-low   : Fan spin using the lowest speed.
+             speed-middle: Fan spin using the middle speed.
+             speed-high  : Fan spin using the highest speed."
         ::= { swFanEntry 3 }
-        
+
     swFanPostion OBJECT-TYPE
         SYNTAX INTEGER {
         other(1),
@@ -329,8 +329,8 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
         STATUS          current
         DESCRIPTION     "The low threshold of shelf temperature."
         ::= { swTemperatureEntry 4 }
-        
-        
+
+
 -- -----------------------------------------------------------------------------
     swUnitMgmt            OBJECT IDENTIFIER ::= { swEquipment 9 }
 
@@ -485,8 +485,8 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
              The first LED is power LED. The second LED is console LED.
              The third LED is RPS (Redundancy Power Supply) LED. The fourth
              LED is management port LED. The fifth LED is FAN LED.
-             
-             For DGS3200-10 and DGS3200-16, the first three octets are defined 
+
+             For DGS3200-10 and DGS3200-16, the first three octets are defined
              as system LED.The first LED is power LED. The second LED is console LED.
              The third LED is RPS (Redundancy Power Supply) LED.
              For DGS3200-24, the first three octets are defined as system LED,
@@ -496,7 +496,7 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
              02 = SD card is present.
              03 = fails to read/write SD card.
              04 = read/write SD card successfully."
-             
+
         ::= { swUnitMgmtEntry 5 }
 
 
@@ -718,12 +718,12 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Shows the current status of each alarm channel."
         ::= { swExternalAlarmEntry 3 }
-        
+
 -- --------------------------------------------------------------------------------
 -- swEquipmentPowerSaving
 -- --------------------------------------------------------------------------------
 	swEquipmentPowerSaving OBJECT IDENTIFIER ::= { swEquipment 11 }
-	 
+
    		swEquipmentPowerSavingState OBJECT-TYPE
        		 SYNTAX  INTEGER {
               		enabled(1),
@@ -734,7 +734,7 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
     		DESCRIPTION  "Indicates the equipment reduced power consumption state."
     		::= { swEquipmentPowerSaving 1 }
 
-    		
+
     	swEquipPowerSavingLenDetect OBJECT-TYPE
        		 SYNTAX  INTEGER {
               		enabled(1),
@@ -744,12 +744,12 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
     		STATUS      current
     		DESCRIPTION  "Indicates the equipment reduced power consumption state with a link partner."
     		::= { swEquipmentPowerSaving 2 }
-    		
+
  -- --------------------------------------------------------------------------------
 -- swEquipmentTemperatureCtrl
 -- --------------------------------------------------------------------------------
      swEquipmentTemperatureCtrl OBJECT IDENTIFIER ::= { swEquipment 12 }
-     
+
      swTemperatureTrapState OBJECT-TYPE
         SYNTAX  INTEGER {
                enabled(1),
@@ -923,29 +923,29 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
         					swPowerStatus
                         }
         STATUS          current
-        DESCRIPTION     "Power Status change notification. The notification is issued 
+        DESCRIPTION     "Power Status change notification. The notification is issued
                          when the swPowerStatus changes in the following cases:
-                         lowVoltage  -> overCurrent. 
-                         lowVoltage  -> working. 
-                         lowVoltage  -> disconnect. 
-                         lowVoltage  -> connect. 
-                         overCurrent -> lowVoltage. 
-                         overCurrent -> working. 
-                         overCurrent -> disconnect. 
-                         overCurrent -> connect. 
-                         working     -> lowVoltage. 
-                         working     -> overCurrent. 
-                         working     -> connect. 
-                         working     -> disconnect. 
-                         fail        -> connect. 
-                         fail        -> disconnect. 
-                         connect     -> lowVoltage. 
-                         connect     -> overCurrent. 
-                         connect     -> working. 
-                         connect     -> disconnect. 
-                         disconnect  -> lowVoltage. 
-                         disconnect  -> overCurrent. 
-                         disconnect  -> working. 
+                         lowVoltage  -> overCurrent.
+                         lowVoltage  -> working.
+                         lowVoltage  -> disconnect.
+                         lowVoltage  -> connect.
+                         overCurrent -> lowVoltage.
+                         overCurrent -> working.
+                         overCurrent -> disconnect.
+                         overCurrent -> connect.
+                         working     -> lowVoltage.
+                         working     -> overCurrent.
+                         working     -> connect.
+                         working     -> disconnect.
+                         fail        -> connect.
+                         fail        -> disconnect.
+                         connect     -> lowVoltage.
+                         connect     -> overCurrent.
+                         connect     -> working.
+                         connect     -> disconnect.
+                         disconnect  -> lowVoltage.
+                         disconnect  -> overCurrent.
+                         disconnect  -> working.
                          disconnect  -> connect."
         ::= { swEquipPowerNotifyPerfix  1 }
 
@@ -956,12 +956,12 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
         					swPowerStatus
                         }
         STATUS          current
-        DESCRIPTION     "Power Failure notification. The notification is issued 
+        DESCRIPTION     "Power Failure notification. The notification is issued
                          when the swPowerStatus changes in the following cases:
-                         lowVoltage  -> fail. 
-   						 overCurrent -> fail. 
-                         working     -> fail. 
-                         connect     -> fail. 
+                         lowVoltage  -> fail.
+   						 overCurrent -> fail.
+                         working     -> fail.
+                         connect     -> fail.
                          disconnect  -> fail."
         ::= { swEquipPowerNotifyPerfix  2 }
 
@@ -973,8 +973,8 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
         STATUS          current
         DESCRIPTION     "Power Recover notification. The notification is issued
                          when the swPowerStatus changes in the following cases:
-                         fail -> lowVoltage.  
-                         fail -> overCurrent. 
+                         fail -> lowVoltage.
+                         fail -> overCurrent.
                          fail -> working."
         ::= { swEquipPowerNotifyPerfix  3 }
 
@@ -1039,7 +1039,7 @@ EQUIPMENT-MIB DEFINITIONS ::= BEGIN
 
 -- -----------------------------------------------------------------------------
     swEquipExternalAlarmNotifyPrefix 	 OBJECT IDENTIFIER ::= { swEquipExternalAlarmNotification 0 }
-    
+
     swExternalAlarm NOTIFICATION-TYPE
         OBJECTS         { swExternalAlarmChannel,
                           swExternalAlarmMessage

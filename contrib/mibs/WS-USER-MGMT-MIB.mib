@@ -6,24 +6,24 @@
 --
 
 	WS-USER-MGMT-MIB DEFINITIONS ::= BEGIN
- 
+
 		IMPORTS
-			OBJECT-GROUP, MODULE-COMPLIANCE			
-				FROM SNMPv2-CONF			
-			IpAddress, OBJECT-TYPE, MODULE-IDENTITY			
-				FROM SNMPv2-SMI			
-			PhysAddress, DisplayString, TruthValue			
-				FROM SNMPv2-TC			
-			wsMgmt			
+			OBJECT-GROUP, MODULE-COMPLIANCE
+				FROM SNMPv2-CONF
+			IpAddress, OBJECT-TYPE, MODULE-IDENTITY
+				FROM SNMPv2-SMI
+			PhysAddress, DisplayString, TruthValue
+				FROM SNMPv2-TC
+			wsMgmt
 				FROM WS-SMI;
-	
-	
+
+
 		-- 1.3.6.1.4.1.388.14.4.2
-		wsUserMgmtMib MODULE-IDENTITY 
+		wsUserMgmtMib MODULE-IDENTITY
 			LAST-UPDATED "200606131844Z"		-- June 13, 2006 at 18:44 GMT
-			ORGANIZATION 
+			ORGANIZATION
 				"Symbol Technologies"
-			CONTACT-INFO 
+			CONTACT-INFO
 				"Symbol Technologies, Inc.
 				Customer Service
 				Postal:
@@ -33,19 +33,19 @@
 				Tel: +1. 631.738.6213
 				E-mail: support@symbol.com
 				Web: http://www.symbol.com/support"
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			REVISION "200606131425Z"		-- June 13, 2006 at 14:25 GMT
-			DESCRIPTION 
+			DESCRIPTION
 				"01a01"
 			::= { wsMgmt 2 }
 
-		
-	
+
+
 --
 -- Type definitions
 --
-	
+
 		AbbrRowStatus ::= INTEGER
 			{
 			active(1),
@@ -53,12 +53,12 @@
 			destroy(6)
 			}
 
-	
-	
+
+
 --
 -- Node definitions
 --
-	
+
 		-- 1.3.6.1.4.1.388.14.4.2.1
 		wsUserMgmtUserTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsUserMgmtUserEntry
@@ -68,7 +68,7 @@
 				"Description."
 			::= { wsUserMgmtMib 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.1.1
 		wsUserMgmtUserEntry OBJECT-TYPE
 			SYNTAX WsUserMgmtUserEntry
@@ -79,9 +79,9 @@
 			INDEX { wsUserMgmtUserName }
 			::= { wsUserMgmtUserTable 1 }
 
-		
+
 		WsUserMgmtUserEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsUserMgmtUserName
 					DisplayString,
 				wsUserMgmtUserPassword
@@ -103,7 +103,7 @@
 				"User Name"
 			::= { wsUserMgmtUserEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.1.1.2
 		wsUserMgmtUserPassword OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (8..32))
@@ -113,7 +113,7 @@
 				"User pasword.  This object will display null string when being read"
 			::= { wsUserMgmtUserEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.1.1.3
 		wsUserMgmtUserRole OBJECT-TYPE
 			SYNTAX BITS
@@ -131,7 +131,7 @@
 				"User previlege"
 			::= { wsUserMgmtUserEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.1.1.4
 		wsUserMgmtUserAccessMode OBJECT-TYPE
 			SYNTAX BITS
@@ -147,7 +147,7 @@
 				"Login source for the user"
 			::= { wsUserMgmtUserEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.1.1.5
 		wsUserMgmtUserRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -157,7 +157,7 @@
 				"Description."
 			::= { wsUserMgmtUserEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.2
 		wsUserMgmtRadiusSvrTable OBJECT-TYPE
 			SYNTAX SEQUENCE OF WsUserMgmtRadiusSvrEntry
@@ -167,7 +167,7 @@
 				"Description."
 			::= { wsUserMgmtMib 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.2.1
 		wsUserMgmtRadiusSvrEntry OBJECT-TYPE
 			SYNTAX WsUserMgmtRadiusSvrEntry
@@ -178,9 +178,9 @@
 			INDEX { wsUserMgmtRadiusSvrIdx }
 			::= { wsUserMgmtRadiusSvrTable 1 }
 
-		
+
 		WsUserMgmtRadiusSvrEntry ::=
-			SEQUENCE { 
+			SEQUENCE {
 				wsUserMgmtRadiusSvrIdx
 					INTEGER,
 				wsUserMgmtRadiusSvrIPAddr
@@ -206,7 +206,7 @@
 				"Description."
 			::= { wsUserMgmtRadiusSvrEntry 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.2.1.2
 		wsUserMgmtRadiusSvrIPAddr OBJECT-TYPE
 			SYNTAX IpAddress
@@ -216,7 +216,7 @@
 				"Radius server IP address"
 			::= { wsUserMgmtRadiusSvrEntry 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.2.1.3
 		wsUserMgmtRadiusSvrPort OBJECT-TYPE
 			SYNTAX INTEGER (0..65535)
@@ -226,7 +226,7 @@
 				"Radius server port"
 			::= { wsUserMgmtRadiusSvrEntry 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.2.1.4
 		wsUserMgmtRadiusSvrNumRetries OBJECT-TYPE
 			SYNTAX INTEGER (0..100)
@@ -236,7 +236,7 @@
 				"Number of retries to communicate with active radius server"
 			::= { wsUserMgmtRadiusSvrEntry 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.2.1.5
 		wsUserMgmtRadiusSvrTimeOut OBJECT-TYPE
 			SYNTAX INTEGER (1..1000)
@@ -247,7 +247,7 @@
 				"Time to wait for radius to reply"
 			::= { wsUserMgmtRadiusSvrEntry 5 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.2.1.6
 		wsUserMgmtRadiusSvrSecret OBJECT-TYPE
 			SYNTAX DisplayString
@@ -257,7 +257,7 @@
 				"Encription key shared with the radius server"
 			::= { wsUserMgmtRadiusSvrEntry 6 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.2.1.7
 		wsUserMgmtRadiusSvrRowStatus OBJECT-TYPE
 			SYNTAX AbbrRowStatus
@@ -267,11 +267,11 @@
 				"Description."
 			::= { wsUserMgmtRadiusSvrEntry 7 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.3
 		wsUserMgmtAuthMethods OBJECT IDENTIFIER ::= { wsUserMgmtMib 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.3.1
 		wsUserMgmtAuthMethod1 OBJECT-TYPE
 			SYNTAX INTEGER
@@ -287,7 +287,7 @@
 				"First authentication method to ues"
 			::= { wsUserMgmtAuthMethods 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.3.2
 		wsUserMgmtAuthMethod2 OBJECT-TYPE
 			SYNTAX INTEGER
@@ -303,7 +303,7 @@
 				"Second authentication method to use if first methond returns erro"
 			::= { wsUserMgmtAuthMethods 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.3.3
 		wsUserMgmtAuthMethod3 OBJECT-TYPE
 			SYNTAX TruthValue
@@ -313,11 +313,11 @@
 				"Indicates if 'none' authentication method is set or not"
 			::= { wsUserMgmtAuthMethods 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.4
 		wsUserMgmtPasswdChange OBJECT IDENTIFIER ::= { wsUserMgmtMib 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.4.1
 		wsUserMgmtPasswdUser OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (1..28))
@@ -327,29 +327,29 @@
 				"Description."
 			::= { wsUserMgmtPasswdChange 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.4.2
 		wsUserMgmtPasswdOld OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (8..32))
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"User must enter the old password in order to change it.  
+				"User must enter the old password in order to change it.
 				Password is null string when read."
 			::= { wsUserMgmtPasswdChange 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.4.3
 		wsUserMgmtPasswdNew OBJECT-TYPE
 			SYNTAX DisplayString (SIZE (8..32))
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"The new user password to be used. 
+				"The new user password to be used.
 				Password is null string when read."
 			::= { wsUserMgmtPasswdChange 3 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.4.4
 		wsUserMgmtPasswdAction OBJECT-TYPE
 			SYNTAX INTEGER
@@ -360,47 +360,47 @@
 			MAX-ACCESS read-write
 			STATUS current
 			DESCRIPTION
-				"Initiate password change. All objects under wsUserMgmtPasswdChange 
+				"Initiate password change. All objects under wsUserMgmtPasswdChange
 				should be sent within a single set request to assure data consistancy.
 				The value of is none(0) when read."
 			::= { wsUserMgmtPasswdChange 4 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.100
 		wsUserMgmtConformance OBJECT IDENTIFIER ::= { wsUserMgmtMib 100 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.100.1
 		wsUserMgmtCompliances OBJECT IDENTIFIER ::= { wsUserMgmtConformance 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.100.1.1
 		wsMgmtCompliance MODULE-COMPLIANCE
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			MODULE -- this module
 				MANDATORY-GROUPS { wsUserMgmtGroup }
 			::= { wsUserMgmtCompliances 1 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.100.2
 		wsUserMgmtGroups OBJECT IDENTIFIER ::= { wsUserMgmtConformance 2 }
 
-		
+
 		-- 1.3.6.1.4.1.388.14.4.2.100.2.2
 		wsUserMgmtGroup OBJECT-GROUP
-			OBJECTS { wsUserMgmtUserPassword, wsUserMgmtUserRole, wsUserMgmtUserAccessMode, wsUserMgmtUserRowStatus, wsUserMgmtRadiusSvrPort, 
-				wsUserMgmtRadiusSvrNumRetries, wsUserMgmtRadiusSvrTimeOut, wsUserMgmtRadiusSvrSecret, wsUserMgmtRadiusSvrRowStatus, wsUserMgmtAuthMethod1, 
-				wsUserMgmtAuthMethod2, wsUserMgmtRadiusSvrIdx, wsUserMgmtUserName, wsUserMgmtPasswdAction, wsUserMgmtPasswdNew, 
+			OBJECTS { wsUserMgmtUserPassword, wsUserMgmtUserRole, wsUserMgmtUserAccessMode, wsUserMgmtUserRowStatus, wsUserMgmtRadiusSvrPort,
+				wsUserMgmtRadiusSvrNumRetries, wsUserMgmtRadiusSvrTimeOut, wsUserMgmtRadiusSvrSecret, wsUserMgmtRadiusSvrRowStatus, wsUserMgmtAuthMethod1,
+				wsUserMgmtAuthMethod2, wsUserMgmtRadiusSvrIdx, wsUserMgmtUserName, wsUserMgmtPasswdAction, wsUserMgmtPasswdNew,
 				wsUserMgmtPasswdOld, wsUserMgmtPasswdUser, wsUserMgmtAuthMethod3, wsUserMgmtRadiusSvrIPAddr }
 			STATUS current
-			DESCRIPTION 
+			DESCRIPTION
 				"Description."
 			::= { wsUserMgmtGroups 2 }
 
-		
-	
+
+
 	END
 
 --

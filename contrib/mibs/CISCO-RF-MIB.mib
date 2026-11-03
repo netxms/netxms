@@ -2,10 +2,10 @@
 -- CISCO-RF-MIB.my:
 -- Descriptions of managed objects for the Redundancy Framework
 -- (RF) subsystem.
---   
+--
 -- August 2000, Timothy Kurnik and Bo Berry
 -- December 2001, Liwei Wang
---   
+--
 -- Copyright (c) 2000-2006, 2023 by Cisco Systems Inc.
 -- All rights reserved.
 -- ****************************************************************
@@ -73,7 +73,7 @@ ciscoRFMIB MODULE-IDENTITY
         "Added a new textual convention : RFClientStatus.
 
         Added the cRFStatusRFClientTable which contains information
-        about all the clients registered with the Redundancy 
+        about all the clients registered with the Redundancy
         Facility (RF). "
     REVISION        "200404010000Z"
     DESCRIPTION
@@ -144,137 +144,137 @@ ciscoRFMIB MODULE-IDENTITY
 
 
 -- Glossary
---   
+--
 
 -- Active Unit - The CPU on which calls are being processed.
---   
+--
 -- Availability   - Availability is measured as a percentage of
 -- uptime. Based on continuous system operation which is typically
 -- 24 hours per day, 7 days per week, 365 days a year.
---   
+--
 -- Bulk Sync - The process of updating the standby unit to the current
 -- context of the active unit. Once the Bulk sync is complete the
 -- standby unit is considered 'hot' and able to become the active unit.
---   
+--
 -- Clients - Applications that have registered with the Redundancy
 -- Facility (RF) to receive RF events and notifications. These are
 -- considered redundancy aware applications.
---   
+--
 -- Cold Redundancy - A redundancy scheme that is not able to instantly
 -- retain established calls and immediately able to handle new
 -- calls. The standby unit in a cold redundancy system is not fully
 -- initialized and is not able to retain established calls.
---   
+--
 -- Configuration Data - Data that the user configures for the
 -- application and networking requirements. PVCs would fall into this
 -- category.
---   
+--
 -- Cutover - A canonical term referring to either a switch-over or a
 -- fail-over.
---   
+--
 -- Data Events - Messages, such as ATM SVC events, sent from active
 -- unit clients to the standby clients. Data Events are used to keep a
 -- standby-hot unit up-to-date with dynamic data changes on the active
 -- unit.
---   
+--
 -- Drop Activity - The process by which the currently active unit
 -- relinquishes activity to the standby unit. The active unit can only
 -- drop activity to a standby-cold or standby-hot unit. This can be
 -- for one of two reasons:
---   
+--
 -- - the currently active unit has determined that it is unhealthy
 -- and needs to release activity to the standby, or
---   
+--
 -- - the user issues a command to drop activity. This is typically
 -- done for maintenance purposes such as upgrading to a new
 -- image in the standby.
---   
+--
 -- Duplex Mode - The mode of operation when both control processors,
 -- one active and one standby, are present in the system. As opposed
 -- to simplex mode.
---   
+--
 -- Dynamic Data   - Dynamic Data is data that changes in real time. It
 -- is this data that is synced from the active to the standby unit.
 -- The type and frequency of dynamic data syncs is client
 -- specific. ATM SVCs fall into this category. Once the SVC is
 -- established on the active unit, ATM sends SVC Data Events to the
 -- standby unit.
---   
+--
 -- Gain Activity - The process by which the standby unit becomes the
 -- active unit.
---   
+--
 -- Hot Redundancy - A redundancy scheme that is able to instantly
 -- retain established calls and immediately able to handle new calls.
---   
+--
 -- Load Sharing  - A high availability scheme whereby a portion of the
 -- system load is statically assigned to each processor/resource. The
 -- assignment of resources may be decided based on ingress interface,
 -- line card, etc. No dynamic decisions are made as to the load
 -- distribution in the system; it is pre-determined.
---   
+--
 -- Negotiation Clash - The situation when two loosely coupled units
 -- think both have the same negotiation status. In this case, the
 -- primary unit should over ride the secondary unit.
---   
+--
 -- Peer Unit - The Secondary Unit is the peer to the Primary Unit,
 -- and the Primary Unit is the peer to the Secondary Unit.
---   
+--
 -- Primary Unit  - This is the unit that wins in the unlikely event of
 -- a negotiation clash between two loosely coupled units. For example,
 -- if both units think they are active,   the Primary unit is designed
 -- to remain active while the Secondary Unit backs down to standby. If
 -- both units think they are standby, the Primary unit is designed to
 -- gain activity while the Secondary Unit remains the standby.
---   
+--
 -- Progression - The process of making redundancy state of the standby
 -- unit equivalent to that of the active unit. This includes
 -- transitioning the RF state machine through several states which in
 -- turn drives the RF clients on the active unit to synchronize any
 -- relevant data with their peer on the standby unit.
---   
+--
 -- Secondary Unit - This is the unit that backs-down in the unlikely
 -- event of a negotiation clash between two loosely coupled units. For
 -- example, if both units think they are active, the Secondary unit is
 -- designed to back down while the Primary unit remains active. If
 -- both units think they are standby, the Secondary unit is designed to
 -- remain standby while the Primary unit gains activity.
---   
+--
 -- Simplex Mode   - The mode of operation when only a single control
 -- processor is present in the system. As opposed to duplex mode.
---   
+--
 -- Maintenance Mode - A mode in redundancy where the standby unit is
 -- present (duplex) but logically disconnected from the active
 -- unit. Clients do not send data syncs to the standby unit. This mode
 -- is useful for software upgrades and other maintenance procedures.
---   
+--
 -- Standby Unit   - The unit which is backing-up the currently Active
 -- unit. The Standby unit has several substates that are specific to
 -- becoming standby-hot. Once the standby unit progresses to
 -- standby-hot, it is able to instantly become the active unit while
 -- retaining calls.
---   
+--
 -- Switch of Activity (SWACT) - Either a forced or automatic switch
 -- of active status from the active unit to the standby unit. The
 -- former standby unit is now referred to as the active unit.
---   
+--
 -- Take Activity - The process by which the standby unit becomes the
 -- active unit. This can be for one of two reasons:
---   
+--
 -- - the standby unit has determined that the currently active unit
 -- is unhealthy and takes activity, or
---   
+--
 -- - the user issues a command to switch activity from the currently
 -- active unit. This is typically done for maintenance purposes
 -- such as upgrading the standby unit.
---   
+--
 -- ISSU - In Service Software Upgrade
 -- IOS Software upgrades between different images will be
 -- possible using the new infrastructure that has been developed
 -- as a part of SSO. It will allow for Stateful Switchovers,
 -- and hence hitless upgrades between different image versions.
---   
+--
 
---   
+--
 -- Textual conventions
 
 RFState ::= TEXTUAL-CONVENTION
@@ -506,7 +506,7 @@ RFIssuStateRev1 ::= TEXTUAL-CONVENTION
               CLI for ISSU process that can be executed in this state
               is the loadversion CLI.
         systemReset
-            - If a system reset occurs, or the abortversion CLI is 
+            - If a system reset occurs, or the abortversion CLI is
               executed, the state of the system is pushed to this state.
         loadVersion
             - When the Standby signs in after the loadversion CLI
@@ -559,8 +559,8 @@ RFClientStatus ::= TEXTUAL-CONVENTION
             - The client is trying to sync all data to standby and
               achieve redundancy.
         clientRedundant
-            - The client is redundant and ready for switchover. The 
-              client can safely claim that there is no data or traffic 
+            - The client is redundant and ready for switchover. The
+              client can safely claim that there is no data or traffic
               loss if there is a switchover."
     SYNTAX          INTEGER  {
                         noStatus(1),
@@ -598,14 +598,14 @@ cRFStatusUnitId OBJECT-TYPE
 
         Some example identifiers include: slot id, physical or logical
         entity id, or a unique id assigned internally by the RF
-        subsystem." 
+        subsystem."
     ::= { cRFStatus 1 }
 
 cRFStatusUnitState OBJECT-TYPE
     SYNTAX          RFState
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "The current state of RF on this unit." 
+    DESCRIPTION     "The current state of RF on this unit."
     ::= { cRFStatus 2 }
 
 cRFStatusPeerUnitId OBJECT-TYPE
@@ -620,14 +620,14 @@ cRFStatusPeerUnitId OBJECT-TYPE
 
         Some example identifiers include: slot id, physical or logical
         entity id, or a unique id assigned internally by the RF
-        subsystem." 
+        subsystem."
     ::= { cRFStatus 3 }
 
 cRFStatusPeerUnitState OBJECT-TYPE
     SYNTAX          RFState
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "The current state of RF on the peer unit." 
+    DESCRIPTION     "The current state of RF on the peer unit."
     ::= { cRFStatus 4 }
 
 cRFStatusPrimaryMode OBJECT-TYPE
@@ -656,7 +656,7 @@ cRFStatusPrimaryMode OBJECT-TYPE
 
         The algorithm for determining the primary unit is system
         dependent, such as 'the redundant unit with the lower numeric
-        unit id is always the primary unit.'" 
+        unit id is always the primary unit.'"
     ::= { cRFStatus 5 }
 
 cRFStatusDuplexMode OBJECT-TYPE
@@ -667,7 +667,7 @@ cRFStatusDuplexMode OBJECT-TYPE
         "Indicates whether the redundant peer unit has been detected
         or not. If the redundant peer unit is detected, this object is
         true. If the redundant peer unit is not detected, this object
-        is false." 
+        is false."
     ::= { cRFStatus 6 }
 
 cRFStatusManualSwactInhibit OBJECT-TYPE
@@ -687,14 +687,14 @@ cRFStatusManualSwactInhibit OBJECT-TYPE
 
         A switch of activity is the event in which the standby
         redundant unit becomes active and the previously active unit
-        becomes standby." 
+        becomes standby."
     ::= { cRFStatus 7 }
 
 cRFStatusLastSwactReasonCode OBJECT-TYPE
     SYNTAX          RFSwactReasonType
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "The reason for the last switch of activity." 
+    DESCRIPTION     "The reason for the last switch of activity."
     ::= { cRFStatus 8 }
 
 cRFStatusFailoverTime OBJECT-TYPE
@@ -704,7 +704,7 @@ cRFStatusFailoverTime OBJECT-TYPE
     DESCRIPTION
         "The value of sysUpTime when the primary redundant unit took over
         as active. The value of this object will be 0 till the first
-        switchover." 
+        switchover."
     ::= { cRFStatus 9 }
 
 cRFStatusPeerStandByEntryTime OBJECT-TYPE
@@ -713,12 +713,12 @@ cRFStatusPeerStandByEntryTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The value of sysUpTime when the peer redundant unit entered the
-        standbyHot state. The value will be 0 on system initialization." 
+        standbyHot state. The value will be 0 on system initialization."
     ::= { cRFStatus 10 }
 -- Redundancy mode capability table
 
 cRFStatusRFModeCapsTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CRFStatusRFModeCapsEntry 
+    SYNTAX          SEQUENCE OF CRFStatusRFModeCapsEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -734,7 +734,7 @@ cRFStatusRFModeCapsEntry OBJECT-TYPE
         "An entry containing the device implementation specific
         terminology associated with the redundancy mode that can be
         supported on the device."
-    INDEX           { cRFStatusRFModeCapsMode } 
+    INDEX           { cRFStatusRFModeCapsMode }
     ::= { cRFStatusRFModeCapsTable 1 }
 
 CRFStatusRFModeCapsEntry ::= SEQUENCE {
@@ -747,7 +747,7 @@ cRFStatusRFModeCapsMode OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "The redundancy mode that can be supported on the device." 
+        "The redundancy mode that can be supported on the device."
     ::= { cRFStatusRFModeCapsEntry 1 }
 
 cRFStatusRFModeCapsModeDescr OBJECT-TYPE
@@ -756,51 +756,51 @@ cRFStatusRFModeCapsModeDescr OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The description of the device implementation specific
-        terminology associated with its supported redundancy mode." 
+        terminology associated with its supported redundancy mode."
     ::= { cRFStatusRFModeCapsEntry 2 }
- 
+
 
 
 cRFStatusIssuState OBJECT-TYPE
     SYNTAX          RFIssuState
     MAX-ACCESS      read-only
     STATUS          deprecated
-    DESCRIPTION     "The current ISSU state of the system." 
+    DESCRIPTION     "The current ISSU state of the system."
     ::= { cRFStatus 12 }
 
 cRFStatusIssuStateRev1 OBJECT-TYPE
     SYNTAX          RFIssuStateRev1
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "The current ISSU state of the system." 
+    DESCRIPTION     "The current ISSU state of the system."
     ::= { cRFStatus 13 }
 
 cRFStatusIssuFromVersion OBJECT-TYPE
     SYNTAX          SnmpAdminString
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "The IOS version from with the user is upgrading" 
+    DESCRIPTION     "The IOS version from with the user is upgrading"
     ::= { cRFStatus 14 }
 
 cRFStatusIssuToVersion OBJECT-TYPE
     SYNTAX          SnmpAdminString
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "The IOS version to with the user is upgrading" 
+    DESCRIPTION     "The IOS version to with the user is upgrading"
     ::= { cRFStatus 15 }
 -- Redundancy Facility (RF) Client Table
 
 cRFStatusRFClientTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CRFStatusRFClientEntry 
+    SYNTAX          SEQUENCE OF CRFStatusRFClientEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table contains a list of RF clients that are
-        registered on the device. 
+        registered on the device.
 
-        RF clients are applications that have registered with 
-        the Redundancy Facility (RF) to receive RF events and 
-        notifications. The purpose of RF clients is to synchronize 
+        RF clients are applications that have registered with
+        the Redundancy Facility (RF) to receive RF events and
+        notifications. The purpose of RF clients is to synchronize
         any relevant data with the standby unit."
     ::= { cRFClient 1 }
 
@@ -813,11 +813,11 @@ cRFStatusRFClientEntry OBJECT-TYPE
         registered with the Redundancy Facility (RF). Entries in
         this table are always created by the system.
 
-        An entry is created in this table when a redundancy aware 
-        application registers with the Redundancy Facility. The entry 
-        is destroyed when that application deregisters from the 
+        An entry is created in this table when a redundancy aware
+        application registers with the Redundancy Facility. The entry
+        is destroyed when that application deregisters from the
         Redundancy Facility."
-    INDEX           { cRFStatusRFClientID } 
+    INDEX           { cRFStatusRFClientID }
     ::= { cRFStatusRFClientTable 1 }
 
 CRFStatusRFClientEntry ::= SEQUENCE {
@@ -834,7 +834,7 @@ cRFStatusRFClientID OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "A unique identifier for the client which registered with the
-        Redundancy Facility." 
+        Redundancy Facility."
     ::= { cRFStatusRFClientEntry 1 }
 
 cRFStatusRFClientDescr OBJECT-TYPE
@@ -843,7 +843,7 @@ cRFStatusRFClientDescr OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The description of the client which has registered with the
-        Redundancy Facility." 
+        Redundancy Facility."
     ::= { cRFStatusRFClientEntry 2 }
 
 cRFStatusRFClientSeq OBJECT-TYPE
@@ -853,8 +853,8 @@ cRFStatusRFClientSeq OBJECT-TYPE
     DESCRIPTION
         "The sequence number of the client. The system assigns the
         sequence numbers based on the order of registration of
-        the Redundancy Facility clients. 
-        This is used for deciding order of RF events sent to clients." 
+        the Redundancy Facility clients.
+        This is used for deciding order of RF events sent to clients."
     ::= { cRFStatusRFClientEntry 3 }
 
 cRFStatusRFClientRedTime OBJECT-TYPE
@@ -865,7 +865,7 @@ cRFStatusRFClientRedTime OBJECT-TYPE
     DESCRIPTION
         "Time taken for this client to become Redundant. This value
         is meaningful when the value of cRFStatusRFClientStatus is
-        not 'noStatus'." 
+        not 'noStatus'."
     ::= { cRFStatusRFClientEntry 4 }
 
 cRFStatusRFClientStatus OBJECT-TYPE
@@ -874,9 +874,9 @@ cRFStatusRFClientStatus OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object provides the status of the Redundancy Facility
-        client." 
+        client."
     ::= { cRFStatusRFClientEntry 5 }
- 
+
 
 
 -- Configuration sub-group definitions
@@ -896,7 +896,7 @@ cRFCfgSplitMode OBJECT-TYPE
         is reset to recover.
 
         Split mode (true) is useful for maintenance operations.
-        " 
+        "
     ::= { cRFCfg 1 }
 
 cRFCfgKeepaliveThresh OBJECT-TYPE
@@ -910,7 +910,7 @@ cRFCfgKeepaliveThresh OBJECT-TYPE
         occurs, a SWACT notification is sent.
 
         On platforms that do not support keep-alives, this object has
-        no purpose or effect." 
+        no purpose or effect."
     ::= { cRFCfg 2 }
 
 cRFCfgKeepaliveThreshMin OBJECT-TYPE
@@ -919,7 +919,7 @@ cRFCfgKeepaliveThreshMin OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The minimum acceptable value for the cRFCfgKeepaliveThresh
-        object." 
+        object."
     ::= { cRFCfg 3 }
 
 cRFCfgKeepaliveThreshMax OBJECT-TYPE
@@ -928,7 +928,7 @@ cRFCfgKeepaliveThreshMax OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The maximum acceptable value for the cRFCfgKeepaliveThresh
-        object." 
+        object."
     ::= { cRFCfg 4 }
 
 cRFCfgKeepaliveTimer OBJECT-TYPE
@@ -944,7 +944,7 @@ cRFCfgKeepaliveTimer OBJECT-TYPE
         SWACT notification is sent.
 
         On platforms that do not support keep-alives, this object has
-        no purpose or effect." 
+        no purpose or effect."
     ::= { cRFCfg 5 }
 
 cRFCfgKeepaliveTimerMin OBJECT-TYPE
@@ -954,7 +954,7 @@ cRFCfgKeepaliveTimerMin OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The minimum acceptable value for the cRFCfgKeepaliveTimer
-        object." 
+        object."
     ::= { cRFCfg 6 }
 
 cRFCfgKeepaliveTimerMax OBJECT-TYPE
@@ -964,7 +964,7 @@ cRFCfgKeepaliveTimerMax OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The maximum acceptable value for the cRFCfgKeepaliveTimer
-        object." 
+        object."
     ::= { cRFCfg 7 }
 
 cRFCfgNotifTimer OBJECT-TYPE
@@ -982,7 +982,7 @@ cRFCfgNotifTimer OBJECT-TYPE
         unit. If the active unit receives the acknowledgement during
         the time period specified by this object, progression proceeds
         as normal. If the timer expires and an acknowledgement was not
-        received by the active unit, a switch of activity occurs." 
+        received by the active unit, a switch of activity occurs."
     ::= { cRFCfg 8 }
 
 cRFCfgNotifTimerMin OBJECT-TYPE
@@ -992,7 +992,7 @@ cRFCfgNotifTimerMin OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The minimum acceptable value for the cRFCfgNotifTimer
-        object." 
+        object."
     ::= { cRFCfg 9 }
 
 cRFCfgNotifTimerMax OBJECT-TYPE
@@ -1002,7 +1002,7 @@ cRFCfgNotifTimerMax OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The maximum acceptable value for the cRFCfgNotifTimer
-        object." 
+        object."
     ::= { cRFCfg 10 }
 
 cRFCfgAdminAction OBJECT-TYPE
@@ -1012,7 +1012,7 @@ cRFCfgAdminAction OBJECT-TYPE
     DESCRIPTION
         "This variable is set to invoke RF subsystem action commands.
         The commands are useful for maintenance and software upgrade
-        activities." 
+        activities."
     ::= { cRFCfg 11 }
 
 cRFCfgNotifsEnabled OBJECT-TYPE
@@ -1021,7 +1021,7 @@ cRFCfgNotifsEnabled OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Allows enabling/disabling of RF subsystem notifications."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cRFCfg 12 }
 
 cRFCfgMaintenanceMode OBJECT-TYPE
@@ -1046,7 +1046,7 @@ cRFCfgMaintenanceMode OBJECT-TYPE
         (false), the standby unit is reset to recover.
 
         Maintenance mode (true) is useful for maintenance-type
-        operations." 
+        operations."
     ::= { cRFCfg 13 }
 
 cRFCfgRedundancyMode OBJECT-TYPE
@@ -1054,7 +1054,7 @@ cRFCfgRedundancyMode OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "Indicates the redundancy mode configured on the device." 
+        "Indicates the redundancy mode configured on the device."
     ::= { cRFCfg 14 }
 
 cRFCfgRedundancyModeDescr OBJECT-TYPE
@@ -1065,7 +1065,7 @@ cRFCfgRedundancyModeDescr OBJECT-TYPE
         "Further clarifies or describes the redundancy mode indicated
         by cRFCfgRedundancyMode. Implementation-specific terminology
         associated with the current redundancy mode may be presented
-        here." 
+        here."
     ::= { cRFCfg 15 }
 
 cRFCfgRedundancyOperMode OBJECT-TYPE
@@ -1073,7 +1073,7 @@ cRFCfgRedundancyOperMode OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "Indicate the operational redundancy mode of the device." 
+        "Indicate the operational redundancy mode of the device."
     ::= { cRFCfg 16 }
 
 -- History sub-group definitions
@@ -1085,11 +1085,11 @@ cRFHistoryTableMaxLength OBJECT-TYPE
         "Maximum number of entries permissible in the history
         table. A value of 0 will result in no history being
         maintained."
-    DEFVAL          { 10 } 
+    DEFVAL          { 10 }
     ::= { cRFHistory 1 }
 
 cRFHistorySwitchOverTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CRFHistorySwitchOverEntry 
+    SYNTAX          SEQUENCE OF CRFHistorySwitchOverEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -1110,7 +1110,7 @@ cRFHistorySwitchOverEntry OBJECT-TYPE
         information. Each entry in the table is indexed by
         cRFHistorySwitchOverIndex. The index wraps around to 1
         after reaching the maximum value."
-    INDEX           { cRFHistorySwitchOverIndex } 
+    INDEX           { cRFHistorySwitchOverIndex }
     ::= { cRFHistorySwitchOverTable 1 }
 
 CRFHistorySwitchOverEntry ::= SEQUENCE {
@@ -1128,7 +1128,7 @@ cRFHistorySwitchOverIndex OBJECT-TYPE
     DESCRIPTION
         "A monotonically increasing integer for the purpose of
         indexing history table. After reaching maximum value,
-        it wraps around to 1." 
+        it wraps around to 1."
     ::= { cRFHistorySwitchOverEntry 1 }
 
 cRFHistoryPrevActiveUnitId OBJECT-TYPE
@@ -1136,7 +1136,7 @@ cRFHistoryPrevActiveUnitId OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "Indicates the primary redundant unit that went down." 
+        "Indicates the primary redundant unit that went down."
     ::= { cRFHistorySwitchOverEntry 2 }
 
 cRFHistoryCurrActiveUnitId OBJECT-TYPE
@@ -1145,14 +1145,14 @@ cRFHistoryCurrActiveUnitId OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Indicates the secondary redundant unit that took
-        over as active." 
+        over as active."
     ::= { cRFHistorySwitchOverEntry 3 }
 
 cRFHistorySwitchOverReason OBJECT-TYPE
     SYNTAX          RFSwactReasonType
     MAX-ACCESS      read-only
     STATUS          current
-    DESCRIPTION     "Indicates the reason for the switchover." 
+    DESCRIPTION     "Indicates the reason for the switchover."
     ::= { cRFHistorySwitchOverEntry 4 }
 
 cRFHistorySwactTime OBJECT-TYPE
@@ -1160,9 +1160,9 @@ cRFHistorySwactTime OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "Indicates the Date & Time when switchover occurred." 
+        "Indicates the Date & Time when switchover occurred."
     ::= { cRFHistorySwitchOverEntry 5 }
- 
+
 
 
 cRFHistoryColdStarts OBJECT-TYPE
@@ -1172,7 +1172,7 @@ cRFHistoryColdStarts OBJECT-TYPE
     DESCRIPTION
         "Indicates the number of system cold starts. This includes
         the number of system cold starts due to switchover failure
-        and the number of manual restarts." 
+        and the number of manual restarts."
     ::= { cRFHistory 3 }
 
 cRFHistoryStandByAvailTime OBJECT-TYPE
@@ -1181,7 +1181,7 @@ cRFHistoryStandByAvailTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "Indicates the cumulative time that a standby redundant
-        unit has been available since last system initialization." 
+        unit has been available since last system initialization."
     ::= { cRFHistory 4 }
 -- MIB Notification definitions
 ciscoRFMIBNotificationsPrefix  OBJECT IDENTIFIER

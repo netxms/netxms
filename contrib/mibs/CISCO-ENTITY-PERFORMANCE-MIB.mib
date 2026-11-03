@@ -1,12 +1,12 @@
 -- *****************************************************************
 -- CISCO-ENTITY-PERFORMANCE-MIB.my
 -- The Performance monitoring MIB for the physical entities.
---   
+--
 -- June 2010, Muthukrishnan Venkatraman
---   
+--
 -- Copyright (c) 2010, 2014 by Cisco Systems Inc.
 -- All rights reserved.
---   
+--
 -- *****************************************************************
 
 CISCO-ENTITY-PERFORMANCE-MIB DEFINITIONS ::= BEGIN
@@ -85,10 +85,10 @@ ciscoEntityPerformanceMIB MODULE-IDENTITY
 
         The following terminologies apply within the scope of this MIB.
 
-        o entity - Any physical entity which can support performance 
+        o entity - Any physical entity which can support performance
                    monitoring as specified in this MIB
 
-        o Utilization - The ratio of current usage to the maximum 
+        o Utilization - The ratio of current usage to the maximum
                         capacity the entity can handle
 
         o Input - Communication channel where packets arrive on the
@@ -153,7 +153,7 @@ CiscoEntPerfType ::= TEXTUAL-CONVENTION
         "This textual convention denotes an enumerated integer-value
         that represents the available various measurement types.
 
-        utilization(1) - The ratio of current usage to the maximum 
+        utilization(1) - The ratio of current usage to the maximum
                          capacity the entity can handle
         bitInputRate(2) - Input bit rate
         bitOutputRate(3) - Output bit rate
@@ -183,11 +183,11 @@ CiscoEntPerfInterval ::= TEXTUAL-CONVENTION
                               collecting statistics from last 5/10
                               seconds then the entity can choose this
                               interval
-        oneMinute (2)       - Interval to collect last 1 minute       
+        oneMinute (2)       - Interval to collect last 1 minute
                               statistics
         fiveMinutes (3)     - Interval to collect last 5 minutes
                               statistics
-        fifteenMinutes (4)  - Interval to collect last 15 minutes 
+        fifteenMinutes (4)  - Interval to collect last 15 minutes
                               statistics"
     SYNTAX          INTEGER  {
                         current(1),
@@ -220,7 +220,7 @@ CiscoEntPerfIntervalAlgo ::= TEXTUAL-CONVENTION
         interval data.
 
         unknown (1) - The calculation method is unknown
-        other (2)   - The calculation method is not list in this       
+        other (2)   - The calculation method is not list in this
                       enumeration.
         current (3) - This is current data
         algoSMA (4) - Simple Moving Average over the specified interval"
@@ -243,7 +243,7 @@ ciscoEntityPerformanceMIBConform  OBJECT IDENTIFIER
 
 
 cepEntityTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CepEntityEntry 
+    SYNTAX          SEQUENCE OF CepEntityEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -267,7 +267,7 @@ cepEntityEntry OBJECT-TYPE
         "A conceptual row in the cepEntityTable. There is an entry
         in this table for each entity which supports performance
         monitoring, as defined by a value of entPhysicalIndex."
-    INDEX           { entPhysicalIndex } 
+    INDEX           { entPhysicalIndex }
     ::= { cepEntityTable 1 }
 
 CepEntityEntry ::= SEQUENCE {
@@ -282,7 +282,7 @@ cepEntityNumReloads OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object provides the number of times the entity is
-        reloaded, since the entity host is up." 
+        reloaded, since the entity host is up."
     ::= { cepEntityEntry 1 }
 
 cepEntityLastReloadTime OBJECT-TYPE
@@ -290,13 +290,13 @@ cepEntityLastReloadTime OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This object provides the entity last reload time." 
+        "This object provides the entity last reload time."
     ::= { cepEntityEntry 2 }
- 
+
 
 
 cepConfigTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CepConfigEntry 
+    SYNTAX          SEQUENCE OF CepConfigEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -305,12 +305,12 @@ cepConfigTable OBJECT-TYPE
         such as current, 1 minute, etc.
 
         An agent creates a conceptual row to this table corresponding
-        to a physical entity for each supported performance measurement 
+        to a physical entity for each supported performance measurement
         and a performance interval upon detection.
 
-        The agent destroys a conceptual row from this table       
-        corresponding to a physical entity for a specific 
-        performance measurement and an interval upon removal 
+        The agent destroys a conceptual row from this table
+        corresponding to a physical entity for a specific
+        performance measurement and an interval upon removal
         of the physical entity."
     ::= { ciscoEntityPerformanceMIBObjects 2 }
 
@@ -322,13 +322,13 @@ cepConfigEntry OBJECT-TYPE
         "A conceptual row in the cepConfigTable. There is an entry in
         this table for each entity by a value of entPhysicalIndex,
         the supported performance time interval by a value of
-        cepConfigInterval, and the supported performance type by a 
+        cepConfigInterval, and the supported performance type by a
         value of cepConfigPerfType."
     INDEX           {
                         entPhysicalIndex,
                         cepConfigInterval,
                         cepConfigPerfType
-                    } 
+                    }
     ::= { cepConfigTable 1 }
 
 CepConfigEntry ::= SEQUENCE {
@@ -346,9 +346,9 @@ cepConfigInterval OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object identifies the time interval for which the
-        performance configuration being applied. The interval 
-        values can be current, 1 minute, etc. as specified in 
-        the CiscoEntPerfInterval." 
+        performance configuration being applied. The interval
+        values can be current, 1 minute, etc. as specified in
+        the CiscoEntPerfInterval."
     ::= { cepConfigEntry 1 }
 
 cepConfigPerfType OBJECT-TYPE
@@ -357,7 +357,7 @@ cepConfigPerfType OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object identifies the performance measurement type for
-        which the performance configuration being applied." 
+        which the performance configuration being applied."
     ::= { cepConfigEntry 2 }
 
 cepConfigPerfRange OBJECT-TYPE
@@ -367,7 +367,7 @@ cepConfigPerfRange OBJECT-TYPE
     DESCRIPTION
         "This object indicates the range used by the performance
         configuration objects such as cepConfigRisingThreshold, etc.
-        for the specific performance measurement type." 
+        for the specific performance measurement type."
     ::= { cepConfigEntry 3 }
 
 cepConfigRisingThreshold OBJECT-TYPE
@@ -377,7 +377,7 @@ cepConfigRisingThreshold OBJECT-TYPE
     DESCRIPTION
         "This object contains the rising threshold value for a
         specific performance measurement type at a specific
-        performance time interval. The value of this object must 
+        performance time interval. The value of this object must
         be greater than cepConfigFallingThreshold.
 
         The supported range of this object can be identified by
@@ -385,7 +385,7 @@ cepConfigRisingThreshold OBJECT-TYPE
 
         The value of zero indicates that no comparison is being
         made between the cepStatsMeasurement object value and the
-        threshold value, therefore no event action will be generated." 
+        threshold value, therefore no event action will be generated."
     ::= { cepConfigEntry 4 }
 
 cepConfigFallingThreshold OBJECT-TYPE
@@ -395,7 +395,7 @@ cepConfigFallingThreshold OBJECT-TYPE
     DESCRIPTION
         "This object contains the falling threshold value for a
         specific performance measurement type at a specific
-        performance interval. The value of this object must 
+        performance interval. The value of this object must
         be less than cepConfigRisingThreshold.
 
         The supported range of this object can be identified by
@@ -403,7 +403,7 @@ cepConfigFallingThreshold OBJECT-TYPE
 
         The value of zero indicates that no comparison is being
         made between the cepStatsMeasurement object value and the
-        threshold value, therefore no event action will be generated." 
+        threshold value, therefore no event action will be generated."
     ::= { cepConfigEntry 5 }
 
 cepConfigThresholdNotifEnabled OBJECT-TYPE
@@ -424,13 +424,13 @@ cepConfigThresholdNotifEnabled OBJECT-TYPE
         true                      false                         No
         false                     true                          No
         false                     false                         No"
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { cepConfigEntry 6 }
- 
+
 
 
 cepStatsTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CepStatsEntry 
+    SYNTAX          SEQUENCE OF CepStatsEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -438,12 +438,12 @@ cepStatsTable OBJECT-TYPE
         are collected at various performance intervals.
 
         An agent creates a conceptual row to this table corresponding
-        to a physical entity for each supported performance measurement 
+        to a physical entity for each supported performance measurement
         and a performance interval upon detection.
 
-        The agent destroys a conceptual row from this table       
-        corresponding to a physical entity for a specific 
-        performance measurement and an interval upon removal 
+        The agent destroys a conceptual row from this table
+        corresponding to a physical entity for a specific
+        performance measurement and an interval upon removal
         of the physical entity."
     ::= { ciscoEntityPerformanceMIBObjects 3 }
 
@@ -455,13 +455,13 @@ cepStatsEntry OBJECT-TYPE
         "A conceptual row in the cepStatsTable. There is an entry in
         this table for each entity by a value of entPhysicalIndex,
         the supported performance time interval by a value of
-        cepConfigInterval, and the supported performance type by a 
+        cepConfigInterval, and the supported performance type by a
         value of cepConfigPerfType."
     INDEX           {
                         entPhysicalIndex,
                         cepConfigInterval,
                         cepConfigPerfType
-                    } 
+                    }
     ::= { cepStatsTable 1 }
 
 CepStatsEntry ::= SEQUENCE {
@@ -475,7 +475,7 @@ cepStatsAlgorithm OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object provides the algorithm used to calculate the
-        entity performance statistics over the specified interval." 
+        entity performance statistics over the specified interval."
     ::= { cepStatsEntry 1 }
 
 cepStatsMeasurement OBJECT-TYPE
@@ -485,13 +485,13 @@ cepStatsMeasurement OBJECT-TYPE
     DESCRIPTION
         "This object provides a specific performance measurement of the
         entity over the specified interval. The range of this object
-        can be identified by the object 'cepConfigPerfRange'." 
+        can be identified by the object 'cepConfigPerfRange'."
     ::= { cepStatsEntry 2 }
- 
+
 
 
 cepEntityIntervalTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CepEntityIntervalEntry 
+    SYNTAX          SEQUENCE OF CepEntityIntervalEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -520,7 +520,7 @@ cepEntityIntervalEntry OBJECT-TYPE
     INDEX           {
                         entPhysicalIndex,
                         cepHistInterval
-                    } 
+                    }
     ::= { cepEntityIntervalTable 1 }
 
 CepEntityIntervalEntry ::= SEQUENCE {
@@ -535,9 +535,9 @@ cepHistInterval OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object identifies the time interval for which the
-        performance history being applied. The interval 
-        values can be 1 minute, 5 minutes, etc. as specified in 
-        the CiscoEntPerfHistInterval." 
+        performance history being applied. The interval
+        values can be 1 minute, 5 minutes, etc. as specified in
+        the CiscoEntPerfHistInterval."
     ::= { cepEntityIntervalEntry 1 }
 
 cepIntervalTimeElapsed OBJECT-TYPE
@@ -558,7 +558,7 @@ cepIntervalTimeElapsed OBJECT-TYPE
         ========            =============
         15 minutes            899
          5 minutes            299
-         1 minutes            59" 
+         1 minutes            59"
     ::= { cepEntityIntervalEntry 2 }
 
 cepValidIntervalCount OBJECT-TYPE
@@ -572,13 +572,13 @@ cepValidIntervalCount OBJECT-TYPE
         brought online within the last 1.36/8/24 hours for 1/5/15
         minutes interval respectively, in which case the value will
         be the number of completed 1/5/15 minute intervals since the
-        entity has been online." 
+        entity has been online."
     ::= { cepEntityIntervalEntry 3 }
- 
+
 
 
 cepIntervalStatsTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CepIntervalStatsEntry 
+    SYNTAX          SEQUENCE OF CepIntervalStatsEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -587,7 +587,7 @@ cepIntervalStatsTable OBJECT-TYPE
 
         The table has the maximum of 96 buckets for all the supported
         intervals. The following table would list the total hours of
-        history maintained for various intervals. 
+        history maintained for various intervals.
 
         Intervals (minutes)  Buckets        History
         =========            =======        =======
@@ -606,7 +606,7 @@ cepIntervalStatsTable OBJECT-TYPE
 
         The support for 15-minutes interval history is required for
         all the entities supporting performance data. However, the
-        support for 1-minute and 5-minutes interval history for 
+        support for 1-minute and 5-minutes interval history for
         entities are optional and at the descretion of the device
         supporting the performance monitoring."
     ::= { ciscoEntityPerformanceMIBObjects 5 }
@@ -627,7 +627,7 @@ cepIntervalStatsEntry OBJECT-TYPE
                         cepHistInterval,
                         cepConfigPerfType,
                         cepIntervalNumber
-                    } 
+                    }
     ::= { cepIntervalStatsTable 1 }
 
 CepIntervalStatsEntry ::= SEQUENCE {
@@ -649,7 +649,7 @@ cepIntervalNumber OBJECT-TYPE
 
         For example, if it is 15 minutes interval history, then the
         96 is the interval number completed 23 hours and 45 minutes
-        prior to interval 1." 
+        prior to interval 1."
     ::= { cepIntervalStatsEntry 1 }
 
 cepIntervalStatsValidData OBJECT-TYPE
@@ -660,7 +660,7 @@ cepIntervalStatsValidData OBJECT-TYPE
         "This object indicates whether the performance statistics for
         this interval is valid. The value 'true' means the performance
         statistics is valid, otherwise the performance statistics is
-        invalid for the interval." 
+        invalid for the interval."
     ::= { cepIntervalStatsEntry 2 }
 
 cepIntervalStatsRange OBJECT-TYPE
@@ -669,7 +669,7 @@ cepIntervalStatsRange OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object provides the range information for the object
-        'cepIntervalStatsMeasurement'." 
+        'cepIntervalStatsMeasurement'."
     ::= { cepIntervalStatsEntry 3 }
 
 cepIntervalStatsMeasurement OBJECT-TYPE
@@ -679,7 +679,7 @@ cepIntervalStatsMeasurement OBJECT-TYPE
     DESCRIPTION
         "This object provides the specific performance statistics of
         an entity over the specified interval. The range of this object
-        can be identified by object 'cepIntervalStatsRange'." 
+        can be identified by object 'cepIntervalStatsRange'."
     ::= { cepIntervalStatsEntry 4 }
 
 cepIntervalStatsCreateTime OBJECT-TYPE
@@ -688,16 +688,16 @@ cepIntervalStatsCreateTime OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object provides the time stamp at which the specific
-        performance statistics gets created." 
+        performance statistics gets created."
     ::= { cepIntervalStatsEntry 5 }
- 
+
 
 ciscoEntityPerformanceMIBNotifObjects  OBJECT IDENTIFIER
     ::= { ciscoEntityPerformanceMIBObjects 6 }
 
 
 cepThroughputTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CepThroughputEntry 
+    SYNTAX          SEQUENCE OF CepThroughputEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -721,7 +721,7 @@ cepThroughputEntry OBJECT-TYPE
         "A conceptual row in the cepThroughputTable. There is an entry
         in this table for each entity which supports throughput
         monitoring, as defined by a value of entPhysicalIndex."
-    INDEX           { entPhysicalIndex } 
+    INDEX           { entPhysicalIndex }
     ::= { cepThroughputTable 1 }
 
 CepThroughputEntry ::= SEQUENCE {
@@ -739,7 +739,7 @@ cepThroughputLicensedBW OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the bandwidth for installed throughput
-        license of the entity." 
+        license of the entity."
     ::= { cepThroughputEntry 1 }
 
 cepThroughputLevel OBJECT-TYPE
@@ -789,9 +789,9 @@ cepThroughputAvgRate OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The object represents the average throughput rate in the
-        interval cepThroughputInterval for this entity." 
+        interval cepThroughputInterval for this entity."
     ::= { cepThroughputEntry 5 }
- 
+
 
 
 cepThresholdNotifEnabled OBJECT-TYPE
@@ -809,7 +809,7 @@ cepThresholdNotifEnabled OBJECT-TYPE
         The generation of the rising/falling threshold depends
         on this global value as well as the object
         'cepConfigThresholdNotifEnabled' present in cepConfigTable."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { ciscoEntityPerformanceMIBNotifObjects 1 }
 
 cepThroughputNotifEnabled OBJECT-TYPE
@@ -822,7 +822,7 @@ cepThroughputNotifEnabled OBJECT-TYPE
         When this object contains a value 'true', then generation of
         cepThroughputNotif is enabled. If this object contains a value
         'false', then generation of cepThroughputNotif is disabled."
-    DEFVAL          { false } 
+    DEFVAL          { false }
     ::= { ciscoEntityPerformanceMIBNotifObjects 2 }
 
 -- Default Notification Type
@@ -836,7 +836,7 @@ cepPerfThreshRisingEvent NOTIFICATION-TYPE
     STATUS          current
     DESCRIPTION
         "A notification indicating that the specific performance
-        measurement is rising the configured threshold on this 
+        measurement is rising the configured threshold on this
         physical entity at a specific performance interval.
 
         This notification will be sent, whenever the
@@ -848,7 +848,7 @@ cepPerfThreshRisingEvent NOTIFICATION-TYPE
         An agent may throttle the generation of consecutive
         cepPerfThreshRisingEvent notification so that
         there is at least a five second (suggested default)
-        gap between notification for an entity of specific 
+        gap between notification for an entity of specific
         performance measurement type at a specific interval."
    ::= { ciscoEntityPerformanceMIBNotifs 1 }
 
@@ -861,7 +861,7 @@ cepPerfThreshFallingEvent NOTIFICATION-TYPE
     STATUS          current
     DESCRIPTION
         "A notification indicating that the specific performance
-        measurement is falling the configured threshold on this 
+        measurement is falling the configured threshold on this
         physical entity at a specific performance interval.
 
         This notification will be sent, whenever the
@@ -873,7 +873,7 @@ cepPerfThreshFallingEvent NOTIFICATION-TYPE
         An agent may throttle the generation of consecutive
         cepPerfThreshFallingEvent notification so that
         there is at least a five second (suggested default)
-        gap between notification for an entity of specific 
+        gap between notification for an entity of specific
         performance measurement type at a specific interval."
    ::= { ciscoEntityPerformanceMIBNotifs 2 }
 
@@ -1049,32 +1049,3 @@ ciscoEntityPerformanceMIBThroughputGroup OBJECT-GROUP
     ::= { ciscoEntityPerformanceMIBGroups 8 }
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

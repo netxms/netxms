@@ -24,7 +24,7 @@ IMPORTS
 netSnmpAgentMIB MODULE-IDENTITY
     LAST-UPDATED "200502070000Z"
     ORGANIZATION "www.net-snmp.org"
-    CONTACT-INFO    
+    CONTACT-INFO
 	 "postal:   Wes Hardaker
                     P.O. Box 382
                     Davis CA  95617
@@ -121,7 +121,7 @@ nsCacheTimeout  OBJECT-TYPE
     STATUS      current
     DESCRIPTION
       "The length of time (?in seconds) for which the data in
-       this particular cache entry will remain valid." 
+       this particular cache entry will remain valid."
     ::= { nsCacheEntry 2 }
 
 nsCacheStatus   OBJECT-TYPE
@@ -394,7 +394,7 @@ nsModuleEntry OBJECT-TYPE
     STATUS	current
     DESCRIPTION
         "An entry containing a registered mib oid."
-    INDEX       { nsmContextName, nsmRegistrationPoint, 
+    INDEX       { nsmContextName, nsmRegistrationPoint,
                   nsmRegistrationPriority }
     ::= { nsModuleTable 1 }
 
@@ -468,7 +468,7 @@ nsNotifyStart        NOTIFICATION-TYPE
     DESCRIPTION
 	"An indication that the agent has started running."
     ::= { netSnmpNotifications 1 }
-    
+
 nsNotifyShutdown     NOTIFICATION-TYPE
     STATUS current
     DESCRIPTION
@@ -482,7 +482,7 @@ nsNotifyRestart      NOTIFICATION-TYPE
 	 This does not imply anything about whether the configuration has
 	 changed or not (unlike the standard coldStart or warmStart traps)"
     ::= { netSnmpNotifications 3 }
-    
+
 
 --
 -- Conformance-related definitions
@@ -545,6 +545,6 @@ nsAgentNotifyGroup NOTIFICATION-GROUP
 	"The notifications relating to the basic operation of the Net-SNMP agent."
     ::= { netSnmpGroups 9 }
 
-    
+
 
 END

@@ -12,7 +12,7 @@ IMPORTS
     OBJECT-TYPE, MODULE-IDENTITY,IpAddress,Unsigned32
                                         FROM SNMPv2-SMI;
 
-    fastpathMvr   MODULE-IDENTITY 
+    fastpathMvr   MODULE-IDENTITY
         LAST-UPDATED "201101260000Z" -- 26 January 2011 12:00:00 GMT
         ORGANIZATION "Dell, Inc."
         CONTACT-INFO ""
@@ -28,7 +28,7 @@ IMPORTS
         "200910210000Z" -- 21 October 2009 12:00:00 GMT
     DESCRIPTION
         "Initial version."
-                                        
+
     ::= { dnOS 50 }
 
     --**************************************************************************************
@@ -43,7 +43,7 @@ IMPORTS
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-                   "Enable/Disable MVR. The value true(1) indicates that MVR is enabled 
+                   "Enable/Disable MVR. The value true(1) indicates that MVR is enabled
                     A value of false(2) indicates that MVR is disabled."
         DEFVAL  { false }
         ::= { mvrGlobalConfig 1 }
@@ -55,8 +55,8 @@ IMPORTS
                     }
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION   
-                   "Shows/Changes MVR mode. 
+        DESCRIPTION
+                   "Shows/Changes MVR mode.
                     The value compatible(1) indicates that compatible mode is enabled.
                     A value of dynamic(2) indicates that dynamic mode is enabled."
         DEFVAL  { compatible }
@@ -65,7 +65,7 @@ IMPORTS
     mvrMulticastVlanId OBJECT-TYPE
         SYNTAX      VlanIndex
         MAX-ACCESS  read-write
-        STATUS      current 
+        STATUS      current
         DESCRIPTION
                    "Shows/Changes the Multicast Vlan number."
         DEFVAL          { 1 }
@@ -74,7 +74,7 @@ IMPORTS
     mvrMaxMulticastGroupsCount OBJECT-TYPE
         SYNTAX      INTEGER
         MAX-ACCESS  read-only
-        STATUS      current 
+        STATUS      current
         DESCRIPTION
                    "The maximum number of multicast groups that is supported by MVR."
         ::= { mvrGlobalConfig 4 }
@@ -82,7 +82,7 @@ IMPORTS
     mvrCurrentMulticastGroupsCount OBJECT-TYPE
         SYNTAX      INTEGER
         MAX-ACCESS  read-only
-        STATUS      current 
+        STATUS      current
         DESCRIPTION
                    "The current number of MVR groups allocated."
         ::= { mvrGlobalConfig 5 }
@@ -218,7 +218,7 @@ IMPORTS
         SYNTAX      INTEGER{
                      active(1),
                      inactive(2)
-                    }       
+                    }
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
@@ -233,7 +233,7 @@ IMPORTS
                    "The status of this conceptual row.To create a row in this table,
                     a manager must set this object to 'createAndGo'(4) .To delete a row in
                     this table, a manager must set this object to `destroy'(6)"
-        ::= { mvrGroupEntry 3 } 
+        ::= { mvrGroupEntry 3 }
 
 
     --**************************************************************************************
@@ -288,7 +288,7 @@ IMPORTS
                    "The status of this conceptual row.To create a row in this table,
                     a manager must set this object to 'createAndGo'(4) .To delete a row in
                     this table, a manager must set this object to `destroy'(6)"
-        ::= { mvrPortMembershipEntry 3 } 
+        ::= { mvrPortMembershipEntry 3 }
 
 
     --**************************************************************************************

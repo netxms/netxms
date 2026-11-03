@@ -14,7 +14,7 @@ rlEnv MODULE-IDENTITY
         San Jose , CA 95134-1706
         USA
 
-        
+
         Website:  Cisco Small Business Support Community <http://www.cisco.com/go/smallbizsupport>"
 
         DESCRIPTION
@@ -251,7 +251,7 @@ rlEnvMonSupplyFanDirection OBJECT-TYPE
         DESCRIPTION
                 "The direction of the power supply's fan."
         ::= { rlEnvMonSupplyStatusEntry 5 }
-        
+
 rlEnvFanData OBJECT IDENTIFIER ::= { rlEnv 5 }
 
 rlEnvFanDataTable OBJECT-TYPE
@@ -330,4 +330,3 @@ rlEnvFanDataDirection OBJECT-TYPE
         ::= { rlEnvFanDataEntry 6 }
 
 END
-

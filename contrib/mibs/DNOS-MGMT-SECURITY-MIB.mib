@@ -65,7 +65,7 @@ IMPORTS
          MAX-ACCESS  read-write
          STATUS      current
          DESCRIPTION
-                     "Configures a layer 4 port number in the range 1025-65535 for secure HTTP 
+                     "Configures a layer 4 port number in the range 1025-65535 for secure HTTP
                       connections. The default port is 443."
          ::= { agentSSLConfigGroup 2 }
 
@@ -251,7 +251,7 @@ IMPORTS
                     }
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION 
+        DESCRIPTION
                     "Shows/Changes EXEC banner state on SSH session."
         DEFVAL      { enable }
         ::= { agentSSHConfigGroup 10 }
@@ -263,7 +263,7 @@ IMPORTS
                     }
         MAX-ACCESS  read-write
         STATUS      current
-        DESCRIPTION 
+        DESCRIPTION
                     "Shows/Changes login banner state on SSH session."
         DEFVAL      { enable }
         ::= { agentSSHConfigGroup 11 }

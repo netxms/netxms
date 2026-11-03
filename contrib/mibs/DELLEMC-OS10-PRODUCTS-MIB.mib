@@ -49,7 +49,7 @@ os10Products MODULE-IDENTITY
 
         REVISION     "201710111200Z"
         DESCRIPTION
-            "Add s4248FB and s4248FBL products. 
+            "Add s4248FB and s4248FBL products.
              Depreciate s4200."
 
         REVISION     "201709191200Z"

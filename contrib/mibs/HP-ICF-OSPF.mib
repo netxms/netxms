@@ -1,9 +1,9 @@
 HP-ICF-OSPF DEFINITIONS ::= BEGIN
 
     IMPORTS
-        MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, mib-2, 
-            Counter32, Integer32 
-                    FROM SNMPv2-SMI 
+        MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, mib-2,
+            Counter32, Integer32
+                    FROM SNMPv2-SMI
         OBJECT-TYPE, MODULE-IDENTITY, IpAddress
             FROM SNMPv2-SMI
         TruthValue, RowStatus
@@ -36,18 +36,18 @@ HP-ICF-OSPF DEFINITIONS ::= BEGIN
                      extensions to the OSPF-MIB module."
 
         REVISION     "200803280339Z" -- March 28, 2008
-        DESCRIPTION  "Added object to  
+        DESCRIPTION  "Added object to
                       1. indicate ospf interface statistics sent,
                       received and error packet count.
-                      2. clear ospf statistics 
+                      2. clear ospf statistics
                       3. indicate reasons for spf run."
 
         REVISION     "200704020933Z" -- April 2, 2007
-        DESCRIPTION  "Added object to indicate if ospf 
+        DESCRIPTION  "Added object to indicate if ospf
                       interface is passive or active"
 
         REVISION     "200607102010Z" -- July 10, 2006
-        DESCRIPTION  "Added objects to display the NSSA route 
+        DESCRIPTION  "Added objects to display the NSSA route
                      metric types."
 
         REVISION     "200305130202Z" -- May 13, 2003
@@ -125,7 +125,7 @@ HP-ICF-OSPF DEFINITIONS ::= BEGIN
                     routes over inter-area or AS-external routes even
                     if hpicfOspfInterAreaDistance or
                     hpicfOspfExternalDistance is lower than
-                    hpicfOspfIntraAreaDistance.  The appropriate 
+                    hpicfOspfIntraAreaDistance.  The appropriate
                     administrative distance value is applied to the
                     route that OSPF selects as its best route to a
                     destination and is used to decide whether OSPF's
@@ -150,7 +150,7 @@ HP-ICF-OSPF DEFINITIONS ::= BEGIN
                     hpicfOspfIntraAreaDistance.  It will also still
                     prefer inter-area routes over AS-external routes
                     even if hpicfOspfExternalDistance is lower than
-                    hpicfOspfInterAreaDistance.  The appropriate 
+                    hpicfOspfInterAreaDistance.  The appropriate
                     administrative distance value is applied to the
                     route that OSPF selects as its best route to a
                     destination and is used to decide whether OSPF's
@@ -173,7 +173,7 @@ HP-ICF-OSPF DEFINITIONS ::= BEGIN
                     routes and inter-area routes over AS-external
                     routes even if hpicfOspfExternalDistance is lower
                     than the hpicfOspfIntraAreaDistance or
-                    hpicfOspfInterAreaDistance.  The appropriate 
+                    hpicfOspfInterAreaDistance.  The appropriate
                     administrative distance value is applied to the
                     route that OSPF selects as its best route to a
                     destination and is used to decide whether OSPF's
@@ -299,12 +299,12 @@ HP-ICF-OSPF DEFINITIONS ::= BEGIN
                          that support route redistribution."
         ::= { hpicfOspfCompliances 1 }
 
---  OSPF route classification used in CIDR Route Table with extensions for 
+--  OSPF route classification used in CIDR Route Table with extensions for
 --  NSSA route types.
---  Please refer the ospfRouteGroup OID in RFC 1850 for a detailed description 
+--  Please refer the ospfRouteGroup OID in RFC 1850 for a detailed description
 --  of the route types.
---  hpicfOspfNssaType1 and hpicfOspfNssaType2 are type 1 and type 2 metrics 
---  associated with the routes imported into OSPF from a different protocol. 
+--  hpicfOspfNssaType1 and hpicfOspfNssaType2 are type 1 and type 2 metrics
+--  associated with the routes imported into OSPF from a different protocol.
 --  As with external metrics, type 1 is comparable and type 2 is non-comparable.
 
 
@@ -337,7 +337,7 @@ hpicfOspfIfEntry OBJECT-TYPE
     ::= { hpicfOspfIfTable 1 }
 
 HpicfOspfIfEntry ::=
-    SEQUENCE { 
+    SEQUENCE {
         hpicfOspfIfPassive  TruthValue
     }
 
@@ -347,7 +347,7 @@ hpicfOspfIfPassive   OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-         "The passive state configuration of the OSPF interface. 
+         "The passive state configuration of the OSPF interface.
           In the passive mode no OSPF protocol messages are exchanged on
           this interface.
 
@@ -365,8 +365,8 @@ hpicfOspfIfPassive   OBJECT-TYPE
     ::= { hpicfOspfIfEntry 1 }
 
 hpicfOspfIfStatsTable  OBJECT-TYPE
-    SYNTAX      SEQUENCE OF HpicfOspfIfStatsEntry 
-    MAX-ACCESS  not-accessible 
+    SYNTAX      SEQUENCE OF HpicfOspfIfStatsEntry
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
         "Table that contains OSPF Interface traffic specific
@@ -374,7 +374,7 @@ hpicfOspfIfStatsTable  OBJECT-TYPE
     ::= { hpicfOspf 5 }
 
 hpicfOspfIfStatsEntry OBJECT-TYPE
-    SYNTAX      HpicfOspfIfStatsEntry 
+    SYNTAX      HpicfOspfIfStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
@@ -387,17 +387,17 @@ hpicfOspfIfStatsEntry OBJECT-TYPE
     ::= { hpicfOspfIfStatsTable 1 }
 
 HpicfOspfIfStatsEntry ::=
-    SEQUENCE { 
-        hpicfOspfSentHelloPkt     Counter32, 
-        hpicfOspfSentDDPkt        Counter32, 
-        hpicfOspfSentLSRPkt       Counter32, 
-        hpicfOspfSentLSUPkt       Counter32, 
-        hpicfOspfSentLSAPkt       Counter32, 
+    SEQUENCE {
+        hpicfOspfSentHelloPkt     Counter32,
+        hpicfOspfSentDDPkt        Counter32,
+        hpicfOspfSentLSRPkt       Counter32,
+        hpicfOspfSentLSUPkt       Counter32,
+        hpicfOspfSentLSAPkt       Counter32,
         hpicfOspfRcvdHelloPkt     Counter32,
-        hpicfOspfRcvdDDPkt        Counter32, 
-        hpicfOspfRcvdLSRPkt       Counter32, 
-        hpicfOspfRcvdLSUPkt       Counter32, 
-        hpicfOspfRcvdLSAPkt       Counter32 
+        hpicfOspfRcvdDDPkt        Counter32,
+        hpicfOspfRcvdLSRPkt       Counter32,
+        hpicfOspfRcvdLSUPkt       Counter32,
+        hpicfOspfRcvdLSAPkt       Counter32
     }
 
 hpicfOspfSentHelloPkt  OBJECT-TYPE
@@ -405,31 +405,31 @@ hpicfOspfSentHelloPkt  OBJECT-TYPE
             MAX-ACCESS      read-only
             STATUS          current
             DESCRIPTION
-                 "The number of OSPF Hello packets sent on the 
-                  interface. This number is incremented each time an 
-                  OSPF Hello packet is sent out of an OSPF enabled 
+                 "The number of OSPF Hello packets sent on the
+                  interface. This number is incremented each time an
+                  OSPF Hello packet is sent out of an OSPF enabled
                   interface
 
-                  Discontinuities in the value of this counter 
-                  can occur at re-initialization of the management 
+                  Discontinuities in the value of this counter
+                  can occur at re-initialization of the management
                   system. The counters can be cleared for any interface
-                  using clear ip ospf statistics command" 
-                        ::= { hpicfOspfIfStatsEntry 1 } 
+                  using clear ip ospf statistics command"
+                        ::= { hpicfOspfIfStatsEntry 1 }
 
 hpicfOspfSentDDPkt  OBJECT-TYPE
             SYNTAX          Counter32
             MAX-ACCESS      read-only
             STATUS          current
             DESCRIPTION
-                "The number of Database Description packets sent on 
-                 the interface. This number is incremented each time  
-                 an OSPF DD packet is sent out of an OSPF enabled 
+                "The number of Database Description packets sent on
+                 the interface. This number is incremented each time
+                 an OSPF DD packet is sent out of an OSPF enabled
                  interface.
 
-                 Discontinuities in the value of this counter 
-                 can occur at re-initialization of the management 
+                 Discontinuities in the value of this counter
+                 can occur at re-initialization of the management
                  system. The counters can be cleared for any interface
-                 using clear ip ospf statistics command" 
+                 using clear ip ospf statistics command"
         ::= { hpicfOspfIfStatsEntry 2 }
 
 hpicfOspfSentLSRPkt  OBJECT-TYPE
@@ -442,10 +442,10 @@ hpicfOspfSentLSRPkt  OBJECT-TYPE
                  OSPF LSR packet is sent out of an OSPF enabled
                  interface.
 
-                 Discontinuities in the value of this counter 
-                 can occur at re-initialization of the management 
+                 Discontinuities in the value of this counter
+                 can occur at re-initialization of the management
                  system. The counters can be cleared for any interface
-                 using clear ip ospf statistics command" 
+                 using clear ip ospf statistics command"
         ::= { hpicfOspfIfStatsEntry 3 }
 
 hpicfOspfSentLSUPkt  OBJECT-TYPE
@@ -458,10 +458,10 @@ hpicfOspfSentLSUPkt  OBJECT-TYPE
                  OSPF LSU packet is sent out of an OSPF enabled
                  interface.
 
-                 Discontinuities in the value of this counter 
-                 can occur at re-initialization of the management 
+                 Discontinuities in the value of this counter
+                 can occur at re-initialization of the management
                  system. The counters can be cleared for any interface
-                 using clear ip ospf statistics command" 
+                 using clear ip ospf statistics command"
         ::= { hpicfOspfIfStatsEntry 4 }
 
 hpicfOspfSentLSAPkt  OBJECT-TYPE
@@ -474,10 +474,10 @@ hpicfOspfSentLSAPkt  OBJECT-TYPE
                  OSPF LSA packet is sent out of an OSPF enabled
                  interface.
 
-                  Discontinuities in the value of this counter 
-                  can occur at re-initialization of the management 
+                  Discontinuities in the value of this counter
+                  can occur at re-initialization of the management
                   system. The counters can be cleared for any interface
-                  using clear ip ospf statistics command" 
+                  using clear ip ospf statistics command"
         ::= { hpicfOspfIfStatsEntry 5 }
 
 hpicfOspfRcvdHelloPkt  OBJECT-TYPE
@@ -488,27 +488,27 @@ hpicfOspfRcvdHelloPkt  OBJECT-TYPE
                  "The number of Hello packets received on the interface.
                   This number is incremented each time a hello
                   packet is received on OSPF enabled interface.
-                  
-                  Discontinuities in the value of this counter 
-                  can occur at re-initialization of the management 
+
+                  Discontinuities in the value of this counter
+                  can occur at re-initialization of the management
                   system. The counters can be cleared for any interface
-                  using clear ip ospf statistics command" 
-        ::= { hpicfOspfIfStatsEntry 6 } 
+                  using clear ip ospf statistics command"
+        ::= { hpicfOspfIfStatsEntry 6 }
 
 hpicfOspfRcvdDDPkt  OBJECT-TYPE
             SYNTAX          Counter32
             MAX-ACCESS      read-only
             STATUS          current
             DESCRIPTION
-                 "The number of Database Description packets received 
-                  on the interface. This number is incremented each 
-                  time a OSPF DD packet is received on OSPF enabled 
+                 "The number of Database Description packets received
+                  on the interface. This number is incremented each
+                  time a OSPF DD packet is received on OSPF enabled
                   interface.
 
-                  Discontinuities in the value of this counter 
-                  can occur at re-initialization of the management 
+                  Discontinuities in the value of this counter
+                  can occur at re-initialization of the management
                   system. The counters can be cleared for any interface
-                  using clear ip ospf statistics command" 
+                  using clear ip ospf statistics command"
         ::= { hpicfOspfIfStatsEntry 7 }
 
 hpicfOspfRcvdLSRPkt  OBJECT-TYPE
@@ -516,15 +516,15 @@ hpicfOspfRcvdLSRPkt  OBJECT-TYPE
             MAX-ACCESS      read-only
             STATUS          current
             DESCRIPTION
-                 "The number of Link State Request packets received 
-                  on the interface. This number is incremented each 
-                  time a OSPF LSR packet is received on OSPF enabled 
+                 "The number of Link State Request packets received
+                  on the interface. This number is incremented each
+                  time a OSPF LSR packet is received on OSPF enabled
                   interface.
 
-                  Discontinuities in the value of this counter 
-                  can occur at re-initialization of the management 
+                  Discontinuities in the value of this counter
+                  can occur at re-initialization of the management
                   system. The counters can be cleared for any interface
-                  using clear ip ospf statistics command" 
+                  using clear ip ospf statistics command"
         ::= { hpicfOspfIfStatsEntry 8 }
 
 hpicfOspfRcvdLSUPkt  OBJECT-TYPE
@@ -532,9 +532,9 @@ hpicfOspfRcvdLSUPkt  OBJECT-TYPE
             MAX-ACCESS      read-only
             STATUS          current
             DESCRIPTION
-                 "The number of Link State Update packets received 
-                  on the interface. This number is incremented each 
-                  time a OSPF LSU packet is received on OSPF enabled 
+                 "The number of Link State Update packets received
+                  on the interface. This number is incremented each
+                  time a OSPF LSU packet is received on OSPF enabled
                   interface."
         ::= { hpicfOspfIfStatsEntry 9 }
 
@@ -543,20 +543,20 @@ hpicfOspfRcvdLSAPkt  OBJECT-TYPE
             MAX-ACCESS      read-only
             STATUS          current
             DESCRIPTION
-                 "The number of Link State Ack packets received 
-                  on the interface. This number is incremented each 
-                  time a OSPF LSA packet is received on OSPF enabled 
+                 "The number of Link State Ack packets received
+                  on the interface. This number is incremented each
+                  time a OSPF LSA packet is received on OSPF enabled
                   interface.
 
-                  Discontinuities in the value of this counter 
-                  can occur at re-initialization of the management 
+                  Discontinuities in the value of this counter
+                  can occur at re-initialization of the management
                   system. The counters can be cleared for any interface
-                  using clear ip ospf statistics command" 
+                  using clear ip ospf statistics command"
         ::= { hpicfOspfIfStatsEntry 10 }
-    
+
 hpicfOspfIfErrorTable  OBJECT-TYPE
-    SYNTAX      SEQUENCE OF HpicfOspfIfErrorEntry 
-    MAX-ACCESS  not-accessible 
+    SYNTAX      SEQUENCE OF HpicfOspfIfErrorEntry
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
         "Table that contains OSPF Interface traffic specific
@@ -564,7 +564,7 @@ hpicfOspfIfErrorTable  OBJECT-TYPE
     ::= { hpicfOspf 6 }
 
 hpicfOspfIfErrorEntry OBJECT-TYPE
-    SYNTAX      HpicfOspfIfErrorEntry 
+    SYNTAX      HpicfOspfIfErrorEntry
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
@@ -577,39 +577,39 @@ hpicfOspfIfErrorEntry OBJECT-TYPE
     ::= { hpicfOspfIfErrorTable 1 }
 
 HpicfOspfIfErrorEntry ::=
-    SEQUENCE { 
-        hpicfOspfIfErrorType      Integer32, 
+    SEQUENCE {
+        hpicfOspfIfErrorType      Integer32,
         hpicfOspfIfErrorCount     Counter32
     }
 
 hpicfOspfIfErrorType  OBJECT-TYPE
-            SYNTAX          Integer32 
-            MAX-ACCESS      not-accessible 
+            SYNTAX          Integer32
+            MAX-ACCESS      not-accessible
             STATUS          current
             DESCRIPTION
-                "The hpicfOspfIfErrorType refers to the type of errors 
-                 in the OSPF packet received on any OSPF enabled 
+                "The hpicfOspfIfErrorType refers to the type of errors
+                 in the OSPF packet received on any OSPF enabled
                  interface. Errors could be Invalid RouterID/ AreaID
                  Chksum error, OutOfbound Error ..."
         ::= { hpicfOspfIfErrorEntry 1 }
 
 hpicfOspfIfErrorCount  OBJECT-TYPE
-            SYNTAX          Counter32 
+            SYNTAX          Counter32
             MAX-ACCESS      read-only
             STATUS          current
             DESCRIPTION
-                " The hpicfOspfErrorCount is count of each type 
+                " The hpicfOspfErrorCount is count of each type
                   error packet recieved on a OSPF interface.
 
-                  Discontinuities in the value of this counter 
-                  can occur at re-initialization of the management 
+                  Discontinuities in the value of this counter
+                  can occur at re-initialization of the management
                   system. The counters can be cleared for any interface
-                  using clear ip ospf statistics command" 
+                  using clear ip ospf statistics command"
         ::= { hpicfOspfIfErrorEntry 2 }
 
 hpicfOspfIfClearStatsTable OBJECT-TYPE
     SYNTAX      SEQUENCE OF  HpicfOspfIfClearStatsEntry
-    MAX-ACCESS  not-accessible 
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
         "A list used to clear statistics information
@@ -617,7 +617,7 @@ hpicfOspfIfClearStatsTable OBJECT-TYPE
     ::= { hpicfOspf 7 }
 
 hpicfOspfIfClearStatsEntry OBJECT-TYPE
-    SYNTAX      HpicfOspfIfClearStatsEntry 
+    SYNTAX      HpicfOspfIfClearStatsEntry
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
@@ -628,7 +628,7 @@ hpicfOspfIfClearStatsEntry OBJECT-TYPE
     ::= { hpicfOspfIfClearStatsTable 1 }
 
 HpicfOspfIfClearStatsEntry ::=
-    SEQUENCE { 
+    SEQUENCE {
         hpicfOspfClearCounters TruthValue
     }
 
@@ -637,22 +637,22 @@ hpicfOspfClearCounters  OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-         "Read of this will always be false, When this variable is set 
-          to true for a given Ipaddress interface, correspondiing 
-          interface counters will be cleared." 
+         "Read of this will always be false, When this variable is set
+          to true for a given Ipaddress interface, correspondiing
+          interface counters will be cleared."
     DEFVAL { false }
     ::= {hpicfOspfIfClearStatsEntry 1 }
-    
+
 hpicfOspfSpfTable  OBJECT-TYPE
-    SYNTAX      SEQUENCE OF HpicfOspfSpfEntry 
-    MAX-ACCESS  not-accessible 
+    SYNTAX      SEQUENCE OF HpicfOspfSpfEntry
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
         "Table that contains OSPF SPF information."
     ::= { hpicfOspf 8 }
 
 hpicfOspfSpfEntry OBJECT-TYPE
-    SYNTAX      HpicfOspfSpfEntry 
+    SYNTAX      HpicfOspfSpfEntry
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
@@ -663,32 +663,32 @@ hpicfOspfSpfEntry OBJECT-TYPE
     ::= { hpicfOspfSpfTable 1 }
 
 HpicfOspfSpfEntry ::=
-    SEQUENCE { 
-        hpicfOspfSpfInstance      Integer32, 
+    SEQUENCE {
+        hpicfOspfSpfInstance      Integer32,
         hpicfOspfSpfReason        Integer32
     }
 
 hpicfOspfSpfInstance  OBJECT-TYPE
             SYNTAX          Integer32
-            MAX-ACCESS      not-accessible 
+            MAX-ACCESS      not-accessible
             STATUS          current
             DESCRIPTION
                 "The hpicfospfSpfInstance refers to the instance of SPF
                  Shortest Path First ran for an OSPF instance."
-                 
+
         ::= { hpicfOspfSpfEntry 1 }
 
 hpicfOspfSpfReason  OBJECT-TYPE
-            SYNTAX          Integer32 
+            SYNTAX          Integer32
             MAX-ACCESS      read-only
             STATUS          current
             DESCRIPTION
-                "The hpicfOspfSpfReason refers to the reason for 
-                 scheduling an SPF run. Reasons could be OSPF init, 
+                "The hpicfOspfSpfReason refers to the reason for
+                 scheduling an SPF run. Reasons could be OSPF init,
                  adding/deleting interface, linkStateUpdate received..
                  Only last ten SPF run's reasons will be saved."
         ::= { hpicfOspfSpfEntry 2 }
-        
+
 hpicfOspfConformance OBJECT IDENTIFIER ::= { hpicfOspf 2 }
 
     hpicfOspfGroups OBJECT IDENTIFIER ::= { hpicfOspfConformance 1 }
@@ -735,8 +735,8 @@ hpicfOspfConformance OBJECT IDENTIFIER ::= { hpicfOspf 2 }
                       hpicfOspfClearCounters,
                       hpicfOspfSpfReason }
         STATUS      current
-        DESCRIPTION "A collection of objects that contain 
+        DESCRIPTION "A collection of objects that contain
                      OSPF interface and SPF statistics."
         ::= { hpicfOspfGroups 4 }
-    
+
 END

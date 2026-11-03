@@ -8,7 +8,7 @@
            FROM SNMPv2-TC
        MODULE-COMPLIANCE, OBJECT-GROUP
            FROM SNMPv2-CONF
-       dnOS  
+       dnOS
            FROM DELL-REF-MIB
        InterfaceIndexOrZero
            FROM IF-MIB
@@ -21,7 +21,7 @@
     LAST-UPDATED "201112140000Z" -- 14 Dec 2011 12:00:00 GMT
     ORGANIZATION "Dell, Inc."
     CONTACT-INFO ""
-                                                                                  
+
     DESCRIPTION
         "This MIB module defines a portion of the SNMP MIB under
          the Dell enterprise OID pertaining to
@@ -42,7 +42,7 @@
          "Dell branding related changes."
     REVISION
          "200503281100Z"  -- Mon Mar 28 11:00 GMT 2005
-    DESCRIPTION 
+    DESCRIPTION
          "Initial version of this MIB module."
     ::= { dnOS 37 }
 
@@ -53,11 +53,11 @@
    DnsCacheEntryType ::= TEXTUAL-CONVENTION
        STATUS  current
        DESCRIPTION
-               "A DNS cache entry type. This is for address or 
+               "A DNS cache entry type. This is for address or
                 for canonical name."
-       SYNTAX  INTEGER { dnsCacheAddresstype(1), 
+       SYNTAX  INTEGER { dnsCacheAddresstype(1),
                          dnsCacheCnametye(2) }
- 
+
 
    fastPathDnsResCtlMIBObjects  OBJECT IDENTIFIER ::= { fastPathDnsResControlMIB 1 }
 
@@ -87,12 +87,12 @@
        ::= {agentResCtlglobal 2 }
 
   agentResCtlCacheFlushStatus OBJECT-TYPE
-       SYNTAX  INTEGER { dnsCacheFlushEnable(1), 
+       SYNTAX  INTEGER { dnsCacheFlushEnable(1),
                          dnsCacheFlushDisable(2) }
        MAX-ACCESS  read-write
        STATUS      current
        DESCRIPTION
-               "The cache Flush status. If set to enable all dynamic cache 
+               "The cache Flush status. If set to enable all dynamic cache
                 entries would be removed."
        ::= {agentResCtlglobal 3 }
 
@@ -101,7 +101,7 @@
        MAX-ACCESS  read-write
        STATUS      current
        DESCRIPTION
-               "The timeout before retransmitting a request to the server. The 
+               "The timeout before retransmitting a request to the server. The
                 timeout value is configured and displayed in seconds."
        DEFVAL { 3 }
        ::= {agentResCtlglobal 4 }
@@ -182,7 +182,7 @@
                "An entry in the DNS Servers list.
                Rows may be created or deleted at any time by the DNS
               Resolver and by SNMP SET requests."
-       INDEX     {agentResCtlDnsNameServerIPType, 
+       INDEX     {agentResCtlDnsNameServerIPType,
                   agentResCtlDnsNameServerIP }
        ::= {agentResCtlServConfigTable 1 }
 
@@ -237,7 +237,7 @@
        ::= {agentResCtlStaticServConfig 1 }
 
   agentResCtlStaticServEntry OBJECT-TYPE
-       SYNTAX     ResCtlStaticServEntry 
+       SYNTAX     ResCtlStaticServEntry
        MAX-ACCESS  not-accessible
        STATUS      current
        DESCRIPTION

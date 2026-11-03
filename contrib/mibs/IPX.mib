@@ -23,7 +23,7 @@ IPX DEFINITIONS ::= BEGIN
 -- created (especially in the area of IPX routing protocols) to contain
 -- more specific information.  Whenever possible, these additional MIBs
 -- should follow the format of this IPX MIB.  Information in these MIBs
--- should be linked to this MIB via the use of the system instance 
+-- should be linked to this MIB via the use of the system instance
 -- identifier mentioned above.
 
 
@@ -117,7 +117,7 @@ IPXBasicSysEntry ::= SEQUENCE {
                         ipxBasicSysOpenSocketFails
                            Counter
                     }
-                           
+
 ipxBasicSysInstance OBJECT-TYPE
    SYNTAX      INTEGER
    ACCESS      read-only
@@ -193,7 +193,7 @@ ipxBasicSysInDiscards OBJECT-TYPE
    ACCESS      read-only
    STATUS      mandatory
    DESCRIPTION "The number of IPX packets received but discarded due to
-                reasons other than those accounted for by 
+                reasons other than those accounted for by
                 ipxBasicSysInHdrErrors, ipxBasicSysInUnknownSockets,
                 ipxAdvSysInDiscards, and ipxAdvSysInCompressDiscards."
    ::= {ipxBasicSysEntry 9}
@@ -321,7 +321,7 @@ IPXAdvSysEntry ::= SEQUENCE {
                      ipxAdvSysServCount
                         INTEGER
                     }
-                           
+
 ipxAdvSysInstance OBJECT-TYPE
    SYNTAX      INTEGER
    ACCESS      read-only
@@ -517,7 +517,7 @@ ipxCircSysInstance OBJECT-TYPE
    ACCESS      read-only
    STATUS      mandatory
    DESCRIPTION "The unique identifier of the instance of IPX
-                to which this entry corresponds.  This value may be 
+                to which this entry corresponds.  This value may be
                 written only when creating a new entry in the table."
    ::= {ipxCircEntry 1}
 
@@ -589,7 +589,7 @@ ipxCircDialName OBJECT-TYPE
    ACCESS      read-only
    STATUS      mandatory
    DESCRIPTION "The symbolic name used to refernce the dialing information
-                used to create this circuit.  This value may be written 
+                used to create this circuit.  This value may be written
                 only when creating a new entry in the table."
    ::= {ipxCircEntry 8}
 
@@ -608,7 +608,7 @@ ipxCircCompressState OBJECT-TYPE
                        }
    ACCESS      read-only
    STATUS      mandatory
-   DESCRIPTION "The compression state on this circuit.  This value may 
+   DESCRIPTION "The compression state on this circuit.  This value may
                 be written only when creating a new entry in the table."
    DEFVAL      { off }
    ::= {ipxCircEntry 10}
@@ -617,7 +617,7 @@ ipxCircCompressSlots OBJECT-TYPE
    SYNTAX      INTEGER
    ACCESS      read-only
    STATUS      mandatory
-   DESCRIPTION "The number of compression slots available on this 
+   DESCRIPTION "The number of compression slots available on this
                 circuit.  This value may be written only when creating a
                 new entry in the table."
    DEFVAL      { 16 }
@@ -639,7 +639,7 @@ ipxCircStaticStatus OBJECT-TYPE
                 and services reached via this circuit matches that
                 saved in permanent storage (current).  Setting the
                 value to write when it had the value changed will write
-                the currently in use information to permanent storage, 
+                the currently in use information to permanent storage,
                 if supported.  Setting the value to read when it had
                 the value changed will replace any routes and services
                 currently defined for the circuit with those read from
@@ -741,7 +741,7 @@ ipxCircDelay OBJECT-TYPE
    STATUS      mandatory
    DESCRIPTION "The period of time, in milliseconds, that it takes to
                 transmit one byte of data, excluding protocol headers,
-                to a destination on the other end of the circuit, if 
+                to a destination on the other end of the circuit, if
                 the circuit is free of other traffic."
    ::= {ipxCircEntry 25}
 
@@ -863,7 +863,7 @@ ipxDestNextHopCircIndex OBJECT-TYPE
    SYNTAX      INTEGER
    ACCESS      read-only
    STATUS      mandatory
-   DESCRIPTION "The unique identifier of the circuit used to reach the 
+   DESCRIPTION "The unique identifier of the circuit used to reach the
                 next hop."
    ::= {ipxDestEntry 6}
 
@@ -895,7 +895,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The Static Routes table contains information about all
 --                 destinations reached via statically configured routes."
 --    ::= {ipxForwarding 2}
--- 
+--
 -- ipxStaticRouteEntry OBJECT-TYPE
 --    SYNTAX      IPXStaticRouteEntry
 --    ACCESS      not-accessible
@@ -907,7 +907,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                 ipxStaticRouteNetNum
 --                }
 --    ::= {ipxStaticRouteTable 1}
--- 
+--
 -- IPXStaticRouteEntry ::= SEQUENCE {
 --                            ipxStaticRouteSysInstance
 --                               INTEGER,
@@ -922,7 +922,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                            ipxStaticRouteHopCount
 --                               INTEGER
 --                           }
--- 
+--
 -- ipxStaticRouteSysInstance OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
@@ -930,7 +930,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The unique identifier of the instance of IPX to
 --                 which this row corresponds."
 --    ::= {ipxStaticRouteEntry 1}
--- 
+--
 -- ipxStaticRouteCircIndex OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
@@ -938,14 +938,14 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The unique identifier of the circuit used to
 --                 reach the first hop in the static route."
 --    ::= {ipxStaticRouteEntry 2}
--- 
+--
 -- ipxStaticRouteNetNum OBJECT-TYPE
 --    SYNTAX      NetNumber
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The IPX network number of the route's destination."
 --    ::= {ipxStaticRouteEntry 3}
--- 
+--
 -- ipxStaticRouteExistState OBJECT-TYPE
 --    SYNTAX      INTEGER {
 --                         off(1),
@@ -957,14 +957,14 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                 value set to off may be deleted from the table at the
 --                 implementation's discretion."
 --    ::= {ipxStaticRouteEntry 4}
--- 
+--
 -- ipxStaticRouteTicks OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The delay, in ticks, to reach the route's destination."
 --    ::= {ipxStaticRouteEntry 5}
--- 
+--
 -- ipxStaticRouteHopCount OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
@@ -976,7 +976,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 -- Services Group
 --    The Services group contains management information for all known
 --    services.
--- 
+--
 -- Services Table
 --    This table contains the services information indexed by service
 --    name and type.
@@ -987,7 +987,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    STATUS      mandatory
 --    DESCRIPTION "The table of services, indexed by name and type."
 --    ::= {ipxServices 1}
--- 
+--
 -- ipxServEntry OBJECT-TYPE
 --    SYNTAX      IPXServEntry
 --    ACCESS      not-accessible
@@ -999,7 +999,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                 ipxServName
 --                }
 --    ::= {ipxServTable 1}
--- 
+--
 -- IPXServEntry ::= SEQUENCE {
 --                      ipxServSysInstance
 --                         INTEGER,
@@ -1018,7 +1018,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                      ipxServHopCount
 --                         INTEGER
 --                     }
--- 
+--
 -- ipxServSysInstance OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
@@ -1026,21 +1026,21 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The unique identifier of the instance of IPX
 --                 to which this entry corresponds."
 --    ::= {ipxServEntry 1}
--- 
+--
 -- ipxServType OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(2))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The service type."
 --    ::= {ipxServEntry 2}
--- 
+--
 -- ipxServName OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(1..48))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The service name."
 --    ::= {ipxServEntry 3}
--- 
+--
 -- ipxServProtocol OBJECT-TYPE
 --    SYNTAX      INTEGER {
 --                         other(1),
@@ -1054,7 +1054,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The protocol from which knowledge of this service was
 --                 obtained."
 --    ::= {ipxServEntry 4}
--- 
+--
 -- ipxServNetNum OBJECT-TYPE
 --    SYNTAX      NetNumber
 --    ACCESS      read-only
@@ -1062,31 +1062,31 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The IPX network number portion of the IPX address of the
 --                 service."
 --    ::= {ipxServEntry 5}
--- 
+--
 -- ipxServNode OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(6))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The node portion of the IPX address of the service."
 --    ::= {ipxServEntry 6}
--- 
+--
 -- ipxServSocket OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(2))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The socket portion of the IPX address of the service."
 --    ::= {ipxServEntry 7}
--- 
+--
 -- ipxServHopCount OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The number of hops to the service."
 --    ::= {ipxServEntry 8}
- 
- 
+
+
 -- Destination Services Table
---   This table contains the services information indexed by address, 
+--   This table contains the services information indexed by address,
 --   name, and type.
 
 -- ipxDestServTable OBJECT-TYPE
@@ -1096,7 +1096,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The table of services, indexed by address, name,
 --                 and type."
 --    ::= {ipxServices 2}
--- 
+--
 -- ipxDestServEntry OBJECT-TYPE
 --    SYNTAX      IPXDestServEntry
 --    ACCESS      not-accessible
@@ -1111,7 +1111,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                 ipxDestServType
 --                }
 --    ::= {ipxDestServTable 1}
--- 
+--
 -- IPXDestServEntry ::= SEQUENCE {
 --                         ipxDestServSysInstance
 --                            INTEGER,
@@ -1130,7 +1130,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                         ipxDestServHopCount
 --                            INTEGER
 --                        }
--- 
+--
 -- ipxDestServSysInstance OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
@@ -1138,7 +1138,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The unique identifier of the instance of IPX
 --                 to which this entry corresponds."
 --    ::= {ipxDestServEntry 1}
--- 
+--
 -- ipxDestServNetNum OBJECT-TYPE
 --    SYNTAX      NetNumber
 --    ACCESS      read-only
@@ -1146,35 +1146,35 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The IPX network number portion of the IPX address of the
 --                 service."
 --    ::= {ipxDestServEntry 2}
--- 
+--
 -- ipxDestServNode OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(6))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The node portion of the IPX address of the service."
 --    ::= {ipxDestServEntry 3}
--- 
+--
 -- ipxDestServSocket OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(2))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The socket portion of the IPX address of the service."
 --    ::= {ipxDestServEntry 4}
--- 
+--
 -- ipxDestServName OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(1..48))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The service name."
 --    ::= {ipxDestServEntry 5}
--- 
+--
 -- ipxDestServType OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(2))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The service type."
 --    ::= {ipxDestServEntry 6}
--- 
+--
 -- ipxDestServProtocol OBJECT-TYPE
 --    SYNTAX      INTEGER {
 --                         other(1),
@@ -1188,7 +1188,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The protocol from which knowledge of this service was
 --                 obtained."
 --    ::= {ipxDestServEntry 7}
--- 
+--
 -- ipxDestServHopCount OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
@@ -1208,7 +1208,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The Static Services table contains information about
 --                 all services reached via statically configured routes."
 --    ::= {ipxServices 3}
--- 
+--
 -- ipxStaticServEntry OBJECT-TYPE
 --    SYNTAX      IPXStaticServEntry
 --    ACCESS      not-accessible
@@ -1221,7 +1221,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                 ipxStaticServType
 --                }
 --    ::= {ipxStaticServTable 1}
--- 
+--
 -- IPXStaticServEntry ::= SEQUENCE {
 --                            ipxStaticServSysInstance
 --                               INTEGER,
@@ -1242,7 +1242,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                            ipxStaticServHopCount
 --                               INTEGER
 --                           }
--- 
+--
 -- ipxStaticServSysInstance OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
@@ -1250,28 +1250,28 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The unique identifier of the instance of IPX to which
 --                 this entry corresponds."
 --    ::= {ipxStaticServEntry 1}
--- 
+--
 -- ipxStaticServCircIndex OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The circuit used to reach this service."
 --    ::= {ipxStaticServEntry 2}
--- 
+--
 -- ipxStaticServName OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(1..48))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The service name."
 --    ::= {ipxStaticServEntry 3}
--- 
+--
 -- ipxStaticServType OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(2))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The service type."
 --    ::= {ipxStaticServEntry 4}
--- 
+--
 -- ipxStaticServExistState OBJECT-TYPE
 --    SYNTAX      INTEGER {
 --                         off(1),
@@ -1283,7 +1283,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --                 value set to off may be deleted from the table at the
 --                 implementation's discretion."
 --    ::= {ipxStaticServEntry 5}
--- 
+--
 -- ipxStaticServNetNum OBJECT-TYPE
 --    SYNTAX      NetNumber
 --    ACCESS      read-only
@@ -1291,21 +1291,21 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION "The IPX network number portion of the IPX address of the
 --                 service."
 --    ::= {ipxStaticServEntry 6}
--- 
+--
 -- ipxStaticServNode OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(6))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The node portion of the IPX address of the service."
 --    ::= {ipxStaticServEntry 7}
--- 
+--
 -- ipxStaticServSocket OBJECT-TYPE
 --    SYNTAX      OCTET STRING (SIZE(2))
 --    ACCESS      read-only
 --    STATUS      mandatory
 --    DESCRIPTION "The socket portion of the IPX address of the service."
 --    ::= {ipxStaticServEntry 8}
--- 
+--
 -- ipxStaticServHopCount OBJECT-TYPE
 --    SYNTAX      INTEGER
 --    ACCESS      read-only
@@ -1326,7 +1326,7 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION   "This trap signifies that the specified circuit has
 --                   gone down."
 --    ::= 1
--- 
+--
 -- ipxTrapCircuitUp TRAP-TYPE
 --    ENTERPRISE    ipxTraps
 --    VARIABLES     {
@@ -1336,6 +1336,6 @@ ipxDestNextHopNetNum OBJECT-TYPE
 --    DESCRIPTION   "This trap signifies that the specified circuit has
 --                   come up."
 --    ::= 2
--- 
+--
 
 END

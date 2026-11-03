@@ -16,8 +16,8 @@
 --
 -- Version 2.02, 2009/02/17, Susan Lu
 -- [New Object]
--- [1]Add "swSysLogServerAddrType" and "swSysLogServerAddr" to support IPv6 
---    syslog server.   
+-- [1]Add "swSysLogServerAddrType" and "swSysLogServerAddr" to support IPv6
+--    syslog server.
 -- [Modification]
 -- [1]Obsolete "swSysLogServerIPAddress".
 --    For support IPv6 syslog server.
@@ -31,7 +31,7 @@
 --
 -- Version 2.00, 2007/03/27, Yedda
 -- This is the first formal version for universal MIB definition.
--- ----------------------------------------------------------------------------- 
+-- -----------------------------------------------------------------------------
 
 SYSLOG-MIB DEFINITIONS ::= BEGIN
 
@@ -65,7 +65,7 @@ SYSLOG-MIB DEFINITIONS ::= BEGIN
             "This object enables or disables the System Log function
             during system runtime."
         ::= { swSysLogMIB 1 }
- 
+
 -- -----------------------------------------------------------------------------
 -- swSysLogServerTable
 -- -----------------------------------------------------------------------------
@@ -101,11 +101,11 @@ SYSLOG-MIB DEFINITIONS ::= BEGIN
             swSysLogServerState
                 INTEGER,
             swSysLogServerRowStatus
-                RowStatus,  
-            swSysLogServerAddrType   
+                RowStatus,
+            swSysLogServerAddrType
           	InetAddressType,
-	    swSysLogServerAddr       
-		InetAddress  
+	    swSysLogServerAddr
+		InetAddress
         }
 
     swSysLogServerIndex OBJECT-TYPE
@@ -205,8 +205,8 @@ SYSLOG-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Indicates the status of this entry. When creating a syslog server
              entry, the IP address should also be set."
-        ::= { swSysLogServerEntry 7 }  
-         
+        ::= { swSysLogServerEntry 7 }
+
     swSysLogServerAddrType OBJECT-TYPE
         SYNTAX        InetAddressType
         MAX-ACCESS    read-create
@@ -214,15 +214,15 @@ SYSLOG-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "Specifies the address type of the System Log Server."
         ::= { swSysLogServerEntry 8 }
-  
+
     swSysLogServerAddr	OBJECT-TYPE
     	SYNTAX	InetAddress
     	MAX-ACCESS   read-create
     	STATUS	current
     	DESCRIPTION
-               "Specifies the address of the System Log Server."   
-       ::= { swSysLogServerEntry 9 }  
-        
+               "Specifies the address of the System Log Server."
+       ::= { swSysLogServerEntry 9 }
+
 
 
 -- -----------------------------------------------------------------------------

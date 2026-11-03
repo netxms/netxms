@@ -6,20 +6,20 @@ IMPORTS
         OBJECT-TYPE,
         IpAddress             FROM SNMPv2-SMI
         rcBayStack            FROM RAPID-CITY
-        rcMltId               FROM RC-MLT-MIB; 
+        rcMltId               FROM RC-MLT-MIB;
 
 rcBayStackMIB MODULE-IDENTITY
        LAST-UPDATED         "200409290000Z"
        ORGANIZATION         "Nortel Networks"
        CONTACT-INFO         "
-                                         
-                         Postal:       Nortel Networks 
-                                       4401 Great America Parkway 
-                                       Santa Clara, CA 95052-8185 
 
-                            Tel: 
-                            Fax:  
-                         E-mail:         
+                         Postal:       Nortel Networks
+                                       4401 Great America Parkway
+                                       Santa Clara, CA 95052-8185
+
+                            Tel:
+                            Fax:
+                         E-mail:
                         "
        DESCRIPTION         "BayStack specific portion of RAPID-CITY-MIB."
 
@@ -57,14 +57,14 @@ rcBayStackTftpAction OBJECT-TYPE
 --
 -- SSH Session Table
 --
- 
+
 rcBayStackSshSessionTable OBJECT-TYPE
         SYNTAX        SEQUENCE OF RcBayStackSshSessionEntry
         MAX-ACCESS    not-accessible
         STATUS        current
         DESCRIPTION   "Table describing the SSH sessions"
         ::= { rcBayStackObjects 2 }
- 
+
 rcBayStackSshSessionEntry OBJECT-TYPE
         SYNTAX        RcBayStackSshSessionEntry
         MAX-ACCESS    not-accessible
@@ -72,20 +72,20 @@ rcBayStackSshSessionEntry OBJECT-TYPE
         DESCRIPTION   "An entry describing an SSH session."
         INDEX         { rcBayStackSshSessionId }
         ::= { rcBayStackSshSessionTable 1 }
- 
+
 RcBayStackSshSessionEntry ::=
         SEQUENCE {
                 rcBayStackSshSessionId INTEGER,
                 rcBayStackSshSessionIp IpAddress
         }
- 
+
 rcBayStackSshSessionId OBJECT-TYPE
         SYNTAX        INTEGER (1..8)
         MAX-ACCESS    not-accessible
         STATUS        current
         DESCRIPTION   "Session ID"
         ::= { rcBayStackSshSessionEntry 1 }
- 
+
 rcBayStackSshSessionIp OBJECT-TYPE
         SYNTAX        IpAddress
         MAX-ACCESS    read-only
@@ -126,7 +126,7 @@ rcMltConfigError NOTIFICATION-TYPE
                        ports in a multi-link trunk was connected to a remote
                        port that was not also configured as a trunk.  The
                        trap indicates that the specified trunk has also been
-                       automatically disabled." 
+                       automatically disabled."
         ::= { rcBayStackTraps0 1 }
 
 END

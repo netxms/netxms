@@ -28,14 +28,14 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
                       Roseville, CA 95747"
         DESCRIPTION  "This MIB module contains HP proprietary
                      objects for managing IP Routing."
-     
-        REVISION     "200804080000Z" -- April 8, 2008      
+
+        REVISION     "200804080000Z" -- April 8, 2008
         DESCRIPTION  "Added hpicfIpv6RtrAdvPrefixTable."
-        
-        REVISION     "200803040000Z" -- Mar 4, 2008      
+
+        REVISION     "200803040000Z" -- Mar 4, 2008
         DESCRIPTION  "Added hpicfIpv6ND."
 
-        REVISION     "200704200000Z" -- Apr 20, 2007      
+        REVISION     "200704200000Z" -- Apr 20, 2007
         DESCRIPTION  "Added hpicfArpAgingTime."
 
         REVISION     "200508130228Z" -- Aug 08, 2005
@@ -173,10 +173,10 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
                     router."
         ::= { hpicfRdiscIfCfgEntry 6 }
 
-    -- ICMP Rate Limiting Objects  
+    -- ICMP Rate Limiting Objects
     hpicfIcmpRateLimits OBJECT IDENTIFIER ::= { hpicfIpRoutingObjects 2 }
 
-    hpicfIcmpBoxLimits  OBJECT IDENTIFIER ::= { hpicfIcmpRateLimits 1 } 
+    hpicfIcmpBoxLimits  OBJECT IDENTIFIER ::= { hpicfIcmpRateLimits 1 }
 
     hpicfIcmpReplyLimitEnable OBJECT-TYPE
         SYNTAX      INTEGER{
@@ -185,8 +185,8 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
                     }
        MAX-ACCESS  read-write
        STATUS      current
-       DESCRIPTION "Enable/Disable ICMP replies."  
-       ::= { hpicfIcmpBoxLimits 1 } 
+       DESCRIPTION "Enable/Disable ICMP replies."
+       ::= { hpicfIcmpBoxLimits 1 }
 
     hpicfIcmpReplyLimit OBJECT-TYPE
        SYNTAX      INTEGER(0..1000000)
@@ -232,7 +232,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
                     }
        MAX-ACCESS  read-write
        STATUS      current
-       DESCRIPTION "Enable/Disable echo replies to directed 
+       DESCRIPTION "Enable/Disable echo replies to directed
                     broadcast echo requests.."
        ::= { hpicfIcmpBoxLimits 6 }
 
@@ -247,7 +247,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION "Enable/disable directed broadcast forwarding."
-        ::= { hpicfGlobalIpConfig 1 } 
+        ::= { hpicfGlobalIpConfig 1 }
 
     hpicfSourceRouteEnable OBJECT-TYPE
         SYNTAX      INTEGER{
@@ -257,7 +257,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION "Enable/disable source routed forwarding."
-        ::= { hpicfGlobalIpConfig 2 } 
+        ::= { hpicfGlobalIpConfig 2 }
 
     hpicfIpMaximumPaths OBJECT-TYPE
         SYNTAX      Integer32
@@ -709,10 +709,10 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
                      is 20 minutes.  Allowable values for the HP
                      implementation are 1-1440 and 0. The value of 0
                      indicates that an infinite ageout is to be
-                     used. The value 16666666 minutes (32 years) is 
-                     used internally to effectively indicate 
+                     used. The value 16666666 minutes (32 years) is
+                     used internally to effectively indicate
                      an infinite timeout."
-        DEFVAL { 20 }                     
+        DEFVAL { 20 }
         ::= { hpicfArpInfo 1 }
 
     -- HP Default Router objects
@@ -724,7 +724,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         MAX-ACCESS  not-accessible
         STATUS      current
         DESCRIPTION "Table of default routers learnt through auto-config
-        This Table will be used in conjunction of ipDefaultRouterTable 
+        This Table will be used in conjunction of ipDefaultRouterTable
         defined in RFC 4293 to get the attributes of the default routers
         learnt through auto-config"
         ::= { hpicfIpDefaultRouterPrefixInfo 1 }
@@ -735,7 +735,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION "A row in the default router table, containing
                     information about a single learnt default router"
-        INDEX       { 
+        INDEX       {
                       hpicfIpDefaultRouterAddressType,
                       hpicfIpDefaultRouterAddress,
                       hpicfIpDefaultRouterIfIndex,
@@ -745,7 +745,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         ::= { hpicfIpDefaultRouterPrefixTable 1 }
 
     HpicfIpDefaultRouterPrefixEntry ::=
-        SEQUENCE { 
+        SEQUENCE {
                   hpicfIpDefaultRouterAddressType InetAddressType,
                   hpicfIpDefaultRouterAddress InetAddress,
                   hpicfIpDefaultRouterIfIndex InterfaceIndex,
@@ -832,7 +832,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         ::= { hpicfIpDefaultRouterPrefixEntry 10 }
 
    -- Default Router table extensions
-    hpicfIpDefaultRouterProperties OBJECT IDENTIFIER ::= 
+    hpicfIpDefaultRouterProperties OBJECT IDENTIFIER ::=
                                                { hpicfIpRoutingObjects 8 }
 
     hpicfIpDefaultRouterTable OBJECT-TYPE
@@ -888,7 +888,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         ::= { hpicfIpv6ND 1 }
 
     -- IPV6 router advertisement prefix list.
-    
+
     hpicfIpv6RtrAdvPrefixTable OBJECT-TYPE
         SYNTAX     SEQUENCE OF HpicfIpv6RtrAdvPrefixEntry
         MAX-ACCESS not-accessible
@@ -896,7 +896,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         DESCRIPTION
                "This table describes the router advertisement
                configuration variables for each interface."
-        REFERENCE "For IPv6 RFC2461,especially section 6.2.1"           
+        REFERENCE "For IPv6 RFC2461,especially section 6.2.1"
         ::= { hpicfIpv6ND 2 }
 
 
@@ -923,7 +923,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
             hpicfIpv6RtrAdvPrefixLifetimeType         INTEGER,
             hpicfIpv6RtrAdvPrefixPreferredLifetime    Unsigned32,
             hpicfIpv6RtrAdvPrefixValidLifetime        Unsigned32,
-            hpicfIpv6RtrAdvPrefixRowStatus            RowStatus 
+            hpicfIpv6RtrAdvPrefixRowStatus            RowStatus
         }
 
     hpicfIpv6RtrAdvPrefixIfIndex OBJECT-TYPE
@@ -934,10 +934,10 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
                    "The index value which uniquely identifies the
                    interface on  which this prefix is configured.
                    The interface identified by a particular value of
-                   this index is the same interface as identified by 
+                   this index is the same interface as identified by
                    the same value of the IF-MIB's ifIndex."
             ::= { hpicfIpv6RtrAdvPrefixEntry 1 }
-            
+
     hpicfIpv6RtrAdvPrefixType OBJECT-TYPE
       SYNTAX     InetAddressType
       MAX-ACCESS not-accessible
@@ -945,17 +945,17 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
       DESCRIPTION
              "The address type of hpicfIpv6RtrAdvPrefixPrefix."
       ::= { hpicfIpv6RtrAdvPrefixEntry 2 }
- 
- 
+
+
     hpicfIpv6RtrAdvPrefixPrefix OBJECT-TYPE
       SYNTAX     InetAddress
       MAX-ACCESS not-accessible
       STATUS     current
       DESCRIPTION
          "The address prefix.  The address type of this object is
-          specified in hpicfIpv6RtrAdvPrefixType. 
-          The length of this object is the standard length for 
-          objects of that type." 
+          specified in hpicfIpv6RtrAdvPrefixType.
+          The length of this object is the standard length for
+          objects of that type."
     ::= { hpicfIpv6RtrAdvPrefixEntry 3 }
 
 
@@ -987,7 +987,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         STATUS     current
         DESCRIPTION
                "Autonomous address configuration flag.
-                Router Advertisement messages are sent out with 
+                Router Advertisement messages are sent out with
                 the autonomous flag field set to this value
                 in the Prefix Information."
         DEFVAL { true }
@@ -1001,9 +1001,9 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         MAX-ACCESS read-create
         STATUS     current
         DESCRIPTION
-               "Specifies if the 
+               "Specifies if the
                hpicfIpv6RtrAdvPrefixPreferredLifetime
-               and hpicfIpv6RtrAdvPrefixValidLifetime are of 
+               and hpicfIpv6RtrAdvPrefixValidLifetime are of
                the kind where consecutive advertisements have the
                same time(fixed) or a time that decrements in real time.
                The realTime(2) can be used to specify a time
@@ -1019,14 +1019,14 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         MAX-ACCESS read-create
         STATUS     current
         DESCRIPTION
-               "The length of time ,in seconds,that this prefix will be 
+               "The length of time ,in seconds,that this prefix will be
                preferred. A value of 4,294,967,295 represents infinity.
                The Router Advertisement messages are sent out with the
                Preferrend LifeTime field set to this value.
-               To specify in a realTime way,set this object to a future 
-               time in number of seconds since January 1, 1970, 
+               To specify in a realTime way,set this object to a future
+               time in number of seconds since January 1, 1970,
                Coordinated Universal Time and also set
-               The default value is 7 days(604800 seconds) fixed time"     
+               The default value is 7 days(604800 seconds) fixed time"
         DEFVAL { 604800 }
         ::= { hpicfIpv6RtrAdvPrefixEntry 8 }
 
@@ -1042,7 +1042,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
                 A value of 4,294,967,295 represents infinity.
                 The Router advertisement messages are sent out with the
                 Valid LifeTime field set to this value.
-                To specify in a realTime way,set this object to a future                time in number of seconds since January 1, 1970, 
+                To specify in a realTime way,set this object to a future                time in number of seconds since January 1, 1970,
                 Coordinated Universal Time and also set
                 hpicfIpv6RtrAdvPrefixTimeType to realTime.                       The default value is 30 days (or 2592000 seconds)
                 fixed time."
@@ -1055,8 +1055,8 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
         STATUS     current
         DESCRIPTION
                "The status of this conceptual row.
-                As all objects in this conceptual row have default 
-                values a row can be created and made active by 
+                As all objects in this conceptual row have default
+                values a row can be created and made active by
                 setting this object appropriately."
         ::= { hpicfIpv6RtrAdvPrefixEntry 10 }
 
@@ -1189,7 +1189,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
 
             GROUP       hpicfIcmpReplyLimitGroup
             DESCRIPTION "This group is mandatory for implementations
-                        that allow configuring ICMP Reply Limit 
+                        that allow configuring ICMP Reply Limit
                         configuration."
 
         ::= { hpicfIpRoutingCompliances 2 }
@@ -1216,7 +1216,7 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
             MANDATORY-GROUPS { hpicfArpBaseGroup }
 
         ::= { hpicfIpRoutingCompliances 4 }
-        
+
     hpicfIpv6RtrAdvPrefixCompliance MODULE-COMPLIANCE
         STATUS      current
         DESCRIPTION "The compliance statement for HP Routing switches
@@ -1228,4 +1228,3 @@ HP-ICF-IP-ROUTING DEFINITIONS ::= BEGIN
 
 
 END
-

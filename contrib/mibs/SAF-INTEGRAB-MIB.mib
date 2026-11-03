@@ -20,7 +20,7 @@ IMPORTS
           FROM SNMPv2-SMI                -- [RFC2578]
       IANAifType
           FROM IANAifType-MIB;
-	
+
 -- saf   	        OBJECT IDENTIFIER ::= { enterprises 7571 }
 -- microwaveRadio   OBJECT IDENTIFIER ::= { tehnika 1 }
 -- pointToPoint     OBJECT IDENTIFIER ::= { microwaveRadio 1 }
@@ -121,7 +121,7 @@ integraB MODULE-IDENTITY
                "Public Release 1.10 module name changed"
        REVISION   "201406110000Z" --  11 jun 2014
        DESCRIPTION
-               "Public Release 1.09. ifPortType syntax 
+               "Public Release 1.09. ifPortType syntax
 	       declared by IANAifType"
        REVISION   "201404160000Z" --  16 apr 2014
        DESCRIPTION
@@ -249,7 +249,7 @@ integraBradioTxMuteDuration OBJECT-TYPE
                     "Time remaning for Tx to be muted in seconds.
                     To turn mute on send number of seconds between 10 and MAX.
                     To turn mute off send 0.
-                    GET will retrieve remaining duration for mute or 
+                    GET will retrieve remaining duration for mute or
                     0 if Tx mute is turned off."
               ::= { integraBradio 9 }
 
@@ -289,8 +289,8 @@ integraBradioRangeEntryIndex OBJECT-TYPE
               MAX-ACCESS read-only
               STATUS current
               DESCRIPTION
-                      "A unique value, greater than zero, for each range 
-                      entry. Starts with 1 and is equal to a number of all range 
+                      "A unique value, greater than zero, for each range
+                      entry. Starts with 1 and is equal to a number of all range
                       parameters."
               ::= { integraBradioRangeEntry 1 }
 
@@ -340,7 +340,7 @@ integraBradioRxLevelState OBJECT-TYPE
               DESCRIPTION "Received signal level state"
               ::= { integraBradio 12 }
 
-            
+
 integraBmodem		OBJECT IDENTIFIER ::=   { integraB 3 }
 
 integraBmodemAcquireStatus OBJECT-TYPE
@@ -556,7 +556,7 @@ integraBsysLicenseExpire OBJECT-TYPE
               UNITS   "s"
               MAX-ACCESS  read-only
               STATUS  current
-              DESCRIPTION "License expires after number of seconds. 
+              DESCRIPTION "License expires after number of seconds.
                            In the case of -1, check licenseGenStatus status"
               ::= { integraBsystem 3 }
 integraBsysLicenseGenStatus OBJECT-TYPE
@@ -1098,9 +1098,9 @@ integraBifEtherStatsMulticastPkts OBJECT-TYPE
               MAX-ACCESS read-only
               STATUS current
               DESCRIPTION
-                     "The total number of good packets (both received and 
-                     transmitted) that were directed to a multicast address.  
-                     Note that this number does not include packets directed 
+                     "The total number of good packets (both received and
+                     transmitted) that were directed to a multicast address.
+                     Note that this number does not include packets directed
                      to the broadcast address."
               ::= { integraBifPortStcEntry 8 }
 
@@ -1110,7 +1110,7 @@ integraBifEtherStatsBroadcastPkts OBJECT-TYPE
               MAX-ACCESS read-only
               STATUS current
               DESCRIPTION
-                     "The total number of good packets (both received and 
+                     "The total number of good packets (both received and
                      transmitted) that were directed to the broadcast address.
                      Note that this does not include multicast packets."
               ::= { integraBifPortStcEntry 9 }
@@ -1193,7 +1193,7 @@ integraBifEtherStatsOversizePkts OBJECT-TYPE
               MAX-ACCESS read-only
               STATUS current
               DESCRIPTION
-                    "The number of packets (both received and 
+                    "The number of packets (both received and
                     transmitted) that were longer than 1518
                     octets (excluding framing bits but including
                     FCS octets) but were otherwise well formed."
@@ -1230,7 +1230,7 @@ integraBifEtherStatsOctets OBJECT-TYPE
               STATUS current
               DESCRIPTION
                     "Total number of octets of data (including
-                    those in bad packets) both received and 
+                    those in bad packets) both received and
                     transmitted."
               ::= { integraBifPortStcEntry 19 }
 
@@ -1477,7 +1477,7 @@ integraBifIfInMulticastPkts OBJECT-TYPE
               STATUS current
               DESCRIPTION
                      "The total number of received good packets
-                     that were directed to a multicast address.  
+                     that were directed to a multicast address.
                      Note that this number does not include broadcast packets."
               ::= { integraBifPortStcEntry 42 }
 
@@ -1488,7 +1488,7 @@ integraBifIfOutMulticastPkts OBJECT-TYPE
               STATUS current
               DESCRIPTION
                      "The total number of transmitted good packets
-                     that were directed to a multicast address.  
+                     that were directed to a multicast address.
                      Note that this number does not include broadcast packets."
               ::= { integraBifPortStcEntry 43 }
 
@@ -1914,7 +1914,7 @@ IntegraBifCosqEntry ::=
                     integraBifCosqIfaceDescr
                         DisplayString,
                     integraBifCosqStatDroppedPacketsCoSQ0
-                        Counter64, 
+                        Counter64,
                     integraBifCosqStatDroppedBytesCoSQ0
                         Counter64,
                     integraBifCosqStatGreenDiscardDroppedPacketsCoSQ0
@@ -2538,7 +2538,7 @@ integraBexecuteConfig OBJECT-TYPE
               MAX-ACCESS  read-write
               STATUS current
               DESCRIPTION "This object can only be set to 1.
-                           It initiates new running configuration 
+                           It initiates new running configuration
                            applying using values, that have been set before.
                            Setting it when no new changes are available
                            will do nothing and return an error.
@@ -2633,7 +2633,7 @@ integraBCompliance MODULE-COMPLIANCE
     DESCRIPTION "The compliance statement for SNMP engine which
                  implements the SAF Tehnika Integra-B device."
     MODULE -- this module
-      MANDATORY-GROUPS { 
+      MANDATORY-GROUPS {
                 integraBMiscGroup,
                 integraBRadioGroup,
                 integraBModemGroup,
@@ -2840,7 +2840,7 @@ integraBEthernetMiiPortGroup OBJECT-GROUP
           integraBifEtherStatsJabbers
    }
    STATUS current
-   DESCRIPTION "A collection of objects, providing info applicable 
+   DESCRIPTION "A collection of objects, providing info applicable
                only to MII group interfaces."
    ::= { integraBGroups 6 }
 

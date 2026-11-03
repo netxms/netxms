@@ -10,12 +10,12 @@
        MacAddress, DisplayString, TEXTUAL-CONVENTION
            FROM SNMPv2-TC;
 
-   cnPilotMIB MODULE-IDENTITY 
+   cnPilotMIB MODULE-IDENTITY
        LAST-UPDATED "201509091238Z"
        ORGANIZATION "Cambium Networks Inc."
        CONTACT-INFO
             "Cambium Networks Support
-             http://www.cambiumnetworks.com/support/     
+             http://www.cambiumnetworks.com/support/
             E-mail:     support@cambiumnetworks.com"
        DESCRIPTION
            "This module contains MIB definitions for APs"
@@ -29,22 +29,22 @@
    cambiumStateGroup               OBJECT IDENTIFIER ::= { cnPilotMIB 1 }
 
 
-   cambiumAccessPointTable  OBJECT-TYPE 
+   cambiumAccessPointTable  OBJECT-TYPE
        SYNTAX       SEQUENCE OF CambiumAccessPointEntry
-       MAX-ACCESS   not-accessible              
-       STATUS       current 
-       DESCRIPTION 
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
                 "This contains all details about AP"
-       ::= { cambiumStateGroup 1 } 
+       ::= { cambiumStateGroup 1 }
 
-   cambiumAccessPointEntry OBJECT-TYPE 
-       SYNTAX       CambiumAccessPointEntry 
-       MAX-ACCESS   not-accessible            
-       STATUS       current 
-       DESCRIPTION 
+   cambiumAccessPointEntry OBJECT-TYPE
+       SYNTAX       CambiumAccessPointEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
              " "
           INDEX { cambiumAPMACAddress }
-       ::= { cambiumAccessPointTable 1 } 
+       ::= { cambiumAccessPointTable 1 }
 
    CambiumAccessPointEntry ::=
    SEQUENCE {
@@ -66,7 +66,7 @@
    }
 
    cambiumAPMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -82,7 +82,7 @@
        ::= { cambiumAccessPointEntry 2 }
 
    cambiumAPIPAddress OBJECT-TYPE
-       SYNTAX      DisplayString (SIZE(0..64)) 
+       SYNTAX      DisplayString (SIZE(0..64))
        MAX-ACCESS  read-only
        STATUS      current
        DESCRIPTION
@@ -186,22 +186,22 @@
        ::= { cambiumAccessPointEntry 15 }
 
 
-   cambiumRadioTable  OBJECT-TYPE 
+   cambiumRadioTable  OBJECT-TYPE
        SYNTAX       SEQUENCE OF CambiumRadioEntry
-       MAX-ACCESS   not-accessible              
-       STATUS       current 
-       DESCRIPTION 
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
                 "This table contains all radios of access point"
-       ::= { cambiumStateGroup 2 } 
+       ::= { cambiumStateGroup 2 }
 
-   cambiumRadioEntry OBJECT-TYPE 
-       SYNTAX       CambiumRadioEntry 
-       MAX-ACCESS   not-accessible            
-       STATUS       current 
-       DESCRIPTION 
+   cambiumRadioEntry OBJECT-TYPE
+       SYNTAX       CambiumRadioEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
              " "
           INDEX { cambiumRadioIndex }
-       ::= { cambiumRadioTable 1 } 
+       ::= { cambiumRadioTable 1 }
 
    CambiumRadioEntry ::=
    SEQUENCE {
@@ -236,7 +236,7 @@
 
 
    cambiumRadioMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -244,7 +244,7 @@
       ::= { cambiumRadioEntry 2 }
 
    cambiumRadioBandType OBJECT-TYPE
-       SYNTAX       DisplayString (SIZE(0..32)) 
+       SYNTAX       DisplayString (SIZE(0..32))
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -348,7 +348,7 @@
       ::= { cambiumRadioEntry 15 }
 
    cambiumRadioNoiseFloor OBJECT-TYPE
-       SYNTAX       DisplayString (SIZE(0..32)) 
+       SYNTAX       DisplayString (SIZE(0..32))
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -356,7 +356,7 @@
       ::= { cambiumRadioEntry 16 }
 
    cambiumRadioInterference OBJECT-TYPE
-       SYNTAX       DisplayString (SIZE(0..32)) 
+       SYNTAX       DisplayString (SIZE(0..32))
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -364,30 +364,30 @@
       ::= { cambiumRadioEntry 17 }
 
    cambiumRadioAirtime OBJECT-TYPE
-       SYNTAX       DisplayString (SIZE(0..64)) 
+       SYNTAX       DisplayString (SIZE(0..64))
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
             "Radio airtime (total/tx/rx/busy)"
       ::= { cambiumRadioEntry 18 }
 
-   cambiumClientTable  OBJECT-TYPE 
+   cambiumClientTable  OBJECT-TYPE
        SYNTAX       SEQUENCE OF CambiumClientEntry
-       MAX-ACCESS   not-accessible              
-       STATUS       current 
-       DESCRIPTION 
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
                 "This table contain information about all clients
                 connected to the access point"
-       ::= { cambiumStateGroup 3 } 
+       ::= { cambiumStateGroup 3 }
 
-   cambiumClientEntry OBJECT-TYPE 
-       SYNTAX       CambiumClientEntry 
-       MAX-ACCESS   not-accessible            
-       STATUS       current 
-       DESCRIPTION 
+   cambiumClientEntry OBJECT-TYPE
+       SYNTAX       CambiumClientEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
              " "
           INDEX { cambiumClientMACAddressIndex }
-       ::= { cambiumClientTable 1 } 
+       ::= { cambiumClientTable 1 }
 
    CambiumClientEntry ::=
    SEQUENCE {
@@ -410,16 +410,16 @@
    }
 
    cambiumClientMACAddressIndex OBJECT-TYPE
-       SYNTAX       Integer32 
+       SYNTAX       Integer32
        MAX-ACCESS   read-only
        STATUS       current
-       DESCRIPTION  
+       DESCRIPTION
             "The auxiliary variable used to identify instances
             of the columnar objects in the Client Table."
        ::= { cambiumClientEntry 1 }
 
    cambiumClientMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -427,7 +427,7 @@
       ::= { cambiumClientEntry 2 }
 
    cambiumClientIPAddress OBJECT-TYPE
-       SYNTAX       DisplayString (SIZE(0..32)) 
+       SYNTAX       DisplayString (SIZE(0..32))
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -435,7 +435,7 @@
       ::= { cambiumClientEntry 3 }
 
    cambiumClientName OBJECT-TYPE
-       SYNTAX      DisplayString (SIZE(0..32)) 
+       SYNTAX      DisplayString (SIZE(0..32))
        MAX-ACCESS  read-only
        STATUS      current
        DESCRIPTION
@@ -444,7 +444,7 @@
 
 
    cambiumClientSsid OBJECT-TYPE
-       SYNTAX      DisplayString (SIZE(0..32))  
+       SYNTAX      DisplayString (SIZE(0..32))
        MAX-ACCESS  read-only
        STATUS      current
        DESCRIPTION
@@ -539,23 +539,23 @@
             "Total bytes received by the client"
        ::= { cambiumClientEntry 16 }
 
-   cambiumWlanTable  OBJECT-TYPE 
+   cambiumWlanTable  OBJECT-TYPE
        SYNTAX       SEQUENCE OF CambiumWlanEntry
-       MAX-ACCESS   not-accessible              
-       STATUS       current 
-       DESCRIPTION 
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
                 "This table contain information about all WLAN
                 configured on the access point"
-       ::= { cambiumStateGroup 4 } 
+       ::= { cambiumStateGroup 4 }
 
-   cambiumWlanEntry OBJECT-TYPE 
-       SYNTAX       CambiumWlanEntry 
-       MAX-ACCESS   not-accessible            
-       STATUS       current 
-       DESCRIPTION 
+   cambiumWlanEntry OBJECT-TYPE
+       SYNTAX       CambiumWlanEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
              " "
           INDEX { cambiumWlanIndex }
-       ::= { cambiumWlanTable 1 } 
+       ::= { cambiumWlanTable 1 }
 
    CambiumWlanEntry ::=
    SEQUENCE {
@@ -590,7 +590,7 @@
       ::= { cambiumWlanEntry 2 }
 
    cambiumWlanBand OBJECT-TYPE
-       SYNTAX       DisplayString (SIZE(0..32)) 
+       SYNTAX       DisplayString (SIZE(0..32))
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -661,23 +661,23 @@
             "Total bytes received"
        ::= { cambiumWlanEntry 11 }
 
-   cambiumMeshClientTable  OBJECT-TYPE 
+   cambiumMeshClientTable  OBJECT-TYPE
        SYNTAX       SEQUENCE OF CambiumMeshClientEntry
-       MAX-ACCESS   not-accessible              
-       STATUS       current 
-       DESCRIPTION 
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
                 "This table contain information about all Mesh
                  clients connected to the access point"
-       ::= { cambiumStateGroup 5 } 
+       ::= { cambiumStateGroup 5 }
 
-   cambiumMeshClientEntry OBJECT-TYPE 
-       SYNTAX       CambiumMeshClientEntry 
-       MAX-ACCESS   not-accessible            
-       STATUS       current 
-       DESCRIPTION 
+   cambiumMeshClientEntry OBJECT-TYPE
+       SYNTAX       CambiumMeshClientEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
              " "
           INDEX { cambiumMeshClientMACAddressIndex }
-       ::= { cambiumMeshClientTable 1 } 
+       ::= { cambiumMeshClientTable 1 }
 
    CambiumMeshClientEntry ::=
    SEQUENCE {
@@ -699,16 +699,16 @@
    }
 
    cambiumMeshClientMACAddressIndex OBJECT-TYPE
-       SYNTAX       Integer32 
+       SYNTAX       Integer32
        MAX-ACCESS   read-only
        STATUS       current
-       DESCRIPTION  
+       DESCRIPTION
             "The auxiliary variable used to identify instances
             of the columnar objects in the mesh client Table."
        ::= { cambiumMeshClientEntry 1 }
 
    cambiumMeshClientMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -716,7 +716,7 @@
       ::= { cambiumMeshClientEntry 2 }
 
    cambiumMeshClientBaseMACAddress OBJECT-TYPE
-       SYNTAX       MacAddress 
+       SYNTAX       MacAddress
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -724,7 +724,7 @@
       ::= { cambiumMeshClientEntry 3 }
 
    cambiumMeshClientIPAddress OBJECT-TYPE
-       SYNTAX       DisplayString (SIZE(0..32)) 
+       SYNTAX       DisplayString (SIZE(0..32))
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -732,7 +732,7 @@
       ::= { cambiumMeshClientEntry 4 }
 
    cambiumMeshClientName OBJECT-TYPE
-       SYNTAX      DisplayString (SIZE(0..32)) 
+       SYNTAX      DisplayString (SIZE(0..32))
        MAX-ACCESS  read-only
        STATUS      current
        DESCRIPTION
@@ -741,7 +741,7 @@
 
 
    cambiumMeshClientSsid OBJECT-TYPE
-       SYNTAX      DisplayString (SIZE(0..32))  
+       SYNTAX      DisplayString (SIZE(0..32))
        MAX-ACCESS  read-only
        STATUS      current
        DESCRIPTION
@@ -773,7 +773,7 @@
        ::= { cambiumMeshClientEntry 9 }
 
    cambiumMeshClientStatus OBJECT-TYPE
-       SYNTAX       DisplayString (SIZE(0..32)) 
+       SYNTAX       DisplayString (SIZE(0..32))
        MAX-ACCESS   read-only
        STATUS       current
        DESCRIPTION
@@ -821,7 +821,7 @@
        ::= { cambiumMeshClientEntry 15 }
 
    cambiumAPSetIPAddress OBJECT-TYPE
-       SYNTAX      DisplayString (SIZE(0..64)) 
+       SYNTAX      DisplayString (SIZE(0..64))
        MAX-ACCESS  read-write
        STATUS      current
        DESCRIPTION
@@ -829,11 +829,11 @@
        ::= { cambiumStateGroup 6 }
 
     cambiumAPReboot OBJECT-TYPE
-       SYNTAX      Integer32 (1) 
+       SYNTAX      Integer32 (1)
        MAX-ACCESS  read-write
        STATUS      current
        DESCRIPTION
             "OID for Device Reboot, send reboot command to device"
        ::= { cambiumStateGroup 7 }
- 
+
 END

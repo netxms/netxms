@@ -1,7 +1,7 @@
 -- *******************************************************************
 -- CISCO-LWAPP-DOT11-MIB.my
 -- January 2007, Devesh Pujari, Srinath Candadai
---   
+--
 -- Copyright (c) 2007, 2009-2010, 2014-2021, 2023-2024 by Cisco Systems, Inc.
 -- All rights reserved.
 -- *******************************************************************
@@ -113,7 +113,7 @@ ciscoLwappDot11MIB MODULE-IDENTITY
         An entity that contains an 802.11 medium access
         control ( MAC ) and physical layer ( PHY ) interface
         and provides access to the distribution services via
-        the wireless medium for associated clients.  
+        the wireless medium for associated clients.
 
         LWAPP APs encapsulate all the 802.11 frames in
         LWAPP frames and sends them to the controller to which
@@ -125,22 +125,22 @@ ciscoLwappDot11MIB MODULE-IDENTITY
         battery power of WLAN-enabled cell phones by providing
         a high rate packet on the order of tens of milliseconds
         such that these kind of phones can wake up and wait at
-        predefined intervals, to reduce battery power.  The 
+        predefined intervals, to reduce battery power.  The
         GPR packet is transmitted from the AP at a predefined
         time interval.
 
 
         Light Weight Access Point Protocol ( LWAPP )
 
-        This is a generic protocol that defines the 
+        This is a generic protocol that defines the
         communication between the Access Points and the
-        Central Controller. 
+        Central Controller.
 
         Mobile Node ( MN )
 
         A roaming 802.11 wireless device in a wireless
-        network associated with an access point. Mobile Node 
-        and client are used interchangeably. 
+        network associated with an access point. Mobile Node
+        and client are used interchangeably.
 
         TU
 
@@ -149,7 +149,7 @@ ciscoLwappDot11MIB MODULE-IDENTITY
         802.11n
 
         802.11n builds upon previous 802.11 standards by
-        adding MIMO (multiple-input multiple-output). 
+        adding MIMO (multiple-input multiple-output).
         MIMO uses multiple transmitter and receiver antennas
         to allow for increased data throughput through spatial
         multiplexing and increased range .
@@ -176,49 +176,49 @@ ciscoLwappDot11MIB MODULE-IDENTITY
 
         This is a value that determines the modulation, coding
         and number of spatial channels.  Each scheme specifies
-        the modulation technique, coding rate , number of 
+        the modulation technique, coding rate , number of
         spatial streams  etc and the corresponding data rate.
 
         Guard Interval
 
-        Guard intervals are used to ensure that distinct 
-        transmissions do not interfere with one another. 
-        The purpose of the guard interval is to introduce 
-        immunity to propagation delays, echoes and 
-        reflections, to which digital data is normally 
+        Guard intervals are used to ensure that distinct
+        transmissions do not interfere with one another.
+        The purpose of the guard interval is to introduce
+        immunity to propagation delays, echoes and
+        reflections, to which digital data is normally
         very sensitive.
 
         Media Access Control ( MAC )
 
-        The Media Access Control Layer is one of two sublayers 
-        that make up the Data Link Layer.  The MAC layer is 
-        responsible for moving data packets to and from one 
-        Network Interface Card (NIC) to another across a shared 
+        The Media Access Control Layer is one of two sublayers
+        that make up the Data Link Layer.  The MAC layer is
+        responsible for moving data packets to and from one
+        Network Interface Card (NIC) to another across a shared
         channel.
 
         Suppression Table
 
-        When the Band Select feature is ON, AP suppresses 
-        the probe response to mobile stations on 2.4 GHz. AP 
-        suppresses probe response to new mobile stattions for 
-        all SSIDs that are being Band Select enabled. 
-        Suppressed mobile station and corresponding suprression 
-        counts are recorded in a table known as Suppression 
+        When the Band Select feature is ON, AP suppresses
+        the probe response to mobile stations on 2.4 GHz. AP
+        suppresses probe response to new mobile stattions for
+        all SSIDs that are being Band Select enabled.
+        Suppressed mobile station and corresponding suprression
+        counts are recorded in a table known as Suppression
         Table which is stored in internal database of controller.
-        Entries of this table aged-out to make place for new 
+        Entries of this table aged-out to make place for new
         entries.
 
         Dual Band Table
 
-        When AP sees probe request from any mobile station in 
+        When AP sees probe request from any mobile station in
         both 2.4GHz and 5GHz band AP will know that mobile station
         is capable of operating on both band. Dual band capable
-        mobile stations are recorded in a table known as dual band 
+        mobile stations are recorded in a table known as dual band
         table which is stored in internal database of controller.
         This record are kept to make sure 5GHz capable mobile station
         should join 5GHz band only.
         Entries in the table will be age out to make space for
-        new entries. 
+        new entries.
         The AP will not respond to the dual band mobile station's
         2.4GHz probe until is removed from the dual band
         table. AP fills the dual band table in the
@@ -233,8 +233,8 @@ ciscoLwappDot11MIB MODULE-IDENTITY
         RSSI
 
         Received Signal Strength Indication (RSSI), the IEEE 802.11
-        standard defines a mechanism by which RF energy is to be 
-        measured by the circuitry on a wireless NIC. Its value is 
+        standard defines a mechanism by which RF energy is to be
+        measured by the circuitry on a wireless NIC. Its value is
         measured in dBm and ranges from -128 to 0.
 
 
@@ -265,7 +265,7 @@ ciscoLwappDot11MIB MODULE-IDENTITY
          - cld11beMcsSupportEnable"
     REVISION        "202104160000Z"
     DESCRIPTION
-        "Added below objects to the cld11axObssPdConfigTable 
+        "Added below objects to the cld11axObssPdConfigTable
          - cld11axSrgObssPdEnable
          - cld11axSrgObssPdMin
          - cld11axSrgObssPdMax"
@@ -328,7 +328,7 @@ ciscoLwappDot11MIB MODULE-IDENTITY
         Added following in cld11acMcs table:
         cld11acMcsSpatialStreamIndex,
         cld11acMcsDataRateIndex,
-        cld11acMcsSupportEnable"            
+        cld11acMcsSupportEnable"
     REVISION        "201005060000Z"
     DESCRIPTION
         "Added cldHtDot11nEnable in CldHtMacOperationsEntry
@@ -404,13 +404,13 @@ cldStatus  OBJECT IDENTIFIER
 -- ********************************************************************
 
 cldHtMacOperationsTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CldHtMacOperationsEntry 
+    SYNTAX          SEQUENCE OF CldHtMacOperationsEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table represents the operational parameters
-        at the MAC layer for the 802.11n networks managed 
-        through the controller. An agent adds an entry to 
+        at the MAC layer for the 802.11n networks managed
+        through the controller. An agent adds an entry to
         this table for every 802.11n band on startup."
     ::= { cldConfig 1 }
 
@@ -421,7 +421,7 @@ cldHtMacOperationsEntry OBJECT-TYPE
     DESCRIPTION
         "Each entry represents the operational parameters
         at the MAC layer for 802.11n networks."
-    INDEX           { cldHtDot11nBand } 
+    INDEX           { cldHtDot11nBand }
     ::= { cldHtMacOperationsTable 1 }
 
 CldHtMacOperationsEntry ::= SEQUENCE {
@@ -440,7 +440,7 @@ cldHtDot11nBand OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object identifies the 802.11n band the parameters
-        correspond to." 
+        correspond to."
     ::= { cldHtMacOperationsEntry 1 }
 
 cldHtDot11nChannelBandwidth OBJECT-TYPE
@@ -450,7 +450,7 @@ cldHtDot11nChannelBandwidth OBJECT-TYPE
     DESCRIPTION
         "This object represents the channel bandwidth for
         the 802.11n networks in the particular band."
-    DEFVAL          { twenty } 
+    DEFVAL          { twenty }
     ::= { cldHtMacOperationsEntry 2 }
 
 cldHtDot11nRifsEnable OBJECT-TYPE
@@ -459,10 +459,10 @@ cldHtDot11nRifsEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object is used to indicate the support for RIFS on
-        this band. A value of 'true' indicates that RIFS is 
-        enabled for this band. A value of 'false' indicates that 
+        this band. A value of 'true' indicates that RIFS is
+        enabled for this band. A value of 'false' indicates that
         RIFS is disabled for this band."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { cldHtMacOperationsEntry 3 }
 
 cldHtDot11nAmsduEnable OBJECT-TYPE
@@ -471,10 +471,10 @@ cldHtDot11nAmsduEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object is used to indicate the support for 802.11n
-        A-MSDU on this band. A value of 'true' indicates that 
-        A-MSDU is enabled for this band. A value of 'false' 
+        A-MSDU on this band. A value of 'true' indicates that
+        A-MSDU is enabled for this band. A value of 'false'
         indicates that A-MSDU is disabled for this band."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { cldHtMacOperationsEntry 4 }
 
 cldHtDot11nAmpduEnable OBJECT-TYPE
@@ -483,10 +483,10 @@ cldHtDot11nAmpduEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object is used to indicate the support for 802.11n
-        A-MPDU on this band. A value of 'true' indicates that 
-        A-MPDU is enabled for this band. A value of 'false' 
+        A-MPDU on this band. A value of 'true' indicates that
+        A-MPDU is enabled for this band. A value of 'false'
         indicates that A-MPDU is disabled for this band."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { cldHtMacOperationsEntry 5 }
 
 cldHtDot11nGuardIntervalEnable OBJECT-TYPE
@@ -495,11 +495,11 @@ cldHtDot11nGuardIntervalEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object is used to indicate the support for 802.11n
-        guard interval on this band. A value of 'true' indicates 
-        that guard interval is enabled for this band. A value of 
+        guard interval on this band. A value of 'true' indicates
+        that guard interval is enabled for this band. A value of
         'false' indicates that guard interval is disabled for
         this band."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { cldHtMacOperationsEntry 6 }
 
 cldHtDot11nEnable OBJECT-TYPE
@@ -508,12 +508,12 @@ cldHtDot11nEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object is used to enable the controller to manage
-        802.11n networks. A value of 'true' means the 802.11n 
+        802.11n networks. A value of 'true' means the 802.11n
         network is enabled. A value of 'false' means the 802.11n
         network is disabled."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { cldHtMacOperationsEntry 7 }
- 
+
 
 
 -- ********************************************************************
@@ -527,8 +527,8 @@ cldMultipleCountryCode OBJECT-TYPE
     DESCRIPTION
         "This object represents the countries in which the
         controller is operating. Multiple countries can be set.
-        The countries are displayed using a 3 letter code 
-        for each country separated by a comma." 
+        The countries are displayed using a 3 letter code
+        for each country separated by a comma."
     ::= { cldConfig 2 }
 
 cldRegulatoryDomain OBJECT-TYPE
@@ -539,14 +539,14 @@ cldRegulatoryDomain OBJECT-TYPE
         "This object represents the regulatory domains for
         the controller.
         Regulatory domain specifies allowed 802.11 chanels.
-        Multiple domains can be listed seperated with spaces." 
+        Multiple domains can be listed seperated with spaces."
     ::= { cldConfig 3 }
 -- ********************************************************************
 -- *    MCS table
 -- ********************************************************************
 
 cld11nMcsTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF Cld11nMcsEntry 
+    SYNTAX          SEQUENCE OF Cld11nMcsEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -560,7 +560,7 @@ cld11nMcsEntry OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "An entry in this table represents a MCS data rate for 802.11n
-        band which is uniquely identified by cld11nMcsDataRateIndex 
+        band which is uniquely identified by cld11nMcsDataRateIndex
         and cld11nMcsBand.
         All entries are added by the controller at startup.
         cld11nMcsDataRate are calculated by different permutation of
@@ -570,7 +570,7 @@ cld11nMcsEntry OBJECT-TYPE
     INDEX           {
                         cld11nMcsBand,
                         cld11nMcsDataRateIndex
-                    } 
+                    }
     ::= { cld11nMcsTable 1 }
 
 Cld11nMcsEntry ::= SEQUENCE {
@@ -589,7 +589,7 @@ cld11nMcsBand OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object identifies the 802.11n band to which
-        the data rate is applicable." 
+        the data rate is applicable."
     ::= { cld11nMcsEntry 1 }
 
 cld11nMcsDataRateIndex OBJECT-TYPE
@@ -598,7 +598,7 @@ cld11nMcsDataRateIndex OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object uniquely identifies the data rate
-        for a particular band." 
+        for a particular band."
     ::= { cld11nMcsEntry 2 }
 
 cld11nMcsDataRate OBJECT-TYPE
@@ -607,7 +607,7 @@ cld11nMcsDataRate OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The object represents the data rate value for this
-        band." 
+        band."
     ::= { cld11nMcsEntry 3 }
 
 cld11nMcsSupportEnable OBJECT-TYPE
@@ -616,10 +616,10 @@ cld11nMcsSupportEnable OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object is used to enable or disable the data
-        rate.  When this object is set to 'true' the MCS 
-        support is enabled. When this object is set 
+        rate.  When this object is set to 'true' the MCS
+        support is enabled. When this object is set
         to 'false' the MCS support is disabled.."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { cld11nMcsEntry 4 }
 
 cld11nMcsChannelWidth OBJECT-TYPE
@@ -629,7 +629,7 @@ cld11nMcsChannelWidth OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The object represents the channel width for which
-        cld11nMcsDataRate has been calculated." 
+        cld11nMcsDataRate has been calculated."
     ::= { cld11nMcsEntry 5 }
 
 cld11nMcsGuardInterval OBJECT-TYPE
@@ -639,7 +639,7 @@ cld11nMcsGuardInterval OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The object represents the guard interval for which
-        cld11nMcsDataRate has been calculated." 
+        cld11nMcsDataRate has been calculated."
     ::= { cld11nMcsEntry 6 }
 
 cld11nMcsModulation OBJECT-TYPE
@@ -648,7 +648,7 @@ cld11nMcsModulation OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "The object represents the modulation used to calculate
-        cld11nMcsDataRate." 
+        cld11nMcsDataRate."
     ::= { cld11nMcsEntry 7 }
 
 
@@ -689,10 +689,10 @@ cld11acMcsEntry OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "An entry in this table represents the additional  MCS data 
-        rate for 802.11ac band which is uniquely identifies by 
+        "An entry in this table represents the additional  MCS data
+        rate for 802.11ac band which is uniquely identifies by
         cld11acMcsSpatialStreamIndex and cld11acMcsDataRateIndex.
-        All entries are added by the controller at startup."    
+        All entries are added by the controller at startup."
     INDEX           {
                         cld11acMcsSpatialStreamIndex,
                         cld11acMcsDataRateIndex
@@ -763,10 +763,10 @@ cldLoadBalancingEnable OBJECT-TYPE
         will be sent to mobile station from AP.
 
         From 7.0 release onwards Load Balancing cannot be configured
-        globally. cldLoadBalancingEnable will be read-only attribute 
+        globally. cldLoadBalancingEnable will be read-only attribute
         and it will always be enable.
         Use cLWlanLoadBalancingEnable to configure it per WLAN."
-    DEFVAL          { enable } 
+    DEFVAL          { enable }
     ::= { cldLoadBalancing 1 }
 
 cldLoadBalancingWindowSize OBJECT-TYPE
@@ -775,23 +775,23 @@ cldLoadBalancingWindowSize OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the threshold for the difference
-        between number of mobile station a given AP can have and 
-        mobile station count of the AP having minimum number of 
+        between number of mobile station a given AP can have and
+        mobile station count of the AP having minimum number of
         mobile station in the setup.
 
         For example, suppose in a network setup there are three
         APs are connected to Controller, say AP1, AP2 and AP3.
-        AP1 have 2 mobile stations, AP2 have 3 and AP3 have 4 
+        AP1 have 2 mobile stations, AP2 have 3 and AP3 have 4
         mobile stations.
-        Here AP1 have minimum number of mobile stations i.e. 2. 
+        Here AP1 have minimum number of mobile stations i.e. 2.
         Suppose window size is configured as 2. So every AP can have
-        2+2=4 mobile stations. So every 5th mobile station will be 
+        2+2=4 mobile stations. So every 5th mobile station will be
         load balanced.
 
         So, if any mobile station tries to join AP3, denial will be sent
         from AP3. For a mobile station denial will be send only for
         cldLoadBalancingDenialCount number of time."
-    DEFVAL          { 5 } 
+    DEFVAL          { 5 }
     ::= { cldLoadBalancing 2 }
 
 cldLoadBalancingDenialCount OBJECT-TYPE
@@ -815,7 +815,7 @@ cldLoadBalancingDenialCount OBJECT-TYPE
 
         Association attempts on an AP from any mobile station before
         associating any AP is called as sequence of assoociation."
-    DEFVAL          { 3 } 
+    DEFVAL          { 3 }
     ::= { cldLoadBalancing 3 }
 
 cldLoadBalancingTrafficThreshold OBJECT-TYPE
@@ -824,14 +824,14 @@ cldLoadBalancingTrafficThreshold OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This object specifies the traffic threshold that  
-        triggers 'uplinkUsage' based load balancing. When the 
-        uplink usage of an AP is above this threshold, this AP 
-        is valid for 'uplinkUsage' based load balancing, if 
-        load balance is enabled by cLWlanLoadBalancingEnable 
+        "This object specifies the traffic threshold that
+        triggers 'uplinkUsage' based load balancing. When the
+        uplink usage of an AP is above this threshold, this AP
+        is valid for 'uplinkUsage' based load balancing, if
+        load balance is enabled by cLWlanLoadBalancingEnable
         and 'uplinkUsage' mode is chosen by cLWlanLoadBalancingMode
         at that WLAN."
-    DEFVAL          { 50 } 
+    DEFVAL          { 50 }
     ::= { cldLoadBalancing 4 }
 
 cldLoadBalancingDot11aWindowSize OBJECT-TYPE
@@ -840,23 +840,23 @@ cldLoadBalancingDot11aWindowSize OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the threshold for the difference
-        between number of mobile station a given AP can have and 
-        mobile station count of the AP having minimum number of 
+        between number of mobile station a given AP can have and
+        mobile station count of the AP having minimum number of
         mobile station in the setup.
 
         For example, suppose in a network setup there are three
         APs are connected to Controller, say AP1, AP2 and AP3.
-        AP1 have 2 mobile stations, AP2 have 3 and AP3 have 4 
+        AP1 have 2 mobile stations, AP2 have 3 and AP3 have 4
         mobile stations.
-        Here AP1 have minimum number of mobile stations i.e. 2. 
+        Here AP1 have minimum number of mobile stations i.e. 2.
         Suppose window size is configured as 2. So every AP can have
-        2+2=4 mobile stations. So every 5th mobile station will be 
+        2+2=4 mobile stations. So every 5th mobile station will be
         load balanced.
 
         So, if any mobile station tries to join AP3, denial will be sent
         from AP3. For a mobile station denial will be send only for
         cldLoadBalancingDenialCount number of time."
-    DEFVAL          { 5 } 
+    DEFVAL          { 5 }
     ::= { cldLoadBalancing 5 }
 
 cldLoadBalancingDot11aDenialCount OBJECT-TYPE
@@ -880,7 +880,7 @@ cldLoadBalancingDot11aDenialCount OBJECT-TYPE
 
         Association attempts on an AP from any mobile station before
         associating any AP is called as sequence of assoociation."
-    DEFVAL          { 3 } 
+    DEFVAL          { 3 }
     ::= { cldLoadBalancing 6 }
 cldLoadBalancingDot11bWindowSize OBJECT-TYPE
     SYNTAX          Integer32 (0..20)
@@ -888,23 +888,23 @@ cldLoadBalancingDot11bWindowSize OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies the threshold for the difference
-        between number of mobile station a given AP can have and 
-        mobile station count of the AP having minimum number of 
+        between number of mobile station a given AP can have and
+        mobile station count of the AP having minimum number of
         mobile station in the setup.
 
         For example, suppose in a network setup there are three
         APs are connected to Controller, say AP1, AP2 and AP3.
-        AP1 have 2 mobile stations, AP2 have 3 and AP3 have 4 
+        AP1 have 2 mobile stations, AP2 have 3 and AP3 have 4
         mobile stations.
-        Here AP1 have minimum number of mobile stations i.e. 2. 
+        Here AP1 have minimum number of mobile stations i.e. 2.
         Suppose window size is configured as 2. So every AP can have
-        2+2=4 mobile stations. So every 5th mobile station will be 
+        2+2=4 mobile stations. So every 5th mobile station will be
         load balanced.
 
         So, if any mobile station tries to join AP3, denial will be sent
         from AP3. For a mobile station denial will be send only for
         cldLoadBalancingDenialCount number of time."
-    DEFVAL          { 5 } 
+    DEFVAL          { 5 }
     ::= { cldLoadBalancing 7 }
 
 cldLoadBalancingDot11bDenialCount OBJECT-TYPE
@@ -928,7 +928,7 @@ cldLoadBalancingDot11bDenialCount OBJECT-TYPE
 
         Association attempts on an AP from any mobile station before
         associating any AP is called as sequence of assoociation."
-    DEFVAL          { 3 } 
+    DEFVAL          { 3 }
     ::= { cldLoadBalancing 8 }
 
 -- **************************
@@ -957,10 +957,10 @@ cldBandSelectEnable OBJECT-TYPE
         only on 2.4 GHz radio.
 
         From 7.0 release onwards Band Select cannot be configured
-        globally. cldBandSelectEnable will be read-only attribute 
+        globally. cldBandSelectEnable will be read-only attribute
         and it will always be enable.
         Use cLWlanBandSelectEnable to configure it per WLAN."
-    DEFVAL          { enable } 
+    DEFVAL          { enable }
     ::= { cldBandSelect 1 }
 
 cldBandSelectCycleCount OBJECT-TYPE
@@ -970,14 +970,14 @@ cldBandSelectCycleCount OBJECT-TYPE
     DESCRIPTION
         "This object specifies band select probe mobile station count.
         Suppressed mobile stations and corresponding suppression count
-        are recorded in a suppression table which is stored in 
-        internal database of controllers. AP will suppress 
+        are recorded in a suppression table which is stored in
+        internal database of controllers. AP will suppress
         probe request of a mobile station till value of cycle count.
         AP will increment cycle counter when a mobile station scan
         a channel on 2.4GHz band after any time greater than
         cldBandSelectCycleThreshold.
-        When a mobile station cycle count is reached and if mobile 
-        station still sends a probe request then AP will respond 
+        When a mobile station cycle count is reached and if mobile
+        station still sends a probe request then AP will respond
         to it by probe response.
 
         For example, we assume at minimum, a mobile station
@@ -988,7 +988,7 @@ cldBandSelectCycleCount OBJECT-TYPE
         probe and the latest one. AP only increments the count if
         the difference of time between the latest and the last
         probe is more than 50 milliseconds."
-    DEFVAL          { 3 } 
+    DEFVAL          { 3 }
     ::= { cldBandSelect 2 }
 
 cldBandSelectCycleThreshold OBJECT-TYPE
@@ -998,8 +998,8 @@ cldBandSelectCycleThreshold OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object specifies time threshold for a new scanning
-        mobile station period. Mobile station cycle counter will 
-        increment only if mobile station scans same channel any 
+        mobile station period. Mobile station cycle counter will
+        increment only if mobile station scans same channel any
         time after cldBandSelectCycleThreshold is passed.
 
         For example, if a mobile station is scanning a channel after
@@ -1008,7 +1008,7 @@ cldBandSelectCycleThreshold OBJECT-TYPE
         after 300 seconds. But if mobile station is scanning after every
         250 milliseconds, then mobile station count will be incremented
         after 250 milliseconds."
-    DEFVAL          { 200 } 
+    DEFVAL          { 200 }
     ::= { cldBandSelect 3 }
 
 cldBandSelectAgeOutSuppression OBJECT-TYPE
@@ -1027,7 +1027,7 @@ cldBandSelectAgeOutSuppression OBJECT-TYPE
         had responded already. If there as no empty slot in
         the table, AP has to respond to all the new mobile station
         until space starts getting available."
-    DEFVAL          { 20 } 
+    DEFVAL          { 20 }
     ::= { cldBandSelect 4 }
 
 cldBandSelectAgeOutDualBand OBJECT-TYPE
@@ -1041,7 +1041,7 @@ cldBandSelectAgeOutDualBand OBJECT-TYPE
         When AP sees probe request from any mobile station in both
         2.4GHz and 5GHz band AP will know that mobile station is
         capable of operating on both band. Dual band capable
-        mobile stations are recorded in a dual band table which 
+        mobile stations are recorded in a dual band table which
         is stored in internal database of controllers.
         This record are kept to make sure 5GHz capable mobile station
         should join 5GHz band only.
@@ -1058,7 +1058,7 @@ cldBandSelectAgeOutDualBand OBJECT-TYPE
            probes.
         3) mobile station with just 5GHz probe detected and 5GHz
            association."
-    DEFVAL          { 60 } 
+    DEFVAL          { 60 }
     ::= { cldBandSelect 5 }
 
 cldBandSelectClientRssi OBJECT-TYPE
@@ -1073,7 +1073,7 @@ cldBandSelectClientRssi OBJECT-TYPE
         This configuration filter out far away mobile stations with
         low signal strength. This will limit the number of
         mobile stations on the table to a reasonable amount."
-    DEFVAL          { -80 } 
+    DEFVAL          { -80 }
     ::= { cldBandSelect 6 }
 cldBandSelectClientMidRssi OBJECT-TYPE
     SYNTAX          Integer32 (-90..-20)
@@ -1123,7 +1123,7 @@ cldDot11axBandId OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the 802.11ax band the parameters
-        correspond to." 
+        correspond to."
     ::= { cld11axConfigEntry 1 }
 
 cldDot11axEnable OBJECT-TYPE
@@ -1139,13 +1139,13 @@ cldDot11axEnable OBJECT-TYPE
     ::= { cld11axConfigEntry 2 }
 
 cld11axMcsTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF Cld11axMcsEntry 
+    SYNTAX          SEQUENCE OF Cld11axMcsEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table represents the operational parameters
-        at the MAC layer for the 802.11ax networks managed 
-        through the controller. An agent adds an entry to 
+        at the MAC layer for the 802.11ax networks managed
+        through the controller. An agent adds an entry to
         this table for every 802.11ax band on startup."
     ::= { cldConfig 11 }
 
@@ -1159,7 +1159,7 @@ cld11axMcsEntry OBJECT-TYPE
     INDEX           { cldDot11axBand,
                       cld11axMcsSpatialStreamIndex,
                       cld11axMcsDataRateIndex
-                    } 
+                    }
     ::= { cld11axMcsTable 1 }
 
 Cld11axMcsEntry ::= SEQUENCE {
@@ -1185,7 +1185,7 @@ cld11axMcsSpatialStreamIndex OBJECT-TYPE
     DESCRIPTION
         "The object represents the spatial stream number
         related to MCS data rate settings on the 802.11ax
-        band." 
+        band."
     ::= { cld11axMcsEntry 2 }
 
 cld11axMcsDataRateIndex OBJECT-TYPE
@@ -1194,7 +1194,7 @@ cld11axMcsDataRateIndex OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the data rate for a
-        particular band." 
+        particular band."
     ::= { cld11axMcsEntry 3 }
 
 cld11axMcsSupportEnable OBJECT-TYPE
@@ -1204,9 +1204,9 @@ cld11axMcsSupportEnable OBJECT-TYPE
     DESCRIPTION
         "This object specifies a option to enable or disable the data
         rate.
-        A value of 'true' indicates the MCS support is enabled. 
+        A value of 'true' indicates the MCS support is enabled.
         A value of 'false' indicates the MCS support is disabled."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { cld11axMcsEntry 4 }
 
 cldDot11axHeCapTable OBJECT-TYPE
@@ -1240,13 +1240,13 @@ CldDot11axHeCapEntry ::= SEQUENCE {
     cldDot11HeAmpduTidBmap   Unsigned32,
     cldDot11HeCapTxRxMcsNss  Unsigned32
 }
- 
+
 cldDot11IsHeCapable OBJECT-TYPE
     SYNTAX          TruthValue
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "The object represents the HE capability of 
+        "The object represents the HE capability of
          802.11ax radio."
     ::= { cldDot11axHeCapEntry 1 }
 
@@ -1364,7 +1364,7 @@ cld11axTargetWakeupTimeEntry OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "An entry in this table represents the target wake-up time 
+        "An entry in this table represents the target wake-up time
 		 parameters on a controller."
     INDEX           {
                         cldBand
@@ -1383,7 +1383,7 @@ cld11axTargetWakeupTimeEnable OBJECT-TYPE
     DESCRIPTION
         "This object specifies whether 802.11ax target wake-up time is enabled
          or disabled.
-         Target wake-up time is a function that permits an AP to 
+         Target wake-up time is a function that permits an AP to
          define a specific time or set of times for individual stations
          to access the medium.
 
@@ -1397,7 +1397,7 @@ cld11axTargetWakeupTimeBroadcastTable OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "This table represents the 802.11ax target wake-up time broadcast 
+        "This table represents the 802.11ax target wake-up time broadcast
          configurations on a controller."
     ::= { cldConfig 16 }
 
@@ -1406,7 +1406,7 @@ cld11axTargetWakeupTimeBroadcastEntry OBJECT-TYPE
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
-        "An entry in this table represents the target wake-up time broadcast 
+        "An entry in this table represents the target wake-up time broadcast
          parameters on a controller."
     INDEX           {
                         cldBand
@@ -1423,16 +1423,16 @@ cld11axTargetWakeupTimeBroadcastEnable OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This object specifies whether 802.11ax target wake-up time broadcast 
+        "This object specifies whether 802.11ax target wake-up time broadcast
 		 is enabled or disabled.
 
-         A value of 'true' indicates that 802.11ax target wake-up time broadcast 
+         A value of 'true' indicates that 802.11ax target wake-up time broadcast
 		 is enabled.
-         A value of 'false' indicates that 802.11ax target wake-up time broadcast 
+         A value of 'false' indicates that 802.11ax target wake-up time broadcast
          is disabled."
     DEFVAL          { true }
     ::= { cld11axTargetWakeupTimeBroadcastEntry 1 }
- 
+
 cld11axBssColorConfigTable OBJECT-TYPE
     SYNTAX          SEQUENCE OF Cld11axBssColorConfigEntry
     MAX-ACCESS      not-accessible
@@ -1495,7 +1495,7 @@ Cld11axBssColorRadioEntry ::= SEQUENCE {
     cld11axBssColor                INTEGER,
     cld11axBssColorConfigType      INTEGER
 }
- 
+
 cld11axIsBssColorCapable OBJECT-TYPE
     SYNTAX          TruthValue
     MAX-ACCESS      read-only
@@ -1626,11 +1626,11 @@ cldDot11bRxSopThresholdCustom OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This attribute is used to configure Rxsop or receiver start 
+        "This attribute is used to configure Rxsop or receiver start
         of packet custom values for 802.11b/g radios.
-        bsnGlobalDot11bRxSopThreshold should be set to custom for 
-        cldDot11bRxSopThresholdCustom configured value to be used" 
-    DEFVAL          { -85 } 
+        bsnGlobalDot11bRxSopThreshold should be set to custom for
+        cldDot11bRxSopThresholdCustom configured value to be used"
+    DEFVAL          { -85 }
     ::= { cldDot11RxsopThreshold 1 }
 
 cldDot11aRxSopThresholdCustom OBJECT-TYPE
@@ -1638,11 +1638,11 @@ cldDot11aRxSopThresholdCustom OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This attribute is used to configure Rxsop or receiver start 
+        "This attribute is used to configure Rxsop or receiver start
         of packet custom values for 802.11b/g radios.
-        bsnGlobalDot11aRxSopThreshold should be set to custom for 
-        cldDot11aRxSopThresholdCustom configured value to be used" 
-    DEFVAL          { -85 } 
+        bsnGlobalDot11aRxSopThreshold should be set to custom for
+        cldDot11aRxSopThresholdCustom configured value to be used"
+    DEFVAL          { -85 }
     ::= { cldDot11RxsopThreshold 2 }
 
 -- *************************************
@@ -1684,7 +1684,7 @@ cldDot116GHzMediumOccupancyLimit OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This attribute for 6GHz band shall indicate the maximum amount 
+        "This attribute for 6GHz band shall indicate the maximum amount
         of time in TU, that a point coordinator may control
         the usage of the wireless medium without relinquishing control
         for long enough to allow at least one instance of DCF access
@@ -1692,28 +1692,28 @@ cldDot116GHzMediumOccupancyLimit OBJECT-TYPE
     ::= { cldDot116GHzPhy 1 }
 
 cldDot116GHzCFPPeriod OBJECT-TYPE
-    SYNTAX          Unsigned32 
+    SYNTAX          Unsigned32
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "The attribute for 6GHz band shall describe the number of 
+        "The attribute for 6GHz band shall describe the number of
         DTIM intervals between the start of CFPs. It is modified by
         MLME-START.request primitive. Default value is 4"
     ::= { cldDot116GHzPhy 2 }
 
 cldDot116GHzCFPMaxDuration OBJECT-TYPE
-    SYNTAX          Unsigned32 
+    SYNTAX          Unsigned32
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "The attribute for 6GHz band shall describe the maximum 
-        duration of the CFP in TU that may be generated by the PCF. 
+        "The attribute for 6GHz band shall describe the maximum
+        duration of the CFP in TU that may be generated by the PCF.
         It is modified by MLME-START.request primitive.
         Default value is 60."
     ::= { cldDot116GHzPhy 3 }
 
 cldDot116GHzCFPollable OBJECT-TYPE
-    SYNTAX          TruthValue 
+    SYNTAX          TruthValue
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
@@ -1734,11 +1734,11 @@ cldDot116GHzCFPollRequest OBJECT-TYPE
     ::= { cldDot116GHzPhy 5 }
 
 cldDot116GHzDTIMPeriod OBJECT-TYPE
-    SYNTAX          Unsigned32 
+    SYNTAX          Unsigned32
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This attribute for 6GHz band shall specify the number 
+        "This attribute for 6GHz band shall specify the number
         of beacon intervals that shall elapse between transmission of
         Beacons frames containing a TIM element whose DTIM
         Count field is 0. This value is transmitted in the DTIM Period
@@ -1746,11 +1746,11 @@ cldDot116GHzDTIMPeriod OBJECT-TYPE
     ::= { cldDot116GHzPhy 6 }
 
 cldDot116GHzRTSThreshold OBJECT-TYPE
-    SYNTAX          Unsigned32 
+    SYNTAX          Unsigned32
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This attribute for 6GHz band shall indicate the number of octets 
+        "This attribute for 6GHz band shall indicate the number of octets
         in an MPDU, below which an RTS/CTS handshake shall not be performed.
         An RTS/CTS handshake shall be performed at the beginning of any
         frame exchange sequence where the MPDU is of type Data or
@@ -1767,7 +1767,7 @@ cldDot116GHzRTSThreshold OBJECT-TYPE
     ::= { cldDot116GHzPhy 7 }
 
 cldDot116GHzShortRetryLimit OBJECT-TYPE
-    SYNTAX          Unsigned32 
+    SYNTAX          Unsigned32
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
@@ -1837,7 +1837,7 @@ cldDot116GHzChannelAgilityEnabled OBJECT-TYPE
     MAX-ACCESS      read-only
     STATUS          current
     DESCRIPTION
-        "This attribute for 6GHz band indicates whether the PHY channel 
+        "This attribute for 6GHz band indicates whether the PHY channel
         agility functionality is enabled. Default value is false."
     ::= { cldDot116GHzPhy 13 }
 
@@ -1882,7 +1882,7 @@ cldDot116GHzDynamicChannelAssignment OBJECT-TYPE
         "This attribute for 6GHz band specifies the Dynamic channel assignment
         (DCA) which has three modes. When the mode is auto, the channel
         assignment will be periodically updated for all Cisco APs that permit
-        this operation. When the DCA is runOnce, channel assignments are updated 
+        this operation. When the DCA is runOnce, channel assignments are updated
         based on the UPDATE_CMD received from the management. When the DCA is
         static, no dynamic channel assignments occurs and value are
         set to their global default. Default is auto."
@@ -1911,7 +1911,7 @@ cldDot116GHzChannelUpdateCmdInvoke OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This attribute for 6GHz band, when set to activate,
-        starts a DCA calculation regardless of the dynamic update interval. 
+        starts a DCA calculation regardless of the dynamic update interval.
         This command should be invoke on Group Leader Cisco Switch.
         Invoking on a Cisco switch which is not a Group leader has no effect."
     ::= { cldDot116GHzGlobalConfig 5 }
@@ -1935,11 +1935,11 @@ cldDot116GHzDynamicTransmitPowerControl OBJECT-TYPE
     MAX-ACCESS      read-write
     STATUS          current
     DESCRIPTION
-        "This attribute for 6GHz band represents the Dynamic transmit 
-        power(DTP) mode, which is of three types. When the mode is auto, 
-        the transmit power of each Cisco AP will be periodically updated for 
+        "This attribute for 6GHz band represents the Dynamic transmit
+        power(DTP) mode, which is of three types. When the mode is auto,
+        the transmit power of each Cisco AP will be periodically updated for
         all Cisco APs that permit this operation. When the DTP is runOnce,
-        transmit power update will occur based on the UPDATE_CMD received from 
+        transmit power update will occur based on the UPDATE_CMD received from
         the management. When the DTP is static, no dynamic transmit power updates
         occur and their global defaults are used.  Default is auto."
     DEFVAL          { automatic }
@@ -1951,7 +1951,7 @@ cldDot116GHzCurrentTxPowerLevel OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This attribute for 6GHz band represents the TxPowerLevel N that is
-        is currently being used to transmit data. Some PHYs also use this 
+        is currently being used to transmit data. Some PHYs also use this
         value to determine the receiver sensitivity requirements for CCA."
     DEFVAL          { 1 }
     ::= { cldDot116GHzGlobalConfig 8 }
@@ -1965,8 +1965,8 @@ cldDot116GHzPowerUpdateCmdInvoke OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This attribute for 6GHz band, when set to activate, starts a DTP
-        calculation regardless of the dynamic update interval. This command 
-        should be invoked on Group Leader Cisco Switch. Invoking on a 
+        calculation regardless of the dynamic update interval. This command
+        should be invoked on Group Leader Cisco Switch. Invoking on a
         Cisco switch which is not a Group leader has no effect."
     ::= { cldDot116GHzGlobalConfig 9 }
 
@@ -2009,12 +2009,12 @@ cldDot116GHzDTPCSupport OBJECT-TYPE
 -- ********************************************************************
 
 cldCountryTable OBJECT-TYPE
-    SYNTAX          SEQUENCE OF CldCountryEntry 
+    SYNTAX          SEQUENCE OF CldCountryEntry
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
         "This table provides the list of countries and the
-        network parameters specific to the respective 
+        network parameters specific to the respective
         countries. It shows the 802.11 networks, managed by
         this controller, where controller can operate."
     ::= { cldStatus 1 }
@@ -2030,7 +2030,7 @@ cldCountryEntry OBJECT-TYPE
         Each entry also displays the corresponding channels
         supported by the cldCountryCode.
         All entries are added by the controller at startup."
-    INDEX           { cldCountryCode } 
+    INDEX           { cldCountryCode }
     ::= { cldCountryTable 1 }
 
 CldCountryEntry ::= SEQUENCE {
@@ -2050,7 +2050,7 @@ cldCountryCode OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object identifies the country for this entry.
-        The 3 letter country code for this index." 
+        The 3 letter country code for this index."
     ::= { cldCountryEntry 1 }
 
 cldCountryName OBJECT-TYPE
@@ -2059,7 +2059,7 @@ cldCountryName OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the name of the country for
-        this entry." 
+        this entry."
     ::= { cldCountryEntry 2 }
 
 cldCountryDot11aChannels OBJECT-TYPE
@@ -2068,7 +2068,7 @@ cldCountryDot11aChannels OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the 802.11a channels
-        separated by comma." 
+        separated by comma."
     ::= { cldCountryEntry 3 }
 
 cldCountryDot11bChannels OBJECT-TYPE
@@ -2077,7 +2077,7 @@ cldCountryDot11bChannels OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the 802.11b channels
-        separated by comma." 
+        separated by comma."
     ::= { cldCountryEntry 4 }
 
 cldCountryDot11aDcaChannels OBJECT-TYPE
@@ -2086,7 +2086,7 @@ cldCountryDot11aDcaChannels OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the 802.11a DCA channels
-        separated by comma." 
+        separated by comma."
     ::= { cldCountryEntry 5 }
 
 cldCountryDot11bDcaChannels OBJECT-TYPE
@@ -2095,9 +2095,9 @@ cldCountryDot11bDcaChannels OBJECT-TYPE
     STATUS          current
     DESCRIPTION
         "This object represents the 802.11b DCA channels
-        separated by comma." 
+        separated by comma."
     ::= { cldCountryEntry 6 }
- 
+
 cldCountryDot116GHzChannels OBJECT-TYPE
     SYNTAX          SnmpAdminString
     MAX-ACCESS      read-only
@@ -2148,7 +2148,7 @@ CldConfiguredCountryEntry ::= SEQUENCE {
 }
 
 cldConfiguredCountryCode OBJECT-TYPE
-    SYNTAX          Unsigned32 (1..252) 
+    SYNTAX          Unsigned32 (1..252)
     MAX-ACCESS      not-accessible
     STATUS          current
     DESCRIPTION
@@ -2180,9 +2180,9 @@ cldCountryChangeNotifEnable OBJECT-TYPE
         ciscoLwappDot11CountryChangeNotif notification.
 
         A value of 'false' indicates that the agent doesn't
-        generate ciscoLwappDot11CountryChangeNotif 
+        generate ciscoLwappDot11CountryChangeNotif
         notification."
-    DEFVAL          { true } 
+    DEFVAL          { true }
     ::= { cldConfig 7 }
 
 -- ********************************************************************
@@ -2194,8 +2194,8 @@ ciscoLwappDot11CountryChangeNotif NOTIFICATION-TYPE
     STATUS          current
     DESCRIPTION
         "This notification is generated by the controller when the
-        country of operation of 802.11 networks is changed 
-        by the administrator. The new country code will be sent in 
+        country of operation of 802.11 networks is changed
+        by the administrator. The new country code will be sent in
         this notification."
    ::= { ciscoLwappDot11MIBNotifs 1 }
 -- ********************************************************************

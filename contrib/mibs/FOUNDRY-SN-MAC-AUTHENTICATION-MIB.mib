@@ -32,7 +32,7 @@ snMacAuthClearGlobalCmd OBJECT-TYPE
 	MAX-ACCESS read-write
 	STATUS     current
 	DESCRIPTION
-		"valid(0) - a SNMP-GET of this mib shows that it is valid command to use. 
+		"valid(0) - a SNMP-GET of this mib shows that it is valid command to use.
 		 clear(1) - represents clear MAC Authentication table for all ports."
 	::= { snMacAuthGlobal 1 }
 
@@ -83,7 +83,7 @@ snMacAuthClearIfCmdAction      OBJECT-TYPE
 	MAX-ACCESS read-write
 	STATUS     current
 	DESCRIPTION
-		"valid(0) - a SNMP-GET of this mib shows that it is valid command to use. 
+		"valid(0) - a SNMP-GET of this mib shows that it is valid command to use.
 		 clear(1) - represents clearing an MAC Authentication entry for an interface."
 	::= { snMacAuthClearIfCmdEntry 2 }
 
@@ -227,7 +227,7 @@ snMacAuthClearMacSessionAction OBJECT-TYPE
 	MAX-ACCESS read-write
 	STATUS     current
 	DESCRIPTION
-		"valid(0) - a SNMP-GET of this mib shows that it is valid command to use. 
+		"valid(0) - a SNMP-GET of this mib shows that it is valid command to use.
 		 clear(1) - represents clearing an MAC Session entry indexed by a MAC address."
 	::= { snMacAuthClearMacSessionEntry 3 }
 

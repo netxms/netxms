@@ -15,9 +15,9 @@
 -- -----------------------------------------------------------------------------
 -- Version 1.04 2009/11/18, Eli Lin
 -- [New Object]
--- 1. Added swERPSMgmtRAPSRPLOwnerOperStatus to display the current operational 
--- value of the RPL owner state. 
--- 2. Added swERPSMgmtRAPSProtectionVlanRangeList1to64, swERPSMgmtRAPSProtectionVlanRangeList65to128, 
+-- 1. Added swERPSMgmtRAPSRPLOwnerOperStatus to display the current operational
+-- value of the RPL owner state.
+-- 2. Added swERPSMgmtRAPSProtectionVlanRangeList1to64, swERPSMgmtRAPSProtectionVlanRangeList65to128,
 -- swERPSMgmtRAPSProtectionVlanRangeList129to192, swERPSMgmtRAPSProtectionVlanRangeList193to256,
 -- swERPSMgmtRAPSProtectionVlanRangeList257to320, swERPSMgmtRAPSProtectionVlanRangeList321to384,
 -- swERPSMgmtRAPSProtectionVlanRangeList385to448 and swERPSMgmtRAPSProtectionVlanRangeList449to512.
@@ -25,28 +25,28 @@
 -- 1.Rename swERPSMgmtRAPSRPLOwner to swERPSMgmtRAPSRPLOwnerAdminState.
 -- -----------------------------------------------------------------------------
 -- Version 1.03 2009/11/16, Danbo
--- Description: 
+-- Description:
 -- [New Object]
--- 1. Added swERPSMgmtRAPSRingAdminState to indicate the administrative state of 
+-- 1. Added swERPSMgmtRAPSRingAdminState to indicate the administrative state of
 --    the ring.
--- 2. Added swERPSMgmtSubRingCtrlTable. 
+-- 2. Added swERPSMgmtSubRingCtrlTable.
 -- 3. Added swERPSMgmtSubRingCtrlEntry.
--- 4. Added swERPSMgmtSubRingCtrlRAPSVlanId to indicate the raps vlan id of a ring which 
---    the sub-ring is connected to. 
+-- 4. Added swERPSMgmtSubRingCtrlRAPSVlanId to indicate the raps vlan id of a ring which
+--    the sub-ring is connected to.
 -- 5. Added swERPSMgmtSubRingCtrlSubRingRAPSVlanId to indicate the raps vlan id of the sub-ring.
--- 6. Added swERPSMgmtSubRingCtrlTCPropagationState to indicate the state of sub-ring 
+-- 6. Added swERPSMgmtSubRingCtrlTCPropagationState to indicate the state of sub-ring
 --    topology change propagation.
--- 7. Added swERPSMgmtSubRingCtrlRowStatus.  
+-- 7. Added swERPSMgmtSubRingCtrlRowStatus.
 -- [Modification]
--- 1. Changed the value range of swERPSMgmtRAPSWestPort and SwERPSMgmtRAPSEastPort 
+-- 1. Changed the value range of swERPSMgmtRAPSWestPort and SwERPSMgmtRAPSEastPort
 -- from "(1..65535)" to "(0|1..65535)".
 -- -----------------------------------------------------------------------------
 -- Version 1.02, 2009/07/30, Eli Lin
 -- [New Object]
 -- 1.Added swERPSTrapState to support ERPS trap state control.
 -- [Modification]
--- 1.Added value lists "signal-fail(3)" in 
---   swERPSMgmtRAPSWestPortState and swERPSMgmtRAPSEastPortState. 
+-- 1.Added value lists "signal-fail(3)" in
+--   swERPSMgmtRAPSWestPortState and swERPSMgmtRAPSEastPortState.
 -- -----------------------------------------------------------------------------
 -- Version 1.01, 2009/04/10, Eli Lin
 -- Revise the name of swERPSNotificationBindings.
@@ -65,7 +65,7 @@ ERPS-MIB DEFINITIONS ::= BEGIN
                     FROM SNMPv2-TC
               NOTIFICATION-TYPE
                     FROM SNMPv2-SMI
-              dlink-common-mgmt 
+              dlink-common-mgmt
                     FROM DLINK-ID-REC-MIB
               VlanIdOrNone
               		FROM Q-BRIDGE-MIB;
@@ -80,13 +80,13 @@ ERPS-MIB DEFINITIONS ::= BEGIN
         ::= { dlink-common-mgmt 78 }
 
 
-    VidList ::= OCTET STRING(SIZE (0..127)) 
+    VidList ::= OCTET STRING(SIZE (0..127))
 
     swERPSCtrl                OBJECT IDENTIFIER ::= { swERPSMIB 1 }
     swERPSInfo                OBJECT IDENTIFIER ::= { swERPSMIB 2 }
     swERPSMgmt                OBJECT IDENTIFIER ::= { swERPSMIB 3 }
     swERPSNotify              OBJECT IDENTIFIER ::= { swERPSMIB 4 }
-    
+
 -- -----------------------------------------------------------------------------
 -- swERPSCtrl
 -- -----------------------------------------------------------------------------
@@ -121,12 +121,12 @@ ERPS-MIB DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION
             "This object indicates the ERPS trap state of the bridge."
-        ::= { swERPSCtrl 3 }    
+        ::= { swERPSCtrl 3 }
 
 -- -----------------------------------------------------------------------------
 -- swERPSInfo
 -- -----------------------------------------------------------------------------
-    
+
 -- -----------------------------------------------------------------------------
 -- swERPSMgmt
 -- -----------------------------------------------------------------------------
@@ -158,9 +158,9 @@ ERPS-MIB DEFINITIONS ::= BEGIN
             swERPSMgmtRAPSEastPort
                 INTEGER,
             swERPSMgmtRAPSEastPortState
-                INTEGER,       
+                INTEGER,
             swERPSMgmtRAPSRPLPort
-                INTEGER,  
+                INTEGER,
             swERPSMgmtRAPSRPLOwnerAdminState
                 INTEGER,
 --             swERPSMgmtRAPSProtectionVlan
@@ -168,13 +168,13 @@ ERPS-MIB DEFINITIONS ::= BEGIN
             swERPSMgmtRAPSRingMEL
                 INTEGER,
             swERPSMgmtRAPSHoldOffTime
-                INTEGER,    
+                INTEGER,
             swERPSMgmtRAPSGuardTime
                 INTEGER,
             swERPSMgmtRAPSWTRTime
                 INTEGER,
             swERPSMgmtRAPSRingState
-                INTEGER,      
+                INTEGER,
 --             swERPSMgmtRAPSRingAdminState
 --                 INTEGER,
             swERPSMgmtRAPSRPLOwnerOperStatus
@@ -193,10 +193,10 @@ ERPS-MIB DEFINITIONS ::= BEGIN
                 OCTET STRING,
             swERPSMgmtRAPSProtectionVlanRangeList385to448
                 OCTET STRING,
-            swERPSMgmtRAPSProtectionVlanRangeList449to512                
+            swERPSMgmtRAPSProtectionVlanRangeList449to512
                 OCTET STRING,
             swERPSMgmtRAPSRowStatus
-                RowStatus     
+                RowStatus
         }
 
     swERPSMgmtRAPSVlanId  OBJECT-TYPE
@@ -206,7 +206,7 @@ ERPS-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
             "The RAPS VLAN is an index of configuration."
         ::= { swERPSMgmtRAPSVlanEntry 1 }
-    
+
     swERPSMgmtRAPSWestPort OBJECT-TYPE
         SYNTAX  INTEGER (0|1..65535)
         MAX-ACCESS  read-write
@@ -272,9 +272,9 @@ ERPS-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-write
         STATUS      current
         DESCRIPTION
-            "The administrative value of the RPL owner state. 
-             The RPL owner is an Ethernet Ring Node adjacent to the RPL that 
-             is responsible for blocking its end of the RPL under normal 
+            "The administrative value of the RPL owner state.
+             The RPL owner is an Ethernet Ring Node adjacent to the RPL that
+             is responsible for blocking its end of the RPL under normal
              conditions."
         ::= { swERPSMgmtRAPSVlanEntry 7 }
 
@@ -331,8 +331,8 @@ ERPS-MIB DEFINITIONS ::= BEGIN
         STATUS      current
         DESCRIPTION
                 "This indicates the state of the ring: begin, init, idle, or protection."
-        ::= { swERPSMgmtRAPSVlanEntry 13 }  
-        
+        ::= { swERPSMgmtRAPSVlanEntry 13 }
+
 --         swERPSMgmtRAPSRingAdminState OBJECT-TYPE
 -- 	    SYNTAX      INTEGER {
 -- 					enabled(1),
@@ -342,7 +342,7 @@ ERPS-MIB DEFINITIONS ::= BEGIN
 -- 	    STATUS      current
 -- 	    DESCRIPTION
 --                 "This indicates the administrative state of the ring."
--- 	    ::= { swERPSMgmtRAPSVlanEntry 14 }	    
+-- 	    ::= { swERPSMgmtRAPSVlanEntry 14 }
 
     swERPSMgmtRAPSRPLOwnerOperStatus OBJECT-TYPE
         SYNTAX      INTEGER {
@@ -353,12 +353,12 @@ ERPS-MIB DEFINITIONS ::= BEGIN
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
-            "The current operational value of the RPL owner state. The value 'active' 
-             is used to indicate that the RPL owner administrative state is enabled 
-             and the device is operated as the active RPL owner. The value 'inactive' 
-             is used to indicate that the RPL owner administrative state is enabled, 
-             but the device is operated as the inactive RPL owner. The value 
-             'disabled' is used to indicate that the RPL owner administrative 
+            "The current operational value of the RPL owner state. The value 'active'
+             is used to indicate that the RPL owner administrative state is enabled
+             and the device is operated as the active RPL owner. The value 'inactive'
+             is used to indicate that the RPL owner administrative state is enabled,
+             but the device is operated as the inactive RPL owner. The value
+             'disabled' is used to indicate that the RPL owner administrative
              state of the device is disabled."
         ::= { swERPSMgmtRAPSVlanEntry 15 }
 
@@ -444,16 +444,16 @@ ERPS-MIB DEFINITIONS ::= BEGIN
 
 -- ----------------------------------------------------------------------------
 -- swERPSMgmtSubRingCtrlTable
--- ----------------------------------------------------------------------------    
--- 
+-- ----------------------------------------------------------------------------
+--
 --     swERPSMgmtSubRingCtrlTable OBJECT-TYPE
 --         SYNTAX      SEQUENCE OF SwERPSMgmtSubRingCtrlEntry
 --         MAX-ACCESS  not-accessible
 --         STATUS      current
 --         DESCRIPTION
 --             "This table contains ERPS sub-ring configuration information."
---         ::= { swERPSMgmt 2 } 
---      
+--         ::= { swERPSMgmt 2 }
+--
 --     swERPSMgmtSubRingCtrlEntry OBJECT-TYPE
 --         SYNTAX      SwERPSMgmtSubRingCtrlEntry
 --         MAX-ACCESS  not-accessible
@@ -462,7 +462,7 @@ ERPS-MIB DEFINITIONS ::= BEGIN
 --             "A list of ERPS sub-ring configuration information."
 --         INDEX    {swERPSMgmtSubRingCtrlRAPSVlanId, swERPSMgmtSubRingCtrlSubRingRAPSVlanId}
 --         ::= { swERPSMgmtSubRingCtrlTable 1 }
---            
+--
 --     SwERPSMgmtSubRingCtrlEntry ::= SEQUENCE {
 --             swERPSMgmtSubRingCtrlRAPSVlanId
 --                 INTEGER,
@@ -471,45 +471,45 @@ ERPS-MIB DEFINITIONS ::= BEGIN
 --             swERPSMgmtSubRingCtrlTCPropagationState
 --                 INTEGER,
 --             swERPSMgmtSubRingCtrlRowStatus
---             	RowStatus	    	   
+--             	RowStatus
 --     }
---     
+--
 --     swERPSMgmtSubRingCtrlRAPSVlanId  OBJECT-TYPE
 --         SYNTAX      INTEGER
 --         MAX-ACCESS  not-accessible
 --         STATUS      current
 --         DESCRIPTION
 --             "The RAPS VLAN is an index of configuration."
---         ::= { swERPSMgmtSubRingCtrlEntry 1 }  
---     
+--         ::= { swERPSMgmtSubRingCtrlEntry 1 }
+--
 --     swERPSMgmtSubRingCtrlSubRingRAPSVlanId  OBJECT-TYPE
 --         SYNTAX      INTEGER
 --         MAX-ACCESS  not-accessible
 --         STATUS      current
 --         DESCRIPTION
 --             "This indicates the ring control VLAN-ID of the sub-ring which connects to another ring."
---         ::= { swERPSMgmtSubRingCtrlEntry 2 } 
---         
+--         ::= { swERPSMgmtSubRingCtrlEntry 2 }
+--
 --     swERPSMgmtSubRingCtrlTCPropagationState  OBJECT-TYPE
 --         SYNTAX      INTEGER
 --         MAX-ACCESS  read-write
 --         STATUS      current
 --         DESCRIPTION
 --             "This indicates the state of sub-ring topology change propagation."
---         ::= { swERPSMgmtSubRingCtrlEntry 3 } 
---         
+--         ::= { swERPSMgmtSubRingCtrlEntry 3 }
+--
 --     swERPSMgmtSubRingCtrlRowStatus OBJECT-TYPE
 --         SYNTAX      RowStatus
 --         MAX-ACCESS  read-create
 --         STATUS      current
 --         DESCRIPTION
 --             "This object indicates the RowStatus of this entry."
---         ::= { swERPSMgmtSubRingCtrlEntry 4 }       
+--         ::= { swERPSMgmtSubRingCtrlEntry 4 }
 
 -- -----------------------------------------------------------------------------
 -- swERPSNotify
 -- -----------------------------------------------------------------------------
-    
+
    swERPSNotifyPrefix       OBJECT IDENTIFIER ::= { swERPSNotify 0 }
 
     swERPSSFDetectedTrap    NOTIFICATION-TYPE
@@ -534,7 +534,7 @@ ERPS-MIB DEFINITIONS ::= BEGIN
         ::= { swERPSNotifyPrefix 3 }
 
     swERPSNotificationBindings   OBJECT IDENTIFIER ::= { swERPSNotify 2 }
-    
+
     swERPSNodeId OBJECT-TYPE
             SYNTAX      MacAddress
             MAX-ACCESS  accessible-for-notify
@@ -542,6 +542,5 @@ ERPS-MIB DEFINITIONS ::= BEGIN
             DESCRIPTION
                 "This used trap object means the node MAC."
             ::= { swERPSNotificationBindings 1 }
-            
-END
 
+END

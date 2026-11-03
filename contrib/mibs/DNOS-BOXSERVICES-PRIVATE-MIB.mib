@@ -28,7 +28,7 @@ IMPORTS
            LAST-UPDATED "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
            ORGANIZATION "Dell, Inc."
            CONTACT-INFO ""
- 
+
      DESCRIPTION
           "The Broadcom Private MIB for DNOS Box Services Feature."
 
@@ -62,15 +62,15 @@ BoxsTemperatureStatus ::= TEXTUAL-CONVENTION
 --    boxServicesGroup
 --
 --    This group provides configuration and status of the Box Services
---    feature.  
+--    feature.
 --
 --**************************************************************************************
 
 	boxServicesGroup               OBJECT IDENTIFIER ::= { fastPathBoxServices 1 }
-  
+
    --**************************************************************************************
    -- Some scalars
-   
+
     boxServicesNormalTempRangeMin OBJECT-TYPE
       SYNTAX     Integer32 (-100..100)
       MAX-ACCESS read-write
@@ -112,7 +112,7 @@ BoxsTemperatureStatus ::= TEXTUAL-CONVENTION
        " Enable or disable Power Supply Module state change trap."
       DEFVAL { enable }
     ::= { boxServicesGroup 4 }
-    
+
     boxServicesFanStateTrapEnable OBJECT-TYPE
       SYNTAX      INTEGER {
                   enable(1),
@@ -125,7 +125,7 @@ BoxsTemperatureStatus ::= TEXTUAL-CONVENTION
       DEFVAL { enable }
     ::= { boxServicesGroup 5 }
 
-boxsPwrUsageHistoryUnitSampleInterval         OBJECT-TYPE 
+boxsPwrUsageHistoryUnitSampleInterval         OBJECT-TYPE
          SYNTAX      INTEGER (30..86400)
          MAX-ACCESS  read-write
          STATUS      current
@@ -134,7 +134,7 @@ boxsPwrUsageHistoryUnitSampleInterval         OBJECT-TYPE
 
          ::= { boxServicesGroup 10 }
 
-boxsPwrUsageHistoryUnitMaxSamples         OBJECT-TYPE 
+boxsPwrUsageHistoryUnitMaxSamples         OBJECT-TYPE
          SYNTAX      INTEGER (1..168)
          MAX-ACCESS  read-write
          STATUS      current
@@ -144,7 +144,7 @@ boxsPwrUsageHistoryUnitMaxSamples         OBJECT-TYPE
          ::= { boxServicesGroup 11 }
 
 
-    boxServicesThermalShutdownSensor         OBJECT-TYPE 
+    boxServicesThermalShutdownSensor         OBJECT-TYPE
          SYNTAX      Unsigned32
          MAX-ACCESS  accessible-for-notify
          STATUS      current
@@ -153,7 +153,7 @@ boxsPwrUsageHistoryUnitMaxSamples         OBJECT-TYPE
 
          ::= { boxServicesGroup 13 }
 
-    boxServicesThermalShutdownTemperature    OBJECT-TYPE 
+    boxServicesThermalShutdownTemperature    OBJECT-TYPE
          SYNTAX      Unsigned32
          MAX-ACCESS  accessible-for-notify
          STATUS      current
@@ -253,7 +253,7 @@ boxsPwrUsageHistoryUnitMaxSamples         OBJECT-TYPE
              DESCRIPTION
                           "The speed of fan"
          ::= { boxServicesFansEntry 4}
-         
+
       boxServicesFanDutyLevel OBJECT-TYPE
              SYNTAX      Integer32
              MAX-ACCESS  read-only
@@ -317,7 +317,7 @@ boxsPwrUsageHistoryUnitMaxSamples         OBJECT-TYPE
                                   fixedAC(3),
                                   removableDC(4),
                                   fixedDC(5),
-                                  removableAC(6) 
+                                  removableAC(6)
                                  }
          MAX-ACCESS  read-only
          STATUS      current
@@ -368,7 +368,7 @@ boxsUnitPwrUsageHistoryEntry OBJECT-TYPE
          SEQUENCE {
             boxsPwrUsageHistoryUnitIndex
                 INTEGER,
-            boxsPwrUsageHistoryUnitSampleIndex         
+            boxsPwrUsageHistoryUnitSampleIndex
                 INTEGER,
             boxsPwrUsageHistoryUnitSampleTime
                 DisplayString,
@@ -383,24 +383,24 @@ boxsPwrUsageHistoryUnitIndex OBJECT-TYPE
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-            "This is a unique index for an entry in the boxsUnitPwrUsageHistoryTable. 
-            A non-zero value indicates the unitIndex for the corresponding unit 
+            "This is a unique index for an entry in the boxsUnitPwrUsageHistoryTable.
+            A non-zero value indicates the unitIndex for the corresponding unit
             entry in the Power Usage History Table."
 
          ::= { boxsUnitPwrUsageHistoryEntry 1 }
 
-boxsPwrUsageHistoryUnitSampleIndex         OBJECT-TYPE 
+boxsPwrUsageHistoryUnitSampleIndex         OBJECT-TYPE
          SYNTAX      INTEGER (1..2147483647)
          MAX-ACCESS  not-accessible
          STATUS      current
          DESCRIPTION
-            "This is a unique index for an entry in the boxsUnitPwrUsageHistoryTable. 
-            A non-zero value indicates the sampleIndex for the corresponding sample 
+            "This is a unique index for an entry in the boxsUnitPwrUsageHistoryTable.
+            A non-zero value indicates the sampleIndex for the corresponding sample
             entry in the Power Usage History Table."
 
          ::= { boxsUnitPwrUsageHistoryEntry 2 }
 
-boxsPwrUsageHistoryUnitSampleTime         OBJECT-TYPE 
+boxsPwrUsageHistoryUnitSampleTime         OBJECT-TYPE
          SYNTAX      DisplayString (SIZE(1..32))
          MAX-ACCESS  read-only
          STATUS      current
@@ -409,7 +409,7 @@ boxsPwrUsageHistoryUnitSampleTime         OBJECT-TYPE
 
          ::= { boxsUnitPwrUsageHistoryEntry 3}
 
-boxsPwrUsageHistoryUnitPowerConsumption         OBJECT-TYPE 
+boxsPwrUsageHistoryUnitPowerConsumption         OBJECT-TYPE
          SYNTAX      INTEGER
          MAX-ACCESS  read-only
          STATUS      current
@@ -418,7 +418,7 @@ boxsPwrUsageHistoryUnitPowerConsumption         OBJECT-TYPE
 
          ::= { boxsUnitPwrUsageHistoryEntry 4 }
 
-boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE 
+boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
          SYNTAX      INTEGER
          MAX-ACCESS  read-only
          STATUS      current
@@ -426,7 +426,7 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
             "Power Consumption (mWatts) per Stack at the time of collecting the given sample."
 
          ::= { boxsUnitPwrUsageHistoryEntry 5 }
-         
+
    --**************************************************************************************
    -- boxServicesTempSensors
 
@@ -461,7 +461,7 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
           boxServicesTempSensorTemperature
               Integer32
           }
-    
+
     boxServicesUnitIndex OBJECT-TYPE
          SYNTAX      Unsigned32
          MAX-ACCESS  read-only
@@ -496,7 +496,7 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
 
 
     boxServicesTempSensorState OBJECT-TYPE
-         SYNTAX      BoxsTemperatureStatus 
+         SYNTAX      BoxsTemperatureStatus
          MAX-ACCESS  read-only
          STATUS      obsolete
          DESCRIPTION
@@ -540,14 +540,14 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
 
     boxServicesTempUnitIndex OBJECT-TYPE
         SYNTAX      Unsigned32
-        MAX-ACCESS  read-only 
+        MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
             "Unit index for an entry in the Box Services Temperature Unit Table"
         ::= { boxServicesTempUnitEntry 1 }
 
     boxServicesTempUnitState OBJECT-TYPE
-        SYNTAX      BoxsTemperatureStatus 
+        SYNTAX      BoxsTemperatureStatus
         MAX-ACCESS  read-only
         STATUS      current
         DESCRIPTION
@@ -566,7 +566,7 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
 --    boxServicesNotificationsGroup
 --
 --    This group provides notification definitions for the Box Services
---    feature.  
+--    feature.
 --
 --**************************************************************************************
 
@@ -587,7 +587,7 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
         STATUS  current
         DESCRIPTION
            "This event describes states of the fan or power supply.
-           
+
              insertion          - hot-pluggable fan or power supply was inserted
              removal            - hot-pluggable fan or power supply was removed
              becomeoperational  - fan or power supply became operational after failure state
@@ -604,10 +604,10 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
         MAX-ACCESS  accessible-for-notify
         STATUS  current
         DESCRIPTION
-           "This event describes change of the temperature. 
-           To avoid flipping on boundary conditions, it is allowed to send the trap 
+           "This event describes change of the temperature.
+           To avoid flipping on boundary conditions, it is allowed to send the trap
            taking into account some margin around thresholds.
-           
+
              abovethreshold     - temperature increased and crossed upper threshold value
              belowthreshold     - temperature decreased and crossed lower threshold value
              withinnormalrange  - temperature returned to normal range (between threshold)"
@@ -690,7 +690,7 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
                 }
         STATUS             current
         DESCRIPTION
-            "Trap is sent when the system temperature crosses a threshold. 
+            "Trap is sent when the system temperature crosses a threshold.
             To avoid rapid flapping between states, a hysteresis may
             be applied."
         ::= { fastPathBoxServicesTraps 5 }
@@ -698,7 +698,7 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
 --**************************************************************************************
 --    Locator LED manage group
 --
---    This group provides manage definitions for the Locator LED feature.  
+--    This group provides manage definitions for the Locator LED feature.
 --
 --**************************************************************************************
 
@@ -729,7 +729,7 @@ boxsPwrUsageHistoryStackPowerConsumption         OBJECT-TYPE
 
     boxsLocatorLedEnable OBJECT-TYPE
          SYNTAX      INTEGER {
-                       disable(0), 
+                       disable(0),
                        enable(1)
                      }
          MAX-ACCESS  read-write

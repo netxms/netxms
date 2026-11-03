@@ -2964,7 +2964,7 @@ OBJECT IDENTIFIER ::= { s5ChasComMod 656 }
 
 s5ChasComBrdBayStack450-1SR -- 1 port 1000Base-SX MDA with LinkSafe
 OBJECT IDENTIFIER ::= { s5ChasComMod 657 }
- 
+
 s5ChasComBrdBayStack400-4TX -- 4 port 10/100 autosense MDA with RJ/45 connectors
 OBJECT IDENTIFIER ::= { s5ChasComMod 658 }
 

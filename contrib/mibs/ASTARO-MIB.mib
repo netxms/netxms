@@ -15,19 +15,19 @@ ASTARO-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
-    enterprises 
+    enterprises
              FROM SNMPv2-SMI ;
 
 
 
--- 
+--
 -- top level
 --
 
 astaro MODULE-IDENTITY
     LAST-UPDATED "201110060000Z"
     ORGANIZATION "Astaro GmbH & Co. KG - a Sophos company"
-    CONTACT-INFO 
+    CONTACT-INFO
                  "Astaro GmbH & Co. KG - a Sophos company
                  Amalienbadstr. 41/Bau 52
                  76227 Karlsruhe
@@ -37,12 +37,12 @@ astaro MODULE-IDENTITY
                  Fax: +49 721 25516 200
                  Email: emea@astaro.com
                  www.astaro.com"
-    DESCRIPTION  
+    DESCRIPTION
                  "The MIB module for Notification Events
 
                  Copyright (C) 2009 by Astaro AG"
     REVISION     "200812170000Z"
-    DESCRIPTION  
+    DESCRIPTION
                  "Initial version"
 ::= { enterprises 9789 }
 
@@ -59,7 +59,7 @@ warn  OBJECT IDENTIFIER ::= { notification 2 }
 crit  OBJECT IDENTIFIER ::= { notification 3 }
 
 
--- 
+--
 -- Notifications
 --
 crit-025 NOTIFICATION-TYPE

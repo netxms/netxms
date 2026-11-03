@@ -1,6 +1,6 @@
 
 -- D-Link Common MIB   AAC module MIB      Ver 1.0 	2003/1/20 02:59下午
--- Revision 1.02 modified  by Richard Chang 		2004/1/15 10:15下午 
+-- Revision 1.02 modified  by Richard Chang 		2004/1/15 10:15下午
 -- Revision 1.01 Draft modified by Scott Sung 		2004/1/13 11:50上午
 -- Remove table - swAACMethodListTable
 -- Add table - swAACLoginMethodListTable,swAACEnableMethodListTable
@@ -13,9 +13,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 -- AAC System Access Authentication Control MIB
 -- -------------------------------------------------------------
 	IMPORTS
-		IpAddress			
+		IpAddress
 	 		FROM RFC1155-SMI
-	    MODULE-IDENTITY, OBJECT-TYPE  
+	    MODULE-IDENTITY, OBJECT-TYPE
 	        FROM SNMPv2-SMI
 	    RowStatus,DisplayString
 	        FROM SNMPv2-TC
@@ -24,8 +24,8 @@ AAC-MIB DEFINITIONS ::= BEGIN
 --		EntryStatus
 --			FROM RMON-MIB
 		dlink-common-mgmt	FROM DLINK-ID-REC-MIB;
-    
-    
+
+
 	swDlinkAACMIB MODULE-IDENTITY
 	    LAST-UPDATED "9911220000Z"
 	    ORGANIZATION "Working Group"
@@ -51,51 +51,51 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS  read-write
 	    STATUS  current
 	    DESCRIPTION
-	        "This object indicates the Access Authentication is enable or 
+	        "This object indicates the Access Authentication is enable or
 	        disable."
-	    ::= { swAACCtrl 1}    
+	    ::= { swAACCtrl 1}
 
--- -------------------------------------------------------------        
-	swAACInfo OBJECT IDENTIFIER ::= { swDlinkAACMIB 2}        
+-- -------------------------------------------------------------
+	swAACInfo OBJECT IDENTIFIER ::= { swDlinkAACMIB 2}
 
 	swAACMaxLoginMethodList  OBJECT-TYPE
-	    SYNTAX     INTEGER 
+	    SYNTAX     INTEGER
 	    MAX-ACCESS read-only
 	    STATUS     current
 	    DESCRIPTION
 	        "The max number of Login method list supported by the system ."
-	    ::= { swAACInfo 1 }  
-	
+	    ::= { swAACInfo 1 }
+
 	swAACMaxEnableMethodList  OBJECT-TYPE
-	    SYNTAX     INTEGER 
+	    SYNTAX     INTEGER
 	    MAX-ACCESS read-only
 	    STATUS     current
 	    DESCRIPTION
 	        "The max number of Enable method list supported by the system ."
-	    ::= { swAACInfo 2 }  
-		    
+	    ::= { swAACInfo 2 }
+
 	swAACMaxServerGroup  OBJECT-TYPE
-	    SYNTAX     INTEGER 
+	    SYNTAX     INTEGER
 	    MAX-ACCESS read-only
 	    STATUS     current
 	    DESCRIPTION
 	        "The max number of Server Group supported by the system ."
-	    ::= { swAACInfo 3 }   
-		    
+	    ::= { swAACInfo 3 }
+
 	swAACMaxServer  OBJECT-TYPE
-	    SYNTAX     INTEGER 
+	    SYNTAX     INTEGER
 	    MAX-ACCESS read-only
 	    STATUS     current
 	    DESCRIPTION
 	        "The max number of AAC server supported by the system ."
-	    ::= { swAACInfo 4 }   	    	    
+	    ::= { swAACInfo 4 }
 
 -- -------------------------------------------------------------
 -- Tables in the DLinkAAC MIB
 -- -------------------------------------------------------------
-   
+
 -- -------------------------------------------------------------
--- Login Method list table 
+-- Login Method list table
 -- -------------------------------------------------------------
 
 	swAACLoginMethodListTable OBJECT-TYPE
@@ -103,11 +103,11 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS not-accessible
 	    STATUS current
 	    DESCRIPTION
-	        "A table that contains information about Login authentication method 
+	        "A table that contains information about Login authentication method
 	        lists."
-	        
+
 	    ::= { swDlinkAACMIB 3 }
-	    
+
 	swAACLoginMethodListEntry OBJECT-TYPE
 	    SYNTAX SwAACLoginMethodListEntry
 	    MAX-ACCESS not-accessible
@@ -115,34 +115,34 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "A list of the Authentication methods."
 	    INDEX { swAACLoginMethodListName }
-	    
+
 	    ::= { swAACLoginMethodListTable 1 }
-	
+
 	SwAACLoginMethodListEntry ::=
 	    SEQUENCE {
 	--    	swAACLoginMethodListIndex
-	--			INTEGER, 
+	--			INTEGER,
 	        swAACLoginMethodListName
 	            DisplayString,
 	        swAACLoginMethod1Type
-	        	INTEGER,				   	                    
+	        	INTEGER,
 	        swAACLoginMethod1ServerGroup
 	            DisplayString,
 	        swAACLoginMethod2Type
-	        	INTEGER,				   	                    
+	        	INTEGER,
 	        swAACLoginMethod2ServerGroup
 	            DisplayString,
 	        swAACLoginMethod3Type
-	        	INTEGER,				   	                    
+	        	INTEGER,
 	        swAACLoginMethod3ServerGroup
 	            DisplayString,
 	        swAACLoginMethod4Type
-	        	INTEGER,				   	                    
+	        	INTEGER,
 	        swAACLoginMethod4ServerGroup
-	            DisplayString,	            	            	                          
-			swAACLoginMethodListRowStatus            
-				RowStatus                   
-	
+	            DisplayString,
+			swAACLoginMethodListRowStatus
+				RowStatus
+
 	    }
 
 --	swAACLoginMethodListIndex  OBJECT-TYPE
@@ -151,9 +151,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 --	    STATUS     current
 --	    DESCRIPTION
 --	        "A value that identifies this swAACMethodEntry."
---	        
---	    ::= { swAACLoginMethodListEntry 1 }	
-	
+--
+--	    ::= { swAACLoginMethodListEntry 1 }
+
 	swAACLoginMethodListName OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-only
@@ -161,7 +161,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "A human-readable text string of the method list. The string is the
 	        same with swAACLoginMethodName."
-	
+
 	    ::= { swAACLoginMethodListEntry 1 }
 
 	swAACLoginMethod1Type OBJECT-TYPE
@@ -179,22 +179,22 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "The type of Login method list. The group type includes tacas(1), 
-	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user 
-	        specific. The keyword type includes local(6), local-enable(7), and 
+	        "The type of Login method list. The group type includes tacas(1),
+	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user
+	        specific. The keyword type includes local(6), local-enable(7), and
 	        none(8)."
-	        
+
 	    ::= { swAACLoginMethodListEntry 2 }
-	    	    
+
 	swAACLoginMethod1ServerGroup OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(0..15))
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "A human-readable text string of the server group. It would be null 
+	        "A human-readable text string of the server group. It would be null
 	        as swAACLoginMethodListType is keyword type. And It is writeable,
 	        just as the swAACLoginMethodListType is server_group(3)."
-	        
+
 	    ::= { swAACLoginMethodListEntry 3 }
 
 	swAACLoginMethod2Type OBJECT-TYPE
@@ -212,22 +212,22 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "The type of Login method list. The group type includes tacas(1), 
-	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user 
-	        specific. The keyword type includes local(6), local-enable(7), and 
+	        "The type of Login method list. The group type includes tacas(1),
+	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user
+	        specific. The keyword type includes local(6), local-enable(7), and
 	        none(8)."
-	        
+
 	    ::= { swAACLoginMethodListEntry 4 }
-	    	    
+
 	swAACLoginMethod2ServerGroup OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(0..15))
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "A human-readable text string of the server group. It would be null 
+	        "A human-readable text string of the server group. It would be null
 	        as swAACLoginMethodListType is keyword type. And It is writeable,
 	        just as the swAACLoginMethodListType is server_group(3)."
-	        
+
 	    ::= { swAACLoginMethodListEntry 5 }
 
 	swAACLoginMethod3Type OBJECT-TYPE
@@ -245,22 +245,22 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "The type of Login method list. The group type includes tacas(1), 
-	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user 
-	        specific. The keyword type includes local(6), local-enable(7), and 
+	        "The type of Login method list. The group type includes tacas(1),
+	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user
+	        specific. The keyword type includes local(6), local-enable(7), and
 	        none(8)."
-	        
+
 	    ::= { swAACLoginMethodListEntry 6 }
-	    	    
+
 	swAACLoginMethod3ServerGroup OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(0..15))
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "A human-readable text string of the server group. It would be null 
+	        "A human-readable text string of the server group. It would be null
 	        as swAACLoginMethodListType is keyword type. And It is writeable,
 	        just as the swAACLoginMethodListType is server_group(3)."
-	        
+
 	    ::= { swAACLoginMethodListEntry 7 }
 
 	swAACLoginMethod4Type OBJECT-TYPE
@@ -278,49 +278,49 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "The type of Login method list. The group type includes tacas(1), 
-	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user 
-	        specific. The keyword type includes local(6), local-enable(7), and 
+	        "The type of Login method list. The group type includes tacas(1),
+	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user
+	        specific. The keyword type includes local(6), local-enable(7), and
 	        none(8)."
-	        
+
 	    ::= { swAACLoginMethodListEntry 8 }
-	    	    
+
 	swAACLoginMethod4ServerGroup OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(0..15))
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "A human-readable text string of the server group. It would be null 
+	        "A human-readable text string of the server group. It would be null
 	        as swAACLoginMethodListType is keyword type. And It is writeable,
 	        just as the swAACLoginMethodListType is server_group(3)."
-	        
-	    ::= { swAACLoginMethodListEntry 9 }	    
-	    	    	    
+
+	    ::= { swAACLoginMethodListEntry 9 }
+
 	swAACLoginMethodListRowStatus OBJECT-TYPE
 	    SYNTAX      RowStatus
 	    MAX-ACCESS  read-create
 	    STATUS      current
 	    DESCRIPTION
-	        "This object indicates the status of this entry. A set request with 
-	        RowStatus is 'CreateAndGo' will be fail while the current entry of 
-	        the table is equal to the maximum number of 
+	        "This object indicates the status of this entry. A set request with
+	        RowStatus is 'CreateAndGo' will be fail while the current entry of
+	        the table is equal to the maximum number of
 	        swAACLoginMethodListIndex."
-	        
-	    ::= { swAACLoginMethodListEntry 10 }    
+
+	    ::= { swAACLoginMethodListEntry 10 }
 
 -- -------------------------------------------------------------
--- Enable Method table 
+-- Enable Method table
 -- -------------------------------------------------------------
 	swAACEnableMethodListTable OBJECT-TYPE
 	    SYNTAX SEQUENCE OF SwAACEnableMethodListEntry
 	    MAX-ACCESS not-accessible
 	    STATUS current
 	    DESCRIPTION
-	        "A table that contains information about Enable authentication method 
+	        "A table that contains information about Enable authentication method
 	        lists."
-	        
+
 	    ::= { swDlinkAACMIB 4 }
-	    
+
 	swAACEnableMethodListEntry OBJECT-TYPE
 	    SYNTAX SwAACEnableMethodListEntry
 	    MAX-ACCESS not-accessible
@@ -328,34 +328,34 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "A list of the Authentication methods."
 	    INDEX { swAACEnableMethodListName }
-	    
+
 	    ::= { swAACEnableMethodListTable 1 }
-	
+
 	SwAACEnableMethodListEntry ::=
 	    SEQUENCE {
 --	    	swAACEnableMethodListIndex
---				INTEGER, 
+--				INTEGER,
 	        swAACEnableMethodListName
 	            DisplayString,
 	        swAACEnableMethod1Type
-	        	INTEGER,				   	                    
+	        	INTEGER,
 	        swAACEnableMethod1ServerGroup
 	            DisplayString,
 	        swAACEnableMethod2Type
-	        	INTEGER,				   	                    
+	        	INTEGER,
 	        swAACEnableMethod2ServerGroup
 	            DisplayString,
 	        swAACEnableMethod3Type
-	        	INTEGER,				   	                    
+	        	INTEGER,
 	        swAACEnableMethod3ServerGroup
 	            DisplayString,
 	        swAACEnableMethod4Type
-	        	INTEGER,				   	                    
+	        	INTEGER,
 	        swAACEnableMethod4ServerGroup
-	            DisplayString,	            	            	                          
-			swAACEnableMethodListRowStatus            
-				RowStatus                   
-	
+	            DisplayString,
+			swAACEnableMethodListRowStatus
+				RowStatus
+
 	    }
 
 --	swAACEnableMethodListIndex  OBJECT-TYPE
@@ -364,9 +364,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 --	    STATUS     current
 --	    DESCRIPTION
 --	        "A value that identifies this swAACMethodEntry."
---	        
---	    ::= { swAACEnableMethodListEntry 1 }	
-	
+--
+--	    ::= { swAACEnableMethodListEntry 1 }
+
 	swAACEnableMethodListName OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-only
@@ -374,7 +374,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "A human-readable text string of the method list. The string is the
 	        same with swAACEnableMethodName."
-	
+
 	    ::= { swAACEnableMethodListEntry 1 }
 
 	swAACEnableMethod1Type OBJECT-TYPE
@@ -392,22 +392,22 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "The type of Enable method list. The group type includes tacas(1), 
-	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user 
-	        specific. The keyword type includes local(6), local-enable(7), and 
+	        "The type of Enable method list. The group type includes tacas(1),
+	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user
+	        specific. The keyword type includes local(6), local-enable(7), and
 	        none(8)."
-	        
+
 	    ::= { swAACEnableMethodListEntry 2 }
-	    	    
+
 	swAACEnableMethod1ServerGroup OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(0..15))
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "A human-readable text string of the server group. It would be null 
+	        "A human-readable text string of the server group. It would be null
 	        as swAACEnableMethodListType is keyword type. And It is writeable,
 	        just as the swAACEnableMethodListType is server_group(3)."
-	        
+
 	    ::= { swAACEnableMethodListEntry 3 }
 
 	swAACEnableMethod2Type OBJECT-TYPE
@@ -425,22 +425,22 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "The type of Enable method list. The group type includes tacas(1), 
-	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user 
-	        specific. The keyword type includes local(6), local-enable(7), and 
+	        "The type of Enable method list. The group type includes tacas(1),
+	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user
+	        specific. The keyword type includes local(6), local-enable(7), and
 	        none(8)."
-	        
+
 	    ::= { swAACEnableMethodListEntry 4 }
-	    	    
+
 	swAACEnableMethod2ServerGroup OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(0..15))
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "A human-readable text string of the server group. It would be null 
+	        "A human-readable text string of the server group. It would be null
 	        as swAACEnableMethodListType is keyword type. And It is writeable,
 	        just as the swAACEnableMethodListType is server_group(3)."
-	        
+
 	    ::= { swAACEnableMethodListEntry 5 }
 
 	swAACEnableMethod3Type OBJECT-TYPE
@@ -458,22 +458,22 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "The type of Enable method list. The group type includes tacas(1), 
-	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user 
-	        specific. The keyword type includes local(6), local-enable(7), and 
+	        "The type of Enable method list. The group type includes tacas(1),
+	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user
+	        specific. The keyword type includes local(6), local-enable(7), and
 	        none(8)."
-	        
+
 	    ::= { swAACEnableMethodListEntry 6 }
-	    	    
+
 	swAACEnableMethod3ServerGroup OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(0..15))
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "A human-readable text string of the server group. It would be null 
+	        "A human-readable text string of the server group. It would be null
 	        as swAACEnableMethodListType is keyword type. And It is writeable,
 	        just as the swAACEnableMethodListType is server_group(3)."
-	        
+
 	    ::= { swAACEnableMethodListEntry 7 }
 
 	swAACEnableMethod4Type OBJECT-TYPE
@@ -491,35 +491,35 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "The type of Enable method list. The group type includes tacas(1), 
-	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user 
-	        specific. The keyword type includes local(6), local-enable(7), and 
+	        "The type of Enable method list. The group type includes tacas(1),
+	        xtacacs(2), tacacs-plus(3), radius(4) and server-group(5) for user
+	        specific. The keyword type includes local(6), local-enable(7), and
 	        none(8)."
-	        
+
 	    ::= { swAACEnableMethodListEntry 8 }
-	    	    
+
 	swAACEnableMethod4ServerGroup OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(0..15))
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
-	        "A human-readable text string of the server group. It would be null 
+	        "A human-readable text string of the server group. It would be null
 	        as swAACEnableMethodListType is keyword type. And It is writeable,
 	        just as the swAACEnableMethodListType is server_group(3)."
-	        
-	    ::= { swAACEnableMethodListEntry 9 }	    
-	    	    	    
+
+	    ::= { swAACEnableMethodListEntry 9 }
+
 	swAACEnableMethodListRowStatus OBJECT-TYPE
 	    SYNTAX      RowStatus
 	    MAX-ACCESS  read-create
 	    STATUS      current
 	    DESCRIPTION
-	        "This object indicates the status of this entry. A set request with 
-	        RowStatus is 'CreateAndGo' will be fail while the current entry of 
-	        the table is equal to the maximum number of 
+	        "This object indicates the status of this entry. A set request with
+	        RowStatus is 'CreateAndGo' will be fail while the current entry of
+	        the table is equal to the maximum number of
 	        swAACEnableMethodListIndex."
-	        
-	    ::= { swAACEnableMethodListEntry 10 }     
+
+	    ::= { swAACEnableMethodListEntry 10 }
 
 
 -- -------------------------------------------------------------
@@ -539,11 +539,11 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS current
 	    DESCRIPTION
 	        "Specify the way which has to execute authentication while login the
-	        system and the method for authentication.Access system via local 
+	        system and the method for authentication.Access system via local
 	        console"
-	
+
 	    ::= { swAACAPLoginMethod 1 }
-	    
+
 	swAACAPTelnetLoginMethod OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-write
@@ -551,9 +551,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Specify the way which has to execute authentication while login the
 	        system and the method for authentication.Access system via telnet."
-	
+
 	    ::= { swAACAPLoginMethod 2 }
-	
+
 	swAACAPSSHLoginMethod OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-write
@@ -561,9 +561,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Specify the way which has to execute authentication while login the
 	        system and the method for authentication.Access system via SSH."
-	
+
 	    ::= { swAACAPLoginMethod 3 }
-	
+
 	swAACAPHttpLoginMethod OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-write
@@ -571,19 +571,19 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Specify the way which has to execute authentication while login the
 	        system and the method for authentication.Access system via HTTP."
-	
+
 	    ::= { swAACAPLoginMethod 4 }
-	
+
 	swAACAPConsoleEnableMethod OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-write
 	    STATUS current
 	    DESCRIPTION
 	        "Specify the way which has to execute authentication while login the
-	        system and the method for authentication.Access system via local 
+	        system and the method for authentication.Access system via local
 	        console."
 	    ::= { swAACAPEnableMethod 1 }
-	    
+
 	swAACAPTelnetEnableMethod OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-write
@@ -591,9 +591,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Specify the way which has to execute authentication while login the
 	        system and the method for authentication.Access system via telnet."
-	
+
 	    ::= { swAACAPEnableMethod 2 }
-	
+
 	swAACAPSSHEnableMethod OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-write
@@ -601,9 +601,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Specify the way which has to execute authentication while login the
 	        system and the method for authentication.Access system via SSH."
-	
+
 	    ::= { swAACAPEnableMethod 3 }
-	
+
 	swAACAPHttpEnableMethod OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-write
@@ -611,13 +611,13 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Specify the way which has to execute authentication while login the
 	        system and the method for authentication.Access system via HTTP."
-	
-	    ::= { swAACAPEnableMethod 4 } 
+
+	    ::= { swAACAPEnableMethod 4 }
 
 -- -------------------------------------------------------------
 -- swAACAPAuthParamGroup OBJECT IDENTIFIER ::= { swDlinkAACMIB 8 }
 -- -------------------------------------------------------------
-	swAACAuthParamGroup OBJECT IDENTIFIER ::= { swDlinkAACMIB 8 }    
+	swAACAuthParamGroup OBJECT IDENTIFIER ::= { swDlinkAACMIB 8 }
 
 	swAACAuthParamResponseTimeout  OBJECT-TYPE
 		    SYNTAX     INTEGER (0..255)
@@ -625,8 +625,8 @@ AAC-MIB DEFINITIONS ::= BEGIN
 		    STATUS     current
 		    DESCRIPTION
 		        "Timeout in second for login authentication response."
-		    ::= { swAACAuthParamGroup 1 }   
-	
+		    ::= { swAACAuthParamGroup 1 }
+
 	swAACAuthParamAttempt  OBJECT-TYPE
 		    SYNTAX     INTEGER (1..255)
 		    MAX-ACCESS read-write
@@ -634,7 +634,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 		    DESCRIPTION
 		        "The amount for login authentication, if login failure exceed,
 		         connection or access would be locked."
-		    ::= { swAACAuthParamGroup 2 }   	       
+		    ::= { swAACAuthParamGroup 2 }
 -- -------------------------------------------------------------
 -- swAACServerGroup OBJECT IDENTIFIER ::= { swDlinkAACMIB 9 }
 -- -------------------------------------------------------------
@@ -645,7 +645,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "A table that contains informations about server group."
 	    ::= { swDlinkAACMIB 9 }
-	    
+
 	swAACServerGroupEntry OBJECT-TYPE
 	    SYNTAX SwAACServerGroupEntry
 	    MAX-ACCESS not-accessible
@@ -654,11 +654,11 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	        "A list of the group including servers."
 	    INDEX { swAACServerGroupName }
 	    ::= { swAACServerGroupTable 1 }
-	    
+
 	SwAACServerGroupEntry ::=
 	    SEQUENCE {
 --	    	swAACServerGroupIndex
---				INTEGER, 
+--				INTEGER,
 	        swAACServerGroupName
 	            DisplayString,
 			swAACServerGroupIPAddr1
@@ -692,39 +692,39 @@ AAC-MIB DEFINITIONS ::= BEGIN
 			swAACServerGroupIPAddr8
 				IpAddress,
 			swAACServerGroupAuthProtocol8
-				INTEGER,								
+				INTEGER,
 	        swAACServerGroupRowStatus
-	            RowStatus            
+	            RowStatus
 	    }
-	        
+
 --	swAACServerGroupIndex  OBJECT-TYPE
 --	    SYNTAX     INTEGER (1..8)
 --	    MAX-ACCESS not-accessible
 --	    STATUS     current
 --	    DESCRIPTION
 --	        "A value that uniquely identifies this SwAACServerGroupEntry ."
---	        
---	    ::= { swAACServerGroupEntry 1 }   
-		    	
+--
+--	    ::= { swAACServerGroupEntry 1 }
+
 	swAACServerGroupName OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(1..15))
 	    MAX-ACCESS read-only
 	    STATUS current
 	    DESCRIPTION
 	        "A human-readable text string of the method group."
-	
+
 	    ::= { swAACServerGroupEntry 1 }
 
-	
+
 	swAACServerGroupIPAddr1 OBJECT-TYPE
 	    SYNTAX      IpAddress
 	    MAX-ACCESS  read-only
 	    STATUS      current
 	    DESCRIPTION
 	        "The IP address of Server"
-	        
+
 	    ::= { swAACServerGroupEntry 2 }
-	
+
 	swAACServerGroupAuthProtocol1 OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	    				tacacs(1),
@@ -738,7 +738,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provided by the Server."
-	        
+
 	    ::= { swAACServerGroupEntry 3 }
 
 	swAACServerGroupIPAddr2 OBJECT-TYPE
@@ -747,9 +747,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The IP address of Server"
-	        
+
 	    ::= { swAACServerGroupEntry 4 }
-	
+
 	swAACServerGroupAuthProtocol2 OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	    				tacacs(1),
@@ -763,8 +763,8 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provided by the Server."
-	        
-	    ::= { swAACServerGroupEntry 5 }	
+
+	    ::= { swAACServerGroupEntry 5 }
 
 	swAACServerGroupIPAddr3 OBJECT-TYPE
 	    SYNTAX      IpAddress
@@ -772,9 +772,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The IP address of Server"
-	        
+
 	    ::= { swAACServerGroupEntry 6 }
-	
+
 	swAACServerGroupAuthProtocol3 OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	    				tacacs(1),
@@ -788,8 +788,8 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provided by the Server."
-	        
-	    ::= { swAACServerGroupEntry 7 }	
+
+	    ::= { swAACServerGroupEntry 7 }
 
 	swAACServerGroupIPAddr4 OBJECT-TYPE
 	    SYNTAX      IpAddress
@@ -797,9 +797,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The IP address of Server"
-	        
+
 	    ::= { swAACServerGroupEntry 8 }
-	
+
 	swAACServerGroupAuthProtocol4 OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	    				tacacs(1),
@@ -813,7 +813,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provided by the Server."
-	        
+
 	    ::= { swAACServerGroupEntry 9 }
 
 	swAACServerGroupIPAddr5 OBJECT-TYPE
@@ -822,9 +822,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The IP address of Server"
-	        
+
 	    ::= { swAACServerGroupEntry 10 }
-	
+
 	swAACServerGroupAuthProtocol5 OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	    				tacacs(1),
@@ -838,7 +838,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provided by the Server."
-	        
+
 	    ::= { swAACServerGroupEntry 11 }
 
 	swAACServerGroupIPAddr6 OBJECT-TYPE
@@ -847,9 +847,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The IP address of Server"
-	        
+
 	    ::= { swAACServerGroupEntry 12 }
-	
+
 	swAACServerGroupAuthProtocol6 OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	    				tacacs(1),
@@ -863,7 +863,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provided by the Server."
-	        
+
 	    ::= { swAACServerGroupEntry 13 }
 
 	swAACServerGroupIPAddr7 OBJECT-TYPE
@@ -872,9 +872,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The IP address of Server"
-	        
+
 	    ::= { swAACServerGroupEntry 14 }
-	
+
 	swAACServerGroupAuthProtocol7 OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	    				tacacs(1),
@@ -888,7 +888,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provided by the Server."
-	        
+
 	    ::= { swAACServerGroupEntry 15 }
 
 	swAACServerGroupIPAddr8 OBJECT-TYPE
@@ -897,9 +897,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The IP address of Server"
-	        
+
 	    ::= { swAACServerGroupEntry 16 }
-	
+
 	swAACServerGroupAuthProtocol8 OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	    				tacacs(1),
@@ -913,19 +913,19 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provided by the Server."
-	        
-	    ::= { swAACServerGroupEntry 17 }	    	    	    	    	            
-	
+
+	    ::= { swAACServerGroupEntry 17 }
+
 	swAACServerGroupRowStatus	OBJECT-TYPE
 	    SYNTAX      RowStatus
 	    MAX-ACCESS  read-create
 	    STATUS      current
 	    DESCRIPTION
 	        "This object indicates the status of this entry.
-	         A set request with RowStatus is 'CreateAndGo' will be fail while 
+	         A set request with RowStatus is 'CreateAndGo' will be fail while
 	         the current entry of the table is equal to swAACMaxServerGroup. "
-	         
-	    ::= { swAACServerGroupEntry 18 }   
+
+	    ::= { swAACServerGroupEntry 18 }
 
 -- -------------------------------------------------------------
 -- swAACServerInfo OBJECT IDENTIFIER ::= { swDlinkAACMIB 10 }
@@ -938,7 +938,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "A table that contains information about severs."
 	    ::= { swDlinkAACMIB 10 }
-	    
+
 	swAACServerInfoEntry OBJECT-TYPE
 	    SYNTAX SwAACServerInfoEntry
 	    MAX-ACCESS not-accessible
@@ -947,7 +947,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	        "A list of the information of server ."
 	    INDEX { swAACServerIPAddr,swAACServerAuthProtocol }
 	    ::= { swAACServerInfoTable 1 }
-	    
+
 	SwAACServerInfoEntry ::=
 	    SEQUENCE {
 			swAACServerIPAddr
@@ -955,17 +955,17 @@ AAC-MIB DEFINITIONS ::= BEGIN
 			swAACServerAuthProtocol
 				INTEGER,
 			swAACServerAuthPort
-				INTEGER,	
+				INTEGER,
 			swAACServerAuthKey
-				DisplayString,						
+				DisplayString,
 	        swAACServerTimeout
-	            INTEGER,   
+	            INTEGER,
 	        swAACServerRetryCount
-	            INTEGER,                                     
+	            INTEGER,
 	        swAACServerRowStatus
-	            RowStatus            
-	    }   
-	
+	            RowStatus
+	    }
+
 	swAACServerIPAddr OBJECT-TYPE
 	    SYNTAX      IpAddress
 	    MAX-ACCESS  read-only
@@ -973,39 +973,39 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "The IP address of Server"
 	    ::= { swAACServerInfoEntry 1 }
-	
+
 	swAACServerAuthProtocol OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	                    tacacs(1),
 	                    xtacacs(2),
 	                    tacacs-plus(3),
-	                    radius(4)                  
+	                    radius(4)
 	                }
 	    MAX-ACCESS  read-only
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provide by the Server."
 	    ::= { swAACServerInfoEntry 2 }
-	
+
 	swAACServerAuthPort OBJECT-TYPE
 	    SYNTAX      INTEGER(1..65535)
 	    MAX-ACCESS  read-create
 	    STATUS      current
 	    DESCRIPTION
-	        "The TCP/IP port .The default authentication port is 49 ,and port 
-	        5001 to 65535 are valid setting in the system , other value except 
+	        "The TCP/IP port .The default authentication port is 49 ,and port
+	        5001 to 65535 are valid setting in the system , other value except
 	        49,5001-65535 will work while set this object."
 	    ::= { swAACServerInfoEntry 3 }
-	
+
 	swAACServerAuthKey OBJECT-TYPE
 	    SYNTAX DisplayString(SIZE(0..254))
 	    MAX-ACCESS read-create
 	    STATUS current
 	    DESCRIPTION
 	        "The key used while authentication process .It is write-only."
-	
+
 	    ::= { swAACServerInfoEntry 4 }
-	
+
 	swAACServerTimeout OBJECT-TYPE
 	    SYNTAX      INTEGER(1..255)
 	    MAX-ACCESS  read-create
@@ -1013,25 +1013,25 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "Server response timeout ."
 	    ::= { swAACServerInfoEntry 5 }
-	    
+
 	swAACServerRetryCount OBJECT-TYPE
 	    SYNTAX      INTEGER(1..255)
 	    MAX-ACCESS  read-create
 	    STATUS      current
 	    DESCRIPTION
 	        "The client retry count ."
-	    ::= { swAACServerInfoEntry 6 }    
-	
+	    ::= { swAACServerInfoEntry 6 }
+
 	swAACServerRowStatus OBJECT-TYPE
 	    SYNTAX      RowStatus
 	    MAX-ACCESS  read-create
 	    STATUS      current
 	    DESCRIPTION
-	        "This object indicates the status of this entry. A set request with 
-	        RowStatus is 'CreateAndGo' will be fail while the current entry of 
-	        the table is equal to swAACMaxServer. "        
+	        "This object indicates the status of this entry. A set request with
+	        RowStatus is 'CreateAndGo' will be fail while the current entry of
+	        the table is equal to swAACMaxServer. "
 	    ::= { swAACServerInfoEntry 7 }
-    
+
 -- -------------------------------------------------------------
 -- swAACServerGroupCtrl OBJECT IDENTIFIER ::= { swDlinkAACMIB 12 }
 -- -------------------------------------------------------------
@@ -1043,7 +1043,7 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "A table that use to add/delete server from group."
 	    ::= { swDlinkAACMIB 12 }
-	    
+
 	swAACServerCtrlEntry OBJECT-TYPE
 	    SYNTAX SwAACServerCtrlEntry
 	    MAX-ACCESS not-accessible
@@ -1052,9 +1052,9 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	        "A table that use to add/delete server from group."
 	    INDEX { swAACCtrlServerGroupName,swAACCtrlServerIPAddr,swAACCtrlServerAuthProtocol }
 	    ::= { swAACServerCtrlTable 1 }
-	    
+
 	SwAACServerCtrlEntry ::=
-	    SEQUENCE {         
+	    SEQUENCE {
 	    	swAACCtrlServerGroupName
 	    		DisplayString,
 	    	swAACCtrlServerIPAddr
@@ -1062,15 +1062,15 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    	swAACCtrlServerAuthProtocol
 	    		INTEGER,
 	        swAACCtrlServerRowState
-	            INTEGER            
-	    }  
+	            INTEGER
+	    }
 
 	swAACCtrlServerGroupName OBJECT-TYPE
 	    SYNTAX      DisplayString(SIZE(1..15))
 	    MAX-ACCESS  not-accessible
 	    STATUS      current
 	    DESCRIPTION
-	        "A human-readable text string of the method group."        
+	        "A human-readable text string of the method group."
 	    ::= { swAACServerCtrlEntry 1 }
 
 	swAACCtrlServerIPAddr OBJECT-TYPE
@@ -1080,29 +1080,29 @@ AAC-MIB DEFINITIONS ::= BEGIN
 	    DESCRIPTION
 	        "The IP address of Server"
 	    ::= { swAACServerCtrlEntry 2 }
-	
+
 	swAACCtrlServerAuthProtocol OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	                    tacacs(1),
 	                    xtacacs(2),
 	                    tacacs-plus(3),
-	                    radius(4)                  
+	                    radius(4)
 	                }
 	    MAX-ACCESS  not-accessible
 	    STATUS      current
 	    DESCRIPTION
 	        "The authentication protocol provide by the Server."
 	    ::= { swAACServerCtrlEntry 3 }
-	    
+
 	swAACCtrlServerRowState OBJECT-TYPE
 	    SYNTAX      INTEGER{
 	                    add(1),
-	                    delete(2)               
+	                    delete(2)
 	                }
 	    MAX-ACCESS  read-write
 	    STATUS      current
 	    DESCRIPTION
-	        "This object used to add or delete a entry from swAACServerGroupTable."        
+	        "This object used to add or delete a entry from swAACServerGroupTable."
 	    ::= { swAACServerCtrlEntry 4 }
-	    
+
 END

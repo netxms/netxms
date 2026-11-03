@@ -3,8 +3,8 @@
 WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 
    IMPORTS
-       TEXTUAL-CONVENTION FROM SNMPv2-TC 
-       
+       TEXTUAL-CONVENTION FROM SNMPv2-TC
+
        MODULE-IDENTITY,
        OBJECT-TYPE,
        snmpModules,
@@ -27,7 +27,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 	   MacAddress,
 	   TruthValue
            FROM SNMPv2-TC
-           
+
        ArubaEnableValue,
 	   ArubaVlanValidRange,
 	   ArubaVoiceCacBit,
@@ -37,8 +37,8 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 	   ArubaCallStates
 	   		FROM ARUBA-TC
 	   wlanStaPhyAddress,
-	   wlanAPMacAddress, 
-	   wlanAPRadioNumber, 
+	   wlanAPMacAddress,
+	   wlanAPRadioNumber,
 	   wlanAPBSSID
            FROM WLSX-WLAN-MIB
        OBJECT-GROUP
@@ -46,7 +46,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 		wlsxEnterpriseMibModules
 			FROM ARUBA-MIB;
 
-   wlsxVoiceMIB MODULE-IDENTITY 
+   wlsxVoiceMIB MODULE-IDENTITY
        LAST-UPDATED "202008141745Z"
        ORGANIZATION "Aruba, a Hewlett Packard Enterprise company"
        CONTACT-INFO
@@ -72,7 +72,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
    wlsxVoiceCallCtrPerClientInfoGroup	OBJECT IDENTIFIER ::= { wlsxVoiceStatsGroup 4 }
    wlsxVoiceClientLocationInfoGroup     OBJECT IDENTIFIER ::= { wlsxVoiceStatsGroup 5 }
 
-   wlsxVoiceCdrTotal  OBJECT-TYPE 
+   wlsxVoiceCdrTotal  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -82,26 +82,26 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCdrInfoGroup 1 }
 
-   wlsxVoiceCdrTable  OBJECT-TYPE 
+   wlsxVoiceCdrTable  OBJECT-TYPE
 	  SYNTAX       SEQUENCE OF VoiceCdrEntry
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
 	  	"
-			This table lists Call Detail Record Info. 
+			This table lists Call Detail Record Info.
 		"
-      ::= { wlsxVoiceCdrInfoGroup 2 } 
-      
-      
+      ::= { wlsxVoiceCdrInfoGroup 2 }
+
+
    wlsxVoiceCdrEntry OBJECT-TYPE
-	  SYNTAX       VoiceCdrEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+	  SYNTAX       VoiceCdrEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              ""
 	  INDEX {voiceCdrId}
-      ::= { wlsxVoiceCdrTable 1 } 
-      
+      ::= { wlsxVoiceCdrTable 1 }
+
 
 --- Based on voip_mgr.h:voip_sip_call_cdr_t
    VoiceCdrEntry ::=
@@ -137,14 +137,14 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
     }
    	voiceCdrId OBJECT-TYPE
          SYNTAX       Unsigned32
-  		 MAX-ACCESS   not-accessible		
+  		 MAX-ACCESS   not-accessible
          STATUS       current
          DESCRIPTION
             "
 			Voice CDR id
             "
         ::= { wlsxVoiceCdrEntry 1 }
-        
+
    	voiceCdrIp OBJECT-TYPE
          SYNTAX       IpAddress
          MAX-ACCESS   read-only
@@ -154,7 +154,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR IP
             "
         ::= { wlsxVoiceCdrEntry 2 }
-        
+
    	voiceCdrMac OBJECT-TYPE
          SYNTAX       MacAddress
          MAX-ACCESS   read-only
@@ -164,7 +164,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR MAC
             "
         ::= { wlsxVoiceCdrEntry 3 }
-        
+
    	voiceCdrName OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -174,7 +174,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR Name
             "
         ::= { wlsxVoiceCdrEntry 4 }
-        
+
    	voiceCdrDialNum OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -184,7 +184,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR dialed number
             "
         ::= { wlsxVoiceCdrEntry 5 }
-        
+
    	voiceCdrDir OBJECT-TYPE
          SYNTAX       ArubaVoiceCdrDirection
          MAX-ACCESS   read-only
@@ -194,7 +194,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR direction incoming or outgoing
             "
         ::= { wlsxVoiceCdrEntry 6 }
-        
+
    	voiceCdrOrigTime OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
@@ -345,7 +345,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR MOS
             "
         ::= { wlsxVoiceCdrEntry 21 }
-		
+
 	voiceCdrDelayA OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -355,7 +355,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR Delay at AP
             "
         ::= { wlsxVoiceCdrEntry 22 }
-	
+
 	voiceCdrJitterA OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -365,7 +365,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR Jitter at AP
             "
         ::= { wlsxVoiceCdrEntry 23 }
-		
+
 	voiceCdrPktLossA OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -375,7 +375,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR packet loss at AP
             "
         ::= { wlsxVoiceCdrEntry 24 }
-		
+
 	voiceCdrRValueC OBJECT-TYPE
          SYNTAX       Integer32
          MAX-ACCESS   read-only
@@ -395,7 +395,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR Delay at Controller
             "
         ::= { wlsxVoiceCdrEntry 26 }
-	
+
 	voiceCdrJitterC OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -405,7 +405,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice CDR Jitter at Controller
             "
         ::= { wlsxVoiceCdrEntry 27 }
-		
+
 	voiceCdrPktLossC OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -414,7 +414,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
 			Voice CDR packet loss at Controller
             "
-        ::= { wlsxVoiceCdrEntry 28 }	
+        ::= { wlsxVoiceCdrEntry 28 }
 --
 -- end VoiceCdrEntry
 --
@@ -424,7 +424,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 --
 -- begin scalar counters
 --
-   voiceCallCtrsTotal  OBJECT-TYPE 
+   voiceCallCtrsTotal  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -434,7 +434,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 1 }
 
-   voiceCallCtrsSuccess  OBJECT-TYPE 
+   voiceCallCtrsSuccess  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -444,7 +444,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 2 }
 
-   voiceCallCtrsFailed  OBJECT-TYPE 
+   voiceCallCtrsFailed  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -454,7 +454,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 3 }
 
-   voiceCallCtrsRejected  OBJECT-TYPE 
+   voiceCallCtrsRejected  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -464,7 +464,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 4 }
 
-   voiceCallCtrsAborted  OBJECT-TYPE 
+   voiceCallCtrsAborted  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -474,7 +474,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 5 }
 
-   voiceCallCtrsOrig  OBJECT-TYPE 
+   voiceCallCtrsOrig  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -484,7 +484,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 6 }
 
-   voiceCallCtrsRecvd  OBJECT-TYPE 
+   voiceCallCtrsRecvd  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -494,7 +494,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 7 }
 
-   voiceCallCtrsActive  OBJECT-TYPE 
+   voiceCallCtrsActive  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -504,7 +504,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 8 }
 
-   voiceCallCtrsNotFnd  OBJECT-TYPE 
+   voiceCallCtrsNotFnd  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       deprecated
@@ -514,7 +514,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 9 }
 
-   voiceCallCtrsBusy  OBJECT-TYPE 
+   voiceCallCtrsBusy  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       deprecated
@@ -524,7 +524,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 10 }
 
-   voiceCallCtrsSvc  OBJECT-TYPE 
+   voiceCallCtrsSvc  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       deprecated
@@ -534,7 +534,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 11 }
 
-   voiceCallCtrsReqTerm  OBJECT-TYPE 
+   voiceCallCtrsReqTerm  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       deprecated
@@ -544,7 +544,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 12 }
 
-   voiceCallCtrsDecline  OBJECT-TYPE 
+   voiceCallCtrsDecline  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       deprecated
@@ -554,7 +554,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 13 }
 
-   voiceCallCtrsUnauth  OBJECT-TYPE 
+   voiceCallCtrsUnauth  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       deprecated
@@ -564,7 +564,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
             "
         ::= { wlsxVoiceCallCtrsGroup 14 }
 
-   voiceCallCtrsMisc  OBJECT-TYPE 
+   voiceCallCtrsMisc  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       deprecated
@@ -581,7 +581,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 --
 -- begin voice client
 --
-   wlsxVoiceClientTotal  OBJECT-TYPE 
+   wlsxVoiceClientTotal  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -593,31 +593,31 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 
 
    wlsxVoiceClientTable  OBJECT-TYPE
-		SYNTAX       SEQUENCE OF VoiceClientEntry 
-        MAX-ACCESS   not-accessible		
-        STATUS       current 
-        DESCRIPTION 
+		SYNTAX       SEQUENCE OF VoiceClientEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
 	  	"
 			This table lists all voice client Info
 		"
-      ::= { wlsxVoiceClientInfoGroup 2 } 
-      
-   wlsxVoiceClientEntry OBJECT-TYPE 
-	  SYNTAX       VoiceClientEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxVoiceClientInfoGroup 2 }
+
+   wlsxVoiceClientEntry OBJECT-TYPE
+	  SYNTAX       VoiceClientEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              ""
 	  INDEX {wlanStaPhyAddress }
-      ::= { wlsxVoiceClientTable 1 } 
+      ::= { wlsxVoiceClientTable 1 }
 
-      
+
 
 --- Based on voip_cac.h:voip_client struct
    VoiceClientEntry ::=
 	SEQUENCE {
 		voiceClientIp			IpAddress,
-		voiceClientProtocol			DisplayString,  
+		voiceClientProtocol			DisplayString,
 		voiceClientRegState			DisplayString,
 		voiceClientContactName		DisplayString,
 		voiceClientServerName		DisplayString,
@@ -636,12 +636,12 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			Voice client IP Address 
+			Voice client IP Address
             "
         ::= { wlsxVoiceClientEntry 1 }
 
    	voiceClientProtocol OBJECT-TYPE
-         SYNTAX       DisplayString 
+         SYNTAX       DisplayString
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -651,7 +651,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxVoiceClientEntry 2 }
 
    	voiceClientRegState OBJECT-TYPE
-         SYNTAX       DisplayString 
+         SYNTAX       DisplayString
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
@@ -696,7 +696,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       deprecated
          DESCRIPTION
             "
-			Voice client VLAN id 
+			Voice client VLAN id
             "
         ::= { wlsxVoiceClientEntry 7 }
 
@@ -709,7 +709,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice client tunnel ID
             "
         ::= { wlsxVoiceClientEntry 8 }
-		
+
 	voiceClientAvgDelay OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -719,7 +719,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice client Avg Delay
             "
         ::= { wlsxVoiceClientEntry 9 }
-		
+
 	voiceClientAvgJitter OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -729,7 +729,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice client average Jitter
             "
         ::= { wlsxVoiceClientEntry 10 }
-		
+
 	voiceClientAvgPktLoss OBJECT-TYPE
          SYNTAX       DisplayString
          MAX-ACCESS   read-only
@@ -739,7 +739,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice client average packet loss
             "
         ::= { wlsxVoiceClientEntry 11 }
-		
+
 	voiceClientAvgCallDuration OBJECT-TYPE
          SYNTAX       Integer32
          MAX-ACCESS   read-only
@@ -749,7 +749,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 			Voice client avg call duration
             "
         ::= { wlsxVoiceClientEntry 12 }
-		
+
 
 --
 -- end voiceClientEntry
@@ -759,8 +759,8 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 -- begin voice call counter per client entry
 --
 
-      
-   wlsxVoiceCallCtrPerClientTotal  OBJECT-TYPE 
+
+   wlsxVoiceCallCtrPerClientTotal  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -771,29 +771,29 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxVoiceCallCtrPerClientInfoGroup 1 }
 
    wlsxVoiceCallCtrPerClientTable  OBJECT-TYPE
-		SYNTAX       SEQUENCE OF VoiceCallCtrPerClientEntry 
-        MAX-ACCESS   not-accessible		
-        STATUS       current 
-        DESCRIPTION 
+		SYNTAX       SEQUENCE OF VoiceCallCtrPerClientEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
 	  	"
 			This table lists all voice client Location Info
 		"
-      ::= { wlsxVoiceCallCtrPerClientInfoGroup 2 } 
-      
-   wlsxVoiceCallCtrPerClientEntry OBJECT-TYPE 
-	  SYNTAX       VoiceCallCtrPerClientEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxVoiceCallCtrPerClientInfoGroup 2 }
+
+   wlsxVoiceCallCtrPerClientEntry OBJECT-TYPE
+	  SYNTAX       VoiceCallCtrPerClientEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              ""
 	  INDEX { wlanStaPhyAddress }
-      ::= { wlsxVoiceCallCtrPerClientTable 1 } 
+      ::= { wlsxVoiceCallCtrPerClientTable 1 }
 
 
    VoiceCallCtrPerClientEntry ::=
 	SEQUENCE {
 		voiceCallCtrTotal          Unsigned32,
-		voiceCallCtrSuccess	    Unsigned32,  
+		voiceCallCtrSuccess	    Unsigned32,
 		voiceCallCtrFailed	  		Unsigned32,
 		voiceCallCtrRejected	    Unsigned32,
 		voiceCallCtrAborted  	    Unsigned32,
@@ -808,7 +808,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			Voice total calls made by client 
+			Voice total calls made by client
             "
         ::= { wlsxVoiceCallCtrPerClientEntry 1 }
 
@@ -818,7 +818,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			Voice total successful calls made by client 
+			Voice total successful calls made by client
             "
         ::= { wlsxVoiceCallCtrPerClientEntry 2 }
 
@@ -828,7 +828,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			Voice total failed calls made by client 
+			Voice total failed calls made by client
             "
         ::= { wlsxVoiceCallCtrPerClientEntry 3 }
 
@@ -843,12 +843,12 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxVoiceCallCtrPerClientEntry 4 }
 
    	voiceCallCtrAborted OBJECT-TYPE
-         SYNTAX       Unsigned32 
+         SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			Voice total calls aborted by client 
+			Voice total calls aborted by client
             "
         ::= { wlsxVoiceCallCtrPerClientEntry 5 }
 
@@ -868,10 +868,10 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			Voice total calls received by client 
+			Voice total calls received by client
             "
         ::= { wlsxVoiceCallCtrPerClientEntry 7 }
-		
+
 	voiceCallCtrActive OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
@@ -891,7 +891,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
 -- begin voice client location entry
 --
 
-   wlsxVoiceClientLocationTotal  OBJECT-TYPE 
+   wlsxVoiceClientLocationTotal  OBJECT-TYPE
          SYNTAX       Unsigned32
          MAX-ACCESS   read-only
          STATUS       current
@@ -902,29 +902,29 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxVoiceClientLocationInfoGroup 1 }
 
    wlsxVoiceClientLocationTable  OBJECT-TYPE
-		SYNTAX       SEQUENCE OF VoiceClientLocationEntry 
-        MAX-ACCESS   not-accessible		
-        STATUS       current 
-        DESCRIPTION 
+		SYNTAX       SEQUENCE OF VoiceClientLocationEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
 	  	"
 			This table lists all voice client Location Info
 		"
-      ::= { wlsxVoiceClientLocationInfoGroup 2 } 
-      
-   wlsxVoiceClientLocationEntry OBJECT-TYPE 
-	  SYNTAX       VoiceClientLocationEntry 
-	  MAX-ACCESS   not-accessible		
-      STATUS       current 
-      DESCRIPTION 
+      ::= { wlsxVoiceClientLocationInfoGroup 2 }
+
+   wlsxVoiceClientLocationEntry OBJECT-TYPE
+	  SYNTAX       VoiceClientLocationEntry
+	  MAX-ACCESS   not-accessible
+      STATUS       current
+      DESCRIPTION
              ""
 	  INDEX { wlanStaPhyAddress }
-      ::= { wlsxVoiceClientLocationTable 1 } 
+      ::= { wlsxVoiceClientLocationTable 1 }
 
 
    VoiceClientLocationEntry ::=
 	SEQUENCE {
 		vcLocationIp          IpAddress,
-		vcLocationMac	      MacAddress,  
+		vcLocationMac	      MacAddress,
 		vcLocationSwitchIp	  IpAddress,
 		vcLocationApName	  DisplayString,
 		vcLocationApMac  	  MacAddress,
@@ -938,7 +938,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			Voice client IP Address 
+			Voice client IP Address
             "
         ::= { wlsxVoiceClientLocationEntry 1 }
 
@@ -948,7 +948,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			Voice client Mac Address 
+			Voice client Mac Address
             "
         ::= { wlsxVoiceClientLocationEntry 2 }
 
@@ -958,7 +958,7 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			Voice Client Switch IP Address 
+			Voice Client Switch IP Address
             "
         ::= { wlsxVoiceClientLocationEntry 3 }
 
@@ -973,12 +973,12 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
         ::= { wlsxVoiceClientLocationEntry 4 }
 
    	vcLocationApMac OBJECT-TYPE
-         SYNTAX       MacAddress 
+         SYNTAX       MacAddress
          MAX-ACCESS   read-only
          STATUS       current
          DESCRIPTION
             "
-			Voice client AP Mac Address 
+			Voice client AP Mac Address
             "
         ::= { wlsxVoiceClientLocationEntry 5 }
 
@@ -998,11 +998,11 @@ WLSX-VOICE-MIB DEFINITIONS ::= BEGIN
          STATUS       current
          DESCRIPTION
             "
-			Voice client Ap Location 
+			Voice client Ap Location
             "
         ::= { wlsxVoiceClientLocationEntry 7 }
 --
--- end voice client location entry 
+-- end voice client location entry
 --
-        
-END        
+
+END

@@ -509,7 +509,7 @@ IntSrvIfAttribEntry ::=
            implementation-specific,   as   implementations
            vary in their use of weighting procedures."
        ::= { intSrvFlowEntry 16 }
-       
+
     intSrvFlowQueue OBJECT-TYPE
         SYNTAX      Integer32
         MAX-ACCESS  read-create

@@ -1,7 +1,7 @@
 -- ****************************************************************
---   
+--
 -- AGENT-CAPABILITIES mib for CISCO-ENTITY-FRU-CONTROL-MIB
---   
+--
 -- March 2002, Subra Hegde, Sirisha Paturi
 -- August 2003, Wen Xu
 -- September 2003, Wen Xu
@@ -9,9 +9,9 @@
 -- September 2004, Jaikumar Chidambaram
 -- May 2006, Bala Kanchana
 -- March 2008, Purna Ghanta
---   
+--
 -- Copyright(c) 2002-2011 by Cisco Systems Inc.
---   
+--
 -- ****************************************************************
 
 CISCO-ENTITY-FRU-CONTROL-CAPABILITY DEFINITIONS ::= BEGIN
@@ -56,7 +56,7 @@ ciscoEntityFruControlCapability MODULE-IDENTITY
     DESCRIPTION
         "Added capabilities for ciscoEfcCapV12R04TP3845nv,
         ciscoEfcCapV12R04TP3825nv, ciscoEfcCapV12R04TP1941,
-        ciscoEfcCapV12R04TP29XX, ciscoEfcCapV12R04TP3925 
+        ciscoEfcCapV12R04TP29XX, ciscoEfcCapV12R04TP3925
         and ciscoEfcCapV12R04TP3945"
     REVISION        "200903110000Z"
     DESCRIPTION
@@ -3606,7 +3606,7 @@ ciscoEfcCapV15R01TP39XXE AGENT-CAPABILITIES
     ::= { ciscoEntityFruControlCapability 36 }
 
 ciscoEfcCapV15R0001SYPCat6K AGENT-CAPABILITIES
-    PRODUCT-RELEASE "Cisco IOS 15.0(1)SY on Catalyst 6000/6500 
+    PRODUCT-RELEASE "Cisco IOS 15.0(1)SY on Catalyst 6000/6500
                     series devices."
     STATUS          current
     DESCRIPTION

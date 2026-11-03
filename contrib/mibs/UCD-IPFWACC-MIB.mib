@@ -11,7 +11,7 @@ IMPORTS
 ucdIpFwAccMIB MODULE-IDENTITY
     LAST-UPDATED "9912160000Z"
     ORGANIZATION "University of California, Davis"
-    CONTACT-INFO    
+    CONTACT-INFO
 	"This mib is no longer being maintained by the University of
 	 California and is now in life-support-mode and being
 	 maintained by the net-snmp project.  The best place to write
@@ -213,7 +213,7 @@ ipFwAccNrSrcPorts OBJECT-TYPE
     ::= { ipFwAccEntry 13 }
 
 ipFwAccNrDstPorts OBJECT-TYPE
-    SYNTAX	Integer32 
+    SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -285,7 +285,7 @@ ipFwAccPort5 OBJECT-TYPE
     ::= { ipFwAccEntry 21 }
 
 ipFwAccPort6 OBJECT-TYPE
-    SYNTAX	Integer32 
+    SYNTAX	Integer32
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
