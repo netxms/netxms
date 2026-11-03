@@ -203,18 +203,27 @@ uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, cons
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
    }
 
+   struct curl_slist *requestHeaders = nullptr;   // Own header list (only when auth header has to be added)
    if (authType == WebServiceAuthType::NONE)
    {
       curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
    }
    else if (authType == WebServiceAuthType::BEARER)
    {
-#if HAVE_DECL_CURLOPT_XOAUTH2_BEARER
-      curl_easy_setopt(curl, CURLOPT_USERNAME, userName);
+#if HAVE_DECL_CURLOPT_XOAUTH2_BEARER && defined(CURLAUTH_BEARER) && (LIBCURL_VERSION_NUM >= 0x074500)
       curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, password);
+      curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
 #else
-      curl_easy_cleanup(curl);
-      return ERR_NOT_IMPLEMENTED;
+      // libcurl < 7.69 leaks token copy set via CURLOPT_XOAUTH2_BEARER when connection is reused within a transfer,
+      // so token is passed as custom header added to a copy of caller-provided header list
+      for(struct curl_slist *h = headers; h != nullptr; h = h->next)
+         requestHeaders = curl_slist_append(requestHeaders, h->data);
+      Buffer<char, 1024> authHeader(strlen(password) + 23);
+      strcpy(authHeader, "Authorization: Bearer ");
+      strcat(authHeader, password);
+      requestHeaders = curl_slist_append(requestHeaders, authHeader);
+      curl_easy_setopt(curl, CURLOPT_HTTPHEADER, requestHeaders);
+      curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
 #endif
    }
    else
@@ -326,6 +335,7 @@ retry:
    }
    MemFree(urlUtf8);
    curl_easy_cleanup(curl);
+   curl_slist_free_all(requestHeaders);
    return rcc;
 }
 

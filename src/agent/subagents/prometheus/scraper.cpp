@@ -203,11 +203,12 @@ bool ScrapeTarget::scrape()
    struct curl_slist *headers = curl_slist_append(nullptr, "Accept: application/openmetrics-text; version=1.0.0; q=0.5, text/plain; version=0.0.4");
    if (m_bearerToken != nullptr)
    {
-#ifdef CURLAUTH_BEARER
+#if defined(CURLAUTH_BEARER) && (LIBCURL_VERSION_NUM >= 0x074500)
       curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, m_bearerToken);
       curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
 #else
-      // Token passed as custom header is not stripped by cURL on cross-host redirects,
+      // libcurl < 7.69 leaks token copy set via CURLOPT_XOAUTH2_BEARER when connection is reused within a transfer.
+      // Token passed as custom header is not stripped by libcurl < 7.58 on cross-host redirects,
       // so disable redirect following to prevent token from leaking to another host
       char *authHeader = MemAllocStringA(strlen(m_bearerToken) + 32);
       strcpy(authHeader, "Authorization: Bearer ");

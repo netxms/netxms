@@ -425,17 +425,19 @@ static void ExecuteHttpRequest(CURL *curl, const HttpRequestData& request, const
       }
       case HttpAuthType::BEARER:
       {
+#if HAVE_DECL_CURLOPT_XOAUTH2_BEARER && defined(CURLAUTH_BEARER) && (LIBCURL_VERSION_NUM >= 0x074500)
+         // Credentials set this way are not sent to a different host after redirect (unlike custom headers in libcurl < 7.58)
          char *token = UTF8StringFromWideString(authSource.password);
-#if HAVE_DECL_CURLOPT_XOAUTH2_BEARER && defined(CURLAUTH_BEARER)
-         // Credentials set this way are not sent to a different host after redirect (unlike custom headers)
          curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, token);
          curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BEARER);
-#else
-         StringBuffer value(L"Bearer ");
-         value.appendUtf8String(token);
-         headers = AppendHeader(headers, L"Authorization", value);
-#endif
          MemFree(token);
+#else
+         // libcurl < 7.69 leaks token copy set via CURLOPT_XOAUTH2_BEARER when connection is reused within a transfer
+         StringBuffer value(L"Bearer ");
+         value.append(authSource.password.cstr());
+         headers = AppendHeader(headers, L"Authorization", value);
+         curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE);
+#endif
          break;
       }
       default:
