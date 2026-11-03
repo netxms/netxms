@@ -36,14 +36,62 @@ static int s_curlInitialized = 0;
 static const char *s_curlVersion = "uninitialized";
 
 /**
+ * Name of active TLS backend (first token of curl_version_info()->ssl_version)
+ */
+static char s_curlSSLBackend[64] = "unknown";
+
+/**
  * libcurl OpenSSL 3 backaend indicator
  */
 LIBNETXMS_EXPORTABLE_VAR(bool g_curlOpenSSL3Backend) = false;
 
 /**
- * Initialize libcurl
+ * Select TLS backend in multi-backend libcurl build. Must be called before curl_global_init().
  */
-bool LIBNETXMS_EXPORTABLE InitializeLibCURL()
+static void SelectSSLBackend(const char *sslBackend)
+{
+#if HAVE_DECL_CURL_GLOBAL_SSLSET
+   const curl_ssl_backend **available = nullptr;
+   switch(curl_global_sslset(CURLSSLBACKEND_NONE, sslBackend, &available))
+   {
+      case CURLSSLSET_OK:
+         break;
+      case CURLSSLSET_UNKNOWN_BACKEND:
+         {
+            char list[256] = "";
+            if (available != nullptr)
+            {
+               for(int i = 0; available[i] != nullptr; i++)
+               {
+                  if (list[0] != 0)
+                     strlcat(list, ", ", sizeof(list));
+                  strlcat(list, available[i]->name, sizeof(list));
+               }
+            }
+            nxlog_write_tag(NXLOG_ERROR, _T("init.curl"), _T("Requested libcurl TLS backend \"%hs\" is not available (available backends: %hs)"), sslBackend, list);
+         }
+         break;
+      case CURLSSLSET_NO_BACKENDS:
+         nxlog_write_tag(NXLOG_WARNING, _T("init.curl"), _T("libcurl is built with single TLS backend, requested TLS backend \"%hs\" ignored"), sslBackend);
+         break;
+      case CURLSSLSET_TOO_LATE:
+         nxlog_write_tag(NXLOG_ERROR, _T("init.curl"), _T("libcurl is already initialized, requested TLS backend \"%hs\" ignored"), sslBackend);
+         break;
+      default:
+         nxlog_write_tag(NXLOG_ERROR, _T("init.curl"), _T("Cannot select libcurl TLS backend \"%hs\""), sslBackend);
+         break;
+   }
+#else
+   nxlog_write_tag(NXLOG_WARNING, _T("init.curl"), _T("TLS backend selection is not supported by this libcurl version, requested TLS backend \"%hs\" ignored"), sslBackend);
+#endif
+}
+
+/**
+ * Initialize libcurl. TLS backend (if given) is selected only by the first call that performs
+ * actual initialization, so daemons should call this function with configured backend name
+ * right after reading configuration and before any other libcurl use.
+ */
+bool LIBNETXMS_EXPORTABLE InitializeLibCURL(const char *sslBackend)
 {
    static VolatileCounter reentryGuarg = 0;
 
@@ -59,24 +107,36 @@ retry:
       goto retry;
    }
 
+   if ((sslBackend != nullptr) && (*sslBackend != 0))
+      SelectSSLBackend(sslBackend);
+
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
    {
-      nxlog_debug_tag(_T("init.curl"), 1, _T("cURL initialization failed"));
+      nxlog_write_tag(NXLOG_ERROR, _T("init.curl"), _T("libcurl initialization failed"));
       s_curlInitialized = -1;
       return false;
    }
 
    s_curlVersion = curl_version();
-   nxlog_debug_tag(_T("init.curl"), 3, _T("cURL initialized (version: %hs)"), s_curlVersion);
-
-#ifndef _WIN32
-   g_curlOpenSSL3Backend = (strstr(s_curlVersion, "OpenSSL/3.") != nullptr);
-   if (g_curlOpenSSL3Backend)
-      nxlog_debug_tag(_T("init.curl"), 3, _T("OpenSSL 3 is used as cURL SSL backend"));
-#endif
 
 #if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
    curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
+
+   // In multi-backend builds ssl_version lists active backend first, followed by inactive ones in parentheses
+   if (version->ssl_version != nullptr)
+   {
+      strlcpy(s_curlSSLBackend, version->ssl_version, sizeof(s_curlSSLBackend));
+      char *p = strchr(s_curlSSLBackend, ' ');
+      if (p != nullptr)
+         *p = 0;
+   }
+   else
+   {
+      strcpy(s_curlSSLBackend, "none");
+   }
+   g_curlOpenSSL3Backend = (strncmp(s_curlSSLBackend, "OpenSSL/3.", 10) == 0);
+   nxlog_write_tag(NXLOG_INFO, _T("init.curl"), _T("libcurl initialized (version: %hs, TLS backend: %hs)"), version->version, s_curlSSLBackend);
+
    char protocols[1024] = "";
    const char * const *p = version->protocols;
    while (*p != nullptr)
@@ -87,6 +147,9 @@ retry:
       p++;
    }
    nxlog_debug_tag(_T("init.curl"), 3, _T("cURL supported protocols: %hs"), protocols);
+#else
+   g_curlOpenSSL3Backend = (strstr(s_curlVersion, "OpenSSL/3.") != nullptr);
+   nxlog_write_tag(NXLOG_INFO, _T("init.curl"), _T("libcurl initialized (version: %hs)"), s_curlVersion);
 #endif
 
    s_curlInitialized = 1;
@@ -108,4 +171,32 @@ void LibCURLCleanup()
 const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion()
 {
    return s_curlVersion;
+}
+
+/**
+ * Setup peer certificate trust for curl handle. If CA bundle file is given, it is used as the only
+ * trust source. Otherwise, on Windows the system certificate store is used: natively by Schannel
+ * backend (with best-effort revocation checks, so unreachable CRL distribution points do not fail
+ * verification), and via CURLSSLOPT_NATIVE_CA by OpenSSL backend, which has no default trust store
+ * on Windows.
+ */
+void LIBNETXMS_EXPORTABLE SetupLibCURLTrust(CURL *curl, const char *caBundle)
+{
+   bool haveBundle = (caBundle != nullptr) && (*caBundle != 0);
+   if (haveBundle)
+      curl_easy_setopt(curl, CURLOPT_CAINFO, caBundle);
+
+#ifdef _WIN32
+   long options = 0;
+#ifdef CURLSSLOPT_REVOKE_BEST_EFFORT
+   if (!strncmp(s_curlSSLBackend, "Schannel", 8))
+      options |= CURLSSLOPT_REVOKE_BEST_EFFORT;
+#endif
+#ifdef CURLSSLOPT_NATIVE_CA
+   if (!haveBundle && !strncmp(s_curlSSLBackend, "OpenSSL", 7))
+      options |= CURLSSLOPT_NATIVE_CA;
+#endif
+   if (options != 0)
+      curl_easy_setopt(curl, CURLOPT_SSL_OPTIONS, options);
+#endif
 }

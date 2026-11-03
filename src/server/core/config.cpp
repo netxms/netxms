@@ -30,6 +30,7 @@
  * Externals
  */
 extern char g_codePage[];
+extern char g_curlSSLBackend[];
 extern StringList g_moduleLoadList;
 extern wchar_t *g_pdsLoadList;
 extern InetAddressList g_peerNodeAddrList;
@@ -137,6 +138,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { L"CodePage", CT_MB_STRING, 0, 0, 256, 0, g_codePage, nullptr },
    { L"CreateCrashDumps", CT_BOOLEAN_FLAG_64, 0, 0, AF_CATCH_EXCEPTIONS, 0, (void*)&g_flags, nullptr },
    { L"CRL", CT_STRING_SET, 0, 0, 0, 0, &g_crlList, nullptr },
+   { L"CurlSSLBackend", CT_MB_STRING, 0, 0, 32, 0, g_curlSSLBackend, nullptr },
    { L"DailyLogFileSuffix", CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, nullptr },
    { L"DataDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, nullptr },
    { L"DBCacheConfigurationTables", CT_BOOLEAN_FLAG_64, 0, 0, AF_CACHE_DB_ON_STARTUP, 0, (void*)&g_flags, nullptr },

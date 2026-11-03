@@ -34,8 +34,9 @@
 #define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
 #endif
 
-bool LIBNETXMS_EXPORTABLE InitializeLibCURL();
+bool LIBNETXMS_EXPORTABLE InitializeLibCURL(const char *sslBackend = nullptr);
 const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion();
+void LIBNETXMS_EXPORTABLE SetupLibCURLTrust(CURL *curl, const char *caBundle);
 
 #if !defined(_WIN32) && defined(SSL_OP_IGNORE_UNEXPECTED_EOF)
 

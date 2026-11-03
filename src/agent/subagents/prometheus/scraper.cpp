@@ -196,8 +196,7 @@ bool ScrapeTarget::scrape()
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, m_verifyPeer ? static_cast<long>(1) : static_cast<long>(0));
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, m_verifyHost ? static_cast<long>(2) : static_cast<long>(0));
-   if (m_caCertificate[0] != 0)
-      curl_easy_setopt(curl, CURLOPT_CAINFO, m_caCertificate);
+   SetupLibCURLTrust(curl, m_caCertificate);
    EnableLibCURLUnexpectedEOFWorkaround(curl);
 
    struct curl_slist *headers = curl_slist_append(nullptr, "Accept: application/openmetrics-text; version=1.0.0; q=0.5, text/plain; version=0.0.4");

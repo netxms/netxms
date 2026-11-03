@@ -113,6 +113,21 @@
 # EnabledCiphers = 5
 
 #
+# CurlSSLBackend
+#
+# TLS backend used by libcurl for HTTPS requests (web service metrics, netsvc
+# and prometheus subagents). Only meaningful for Windows builds where libcurl
+# is built with multiple backends; otherwise the value is ignored with a
+# warning in the log. With "schannel" (default on Windows) certificate trust
+# comes from the Windows certificate store; with "openssl" trust comes from
+# the Windows certificate store as well unless CACertificates is set.
+#
+# Possible values: schannel, openssl
+#
+# Example:
+# CurlSSLBackend = openssl
+
+#
 # EnvironmentFile
 #
 # File with additional environment variables for the agent process, one

@@ -195,6 +195,7 @@ uint32_t g_logHistorySize = 4;
 TCHAR g_szDailyLogFileSuffix[64] = _T("");
 NXCORE_EXPORTABLE_VAR(TCHAR g_szDumpDir[MAX_PATH]) = DEFAULT_DUMP_DIR;
 char g_codePage[256] = "";
+char g_curlSSLBackend[32] = "";
 NXCORE_EXPORTABLE_VAR(TCHAR g_szListenAddress[MAX_PATH]) = _T("*");
 #ifndef _WIN32
 NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[MAX_PATH]) = _T("/var/run/netxmsd.pid");
@@ -1230,7 +1231,7 @@ bool NXCORE_EXPORTABLE Initialize()
 	InitLocalNetInfo();
 
 	// Initialize libcurl once before any thread can create curl handles
-	if (!InitializeLibCURL())
+	if (!InitializeLibCURL(g_curlSSLBackend))
 	   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("libcurl initialization failed, HTTP client functionality will be unavailable"));
 
 	// Initialize database driver and connect to database

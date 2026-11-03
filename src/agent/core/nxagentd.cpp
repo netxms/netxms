@@ -25,6 +25,7 @@
 #include <nxstat.h>
 #include <netxms_getopt.h>
 #include <netxms-version.h>
+#include <nxlibcurl.h>
 #include <locale.h>
 
 #ifdef _WIN32
@@ -258,6 +259,7 @@ uint16_t g_sessionAgentPort = 28180;
 uint32_t g_dwIdleTimeout = 120;   // Session idle timeout
 uint32_t g_webSvcCacheExpirationTime = 600;  // 10 minutes by default
 char g_caBundle[1024] = "";
+static char s_curlSSLBackend[32] = "";
 bool g_restartPending = false;   // Restart pending flag
 
 #ifdef _WIN32
@@ -338,6 +340,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("BackgroundExternalMetric"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_backgroundExternalMetrics, nullptr },
    { _T("ControlServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszControlServerList, nullptr },
    { _T("CreateCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, SF_CATCH_EXCEPTIONS, 0, &s_startupFlags, nullptr },
+   { _T("CurlSSLBackend"), CT_MB_STRING, 0, 0, sizeof(s_curlSSLBackend), 0, s_curlSSLBackend, nullptr },
    { _T("CRL"), CT_STRING_SET, 0, 0, 0, 0, &s_crlList, nullptr },
    { _T("CRLReloadInterval"), CT_LONG, 0, 0, 0, 0, &s_crlReloadInterval, nullptr },
    { _T("DataCollectionMaxThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr },
@@ -1201,6 +1204,10 @@ BOOL Initialize()
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Failed to initialize cryptography module"));
       return FALSE;
    }
+
+   // Initialize libcurl once before any subagent or web service request can create curl handles
+   if (!InitializeLibCURL(s_curlSSLBackend))
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("libcurl initialization failed, HTTP client functionality will be unavailable"));
 
    // Initialize libssl
 #ifdef _WITH_ENCRYPTION

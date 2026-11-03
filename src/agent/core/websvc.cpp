@@ -165,6 +165,12 @@ uint32_t WebServiceRequest::getList(const TCHAR *path, NXCPMessage *response)
 uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
       WebServiceAuthType authType, struct curl_slist *headers, bool verifyPeer, bool verifyHost, bool followLocation, bool forcePlainTextParser, uint32_t requestTimeout)
 {
+   if (!InitializeLibCURL())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("WebServiceRequest::query(%s): libcurl initialization failed"), url);
+      return ERR_INTERNAL_ERROR;
+   }
+
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
    {
@@ -187,8 +193,7 @@ uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, cons
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, verifyPeer ? 1 : 0);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verifyHost ? 2 : 0);
-   if (g_caBundle[0] != 0)
-      curl_easy_setopt(curl, CURLOPT_CAINFO, g_caBundle);
+   SetupLibCURLTrust(curl, g_caBundle);
    EnableLibCURLUnexpectedEOFWorkaround(curl);
 
    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, s_httpRequestMethods[requestMethod]);

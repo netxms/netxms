@@ -47,6 +47,20 @@
 # DBPassword = password
 
 #
+# CurlSSLBackend
+#
+# TLS backend used by libcurl for HTTPS requests (notification channels,
+# web hooks, NXSL HTTP client, helpdesk integrations). Only meaningful for
+# Windows builds where libcurl is built with multiple backends; otherwise
+# the value is ignored with a warning in the log. With "schannel" (default
+# on Windows) certificate trust comes from the Windows certificate store.
+#
+# Possible values: schannel, openssl
+#
+# Example:
+# CurlSSLBackend = openssl
+
+#
 # LogFailedSQLQueries
 #
 # Controls logging of failed SQL queries.
