@@ -37,6 +37,8 @@ tags:
     description: AI assistant chat sessions
   - name: AI Management
     description: AI skills and functions management
+  - name: AI Messages
+    description: Messages and approval requests sent to users by AI tasks
   - name: AI Saved Prompts
     description: Per-user saved prompts for the AI assistant
   - name: Object Tools
@@ -1413,6 +1415,146 @@ paths:
         - BearerAuth: []
       tags:
         - AI Memory
+  /v1/ai/messages:
+    get:
+      operationId: listAiMessages
+      summary: List AI messages for current user
+      description: >-
+        Retrieve non-expired messages and approval requests addressed to the
+        caller by AI tasks and chats. Status is reported as seen by the caller:
+        a pending message the caller has already read is reported as "read".
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [informational, alert, approvalRequest]
+          description: Limit to messages of the given type
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, read, approved, rejected]
+          description: Limit to messages in the given status
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiMessage'
+        '400':
+          description: Invalid query parameters
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Messages
+  /v1/ai/messages/{message-id}:
+    get:
+      operationId: getAiMessage
+      summary: Get AI message details
+      parameters:
+        - name: message-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Message details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiMessage'
+        '400':
+          description: Invalid message ID
+        '403':
+          description: Caller is not a recipient of the message
+        '404':
+          description: Message not found or expired
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Messages
+    delete:
+      operationId: deleteAiMessage
+      summary: Delete AI message
+      description: >-
+        Delete message for all recipients. Allowed for the user who initiated
+        the task that created the message, and for users with the "manage AI
+        tasks" system access right.
+      parameters:
+        - name: message-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Message deleted
+        '400':
+          description: Invalid message ID
+        '403':
+          description: Caller is neither the message initiator nor has the "manage AI tasks" access right
+        '404':
+          description: Message not found or expired
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Messages
+  /v1/ai/messages/{message-id}/status:
+    put:
+      operationId: setAiMessageStatus
+      summary: Mark message as read, approve or reject
+      description: >-
+        Mark message as read by the caller, or approve/reject an approval
+        request. Approving a request that carries spawn task data starts a new
+        AI task running as the caller. Approval and rejection apply to all
+        recipients and are only possible while the request is pending or read.
+      parameters:
+        - name: message-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [read, approved, rejected]
+                  description: New message status
+      responses:
+        '200':
+          description: Status updated, returns updated message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiMessage'
+        '400':
+          description: Invalid message ID or status
+        '403':
+          description: Caller is not a recipient of the message
+        '404':
+          description: Message not found or expired
+        '409':
+          description: Message is not an approval request or was already approved or rejected
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Messages
   /v1/ai/observations:
     get:
       operationId: listAiObservations
@@ -14458,6 +14600,62 @@ components:
           type: string
           enum: [new, acknowledged, dismissed]
           description: Observation triage state
+    AiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Message ID
+        guid:
+          type: string
+          format: uuid
+          description: Message GUID
+        type:
+          type: string
+          enum: [informational, alert, approvalRequest]
+          description: Message type
+        status:
+          type: string
+          enum: [pending, read, approved, rejected, expired]
+          description: Message status as seen by the caller
+        creationTime:
+          type: string
+          format: date-time
+          description: Creation time
+        expirationTime:
+          type: string
+          format: date-time
+          description: Expiration time
+        sourceTaskId:
+          type: integer
+          description: ID of the AI task that created the message (0 if not created by a task)
+        sourceTaskType:
+          type: string
+          description: Type of the AI task that created the message
+        relatedObjectId:
+          type: integer
+          description: Related object ID (0 if none)
+        title:
+          type: string
+          description: Message title
+        text:
+          type: string
+          description: Full message text
+        spawnTaskData:
+          type: object
+          additionalProperties: true
+          description: >-
+            Task to be started when an approval request is approved (present
+            only for approval requests that carry one). Contains taskType,
+            userPrompt and contextObjectId.
+        isInitiator:
+          type: boolean
+          description: True if the caller initiated the task that created the message
+        readTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Time the caller read the message (null if not read)
     AiMemoryEntry:
       type: object
       properties:
@@ -14492,11 +14690,13 @@ components:
           type: integer
           description: Chat ID, AI task ID, or AI operator instance ID depending on source type (0 for human)
         createdAt:
-          type: integer
-          description: Creation time (UNIX timestamp)
+          type: string
+          format: date-time
+          description: Creation time
         updatedAt:
-          type: integer
-          description: Last modification time (UNIX timestamp)
+          type: string
+          format: date-time
+          description: Last modification time
         locked:
           type: boolean
           description: True if the entry cannot be changed or deleted by the model
@@ -14840,9 +15040,9 @@ components:
           type: string
           description: Additional context for the question (empty string if not provided)
         expiresAt:
-          type: integer
-          format: int64
-          description: Time when the question expires, as UNIX timestamp
+          type: string
+          format: date-time
+          description: Time when the question expires
         options:
           type: array
           description: Available answer options (present only for multipleChoice questions)

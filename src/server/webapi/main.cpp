@@ -63,6 +63,10 @@ int H_AiMemoryEntryCreate(Context *context);
 int H_AiMemoryEntryDetails(Context *context);
 int H_AiMemoryEntryUpdate(Context *context);
 int H_AiMemoryEntryDelete(Context *context);
+int H_AiMessageDelete(Context *context);
+int H_AiMessageDetails(Context *context);
+int H_AiMessages(Context *context);
+int H_AiMessageStatusUpdate(Context *context);
 int H_AiObservations(Context *context);
 int H_AiObservationStateUpdate(Context *context);
 int H_AiOperators(Context *context);
@@ -460,6 +464,16 @@ static bool InitModule(Config *config)
       .GET(H_AiMemoryEntryDetails)
       .PATCH(H_AiMemoryEntryUpdate)
       .DELETE(H_AiMemoryEntryDelete)
+      .build();
+   RouteBuilder("v1/ai/messages")
+      .GET(H_AiMessages)
+      .build();
+   RouteBuilder("v1/ai/messages/:message-id")
+      .GET(H_AiMessageDetails)
+      .DELETE(H_AiMessageDelete)
+      .build();
+   RouteBuilder("v1/ai/messages/:message-id/status")
+      .PUT(H_AiMessageStatusUpdate)
       .build();
    RouteBuilder("v1/ai/observations")
       .GET(H_AiObservations)

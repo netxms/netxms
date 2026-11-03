@@ -58,7 +58,7 @@ bool Question::loadFromJson(json_t *json)
    confirmationType = static_cast<ConfirmationType>(json_object_get_int32(json, "confirmationType", 0));
    text = json_object_get_string_utf8(json, "text", "");
    context = json_object_get_string_utf8(json, "context", "");
-   expiresAt = static_cast<time_t>(json_object_get_int64(json, "expiresAt", 0));
+   expiresAt = json_object_get_time(json, "expiresAt", 0);
 
    json_t *optionList = json_object_get(json, "options");
    if (json_is_array(optionList))

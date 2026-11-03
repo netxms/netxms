@@ -287,8 +287,8 @@ json_t *AIMemoryEntry::toJson() const
    json_object_set_new(json, "sourceUserId", json_integer(m_sourceUserId));
    json_object_set_new(json, "sourceType", json_string(SourceTypeName(m_sourceType)));
    json_object_set_new(json, "sourceId", json_integer(m_sourceId));
-   json_object_set_new(json, "createdAt", json_integer(static_cast<json_int_t>(m_createdAt)));
-   json_object_set_new(json, "updatedAt", json_integer(static_cast<json_int_t>(m_updatedAt)));
+   json_object_set_new(json, "createdAt", json_time_string(m_createdAt));
+   json_object_set_new(json, "updatedAt", json_time_string(m_updatedAt));
    json_object_set_new(json, "locked", json_boolean(m_locked));
    return json;
 }

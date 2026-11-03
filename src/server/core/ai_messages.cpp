@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <nxai.h>
 #include <ai_messages.h>
+#include <nms_users.h>
 
 #define DEBUG_TAG L"ai.messages"
 
@@ -199,7 +200,7 @@ AIMessage::AIMessage(DB_RESULT hResult, int row) :
    DBGetField(hResult, row, 8, m_title, 256);
    m_text = DBGetField(hResult, row, 9, nullptr, 0);
    m_spawnTaskData = DBGetField(hResult, row, 10, nullptr, 0);
-   m_status = static_cast<AIMessageStatus>(DBGetFieldInt32(hResult, row, 11));
+   m_status = AIMessageStatusFromInt(DBGetFieldInt32(hResult, row, 11));
 }
 
 /**
@@ -230,12 +231,10 @@ void AIMessage::addRecipient(uint32_t userId, bool isInitiator, time_t readTime)
  */
 bool AIMessage::isRecipient(uint32_t userId) const
 {
-   for (int i = 0; i < m_recipients.size(); i++)
-   {
-      if (m_recipients.get(i)->userId == userId)
-         return true;
-   }
-   return false;
+   lock();
+   bool result = (findRecipient(userId) != nullptr);
+   unlock();
+   return result;
 }
 
 /**
@@ -243,13 +242,11 @@ bool AIMessage::isRecipient(uint32_t userId) const
  */
 bool AIMessage::isInitiator(uint32_t userId) const
 {
-   for (int i = 0; i < m_recipients.size(); i++)
-   {
-      AIMessageRecipient *r = m_recipients.get(i);
-      if (r->userId == userId && r->isInitiator)
-         return true;
-   }
-   return false;
+   lock();
+   const AIMessageRecipient *r = findRecipient(userId);
+   bool result = (r != nullptr) && r->isInitiator;
+   unlock();
+   return result;
 }
 
 /**
@@ -313,6 +310,31 @@ bool AIMessage::setStatus(AIMessageStatus status)
 }
 
 /**
+ * Find recipient record for given user (must be called with lock held)
+ */
+const AIMessageRecipient *AIMessage::findRecipient(uint32_t userId) const
+{
+   for (int i = 0; i < m_recipients.size(); i++)
+   {
+      const AIMessageRecipient *r = m_recipients.get(i);
+      if (r->userId == userId)
+         return r;
+   }
+   return nullptr;
+}
+
+/**
+ * Get message status as seen by given user - pending message already read by user is reported as read (must be called with lock held)
+ */
+AIMessageStatus AIMessage::getStatusForUser(uint32_t userId) const
+{
+   if (m_status != AI_MSG_STATUS_PENDING)
+      return m_status;
+   const AIMessageRecipient *r = findRecipient(userId);
+   return ((r != nullptr) && (r->readTime != 0)) ? AI_MSG_STATUS_READ : AI_MSG_STATUS_PENDING;
+}
+
+/**
  * Fill NXCP message
  */
 void AIMessage::fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t userId) const
@@ -329,26 +351,51 @@ void AIMessage::fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t userId) 
    msg->setField(baseId + 8, m_title);
    msg->setField(baseId + 9, m_text);
    msg->setField(baseId + 10, CHECK_NULL_EX(m_spawnTaskData));
-   if (m_status == AI_MSG_STATUS_PENDING)
-   {
-      // Check if message is read by user
-      bool isRead = false;
-      for (int i = 0; i < m_recipients.size(); i++)
-      {
-         AIMessageRecipient *r = m_recipients.get(i);
-         if (r->userId == userId)
-         {
-            isRead = (r->readTime != 0);
-            break;
-         }
-      }
-      msg->setField(baseId + 11, static_cast<uint16_t>(isRead ? AI_MSG_STATUS_READ : AI_MSG_STATUS_PENDING));
-   }
-   else
-   {
-      msg->setField(baseId + 11, static_cast<uint16_t>(m_status));
-   }
+   msg->setField(baseId + 11, static_cast<uint16_t>(getStatusForUser(userId)));
    unlock();
+}
+
+/**
+ * Message type names for JSON representation
+ */
+static const char *s_messageTypeNames[] = { "informational", "alert", "approvalRequest" };
+
+/**
+ * Message status names for JSON representation
+ */
+static const char *s_messageStatusNames[] = { "pending", "read", "approved", "rejected", "expired" };
+
+/**
+ * Create JSON representation of message as seen by given user
+ */
+json_t *AIMessage::toJson(uint32_t userId) const
+{
+   json_t *json = json_object();
+   lock();
+   json_object_set_new(json, "id", json_integer(m_id));
+   json_object_set_new(json, "guid", m_guid.toJson());
+   json_object_set_new(json, "type", json_string(((m_type >= AI_MESSAGE_INFORMATIONAL) && (m_type <= AI_MESSAGE_APPROVAL_REQUEST)) ? s_messageTypeNames[m_type] : "unknown"));
+   json_object_set_new(json, "status", json_string(s_messageStatusNames[getStatusForUser(userId)]));
+   json_object_set_new(json, "creationTime", json_time_string(m_creationTime));
+   json_object_set_new(json, "expirationTime", json_time_string(m_expirationTime));
+   json_object_set_new(json, "sourceTaskId", json_integer(m_sourceTaskId));
+   json_object_set_new(json, "sourceTaskType", json_string_t(m_sourceTaskType));
+   json_object_set_new(json, "relatedObjectId", json_integer(m_relatedObjectId));
+   json_object_set_new(json, "title", json_string_t(m_title));
+   json_object_set_new(json, "text", json_string_t(CHECK_NULL_EX(m_text)));
+   if ((m_spawnTaskData != nullptr) && (m_spawnTaskData[0] != 0))
+   {
+      char *spawnTaskData = UTF8StringFromWideString(m_spawnTaskData);
+      json_t *spawnTaskJson = json_loads(spawnTaskData, 0, nullptr);
+      MemFree(spawnTaskData);
+      if (spawnTaskJson != nullptr)
+         json_object_set_new(json, "spawnTaskData", spawnTaskJson);
+   }
+   const AIMessageRecipient *r = findRecipient(userId);
+   json_object_set_new(json, "isInitiator", json_boolean((r != nullptr) && r->isInitiator));
+   json_object_set_new(json, "readTime", json_time_string((r != nullptr) ? r->readTime : 0));
+   unlock();
+   return json;
 }
 
 /**
@@ -626,14 +673,9 @@ uint32_t NXCORE_EXPORTABLE DeleteAIMessage(uint32_t messageId, uint32_t userId)
    if (msg == nullptr)
       return RCC_INVALID_MESSAGE_ID;
 
-   // Only initiator or admin can delete
-   if (!msg->isInitiator(userId))
-   {
-      // Check if user is admin
-      // For now, just allow if user is recipient
-      if (!msg->isRecipient(userId))
-         return RCC_ACCESS_DENIED;
-   }
+   // Only initiator or user with AI task management rights can delete
+   if (!msg->isInitiator(userId) && ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) == 0))
+      return RCC_ACCESS_DENIED;
 
    msg->deleteFromDatabase();
    s_messages.remove(messageId);

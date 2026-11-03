@@ -66,7 +66,7 @@ struct AIMessageRecipient
 /**
  * AI agent message
  */
-class AIMessage
+class NXCORE_EXPORTABLE AIMessage
 {
 private:
    uint32_t m_id;
@@ -86,6 +86,9 @@ private:
 
    void lock() const { m_mutex.lock(); }
    void unlock() const { m_mutex.unlock(); }
+
+   const AIMessageRecipient *findRecipient(uint32_t userId) const;
+   AIMessageStatus getStatusForUser(uint32_t userId) const;
 
 public:
    AIMessage(uint32_t id, AIMessageType type, const TCHAR *title, const TCHAR *text,
@@ -116,6 +119,7 @@ public:
    bool setStatus(AIMessageStatus status);
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t userId) const;
+   json_t *toJson(uint32_t userId) const;
    bool saveToDatabase() const;
    bool deleteFromDatabase();
 };
@@ -188,7 +192,7 @@ uint32_t NXCORE_EXPORTABLE ApproveAIMessage(uint32_t messageId, uint32_t userId)
 uint32_t NXCORE_EXPORTABLE RejectAIMessage(uint32_t messageId, uint32_t userId);
 
 /**
- * Delete AI message
+ * Delete AI message. Allowed for message initiator and users with SYSTEM_ACCESS_MANAGE_AI_TASKS right.
  * @param messageId Message ID
  * @param userId User ID (for permission check)
  * @return RCC code

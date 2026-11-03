@@ -2311,7 +2311,7 @@ json_t *Chat::getPendingQuestion()
    json_object_set_new(question, "confirmationType", json_integer(static_cast<int>(m_pendingQuestion->confirmationType)));
    json_object_set_new(question, "text", json_string(m_pendingQuestion->text.c_str()));
    json_object_set_new(question, "context", json_string(m_pendingQuestion->context.c_str()));
-   json_object_set_new(question, "expiresAt", json_integer(m_pendingQuestion->expiresAt));
+   json_object_set_new(question, "expiresAt", json_time_string(m_pendingQuestion->expiresAt));
 
    if (m_pendingQuestion->isMultipleChoice)
    {
