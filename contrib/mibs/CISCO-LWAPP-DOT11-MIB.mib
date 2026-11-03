@@ -19,7 +19,8 @@ IMPORTS
     OBJECT-GROUP,
     NOTIFICATION-GROUP
         FROM SNMPv2-CONF
-    TruthValue
+    TruthValue,
+    RowStatus
         FROM SNMPv2-TC
     SnmpAdminString
         FROM SNMP-FRAMEWORK-MIB

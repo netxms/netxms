@@ -24,6 +24,7 @@ IMPORTS
         FROM SNMPv2-CONF
     MacAddress,
     RowStatus,
+    TimeInterval,
     TruthValue
         FROM SNMPv2-TC
     SnmpAdminString

@@ -41,6 +41,7 @@ IMPORTS
     IANAifType
         FROM IANAifType-MIB
     CLApIfType,
+    CLDot11Band,
     CLDot11Channel,
     CLApAssocFailureReason,
     CLApDot11RadioSubband,
