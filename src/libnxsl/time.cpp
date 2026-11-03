@@ -107,6 +107,26 @@ struct DateTime
    {
       if (valid)
          return;
+
+      // Fold month into year before calling timegm()/mktime(): some platform
+      // implementations (Solaris) silently overflow tm_year instead of returning -1
+      int64_t year = static_cast<int64_t>(data.tm_year) + data.tm_mon / 12;
+      int month = data.tm_mon % 12;
+      if (month < 0)
+      {
+         month += 12;
+         year--;
+      }
+      if ((year > INT_MAX) || (year < INT_MIN))
+      {
+         timestamp = static_cast<time_t>(-1);
+         valid = true;
+         updateFromTimestamp();
+         return;
+      }
+      data.tm_year = static_cast<int>(year);
+      data.tm_mon = month;
+
       timestamp = utc ? timegm(&data) : mktime(&data);
       valid = true;
       updateFromTimestamp();
