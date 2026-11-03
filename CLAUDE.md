@@ -22,6 +22,8 @@ When a shared helper performs a lookup that can fail (e.g. resolving an imported
 
 When hardening ingestion of an NXCP or JSON field, keep the existing `getFieldAs*` / `json_object_get_*` accessor and add the range or sanity check after it. Change the accessor type only when the current one actually loses information the code needs; the out-of-range value is the bug, not the narrow read.
 
+Server code and modules never run database maintenance (`VACUUM`, `ANALYZE`, `REINDEX`, table rebuilds) on their own. That is the administrator's job: housekeeping deletes rows and leaves maintenance to the DBA or `nxdbmgr`.
+
 ## Quick Start
 
 ### C++ Components (Server, Agent, Libraries)
