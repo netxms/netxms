@@ -165,6 +165,17 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.58 to 70.59
+ */
+static bool H_UpgradeFromV58()
+{
+   // Oracle stores empty strings as NULL, so user variables with empty values require nullable column
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, L"user_profiles", L"var_value"));
+   CHK_EXEC(SetMinorSchemaVersion(59));
+   return true;
+}
+
+/**
  * Upgrade from 70.57 to 70.58
  */
 static bool H_UpgradeFromV57()
@@ -315,6 +326,9 @@ static bool H_UpgradeFromV52()
    CHK_EXEC(DBDropPrimaryKey(g_dbHandle, L"user_profiles"));
    CHK_EXEC(DBResizeColumn(g_dbHandle, L"user_profiles", L"var_name", 127, false));
    CHK_EXEC(DBAddPrimaryKey(g_dbHandle, L"user_profiles", L"user_id,var_name"));
+
+   // Oracle stores empty strings as NULL, and migrated attributes may have empty values
+   CHK_EXEC(DBRemoveNotNullConstraint(g_dbHandle, L"user_profiles", L"var_value"));
 
    // Dot-prefixed user custom attributes (client-side UI state stored by older clients) are replaced
    // by user variables; move them over without the leading dot and drop the originals.
@@ -1922,6 +1936,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 58, 70, 59, H_UpgradeFromV58 },
    { 57, 70, 58, H_UpgradeFromV57 },
    { 56, 70, 57, H_UpgradeFromV56 },
    { 55, 70, 56, H_UpgradeFromV55 },

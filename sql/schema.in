@@ -159,7 +159,7 @@ CREATE TABLE user_profiles
 (
   user_id integer not null,
   var_name varchar(127) not null,
-  var_value SQL_TEXT not null,
+  var_value SQL_TEXT null,
   PRIMARY KEY(user_id,var_name)
 ) TABLE_TYPE;
 
