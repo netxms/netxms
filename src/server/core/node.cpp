@@ -5138,6 +5138,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
       return false;
    }
    sendPollerMsg(POLLER_INFO _T("Received information on %d hardware components\r\n"), components->size());
+   components->sort(HardwareComponentComparator);  // required by CalculateHardwareChanges
 
    static const TCHAR *categoryNames[] = { _T("Other"), _T("Baseboard"), _T("Processor"), _T("Memory device"), _T("Storage device"), _T("Battery"), _T("Network adapter") };
 

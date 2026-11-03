@@ -23,14 +23,26 @@
 #include "nxcore.h"
 
 /**
- * Comparator for hardware components
+ * Comparator for hardware components. Storage devices and network adapters that have serial number (MAC address
+ * for network adapters) are identified by it regardless of index, because agents report index as enumeration
+ * position that shifts when other devices are added or removed. Such components are ordered before components
+ * of same category without serial number, which are identified by index.
  */
 int HardwareComponentComparator(const HardwareComponent **c1, const HardwareComponent **c2)
 {
    int rc = static_cast<int>((*c1)->getCategory()) - static_cast<int>((*c2)->getCategory());
    if (rc != 0)
       return rc;
-   if ((*c1)->getIndex() != (*c2)->getIndex())
+   bool compareIndex = true;
+   if (((*c1)->getCategory() == HWC_STORAGE) || ((*c1)->getCategory() == HWC_NETWORK_ADAPTER))
+   {
+      bool hasSerial1 = (*(*c1)->getSerialNumber() != 0);
+      bool hasSerial2 = (*(*c2)->getSerialNumber() != 0);
+      if (hasSerial1 != hasSerial2)
+         return hasSerial1 ? -1 : 1;
+      compareIndex = !hasSerial1;
+   }
+   if (compareIndex && ((*c1)->getIndex() != (*c2)->getIndex()))
       return (*c1)->getIndex() < (*c2)->getIndex() ? -1 : 1;
    rc = _tcscmp((*c1)->getSerialNumber(), (*c2)->getSerialNumber());
    if (rc != 0)
@@ -48,7 +60,7 @@ int HardwareComponentComparator(const HardwareComponent **c1, const HardwareComp
 }
 
 /**
- * Calculate hardware changes
+ * Calculate hardware changes. Both sets must be sorted with HardwareComponentComparator.
  */
 ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareComponent> *oldSet, ObjectArray<HardwareComponent> *newSet)
 {
