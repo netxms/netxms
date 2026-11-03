@@ -5727,7 +5727,7 @@ static double s_decimalMultipliersSmall[] = { 0.000000000000001, 0.000000000001,
 static double s_binaryMultipliers[] = { 1L, 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x4000000000000L };
 static const TCHAR *s_suffix[] = { _T(""), _T(" k"), _T(" M"), _T(" G"), _T(" T"), _T(" P") };
 static const TCHAR *s_binarySuffix[] = { _T(""), _T(" Ki"), _T(" Mi"), _T(" Gi"), _T(" Ti"), _T(" Pi") };
-static const TCHAR *s_suffixSmall[] = { _T(" f"), _T(" p"), _T(" n"), _T(" μ"), _T(" m"), _T("") };
+static const TCHAR *s_suffixSmall[] = { _T(" f"), _T(" p"), _T(" n"), _T(" \u03bc"), _T(" m"), _T("") };
 
 /**
  * Convert number to short form using decadic unit prefixes
@@ -5795,7 +5795,7 @@ String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, in
 /**
  * List of units that should be exempt from multiplication
  */
-static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dBm"), _T("rpm"), _T("RPM") };
+static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("\u00b0C"), _T("\u00b0F"), _T("dBm"), _T("rpm"), _T("RPM") };
 
 /**
  * Format DCI value based on Unit and value.

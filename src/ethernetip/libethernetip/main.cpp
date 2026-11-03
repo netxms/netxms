@@ -1276,7 +1276,7 @@ static CodeLookupElement s_vendorLookupTable[] =
    { 1451, _T("Domino Printing") },
    { 1452, _T("LightMachinery Inc") },
    { 1453, _T("DEUTA-WERKE GmbH") },
-   { 1454, _T("Altus Sistemas de Automação S.A.") },
+   { 1454, _T("Altus Sistemas de Automa\u00e7\u00e3o S.A.") },
    { 1455, _T("Criterion NDT") },
    { 1456, _T("InterTech Development Company") },
    { 1457, _T("Action Labs, Incorporated") },

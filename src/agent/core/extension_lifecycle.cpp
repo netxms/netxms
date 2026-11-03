@@ -154,7 +154,7 @@ public:
       });
 
       if (runAs != nullptr && *runAs != 0)
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Extension(%s): RunAs=%s ignored — not yet implemented in v1"), m_extensionName.cstr(), runAs);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Extension(%s): RunAs=%s ignored - not yet implemented in v1"), m_extensionName.cstr(), runAs);
 
       return execute();
    }

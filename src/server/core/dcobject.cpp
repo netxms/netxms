@@ -2482,7 +2482,7 @@ DCObjectInfo::~DCObjectInfo()
 /**
  * List of units that should be exempt from multiplication
  */
-static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dbm") };
+static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("\u00b0C"), _T("\u00b0F"), _T("dbm") };
 
 /**
  * Format DCI value

@@ -49,7 +49,7 @@ void TestFormatNumber()
 
    StartTest(_T("FormatNumber - small numbers"));
    AssertEquals(FormatNumber(0.005, false, 0, 2).cstr(), _T("5.00 m"));
-   AssertEquals(FormatNumber(0.000002, false, 0, 2).cstr(), _T("2.00 μ"));
+   AssertEquals(FormatNumber(0.000002, false, 0, 2).cstr(), _T("2.00 \u03bc"));
    AssertEquals(FormatNumber(0.000000003, false, 0, 2).cstr(), _T("3.00 n"));
    AssertEquals(FormatNumber(-0.005, false, 0, 2).cstr(), _T("-5.00 m"));
    EndTest();
@@ -104,7 +104,7 @@ void TestFormatDCIValue()
 
    StartTest(_T("FormatDCIValue - units exempt from multipliers"));
    AssertEquals(FormatDCIValue(_T("%"), _T("95.5")).cstr(), _T("95.5 %"));
-   AssertEquals(FormatDCIValue(_T("°C"), _T("21.5")).cstr(), _T("21.5 °C"));
+   AssertEquals(FormatDCIValue(_T("\u00b0C"), _T("21.5")).cstr(), _T("21.5 \u00b0C"));
    AssertEquals(FormatDCIValue(_T("dBm"), _T("-65")).cstr(), _T("-65 dBm"));
    AssertEquals(FormatDCIValue(_T("rpm"), _T("12000")).cstr(), _T("12000 rpm"));
    EndTest();
