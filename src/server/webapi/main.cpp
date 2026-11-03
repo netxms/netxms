@@ -130,6 +130,8 @@ int H_DataExportStart(Context *context);
 int H_DataExportState(Context *context);
 int H_DataCollectionTableValue(Context *context);
 int H_PerformanceViewDCIs(Context *context);
+int H_AvailableAgentMetrics(Context *context);
+int H_AvailableDeviceDriverMetrics(Context *context);
 int H_DataCollectionConfigList(Context *context);
 int H_DataCollectionConfigGet(Context *context);
 int H_DataCollectionConfigCreate(Context *context);
@@ -962,6 +964,12 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/agent")
       .GET(H_ObjectAgentGet)
       .PATCH(H_ObjectAgentUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/available-metrics/agent")
+      .GET(H_AvailableAgentMetrics)
+      .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/available-metrics/device-driver")
+      .GET(H_AvailableDeviceDriverMetrics)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/current-values")
       .GET(H_DataCollectionCurrentValues)

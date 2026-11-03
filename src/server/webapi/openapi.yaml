@@ -7167,6 +7167,96 @@ paths:
         - BearerAuth: []
       tags:
         - Data Collection
+  /v1/objects/{object-id}/data-collection/available-metrics/agent:
+    get:
+      operationId: getAvailableAgentMetrics
+      summary: Get available agent metrics
+      description: |
+        Retrieve metrics, tables and lists supported by the NetXMS agent, as cached by the server during the last
+        configuration poll. Used for metric selection when configuring DCIs with origin `agent`.
+        Lists are taken from the node itself, from the controller node for a chassis, or from the gateway node
+        for a sensor. For templates and clusters the merged list from all nodes is returned (duplicates by name removed).
+        Lists are empty if the backing node cannot be resolved or has no cached list yet.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+      responses:
+        '200':
+          description: Available metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvailableMetric'
+                  tables:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvailableTable'
+                  lists:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvailableList'
+        '400':
+          description: Object class does not provide metric lists
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
+  /v1/objects/{object-id}/data-collection/available-metrics/device-driver:
+    get:
+      operationId: getAvailableDeviceDriverMetrics
+      summary: Get available device driver metrics
+      description: |
+        Retrieve metrics provided by the network device driver, as cached by the server during the last
+        configuration poll. Used for metric selection when configuring DCIs with origin `driver`.
+        Lists are taken from the node itself, from the controller node for a chassis, or from the gateway node
+        for a sensor. For templates and clusters the merged list from all nodes is returned (duplicates by name removed).
+        Lists are empty if the backing node cannot be resolved or has no cached list yet.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+      responses:
+        '200':
+          description: Available metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AvailableMetric'
+        '400':
+          description: Object class does not provide metric lists
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
   /v1/objects/{object-id}/data-collection/current-values:
     get:
       operationId: getDciCurrentValues
@@ -14294,6 +14384,42 @@ components:
           type: string
           format: date-time
           nullable: true
+    AvailableMetric:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Metric name; `(*)` suffix indicates metric that requires instance argument
+        description:
+          type: string
+          description: Metric description; may contain `{instance}` placeholder
+        dataType:
+          type: string
+          enum: [int32, uint32, int64, uint64, string, float, 'null', counter32, counter64]
+          description: Data type of metric value
+    AvailableTable:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Table name; `(*)` suffix indicates table that requires instance argument
+        description:
+          type: string
+          description: Table description
+        instanceColumns:
+          type: array
+          items:
+            type: string
+          description: Names of columns forming row instance
+    AvailableList:
+      type: object
+      properties:
+        name:
+          type: string
+          description: List name; `(*)` suffix indicates list that requires instance argument
+        description:
+          type: string
+          description: List description
     AiObservation:
       type: object
       properties:

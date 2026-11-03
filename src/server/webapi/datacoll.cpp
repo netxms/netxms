@@ -645,6 +645,50 @@ int H_PerformanceViewDCIs(Context *context)
 }
 
 /**
+ * Get metrics with given origin available for data collection on object
+ */
+static int GetAvailableMetrics(Context *context, int origin)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   json_t *response = GetAvailableMetricsAsJson(*object, origin);
+   if (response == nullptr)
+   {
+      context->setErrorResponse("Object does not provide metric lists");
+      return 400;
+   }
+
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
+ * Handler for /v1/objects/:object-id/data-collection/available-metrics/agent
+ */
+int H_AvailableAgentMetrics(Context *context)
+{
+   return GetAvailableMetrics(context, DS_NATIVE_AGENT);
+}
+
+/**
+ * Handler for /v1/objects/:object-id/data-collection/available-metrics/device-driver
+ */
+int H_AvailableDeviceDriverMetrics(Context *context)
+{
+   return GetAvailableMetrics(context, DS_DEVICE_DRIVER);
+}
+
+/**
  * Element of data push request
  */
 struct PushDataElement

@@ -588,112 +588,221 @@ void StopDataCollection()
 }
 
 /**
- * Callback data for WriteFullParamListToMessage
+ * Get source of agent and device driver metric lists for given object. For object classes backed by
+ * a single node (node itself, chassis controller, sensor gateway) node is set to that node, or to
+ * nullptr if it cannot be resolved.
  */
-struct WriteFullParamListToMessage_CallbackData
+MetricListSource GetMetricListSource(NetObj& object, shared_ptr<Node> *node)
 {
-   int origin;
-   ObjectArray<AgentParameterDefinition> *parameters;
-};
-
-/**
- * Update parameter list from node
- */
-static EnumerationCallbackResult UpdateParamList(NetObj *object, void *data)
-{
-   WriteFullParamListToMessage_CallbackData *cd = static_cast<WriteFullParamListToMessage_CallbackData*>(data);
-
-	ObjectArray<AgentParameterDefinition> *paramList = static_cast<Node*>(object)->openParamList(cd->origin);
-	if ((paramList != nullptr) && (paramList->size() > 0))
-	{
-		for(int i = 0; i < paramList->size(); i++)
-		{
-			int j;
-			for(j = 0; j < cd->parameters->size(); j++)
-			{
-				if (!_tcsicmp(paramList->get(i)->getName(), cd->parameters->get(j)->getName()))
-					break;
-			}
-
-			if (j == cd->parameters->size())
-			{
-			   cd->parameters->add(new AgentParameterDefinition(paramList->get(i)));
-			}
-		}
-	}
-	static_cast<Node*>(object)->closeParamList();
-
-	return _CONTINUE;
+   switch(object.getObjectClass())
+   {
+      case OBJECT_NODE:
+         *node = static_pointer_cast<Node>(object.self());
+         return MetricListSource::NODE;
+      case OBJECT_CLUSTER:
+      case OBJECT_TEMPLATE:
+         return MetricListSource::ALL_NODES;
+      case OBJECT_CHASSIS:
+         *node = static_pointer_cast<Node>(FindObjectById(static_cast<Chassis&>(object).getControllerId(), OBJECT_NODE));
+         return MetricListSource::NODE;
+      case OBJECT_SENSOR:
+         *node = static_pointer_cast<Node>(FindObjectById(static_cast<Sensor&>(object).getGatewayNodeId(), OBJECT_NODE));
+         return MetricListSource::NODE;
+      default:
+         return MetricListSource::INCOMPATIBLE;
+   }
 }
 
 /**
- * Update table list from node
+ * Create copy of agent parameter or table definition
  */
-static EnumerationCallbackResult UpdateTableList(NetObj *object, void *data)
+template<typename T> static inline T *CloneDefinition(const T *src)
 {
-	ObjectArray<AgentTableDefinition> *fullList = (ObjectArray<AgentTableDefinition> *)data;
-
-   ObjectArray<AgentTableDefinition> *tableList = static_cast<Node*>(object)->openTableList();
-	if ((tableList != nullptr) && (tableList->size() > 0))
-	{
-		for(int i = 0; i < tableList->size(); i++)
-		{
-			int j;
-			for(j = 0; j < fullList->size(); j++)
-			{
-				if (!_tcsicmp(tableList->get(i)->getName(), fullList->get(j)->getName()))
-					break;
-			}
-
-			if (j == fullList->size())
-			{
-            fullList->add(new AgentTableDefinition(tableList->get(i)));
-			}
-		}
-	}
-	static_cast<Node*>(object)->closeTableList();
-
-	return _CONTINUE;
+   return new T(src);
 }
 
+/**
+ * Create copy of agent list definition
+ */
+static inline AgentListDefinition *CloneDefinition(const AgentListDefinition *src)
+{
+   return new AgentListDefinition(*src);
+}
+
+/**
+ * Add elements from source list to merged list, skipping elements with already known names
+ */
+template<typename T> static void MergeDefinitionList(ObjectArray<T> *mergedList, ObjectArray<T> *list)
+{
+   if (list == nullptr)
+      return;
+
+   for(int i = 0; i < list->size(); i++)
+   {
+      T *e = list->get(i);
+      int j;
+      for(j = 0; j < mergedList->size(); j++)
+      {
+         if (!_tcsicmp(e->getName(), mergedList->get(j)->getName()))
+            break;
+      }
+      if (j == mergedList->size())
+         mergedList->add(CloneDefinition(e));
+   }
+}
+
+/**
+ * Get merged list of metrics with given origin supported by all nodes
+ */
+ObjectArray<AgentParameterDefinition> *GetFullAgentParameterList(int origin)
+{
+   auto fullList = new ObjectArray<AgentParameterDefinition>(64, 64, Ownership::True);
+   g_idxNodeById.forEach(
+      [fullList, origin] (NetObj *object) -> EnumerationCallbackResult
+      {
+         MergeDefinitionList(fullList, static_cast<Node*>(object)->openParamList(origin));
+         static_cast<Node*>(object)->closeParamList();
+         return _CONTINUE;
+      });
+   return fullList;
+}
+
+/**
+ * Get merged list of agent tables supported by all nodes
+ */
+ObjectArray<AgentTableDefinition> *GetFullAgentTableList()
+{
+   auto fullList = new ObjectArray<AgentTableDefinition>(64, 64, Ownership::True);
+   g_idxNodeById.forEach(
+      [fullList] (NetObj *object) -> EnumerationCallbackResult
+      {
+         MergeDefinitionList(fullList, static_cast<Node*>(object)->openTableList());
+         static_cast<Node*>(object)->closeTableList();
+         return _CONTINUE;
+      });
+   return fullList;
+}
+
+/**
+ * Get merged list of agent lists supported by all nodes
+ */
+ObjectArray<AgentListDefinition> *GetFullAgentListList()
+{
+   auto fullList = new ObjectArray<AgentListDefinition>(64, 64, Ownership::True);
+   g_idxNodeById.forEach(
+      [fullList] (NetObj *object) -> EnumerationCallbackResult
+      {
+         MergeDefinitionList(fullList, static_cast<Node*>(object)->openListList());
+         static_cast<Node*>(object)->closeListList();
+         return _CONTINUE;
+      });
+   return fullList;
+}
 
 /**
  * Write full (from all nodes) agent parameters list to NXCP message
  */
 void WriteFullParamListToMessage(NXCPMessage *msg, int origin, uint16_t flags)
 {
-   // Gather full parameter list
-	if (flags & 0x01)
-	{
-		ObjectArray<AgentParameterDefinition> fullList(64, 64, Ownership::True);
-		WriteFullParamListToMessage_CallbackData data;
-		data.origin = origin;
-		data.parameters = &fullList;
-		g_idxNodeById.forEach(UpdateParamList, &data);
+   if (flags & 0x01)
+   {
+      ObjectArray<AgentParameterDefinition> *fullList = GetFullAgentParameterList(origin);
+      msg->setField(VID_NUM_PARAMETERS, static_cast<uint32_t>(fullList->size()));
+      uint32_t fieldId = VID_PARAM_LIST_BASE;
+      for(int i = 0; i < fullList->size(); i++)
+         fieldId += fullList->get(i)->fillMessage(msg, fieldId);
+      delete fullList;
+   }
 
-		// Put list into the message
-		msg->setField(VID_NUM_PARAMETERS, (UINT32)fullList.size());
-      UINT32 varId = VID_PARAM_LIST_BASE;
-		for(int i = 0; i < fullList.size(); i++)
-		{
-         varId += fullList.get(i)->fillMessage(msg, varId);
-		}
-	}
+   if (flags & 0x02)
+   {
+      ObjectArray<AgentTableDefinition> *fullList = GetFullAgentTableList();
+      msg->setField(VID_NUM_TABLES, static_cast<uint32_t>(fullList->size()));
+      uint32_t fieldId = VID_TABLE_LIST_BASE;
+      for(int i = 0; i < fullList->size(); i++)
+         fieldId += fullList->get(i)->fillMessage(msg, fieldId);
+      delete fullList;
+   }
+}
 
-   // Gather full table list
-	if (flags & 0x02)
-	{
-		ObjectArray<AgentTableDefinition> fullList(64, 64, Ownership::True);
-		g_idxNodeById.forEach(UpdateTableList, &fullList);
+/**
+ * Write full (from all nodes) agent list list to NXCP message
+ */
+void WriteFullListListToMessage(NXCPMessage *msg)
+{
+   ObjectArray<AgentListDefinition> *fullList = GetFullAgentListList();
+   msg->setField(VID_NUM_ENUMS, static_cast<uint32_t>(fullList->size()));
+   uint32_t fieldId = VID_ENUM_LIST_BASE;
+   for(int i = 0; i < fullList->size(); i++, fieldId += 10)
+      fullList->get(i)->fillMessage(msg, fieldId);
+   delete fullList;
+}
 
-		// Put list into the message
-		msg->setField(VID_NUM_TABLES, (UINT32)fullList.size());
-		uint32_t fieldId = VID_TABLE_LIST_BASE;
-		for(int i = 0; i < fullList.size(); i++)
-		{
-         fieldId += fullList.get(i)->fillMessage(msg, fieldId);
-		}
-	}
+/**
+ * Convert definition list to JSON array
+ */
+template<typename T> static json_t *DefinitionListToJson(const ObjectArray<T> *list)
+{
+   json_t *array = json_array();
+   if (list != nullptr)
+   {
+      for(int i = 0; i < list->size(); i++)
+         json_array_append_new(array, list->get(i)->toJson());
+   }
+   return array;
+}
+
+/**
+ * Get metrics available for data collection with given origin (DS_NATIVE_AGENT or DS_DEVICE_DRIVER) on
+ * given object as JSON. Response contains "metrics" array for both origins and "tables" and "lists" arrays
+ * for agent origin. Returns nullptr if object class does not support metric lists.
+ */
+json_t NXCORE_EXPORTABLE *GetAvailableMetricsAsJson(NetObj& object, int origin)
+{
+   shared_ptr<Node> node;
+   MetricListSource source = GetMetricListSource(object, &node);
+   if (source == MetricListSource::INCOMPATIBLE)
+      return nullptr;
+
+   json_t *response = json_object();
+   if (source == MetricListSource::ALL_NODES)
+   {
+      ObjectArray<AgentParameterDefinition> *metrics = GetFullAgentParameterList(origin);
+      json_object_set_new(response, "metrics", DefinitionListToJson(metrics));
+      delete metrics;
+      if (origin == DS_NATIVE_AGENT)
+      {
+         ObjectArray<AgentTableDefinition> *tables = GetFullAgentTableList();
+         json_object_set_new(response, "tables", DefinitionListToJson(tables));
+         delete tables;
+
+         ObjectArray<AgentListDefinition> *lists = GetFullAgentListList();
+         json_object_set_new(response, "lists", DefinitionListToJson(lists));
+         delete lists;
+      }
+   }
+   else if (node != nullptr)
+   {
+      json_object_set_new(response, "metrics", DefinitionListToJson(node->openParamList(origin)));
+      node->closeParamList();
+      if (origin == DS_NATIVE_AGENT)
+      {
+         json_object_set_new(response, "tables", DefinitionListToJson(node->openTableList()));
+         node->closeTableList();
+         json_object_set_new(response, "lists", DefinitionListToJson(node->openListList()));
+         node->closeListList();
+      }
+   }
+   else
+   {
+      json_object_set_new(response, "metrics", json_array());
+      if (origin == DS_NATIVE_AGENT)
+      {
+         json_object_set_new(response, "tables", json_array());
+         json_object_set_new(response, "lists", json_array());
+      }
+   }
+   return response;
 }
 
 /**

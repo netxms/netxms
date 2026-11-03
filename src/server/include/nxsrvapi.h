@@ -903,6 +903,7 @@ public:
    ~AgentParameterDefinition();
 
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   json_t *toJson() const;
 
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
@@ -941,6 +942,7 @@ public:
    ~AgentTableDefinition();
 
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   json_t *toJson() const;
 
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
@@ -965,6 +967,14 @@ public:
    {
       msg->setField(baseId, m_name);
       msg->setField(baseId + 1, m_description);
+   }
+
+   json_t *toJson() const
+   {
+      json_t *json = json_object();
+      json_object_set_new(json, "name", json_string_t(m_name));
+      json_object_set_new(json, "description", json_string_t(m_description));
+      return json;
    }
 
    const wchar_t *getName() const { return m_name.cstr(); }
@@ -1812,6 +1822,7 @@ const wchar_t LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(uint32_t code);
  * Variables
  */
 extern LIBNXSRV_EXPORTABLE_VAR(VolatileCounter64 g_flags);
+extern LIBNXSRV_EXPORTABLE_VAR(CodeLookupElement g_dciDataTypeNames[]);
 extern LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool);
 extern LIBNXSRV_EXPORTABLE_VAR(int g_dbSyntax);
 

@@ -4045,6 +4045,17 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
 }
 
 /**
+ * DCI data type names (shared by server JSON representations)
+ */
+CodeLookupElement LIBNXSRV_EXPORTABLE g_dciDataTypeNames[] =
+{
+   { DCI_DT_INT, L"int32" }, { DCI_DT_UINT, L"uint32" }, { DCI_DT_INT64, L"int64" },
+   { DCI_DT_UINT64, L"uint64" }, { DCI_DT_STRING, L"string" }, { DCI_DT_FLOAT, L"float" },
+   { DCI_DT_NULL, L"null" }, { DCI_DT_COUNTER32, L"counter32" }, { DCI_DT_COUNTER64, L"counter64" },
+   { 0, nullptr }
+};
+
+/**
  * Create new agent parameter definition from NXCP message
  */
 AgentParameterDefinition::AgentParameterDefinition(const NXCPMessage *msg, uint32_t baseId)
@@ -4097,6 +4108,18 @@ uint32_t AgentParameterDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId
    msg->setField(baseId + 1, m_description);
    msg->setField(baseId + 2, static_cast<uint16_t>(m_dataType));
    return 3;
+}
+
+/**
+ * Serialize to JSON
+ */
+json_t *AgentParameterDefinition::toJson() const
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "name", json_string_t(m_name));
+   json_object_set_new(json, "description", json_string_t(m_description));
+   json_object_set_new(json, "dataType", json_string_w(CodeToText(m_dataType, g_dciDataTypeNames, L"int32")));
+   return json;
 }
 
 /**
@@ -4167,6 +4190,18 @@ uint32_t AgentTableDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) co
 
    msg->setField(baseId, fieldId - baseId);
    return fieldId - baseId;
+}
+
+/**
+ * Serialize to JSON
+ */
+json_t *AgentTableDefinition::toJson() const
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "name", json_string_t(m_name));
+   json_object_set_new(json, "description", json_string_t(m_description));
+   json_object_set_new(json, "instanceColumns", m_instanceColumns->toJson());
+   return json;
 }
 
 /**

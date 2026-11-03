@@ -42,7 +42,6 @@ extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciStatusNames[];
 extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciPollingScheduleTypeNames[];
 extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciRetentionTypeNames[];
 extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciInstanceDiscoveryMethodNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciDataTypeNames[];
 extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciDeltaCalculationNames[];
 extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciSnmpRawTypeNames[];
 extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciThresholdFunctionNames[];
@@ -168,6 +167,8 @@ public:
 
 class DCItem;
 class DataCollectionTarget;
+class NetObj;
+class Node;
 
 /**
  * Threshold definition class
@@ -1205,6 +1206,23 @@ static inline uint32_t RCCFromDCIError(DataCollectionError error)
 void InitDataCollector();
 void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, wchar_t *buffer, uint32_t *error);
 void WriteFullParamListToMessage(NXCPMessage *msg, int origin, uint16_t flags);
+void WriteFullListListToMessage(NXCPMessage *msg);
+ObjectArray<AgentParameterDefinition> *GetFullAgentParameterList(int origin);
+ObjectArray<AgentTableDefinition> *GetFullAgentTableList();
+ObjectArray<AgentListDefinition> *GetFullAgentListList();
+
+/**
+ * Source of agent and device driver metric lists for an object
+ */
+enum class MetricListSource
+{
+   INCOMPATIBLE,  // object class does not have metric lists
+   NODE,          // lists of a single node (may be unresolved)
+   ALL_NODES      // merged lists of all nodes (templates and clusters)
+};
+
+MetricListSource GetMetricListSource(NetObj& object, shared_ptr<Node> *node);
+json_t NXCORE_EXPORTABLE *GetAvailableMetricsAsJson(NetObj& object, int origin);
 int GetDCObjectType(uint32_t nodeId, uint32_t dciId);
 
 bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **source, int *address, const TCHAR **conversion);

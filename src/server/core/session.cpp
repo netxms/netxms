@@ -9514,39 +9514,30 @@ void ClientSession::getParametersList(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      int origin = request.isFieldExist(VID_DCI_SOURCE_TYPE) ? request.getFieldAsInt16(VID_DCI_SOURCE_TYPE) : DS_NATIVE_AGENT;
-      switch(object->getObjectClass())
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-         case OBJECT_NODE:
-            response.setField(VID_RCC, RCC_SUCCESS);
-            static_cast<Node&>(*object).writeParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
-            break;
-         case OBJECT_CLUSTER:
-         case OBJECT_TEMPLATE:
-            response.setField(VID_RCC, RCC_SUCCESS);
-            WriteFullParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
-            break;
-         case OBJECT_CHASSIS:
-            response.setField(VID_RCC, RCC_SUCCESS);
-            if (static_cast<Chassis&>(*object).getControllerId() != 0)
-            {
-               shared_ptr<NetObj> controller = FindObjectById(static_cast<Chassis&>(*object).getControllerId(), OBJECT_NODE);
-               if (controller != nullptr)
-                  static_cast<Node&>(*controller).writeParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
-            }
-            break;
-         case OBJECT_SENSOR:
-            response.setField(VID_RCC, RCC_SUCCESS);
-            if (static_cast<Sensor&>(*object).getGatewayNodeId() != 0)
-            {
-               shared_ptr<NetObj> gatewayNode = FindObjectById(static_cast<Sensor&>(*object).getGatewayNodeId(), OBJECT_NODE);
-               if (gatewayNode != nullptr)
-                  static_cast<Node&>(*gatewayNode).writeParamListToMessage(&response, origin, request.getFieldAsUInt16(VID_FLAGS));
-            }
-            break;
-         default:
-            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-            break;
+         int origin = request.isFieldExist(VID_DCI_SOURCE_TYPE) ? request.getFieldAsInt16(VID_DCI_SOURCE_TYPE) : DS_NATIVE_AGENT;
+         uint16_t flags = request.getFieldAsUInt16(VID_FLAGS);
+         shared_ptr<Node> node;
+         switch(GetMetricListSource(*object, &node))
+         {
+            case MetricListSource::NODE:
+               response.setField(VID_RCC, RCC_SUCCESS);
+               if (node != nullptr)
+                  node->writeParamListToMessage(&response, origin, flags);
+               break;
+            case MetricListSource::ALL_NODES:
+               response.setField(VID_RCC, RCC_SUCCESS);
+               WriteFullParamListToMessage(&response, origin, flags);
+               break;
+            default:
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+               break;
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
@@ -9567,24 +9558,28 @@ void ClientSession::getListsList(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      switch(object->getObjectClass())
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
       {
-         case OBJECT_NODE:
-            response.setField(VID_RCC, RCC_SUCCESS);
-            static_cast<Node&>(*object).writeListListToMessage(&response);
-            break;
-         case OBJECT_SENSOR:
-            response.setField(VID_RCC, RCC_SUCCESS);
-            if (static_cast<Sensor&>(*object).getGatewayNodeId() != 0)
-            {
-               shared_ptr<NetObj> gatewayNode = FindObjectById(static_cast<Sensor&>(*object).getGatewayNodeId(), OBJECT_NODE);
-               if (gatewayNode != nullptr)
-                  static_cast<Node&>(*gatewayNode).writeListListToMessage(&response);
-            }
-            break;
-         default:
-            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-            break;
+         shared_ptr<Node> node;
+         switch(GetMetricListSource(*object, &node))
+         {
+            case MetricListSource::NODE:
+               response.setField(VID_RCC, RCC_SUCCESS);
+               if (node != nullptr)
+                  node->writeListListToMessage(&response);
+               break;
+            case MetricListSource::ALL_NODES:
+               response.setField(VID_RCC, RCC_SUCCESS);
+               WriteFullListListToMessage(&response);
+               break;
+            default:
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+               break;
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else

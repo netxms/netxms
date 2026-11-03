@@ -97,13 +97,6 @@ CodeLookupElement g_dciInstanceDiscoveryMethodNames[] =
    { IDM_SMCLP_PROPERTIES, L"smclpProperties" }, { IDM_PUSH, L"push" }, { IDM_OTLP, L"otlp" },
    { 0, nullptr }
 };
-CodeLookupElement g_dciDataTypeNames[] =
-{
-   { DCI_DT_INT, L"int32" }, { DCI_DT_UINT, L"uint32" }, { DCI_DT_INT64, L"int64" },
-   { DCI_DT_UINT64, L"uint64" }, { DCI_DT_STRING, L"string" }, { DCI_DT_FLOAT, L"float" },
-   { DCI_DT_NULL, L"null" }, { DCI_DT_COUNTER32, L"counter32" }, { DCI_DT_COUNTER64, L"counter64" },
-   { 0, nullptr }
-};
 CodeLookupElement g_dciDeltaCalculationNames[] =
 {
    { DCM_ORIGINAL_VALUE, L"none" }, { DCM_SIMPLE, L"simple" },
