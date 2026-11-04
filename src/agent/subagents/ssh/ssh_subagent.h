@@ -159,6 +159,7 @@ class SSHChannelProxy
 private:
    uint32_t m_channelId;
    ssh_channel m_sshChannel;
+   Mutex m_sshLock;  // libssh session is not thread-safe; reads, writes and resizes come from different threads
    SSHSession *m_sshSession;
    shared_ptr<AbstractCommSession> m_commSession;
    THREAD m_readerThread;

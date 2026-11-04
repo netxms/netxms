@@ -527,7 +527,7 @@ LONG H_SSHCheckShellChannel(const TCHAR *param, const TCHAR *arg, TCHAR *value, 
                   }
                   nxlog_debug_tag(DEBUG_TAG, 8, _T("SSH.CheckShellChannel: prompt pattern did not match line \"%s\" on %s:%u"), lastLine, hostName, port);
                }
-               else if (nbytes == 0)
+               else if ((nbytes == 0) || (nbytes == SSH_AGAIN))  // libssh 0.11+ returns SSH_AGAIN on timeout
                {
                   // No data available, check if we have enough to test
                   if (totalBytesRead > 0)

@@ -38,6 +38,7 @@ import org.eclipse.terminal.control.ITerminalListener;
 import org.eclipse.terminal.control.ITerminalViewControl;
 import org.eclipse.terminal.control.TerminalTitleRequestor;
 import org.eclipse.terminal.control.TerminalViewControlFactory;
+import org.eclipse.terminal.internal.textcanvas.TextCanvas;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.nxmc.Memento;
@@ -131,6 +132,7 @@ public class SshTerminalView extends AdHocObjectView
       }, parent, new ITerminalConnector[] { terminalConnector }, true);
       terminal.setConnector(terminalConnector);
       terminal.setCharset(StandardCharsets.UTF_8);
+      ((TextCanvas)terminal.getControl()).setMinColumns(20); // default minimum of 80 columns adds horizontal scrollbar in narrow views
 
       createActions();
       updateActions(TerminalState.CLOSED);
@@ -293,6 +295,8 @@ public class SshTerminalView extends AdHocObjectView
       private int pendingColumns = 0; // guarded by resizeLock
       private int pendingRows = 0; // guarded by resizeLock
       private boolean resizeInProgress = false; // guarded by resizeLock
+      private int sentColumns = 0; // guarded by resizeLock
+      private int sentRows = 0; // guarded by resizeLock
       private final OutputStream remoteStream = new OutputStream() {
          @Override
          public void write(int b) throws IOException
@@ -320,6 +324,7 @@ public class SshTerminalView extends AdHocObjectView
       public void connect(ITerminalControl control)
       {
          super.connect(control);
+         control.setVT100LineWrapping(true); // xterm (terminal type sent to remote side) defers wrap at right margin
          control.setState(TerminalState.CONNECTING);
 
          final NXCSession session = Registry.getSession();
@@ -330,7 +335,14 @@ public class SshTerminalView extends AdHocObjectView
          Thread thread = new Thread(() -> {
             try
             {
-               t.connect(columns, rows);
+               int initialColumns = columns;
+               int initialRows = rows;
+               t.connect(initialColumns, initialRows);
+               synchronized(resizeLock)
+               {
+                  sentColumns = initialColumns;
+                  sentRows = initialRows;
+               }
                connected = true;
                control.setState(TerminalState.CONNECTED);
 
@@ -403,9 +415,11 @@ public class SshTerminalView extends AdHocObjectView
       }
 
       /**
-       * Called by terminal control on UI thread for every resize event. Remote side is notified from a background thread
-       * because in proxy mode resize is a console-server-agent round trip; events arriving while notification is in
-       * progress are coalesced so that only the most recent size is sent.
+       * Called by terminal control on UI thread for every resize event, and also on redraws with unchanged size, which
+       * must not reach remote side: each window-change makes some shells (RouterOS) redraw the screen, which triggers
+       * another call. Remote side is notified from a background thread because in proxy mode resize is a
+       * console-server-agent round trip; events arriving while notification is in progress are coalesced so that only
+       * the most recent size is sent.
        *
        * @see org.eclipse.terminal.connector.provider.AbstractTerminalConnector#setTerminalSize(int, int)
        */
@@ -424,7 +438,7 @@ public class SshTerminalView extends AdHocObjectView
          {
             pendingColumns = newWidth;
             pendingRows = newHeight;
-            if (resizeInProgress)
+            if (resizeInProgress || ((newWidth == sentColumns) && (newHeight == sentRows)))
                return;
             resizeInProgress = true;
          }
@@ -438,10 +452,14 @@ public class SshTerminalView extends AdHocObjectView
             }
             while(true)
             {
-               if (connected)
-                  t.resize(c, r);
+               boolean sent = connected && t.resize(c, r);
                synchronized(resizeLock)
                {
+                  if (sent)
+                  {
+                     sentColumns = c;
+                     sentRows = r;
+                  }
                   if ((pendingColumns == c) && (pendingRows == r))
                   {
                      resizeInProgress = false;

@@ -157,13 +157,28 @@ void SSHChannelProxy::readerThreadInternal()
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u reader thread started"), m_channelId);
 
+   SOCKET sshSocket = ssh_get_fd(ssh_channel_get_session(m_sshChannel));
+   bool eof = false;
+   int nbytes = 0;
    while(m_running)
    {
-      // Read with 100ms timeout for responsive shutdown
-      int nbytes = ssh_channel_read_timeout(m_sshChannel,
-                                            buffer + NXCP_HEADER_SIZE,
-                                            sizeof(buffer) - NXCP_HEADER_SIZE,
-                                            0, 100);
+      // Wait on the socket without holding the lock, so that writes and resizes are not delayed by an idle channel.
+      // Data already buffered by libssh (it can read incoming packets inside ssh_channel_write) is picked up by the
+      // non-blocking read on the next poll timeout at the latest.
+      if (nbytes == 0)
+      {
+         SocketPoller sp;
+         sp.add(sshSocket);
+         sp.poll(100);
+      }
+
+      m_sshLock.lock();
+      nbytes = ssh_channel_read_nonblocking(m_sshChannel, buffer + NXCP_HEADER_SIZE, sizeof(buffer) - NXCP_HEADER_SIZE, 0);
+      eof = ssh_channel_is_eof(m_sshChannel);
+      if ((nbytes < 0) && !eof)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u read error (%hs)"), m_channelId, ssh_get_error(ssh_channel_get_session(m_sshChannel)));
+      m_sshLock.unlock();
+
       if (nbytes > 0)
       {
          // Build and send NXCP message (same pattern as TcpProxy)
@@ -182,20 +197,11 @@ void SSHChannelProxy::readerThreadInternal()
       }
       else if (nbytes < 0)
       {
-         // Error or channel closed
-         if (!ssh_channel_is_eof(m_sshChannel))
-         {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u read error"), m_channelId);
-         }
+         // SSH_EOF when remote side closed the channel (e.g. shell exit), read errors are logged above
+         if (eof)
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u reached end of stream"), m_channelId);
          break;
       }
-      else if (ssh_channel_is_eof(m_sshChannel))
-      {
-         // libssh returns 0 both on timeout and at EOF; remote side closed the channel (e.g. shell exit)
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u reached end of stream"), m_channelId);
-         break;
-      }
-      // nbytes == 0 without EOF means timeout, continue loop
    }
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u reader thread stopped"), m_channelId);
@@ -209,7 +215,7 @@ void SSHChannelProxy::readerThreadInternal()
    // is already unlinked by that thread, which will delete it after this thread exits.
    NXCPMessage msg(CMD_CLOSE_SSH_CHANNEL, 0, m_commSession->getProtocolVersion());
    msg.setField(VID_CHANNEL_ID, m_channelId);
-   msg.setField(VID_ERROR_INDICATOR, !ssh_channel_is_eof(m_sshChannel));
+   msg.setField(VID_ERROR_INDICATOR, !eof);
    m_commSession->postMessage(&msg);
 
    if (UnlinkSSHChannelProxy(this))
@@ -251,7 +257,9 @@ void SSHChannelProxy::writeToChannel(const BYTE *data, size_t size)
 {
    if (m_sshChannel != nullptr && m_running)
    {
+      m_sshLock.lock();
       int written = ssh_channel_write(m_sshChannel, data, static_cast<uint32_t>(size));
+      m_sshLock.unlock();
       if (written < 0)
       {
          nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u write error"), m_channelId);
@@ -266,7 +274,10 @@ void SSHChannelProxy::resize(int columns, int rows)
 {
    if (m_sshChannel != nullptr && m_running)
    {
-      if (ssh_channel_change_pty_size(m_sshChannel, columns, rows) != SSH_OK)
+      m_sshLock.lock();
+      int rc = ssh_channel_change_pty_size(m_sshChannel, columns, rows);
+      m_sshLock.unlock();
+      if (rc != SSH_OK)
       {
          nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u PTY resize to %dx%d failed"), m_channelId, columns, rows);
       }

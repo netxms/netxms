@@ -54,8 +54,9 @@ public interface TerminalTransport
     *
     * @param columns new width in columns
     * @param rows new height in rows
+    * @return true if remote system was notified
     */
-   public void resize(int columns, int rows);
+   public boolean resize(int columns, int rows);
 
    /**
     * Close session and release all resources. Safe to call multiple times.
