@@ -281,16 +281,22 @@ void SshTerminalWebSocketSession::processControlMessage(const ByteStream& frame)
  */
 void SshTerminalWebSocketSession::run()
 {
+   int64_t nextKeepaliveTime = GetMonotonicClockTime() + AGENT_KEEPALIVE_INTERVAL;
    while(!IsShutdownInProgress())
    {
-      SocketPoller sp;
-      sp.add(m_socket);
-      int rc = sp.poll(AGENT_KEEPALIVE_INTERVAL);
-      if (rc == 0)
+      int64_t now = GetMonotonicClockTime();
+      if (now >= nextKeepaliveTime)
       {
          m_agentConn->nop();
-         continue;
+         now = GetMonotonicClockTime();
+         nextKeepaliveTime = now + AGENT_KEEPALIVE_INTERVAL;
       }
+
+      SocketPoller sp;
+      sp.add(m_socket);
+      int rc = sp.poll(static_cast<uint32_t>(nextKeepaliveTime - now));
+      if (rc == 0)
+         continue;
 
       ByteStream buffer;
       BYTE frameType;
