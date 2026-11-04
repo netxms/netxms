@@ -51,6 +51,30 @@ static void Decommission(const shared_ptr<Node>& node)
 }
 
 /**
+ * Decommission node with IP address cleanup and check that address of its interface is released
+ */
+static void CheckInterfaceAddressRelease(const TCHAR *ipAddr)
+{
+   InetAddress address = InetAddress::parse(ipAddr);
+   NewNodeData data(address);
+   shared_ptr<Node> node = make_shared<Node>(&data, 0);
+   node->unpublish();
+   NetObjInsert(node, true, false);
+
+   InterfaceInfo ifInfo(1);
+   ifInfo.ipAddrList.add(address);
+   shared_ptr<Interface> iface = node->createNewInterface(&ifInfo, false, true);
+   AssertNotNull(iface);
+   AssertTrue(FindInterfaceByIP(0, address) == iface);
+
+   node->decommission(time(nullptr) + 86400, true);
+   AssertTrue(FindInterfaceByIP(0, address) == nullptr);
+   AssertTrue(FindNodeByIP(0, address) == nullptr);
+
+   node->deleteObject();
+}
+
+/**
  * Test node recommission
  */
 void TestRecommission()
@@ -146,5 +170,17 @@ void TestRecommission()
 
    node2->deleteObject();
 
+   EndTest();
+
+   StartTest(_T("Decommission with IP address cleanup releases interface addresses"));
+   AssertTrue(IsZoningEnabled());
+   CheckInterfaceAddressRelease(_T("10.255.255.23"));
+   EndTest();
+
+   // Zoning is enabled by default; run the same check with zoning disabled
+   StartTest(_T("Decommission with IP address cleanup releases interface addresses without zoning"));
+   g_flags &= ~AF_ENABLE_ZONING;
+   CheckInterfaceAddressRelease(_T("10.255.255.24"));
+   g_flags |= AF_ENABLE_ZONING;
    EndTest();
 }
