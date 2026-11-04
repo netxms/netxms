@@ -147,6 +147,8 @@ void TestZipArchiveWriter()
    AssertTrue(writer.endEntry());
 
    AssertTrue(writer.beginEntry("empty.txt"));
+   BYTE digest[SHA256_DIGEST_SIZE], expectedDigest[SHA256_DIGEST_SIZE];
+   AssertFalse(writer.getEntryDigest("empty.txt", digest));   // entry still open
    AssertTrue(writer.endEntry());
 
    AssertFalse(writer.write("x", 1));   // no open entry
@@ -154,6 +156,14 @@ void TestZipArchiveWriter()
 
    AssertEquals(writer.getEntryCount(), 3);
    AssertTrue(writer.close());
+
+   AssertTrue(writer.getEntryDigest("data/values.csv", digest));
+   CalculateSHA256Hash(largeText.data(), largeText.size(), expectedDigest);
+   AssertTrue(memcmp(digest, expectedDigest, SHA256_DIGEST_SIZE) == 0);
+   AssertTrue(writer.getEntryDigest("empty.txt", digest));
+   CalculateSHA256Hash("", 0, expectedDigest);
+   AssertTrue(memcmp(digest, expectedDigest, SHA256_DIGEST_SIZE) == 0);
+   AssertFalse(writer.getEntryDigest("missing.txt", digest));
    AssertFalse(writer.isOpen());
    AssertFalse(writer.isError());
 

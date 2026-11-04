@@ -35,7 +35,7 @@
 #define DEBUG_TAG L"dataexport"
 
 #define DDIR_EXPORT              FS_PATH_SEPARATOR L"export"
-#define EXPORT_FORMAT_VERSION    1
+#define EXPORT_FORMAT_VERSION    2
 #define RAW_READ_CHUNK_MS        (31LL * 86400LL * 1000LL)     // History is read in one-month chunks to bound memory use
 #define EXPORT_RETENTION_MS      3600000                       // Undownloaded export files and failed export state are forgotten after one hour
 #define MAX_TAG_PATTERNS         1024                          // Upper bound for tag pattern count in NXCP request
@@ -547,6 +547,45 @@ static const char *TierName(DciTier tier)
 }
 
 /**
+ * Get delta calculation method name
+ */
+static const char *DeltaMethodName(int method)
+{
+   switch(method)
+   {
+      case DCM_SIMPLE:
+         return "simple";
+      case DCM_AVERAGE_PER_SECOND:
+         return "average_per_second";
+      case DCM_AVERAGE_PER_MINUTE:
+         return "average_per_minute";
+      default:
+         return "original";
+   }
+}
+
+/**
+ * Get nominal polling interval of DCI in seconds, or 0 if DCI has no fixed interval (pushed or computed values,
+ * advanced schedule)
+ */
+static uint64_t NominalPollingInterval(const DCItem& dci)
+{
+   int origin = dci.getDataSource();
+   if ((origin == DS_PUSH_AGENT) || (origin == DS_OTLP) || (origin == DS_COMPUTED) || dci.isAdvancedSchedule())
+      return 0;
+   return static_cast<uint64_t>(dci.getEffectivePollingInterval());
+}
+
+/**
+ * Check if DCI has non-empty transformation script
+ */
+static bool HasTransformation(const DCItem& dci)
+{
+   SharedString script = dci.getTransformationScriptSource();
+   return !script.isNull() && !IsBlankString(script);
+}
+
+/**
  * Get sample quality name
  */
 static const char *QualityName(SampleQuality quality)
@@ -575,7 +614,8 @@ static bool WriteMetricCatalog(ZipArchiveWriter& archive, std::vector<ExportedMe
    if (!archive.beginEntry("metrics.csv"))
       return false;
    archive.write("metric_id,tag,owner_id,owner_name,owner_class,related_object_id,related_object_name,related_object_class,"
-                 "name,description,unit,multiplier,data_type,origin,polling_interval,tier,facility_path\n");
+                 "name,description,unit,multiplier,data_type,origin,delta_method,transformation,polling_interval,tier,"
+                 "time_zone,time_zone_rule,facility_path\n");
 
    for(ExportedMetric& m : metrics)
    {
@@ -614,8 +654,25 @@ static bool WriteMetricCatalog(ZipArchiveWriter& archive, std::vector<ExportedMe
       AppendCsvField(line, static_cast<uint64_t>(m.dci->getMultiplier()));
       AppendCsvField(line, CodeToText(m.dci->getTransformedDataType(), g_dciDataTypeNames, L""));
       AppendCsvField(line, CodeToText(m.dci->getDataSource(), g_dciOriginNames, L""));
-      AppendCsvField(line, static_cast<uint64_t>(m.dci->getEffectivePollingInterval()));
+      AppendCsvField(line, DeltaMethodName(m.dci->getDeltaCalculationMethod()));
+      AppendCsvField(line, HasTransformation(*m.dci) ? "true" : "false");
+      uint64_t pollingInterval = NominalPollingInterval(*m.dci);
+      if (pollingInterval != 0)
+         AppendCsvField(line, pollingInterval);
+      else
+         AppendCsvField(line, "");
       AppendCsvField(line, TierName(m.tier));
+      TimeZoneRule timeZoneRule;
+      if (m.owner->getTimeZoneRule(&timeZoneRule))
+      {
+         AppendCsvField(line, m.owner->getTimeZone().cstr());
+         AppendCsvField(line, timeZoneRule.toString());
+      }
+      else
+      {
+         AppendCsvField(line, "");
+         AppendCsvField(line, "");
+      }
       AppendCsvField(line, BuildSpatialPath(m.owner, anonymizer, userId).c_str(), true);
       archive.write(line);
    }
@@ -747,6 +804,8 @@ static int64_t WriteTieredSamples(ZipArchiveWriter& archive, const ExportedMetri
  */
 static bool WriteManifest(ZipArchiveWriter& archive, const DataExportRequest& request, const DataExportInfo& info)
 {
+   static const char *dataFiles[][2] = { { "metrics", "metrics.csv" }, { "data", "data.csv" } };
+
    json_t *manifest = json_object();
    json_object_set_new(manifest, "formatVersion", json_integer(EXPORT_FORMAT_VERSION));
    json_object_set_new(manifest, "generator", json_string_w(L"NetXMS " NETXMS_VERSION_STRING));
@@ -773,8 +832,21 @@ static bool WriteManifest(ZipArchiveWriter& archive, const DataExportRequest& re
    json_object_set_new(manifest, "skippedCount", json_integer(info.skippedCount));
    json_object_set_new(manifest, "sampleCount", json_integer(static_cast<json_int_t>(info.sampleCount)));
    json_t *files = json_object();
-   json_object_set_new(files, "metrics", json_string("metrics.csv"));
-   json_object_set_new(files, "data", json_string("data.csv"));
+   for(int i = 0; i < 2; i++)
+   {
+      BYTE digest[SHA256_DIGEST_SIZE];
+      if (!archive.getEntryDigest(dataFiles[i][1], digest))
+      {
+         json_decref(files);
+         json_decref(manifest);
+         return false;
+      }
+      char digestText[SHA256_DIGEST_SIZE * 2 + 1];
+      json_t *file = json_object();
+      json_object_set_new(file, "name", json_string(dataFiles[i][1]));
+      json_object_set_new(file, "sha256", json_string(BinToStrExAL(digest, SHA256_DIGEST_SIZE, digestText, 0, 0)));
+      json_object_set_new(files, dataFiles[i][0], file);
+   }
    json_object_set_new(manifest, "files", files);
 
    char *text = json_dumps(manifest, JSON_INDENT(3));

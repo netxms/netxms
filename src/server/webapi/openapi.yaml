@@ -2217,8 +2217,11 @@ paths:
         Start a server-side export of DCI history for metrics selected either by system tag patterns under a root object
         or by an explicit DCI list. The export runs as a background task; poll GET /v1/data-export/{task-id} for progress
         and download the produced archive from GET /v1/data-export/{task-id}/file once the task is completed. The archive
-        is a ZIP with metrics.csv (one row per metric, including the classifier tag and a stable metric identifier),
-        data.csv (one row per sample, with provenance attributes) and manifest.json. With "anonymize" set, object names
+        is a ZIP with metrics.csv (one row per metric, including the classifier tag, a stable metric identifier, unit,
+        origin, delta calculation method, presence of a transformation script, nominal polling interval (empty for pushed
+        or computed values and advanced schedules) and the owner's effective time zone as IANA name and POSIX TZ rule),
+        data.csv (one row per sample, with provenance attributes) and manifest.json (export parameters and SHA-256
+        digests of the uncompressed metrics.csv and data.csv). With "anonymize" set, object names
         are replaced with class-based pseudonyms and metric identifiers with HMAC-derived pseudonyms that stay stable across
         exports from the same server; numeric object identifiers and the server identifier are omitted from the archive.
         "keepMapping" additionally produces a pseudonym-to-identity mapping file that is downloaded separately and is never

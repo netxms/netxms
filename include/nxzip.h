@@ -33,7 +33,8 @@
  * Streaming ZIP archive writer. Entries are written sequentially: beginEntry(), any number of write() calls,
  * endEntry(). Entry data is deflated on the fly, so entry size does not need to be known in advance.
  * Archive is ZIP64 capable (entries and archives larger than 4 GB, more than 65535 entries).
- * Entry names are UTF-8 with forward slashes as path separators.
+ * Entry names are UTF-8 with forward slashes as path separators. SHA-256 digest of uncompressed content is
+ * calculated for each entry and is available via getEntryDigest() once the entry is finished.
  */
 class LIBNETXMS_EXPORTABLE ZipArchiveWriter
 {
@@ -47,6 +48,7 @@ private:
       uint64_t localHeaderOffset;
       uint16_t dosTime;
       uint16_t dosDate;
+      BYTE sha256[SHA256_DIGEST_SIZE];
    };
 
    int m_fd;
@@ -56,6 +58,7 @@ private:
    bool m_error;
    void *m_zstream;        // z_stream*, kept opaque to avoid zlib.h in the header
    BYTE *m_outputBuffer;
+   void *m_digestState;    // SHA256_STATE*, kept opaque to avoid nxcrypto.h in the header
 
    bool writeRaw(const void *data, size_t size);
    bool flushDeflate(int flush);
@@ -79,6 +82,7 @@ public:
    bool isError() const { return m_error; }
    int getEntryCount() const { return static_cast<int>(m_entries.size()); }
    uint64_t getArchiveSize() const { return m_position; }
+   bool getEntryDigest(const char *name, BYTE *digest) const;
 };
 
 #endif   /* _nxzip_h_ */

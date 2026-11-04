@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -70,17 +71,71 @@ public class DataExportTest extends AbstractSessionTest
    }
 
    /**
-    * Parse CSV text into rows (test data contains no quoted separators)
+    * Calculate SHA-256 digest of ZIP entry content as lowercase hex string
+    */
+   private static String entryDigest(ZipFile zip, String name) throws Exception
+   {
+      byte[] digest = MessageDigest.getInstance("SHA-256").digest(zip.getInputStream(zip.getEntry(name)).readAllBytes());
+      StringBuilder sb = new StringBuilder();
+      for(byte b : digest)
+         sb.append(String.format("%02x", b));
+      return sb.toString();
+   }
+
+   /**
+    * Parse CSV text into rows (RFC 4180 quoting, no line breaks inside fields)
     */
    private static List<String[]> parseCsv(String text)
    {
       List<String[]> rows = new ArrayList<>();
       for(String line : text.split("\n"))
       {
-         if (!line.isEmpty())
-            rows.add(line.split(",", -1));
+         if (line.isEmpty())
+            continue;
+         List<String> fields = new ArrayList<>();
+         StringBuilder field = new StringBuilder();
+         boolean quoted = false;
+         for(int i = 0; i < line.length(); i++)
+         {
+            char ch = line.charAt(i);
+            if (quoted)
+            {
+               if (ch != '"')
+                  field.append(ch);
+               else if ((i + 1 < line.length()) && (line.charAt(i + 1) == '"'))
+                  field.append(line.charAt(++i));
+               else
+                  quoted = false;
+            }
+            else if (ch == '"')
+            {
+               quoted = true;
+            }
+            else if (ch == ',')
+            {
+               fields.add(field.toString());
+               field.setLength(0);
+            }
+            else
+            {
+               field.append(ch);
+            }
+         }
+         fields.add(field.toString());
+         rows.add(fields.toArray(new String[fields.size()]));
       }
       return rows;
+   }
+
+   /**
+    * Map CSV header names to column indexes
+    */
+   private static Map<String, Integer> columnIndexes(String[] header)
+   {
+      Map<String, Integer> columns = new HashMap<>();
+      for(int i = 0; i < header.length; i++)
+         columns.put(header[i], i);
+      return columns;
    }
 
    /**
@@ -140,6 +195,7 @@ public class DataExportTest extends AbstractSessionTest
       energy.setName("DataExportTest.Energy");
       energy.setDescription(DCI_ENERGY);
       energy.setSystemTag("eed.eit");
+      energy.setDeltaCalculation(DataCollectionItem.DELTA_SIMPLE);
       long energyId = dcc.modifyObject(energy);
 
       DataCollectionItem power = new DataCollectionItem(dcc, 0);
@@ -207,7 +263,9 @@ public class DataExportTest extends AbstractSessionTest
          try (ZipFile zip = new ZipFile(result.getFile()))
          {
             String manifest = readEntry(zip, "manifest.json");
-            assertTrue(manifest.contains("\"formatVersion\": 1"));
+            assertTrue(manifest.contains("\"formatVersion\": 2"));
+            assertTrue(manifest.contains("\"sha256\": \"" + entryDigest(zip, "metrics.csv") + "\""), "manifest must contain digest of metrics.csv");
+            assertTrue(manifest.contains("\"sha256\": \"" + entryDigest(zip, "data.csv") + "\""), "manifest must contain digest of data.csv");
             assertTrue(manifest.contains("\"anonymized\": false"));
             assertTrue(manifest.contains("\"metricCount\": 2"));
 
@@ -215,6 +273,7 @@ public class DataExportTest extends AbstractSessionTest
             assertEquals(3, metrics.size());
             assertEquals("metric_id", metrics.get(0)[0]);
             assertEquals("tag", metrics.get(0)[1]);
+            Map<String, Integer> columns = columnIndexes(metrics.get(0));
             Map<String, String[]> byTag = new HashMap<>();
             for(int i = 1; i < metrics.size(); i++)
                byTag.put(metrics.get(i)[1], metrics.get(i));
@@ -225,10 +284,17 @@ public class DataExportTest extends AbstractSessionTest
             assertEquals(36, energyMetricId.length());   // DCI GUID
             assertEquals(String.valueOf(node.getObjectId()), energyRow[2]);
             assertEquals(node.getObjectName(), energyRow[3]);
-            assertEquals(DCI_ENERGY, energyRow[9]);
-            assertEquals("float", energyRow[12]);
-            assertEquals("push", energyRow[13]);
-            assertEquals("raw", energyRow[15]);
+            assertEquals(DCI_ENERGY, energyRow[columns.get("description")]);
+            assertEquals("float", energyRow[columns.get("data_type")]);
+            assertEquals("push", energyRow[columns.get("origin")]);
+            assertEquals("simple", energyRow[columns.get("delta_method")]);
+            assertEquals("original", byTag.get("power.in")[columns.get("delta_method")]);
+            assertEquals("false", energyRow[columns.get("transformation")]);
+            assertEquals("", energyRow[columns.get("polling_interval")], "pushed DCI has no polling interval");
+            assertEquals("raw", energyRow[columns.get("tier")]);
+            assertEquals((node.getTimeZone() != null) ? node.getTimeZone() : "", energyRow[columns.get("time_zone")]);
+            assertEquals((node.getTimeZoneRule() != null) ? node.getTimeZoneRule() : "", energyRow[columns.get("time_zone_rule")]);
+            assertEquals("facility_path", metrics.get(0)[metrics.get(0).length - 1]);
 
             List<String[]> data = parseCsv(readEntry(zip, "data.csv"));
             assertEquals("metric_id,timestamp,value,min,max,count,quality,lower_bound,upper_bound,completeness,method_id", String.join(",", data.get(0)));
@@ -243,7 +309,8 @@ public class DataExportTest extends AbstractSessionTest
                   assertTrue(row[1].compareTo(previousTimestamp) >= 0, "samples must be ordered oldest first");
                   previousTimestamp = row[1];
                   assertTrue(row[1].endsWith("Z"));
-                  assertTrue(Double.parseDouble(row[2]) >= 1000.5);
+                  // Simple delta between consecutive pushes; first sample after DCI creation is stored as 0
+                  assertEquals((energyRows == 1) ? 0.0 : 1.0, Double.parseDouble(row[2]), 0.0001);
                   assertEquals("", row[6]);   // default quality is not written
                }
             }

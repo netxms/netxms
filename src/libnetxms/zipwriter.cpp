@@ -24,6 +24,7 @@
 #include "libnetxms.h"
 #include <nxzip.h>
 #include <nxstat.h>
+#include <nxcrypto.h>
 #include <zlib.h>
 
 #define OUTPUT_BUFFER_SIZE 65536
@@ -34,17 +35,16 @@
 #define ZIP64_LOCAL_EXTRA_SIZE   20    // header ID (2) + size (2) + uncompressed (8) + compressed (8)
 
 /**
- * Little-endian field writer for fixed-size headers
+ * Little-endian field writer for fixed-size headers. Buffer must be large enough for all fields written.
  */
 class HeaderBuilder
 {
 private:
    BYTE *m_buffer;
-   size_t m_size;
    size_t m_position;
 
 public:
-   HeaderBuilder(BYTE *buffer, size_t size) : m_buffer(buffer), m_size(size), m_position(0) {}
+   HeaderBuilder(BYTE *buffer) : m_buffer(buffer), m_position(0) {}
 
    void u16(uint16_t v)
    {
@@ -64,7 +64,7 @@ public:
       u32(static_cast<uint32_t>((v >> 32) & 0xFFFFFFFF));
    }
 
-   size_t size() const { return m_position; }
+   size_t length() const { return m_position; }
 };
 
 /**
@@ -90,6 +90,7 @@ ZipArchiveWriter::ZipArchiveWriter()
    m_error = false;
    m_zstream = nullptr;
    m_outputBuffer = nullptr;
+   m_digestState = MemAllocStruct<SHA256_STATE>();
 }
 
 /**
@@ -100,6 +101,7 @@ ZipArchiveWriter::~ZipArchiveWriter()
    if (m_fd != -1)
       close();
    MemFree(m_outputBuffer);
+   MemFree(m_digestState);
    if (m_zstream != nullptr)
    {
       deflateEnd(static_cast<z_stream*>(m_zstream));
@@ -156,7 +158,7 @@ bool ZipArchiveWriter::writeRaw(const void *data, size_t size)
 bool ZipArchiveWriter::writeEntryHeader(const Entry& entry)
 {
    BYTE buffer[30 + ZIP64_LOCAL_EXTRA_SIZE];
-   HeaderBuilder h(buffer, sizeof(buffer));
+   HeaderBuilder h(buffer);
    h.u32(0x04034B50);                           // local file header signature
    h.u16(ZIP_VERSION_NEEDED);
    h.u16(ZIP_FLAG_UTF8_NAMES);
@@ -184,11 +186,11 @@ bool ZipArchiveWriter::patchEntryHeader(const Entry& entry)
    uint64_t endPosition = m_position;
 
    BYTE crc[4];
-   HeaderBuilder c(crc, sizeof(crc));
+   HeaderBuilder c(crc);
    c.u32(entry.crc);
 
    BYTE sizes[16];
-   HeaderBuilder s(sizes, sizeof(sizes));
+   HeaderBuilder s(sizes);
    s.u64(entry.uncompressedSize);
    s.u64(entry.compressedSize);
 
@@ -248,6 +250,7 @@ bool ZipArchiveWriter::beginEntry(const char *name)
 
    m_entries.push_back(entry);
    m_entryOpen = true;
+   SHA256Init(static_cast<SHA256_STATE*>(m_digestState));
    return true;
 }
 
@@ -294,6 +297,7 @@ bool ZipArchiveWriter::write(const void *data, size_t size)
    Entry& entry = m_entries.back();
    entry.crc = static_cast<uint32_t>(crc32(entry.crc, static_cast<const Bytef*>(data), static_cast<uInt>(size)));
    entry.uncompressedSize += size;
+   SHA256Update(static_cast<SHA256_STATE*>(m_digestState), data, size);
 
    z_stream *zs = static_cast<z_stream*>(m_zstream);
    const BYTE *p = static_cast<const BYTE*>(data);
@@ -315,7 +319,13 @@ bool ZipArchiveWriter::write(const void *data, size_t size)
  */
 bool ZipArchiveWriter::endEntry()
 {
-   if (!m_entryOpen || m_error)
+   if (!m_entryOpen)
+      return false;
+
+   // Digest is finalized even on error to release hash context
+   SHA256Final(static_cast<SHA256_STATE*>(m_digestState), m_entries.back().sha256);
+   m_entryOpen = false;
+   if (m_error)
       return false;
 
    z_stream *zs = static_cast<z_stream*>(m_zstream);
@@ -324,8 +334,26 @@ bool ZipArchiveWriter::endEntry()
    if (!flushDeflate(Z_FINISH))
       return false;
 
-   m_entryOpen = false;
    return patchEntryHeader(m_entries.back());
+}
+
+/**
+ * Get SHA-256 digest of uncompressed content of finished entry with given name. Returns false if there is no such entry
+ * or entry is still open.
+ */
+bool ZipArchiveWriter::getEntryDigest(const char *name, BYTE *digest) const
+{
+   for(size_t i = 0; i < m_entries.size(); i++)
+   {
+      if (m_entryOpen && (i == m_entries.size() - 1))
+         break;
+      if (m_entries[i].name == name)
+      {
+         memcpy(digest, m_entries[i].sha256, SHA256_DIGEST_SIZE);
+         return true;
+      }
+   }
+   return false;
 }
 
 /**
@@ -343,7 +371,7 @@ bool ZipArchiveWriter::writeCentralDirectory()
       needZip64 = needZip64 || largeSizes || largeOffset;
 
       BYTE extra[4 + 24];
-      HeaderBuilder e(extra, sizeof(extra));
+      HeaderBuilder e(extra);
       if (largeSizes || largeOffset)
       {
          e.u16(0x0001);
@@ -358,7 +386,7 @@ bool ZipArchiveWriter::writeCentralDirectory()
       }
 
       BYTE buffer[46];
-      HeaderBuilder h(buffer, sizeof(buffer));
+      HeaderBuilder h(buffer);
       h.u32(0x02014B50);                        // central directory file header signature
       h.u16(ZIP_VERSION_NEEDED);                // version made by
       h.u16(ZIP_VERSION_NEEDED);                // version needed to extract
@@ -370,14 +398,14 @@ bool ZipArchiveWriter::writeCentralDirectory()
       h.u32(largeSizes ? 0xFFFFFFFF : static_cast<uint32_t>(entry.compressedSize));
       h.u32(largeSizes ? 0xFFFFFFFF : static_cast<uint32_t>(entry.uncompressedSize));
       h.u16(static_cast<uint16_t>(entry.name.size()));
-      h.u16(static_cast<uint16_t>(e.size()));   // extra field length
+      h.u16(static_cast<uint16_t>(e.length()));   // extra field length
       h.u16(0);                                 // comment length
       h.u16(0);                                 // disk number start
       h.u16(0);                                 // internal attributes
       h.u32(0);                                 // external attributes
       h.u32(largeOffset ? 0xFFFFFFFF : static_cast<uint32_t>(entry.localHeaderOffset));
 
-      if (!writeRaw(buffer, 46) || !writeRaw(entry.name.data(), entry.name.size()) || ((e.size() > 0) && !writeRaw(extra, e.size())))
+      if (!writeRaw(buffer, 46) || !writeRaw(entry.name.data(), entry.name.size()) || ((e.length() > 0) && !writeRaw(extra, e.length())))
          return false;
    }
 
@@ -389,7 +417,7 @@ bool ZipArchiveWriter::writeCentralDirectory()
       uint64_t zip64EndOffset = m_position;
 
       BYTE buffer[56 + 20];
-      HeaderBuilder h(buffer, sizeof(buffer));
+      HeaderBuilder h(buffer);
       h.u32(0x06064B50);                        // ZIP64 end of central directory record
       h.u64(44);                                // size of remaining record
       h.u16(ZIP_VERSION_NEEDED);
@@ -404,12 +432,12 @@ bool ZipArchiveWriter::writeCentralDirectory()
       h.u32(0);
       h.u64(zip64EndOffset);
       h.u32(1);                                 // total number of disks
-      if (!writeRaw(buffer, h.size()))
+      if (!writeRaw(buffer, h.length()))
          return false;
    }
 
    BYTE buffer[22];
-   HeaderBuilder h(buffer, sizeof(buffer));
+   HeaderBuilder h(buffer);
    h.u32(0x06054B50);                           // end of central directory record
    h.u16(0);
    h.u16(0);
