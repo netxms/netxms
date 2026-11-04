@@ -20353,6 +20353,9 @@ components:
         sourceNode:
           type: integer
           description: Source (proxy) node ID, or 0 to disable
+        relatedObject:
+          type: integer
+          description: ID of the object this DCI is related to (for example the interface for interface traffic metrics), or 0 if none
         snmpPort:
           type: integer
         snmpVersion:

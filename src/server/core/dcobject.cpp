@@ -1888,6 +1888,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "errorCount", json_integer(m_errorCount));
    json_object_set_new(root, "resourceId", json_integer(m_resourceId));
    json_object_set_new(root, "sourceNode", json_integer(m_sourceNode));
+   json_object_set_new(root, "relatedObject", json_integer(m_relatedObject));
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
    json_object_set_new(root, "snmpContext", json_string_w(m_snmpContext));
@@ -1965,6 +1966,7 @@ uint32_t DCObject::updateFromJSON(json_t *json, bool create)
        !json_object_update_enum(json, "origin", g_dciOriginNames, &m_source) ||
        !json_object_update_integer(json, "resourceId", &m_resourceId) ||
        !json_object_update_integer(json, "sourceNode", &m_sourceNode) ||
+       !json_object_update_integer(json, "relatedObject", &m_relatedObject) ||
        !json_object_update_integer(json, "snmpPort", &m_snmpPort) ||
        !json_object_update_enum(json, "instanceDiscoveryMethod", g_dciInstanceDiscoveryMethodNames, &m_instanceDiscoveryMethod) ||
        !json_object_update_integer(json, "instanceRetentionTime", &m_instanceRetentionTime))
