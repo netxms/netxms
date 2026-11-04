@@ -1501,12 +1501,12 @@ class LIBNXSRV_EXPORTABLE ModbusDirectTransport : public ModbusTransport
 public:
    ModbusDirectTransport(const InetAddress& ipAddress, uint16_t port, uint16_t unitId) : ModbusTransport(ipAddress, port, unitId) { }
 
-   virtual ModbusOperationStatus checkConnection();
-   virtual ModbusOperationStatus readDeviceIdentification(ModbusDeviceIdentification *deviceId);
-   virtual ModbusOperationStatus readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value);
-   virtual ModbusOperationStatus readInputRegisters(int address, const TCHAR *conversion, TCHAR *value);
-   virtual ModbusOperationStatus readCoil(int address, TCHAR *value);
-   virtual ModbusOperationStatus readDiscreteInput(int address, TCHAR *value);
+   virtual ModbusOperationStatus checkConnection() override;
+   virtual ModbusOperationStatus readDeviceIdentification(ModbusDeviceIdentification *deviceId) override;
+   virtual ModbusOperationStatus readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value) override;
+   virtual ModbusOperationStatus readInputRegisters(int address, const TCHAR *conversion, TCHAR *value) override;
+   virtual ModbusOperationStatus readCoil(int address, TCHAR *value) override;
+   virtual ModbusOperationStatus readDiscreteInput(int address, TCHAR *value) override;
 };
 
 /**
@@ -1522,12 +1522,12 @@ private:
 public:
    ModbusProxyTransport(const shared_ptr<AgentConnection>& agentConnection, const InetAddress& ipAddress, uint16_t port, uint16_t unitId) : ModbusTransport(ipAddress, port, unitId), m_agentConnection(agentConnection) { }
 
-   virtual ModbusOperationStatus checkConnection();
-   virtual ModbusOperationStatus readDeviceIdentification(ModbusDeviceIdentification *deviceId);
-   virtual ModbusOperationStatus readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value);
-   virtual ModbusOperationStatus readInputRegisters(int address, const TCHAR *conversion, TCHAR *value);
-   virtual ModbusOperationStatus readCoil(int address, TCHAR *value);
-   virtual ModbusOperationStatus readDiscreteInput(int address, TCHAR *value);
+   virtual ModbusOperationStatus checkConnection() override;
+   virtual ModbusOperationStatus readDeviceIdentification(ModbusDeviceIdentification *deviceId) override;
+   virtual ModbusOperationStatus readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value) override;
+   virtual ModbusOperationStatus readInputRegisters(int address, const TCHAR *conversion, TCHAR *value) override;
+   virtual ModbusOperationStatus readCoil(int address, TCHAR *value) override;
+   virtual ModbusOperationStatus readDiscreteInput(int address, TCHAR *value) override;
 };
 
 #endif   /* WITH_MODBUS */
