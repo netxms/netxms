@@ -185,15 +185,17 @@ public class DirectSshTransport implements TerminalTransport
     * @see org.netxms.nxmc.modules.objects.ssh.TerminalTransport#resize(int, int)
     */
    @Override
-   public void resize(int columns, int rows)
+   public boolean resize(int columns, int rows)
    {
       ChannelShell c;
       synchronized(this)
       {
          c = channel;
       }
-      if ((c != null) && c.isConnected())
-         c.setPtySize(columns, rows, 0, 0);
+      if ((c == null) || !c.isConnected())
+         return false;
+      c.setPtySize(columns, rows, 0, 0);
+      return true;
    }
 
    /**

@@ -107,7 +107,7 @@ public class ProxySshTransport implements TerminalTransport
     * @see org.netxms.nxmc.modules.objects.ssh.TerminalTransport#resize(int, int)
     */
    @Override
-   public void resize(int columns, int rows)
+   public boolean resize(int columns, int rows)
    {
       TcpProxy p;
       synchronized(this)
@@ -115,14 +115,16 @@ public class ProxySshTransport implements TerminalTransport
          p = proxy;
       }
       if ((p == null) || p.isClosed())
-         return;
+         return false;
       try
       {
          session.resizeSshTerminal(p, columns, rows);
+         return true;
       }
       catch(Exception e)
       {
          logger.debug("Cannot resize SSH terminal", e);
+         return false;
       }
    }
 
