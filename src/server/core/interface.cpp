@@ -2058,31 +2058,35 @@ void Interface::clearIpAddresses()
    setModified(MODIFY_INTERFACE_PROPERTIES);
    unlockProperties();
 
-   if (!isExcludedFromTopology())
+   if (isExcludedFromTopology())
+      return;
+
+   shared_ptr<Zone> zone;
+   if (IsZoningEnabled())
    {
-      if (IsZoningEnabled())
+      zone = FindZoneByUIN(m_zoneUIN);
+      if (zone == nullptr)
+         return;
+   }
+
+   const ObjectArray<InetAddress>& list = addrList.getList();
+   for(int i = 0; i < list.size(); i++)
+   {
+      InetAddress *addr = list.get(i);
+      if (!addr->isValidUnicast())
+         continue;
+
+      if (zone != nullptr)
       {
-         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-         if (zone != nullptr)
-         {
-            zone->removeFromIndex(*this);
-         }
+         shared_ptr<Interface> o = zone->getInterfaceByAddr(*addr);
+         if ((o != nullptr) && (o->getId() == m_id))
+            zone->removeFromInterfaceIndex(*addr);
       }
       else
       {
-         const ObjectArray<InetAddress>& list = addrList.getList();
-         for(int i = 0; i < list.size(); i++)
-         {
-            InetAddress *addr = list.get(i);
-            if (addr->isValidUnicast())
-            {
-               shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(*addr);
-               if ((o != nullptr) && (o->getId() == m_id))
-               {
-                  g_idxInterfaceByAddr.remove(*addr);
-               }
-            }
-         }
+         shared_ptr<NetObj> o = g_idxInterfaceByAddr.get(*addr);
+         if ((o != nullptr) && (o->getId() == m_id))
+            g_idxInterfaceByAddr.remove(*addr);
       }
    }
 }
