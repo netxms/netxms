@@ -37,6 +37,11 @@ static const int SSH_TERMINAL_TOKEN_VALIDITY = 30;
 static const size_t SSH_TERMINAL_OUTPUT_QUEUE_LIMIT = 1024 * 1024;
 
 /**
+ * Interval (milliseconds) of keepalive requests to agent while terminal is idle; must be below agent's SessionIdleTimeout
+ */
+static const uint32_t AGENT_KEEPALIVE_INTERVAL = 30000;
+
+/**
  * WebSocket session for interactive SSH terminal. SSH session is terminated on the node's SSH proxy agent;
  * PTY data is relayed between WebSocket binary frames and agent SSH channel.
  *
@@ -278,9 +283,18 @@ void SshTerminalWebSocketSession::run()
 {
    while(!IsShutdownInProgress())
    {
+      SocketPoller sp;
+      sp.add(m_socket);
+      int rc = sp.poll(AGENT_KEEPALIVE_INTERVAL);
+      if (rc == 0)
+      {
+         m_agentConn->nop();
+         continue;
+      }
+
       ByteStream buffer;
       BYTE frameType;
-      if (!ReadWebsocketFrame(m_socket, &buffer, &frameType))
+      if ((rc < 0) || !ReadWebsocketFrame(m_socket, &buffer, &frameType))
       {
          nxlog_debug_tag(DEBUG_TAG, 5, L"SSH terminal channel %u: WebSocket read error or socket shutdown", m_agentChannelId);
          break;

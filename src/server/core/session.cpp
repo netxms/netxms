@@ -328,14 +328,6 @@ EnumerationCallbackResult ClientSession::checkFileTransfer(const uint32_t &key, 
 }
 
 /**
- * Send keepalive to agent connection used by TCP proxy or SSH terminal channel
- */
-static void SendTcpProxyAgentKeepalive(const shared_ptr<AgentConnectionEx>& conn)
-{
-   conn->nop();
-}
-
-/**
  * Run session housekeeper
  */
 void ClientSession::runHousekeeper()
@@ -349,10 +341,21 @@ void ClientSession::runHousekeeper()
    }
 
    // Agent drops sessions without incoming messages after SessionIdleTimeout, and an idle TCP proxy
-   // or SSH terminal channel produces no server to agent traffic
+   // or SSH terminal channel produces no server to agent traffic. Agent connection keeps raw pointer to
+   // this session as TCP proxy callback, so session must outlive the connection reference held by the task.
    m_tcpProxyLock.lock();
    for(int i = 0; i < m_tcpProxyConnections.size(); i++)
-      ThreadPoolExecute(g_clientThreadPool, SendTcpProxyAgentKeepalive, m_tcpProxyConnections.get(i)->agentConnection);
+   {
+      incRefCount();
+      shared_ptr<AgentConnectionEx> conn = m_tcpProxyConnections.get(i)->agentConnection;
+      ThreadPoolExecute(g_clientThreadPool,
+         [this, conn] () mutable -> void
+         {
+            conn->nop();
+            conn.reset();
+            decRefCount();
+         });
+   }
    m_tcpProxyLock.unlock();
 }
 
