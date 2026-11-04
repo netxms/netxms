@@ -122,13 +122,19 @@ retry:
 #if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
    curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
 
-   // In multi-backend builds ssl_version lists active backend first, followed by inactive ones in parentheses
-   if (version->ssl_version != nullptr)
+   // In multi-backend builds ssl_version lists all backends in build order, with inactive ones in parentheses
+   // (for example "(OpenSSL/3.5.9) Schannel")
+   const char *backend = version->ssl_version;
+   while ((backend != nullptr) && (*backend == '('))
    {
-      strlcpy(s_curlSSLBackend, version->ssl_version, sizeof(s_curlSSLBackend));
-      char *p = strchr(s_curlSSLBackend, ' ');
-      if (p != nullptr)
-         *p = 0;
+      backend = strchr(backend, ' ');
+      if (backend != nullptr)
+         backend++;
+   }
+   if ((backend != nullptr) && (*backend != 0))
+   {
+      strlcpy(s_curlSSLBackend, backend, sizeof(s_curlSSLBackend));
+      s_curlSSLBackend[strcspn(s_curlSSLBackend, " ")] = 0;
    }
    else
    {
@@ -171,6 +177,15 @@ void LibCURLCleanup()
 const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion()
 {
    return s_curlVersion;
+}
+
+/**
+ * Get active libcurl TLS backend name with version (for example "OpenSSL/3.5.9" or "Schannel"),
+ * "none" if libcurl is built without TLS support, or "unknown" if libcurl is not initialized
+ */
+const char LIBNETXMS_EXPORTABLE *GetLibCURLSSLBackend()
+{
+   return s_curlSSLBackend;
 }
 
 /**

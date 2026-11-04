@@ -36,6 +36,7 @@
 
 bool LIBNETXMS_EXPORTABLE InitializeLibCURL(const char *sslBackend = nullptr);
 const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion();
+const char LIBNETXMS_EXPORTABLE *GetLibCURLSSLBackend();
 void LIBNETXMS_EXPORTABLE SetupLibCURLTrust(CURL *curl, const char *caBundle);
 
 #if !defined(_WIN32) && defined(SSL_OP_IGNORE_UNEXPECTED_EOF)
