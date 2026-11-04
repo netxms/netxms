@@ -42,6 +42,8 @@ For formatting into a `wchar_t *` buffer, use `nx_swprintf(buffer, size, L"...",
 
 - **Audit subsystem for deferred actions.** Scheduled task create/update/delete is audited under `AUDIT_SYSCFG` for every handler type, including `Maintenance.*`. `AUDIT_OBJECTS` is written when the object itself changes, i.e. when the scheduled task executes. Generally: audit the scheduling under its configuration subsystem and the effect under the subsystem of the thing affected.
 
+- **Zoning is on by default.** `Objects.EnableZoning` is `1` in `sql/setup.in`; the `false` fallback in `ConfigReadBoolean(L"Objects.EnableZoning", false)` only applies to a database without the row. With zoning on, address lookups go through the per-zone indexes (`Zone::m_idxNodeByAddr` / `m_idxInterfaceByAddr` / `m_idxSubnetByAddr`), not `g_idxNodeByAddr` / `g_idxInterfaceByAddr` / `g_idxSubnetByAddr`. Treat the `IsZoningEnabled()` branch as the primary path: when code branches on it, implement, review and test the zoning branch first. The non-zoning branch must not be the only one exercised.
+
 - **User ID 0 is the system account.** It is normally disabled and used by server code to mean "system / no user session" (`checkAccessRights` grants everything, background AI chats run as 0). Per-user features (AI memory, preferences, history) may legitimately skip it — do not report that as a bug.
 
 - **Object tool input fields only where they are consumed.** Only `TOOL_TYPE_ACTION`, `SERVER_COMMAND`, `SERVER_SCRIPT`, `SSH_COMMAND`, `URL` and library-script execution expand input fields (via `expandText()` or NXSL `$INPUT`). `TOOL_TYPE_SNMP_TABLE`, `AGENT_TABLE` and `AGENT_LIST` never do, so do not read, log or forward input fields on those paths.

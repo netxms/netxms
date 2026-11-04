@@ -116,6 +116,13 @@ Do not create a new standalone binary for server core code. There are two homes:
   SQL. `-D <level>` sets the server debug level (log goes to the work
   directory), `-k` keeps the work directory after a successful run; it is always
   kept after a failure.
+  The database comes from `nxdbmgr init` with default configuration, so the server
+  runs with zoning enabled and objects created with `zoneUIN` 0 land in the default
+  zone. For code with an `IsZoningEnabled()` branch, the zoning path is covered as is
+  (`AssertTrue(IsZoningEnabled())` keeps it from silently switching). To cover the
+  non-zoning path, clear `AF_ENABLE_ZONING` in `g_flags` around the case and set it
+  again afterwards, so later tests still run with zoning (reference: decommission
+  cases in `test-server/recommission.cpp`).
 
 Both binaries need `@MICROHTTPD_CPPFLAGS@` / `-I$(MICROHTTPD_ROOT)/include`
 because `nms_core.h` reaches `netxms-webapi.h`, which includes `<microhttpd.h>`.
