@@ -28,6 +28,10 @@
 #include <nxmodule.h>
 #include <cloud-connector.h>
 #include <nxlibcurl.h>
+#include <openssl/ssl.h>
+#include <openssl/pem.h>
+#include <openssl/pkcs12.h>
+#include <openssl/err.h>
 
 #define DEBUG_TAG L"docker"
 
@@ -40,9 +44,19 @@ private:
    char m_baseUrl[512];
    char m_socketPath[256];
    bool m_useTLS;
-   char *m_caCert;
-   char *m_clientCert;
-   char *m_clientKey;
+   char *m_caCertPEM;
+   STACK_OF(X509) *m_caCerts;
+   X509 *m_clientCert;
+   EVP_PKEY *m_clientKey;
+   BYTE *m_pkcs12;
+   size_t m_pkcs12Size;
+   char m_pkcs12Password[33];
+
+   bool loadTLSCredentials(json_t *credentials);
+   bool setupTLS(CURL *curl);
+   bool buildPKCS12();
+
+   static CURLcode sslContextCallback(CURL *curl, void *sslctx, void *context);
 
 public:
    DockerClient();

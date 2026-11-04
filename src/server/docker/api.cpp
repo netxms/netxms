@@ -35,9 +35,13 @@ DockerClient::DockerClient()
    m_baseUrl[0] = 0;
    m_socketPath[0] = 0;
    m_useTLS = false;
-   m_caCert = nullptr;
+   m_caCertPEM = nullptr;
+   m_caCerts = nullptr;
    m_clientCert = nullptr;
    m_clientKey = nullptr;
+   m_pkcs12 = nullptr;
+   m_pkcs12Size = 0;
+   m_pkcs12Password[0] = 0;
 }
 
 /**
@@ -45,9 +49,107 @@ DockerClient::DockerClient()
  */
 DockerClient::~DockerClient()
 {
-   MemFree(m_caCert);
-   MemFree(m_clientCert);
-   MemFree(m_clientKey);
+   MemFree(m_caCertPEM);
+   if (m_caCerts != nullptr)
+      sk_X509_pop_free(m_caCerts, X509_free);
+   if (m_clientCert != nullptr)
+      X509_free(m_clientCert);
+   if (m_clientKey != nullptr)
+      EVP_PKEY_free(m_clientKey);
+   MemFree(m_pkcs12);
+}
+
+/**
+ * Passphrase callback for PEM readers. Encrypted private keys are not supported, and without this
+ * callback OpenSSL would prompt for passphrase on the controlling terminal.
+ */
+static int NoPassphraseCallback(char *buffer, int size, int rwflag, void *userdata)
+{
+   return 0;
+}
+
+/**
+ * Get text of last OpenSSL error and clear error queue
+ */
+static const char *GetLastOpenSSLError(char *buffer, size_t size)
+{
+   unsigned long error = ERR_get_error();
+   if (error != 0)
+      ERR_error_string_n(error, buffer, size);
+   else
+      strlcpy(buffer, "unknown error", size);
+   ERR_clear_error();
+   return buffer;
+}
+
+/**
+ * Load TLS credentials (PEM encoded CA certificates, client certificate and client private key)
+ */
+bool DockerClient::loadTLSCredentials(json_t *credentials)
+{
+   char errorText[256];
+
+   const char *caCert = json_object_get_string_utf8(credentials, "tlsCaCert", nullptr);
+   const char *clientCert = json_object_get_string_utf8(credentials, "tlsCert", nullptr);
+   const char *clientKey = json_object_get_string_utf8(credentials, "tlsKey", nullptr);
+
+   if ((clientCert == nullptr) != (clientKey == nullptr))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: both \"tlsCert\" and \"tlsKey\" should be provided for client authentication");
+      return false;
+   }
+
+   m_caCertPEM = MemCopyStringA(caCert);
+   m_caCerts = sk_X509_new_null();
+   BIO *bio = BIO_new_mem_buf(caCert, -1);
+   if (bio != nullptr)
+   {
+      X509 *cert;
+      while ((cert = PEM_read_bio_X509(bio, nullptr, NoPassphraseCallback, nullptr)) != nullptr)
+         sk_X509_push(m_caCerts, cert);
+      BIO_free(bio);
+   }
+   ERR_clear_error();   // reading stops with "no start line" error at the end of input
+   if (sk_X509_num(m_caCerts) == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: cannot parse CA certificate from \"tlsCaCert\"");
+      return false;
+   }
+
+   if (clientCert == nullptr)
+      return true;
+
+   bio = BIO_new_mem_buf(clientCert, -1);
+   if (bio != nullptr)
+   {
+      m_clientCert = PEM_read_bio_X509(bio, nullptr, NoPassphraseCallback, nullptr);
+      BIO_free(bio);
+   }
+   if (m_clientCert == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: cannot parse client certificate from \"tlsCert\" (%hs)", GetLastOpenSSLError(errorText, sizeof(errorText)));
+      return false;
+   }
+
+   bio = BIO_new_mem_buf(clientKey, -1);
+   if (bio != nullptr)
+   {
+      m_clientKey = PEM_read_bio_PrivateKey(bio, nullptr, NoPassphraseCallback, nullptr);
+      BIO_free(bio);
+   }
+   if (m_clientKey == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: cannot parse client private key from \"tlsKey\" (%hs)", GetLastOpenSSLError(errorText, sizeof(errorText)));
+      return false;
+   }
+
+   if (!X509_check_private_key(m_clientCert, m_clientKey))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: client private key does not match client certificate (%hs)", GetLastOpenSSLError(errorText, sizeof(errorText)));
+      return false;
+   }
+
+   return true;
 }
 
 /**
@@ -59,6 +161,7 @@ DockerClient::~DockerClient()
  *   "tlsCert": "-----BEGIN CERTIFICATE-----\n...",
  *   "tlsKey": "-----BEGIN RSA PRIVATE KEY-----\n..."
  * }
+ * TLS is used when "tlsCaCert" is present; "tlsCert" and "tlsKey" are optional, but must be given together.
  */
 bool DockerClient::configure(json_t *credentials)
 {
@@ -81,23 +184,19 @@ bool DockerClient::configure(json_t *credentials)
    {
       // TCP connection
       const char *hostPort = endpoint + 6;
-      const char *caCert = json_object_get_string_utf8(credentials, "tlsCaCert", nullptr);
-      if (caCert != nullptr)
+      if (json_object_get_string_utf8(credentials, "tlsCaCert", nullptr) != nullptr)
       {
          // TLS enabled
+         if (!loadTLSCredentials(credentials))
+            return false;
          snprintf(m_baseUrl, sizeof(m_baseUrl), "https://%s", hostPort);
          m_useTLS = true;
-         m_caCert = MemCopyStringA(caCert);
-
-         const char *clientCert = json_object_get_string_utf8(credentials, "tlsCert", nullptr);
-         if (clientCert != nullptr)
-            m_clientCert = MemCopyStringA(clientCert);
-
-         const char *clientKey = json_object_get_string_utf8(credentials, "tlsKey", nullptr);
-         if (clientKey != nullptr)
-            m_clientKey = MemCopyStringA(clientKey);
-
-         nxlog_debug_tag(DEBUG_TAG, 5, L"DockerClient: configured for TLS connection to \"%hs\"", hostPort);
+         nxlog_debug_tag(DEBUG_TAG, 5, L"DockerClient: configured for TLS connection to \"%hs\"%s", hostPort, (m_clientCert != nullptr) ? L" with client certificate" : L"");
+      }
+      else if ((json_object_get_string_utf8(credentials, "tlsCert", nullptr) != nullptr) || (json_object_get_string_utf8(credentials, "tlsKey", nullptr) != nullptr))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: client certificate provided for \"%hs\" without CA certificate (\"tlsCaCert\")", hostPort);
+         return false;
       }
       else
       {
@@ -115,84 +214,148 @@ bool DockerClient::configure(json_t *credentials)
    return true;
 }
 
-#ifndef _WIN32
-
 /**
- * TLS context data for SSL_CTX_FUNCTION callback
+ * Curl SSL context callback (OpenSSL backend) for installing CA certificates and client credentials
  */
-struct TLSContextData
-{
-   const char *caCert;
-   const char *clientCert;
-   const char *clientKey;
-};
-
-/**
- * Curl SSL context callback for loading PEM certificates from memory
- */
-static CURLcode SSLContextCallback(CURL *curl, void *sslctx, void *context)
+CURLcode DockerClient::sslContextCallback(CURL *curl, void *sslctx, void *context)
 {
    SSL_CTX *ctx = static_cast<SSL_CTX*>(sslctx);
-   TLSContextData *data = static_cast<TLSContextData*>(context);
+   DockerClient *client = static_cast<DockerClient*>(context);
 
-#ifdef SSL_OP_IGNORE_UNEXPECTED_EOF
+#if !defined(_WIN32) && defined(SSL_OP_IGNORE_UNEXPECTED_EOF)
    if (g_curlOpenSSL3Backend)
       SSL_CTX_set_options(ctx, SSL_OP_IGNORE_UNEXPECTED_EOF);
 #endif
 
-   // Load CA certificate
-   if (data->caCert != nullptr)
-   {
-      BIO *bio = BIO_new_mem_buf(data->caCert, -1);
-      if (bio != nullptr)
-      {
-         X509 *cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
-         if (cert != nullptr)
-         {
-            X509_STORE *store = SSL_CTX_get_cert_store(ctx);
-            X509_STORE_add_cert(store, cert);
-            X509_free(cert);
-         }
-         BIO_free(bio);
-      }
-   }
+   X509_STORE *store = SSL_CTX_get_cert_store(ctx);
+   for(int i = 0; i < sk_X509_num(client->m_caCerts); i++)
+      X509_STORE_add_cert(store, sk_X509_value(client->m_caCerts, i));
+   ERR_clear_error();   // older OpenSSL versions report already present certificate as an error
 
-   // Load client certificate
-   if (data->clientCert != nullptr)
+   if (client->m_clientCert != nullptr)
    {
-      BIO *bio = BIO_new_mem_buf(data->clientCert, -1);
-      if (bio != nullptr)
+      if (!SSL_CTX_use_certificate(ctx, client->m_clientCert) || !SSL_CTX_use_PrivateKey(ctx, client->m_clientKey))
       {
-         X509 *cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
-         if (cert != nullptr)
-         {
-            SSL_CTX_use_certificate(ctx, cert);
-            X509_free(cert);
-         }
-         BIO_free(bio);
-      }
-   }
-
-   // Load client private key
-   if (data->clientKey != nullptr)
-   {
-      BIO *bio = BIO_new_mem_buf(data->clientKey, -1);
-      if (bio != nullptr)
-      {
-         EVP_PKEY *key = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
-         if (key != nullptr)
-         {
-            SSL_CTX_use_PrivateKey(ctx, key);
-            EVP_PKEY_free(key);
-         }
-         BIO_free(bio);
+         char errorText[256];
+         nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: cannot install client certificate (%hs)", GetLastOpenSSLError(errorText, sizeof(errorText)));
+         return CURLE_SSL_CERTPROBLEM;
       }
    }
 
    return CURLE_OK;
 }
 
-#endif /* _WIN32 */
+#if HAVE_DECL_CURLOPT_CAINFO_BLOB
+
+/**
+ * Build PKCS#12 container with client certificate and key for TLS backends that cannot use PEM key
+ * (Schannel). Legacy 3DES/SHA1 protection is used for compatibility with Windows PFX import.
+ */
+bool DockerClient::buildPKCS12()
+{
+   if (m_pkcs12 != nullptr)
+      return true;
+
+   BYTE random[16];
+   GenerateRandomBytes(random, sizeof(random));
+   BinToStrA(random, sizeof(random), m_pkcs12Password);
+
+   char errorText[256];
+   PKCS12 *p12 = PKCS12_create(m_pkcs12Password, nullptr, m_clientKey, m_clientCert, nullptr,
+      NID_pbe_WithSHA1And3_Key_TripleDES_CBC, NID_pbe_WithSHA1And3_Key_TripleDES_CBC, PKCS12_DEFAULT_ITER, -1, 0);
+   if (p12 == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: cannot create PKCS#12 container for client certificate (%hs)", GetLastOpenSSLError(errorText, sizeof(errorText)));
+      return false;
+   }
+   if (!PKCS12_set_mac(p12, m_pkcs12Password, -1, nullptr, 0, PKCS12_DEFAULT_ITER, EVP_sha1()))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: cannot set PKCS#12 container MAC (%hs)", GetLastOpenSSLError(errorText, sizeof(errorText)));
+      PKCS12_free(p12);
+      return false;
+   }
+
+   int size = i2d_PKCS12(p12, nullptr);
+   if (size > 0)
+   {
+      m_pkcs12 = MemAllocArrayNoInit<BYTE>(size);
+      BYTE *p = m_pkcs12;
+      i2d_PKCS12(p12, &p);
+      m_pkcs12Size = size;
+   }
+   PKCS12_free(p12);
+   if (m_pkcs12 == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: cannot encode PKCS#12 container (%hs)", GetLastOpenSSLError(errorText, sizeof(errorText)));
+      return false;
+   }
+   return true;
+}
+
+#endif /* HAVE_DECL_CURLOPT_CAINFO_BLOB */
+
+/**
+ * Setup TLS verification and client authentication on curl handle. OpenSSL backend gets CA
+ * certificates and client credentials through SSL context callback (works with any libcurl version).
+ * Other backends (Schannel, GnuTLS, etc.) reject the callback, and in-memory certificate blobs are
+ * used instead. Returns false if TLS cannot be set up, so the request is never sent unverified.
+ */
+bool DockerClient::setupTLS(CURL *curl)
+{
+   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)1);
+   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, (long)2);
+
+   CURLcode rc = curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, sslContextCallback);
+   if (rc == CURLE_OK)
+   {
+      curl_easy_setopt(curl, CURLOPT_SSL_CTX_DATA, this);
+      return true;
+   }
+
+#if HAVE_DECL_CURLOPT_CAINFO_BLOB
+   nxlog_debug_tag(DEBUG_TAG, 7, L"DockerClient: SSL context callback is not supported by TLS backend (%d: %hs), using certificate blobs", rc, curl_easy_strerror(rc));
+
+   struct curl_blob blob;
+   blob.data = m_caCertPEM;
+   blob.len = strlen(m_caCertPEM);
+   blob.flags = CURL_BLOB_COPY;
+   rc = curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB, &blob);
+   if (rc != CURLE_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: cannot set CA certificate (%d: %hs)", rc, curl_easy_strerror(rc));
+      return false;
+   }
+
+   if (m_clientCert != nullptr)
+   {
+      if (!buildPKCS12())
+         return false;
+
+      blob.data = m_pkcs12;
+      blob.len = m_pkcs12Size;
+      blob.flags = CURL_BLOB_COPY;
+      rc = curl_easy_setopt(curl, CURLOPT_SSLCERT_BLOB, &blob);
+      if (rc == CURLE_OK)
+         rc = curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "P12");
+      if (rc == CURLE_OK)
+         rc = curl_easy_setopt(curl, CURLOPT_KEYPASSWD, m_pkcs12Password);
+      if (rc != CURLE_OK)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: cannot set client certificate (%d: %hs)", rc, curl_easy_strerror(rc));
+         return false;
+      }
+   }
+
+#ifdef CURLSSLOPT_REVOKE_BEST_EFFORT
+   // Private Docker CA usually has no CRL distribution points; Schannel would fail revocation check otherwise
+   curl_easy_setopt(curl, CURLOPT_SSL_OPTIONS, (long)CURLSSLOPT_REVOKE_BEST_EFFORT);
+#endif
+   return true;
+#else
+   nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: TLS backend does not support SSL context callback (%d: %hs) and libcurl is too old for in-memory certificates", rc, curl_easy_strerror(rc));
+   return false;
+#endif
+}
 
 /**
  * Execute HTTP GET request against Docker Engine API.
@@ -234,27 +397,11 @@ json_t *DockerClient::httpGet(const char *path)
    }
 #endif
 
-#ifndef _WIN32
-   // TLS with in-memory certificates
-   TLSContextData tlsData;
-   if (m_useTLS)
+   if (m_useTLS && !setupTLS(curl))
    {
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)1);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, (long)2);
-
-      tlsData.caCert = m_caCert;
-      tlsData.clientCert = m_clientCert;
-      tlsData.clientKey = m_clientKey;
-      curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, SSLContextCallback);
-      curl_easy_setopt(curl, CURLOPT_SSL_CTX_DATA, &tlsData);
+      curl_easy_cleanup(curl);
+      return nullptr;
    }
-#else
-   if (m_useTLS)
-   {
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)0);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, (long)0);
-   }
-#endif
 
    char errorBuffer[CURL_ERROR_SIZE];
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
