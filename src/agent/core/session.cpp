@@ -236,7 +236,7 @@ void CommSession::readThread()
          // Check for timeout
          if (result == MSGRECV_TIMEOUT)
          {
-            if (m_timestamp + g_dwIdleTimeout * 1000 > GetMonotonicClockTime())
+            if (m_timestamp + g_dwIdleTimeout * 1000 < GetMonotonicClockTime())
             {
                debugPrintf(5, _T("Session disconnected by timeout (last activity timestamp is ") INT64_FMT _T(")"), m_timestamp);
                break;
