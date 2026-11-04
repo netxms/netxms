@@ -328,6 +328,14 @@ EnumerationCallbackResult ClientSession::checkFileTransfer(const uint32_t &key, 
 }
 
 /**
+ * Send keepalive to agent connection used by TCP proxy or SSH terminal channel
+ */
+static void SendTcpProxyAgentKeepalive(const shared_ptr<AgentConnectionEx>& conn)
+{
+   conn->nop();
+}
+
+/**
  * Run session housekeeper
  */
 void ClientSession::runHousekeeper()
@@ -339,6 +347,13 @@ void ClientSession::runHousekeeper()
    {
       m_downloadFileMap.remove(cancelList.get(i));
    }
+
+   // Agent drops sessions without incoming messages after SessionIdleTimeout, and an idle TCP proxy
+   // or SSH terminal channel produces no server to agent traffic
+   m_tcpProxyLock.lock();
+   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
+      ThreadPoolExecute(g_clientThreadPool, SendTcpProxyAgentKeepalive, m_tcpProxyConnections.get(i)->agentConnection);
+   m_tcpProxyLock.unlock();
 }
 
 /**
