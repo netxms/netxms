@@ -60,7 +60,10 @@ public abstract class AbstractSessionTest
       if (s.isPasswordExpired())
       {
          s.setUserPassword(session.getUserId(), TestConstants.SERVER_PASSWORD, TestConstants.SERVER_PASSWORD);
-         s.setServerVariable("DataCollection.DefaultDCIRetentionTime", "10");
+         s.setServerVariable("DataCollection.DefaultDCIRetentionTime", "3");
+         s.setServerVariable("Events.LogRetentionTime", "3");
+         s.setServerVariable("Alarms.HistoryRetentionTime", "3");
+         s.setServerVariable("AuditLog.RetentionTime", "3");
       }
       return s;
    }
