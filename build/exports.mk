@@ -1,8 +1,9 @@
 #
 # exports.mk - variable export list shared by the top-level Makefile.w32 and
-# any private-subsystem dispatcher (e.g. private/atm/Makefile.w32) that can be
-# invoked standalone. Include this AFTER config.mingw (and after any
-# normalization/tier forcing) so the exported values are final.
+# the private-subsystem dispatchers (private/atm/Makefile.w32,
+# private/netxms/Makefile.w32) that can be invoked standalone. Include this
+# AFTER config.mingw (and after any normalization/tier forcing) so the exported
+# values are final.
 #
 # Sub-makes inherit these via the environment; component Makefiles rely on them
 # instead of re-including config.mingw.

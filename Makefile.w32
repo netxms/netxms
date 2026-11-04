@@ -41,7 +41,8 @@ endif
 .NOTPARALLEL:
 
 # Export variables for sub-makefiles. The list is shared with private-subsystem
-# dispatchers (private/atm/Makefile.w32) that can also run standalone.
+# dispatchers (private/atm/Makefile.w32, private/netxms/Makefile.w32) that can
+# also run standalone.
 include $(TOPDIR)/build/exports.mk
 
 #####################################################################
@@ -194,8 +195,19 @@ ATM_TOP = private/atm
 endif
 endif
 
+# Private Enterprise Edition subsystem (optional) - EE server modules. Same
+# model as ATM: built only when its dispatcher (private/netxms/Makefile.w32)
+# is present.
+BUILD_EE ?= 1
+EE_TOP =
+ifeq ($(strip $(BUILD_EE)),1)
+ifneq ($(wildcard $(TOPDIR)/private/netxms/Makefile.w32),)
+EE_TOP = private/netxms
+endif
+endif
+
 # Complete build order
-ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS) $(TESTS_DIRS) $(ATM_TOP)
+ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS) $(TESTS_DIRS) $(ATM_TOP) $(EE_TOP)
 
 # Architectures built by the all-arch target
 # Override on the command line: make -f Makefile.w32 all-arch ALL_ARCHS="x64 arm64"
@@ -289,6 +301,9 @@ tests/test-server: src/server/core src/server/tools src/db/dbdrv sql
 # ATM subsystem links the agent, server and core import libraries, so it is
 # built after every in-tree tier it depends on.
 $(ATM_TOP): $(LIBS) $(AGENT_DIRS) $(SERVER_DIRS)
+
+# EE subsystem links the server and core import libraries.
+$(EE_TOP): $(LIBS) $(SERVER_DIRS)
 
 clean:
 	@echo "Cleaning build artifacts..."
