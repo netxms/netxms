@@ -269,6 +269,15 @@ void NXCORE_EXPORTABLE SendWebsocketCloseFrame(SOCKET socketHandle, uint16_t sta
 }
 
 /**
+ * Reject WebSocket connection right after protocol upgrade: send close frame with given status code and close connection
+ */
+void NXCORE_EXPORTABLE RejectWebsocketConnection(MHD_socket socketHandle, MHD_UpgradeResponseHandle *responseHandle, uint16_t statusCode)
+{
+   SendWebsocketCloseFrame(static_cast<SOCKET>(socketHandle), statusCode);
+   MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
+}
+
+/**
  * Upgrade connection to websocket
  */
 static MHD_Result UpgradeToWebsocket(Context *context, MHD_Connection *connection, const char *url)

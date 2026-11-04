@@ -21,6 +21,8 @@ tags:
     description: Data collection items and historical data
   - name: TCP Proxy
     description: TCP proxy for remote access (VNC, SSH, etc.)
+  - name: SSH Terminal
+    description: Interactive SSH terminal sessions
   - name: Grafana
     description: Grafana integration endpoints
   - name: Scheduled Tasks
@@ -706,6 +708,74 @@ paths:
       security: []
       tags:
         - TCP Proxy
+  /v1/ssh-terminal/{token}:
+    get:
+      operationId: connectSshTerminal
+      summary: SSH Terminal WebSocket Connection
+      description: |
+        Establish a WebSocket connection for an interactive SSH terminal session. This endpoint
+        requires a valid session token obtained from `POST /v1/objects/{object-id}/ssh-terminal`.
+
+        **Token Properties:**
+        - Single-use: token is invalidated upon WebSocket connection
+        - Short-lived: expires after 30 seconds if not used
+        - No authentication header needed: token in path serves as authorization
+
+        **WebSocket Protocol:**
+        - Binary frames (opcode 0x02) carry raw terminal data in both directions
+          (client to server: keyboard input; server to client: PTY output)
+        - Text frames (opcode 0x01) carry JSON control messages
+        - Close frame (opcode 0x08) terminates the session and closes the SSH channel
+
+        **Control Messages (server to client):**
+        - Connection ready: `SshTerminalConnectedMessage`, e.g. `{"type": "connected"}`
+        - Close notification: `SshTerminalCloseMessage`, e.g. `{"type": "close", "reason": "normal"}`;
+          sent before the close frame when the session ends on the remote or agent side, or when
+          the server closes it because the client does not read terminal output fast enough
+
+        **Control Messages (client to server):**
+        - Terminal resize: `SshTerminalResizeMessage`, e.g. `{"type": "resize", "columns": 132, "rows": 43}`
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Session token obtained from POST /v1/objects/{object-id}/ssh-terminal
+      responses:
+        '101':
+          description: |
+            Switching Protocols - WebSocket connection established successfully.
+            A JSON message `{"type": "connected"}` is sent after successful upgrade, followed by
+            any terminal output buffered since the SSH channel was opened.
+            If the token is invalid, expired or already used, the connection is closed right after
+            the upgrade with WebSocket close code 1008 (Policy Violation) - no HTTP error status
+            is returned in that case.
+          headers:
+            Upgrade:
+              schema:
+                type: string
+                example: websocket
+            Connection:
+              schema:
+                type: string
+                example: Upgrade
+            Sec-WebSocket-Accept:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                description: Control messages sent by the server as WebSocket text frames
+                oneOf:
+                  - $ref: '#/components/schemas/SshTerminalConnectedMessage'
+                  - $ref: '#/components/schemas/SshTerminalCloseMessage'
+        '426':
+          description: Upgrade required - request did not ask for a protocol upgrade to WebSocket.
+      security: []
+      tags:
+        - SSH Terminal
   /v1/agent-tunnels:
     get:
       operationId: listAgentTunnels
@@ -8215,6 +8285,126 @@ paths:
             Agent may be unreachable or TCP proxy setup failed.
         '503':
           description: Service Unavailable - No proxy node available
+      security:
+        - BearerAuth: []
+
+  /v1/objects/{object-id}/ssh-terminal:
+    post:
+      operationId: createSshTerminalSession
+      summary: Create SSH Terminal Session
+      description: |
+        Open an interactive SSH terminal session (PTY) to a node and return a short-lived token
+        for WebSocket connection. The SSH session is established by the node's effective SSH proxy
+        agent (ssh subagent); the server relays terminal data between the agent and the WebSocket.
+
+        The SSH channel is opened while this request is processed, so connection and authentication
+        failures are reported synchronously. Output produced by the remote side before the WebSocket
+        is connected (banner, prompt) is buffered and delivered after connection. Terminal output
+        waiting for delivery to the client is limited to 1 MB; if the client does not read it fast
+        enough (or never connects while the remote side keeps producing output), the session is
+        closed with reason `overflow`.
+
+        **Two-Phase Authorization Flow:**
+        1. Call this endpoint with Bearer token authentication
+        2. Server opens SSH channel via agent and returns a session token
+        3. Connect to `/v1/ssh-terminal/{token}` WebSocket endpoint (no auth header needed)
+
+        If the token is not used within its validity period, the SSH channel is closed.
+
+        **Required Permissions:**
+        - System access right: SYSTEM_ACCESS_SETUP_TCP_PROXY
+        - Object access right: OBJECT_ACCESS_CONTROL on the node
+      tags:
+        - Objects
+        - SSH Terminal
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [columns, rows]
+              properties:
+                columns:
+                  type: integer
+                  minimum: 1
+                  maximum: 1024
+                  description: Initial terminal width in characters
+                rows:
+                  type: integer
+                  minimum: 1
+                  maximum: 1024
+                  description: Initial terminal height in lines
+                terminalType:
+                  type: string
+                  maxLength: 31
+                  description: |
+                    Terminal type (TERM) requested for the PTY, e.g. `xterm-256color`.
+                    If omitted, the default from the node's device driver is used.
+                login:
+                  type: string
+                  description: |
+                    SSH login name. If omitted or null, SSH credentials stored on the node (login,
+                    password and SSH key) are used and `password` / `keyId` are ignored.
+                password:
+                  type: string
+                  format: password
+                  description: SSH password (used only when `login` is provided)
+                keyId:
+                  type: integer
+                  description: ID of SSH key to use (used only when `login` is provided; 0 for none)
+            example:
+              columns: 120
+              rows: 40
+              terminalType: xterm-256color
+      responses:
+        '201':
+          description: SSH terminal session created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    format: uuid
+                    description: Session token for WebSocket connection
+                  expiresIn:
+                    type: integer
+                    description: Token validity period in seconds
+                  wsUrl:
+                    type: string
+                    description: WebSocket URL path to connect to
+              example:
+                token: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                expiresIn: 30
+                wsUrl: "/v1/ssh-terminal/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '400':
+          description: Bad Request - Object is not a node, missing body, or invalid terminal size.
+        '401':
+          description: Unauthorized - Authentication token missing or invalid
+        '403':
+          description: |
+            Forbidden - User does not have required permissions.
+            Either SYSTEM_ACCESS_SETUP_TCP_PROXY or OBJECT_ACCESS_CONTROL is missing.
+        '404':
+          description: Object not found - Invalid object ID
+        '502':
+          description: |
+            Bad Gateway - Cannot connect to SSH proxy agent, or agent failed to establish SSH session
+            (connection or authentication failure, or interactive channel could not be opened).
+            Error response contains agent error text.
+        '503':
+          description: Service Unavailable - SSH proxy node for the target node is not available
+        '504':
+          description: Gateway Timeout - SSH proxy agent did not respond in time
       security:
         - BearerAuth: []
 
@@ -20406,6 +20596,47 @@ components:
             - normal: Connection closed normally by remote end
             - error: Connection closed due to an error
             - agent_disconnect: Agent connection was lost
+    SshTerminalConnectedMessage:
+      type: object
+      description: WebSocket text message sent when SSH terminal session is connected
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [connected]
+    SshTerminalCloseMessage:
+      type: object
+      description: WebSocket text message sent when SSH terminal session is closed by remote or agent side, or by the server
+      required: [type, reason]
+      properties:
+        type:
+          type: string
+          enum: [close]
+        reason:
+          type: string
+          enum: [normal, error, agent_disconnect, overflow]
+          description: |
+            Reason for session closure:
+            - normal: SSH channel closed normally by remote end (e.g. logout)
+            - error: SSH channel closed due to an error
+            - agent_disconnect: Connection to SSH proxy agent was lost
+            - overflow: Client did not read terminal output fast enough (queued output exceeded 1 MB)
+    SshTerminalResizeMessage:
+      type: object
+      description: WebSocket text message sent by client to change terminal size
+      required: [type, columns, rows]
+      properties:
+        type:
+          type: string
+          enum: [resize]
+        columns:
+          type: integer
+          minimum: 1
+          maximum: 1024
+        rows:
+          type: integer
+          minimum: 1
+          maximum: 1024
     ServerAction:
       type: object
       description: Server action configuration

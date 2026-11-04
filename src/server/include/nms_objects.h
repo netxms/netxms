@@ -260,6 +260,7 @@ protected:
    shared_ptr<AgentTunnel> m_tunnel;
    shared_ptr<AgentTunnel> m_proxyTunnel;
    TcpProxyCallback *m_tcpProxyCallback;
+   Mutex m_tcpProxyCallbackLock;   // held while callback is invoked, so setTcpProxyCallback() waits for in-flight calls
    int64_t m_dbWriterQueueThreshold;
    Mutex m_trapAckLock;
    bool m_trapAckScheduled;

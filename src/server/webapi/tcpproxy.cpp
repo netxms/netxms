@@ -150,7 +150,7 @@ void TcpProxyWebSocketSession::run()
       ByteStream buffer;
       BYTE frameType;
 
-      if (!ReadWebsocketFrame(static_cast<int>(m_socket), &buffer, &frameType))
+      if (!ReadWebsocketFrame(m_socket, &buffer, &frameType))
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("TCP proxy channel %u: WebSocket read error"), m_agentChannelId);
          break;
@@ -536,8 +536,7 @@ void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
    if (tokenStr == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection rejected: no token provided"));
-      SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
-      MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
+      RejectWebsocketConnection(sock, responseHandle);
       return;
    }
 
@@ -545,8 +544,7 @@ void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
    if (token.isNull())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection rejected: invalid token format"));
-      SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
-      MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
+      RejectWebsocketConnection(sock, responseHandle);
       return;
    }
 
@@ -563,8 +561,7 @@ void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
    if (session == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("TCP proxy WebSocket connection rejected: token not found"));
-      SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
-      MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
+      RejectWebsocketConnection(sock, responseHandle);
       return;
    }
 
@@ -574,8 +571,7 @@ void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
       nxlog_debug_tag(DEBUG_TAG, 4, L"TCP proxy WebSocket connection rejected: token expired");
       session->close();
       delete session;
-      SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
-      MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
+      RejectWebsocketConnection(sock, responseHandle);
       return;
    }
 

@@ -34,6 +34,11 @@ DEFINE_MODULE_METADATA("WEBAPI", "Raden Solutions", NETXMS_VERSION_STRING_A, NET
 void CleanupExpiredTcpProxySessions();
 
 /**
+ * Cleanup expired SSH terminal sessions
+ */
+void CleanupExpiredSshTerminalSessions();
+
+/**
  * Cleanup expired server console sessions
  */
 void CleanupExpiredServerConsoleSessions();
@@ -259,6 +264,7 @@ int H_ObjectExecuteScript(Context *context);
 int H_ObjectExpandText(Context *context);
 int H_ObjectQuery(Context *context);
 int H_ObjectRemoteControl(Context *context);
+int H_ObjectSshTerminalCreate(Context *context);
 int H_ChassisLayout(Context *context);
 int H_RackLayout(Context *context);
 int H_RackPassiveElementCreate(Context *context);
@@ -394,6 +400,9 @@ int H_User2FABindingUpdate(Context *context);
  * WebSocket upgrade handlers
  */
 void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
+                        const char *extra_in, size_t extra_in_size, MHD_socket sock,
+                        MHD_UpgradeResponseHandle *urh);
+void WS_SshTerminalConnect(void *cls, MHD_Connection *connection, void *con_cls,
                         const char *extra_in, size_t extra_in_size, MHD_socket sock,
                         MHD_UpgradeResponseHandle *urh);
 void WS_ToolOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
@@ -1027,6 +1036,9 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/remote-control")
       .POST(H_ObjectRemoteControl)
       .build();
+   RouteBuilder("v1/objects/:object-id/ssh-terminal")
+      .POST(H_ObjectSshTerminalCreate)  // Open SSH channel, get WebSocket token
+      .build();
    RouteBuilder("v1/objects/:object-id/restore-device-config")
       .POST(H_DeviceConfigRestore)
       .build();
@@ -1246,10 +1258,16 @@ static bool InitModule(Config *config)
       .upgradeProtocol(WS_TcpProxyConnect)
       .noauth()  // Token-based auth, not Bearer token
       .build();
+   RouteBuilder("v1/ssh-terminal/:token")
+      .GET([](Context *context) { context->setErrorResponse("WebSocket connection required"); return 426; })
+      .upgradeProtocol(WS_SshTerminalConnect)
+      .noauth()  // Token-based auth, not Bearer token
+      .build();
 
 
    ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredTcpProxySessions);  // In 5 minutes
    ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredServerConsoleSessions);  // In 5 minutes
+   ThreadPoolScheduleRelative(g_mainThreadPool, 60000, CleanupExpiredSshTerminalSessions);  // In 1 minute
    return true;
 }
 

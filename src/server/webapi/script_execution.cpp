@@ -571,16 +571,6 @@ int H_ScriptExecutionStop(Context *context)
 }
 
 /**
- * Reject WebSocket connection
- */
-static void RejectConnection(MHD_socket sock, MHD_UpgradeResponseHandle *responseHandle, const wchar_t *reason)
-{
-   nxlog_debug_tag(DEBUG_TAG, 4, L"Script output WebSocket connection rejected: %s", reason);
-   SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
-   MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
-}
-
-/**
  * WebSocket upgrade handler for script output streaming
  */
 void WS_ScriptOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
@@ -592,14 +582,16 @@ void WS_ScriptOutputConnect(void *cls, MHD_Connection *connection, void *con_cls
    const wchar_t *tokenStr = context->getPlaceholderValue(L"token");
    if (tokenStr == nullptr)
    {
-      RejectConnection(sock, responseHandle, L"no token provided");
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Script output WebSocket connection rejected: no token provided");
+      RejectWebsocketConnection(sock, responseHandle);
       return;
    }
 
    uuid token = uuid::parse(tokenStr);
    if (token.isNull())
    {
-      RejectConnection(sock, responseHandle, L"invalid token format");
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Script output WebSocket connection rejected: invalid token format");
+      RejectWebsocketConnection(sock, responseHandle);
       return;
    }
 
@@ -612,7 +604,8 @@ void WS_ScriptOutputConnect(void *cls, MHD_Connection *connection, void *con_cls
 
    if (execution == nullptr)
    {
-      RejectConnection(sock, responseHandle, L"token not found");
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Script output WebSocket connection rejected: token not found");
+      RejectWebsocketConnection(sock, responseHandle);
       return;
    }
 

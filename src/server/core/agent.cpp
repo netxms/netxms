@@ -38,7 +38,7 @@ void QueueWindowsEvent(WindowsEvent *event);
  * Create normal agent connection
  */
 AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr, uint16_t port, const TCHAR *secret, bool allowCompression) :
-         AgentConnection(ipAddr, port, secret, allowCompression)
+         AgentConnection(ipAddr, port, secret, allowCompression), m_tcpProxyCallbackLock(MutexType::RECURSIVE)
 {
    m_nodeId = nodeId;
    m_proxyNodeId = 0;
@@ -56,7 +56,7 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr,
  * Create agent connection within tunnel
  */
 AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunnel>& tunnel, const TCHAR *secret, bool allowCompression) :
-         AgentConnection(InetAddress::INVALID, 0, secret, allowCompression), m_tunnel(tunnel)
+         AgentConnection(InetAddress::INVALID, 0, secret, allowCompression), m_tunnel(tunnel), m_tcpProxyCallbackLock(MutexType::RECURSIVE)
 {
    m_nodeId = nodeId;
    m_proxyNodeId = 0;
@@ -1103,11 +1103,15 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
 }
 
 /**
- * Set callback for receiving TCP proxy packets
+ * Set callback for receiving TCP proxy packets and agent disconnect notifications. Returns only after any callback
+ * invocation in progress on receiver thread has completed, so caller can safely destroy previous callback object
+ * afterwards. Lock is recursive, so callback object may call this method from within its callback methods.
  */
 void AgentConnectionEx::setTcpProxyCallback(TcpProxyCallback *callback)
 {
+   m_tcpProxyCallbackLock.lock();
    m_tcpProxyCallback = callback;
+   m_tcpProxyCallbackLock.unlock();
 }
 
 /**
@@ -1115,8 +1119,10 @@ void AgentConnectionEx::setTcpProxyCallback(TcpProxyCallback *callback)
  */
 void AgentConnectionEx::processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
 {
+   m_tcpProxyCallbackLock.lock();
    if (m_tcpProxyCallback != nullptr)
       m_tcpProxyCallback->onTcpProxyData(this, channelId, data, size, errorIndicator);
+   m_tcpProxyCallbackLock.unlock();
 }
 
 /**
@@ -1136,8 +1142,10 @@ void AgentConnectionEx::onDisconnect()
    if (isFileUpdateConnection())
       RemoveFileMonitorsByNodeId(m_nodeId);
 
+   m_tcpProxyCallbackLock.lock();
    if (m_tcpProxyCallback != nullptr)
       m_tcpProxyCallback->onTcpProxyAgentDisconnect(this);
+   m_tcpProxyCallbackLock.unlock();
 }
 
 #define DEBUG_TAG _T("agent")
