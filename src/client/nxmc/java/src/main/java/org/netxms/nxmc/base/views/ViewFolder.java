@@ -584,6 +584,8 @@ public class ViewFolder extends ViewContainer
          {
             tabFolder.setSelection(tabItem);
             activateView(view, tabItem);
+            if (activate)
+               view.setFocus();
          }
       }
    }
