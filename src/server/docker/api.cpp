@@ -256,6 +256,10 @@ bool DockerClient::buildPKCS12()
    if (m_pkcs12 != nullptr)
       return true;
 
+   // Schannel cannot acquire credentials for EC client key imported from PKCS#12 (fails with SEC_E_NO_CREDENTIALS)
+   if ((EVP_PKEY_base_id(m_clientKey) == EVP_PKEY_EC) && !strncmp(GetLibCURLSSLBackend(), "Schannel", 8))
+      nxlog_debug_tag(DEBUG_TAG, 1, L"DockerClient: Schannel TLS backend does not support EC client keys, TLS handshake will likely fail (use RSA client key or set CurlSSLBackend to OpenSSL)");
+
    BYTE random[16];
    GenerateRandomBytes(random, sizeof(random));
    BinToStrA(random, sizeof(random), m_pkcs12Password);
