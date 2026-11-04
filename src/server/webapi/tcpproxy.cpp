@@ -30,6 +30,11 @@
 static const int TCP_PROXY_TOKEN_VALIDITY = 30;
 
 /**
+ * Interval (milliseconds) of keepalive requests to agent while proxy channel is idle; must be below agent's SessionIdleTimeout
+ */
+static const uint32_t AGENT_KEEPALIVE_INTERVAL = 30000;
+
+/**
  * WebSocket TCP proxy session
  */
 class TcpProxyWebSocketSession : public TcpProxyCallback
@@ -147,10 +152,19 @@ void TcpProxyWebSocketSession::run()
 {
    while (!m_closed && !IsShutdownInProgress())
    {
+      SocketPoller sp;
+      sp.add(m_socket);
+      int rc = sp.poll(AGENT_KEEPALIVE_INTERVAL);
+      if (rc == 0)
+      {
+         m_agentConn->nop();
+         continue;
+      }
+
       ByteStream buffer;
       BYTE frameType;
 
-      if (!ReadWebsocketFrame(m_socket, &buffer, &frameType))
+      if ((rc < 0) || !ReadWebsocketFrame(m_socket, &buffer, &frameType))
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("TCP proxy channel %u: WebSocket read error"), m_agentChannelId);
          break;
