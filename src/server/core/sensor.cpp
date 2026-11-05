@@ -432,7 +432,7 @@ bool Sensor::confPollModbus(uint32_t requestId)
    sendPollerMsg(_T("   Checking Modbus...\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking Modbus"), m_name);
 
-   ModbusTransport *transport = gatewayNode->createModbusTransport(gatewayNode->getModbusUnitId());
+   ModbusTransport *transport = gatewayNode->createModbusTransport(m_modbusUnitId);
    if (transport != nullptr)
    {
       ModbusOperationStatus status = transport->checkConnection();
@@ -604,7 +604,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
 
       ModbusOperationStatus status = MODBUS_STATUS_COMM_FAILURE;
       shared_ptr<Node> gatewayNode = static_pointer_cast<Node>(FindObjectById(m_gatewayNodeId, OBJECT_NODE));
-      ModbusTransport *transport = (gatewayNode != nullptr) ? gatewayNode->createModbusTransport(gatewayNode->getModbusUnitId()) : nullptr;
+      ModbusTransport *transport = (gatewayNode != nullptr) ? gatewayNode->createModbusTransport(m_modbusUnitId) : nullptr;
       if ((transport != nullptr) && ((status = transport->checkConnection()) == MODBUS_STATUS_SUCCESS))
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): connected to device via Modbus"), m_name);
