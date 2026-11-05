@@ -1574,6 +1574,7 @@ bool LIBNXAGENT_EXPORTABLE IsParametrizedCommand(const TCHAR *command);
 #if WITH_MODBUS
 typedef struct _modbus modbus_t;
 bool LIBNXAGENT_EXPORTABLE ModbusCheckConnection(const InetAddress& addr, uint16_t port, int32_t unitId);
+bool LIBNXAGENT_EXPORTABLE ModbusIsDataUnavailableError(int error);
 int LIBNXAGENT_EXPORTABLE ModbusExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback, int commErrorStatus);
 int LIBNXAGENT_EXPORTABLE ModbusReadHoldingRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value, size_t size);
 int LIBNXAGENT_EXPORTABLE ModbusReadInputRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value, size_t size);

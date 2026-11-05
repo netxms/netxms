@@ -77,6 +77,17 @@ bool LIBNXAGENT_EXPORTABLE ModbusCheckConnection(const InetAddress& addr, uint16
 }
 
 /**
+ * Check if libmodbus error code of failed request means that requested data is not available on the device: exceptions
+ * "illegal function", "illegal data address" and "illegal data value" and invalid request parameters. All other errors
+ * (timeouts, connection errors, gateway exceptions, device failure or busy exceptions, malformed responses) are
+ * communication failures.
+ */
+bool LIBNXAGENT_EXPORTABLE ModbusIsDataUnavailableError(int error)
+{
+   return (error == EMBXILFUN) || (error == EMBXILADD) || (error == EMBXILVAL) || (error == EMBMDATA) || (error == EINVAL);
+}
+
+/**
  * Execute provided callback within Modbus session context
  */
 int LIBNXAGENT_EXPORTABLE ModbusExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback, int commErrorStatus)
@@ -184,7 +195,7 @@ static inline double modbus_get_double_le(uint16_t *input)
  * For string conversion, supplied value buffer should be at least N + 2 character long. For other conversions,
  * buffer should be at least 32 characters long. If buffer is smaller, result string will be cut accordingly.
  *
- * Returns number of registers read or -1 on error.
+ * Returns number of registers read or -1 on error (errno is set to EINVAL for invalid conversion).
  */
 static int ModbusReadRegisters(modbus_t *mb, bool input, int address, const TCHAR *conversion, TCHAR *value, size_t size)
 {
@@ -213,7 +224,10 @@ static int ModbusReadRegisters(modbus_t *mb, bool input, int address, const TCHA
          nr = (_tcstol(&conversion[7], nullptr, 10) + 1) / 2;
       }
       if (nr <= 0)
+      {
+         errno = EINVAL;
          return -1;
+      }
       type = ConversionType::STRING;
    }
    else if (!_tcsicmp(conversion, _T("int16")) || !_tcsicmp(conversion, _T("uint16")))
@@ -263,7 +277,8 @@ static int ModbusReadRegisters(modbus_t *mb, bool input, int address, const TCHA
    }
    else
    {
-      return -1;  // invalid conversion
+      errno = EINVAL;   // invalid conversion
+      return -1;
    }
 
    int rc;

@@ -33,6 +33,14 @@
 #endif
 
 /**
+ * Map libmodbus error code of failed request to metric handler return code
+ */
+static inline LONG ModbusErrorToRC(int error)
+{
+   return ModbusIsDataUnavailableError(error) ? SYSINFO_RC_UNSUPPORTED : SYSINFO_RC_ERROR;
+}
+
+/**
  * Handler for Modbus.ConnectionStatus(*) metric
  */
 LONG H_ModbusConnectionStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
@@ -94,8 +102,9 @@ LONG H_ModbusHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value
       {
          if (ModbusReadHoldingRegisters(mb, modbusAddress, conversion, value, MAX_RESULT_LENGTH) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadHoldingRegisters(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
-            return SYSINFO_RC_ERROR;
+            int error = errno;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadHoldingRegisters(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(error));
+            return ModbusErrorToRC(error);
          }
          return SYSINFO_RC_SUCCESS;
       });
@@ -115,8 +124,9 @@ LONG H_ModbusInputRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, 
       {
          if (ModbusReadInputRegisters(mb, modbusAddress, conversion, value, MAX_RESULT_LENGTH) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadInputRegisters(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
-            return SYSINFO_RC_ERROR;
+            int error = errno;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadInputRegisters(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(error));
+            return ModbusErrorToRC(error);
          }
          return SYSINFO_RC_SUCCESS;
       });
@@ -133,8 +143,9 @@ LONG H_ModbusCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractC
          uint8_t coil;
          if (modbus_read_bits(mb, modbusAddress, 1, &coil) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_bits(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
-            return SYSINFO_RC_ERROR;
+            int error = errno;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_bits(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(error));
+            return ModbusErrorToRC(error);
          }
 
          ret_boolean(value, coil ? true : false);
@@ -153,8 +164,9 @@ LONG H_ModbusDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, 
          uint8_t input;
          if (modbus_read_input_bits(mb, modbusAddress, 1, &input) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_input_bits(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
-            return SYSINFO_RC_ERROR;
+            int error = errno;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_input_bits(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(error));
+            return ModbusErrorToRC(error);
          }
 
          ret_boolean(value, input ? true : false);
@@ -193,8 +205,9 @@ LONG H_ModbusDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringL
             rc = modbus_read_device_id(mb, MODBUS_READ_DEVICE_ID_BASIC, 0, &deviceId);
             if (rc < 0)
             {
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_device_id(%hs:%d:%d): request on BASIC level failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
-               return SYSINFO_RC_ERROR;
+               int error = errno;
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_device_id(%hs:%d:%d): request on BASIC level failed (%hs)"), addrText, port, unitId, modbus_strerror(error));
+               return ModbusErrorToRC(error);
             }
          }
 

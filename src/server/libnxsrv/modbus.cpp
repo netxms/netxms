@@ -42,6 +42,16 @@ const TCHAR LIBNXSRV_EXPORTABLE *GetModbusStatusText(ModbusOperationStatus statu
 #endif
 
 /**
+ * Map libmodbus error code of failed request to operation status
+ */
+static ModbusOperationStatus ModbusErrorToStatus(int error)
+{
+   if (ModbusIsDataUnavailableError(error))
+      return MODBUS_STATUS_PROTOCOL_ERROR;
+   return (error == ETIMEDOUT) ? MODBUS_STATUS_TIMEOUT : MODBUS_STATUS_COMM_FAILURE;
+}
+
+/**
  * Direct transport - check connection
  */
 ModbusOperationStatus ModbusDirectTransport::checkConnection()
@@ -66,8 +76,9 @@ ModbusOperationStatus ModbusDirectTransport::readDeviceIdentification(ModbusDevi
             rc = modbus_read_device_id(mb, MODBUS_READ_DEVICE_ID_BASIC, 0, &d);
             if (rc < 0)
             {
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_device_id(%hs:%d:%d): request on BASIC level failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(errno));
-               return MODBUS_STATUS_PROTOCOL_ERROR;
+               int error = errno;
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_device_id(%hs:%d:%d): request on BASIC level failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(error));
+               return ModbusErrorToStatus(error);
             }
          }
 
@@ -130,8 +141,9 @@ ModbusOperationStatus ModbusDirectTransport::readHoldingRegisters(int address, c
       {
          if (ModbusReadHoldingRegisters(mb, address, conversion, value, MAX_RESULT_LENGTH) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadHoldingRegisters(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(errno));
-            return MODBUS_STATUS_PROTOCOL_ERROR;
+            int error = errno;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadHoldingRegisters(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(error));
+            return ModbusErrorToStatus(error);
          }
          return MODBUS_STATUS_SUCCESS;
       }, MODBUS_STATUS_COMM_FAILURE);
@@ -147,8 +159,9 @@ ModbusOperationStatus ModbusDirectTransport::readInputRegisters(int address, con
       {
          if (ModbusReadInputRegisters(mb, address, conversion, value, MAX_RESULT_LENGTH) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadInputRegisters(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(errno));
-            return MODBUS_STATUS_PROTOCOL_ERROR;
+            int error = errno;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadInputRegisters(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(error));
+            return ModbusErrorToStatus(error);
          }
          return MODBUS_STATUS_SUCCESS;
       }, MODBUS_STATUS_COMM_FAILURE);
@@ -165,8 +178,9 @@ ModbusOperationStatus ModbusDirectTransport::readCoil(int address, TCHAR *value)
          uint8_t coil;
          if (modbus_read_bits(mb, address, 1, &coil) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_bits(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(errno));
-            return MODBUS_STATUS_PROTOCOL_ERROR;
+            int error = errno;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_bits(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(error));
+            return ModbusErrorToStatus(error);
          }
 
          ret_boolean(value, coil ? true : false);
@@ -185,8 +199,9 @@ ModbusOperationStatus ModbusDirectTransport::readDiscreteInput(int address, TCHA
          uint8_t input;
          if (modbus_read_input_bits(mb, address, 1, &input) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_input_bits(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(errno));
-            return MODBUS_STATUS_PROTOCOL_ERROR;
+            int error = errno;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_input_bits(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(error));
+            return ModbusErrorToStatus(error);
          }
 
          ret_boolean(value, input ? true : false);
@@ -290,6 +305,9 @@ ModbusOperationStatus ModbusProxyTransport::readMetricFromAgent(const TCHAR *met
          return MODBUS_STATUS_SUCCESS;
       case ERR_REQUEST_TIMEOUT:
          return MODBUS_STATUS_TIMEOUT;
+      case ERR_UNKNOWN_METRIC:
+      case ERR_UNSUPPORTED_METRIC:
+         return MODBUS_STATUS_PROTOCOL_ERROR;
       default:
          return MODBUS_STATUS_COMM_FAILURE;
    }
