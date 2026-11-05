@@ -46,6 +46,7 @@ This skill provides comprehensive log analysis capabilities for NetXMS. Use this
 
 - `get-log-statistics`: Get volume statistics with grouping by time, source, or severity
 - `correlate-logs`: Create unified timeline across log sources for a device and its neighbors
+- `get-object-timeline` (global tool): Chronological history of a single object - events, threshold and reachability changes, alarm state changes, maintenance, audited configuration changes, package deployments, and module-provided records. Prefer it over `correlate-logs` when the question is "what happened to this object" rather than "what do the raw logs say"
 - `analyze-log-patterns`: Detect bursts, recurring patterns, new messages, and top patterns
 
 ## Built-in Logs

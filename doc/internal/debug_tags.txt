@@ -234,6 +234,7 @@ obj.maint	Object maintenance related
 obj.netmap	Network maps
 obj.poll.node	New node poll
 obj.query       Object queries
+obj.timeline	Object timeline (event, alarm, audit, deployment and module-provided history)
 obj.relations	Object relation related
 obj.sync	Object synchronization
 

@@ -23,6 +23,17 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 71.3 to 71.4
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_audit_log_timestamp ON audit_log(timestamp)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_audit_log_object ON audit_log(object_id,timestamp)"));
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 71.2 to 71.3
  */
 static bool H_UpgradeFromV2()
@@ -106,6 +117,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  71, 4,  H_UpgradeFromV3  },
    { 2,  71, 3,  H_UpgradeFromV2  },
    { 1,  71, 2,  H_UpgradeFromV1  },
    { 0,  71, 1,  H_UpgradeFromV0  },

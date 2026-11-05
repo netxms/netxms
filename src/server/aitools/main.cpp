@@ -88,6 +88,7 @@ std::string F_GetObservationPointTopTalkers(json_t *arguments, uint32_t userId);
 std::string F_GetObservationPoints(json_t *arguments, uint32_t userId);
 std::string F_GetTrafficObservers(json_t *arguments, uint32_t userId);
 std::string F_GetObject(json_t *arguments, uint32_t userId);
+std::string F_GetObjectTimeline(json_t *arguments, uint32_t userId);
 std::string F_SendNotification(json_t *arguments, uint32_t userId);
 std::string F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId);
 std::string F_SNMPWalk(json_t *arguments, uint32_t userId);
@@ -198,6 +199,32 @@ static void CreateAIToolList()
          { "object", "mandatory name or ID of an object (node, device, server, workstation, container, etc.)" }
       },
       F_GetObject);
+   RegisterAITool(
+      "get-object-timeline",
+      "Get one chronological stream of everything that happened to a single object (node, device, sensor, etc.) within a time window. "
+      "Use this as the first step when investigating what happened to a specific object, e.g. 'why did this node go down', "
+      "'what changed before the problem started', or when building an incident narrative. "
+      "Categories: 'event' (other logged events), 'threshold' (DCI threshold activation/deactivation), "
+      "'reachability' (agent/SNMP/ICMP/SSH/Modbus/EtherNet-IP unreachable/OK, node down/up/unreachable), "
+      "'maintenance' (maintenance mode entered/left, maintenance journal entries), "
+      "'software' (installed/updated/removed packages as detected by configuration poll - timestamp is when the change was detected, not when it happened), "
+      "'alarm' (alarm creation and state changes), 'audit' (configuration changes made to the object), "
+      "'deployment' (package deployment jobs started from NetXMS); server modules can add more categories - "
+      "every available category is listed in the 'categories' section of the result. "
+      "Each category is limited separately; when a category is truncated, the most recent records are kept and 'completeFrom' "
+      "tells from which time that category is complete - narrow the window or filter categories to see older records. "
+      "Categories the user has no access to are marked with 'accessDenied'. "
+      "Limitations: alarm history is only available until terminated alarms are removed by housekeeping, "
+      "and events configured not to be written to the event log never appear.",
+      {
+         { "object", "mandatory name or ID of an object" },
+         { "time_from", "start of the window: ISO 8601 timestamp, UNIX time, or relative like '-6h', '-2d' (default: 24 hours before time_to)" },
+         { "time_to", "end of the window, same formats as time_from (default: now)" },
+         { "categories", "optional list of categories to include (default: all)", "array", "string" },
+         { "min_severity", "minimum severity for the generic 'event' category only: normal, warning, minor, major, critical (default: normal)" },
+         { "limit_per_category", "maximum number of records per category, 1-200 (default: 50)", "integer" }
+      },
+      F_GetObjectTimeline);
    RegisterAITool(
       "send-notification",
       "Send notification to given recipient using one of configured notification channels.",

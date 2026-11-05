@@ -2584,6 +2584,9 @@ CREATE TABLE audit_log
   PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 
+CREATE INDEX idx_audit_log_timestamp ON audit_log(timestamp);
+CREATE INDEX idx_audit_log_object ON audit_log(object_id,timestamp);
+
 /**
  * Persistent storage
  */

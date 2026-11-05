@@ -21,6 +21,7 @@
 **/
 
 #include "aitools.h"
+#include <nxcore_timeline.h>
 #include <unordered_set>
 
 /**
@@ -492,4 +493,99 @@ std::string F_ExplainObjectStatus(json_t *arguments, uint32_t userId)
       return std::string("Access denied");
 
    return JsonToString(object->buildStatusExplanation());
+}
+
+/**
+ * Get chronological timeline of everything that happened to an object
+ */
+std::string F_GetObjectTimeline(json_t *arguments, uint32_t userId)
+{
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if (object == nullptr)
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Access denied");
+
+   time_t timeTo = time(nullptr);
+   const char *s = json_object_get_string_utf8(arguments, "time_to", nullptr);
+   if ((s != nullptr) && (*s != 0))
+   {
+      timeTo = ParseTimestamp(s);
+      if (timeTo == 0)
+         return std::string("Invalid time_to value");
+   }
+
+   time_t timeFrom = timeTo - 86400;
+   s = json_object_get_string_utf8(arguments, "time_from", nullptr);
+   if ((s != nullptr) && (*s != 0))
+   {
+      timeFrom = ParseTimestamp(s);
+      if (timeFrom == 0)
+         return std::string("Invalid time_from value");
+   }
+   if (timeFrom > timeTo)
+      return std::string("time_from must not be later than time_to");
+
+   std::vector<const char*> knownCategories = GetObjectTimelineCategories();
+   StringSet categories;
+   json_t *categoryList = json_object_get_array_ex(arguments, "categories");
+   if (categoryList != nullptr)
+   {
+      size_t index;
+      json_t *value;
+      json_array_foreach(categoryList, index, value)
+      {
+         const char *name = json_string_value(value);
+         if (name == nullptr)
+            continue;
+         const char *category = nullptr;
+         for(const char *c : knownCategories)
+         {
+            if (!stricmp(c, name))
+            {
+               category = c;
+               break;
+            }
+         }
+         if (category == nullptr)
+         {
+            json_decref(categoryList);
+            std::string error("Unknown category \"");
+            error.append(name);
+            error.append("\"; valid categories are:");
+            for(const char *c : knownCategories)
+            {
+               error.append(" ");
+               error.append(c);
+            }
+            return error;
+         }
+         categories.add(String(category, "utf-8"));
+      }
+      json_decref(categoryList);
+   }
+
+   int minSeverity = SEVERITY_NORMAL;
+   const char *severity = json_object_get_string_utf8(arguments, "min_severity", nullptr);
+   if ((severity != nullptr) && (*severity != 0))
+   {
+      if (!stricmp(severity, "warning"))
+         minSeverity = SEVERITY_WARNING;
+      else if (!stricmp(severity, "minor"))
+         minSeverity = SEVERITY_MINOR;
+      else if (!stricmp(severity, "major"))
+         minSeverity = SEVERITY_MAJOR;
+      else if (!stricmp(severity, "critical"))
+         minSeverity = SEVERITY_CRITICAL;
+      else if (stricmp(severity, "normal"))
+         return std::string("Invalid min_severity value (expected normal, warning, minor, major, or critical)");
+   }
+
+   int limit = json_object_get_int32(arguments, "limit_per_category", 50);
+   if (limit < 1)
+      limit = 1;
+   else if (limit > 200)
+      limit = 200;
+
+   return JsonToString(BuildObjectTimeline(object, timeFrom, timeTo, userId, categories.isEmpty() ? nullptr : &categories, limit, minSeverity));
 }
