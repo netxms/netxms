@@ -13733,7 +13733,7 @@ paths:
     post:
       operationId: createUser
       summary: Create user
-      description: Create a new user. Requires MANAGE_USERS access right.
+      description: Create a new user with given properties. Requires MANAGE_USERS access right. Password is set separately via POST /v1/users/{user-id}/password.
       requestBody:
         required: true
         content:
@@ -14051,13 +14051,13 @@ paths:
     post:
       operationId: createUserGroup
       summary: Create user group
-      description: Create a new user group. Requires MANAGE_USERS access right.
+      description: Create a new user group with given properties. Requires MANAGE_USERS access right.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserCreateInput'
+              $ref: '#/components/schemas/UserGroupCreateInput'
             example:
               name: operators
       responses:
@@ -16819,14 +16819,19 @@ components:
             type: integer
           description: List of member user IDs
     UserCreateInput:
-      type: object
-      description: User or group creation request
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          description: Login name (must be a valid object name)
+      description: User creation request. Accepts the same properties as UserUpdateInput; only name is required.
+      allOf:
+        - $ref: '#/components/schemas/UserUpdateInput'
+        - type: object
+          required:
+            - name
+    UserGroupCreateInput:
+      description: User group creation request. Accepts the same properties as UserGroupUpdateInput; only name is required.
+      allOf:
+        - $ref: '#/components/schemas/UserGroupUpdateInput'
+        - type: object
+          required:
+            - name
     UserUpdateInput:
       type: object
       description: User update request. All fields are optional - only provided fields are modified.

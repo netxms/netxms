@@ -114,17 +114,28 @@ int H_UserCreate(Context *context)
       return 500;
    }
 
-   context->writeAuditLog(AUDIT_SECURITY, true, 0, L"User [%u] created", userId);
-
-   IntegerArray<uint32_t> ids(1);
-   ids.add(userId);
-   unique_ptr<ObjectArray<UserDatabaseObject>> result = FindUserDBObjects(ids);
-   if (result != nullptr && !result->isEmpty())
+   // Apply remaining properties from request (same set as accepted by PUT)
+   json_t *oldValue = nullptr, *newValue = nullptr;
+   rcc = ModifyUserDatabaseObjectFromJson(userId, request, &oldValue, &newValue);
+   if (oldValue != nullptr)
+      json_decref(oldValue);
+   if (rcc != RCC_SUCCESS)
    {
-      json_t *output = result->get(0)->toJson();
-      context->setResponseData(output);
-      json_decref(output);
+      if (newValue != nullptr)
+         json_decref(newValue);
+      DeleteUserDatabaseObject(userId);
+      if (rcc == RCC_INVALID_ARGUMENT)
+      {
+         context->setErrorResponse("Invalid user properties");
+         return 400;
+      }
+      context->setErrorResponse("Database failure");
+      return 500;
    }
+
+   context->writeAuditLogWithValues(AUDIT_SECURITY, true, 0, nullptr, newValue, L"User [%u] created", userId);
+   context->setResponseData(newValue);
+   json_decref(newValue);
    return 201;
 }
 
@@ -684,17 +695,28 @@ int H_UserGroupCreate(Context *context)
       return 500;
    }
 
-   context->writeAuditLog(AUDIT_SECURITY, true, 0, L"User group [%u] created", groupId);
-
-   IntegerArray<uint32_t> ids(1);
-   ids.add(groupId);
-   unique_ptr<ObjectArray<UserDatabaseObject>> result = FindUserDBObjects(ids);
-   if (result != nullptr && !result->isEmpty())
+   // Apply remaining properties from request (same set as accepted by PUT)
+   json_t *oldValue = nullptr, *newValue = nullptr;
+   rcc = ModifyUserDatabaseObjectFromJson(groupId, request, &oldValue, &newValue);
+   if (oldValue != nullptr)
+      json_decref(oldValue);
+   if (rcc != RCC_SUCCESS)
    {
-      json_t *output = result->get(0)->toJson();
-      context->setResponseData(output);
-      json_decref(output);
+      if (newValue != nullptr)
+         json_decref(newValue);
+      DeleteUserDatabaseObject(groupId);
+      if (rcc == RCC_INVALID_ARGUMENT)
+      {
+         context->setErrorResponse("Invalid group properties");
+         return 400;
+      }
+      context->setErrorResponse("Database failure");
+      return 500;
    }
+
+   context->writeAuditLogWithValues(AUDIT_SECURITY, true, 0, nullptr, newValue, L"User group [%u] created", groupId);
+   context->setResponseData(newValue);
+   json_decref(newValue);
    return 201;
 }
 
