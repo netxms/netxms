@@ -41,6 +41,7 @@
 #endif
 
 void TestAuthenticationTokens();
+void TestNetworkLossCorrelation();
 void TestCustomAttributes();
 void TestDelegateObjects();
 void TestNXSLAudit();
@@ -261,6 +262,7 @@ int main(int argc, char *argv[])
    SetTestFailureHook(TestFailureHandler);
 
    TestAuthenticationTokens();
+   TestNetworkLossCorrelation();
    TestCustomAttributes();
    TestDelegateObjects();
    TestNXSLAudit();

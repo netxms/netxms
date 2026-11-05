@@ -27,7 +27,20 @@
 /**
  * Static data
  */
-static uint64_t m_networkLostEventId = 0;
+static uint64_t s_networkLostEventId = 0;
+static uint64_t s_networkRestoredEventId = 0;
+
+/**
+ * Get root event ID for recovery event of an object that went down because of NetXMS server network connectivity loss.
+ * Recovery is rooted to the SYS_NETWORK_CONN_RESTORED event that ended that outage (event IDs only grow, so a restore
+ * event with higher ID came after the loss), or to the loss event itself if connectivity is not restored yet or the
+ * restore event is not known (for example after server restart).
+ */
+static inline uint64_t GetNetworkLossRecoveryRootId(uint64_t lossEventId)
+{
+   uint64_t restoredEventId = s_networkRestoredEventId;
+   return (restoredEventId > lossEventId) ? restoredEventId : lossEventId;
+}
 
 /**
  * Correlate current event to agent unreachable event
@@ -59,7 +72,8 @@ static void C_SysNodeDown(Node *node, Event *event)
 	// Check for NetXMS server network connectivity
 	if (g_flags & AF_NO_NETWORK_CONNECTIVITY)
 	{
-		event->setRootId(m_networkLostEventId);
+		event->setRootId(s_networkLostEventId);
+		node->setLastEventId(LAST_EVENT_NETWORK_LOSS, s_networkLostEventId);
 		return;
 	}
 
@@ -87,37 +101,60 @@ static void C_SysNodeUnreachable(Node *node, Event *event)
       return;
    }
 
-   shared_ptr<NetObj> object;
+   int rootEventIndex;
    NetworkPathFailureReason reason = NetworkPathFailureReasonFromInt(event->getParameterAsInt32(0, 0));
    switch(reason)
    {
       case NetworkPathFailureReason::PROXY_NODE_DOWN:
       case NetworkPathFailureReason::ROUTER_DOWN:
       case NetworkPathFailureReason::SWITCH_DOWN:
-         object = FindObjectById(event->getParameterAsUInt32(2, 0), OBJECT_NODE);
-         if (object != nullptr)
-         {
-            event->setRootId(static_cast<const Node&>(*object).getLastEventId(LAST_EVENT_NODE_DOWN));
-         }
+         rootEventIndex = LAST_EVENT_NODE_DOWN;
          break;
       case NetworkPathFailureReason::PROXY_AGENT_UNREACHABLE:
-         object = FindObjectById(event->getParameterAsUInt32(2, 0), OBJECT_NODE);
-         if (object != nullptr)
-         {
-            event->setRootId(static_cast<const Node&>(*object).getLastEventId(LAST_EVENT_AGENT_DOWN));
-         }
+         rootEventIndex = LAST_EVENT_AGENT_DOWN;
          break;
       case NetworkPathFailureReason::AGENT_TUNNEL_DOWN:
          // Check for NetXMS server network connectivity (tunnel-only nodes have no
          // intermediate path objects, so the beacon check is the only correlation source)
          if (g_flags & AF_NO_NETWORK_CONNECTIVITY)
          {
-            event->setRootId(m_networkLostEventId);
+            event->setRootId(s_networkLostEventId);
+            node->setLastEventId(LAST_EVENT_NETWORK_LOSS, s_networkLostEventId);
          }
-         break;
+         return;
       default:
-         break;
+         return;
    }
+
+   shared_ptr<NetObj> object = FindObjectById(event->getParameterAsUInt32(2, 0), OBJECT_NODE);
+   if (object != nullptr)
+   {
+      const Node& rootCauseNode = static_cast<const Node&>(*object);
+      event->setRootId(rootCauseNode.getLastEventId(rootEventIndex));
+      // Root cause node that is down because of network connectivity loss makes this node's
+      // outage part of the same loss (nodes behind tunnel-only zone proxies)
+      node->setLastEventId(LAST_EVENT_NETWORK_LOSS, rootCauseNode.getLastEventId(LAST_EVENT_NETWORK_LOSS));
+   }
+}
+
+/**
+ * Correlate SYS_NODE_UP event. Recovery of a node whose outage was caused by NetXMS server network
+ * connectivity loss is correlated to connectivity restore, so that it does not produce a per-node
+ * notification burst after correlated down events.
+ */
+static void C_SysNodeUp(Node *node, Event *event)
+{
+   uint64_t lossEventId = node->getLastEventId(LAST_EVENT_NETWORK_LOSS);
+   if (lossEventId == 0)
+      return;
+
+   if (!ConfigReadBoolean(L"Events.Correlation.TopologyBased", true))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"C_SysNodeUp: topology based event correlation disabled");
+      return;
+   }
+
+   event->setRootId(GetNetworkLossRecoveryRootId(lossEventId));
 }
 
 /**
@@ -224,17 +261,24 @@ static void CorrelateNodeEvent(Event *event, Node *node)
          break;
       case EVENT_NODE_DOWN:
          node->setLastEventId(LAST_EVENT_NODE_DOWN, event->getId());
+         node->setLastEventId(LAST_EVENT_NETWORK_LOSS, 0);
          C_SysNodeDown(node, event);
          break;
       case EVENT_NODE_UNREACHABLE:
          node->setLastEventId(LAST_EVENT_NODE_DOWN, event->getId());
+         node->setLastEventId(LAST_EVENT_NETWORK_LOSS, 0);
          C_SysNodeUnreachable(node, event);
          break;
       case EVENT_NODE_UP:
+         C_SysNodeUp(node, event);
          node->setLastEventId(LAST_EVENT_NODE_DOWN, 0);
+         node->setLastEventId(LAST_EVENT_NETWORK_LOSS, 0);
          break;
       case EVENT_NETWORK_CONNECTION_LOST:
-         m_networkLostEventId = event->getId();
+         s_networkLostEventId = event->getId();
+         break;
+      case EVENT_NETWORK_CONNECTION_RESTORED:
+         s_networkRestoredEventId = event->getId();
          break;
       case EVENT_ROUTING_LOOP_DETECTED:
          node->setRoutingLoopEvent(InetAddress::parse(event->getNamedParameter(L"destAddress", L"")), event->getNamedParameterAsUInt32(L"destNodeId"), event->getId());
@@ -258,7 +302,8 @@ static void C_SysApDown(AccessPoint *ap, Event *event)
    // Check for NetXMS server network connectivity
    if (g_flags & AF_NO_NETWORK_CONNECTIVITY)
    {
-      event->setRootId(m_networkLostEventId);
+      event->setRootId(s_networkLostEventId);
+      ap->setNetworkLossEventId(s_networkLostEventId);
       return;
    }
 
@@ -274,6 +319,45 @@ static void C_SysApDown(AccessPoint *ap, Event *event)
 }
 
 /**
+ * Correlate SYS_AP_UNKNOWN event. Access point state becomes unknown when its controller cannot be reached,
+ * which is the usual outcome of NetXMS server network connectivity loss for access points that cannot be
+ * pinged directly (zone proxy, no IP address, controller bridge).
+ */
+static void C_SysApUnknown(AccessPoint *ap, Event *event)
+{
+   if (!ConfigReadBoolean(L"Events.Correlation.TopologyBased", true))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"C_SysApUnknown: topology based event correlation disabled");
+      return;
+   }
+
+   // Check for NetXMS server network connectivity
+   if (g_flags & AF_NO_NETWORK_CONNECTIVITY)
+   {
+      event->setRootId(s_networkLostEventId);
+      ap->setNetworkLossEventId(s_networkLostEventId);
+   }
+}
+
+/**
+ * Correlate SYS_AP_UP event (see C_SysNodeUp for details)
+ */
+static void C_SysApUp(AccessPoint *ap, Event *event)
+{
+   uint64_t lossEventId = ap->getNetworkLossEventId();
+   if (lossEventId == 0)
+      return;
+
+   if (!ConfigReadBoolean(L"Events.Correlation.TopologyBased", true))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"C_SysApUp: topology based event correlation disabled");
+      return;
+   }
+
+   event->setRootId(GetNetworkLossRecoveryRootId(lossEventId));
+}
+
+/**
  * Correlate access point event
  */
 static void CorrelateAccessPointEvent(Event *event, AccessPoint *ap)
@@ -281,7 +365,19 @@ static void CorrelateAccessPointEvent(Event *event, AccessPoint *ap)
    switch(event->getCode())
    {
       case EVENT_AP_DOWN:
+         ap->setNetworkLossEventId(0);
          C_SysApDown(ap, event);
+         break;
+      case EVENT_AP_UNKNOWN:
+         ap->setNetworkLossEventId(0);
+         C_SysApUnknown(ap, event);
+         break;
+      case EVENT_AP_UNPROVISIONED:
+         ap->setNetworkLossEventId(0);
+         break;
+      case EVENT_AP_UP:
+         C_SysApUp(ap, event);
+         ap->setNetworkLossEventId(0);
          break;
       default:
          break;

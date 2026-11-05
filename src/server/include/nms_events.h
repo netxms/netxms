@@ -1140,7 +1140,7 @@ void GetEventConfiguration(NXCPMessage *msg);
 json_t NXCORE_EXPORTABLE *GetEventTemplatesAsJson();
 void CreateEventTemplateExportRecord(json_t *array, uint32_t eventCode);
 
-void CorrelateEvent(Event *event);
+void NXCORE_EXPORTABLE CorrelateEvent(Event *event);
 Event *LoadEventFromDatabase(uint64_t eventId);
 Event *FindEventInLoggerQueue(uint64_t eventId);
 StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats();

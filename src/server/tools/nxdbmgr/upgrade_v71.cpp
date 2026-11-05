@@ -23,6 +23,26 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 71.2 to 71.3
+ */
+static bool H_UpgradeFromV2()
+{
+   // Add RF_ACCEPT_CORRELATED (0x4000 = 16384) to default rules "Terminate node down alarms when node is up" and "End downtime",
+   // because SYS_NODE_UP can now be correlated (recovery after NetXMS server network connectivity loss)
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE event_policy SET flags=flags+16384 WHERE rule_guid IN ('4fa20604-b56f-4f12-bb5d-2c3243a126c9','256c2abd-3e14-4e02-9606-7c78c77e1a78') AND BITAND(flags, 16384)=0"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE event_policy SET flags=flags+16384 WHERE rule_guid IN ('4fa20604-b56f-4f12-bb5d-2c3243a126c9','256c2abd-3e14-4e02-9606-7c78c77e1a78') AND (flags & 16384)=0"));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 71.1 to 71.2
  */
 static bool H_UpgradeFromV1()
@@ -86,6 +106,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  71, 3,  H_UpgradeFromV2  },
    { 1,  71, 2,  H_UpgradeFromV1  },
    { 0,  71, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }

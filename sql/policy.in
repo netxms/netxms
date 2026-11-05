@@ -12,7 +12,7 @@ INSERT INTO event_policy (chain_id,rule_id,rule_guid,flags,comments,alarm_messag
 		'%m',5,'NODE_DOWN_%i','',0,EVENT_ALARM_TIMEOUT,0,0);
 
 INSERT INTO event_policy (chain_id,rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,incident_delay,incident_ai_depth)
-	VALUES (0,1,'4fa20604-b56f-4f12-bb5d-2c3243a126c9',7944,'Terminate node down alarms when node is up',
+	VALUES (0,1,'4fa20604-b56f-4f12-bb5d-2c3243a126c9',24328,'Terminate node down alarms when node is up',
 		'%m',6,'NODE_DOWN_%i','',0,EVENT_ALARM_TIMEOUT,0,0);
 
 INSERT INTO event_policy (chain_id,rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,incident_delay,incident_ai_depth)
@@ -224,7 +224,7 @@ INSERT INTO event_policy (chain_id,rule_id,rule_guid,flags,comments,alarm_messag
         '%m',5,'','',0,EVENT_ALARM_TIMEOUT,'NODE_DOWN',0,0);
 
 INSERT INTO event_policy (chain_id,rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,downtime_tag,incident_delay,incident_ai_depth)
-    VALUES (0,52,'256c2abd-3e14-4e02-9606-7c78c77e1a78',139008,'End downtime',
+    VALUES (0,52,'256c2abd-3e14-4e02-9606-7c78c77e1a78',155392,'End downtime',
         '%m',5,'','',0,EVENT_ALARM_TIMEOUT,'NODE_DOWN',0,0);
 
 INSERT INTO event_policy (chain_id,rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,incident_delay,incident_ai_depth)

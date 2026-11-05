@@ -98,8 +98,9 @@ DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t object
  */
 #define MAX_LAST_EVENTS       8
 
-#define LAST_EVENT_NODE_DOWN  0
-#define LAST_EVENT_AGENT_DOWN 1
+#define LAST_EVENT_NODE_DOWN     0
+#define LAST_EVENT_AGENT_DOWN    1
+#define LAST_EVENT_NETWORK_LOSS  2  /* SYS_NETWORK_CONN_LOST event current node outage is attributed to */
 
 /**
  * Built-in object IDs
@@ -3235,6 +3236,7 @@ protected:
    uint32_t m_peerInterfaceId;       // ID of ethernet peer interface object, or 0 if unknown
    LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
    time_t m_downSince;
+   uint64_t m_networkLossEventId;    // SYS_NETWORK_CONN_LOST event current outage is attributed to, or 0
 
    virtual void fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
@@ -3295,6 +3297,8 @@ public:
    uint32_t getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
    time_t getDownSince() const { return m_downSince; }
+   uint64_t getNetworkLossEventId() const { return m_networkLossEventId; }
+   void setNetworkLossEventId(uint64_t eventId) { m_networkLossEventId = eventId; }
 
    ObjectArray<WirelessStationInfo> *getWirelessStations() const;
    NXSL_Value *getWirelessStationsForNXSL(NXSL_VM *vm) const;

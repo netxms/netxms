@@ -40,6 +40,7 @@ AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAdd
    m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
    m_downSince = 0;
+   m_networkLossEventId = 0;
 }
 
 /**
@@ -61,6 +62,7 @@ AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& ma
    m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
    m_downSince = 0;
+   m_networkLossEventId = 0;
 }
 
 /**
