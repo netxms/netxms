@@ -4063,6 +4063,7 @@ static inline NetworkPathFailureReason NetworkPathFailureReasonFromInt(int32_t i
       case 6: return NetworkPathFailureReason::VPN_TUNNEL_DOWN;
       case 7: return NetworkPathFailureReason::ROUTING_LOOP;
       case 8: return NetworkPathFailureReason::INTERFACE_DISABLED;
+      case 9: return NetworkPathFailureReason::AGENT_TUNNEL_DOWN;
       default: return NetworkPathFailureReason::NONE;
    }
 }
