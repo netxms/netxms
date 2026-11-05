@@ -17,7 +17,7 @@ repos:
         args: [--allow-multiple-documents]
       - id: destroyed-symlinks
       - id: detect-private-key
-        exclude: src/server/core/sshkeys.cpp
+        exclude: ^(src/server/core/sshkeys.cpp|tests/test-libnxcore/sshkeys.cpp|tests/test-server/sshkeys.cpp|tests/integration/src/test/java/org/netxms/tests/SshKeyTest.java)$
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace

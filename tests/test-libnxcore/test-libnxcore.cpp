@@ -36,6 +36,7 @@ void TestAIMemoryPromptBlock();
 void TestObjectIndex();
 void TestPhysicalPlacement();
 void TestSplitCommandLine();
+void TestOpenSshKeyParser();
 
 /**
  * main()
@@ -54,6 +55,7 @@ int main(int argc, char *argv[])
    TestObjectIndex();
    TestPhysicalPlacement();
    TestSplitCommandLine();
+   TestOpenSshKeyParser();
 
    return 0;
 }

@@ -50,6 +50,7 @@ void TestNodeIPChange();
 void TestObjectHierarchy();
 void TestRecommission();
 void TestSampleAttributes();
+void TestSshKeys();
 void TestUserGroups();
 
 /**
@@ -271,6 +272,7 @@ int main(int argc, char *argv[])
    TestObjectHierarchy();
    TestRecommission();
    TestSampleAttributes();
+   TestSshKeys();
    TestUserGroups();
 
    SetTestFailureHook(nullptr);

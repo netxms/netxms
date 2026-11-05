@@ -19414,8 +19414,7 @@ void ClientSession::updateSshKey(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
    {
-      CreateOrEditSshKey(request);
-      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_RCC, CreateOrEditSshKey(request));
    }
    else
    {

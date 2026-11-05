@@ -23,6 +23,27 @@
 #include "webapi.h"
 
 /**
+ * Map SSH key operation error to HTTP status and response
+ */
+static int SshKeyErrorResponse(Context *context, uint32_t rcc)
+{
+   switch(rcc)
+   {
+      case RCC_INVALID_OBJECT_NAME:
+         context->setErrorResponse("Invalid name");
+         return 400;
+      case RCC_INVALID_ARGUMENT:
+         context->setErrorResponse("Invalid private key. Expected an unencrypted OpenSSH private key (convert with ssh-keygen -p -N \"\" -f <file>)");
+         return 400;
+      case RCC_INVALID_SSH_KEY_ID:
+         return 404;
+      default:
+         context->setErrorResponse("Internal error");
+         return 500;
+   }
+}
+
+/**
  * Handler for GET /v1/ssh-keys
  */
 int H_SshKeys(Context *context)
@@ -61,39 +82,26 @@ int H_SshKeyCreate(Context *context)
       return 403;
 
    json_t *request = context->getRequestDocument();
-   if (request == nullptr)
+   if (!json_is_object(request))
       return 400;
-
-   json_t *jsonName = json_object_get(request, "name");
-   if (!json_is_string(jsonName))
-   {
-      context->setErrorResponse("Missing or invalid name field");
-      return 400;
-   }
 
    uint32_t keyId = 0;
    uint32_t rcc;
 
-   json_t *jsonPublicKey = json_object_get(request, "publicKey");
-   json_t *jsonPrivateKey = json_object_get(request, "privateKey");
-   if (json_is_string(jsonPublicKey) && json_is_string(jsonPrivateKey))
+   if (json_object_get(request, "privateKey") != nullptr)
    {
-      // Import existing key pair
+      // Import private key and derive public key
       rcc = CreateOrEditSshKey(0, request, &keyId);
    }
    else
    {
       // Generate new key pair
-      wchar_t name[256];
-      utf8_to_wchar(json_string_value(jsonName), -1, name, 256);
+      String name = json_object_get_string(request, "name", L"");
       rcc = GenerateSshKey(name, &keyId);
    }
 
    if (rcc != RCC_SUCCESS)
-   {
-      context->setErrorResponse("Internal error");
-      return 500;
-   }
+      return SshKeyErrorResponse(context, rcc);
 
    context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"SSH key [%u] created", keyId);
 
@@ -119,24 +127,12 @@ int H_SshKeyUpdate(Context *context)
       return 400;
 
    json_t *request = context->getRequestDocument();
-   if (request == nullptr)
+   if (!json_is_object(request))
       return 400;
 
    uint32_t rcc = CreateOrEditSshKey(keyId, request);
-   if (rcc == RCC_INVALID_SSH_KEY_ID)
-      return 404;
-
-   if (rcc == RCC_INVALID_ARGUMENT)
-   {
-      context->setErrorResponse("Missing or invalid name field");
-      return 400;
-   }
-
    if (rcc != RCC_SUCCESS)
-   {
-      context->setErrorResponse("Internal error");
-      return 500;
-   }
+      return SshKeyErrorResponse(context, rcc);
 
    context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"SSH key [%u] updated", keyId);
 

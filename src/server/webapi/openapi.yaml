@@ -12131,8 +12131,9 @@ paths:
       operationId: createSshKey
       summary: Create SSH key
       description: |
-        Create a new SSH key. If only a name is provided, a new RSA key pair is generated.
-        If publicKey and privateKey fields are also provided, the key pair is imported.
+        Create a new SSH key. If privateKey is absent, a new RSA key pair is generated.
+        If privateKey is present, import an unencrypted OpenSSH private key and derive its public key.
+        Any client-supplied publicKey property is ignored.
       requestBody:
         required: true
         content:
@@ -12147,7 +12148,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SshKey'
         '400':
-          description: Invalid request
+          description: Request body is not an object, name is missing, invalid or longer than 254 characters, or privateKey is not a valid unencrypted OpenSSH private key
         '401':
           description: Unauthorized
         '403':
@@ -12188,7 +12189,10 @@ paths:
     put:
       operationId: updateSshKey
       summary: Update SSH key
-      description: Update an existing SSH key's name and optionally its key data.
+      description: |
+        Update an existing SSH key's name. If privateKey is absent, keep the current key pair.
+        If privateKey is present, replace it with an unencrypted OpenSSH private key and derive its public key.
+        Any client-supplied publicKey property is ignored.
       parameters:
         - name: key-id
           in: path
@@ -12210,7 +12214,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SshKey'
         '400':
-          description: Invalid request
+          description: Invalid key ID, request body is not an object, name is missing, invalid or longer than 254 characters, or privateKey is not a valid unencrypted OpenSSH private key
         '401':
           description: Unauthorized
         '403':
@@ -20837,13 +20841,11 @@ components:
       properties:
         name:
           type: string
-          description: SSH key name
-        publicKey:
-          type: string
-          description: Public key to import (omit to generate a new key pair)
+          maxLength: 254
+          description: Non-blank SSH key name
         privateKey:
           type: string
-          description: Private key to import (required if publicKey is provided)
+          description: Unencrypted OpenSSH private key to import; omit to generate a new RSA key pair. PEM and PKCS#8 formats are not accepted.
     SshKeyUpdate:
       type: object
       required:
@@ -20851,13 +20853,11 @@ components:
       properties:
         name:
           type: string
-          description: SSH key name
-        publicKey:
-          type: string
-          description: New public key
+          maxLength: 254
+          description: Non-blank SSH key name
         privateKey:
           type: string
-          description: New private key
+          description: New unencrypted OpenSSH private key; omit to keep the current key pair. PEM and PKCS#8 formats are not accepted.
     SshKeyInUse:
       type: object
       properties:
