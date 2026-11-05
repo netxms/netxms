@@ -3678,7 +3678,7 @@ restart_status_poll:
       {
          case OBJECT_INTERFACE:
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): polling interface %d [%s]"), m_name, curr->getId(), curr->getName());
-            static_cast<Interface*>(curr)->statusPoll(pSession, rqId, eventQueue, cluster.get(), snmp, m_icmpProxy, agentConnected);
+            static_cast<Interface*>(curr)->statusPoll(pSession, rqId, eventQueue, cluster.get(), snmp, agentConnected);
             break;
          case OBJECT_NETWORKSERVICE:
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): polling network service %d [%s]"), m_name, curr->getId(), curr->getName());
@@ -3806,19 +3806,25 @@ restart_status_poll:
             allDown = false;
          }
       }
-      if (allDown && (m_flags & NF_PING_PRIMARY_IP) && m_ipAddress.isValidUnicast())
+      if (allDown && !(m_flags & NF_DISABLE_ICMP) && m_ipAddress.isValidUnicast())
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using ICMP ping on primary IP address"), m_name);
-         sendPollerMsg(_T("Checking primary IP address with ICMP ping\r\n"));
-         if (IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, nullptr, g_icmpPingSize, false) == ICMP_SUCCESS)
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"StatusPoll(%s): using ICMP ping on primary IP address", m_name);
+         sendPollerMsg(L"Checking primary IP address with ICMP ping\r\n");
+         uint32_t status = pingAddress(m_ipAddress);
+         if (status == ICMP_SUCCESS)
          {
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): primary IP address responds to ICMP ping, considering node as reachable"), m_name);
-            sendPollerMsg(POLLER_INFO _T("   Primary IP address is responding to ICMP ping\r\n"));
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"StatusPoll(%s): primary IP address responds to ICMP ping, considering node as reachable", m_name);
+            sendPollerMsg(POLLER_INFO L"   Primary IP address is responding to ICMP ping\r\n");
             allDown = false;
+         }
+         else if ((status == ICMP_TIMEOUT) || (status == ICMP_UNREACHABLE))
+         {
+            sendPollerMsg(POLLER_ERROR L"   Primary IP address is not responding to ICMP ping\r\n");
          }
          else
          {
-            sendPollerMsg(POLLER_ERROR _T("   Primary IP address is not responding to ICMP ping\r\n"));
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"StatusPoll(%s): ICMP ping on primary IP address cannot be performed (status %u)", m_name, status);
+            sendPollerMsg(POLLER_WARNING L"   Unable to check primary IP address with ICMP ping\r\n");
          }
       }
 
@@ -13506,6 +13512,61 @@ uint32_t Node::getEffectiveTcpProxy()
 uint32_t Node::getEffectiveIcmpProxy()
 {
    return GetEffectiveProtocolProxy(this, m_icmpProxy, m_zoneUIN);
+}
+
+/**
+ * Ping given address from server or via effective ICMP proxy for this node. Returns ICMP_SUCCESS if address responds,
+ * ICMP_TIMEOUT or ICMP_UNREACHABLE if it does not respond, and other ICMP_* codes if ping cannot be performed
+ * (proxy not available, PING subagent not loaded on proxy, etc.).
+ */
+uint32_t Node::pingAddress(const InetAddress& addr)
+{
+   wchar_t addrText[64];
+   addr.toString(addrText);
+
+   uint32_t icmpProxy = getEffectiveIcmpProxy();
+   if (icmpProxy == 0)
+   {
+      uint32_t status = IcmpPing(addr, 3, g_icmpPingTimeout, nullptr, g_icmpPingSize, false);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Node::pingAddress(%s [%u]): direct ping of %s, status %u", m_name, m_id, addrText, status);
+      return status;
+   }
+
+   shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(icmpProxy));
+   if ((proxyNode == nullptr) || !proxyNode->isNativeAgent() || proxyNode->isDown())
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Node::pingAddress(%s [%u]): ICMP proxy [%u] not available", m_name, m_id, icmpProxy);
+      sendPollerMsg(POLLER_ERROR L"   ICMP proxy not available\r\n");
+      return ICMP_SEND_FAILED;
+   }
+
+   shared_ptr<AgentConnection> conn = proxyNode->acquireProxyConnection(ICMP_PROXY);
+   if (conn == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Node::pingAddress(%s [%u]): cannot connect to agent on ICMP proxy %s [%u]", m_name, m_id, proxyNode->getName(), icmpProxy);
+      sendPollerMsg(POLLER_ERROR L"   Unable to establish connection with ICMP proxy\r\n");
+      return ICMP_SEND_FAILED;
+   }
+
+   wchar_t metric[128], buffer[64];
+   nx_swprintf(metric, 128, L"Icmp.Ping(%s)", addrText);
+   uint32_t rcc = conn->getParameter(metric, buffer, 64);
+   if (rcc == ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Node::pingAddress(%s [%u]): ping of %s via proxy %s [%u], response \"%s\"", m_name, m_id, addrText, proxyNode->getName(), icmpProxy, buffer);
+      wchar_t *eptr;
+      long rtt = wcstol(buffer, &eptr, 10);
+      if ((*eptr != 0) || (rtt < 0))
+         return ICMP_API_ERROR;
+      return (rtt < 10000) ? ICMP_SUCCESS : ICMP_TIMEOUT;   // PING subagent reports 10000 for no response
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Node::pingAddress(%s [%u]): ping of %s via proxy %s [%u] failed (%u: %s)", m_name, m_id, addrText, proxyNode->getName(), icmpProxy, rcc, AgentErrorCodeToText(rcc));
+   if (rcc == ERR_REQUEST_TIMEOUT)
+      return ICMP_TIMEOUT;
+   if ((rcc == ERR_UNKNOWN_METRIC) || (rcc == ERR_UNSUPPORTED_METRIC))
+      sendPollerMsg(POLLER_WARNING L"   ICMP ping metric is not supported by proxy agent (PING subagent may not be loaded)\r\n");
+   return ICMP_API_ERROR;
 }
 
 /**

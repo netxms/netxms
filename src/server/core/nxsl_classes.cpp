@@ -2631,16 +2631,6 @@ NXSL_METHOD_DEFINITION(Node, enableModbusTcp)
 }
 
 /**
- * enablePrimaryIPPing(enabled) method
- */
-NXSL_METHOD_DEFINITION(Node, enablePrimaryIPPing)
-{
-   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
-   { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_PING_PRIMARY_IP, false, L"enablePrimaryIPPing");
-}
-
-/**
  * enableRoutingTablePolling(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableRoutingTablePolling)
@@ -3795,7 +3785,6 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableIcmp, 1);
    NXSL_REGISTER_METHOD(Node, enableModbusTcp, 1);
    NXSL_REGISTER_METHOD(Node, enableNetconf, 1);
-   NXSL_REGISTER_METHOD(Node, enablePrimaryIPPing, 1);
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSmclpPropertyPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);

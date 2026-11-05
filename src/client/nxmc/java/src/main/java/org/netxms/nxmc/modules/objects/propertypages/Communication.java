@@ -56,7 +56,6 @@ public class Communication extends ObjectPropertyPage
 	private LabeledText primaryName;
    private Button checkNodeWithoutIP;
    private Button externalGateway;
-   private Button enablePingOnPrimaryIP;
 	private boolean primaryNameChanged = false;
    private Chassis chassis;
    private ObjectSelector controllerNode;
@@ -170,14 +169,6 @@ public class Communication extends ObjectPropertyPage
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          externalGateway.setLayoutData(gd);
-
-         enablePingOnPrimaryIP = new Button(dialogArea, SWT.CHECK);
-         enablePingOnPrimaryIP.setText(i18n.tr("Use ICMP ping on primary IP address to determine node status"));
-         enablePingOnPrimaryIP.setSelection(node.isPingOnPrimaryIPEnabled());
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = true;
-         enablePingOnPrimaryIP.setLayoutData(gd);
       }
       else if (object instanceof Chassis)
       {
@@ -247,11 +238,7 @@ public class Communication extends ObjectPropertyPage
          flags |= AbstractNode.NF_EXTERNAL_GATEWAY;
       else
          flags &= ~AbstractNode.NF_EXTERNAL_GATEWAY;
-      if (enablePingOnPrimaryIP.getSelection())
-         flags |= AbstractNode.NF_PING_PRIMARY_IP;
-      else
-         flags &= ~AbstractNode.NF_PING_PRIMARY_IP;
-      md.setObjectFlags(flags, AbstractNode.NF_EXTERNAL_GATEWAY | AbstractNode.NF_PING_PRIMARY_IP);
+      md.setObjectFlags(flags, AbstractNode.NF_EXTERNAL_GATEWAY);
 
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Updating communication settings for node {0}", node.getObjectName()), null, messageArea) {
@@ -335,7 +322,6 @@ public class Communication extends ObjectPropertyPage
          checkNodeWithoutIP.setSelection(false);
          primaryName.getTextControl().setEnabled(true);
          externalGateway.setSelection(false);
-         enablePingOnPrimaryIP.setSelection(false);
       }
 	}
 }

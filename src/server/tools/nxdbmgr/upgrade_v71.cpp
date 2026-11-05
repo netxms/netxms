@@ -23,6 +23,25 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 71.4 to 71.5
+ */
+static bool H_UpgradeFromV4()
+{
+   // Clear retired node flag NF_PING_PRIMARY_IP (0x04000000 = 67108864) - primary IP is now always checked with ICMP ping
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE object_properties SET flags=flags-67108864 WHERE BITAND(flags, 67108864)<>0 AND object_id IN (SELECT id FROM nodes)"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE object_properties SET flags=flags-67108864 WHERE (flags & 67108864)<>0 AND object_id IN (SELECT id FROM nodes)"));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 71.3 to 71.4
  */
 static bool H_UpgradeFromV3()
@@ -117,6 +136,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  71, 5,  H_UpgradeFromV4  },
    { 3,  71, 4,  H_UpgradeFromV3  },
    { 2,  71, 3,  H_UpgradeFromV2  },
    { 1,  71, 2,  H_UpgradeFromV1  },

@@ -2541,7 +2541,7 @@ protected:
    uint64_t m_lastDownEventId;
    HashMap<uint32_t, InterfaceState> m_beforeMaintenaceData;
 
-   void icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
+   void icmpStatusPoll(Node *node, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);
    void stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node);
 
@@ -2799,7 +2799,7 @@ public:
 
    uint32_t wakeUp();
 
-   void statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, uint32_t nodeIcmpProxy, bool agentReachable);
+   void statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, bool agentReachable);
 };
 
 /**
@@ -5017,6 +5017,8 @@ public:
    uint32_t getEffectiveIcmpProxy();
    uint32_t getEffectiveAgentProxy();
    uint32_t getEffectiveTcpProxy();
+
+   uint32_t pingAddress(const InetAddress& addr);
 
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
    void writeListListToMessage(NXCPMessage *msg);

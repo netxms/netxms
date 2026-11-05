@@ -808,7 +808,7 @@ void Interface::generateEventsAfterMaintenace(uint32_t parentId)
 /**
  * Perform status poll on interface
  */
-void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, uint32_t nodeIcmpProxy, bool agentReachable)
+void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, bool agentReachable)
 {
    if (IsShutdownInProgress())
       return;
@@ -867,18 +867,20 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 		}
    }
 
-   if (needPoll && !(m_flags & IF_DISABLE_ICMP_STATUS_POLL))
+   if (needPoll)
    {
-		// Ping cannot be used for cluster sync interfaces
-      if ((node->getFlags() & NF_DISABLE_ICMP) || isLoopback() || !m_ipAddressList.hasValidUnicastAddress())
+      // ICMP is used only for interfaces whose addresses are known to belong to this node: pseudo-interface
+      // (configuration poll keeps its address in sync with node's primary IP) and manually created interfaces.
+      // Addresses of other interfaces may not be routable from the server and ping can reach a different host.
+      if ((isFake() || isManuallyCreated()) && !(m_flags & IF_DISABLE_ICMP_STATUS_POLL) &&
+          !(node->getFlags() & NF_DISABLE_ICMP) && !isLoopback() && m_ipAddressList.hasValidUnicastAddress())
       {
-			// Interface doesn't have an IP address, so we can't ping it
-			sendPollerMsg(POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
-			nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): cannot use ping for status check"), m_id, m_name);
+         icmpStatusPoll(node.get(), cluster, &adminState, &operState);
       }
       else
       {
-         icmpStatusPoll(rqId, nodeIcmpProxy, cluster, &adminState, &operState);
+         sendPollerMsg(POLLER_WARNING L"      Interface status cannot be determined\r\n");
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Interface::StatusPoll(%d,%s): ICMP cannot be used for status check", m_id, m_name);
       }
    }
 
@@ -1123,116 +1125,41 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 }
 
 /**
- * Do ICMP part of status poll
+ * Do ICMP part of status poll. Each valid unicast address (except cluster sync addresses) is pinged until one responds.
+ * Interface state is left unknown if ping cannot be performed.
  */
-void Interface::icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState)
+void Interface::icmpStatusPoll(Node *node, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
-   // Use ICMP ping as a last option
-	uint32_t icmpProxy = nodeIcmpProxy;
+   sendPollerMsg(L"      Starting ICMP ping\r\n");
+   uint32_t status = ICMP_SEND_FAILED;
+   const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
+   for(int i = 0; i < list.size(); i++)
+   {
+      const InetAddress *a = list.get(i);
+      if (!a->isValidUnicast() || ((cluster != nullptr) && cluster->isSyncAddr(*a)))
+         continue;
 
-	if (IsZoningEnabled() && (m_zoneUIN != 0) && (icmpProxy == 0))
-	{
-		shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-		if (zone != nullptr)
-		{
-			icmpProxy = zone->getAvailableProxyNodeId(getParentNode().get());
-		}
-	}
+      status = node->pingAddress(*a);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Interface::StatusPoll(%d,%s): ping %s status %u", m_id, m_name, a->toString().cstr(), status);
+      if ((status != ICMP_TIMEOUT) && (status != ICMP_UNREACHABLE))
+         break;   // Address responded, or ping cannot be performed at all
+   }
 
-	if (icmpProxy != 0)
-	{
-		sendPollerMsg(_T("      Starting ICMP ping via proxy\r\n"));
-		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): ping via proxy [%u]"), m_id, m_name, icmpProxy);
-		shared_ptr<Node> proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(icmpProxy));
-		if ((proxyNode != nullptr) && proxyNode->isNativeAgent())
-		{
-		   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): proxy node found: %s"), m_id, m_name, proxyNode->getName());
-			shared_ptr<AgentConnection> conn = proxyNode->acquireProxyConnection(ICMP_PROXY);
-			if (conn != nullptr)
-			{
-				TCHAR parameter[128], buffer[64];
-            const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
-            long value = -1;
-            for(int i = 0; (i < list.size()) && ((value == 10000) || (value == -1)); i++)
-            {
-               const InetAddress *a = list.get(i);
-               if (a->isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(*a)))
-               {
-				      _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), a->toString(buffer));
-                  uint32_t rcc = conn->getParameter(parameter, buffer, 64);
-				      if (rcc == ERR_SUCCESS)
-				      {
-				         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
-					      TCHAR *eptr;
-					      value = _tcstol(buffer, &eptr, 10);
-                     if (*eptr != 0)
-                     {
-                        value = -1;
-                     }
-                  }
-                  else if ((rcc == ERR_UNKNOWN_METRIC) || (rcc == ERR_UNSUPPORTED_METRIC))
-                  {
-                     nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::StatusPoll(%d,%s): ICMP ping metric is not supported by proxy agent (PING subagent may not be loaded)"), m_id, m_name);
-                     sendPollerMsg(POLLER_WARNING _T("      ICMP ping metric is not supported by proxy agent (PING subagent may not be loaded)\r\n"));
-                     break;
-                  }
-               }
-            }
-
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): response time %d"), m_id, m_name, (int)value);
-				if (value >= 0)
-				{
-					if (value < 10000)
-					{
-						*adminState = IF_ADMIN_STATE_UP;
-						*operState = IF_OPER_STATE_UP;
-					}
-					else
-					{
-						*adminState = IF_ADMIN_STATE_UNKNOWN;
-						*operState = IF_OPER_STATE_DOWN;
-					}
-				}
-			}
-			else
-			{
-			   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): cannot connect to agent on proxy node"), m_id, m_name);
-				sendPollerMsg(POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
-			}
-		}
-		else
-		{
-		   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): proxy node not available"), m_id, m_name);
-			sendPollerMsg(POLLER_ERROR _T("      ICMP proxy not available\r\n"));
-		}
-	}
-	else	// not using ICMP proxy
-	{
-		sendPollerMsg(_T("      Starting ICMP ping\r\n"));
-      const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
-      uint32_t dwPingStatus = ICMP_TIMEOUT;
-      for(int i = 0; (i < list.size()) && (dwPingStatus != ICMP_SUCCESS); i++)
-      {
-         const InetAddress *a = list.get(i);
-         if (a->isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(*a)))
-         {
-            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d)"),
-               m_id, m_name, a->toString().cstr(), g_icmpPingTimeout, g_icmpPingSize);
-		      dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, nullptr, g_icmpPingSize, false);
-         }
-      }
-		if (dwPingStatus == ICMP_SUCCESS)
-		{
-			*adminState = IF_ADMIN_STATE_UP;
-			*operState = IF_OPER_STATE_UP;
-		}
-		else
-		{
-			*adminState = IF_ADMIN_STATE_UNKNOWN;
-			*operState = IF_OPER_STATE_DOWN;
-		}
-		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): ping result %d, adminState=%d, operState=%d"), m_id, m_name, dwPingStatus, *adminState, *operState);
-	}
+   if (status == ICMP_SUCCESS)
+   {
+      *adminState = IF_ADMIN_STATE_UP;
+      *operState = IF_OPER_STATE_UP;
+   }
+   else if ((status == ICMP_TIMEOUT) || (status == ICMP_UNREACHABLE))
+   {
+      *adminState = IF_ADMIN_STATE_UNKNOWN;
+      *operState = IF_OPER_STATE_DOWN;
+   }
+   else
+   {
+      sendPollerMsg(POLLER_WARNING L"      Unable to perform ICMP ping\r\n");
+   }
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Interface::StatusPoll(%d,%s): ping result %u, adminState=%d, operState=%d", m_id, m_name, status, *adminState, *operState);
 }
 
 /**
