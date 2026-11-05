@@ -70,9 +70,19 @@ struct WorkRequest
 {
    ThreadPoolWorkerFunction func;
    void *arg;
+   ThreadPoolWorkerFunction cleanup;   // Called instead of func when request is discarded without execution (can be null)
    int64_t queueTime;
    int64_t runTime;
 };
+
+/**
+ * Discard work request without execution
+ */
+static inline void DiscardRequest(const WorkRequest& rq)
+{
+   if (rq.cleanup != nullptr)
+      rq.cleanup(rq.arg);
+}
 
 /**
  * Request queue for serialized execution
@@ -210,6 +220,7 @@ static void WorkerThread(WorkerThreadInfo *threadInfo)
 
             rq.func = JoinWorkerThread;
             rq.arg = threadInfo;
+            rq.cleanup = nullptr;
             rq.queueTime = GetCurrentTimeMs();
             InterlockedIncrement(&p->activeRequests);
             p->queue.put(rq);
@@ -368,6 +379,7 @@ static void MaintenanceThread(ThreadPool *p)
                   WorkRequest rq;
                   rq.func = nullptr;
                   rq.arg = s_stopAndUnregister;
+                  rq.cleanup = nullptr;
                   rq.queueTime = GetCurrentTimeMs();
                   p->queue.put(rq);
                }
@@ -483,6 +495,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
    WorkRequest rq;
    rq.func = nullptr;
    rq.arg = nullptr;
+   rq.cleanup = nullptr;
    rq.queueTime = GetCurrentTimeMs();
    p->mutex.lock();
    int count = p->threads.size();
@@ -497,6 +510,26 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
          return _CONTINUE;
       });
 
+   // Release requests that were accepted but never executed
+   while(!p->schedulerQueue.empty())
+   {
+      DiscardRequest(p->schedulerQueue.top());
+      p->schedulerQueue.pop();
+   }
+   while(p->queue.get(&rq))
+   {
+      if (rq.func != nullptr)
+         DiscardRequest(rq);
+   }
+   p->serializationQueues.forEach(
+      [] (const TCHAR *key, SerializationQueue *queue) -> EnumerationCallbackResult
+      {
+         WorkRequest rq;
+         while(queue->get(&rq))
+            DiscardRequest(rq);
+         return _CONTINUE;
+      });
+
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Thread pool %s destroyed"), p->name);
    delete p;
 }
@@ -504,16 +537,21 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
 /**
  * Execute task as soon as possible
  */
-void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg)
+void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup)
 {
    if (p->shutdownMode)
+   {
+      if (cleanup != nullptr)
+         cleanup(arg);
       return;
+   }
 
    InterlockedIncrement(&p->activeRequests);
    InterlockedIncrement64(&p->taskExecutionCount);
    WorkRequest rq;
    rq.func = f;
    rq.arg = arg;
+   rq.cleanup = cleanup;
    rq.queueTime = GetCurrentTimeMs();
    p->queue.put(rq);
 }
@@ -561,14 +599,19 @@ static void ProcessSerializedRequests(RequestSerializationData *data)
 /**
  * Execute task serialized (not before previous task with same key ends)
  */
-void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg)
+void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup)
 {
    if (p->shutdownMode)
+   {
+      if (cleanup != nullptr)
+         cleanup(arg);
       return;
+   }
 
    WorkRequest rq;
    rq.func = f;
    rq.arg = arg;
+   rq.cleanup = cleanup;
    rq.queueTime = GetCurrentTimeMs();
 
    p->serializationLock.lock();
@@ -597,14 +640,19 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR
 /**
  * Schedule task for execution using absolute time (in milliseconds)
  */
-void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, ThreadPoolWorkerFunction f, void *arg)
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup)
 {
    if (p->shutdownMode)
+   {
+      if (cleanup != nullptr)
+         cleanup(arg);
       return;
+   }
 
    WorkRequest rq;
    rq.func = f;
    rq.arg = arg;
+   rq.cleanup = cleanup;
    rq.runTime = runTime;
    rq.queueTime = GetCurrentTimeMs();
 
@@ -617,20 +665,20 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t ru
 /**
  * Schedule task for execution using absolute time
  */
-void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, ThreadPoolWorkerFunction f, void *arg)
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup)
 {
-   ThreadPoolScheduleAbsoluteMs(p, static_cast<int64_t>(runTime) * 1000, f, arg);
+   ThreadPoolScheduleAbsoluteMs(p, static_cast<int64_t>(runTime) * 1000, f, arg, cleanup);
 }
 
 /**
  * Schedule task for execution using relative time (delay in milliseconds)
  */
-void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, ThreadPoolWorkerFunction f, void *arg)
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup)
 {
    if (delay > 0)
-      ThreadPoolScheduleAbsoluteMs(p, GetCurrentTimeMs() + delay, f, arg);
+      ThreadPoolScheduleAbsoluteMs(p, GetCurrentTimeMs() + delay, f, arg, cleanup);
    else
-      ThreadPoolExecute(p, f, arg);
+      ThreadPoolExecute(p, f, arg, cleanup);
 }
 
 /**

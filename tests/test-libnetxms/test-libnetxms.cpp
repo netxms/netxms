@@ -20,6 +20,7 @@ void TestMemoryPool();
 void TestObjectMemoryPool();
 void TestThreadPool();
 void TestThreadPoolDelayedExecution();
+void TestThreadPoolDiscardedRequests();
 void TestQueue();
 void TestSharedObjectQueue();
 void TestSQueue();
@@ -4013,6 +4014,7 @@ int main(int argc, char *argv[])
 
    TestThreadPool();
    TestThreadPoolDelayedExecution();
+   TestThreadPoolDiscardedRequests();
    TestThreadCountAndMaxWaitTime();
    TestThreadPoolStalledExpansion();
    TestWebSocketURLParsing();

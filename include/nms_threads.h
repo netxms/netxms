@@ -741,11 +741,11 @@ typedef void (*ThreadPoolWorkerFunction)(void *);
 /* Thread pool functions */
 ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(const TCHAR *name, int minThreads, int maxThreads, int stackSize = 0);
 void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p);
-void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg);
-void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg);
-void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, ThreadPoolWorkerFunction f, void *arg);
-void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, ThreadPoolWorkerFunction f, void *arg);
-void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, ThreadPoolWorkerFunction f, void *arg);
+void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup = nullptr);
+void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup = nullptr);
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup = nullptr);
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup = nullptr);
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, ThreadPoolWorkerFunction f, void *arg, ThreadPoolWorkerFunction cleanup = nullptr);
 void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info);
 bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *info);
 ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolGetByName(const TCHAR *name);
@@ -825,6 +825,14 @@ template <typename T> static inline void ThreadPoolExecute(ThreadPool *p, void (
 }
 
 /**
+ * Cleanup function for heap-allocated wrapper data of thread pool tasks that were discarded without execution
+ */
+template <typename T> static void __ThreadPoolDelete(void *arg)
+{
+   delete static_cast<T*>(arg);
+}
+
+/**
  * Wrapper data for ThreadPoolExecute with shared_ptr argument
  */
 template <typename T> class __ThreadPoolExecute_SharedPtr_WrapperData
@@ -854,7 +862,7 @@ template <typename T> void __ThreadPoolExecute_SharedPtr_Wrapper(void *arg)
  */
 template <typename T> static inline void ThreadPoolExecute(ThreadPool *p, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
+   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData<T>>);
 }
 
 /**
@@ -870,7 +878,7 @@ template <typename T> static inline void ThreadPoolExecuteSerialized(ThreadPool 
  */
 template <typename T> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData<T>>);
 }
 
 /**
@@ -886,7 +894,7 @@ template <typename T> static inline void ThreadPoolScheduleAbsolute(ThreadPool *
  */
 template <typename T> static inline void ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
 {
-   ThreadPoolScheduleAbsolute(p, runTime, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
+   ThreadPoolScheduleAbsolute(p, runTime, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData<T>>);
 }
 
 /**
@@ -902,7 +910,7 @@ template <typename T> static inline void ThreadPoolScheduleAbsoluteMs(ThreadPool
  */
 template <typename T> static inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
 {
-   ThreadPoolScheduleAbsoluteMs(p, runTime, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
+   ThreadPoolScheduleAbsoluteMs(p, runTime, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData<T>>);
 }
 
 /**
@@ -918,7 +926,47 @@ template <typename T> static inline void ThreadPoolScheduleRelative(ThreadPool *
  */
 template <typename T> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)(const shared_ptr<T>&), const shared_ptr<T>& arg)
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper<T>, new __ThreadPoolExecute_SharedPtr_WrapperData<T>(arg, f), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData<T>>);
+}
+
+/**
+ * Wrapper for ThreadPoolExecute with pointer argument and cleanup function (called instead of task function if task is discarded)
+ */
+template <typename T> static inline void ThreadPoolExecute(ThreadPool *p, void (*f)(T *), T *arg, void (*cleanup)(T *))
+{
+   ThreadPoolExecute(p, (ThreadPoolWorkerFunction)f, (void *)arg, (ThreadPoolWorkerFunction)cleanup);
+}
+
+/**
+ * Wrapper for ThreadPoolExecuteSerialized with pointer argument and cleanup function (called instead of task function if task is discarded)
+ */
+template <typename T> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(T *), T *arg, void (*cleanup)(T *))
+{
+   ThreadPoolExecuteSerialized(p, key, (ThreadPoolWorkerFunction)f, (void *)arg, (ThreadPoolWorkerFunction)cleanup);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleAbsolute with pointer argument and cleanup function (called instead of task function if task is discarded)
+ */
+template <typename T> static inline void ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, void (*f)(T *), T *arg, void (*cleanup)(T *))
+{
+   ThreadPoolScheduleAbsolute(p, runTime, (ThreadPoolWorkerFunction)f, (void *)arg, (ThreadPoolWorkerFunction)cleanup);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleAbsoluteMs with pointer argument and cleanup function (called instead of task function if task is discarded)
+ */
+template <typename T> static inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, void (*f)(T *), T *arg, void (*cleanup)(T *))
+{
+   ThreadPoolScheduleAbsoluteMs(p, runTime, (ThreadPoolWorkerFunction)f, (void *)arg, (ThreadPoolWorkerFunction)cleanup);
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleRelative with pointer argument and cleanup function (called instead of task function if task is discarded)
+ */
+template <typename T> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)(T *), T *arg, void (*cleanup)(T *))
+{
+   ThreadPoolScheduleRelative(p, delay, (ThreadPoolWorkerFunction)f, (void *)arg, (ThreadPoolWorkerFunction)cleanup);
 }
 
 /**
@@ -952,7 +1000,7 @@ template <typename T> static void __ThreadPoolExecute_Wrapper_0(void *arg)
  */
 template <typename T, typename B> static inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)())
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_0<B>>);
 }
 
 /**
@@ -960,7 +1008,7 @@ template <typename T, typename B> static inline void ThreadPoolExecute(ThreadPoo
  */
 template <typename T, typename B> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, T *object, void (B::*f)())
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_0<B>>);
 }
 
 /**
@@ -968,7 +1016,7 @@ template <typename T, typename B> static inline void ThreadPoolExecuteSerialized
  */
 template <typename T, typename B> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, T *object, void (B::*f)())
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_0<B>, new __ThreadPoolExecute_WrapperData_0<B>(object, f), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_0<B>>);
 }
 
 /**
@@ -1001,7 +1049,7 @@ template <typename T> static void __ThreadPoolExecute_SharedPtr_Wrapper_0(void *
  */
 template <typename T, typename B> static inline void ThreadPoolExecute(ThreadPool *p, const shared_ptr<T>& object, void (B::*f)())
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
+   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData_0<B>>);
 }
 
 /**
@@ -1009,7 +1057,7 @@ template <typename T, typename B> static inline void ThreadPoolExecute(ThreadPoo
  */
 template <typename T, typename B> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, const shared_ptr<T>& object, void (B::*f)())
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData_0<B>>);
 }
 
 /**
@@ -1017,7 +1065,7 @@ template <typename T, typename B> static inline void ThreadPoolExecuteSerialized
  */
 template <typename T, typename B> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, const shared_ptr<T>& object, void (B::*f)())
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_0<B>, new __ThreadPoolExecute_SharedPtr_WrapperData_0<B>(object, f), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData_0<B>>);
 }
 
 /**
@@ -1052,7 +1100,7 @@ template <typename T, typename R> static void __ThreadPoolExecute_Wrapper_1(void
  */
 template <typename T, typename B, typename R> static inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R), R arg)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_1<B, R>>);
 }
 
 /**
@@ -1060,7 +1108,7 @@ template <typename T, typename B, typename R> static inline void ThreadPoolExecu
  */
 template <typename T, typename B, typename R> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, T *object, void (B::*f)(R), R arg)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_1<B, R>>);
 }
 
 /**
@@ -1068,7 +1116,7 @@ template <typename T, typename B, typename R> static inline void ThreadPoolExecu
  */
 template <typename T, typename B, typename R> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, T *object, void (B::*f)(R), R arg)
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_1<B, R>, new __ThreadPoolExecute_WrapperData_1<B, R>(object, f, arg), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_1<B, R>>);
 }
 
 /**
@@ -1102,7 +1150,7 @@ template <typename T, typename R> static void __ThreadPoolExecute_SharedPtr_Wrap
  */
 template <typename T, typename B, typename R> static inline void ThreadPoolExecute(ThreadPool *p, const shared_ptr<T>& object, void (B::*f)(R), R arg)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg));
+   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>>);
 }
 
 /**
@@ -1110,7 +1158,7 @@ template <typename T, typename B, typename R> static inline void ThreadPoolExecu
  */
 template <typename T, typename B, typename R> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, const shared_ptr<T>& object, void (B::*f)(R), R arg)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>>);
 }
 
 /**
@@ -1118,7 +1166,7 @@ template <typename T, typename B, typename R> static inline void ThreadPoolExecu
  */
 template <typename T, typename B, typename R> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, const shared_ptr<T>& object, void (B::*f)(R), R arg)
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_1<B, R>, new __ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>(object, f, arg), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData_1<B, R>>);
 }
 
 /**
@@ -1152,7 +1200,7 @@ template <typename R1, typename R2> static void __ThreadPoolExecute_Wrapper_2F(v
  */
 template <typename R1, typename R2> static inline void ThreadPoolExecute(ThreadPool *p, void (*f)(R1, R2), R1 arg1, R2 arg2)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_2F<R1, R2>, new __ThreadPoolExecute_WrapperData_2F<R1, R2>(f, arg1, arg2));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_2F<R1, R2>, new __ThreadPoolExecute_WrapperData_2F<R1, R2>(f, arg1, arg2), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_2F<R1, R2>>);
 }
 
 /**
@@ -1160,7 +1208,7 @@ template <typename R1, typename R2> static inline void ThreadPoolExecute(ThreadP
  */
 template <typename R1, typename R2> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(R1, R2), R1 arg1, R2 arg2)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_2F<R1, R2>, new __ThreadPoolExecute_WrapperData_2F<R1, R2>(f, arg1, arg2));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_2F<R1, R2>, new __ThreadPoolExecute_WrapperData_2F<R1, R2>(f, arg1, arg2), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_2F<R1, R2>>);
 }
 
 /**
@@ -1196,7 +1244,7 @@ template <typename T, typename R1, typename R2> static void __ThreadPoolExecute_
  */
 template <typename T, typename B, typename R1, typename R2> static inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_WrapperData_2<B, R1, R2>(object, f, arg1, arg2), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_2<B, R1, R2>>);
 }
 
 /**
@@ -1204,7 +1252,7 @@ template <typename T, typename B, typename R1, typename R2> static inline void T
  */
 template <typename T, typename B, typename R1, typename R2> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, T *object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_WrapperData_2<B, R1, R2>(object, f, arg1, arg2), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_2<B, R1, R2>>);
 }
 
 /**
@@ -1212,7 +1260,7 @@ template <typename T, typename B, typename R1, typename R2> static inline void T
  */
 template <typename T, typename B, typename R1, typename R2> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, T *object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_WrapperData_2<B, R1, R2>(object, f, arg1, arg2), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_2<B, R1, R2>>);
 }
 
 /**
@@ -1247,7 +1295,7 @@ template <typename T, typename R1, typename R2> static void __ThreadPoolExecute_
  */
 template <typename T, typename B, typename R1, typename R2> static inline void ThreadPoolExecute(ThreadPool *p, const shared_ptr<T>& object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+   ThreadPoolExecute(p, __ThreadPoolExecute_SharedPtr_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>(object, f, arg1, arg2), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>>);
 }
 
 /**
@@ -1255,7 +1303,7 @@ template <typename T, typename B, typename R1, typename R2> static inline void T
  */
 template <typename T, typename B, typename R1, typename R2> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, const shared_ptr<T>& object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_SharedPtr_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>(object, f, arg1, arg2), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>>);
 }
 
 /**
@@ -1263,7 +1311,7 @@ template <typename T, typename B, typename R1, typename R2> static inline void T
  */
 template <typename T, typename B, typename R1, typename R2> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, const shared_ptr<T>& object, void (B::*f)(R1, R2), R1 arg1, R2 arg2)
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>(object, f, arg1, arg2));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_SharedPtr_Wrapper_2<B, R1, R2>, new __ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>(object, f, arg1, arg2), __ThreadPoolDelete<__ThreadPoolExecute_SharedPtr_WrapperData_2<B, R1, R2>>);
 }
 
 /**
@@ -1300,7 +1348,7 @@ template <typename T, typename R1, typename R2, typename R3> static void __Threa
  */
 template <typename T, typename B, typename R1, typename R2, typename R3> static inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_3<B, R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3<B, R1, R2, R3>(object, f, arg1, arg2, arg3));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_3<B, R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3<B, R1, R2, R3>(object, f, arg1, arg2, arg3), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_3<B, R1, R2, R3>>);
 }
 
 /**
@@ -1335,7 +1383,7 @@ template <typename R1, typename R2, typename R3> static void __ThreadPoolExecute
  */
 template <typename R1, typename R2, typename R3> static inline void ThreadPoolExecute(ThreadPool *p, void (*f)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_3F<R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3F<R1, R2, R3>(f, arg1, arg2, arg3));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_3F<R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3F<R1, R2, R3>(f, arg1, arg2, arg3), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_3F<R1, R2, R3>>);
 }
 
 /**
@@ -1343,7 +1391,7 @@ template <typename R1, typename R2, typename R3> static inline void ThreadPoolEx
  */
 template <typename R1, typename R2, typename R3> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_3F<R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3F<R1, R2, R3>(f, arg1, arg2, arg3));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_3F<R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3F<R1, R2, R3>(f, arg1, arg2, arg3), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_3F<R1, R2, R3>>);
 }
 
 /**
@@ -1351,7 +1399,7 @@ template <typename R1, typename R2, typename R3> static inline void ThreadPoolEx
  */
 template <typename R1, typename R2, typename R3> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3)
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_3F<R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3F<R1, R2, R3>(f, arg1, arg2, arg3));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_3F<R1, R2, R3>, new __ThreadPoolExecute_WrapperData_3F<R1, R2, R3>(f, arg1, arg2, arg3), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_3F<R1, R2, R3>>);
 }
 
 /**
@@ -1389,7 +1437,7 @@ template <typename T, typename R1, typename R2, typename R3, typename R4> static
  */
 template <typename T, typename B, typename R1, typename R2, typename R3, typename R4> static inline void ThreadPoolExecute(ThreadPool *p, T *object, void (B::*f)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_4<B, R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4<B, R1, R2, R3, R4>(object, f, arg1, arg2, arg3, arg4));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_4<B, R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4<B, R1, R2, R3, R4>(object, f, arg1, arg2, arg3, arg4), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_4<B, R1, R2, R3, R4>>);
 }
 
 /**
@@ -1425,7 +1473,7 @@ template <typename R1, typename R2, typename R3, typename R4> static void __Thre
  */
 template <typename R1, typename R2, typename R3, typename R4> static inline void ThreadPoolExecute(ThreadPool *p, void (*f)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>>);
 }
 
 /**
@@ -1433,7 +1481,7 @@ template <typename R1, typename R2, typename R3, typename R4> static inline void
  */
 template <typename R1, typename R2, typename R3, typename R4> static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, void (*f)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>>);
 }
 
 /**
@@ -1441,7 +1489,7 @@ template <typename R1, typename R2, typename R3, typename R4> static inline void
  */
 template <typename R1, typename R2, typename R3, typename R4> static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4)
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4), __ThreadPoolDelete<__ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>>);
 }
 
 /**
@@ -1459,7 +1507,7 @@ static inline void __ThreadPoolExecute_Callable_Wrapper(void *arg)
  */
 static inline void ThreadPoolExecute(ThreadPool *p, const std::function<void ()>& f)
 {
-   ThreadPoolExecute(p, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
+   ThreadPoolExecute(p, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f), __ThreadPoolDelete<std::function<void ()>>);
 }
 
 /**
@@ -1467,7 +1515,7 @@ static inline void ThreadPoolExecute(ThreadPool *p, const std::function<void ()>
  */
 static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, const std::function<void ()>& f)
 {
-   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f), __ThreadPoolDelete<std::function<void ()>>);
 }
 
 /**
@@ -1475,7 +1523,7 @@ static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, 
  */
 static inline void ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, const std::function<void ()>& f)
 {
-   ThreadPoolScheduleAbsolute(p, runTime, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
+   ThreadPoolScheduleAbsolute(p, runTime, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f), __ThreadPoolDelete<std::function<void ()>>);
 }
 
 /**
@@ -1483,7 +1531,7 @@ static inline void ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, con
  */
 static inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, const std::function<void ()>& f)
 {
-   ThreadPoolScheduleAbsoluteMs(p, runTime, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
+   ThreadPoolScheduleAbsoluteMs(p, runTime, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f), __ThreadPoolDelete<std::function<void ()>>);
 }
 
 /**
@@ -1491,7 +1539,7 @@ static inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, 
  */
 static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, const std::function<void ()>& f)
 {
-   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f), __ThreadPoolDelete<std::function<void ()>>);
 }
 
 /**

@@ -153,6 +153,31 @@ void TestThreadPoolDelayedExecution()
    EndTest();
 }
 
+/**
+ * Task that must never run (scheduled far in the future and discarded on pool destruction)
+ */
+static void NeverExecutedTask(const shared_ptr<int>& counter)
+{
+   (*counter)++;
+}
+
+void TestThreadPoolDiscardedRequests()
+{
+   StartTest(_T("Thread pool - discarded requests"));
+   ThreadPool *p = ThreadPoolCreate(_T("TEST6"), 2, 4, 0);
+
+   auto counter = make_shared<int>(0);
+   ThreadPoolScheduleRelative(p, 3600000, NeverExecutedTask, counter);
+   ThreadPoolScheduleAbsolute(p, time(nullptr) + 3600, NeverExecutedTask, counter);
+   AssertEquals(counter.use_count(), 3L);
+
+   ThreadPoolDestroy(p);
+   AssertEquals(*counter, 0);
+   AssertEquals(counter.use_count(), 1L);   // Wrapper data released without executing the task
+
+   EndTest();
+}
+
 static Mutex s_waitTimeTestLock1;
 static Mutex s_waitTimeTestLock2;
 

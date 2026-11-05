@@ -70,6 +70,14 @@ struct ThresholdRepeatContext
 };
 
 /**
+ * Delete threshold repeat context (used when scheduled repeat is discarded on shutdown)
+ */
+static void DeleteThresholdRepeatContext(ThresholdRepeatContext *ctx)
+{
+   delete ctx;
+}
+
+/**
  * Callback for processing threshold repeat events
  */
 static void ProcessThresholdRepeatEvent(ThresholdRepeatContext *ctx)
@@ -98,7 +106,7 @@ static void ProcessThresholdRepeatEvent(ThresholdRepeatContext *ctx)
    {
       nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 6, _T("Posted repeat for target=%u dci=%u threshold=%u, next in %us"),
          ctx->targetId, ctx->dciId, ctx->thresholdId, repeatInterval);
-      ThreadPoolScheduleRelative(g_thresholdRepeatPool, repeatInterval * 1000, ProcessThresholdRepeatEvent, ctx);  // Reuse context
+      ThreadPoolScheduleRelative(g_thresholdRepeatPool, repeatInterval * 1000, ProcessThresholdRepeatEvent, ctx, DeleteThresholdRepeatContext);  // Reuse context
    }
    else
    {
@@ -118,7 +126,7 @@ static void ScheduleThresholdRepeatEvent(uint32_t targetId, uint32_t dciId, uint
    nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 6, _T("Scheduling repeat for target=%u dci=%u threshold=%u seq=") UINT64_FMT _T(" in %us"),
       targetId, dciId, thresholdId, activationSequence, delay);
 
-   ThreadPoolScheduleRelative(g_thresholdRepeatPool, delay * 1000, ProcessThresholdRepeatEvent, ctx);
+   ThreadPoolScheduleRelative(g_thresholdRepeatPool, delay * 1000, ProcessThresholdRepeatEvent, ctx, DeleteThresholdRepeatContext);
 }
 
 /**
