@@ -3567,7 +3567,7 @@ restart_status_poll:
       ModbusOperationStatus status = MODBUS_STATUS_COMM_FAILURE;
       uint32_t modbusProxyId;
       bool modbusProxyConnectionFailed;
-      ModbusTransport *transport = createModbusTransport(&modbusProxyId, &modbusProxyConnectionFailed);
+      ModbusTransport *transport = createModbusTransport(m_modbusUnitId, &modbusProxyId, &modbusProxyConnectionFailed);
       if ((transport != nullptr) && ((status = transport->checkConnection()) == MODBUS_STATUS_SUCCESS))
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): connected to device via Modbus TCP"), m_name);
@@ -6999,7 +6999,7 @@ bool Node::confPollModbus()
    sendPollerMsg(_T("   Checking Modbus TCP...\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking Modbus TCP"), m_name);
 
-   ModbusTransport *transport = createModbusTransport();
+   ModbusTransport *transport = createModbusTransport(m_modbusUnitId);
    if (transport != nullptr)
    {
       ModbusOperationStatus status = transport->checkConnection();
@@ -9760,7 +9760,7 @@ DataCollectionError Node::getMetricFromModbus(const TCHAR *metric, TCHAR *buffer
       return DCE_NOT_SUPPORTED;
    }
 
-   ModbusTransport *transport = createModbusTransport();
+   ModbusTransport *transport = createModbusTransport(unitId);
    if (transport == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): cannot create Modbus transport"), m_name, metric);
@@ -17618,9 +17618,9 @@ void Node::updateClusterMembership()
 }
 
 /**
- * Create MODBUS transport
+ * Create MODBUS transport for given unit ID
  */
-ModbusTransport *Node::createModbusTransport(uint32_t *proxyNodeId, bool *proxyConnectionFailed)
+ModbusTransport *Node::createModbusTransport(uint16_t unitId, uint32_t *proxyNodeId, bool *proxyConnectionFailed)
 {
    if (proxyNodeId != nullptr)
       *proxyNodeId = 0;
@@ -17640,7 +17640,7 @@ ModbusTransport *Node::createModbusTransport(uint32_t *proxyNodeId, bool *proxyC
       *proxyNodeId = modbusProxy;
    if (modbusProxy == 0)
    {
-      transport = new ModbusDirectTransport(m_ipAddress, m_modbusTcpPort, m_modbusUnitId);
+      transport = new ModbusDirectTransport(m_ipAddress, m_modbusTcpPort, unitId);
    }
    else
    {
@@ -17651,7 +17651,7 @@ ModbusTransport *Node::createModbusTransport(uint32_t *proxyNodeId, bool *proxyC
          if (conn != nullptr)
          {
             // Use loopback address if node is MODBUS proxy for itself
-            transport = new ModbusProxyTransport(conn, (modbusProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, m_modbusTcpPort, m_modbusUnitId);
+            transport = new ModbusProxyTransport(conn, (modbusProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, m_modbusTcpPort, unitId);
          }
          else if (proxyConnectionFailed != nullptr)
          {
