@@ -19,19 +19,19 @@
 package org.netxms.nxmc.modules.serverconfig.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.SshKeyPair;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -43,31 +43,34 @@ public class SSHKeyEditDialog extends Dialog
    private final I18n i18n = LocalizationHelper.getI18n(SSHKeyEditDialog.class);
 
    private LabeledText textName;
-   private LabeledText publicKey;
    private LabeledText privateKey;
-   private Button replaceKeysButton;
-   private SshKeyPair key;
-   private boolean isNew;
+   private final SshKeyPair key;
+   private final boolean isNew;
+   private final String errorMessage;
 
    /**
-    * Edit SSH key dialog constructor
-    * 
+    * Edit SSH key dialog with an optional error from a failed save
+    *
     * @param shell shell
-    * @param key key data or null if new key
+    * @param key key data (ID 0 means import)
+    * @param errorMessage error to show inline or null
     */
-   public SSHKeyEditDialog(Shell shell, SshKeyPair key)
+   public SSHKeyEditDialog(Shell shell, SshKeyPair key, String errorMessage)
    {
       super(shell);
-      if (key == null)
-      {
-         this.key = new SshKeyPair();
-         isNew = true;
-      }
-      else
-      {
-         this.key = key;
-         isNew = false;
-      }
+      this.key = key;
+      isNew = this.key.getId() == 0;
+      this.errorMessage = errorMessage;
+   }
+
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell shell)
+   {
+      super.configureShell(shell);
+      shell.setText(isNew ? i18n.tr("Import SSH Key") : i18n.tr("Edit SSH Key"));
    }
 
    /**
@@ -86,8 +89,9 @@ public class SSHKeyEditDialog extends Dialog
 
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel(i18n.tr("Name"));
+      textName.setTextLimit(254);
       textName.setText(key.getName());
-      textName.getTextControl().setTextLimit(255);
+      textName.getTextControl().addModifyListener(e -> updateOkButton());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -96,34 +100,19 @@ public class SSHKeyEditDialog extends Dialog
 
       if (!isNew)
       {
-         replaceKeysButton = new Button(dialogArea, SWT.CHECK);
-         replaceKeysButton.setText(i18n.tr("Replace keys"));
-         replaceKeysButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e)
-            {
-               publicKey.setEditable(replaceKeysButton.getSelection());
-               privateKey.setEditable(replaceKeysButton.getSelection());
-            }
-         });
+         LabeledText publicKey = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY);
+         publicKey.setLabel(i18n.tr("Current public key"));
+         publicKey.setText(key.getPublicKey());
+         gd = new GridData(SWT.FILL, SWT.FILL, true, false);
+         gd.heightHint = 90;
+         gd.widthHint = 600;
+         publicKey.setLayoutData(gd);
       }
 
-      publicKey = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.WRAP);
-      publicKey.setLabel(i18n.tr("Public key"));
-      publicKey.setText(key.getPublicKey());
-      publicKey.setEditable(isNew);
-      gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      gd.heightHint = 200;
-      gd.widthHint = 600;
-      gd.verticalAlignment = SWT.FILL;
-      publicKey.setLayoutData(gd);
-
       privateKey = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.WRAP);
-      privateKey.setLabel(i18n.tr("Private key"));
-      privateKey.setText("");
-      privateKey.setEditable(isNew);
+      privateKey.setLabel(isNew ? i18n.tr("Private key") : i18n.tr("New private key"));
+      privateKey.setText(key.getPrivateKey());
+      privateKey.getTextControl().addModifyListener(e -> updateOkButton());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -132,12 +121,46 @@ public class SSHKeyEditDialog extends Dialog
       gd.verticalAlignment = SWT.FILL;
       privateKey.setLayoutData(gd);
 
+      Label hint = new Label(dialogArea, SWT.WRAP);
+      hint.setText(isNew ? i18n.tr("Public key will be derived from the private key") : i18n.tr("Leave empty to keep the current key"));
+      hint.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      if (errorMessage != null)
+      {
+         Label error = new Label(dialogArea, SWT.WRAP);
+         error.setText(errorMessage);
+         error.setForeground(ThemeEngine.getForegroundColor("List.Error"));
+         gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+         gd.widthHint = 600;
+         error.setLayoutData(gd);
+      }
+
       return dialogArea;
    }
 
    /**
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected void createButtonsForButtonBar(Composite parent)
+   {
+      super.createButtonsForButtonBar(parent);
+      updateOkButton();
+   }
+
+   /**
+    * Enable OK when required input is present
+    */
+   private void updateOkButton()
+   {
+      Button ok = getButton(IDialogConstants.OK_ID);
+      if (ok != null)
+         ok.setEnabled(!textName.getText().isBlank() && (!isNew || !privateKey.getText().isBlank()));
+   }
+
+   /**
     * Get updated SSH keys data
-    * 
+    *
     * @return updated or created SSH key data
     */
    public SshKeyPair getSshKeyData()
@@ -151,17 +174,9 @@ public class SSHKeyEditDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      if (textName.getText().isEmpty() || ((isNew || replaceKeysButton.getSelection()) && (publicKey.getText().isEmpty() || privateKey.getText().isEmpty())))
-      {
-         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("All fields should be filled"));
-         return;
-      }
-
       key.setName(textName.getText());
-      if (isNew || replaceKeysButton.getSelection())
-      {
-         key.setKeys(publicKey.getText(), privateKey.getText());
-      }
+      String newPrivateKey = privateKey.getText();
+      key.setPrivateKey(newPrivateKey.isBlank() ? null : newPrivateKey);
       super.okPressed();
    }
 }

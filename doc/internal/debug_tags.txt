@@ -293,6 +293,7 @@ snmp.trap	SNMP trap processing
 snmp.trap.flood	SNMP trap flood detection
 ssh		SSH subagent
 ssh.channel	SSH interactive channel (server-side)
+ssh.keys	SSH key import validation (server-side)
 
 startup		Server startup
 statcoll	Internal server statistic collector

@@ -430,23 +430,7 @@ public class SSHKeys extends ConfigurationView
          return;
 
       final SshKeyPair key = (SshKeyPair)selection.getFirstElement();
-      final SSHKeyEditDialog dlg = new SSHKeyEditDialog(getWindow().getShell(), new SshKeyPair(key));
-      if (dlg.open() != Window.OK)
-         return;
-
-      new Job(i18n.tr("Updating SSH key"), this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            session.updateSshKey(dlg.getSshKeyData());
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot update SSH key");
-         }
-      }.start();
+      editKey(new SshKeyPair(key), null);
    }
 
    /**
@@ -454,21 +438,46 @@ public class SSHKeys extends ConfigurationView
     */
    protected void importKeys()
    {
-      final SSHKeyEditDialog dlg = new SSHKeyEditDialog(getWindow().getShell(), null);
+      editKey(new SshKeyPair(), null);
+   }
+
+   /**
+    * Collect and save SSH key data, reopening the submitted key after a validation error
+    *
+    * @param key key to import or edit
+    * @param errorMessage error from a failed save or null
+    */
+   private void editKey(SshKeyPair key, String errorMessage)
+   {
+      final SSHKeyEditDialog dlg = new SSHKeyEditDialog(getWindow().getShell(), key, errorMessage);
       if (dlg.open() != Window.OK)
          return;
 
-      new Job(i18n.tr("Importing SSH keys"), this) {
+      final boolean isNew = key.getId() == 0;
+      new Job(isNew ? i18n.tr("Importing SSH keys") : i18n.tr("Updating SSH key"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.updateSshKey(dlg.getSshKeyData());
+            try
+            {
+               session.updateSshKey(dlg.getSshKeyData());
+            }
+            catch(NXCException e)
+            {
+               if (e.getErrorCode() != RCC.INVALID_ARGUMENT)
+                  throw e;
+
+               runInUIThread(() -> {
+                  if (!isClientAreaDisposed())
+                     editKey(dlg.getSshKeyData(), i18n.tr("Invalid private key. Expected an unencrypted OpenSSH private key (convert with ssh-keygen -p -N \"\" -f <file>)"));
+               });
+            }
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot import SSH keys");
+            return isNew ? i18n.tr("Cannot import SSH keys") : i18n.tr("Cannot update SSH key");
          }
       }.start();
    }
@@ -482,7 +491,9 @@ public class SSHKeys extends ConfigurationView
          @Override
          public String isValid(String newText)
          {
-            return newText.isBlank() ? i18n.tr("Key name should not be empty") : null;
+            if (newText.isBlank())
+               return i18n.tr("Key name should not be empty");
+            return (newText.trim().length() > 254) ? i18n.tr("Key name should not be longer than 254 characters") : null;
          }
       });
       if (dlg.open() != Window.OK)

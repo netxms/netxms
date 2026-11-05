@@ -44,7 +44,7 @@ public class SshKeyPair
 
    /**
     * Copy constructor
-    * 
+    *
     * @param src source object
     */
    public SshKeyPair(SshKeyPair src)
@@ -57,7 +57,7 @@ public class SshKeyPair
 
    /**
     * Create from NXCP message
-    * 
+    *
     * @param msg NXCP message
     * @param baseId base field ID
     */
@@ -66,12 +66,12 @@ public class SshKeyPair
       id = msg.getFieldAsInt32(baseId++);
       name = msg.getFieldAsString(baseId++);
       publicKey = msg.getFieldAsString(baseId++);
-      privateKey = null;       
+      privateKey = null;
    }
 
    /**
     * Fill NXCP message
-    * 
+    *
     * @param msg NXCP message
     */
    public void fillMessage(NXCPMessage msg)
@@ -79,10 +79,7 @@ public class SshKeyPair
       msg.setFieldInt32(NXCPCodes.VID_SSH_KEY_ID, id);
       msg.setField(NXCPCodes.VID_NAME, name);
       if (privateKey != null)
-      {
-         msg.setField(NXCPCodes.VID_PUBLIC_KEY, publicKey);
          msg.setField(NXCPCodes.VID_PRIVATE_KEY, privateKey);
-      }
    }
 
    /**
@@ -136,14 +133,13 @@ public class SshKeyPair
    }
 
    /**
-    * Set public and private keys.
-    * 
-    * @param publicKey new public key
-    * @param privateKey new private key
+    * Set private key to import (unencrypted OpenSSH format). Server derives public key from it. When private key is
+    * null, existing key pair is kept and only the name is updated.
+    *
+    * @param privateKey new private key or null
     */
-   public void setKeys(String publicKey, String privateKey)
+   public void setPrivateKey(String privateKey)
    {
-      this.publicKey = publicKey;
       this.privateKey = privateKey;
    }
 }
