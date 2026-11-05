@@ -4998,7 +4998,7 @@ public:
 
    shared_ptr<SSHInteractiveChannel> openInteractiveSSHChannel(const wchar_t *login, const wchar_t *password, uint32_t keyId);
 
-   ModbusTransport *createModbusTransport(uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr);
+   ModbusTransport *createModbusTransport(uint16_t unitId, uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr);
 
    InetAddress getEffectiveEtherNetIPAddress() const { return m_eipAddress.isValidUnicast() ? m_eipAddress : m_ipAddress; }
 
