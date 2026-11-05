@@ -95,7 +95,7 @@ public class EventProcessingPolicyRule
    private List<String> persistentStorageDelete;
    private Map<String, String> customAttributeStorageSet;
    private List<String> customAttributeStorageDelete;
-   private String aiAgentInstructions;
+   private String aiInstructions;
    private String comments;
    private int ruleNumber;
    private int chainId;
@@ -144,7 +144,7 @@ public class EventProcessingPolicyRule
       persistentStorageDelete = new ArrayList<String>(0);
       customAttributeStorageSet = new HashMap<String, String>(0);
       customAttributeStorageDelete = new ArrayList<String>(0);
-      aiAgentInstructions = "";
+      aiInstructions = "";
       comments = "";
       ruleNumber = 0;
       errors = 0;
@@ -198,7 +198,7 @@ public class EventProcessingPolicyRule
       persistentStorageDelete = new ArrayList<String>(src.persistentStorageDelete);
       customAttributeStorageSet = new HashMap<String, String>(src.customAttributeStorageSet);
       customAttributeStorageDelete = new ArrayList<String>(src.customAttributeStorageDelete);
-      aiAgentInstructions = src.aiAgentInstructions;
+      aiInstructions = src.aiInstructions;
       comments = src.comments;
       ruleNumber = src.ruleNumber;
       errors = src.errors; // Copy has same references as source rule, so it has same errors
@@ -249,7 +249,7 @@ public class EventProcessingPolicyRule
       incidentAIAnalysisDepth = msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_AI_DEPTH);
       incidentAIPrompt = msg.getFieldAsString(NXCPCodes.VID_INCIDENT_AI_PROMPT);
       actionScript = msg.getFieldAsString(NXCPCodes.VID_ACTION_SCRIPT);
-      aiAgentInstructions = msg.getFieldAsString(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS);
+      aiInstructions = msg.getFieldAsString(NXCPCodes.VID_AI_INSTRUCTIONS);
       comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 
       int actionCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ACTIONS);
@@ -332,7 +332,7 @@ public class EventProcessingPolicyRule
       msg.setFieldInt32(NXCPCodes.VID_INCIDENT_AI_DEPTH, incidentAIAnalysisDepth);
       msg.setField(NXCPCodes.VID_INCIDENT_AI_PROMPT, incidentAIPrompt);
       msg.setField(NXCPCodes.VID_ACTION_SCRIPT, actionScript);
-      msg.setField(NXCPCodes.VID_AI_AGENT_INSTRUCTIONS, aiAgentInstructions);
+      msg.setField(NXCPCodes.VID_AI_INSTRUCTIONS, aiInstructions);
 
       msg.setFieldsFromStringMap(persistentStorageSet, NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
       msg.setFieldsFromStringCollection(persistentStorageDelete, NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);
@@ -1002,23 +1002,23 @@ public class EventProcessingPolicyRule
    }
 
    /**
-    * Get instructions for AI agent
+    * Get instructions for AI assistant
     *
-    * @return instructions for AI agent
+    * @return instructions for AI assistant
     */
-   public String getAiAgentInstructions()
+   public String getAiInstructions()
    {
-      return aiAgentInstructions;
+      return aiInstructions;
    }
 
    /**
-    * Set instructions for AI agent
+    * Set instructions for AI assistant
     *
-    * @param aiAgentInstructions AI agent instructions to set
+    * @param aiInstructions AI instructions to set
     */
-   public void setAiAgentInstructions(String aiAgentInstructions)
+   public void setAiInstructions(String aiInstructions)
    {
-      this.aiAgentInstructions = aiAgentInstructions;
+      this.aiInstructions = aiInstructions;
       this.modified = true;
    }
 

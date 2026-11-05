@@ -26,7 +26,7 @@ import org.netxms.base.NXCPMessage;
 public class AiDisabledItem
 {
    private String name;
-   private char type; // 'S' = skill, 'F' = function
+   private char type; // 'S' = skill, 'F' = tool
 
    /**
     * Create from NXCP message.
@@ -45,7 +45,7 @@ public class AiDisabledItem
     * Create with explicit values.
     *
     * @param name item name
-    * @param type item type ('S' for skill, 'F' for function)
+    * @param type item type ('S' for skill, 'F' for tool)
     */
    public AiDisabledItem(String name, char type)
    {
@@ -66,7 +66,7 @@ public class AiDisabledItem
    /**
     * Get item type.
     *
-    * @return 'S' for skill, 'F' for function
+    * @return 'S' for skill, 'F' for tool
     */
    public char getType()
    {

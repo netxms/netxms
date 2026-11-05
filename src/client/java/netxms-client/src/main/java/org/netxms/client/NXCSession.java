@@ -77,12 +77,12 @@ import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationFile;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
-import org.netxms.client.ai.AiAgentTask;
-import org.netxms.client.ai.AiAssistantFunction;
-import org.netxms.client.ai.AiAssistantSkill;
+import org.netxms.client.ai.AiTask;
+import org.netxms.client.ai.AiTool;
+import org.netxms.client.ai.AiSkill;
 import org.netxms.client.ai.AiChatResponse;
 import org.netxms.client.ai.AiDisabledItem;
-import org.netxms.client.ai.AiFunctionCall;
+import org.netxms.client.ai.AiToolCall;
 import org.netxms.client.ai.AiMessage;
 import org.netxms.client.ai.AiMemoryEntry;
 import org.netxms.client.ai.AiOperator;
@@ -860,7 +860,7 @@ public class NXCSession
                      sendNotification(new SessionNotification(SessionNotification.PACKAGE_DEPLOYMENT_JOB_CHANGED, msg.getFieldAsInt64(NXCPCodes.VID_ELEMENT_LIST_BASE),
                            new PackageDeploymentJob(msg, NXCPCodes.VID_ELEMENT_LIST_BASE)));
                      break;
-                  case NXCPCodes.CMD_AI_AGENT_QUESTION:
+                  case NXCPCodes.CMD_AI_ASSISTANT_QUESTION:
                      sendNotification(new SessionNotification(SessionNotification.AI_QUESTION,
                            msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID), new AiQuestion(msg)));
                      break;
@@ -869,9 +869,9 @@ public class NXCSession
                            msg.getFieldAsInt64(NXCPCodes.VID_AI_MESSAGE_ID),
                            new AiMessage(msg, NXCPCodes.VID_ELEMENT_LIST_BASE)));
                      break;
-                  case NXCPCodes.CMD_AI_FUNCTION_CALL:
-                     sendNotification(new SessionNotification(SessionNotification.AI_FUNCTION_CALL,
-                           msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID), new AiFunctionCall(msg)));
+                  case NXCPCodes.CMD_AI_TOOL_CALL:
+                     sendNotification(new SessionNotification(SessionNotification.AI_TOOL_CALL,
+                           msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID), new AiToolCall(msg)));
                      break;
                   default:
                      // Check subscriptions
@@ -17820,35 +17820,35 @@ public class NXCSession
    }
 
    /**
-    * Get list of registered AI assistant skills and functions with disabled status.
+    * Get list of registered AI skills and tools with disabled status.
     *
-    * @return array with three lists: [0] skills, [1] functions, [2] extra disabled items
+    * @return array with three lists: [0] skills, [1] tools, [2] extra disabled items
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Object[] getAiSkillsAndFunctions() throws IOException, NXCException
+   public Object[] getAiSkillsAndTools() throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_SKILLS_AND_FUNCTIONS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_SKILLS_AND_TOOLS);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
 
       // Parse skills
       int skillCount = response.getFieldAsInt32(NXCPCodes.VID_NUM_SKILLS);
-      List<AiAssistantSkill> skills = new ArrayList<>(skillCount);
+      List<AiSkill> skills = new ArrayList<>(skillCount);
       long fieldId = NXCPCodes.VID_SKILL_LIST_BASE;
       for(int i = 0; i < skillCount; i++)
       {
-         skills.add(new AiAssistantSkill(response, fieldId));
+         skills.add(new AiSkill(response, fieldId));
          fieldId += 0x100;
       }
 
       // Parse functions
       int funcCount = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      List<AiAssistantFunction> functions = new ArrayList<>(funcCount);
+      List<AiTool> tools = new ArrayList<>(funcCount);
       fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < funcCount; i++)
       {
-         functions.add(new AiAssistantFunction(response, fieldId));
+         tools.add(new AiTool(response, fieldId));
          fieldId += 0x100;
       }
 
@@ -17862,13 +17862,13 @@ public class NXCSession
          fieldId += 0x100;
       }
 
-      return new Object[] { skills, functions, extras };
+      return new Object[] { skills, tools, extras };
    }
 
    /**
     * Add item to AI disabled list.
     *
-    * @param type item type ('S' for skill, 'F' for function)
+    * @param type item type ('S' for skill, 'F' for tool)
     * @param name item name
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -17886,7 +17886,7 @@ public class NXCSession
    /**
     * Remove item from AI disabled list.
     *
-    * @param type item type ('S' for skill, 'F' for function)
+    * @param type item type ('S' for skill, 'F' for tool)
     * @param name item name
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
@@ -17902,45 +17902,45 @@ public class NXCSession
    }
 
    /**
-    * Get list of AI agent tasks.
+    * Get list of AI tasks.
     *
-    * @return list of AI agent tasks
+    * @return list of AI tasks
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<AiAgentTask> getAiAgentTasks() throws IOException, NXCException
+   public List<AiTask> getAiTasks() throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_AGENT_TASKS);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_TASKS);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      List<AiAgentTask> tasks = new ArrayList<>(count);
+      List<AiTask> tasks = new ArrayList<>(count);
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         tasks.add(new AiAgentTask(response, fieldId));
+         tasks.add(new AiTask(response, fieldId));
          fieldId += 20;
       }
       return tasks;
    }
 
    /**
-    * Delete AI agent task.
+    * Delete AI task.
     *
     * @param taskId task ID
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deleteAiAgentTask(long taskId) throws IOException, NXCException
+   public void deleteAiTask(long taskId) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_AGENT_TASK);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_TASK);
       msg.setFieldUInt32(NXCPCodes.VID_TASK_ID, taskId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
 
    /**
-    * Create AI agent task.
+    * Create AI task.
     *
     * @param description task description
     * @param prompt task prompt
@@ -17948,9 +17948,9 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public long createAiAgentTask(String description, String prompt) throws IOException, NXCException
+   public long createAiTask(String description, String prompt) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_AI_AGENT_TASK);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_AI_TASK);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
       msg.setField(NXCPCodes.VID_PROMPT, prompt);
       sendMessage(msg);
@@ -17959,7 +17959,7 @@ public class NXCSession
    }
 
    /**
-    * Answer AI agent question.
+    * Answer AI assistant question.
     *
     * @param chatId chat ID the question belongs to
     * @param questionId question ID
@@ -17970,7 +17970,7 @@ public class NXCSession
     */
    public void answerAiQuestion(long chatId, long questionId, boolean positive, int selectedOption) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_AI_AGENT_RESPONSE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_AI_ASSISTANT_RESPONSE);
       msg.setFieldUInt32(NXCPCodes.VID_CHAT_ID, chatId);
       msg.setFieldInt64(NXCPCodes.VID_AI_QUESTION_ID, questionId);
       msg.setField(NXCPCodes.VID_AI_RESPONSE_POSITIVE, positive);

@@ -91,7 +91,7 @@ int H_AiSavedPromptDetails(Context *context);
 int H_AiSavedPromptCreate(Context *context);
 int H_AiSavedPromptUpdate(Context *context);
 int H_AiSavedPromptDelete(Context *context);
-int H_AiSkillsAndFunctions(Context *context);
+int H_AiSkillsAndTools(Context *context);
 int H_ServerActions(Context *context);
 int H_ServerActionDetails(Context *context);
 int H_ServerActionCreate(Context *context);
@@ -523,8 +523,8 @@ static bool InitModule(Config *config)
       .PUT(H_AiSavedPromptUpdate)
       .DELETE(H_AiSavedPromptDelete)
       .build();
-   RouteBuilder("v1/ai/skills-and-functions")
-      .GET(H_AiSkillsAndFunctions)
+   RouteBuilder("v1/ai/skills-and-tools")
+      .GET(H_AiSkillsAndTools)
       .build();
    RouteBuilder("v1/background-tasks/:task-id")
       .GET(H_BackgroundTaskDetails)

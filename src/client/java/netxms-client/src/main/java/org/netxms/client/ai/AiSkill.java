@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2013-2025 Raden Solutions
+ * Copyright (C) 2013-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,31 +21,35 @@ package org.netxms.client.ai;
 import org.netxms.base.NXCPMessage;
 
 /**
- * Function for AI assistant
+ * AI skill
  */
-public class AiAssistantFunction
+public class AiSkill
 {
    private String name;
    private String description;
    private boolean disabled;
+   private boolean supportsWorker;
+   private String defaultMode;
 
    /**
-    * Create function object from NXCP message.
+    * Create skill object from NXCP message.
     *
     * @param msg NXCP message
-    * @param baseId base ID for function fields
+    * @param baseId base ID for skill fields
     */
-   public AiAssistantFunction(NXCPMessage msg, long baseId)
+   public AiSkill(NXCPMessage msg, long baseId)
    {
       name = msg.getFieldAsString(baseId);
       description = msg.getFieldAsString(baseId + 1);
       disabled = msg.getFieldAsBoolean(baseId + 2);
+      supportsWorker = msg.getFieldAsBoolean(baseId + 3);
+      defaultMode = msg.getFieldAsString(baseId + 4);
    }
 
    /**
-    * Get function name.
+    * Get skill name.
     *
-    * @return function name
+    * @return skill name
     */
    public String getName()
    {
@@ -53,9 +57,9 @@ public class AiAssistantFunction
    }
 
    /**
-    * Get function description.
+    * Get skill description.
     *
-    * @return function description
+    * @return skill description
     */
    public String getDescription()
    {
@@ -63,12 +67,32 @@ public class AiAssistantFunction
    }
 
    /**
-    * Check if this function is disabled by administrator.
+    * Check if this skill is disabled by administrator.
     *
     * @return true if disabled
     */
    public boolean isDisabled()
    {
       return disabled;
+   }
+
+   /**
+    * Check if this skill can be run in a worker.
+    *
+    * @return true if skill can be run in a worker
+    */
+   public boolean isWorkerSupported()
+   {
+      return supportsWorker;
+   }
+
+   /**
+    * Get default execution mode.
+    *
+    * @return default execution mode ("load" or "worker")
+    */
+   public String getDefaultMode()
+   {
+      return defaultMode;
    }
 }

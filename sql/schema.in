@@ -3850,7 +3850,7 @@ SELECT create_hypertable('ai_operator_execution_log', 'execution_timestamp', chu
 #endif
 
 /**
- * AI agent messages
+  * AI messages
  */
 CREATE TABLE ai_messages
 (
@@ -3859,8 +3859,8 @@ CREATE TABLE ai_messages
    message_type integer not null,
    creation_time integer not null,
    expiration_time integer not null,
-   source_task_id integer null,
-   source_task_type varchar(63) null,
+   origin_type char(1) null,
+   origin_id integer null,
    related_object_id integer null,
    title varchar(255) not null,
    message_text SQL_TEXT not null,

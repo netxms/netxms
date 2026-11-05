@@ -27,9 +27,9 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
 
 /**
- * "AI Agent Instructions" property page
+ * "AI Instructions" property page
  */
-public class RuleAiAgentInstructions extends RuleBasePropertyPage
+public class RuleAiInstructions extends RuleBasePropertyPage
 {
 	private Text instructions;
 
@@ -38,9 +38,9 @@ public class RuleAiAgentInstructions extends RuleBasePropertyPage
     *
     * @param editor rule editor
     */
-   public RuleAiAgentInstructions(RuleEditor editor)
+   public RuleAiInstructions(RuleEditor editor)
    {
-      super(editor, LocalizationHelper.getI18n(RuleAiAgentInstructions.class).tr("AI Agent Instructions"));
+      super(editor, LocalizationHelper.getI18n(RuleAiInstructions.class).tr("AI Instructions"));
    }
 
    /**
@@ -53,7 +53,7 @@ public class RuleAiAgentInstructions extends RuleBasePropertyPage
 		dialogArea.setLayout(new FillLayout());
 
 		instructions = new Text(dialogArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-      instructions.setText(rule.getAiAgentInstructions());
+      instructions.setText(rule.getAiInstructions());
 
 		return dialogArea;
 	}
@@ -64,7 +64,7 @@ public class RuleAiAgentInstructions extends RuleBasePropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
 	{
-      rule.setAiAgentInstructions(instructions.getText().trim());
+      rule.setAiInstructions(instructions.getText().trim());
 		editor.setModified(true);
       return true;
 	}

@@ -7315,9 +7315,9 @@ msgstr "Regra está &desabilitada"
 msgid "Accept &correlated events"
 msgstr "Aceitar eventos &correlacionados"
 
-#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleAiAgentInstructions.java:43
-msgid "AI Agent Instructions"
-msgstr "Instruções para o Agente de IA"
+#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleAiInstructions.java:43
+msgid "AI Instructions"
+msgstr "Instruções de IA"
 
 #: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleTimeFilter.java:57
 msgid "Any time"
@@ -8287,8 +8287,8 @@ msgid "Call chains:"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:1101
-msgid "Instruct AI agent:"
-msgstr "Instruir agente de IA:"
+msgid "Instruct AI assistant:"
+msgstr "Instruir assistente de IA:"
 
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:1118
 msgid "Force event logging"
@@ -25912,7 +25912,7 @@ msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/propertypages/AiOperatorInstructions.java:122
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiOperatorManager.java:104
-msgid "Iteration"
+msgid "Cycle"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/propertypages/AiOperatorInstructions.java:122
@@ -25945,8 +25945,8 @@ msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/AiSkillsConfigurationElement.java:42
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:85
-msgid "AI Skills & Functions"
-msgstr "Habilidades & Funções de IA"
+msgid "AI Skills & Tools"
+msgstr "Habilidades & Ferramentas de IA"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/dialogs/AiMemoryEntryEditDialog.java:84
 msgid "Create Memory Entry"
@@ -26345,12 +26345,12 @@ msgid "Do you really want to delete selected tasks?"
 msgstr "Você realmente deseja deletar as tarefas selecionadas?"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiTaskManager.java:316
-msgid "Delete AI agent tasks"
-msgstr "Deletar tarefas do agente de IA"
+msgid "Delete AI tasks"
+msgstr "Deletar tarefas de IA"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiTaskManager.java:329
-msgid "Cannot delete AI agent task"
-msgstr "Não foi possível deletar a tarefa do agente de IA"
+msgid "Cannot delete AI task"
+msgstr "Não foi possível deletar a tarefa de IA"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/helpers/AiOperatorLabelProvider.java:93
 msgid "Unlimited"
@@ -26498,7 +26498,7 @@ msgid "Confirm Reset"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiOperatorManager.java:433
-msgid "Accumulated state (memento, current focus, watch list, standing instructions, and iteration counter) of selected AI operator instances will be cleared. Standing checks are kept. Are you sure?"
+msgid "Accumulated state (memento, current focus, watch list, standing instructions, and cycle counter) of selected AI operator instances will be cleared. Standing checks are kept. Are you sure?"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiOperatorManager.java:437
@@ -26518,12 +26518,12 @@ msgid "&Remove custom entry"
 msgstr "&Remover entrada personalizada"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:279
-msgid "Loading AI skills and functions"
-msgstr "Carregando habilidades e funções de IA"
+msgid "Loading AI skills and tools"
+msgstr "Carregando habilidades e ferramentas de IA"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:304
-msgid "Cannot load AI skills and functions"
-msgstr "Não foi possível carregar habilidades e funções de IA"
+msgid "Cannot load AI skills and tools"
+msgstr "Não foi possível carregar habilidades e ferramentas de IA"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:322
 msgid "Disabling AI items"
@@ -26546,8 +26546,8 @@ msgid "Add Custom Entry"
 msgstr "Adicionar Entrada Personalizada"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:362
-msgid "Enter the name of the skill or function to disable:"
-msgstr "Insira o nome da habilidade ou função a ser desativada:"
+msgid "Enter the name of the skill or tool to disable:"
+msgstr "Insira o nome da habilidade ou ferramenta a ser desativada:"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:372
 msgid "Item Type"
@@ -26555,8 +26555,8 @@ msgstr "Tipo de Item"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:373
 #, java-format
-msgid "Is \"{0}\" a skill or a function?"
-msgstr "\"{0}\" é uma habilidade ou função?"
+msgid "Is \"{0}\" a skill or a tool?"
+msgstr "\"{0}\" é uma habilidade ou ferramenta?"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:381
 msgid "Adding custom disabled entry"

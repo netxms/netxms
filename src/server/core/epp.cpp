@@ -67,7 +67,7 @@ EPRule::EPRule(uint32_t id) : m_chainCalls(0, 4, Ownership::True), m_timeFrames(
 	m_alarmTimeout = 0;
 	m_alarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
 	m_downtimeTag[0] = 0;
-	m_aiAgentInstructions = nullptr;
+	m_aiInstructions = nullptr;
    m_incidentDelay = 0;
    m_incidentTitle = nullptr;
    m_incidentDescription = nullptr;
@@ -143,7 +143,9 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    m_alarmImpact = MemCopyString(config.getSubEntryValue(_T("alarmImpact")));
    m_rcaScriptName = MemCopyString(config.getSubEntryValue(L"rootCauseAnalysisScript"));
    m_alarmCategoryScriptName = MemCopyString(config.getSubEntryValue(L"alarmCategoryScript"));
-   m_aiAgentInstructions = MemCopyString(config.getSubEntryValue(L"aiAgentInstructions"));
+   // Configurations exported by older versions use "aiAgentInstructions"
+   const wchar_t *aiInstructions = config.getSubEntryValue(L"aiInstructions");
+   m_aiInstructions = MemCopyString((aiInstructions != nullptr) ? aiInstructions : config.getSubEntryValue(L"aiAgentInstructions"));
 
    wcslcpy(m_downtimeTag, config.getSubEntryValue(L"downtimeTag", 0, L""), MAX_DOWNTIME_TAG_LENGTH);
 
@@ -596,7 +598,9 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_chainCalls(0, 4, Owners
 
    m_alarmCategoryScriptName = MemCopyString(json_object_get_string(json, "alarmCategoryScript", _T("")));
 
-   m_aiAgentInstructions = MemCopyString(json_object_get_string(json, "aiAgentInstructions", _T("")));
+   // Configurations exported by older versions use "aiAgentInstructions"
+   json_t *aiInstructions = json_object_get(json, "aiInstructions");
+   m_aiInstructions = MemCopyString(json_object_get_string(json, json_is_string(aiInstructions) ? "aiInstructions" : "aiAgentInstructions", _T("")));
 
    String downtimeTag = json_object_get_string(json, "downtimeTag", _T(""));
    wcslcpy(m_downtimeTag, downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
@@ -775,7 +779,7 @@ EPRule::EPRule(DB_RESULT hResult, int row, const wchar_t *chainName) : m_chainCa
       m_actionScript = nullptr;
    }
    DBGetField(hResult, row, 14, m_downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
-   m_aiAgentInstructions = DBGetField(hResult, row, 15, nullptr, 0);
+   m_aiInstructions = DBGetField(hResult, row, 15, nullptr, 0);
    m_incidentDelay = DBGetFieldUInt32(hResult, row, 16);
    m_incidentTitle = DBGetField(hResult, row, 17, nullptr, 0);
    m_incidentDescription = DBGetField(hResult, row, 18, nullptr, 0);
@@ -895,7 +899,7 @@ EPRule::EPRule(const NXCPMessage& msg, const wchar_t *chainName) : m_chainCalls(
       m_actionScript = nullptr;
    }
 
-   m_aiAgentInstructions = msg.getFieldAsString(VID_AI_AGENT_INSTRUCTIONS);
+   m_aiInstructions = msg.getFieldAsString(VID_AI_INSTRUCTIONS);
 
    m_incidentDelay = msg.getFieldAsUInt32(VID_INCIDENT_DELAY);
    m_incidentTitle = msg.getFieldAsString(VID_INCIDENT_TITLE);
@@ -920,7 +924,7 @@ EPRule::~EPRule()
    delete m_filterScript;
    MemFree(m_actionScriptSource);
    delete m_actionScript;
-   MemFree(m_aiAgentInstructions);
+   MemFree(m_aiInstructions);
    MemFree(m_incidentTitle);
    MemFree(m_incidentDescription);
    MemFree(m_incidentAIPrompt);
@@ -1547,9 +1551,9 @@ bool EPRule::processEvent(Event *event, EventProcessingContext *context) const
          rec->recordEffect("downtime-end", std::move(tag));
    }
 
-   if ((m_aiAgentInstructions != nullptr) && (m_aiAgentInstructions[0] != 0))
+   if ((m_aiInstructions != nullptr) && (m_aiInstructions[0] != 0))
    {
-      ProcessEventWithAIAssistant(event, object, m_aiAgentInstructions);
+      ProcessEventWithAIAssistant(event, object, m_aiInstructions);
       if (rec != nullptr)
          rec->recordEffect("ai-analysis", nullptr);
    }
@@ -2135,7 +2139,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
       DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
       DBBind(hStmt, 13, DB_SQLTYPE_TEXT, m_actionScriptSource, DB_BIND_STATIC);
       DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_downtimeTag, DB_BIND_STATIC);
-      DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_aiAgentInstructions, DB_BIND_STATIC);
+      DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_aiInstructions, DB_BIND_STATIC);
       DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_incidentDelay);
       DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_incidentTitle, DB_BIND_STATIC, 255);
       DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_incidentDescription, DB_BIND_STATIC, 2000);
@@ -2385,7 +2389,7 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_ALARM_CATEGORY_SCRIPT, m_alarmCategoryScriptName);
    msg->setField(VID_DOWNTIME_TAG, m_downtimeTag);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
-   msg->setField(VID_AI_AGENT_INSTRUCTIONS, CHECK_NULL_EX(m_aiAgentInstructions));
+   msg->setField(VID_AI_INSTRUCTIONS, CHECK_NULL_EX(m_aiInstructions));
    msg->setField(VID_NUM_ACTIONS, static_cast<uint32_t>(m_actions.size()));
    uint32_t fieldId = VID_ACTION_LIST_BASE;
    for(int i = 0; i < m_actions.size(); i++)
@@ -2566,7 +2570,7 @@ json_t *EPRule::toJson(bool assistantMode) const
    json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
    json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
-   json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
+   json_object_set_new(root, "aiInstructions", json_string_t(m_aiInstructions));
 
    uint32_t errors = getErrors();
    json_object_set_new(root, "errors", (errors != 0) ? json_boolean_object(errors, s_ruleErrorMapping) : json_null());

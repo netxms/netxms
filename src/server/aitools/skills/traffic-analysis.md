@@ -17,7 +17,7 @@ This skill gives access to data from external network traffic analyzers (ntopng 
 - **Large host sets.** An observation point may see tens of thousands of hosts. Always use `filter`, `unmatched_only`, and `limit` with `get-observation-point-active-hosts`; never try to page through the full set.
 - **Capability gated.** Peers, L7, top talkers and DSCP queries depend on backend capabilities reported by `get-traffic-observers`. A tool reports clearly when the backend does not support the query.
 
-## Available Functions
+## Available Tools
 
 ### Discovery
 - `get-traffic-observers`: List analyzer instances with connection state, backend product, version, and capabilities. Call first to confirm traffic data exists at all.

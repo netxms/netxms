@@ -19,7 +19,7 @@ This skill provides comprehensive incident management and analysis capabilities 
 - **Assignment Optimization**: Suggest appropriate assignees based on object ownership and responsibility
 - **Impact Assessment**: Understand incident scope by examining topology relationships
 
-## Available Functions
+## Available Tools
 
 ### Context Gathering
 - `get-incident-details`: Get full incident details including linked alarms, state, and metadata

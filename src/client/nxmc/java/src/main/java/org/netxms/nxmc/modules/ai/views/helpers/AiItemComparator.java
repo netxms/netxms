@@ -27,7 +27,7 @@ import org.netxms.nxmc.modules.ai.views.AiSkillsManager;
 import org.netxms.nxmc.modules.ai.views.AiSkillsManager.AiItemEntry;
 
 /**
- * Comparator for AI skills and functions list
+ * Comparator for AI skills and tools list
  */
 public class AiItemComparator extends ViewerComparator
 {

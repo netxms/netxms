@@ -99,7 +99,7 @@ void InitializeAIMessageManager()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,message_guid,message_type,creation_time,expiration_time,")
-                                     _T("source_task_id,source_task_type,related_object_id,title,message_text,")
+                                     _T("origin_type,origin_id,related_object_id,title,message_text,")
                                      _T("spawn_task_data,status FROM ai_messages"));
    if (hResult != nullptr)
    {
@@ -165,7 +165,7 @@ void ShutdownAIMessageManager()
  * Constructor from data
  */
 AIMessage::AIMessage(uint32_t id, AIMessageType type, const TCHAR *title, const TCHAR *text,
-                     uint32_t relatedObjectId, uint32_t sourceTaskId, const TCHAR *sourceTaskType,
+                     uint32_t relatedObjectId, char originType, uint32_t originId,
                      const TCHAR *spawnTaskData, uint32_t expirationMinutes) :
    m_recipients(4, 4, Ownership::True), m_mutex(MutexType::FAST)
 {
@@ -174,8 +174,8 @@ AIMessage::AIMessage(uint32_t id, AIMessageType type, const TCHAR *title, const 
    m_type = type;
    m_creationTime = time(nullptr);
    m_expirationTime = m_creationTime + (expirationMinutes * 60);
-   m_sourceTaskId = sourceTaskId;
-   _tcslcpy(m_sourceTaskType, CHECK_NULL_EX(sourceTaskType), 64);
+   m_originType = originType;
+   m_originId = originId;
    m_relatedObjectId = relatedObjectId;
    _tcslcpy(m_title, title, 256);
    m_text = MemCopyString(text);
@@ -194,8 +194,10 @@ AIMessage::AIMessage(DB_RESULT hResult, int row) :
    m_type = static_cast<AIMessageType>(DBGetFieldInt32(hResult, row, 2));
    m_creationTime = DBGetFieldTime(hResult, row, 3);
    m_expirationTime = DBGetFieldTime(hResult, row, 4);
-   m_sourceTaskId = DBGetFieldUInt32(hResult, row, 5);
-   DBGetField(hResult, row, 6, m_sourceTaskType, 64);
+   char originType[2];
+   DBGetFieldUTF8(hResult, row, 5, originType, sizeof(originType));
+   m_originType = (originType[0] != ' ') ? originType[0] : 0;   // char(1) column is space-padded by some databases when empty string is stored
+   m_originId = DBGetFieldUInt32(hResult, row, 6);
    m_relatedObjectId = DBGetFieldUInt32(hResult, row, 7);
    DBGetField(hResult, row, 8, m_title, 256);
    m_text = DBGetField(hResult, row, 9, nullptr, 0);
@@ -345,8 +347,8 @@ void AIMessage::fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t userId) 
    msg->setField(baseId + 2, static_cast<uint16_t>(m_type));
    msg->setFieldFromTime(baseId + 3, m_creationTime);
    msg->setFieldFromTime(baseId + 4, m_expirationTime);
-   msg->setField(baseId + 5, m_sourceTaskId);
-   msg->setField(baseId + 6, m_sourceTaskType);
+   msg->setField(baseId + 5, m_originId);
+   msg->setFieldFromUtf8String(baseId + 6, (m_originType != 0) ? AIChatOriginName(m_originType) : "");
    msg->setField(baseId + 7, m_relatedObjectId);
    msg->setField(baseId + 8, m_title);
    msg->setField(baseId + 9, m_text);
@@ -378,8 +380,17 @@ json_t *AIMessage::toJson(uint32_t userId) const
    json_object_set_new(json, "status", json_string(s_messageStatusNames[getStatusForUser(userId)]));
    json_object_set_new(json, "creationTime", json_time_string(m_creationTime));
    json_object_set_new(json, "expirationTime", json_time_string(m_expirationTime));
-   json_object_set_new(json, "sourceTaskId", json_integer(m_sourceTaskId));
-   json_object_set_new(json, "sourceTaskType", json_string_t(m_sourceTaskType));
+   if (m_originType != 0)
+   {
+      json_t *origin = json_object();
+      json_object_set_new(origin, "type", json_string(AIChatOriginName(m_originType)));
+      json_object_set_new(origin, "id", json_integer(m_originId));
+      json_object_set_new(json, "origin", origin);
+   }
+   else
+   {
+      json_object_set_new(json, "origin", json_null());
+   }
    json_object_set_new(json, "relatedObjectId", json_integer(m_relatedObjectId));
    json_object_set_new(json, "title", json_string_t(m_title));
    json_object_set_new(json, "text", json_string_t(CHECK_NULL_EX(m_text)));
@@ -410,7 +421,7 @@ bool AIMessage::saveToDatabase() const
    {
       DB_STATEMENT hStmt = DBPrepare(hdb,
          _T("INSERT INTO ai_messages (id,message_guid,message_type,creation_time,expiration_time,")
-         _T("source_task_id,source_task_type,related_object_id,title,message_text,spawn_task_data,status) ")
+         _T("origin_type,origin_id,related_object_id,title,message_text,spawn_task_data,status) ")
          _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"));
 
       if (hStmt != nullptr)
@@ -421,8 +432,9 @@ bool AIMessage::saveToDatabase() const
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int>(m_type));
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_expirationTime));
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_sourceTaskId);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_sourceTaskType, DB_BIND_TRANSIENT);
+         wchar_t originType[2] = { static_cast<wchar_t>(m_originType), 0 };   // empty string if origin is unknown
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, originType, DB_BIND_TRANSIENT);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_originId);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_relatedObjectId);
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_title, DB_BIND_TRANSIENT);
          DBBind(hStmt, 10, DB_SQLTYPE_TEXT, m_text, DB_BIND_TRANSIENT);
@@ -501,12 +513,20 @@ bool AIMessage::deleteFromDatabase()
  * Create AI message
  */
 uint32_t NXCORE_EXPORTABLE CreateAIMessage(AIMessageType type, const TCHAR *title, const TCHAR *text,
-   uint32_t initiatorUserId, uint32_t relatedObjectId, uint32_t sourceTaskId,
-   const TCHAR *sourceTaskType, const TCHAR *spawnTaskData,
+   uint32_t initiatorUserId, uint32_t relatedObjectId, const TCHAR *spawnTaskData,
    uint32_t expirationMinutes, bool includeResponsibleUsers)
 {
+   char originType = 0;
+   uint32_t originId = 0;
+   Chat *chat = GetCurrentAIChat();
+   if (chat != nullptr)
+   {
+      originType = static_cast<char>(chat->getOrigin());
+      originId = chat->getOriginId();
+   }
+
    auto message = make_shared<AIMessage>(InterlockedIncrement(&s_messageId), type, title, text, relatedObjectId,
-      sourceTaskId, sourceTaskType, spawnTaskData, expirationMinutes);
+      originType, originId, spawnTaskData, expirationMinutes);
 
    // Add initiator as recipient
    message->addRecipient(initiatorUserId, true);
@@ -712,7 +732,7 @@ void NotifyAIMessageRecipients(uint32_t messageId, bool isNew)
 }
 
 /**
- * Create AI message (AI function)
+ * Create AI message (AI tool)
  */
 std::string F_CreateAIMessage(json_t *arguments, uint32_t userId)
 {
@@ -733,7 +753,7 @@ std::string F_CreateAIMessage(json_t *arguments, uint32_t userId)
    uint32_t expirationMinutes = json_object_get_uint32(arguments, "expirationMinutes", 10080);
 
    uint32_t messageId = CreateAIMessage(type, String(title, "utf-8"), String(text, "utf-8"),
-      userId, relatedObjectId, 0, nullptr, nullptr, expirationMinutes, false);
+      userId, relatedObjectId, nullptr, expirationMinutes, false);
 
    if (messageId == 0)
       return std::string("Error: failed to create message");
@@ -745,7 +765,7 @@ std::string F_CreateAIMessage(json_t *arguments, uint32_t userId)
 }
 
 /**
- * Create approval request AI message (AI function)
+ * Create approval request AI message (AI tool)
  */
 std::string F_CreateApprovalRequest(json_t *arguments, uint32_t userId)
 {
@@ -773,7 +793,7 @@ std::string F_CreateApprovalRequest(json_t *arguments, uint32_t userId)
    json_decref(spawnData);
 
    uint32_t messageId = CreateAIMessage(AI_MESSAGE_APPROVAL_REQUEST, String(title, "utf-8"),
-      String(text, "utf-8"), userId, relatedObjectId, 0, nullptr,
+      String(text, "utf-8"), userId, relatedObjectId,
       String(spawnDataStr, "utf-8"), expirationMinutes, false);
 
    MemFree(spawnDataStr);

@@ -31,13 +31,13 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Label provider for AI skills and functions list
+ * Label provider for AI skills and tools list
  */
 public class AiItemLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
    private final I18n i18n = LocalizationHelper.getI18n(AiItemLabelProvider.class);
    private final Color disabledColor = WidgetHelper.getSystemColor(WidgetHelper.COLOR_WIDGET_DISABLED_FOREGROUND);
-   private final Image imageFunction;
+   private final Image imageTool;
    private final Image imageSkill;
    private final Image imageUnknownElement;
 
@@ -46,7 +46,7 @@ public class AiItemLabelProvider extends LabelProvider implements ITableLabelPro
     */
    public AiItemLabelProvider()
    {
-      imageFunction = ResourceManager.getImage("icons/ai/function.png");
+      imageTool = ResourceManager.getImage("icons/ai/function.png");
       imageSkill = ResourceManager.getImage("icons/ai/skill.png");
       imageUnknownElement = ResourceManager.getImage("icons/ai/unknown-element.png");
    }
@@ -57,7 +57,7 @@ public class AiItemLabelProvider extends LabelProvider implements ITableLabelPro
    @Override
    public void dispose()
    {
-      imageFunction.dispose();
+      imageTool.dispose();
       imageSkill.dispose();
       imageUnknownElement.dispose();
       super.dispose();
@@ -78,7 +78,7 @@ public class AiItemLabelProvider extends LabelProvider implements ITableLabelPro
       switch(((AiItemEntry)element).getTypeChar())
       {
          case 'F':
-            return imageFunction;
+            return imageTool;
          case 'S':
             return imageSkill;
       }

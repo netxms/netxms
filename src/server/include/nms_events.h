@@ -797,7 +797,7 @@ private:
    StringMap m_customAttributeSetActions;
    StringList m_customAttributeDeleteActions;
 
-   wchar_t *m_aiAgentInstructions;
+   wchar_t *m_aiInstructions;
 
    bool matchSource(const shared_ptr<NetObj>& object) const;
    bool matchEvent(uint32_t eventCode) const;

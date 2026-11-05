@@ -38,8 +38,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ai.AiAssistantFunction;
-import org.netxms.client.ai.AiAssistantSkill;
+import org.netxms.client.ai.AiTool;
+import org.netxms.client.ai.AiSkill;
 import org.netxms.client.ai.AiDisabledItem;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.nxmc.Registry;
@@ -57,7 +57,7 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * AI skills and functions management view
+ * AI skills and tools management view
  */
 public class AiSkillsManager extends ConfigurationView
 {
@@ -82,7 +82,7 @@ public class AiSkillsManager extends ConfigurationView
     */
    public AiSkillsManager()
    {
-      super(LocalizationHelper.getI18n(AiSkillsManager.class).tr("AI Skills & Functions"), ResourceManager.getImageDescriptor("icons/config-views/ai-skills.png"), "configuration.ai-skills", true);
+      super(LocalizationHelper.getI18n(AiSkillsManager.class).tr("AI Skills & Tools"), ResourceManager.getImageDescriptor("icons/config-views/ai-skills.png"), "configuration.ai-skills", true);
       session = Registry.getSession();
       canManage = (session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_MANAGE_AI_SKILLS) != 0;
    }
@@ -276,21 +276,21 @@ public class AiSkillsManager extends ConfigurationView
    @Override
    public void refresh()
    {
-      new Job(i18n.tr("Loading AI skills and functions"), this) {
+      new Job(i18n.tr("Loading AI skills and tools"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final Object[] result = session.getAiSkillsAndFunctions();
+            final Object[] result = session.getAiSkillsAndTools();
             runInUIThread(new Runnable() {
                @SuppressWarnings("unchecked")
                @Override
                public void run()
                {
                   items.clear();
-                  for(AiAssistantSkill skill : (List<AiAssistantSkill>)result[0])
+                  for(AiSkill skill : (List<AiSkill>)result[0])
                      items.add(new AiItemEntry(skill));
-                  for(AiAssistantFunction function : (List<AiAssistantFunction>)result[1])
-                     items.add(new AiItemEntry(function));
+                  for(AiTool tool : (List<AiTool>)result[1])
+                     items.add(new AiItemEntry(tool));
                   for(AiDisabledItem extra : (List<AiDisabledItem>)result[2])
                      items.add(new AiItemEntry(extra));
                   viewer.setInput(items.toArray());
@@ -301,7 +301,7 @@ public class AiSkillsManager extends ConfigurationView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot load AI skills and functions");
+            return i18n.tr("Cannot load AI skills and tools");
          }
       }.start();
    }
@@ -357,9 +357,9 @@ public class AiSkillsManager extends ConfigurationView
     */
    private void addCustomEntry()
    {
-      final String[] types = { i18n.tr("Skill"), i18n.tr("Function") };
+      final String[] types = { i18n.tr("Skill"), i18n.tr("Tool") };
       InputDialog dlg = new InputDialog(getWindow().getShell(), i18n.tr("Add Custom Entry"),
-         i18n.tr("Enter the name of the skill or function to disable:"), "", null);
+         i18n.tr("Enter the name of the skill or tool to disable:"), "", null);
       if (dlg.open() != Window.OK)
          return;
 
@@ -370,7 +370,7 @@ public class AiSkillsManager extends ConfigurationView
       // Ask for type
       org.eclipse.jface.dialogs.MessageDialog typeDlg = new org.eclipse.jface.dialogs.MessageDialog(
          getWindow().getShell(), i18n.tr("Item Type"), null,
-         i18n.tr("Is \"{0}\" a skill or a function?", name),
+         i18n.tr("Is \"{0}\" a skill or a tool?", name),
          org.eclipse.jface.dialogs.MessageDialog.QUESTION, types, 1);
       int typeIndex = typeDlg.open();
       if (typeIndex < 0)
@@ -495,7 +495,7 @@ public class AiSkillsManager extends ConfigurationView
       private boolean disabled;
       private boolean registered;
 
-      public AiItemEntry(AiAssistantSkill skill)
+      public AiItemEntry(AiSkill skill)
       {
          this.name = skill.getName();
          this.description = skill.getDescription();
@@ -504,12 +504,12 @@ public class AiSkillsManager extends ConfigurationView
          this.registered = true;
       }
 
-      public AiItemEntry(AiAssistantFunction function)
+      public AiItemEntry(AiTool tool)
       {
-         this.name = function.getName();
-         this.description = function.getDescription();
+         this.name = tool.getName();
+         this.description = tool.getDescription();
          this.typeChar = 'F';
-         this.disabled = function.isDisabled();
+         this.disabled = tool.isDisabled();
          this.registered = true;
       }
 
@@ -539,7 +539,7 @@ public class AiSkillsManager extends ConfigurationView
 
       public String getTypeName()
       {
-         return typeChar == 'S' ? "Skill" : "Function";
+         return typeChar == 'S' ? "Skill" : "Tool";
       }
 
       public boolean isDisabled()

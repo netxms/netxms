@@ -8147,9 +8147,9 @@ NXSL_Value *NXSL_AIOperatorClass::getAttr(NXSL_Object *object, const NXSL_Identi
    {
       value = vm->createValue(instance->getId());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("iteration"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("cycle") || NXSL_COMPARE_ATTRIBUTE_NAME("iteration"))   // "iteration" is the name used before 7.1
    {
-      value = vm->createValue(instance->getIteration());
+      value = vm->createValue(instance->getCycle());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastExecutionTime"))
    {

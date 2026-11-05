@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2013-2026 Raden Solutions
+ * Copyright (C) 2013-2025 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,35 +21,31 @@ package org.netxms.client.ai;
 import org.netxms.base.NXCPMessage;
 
 /**
- * AI assistant skill
+ * AI tool
  */
-public class AiAssistantSkill
+public class AiTool
 {
    private String name;
    private String description;
    private boolean disabled;
-   private boolean supportsDelegation;
-   private String defaultMode;
 
    /**
-    * Create skill object from NXCP message.
+    * Create tool object from NXCP message.
     *
     * @param msg NXCP message
-    * @param baseId base ID for skill fields
+    * @param baseId base ID for tool fields
     */
-   public AiAssistantSkill(NXCPMessage msg, long baseId)
+   public AiTool(NXCPMessage msg, long baseId)
    {
       name = msg.getFieldAsString(baseId);
       description = msg.getFieldAsString(baseId + 1);
       disabled = msg.getFieldAsBoolean(baseId + 2);
-      supportsDelegation = msg.getFieldAsBoolean(baseId + 3);
-      defaultMode = msg.getFieldAsString(baseId + 4);
    }
 
    /**
-    * Get skill name.
+    * Get tool name.
     *
-    * @return skill name
+    * @return tool name
     */
    public String getName()
    {
@@ -57,9 +53,9 @@ public class AiAssistantSkill
    }
 
    /**
-    * Get skill description.
+    * Get tool description.
     *
-    * @return skill description
+    * @return tool description
     */
    public String getDescription()
    {
@@ -67,32 +63,12 @@ public class AiAssistantSkill
    }
 
    /**
-    * Check if this skill is disabled by administrator.
+    * Check if this tool is disabled by administrator.
     *
     * @return true if disabled
     */
    public boolean isDisabled()
    {
       return disabled;
-   }
-
-   /**
-    * Check if this skill supports delegation.
-    *
-    * @return true if delegation is supported
-    */
-   public boolean isSupportsDelegation()
-   {
-      return supportsDelegation;
-   }
-
-   /**
-    * Get default execution mode.
-    *
-    * @return default execution mode ("loaded" or "delegated")
-    */
-   public String getDefaultMode()
-   {
-      return defaultMode;
    }
 }

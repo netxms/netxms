@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ai.AiAgentTask;
+import org.netxms.client.ai.AiTask;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
@@ -69,7 +69,7 @@ public class AiTaskLabelProvider extends LabelProvider implements ITableLabelPro
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-      AiAgentTask task = (AiAgentTask)element;
+      AiTask task = (AiTask)element;
 		switch(columnIndex)
 		{
          case AiTaskManager.COLUMN_DESCRIPTION:

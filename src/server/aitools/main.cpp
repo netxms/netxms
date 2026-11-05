@@ -132,11 +132,11 @@ std::string F_UpdateWebService(json_t *arguments, uint32_t userId);
 DEFINE_MODULE_METADATA("AITOOLS", "Raden Solutions", NETXMS_VERSION_STRING_A, NETXMS_BUILD_TAG_A)
 
 /**
- * Create function list
+ * Create tool list
  */
-static void CreateAssistantFunctionList()
+static void CreateAIToolList()
 {
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "alarm-list",
       "Get list of active alarms (alerts) for monitored devices, including each alarm's numeric ID (needed by the alarm-management skill to act on it). Each alarm represents an outstanding problem or condition worth operator attention. Device in this context could mean anything related to IT infrastructure: switch, router, server, workstation, ATM, POS, terminal, printer, scanner, UPS, sensor of any kind.",
       {
@@ -144,21 +144,21 @@ static void CreateAssistantFunctionList()
          { "state", "optional state filter: 'active' (outstanding + acknowledged, the default), 'outstanding', 'acknowledged', 'resolved', or 'all'" }
       },
       F_AlarmList);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "clear-notification-queue",
       "Clear notification channel's queue",
       {
          { "channel", "notification channel name (mandatory)" }
       },
       F_ClearNotificationChannelQueue);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "explain-object-status",
       "Get detailed list of factors that contributed to the current status of an object (node, device, server, workstation, container, etc.).",
       {
          { "object", "mandatory name or ID of an object" }
       },
       F_ExplainObjectStatus);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "find-objects",
       "Find objects by name, IP address, class, parent object, or zone. At least one search criteria should be set.",
       {
@@ -169,7 +169,7 @@ static void CreateAssistantFunctionList()
          { "zoneUIN", "optional zone UIN", "integer" }
       },
       F_FindObjects);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "force-poll",
       "Trigger an immediate poll on a monitored object instead of waiting for the next scheduled poll. "
       "Use when fresh state is needed right now — e.g. after a device was fixed or reconfigured, to "
@@ -186,19 +186,19 @@ static void CreateAssistantFunctionList()
          { "timeoutSeconds", "max seconds to wait when wait=true; clamped to [1, 300] (default: 30)", "integer" }
       },
       F_ForcePoll);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "get-notification-channels",
       "Get list of configured notification channels",
       {},
       F_GetNotificationChannels);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "get-object",
       "Find object by its name or ID",
       {
          { "object", "mandatory name or ID of an object (node, device, server, workstation, container, etc.)" }
       },
       F_GetObject);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "send-notification",
       "Send notification to given recipient using one of configured notification channels.",
       {
@@ -208,7 +208,7 @@ static void CreateAssistantFunctionList()
          { "subject", "notification subject (optional)" }
       },
       F_SendNotification);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "operational-status",
       "Composite triage view of what is currently broken in the monitored infrastructure: down/critical nodes, "
       "active alarms grouped by source object, recent critical events, and DCIs with detected anomalies — all in a single call. "
@@ -228,7 +228,7 @@ static void CreateAssistantFunctionList()
          { "include_quiet", "if true, also include objects in maintenance mode and administratively unmanaged objects. Default: false", "boolean" }
       },
       F_OperationalStatus);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "server-stats",
       "Get stats (basic internal performance metrics like number of objects, nodes, sensors, interfaces, metrics, data collection items) of NetXMS server itself.",
       {},
@@ -236,7 +236,7 @@ static void CreateAssistantFunctionList()
       {
          return JsonToString(GetServerStats());
       });
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "snmp-read",
       "Read SNMP variable from given node",
       {
@@ -244,7 +244,7 @@ static void CreateAssistantFunctionList()
          { "oid", "SNMP OID of the variable to read" }
       },
       F_SNMPRead);
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "snmp-walk",
       "Walk SNMP MIB from given node",
       {
@@ -258,21 +258,21 @@ static void CreateAssistantFunctionList()
 /**
  * Create skill list
  */
-static void CreateAssistantSkillList()
+static void CreateAISkillList()
 {
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "alarm-management",
-      "Provides alarm lifecycle management for NetXMS. Use this skill to acknowledge, resolve, and terminate alarms (alerts), add operator comments, and inspect full alarm details including comment history and related events. Essential for alert triage, incident response, on-call workflows, and clearing stale or resolved alarms. To get a list of active alarms (with their IDs) use the alarm-list function; this skill provides the actions you take on those alarms.",
+      "Provides alarm lifecycle management for NetXMS. Use this skill to acknowledge, resolve, and terminate alarms (alerts), add operator comments, and inspect full alarm details including comment history and related events. Essential for alert triage, incident response, on-call workflows, and clearing stale or resolved alarms. To get a list of active alarms (with their IDs) use the alarm-list tool; this skill provides the actions you take on those alarms.",
       "@alarm-management.md",
       {
-         AssistantFunction(
+         AITool(
             "get-alarm-details",
             "Get full details of a single active alarm: state, severity, source object and its status, timestamps, repeat count, helpdesk linkage, the originating EPP rule, the complete operator comment history, and recent related events. Use this before acting on an alarm to understand its context. Terminated alarms are not retained in the active list and cannot be retrieved here.",
             {
                { "alarm", "numeric alarm ID (mandatory)", "integer" }
             },
             F_GetAlarmDetails),
-         AssistantFunction(
+         AITool(
             "acknowledge-alarm",
             "Acknowledge one or more alarms, signaling that an operator is aware of the condition. Only alarms in the outstanding state can be acknowledged. Returns a per-alarm result with success/failure for each ID.",
             {
@@ -282,7 +282,7 @@ static void CreateAssistantSkillList()
                { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)", "boolean" }
             },
             F_AcknowledgeAlarm),
-         AssistantFunction(
+         AITool(
             "resolve-alarm",
             "Resolve one or more alarms. A resolved alarm remains in the active alarm list and will be re-activated automatically if the originating condition occurs again. Use this when the underlying problem has been fixed. Returns a per-alarm result.",
             {
@@ -290,7 +290,7 @@ static void CreateAssistantSkillList()
                { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)", "boolean" }
             },
             F_ResolveAlarm),
-         AssistantFunction(
+         AITool(
             "terminate-alarm",
             "Terminate one or more alarms, removing them from the active alarm list. The alarm will not reappear unless it is raised again. Use this to clear stale alarms or alarms that no longer apply. An alarm that is open in an external helpdesk system cannot be terminated until the helpdesk issue is closed. Returns a per-alarm result.",
             {
@@ -298,7 +298,7 @@ static void CreateAssistantSkillList()
                { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)", "boolean" }
             },
             F_TerminateAlarm),
-         AssistantFunction(
+         AITool(
             "add-alarm-comment",
             "Add an operator comment to an alarm to document analysis findings, actions taken, or context for other operators. The comment is appended to the alarm's comment history.",
             {
@@ -309,12 +309,12 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "data-collection",
       "Provides comprehensive data collection management capabilities for NetXMS monitored infrastructure. Use this skill to create, edit, and delete metrics, configure thresholds, monitor current values, analyze performance data, analyze historical data, detect trends and anomalies, and optimize performance monitoring across your IT environment. Essential for performance analysis, capacity planning, resource utilization monitoring, and troubleshooting performance issues.",
       "@data-collection.md",
       {
-         AssistantFunction(
+         AITool(
             "create-metric",
             "Create new data collection item (metric) for given object (node, device, server, etc.).",
             {
@@ -343,7 +343,7 @@ static void CreateAssistantSkillList()
                { "hideOnLastValuesPage", "hide from last values page (optional, boolean)", "boolean" }
             },
             F_CreateMetric),
-         AssistantFunction(
+         AITool(
             "edit-metric",
             "Edit existing data collection item (metric) properties. Only specified properties are changed, others remain unchanged. Use get-metric-details first to see current configuration.",
             {
@@ -375,7 +375,7 @@ static void CreateAssistantSkillList()
                { "aggregateOnCluster", "aggregate on cluster (optional, boolean)", "boolean" }
             },
             F_EditMetric),
-         AssistantFunction(
+         AITool(
             "delete-metric",
             "Delete a data collection item (metric) and its historical data.",
             {
@@ -383,7 +383,7 @@ static void CreateAssistantSkillList()
                { "metric", "name or ID of the metric to delete (mandatory)" }
             },
             F_DeleteMetric),
-         AssistantFunction(
+         AITool(
             "get-metric-details",
             "Get full configuration details of a single data collection item (metric), including all properties, flags, thresholds count, transformation script, and metadata. Use this before editing a metric to see its current configuration.",
             {
@@ -391,7 +391,7 @@ static void CreateAssistantSkillList()
                { "metric", "name or ID of the metric (mandatory)" }
             },
             F_GetMetricDetails),
-         AssistantFunction(
+         AITool(
             "get-metrics",
             "Get data collection items (metrics) and their current values for given object",
             {
@@ -399,7 +399,7 @@ static void CreateAssistantSkillList()
                { "filter", "optional filter to select specific metrics by name or description (partial match, case insensitive)" }
             },
             F_GetMetrics),
-         AssistantFunction(
+         AITool(
             "get-historical-data",
             "Get historical time series data for analysis and anomaly detection. Returns data points with timestamps and values for specified time period.",
             {
@@ -410,7 +410,7 @@ static void CreateAssistantSkillList()
                { "maxDataPoints", "optional maximum number of data points to return; if set, data will be aggregated into time buckets with min/max/avg values; default is 500; set to 0 for raw data", "integer" }
             },
             F_GetHistoricalData),
-         AssistantFunction(
+         AITool(
             "get-thresholds",
             "Get all thresholds configured on a data collection item (metric).",
             {
@@ -418,14 +418,14 @@ static void CreateAssistantSkillList()
                { "metric", "name or ID of the metric (mandatory)" }
             },
             F_GetThresholds),
-         AssistantFunction(
+         AITool(
             "get-object-thresholds",
             "Get all thresholds configured across every data collection item and table on an object (node, device, etc.) in a single call. Returns one row per threshold with the data collection item name and ID, threshold ID, condition, and the names of the events generated on activation and deactivation. Use this to answer questions like which events can be generated from thresholds on a given node.",
             {
                { "object", "name or ID of an object (mandatory)" }
             },
             F_GetObjectThresholds),
-         AssistantFunction(
+         AITool(
             "add-threshold",
             "Add a threshold to a data collection item for alerting when values exceed limits.",
             {
@@ -443,7 +443,7 @@ static void CreateAssistantSkillList()
                { "script", "NXSL script for script function (optional)" }
             },
             F_AddThreshold),
-         AssistantFunction(
+         AITool(
             "edit-threshold",
             "Edit an existing threshold on a data collection item. Only specified properties are changed; others (including runtime state) remain unchanged. Parameters mirror add-threshold. Use get-thresholds or get-object-thresholds first to find the threshold ID.",
             {
@@ -463,7 +463,7 @@ static void CreateAssistantSkillList()
                { "script", "new NXSL script for script function, empty string to clear (optional)" }
             },
             F_EditThreshold),
-         AssistantFunction(
+         AITool(
             "delete-threshold",
             "Delete a threshold from a data collection item.",
             {
@@ -475,12 +475,12 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "event-processing",
       "Provides comprehensive event processing management capabilities for NetXMS. Use this skill to CREATE, MODIFY, and DELETE event templates, manage event processing policy (EPP), server-side actions, and understand how events flow through the system. Event templates define the structure of events (name, severity, message format). You can create new custom event templates, modify existing user-defined templates, or delete templates that are no longer needed. Events are generated by various sources (monitoring, SNMP traps, syslog, agents) and processed according to configured rules to generate alarms, send notifications, execute actions, or correlate related events.",
       "@event-processing.md",
       {
-         AssistantFunction(
+         AITool(
             "create-event-template",
             "Create a new event template. System will auto-assign event code >= 100000.",
             {
@@ -491,7 +491,7 @@ static void CreateAssistantSkillList()
                { "tags", "comma-separated tags (optional)" }
             },
             F_CreateEventTemplate),
-         AssistantFunction(
+         AITool(
             "modify-event-template",
             "Modify a user-defined event template (code >= 100000).",
             {
@@ -504,7 +504,7 @@ static void CreateAssistantSkillList()
                { "tags", "new tags (optional)" }
             },
             F_ModifyEventTemplate),
-         AssistantFunction(
+         AITool(
             "delete-event-template",
             "Delete a user-defined event template (code >= 100000).",
             {
@@ -512,19 +512,19 @@ static void CreateAssistantSkillList()
                { "name", "event name (provide code or name)" }
             },
             F_DeleteEventTemplate),
-         AssistantFunction(
+         AITool(
             "get-event-processing-action",
             "Get specific server-side action used in event processing by its ID. Server-side actions define operations that can be executed in response to events, such as sending notifications, executing commands, or running scripts.",
             {
                { "id", "action ID (numeric)", "integer" }
             },
             F_GetEventProcessingAction),
-         AssistantFunction(
+         AITool(
             "get-event-processing-actions",
             "Get list of server-side actions used in event processing. Server-side actions define operations that can be executed in response to events, such as sending notifications, executing commands, or running scripts.",
             {},
             F_GetEventProcessingActions),
-         AssistantFunction(
+         AITool(
             "get-event-template",
             "Get event template definition by code or name. Event templates define the structure and properties of events that can be generated in NetXMS.",
             {
@@ -532,12 +532,12 @@ static void CreateAssistantSkillList()
                { "name", "event template name (either code or name must be provided)" }
             },
             F_GetEventTemplate),
-         AssistantFunction(
+         AITool(
             "get-event-processing-policy",
             "Get the complete event processing policy configuration. The policy defines rules for how events are processed, including conditions, actions, and correlations. Every chain with its rules is in 'chains'; the main chain (the entry point of event processing) has ID 0.",
             {},
             F_GetEventProcessingPolicy),
-         AssistantFunction(
+         AITool(
             "create-epp-rule",
             "Create a new event processing policy rule in the main chain or in the chain given by 'chain'. Returns the created rule (with its assigned GUID) and the new chain version. Position the rule with after_guid / before_guid / position (default: append at end).",
             {
@@ -582,14 +582,14 @@ static void CreateAssistantSkillList()
                { "downtime_tag", "downtime tag (optional)" },
                { "request_ai_comment", "if true, request AI-generated comment on alarm (optional, default false)", "boolean" },
                { "rca_script_name", "name of library script for root cause analysis (optional)" },
-               { "ai_agent_instructions", "instructions for AI agent processing this rule (optional)" },
+               { "ai_instructions", "instructions for AI assistant processing events matched by this rule (optional)" },
                { "pstorage_set", "object map of persistent storage keys to set on match: {key: value, ...} (optional)", "object" },
                { "pstorage_delete", "array of persistent storage keys to delete on match (optional)", "array", "string" },
                { "custom_attribute_set", "object map of custom attributes to set on the source object: {key: value, ...} (optional)", "object" },
                { "custom_attribute_delete", "array of custom attribute names to delete on the source object (optional)", "array", "string" }
             },
             F_CreateEppRule),
-         AssistantFunction(
+         AITool(
             "modify-epp-rule",
             "Modify an existing event processing policy rule. Only fields actually provided are changed - any field omitted is left unchanged. Use get-event-processing-policy first to find the rule GUID and review its current settings. The rule may belong to any chain.",
             {
@@ -631,35 +631,35 @@ static void CreateAssistantSkillList()
                { "downtime_tag", "new downtime tag (optional)" },
                { "request_ai_comment", "new request_ai_comment flag (optional)", "boolean" },
                { "rca_script_name", "new RCA script name (optional)" },
-               { "ai_agent_instructions", "new AI agent instructions (optional)" },
+               { "ai_instructions", "new AI instructions (optional)" },
                { "pstorage_set", "new persistent storage set map (optional, replaces current)", "object" },
                { "pstorage_delete", "new persistent storage delete list (optional, replaces current)", "array", "string" },
                { "custom_attribute_set", "new custom attribute set map (optional, replaces current)", "object" },
                { "custom_attribute_delete", "new custom attribute delete list (optional, replaces current)", "array", "string" }
             },
             F_ModifyEppRule),
-         AssistantFunction(
+         AITool(
             "delete-epp-rule",
             "Delete an event processing policy rule. The rule may belong to any chain.",
             {
                { "guid", "GUID of the rule to delete (mandatory)" }
             },
             F_DeleteEppRule),
-         AssistantFunction(
+         AITool(
             "enable-epp-rule",
             "Enable a previously disabled event processing policy rule. The rule may belong to any chain.",
             {
                { "guid", "GUID of the rule to enable (mandatory)" }
             },
             F_EnableEppRule),
-         AssistantFunction(
+         AITool(
             "disable-epp-rule",
             "Disable an event processing policy rule. The rule remains in the policy but is skipped during event processing. The rule may belong to any chain.",
             {
                { "guid", "GUID of the rule to disable (mandatory)" }
             },
             F_DisableEppRule),
-         AssistantFunction(
+         AITool(
             "move-epp-rule",
             "Move an event processing policy rule to a new position within its chain. Rules are evaluated top-to-bottom, so order can be functionally significant (especially with stop_processing).",
             {
@@ -669,7 +669,7 @@ static void CreateAssistantSkillList()
                { "position", "explicit position: 'first' or 'last' (optional)" }
             },
             F_MoveEppRule),
-         AssistantFunction(
+         AITool(
             "create-server-action",
             "Create a new server-side action that can be referenced from event processing rules. Action types: local_command (run shell command on server), agent_command (run command on monitored node via agent), ssh_command (run command via SSH), notification (send via configured notification channel), forward_event (forward event to another NetXMS server), nxsl_script (execute NXSL script).",
             {
@@ -682,7 +682,7 @@ static void CreateAssistantSkillList()
                { "channel", "notification channel name (notification type only) (optional)" }
             },
             F_CreateServerAction),
-         AssistantFunction(
+         AITool(
             "modify-server-action",
             "Modify an existing server-side action. Only fields actually provided are changed.",
             {
@@ -696,7 +696,7 @@ static void CreateAssistantSkillList()
                { "channel", "new notification channel name (optional)" }
             },
             F_ModifyServerAction),
-         AssistantFunction(
+         AITool(
             "delete-server-action",
             "Delete a server-side action. Refused if any event processing rule still references it - modify those rules first.",
             {
@@ -706,26 +706,26 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "inventory",
       "Provides comprehensive inventory management capabilities for NetXMS monitored nodes, including hardware components, software packages, and network interfaces. Use this skill for asset discovery, compliance auditing, security assessment, change management, capacity planning, and troubleshooting system configurations.",
       "@inventory.md",
       {
-         AssistantFunction(
+         AITool(
             "get-node-hardware-components",
             "Get list of hardware components for given node (servers, workstations, network devices, etc.). Returns information about physical components like CPUs, memory modules, storage devices, power supplies, fans, etc.",
             {
                { "object", "name or ID of a node" }
             },
             F_GetNodeHardwareComponents),
-         AssistantFunction(
+         AITool(
             "get-node-interfaces",
             "Get list of network interfaces for given node",
             {
                { "object", "name or ID of a node" }
             },
             F_GetNodeInterfaces),
-         AssistantFunction(
+         AITool(
             "get-node-software-packages",
             "Get list of software packages for given node (servers, workstations, network devices, etc.). Returns information about installed software packages including name, version, vendor, installation date, etc.",
             {
@@ -736,31 +736,31 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "traffic-analysis",
       "Provides access to network traffic analyzer data collected through traffic observers (ntopng and similar backends). Use this skill to see which hosts a node communicates with, per-application (L7) traffic breakdown, top talkers, active hosts, throughput, drops and retransmits on an observed network segment. Intended for root cause analysis, anomaly investigation, and identifying unexpected traffic sources or destinations.",
       "@traffic-analysis.md",
       {
-         AssistantFunction(
+         AITool(
             "get-traffic-observers",
             "List configured traffic observers (traffic analyzer instances) with connection state, backend product and version, and supported capabilities. Call this first to check whether traffic data is available at all.",
             {},
             F_GetTrafficObservers),
-         AssistantFunction(
+         AITool(
             "get-observation-points",
             "List observation points (monitored interfaces or segments of a traffic analyzer) with state, scope, local networks, sampling rate, and number of matched nodes.",
             {
                { "observer", "optional name or ID of a traffic observer to restrict the list" }
             },
             F_GetObservationPoints),
-         AssistantFunction(
+         AITool(
             "get-node-traffic-context",
             "Check whether a node is seen by any observation point and return current host-level traffic counters (bytes, packets, active flows, TCP retransmits, backend alerts) from each point that observes it. Use this as the entry point when investigating a node.",
             {
                { "object", "name or ID of a node (mandatory)" }
             },
             F_GetNodeTrafficContext),
-         AssistantFunction(
+         AITool(
             "get-node-traffic-peers",
             "Get hosts the node is currently communicating with (conversation peers), with role (client or server), bytes sent and received, and flow count. Peers that are monitored nodes are annotated with node ID and name. Returns most active peers first.",
             {
@@ -769,7 +769,7 @@ static void CreateAssistantSkillList()
                { "limit", "maximum number of peers to return per observation point (default 50)", "integer" }
             },
             F_GetNodeTrafficPeers),
-         AssistantFunction(
+         AITool(
             "get-node-traffic-l7-breakdown",
             "Get per-application (layer 7 protocol) breakdown of the node's traffic: bytes sent and received, packets, and flows per detected application.",
             {
@@ -778,14 +778,14 @@ static void CreateAssistantSkillList()
                { "limit", "maximum number of applications to return (default 50)", "integer" }
             },
             F_GetNodeTrafficL7Breakdown),
-         AssistantFunction(
+         AITool(
             "get-observation-point-statistics",
             "Get current aggregate statistics of an observation point: throughput in and out, cumulative bytes and packets, active hosts and flows, dropped packets, and TCP retransmits.",
             {
                { "point", "name or ID of an observation point (mandatory)" }
             },
             F_GetObservationPointStatistics),
-         AssistantFunction(
+         AITool(
             "get-observation-point-top-talkers",
             "Get hosts generating most traffic on an observation point. Hosts that are monitored nodes are annotated with node ID and name.",
             {
@@ -793,7 +793,7 @@ static void CreateAssistantSkillList()
                { "limit", "maximum number of hosts to return (default 50)", "integer" }
             },
             F_GetObservationPointTopTalkers),
-         AssistantFunction(
+         AITool(
             "get-observation-point-l7-breakdown",
             "Get per-application (layer 7 protocol) traffic breakdown for the whole observation point.",
             {
@@ -801,7 +801,7 @@ static void CreateAssistantSkillList()
                { "limit", "maximum number of applications to return (default 50)", "integer" }
             },
             F_GetObservationPointL7Breakdown),
-         AssistantFunction(
+         AITool(
             "get-observation-point-dscp-breakdown",
             "Get traffic breakdown by DSCP (QoS) class for an observation point.",
             {
@@ -809,7 +809,7 @@ static void CreateAssistantSkillList()
                { "limit", "maximum number of classes to return (default 50)", "integer" }
             },
             F_GetObservationPointDSCPBreakdown),
-         AssistantFunction(
+         AITool(
             "get-observation-point-active-hosts",
             "List hosts currently active on an observation point with IP, VLAN, MAC, name, first and last seen time, and the matched NetXMS node if any. Use the filter to narrow large host sets; unmatched hosts are devices seen on the wire that are not monitored by NetXMS.",
             {
@@ -822,12 +822,12 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "maintenance",
       "Provides comprehensive maintenance management capabilities for NetXMS monitored infrastructure. Use this skill to manage planned maintenance windows, suppress alerts during maintenance activities, and ensure proper coordination of maintenance operations across your IT environment.",
       "@maintenance.md",
       {
-         AssistantFunction(
+         AITool(
             "start-maintenance",
             "Start maintenance period for given object (node, device, server, workstation, container, etc.). While in maintenance mode, object will be monitored but alerts and notifications will be suppressed.",
             {
@@ -835,7 +835,7 @@ static void CreateAssistantSkillList()
                { "message", "optional maintenance message" }
             },
             F_StartMaintenance),
-         AssistantFunction(
+         AITool(
             "end-maintenance",
             "End maintenance period for given object (node, device, server, workstation, container, etc.).",
             {
@@ -845,12 +845,12 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "object-management",
       "Provides capabilities for changing monitoring configuration of NetXMS objects. Use this skill to set expected state of network interfaces (up, down, ignore, auto) - for example to stop alerts on unused or intentionally disabled ports - and to set objects to managed or unmanaged state.",
       "@object-management.md",
       {
-         AssistantFunction(
+         AITool(
             "set-interface-expected-state",
             "Set expected state of a network interface. Interface status is calculated by comparing actual operational state with expected state: up - interface is expected to be up, down state is critical; down - interface is expected to be down, up state is critical; ignore - interface state does not affect interface or node status; auto - expected state will be set from actual state on next status poll.",
             {
@@ -859,14 +859,14 @@ static void CreateAssistantSkillList()
                { "state", "new expected state: up, down, ignore, or auto (mandatory)" }
             },
             F_SetInterfaceExpectedState),
-         AssistantFunction(
+         AITool(
             "manage-object",
             "Set object (node, interface, container, etc.) to managed state. Management status change also applies to all child objects. Status polling and data collection resume for managed objects. Decommissioned nodes cannot be set to managed state.",
             {
                { "object", "name or ID of an object (mandatory)" }
             },
             F_ManageObject),
-         AssistantFunction(
+         AITool(
             "unmanage-object",
             "Set object (node, interface, container, etc.) to unmanaged state. Management status change also applies to all child objects. Unmanaged objects are not polled, do not collect data, and do not generate events or alarms until set back to managed state.",
             {
@@ -876,19 +876,19 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "incident-analysis",
       "Provides comprehensive incident management and analysis capabilities for NetXMS. Use this skill to investigate incidents, analyze root causes, correlate related alarms, review historical incidents, assess topology impact, and manage incident lifecycle including comments and assignments.",
       "@incident-analysis.md",
       {
-         AssistantFunction(
+         AITool(
             "get-incident-details",
             "Get full details of an incident including linked alarms, source object, comments, and state information.",
             {
                { "incident_id", "ID of the incident (mandatory)", "integer" }
             },
             F_GetIncidentDetails),
-         AssistantFunction(
+         AITool(
             "get-incident-related-events",
             "Get events related to an incident within a time window around its creation for correlation analysis.",
             {
@@ -896,7 +896,7 @@ static void CreateAssistantSkillList()
                { "time_window", "Time window before and after incident creation, as duration with unit suffix (e.g. '30m', '2h', '1d'); number without unit means seconds (default: 1h)" }
             },
             F_GetIncidentRelatedEvents),
-         AssistantFunction(
+         AITool(
             "get-incident-history",
             "Get historical incidents for a specific object to identify recurring issues and patterns.",
             {
@@ -904,14 +904,14 @@ static void CreateAssistantSkillList()
                { "max_count", "Maximum number of historical incidents to return (default: 20)", "integer" }
             },
             F_GetIncidentHistory),
-         AssistantFunction(
+         AITool(
             "get-incident-topology-context",
             "Get topology context for an incident including upstream and downstream objects with their current status.",
             {
                { "incident_id", "ID of the incident (mandatory)", "integer" }
             },
             F_GetIncidentTopologyContext),
-         AssistantFunction(
+         AITool(
             "add-incident-comment",
             "Add a comment to an incident for documenting analysis findings, updates, or notes.",
             {
@@ -919,7 +919,7 @@ static void CreateAssistantSkillList()
                { "text", "Comment text to add (mandatory)" }
             },
             F_AddIncidentComment),
-         AssistantFunction(
+         AITool(
             "link-alarm-to-incident",
             "Link a single alarm to an incident. Alarms can only be linked to one incident at a time.",
             {
@@ -927,7 +927,7 @@ static void CreateAssistantSkillList()
                { "alarm_id", "ID of the alarm to link (mandatory)", "integer" }
             },
             F_LinkAlarmToIncident),
-         AssistantFunction(
+         AITool(
             "link-alarms-to-incident",
             "Link multiple alarms to an incident in a single operation.",
             {
@@ -935,7 +935,7 @@ static void CreateAssistantSkillList()
                { "alarm_ids", "JSON array of alarm IDs to link (mandatory)", "array", "integer" }
             },
             F_LinkAlarmsToIncident),
-         AssistantFunction(
+         AITool(
             "assign-incident",
             "Assign an incident to a specific user by user ID or username.",
             {
@@ -944,21 +944,21 @@ static void CreateAssistantSkillList()
                { "user_name", "Username to assign to (provide either user_id or user_name)" }
             },
             F_AssignIncident),
-         AssistantFunction(
+         AITool(
             "suggest-incident-assignee",
             "Get AI suggestion for incident assignment based on responsible users configured on the source object.",
             {
                { "incident_id", "ID of the incident (mandatory)", "integer" }
             },
             F_SuggestIncidentAssignee),
-         AssistantFunction(
+         AITool(
             "get-open-incidents",
             "Get all open (not closed) incidents for a specific object. Returns incidents in states: Open, In Progress, Blocked, or Resolved.",
             {
                { "object", "Name or ID of the object to get open incidents for (mandatory)" }
             },
             F_GetOpenIncidents),
-         AssistantFunction(
+         AITool(
             "create-incident",
             "Create a new incident for tracking an issue. Use when detecting patterns, anomalies, or issues that warrant unified tracking.",
             {
@@ -968,7 +968,7 @@ static void CreateAssistantSkillList()
                { "source_alarm_id", "ID of an alarm to link (optional)", "integer" }
             },
             F_CreateIncident),
-         AssistantFunction(
+         AITool(
             "create-incident-from-alarms",
             "Create an incident linking multiple related alarms. Use when multiple alarms stem from a common root cause.",
             {
@@ -980,24 +980,24 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "log-analysis",
       "Provides comprehensive log analysis capabilities for NetXMS. Use this skill to search and analyze syslog messages, Windows events, SNMP traps, system events, and custom log tables from server modules. Essential for troubleshooting, root cause analysis, security investigation, compliance auditing, and detecting patterns or anomalies in log data across monitored infrastructure.",
       "@log-analysis.md",
       {
-         AssistantFunction(
+         AITool(
             "list-logs",
             "List all available logs that the user has permission to access. Use this to discover available log sources including custom logs from server modules.",
             {},
             F_ListLogs),
-         AssistantFunction(
+         AITool(
             "get-log-schema",
             "Get detailed schema information for a specific log including column names, types, and descriptions.",
             {
                { "log_name", "name of the log to get schema for (required)" }
             },
             F_GetLogSchema),
-         AssistantFunction(
+         AITool(
             "search-log",
             "Search any log table with flexible filtering. Works with built-in logs and custom module logs.",
             {
@@ -1010,7 +1010,7 @@ static void CreateAssistantSkillList()
                { "limit", "max results (default: 100, max: 1000)", "integer" }
             },
             F_SearchLog),
-         AssistantFunction(
+         AITool(
             "search-syslog",
             "Search syslog messages with flexible filtering by time, source, severity, facility, and text content.",
             {
@@ -1024,7 +1024,7 @@ static void CreateAssistantSkillList()
                { "limit", "max results (default: 100, max: 1000)", "integer" }
             },
             F_SearchSyslog),
-         AssistantFunction(
+         AITool(
             "search-windows-events",
             "Search Windows event log entries collected from monitored Windows hosts.",
             {
@@ -1039,7 +1039,7 @@ static void CreateAssistantSkillList()
                { "limit", "max results (default: 100)", "integer" }
             },
             F_SearchWindowsEvents),
-         AssistantFunction(
+         AITool(
             "search-snmp-traps",
             "Search SNMP traps received from network devices.",
             {
@@ -1052,7 +1052,7 @@ static void CreateAssistantSkillList()
                { "limit", "max results (default: 100)", "integer" }
             },
             F_SearchSnmpTraps),
-         AssistantFunction(
+         AITool(
             "search-events",
             "Search NetXMS system events generated by thresholds, polling, and scripts.",
             {
@@ -1067,7 +1067,7 @@ static void CreateAssistantSkillList()
                { "limit", "max results (default: 100)", "integer" }
             },
             F_SearchEvents),
-         AssistantFunction(
+         AITool(
             "get-log-statistics",
             "Get log volume statistics for capacity planning and trend analysis.",
             {
@@ -1078,7 +1078,7 @@ static void CreateAssistantSkillList()
                { "group_by", "grouping: hour, day, source, severity (default: hour)" }
             },
             F_GetLogStatistics),
-         AssistantFunction(
+         AITool(
             "correlate-logs",
             "Cross-correlate log entries across multiple sources within a time window for root cause analysis.",
             {
@@ -1090,7 +1090,7 @@ static void CreateAssistantSkillList()
                { "limit_per_source", "max entries per source (default: 50)", "integer" }
             },
             F_CorrelateLogs),
-         AssistantFunction(
+         AITool(
             "analyze-log-patterns",
             "Analyze log patterns for anomaly detection, burst identification, recurring patterns, and new message detection.",
             {
@@ -1104,26 +1104,26 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "device-backup",
       "Provides device configuration backup management capabilities for NetXMS monitored network devices. Use this skill to check backup registration status, list available backups, retrieve configuration content, trigger on-demand backups, and compare configurations across backup versions for change analysis, compliance auditing, and troubleshooting.",
       "@device-backup.md",
       {
-         AssistantFunction(
+         AITool(
             "get-backup-status",
             "Check if a device is registered for configuration backup and get last backup job status.",
             {
                { "object", "name or ID of a node (mandatory)" }
             },
             F_GetBackupStatus),
-         AssistantFunction(
+         AITool(
             "get-backup-list",
             "Get list of available configuration backups for a device with timestamps, sizes, and SHA-256 hashes.",
             {
                { "object", "name or ID of a node (mandatory)" }
             },
             F_GetBackupList),
-         AssistantFunction(
+         AITool(
             "get-backup-content",
             "Get full configuration content from a specific backup or the latest backup. Returns both running and startup configs.",
             {
@@ -1131,14 +1131,14 @@ static void CreateAssistantSkillList()
                { "backupId", "backup ID to retrieve (optional, defaults to latest backup)", "integer" }
             },
             F_GetBackupContent),
-         AssistantFunction(
+         AITool(
             "start-backup",
             "Trigger an immediate device configuration backup job. Device must be registered for backup.",
             {
                { "object", "name or ID of a node (mandatory)" }
             },
             F_StartBackup),
-         AssistantFunction(
+         AITool(
             "compare-backups",
             "Get two backup configurations side by side for diff comparison.",
             {
@@ -1151,24 +1151,24 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "dashboard-building",
       "Provides capabilities for building and editing NetXMS dashboards from natural-language requests. Use this skill to create a new dashboard and incrementally add, configure, reorder, or remove visualization elements such as charts, network maps, alarm viewers, and status maps. The dashboard is built one element at a time with per-element validation. Discover supported element types with list-dashboard-element-types and their configuration schemas with describe-dashboard-element-type before adding elements. Use the existing data collection tools (e.g. get-metrics) to resolve node and DCI identifiers for chart elements.",
       "@dashboard-building.md",
       {
-         AssistantFunction(
+         AITool(
             "list-dashboard-element-types",
             "List all supported dashboard element types with a one-line description of each. Call this first to discover what can be placed on a dashboard.",
             {},
             F_ListDashboardElementTypes),
-         AssistantFunction(
+         AITool(
             "describe-dashboard-element-type",
             "Get the full configuration schema and a filled example for one dashboard element type.",
             {
                { "type", "element type name as returned by list-dashboard-element-types (mandatory)" }
             },
             F_DescribeDashboardElementType),
-         AssistantFunction(
+         AITool(
             "create-dashboard",
             "Create a new empty dashboard. Returns the new dashboard ID used by the other dashboard tools.",
             {
@@ -1179,14 +1179,14 @@ static void CreateAssistantSkillList()
                { "associateWith", "name or ID of an object to associate the dashboard with (optional)" }
             },
             F_CreateDashboard),
-         AssistantFunction(
+         AITool(
             "get-dashboard",
             "Read back a dashboard: its column count and ordered list of elements, each with its stable GUID, type, layout, and configuration. Use the GUIDs to target update/remove/move operations.",
             {
                { "dashboard", "name or ID of the dashboard (mandatory)" }
             },
             F_GetDashboard),
-         AssistantFunction(
+         AITool(
             "update-dashboard",
             "Update dashboard-level properties. Only the properties supplied are changed; omitted ones are left as-is.",
             {
@@ -1196,7 +1196,7 @@ static void CreateAssistantSkillList()
                { "scrollable", "whether the dashboard is scrollable vertically; set true for dashboards with many rows of charts so they are not squeezed into the visible area (optional)", "boolean" }
             },
             F_UpdateDashboard),
-         AssistantFunction(
+         AITool(
             "add-dashboard-element",
             "Append a configured element to a dashboard. References to non-existent or inaccessible objects/DCIs are rejected and the element is not added.",
             {
@@ -1208,7 +1208,7 @@ static void CreateAssistantSkillList()
                { "grabVerticalSpace", "whether the element grabs extra vertical space (default true); set false for labels so they take only their natural height", "boolean" }
             },
             F_AddDashboardElement),
-         AssistantFunction(
+         AITool(
             "update-dashboard-element",
             "Replace the configuration (and optionally the layout) of an existing element identified by its GUID.",
             {
@@ -1220,7 +1220,7 @@ static void CreateAssistantSkillList()
                { "grabVerticalSpace", "optional: whether the element grabs extra vertical space; set false for labels so they take only their natural height", "boolean" }
             },
             F_UpdateDashboardElement),
-         AssistantFunction(
+         AITool(
             "remove-dashboard-element",
             "Remove an element from a dashboard by its GUID.",
             {
@@ -1228,7 +1228,7 @@ static void CreateAssistantSkillList()
                { "guid", "GUID of the element to remove (mandatory)" }
             },
             F_RemoveDashboardElement),
-         AssistantFunction(
+         AITool(
             "move-dashboard-element",
             "Move an element to a new position in the dashboard's element order. The element GUID is preserved.",
             {
@@ -1240,26 +1240,26 @@ static void CreateAssistantSkillList()
       }
    );
 
-   RegisterAIAssistantSkill(
+   RegisterAISkill(
       "web-services",
       "Provides access to NetXMS web service definitions and the ability to actually call them. Use this skill to inspect configured web services, retrieve a live response document from a REST or HTTP API and analyze its structure, verify that a JSON or XML data extraction path resolves to the expected value, and create or update web service definitions. Essential when setting up web service based data collection (data collection items with origin websvc) and when troubleshooting web service metrics that return no data or wrong values.",
       "@web-services.md",
       {
-         AssistantFunction(
+         AITool(
             "list-web-services",
             "Get list of configured web service definitions with their URL, HTTP method, authentication type, timeouts, and headers. Credentials are never returned. Use this to find out which web services are already configured before creating a new one.",
             {
                { "filter", "optional filter to select definitions by name, description, or URL (partial match, case insensitive)" }
             },
             F_ListWebServices),
-         AssistantFunction(
+         AITool(
             "get-web-service",
             "Get full configuration of a single web service definition, including the metric name template to use when creating a data collection item based on it. Credentials are never returned.",
             {
                { "service", "name or ID of the web service definition (mandatory)" }
             },
             F_GetWebService),
-         AssistantFunction(
+         AITool(
             "query-web-service",
             "Call a web service against a monitored object and return the raw response document, HTTP response code, and the actual URL that was called. The request is sent by the agent on the object's effective web service proxy, exactly as it would be during data collection, and always hits the live service rather than the agent response cache. Use this to see what an API actually returns before proposing data extraction paths, and to diagnose failing web service metrics. Large documents are truncated.",
             {
@@ -1268,7 +1268,7 @@ static void CreateAssistantSkillList()
                { "args", "optional array of string arguments substituted into URL and headers as macros $1, $2, and so on", "array", "string" }
             },
             F_QueryWebService),
-         AssistantFunction(
+         AITool(
             "test-web-service-path",
             "Resolve a data extraction path against a web service response and return the extracted value or list of values. Path syntax is JSONPath for JSON responses and XPath for XML responses. Use this to confirm that a path proposed from the response document actually works before creating a data collection item; on success the exact metric name for that item is returned. Note that the response may come from the agent response cache according to the definition's cache retention time.",
             {
@@ -1279,9 +1279,9 @@ static void CreateAssistantSkillList()
                { "args", "optional array of string arguments substituted into URL and headers as macros $1, $2, and so on", "array", "string" }
             },
             F_TestWebServicePath),
-         AssistantFunction(
+         AITool(
             "create-web-service",
-            "Create new web service definition. Prefer asking the user to configure credentials in the management client instead of passing them here, because everything passed to this function is sent to the configured AI provider.",
+            "Create new web service definition. Prefer asking the user to configure credentials in the management client instead of passing them here, because everything passed to this tool is sent to the configured AI provider.",
             {
                { "name", "definition name, used as first part of metric name in data collection items (mandatory)" },
                { "url", "service URL, may contain macros expanded in context of the queried object (mandatory)" },
@@ -1300,7 +1300,7 @@ static void CreateAssistantSkillList()
                { "force_plain_text_parser", "treat response as plain text instead of detecting JSON or XML (default: false)", "boolean" }
             },
             F_CreateWebService),
-         AssistantFunction(
+         AITool(
             "update-web-service",
             "Update existing web service definition. Only provided properties are changed, all others keep their current values. Credentials that are not provided are preserved.",
             {
@@ -1332,8 +1332,8 @@ static void CreateAssistantSkillList()
 static bool InitializeModule(Config *config)
 {
    AddAIAssistantPromptFromFile(L"overview.md");
-   CreateAssistantFunctionList();
-   CreateAssistantSkillList();
+   CreateAIToolList();
+   CreateAISkillList();
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"AI assistant tools module version " NETXMS_VERSION_STRING L" initialized");
    return true;
 }

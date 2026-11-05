@@ -435,7 +435,7 @@ bool WebApiClient::getStatus(uint32_t chatId, ChatStatus *status)
 
    status->response = json_object_get_string_utf8(document, "response", "");
    status->errorMessage = json_object_get_string_utf8(document, "errorMessage", "");
-   status->currentFunction = json_object_get_string_utf8(document, "currentFunction", "");
+   status->currentTool = json_object_get_string_utf8(document, "currentTool", "");
    status->question.loadFromJson(json_object_get(document, "pendingQuestion"));
 
    json_decref(document);
@@ -488,7 +488,7 @@ bool WebApiClient::waitForResponse(uint32_t chatId, ChatResponse *response, cons
       }
 
       if (progressCallback)
-         progressCallback(!status.currentFunction.empty() ? status.currentFunction.c_str() : nullptr);
+         progressCallback(!status.currentTool.empty() ? status.currentTool.c_str() : nullptr);
 
       if (elapsed >= m_responseTimeout)
       {

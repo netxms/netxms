@@ -64,7 +64,7 @@ struct AIMessageRecipient
 };
 
 /**
- * AI agent message
+ * AI message
  */
 class NXCORE_EXPORTABLE AIMessage
 {
@@ -74,8 +74,8 @@ private:
    AIMessageType m_type;
    time_t m_creationTime;
    time_t m_expirationTime;
-   uint32_t m_sourceTaskId;
-   TCHAR m_sourceTaskType[64];
+   char m_originType;      // AIChatOrigin code of the chat that created the message (0 if unknown)
+   uint32_t m_originId;    // task or operator instance ID; chat ID for chat origin
    uint32_t m_relatedObjectId;
    TCHAR m_title[256];
    TCHAR *m_text;
@@ -92,7 +92,7 @@ private:
 
 public:
    AIMessage(uint32_t id, AIMessageType type, const TCHAR *title, const TCHAR *text,
-             uint32_t relatedObjectId = 0, uint32_t sourceTaskId = 0, const TCHAR *sourceTaskType = nullptr,
+             uint32_t relatedObjectId = 0, char originType = 0, uint32_t originId = 0,
              const TCHAR *spawnTaskData = nullptr, uint32_t expirationMinutes = 10080);
    AIMessage(DB_RESULT hResult, int row);
    ~AIMessage();
@@ -102,8 +102,8 @@ public:
    AIMessageType getType() const { return m_type; }
    time_t getCreationTime() const { return m_creationTime; }
    time_t getExpirationTime() const { return m_expirationTime; }
-   uint32_t getSourceTaskId() const { return m_sourceTaskId; }
-   const TCHAR *getSourceTaskType() const { return m_sourceTaskType; }
+   char getOriginType() const { return m_originType; }
+   uint32_t getOriginId() const { return m_originId; }
    uint32_t getRelatedObjectId() const { return m_relatedObjectId; }
    const TCHAR *getTitle() const { return m_title; }
    const TCHAR *getText() const { return m_text; }
@@ -135,22 +135,19 @@ void InitializeAIMessageManager();
 void ShutdownAIMessageManager();
 
 /**
- * Create AI message
+ * Create AI message. Origin (chat, AI task, or AI operator) is taken from the AI chat executing on the calling thread, if any.
  * @param type Message type
  * @param title Short title
  * @param text Full message text
  * @param initiatorUserId ID of user who initiated the task
  * @param relatedObjectId Related NetXMS object ID (optional)
- * @param sourceTaskId Source task ID (optional)
- * @param sourceTaskType Source task type (optional)
  * @param spawnTaskData JSON data for task spawning on approval (optional)
  * @param expirationMinutes Minutes until message expires
  * @param includeResponsibleUsers Add responsible users as recipients
  * @return Message ID on success, 0 on failure
  */
 uint32_t NXCORE_EXPORTABLE CreateAIMessage(AIMessageType type, const TCHAR *title, const TCHAR *text,
-   uint32_t initiatorUserId, uint32_t relatedObjectId = 0, uint32_t sourceTaskId = 0,
-   const TCHAR *sourceTaskType = nullptr, const TCHAR *spawnTaskData = nullptr,
+   uint32_t initiatorUserId, uint32_t relatedObjectId = 0, const TCHAR *spawnTaskData = nullptr,
    uint32_t expirationMinutes = 10080, bool includeResponsibleUsers = false);
 
 /**
@@ -207,12 +204,12 @@ uint32_t NXCORE_EXPORTABLE DeleteAIMessage(uint32_t messageId, uint32_t userId);
 void NotifyAIMessageRecipients(uint32_t messageId, bool isNew);
 
 /**
- * Create AI message (AI function)
+ * Create AI message (AI tool)
  */
 std::string F_CreateAIMessage(json_t *arguments, uint32_t userId);
 
 /**
- * Create approval request AI message (AI function)
+ * Create approval request AI message (AI tool)
  */
 std::string F_CreateApprovalRequest(json_t *arguments, uint32_t userId);
 

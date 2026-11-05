@@ -132,7 +132,7 @@ uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId);
 
 uint64_t StartFileUploadToAgent(const shared_ptr<Node>& node, const TCHAR *localFile, const TCHAR *remoteFile, uint32_t userId);
 
-void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId);
+void FillAITaskListMessage(NXCPMessage *msg, uint32_t userId);
 
 void ExportSyslogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
 void ExportWinlogParserRulesJSON(const NXCPMessage& request, long countFieldId, long baseId, json_t *object);
@@ -2271,22 +2271,22 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_REQUEST_AI_ASSISTANT_COMMENT:
          requestAiAssistantComment(*request);
          break;
-      case CMD_GET_AI_SKILLS_AND_FUNCTIONS:
-         getAiSkillsAndFunctions(*request);
+      case CMD_GET_AI_SKILLS_AND_TOOLS:
+         getAiSkillsAndTools(*request);
          break;
       case CMD_MODIFY_AI_DISABLED_LIST:
          modifyAiDisabledList(*request);
          break;
-      case CMD_GET_AI_AGENT_TASKS:
-         getAiAgentTasks(*request);
+      case CMD_GET_AI_TASKS:
+         getAiTasks(*request);
          break;
-      case CMD_DELETE_AI_AGENT_TASK:
-         deleteAiAgentTask(*request);
+      case CMD_DELETE_AI_TASK:
+         deleteAiTask(*request);
          break;
-      case CMD_ADD_AI_AGENT_TASK:
-         addAiAgentTask(*request);
+      case CMD_ADD_AI_TASK:
+         addAiTask(*request);
          break;
-      case CMD_AI_AGENT_RESPONSE:
+      case CMD_AI_ASSISTANT_RESPONSE:
          handleAiQuestionResponse(*request);
          break;
       case CMD_GET_AI_MESSAGES:
@@ -21309,12 +21309,12 @@ void ClientSession::requestAiAssistantComment(const NXCPMessage& request)
 /**
  * Get list of AI skills and functions (with disabled status)
  */
-void ClientSession::getAiSkillsAndFunctions(const NXCPMessage& request)
+void ClientSession::getAiSkillsAndTools(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_SKILLS) || checkSystemAccessRights(SYSTEM_ACCESS_USE_AI_ASSISTANT))
    {
-      FillAISkillsAndFunctionsMessage(&response);
+      FillAISkillsAndToolsMessage(&response);
       response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
@@ -21364,20 +21364,20 @@ void ClientSession::modifyAiDisabledList(const NXCPMessage& request)
 }
 
 /**
- * Get AI agent tasks
+ * Get AI tasks
  */
-void ClientSession::getAiAgentTasks(const NXCPMessage& request)
+void ClientSession::getAiTasks(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   FillAIAgentTaskListMessage(&response, m_userId);
+   FillAITaskListMessage(&response, m_userId);
    response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }
 
 /**
- * Delete AI agent task
+ * Delete AI task
  */
-void ClientSession::deleteAiAgentTask(const NXCPMessage& request)
+void ClientSession::deleteAiTask(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t taskId = request.getFieldAsUInt32(VID_TASK_ID);
@@ -21385,19 +21385,19 @@ void ClientSession::deleteAiAgentTask(const NXCPMessage& request)
    response.setField(VID_RCC, rcc);
    if (rcc == RCC_SUCCESS)
    {
-      writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI agent task %u deleted", taskId);
+      writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI task %u deleted", taskId);
    }
    else if (rcc == RCC_ACCESS_DENIED)
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting AI agent task %u", taskId);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting AI task %u", taskId);
    }
    sendMessage(response);
 }
 
 /**
- * Add AI agent task
+ * Add AI task
  */
-void ClientSession::addAiAgentTask(const NXCPMessage& request)
+void ClientSession::addAiTask(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSystemAccessRights(SYSTEM_ACCESS_USE_AI_ASSISTANT) || checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_TASKS))
@@ -21409,7 +21409,7 @@ void ClientSession::addAiAgentTask(const NXCPMessage& request)
          uint32_t taskId = RegisterAITask(description, m_userId, prompt);
          response.setField(VID_RCC, RCC_SUCCESS);
          response.setField(VID_TASK_ID, taskId);
-         writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI agent task %u added", taskId);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI task %u added", taskId);
       }
       else
       {
@@ -21421,16 +21421,16 @@ void ClientSession::addAiAgentTask(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on adding AI agent task");
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on adding AI task");
    }
    sendMessage(response);
 }
 
 /**
- * Handle AI agent question response from client
+ * Handle AI assistant question response from client
  *
  * Called by:
- * CMD_AI_AGENT_RESPONSE
+ * CMD_AI_ASSISTANT_RESPONSE
  *
  * Expected input parameters:
  * VID_CHAT_ID              Chat ID
@@ -21799,7 +21799,7 @@ void ClientSession::deleteAiOperator(const NXCPMessage& request)
 }
 
 /**
- * Reset AI operator instance accumulated state (memento, focus, watch list, iteration counter)
+ * Reset AI operator instance accumulated state (memento, focus, watch list, cycle counter)
  *
  * Called by:
  * CMD_RESET_AI_OPERATOR

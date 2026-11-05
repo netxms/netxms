@@ -59,7 +59,7 @@ import org.xnap.commons.i18n.I18n;
 public class AiOperatorInstructions extends PropertyPage
 {
    private static final int COLUMN_TIMESTAMP = 0;
-   private static final int COLUMN_ITERATION = 1;
+   private static final int COLUMN_CYCLE = 1;
    private static final int COLUMN_TEXT = 2;
 
    private final I18n i18n = LocalizationHelper.getI18n(AiOperatorInstructions.class);
@@ -119,7 +119,7 @@ public class AiOperatorInstructions extends PropertyPage
          gd.verticalIndent = WidgetHelper.OUTER_SPACING;
          label.setLayoutData(gd);
 
-         final String[] columnNames = { i18n.tr("Changed"), i18n.tr("Iteration"), i18n.tr("Previous text") };
+         final String[] columnNames = { i18n.tr("Changed"), i18n.tr("Cycle"), i18n.tr("Previous text") };
          final int[] columnWidths = { 150, 70, 300 };
          historyViewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, COLUMN_TIMESTAMP, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION);
          historyViewer.setContentProvider(new ArrayContentProvider());
@@ -270,8 +270,8 @@ public class AiOperatorInstructions extends PropertyPage
          {
             case COLUMN_TIMESTAMP:
                return (record.getTimestamp() != null) ? DateFormatFactory.getDateTimeFormat().format(record.getTimestamp()) : "";
-            case COLUMN_ITERATION:
-               return Integer.toString(record.getIteration());
+            case COLUMN_CYCLE:
+               return Integer.toString(record.getCycle());
             case COLUMN_TEXT:
                String text = record.getPreviousText();
                int newline = text.indexOf('\n');

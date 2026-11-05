@@ -53,7 +53,7 @@ public class AiOperator
    private boolean instructionsModified;
    private Date lastExecutionTime;
    private Date nextExecutionTime;
-   private int iteration;
+   private int cycle;
    private int consecutiveFailures;
    private String lastExplanation;
    private Date creationTime;
@@ -89,7 +89,7 @@ public class AiOperator
       instructionsModified = false;
       lastExecutionTime = null;
       nextExecutionTime = null;
-      iteration = 0;
+      cycle = 0;
       consecutiveFailures = 0;
       lastExplanation = "";
       creationTime = null;
@@ -124,7 +124,7 @@ public class AiOperator
       observationMaxRecords = msg.getFieldAsInt32(baseId + 17);
       lastExecutionTime = msg.getFieldAsDate(baseId + 18);
       nextExecutionTime = msg.getFieldAsDate(baseId + 19);
-      iteration = msg.getFieldAsInt32(baseId + 20);
+      cycle = msg.getFieldAsInt32(baseId + 20);
       consecutiveFailures = msg.getFieldAsInt32(baseId + 21);
       lastExplanation = msg.getFieldAsString(baseId + 22);
       creationTime = msg.getFieldAsDate(baseId + 23);
@@ -238,7 +238,7 @@ public class AiOperator
    }
 
    /**
-    * @return true if an iteration is currently running
+    * @return true if a cycle is currently running
     */
    public boolean isExecuting()
    {
@@ -366,7 +366,7 @@ public class AiOperator
    }
 
    /**
-    * @return state carried between iterations by the operator itself
+    * @return state carried between cycles by the operator itself
     */
    public String getMemento()
    {
@@ -422,11 +422,11 @@ public class AiOperator
    }
 
    /**
-    * @return number of completed iterations
+    * @return number of completed cycles
     */
-   public int getIteration()
+   public int getCycle()
    {
-      return iteration;
+      return cycle;
    }
 
    /**

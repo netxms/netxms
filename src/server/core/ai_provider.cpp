@@ -51,6 +51,14 @@ LLMTokenUsage NXCORE_EXPORTABLE *SetLLMTokenUsageCollector(LLMTokenUsage *collec
 }
 
 /**
+ * Get LLM token usage collector set for calling thread
+ */
+LLMTokenUsage NXCORE_EXPORTABLE *GetLLMTokenUsageCollector()
+{
+   return s_tokenUsageCollector;
+}
+
+/**
  * LLMProvider constructor
  */
 LLMProvider::LLMProvider(const LLMProviderConfig& config) : m_config(config), m_totalRequests(0), m_totalInputTokens(0), m_totalOutputTokens(0), m_failedRequests(0)

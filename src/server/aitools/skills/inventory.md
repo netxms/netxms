@@ -4,7 +4,7 @@ This skill provides comprehensive inventory management capabilities for NetXMS m
 
 ## Hardware Inventory
 
-Use the hardware inventory functions to discover and analyze physical components of monitored devices:
+Use the hardware inventory tools to discover and analyze physical components of monitored devices:
 
 - **CPUs and Processors**: Get detailed information about installed processors, cores, and architecture
 - **Memory Modules**: Discover RAM modules, capacity, speed, and configuration
@@ -16,7 +16,7 @@ Use the hardware inventory functions to discover and analyze physical components
 
 ## Software Inventory
 
-Use software inventory functions to track installed applications and system components:
+Use software inventory tools to track installed applications and system components:
 
 - **Installed Packages**: Get comprehensive list of installed software packages
 - **Version Tracking**: Monitor software versions and updates
@@ -57,7 +57,7 @@ When working with inventory data:
 
 ## Integration Notes
 
-The inventory functions work with:
+The inventory tools work with:
 - Windows systems via WMI and NetXMS agent
 - Linux/Unix systems via NetXMS agent
 - Network devices via SNMP (where supported)

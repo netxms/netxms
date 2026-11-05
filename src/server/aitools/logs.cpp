@@ -484,7 +484,7 @@ std::string F_GetLogSchema(json_t *arguments, uint32_t userId)
 }
 
 /**
- * Unified log search function
+ * Unified log search tool
  */
 std::string F_SearchLog(json_t *arguments, uint32_t userId)
 {

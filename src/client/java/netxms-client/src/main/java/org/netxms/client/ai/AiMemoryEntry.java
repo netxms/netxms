@@ -25,7 +25,7 @@ import org.netxms.client.constants.AiMemoryScope;
 
 /**
  * AI memory entry: fact about the monitored environment, note about a user, or note about an object that persists
- * across AI assistant chats, AI tasks, and AI operator iterations.
+ * across AI assistant chats, AI tasks, and AI operator cycles.
  */
 public class AiMemoryEntry
 {
@@ -40,7 +40,7 @@ public class AiMemoryEntry
    public static final char SOURCE_TASK = 'T';
 
    /**
-    * Source type of entries written by the model during AI operator iteration
+    * Source type of entries written by the model during AI operator cycle
     */
    public static final char SOURCE_OPERATOR = 'O';
 

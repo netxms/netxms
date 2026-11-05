@@ -43,7 +43,7 @@ Calling `query-web-service` first refreshes the cached document, so the usual or
 ## Setting up a new web service metric
 
 1. Call `list-web-services` to check whether a suitable definition already exists.
-2. If not, create one with `create-web-service`. The URL and authentication details must come from the user; if they were not provided, ask for them (or, when running as a delegated task, report them as missing instead of inventing values).
+2. If not, create one with `create-web-service`. The URL and authentication details must come from the user; if they were not provided, ask for them (or, when running in a worker, report them as missing instead of inventing values).
 3. Call `query-web-service` for the object that will collect the data, and read the returned document to understand its structure.
 4. Propose one or more extraction paths and verify each with `test-web-service-path`. Never propose a path without verifying it - a path that looks correct against the document may still fail, for example because of the array indexing rules of the parser.
 5. Use the `dciMetricName` returned by a successful path test as the `metric` argument of `create-metric` in the data-collection skill, with `origin` set to `websvc`.
@@ -59,7 +59,7 @@ Calling `query-web-service` first refreshes the cached document, so the usual or
 
 ## Security
 
-- Passwords are never returned by any function in this skill, and bearer tokens are reported as `***`. Header values that look like secrets are also hidden. Do not ask the user to repeat a credential just to display it.
+- Passwords are never returned by any tool in this skill, and bearer tokens are reported as `***`. Header values that look like secrets are also hidden. Do not ask the user to repeat a credential just to display it.
 - Everything passed to `create-web-service` and `update-web-service` is sent to the configured AI provider. When credentials must be set, prefer telling the user to enter them in the management client rather than typing them into the chat.
 - Reading and changing definitions requires the "Configure web service definitions" system right; querying a web service requires the "Query web services" right on the target object. Report an access denied result to the user rather than trying another object.
 

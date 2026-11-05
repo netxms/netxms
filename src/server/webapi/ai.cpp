@@ -202,8 +202,8 @@ int H_AiChatGetStatus(Context *context)
          }
          // Include currently executing function name if any
          {
-            const char *currentFunction = chat->getCurrentFunction();
-            json_object_set_new(response, "currentFunction", currentFunction != nullptr ? json_string(currentFunction) : json_null());
+            const char *currentTool = chat->getCurrentTool();
+            json_object_set_new(response, "currentTool", currentTool != nullptr ? json_string(currentTool) : json_null());
          }
          break;
 
@@ -398,9 +398,9 @@ int H_AiChatDelete(Context *context)
 }
 
 /**
- * Handler for GET /v1/ai/skills-and-functions - get all registered skills, functions, and unmatched stop list entries
+ * Handler for GET /v1/ai/skills-and-tools - get all registered skills, tools, and unmatched stop list entries
  */
-int H_AiSkillsAndFunctions(Context *context)
+int H_AiSkillsAndTools(Context *context)
 {
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_SKILLS) &&
        !context->checkSystemAccessRights(SYSTEM_ACCESS_USE_AI_ASSISTANT))
@@ -411,8 +411,7 @@ int H_AiSkillsAndFunctions(Context *context)
    json_t *skills = GetAISkillsAsJson();
    json_object_set_new(response, "skills", skills);
 
-   json_t *functions = GetAIFunctionsAsJson();
-   json_object_set_new(response, "functions", functions);
+   json_object_set_new(response, "tools", GetAIToolsAsJson());
 
    json_t *extras = GetAIDisabledExtrasAsJson();
    json_object_set_new(response, "disabledExtras", extras);
@@ -420,6 +419,32 @@ int H_AiSkillsAndFunctions(Context *context)
    context->setResponseData(response);
    json_decref(response);
    return 200;
+}
+
+/**
+ * Convert external disabled item type name ("skill" or "tool") to internal type code. Returns 0 if name is not valid.
+ */
+static char DisabledItemTypeFromName(const char *name)
+{
+   if (name == nullptr)
+      return 0;
+   if (!strcmp(name, "skill"))
+      return 'S';
+   if (!strcmp(name, "tool"))
+      return 'F';
+   return 0;
+}
+
+/**
+ * Convert external disabled item type name ("skill" or "tool") to internal type code. Returns 0 if name is not valid.
+ */
+static char DisabledItemTypeFromName(const wchar_t *name)
+{
+   if (!wcscmp(name, L"skill"))
+      return 'S';
+   if (!wcscmp(name, L"tool"))
+      return 'F';
+   return 0;
 }
 
 /**
@@ -434,10 +459,10 @@ int H_AiDisabledItemCreate(Context *context)
    if (request == nullptr)
       return 400;
 
-   const char *type = json_object_get_string_utf8(request, "type", nullptr);
-   if (type == nullptr || (type[0] != 'S' && type[0] != 'F') || type[1] != '\0')
+   char type = DisabledItemTypeFromName(json_object_get_string_utf8(request, "type", nullptr));
+   if (type == 0)
    {
-      context->setErrorResponse("Invalid or missing \"type\" field (must be \"S\" or \"F\")");
+      context->setErrorResponse("Invalid or missing \"type\" field (must be \"skill\" or \"tool\")");
       return 400;
    }
 
@@ -448,13 +473,13 @@ int H_AiDisabledItemCreate(Context *context)
       return 400;
    }
 
-   if (!AddAIDisabledItem(type[0], name))
+   if (!AddAIDisabledItem(type, name))
    {
       context->setErrorResponse("Database failure");
       return 500;
    }
 
-   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI %s \"%hs\" added to disabled list", (type[0] == 'S') ? L"skill" : L"function", name);
+   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI %s \"%hs\" added to disabled list", (type == 'S') ? L"skill" : L"tool", name);
    return 204;
 }
 
@@ -466,10 +491,11 @@ int H_AiDisabledItemDelete(Context *context)
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_SKILLS))
       return 403;
 
-   const wchar_t *itemType = context->getPlaceholderValue(L"item-type");
-   if (itemType == nullptr || (itemType[0] != 'S' && itemType[0] != 'F') || itemType[1] != 0)
+   const wchar_t *itemTypeName = context->getPlaceholderValue(L"item-type");
+   char itemType = (itemTypeName != nullptr) ? DisabledItemTypeFromName(itemTypeName) : 0;
+   if (itemType == 0)
    {
-      context->setErrorResponse("Invalid item type (must be \"S\" or \"F\")");
+      context->setErrorResponse("Invalid item type (must be \"skill\" or \"tool\")");
       return 400;
    }
 
@@ -483,13 +509,13 @@ int H_AiDisabledItemDelete(Context *context)
    char name[128];
    wchar_to_utf8(itemName, -1, name, sizeof(name));
 
-   if (!RemoveAIDisabledItem(static_cast<char>(itemType[0]), name))
+   if (!RemoveAIDisabledItem(itemType, name))
    {
       context->setErrorResponse("Database failure");
       return 500;
    }
 
-   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI %s \"%hs\" removed from disabled list", (itemType[0] == 'S') ? L"skill" : L"function", name);
+   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI %s \"%hs\" removed from disabled list", (itemType == 'S') ? L"skill" : L"tool", name);
    return 204;
 }
 

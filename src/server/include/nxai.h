@@ -16,62 +16,63 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: iris.h
+** File: nxai.h
 **
 **/
 
-#ifndef _iris_h_
-#define _iris_h_
+#ifndef _nxai_h_
+#define _nxai_h_
 
 #include <unordered_map>
 #include <unordered_set>
+#include <atomic>
 
 #define AI_ASSISTANT_COMPONENT   L"AI-ASSISTANT"
 
 /**
- * AI assistant function handler
+ * AI tool handler
  */
-typedef std::function<std::string(json_t*, uint32_t)> AssistantFunctionHandler;
+typedef std::function<std::string(json_t*, uint32_t)> AIToolHandler;
 
 /**
- * Assistant function parameter descriptor. Type names follow JSON schema: "string", "integer", "number", "boolean", "array", "object".
- * For "array" parameters itemType gives the type of array elements.
+ * AI tool descriptor
  */
-struct AssistantFunctionParameter
+struct AITool
 {
-   std::string name;
-   std::string description;
-   std::string type;
-   std::string itemType;
-
-   AssistantFunctionParameter(const char *name, const char *description, const char *type = "string", const char *itemType = "string")
-      : name(name), description(description), type(type), itemType(itemType)
+   /**
+    * Tool parameter descriptor. Type names follow JSON schema: "string", "integer", "number", "boolean", "array", "object".
+    * For "array" parameters itemType gives the type of array elements. Nested to avoid clash with agent-side AITool::Parameter.
+    */
+   struct Parameter
    {
-   }
-};
+      std::string name;
+      std::string description;
+      std::string type;
+      std::string itemType;
 
-/**
- * Assistant function descriptor
- */
-struct AssistantFunction
-{
+      Parameter(const char *name, const char *description, const char *type = "string", const char *itemType = "string")
+         : name(name), description(description), type(type), itemType(itemType)
+      {
+      }
+   };
+
    std::string name;
    std::string description;
-   std::vector<AssistantFunctionParameter> parameters;
-   AssistantFunctionHandler handler;
-   bool chatOnly;  // Function only makes sense within interactive chat context and is not exposed to MCP clients
+   std::vector<Parameter> parameters;
+   AIToolHandler handler;
+   bool chatOnly;  // Tool only makes sense within interactive chat context and is not exposed to MCP clients
 
-   AssistantFunction(const std::string& name, const std::string& description,
-      const std::vector<AssistantFunctionParameter>& parameters, AssistantFunctionHandler handler, bool chatOnly = false)
+   AITool(const std::string& name, const std::string& description,
+      const std::vector<Parameter>& parameters, AIToolHandler handler, bool chatOnly = false)
       : name(name), description(description), parameters(parameters), handler(handler), chatOnly(chatOnly)
    {
    }
 };
 
 /**
- * Set of AI assistant functions
+ * Set of AI tools
  */
-typedef std::unordered_map<std::string, shared_ptr<AssistantFunction>> AssistantFunctionSet;
+typedef std::unordered_map<std::string, shared_ptr<AITool>> AIToolSet;
 
 /**
  * AI task state
@@ -139,7 +140,7 @@ private:
    StringBuffer m_explanation;
    String m_description;
    AITaskState m_state;
-   uint32_t m_iteration;
+   uint32_t m_runCount;
 
    // Runtime state (not persisted), protected by AI task list lock
    bool m_executing;
@@ -160,7 +161,7 @@ public:
    AITaskState getState() const { return m_state; }
    time_t getLastExecutionTime() const { return m_lastExecutionTime; }
    time_t getNextExecutionTime() const { return m_nextExecutionTime; }
-   uint32_t getIteration() const { return m_iteration; }
+   uint32_t getRunCount() const { return m_runCount; }
    String getExplanation() const { return GetAttributeWithLock<String>(m_explanation, m_mutex); }
    bool isExecuting() const { return m_executing; }
    void setExecuting() { m_executing = true; }
@@ -190,7 +191,7 @@ enum class AIObservationState
  */
 enum class AICheckAction
 {
-   WAKE = 0,      // Queue an out-of-schedule iteration of the owning instance
+   WAKE = 0,      // Queue an out-of-schedule cycle of the owning instance
    OBSERVE = 1    // Record an observation directly, without LLM involvement
 };
 
@@ -366,7 +367,7 @@ private:
    bool m_instructionsLocked;    // Set by a human; model updates are ignored while set
    time_t m_lastExecutionTime;
    time_t m_nextExecutionTime;
-   uint32_t m_iteration;
+   uint32_t m_cycle;
    time_t m_creationTime;
    time_t m_modificationTime;
 
@@ -401,7 +402,7 @@ public:
    void setExecuting() { m_executing = true; }
    time_t getNextExecutionTime() const { return m_nextExecutionTime; }
    time_t getLastExecutionTime() const { return m_lastExecutionTime; }
-   uint32_t getIteration() const { return m_iteration; }
+   uint32_t getCycle() const { return m_cycle; }
    int64_t getTokensUsedToday() const { return m_tokensUsed; }
    uint32_t getObservationRetentionDays() const { return m_observationRetentionDays; }
    uint32_t getObservationMaxRecords() const { return m_observationMaxRecords; }
@@ -473,7 +474,7 @@ uint32_t NXCORE_EXPORTABLE DeleteAIOperatorInstance(uint32_t instanceId);
 uint32_t NXCORE_EXPORTABLE SetAIOperatorInstanceEnabled(uint32_t instanceId, bool enabled);
 
 /**
- * Reset AI operator instance accumulated state (memento, focus, watch list, iteration counter)
+ * Reset AI operator instance accumulated state (memento, focus, watch list, cycle counter)
  */
 uint32_t NXCORE_EXPORTABLE ResetAIOperatorInstanceMemento(uint32_t instanceId);
 
@@ -573,8 +574,25 @@ enum class AIChatOrigin : char
 {
    CHAT = 'C',         // interactive chat, chat bot session, or one-shot request
    AI_TASK = 'T',      // AI task execution
-   AI_OPERATOR = 'O'   // AI operator instance iteration
+   AI_OPERATOR = 'O'   // AI operator instance cycle
 };
+
+/**
+ * Get symbolic name of chat origin code for external representation (returns "unknown" for unrecognized code)
+ */
+static inline const char *AIChatOriginName(char origin)
+{
+   switch(origin)
+   {
+      case static_cast<char>(AIChatOrigin::CHAT):
+         return "chat";
+      case static_cast<char>(AIChatOrigin::AI_TASK):
+         return "task";
+      case static_cast<char>(AIChatOrigin::AI_OPERATOR):
+         return "operator";
+   }
+   return "unknown";
+}
 
 /**
  * Source type of memory entry written by human
@@ -763,8 +781,8 @@ private:
    Mutex m_mutex;
    json_t *m_messages;
    std::string m_systemPrompt;
-   AssistantFunctionSet m_functions;
-   json_t *m_functionDeclarations;
+   AIToolSet m_tools;
+   json_t *m_toolDeclarations;
    time_t m_creationTime;
    time_t m_lastUpdateTime;
    PendingQuestion *m_pendingQuestion;
@@ -773,7 +791,7 @@ private:
    AsyncRequestState m_asyncState;
    char *m_asyncResult;
    char *m_asyncErrorMessage;
-   const char *m_currentFunction;
+   const char *m_currentTool;
    AIContextUsage m_contextUsage;   // protected by m_asyncMutex
    Mutex m_asyncMutex;
    std::string m_lastError;
@@ -781,6 +799,7 @@ private:
    char m_slot[32];  // Provider slot (e.g., "interactive", "background", "fast", "analytical")
    AIChatOrigin m_origin;
    uint32_t m_originId;   // task or operator instance ID; chat ID for AIChatOrigin::CHAT
+   std::atomic<bool> m_cancelled;   // set from another thread to stop request processing at next step
 
    void addMessage(const char *role, const char *content)
    {
@@ -801,10 +820,10 @@ private:
       }
    }
 
-   void initializeFunctions();
-   std::string callFunction(const char *name, json_t *arguments);
+   void initializeTools();
+   std::string callTool(const char *name, json_t *arguments);
    std::string loadSkill(const char *skillName);
-   std::string delegateToSkill(const char *skillName, const char *task);
+   std::string runWorkers(json_t *workers);
 
 public:
    Chat(NetObj *context = nullptr, json_t *eventData = nullptr, uint32_t userId = 0, const char *systemPrompt = nullptr, bool isInteractive = true, bool enableTools = true);
@@ -820,6 +839,11 @@ public:
    uint32_t getOriginId() const { return m_originId; }
    void setOrigin(AIChatOrigin origin, uint32_t originId) { m_origin = origin; m_originId = originId; }
 
+   /**
+    * Request cancellation of current request processing. Can be called from any thread; request stops before its next step.
+    */
+   void cancel() { m_cancelled = true; }
+
    void bindToIncident(uint32_t incidentId);
    void enableVisualizationOutput();
 
@@ -827,7 +851,7 @@ public:
 
    bool startAsyncRequest(const char *prompt, const char *context = nullptr);
    AsyncRequestState getAsyncState() const { return m_asyncState; }
-   const char *getCurrentFunction() const { return m_currentFunction; }
+   const char *getCurrentTool() const { return m_currentTool; }
    AIContextUsage getContextUsage() const { return GetAttributeWithLock(m_contextUsage, m_asyncMutex); }
    char *takeAsyncResult();
    char *takeAsyncErrorMessage();
@@ -853,50 +877,50 @@ public:
  */
 enum class SkillExecutionMode
 {
-   LOADED = 0,      // Load into caller's context
-   DELEGATED = 1    // Run in separate context
+   LOAD = 0,      // Load into caller's context
+   WORKER = 1     // Run in a worker (separate context)
 };
 
 /**
  * AI assistant skill
  */
-struct AssistantSkill
+struct AISkill
 {
    std::string name;
    std::string description;
    std::string prompt;
-   std::vector<AssistantFunction> functions;
-   bool supportsDelegation;
+   std::vector<AITool> tools;
+   bool supportsWorker;
    SkillExecutionMode defaultMode;
 
-   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt,
-      bool _supportsDelegation = true, SkillExecutionMode _defaultMode = SkillExecutionMode::LOADED) :
-      name(_name), description(_description), prompt(_prompt), supportsDelegation(_supportsDelegation), defaultMode(_defaultMode)
+   AISkill(const std::string& _name, const std::string& _description, const std::string& _prompt,
+      bool _supportsWorker = true, SkillExecutionMode _defaultMode = SkillExecutionMode::LOAD) :
+      name(_name), description(_description), prompt(_prompt), supportsWorker(_supportsWorker), defaultMode(_defaultMode)
    {
    }
 
-   AssistantSkill(const std::string& _name, const std::string& _description, const std::string& _prompt, const std::vector<AssistantFunction>& _functions,
-      bool _supportsDelegation = true, SkillExecutionMode _defaultMode = SkillExecutionMode::LOADED) :
-      name(_name), description(_description), prompt(_prompt), functions(_functions), supportsDelegation(_supportsDelegation), defaultMode(_defaultMode)
+   AISkill(const std::string& _name, const std::string& _description, const std::string& _prompt, const std::vector<AITool>& _tools,
+      bool _supportsWorker = true, SkillExecutionMode _defaultMode = SkillExecutionMode::LOAD) :
+      name(_name), description(_description), prompt(_prompt), tools(_tools), supportsWorker(_supportsWorker), defaultMode(_defaultMode)
    {
    }
 };
 
 /**
- * Register assistant function. This function intended to be called only during server core or module initialization.
+ * Register AI tool. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<AssistantFunctionParameter>& parameters, AssistantFunctionHandler handler);
+void NXCORE_EXPORTABLE RegisterAITool(const char *name, const char *description, const std::vector<AITool::Parameter>& parameters, AIToolHandler handler);
 
 /**
- * Get unified tool list for MCP clients: global functions plus functions from all skills flattened into one namespace,
+ * Get unified tool list for MCP clients: global tools plus tools from all skills flattened into one namespace,
  * excluding disabled and chat-only items. Each element is a JSON object with name, description, and MCP input schema.
  * Caller must call json_decref on result.
  */
 json_t NXCORE_EXPORTABLE *GetMCPToolsAsJson();
 
 /**
- * Call AI assistant function by name on behalf of MCP client. Function name is resolved in global functions first,
- * then across all skills, honoring disabled lists and chat-only flags. If function cannot be resolved, *found is
+ * Call AI tool by name on behalf of MCP client. Tool name is resolved in global tools first,
+ * then across all skills, honoring disabled lists and chat-only flags. If tool cannot be resolved, *found is
  * set to false (when provided) and error message is returned.
  */
 std::string NXCORE_EXPORTABLE CallMCPTool(const char *name, json_t *arguments, uint32_t userId, bool *found = nullptr);
@@ -914,9 +938,9 @@ json_t NXCORE_EXPORTABLE *GetMCPPromptsAsJson();
 json_t NXCORE_EXPORTABLE *GetMCPPromptAsJson(const char *name);
 
 /**
- * Fill message with registered skills and functions list (including disabled status)
+ * Fill message with registered skills and tools list (including disabled status)
  */
-void FillAISkillsAndFunctionsMessage(NXCPMessage *msg);
+void FillAISkillsAndToolsMessage(NXCPMessage *msg);
 
 /**
  * Load AI disabled items from database
@@ -929,9 +953,9 @@ void LoadAIDisabledLists();
 std::unordered_set<std::string> NXCORE_EXPORTABLE GetAIDisabledSkills();
 
 /**
- * Get snapshot of disabled functions set (for batch checking without repeated locking)
+ * Get snapshot of disabled tools set (for batch checking without repeated locking)
  */
-std::unordered_set<std::string> NXCORE_EXPORTABLE GetAIDisabledFunctions();
+std::unordered_set<std::string> NXCORE_EXPORTABLE GetAIDisabledTools();
 
 /**
  * Check if a specific AI skill is disabled (convenience wrapper for single-item checks)
@@ -939,9 +963,9 @@ std::unordered_set<std::string> NXCORE_EXPORTABLE GetAIDisabledFunctions();
 bool NXCORE_EXPORTABLE IsAISkillDisabled(const std::string& name);
 
 /**
- * Check if a specific AI function is disabled (convenience wrapper for single-item checks)
+ * Check if a specific AI tool is disabled (convenience wrapper for single-item checks)
  */
-bool NXCORE_EXPORTABLE IsAIFunctionDisabled(const std::string& name);
+bool NXCORE_EXPORTABLE IsAIToolDisabled(const std::string& name);
 
 /**
  * Add item to AI disabled list (writes to DB and updates cache)
@@ -959,9 +983,9 @@ bool NXCORE_EXPORTABLE RemoveAIDisabledItem(char type, const char *name);
 json_t NXCORE_EXPORTABLE *GetAISkillsAsJson();
 
 /**
- * Get registered functions as JSON array (caller must call json_decref on result)
+ * Get registered tools as JSON array (caller must call json_decref on result)
  */
-json_t NXCORE_EXPORTABLE *GetAIFunctionsAsJson();
+json_t NXCORE_EXPORTABLE *GetAIToolsAsJson();
 
 /**
  * Get disabled items not matching any registered entity as JSON array (caller must call json_decref on result)
@@ -969,26 +993,26 @@ json_t NXCORE_EXPORTABLE *GetAIFunctionsAsJson();
 json_t NXCORE_EXPORTABLE *GetAIDisabledExtrasAsJson();
 
 /**
- * Register AI assistant skill. This function intended to be called only during server core or module initialization.
+ * Register AI skill. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt);
+void NXCORE_EXPORTABLE RegisterAISkill(const char *name, const char *description, const char *prompt);
 
 /**
- * Register AI assistant skill with functions. This function intended to be called only during server core or module initialization.
+ * Register AI skill with tools. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt, const std::vector<AssistantFunction>& functions);
+void NXCORE_EXPORTABLE RegisterAISkill(const char *name, const char *description, const char *prompt, const std::vector<AITool>& tools);
 
 /**
- * Register AI assistant skill with delegation support. This function intended to be called only during server core or module initialization.
+ * Register AI skill with execution mode settings. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt,
-   bool supportsDelegation, SkillExecutionMode defaultMode);
+void NXCORE_EXPORTABLE RegisterAISkill(const char *name, const char *description, const char *prompt,
+   bool supportsWorker, SkillExecutionMode defaultMode);
 
 /**
- * Register AI assistant skill with functions and delegation support. This function intended to be called only during server core or module initialization.
+ * Register AI skill with tools and execution mode settings. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAIAssistantSkill(const char *name, const char *description, const char *prompt,
-   const std::vector<AssistantFunction>& functions, bool supportsDelegation, SkillExecutionMode defaultMode);
+void NXCORE_EXPORTABLE RegisterAISkill(const char *name, const char *description, const char *prompt,
+   const std::vector<AITool>& tools, bool supportsWorker, SkillExecutionMode defaultMode);
 
 /**
  * Add custom prompt
@@ -1019,7 +1043,7 @@ AIGuardCheckResult RunAIGuardClassifier(const char *classifierPrompt, const char
 /**
  * Get current chat context (thread-local).
  * Returns the Chat object that is currently processing a request on this thread, or nullptr if none.
- * This allows AI function handlers to access the Chat for user interaction (e.g., askConfirmation).
+ * This allows AI tool handlers to access the Chat for user interaction (e.g., askConfirmation).
  */
 Chat NXCORE_EXPORTABLE *GetCurrentAIChat();
 
@@ -1051,7 +1075,7 @@ uint32_t NXCORE_EXPORTABLE DeleteAIAssistantChat(uint32_t chatId, uint32_t userI
  * @param prompt Query prompt
  * @param context Optional object context
  * @param slot Provider slot to use (e.g., "fast", "analytical"); falls back to "default" slot if requested slot is not configured
- * @param enableTools If true, register functions and skills; if false, no tools and single iteration
+ * @param enableTools If true, register tools and skills; if false, no tools and single step
  */
 char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context = nullptr, const char *slot = nullptr, bool enableTools = true);
 

@@ -127,7 +127,7 @@ static int MethodToolsCall(Context *context, json_t *id, json_t *params)
    }
 
    bool isError = (output.compare(0, 6, "Error:") == 0);
-   context->writeAuditLog(AUDIT_AI, !isError, 0, L"AI assistant function \"%hs\" called via MCP", name);
+   context->writeAuditLog(AUDIT_AI, !isError, 0, L"AI tool \"%hs\" called via MCP", name);
    nxlog_debug_tag(DEBUG_TAG_MCP, 5, L"Tool \"%hs\" executed (%s)", name, isError ? L"error" : L"success");
 
    json_t *result = json_object();

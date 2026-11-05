@@ -27,7 +27,7 @@ import org.netxms.base.NXCPMessage;
 public class AiOperatorInstructionsHistoryRecord
 {
    private long id;
-   private int iteration;
+   private int cycle;
    private Date timestamp;
    private String previousText;
 
@@ -40,7 +40,7 @@ public class AiOperatorInstructionsHistoryRecord
    public AiOperatorInstructionsHistoryRecord(NXCPMessage msg, long baseId)
    {
       id = msg.getFieldAsInt64(baseId);
-      iteration = msg.getFieldAsInt32(baseId + 1);
+      cycle = msg.getFieldAsInt32(baseId + 1);
       timestamp = msg.getFieldAsDate(baseId + 2);
       previousText = msg.getFieldAsString(baseId + 3);
    }
@@ -54,11 +54,11 @@ public class AiOperatorInstructionsHistoryRecord
    }
 
    /**
-    * @return instance iteration at which the instructions changed
+    * @return instance cycle at which the instructions changed
     */
-   public int getIteration()
+   public int getCycle()
    {
-      return iteration;
+      return cycle;
    }
 
    /**

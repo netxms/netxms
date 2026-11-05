@@ -77,8 +77,8 @@ public class AiOperatorComparator extends ViewerComparator
          case AiOperatorManager.COLUMN_TOKENS_USED:
             rc = Long.signum(o1.getTokensUsedToday() - o2.getTokensUsedToday());
             break;
-         case AiOperatorManager.COLUMN_ITERATION:
-            rc = Integer.signum(o1.getIteration() - o2.getIteration());
+         case AiOperatorManager.COLUMN_CYCLE:
+            rc = Integer.signum(o1.getCycle() - o2.getCycle());
             break;
          case AiOperatorManager.COLUMN_LAST_EXECUTION:
             rc = Long.signum(getTime(o1.getLastExecutionTime()) - getTime(o2.getLastExecutionTime()));

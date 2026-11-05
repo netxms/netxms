@@ -69,7 +69,7 @@ public class AiOperatorManager extends ConfigurationView
    public static final int COLUMN_MAX_INTERVAL = 7;
    public static final int COLUMN_TOKEN_BUDGET = 8;
    public static final int COLUMN_TOKENS_USED = 9;
-   public static final int COLUMN_ITERATION = 10;
+   public static final int COLUMN_CYCLE = 10;
    public static final int COLUMN_LAST_EXECUTION = 11;
    public static final int COLUMN_NEXT_EXECUTION = 12;
    public static final int COLUMN_FOCUS = 13;
@@ -101,7 +101,7 @@ public class AiOperatorManager extends ConfigurationView
    {
       final String[] columnNames = { i18n.tr("ID"), i18n.tr("Name"), i18n.tr("Description"), i18n.tr("State"), i18n.tr("Owner"),
             i18n.tr("Model slot"), i18n.tr("Min interval"), i18n.tr("Max interval"), i18n.tr("Token budget"), i18n.tr("Tokens used today"),
-            i18n.tr("Iteration"), i18n.tr("Last execution"), i18n.tr("Next execution"), i18n.tr("Current focus"), i18n.tr("Explanation") };
+            i18n.tr("Cycle"), i18n.tr("Last execution"), i18n.tr("Next execution"), i18n.tr("Current focus"), i18n.tr("Explanation") };
       final int[] columnWidths = { 60, 200, 300, 80, 120, 120, 90, 90, 100, 120, 80, 150, 150, 300, 400 };
       viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI, "AiOperatorManager");
       viewer.setContentProvider(new ArrayContentProvider());
@@ -430,7 +430,7 @@ public class AiOperatorManager extends ConfigurationView
          return;
 
       if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Reset"),
-            i18n.tr("Accumulated state (memento, current focus, watch list, standing instructions, and iteration counter) of selected AI operator instances will be cleared. Standing checks are kept. Are you sure?")))
+            i18n.tr("Accumulated state (memento, current focus, watch list, standing instructions, and cycle counter) of selected AI operator instances will be cleared. Standing checks are kept. Are you sure?")))
          return;
 
       final Object[] objects = selection.toArray();

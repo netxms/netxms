@@ -29,8 +29,8 @@
 static NXCORE_LOG s_logs[] =
 {
    { L"AIOperatorExecutionLog", L"ai_operator_execution_log", L"record_id", nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
-      "AI operator execution log. Tracks AI operator instance executions (monitoring iterations) including instance name, "
-      "status (completed, failed, skipped, check fired, check error), iteration number, duration, token usage, and explanation of results or errors. "
+      "AI operator execution log. Tracks AI operator instance executions (monitoring cycles) including instance name, "
+      "status (completed, failed, skipped, check fired, check error), cycle number, duration, token usage, and explanation of results or errors. "
       "Standing check runs are logged only when a check fires or fails.",
       {
          { L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
@@ -38,7 +38,7 @@ static NXCORE_LOG s_logs[] =
          { L"instance_id", L"Instance", LC_INTEGER, 0 },
          { L"instance_name", L"Instance Name", LC_TEXT, 0 },
          { L"status", L"Status", LC_AI_OP_EXEC_STATUS, LCF_CHAR_COLUMN },
-         { L"iteration", L"Iteration", LC_INTEGER, 0 },
+         { L"iteration", L"Cycle", LC_INTEGER, 0 },
          { L"duration_ms", L"Duration (ms)", LC_INTEGER, 0 },
          { L"input_tokens", L"Input Tokens", LC_INTEGER, 0 },
          { L"output_tokens", L"Output Tokens", LC_INTEGER, 0 },
@@ -65,7 +65,7 @@ static NXCORE_LOG s_logs[] =
    },
    { L"AITaskLog", L"ai_task_execution_log", L"record_id", nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
       "AI task execution log. Tracks AI assistant task executions including task descriptions, user, status "
-      "(pending, running, completed, failed), iteration count, and explanations of results or errors.",
+      "(pending, running, completed, failed), run number, and explanations of results or errors.",
       {
          { L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
          { L"execution_timestamp", L"Timestamp", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
@@ -73,7 +73,7 @@ static NXCORE_LOG s_logs[] =
          { L"task_description", L"Task Description", LC_TEXT, 0 },
          { L"user_id", L"User", LC_USER_ID, 0 },
          { L"status", L"Status", LC_AI_TASK_STATUS, LCF_CHAR_COLUMN },
-         { L"iteration", L"Iteration", LC_INTEGER, 0 },
+         { L"iteration", L"Run", LC_INTEGER, 0 },
          { L"explanation", L"Explanation", LC_TEXT_DETAILS, 0 },
          { nullptr, nullptr, 0, 0 }
       }

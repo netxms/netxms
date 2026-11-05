@@ -7319,9 +7319,9 @@ msgstr "規則已停用(&D)"
 msgid "Accept &correlated events"
 msgstr "接受相關聯的事件(&C)"
 
-#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleAiAgentInstructions.java:43
-msgid "AI Agent Instructions"
-msgstr "AI 代理指示"
+#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleAiInstructions.java:43
+msgid "AI Instructions"
+msgstr "AI 指示"
 
 #: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleTimeFilter.java:57
 msgid "Any time"
@@ -8291,8 +8291,8 @@ msgid "Call chains:"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:1101
-msgid "Instruct AI agent:"
-msgstr "指示 AI 代理："
+msgid "Instruct AI assistant:"
+msgstr "指示 AI 助理："
 
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:1118
 msgid "Force event logging"
@@ -25917,8 +25917,8 @@ msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/propertypages/AiOperatorInstructions.java:122
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiOperatorManager.java:104
-msgid "Iteration"
-msgstr "疊代次數"
+msgid "Cycle"
+msgstr "週期"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/propertypages/AiOperatorInstructions.java:122
 msgid "Previous text"
@@ -25950,8 +25950,8 @@ msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/AiSkillsConfigurationElement.java:42
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:85
-msgid "AI Skills & Functions"
-msgstr "AI 技能與函式"
+msgid "AI Skills & Tools"
+msgstr "AI 技能與工具"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/dialogs/AiMemoryEntryEditDialog.java:84
 msgid "Create Memory Entry"
@@ -26350,12 +26350,12 @@ msgid "Do you really want to delete selected tasks?"
 msgstr "確定要刪除選取的工作嗎？"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiTaskManager.java:316
-msgid "Delete AI agent tasks"
-msgstr "刪除 AI 代理工作"
+msgid "Delete AI tasks"
+msgstr "刪除 AI 工作"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiTaskManager.java:329
-msgid "Cannot delete AI agent task"
-msgstr "無法刪除 AI 代理工作"
+msgid "Cannot delete AI task"
+msgstr "無法刪除 AI 工作"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/helpers/AiOperatorLabelProvider.java:93
 msgid "Unlimited"
@@ -26503,7 +26503,7 @@ msgid "Confirm Reset"
 msgstr "確認重設"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiOperatorManager.java:433
-msgid "Accumulated state (memento, current focus, watch list, standing instructions, and iteration counter) of selected AI operator instances will be cleared. Standing checks are kept. Are you sure?"
+msgid "Accumulated state (memento, current focus, watch list, standing instructions, and cycle counter) of selected AI operator instances will be cleared. Standing checks are kept. Are you sure?"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiOperatorManager.java:437
@@ -26523,12 +26523,12 @@ msgid "&Remove custom entry"
 msgstr "移除自訂項目(&R)"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:279
-msgid "Loading AI skills and functions"
-msgstr "正在載入 AI 技能與函式"
+msgid "Loading AI skills and tools"
+msgstr "正在載入 AI 技能與工具"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:304
-msgid "Cannot load AI skills and functions"
-msgstr "無法載入 AI 技能與函式"
+msgid "Cannot load AI skills and tools"
+msgstr "無法載入 AI 技能與工具"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:322
 msgid "Disabling AI items"
@@ -26551,8 +26551,8 @@ msgid "Add Custom Entry"
 msgstr "新增自訂項目"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:362
-msgid "Enter the name of the skill or function to disable:"
-msgstr "請輸入要停用的技能或函式名稱："
+msgid "Enter the name of the skill or tool to disable:"
+msgstr "請輸入要停用的技能或工具名稱："
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:372
 msgid "Item Type"
@@ -26560,8 +26560,8 @@ msgstr "項目類型"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:373
 #, java-format
-msgid "Is \"{0}\" a skill or a function?"
-msgstr "「{0}」是技能還是函式？"
+msgid "Is \"{0}\" a skill or a tool?"
+msgstr "「{0}」是技能還是工具？"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:381
 msgid "Adding custom disabled entry"

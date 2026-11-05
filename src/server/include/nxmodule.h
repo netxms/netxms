@@ -156,7 +156,6 @@ typedef struct
    void (*pfProcessAuditRecord)(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
             session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *text);
    WirelessControllerBridge *(*pfGetWLCBridgeInterface)(const wchar_t *bridgeName);
-   std::string (*pfGetAIAgentInstructions)();
    DeviceBackupInterface *deviceBackupInterface;
    CloudConnectorInterface *cloudConnector;
    TrafficConnectorInterface *trafficConnector;

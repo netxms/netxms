@@ -23,6 +23,37 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 71.1 to 71.2
+ */
+static bool H_UpgradeFromV1()
+{
+   static const wchar_t *batch =
+      L"UPDATE config SET var_name='AI.MaxInteractiveSteps',description='Maximum number of LLM steps (round trips with tool calls) for interactive AI assistant chats before the user is asked whether to continue.' WHERE var_name='AI.MaxInteractiveIterations'\n"
+      L"UPDATE config SET var_name='AI.MaxBackgroundSteps',description='Maximum number of LLM steps (round trips with tool calls) for background AI assistant requests (event processing, scheduled tasks, incident analysis) before the request is stopped.' WHERE var_name='AI.MaxBackgroundIterations'\n"
+      L"UPDATE scheduled_tasks SET taskId='Execute.AIPrompt' WHERE taskId='Execute.AIAgentTask'\n"
+      L"ALTER TABLE ai_messages ADD origin_type char(1) null\n"
+      L"ALTER TABLE ai_messages ADD origin_id integer null\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+
+   // Source task columns were never populated, so there is nothing to convert
+   CHK_EXEC(DBDropColumn(g_dbHandle, L"ai_messages", L"source_task_id"));
+   CHK_EXEC(DBDropColumn(g_dbHandle, L"ai_messages", L"source_task_type"));
+
+   CHK_EXEC(CreateConfigParam(L"AI.Workers.MaxParallel", L"4",
+      L"Maximum number of AI workers that can be started by a single run-workers call.",
+      nullptr, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AI.Workers.Timeout", L"600",
+      L"Maximum time AI assistant waits for workers started by a single run-workers call. Workers that do not complete within this time are cancelled.",
+      L"seconds", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"ThreadPool.AIWorkers.BaseSize", L"4", L"Base size for AI workers thread pool.", nullptr, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"ThreadPool.AIWorkers.MaxSize", L"16", L"Maximum size for AI workers thread pool.", nullptr, 'I', true, true, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
  * Upgrade from 71.0 to 71.1
  */
 static bool H_UpgradeFromV0()
@@ -55,6 +86,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  71, 2,  H_UpgradeFromV1  },
    { 0,  71, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };

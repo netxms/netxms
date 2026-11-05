@@ -66,6 +66,21 @@ else if (argv[0]->isInteger())
 
 `NXSL_Value::isFalse()` returns `true` for both `false` and `null`. To distinguish an explicit `false` from "no return value", check `isNull()` first.
 
+## AI Subsystem Terminology
+
+Use these terms consistently in code, prompts, UI strings and documentation:
+
+- **AI assistant**: the interactive, user-facing actor (UI chat, chat bot session, one-shot query). It is the only actor that may ask the user questions.
+- **AI operator**: a perpetual autonomous monitoring loop. One execution is a **cycle**.
+- **AI task**: a scheduled job executed by the background assistant. One execution is a **run**.
+- **Worker**: a child execution with its own context, started via `run-workers` by an assistant, operator or task. Workers run in parallel, run as the parent's user, inherit its origin, cannot ask questions, and cannot start other workers.
+- **Tool** (`AITool`, `RegisterAITool`): anything the model can call. Do not call them "functions". **Agent tool**: a tool provided by a NetXMS agent.
+- **Skill** (`AISkill`): domain instructions plus tools, either loaded into the current context (`load-skill`) or run in a worker.
+- **Step**: one LLM round trip with tool calls (limits `AI.MaxInteractiveSteps` / `AI.MaxBackgroundSteps`).
+- **Origin** (`AIChatOrigin` + origin ID): provenance of memory entries and AI messages.
+
+"Agent" always means the NetXMS agent; never use "AI agent". Do not use "delegation" or "iteration" for AI concepts.
+
 ## Network Device Drivers
 
 Drivers live in `drivers/<vendor>/`; the interface is `include/nddrv.h`, the generic base implementation `libnxsrv/ndd.cpp`. Use `DECLARE_NDD_ENTRY_POINT(Class)` for a single driver, or `NDD_BEGIN_DRIVER_LIST` / `NDD_DRIVER(Class)` / `NDD_END_DRIVER_LIST` / `DECLARE_NDD_MODULE_ENTRY_POINT` for several drivers in one module. `isPotentialDevice()` returns a priority (0 = not supported); the highest-priority match wins.

@@ -1005,9 +1005,9 @@ paths:
                     description: Pending question from AI (present when status is processing)
                     allOf:
                       - $ref: '#/components/schemas/PendingQuestion'
-                  currentFunction:
+                  currentTool:
                     type: string
-                    description: Name of the function currently being executed by AI (present when status is processing)
+                    description: Name of the tool currently being executed by AI (present when status is processing)
                     nullable: true
                   response:
                     type: string
@@ -1188,17 +1188,17 @@ paths:
         - BearerAuth: []
       tags:
         - AI Chat
-  /v1/ai/skills-and-functions:
+  /v1/ai/skills-and-tools:
     get:
-      operationId: getAiSkillsAndFunctions
-      summary: Get AI skills, functions, and disabled items
+      operationId: getAiSkillsAndTools
+      summary: Get AI skills, tools, and disabled items
       description: >-
-        Returns all registered AI skills and functions with their disabled status,
+        Returns all registered AI skills and tools with their disabled status,
         plus stop list entries that do not correspond to any registered entity.
         Requires MANAGE_AI_SKILLS or USE_AI_ASSISTANT access right.
       responses:
         '200':
-          description: Skills, functions, and disabled extras retrieved successfully
+          description: Skills, tools, and disabled extras retrieved successfully
           content:
             application/json:
               schema:
@@ -1215,12 +1215,12 @@ paths:
                           type: string
                         disabled:
                           type: boolean
-                        supportsDelegation:
+                        supportsWorker:
                           type: boolean
                         defaultMode:
                           type: string
-                          enum: [loaded, delegated]
-                  functions:
+                          enum: [load, worker]
+                  tools:
                     type: array
                     items:
                       type: object
@@ -1251,7 +1251,7 @@ paths:
                       properties:
                         type:
                           type: string
-                          enum: [S, F]
+                          enum: [skill, tool]
                         name:
                           type: string
         '401':
@@ -1267,7 +1267,7 @@ paths:
       operationId: addAiDisabledItem
       summary: Add item to AI disabled list
       description: >-
-        Add a skill or function name to the stop list. The item does not need to
+        Add a skill or tool name to the stop list. The item does not need to
         correspond to a currently registered entity. Requires MANAGE_AI_SKILLS access right.
       requestBody:
         required: true
@@ -1279,14 +1279,14 @@ paths:
               properties:
                 type:
                   type: string
-                  enum: [S, F]
-                  description: Item type - S for skill, F for function
+                  enum: [skill, tool]
+                  description: Item type
                 name:
                   type: string
-                  description: Name of the skill or function to disable
+                  description: Name of the skill or tool to disable
             example:
-              type: F
-              name: some-function-name
+              type: tool
+              name: some-tool-name
       responses:
         '204':
           description: Item added to disabled list successfully
@@ -1307,21 +1307,21 @@ paths:
       operationId: removeAiDisabledItem
       summary: Remove item from AI disabled list
       description: >-
-        Remove a skill or function name from the stop list. Requires MANAGE_AI_SKILLS access right.
+        Remove a skill or tool name from the stop list. Requires MANAGE_AI_SKILLS access right.
       parameters:
         - name: item-type
           in: path
           required: true
           schema:
             type: string
-            enum: [S, F]
-          description: Item type - S for skill, F for function
+            enum: [skill, tool]
+          description: Item type
         - name: item-name
           in: path
           required: true
           schema:
             type: string
-          description: Name of the skill or function to re-enable
+          description: Name of the skill or tool to re-enable
       responses:
         '204':
           description: Item removed from disabled list successfully
@@ -2072,7 +2072,7 @@ paths:
       summary: Reset AI operator accumulated state
       description: >-
         Clear the instance's accumulated adaptive state (memento, current
-        focus, watch list, standing instructions, and iteration counter). The
+        focus, watch list, standing instructions, and cycle counter). The
         next execution starts from a clean slate. Standing checks are not
         affected.
       parameters:
@@ -14819,12 +14819,18 @@ components:
           type: string
           format: date-time
           description: Expiration time
-        sourceTaskId:
-          type: integer
-          description: ID of the AI task that created the message (0 if not created by a task)
-        sourceTaskType:
-          type: string
-          description: Type of the AI task that created the message
+        origin:
+          type: object
+          nullable: true
+          description: Entity that created the message (null if not known)
+          properties:
+            type:
+              type: string
+              enum: [chat, task, operator]
+              description: Origin type
+            id:
+              type: integer
+              description: AI task ID or AI operator instance ID; chat ID for chat origin
         relatedObjectId:
           type: integer
           description: Related object ID (0 if none)
@@ -14935,7 +14941,7 @@ components:
           description: True if the instance is enabled
         executing:
           type: boolean
-          description: True if an iteration is currently running
+          description: True if a cycle is currently running
         scopeFilter:
           type: string
           description: Attention scope filter (object names or IDs)
@@ -14966,7 +14972,7 @@ components:
           description: Watch list maintained by the operator itself
         memento:
           type: string
-          description: State carried between iterations by the operator itself
+          description: State carried between cycles by the operator itself
         observationRetentionDays:
           type: integer
           description: Observation retention override in days (0 = server default)
@@ -14987,9 +14993,9 @@ components:
           type: string
           format: date-time
           description: Scheduled time of the next execution
-        iteration:
+        cycle:
           type: integer
-          description: Number of completed iterations
+          description: Number of completed cycles
         consecutiveFailures:
           type: integer
           description: Consecutive failed executions (resets on success and restart)
@@ -15184,9 +15190,9 @@ components:
           type: integer
           format: int64
           description: Record identifier
-        iteration:
+        cycle:
           type: integer
-          description: Instance iteration at which the instructions changed
+          description: Instance cycle at which the instructions changed
         timestamp:
           type: string
           format: date-time
@@ -17435,9 +17441,9 @@ components:
         incidentAIPrompt:
           type: string
           description: Custom AI analysis instructions for the incident
-        aiAgentInstructions:
+        aiInstructions:
           type: string
-          description: Instructions for the AI agent when generating an alarm comment
+          description: Instructions for the AI assistant processing events matched by this rule (empty = no AI processing)
         comments:
           type: string
           description: Rule description

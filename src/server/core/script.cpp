@@ -26,8 +26,8 @@
 #define DEBUG_TAG_BASE        _T("scripts")
 #define DEBUG_TAG_SCHEDULED   DEBUG_TAG_BASE _T(".scheduled")
 
-void RegisterAIFunctionScriptHandler(const NXSL_LibraryScript *script, bool runtimeChange);
-void UnregisterAIFunctionScriptHandler(const NXSL_LibraryScript *script);
+void RegisterAIToolScriptHandler(const NXSL_LibraryScript *script, bool runtimeChange);
+void UnregisterAIToolScriptHandler(const NXSL_LibraryScript *script);
 
 /**
  * Create security context for script executed within client session. Session must stay valid for VM lifetime.
@@ -391,13 +391,13 @@ void NXCORE_EXPORTABLE ReloadScript(uint32_t id)
    NXSL_LibraryScript *s = s_scriptLibrary.findScript(id);
    if ((s != nullptr) && s->getMetadataEntryAsBoolean(L"ai_tool"))
    {
-      UnregisterAIFunctionScriptHandler(s);
+      UnregisterAIToolScriptHandler(s);
    }
    s_scriptLibrary.deleteScript(id);
    s_scriptLibrary.addScript(script);
    if (script->getMetadataEntryAsBoolean(L"ai_tool"))
    {
-      RegisterAIFunctionScriptHandler(script, true);
+      RegisterAIToolScriptHandler(script, true);
    }
    s_scriptLibrary.unlock();
 }
@@ -642,7 +642,7 @@ uint32_t NXCORE_EXPORTABLE DeleteScript(uint32_t scriptId)
          NXSL_LibraryScript *s = s_scriptLibrary.findScript(scriptId);
          if ((s != nullptr) && s->getMetadataEntryAsBoolean(L"ai_tool"))
          {
-            UnregisterAIFunctionScriptHandler(s);
+            UnregisterAIToolScriptHandler(s);
          }
          s_scriptLibrary.deleteScript(scriptId);
          s_scriptLibrary.unlock();

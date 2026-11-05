@@ -23,9 +23,9 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.AiTaskState;
 
 /**
- * AI agent task
+ * AI task
  */
-public class AiAgentTask
+public class AiTask
 {
    private long id;
    private int userId;
@@ -34,7 +34,7 @@ public class AiAgentTask
    private AiTaskState state;
    private Date lastExecutionTime;
    private Date nextExecutionTime;
-   private int iteration;
+   private int runCount;
    private String explanation;
 
    /**
@@ -43,7 +43,7 @@ public class AiAgentTask
     * @param msg NXCP message
     * @param baseId base ID for fields
     */
-   public AiAgentTask(NXCPMessage msg, long baseId)
+   public AiTask(NXCPMessage msg, long baseId)
    {
       id = msg.getFieldAsInt64(baseId);
       userId = msg.getFieldAsInt32(baseId + 1);
@@ -52,7 +52,7 @@ public class AiAgentTask
       state = AiTaskState.getByValue(msg.getFieldAsInt32(baseId + 4));
       lastExecutionTime = msg.getFieldAsDate(baseId + 5);
       nextExecutionTime = msg.getFieldAsDate(baseId + 6);
-      iteration = msg.getFieldAsInt32(baseId + 7);
+      runCount = msg.getFieldAsInt32(baseId + 7);
       explanation = msg.getFieldAsString(baseId + 8);
    }
 
@@ -113,11 +113,11 @@ public class AiAgentTask
    }
 
    /**
-    * @return the iteration
+    * @return number of runs (including the current one while executing)
     */
-   public int getIteration()
+   public int getRunCount()
    {
-      return iteration;
+      return runCount;
    }
 
    /**

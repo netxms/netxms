@@ -19,7 +19,7 @@
 ** File: ai_memory.cpp
 **
 ** AI assistant memory store: environment facts, per-user notes, and per-object notes that
-** persist across chats, AI tasks, and AI operator iterations.
+** persist across chats, AI tasks, and AI operator cycles.
 **
 **/
 
@@ -71,7 +71,7 @@ static const char *s_memoryGuardPrompt =
  */
 static const char *s_memoryPrompt =
    "# Persistent memory\n\n"
-   "You have a persistent memory store that survives across chats, AI tasks, and AI operator iterations. It has three scopes:\n"
+   "You have a persistent memory store that survives across chats, AI tasks, and AI operator cycles. It has three scopes:\n"
    "- **environment** - facts about the monitored environment as a whole (naming conventions, site layout, ownership, "
    "known issues, operational policies). Shared with all users and background runs; writing requires the \"Manage AI memory\" right.\n"
    "- **user** - notes about the user you are talking to (preferred level of detail, terminology and abbreviations they use, "
@@ -127,18 +127,7 @@ bool NXCORE_EXPORTABLE AIMemoryScopeFromName(const char *name, AIMemoryScope *sc
  */
 static const char *SourceTypeName(char sourceType)
 {
-   switch(sourceType)
-   {
-      case 'C':
-         return "chat";
-      case 'T':
-         return "task";
-      case 'O':
-         return "operator";
-      case AI_MEMORY_SOURCE_HUMAN:
-         return "human";
-   }
-   return "unknown";
+   return (sourceType == AI_MEMORY_SOURCE_HUMAN) ? "human" : AIChatOriginName(sourceType);
 }
 
 /**
@@ -1091,15 +1080,15 @@ static std::string F_Recall(json_t *arguments, uint32_t userId)
 static void RegisterScopeTools(AIMemoryScope scope, const char *rememberName, const char *updateName, const char *forgetName,
       const char *rememberDescription, const char *updateDescription, const char *forgetDescription)
 {
-   std::vector<AssistantFunctionParameter> rememberParams;
+   std::vector<AITool::Parameter> rememberParams;
    if (scope == AIMemoryScope::OBJECT)
       rememberParams.emplace_back("object", "Name or ID of the object the note is about (mandatory)");
    rememberParams.emplace_back("title", "Short descriptive title, unique within scope (mandatory, max 127 bytes)");
    rememberParams.emplace_back("content", "Content of the note, one to three sentences (mandatory)");
-   RegisterAIAssistantFunction(rememberName, rememberDescription, rememberParams,
+   RegisterAITool(rememberName, rememberDescription, rememberParams,
       [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Remember(scope, arguments, userId); });
 
-   RegisterAIAssistantFunction(updateName, updateDescription,
+   RegisterAITool(updateName, updateDescription,
       {
          { "id", "Memory entry ID (mandatory)", "integer" },
          { "title", "New title (optional)" },
@@ -1107,7 +1096,7 @@ static void RegisterScopeTools(AIMemoryScope scope, const char *rememberName, co
       },
       [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Update(scope, arguments, userId); });
 
-   RegisterAIAssistantFunction(forgetName, forgetDescription,
+   RegisterAITool(forgetName, forgetDescription,
       {
          { "id", "Memory entry ID (mandatory)", "integer" }
       },
@@ -1163,7 +1152,7 @@ void InitAIMemory()
       "Update title and/or content of a note about an object.",
       "Delete a note about an object.");
 
-   RegisterAIAssistantFunction("recall-memory",
+   RegisterAITool("recall-memory",
       "Retrieve persistent memory entries that are not in your context: entries omitted due to size limit, notes about objects "
       "other than the context object, or entries matching a search text. Returns JSON object with \"entries\" (array of entries with id, "
       "scope, title, content, and timestamps; most recently updated first, at most 50) and \"omitted\" (number of matching entries "

@@ -27,7 +27,7 @@ Event templates serve as blueprints that ensure consistent event generation and 
 
 ### Managing Event Templates
 
-You can create, modify, and delete event templates using the provided functions:
+You can create, modify, and delete event templates using the provided tools:
 
 #### Creating Event Templates
 Use `create-event-template` to create new custom event templates. Required parameters:
@@ -123,7 +123,7 @@ When constructing or modifying rules, key fields fall into these groups:
 - **Alarms** - `generate_alarm`, `alarm_severity` (`info`/`warning`/`minor`/`major`/`critical`/`normal`/`same as event`/`resolve`/`terminate`), `alarm_message`, `alarm_impact`, `alarm_key` (used for deduplication and resolve/terminate matching - rules with `alarm_severity: "resolve"` or `"terminate"` find the active alarm by this key), `alarm_timeout` (seconds), `alarm_timeout_event` (event code/name fired on timeout), `alarm_categories`, `alarm_category_script` (name of library script returning category name or array of names; replaces `alarm_categories` when set), `create_ticket`, `terminate_by_regexp`.
 - **Incidents** - `create_incident`, `incident_delay`, `incident_title`, `incident_description`, `ai_analyze_incident`, `incident_ai_analysis_depth` (`quick`/`standard`/`thorough`), `incident_ai_prompt`.
 - **Downtime tracking** - `start_downtime`, `end_downtime`, `downtime_tag`.
-- **AI integration** - `request_ai_comment` (request AI-generated comment on alarm), `ai_agent_instructions`, `rca_script_name`.
+- **AI integration** - `request_ai_comment` (request AI-generated comment on alarm), `ai_instructions`, `rca_script_name`.
 - **Side effects** - `pstorage_set` (object map - server persistent storage), `pstorage_delete` (array of keys), `custom_attribute_set` / `custom_attribute_delete` (act on the source object's custom attributes).
 
 ### Identifier Resolution
@@ -136,7 +136,7 @@ The policy uses optimistic concurrency. The write tools automatically retry once
 
 ### Audit Logging
 
-Every successful mutation writes an entry to the system audit log under subsystem `SYSCFG`, prefixed with `"AI agent: …"` and including the rule GUID, the chain, and its new version. Modify operations capture before/after values where available. No further audit logging is needed from the AI.
+Every successful mutation writes an entry to the system audit log under subsystem `SYSCFG`, prefixed with `"AI: …"` and including the rule GUID, the chain, and its new version. Modify operations capture before/after values where available. No further audit logging is needed from the AI.
 
 ## Key Concepts
 

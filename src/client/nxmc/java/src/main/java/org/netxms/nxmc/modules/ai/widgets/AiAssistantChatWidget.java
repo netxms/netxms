@@ -57,7 +57,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.ai.AiChatResponse;
 import org.netxms.client.ai.AiContextUsage;
-import org.netxms.client.ai.AiFunctionCall;
+import org.netxms.client.ai.AiToolCall;
 import org.netxms.client.ai.AiQuestion;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
@@ -205,7 +205,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       chatContent.append(".question-answered { opacity: 0.6; }");
       chatContent.append(".question-answered .question-buttons { display: none; }");
       chatContent.append(".question-btn:disabled { opacity: 0.5; cursor: not-allowed; }");
-      // Function call status styles
+      // Tool call status styles
       chatContent.append(".function-status { display: flex; align-items: center; gap: 8px; color: #555; }");
       chatContent.append(".function-spinner { width: 16px; height: 16px; animation: spin 1s linear infinite; }");
       chatContent.append("@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }");
@@ -449,34 +449,34 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       {
          getDisplay().asyncExec(() -> displayQuestion((AiQuestion)n.getObject()));
       }
-      else if (n.getCode() == SessionNotification.AI_FUNCTION_CALL)
+      else if (n.getCode() == SessionNotification.AI_TOOL_CALL)
       {
          getDisplay().asyncExec(() -> {
-            AiFunctionCall functionCall = (AiFunctionCall)n.getObject();
-            if (functionCall.getContextUsage() != null)
-               updateContextUsage(functionCall.getContextUsage());
-            updateFunctionStatus(functionCall);
+            AiToolCall toolCall = (AiToolCall)n.getObject();
+            if (toolCall.getContextUsage() != null)
+               updateContextUsage(toolCall.getContextUsage());
+            updateToolStatus(toolCall);
          });
       }
    }
 
    /**
-    * Update the "Thinking..." message to show current function being executed with a spinner icon
+    * Update the "Thinking..." message to show current tool being executed with a spinner icon
     *
-    * @param functionCall function call information
+    * @param toolCall tool call information
     */
-   private void updateFunctionStatus(AiFunctionCall functionCall)
+   private void updateToolStatus(AiToolCall toolCall)
    {
       if (currentMessageId == null)
          return;
 
-      // Build HTML with spinner SVG and function name
+      // Build HTML with spinner SVG and tool name
       String spinnerSvg = "<svg class='function-spinner' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>" +
                           "<circle cx='12' cy='12' r='10' stroke-opacity='0.25'/>" +
                           "<path d='M12 2a10 10 0 0 1 10 10' stroke-linecap='round'/>" +
                           "</svg>";
       String statusHtml = "<div class='function-status'>" + spinnerSvg +
-                          "<span>" + escapeHtml(functionCall.getDisplayName()) + "...</span></div>";
+                          "<span>" + escapeHtml(toolCall.getDisplayName()) + "...</span></div>";
 
       // Update directly in HTML content (bypass markdown processing for status messages)
       String currentContent = chatContent.toString();
@@ -874,7 +874,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    }
 
    /**
-    * Display a question from the AI agent
+    * Display a question from the AI assistant
     *
     * @param question the question to display
     */

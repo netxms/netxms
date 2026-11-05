@@ -16,7 +16,8 @@ ai.prov.*	AI/LLM provider communication (openai, anthropic, mistral, ollama)
 ai.provider	AI/LLM provider framework (common layer above ai.prov.*)
 ai.skills	AI skill loading and management
 ai.tasks	AI background tasks
-ai.tools	AI assistant tools (server and agent side)
+ai.tools	AI tools (server and agent side)
+ai.workers	AI workers (parallel child executions started by run-workers)
 aifileops	AI file operations subagent
 
 aix		AIX platform subagent messages

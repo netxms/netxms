@@ -22,28 +22,28 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
- * AI assistant function call notification
+ * AI tool call notification
  */
-public class AiFunctionCall
+public class AiToolCall
 {
    private long chatId;
-   private String functionName;
+   private String toolName;
    private AiContextUsage contextUsage;
 
    /**
-    * Create function call object from NXCP message.
+    * Create tool call object from NXCP message.
     *
     * @param msg NXCP message
     */
-   public AiFunctionCall(NXCPMessage msg)
+   public AiToolCall(NXCPMessage msg)
    {
       chatId = msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID);
-      functionName = msg.getFieldAsString(NXCPCodes.VID_AI_FUNCTION_NAME);
+      toolName = msg.getFieldAsString(NXCPCodes.VID_AI_CALLED_TOOL);
       contextUsage = AiContextUsage.createFromMessage(msg);
    }
 
    /**
-    * Get chat ID this function call belongs to.
+    * Get chat ID this tool call belongs to.
     *
     * @return chat ID
     */
@@ -53,7 +53,7 @@ public class AiFunctionCall
    }
 
    /**
-    * Get context window usage at the moment of this function call.
+    * Get context window usage at the moment of this tool call.
     *
     * @return context window usage or null if not provided by server
     */
@@ -63,28 +63,28 @@ public class AiFunctionCall
    }
 
    /**
-    * Get function name.
+    * Get tool name.
     *
-    * @return function name
+    * @return tool name
     */
-   public String getFunctionName()
+   public String getToolName()
    {
-      return functionName;
+      return toolName;
    }
 
    /**
-    * Get user-friendly display name for the function.
-    * Converts function names like "get-node-details" to "Getting node details"
+    * Get user-friendly display name for the tool.
+    * Converts tool names like "get-node-details" to "Getting node details"
     *
     * @return display name
     */
    public String getDisplayName()
    {
-      if (functionName == null || functionName.isEmpty())
+      if (toolName == null || toolName.isEmpty())
          return "Processing";
 
       // Convert snake_case and kebab-case to readable text
-      String readable = functionName.replace('-', ' ').replace('_', ' ');
+      String readable = toolName.replace('-', ' ').replace('_', ' ');
 
       // Convert to progressive tense for common verbs
       String lower = readable.toLowerCase();

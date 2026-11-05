@@ -1052,11 +1052,11 @@ private:
    void clearAiAssistantChat(const NXCPMessage& request);
    void deleteAiAssistantChat(const NXCPMessage& request);
    void requestAiAssistantComment(const NXCPMessage& request);
-   void getAiSkillsAndFunctions(const NXCPMessage& request);
+   void getAiSkillsAndTools(const NXCPMessage& request);
    void modifyAiDisabledList(const NXCPMessage& request);
-   void getAiAgentTasks(const NXCPMessage& request);
-   void deleteAiAgentTask(const NXCPMessage& request);
-   void addAiAgentTask(const NXCPMessage& request);
+   void getAiTasks(const NXCPMessage& request);
+   void deleteAiTask(const NXCPMessage& request);
+   void addAiTask(const NXCPMessage& request);
    void handleAiQuestionResponse(const NXCPMessage& request);
    void getAIMessages(const NXCPMessage& request);
    void setAIMessageStatus(const NXCPMessage& request);

@@ -846,7 +846,7 @@ static std::string EppReadModifyWrite(
 
       if (saveRcc == RCC_SUCCESS)
       {
-         WriteAuditLog(AUDIT_SYSCFG, true, userId, nullptr, 0, 0, L"AI agent %hs: %s (chain %u version %u)",
+         WriteAuditLog(AUDIT_SYSCFG, true, userId, nullptr, 0, 0, L"AI: %hs %s (chain %u version %u)",
             auditAction, auditDetail, chainId, newVersion);
          json_t *response = json_object();
          json_object_set_new(response, "status", json_string("ok"));
@@ -1150,8 +1150,8 @@ static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, json_t *snaps
    v = json_object_get(arguments, "alarm_category_script");
    if (json_is_string(v)) json_object_set(rule, "alarmCategoryScript", v);
 
-   v = json_object_get(arguments, "ai_agent_instructions");
-   if (json_is_string(v)) json_object_set(rule, "aiAgentInstructions", v);
+   v = json_object_get(arguments, "ai_instructions");
+   if (json_is_string(v)) json_object_set(rule, "aiInstructions", v);
 
    // Flat integer fields
    v = json_object_get(arguments, "alarm_timeout");
@@ -1795,7 +1795,7 @@ std::string F_CreateServerAction(json_t *arguments, uint32_t userId)
    json_decref(webApiArgs);
 
    WriteAuditLog(AUDIT_SYSCFG, true, userId, nullptr, 0, 0,
-      L"AI agent: created server action %u (%ls)", actionId, name);
+      L"AI: created server action %u (%ls)", actionId, name);
 
    return EppActionSuccessResponse("create-server-action", actionId);
 }
@@ -1845,7 +1845,7 @@ std::string F_ModifyServerAction(json_t *arguments, uint32_t userId)
    }
 
    WriteAuditLogWithJsonValues(AUDIT_SYSCFG, true, userId, nullptr, 0, 0,
-      oldValue, newValue, L"AI agent: modified server action %u", actionId);
+      oldValue, newValue, L"AI: modified server action %u", actionId);
    if (oldValue != nullptr) json_decref(oldValue);
    if (newValue != nullptr) json_decref(newValue);
 
@@ -1886,7 +1886,7 @@ std::string F_DeleteServerAction(json_t *arguments, uint32_t userId)
       return std::string("Failed to delete server action");
 
    WriteAuditLog(AUDIT_SYSCFG, true, userId, nullptr, 0, 0,
-      L"AI agent: deleted server action %u", actionId);
+      L"AI: deleted server action %u", actionId);
 
    json_t *response = json_object();
    json_object_set_new(response, "status", json_string("ok"));

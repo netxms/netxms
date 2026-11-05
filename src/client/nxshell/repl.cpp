@@ -66,7 +66,7 @@ public:
       stop();
    }
 
-   void update(const char *currentFunction);
+   void update(const char *currentTool);
    void stop();
 };
 
@@ -98,14 +98,14 @@ void ProgressIndicator::run()
 /**
  * Update text displayed by progress indicator. Indicator is started if it is not running yet.
  */
-void ProgressIndicator::update(const char *currentFunction)
+void ProgressIndicator::update(const char *currentTool)
 {
    LockGuard lockGuard(m_mutex);
 
-   if (currentFunction != nullptr)
+   if (currentTool != nullptr)
    {
       m_message = "Executing ";
-      m_message.append(currentFunction).append("...");
+      m_message.append(currentTool).append("...");
    }
    else
    {
@@ -142,9 +142,9 @@ static ProgressIndicator s_progressIndicator;
 /**
  * Show progress indicator with name of function currently executed by assistant (can be nullptr)
  */
-void ProgressIndicatorUpdate(const char *currentFunction)
+void ProgressIndicatorUpdate(const char *currentTool)
 {
-   s_progressIndicator.update(currentFunction);
+   s_progressIndicator.update(currentTool);
 }
 
 /**

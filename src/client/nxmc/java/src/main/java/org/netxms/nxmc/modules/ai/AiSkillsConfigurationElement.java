@@ -27,7 +27,7 @@ import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Configuration perspective element for AI skills and functions management
+ * Configuration perspective element for AI skills and tools management
  */
 public class AiSkillsConfigurationElement implements ConfigurationPerspectiveElement
 {
@@ -39,7 +39,7 @@ public class AiSkillsConfigurationElement implements ConfigurationPerspectiveEle
    @Override
    public String getName()
    {
-      return i18n.tr("AI Skills & Functions");
+      return i18n.tr("AI Skills & Tools");
    }
 
    /**

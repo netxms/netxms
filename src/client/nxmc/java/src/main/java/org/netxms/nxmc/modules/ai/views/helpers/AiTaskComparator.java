@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.client.ai.AiAgentTask;
+import org.netxms.client.ai.AiTask;
 import org.netxms.nxmc.modules.ai.views.AiTaskManager;
 
 /**
@@ -45,25 +45,25 @@ public class AiTaskComparator extends ViewerComparator
       switch((Integer)sortColumn.getData("ID"))
 		{
          case AiTaskManager.COLUMN_DESCRIPTION:
-            rc = ((AiAgentTask)e1).getDescription().compareToIgnoreCase(((AiAgentTask)e2).getDescription());
+            rc = ((AiTask)e1).getDescription().compareToIgnoreCase(((AiTask)e2).getDescription());
 				break;
          case AiTaskManager.COLUMN_EXPLANATION:
-            rc = ((AiAgentTask)e1).getExplanation().compareToIgnoreCase(((AiAgentTask)e2).getExplanation());
+            rc = ((AiTask)e1).getExplanation().compareToIgnoreCase(((AiTask)e2).getExplanation());
             break;
          case AiTaskManager.COLUMN_ID:
-            rc = Long.signum(((AiAgentTask)e1).getId() - ((AiAgentTask)e2).getId());
+            rc = Long.signum(((AiTask)e1).getId() - ((AiTask)e2).getId());
             break;
          case AiTaskManager.COLUMN_STATE:
-            rc = Integer.signum(((AiAgentTask)e1).getState().getValue() - ((AiAgentTask)e2).getState().getValue());
+            rc = Integer.signum(((AiTask)e1).getState().getValue() - ((AiTask)e2).getState().getValue());
             break;
          case AiTaskManager.COLUMN_LAST_EXECUTION:
-            rc = Long.signum(((AiAgentTask)e1).getLastExecutionTime().getTime() - ((AiAgentTask)e2).getLastExecutionTime().getTime());
+            rc = Long.signum(((AiTask)e1).getLastExecutionTime().getTime() - ((AiTask)e2).getLastExecutionTime().getTime());
             break;
          case AiTaskManager.COLUMN_NEXT_EXECUTION:
-            rc = Long.signum(((AiAgentTask)e1).getNextExecutionTime().getTime() - ((AiAgentTask)e2).getNextExecutionTime().getTime());
+            rc = Long.signum(((AiTask)e1).getNextExecutionTime().getTime() - ((AiTask)e2).getNextExecutionTime().getTime());
             break;
          case AiTaskManager.COLUMN_OWNER:
-            rc = Long.signum(((AiAgentTask)e1).getUserId() - ((AiAgentTask)e2).getUserId());
+            rc = Long.signum(((AiTask)e1).getUserId() - ((AiTask)e2).getUserId());
             break;
 			default:
 				rc = 0;

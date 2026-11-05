@@ -55,7 +55,7 @@ std::string F_GetNodeAITools(json_t *arguments, uint32_t userId)
    json_object_set_new(response, "status", json_string("success"));
    json_object_set_new(response, "node", json_string(nodeRef));
    json_object_set_new(response, "instructions", json_string(
-      "Tool discovery complete. To use any of these tools, call the execute-agent-tool function with: "
+      "Tool discovery complete. To use any of these tools, call the execute-agent-tool tool with: "
       "node (same node name), tool_name (from the tools list below), and parameters (JSON object matching the tool's parameter schema). "
       "Do NOT call get-node-ai-tools again - proceed directly to execute-agent-tool."));
 

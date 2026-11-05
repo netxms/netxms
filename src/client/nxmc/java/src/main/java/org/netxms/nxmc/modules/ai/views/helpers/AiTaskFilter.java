@@ -20,7 +20,7 @@ package org.netxms.nxmc.modules.ai.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.ai.AiAgentTask;
+import org.netxms.client.ai.AiTask;
 import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
@@ -46,7 +46,7 @@ public final class AiTaskFilter extends ViewerFilter implements AbstractViewerFi
       if (filter.isEmpty())
          return true;
 
-      final AiAgentTask task = (AiAgentTask)element;
+      final AiTask task = (AiTask)element;
       return filter.matches(task.getDescription(), labelProvider.stateNames[task.getState().getValue()], task.getExplanation());
    }
 

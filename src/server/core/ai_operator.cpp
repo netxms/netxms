@@ -48,7 +48,7 @@ static std::string s_systemPrompt;
 
 /**
  * Instance being executed on this thread (set for the duration of AIOperatorInstance::execute()
- * so that AI functions like record-observation can attribute their effects)
+ * so that AI tools like record-observation can attribute their effects)
  */
 static thread_local AIOperatorInstance *s_currentInstance = nullptr;
 
@@ -119,7 +119,7 @@ AIOperatorInstance::AIOperatorInstance(const wchar_t *name, uint32_t ownerUserId
    m_instructionsLocked = false;
    m_lastExecutionTime = 0;
    m_nextExecutionTime = 0;
-   m_iteration = 0;
+   m_cycle = 0;
    m_creationTime = m_modificationTime = time(nullptr);
    m_executing = false;
    m_consecutiveFailures = 0;
@@ -169,7 +169,7 @@ AIOperatorInstance::AIOperatorInstance(DB_RESULT hResult, int row)
    m_instructionsLocked = (flag[0] == '1');
    m_lastExecutionTime = DBGetFieldUInt32(hResult, row, 20);
    m_nextExecutionTime = DBGetFieldUInt32(hResult, row, 21);
-   m_iteration = DBGetFieldUInt32(hResult, row, 22);
+   m_cycle = DBGetFieldUInt32(hResult, row, 22);
    m_creationTime = DBGetFieldUInt32(hResult, row, 23);
    m_modificationTime = DBGetFieldUInt32(hResult, row, 24);
    m_executing = false;
@@ -215,7 +215,7 @@ bool AIOperatorInstance::saveToDatabase() const
       DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_instructionsLocked ? L"1" : L"0", DB_BIND_STATIC);
       DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastExecutionTime));
       DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_nextExecutionTime));
-      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_iteration);
+      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_cycle);
       DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
       DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_modificationTime));
       DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_id);
@@ -259,7 +259,7 @@ void AIOperatorInstance::logExecution(wchar_t status, uint32_t durationMs, int64
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, 63);
       DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, statusText, DB_BIND_STATIC);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_iteration);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_cycle);
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, durationMs);
       DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, static_cast<int32_t>(inputTokens));
       DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<int32_t>(outputTokens));
@@ -272,7 +272,7 @@ void AIOperatorInstance::logExecution(wchar_t status, uint32_t durationMs, int64
 }
 
 /**
- * Process LLM response for one monitoring iteration. Must be called with instance lock held.
+ * Process LLM response for one monitoring cycle. Must be called with instance lock held.
  * Returns false if response does not follow the expected contract.
  */
 bool AIOperatorInstance::processResponse(const char *response, time_t now)
@@ -355,8 +355,8 @@ bool AIOperatorInstance::processResponse(const char *response, time_t now)
 
    json_decref(json);
 
-   nxlog_debug_tag(DEBUG_TAG, 5, L"AI operator [%u] \"%s\" iteration %u completed, next execution at %s",
-      m_id, m_name, m_iteration, FormatTimestamp(m_nextExecutionTime).cstr());
+   nxlog_debug_tag(DEBUG_TAG, 5, L"AI operator [%u] \"%s\" cycle %u completed, next execution at %s",
+      m_id, m_name, m_cycle, FormatTimestamp(m_nextExecutionTime).cstr());
    nxlog_debug_tag(DEBUG_TAG, 6, L"AI operator [%u] explanation: %s", m_id, m_lastExplanation.cstr());
    return true;
 }
@@ -387,13 +387,13 @@ void AIOperatorInstance::handleFailure(const char *error, time_t now)
    {
       // Retry with previous memento after minimal interval
       m_nextExecutionTime = now + m_minInterval;
-      nxlog_debug_tag(DEBUG_TAG, 5, L"AI operator [%u] \"%s\" iteration %u failed (%hs), retry at %s",
-         m_id, m_name, m_iteration, error, FormatTimestamp(m_nextExecutionTime).cstr());
+      nxlog_debug_tag(DEBUG_TAG, 5, L"AI operator [%u] \"%s\" cycle %u failed (%hs), retry at %s",
+         m_id, m_name, m_cycle, error, FormatTimestamp(m_nextExecutionTime).cstr());
    }
 }
 
 /**
- * Execute one monitoring iteration
+ * Execute one monitoring cycle
  */
 void AIOperatorInstance::execute()
 {
@@ -402,7 +402,7 @@ void AIOperatorInstance::execute()
 
    m_mutex.lock();
 
-   // Interrupts raised by standing checks are consumed by this iteration; if the iteration cannot run
+   // Interrupts raised by standing checks are consumed by this cycle; if the cycle cannot run
    // they are dropped rather than queued indefinitely
    std::vector<AIOperatorInterrupt> interrupts;
    interrupts.swap(m_pendingInterrupts);
@@ -448,7 +448,7 @@ void AIOperatorInstance::execute()
       return;
    }
 
-   m_iteration++;
+   m_cycle++;
    m_lastExecutionTime = now;
 
    std::string systemPrompt(s_systemPrompt);
@@ -459,14 +459,14 @@ void AIOperatorInstance::execute()
    }
    if (!m_instructions.empty())
    {
-      systemPrompt.append("\n\nSTANDING INSTRUCTIONS (written by you on earlier iterations; persona and system rules above take precedence):\n");
+      systemPrompt.append("\n\nSTANDING INSTRUCTIONS (written by you on earlier cycles; persona and system rules above take precedence):\n");
       systemPrompt.append(m_instructions);
    }
 
-   std::string prompt("Perform one monitoring iteration now according to your instructions.\n<iteration>");
+   std::string prompt("Perform one monitoring cycle now according to your instructions.\n<cycle>");
    char buffer[32];
-   prompt.append(IntegerToString(m_iteration, buffer));
-   prompt.append("</iteration>\n<interval_bounds>min=");
+   prompt.append(IntegerToString(m_cycle, buffer));
+   prompt.append("</cycle>\n<interval_bounds>min=");
    prompt.append(IntegerToString(m_minInterval, buffer));
    prompt.append(" max=");
    prompt.append(IntegerToString(m_maxInterval, buffer));
@@ -729,8 +729,8 @@ void AIOperatorInstance::setEnabled(bool enabled)
 }
 
 /**
- * Reset accumulated state (memento, focus, watch list, standing instructions, iteration counter).
- * Standing checks are deliberately left intact - they are delegated work, not state.
+ * Reset accumulated state (memento, focus, watch list, standing instructions, cycle counter).
+ * Standing checks are deliberately left intact - they are scheduled work, not state.
  */
 void AIOperatorInstance::resetMemento()
 {
@@ -739,7 +739,7 @@ void AIOperatorInstance::resetMemento()
    m_memento.clear();
    m_watchList.clear();
    m_currentFocus[0] = 0;
-   m_iteration = 0;
+   m_cycle = 0;
    m_modificationTime = time(nullptr);
    saveToDatabase();
    nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\" accumulated state reset", m_id, m_name);
@@ -774,7 +774,7 @@ json_t *AIOperatorInstance::toJson() const
    json_object_set_new(json, "instructionsLocked", json_boolean(m_instructionsLocked));
    json_object_set_new(json, "lastExecutionTime", json_time_string(m_lastExecutionTime));
    json_object_set_new(json, "nextExecutionTime", json_time_string(m_nextExecutionTime));
-   json_object_set_new(json, "iteration", json_integer(m_iteration));
+   json_object_set_new(json, "cycle", json_integer(m_cycle));
    json_object_set_new(json, "consecutiveFailures", json_integer(m_consecutiveFailures));
    json_object_set_new(json, "lastExplanation", json_string_t(m_lastExplanation));
    json_object_set_new(json, "created", json_time_string(m_creationTime));
@@ -808,7 +808,7 @@ void AIOperatorInstance::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 17, m_observationMaxRecords);
    msg->setFieldFromTime(baseId + 18, m_lastExecutionTime);
    msg->setFieldFromTime(baseId + 19, m_nextExecutionTime);
-   msg->setField(baseId + 20, m_iteration);
+   msg->setField(baseId + 20, m_cycle);
    msg->setField(baseId + 21, static_cast<int32_t>(m_consecutiveFailures));
    msg->setField(baseId + 22, m_lastExplanation);
    msg->setFieldFromTime(baseId + 23, m_creationTime);
@@ -1787,7 +1787,7 @@ size_t AIOperatorInstance::setInstructions(const char *text, time_t now)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, InterlockedIncrement64(&s_instructionsHistoryId));
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_iteration);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_cycle);
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(now));
       DBBind(hStmt, 5, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_instructions.c_str(), DB_BIND_STATIC);
       DBExecute(hStmt);
@@ -1832,7 +1832,7 @@ int AIOperatorInstance::findCheckIndex(uint32_t checkId) const
 }
 
 /**
- * Append <checks> block to iteration prompt. Must be called with instance lock held.
+ * Append <checks> block to cycle prompt. Must be called with instance lock held.
  */
 void AIOperatorInstance::appendChecksToPrompt(std::string& prompt) const
 {
@@ -2231,7 +2231,7 @@ uint32_t FillAIOperatorCheckListMessage(uint32_t instanceId, NXCPMessage *msg)
 }
 
 /**
- * Read standing instructions history of AI operator instance. Callback receives record ID, iteration,
+ * Read standing instructions history of AI operator instance. Callback receives record ID, cycle,
  * change timestamp, and previous text (UTF-8).
  */
 static void ReadInstructionsHistory(uint32_t instanceId, std::function<void (int64_t, uint32_t, time_t, const char*)> callback)
@@ -2268,11 +2268,11 @@ json_t NXCORE_EXPORTABLE *GetAIOperatorInstructionsHistoryAsJson(uint32_t instan
 
    json_t *output = json_array();
    ReadInstructionsHistory(instanceId,
-      [output] (int64_t recordId, uint32_t iteration, time_t timestamp, const char *text)
+      [output] (int64_t recordId, uint32_t cycle, time_t timestamp, const char *text)
       {
          json_t *record = json_object();
          json_object_set_new(record, "id", json_integer(recordId));
-         json_object_set_new(record, "iteration", json_integer(iteration));
+         json_object_set_new(record, "cycle", json_integer(cycle));
          json_object_set_new(record, "timestamp", json_time_string(timestamp));
          json_object_set_new(record, "previousText", json_string(text));
          json_array_append_new(output, record);
@@ -2291,10 +2291,10 @@ uint32_t FillAIOperatorInstructionsHistoryMessage(uint32_t instanceId, NXCPMessa
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    uint32_t count = 0;
    ReadInstructionsHistory(instanceId,
-      [msg, &fieldId, &count] (int64_t recordId, uint32_t iteration, time_t timestamp, const char *text)
+      [msg, &fieldId, &count] (int64_t recordId, uint32_t cycle, time_t timestamp, const char *text)
       {
          msg->setField(fieldId, recordId);
-         msg->setField(fieldId + 1, iteration);
+         msg->setField(fieldId + 1, cycle);
          msg->setFieldFromTime(fieldId + 2, timestamp);
          msg->setFieldFromUtf8String(fieldId + 3, text);
          fieldId += 10;
@@ -2305,7 +2305,7 @@ uint32_t FillAIOperatorInstructionsHistoryMessage(uint32_t instanceId, NXCPMessa
 }
 
 /**
- * Build standing check configuration from AI function arguments. Returns false and sets error message on failure.
+ * Build standing check configuration from AI tool arguments. Returns false and sets error message on failure.
  */
 static bool BuildCheckConfigFromArguments(json_t *arguments, json_t *config, uint32_t userId, std::string *error)
 {
@@ -2363,7 +2363,7 @@ static bool BuildCheckConfigFromArguments(json_t *arguments, json_t *config, uin
 }
 
 /**
- * Convert RCC from standing check management to AI function result message
+ * Convert RCC from standing check management to AI tool result message
  */
 static std::string CheckRccToMessage(uint32_t rcc, const String& errorText)
 {
@@ -2395,13 +2395,13 @@ static std::string CheckRccToMessage(uint32_t rcc, const String& errorText)
 }
 
 /**
- * AI assistant function: create-check
+ * AI tool: create-check
  */
 static std::string F_CreateCheck(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this function can only be used during AI operator execution");
+      return std::string("Error: this tool can only be used during AI operator execution");
 
    json_t *config = json_object();
    std::string error;
@@ -2423,13 +2423,13 @@ static std::string F_CreateCheck(json_t *arguments, uint32_t userId)
 }
 
 /**
- * AI assistant function: update-check
+ * AI tool: update-check
  */
 static std::string F_UpdateCheck(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this function can only be used during AI operator execution");
+      return std::string("Error: this tool can only be used during AI operator execution");
 
    uint32_t checkId = json_object_get_uint32(arguments, "id", 0);
    if (checkId == 0)
@@ -2454,13 +2454,13 @@ static std::string F_UpdateCheck(json_t *arguments, uint32_t userId)
 }
 
 /**
- * AI assistant function: delete-check
+ * AI tool: delete-check
  */
 static std::string F_DeleteCheck(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this function can only be used during AI operator execution");
+      return std::string("Error: this tool can only be used during AI operator execution");
 
    uint32_t checkId = json_object_get_uint32(arguments, "id", 0);
    if (checkId == 0)
@@ -2475,13 +2475,13 @@ static std::string F_DeleteCheck(json_t *arguments, uint32_t userId)
 }
 
 /**
- * AI assistant function: test-check
+ * AI tool: test-check
  */
 static std::string F_TestCheck(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this function can only be used during AI operator execution");
+      return std::string("Error: this tool can only be used during AI operator execution");
 
    const char *source = json_object_get_string_utf8(arguments, "source", nullptr);
    if ((source == nullptr) || (*source == 0))
@@ -2523,13 +2523,13 @@ static std::string F_TestCheck(json_t *arguments, uint32_t userId)
 }
 
 /**
- * AI assistant function: record-observation
+ * AI tool: record-observation
  */
 static std::string F_RecordObservation(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this function can only be used during AI operator execution");
+      return std::string("Error: this tool can only be used during AI operator execution");
 
    const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
    if ((title == nullptr) || (*title == 0))
@@ -2607,7 +2607,7 @@ static void AIOperatorSchedulerThread()
 
       // Mark selected instances and checks as executing at enqueue time to prevent double dispatch.
       // An instance with pending check interrupts is due regardless of its next execution time, but not
-      // sooner than the interrupt cooldown after its last iteration; interrupts arriving inside the cooldown
+      // sooner than the interrupt cooldown after its last cycle; interrupts arriving inside the cooldown
       // stay queued and are consumed by the next dispatch.
       s_instancesLock.lock();
       for(const shared_ptr<AIOperatorInstance>& instance : s_instances)
@@ -2664,7 +2664,7 @@ static void AIOperatorSchedulerThread()
 void ShowAIOperators(ServerConsole *console)
 {
    ConsolePrintf(console, L" %-6s | %-24s | %-8s | %-9s | %-20s | %-20s | %9s | %12s | %-7s\n",
-      L"ID", L"Name", L"Enabled", L"State", L"Last execution", L"Next execution", L"Iteration", L"Tokens today", L"Checks");
+      L"ID", L"Name", L"Enabled", L"State", L"Last execution", L"Next execution", L"Cycle", L"Tokens today", L"Checks");
    ConsolePrintf(console, L"--------+--------------------------+----------+-----------+----------------------+----------------------+-----------+--------------+--------\n");
 
    s_instancesLock.lock();
@@ -2679,7 +2679,7 @@ void ShowAIOperators(ServerConsole *console)
             instance->isExecuting() ? L"running" : L"idle",
             (instance->getLastExecutionTime() > 0) ? FormatTimestamp(instance->getLastExecutionTime()).cstr() : L"never",
             instance->isEnabled() ? FormatTimestamp(instance->getNextExecutionTime()).cstr() : L"never",
-            instance->getIteration(),
+            instance->getCycle(),
             static_cast<uint32_t>(instance->getTokensUsedToday()),
             enabledChecks, totalChecks);
          return _CONTINUE;
@@ -2788,38 +2788,40 @@ void InitAIOperators()
    s_systemPrompt =
       "You are an AI operator integrated with NetXMS, a network management system. "
       "You run as a perpetual adaptive monitoring loop: you are executed periodically, examine the monitored environment, "
-      "record notable findings, and decide when to run next. You are never done - each execution is one iteration of an endless loop.\n\n"
+      "record notable findings, and decide when to run next. You are never done - each execution is one cycle of an endless loop.\n\n"
       "AUTONOMOUS OPERATION:\n"
       "- Make decisions without user input or confirmation\n"
       "- Take appropriate actions based on available information\n"
       "- Never stop to ask for user input or confirmation\n\n"
       "MONITORING MODEL:\n"
-      "- <iteration> tag indicates current iteration number starting from 1\n"
+      "- <cycle> tag indicates current cycle number starting from 1\n"
       "- <scope> tag (if present) describes the part of the infrastructure you are responsible for; stay within it\n"
-      "- <current_focus> tag contains the focus you set on the previous iteration\n"
+      "- <current_focus> tag contains the focus you set on the previous cycle\n"
       "- <watch_list> tag contains the list of items you decided to watch\n"
-      "- <memento> tag contains data preserved from previous iteration (if any)\n"
+      "- <memento> tag contains data preserved from previous cycle (if any)\n"
       "- <interval_bounds> tag contains allowed range for next execution delay in seconds\n"
       "- <checks> tag (if present) lists your standing checks with their state\n"
-      "- <triggered_checks> tag (if present) lists standing checks with 'wake' action that fired since your last iteration, "
-      "with their payloads; this iteration was started because of them, so investigate them first\n"
-      "- Use available functions to assess current operational status, alarms, events, and metrics\n"
-      "- Load skills using load-skill function when you need specialized capabilities\n\n"
+      "- <triggered_checks> tag (if present) lists standing checks with 'wake' action that fired since your last cycle, "
+      "with their payloads; this cycle was started because of them, so investigate them first\n"
+      "- Use available tools to assess current operational status, alarms, events, and metrics\n"
+      "- Load skills using load-skill tool when you need specialized capabilities\n"
+      "- Use run-workers to investigate several independent items in parallel (for example, several affected nodes); "
+      "give each worker a complete task description, as workers do not see your context and cannot record observations\n\n"
       "STANDING CHECKS:\n"
       "- A standing check is an NXSL script the server runs for you on its own schedule, without LLM cost and with consistent verdicts\n"
-      "- Prefer a standing check for anything you would otherwise re-poll on every iteration\n"
-      "- Manage checks with create-check, update-check, delete-check, and test-check functions; validate a script with test-check "
+      "- Prefer a standing check for anything you would otherwise re-poll on every cycle\n"
+      "- Manage checks with create-check, update-check, delete-check, and test-check tools; validate a script with test-check "
       "before creating it\n"
       "- Script contract: $object is bound to the check's object (or null); return null or false when everything is fine; "
       "return a string (used as title) or a hash with 'title', 'severity' (normal, warning, minor, major, critical) and 'details' "
       "to fire; any other return value is a check error\n"
       "- Use 'observe' action when a fired check is an unambiguous finding that can be recorded as an observation directly; "
       "use 'wake' when a fired check needs your investigation\n"
-      "- Keep the check list small and relevant: review <checks> on every iteration, retire checks that are no longer useful, "
+      "- Keep the check list small and relevant: review <checks> on every cycle, retire checks that are no longer useful, "
       "and do not re-poll conditions already covered by a check\n"
       "- Checks failing repeatedly are disabled automatically; fix or delete them\n\n"
       "STANDING INSTRUCTIONS:\n"
-      "- You may keep standing instructions for yourself: guidance injected into your system prompt on every iteration "
+      "- You may keep standing instructions for yourself: guidance injected into your system prompt on every cycle "
       "after the operator persona\n"
       "- Return them in the 'instructions' response field: omit the field to keep the current text, return an empty string "
       "to clear it, or return the complete new text to replace it\n"
@@ -2834,25 +2836,20 @@ void InitAIOperators()
       "back off when everything is stable\n"
       "- The delay is clamped to the range given in <interval_bounds>\n\n"
       "TIMESTAMP FORMATS:\n"
-      "All functions accepting timestamp arguments support the following formats:\n"
+      "All tools accepting timestamp arguments support the following formats:\n"
       "- Relative: [+|-]<number>[s|m|h|d] where s=seconds, m=minutes, h=hours, d=days\n"
       "- UNIX timestamp: numeric value representing seconds since epoch\n"
       "- ISO 8601: YYYY-MM-DDTHH:MM:SSZ in UTC\n\n"
       "RESPONSE FORMAT:\n"
-      "Provide structured iteration report in JSON format. Use only clean JSON without any additional text or markdown.\n"
+      "Provide structured cycle report in JSON format. Use only clean JSON without any additional text or markdown.\n"
       "Fields:\n"
       "- 'next_execution_time': delay in seconds until next execution (required)\n"
       "- 'current_focus': short summary of what you will focus on next (optional, replaces current)\n"
       "- 'watch_list': updated list of items you are watching (optional, string or array, replaces current)\n"
-      "- 'memento': data to preserve until next iteration (optional, string or object; omit to keep previous value)\n"
+      "- 'memento': data to preserve until next cycle (optional, string or object; omit to keep previous value)\n"
       "- 'instructions': updated standing instructions (optional, string; omit to keep, empty string to clear)\n"
-      "- 'explanation': brief summary of this iteration and reasoning behind your decisions (required)\n";
-   ENUMERATE_MODULES(pfGetAIAgentInstructions)
-   {
-      s_systemPrompt.append(CURRENT_MODULE.pfGetAIAgentInstructions());
-   }
-
-   RegisterAIAssistantFunction(
+      "- 'explanation': brief summary of this cycle and reasoning behind your decisions (required)\n";
+   RegisterAITool(
       "record-observation",
       "Record a monitoring observation (available only during AI operator execution). "
       "Use this to record notable findings: anomalies, degradations, recoveries, notable trends. "
@@ -2866,7 +2863,7 @@ void InitAIOperators()
       },
       F_RecordObservation);
 
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "create-check",
       "Create a standing check for this AI operator instance (available only during AI operator execution). "
       "A standing check is an NXSL script run by the server on schedule without LLM involvement. "
@@ -2879,13 +2876,13 @@ void InitAIOperators()
          { "source", "NXSL source code of the check" },
          { "interval", "Run interval in seconds (minimum 30, default 300)", "integer" },
          { "object", "Optional: name or ID of the object bound as $object" },
-         { "action", "Action when the check fires: 'wake' (start an iteration with the payload) or 'observe' (record observation directly); default 'wake'" },
+         { "action", "Action when the check fires: 'wake' (start a cycle with the payload) or 'observe' (record observation directly); default 'wake'" },
          { "cooldown", "Optional: minimum seconds between two action applications (default 0)", "integer" },
          { "renotify_interval", "Optional: seconds after which the action is applied again while the check stays fired (default 0 = only on the quiet->fired edge)", "integer" }
       },
       F_CreateCheck);
 
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "update-check",
       "Update a standing check of this AI operator instance (available only during AI operator execution). "
       "Only provided fields are changed; changed source is compiled first. Locked checks cannot be updated.",
@@ -2903,7 +2900,7 @@ void InitAIOperators()
       },
       F_UpdateCheck);
 
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "delete-check",
       "Delete a standing check of this AI operator instance (available only during AI operator execution). Locked checks cannot be deleted.",
       {
@@ -2911,7 +2908,7 @@ void InitAIOperators()
       },
       F_DeleteCheck);
 
-   RegisterAIAssistantFunction(
+   RegisterAITool(
       "test-check",
       "Run standing check source once with the real security context and return its verdict without creating a check or recording anything "
       "(available only during AI operator execution). Use it to validate a script before create-check or update-check.",

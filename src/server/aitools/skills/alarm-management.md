@@ -1,6 +1,6 @@
 # Alarm Management Skill
 
-This skill provides alarm lifecycle management for NetXMS. Use it to acknowledge, resolve, and terminate alarms, add operator comments, and inspect full alarm details. It is the action counterpart to the `alarm-list` function, which lists currently active alarms together with their IDs.
+This skill provides alarm lifecycle management for NetXMS. Use it to acknowledge, resolve, and terminate alarms, add operator comments, and inspect full alarm details. It is the action counterpart to the `alarm-list` tool, which lists currently active alarms together with their IDs.
 
 ## Key Capabilities
 

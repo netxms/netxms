@@ -25,7 +25,7 @@ import org.netxms.client.constants.AiMessageStatus;
 import org.netxms.client.constants.AiMessageType;
 
 /**
- * AI agent message
+ * AI message
  */
 public class AiMessage
 {
@@ -34,8 +34,8 @@ public class AiMessage
    private AiMessageType messageType;
    private Date creationTime;
    private Date expirationTime;
-   private long sourceTaskId;
-   private String sourceTaskType;
+   private long originId;
+   private String originType;
    private long relatedObjectId;
    private String title;
    private String text;
@@ -55,8 +55,8 @@ public class AiMessage
       messageType = AiMessageType.getByValue(msg.getFieldAsInt32(baseId + 2));
       creationTime = msg.getFieldAsDate(baseId + 3);
       expirationTime = msg.getFieldAsDate(baseId + 4);
-      sourceTaskId = msg.getFieldAsInt64(baseId + 5);
-      sourceTaskType = msg.getFieldAsString(baseId + 6);
+      originId = msg.getFieldAsInt64(baseId + 5);
+      originType = msg.getFieldAsString(baseId + 6);
       relatedObjectId = msg.getFieldAsInt64(baseId + 7);
       title = msg.getFieldAsString(baseId + 8);
       text = msg.getFieldAsString(baseId + 9);
@@ -105,19 +105,24 @@ public class AiMessage
    }
 
    /**
-    * @return the sourceTaskId
+    * Get ID of the entity that created this message: AI task ID or AI operator instance ID, or chat ID for messages created
+    * from a chat.
+    *
+    * @return origin ID
     */
-   public long getSourceTaskId()
+   public long getOriginId()
    {
-      return sourceTaskId;
+      return originId;
    }
 
    /**
-    * @return the sourceTaskType
+    * Get type of the entity that created this message: "chat", "task", or "operator" (empty string if not known).
+    *
+    * @return origin type
     */
-   public String getSourceTaskType()
+   public String getOriginType()
    {
-      return sourceTaskType;
+      return originType;
    }
 
    /**
@@ -186,7 +191,7 @@ public class AiMessage
    @Override
    public String toString()
    {
-      return "AiMessage [id=" + id + ", guid=" + guid + ", messageType=" + messageType + ", creationTime=" + creationTime + ", expirationTime=" + expirationTime + ", sourceTaskId=" + sourceTaskId +
-            ", sourceTaskType=" + sourceTaskType + ", relatedObjectId=" + relatedObjectId + ", title=" + title + ", text=" + text + ", spawnTaskData=" + spawnTaskData + ", status=" + status + "]";
+      return "AiMessage [id=" + id + ", guid=" + guid + ", messageType=" + messageType + ", creationTime=" + creationTime + ", expirationTime=" + expirationTime + ", originId=" + originId +
+            ", originType=" + originType + ", relatedObjectId=" + relatedObjectId + ", title=" + title + ", text=" + text + ", spawnTaskData=" + spawnTaskData + ", status=" + status + "]";
    }
 }

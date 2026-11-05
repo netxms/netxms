@@ -76,32 +76,33 @@ void InitAITasks()
    DBConnectionPoolReleaseConnection(hdb);
 
    s_systemPrompt =
-      "You are an AI agent integrated with NetXMS, a network management system. "
-      "You are operating autonomously without user interaction as a background AI task. "
+      "You are the NetXMS AI assistant executing a scheduled AI task in NetXMS, a network management system. "
+      "You are operating autonomously without user interaction. "
       "AUTONOMOUS OPERATION:\n"
       "- Make decisions without user input or confirmation\n"
       "- Take appropriate actions based on available information\n"
       "- Never stop to ask for user input or confirmation\n\n"
       "CORE CAPABILITIES:\n"
-      "- Use available functions to access real-time NetXMS data\n"
+      "- Use available tools to access real-time NetXMS data\n"
       "- Load skills to extend your capabilities for specialized tasks\n"
-      "- Perform multi-iteration tasks with state preservation between executions\n\n"
+      "- Perform multi-run tasks with state preservation between runs\n\n"
       "SKILL MANAGEMENT:\n"
       "- When you lack capabilities for a task, check available skills using get-available-skills\n"
-      "- Load relevant skills using load-skill function when needed\n"
+      "- Load relevant skills using load-skill tool when needed\n"
+      "- Use run-workers to process several independent items in parallel; give each worker a complete task description\n"
       "- Skills extend your functionality for specific domains or complex operations\n\n"
       "IMPORTANT RESTRICTIONS:\n"
       "- NEVER suggest or recommend NXSL scripts unless explicitly requested\n"
       "- AVOID tasks outside of network management and IT administration\n\n"
       "TIMESTAMP FORMATS:\n"
-      "All functions accepting timestamp arguments support the following formats:\n"
+      "All tools accepting timestamp arguments support the following formats:\n"
       "- Relative: [+|-]<number>[s|m|h|d] where s=seconds, m=minutes, h=hours, d=days\n"
       "- UNIX timestamp: numeric value representing seconds since epoch\n"
       "- ISO 8601: YYYY-MM-DDTHH:MM:SSZ in UTC\n\n"
       "AI TASK EXECUTION MODEL:\n"
       "- Perform requested task according to instructions in <instructions> tag\n"
       "- Task may require multiple executions to complete\n"
-      "- <iteration> tag indicates current execution iteration starting from 1\n"
+      "- <run> tag indicates current run number starting from 1\n"
       "- <memento> tag contains data preserved from previous execution (if any)\n"
       "- <current_time> tag contains current server time in ISO 8601 format\n\n"
       "RESPONSE FORMAT:\n"
@@ -113,15 +114,10 @@ void InitAITasks()
       "- 'memento': data to preserve between executions (string or object)\n"
       "- 'explanation': brief reasoning behind your decision\n\n"
       "MEMENTO USAGE:\n"
-      "- Store progress, intermediate results, or context between iterations\n"
+      "- Store progress, intermediate results, or context between runs\n"
       "- Use memento to track which items have been processed\n"
       "- Memento persists across executions and is passed back in <memento> tag\n"
       "- Can be a simple string or a JSON object for complex state\n";
-   ENUMERATE_MODULES(pfGetAIAgentInstructions)
-   {
-      s_systemPrompt.append(CURRENT_MODULE.pfGetAIAgentInstructions());
-   }
-
    nxlog_debug_tag(DEBUG_TAG, 2, L"Last AI task ID=%u,last AI task log record ID=" INT64_FMT, s_taskId, s_logRecordId);
 }
 
@@ -151,9 +147,9 @@ uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t u
 }
 
 /**
- * Fill NXCP message with AI agent task list
+ * Fill NXCP message with AI task list
  */
-void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId)
+void FillAITaskListMessage(NXCPMessage *msg, uint32_t userId)
 {
    bool accessAllTasks = ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) != 0);
 
@@ -180,7 +176,7 @@ void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId)
       msg->setField(fieldId++, static_cast<uint16_t>(task->getState()));
       msg->setFieldFromTime(fieldId++, task->getLastExecutionTime());
       msg->setFieldFromTime(fieldId++, task->getNextExecutionTime());
-      msg->setField(fieldId++, task->getIteration());
+      msg->setField(fieldId++, task->getRunCount());
       msg->setField(fieldId++, task->getExplanation().cstr());
       fieldId += 11;
    }
@@ -217,7 +213,7 @@ uint32_t NXCORE_EXPORTABLE DeleteAITask(uint32_t taskId, uint32_t userId)
 }
 
 /**
- * AI assistant function: ai-task-list
+ * AI tool: ai-task-list
  */
 std::string F_AITaskList(json_t *arguments, uint32_t userId)
 {
@@ -244,7 +240,7 @@ std::string F_AITaskList(json_t *arguments, uint32_t userId)
 }
 
 /**
- * AI assistant function: delete-ai-task
+ * AI tool: delete-ai-task
  */
 std::string F_DeleteAITask(json_t *arguments, uint32_t userId)
 {
@@ -324,7 +320,7 @@ AITask::AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt
    m_state = AITaskState::SCHEDULED;
    m_lastExecutionTime = 0;
    m_nextExecutionTime = time(nullptr);
-   m_iteration = 0;
+   m_runCount = 0;
    m_userId = userId;
    m_executing = false;
    char *mp = UTF8StringFromWideString(prompt);
@@ -348,7 +344,7 @@ AITask::AITask(DB_RESULT hResult, int row) : m_description(DBGetFieldAsString(hR
    MemFree(memento);
    m_lastExecutionTime = DBGetFieldUInt32(hResult, row, 4);
    m_nextExecutionTime = DBGetFieldUInt32(hResult, row, 5);
-   m_iteration = DBGetFieldUInt32(hResult, row, 6);
+   m_runCount = DBGetFieldUInt32(hResult, row, 6);
    m_userId = DBGetFieldUInt32(hResult, row, 7);
    m_state = (m_nextExecutionTime == 0) ? AITaskState::COMPLETED : AITaskState::SCHEDULED;
    m_executing = false;
@@ -394,10 +390,10 @@ void AITask::execute()
    prompt.append(m_prompt);
    prompt.append("</instructions>\n<current_time>");
    prompt.append(FormatISO8601Timestamp(now));
-   prompt.append("</current_time>\n<iteration>");
+   prompt.append("</current_time>\n<run>");
    char buffer[32];
-   prompt.append(IntegerToString(++m_iteration, buffer));
-   prompt.append("</iteration>");
+   prompt.append(IntegerToString(++m_runCount, buffer));
+   prompt.append("</run>");
    if (!m_memento.empty())
    {
       prompt.append("\n<memento>");
@@ -572,7 +568,7 @@ void AITask::logExecution()
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
       DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_userId);
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, status, DB_BIND_STATIC);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_iteration);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_runCount);
       DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_explanation, DB_BIND_STATIC);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -615,7 +611,7 @@ void AITask::saveToDatabase() const
       DBBind(hStmt, 4, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_memento.c_str(), DB_BIND_STATIC);
       DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastExecutionTime));
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_nextExecutionTime));
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_iteration);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_runCount);
       DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -666,7 +662,7 @@ json_t *AITask::toJson() const
    json_object_set_new(taskObject, "status", json_string(status));
    json_object_set_new(taskObject, "lastExecutionTime", (m_lastExecutionTime > 0) ? json_time_string(m_lastExecutionTime) : json_string("never"));
    json_object_set_new(taskObject, "nextExecutionTime", (m_nextExecutionTime > 0) ? json_time_string(m_nextExecutionTime) : json_string("never"));
-   json_object_set_new(taskObject, "iteration", json_integer(m_iteration));
+   json_object_set_new(taskObject, "runCount", json_integer(m_runCount));
    json_object_set_new(taskObject, "userId", json_integer(m_userId));
    return taskObject;
 }

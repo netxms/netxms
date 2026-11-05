@@ -25,7 +25,7 @@
 #include <nms_users.h>
 
 /**
- * Maximum size of response document (in characters) included into function output
+ * Maximum size of response document (in characters) included into tool output
  */
 #define MAX_DOCUMENT_SIZE  65536
 
@@ -152,7 +152,7 @@ static void SanitizeDefinitionJson(json_t *definition)
 }
 
 /**
- * Find web service definition by name or ID given in function arguments
+ * Find web service definition by name or ID given in tool arguments
  */
 static shared_ptr<WebServiceDefinition> FindDefinition(json_t *arguments, const char *tag)
 {
@@ -471,7 +471,7 @@ std::string F_TestWebServicePath(json_t *arguments, uint32_t userId)
 }
 
 /**
- * Read web service definition properties from function arguments into JSON configuration document.
+ * Read web service definition properties from tool arguments into JSON configuration document.
  * Returns error message on validation failure or empty string on success.
  */
 static std::string ReadDefinitionProperties(json_t *arguments, json_t *config)

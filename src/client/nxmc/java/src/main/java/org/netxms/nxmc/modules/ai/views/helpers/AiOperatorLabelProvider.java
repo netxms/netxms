@@ -93,8 +93,8 @@ public class AiOperatorLabelProvider extends LabelProvider implements ITableLabe
             return (operator.getDailyTokenBudget() > 0) ? Integer.toString(operator.getDailyTokenBudget()) : i18n.tr("Unlimited");
          case AiOperatorManager.COLUMN_TOKENS_USED:
             return Long.toString(operator.getTokensUsedToday());
-         case AiOperatorManager.COLUMN_ITERATION:
-            return Integer.toString(operator.getIteration());
+         case AiOperatorManager.COLUMN_CYCLE:
+            return Integer.toString(operator.getCycle());
          case AiOperatorManager.COLUMN_LAST_EXECUTION:
             return formatTime(operator.getLastExecutionTime());
          case AiOperatorManager.COLUMN_NEXT_EXECUTION:

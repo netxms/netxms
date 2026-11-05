@@ -38,7 +38,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.ai.AiAgentTask;
+import org.netxms.client.ai.AiTask;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -71,7 +71,7 @@ public class AiTaskManager extends ConfigurationView
    private SortableTableViewer viewer;
    private NXCSession session;
    private SessionListener sessionListener;
-   private Map<Long, AiAgentTask> tasks = new HashMap<>();
+   private Map<Long, AiTask> tasks = new HashMap<>();
    private Action actionNew;
    private Action actionDelete;
 
@@ -171,11 +171,11 @@ public class AiTaskManager extends ConfigurationView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            List<AiAgentTask> tasks = session.getAiAgentTasks();
+            List<AiTask> tasks = session.getAiTasks();
             synchronized(AiTaskManager.this.tasks)
             {
                AiTaskManager.this.tasks.clear();
-               for(AiAgentTask t : tasks)
+               for(AiTask t : tasks)
                {
                   AiTaskManager.this.tasks.put(t.getId(), t);
                }
@@ -285,7 +285,7 @@ public class AiTaskManager extends ConfigurationView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            long id = session.createAiAgentTask(dlg.getDescription(), dlg.getPrompt());
+            long id = session.createAiTask(dlg.getDescription(), dlg.getPrompt());
             runInUIThread(() -> {
                refresh(); // FIXME: should add only new task instead of full refresh or wait for update via notification
             });
@@ -313,20 +313,20 @@ public class AiTaskManager extends ConfigurationView
          return;
 
       final Object[] objects = selection.toArray();
-      new Job(i18n.tr("Delete AI agent tasks"), this) {
+      new Job(i18n.tr("Delete AI tasks"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(int i = 0; i < objects.length; i++)
             {
-               session.deleteAiAgentTask(((AiAgentTask)objects[i]).getId());
+               session.deleteAiTask(((AiTask)objects[i]).getId());
             }
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot delete AI agent task");
+            return i18n.tr("Cannot delete AI task");
          }
       }.start();
    }

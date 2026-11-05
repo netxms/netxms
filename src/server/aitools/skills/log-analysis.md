@@ -5,7 +5,7 @@ This skill provides comprehensive log analysis capabilities for NetXMS. Use this
 ## Key Capabilities
 
 - **Log Discovery**: Discover available logs with `list-logs` and understand their schema with `get-log-schema`
-- **Universal Search**: Search any log table with the unified `search-log` function
+- **Universal Search**: Search any log table with the unified `search-log` tool
 - **Log Correlation**: Cross-correlate events across multiple sources and network neighbors
 - **Pattern Detection**: Identify recurring patterns, message bursts, and new error patterns
 - **Statistical Analysis**: Analyze log volume trends for capacity planning
@@ -27,14 +27,14 @@ This skill provides comprehensive log analysis capabilities for NetXMS. Use this
 4. **Correlate**: Use `correlate-logs` to see related events across sources
 5. **Analyze Patterns**: Use `analyze-log-patterns` to detect anomalies
 
-## Available Functions
+## Available Tools
 
-### Discovery Functions
+### Discovery Tools
 
 - `list-logs`: List all available logs the user can access (includes custom module logs)
 - `get-log-schema`: Get detailed schema for a log including column types and descriptions
 
-### Search Functions
+### Search Tools
 
 - `search-log`: Universal search for any log table with flexible filtering
 - `search-syslog`: Specialized search for syslog messages with severity/facility filters
@@ -42,7 +42,7 @@ This skill provides comprehensive log analysis capabilities for NetXMS. Use this
 - `search-snmp-traps`: Search SNMP traps by OID, source IP, and varbind content
 - `search-events`: Search NetXMS system events by code, severity, origin, and tags
 
-### Analysis Functions
+### Analysis Tools
 
 - `get-log-statistics`: Get volume statistics with grouping by time, source, or severity
 - `correlate-logs`: Create unified timeline across log sources for a device and its neighbors
@@ -158,7 +158,7 @@ When using `analyze-log-patterns`:
 
 ## Using search-log with filters
 
-The `search-log` function accepts a `filters` parameter for column-specific filtering:
+The `search-log` tool accepts a `filters` parameter for column-specific filtering:
 
 ```json
 {

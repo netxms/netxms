@@ -103,6 +103,11 @@ struct LLMTokenUsage
 LLMTokenUsage NXCORE_EXPORTABLE *SetLLMTokenUsageCollector(LLMTokenUsage *collector);
 
 /**
+ * Get LLM token usage collector set for calling thread (nullptr if not set)
+ */
+LLMTokenUsage NXCORE_EXPORTABLE *GetLLMTokenUsageCollector();
+
+/**
  * LLM provider abstract base class
  */
 class NXCORE_EXPORTABLE LLMProvider

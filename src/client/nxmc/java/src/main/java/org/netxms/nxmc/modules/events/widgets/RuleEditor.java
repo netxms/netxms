@@ -76,7 +76,7 @@ import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.propertypages.RuleAction;
 import org.netxms.nxmc.modules.events.propertypages.RuleActionScript;
-import org.netxms.nxmc.modules.events.propertypages.RuleAiAgentInstructions;
+import org.netxms.nxmc.modules.events.propertypages.RuleAiInstructions;
 import org.netxms.nxmc.modules.events.propertypages.RuleAlarm;
 import org.netxms.nxmc.modules.events.propertypages.RuleChainCalls;
 import org.netxms.nxmc.modules.events.propertypages.RuleComments;
@@ -1094,11 +1094,11 @@ public class RuleEditor extends Composite
          }
       }
 
-      /* AI agent instructions */
-      if (!rule.getAiAgentInstructions().isBlank())
+      /* AI instructions */
+      if (!rule.getAiInstructions().isBlank())
       {
-         final MouseListener listener = createMouseListener("AIAgentInstructions");
-         addActionGroupLabel(clientArea, i18n.tr("Instruct AI agent:"), SharedIcons.IMG_AI_ASSISTANT, listener);
+         final MouseListener listener = createMouseListener("AIInstructions");
+         addActionGroupLabel(clientArea, i18n.tr("Instruct AI assistant:"), SharedIcons.IMG_AI_ASSISTANT, listener);
 
          Text aiInstructions = new Text(clientArea, SWT.MULTI | SWT.WRAP);
          GridData gd = new GridData();
@@ -1106,7 +1106,7 @@ public class RuleEditor extends Composite
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          aiInstructions.setLayoutData(gd);
-         aiInstructions.setText(rule.getAiAgentInstructions());
+         aiInstructions.setText(rule.getAiInstructions());
          aiInstructions.setEditable(false);
          aiInstructions.addMouseListener(listener);
       }
@@ -1235,7 +1235,7 @@ public class RuleEditor extends Composite
       pm.addTo("Action", new PreferenceNode("ActionScript", new RuleActionScript(this)));
       pm.addTo("Action", new PreferenceNode("TimerCancellations", new RuleTimerCancellations(this)));
       pm.addTo("Action", new PreferenceNode("ChainCalls", new RuleChainCalls(this)));
-      pm.addTo("Action", new PreferenceNode("AIAgentInstructions", new RuleAiAgentInstructions(this)));
+      pm.addTo("Action", new PreferenceNode("AIInstructions", new RuleAiInstructions(this)));
       pm.addToRoot(new PreferenceNode("Comments", new RuleComments(this)));
 
       PropertyDialog dlg = new PropertyDialog(editor.getWindow().getShell(), pm, String.format(i18n.tr("Edit Rule %d"), ruleNumber)) {

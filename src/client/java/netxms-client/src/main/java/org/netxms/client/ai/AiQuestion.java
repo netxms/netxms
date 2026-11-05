@@ -23,7 +23,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 /**
- * AI agent question for user interaction
+ * AI assistant question for user interaction
  */
 public class AiQuestion
 {

@@ -7400,10 +7400,9 @@ msgstr "Pravidlo je &zakázáno"
 msgid "Accept &correlated events"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleAiAgentInstructions.java:43
-#, fuzzy
-msgid "AI Agent Instructions"
-msgstr "Agent Configurations"
+#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleAiInstructions.java:43
+msgid "AI Instructions"
+msgstr "Pokyny pro AI"
 
 #: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleTimeFilter.java:57
 #, fuzzy
@@ -8401,8 +8400,8 @@ msgid "Call chains:"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:1101
-msgid "Instruct AI agent:"
-msgstr ""
+msgid "Instruct AI assistant:"
+msgstr "Instruovat AI asistenta:"
 
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:1118
 msgid "Force event logging"
@@ -26155,7 +26154,7 @@ msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/propertypages/AiOperatorInstructions.java:122
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiOperatorManager.java:104
-msgid "Iteration"
+msgid "Cycle"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/propertypages/AiOperatorInstructions.java:122
@@ -26188,7 +26187,7 @@ msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/AiSkillsConfigurationElement.java:42
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:85
-msgid "AI Skills & Functions"
+msgid "AI Skills & Tools"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/dialogs/AiMemoryEntryEditDialog.java:84
@@ -26611,14 +26610,12 @@ msgid "Do you really want to delete selected tasks?"
 msgstr "Opravdu chcete smazat označené akce?"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiTaskManager.java:316
-#, fuzzy
-msgid "Delete AI agent tasks"
-msgstr "Smazat balíčky agenta"
+msgid "Delete AI tasks"
+msgstr "Smazat úlohy AI"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiTaskManager.java:329
-#, fuzzy
-msgid "Cannot delete AI agent task"
-msgstr "Nelze smazat šablonu události"
+msgid "Cannot delete AI task"
+msgstr "Nelze smazat úlohu AI"
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/helpers/AiOperatorLabelProvider.java:93
 msgid "Unlimited"
@@ -26767,7 +26764,7 @@ msgid "Confirm Reset"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiOperatorManager.java:433
-msgid "Accumulated state (memento, current focus, watch list, standing instructions, and iteration counter) of selected AI operator instances will be cleared. Standing checks are kept. Are you sure?"
+msgid "Accumulated state (memento, current focus, watch list, standing instructions, and cycle counter) of selected AI operator instances will be cleared. Standing checks are kept. Are you sure?"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiOperatorManager.java:437
@@ -26787,11 +26784,11 @@ msgid "&Remove custom entry"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:279
-msgid "Loading AI skills and functions"
+msgid "Loading AI skills and tools"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:304
-msgid "Cannot load AI skills and functions"
+msgid "Cannot load AI skills and tools"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:322
@@ -26815,7 +26812,7 @@ msgid "Add Custom Entry"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:362
-msgid "Enter the name of the skill or function to disable:"
+msgid "Enter the name of the skill or tool to disable:"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:372
@@ -26824,7 +26821,7 @@ msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:373
 #, java-format
-msgid "Is \"{0}\" a skill or a function?"
+msgid "Is \"{0}\" a skill or a tool?"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/ai/views/AiSkillsManager.java:381

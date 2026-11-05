@@ -96,7 +96,7 @@ struct ChatStatus
    ChatState state;
    std::string response;         // Assistant response, set when state is COMPLETED
    std::string errorMessage;     // Error message, set when state is FAILED
-   std::string currentFunction;  // Name of function being executed by assistant, if any
+   std::string currentTool;  // Name of tool being executed by assistant, if any
    Question question;            // Pending question, valid if question.id is not 0
 
    ChatStatus()
@@ -330,7 +330,7 @@ bool ReadInputLine(const char *prompt, std::string *line);
 void WriteOutput(const char *text);
 void AppendHighlightedText(std::string *output, const char *attributes, const char *text);
 
-void ProgressIndicatorUpdate(const char *currentFunction);
+void ProgressIndicatorUpdate(const char *currentTool);
 void ProgressIndicatorStop();
 
 bool GetConfigFilePath(const TCHAR *name, TCHAR *path, size_t size);
