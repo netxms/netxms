@@ -276,13 +276,15 @@ void Sensor::calculateCompoundStatus(bool forcedRecalc)
 }
 
 /**
- * Get effective source node for given data collection object
+ * Get effective source node for given data collection object. Modbus DCOs are collected by the sensor itself
+ * (through its gateway node, with the sensor's unit ID), all other external sources by the gateway node.
  */
 uint32_t Sensor::getEffectiveSourceNode(DCObject *dco)
 {
    if (dco->getSourceNode() != 0)
       return dco->getSourceNode();
-   if ((dco->getDataSource() != DS_INTERNAL) && (dco->getDataSource() != DS_PUSH_AGENT) && (dco->getDataSource() != DS_OTLP) && (dco->getDataSource() != DS_COMPUTED) && (dco->getDataSource() != DS_SCRIPT))
+   int source = dco->getDataSource();
+   if ((source != DS_INTERNAL) && (source != DS_PUSH_AGENT) && (source != DS_OTLP) && (source != DS_COMPUTED) && (source != DS_SCRIPT) && (source != DS_MODBUS))
       return m_gatewayNodeId;
    return 0;
 }
