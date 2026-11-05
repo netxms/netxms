@@ -2656,6 +2656,10 @@ msgid "Login as mobile device"
 msgstr "Se connecter en tant que peripherique mobile"
 
 #: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:108
+msgid "Access server file system from scripts"
+msgstr "Accéder au système de fichiers du serveur depuis les scripts"
+
+#: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:108
 #, fuzzy
 msgid "Manage object categories"
 msgstr "Gerer les packages"

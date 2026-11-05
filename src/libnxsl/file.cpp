@@ -37,6 +37,12 @@ int F_FileAccess(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[1]->isInteger())
 		return NXSL_ERR_NOT_INTEGER;
 
+	if (!CheckFileIOAccess(vm))
+	{
+		*result = vm->createValue(false);
+		return 0;
+	}
+
 	*result = vm->createValue(_taccess(argv[0]->getValueAsCString(), argv[1]->getValueAsInt32()) == 0);
 	return 0;
 }
@@ -54,6 +60,12 @@ int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
+
+	if (!CheckFileIOAccess(vm))
+	{
+		*result = vm->createValue(false);
+		return 0;
+	}
 
 	*result = vm->createValue(CopyFileOrDirectory(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()));
 	return 0;
@@ -73,6 +85,12 @@ int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
+	if (!CheckFileIOAccess(vm))
+	{
+		*result = vm->createValue(false);
+		return 0;
+	}
+
 	*result = vm->createValue(_trename(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()) == 0);
 	return 0;
 }
@@ -87,6 +105,12 @@ int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
+	if (!CheckFileIOAccess(vm))
+	{
+		*result = vm->createValue(false);
+		return 0;
+	}
+
 	*result = vm->createValue(_tremove(argv[0]->getValueAsCString()) == 0);
 	return 0;
 }
@@ -100,6 +124,12 @@ int F_CreateDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
+
+	if (!CheckFileIOAccess(vm))
+	{
+		*result = vm->createValue(false);
+		return 0;
+	}
 
 #ifdef _WIN32
 	*result = vm->createValue(CreateDirectory(argv[0]->getValueAsCString(), nullptr));
@@ -118,6 +148,12 @@ int F_RemoveDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 {
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
+
+	if (!CheckFileIOAccess(vm))
+	{
+		*result = vm->createValue(false);
+		return 0;
+	}
 
 #ifdef _WIN32
    *result = vm->createValue(RemoveDirectory(argv[0]->getValueAsCString()));

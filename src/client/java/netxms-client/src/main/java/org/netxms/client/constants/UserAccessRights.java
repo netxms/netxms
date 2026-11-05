@@ -85,6 +85,7 @@ public final class UserAccessRights
    public static final long SYSTEM_ACCESS_MANAGE_AI_OPERATORS     = 0x400000000000000L;
    public static final long SYSTEM_ACCESS_HTTP_REQUESTS           = 0x800000000000000L;
    public static final long SYSTEM_ACCESS_MANAGE_AI_MEMORY        = 0x1000000000000000L;
+   public static final long SYSTEM_ACCESS_NXSL_FILE_IO            = 0x2000000000000000L;
 
 	// Object access rights
 	public static final long OBJECT_ACCESS_READ             = 0x00000001L;

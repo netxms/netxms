@@ -105,6 +105,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_TOOLS, i18n.tr("Configure object tools")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_USERS, i18n.tr("Manage users")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, i18n.tr("Login as mobile device")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_NXSL_FILE_IO, i18n.tr("Access server file system from scripts")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_OBJECT_CATEGORIES, i18n.tr("Manage object categories")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, i18n.tr("Manage own scheduled tasks")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_PERSISTENT_STORAGE, i18n.tr("Manage persistent storage")));

@@ -275,6 +275,12 @@ int F_OpenFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		mode = _T("r");
 	}
 
+	if (!CheckFileIOAccess(vm))
+	{
+		*ppResult = vm->createValue();
+		return 0;
+	}
+
 	FILE *handle = _tfopen(argv[0]->getValueAsCString(), mode);
 	if (handle != NULL)
 	{

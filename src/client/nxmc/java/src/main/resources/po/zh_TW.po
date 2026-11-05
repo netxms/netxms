@@ -2651,6 +2651,10 @@ msgid "Login as mobile device"
 msgstr "以行動裝置身分登入"
 
 #: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:108
+msgid "Access server file system from scripts"
+msgstr "從指令碼存取伺服器檔案系統"
+
+#: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:108
 msgid "Manage object categories"
 msgstr "管理物件類別"
 

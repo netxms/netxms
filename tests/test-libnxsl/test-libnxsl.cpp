@@ -141,6 +141,96 @@ static void RunTestScript(const TCHAR *name)
 /**
  * main()
  */
+/**
+ * Security context that denies every access check
+ */
+class DenyAllSecurityContext : public NXSL_SecurityContext
+{
+public:
+   virtual bool validateAccess(int subsystem, uint64_t requiredAccess, const void *object) override
+   {
+      return false;
+   }
+};
+
+/**
+ * Run inline script with file I/O functions enabled and return its integer result
+ */
+static int32_t RunFileIOScript(const char *source, const TCHAR *fileName, NXSL_SecurityContext *securityContext)
+{
+   NXSL_Environment *env = new NXSL_Environment();
+   env->registerIOFunctions();
+
+   NXSL_CompilationDiagnostic compileDiag;
+   NXSL_VM *vm = NXSLCompileAndCreateVM(source, env, &compileDiag);
+   AssertNotNull(vm);
+   if (securityContext != nullptr)
+      vm->setSecurityContext(securityContext);
+
+   ObjectRefArray<NXSL_Value> args(1, 1);
+   args.add(vm->createValue(fileName));
+   bool success = vm->run(args);
+   if (!success)
+      WriteToTerminalEx(_T("\n   Script error: %s\n"), vm->getErrorText());
+   AssertTrue(success);
+   AssertNotNull(vm->getResult());
+   AssertTrue(vm->getResult()->isInteger());
+   int32_t result = vm->getResult()->getValueAsInt32();
+   delete vm;
+   return result;
+}
+
+/**
+ * Test access control for file I/O functions
+ */
+static void TestFileIOAccessControl()
+{
+   StartTest(_T("File I/O access control"));
+
+   TCHAR fileName[MAX_PATH];
+   GetNetXMSDirectory(nxDirData, fileName);
+   _tcslcat(fileName, FS_PATH_SEPARATOR _T("nxsl-test-file-io.tmp"), MAX_PATH);
+   FILE *f = _tfopen(fileName, _T("w"));
+   if (f == nullptr)
+   {
+      // Fall back to current directory if data directory is not writable
+      _tcscpy(fileName, _T("nxsl-test-file-io.tmp"));
+      f = _tfopen(fileName, _T("w"));
+   }
+   AssertNotNull(f);
+   fputs("test", f);
+   fclose(f);
+
+   // Without security context every function works
+   AssertEquals(RunFileIOScript(
+      "import IO;\n"
+      "if (!FileAccess($1, 0)) return 1;\n"
+      "f = OpenFile($1);\n"
+      "if (f == null) return 2;\n"
+      "f.close();\n"
+      "return 0;", fileName, nullptr), 0);
+
+   // Denying security context: functions fail without touching the file system
+   AssertEquals(RunFileIOScript(
+      "import IO;\n"
+      "if (FileAccess($1, 0)) return 1;\n"
+      "if (OpenFile($1) != null) return 2;\n"
+      "if (OpenFile($1, \"w\") != null) return 3;\n"
+      "if (CopyFile($1, $1 .. \".copy\")) return 4;\n"
+      "if (RenameFile($1, $1 .. \".renamed\")) return 5;\n"
+      "if (CreateDirectory($1 .. \".dir\")) return 6;\n"
+      "if (RemoveDirectory($1 .. \".dir\")) return 7;\n"
+      "if (DeleteFile($1)) return 8;\n"
+      "return 0;", fileName, new DenyAllSecurityContext()), 0);
+   AssertTrue(_taccess(fileName, 0) == 0);
+
+   // Without security context again - file is intact and can be deleted
+   AssertEquals(RunFileIOScript("import IO;\nreturn DeleteFile($1) ? 0 : 1;", fileName, nullptr), 0);
+   AssertTrue(_taccess(fileName, 0) != 0);
+
+   EndTest();
+}
+
 int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
@@ -173,6 +263,7 @@ int main(int argc, char *argv[])
 
    TestCompiler();
    TestStop();
+   TestFileIOAccessControl();
    RunTestScript(_T("addr.nxsl"));
    RunTestScript(_T("arrays.nxsl"));
    RunTestScript(_T("base64.nxsl"));

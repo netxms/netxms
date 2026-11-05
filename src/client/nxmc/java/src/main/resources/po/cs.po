@@ -2656,6 +2656,10 @@ msgid "Login as mobile device"
 msgstr "Přihlásit se jako mobilní zařízení"
 
 #: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:108
+msgid "Access server file system from scripts"
+msgstr "Přístup k souborovému systému serveru ze skriptů"
+
+#: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:108
 #, fuzzy
 msgid "Manage object categories"
 msgstr "Spravovat balíčky"

@@ -2649,6 +2649,10 @@ msgid "Login as mobile device"
 msgstr "Acesso com dispositivo móvel"
 
 #: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:108
+msgid "Access server file system from scripts"
+msgstr "Acessar o sistema de arquivos do servidor a partir de scripts"
+
+#: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:108
 msgid "Manage object categories"
 msgstr "Gerenciar categorias de objeto"
 

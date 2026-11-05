@@ -986,6 +986,12 @@ struct NXSL_FunctionImport
 };
 
 /**
+ * NXSL security context subsystem identifiers
+ */
+#define NXSL_AC_OBJECT    0
+#define NXSL_AC_SYSTEM    1
+
+/**
  * NXSL security context
  */
 class LIBNXSL_EXPORTABLE NXSL_SecurityContext

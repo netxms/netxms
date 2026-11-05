@@ -26,6 +26,15 @@
 #include <openssl/x509.h>
 
 /**
+ * Upgrade from 70.59 to 71.0
+ */
+static bool H_UpgradeFromV59()
+{
+   CHK_EXEC(SetMajorSchemaVersion(71, 0));
+   return true;
+}
+
+/**
  * Convert hex encoded PKCS#1 RSA public key (format of public key certificate mapping data before 62.44) to public
  * key fingerprint - SHA-256 hash of DER encoded SubjectPublicKeyInfo. Returns false if data is not PKCS#1 RSA public
  * key (keys of other types were stored without key parameters and cannot be converted).
@@ -1936,6 +1945,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 59, 71, 0,  H_UpgradeFromV59 },
    { 58, 70, 59, H_UpgradeFromV58 },
    { 57, 70, 58, H_UpgradeFromV57 },
    { 56, 70, 57, H_UpgradeFromV56 },
@@ -2007,7 +2017,7 @@ bool MajorSchemaUpgrade_V70()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 70) && (minor < DB_SCHEMA_VERSION_V70_MINOR))
+   while (major == 70)
    {
       // Find upgrade procedure
       int i;

@@ -515,12 +515,6 @@ public:
 };
 
 /**
- * NXSL security context subsystem identifiers
- */
-#define NXSL_AC_OBJECT    0
-#define NXSL_AC_SYSTEM    1
-
-/**
  * NXSL security context for user-initiated scripts
  */
 class NXCORE_EXPORTABLE NXSL_UserSecurityContext : public NXSL_SecurityContext

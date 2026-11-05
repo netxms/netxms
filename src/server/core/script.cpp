@@ -56,7 +56,13 @@ bool NXSL_UserSecurityContext::validateAccess(int subsystem, uint64_t requiredAc
          return false;
       }
       case NXSL_AC_SYSTEM:
-         return (GetEffectiveSystemRights(m_userId) & requiredAccess) == requiredAccess;
+      {
+         uint64_t systemRights = GetEffectiveSystemRights(m_userId);
+         if ((systemRights & requiredAccess) == requiredAccess)
+            return true;
+         nxlog_debug_tag(L"nxsl.security", 4, L"Access denied: user %u, required system access 0x" UINT64X_FMT(L"016"), m_userId, requiredAccess);
+         return false;
+      }
       default:
          return false;
    }

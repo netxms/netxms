@@ -29,6 +29,7 @@
 #include <nxcpapi.h>
 #include <nxsl.h>
 #include <nxqueue.h>
+#include <nxcldefs.h>
 
 union YYSTYPE;
 typedef void *yyscan_t;
@@ -38,6 +39,14 @@ typedef void *yyscan_t;
 //
 
 #define MAX_STRING_SIZE    8192
+
+/**
+ * Check if file I/O functions are permitted by VM's security context
+ */
+static inline bool CheckFileIOAccess(NXSL_VM *vm)
+{
+   return vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_NXSL_FILE_IO);
+}
 
 /**
  * Instruction opcodes
