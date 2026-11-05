@@ -26,20 +26,6 @@
 #define DEBUG_TAG _T("data.extractor")
 
 /**
- * Function to replace new line to space
- */
-static char *RemoveNewLines(char* str)
-{
-    char *currentPos = strchr(str,'\n');
-    while (currentPos != nullptr)
-    {
-        *currentPos = ' ';
-        currentPos = strchr(currentPos,'\n');
-    }
-    return str;
-}
-
-/**
  * Constructor
  */
 StructuredDataExtractor::StructuredDataExtractor(const TCHAR *source)
@@ -98,6 +84,20 @@ uint32_t StructuredDataExtractor::getMetricFromXML(const TCHAR *query, char *buf
 }
 
 #ifdef HAVE_LIBJQ
+
+/**
+ * Function to replace new line to space
+ */
+static char *RemoveNewLines(char* str)
+{
+    char *currentPos = strchr(str,'\n');
+    while (currentPos != nullptr)
+    {
+        *currentPos = ' ';
+        currentPos = strchr(currentPos,'\n');
+    }
+    return str;
+}
 
 /**
  * JQ logging callback
