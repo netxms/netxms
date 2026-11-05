@@ -1304,6 +1304,12 @@ void DataCollectionTarget::queueItemsForPolling()
                {
                   target = static_cast<Node*>(this);
                }
+               else if (getObjectClass() == OBJECT_SENSOR)
+               {
+                  // Sensor collects Modbus data itself, but through its gateway node
+                  sourceNode = FindObjectById(static_cast<Sensor*>(this)->getGatewayNodeId(), OBJECT_NODE);
+                  target = static_cast<Node*>(sourceNode.get());
+               }
                else
                {
                   // skip connectivity check if target is not a node
