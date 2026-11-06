@@ -332,6 +332,7 @@ Root: HKLM; Subkey: "Software\NetXMS\Server"; ValueType: string; ValueName: "Con
 
 [InstallDelete]
 Type: files; Name: "{app}\lib\java\*.jar"
+Type: files; Name: "{app}\bin\mysql.ddr"
 Type: files; Name: "{app}\share\mibs\CHECKPOINT-NG-MIB.mib"
 Type: files; Name: "{app}\share\mibs\CISCO-VLAN-BRIDGE-MIB.mib"
 

@@ -57,7 +57,7 @@ External libraries must be built for (or downloaded as) llvm-mingw import librar
 - **libssh** – SSH subagent
 - **libmosquitto** – MQTT subagent
 - **Java JDK** – Java subagent (JNI headers)
-- **PostgreSQL / MySQL / MariaDB / Oracle / Informix / DB2 client libraries** – corresponding database drivers
+- **PostgreSQL / MariaDB / Oracle / Informix / DB2 client libraries** – corresponding database drivers (no MySQL driver is built on Windows; libnxdb loads `mariadb.ddr` when `mysql.ddr` is requested)
 
 The template expects SDKs under a common root (`C:/SDK-llvm-mingw/<name>`), with per-architecture libraries in `lib/<arch>`. Adjust the paths in `config.mingw` to match your layout.
 
@@ -284,7 +284,7 @@ Update the SDK path in `config.mingw` and verify the per-architecture library fi
 - `C:/SDK-llvm-mingw/openssl/lib/x64/libssl.a` (or `.dll.a`)
 - `C:/SDK-llvm-mingw/openssl/lib/x64/libcrypto.a`
 
-Some vendor SDKs (MySQL, Oracle, DB2, ...) ship MSVC-style `*.lib` import libraries. Link those by exact file name, e.g. `-l:libmysql.lib` (the `config.mingw` entries for those database drivers already do this). libpq and MariaDB are built with llvm-mingw and link normally via `-lpq` / `-lmariadb`.
+Some vendor SDKs (Oracle, DB2, Informix) ship MSVC-style `*.lib` import libraries. Link those by exact file name, e.g. `-l:oci.lib` (the `config.mingw` entries for those database drivers already do this). libpq and MariaDB are built with llvm-mingw and link normally via `-lpq` / `-lmariadb`.
 
 ### Resource compiler errors
 

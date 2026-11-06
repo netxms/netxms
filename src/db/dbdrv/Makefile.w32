@@ -15,8 +15,8 @@
 # just pgsql, mariadb, the in-tree sqlite engine and the Windows-native
 # ODBC/MSSQL drivers.
 #   pgsql    -> PostgreSQL client (libpq)
-#   mysql    -> MySQL client
-#   mariadb  -> MariaDB client
+#   mariadb  -> MariaDB client (also serves MySQL servers; libnxdb loads it
+#               when mysql.ddr is requested)
 #   oracle   -> Oracle Instant Client (OCI)
 #   db2      -> IBM DB2 CLI
 #   informix -> IBM Informix CLI
@@ -30,7 +30,6 @@ MINGW_SDK_DRIVERS = \
 VENDOR_SDK_DRIVERS = \
 	db2 \
 	informix \
-	mysql \
 	oracle
 
 BASE_DRIVERS = \
