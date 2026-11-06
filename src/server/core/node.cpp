@@ -13514,6 +13514,36 @@ uint32_t Node::getEffectiveIcmpProxy()
 }
 
 /**
+ * Ping address via ICMP proxy over established agent connection. Returns ICMP_SUCCESS (round trip time in *rtt) or
+ * ICMP_TIMEOUT when PING subagent reports result (it reports 10000 for no response), ICMP_SEND_FAILED when proxy
+ * agent does not answer the request, and ICMP_API_ERROR for any other failure (metric not supported by proxy,
+ * malformed response). Agent error code is stored in *agentError for diagnostics.
+ */
+static uint32_t PingViaProxy(AgentConnection *conn, const InetAddress& addr, uint32_t *rtt, uint32_t *agentError, const wchar_t *debugTag)
+{
+   wchar_t addrText[64], metric[128], buffer[64];
+   addr.toString(addrText);
+   nx_swprintf(metric, 128, L"Icmp.Ping(%s)", addrText);
+   uint32_t rcc = conn->getParameter(metric, buffer, 64);
+   *agentError = rcc;
+   if (rcc != ERR_SUCCESS)
+   {
+      nxlog_debug_tag(debugTag, 7, L"PingViaProxy(%s): request failed (%u: %s)", addrText, rcc, AgentErrorCodeToText(rcc));
+      return (rcc == ERR_REQUEST_TIMEOUT) ? ICMP_SEND_FAILED : ICMP_API_ERROR;
+   }
+
+   nxlog_debug_tag(debugTag, 7, L"PingViaProxy(%s): proxy response \"%s\"", addrText, buffer);
+   wchar_t *eptr;
+   long value = wcstol(buffer, &eptr, 10);
+   if ((*eptr != 0) || (value < 0))
+      return ICMP_API_ERROR;
+   if (value >= 10000)
+      return ICMP_TIMEOUT;
+   *rtt = static_cast<uint32_t>(value);
+   return ICMP_SUCCESS;
+}
+
+/**
  * Ping given address from server or via effective ICMP proxy for this node. Returns ICMP_SUCCESS if address responds,
  * ICMP_TIMEOUT or ICMP_UNREACHABLE if it does not respond, and other ICMP_* codes if ping cannot be performed
  * (proxy not available, PING subagent not loaded on proxy, etc.). Reason for failure to perform ping is reported
@@ -13552,34 +13582,24 @@ uint32_t Node::pingAddress(const InetAddress& addr, const wchar_t *indent)
       return ICMP_SEND_FAILED;
    }
 
-   wchar_t metric[128], buffer[64];
-   nx_swprintf(metric, 128, L"Icmp.Ping(%s)", addrText);
-   uint32_t rcc = conn->getParameter(metric, buffer, 64);
-   if (rcc == ERR_SUCCESS)
-   {
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Node::pingAddress(%s [%u]): ping of %s via proxy %s [%u], response \"%s\"", m_name, m_id, addrText, proxyNode->getName(), icmpProxy, buffer);
-      wchar_t *eptr;
-      long rtt = wcstol(buffer, &eptr, 10);
-      if ((*eptr != 0) || (rtt < 0))
-      {
-         sendPollerMsg(POLLER_WARNING L"%lsInvalid response from ICMP proxy\r\n", indent);
-         return ICMP_API_ERROR;
-      }
-      return (rtt < 10000) ? ICMP_SUCCESS : ICMP_TIMEOUT;   // PING subagent reports 10000 for no response
-   }
-
-   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Node::pingAddress(%s [%u]): ping of %s via proxy %s [%u] failed (%u: %s)", m_name, m_id, addrText, proxyNode->getName(), icmpProxy, rcc, AgentErrorCodeToText(rcc));
-   if (rcc == ERR_REQUEST_TIMEOUT)
+   uint32_t rtt, rcc;
+   uint32_t status = PingViaProxy(conn.get(), addr, &rtt, &rcc, DEBUG_TAG_STATUS_POLL);
+   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Node::pingAddress(%s [%u]): ping of %s via proxy %s [%u], status %u", m_name, m_id, addrText, proxyNode->getName(), icmpProxy, status);
+   if (status == ICMP_SEND_FAILED)
    {
       // Proxy agent did not answer in time; this says nothing about target reachability
       sendPollerMsg(POLLER_WARNING L"%lsICMP proxy did not respond to ping request\r\n", indent);
-      return ICMP_SEND_FAILED;
    }
-   if ((rcc == ERR_UNKNOWN_METRIC) || (rcc == ERR_UNSUPPORTED_METRIC))
-      sendPollerMsg(POLLER_WARNING L"%lsICMP ping metric is not supported by proxy agent (PING subagent may not be loaded)\r\n", indent);
-   else
-      sendPollerMsg(POLLER_WARNING L"%lsICMP proxy returned error: %ls\r\n", indent, AgentErrorCodeToText(rcc));
-   return ICMP_API_ERROR;
+   else if (status == ICMP_API_ERROR)
+   {
+      if ((rcc == ERR_UNKNOWN_METRIC) || (rcc == ERR_UNSUPPORTED_METRIC))
+         sendPollerMsg(POLLER_WARNING L"%lsICMP ping metric is not supported by proxy agent (PING subagent may not be loaded)\r\n", indent);
+      else if (rcc != ERR_SUCCESS)
+         sendPollerMsg(POLLER_WARNING L"%lsICMP proxy returned error: %ls\r\n", indent, AgentErrorCodeToText(rcc));
+      else
+         sendPollerMsg(POLLER_WARNING L"%lsInvalid response from ICMP proxy\r\n", indent);
+   }
+   return status;
 }
 
 /**
@@ -17363,29 +17383,11 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
    uint32_t status = ICMP_SEND_FAILED, rtt = 0;
    if (conn != nullptr)
    {
-      TCHAR parameter[128];
-      _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), addr.toString(buffer));
-      uint32_t rcc = conn->getParameter(parameter, buffer, 64);
-      if (rcc == ERR_SUCCESS)
-      {
-         nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: proxy response: \"%s\""), debugPrefix, buffer);
-         TCHAR *eptr;
-         rtt = _tcstol(buffer, &eptr, 10);
-         if (*eptr == 0)
-         {
-            status = ICMP_SUCCESS;
-         }
-      }
-      else if (rcc == ERR_REQUEST_TIMEOUT)
-      {
-         status = ICMP_TIMEOUT;
-         rtt = 10000;
-      }
-      else if ((rcc == ERR_UNKNOWN_METRIC) || (rcc == ERR_UNSUPPORTED_METRIC))
-      {
-         nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 5, _T("%s ICMP ping metric is not supported by proxy agent (PING subagent may not be loaded)"), debugPrefix);
-      }
-      nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, _T("%s: response time %u"), debugPrefix, rtt);
+      uint32_t rcc;
+      status = PingViaProxy(conn, addr, &rtt, &rcc, DEBUG_TAG_ICMP_POLL);
+      if ((rcc == ERR_UNKNOWN_METRIC) || (rcc == ERR_UNSUPPORTED_METRIC))
+         nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 5, L"%s ICMP ping metric is not supported by proxy agent (PING subagent may not be loaded)", debugPrefix);
+      nxlog_debug_tag(DEBUG_TAG_ICMP_POLL, 7, L"%s: ping via proxy status=%u RTT=%u", debugPrefix, status, rtt);
    }
    else  // not using ICMP proxy
    {
