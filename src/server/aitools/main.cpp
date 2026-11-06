@@ -89,6 +89,7 @@ std::string F_GetObservationPoints(json_t *arguments, uint32_t userId);
 std::string F_GetTrafficObservers(json_t *arguments, uint32_t userId);
 std::string F_GetObject(json_t *arguments, uint32_t userId);
 std::string F_GetObjectTimeline(json_t *arguments, uint32_t userId);
+std::string F_GetNodeHealth(json_t *arguments, uint32_t userId);
 std::string F_SendNotification(json_t *arguments, uint32_t userId);
 std::string F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId);
 std::string F_SNMPWalk(json_t *arguments, uint32_t userId);
@@ -225,6 +226,26 @@ static void CreateAIToolList()
          { "limit_per_category", "maximum number of records per category, 1-200 (default: 50)", "integer" }
       },
       F_GetObjectTimeline);
+   RegisterAITool(
+      "get-node-health",
+      "Get one-call OS-level health snapshot of a node (server, workstation, VM) with pre-evaluated findings. "
+      "Use this to answer 'is this host itself healthy?' - before drilling into individual metrics. "
+      "The 'findings' array lists detected problems (e.g. filesystem almost full, swap in use, failed service, clock offset, "
+      "recent reboot, interface errors, agent problems) with severity 'critical', 'warning' or 'info'; an empty array means no problems were detected. "
+      "Raw sections follow: cpu, memory, disks, uptime, services (failed or automatic-but-stopped), topProcesses (by memory and by CPU), "
+      "interfaces (error and drop counters), clock (offset from server time), agentProblems. "
+      "Data is read live from the NetXMS agent, or from SNMP HOST-RESOURCES-MIB and IF-MIB for nodes without agent "
+      "or when the agent is not reachable (services, processes, clock and agent problems are then not available). "
+      "Interface error rates come from existing error/discard DCIs when they are collected, otherwise from two live samples a few seconds apart; "
+      "the call therefore takes at least 3 seconds. "
+      "Sections that could not be read contain 'error' with data collection error name (e.g. NOT_SUPPORTED, COMM_ERROR). "
+      "If the node cannot be reached at all, last collected values of OS health DCIs are returned in 'dciLastValues' instead. "
+      "Not for status calculation (use explain-object-status), DCI values (use get-metrics) or interface link state (use get-node-interfaces).",
+      {
+         { "object", "mandatory name or ID of a node" },
+         { "top", "number of top processes to return in each ranking, 1-50 (default: 5)", "integer" }
+      },
+      F_GetNodeHealth);
    RegisterAITool(
       "send-notification",
       "Send notification to given recipient using one of configured notification channels.",
