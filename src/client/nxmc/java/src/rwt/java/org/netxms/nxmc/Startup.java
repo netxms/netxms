@@ -34,6 +34,7 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.window.Window.IExceptionHandler;
+import org.eclipse.rap.json.JsonObject;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.application.EntryPoint;
 import org.eclipse.rap.rwt.client.service.ExitConfirmation;
@@ -41,6 +42,8 @@ import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.client.service.StartupParameters;
 import org.eclipse.rap.rwt.internal.application.ApplicationContextImpl;
 import org.eclipse.rap.rwt.internal.service.ContextProvider;
+import org.eclipse.rap.rwt.remote.AbstractOperationHandler;
+import org.eclipse.rap.rwt.remote.RemoteObject;
 import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
@@ -48,7 +51,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
 import org.netxms.certificate.manager.CertificateManagerProvider;
@@ -101,7 +103,7 @@ public class Startup implements EntryPoint, StartupParameters
 
    private I18n i18n = LocalizationHelper.getI18n(Startup.class);
    private Display display;
-   private long activityTimestamp = System.currentTimeMillis();
+   private volatile long activityTimestamp = System.currentTimeMillis();
 
    static
    {
@@ -348,20 +350,18 @@ public class Startup implements EntryPoint, StartupParameters
          return;
       }
 
-      Listener activityListener = (e) -> {
-         activityTimestamp = System.currentTimeMillis();
-      };
-      // RWT transmits an event to the server only if some widget has a listener for it,
-      // so raw mouse/key events alone are not a reliable activity indicator (most user
-      // interaction arrives as Selection, Modify, etc.). Track every event type that
-      // reaches the server during normal interaction. Timer-driven view refreshes do
-      // not dispatch widget events and therefore do not count as activity.
-      int[] activityEvents = {
-         SWT.Collapse, SWT.DefaultSelection, SWT.Expand, SWT.FocusIn, SWT.KeyDown, SWT.MenuDetect,
-         SWT.Modify, SWT.MouseDoubleClick, SWT.MouseDown, SWT.MouseUp, SWT.Selection
-      };
-      for(int eventType : activityEvents)
-         display.addFilter(eventType, activityListener);
+      // Widget events are not used as activity indicator: RWT sends mouse and key events to the server
+      // only for widgets that listen for them, and fires Modify, FocusIn, Selection etc. on programmatic
+      // changes as well. Real user input is reported by client side script (activitytracker.js).
+      RemoteObject activityTracker = RWT.getUISession().getConnection().createRemoteObject("netxms.ActivityTracker");
+      activityTracker.setHandler(new AbstractOperationHandler() {
+         @Override
+         public void handleNotify(String event, JsonObject properties)
+         {
+            activityTimestamp = System.currentTimeMillis();
+         }
+      });
+      activityTracker.listen("activity", true);
 
       final long inactivityTimeoutMs = inactivityTimeout * 1000L;
       Thread thread = new Thread(() -> {
