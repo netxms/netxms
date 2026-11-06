@@ -22,6 +22,7 @@ Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [InstallDelete]
 Type: files; Name: "{app}\lib\java\*.jar"
+Type: files; Name: "{app}\bin\mysql.ddr"
 
 [Run]
 Filename: "icacls.exe"; Parameters: """{app}"" /inheritance:r"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions

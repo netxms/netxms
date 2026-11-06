@@ -5,7 +5,8 @@
 #
 # DBDriver
 #
-# Database driver to use
+# Database driver to use. On Windows mysql.ddr is not shipped and is treated
+# as an alias for mariadb.ddr, which works with both MySQL and MariaDB servers.
 #
 # DBDriver = mariadb.ddr
 # DBDriver = mssql.ddr

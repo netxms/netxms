@@ -132,9 +132,6 @@ PGSQL_ROOT = $(SDK_ROOT)/libpq
 # MariaDB client library (optional, for mariadb database driver)
 MARIADB_ROOT = $(SDK_ROOT)/mariadb
 
-# MySQL client library (optional, for mysql database driver)
-MYSQL_ROOT = $(SDK_ROOT)/mysql/$(ARCH)
-
 # libmosquitto (optional, for MQTT subagent)
 MOSQUITTO_ROOT = $(SDK_ROOT)/libmosquitto
 
@@ -348,7 +345,6 @@ SNAPPY_LIBS = -L$(SNAPPY_ROOT)/lib/$(ARCH) -lsnappy
 # uses the in-tree nxsqlite engine, so neither needs an entry here.
 PGSQL_LIBS = -L$(PGSQL_ROOT)/lib/$(ARCH) -lpq
 MARIADB_LIBS = -L$(MARIADB_ROOT)/lib/$(ARCH) -lmariadb
-MYSQL_LIBS = -L$(MYSQL_ROOT)/lib -l:libmysql.lib
 ORACLE_LIBS = -L$(ORACLE_ROOT)/sdk/lib/msvc -l:oci.lib
 INFORMIX_LIBS = -L$(INFORMIX_ROOT)/lib -l:iclit09b.lib
 

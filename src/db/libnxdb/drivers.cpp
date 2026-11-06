@@ -71,10 +71,19 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    // Load driver's module
    TCHAR fullName[MAX_PATH];
 #ifdef _WIN32
-   _tcslcpy(fullName, module, MAX_PATH);
-   size_t len = _tcslen(fullName);
-   if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".ddr")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
-      _tcslcat(fullName, _T(".ddr"), MAX_PATH);
+   // MySQL driver is not shipped on Windows - MariaDB driver serves both MySQL and MariaDB servers
+   if (!_tcsicmp(module, _T("mysql")) || !_tcsicmp(module, _T("mysql.ddr")))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DRIVER, 4, _T("Database driver \"%s\" is an alias for \"mariadb.ddr\" on this platform"), module);
+      _tcslcpy(fullName, _T("mariadb.ddr"), MAX_PATH);
+   }
+   else
+   {
+      _tcslcpy(fullName, module, MAX_PATH);
+      size_t len = _tcslen(fullName);
+      if ((len < 4) || (_tcsicmp(&fullName[len - 4], _T(".ddr")) && _tcsicmp(&fullName[len - 4], _T(".dll"))))
+         _tcslcat(fullName, _T(".ddr"), MAX_PATH);
+   }
    driver->m_handle = DLOpen(fullName, szErrorText);
 #else
 	if (_tcscmp(module, _T(":self:")) && (_tcschr(module, _T('/')) == nullptr))
