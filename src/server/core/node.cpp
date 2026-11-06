@@ -8124,7 +8124,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
          if (getChildList().get(i)->getObjectClass() == OBJECT_INTERFACE)
          {
             auto iface = static_cast<Interface*>(getChildList().get(i));
-            if (iface->isFake())
+            if (iface->isPseudoInterface())
             {
                // always delete fake interfaces if we got actual interface list
                deleteList.add(iface);
@@ -8450,7 +8450,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
       MacAddress macAddr(MacAddress::ZERO);
       Interface *iface;
       uint32_t ifaceCount = getInterfaceCount(&iface);
-      if ((ifList != nullptr) && ((ifaceCount > 1) || ((ifaceCount == 1) && !iface->isFake())))
+      if ((ifList != nullptr) && ((ifaceCount > 1) || ((ifaceCount == 1) && !iface->isPseudoInterface())))
       {
          // Node has interfaces from previous polls but do not report them anymore
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): clearing interface list"), m_name, m_id);
@@ -8462,7 +8462,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
       }
       if (ifaceCount == 1)
       {
-         if (iface->isFake())
+         if (iface->isPseudoInterface())
          {
             // Check if primary IP is different from interface's IP
             if (!iface->hasIpAddress(m_ipAddress))
@@ -12837,7 +12837,7 @@ void Node::setPrimaryIPAddress(const InetAddress& addr)
          for (int i = 0; i < getChildList().size(); i++)
          {
             NetObj *iface = getChildList().get(i);
-            if (iface->getObjectClass() == OBJECT_INTERFACE && static_cast<Interface*>(iface)->isFake())
+            if (iface->getObjectClass() == OBJECT_INTERFACE && static_cast<Interface*>(iface)->isPseudoInterface())
             {
                static_cast<Interface*>(iface)->setIpAddress(m_ipAddress);
             }
@@ -12887,7 +12887,7 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
       {
          NetObj *object = getChildList().get(i);
          object->resetStatus();
-         if ((object->getObjectClass() == OBJECT_INTERFACE) && static_cast<Interface*>(object)->isFake())
+         if ((object->getObjectClass() == OBJECT_INTERFACE) && static_cast<Interface*>(object)->isPseudoInterface())
          {
             static_cast<Interface*>(object)->setIpAddress(ipAddr);
          }

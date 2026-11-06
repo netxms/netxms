@@ -4967,6 +4967,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
       value = vm->createValue(iface->isOSPF());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPseudo"))
+   {
+      value = vm->createValue(iface->isPseudoInterface());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPhysicalPort"))
    {
 		value = vm->createValue(iface->isPhysicalPort());

@@ -23,6 +23,27 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 71.5 to 71.6
+ */
+static bool H_UpgradeFromV5()
+{
+   // Mark existing pseudo-interfaces with IF_PSEUDO flag (0x00000800 = 2048); previously they were identified by index 1, type other(1) and name "unknown".
+   // Bit is cleared on all interfaces first because interface flags saved by older versions may contain undefined bits.
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE object_properties SET flags=flags-2048 WHERE BITAND(flags, 2048)<>0 AND object_id IN (SELECT id FROM interfaces)"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE object_properties SET flags=flags-2048 WHERE (flags & 2048)<>0 AND object_id IN (SELECT id FROM interfaces)"));
+   }
+   CHK_EXEC(SQLQuery(L"UPDATE object_properties SET flags=flags+2048 WHERE name='unknown' AND object_id IN (SELECT id FROM interfaces WHERE if_type=1 AND if_index=1)"));
+
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 71.4 to 71.5
  */
 static bool H_UpgradeFromV4()
@@ -136,6 +157,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  71, 6,  H_UpgradeFromV5  },
    { 4,  71, 5,  H_UpgradeFromV4  },
    { 3,  71, 4,  H_UpgradeFromV3  },
    { 2,  71, 3,  H_UpgradeFromV2  },

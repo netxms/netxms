@@ -112,7 +112,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
           : super(), m_macAddress(MacAddress::ZERO), m_description(_T("unknown")), m_ifName(_T("unknown")), m_beforeMaintenaceData(Ownership::True)
 {
    m_parentInterfaceId = 0;
-	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
+   m_flags = IF_PSEUDO | (bSyntheticMask ? IF_SYNTHETIC_MASK : 0);
    if (addrList.isLoopbackOnly())
 		m_flags |= IF_LOOPBACK;
 
@@ -872,7 +872,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
       // ICMP is used only for interfaces whose addresses are known to belong to this node: pseudo-interface
       // (configuration poll keeps its address in sync with node's primary IP) and manually created interfaces.
       // Addresses of other interfaces may not be routable from the server and ping can reach a different host.
-      if ((isFake() || isManuallyCreated()) && !(m_flags & IF_DISABLE_ICMP_STATUS_POLL) &&
+      if ((isPseudoInterface() || isManuallyCreated()) && !(m_flags & IF_DISABLE_ICMP_STATUS_POLL) &&
           !(node->getFlags() & NF_DISABLE_ICMP) && !isLoopback() && m_ipAddressList.hasValidUnicastAddress())
       {
          icmpStatusPoll(node.get(), cluster, &adminState, &operState);

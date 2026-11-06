@@ -2669,12 +2669,7 @@ public:
    bool isOSPF() const { return (m_flags & IF_OSPF_INTERFACE) != 0; }
    bool isManuallyCreated() const { return (m_flags & IF_CREATED_MANUALLY) != 0; }
    bool isExcludedFromTopology() const { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) != 0; }
-   bool isFake() const
-   {
-      return (m_index == 1) &&
-             (m_type == IFTYPE_OTHER) &&
-             !_tcscmp(m_name, _T("unknown"));
-   }
+   bool isPseudoInterface() const { return (m_flags & IF_PSEUDO) != 0; }
    bool isSubInterface() const { return m_parentInterfaceId != 0; }
    bool isPointToPoint() const;
    bool isIncludedInIcmpPoll() const { return (m_flags & IF_INCLUDE_IN_ICMP_POLL) != 0; }
