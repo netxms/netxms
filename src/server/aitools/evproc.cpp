@@ -1157,6 +1157,12 @@ static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, json_t *snaps
    v = json_object_get(arguments, "alarm_timeout");
    if (json_is_integer(v)) json_object_set(rule, "alarmTimeout", v);
 
+   v = json_object_get(arguments, "alarm_flap_count");
+   if (json_is_integer(v)) json_object_set(rule, "alarmFlapCount", v);
+
+   v = json_object_get(arguments, "alarm_flap_window");
+   if (json_is_integer(v)) json_object_set(rule, "alarmFlapWindow", v);
+
    v = json_object_get(arguments, "incident_delay");
    if (json_is_integer(v)) json_object_set(rule, "incidentDelay", v);
 

@@ -61,6 +61,11 @@ private:
    uint32_t m_repeatCount;
    uint32_t m_timeout;
    uint32_t m_timeoutEvent;
+   uint32_t m_flapDetectionCount;   // Flap detection settings from EPP rule (not persisted, restored from rule on startup)
+   uint32_t m_flapDetectionWindow;
+   time_t m_lastFlapTransitionTime; // Time of last transition between active and resolved states while flapping
+   bool m_flapping;
+   bool m_terminationPending;       // Termination by key deferred because alarm is flapping
    TCHAR m_message[MAX_EVENT_MSG_LENGTH];
    TCHAR m_key[MAX_DB_STRING];
    TCHAR m_helpDeskRef[MAX_HELPDESK_REF_LEN];
@@ -79,7 +84,8 @@ private:
 public:
    Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
             const TCHAR *message, const TCHAR *key, const TCHAR *impact, int severity, uint32_t timeout,
-            uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList);
+            uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList,
+            uint32_t flapDetectionCount, uint32_t flapDetectionWindow, bool flapping);
    Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row);
    Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode = 0);
    ~Alarm();
@@ -108,6 +114,11 @@ public:
    uint32_t getRepeatCount() const { return m_repeatCount; }
    uint32_t getTimeout() const { return m_timeout; }
    uint32_t getTimeoutEvent() const { return m_timeoutEvent; }
+   bool isFlapping() const { return m_flapping; }
+   bool isTerminationPending() const { return m_terminationPending; }
+   uint32_t getFlapDetectionCount() const { return m_flapDetectionCount; }
+   uint32_t getFlapDetectionWindow() const { return m_flapDetectionWindow; }
+   time_t getLastFlapTransitionTime() const { return m_lastFlapTransitionTime; }
    const TCHAR *getMessage() const { return m_message; }
    const TCHAR *getKey() const { return m_key; }
    const TCHAR *getHelpDeskRef() const { return m_helpDeskRef; }
@@ -129,13 +140,18 @@ public:
    void updateInDatabase();
 
    void clearTimeout() { m_timeout = 0; }
+   void setFlapDetectionSettings(uint32_t count, uint32_t window) { m_flapDetectionCount = count; m_flapDetectionWindow = window; }
+   void deferTermination(Event *event);
+   void clearFlapping();
+   void postFlappingEvent(uint32_t eventCode) const;
    void onAckTimeoutExpiration() { m_ackTimeout = 0; m_state = ALARM_STATE_OUTSTANDING; }
 
    void addRelatedEvent(uint64_t eventId) { m_relatedEvents.add(eventId); }
    bool isEventRelated(uint64_t eventId) const { return m_relatedEvents.contains(eventId); }
 
    void updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription, int state, int severity, uint32_t timeout,
-            uint32_t timeoutEvent, uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList);
+            uint32_t timeoutEvent, uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList,
+            uint32_t flapDetectionCount, uint32_t flapDetectionWindow);
    void updateParentAlarm(uint32_t parentAlarmId);
    uint32_t acknowledge(GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
    void resolve(uint32_t userId, Event *event, bool terminate, bool notify, bool includeSubordinates);
@@ -255,7 +271,8 @@ Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(uint32_t alarmId);
 
 uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& rule, const TCHAR *rule_description, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
-         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue, bool addAiComment);
+         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue, bool addAiComment,
+         uint32_t flapDetectionCount, uint32_t flapDetectionWindow);
 uint32_t NXCORE_EXPORTABLE AckAlarmById(uint32_t dwAlarmId, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime, bool includeSubordinates);
 uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, GenericClientSession *session, bool sticky, uint32_t acknowledgmentActionTime);
 uint32_t NXCORE_EXPORTABLE ResolveAlarmById(uint32_t alarmId, GenericClientSession *session, bool terminate, bool includeSubordinates);

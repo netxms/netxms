@@ -8298,6 +8298,10 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    {
       value = vm->createValue(alarm->getImpact());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isFlapping"))
+   {
+      value = vm->createValue(alarm->isFlapping());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("key"))
    {
       value = vm->createValue(alarm->getKey());

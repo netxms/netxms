@@ -238,6 +238,8 @@
 #define EVENT_AGENT_TLS_CERT_PINNED                 184
 #define EVENT_AGENT_TLS_CERT_MISMATCH               185
 #define EVENT_EPP_CHAIN_LOOP                        186
+#define EVENT_ALARM_FLAPPING_STARTED                187
+#define EVENT_ALARM_FLAPPING_ENDED                  188
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

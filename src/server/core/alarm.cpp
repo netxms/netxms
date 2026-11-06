@@ -275,6 +275,84 @@ static bool s_rootCauseUpdateNeeded = false;
 static bool s_rootCauseUpdatePossible = false;
 
 /**
+ * Recent terminations by event processing policy of alarms with flap detection enabled
+ */
+struct AlarmFlapHistory
+{
+   uint32_t window;
+   IntegerArray<int64_t> terminations;
+
+   AlarmFlapHistory() : terminations(0, 16)
+   {
+      window = 0;
+   }
+};
+
+/**
+ * Alarm flap history by alarm key (protected by alarm list lock)
+ */
+static StringObjectMap<AlarmFlapHistory> s_flapHistory(Ownership::True);
+
+/**
+ * Record termination of alarm with flap detection enabled. Must be called with alarm list locked.
+ */
+static void RecordAlarmTermination(const Alarm *alarm)
+{
+   AlarmFlapHistory *history = s_flapHistory.get(alarm->getKey());
+   if (history == nullptr)
+   {
+      history = new AlarmFlapHistory();
+      s_flapHistory.set(alarm->getKey(), history);
+   }
+   history->window = alarm->getFlapDetectionWindow();
+   history->terminations.add(static_cast<int64_t>(time(nullptr)));
+   while(history->terminations.size() > static_cast<int>(alarm->getFlapDetectionCount()))
+      history->terminations.remove(0);
+}
+
+/**
+ * Check if new alarm with given key should be marked as flapping (at least given number of
+ * terminations within detection window). Key history is cleared when flapping is detected.
+ * Must be called with alarm list locked.
+ */
+static bool CheckAlarmFlapping(const wchar_t *key, uint32_t count, uint32_t window)
+{
+   AlarmFlapHistory *history = s_flapHistory.get(key);
+   if (history == nullptr)
+      return false;
+
+   int64_t now = static_cast<int64_t>(time(nullptr));
+   uint32_t recentTerminations = 0;
+   for(int i = 0; i < history->terminations.size(); i++)
+   {
+      if (history->terminations.get(i) + window >= now)
+         recentTerminations++;
+   }
+   if (recentTerminations < count)
+      return false;
+
+   s_flapHistory.remove(key);
+   return true;
+}
+
+/**
+ * Remove flap history entries without terminations within detection window. Must be called with alarm list locked.
+ */
+static void PurgeFlapHistory(time_t now)
+{
+   StringList expiredKeys;
+   s_flapHistory.forEach(
+      [now, &expiredKeys] (const wchar_t *key, AlarmFlapHistory *history) -> EnumerationCallbackResult
+      {
+         if (history->terminations.isEmpty() || (history->terminations.get(history->terminations.size() - 1) + history->window < static_cast<int64_t>(now)))
+            expiredKeys.add(key);
+         return _CONTINUE;
+      });
+   for(int i = 0; i < expiredKeys.size(); i++)
+      s_flapHistory.remove(expiredKeys.get(i));
+}
+
+/**
  * Alarm DB write request types
  */
 enum AlarmDbWriteType
@@ -440,7 +518,8 @@ static uint32_t GetCommentCount(DB_HANDLE hdb, uint32_t alarmId)
  */
 Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
          const TCHAR *message, const TCHAR *key, const TCHAR *impact, int severity, uint32_t timeout,
-         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_relatedEvents(0, 64), m_alarmCategoryList(alarmCategoryList)
+         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList,
+         uint32_t flapDetectionCount, uint32_t flapDetectionWindow, bool flapping) : m_relatedEvents(0, 64), m_alarmCategoryList(alarmCategoryList)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
    m_parentAlarmId = parentAlarmId;
@@ -472,6 +551,11 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_impact = MemCopyString(impact);
    m_timeout = timeout;
    m_timeoutEvent = timeoutEvent;
+   m_flapDetectionCount = flapDetectionCount;
+   m_flapDetectionWindow = flapDetectionWindow;
+   m_flapping = flapping;
+   m_terminationPending = false;
+   m_lastFlapTransitionTime = m_creationTime;
    m_commentCount = 0;
    m_ackTimeout = 0;
    m_ackByUser = INVALID_UID;
@@ -503,7 +587,10 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row) : m_relatedEvents(16, 16
    DBGetField(hResult, row, 12, m_helpDeskRef, MAX_HELPDESK_REF_LEN);
    m_ackByUser = DBGetFieldULong(hResult, row, 13);
    m_repeatCount = DBGetFieldULong(hResult, row, 14);
-   m_state = (BYTE)DBGetFieldLong(hResult, row, 15);
+   BYTE state = static_cast<BYTE>(DBGetFieldLong(hResult, row, 15));
+   m_flapping = (state & ALARM_STATE_FLAPPING) != 0;
+   m_terminationPending = (state & ALARM_STATE_TERMINATION_PENDING) != 0;
+   m_state = state & ~(ALARM_STATE_FLAPPING | ALARM_STATE_TERMINATION_PENDING);
    m_timeout = DBGetFieldULong(hResult, row, 16);
    m_timeoutEvent = DBGetFieldULong(hResult, row, 17);
    m_resolvedByUser = DBGetFieldULong(hResult, row, 18);
@@ -531,6 +618,9 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row) : m_relatedEvents(16, 16
    m_rcaScriptName = DBGetField(hResult, row, 26, nullptr, 0);
    m_impact = DBGetField(hResult, row, 27, nullptr, 0);
    m_lastStateChangeTime = DBGetFieldULong(hResult, row, 28);
+   m_lastFlapTransitionTime = m_lastStateChangeTime;
+   m_flapDetectionCount = 0;  // Restored from EPP rule by alarm manager on activation
+   m_flapDetectionWindow = 0;
    m_notificationCode = 0;
    m_commentCount = GetCommentCount(hdb, m_alarmId);
    m_termByUser = 0;
@@ -582,6 +672,11 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) :
    m_repeatCount = src->m_repeatCount;
    m_timeout = src->m_timeout;
    m_timeoutEvent = src->m_timeoutEvent;
+   m_flapDetectionCount = src->m_flapDetectionCount;
+   m_flapDetectionWindow = src->m_flapDetectionWindow;
+   m_lastFlapTransitionTime = src->m_lastFlapTransitionTime;
+   m_flapping = src->m_flapping;
+   m_terminationPending = src->m_terminationPending;
    wcscpy(m_message, src->m_message);
    wcscpy(m_key, src->m_key);
    wcscpy(m_helpDeskRef, src->m_helpDeskRef);
@@ -794,7 +889,7 @@ AlarmDbWriteRequest *Alarm::createDbWriteSnapshot(int type)
    rq->dciId = m_dciId;
    rq->currentSeverity = m_currentSeverity;
    rq->originalSeverity = m_originalSeverity;
-   rq->state = m_state;
+   rq->state = m_state | (m_flapping ? ALARM_STATE_FLAPPING : 0) | (m_terminationPending ? ALARM_STATE_TERMINATION_PENDING : 0);
    rq->helpDeskState = m_helpDeskState;
    rq->ackByUser = m_ackByUser;
    rq->resolvedByUser = m_resolvedByUser;
@@ -1040,6 +1135,7 @@ void Alarm::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_IMPACT, m_impact);
    msg->setField(VID_STATE, (WORD)(m_state & ALARM_STATE_MASK)); // send only state to client, without flags
    msg->setField(VID_IS_STICKY, (WORD)((m_state & ALARM_STATE_STICKY) ? 1 : 0));
+   msg->setField(VID_IS_FLAPPING, m_flapping);
    msg->setField(VID_CURRENT_SEVERITY, (WORD)m_currentSeverity);
    msg->setField(VID_ORIGINAL_SEVERITY, (WORD)m_originalSeverity);
    msg->setField(VID_HELPDESK_STATE, (WORD)m_helpDeskState);
@@ -1088,6 +1184,7 @@ json_t *Alarm::toJson() const
    json_object_set_new(root, "impact", json_string_t(m_impact));
    json_object_set_new(root, "state", json_integer(m_state & ALARM_STATE_MASK));
    json_object_set_new(root, "isSticky", json_boolean(m_state & ALARM_STATE_STICKY));
+   json_object_set_new(root, "isFlapping", json_boolean(m_flapping));
    json_object_set_new(root, "severity", json_integer(m_currentSeverity));
    json_object_set_new(root, "originalSeverity", json_integer(m_originalSeverity));
    json_object_set_new(root, "helpDeskState", json_integer(m_helpDeskState));
@@ -1331,7 +1428,8 @@ json_t NXCORE_EXPORTABLE *GetAlarmEventsAsJson(uint32_t alarmId)
  * Update existing alarm from event
  */
 void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR* ruleDescription, int state, int severity, uint32_t timeout, uint32_t timeoutEvent,
-         uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList)
+         uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList,
+         uint32_t flapDetectionCount, uint32_t flapDetectionWindow)
 {
    m_repeatCount++;
    m_parentAlarmId = parentAlarmId;
@@ -1349,6 +1447,14 @@ void Alarm::updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *r
    m_dciId = event->getDciId();
    bool stateChanged = false;
    int prevState = m_state & ALARM_STATE_MASK;
+   if (m_flapping && (prevState == ALARM_STATE_RESOLVED))
+   {
+      // Flapping alarm reopened (possibly within deferred termination window)
+      m_terminationPending = false;
+      m_lastFlapTransitionTime = m_lastChangeTime;
+   }
+   m_flapDetectionCount = flapDetectionCount;
+   m_flapDetectionWindow = flapDetectionWindow;
    if (((m_state & ALARM_STATE_STICKY) == 0) && (m_state != state))
    {
       m_state = state;
@@ -1439,11 +1545,13 @@ static void AddAIAssistantComment(uint32_t alarmId)
  */
 uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *ruleDescription, const TCHAR *message, const TCHAR *key, const TCHAR *impact,
          int severity, uint32_t timeout, uint32_t timeoutEvent, uint32_t parentAlarmId, const TCHAR *rcaScriptName, Event *event,
-         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue, bool addAiComment)
+         uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList, bool openHelpdeskIssue, bool addAiComment,
+         uint32_t flapDetectionCount, uint32_t flapDetectionWindow)
 {
    uint32_t alarmId = 0;
    bool newAlarm = true;
    bool updateRelatedEvent = false;
+   bool flapping = false;
 
    // Check if we have a duplicate alarm
    if (key[0] != 0)
@@ -1464,7 +1572,8 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
                parent->addSubordinateAlarm(alarm->getAlarmId());
          }
          uint32_t currSourceObject = alarm->getSourceObject();
-         alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, ALARM_STATE_OUTSTANDING, severity, timeout, timeoutEvent, ackTimeout, message, impact, alarmCategoryList);
+         alarm->updateFromEvent(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, ALARM_STATE_OUTSTANDING, severity, timeout, timeoutEvent, ackTimeout, message, impact, alarmCategoryList,
+                  flapDetectionCount, flapDetectionWindow);
          if (!alarm->isEventRelated(event->getId()))
          {
             alarmId = alarm->getAlarmId();      // needed for correct update of related events
@@ -1481,6 +1590,10 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
 
          newAlarm = false;
       }
+      else if (flapDetectionCount > 0)
+      {
+         flapping = CheckAlarmFlapping(key, flapDetectionCount, flapDetectionWindow);
+      }
 
       s_alarmList.unlock();
    }
@@ -1488,7 +1601,8 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
    if (newAlarm)
    {
       // Create new alarm structure
-      Alarm *alarm = new Alarm(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, message, key, impact, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
+      Alarm *alarm = new Alarm(event, parentAlarmId, rcaScriptName, ruleGuid, ruleDescription, message, key, impact, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList,
+               flapDetectionCount, flapDetectionWindow, flapping);
       alarmId = alarm->getAlarmId();
 
       // Open helpdesk issue
@@ -1500,6 +1614,11 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
       nxlog_debug_tag(DEBUG_TAG, 7, _T("AlarmManager: adding new active alarm, current alarm count %d"), s_alarmList.size());
       s_alarmList.add(alarm);
       UpdateObjectOnAlarmUpdate(event->getSourceId(), alarm, false);
+      if (flapping)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Alarm %u with key \"%s\" created in flapping state (%u terminations within %u seconds)", alarmId, key, flapDetectionCount, flapDetectionWindow);
+         alarm->postFlappingEvent(EVENT_ALARM_FLAPPING_STARTED);
+      }
       s_alarmList.unlock();
 
 		alarm->createInDatabase();
@@ -1672,6 +1791,19 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
    int prevState = m_state & ALARM_STATE_MASK;
    m_state = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
    m_ackTimeout = 0;
+   if (m_flapping)
+   {
+      if (terminate)
+      {
+         m_flapping = false;
+         m_terminationPending = false;
+         postFlappingEvent(EVENT_ALARM_FLAPPING_ENDED);
+      }
+      else
+      {
+         m_lastFlapTransitionTime = m_lastChangeTime;
+      }
+   }
    if (m_helpDeskState != ALARM_HELPDESK_IGNORED)
       m_helpDeskState = ALARM_HELPDESK_CLOSED;
    if (notify)
@@ -1696,6 +1828,48 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
       static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
       QueueSQLRequest(L"INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)", 8, sqlTypes, values);
    }
+}
+
+/**
+ * Defer termination of flapping alarm: alarm is resolved and terminated by watchdog if not reopened within flap detection window
+ */
+void Alarm::deferTermination(Event *event)
+{
+   m_terminationPending = true;
+   if ((m_state & ALARM_STATE_MASK) == ALARM_STATE_RESOLVED)
+      updateInDatabase();  // Already resolved, deferral window counts from resolution time
+   else
+      resolve(0, event, false, true, false);
+   nxlog_debug_tag(DEBUG_TAG, 5, L"Termination of flapping alarm %u deferred for %u seconds", m_alarmId, m_flapDetectionWindow);
+}
+
+/**
+ * Clear flapping flag of active alarm when no transitions occurred within flap detection window
+ */
+void Alarm::clearFlapping()
+{
+   m_flapping = false;
+   m_terminationPending = false;
+   postFlappingEvent(EVENT_ALARM_FLAPPING_ENDED);
+   NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
+   updateInDatabase();
+}
+
+/**
+ * Post flapping state change event for this alarm
+ */
+void Alarm::postFlappingEvent(uint32_t eventCode) const
+{
+   wchar_t eventName[MAX_EVENT_NAME];
+   if (!EventNameFromCode(m_sourceEventCode, eventName))
+      nx_swprintf(eventName, MAX_EVENT_NAME, L"[%u]", m_sourceEventCode);
+   EventBuilder(eventCode, m_sourceObject)
+      .param(L"alarmId", m_alarmId)
+      .param(L"alarmMessage", m_message)
+      .param(L"alarmKey", m_key)
+      .param(L"originalEventCode", m_sourceEventCode)
+      .param(L"originalEventName", eventName)
+      .post();
 }
 
 /**
@@ -1774,6 +1948,7 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
                   UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
                   if (terminate)
                   {
+                     s_flapHistory.remove(alarm->getKey());
                      s_alarmList.remove(alarm);
                   }
                }
@@ -1810,6 +1985,34 @@ void NXCORE_EXPORTABLE ResolveAlarmsById(const IntegerArray<uint32_t>& alarmIds,
 }
 
 /**
+ * Check if alarm should be resolved or terminated on request from event processing policy
+ */
+static inline bool IsAlarmResolvableByPolicy(const Alarm *alarm, bool terminate)
+{
+   return ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(L"Alarms.IgnoreHelpdeskState", false)) &&
+          (terminate ? !alarm->isTerminationPending() : (alarm->getState() != ALARM_STATE_RESOLVED));
+}
+
+/**
+ * Resolve or terminate alarm on request from event processing policy. Termination of flapping alarm is deferred.
+ * Alarm object is destroyed if terminated. Must be called with alarm list locked.
+ */
+static void ResolveAlarmByPolicy(Alarm *alarm, bool terminate, Event *event)
+{
+   if (terminate && alarm->isFlapping())
+   {
+      alarm->deferTermination(event);
+      return;
+   }
+
+   if (terminate && (alarm->getFlapDetectionCount() > 0))
+      RecordAlarmTermination(alarm);
+   alarm->resolve(0, event, terminate, true, false);
+   if (terminate)
+      s_alarmList.remove(alarm);
+}
+
+/**
  * Resolve alarm(s) by matching alarm key with regular expression
  */
 static void ResolveAlarmByKeyRegexp(const TCHAR *keyPattern, bool terminate, Event *event)
@@ -1829,8 +2032,7 @@ static void ResolveAlarmByKeyRegexp(const TCHAR *keyPattern, bool terminate, Eve
          {
             int ovector[60];
             if ((_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, ovector, 60) >= 0) &&
-                ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
-                (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
+                IsAlarmResolvableByPolicy(alarm, terminate))
             {
                // Add alarm and alarm's source object to update list
                matchedAlarms.add(alarm);
@@ -1844,12 +2046,8 @@ static void ResolveAlarmByKeyRegexp(const TCHAR *keyPattern, bool terminate, Eve
       for(int i = 0; i < matchedAlarms.size(); i++)
       {
          Alarm *alarm = matchedAlarms.get(i);
-         alarm->resolve(0, event, terminate, true, false);
          UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
-         if (terminate)
-         {
-            s_alarmList.remove(alarm);
-         }
+         ResolveAlarmByPolicy(alarm, terminate, event);
       }
 
       s_alarmList.unlock();
@@ -1874,20 +2072,14 @@ static void ResolveAlarmByKeyExact(const TCHAR *key, bool terminate, Event *even
    uint32_t objectId = 0, alarmId = 0;
    s_alarmList.lock();
    Alarm *alarm = s_alarmList.find(key);
-   if ((alarm != nullptr) &&
-       ((alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN) || ConfigReadBoolean(_T("Alarms.IgnoreHelpdeskState"), false)) &&
-       (terminate || (alarm->getState() != ALARM_STATE_RESOLVED)))
+   if ((alarm != nullptr) && IsAlarmResolvableByPolicy(alarm, terminate))
    {
       // Add alarm's source object to update list
       objectId = alarm->getSourceObject();
       alarmId = alarm->getAlarmId();
 
       // Resolve or terminate alarm
-      alarm->resolve(0, event, terminate, true, false);
-      if (terminate)
-      {
-         s_alarmList.remove(alarm);
-      }
+      ResolveAlarmByPolicy(alarm, terminate, event);
    }
    s_alarmList.unlock();
 
@@ -1938,6 +2130,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate)
       UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), false);
       if (terminate)
       {
+         s_flapHistory.remove(alarm->getKey());
          s_alarmList.remove(alarm);
       }
    }
@@ -1979,6 +2172,7 @@ uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, GenericClient
          alarm->resolve((session != nullptr) ? session->getUserId() : 0, nullptr, terminate, true, false);
          if (terminate)
          {
+            s_flapHistory.remove(alarm->getKey());
             s_alarmList.remove(alarm);
          }
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
@@ -2564,6 +2758,7 @@ uint64_t GetAlarmMemoryUsage()
 static void WatchdogThread()
 {
    ThreadSetName("AlarmWatchdog");
+   time_t lastFlapHistoryPurge = time(nullptr);
 
 	while(!s_shutdown.wait(1000))
 	{
@@ -2619,7 +2814,24 @@ static void WatchdogThread()
                NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
             }
 
-            if ((s_resolveExpirationTime > 0) &&
+            if (alarm->isFlapping() && (alarm->getLastFlapTransitionTime() + static_cast<time_t>(alarm->getFlapDetectionWindow()) <= now))
+            {
+               if (alarm->isTerminationPending())
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 5, L"Deferred termination of flapping alarm: alarm_id=%u, last_transition=%u, window=%u, now=%u",
+                           alarm->getAlarmId(), static_cast<uint32_t>(alarm->getLastFlapTransitionTime()), alarm->getFlapDetectionWindow(), static_cast<uint32_t>(now));
+                  terminatedAlarms.add(alarm);
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 5, L"Alarm flapping ended: alarm_id=%u, last_transition=%u, window=%u, now=%u",
+                           alarm->getAlarmId(), static_cast<uint32_t>(alarm->getLastFlapTransitionTime()), alarm->getFlapDetectionWindow(), static_cast<uint32_t>(now));
+                  alarm->clearFlapping();
+               }
+            }
+
+            // Resolve expiration is not applied to flapping alarms - they are handled by flap detection window
+            if ((s_resolveExpirationTime > 0) && !alarm->isFlapping() &&
                 ((alarm->getState() & ALARM_STATE_MASK) == ALARM_STATE_RESOLVED) &&
                 (alarm->getLastChangeTime() + s_resolveExpirationTime <= now) &&
                 (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN))
@@ -2639,6 +2851,12 @@ static void WatchdogThread()
          alarm->resolve(0, nullptr, true, true, false);
          UpdateObjectOnAlarmResolve(alarm->getSourceObject(), alarm->getAlarmId(), true);
 		   s_alarmList.remove(alarm);
+		}
+
+		if (now - lastFlapHistoryPurge >= 60)
+		{
+		   PurgeFlapHistory(now);
+		   lastFlapHistoryPurge = now;
 		}
 
 		s_alarmList.unlock();
@@ -3210,6 +3428,56 @@ bool InitAlarmManager()
 }
 
 /**
+ * Restore flap detection settings of flapping alarms loaded from database from their event processing
+ * policy rules. Alarms which rule is missing or has flap detection disabled leave flapping state
+ * (or are terminated if termination is pending) on first watchdog pass.
+ */
+static void RestoreFlapDetectionSettings()
+{
+   struct FlappingAlarm
+   {
+      uint32_t alarmId;
+      uuid ruleGuid;
+   };
+   StructArray<FlappingAlarm> alarms;
+
+   s_alarmList.lock();
+   s_alarmList.forEach(
+      [&alarms] (Alarm *alarm) -> EnumerationCallbackResult
+      {
+         if (alarm->isFlapping())
+         {
+            FlappingAlarm *a = alarms.addPlaceholder();
+            a->alarmId = alarm->getAlarmId();
+            a->ruleGuid = alarm->getRuleGuid();
+         }
+         return _CONTINUE;
+      });
+   s_alarmList.unlock();
+
+   if (alarms.isEmpty())
+      return;
+
+   // Rule lookup is done without holding alarm list lock (event processing threads lock alarm list while holding policy lock)
+   EventProcessingPolicy *policy = GetEventProcessingPolicy();
+   for(int i = 0; i < alarms.size(); i++)
+   {
+      FlappingAlarm *a = alarms.get(i);
+      shared_ptr<EPRule> rule = policy->findRule(a->ruleGuid);
+      uint32_t count = (rule != nullptr) ? rule->getAlarmFlapCount() : 0;
+      uint32_t window = (count > 0) ? rule->getAlarmFlapWindow() : 0;
+
+      s_alarmList.lock();
+      Alarm *alarm = s_alarmList.find(a->alarmId);
+      if (alarm != nullptr)
+         alarm->setFlapDetectionSettings(count, window);
+      s_alarmList.unlock();
+
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Restored flap detection settings for alarm %u (count=%u, window=%u)", a->alarmId, count, window);
+   }
+}
+
+/**
  * Activate alarm manager (phase 2 of startup): start worker threads. In
  * cluster mode InitAlarmManager() runs during passive bring-up while this
  * function runs at activation; the state change log record ID is re-seeded
@@ -3231,6 +3499,8 @@ void ActivateAlarmManager()
    }
    DBConnectionPoolReleaseConnection(hdb);
    s_stateChangeLogRecordId += HAGetRecordIdGap();
+
+   RestoreFlapDetectionSettings();
 
    s_alarmDbWriterThread = ThreadCreateEx(AlarmDbWriterThread);
    s_watchdogThread = ThreadCreateEx(WatchdogThread);

@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.nxmc.base.widgets.LabeledDurationInput;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmCategorySelector;
@@ -69,6 +70,8 @@ public class RuleAlarm extends RuleBasePropertyPage
 	private LabeledText alarmKeyCreate;
    private Combo alarmSeverity;
    private LabeledDurationInput alarmTimeout;
+   private LabeledSpinner flapCount;
+   private LabeledDurationInput flapWindow;
 	private AlarmCategorySelector alarmCategory;
 	private ScriptSelector alarmCategoryScript;
 	private EventSelector timeoutEvent;
@@ -227,6 +230,32 @@ public class RuleAlarm extends RuleBasePropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		alarmTimeout.setLayoutData(gd);
 
+      flapCount = new LabeledSpinner(alarmCreationSubgroup, SWT.NONE);
+      flapCount.setLabel(i18n.tr("Flap detection threshold"));
+      flapCount.setRange(0, 10000);
+      flapCount.setSelection(rule.getAlarmFlapCount());
+      flapCount.getSpinnerControl().setToolTipText(i18n.tr("New alarm is marked as flapping when alarm with same key was terminated by event processing policy at least given number of times within flap detection window (0 disables flap detection)"));
+      flapCount.getSpinnerControl().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            flapWindow.setEnabled(flapCount.getSelection() > 0);
+         }
+      });
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      flapCount.setLayoutData(gd);
+
+      flapWindow = new LabeledDurationInput(alarmCreationSubgroup, SWT.NONE);
+      flapWindow.setLabel(i18n.tr("Flap detection window"));
+      flapWindow.setValue(rule.getAlarmFlapWindow());
+      flapWindow.setEnabled(rule.getAlarmFlapCount() > 0);
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      flapWindow.setLayoutData(gd);
+
 		timeoutEvent = new EventSelector(alarmCreationGroup, SWT.NONE);
       timeoutEvent.setLabel(i18n.tr("Timeout event"));
 		timeoutEvent.setEventCode(rule.getAlarmTimeoutEvent());
@@ -375,7 +404,11 @@ public class RuleAlarm extends RuleBasePropertyPage
 			case ALARM_CREATE:
             if (!alarmTimeout.validate())
                return false;
+            if ((flapCount.getSelection() > 0) && !flapWindow.validate())
+               return false;
             rule.setAlarmTimeout(alarmTimeout.getValue());
+            rule.setAlarmFlapCount(flapCount.getSelection());
+            rule.setAlarmFlapWindow((flapCount.getSelection() > 0) ? flapWindow.getValue() : 0);
 				rule.setAlarmMessage(alarmMessage.getText());
 				rule.setAlarmKey(alarmKeyCreate.getText());
 				rule.setAlarmSeverity(Severity.getByValue(alarmSeverity.getSelectionIndex()));

@@ -248,6 +248,8 @@ enum RoomElementType
 #define ALARM_STATE_TERMINATED   0x03
 #define ALARM_STATE_MASK         0x0F		/* mask for selecting alarm state */
 #define ALARM_STATE_STICKY       0x10		/* bit flag indicating sticky state */
+#define ALARM_STATE_FLAPPING     0x20		/* bit flag indicating flapping alarm (stored in database only) */
+#define ALARM_STATE_TERMINATION_PENDING 0x40 /* bit flag indicating deferred termination of flapping alarm (stored in database only) */
 
 /**
  * Alarm state in help desk system

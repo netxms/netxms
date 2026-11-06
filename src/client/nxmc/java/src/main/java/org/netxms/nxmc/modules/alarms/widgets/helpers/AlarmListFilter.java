@@ -82,6 +82,8 @@ public class AlarmListFilter extends ViewerFilter implements AbstractViewerFilte
             }
             if (name.equals("event"))
                return session.getEventName(alarm.getSourceEventCode());
+            if (name.equals("flapping"))
+               return alarm.isFlapping() ? "yes" : "no";
             if (name.equals("hascomments"))
                return alarm.getCommentsCount() > 0 ? "yes" : "no";
             if (name.equals("repeatcount"))

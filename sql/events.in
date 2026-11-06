@@ -2309,6 +2309,32 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   3) ruleNumber - Calling rule number within its chain' CONCAT CRLF CONCAT
 		'   4) ruleGuid - Calling rule GUID'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_ALARM_FLAPPING_STARTED, 'SYS_ALARM_FLAPPING_STARTED', '67ff29ef-f703-4681-af2d-16922703b6cb',
+		EVENT_SEVERITY_WARNING, 1,
+		'Alarm flapping started (ID: %1; Text: %2)',
+		'Generated when alarm flapping is detected: alarm is created again for the same key after being terminated by event processing policy the configured number of times within detection window. Alarm stays open until no transitions occur during detection window.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) alarmId - Alarm ID' CONCAT CRLF CONCAT
+		'   2) alarmMessage - Alarm message' CONCAT CRLF CONCAT
+		'   3) alarmKey - Alarm key' CONCAT CRLF CONCAT
+		'   4) originalEventCode - Original event code' CONCAT CRLF CONCAT
+		'   5) originalEventName - Original event name'
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_ALARM_FLAPPING_ENDED, 'SYS_ALARM_FLAPPING_ENDED', '557193b3-f310-4862-b24d-08d995852320',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Alarm flapping ended (ID: %1; Text: %2)',
+		'Generated when alarm leaves flapping state: no transitions between active and terminated states occurred during detection window, or alarm was terminated.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) alarmId - Alarm ID' CONCAT CRLF CONCAT
+		'   2) alarmMessage - Alarm message' CONCAT CRLF CONCAT
+		'   3) alarmKey - Alarm key' CONCAT CRLF CONCAT
+		'   4) originalEventCode - Original event code' CONCAT CRLF CONCAT
+		'   5) originalEventName - Original event name'
+	);
 
 /*
 ** SNMP traps

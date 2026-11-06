@@ -66,6 +66,8 @@ EPRule::EPRule(uint32_t id) : m_chainCalls(0, 4, Ownership::True), m_timeFrames(
    m_actionScript = nullptr;
 	m_alarmTimeout = 0;
 	m_alarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
+   m_alarmFlapCount = 0;
+   m_alarmFlapWindow = 0;
 	m_downtimeTag[0] = 0;
 	m_aiInstructions = nullptr;
    m_incidentDelay = 0;
@@ -138,6 +140,8 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    m_alarmSeverity = config.getSubEntryValueAsInt(_T("alarmSeverity"));
 	m_alarmTimeout = config.getSubEntryValueAsUInt(_T("alarmTimeout"));
 	m_alarmTimeoutEvent = config.getSubEntryValueAsUInt(_T("alarmTimeoutEvent"), 0, EVENT_ALARM_TIMEOUT);
+   m_alarmFlapCount = config.getSubEntryValueAsUInt(L"alarmFlapCount");
+   m_alarmFlapWindow = config.getSubEntryValueAsUInt(L"alarmFlapWindow");
    m_alarmKey = MemCopyString(config.getSubEntryValue(_T("alarmKey")));
    m_alarmMessage = MemCopyString(config.getSubEntryValue(_T("alarmMessage")));
    m_alarmImpact = MemCopyString(config.getSubEntryValue(_T("alarmImpact")));
@@ -572,6 +576,8 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_chainCalls(0, 4, Owners
    m_comments = MemCopyString(json_object_get_string(json, "comments", _T("")));
    m_alarmSeverity = json_object_get_int32(json, "alarmSeverity");
    m_alarmTimeout = json_object_get_uint32(json, "alarmTimeout");
+   m_alarmFlapCount = json_object_get_uint32(json, "alarmFlapCount");
+   m_alarmFlapWindow = json_object_get_uint32(json, "alarmFlapWindow");
 
    // Import alarm timeout event - export records use the event name, while toJson() uses the numeric event code
    json_t *alarmTimeoutEventJson = json_object_get(json, "alarmTimeoutEvent");
@@ -733,7 +739,7 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_chainCalls(0, 4, Owners
  * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,
  * downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,
  * incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time,
- * alarm_category_script
+ * alarm_category_script,alarm_flap_count,alarm_flap_window
  */
 EPRule::EPRule(DB_RESULT hResult, int row, const wchar_t *chainName) : m_chainCalls(0, 4, Ownership::True), m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
@@ -789,6 +795,8 @@ EPRule::EPRule(DB_RESULT hResult, int row, const wchar_t *chainName) : m_chainCa
    m_modifiedByName = DBGetFieldAsString(hResult, row, 22);
    m_modificationTime = static_cast<time_t>(DBGetFieldULong(hResult, row, 23));
    m_alarmCategoryScriptName = DBGetField(hResult, row, 24, nullptr, 0);
+   m_alarmFlapCount = DBGetFieldUInt32(hResult, row, 25);
+   m_alarmFlapWindow = DBGetFieldUInt32(hResult, row, 26);
 }
 
 /**
@@ -858,6 +866,8 @@ EPRule::EPRule(const NXCPMessage& msg, const wchar_t *chainName) : m_chainCalls(
    m_alarmSeverity = msg.getFieldAsUInt16(VID_ALARM_SEVERITY);
 	m_alarmTimeout = msg.getFieldAsUInt32(VID_ALARM_TIMEOUT);
 	m_alarmTimeoutEvent = msg.getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
+   m_alarmFlapCount = msg.getFieldAsUInt32(VID_ALARM_FLAP_COUNT);
+   m_alarmFlapWindow = msg.getFieldAsUInt32(VID_ALARM_FLAP_WINDOW);
 	m_rcaScriptName = msg.getFieldAsString(VID_RCA_SCRIPT_NAME);
 	m_alarmCategoryScriptName = msg.getFieldAsString(VID_ALARM_CATEGORY_SCRIPT);
 
@@ -1883,7 +1893,8 @@ uint32_t EPRule::generateAlarm(Event *event, EventRuleExecution *rec) const
 	   alarmId = CreateNewAlarm(m_guid, m_comments, message, key, impact,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
                      m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, *alarmCategories,
-                     (m_flags & RF_CREATE_TICKET) != 0, (m_flags & RF_REQUEST_AI_COMMENT) != 0);
+                     (m_flags & RF_CREATE_TICKET) != 0, (m_flags & RF_REQUEST_AI_COMMENT) != 0,
+                     m_alarmFlapCount, m_alarmFlapWindow);
 	   event->setLastAlarmMessage(message);
 	   event->setLastAlarmId(alarmId);
 
@@ -2121,8 +2132,8 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
                                   _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,")
                                   _T("action_script,downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,")
                                   _T("incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time,")
-                                  _T("alarm_category_script,chain_id) ")
-                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                                  _T("alarm_category_script,chain_id,alarm_flap_count,alarm_flap_window) ")
+                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -2150,6 +2161,8 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
       DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(modificationTime));
       DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_alarmCategoryScriptName, DB_BIND_STATIC, MAX_DB_STRING);
       DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_chainId);
+      DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, m_alarmFlapCount);
+      DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_alarmFlapWindow);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -2384,6 +2397,8 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_IMPACT, m_alarmImpact);
    msg->setField(VID_ALARM_TIMEOUT, m_alarmTimeout);
    msg->setField(VID_ALARM_TIMEOUT_EVENT, m_alarmTimeoutEvent);
+   msg->setField(VID_ALARM_FLAP_COUNT, m_alarmFlapCount);
+   msg->setField(VID_ALARM_FLAP_WINDOW, m_alarmFlapWindow);
    msg->setFieldFromInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
    msg->setField(VID_RCA_SCRIPT_NAME, m_rcaScriptName);
    msg->setField(VID_ALARM_CATEGORY_SCRIPT, m_alarmCategoryScriptName);
@@ -2585,6 +2600,8 @@ json_t *EPRule::toJson(bool assistantMode) const
          json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
          json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
          json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
+         json_object_set_new(root, "alarmFlapCount", json_integer(m_alarmFlapCount));
+         json_object_set_new(root, "alarmFlapWindow", json_integer(m_alarmFlapWindow));
       }
       if ((m_flags & RF_GENERATE_ALARM) != 0)
       {
@@ -2620,6 +2637,8 @@ json_t *EPRule::toJson(bool assistantMode) const
       json_object_set_new(root, "alarmKey", json_string_t(m_alarmKey));
       json_object_set_new(root, "alarmTimeout", json_integer(m_alarmTimeout));
       json_object_set_new(root, "alarmTimeoutEvent", json_integer(m_alarmTimeoutEvent));
+      json_object_set_new(root, "alarmFlapCount", json_integer(m_alarmFlapCount));
+      json_object_set_new(root, "alarmFlapWindow", json_integer(m_alarmFlapWindow));
       json_object_set_new(root, "incidentDelay", json_integer(m_incidentDelay));
       json_object_set_new(root, "incidentTitle", json_string_t(m_incidentTitle));
       json_object_set_new(root, "incidentDescription", json_string_t(m_incidentDescription));
@@ -2843,7 +2862,7 @@ bool EventProcessingPolicy::loadFromDB()
                               L"incident_delay,incident_title,incident_description,"
                               L"incident_ai_depth,incident_ai_prompt,"
                               L"modified_by_guid,modified_by_name,modification_time,"
-                              L"alarm_category_script "
+                              L"alarm_category_script,alarm_flap_count,alarm_flap_window "
                               L"FROM event_policy ORDER BY chain_id,rule_id");
       if (hResult != nullptr)
       {

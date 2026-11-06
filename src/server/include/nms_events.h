@@ -777,6 +777,8 @@ private:
    wchar_t *m_alarmKey;
    uint32_t m_alarmTimeout;
    uint32_t m_alarmTimeoutEvent;
+   uint32_t m_alarmFlapCount;    // Number of alarm terminations within detection window that marks new alarm as flapping (0 = disabled)
+   uint32_t m_alarmFlapWindow;   // Flap detection window in seconds
 	IntegerArray<uint32_t> m_alarmCategoryList;
 	wchar_t *m_rcaScriptName;    // Name of library script used for root cause analysis
 	wchar_t *m_alarmCategoryScriptName;   // Name of library script that returns alarm categories for generated alarm
@@ -866,6 +868,8 @@ public:
 
    bool isUsingEvent(uint32_t eventCode) const { return m_events.contains(eventCode); }
    const wchar_t *getComments() const { return m_comments; }
+   uint32_t getAlarmFlapCount() const { return m_alarmFlapCount; }
+   uint32_t getAlarmFlapWindow() const { return m_alarmFlapWindow; }
 
    void getScriptDependencies(StringSet *dependencies) const;
 };
@@ -1074,6 +1078,13 @@ public:
    bool saveToDB(const uuid& modifiedByGuid, const TCHAR* modifiedByName) const;
    bool saveToDB() const { return saveToDB(uuid::NULL_UUID, _T("System")); }  // Convenience for imports
    void processEvent(Event *pEvent);
+   shared_ptr<EPRule> findRule(const uuid& guid) const
+   {
+      readLock();
+      shared_ptr<EPRule> rule = findRuleByGuid(guid);
+      unlock();
+      return rule;
+   }
    EventPolicyChain *getChain(uint32_t chainId) const { return m_chains.get(chainId); }   // Caller must hold policy lock
    bool enterChain(EventPolicyChain *chain, Event *event, EventProcessingContext *context);
    uint32_t fillChainRegistry(NXCPMessage *response, uint32_t userId, bool globalRights) const;

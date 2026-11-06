@@ -46,6 +46,7 @@ int H_Alarms(Context *context)
          json_object_set_new(json, "id", json_integer(alarm->getAlarmId()));
          json_object_set_new(json, "severity", json_integer(alarm->getCurrentSeverity()));
          json_object_set_new(json, "state", json_integer(alarm->getState() & ALARM_STATE_MASK));
+         json_object_set_new(json, "isFlapping", json_boolean(alarm->isFlapping()));
          json_object_set_new(json, "source", json_integer(object->getId()));
          json_object_set_new(json, "sourceName", json_string_t(object->getName()));
          json_object_set_new(json, "zoneUIN", json_integer(alarm->getZoneUIN()));

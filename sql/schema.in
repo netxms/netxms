@@ -1869,6 +1869,8 @@ CREATE TABLE event_policy
   alarm_key varchar(255) null,    // Alarm key (used for auto termination)
   alarm_timeout integer not null, // Timeout before sending event
   alarm_timeout_event integer not null,  // Event to be sent on timeout
+  alarm_flap_count integer not null,   // Number of alarm terminations within detection window that marks new alarm as flapping (0 = disabled)
+  alarm_flap_window integer not null,  // Flap detection window in seconds
   downtime_tag varchar(15) null,
   rca_script_name varchar(255) null,
   alarm_category_script varchar(255) null,  // Name of library script returning alarm categories

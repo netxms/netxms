@@ -56,6 +56,7 @@ public class Alarm
    private int repeatCount;
    private int state;
    private boolean sticky;
+   private boolean flapping;
    private int acknowledgedByUser;
    private int resolvedByUser;
    private int terminatedByUser;
@@ -90,6 +91,7 @@ public class Alarm
       repeatCount = msg.getFieldAsInt32(NXCPCodes.VID_REPEAT_COUNT);
       state = msg.getFieldAsInt32(NXCPCodes.VID_STATE);
       sticky = msg.getFieldAsBoolean(NXCPCodes.VID_IS_STICKY);
+      flapping = msg.getFieldAsBoolean(NXCPCodes.VID_IS_FLAPPING);
       acknowledgedByUser = msg.getFieldAsInt32(NXCPCodes.VID_ACK_BY_USER);
       resolvedByUser = msg.getFieldAsInt32(NXCPCodes.VID_RESOLVED_BY_USER);
       terminatedByUser = msg.getFieldAsInt32(NXCPCodes.VID_TERMINATED_BY_USER);
@@ -343,6 +345,16 @@ public class Alarm
    }
 
    /**
+    * Check if this alarm is flapping (repeatedly created and terminated for the same key).
+    *
+    * @return true if alarm is flapping
+    */
+   public boolean isFlapping()
+   {
+      return flapping;
+   }
+
+   /**
     * Get time when alarm was acknowledged
     *
     * @return time when alarm was acknowledged
@@ -409,7 +421,7 @@ public class Alarm
    public String toString()
    {
       return "Alarm [id=" + id + ", parentId=" + parentId + ", currentSeverity=" + currentSeverity + ", originalSeverity="
-            + originalSeverity + ", repeatCount=" + repeatCount + ", state=" + state + ", sticky=" + sticky
+            + originalSeverity + ", repeatCount=" + repeatCount + ", state=" + state + ", sticky=" + sticky + ", flapping=" + flapping
             + ", acknowledgedByUser=" + acknowledgedByUser + ", resolvedByUser=" + resolvedByUser + ", terminatedByUser="
             + terminatedByUser + ", sourceEventId=" + sourceEventId + ", sourceEventCode=" + sourceEventCode + ", sourceObjectId="
             + sourceObjectId + ", dciId=" + dciId + ", creationTime=" + creationTime + ", lastChangeTime=" + lastChangeTime

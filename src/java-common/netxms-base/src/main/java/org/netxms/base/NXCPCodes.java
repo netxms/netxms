@@ -1667,6 +1667,9 @@ public class NXCPCodes
    public static final long VID_REDIRECT_URL = 1073;
    public static final long VID_AI_CONTEXT_TOKENS = 1074;
    public static final long VID_AI_CONTEXT_WINDOW = 1075;
+   public static final long VID_ALARM_FLAP_COUNT = 1076;
+   public static final long VID_ALARM_FLAP_WINDOW = 1077;
+   public static final long VID_IS_FLAPPING = 1078;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

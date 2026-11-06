@@ -167,6 +167,7 @@ public class AlarmList extends CompositeWithMessageArea
    private final SearchQueryAttribute[] attributeProposals = {
          new SearchQueryAttribute("AcknowledgedBy:"),
          new SearchQueryAttribute("Event:", new EventAttributeValueProvider()),
+         new SearchQueryAttribute("Flapping:", "yes", "no"),
          new SearchQueryAttribute("HasComments:", "yes", "no"),
          new SearchQueryAttribute("NOT"),
          new SearchQueryAttribute("RepeatCount:"),

@@ -2636,6 +2636,9 @@ paths:
                     state:
                       type: integer
                       description: "Alarm state: 0=Outstanding, 1=Acknowledged, 2=Resolved, 3=Terminated"
+                    isFlapping:
+                      type: boolean
+                      description: Whether the alarm is flapping (repeatedly created and terminated for the same key)
                     source:
                       type: integer
                       description: Source object ID
@@ -16385,6 +16388,9 @@ components:
         isSticky:
           type: boolean
           description: Whether the alarm is sticky
+        isFlapping:
+          type: boolean
+          description: Whether the alarm is flapping (repeatedly created and terminated for the same key)
         severity:
           type: integer
           description: "Current severity: 0=Normal, 1=Warning, 2=Minor, 3=Major, 4=Critical"
@@ -17364,6 +17370,12 @@ components:
         alarmTimeoutEvent:
           type: integer
           description: Event code generated when the alarm times out
+        alarmFlapCount:
+          type: integer
+          description: Number of terminations of alarm with the same key within flap detection window that marks new alarm as flapping (0 = flap detection disabled)
+        alarmFlapWindow:
+          type: integer
+          description: Flap detection window in seconds
         alarmCategories:
           type: array
           description: Alarm category IDs assigned to the generated alarm

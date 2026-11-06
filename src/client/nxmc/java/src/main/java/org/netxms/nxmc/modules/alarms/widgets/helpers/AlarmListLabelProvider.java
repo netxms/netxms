@@ -175,7 +175,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
       int time = alarm.getAckTime();
       String timeString = time > 0
             ? " (" + DateFormatFactory.getDateTimeFormat().format(System.currentTimeMillis() + time * 1000L) + ")" : "";
-      return stateText[alarm.getState()] + timeString;
+      return alarm.isFlapping() ? stateText[alarm.getState()] + timeString + " " + i18n.tr("(flapping)") : stateText[alarm.getState()] + timeString;
    }
 
    /**

@@ -79,6 +79,8 @@ public class EventProcessingPolicyRule
    private Severity alarmSeverity;
    private int alarmTimeout;
    private int alarmTimeoutEvent;
+   private int alarmFlapCount;
+   private int alarmFlapWindow;
    private List<Long> alarmCategoryIds;
    private String alarmCategoryScriptName;
    private String rcaScriptName;
@@ -128,6 +130,8 @@ public class EventProcessingPolicyRule
       alarmSeverity = Severity.UNKNOWN;
       alarmTimeout = 0;
       alarmTimeoutEvent = 43;
+      alarmFlapCount = 0;
+      alarmFlapWindow = 0;
       alarmCategoryIds = new ArrayList<Long>(0);
       alarmCategoryScriptName = null;
       rcaScriptName = null;
@@ -180,6 +184,8 @@ public class EventProcessingPolicyRule
       alarmSeverity = src.alarmSeverity;
       alarmTimeout = src.alarmTimeout;
       alarmTimeoutEvent = src.alarmTimeoutEvent;
+      alarmFlapCount = src.alarmFlapCount;
+      alarmFlapWindow = src.alarmFlapWindow;
       alarmCategoryIds = src.alarmCategoryIds;
       alarmCategoryScriptName = src.alarmCategoryScriptName;
       rcaScriptName = src.rcaScriptName;
@@ -239,6 +245,8 @@ public class EventProcessingPolicyRule
       alarmSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_ALARM_SEVERITY));
       alarmTimeout = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT);
       alarmTimeoutEvent = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
+      alarmFlapCount = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_FLAP_COUNT);
+      alarmFlapWindow = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_FLAP_WINDOW);
       alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
       alarmCategoryScriptName = msg.getFieldAsString(NXCPCodes.VID_ALARM_CATEGORY_SCRIPT);
       rcaScriptName = msg.getFieldAsString(NXCPCodes.VID_RCA_SCRIPT_NAME);
@@ -322,6 +330,8 @@ public class EventProcessingPolicyRule
       msg.setFieldInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity.getValue());
       msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
       msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, alarmTimeoutEvent);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_FLAP_COUNT, alarmFlapCount);
+      msg.setFieldInt32(NXCPCodes.VID_ALARM_FLAP_WINDOW, alarmFlapWindow);
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds);
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_SCRIPT, alarmCategoryScriptName);
       msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
@@ -488,6 +498,48 @@ public class EventProcessingPolicyRule
    public void setAlarmTimeoutEvent(int alarmTimeoutEvent)
    {
       this.alarmTimeoutEvent = alarmTimeoutEvent;
+      this.modified = true;
+   }
+
+   /**
+    * Get number of alarm terminations within flap detection window that marks new alarm with same key as flapping.
+    *
+    * @return number of terminations (0 if flap detection is disabled)
+    */
+   public int getAlarmFlapCount()
+   {
+      return alarmFlapCount;
+   }
+
+   /**
+    * Set number of alarm terminations within flap detection window that marks new alarm with same key as flapping.
+    *
+    * @param alarmFlapCount number of terminations (0 to disable flap detection)
+    */
+   public void setAlarmFlapCount(int alarmFlapCount)
+   {
+      this.alarmFlapCount = alarmFlapCount;
+      this.modified = true;
+   }
+
+   /**
+    * Get flap detection window.
+    *
+    * @return flap detection window in seconds
+    */
+   public int getAlarmFlapWindow()
+   {
+      return alarmFlapWindow;
+   }
+
+   /**
+    * Set flap detection window.
+    *
+    * @param alarmFlapWindow flap detection window in seconds
+    */
+   public void setAlarmFlapWindow(int alarmFlapWindow)
+   {
+      this.alarmFlapWindow = alarmFlapWindow;
       this.modified = true;
    }
 

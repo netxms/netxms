@@ -820,7 +820,7 @@ public class AlarmDetails extends AdHocObjectView
 		int ackTime = alarm.getAckTime();
 		String ackExpirationTime = (ackTime > 0)
 		      ? " (" + DateFormatFactory.getDateTimeFormat().format(System.currentTimeMillis() + ackTime * 1000L) + ")" : "";
-		alarmState.setText(stateText[alarm.getState()] + ackExpirationTime);
+		alarmState.setText(stateText[alarm.getState()] + ackExpirationTime + (alarm.isFlapping() ? " " + i18n.tr("(flapping)") : ""));
 
 		AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
 		alarmSource.setImage((object != null) ? objectLabelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);

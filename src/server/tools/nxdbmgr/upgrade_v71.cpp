@@ -21,6 +21,44 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
+
+/**
+ * Upgrade from 71.6 to 71.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE event_policy ADD alarm_flap_count integer"));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE event_policy ADD alarm_flap_window integer"));
+   CHK_EXEC(SQLQuery(L"UPDATE event_policy SET alarm_flap_count=0,alarm_flap_window=0"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"event_policy", L"alarm_flap_count"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"event_policy", L"alarm_flap_window"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_ALARM_FLAPPING_STARTED, L"SYS_ALARM_FLAPPING_STARTED",
+            EVENT_SEVERITY_WARNING, EF_LOG, L"67ff29ef-f703-4681-af2d-16922703b6cb",
+            L"Alarm flapping started (ID: %1; Text: %2)",
+            L"Generated when alarm flapping is detected: alarm is created again for the same key after being terminated by event processing policy the configured number of times within detection window. Alarm stays open until no transitions occur during detection window.\r\n"
+            L"Parameters:\r\n"
+            L"   1) alarmId - Alarm ID\r\n"
+            L"   2) alarmMessage - Alarm message\r\n"
+            L"   3) alarmKey - Alarm key\r\n"
+            L"   4) originalEventCode - Original event code\r\n"
+            L"   5) originalEventName - Original event name"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_ALARM_FLAPPING_ENDED, L"SYS_ALARM_FLAPPING_ENDED",
+            EVENT_SEVERITY_NORMAL, EF_LOG, L"557193b3-f310-4862-b24d-08d995852320",
+            L"Alarm flapping ended (ID: %1; Text: %2)",
+            L"Generated when alarm leaves flapping state: no transitions between active and terminated states occurred during detection window, or alarm was terminated.\r\n"
+            L"Parameters:\r\n"
+            L"   1) alarmId - Alarm ID\r\n"
+            L"   2) alarmMessage - Alarm message\r\n"
+            L"   3) alarmKey - Alarm key\r\n"
+            L"   4) originalEventCode - Original event code\r\n"
+            L"   5) originalEventName - Original event name"));
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
 
 /**
  * Upgrade from 71.5 to 71.6
@@ -157,6 +195,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  71, 7,  H_UpgradeFromV6  },
    { 5,  71, 6,  H_UpgradeFromV5  },
    { 4,  71, 5,  H_UpgradeFromV4  },
    { 3,  71, 4,  H_UpgradeFromV3  },
