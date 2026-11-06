@@ -5018,7 +5018,7 @@ public:
    uint32_t getEffectiveAgentProxy();
    uint32_t getEffectiveTcpProxy();
 
-   uint32_t pingAddress(const InetAddress& addr);
+   uint32_t pingAddress(const InetAddress& addr, const wchar_t *indent);
 
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
    void writeListListToMessage(NXCPMessage *msg);

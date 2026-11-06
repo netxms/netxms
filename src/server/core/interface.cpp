@@ -1132,6 +1132,7 @@ void Interface::icmpStatusPoll(Node *node, Cluster *cluster, InterfaceAdminState
 {
    sendPollerMsg(L"      Starting ICMP ping\r\n");
    uint32_t status = ICMP_SEND_FAILED;
+   bool noResponse = false;
    const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
    for(int i = 0; i < list.size(); i++)
    {
@@ -1139,11 +1140,17 @@ void Interface::icmpStatusPoll(Node *node, Cluster *cluster, InterfaceAdminState
       if (!a->isValidUnicast() || ((cluster != nullptr) && cluster->isSyncAddr(*a)))
          continue;
 
-      status = node->pingAddress(*a);
+      status = node->pingAddress(*a, L"      ");
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Interface::StatusPoll(%d,%s): ping %s status %u", m_id, m_name, a->toString().cstr(), status);
-      if ((status != ICMP_TIMEOUT) && (status != ICMP_UNREACHABLE))
-         break;   // Address responded, or ping cannot be performed at all
+      if ((status == ICMP_SUCCESS) || (status == ICMP_SEND_FAILED))
+         break;   // Address responded, or ping cannot be performed at all (proxy unavailable); other errors are per-address
+      if ((status == ICMP_TIMEOUT) || (status == ICMP_UNREACHABLE))
+         noResponse = true;
    }
+
+   // Address that did not respond outweighs per-address errors on other addresses
+   if ((status == ICMP_API_ERROR) && noResponse)
+      status = ICMP_TIMEOUT;
 
    if (status == ICMP_SUCCESS)
    {
@@ -1154,10 +1161,6 @@ void Interface::icmpStatusPoll(Node *node, Cluster *cluster, InterfaceAdminState
    {
       *adminState = IF_ADMIN_STATE_UNKNOWN;
       *operState = IF_OPER_STATE_DOWN;
-   }
-   else
-   {
-      sendPollerMsg(POLLER_WARNING L"      Unable to perform ICMP ping\r\n");
    }
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Interface::StatusPoll(%d,%s): ping result %u, adminState=%d, operState=%d", m_id, m_name, status, *adminState, *operState);
 }
