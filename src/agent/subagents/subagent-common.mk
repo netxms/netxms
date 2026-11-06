@@ -29,6 +29,10 @@ RC_OBJECT = $(OBJDIR)/netxms-build-tag.o
 # Optional subagent-specific resource script (embedded parser XML etc.)
 ifdef SA_RC
 SA_RC_OBJECT = $(OBJDIR)/$(basename $(SA_RC)).res.o
+# Files named in double quotes in the resource script (embedded data, resource.h)
+# are prerequisites too, so editing them rebuilds the resource object.
+# Names that do not exist locally (e.g. afxres.h) are dropped by wildcard.
+SA_RC_DEPS = $(wildcard $(subst ",,$(filter "%",$(file < $(SA_RC)))))
 endif
 
 # Object files (.cpp and .c both map to .o)
@@ -77,7 +81,7 @@ $(RC_OBJECT): $(RC_SOURCE)
 ifdef SA_RC
 # -I. so windres finds resource.h and the referenced data files (parser XML),
 # which are named relative to the subagent directory.
-$(SA_RC_OBJECT): $(SA_RC)
+$(SA_RC_OBJECT): $(SA_RC) $(SA_RC_DEPS)
 	@mkdir -p $(dir $@)
 	@echo "  RC      $<"
 	$(Q)$(WINDRES) -I. -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
