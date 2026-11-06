@@ -373,6 +373,8 @@ static const char *FdbEntryTypeToText(uint16_t type)
 {
    switch(type)
    {
+      case 1:
+         return "Other";
       case 3:
          return "Dynamic";
       case 5:
