@@ -86,6 +86,8 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
          case SwitchForwardingDatabaseView.COLUMN_TYPE:
             switch(e.getType())
             {
+               case 1:
+                  return i18n.tr("Other");
                case 3:
                   return i18n.tr("Dynamic");
                case 5:

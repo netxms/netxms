@@ -1384,7 +1384,8 @@ static uint32_t FDBHandler(SNMP_Variable *var, SNMP_Transport *snmp, StructArray
       {
          uint32_t port = varPort->getValueAsUInt();
          int status = varStatus->getValueAsInt();
-         if ((port > 0) && ((status == 3) || (status == 5) || (status == 6)))  // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
+         // status: 1 == other (forwarding controlled by another MIB object, e.g. port security or 802.1X), 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
+         if ((port > 0) && ((status == 1) || (status == 3) || (status == 5) || (status == 6)))
          {
             ForwardingDatabaseEntry *entry = new(fdb->addPlaceholder()) ForwardingDatabaseEntry();
             entry->bridgePort = port;
@@ -1419,8 +1420,10 @@ static uint32_t Dot1qTpFdbHandler(SNMP_Variable *var, SNMP_Transport *snmp, Stru
    uint32_t rcc = snmp->doRequest(&request, &response);
    if (rcc == SNMP_ERR_SUCCESS)
    {
-      int status = response->getVariable(0)->getValueAsInt();
-      if ((status == 3) || (status == 5) || (status == 6)) // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
+      SNMP_Variable *varStatus = response->getVariable(0);
+      int status = (varStatus != nullptr) ? varStatus->getValueAsInt() : 0;
+      // status: 1 == other (forwarding controlled by another MIB object, e.g. port security or 802.1X), 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
+      if ((status == 1) || (status == 3) || (status == 5) || (status == 6))
       {
          ForwardingDatabaseEntry *entry = new(fdb->addPlaceholder()) ForwardingDatabaseEntry();
          entry->bridgePort = port;

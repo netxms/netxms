@@ -31,6 +31,26 @@ static int EntryComparator(const void *p1, const void *p2)
 }
 
 /**
+ * Textual representation of FDB entry type (dot1dTpFdbStatus)
+ */
+static const wchar_t *FdbEntryTypeToText(uint16_t type)
+{
+   switch(type)
+   {
+      case 1:
+         return L"Other";
+      case 3:
+         return L"Dynamic";
+      case 5:
+         return L"Static";
+      case 6:
+         return L"Secure";
+      default:
+         return L"Unknown";
+   }
+}
+
+/**
  * Get interface index for given bridge port number
  */
 static uint32_t IfIndexFromPort(uint32_t port, const StructArray<BridgePort> *bridgePorts, const Node *node)
@@ -180,7 +200,7 @@ void ForwardingDatabase::print(ServerConsole *console, const Node& owner)
       shared_ptr<Interface> iface = owner.findInterfaceByIndex(e->ifIndex);
       console->printf(_T("%s | %7d | %-20s | %4d | %-7s | %5d | %s\n"), e->macAddr.toString(macAddrStr),
          e->ifIndex, (iface != nullptr) ? iface->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"),
-         e->bridgePort, (e->type == 3) ? _T("dynamic") : ((e->type == 5) ? _T("static") : ((e->type == 6) ? _T("secure") : _T("unknown"))),
+         e->bridgePort, FdbEntryTypeToText(e->type),
          e->nodeObject, (node != nullptr) ? node->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
    }
 	console->printf(_T("\n%d entries\n\n"), m_fdb.size());
@@ -294,7 +314,7 @@ shared_ptr<Table> ForwardingDatabase::getAsTable()
          result->set(7, _T(""));
          result->set(8, _T(""));
       }
-      result->set(9, (e->type) == 3 ? _T("Dynamic") : ((e->type == 5) ? _T("Static") : ((e->type == 6) ? _T("Secure") : _T("Unknown"))));
+      result->set(9, FdbEntryTypeToText(e->type));
    }
 
    return result;
