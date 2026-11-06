@@ -103,7 +103,7 @@ uint32_t NXCORE_EXPORTABLE UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
 /**
  * Get tunnel for node
  */
-shared_ptr<AgentTunnel> GetTunnelForNode(uint32_t nodeId);
+shared_ptr<AgentTunnel> NXCORE_EXPORTABLE GetTunnelForNode(uint32_t nodeId);
 
 /**
  * Register outbound tunnel established by node. Returns effective tunnel for the node - either
@@ -137,7 +137,7 @@ enum class TunnelCapabilityFilter
 /**
  * Get tunnel type by type
  */
-int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels);
+int NXCORE_EXPORTABLE GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels);
 
 /**
  * Update agent certificate mapping index for externally provisioned certificates

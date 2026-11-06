@@ -162,7 +162,7 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
 /**
  * Get tunnel for node. Caller must decrease reference counter on tunnel.
  */
-shared_ptr<AgentTunnel> GetTunnelForNode(uint32_t nodeId)
+shared_ptr<AgentTunnel> NXCORE_EXPORTABLE GetTunnelForNode(uint32_t nodeId)
 {
    s_tunnelListLock.lock();
    shared_ptr<AgentTunnel> tunnel = s_boundTunnels.getShared(nodeId);
@@ -1596,7 +1596,7 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
 /**
  * Get number of bound agent tunnels matching given filter
  */
-int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels)
+int NXCORE_EXPORTABLE GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels)
 {
    int count = 0;
 
