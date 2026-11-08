@@ -249,6 +249,7 @@ public class RuleAlarm extends RuleBasePropertyPage
 
       flapWindow = new LabeledDurationInput(alarmCreationSubgroup, SWT.NONE);
       flapWindow.setLabel(i18n.tr("Flap detection window"));
+      flapWindow.setRange(1, 86400 * 30);
       flapWindow.setValue(rule.getAlarmFlapWindow());
       flapWindow.setEnabled(rule.getAlarmFlapCount() > 0);
       gd = new GridData();

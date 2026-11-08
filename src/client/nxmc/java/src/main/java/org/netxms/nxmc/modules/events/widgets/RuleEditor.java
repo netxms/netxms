@@ -56,6 +56,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.base.Duration;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
@@ -861,6 +862,14 @@ public class RuleEditor extends Composite
             if ((rule.getAlarmKey() != null) && !rule.getAlarmKey().isEmpty())
             {
                createLabel(clientArea, 1, false, String.format(i18n.tr("with key \"%s\""), rule.getAlarmKey()), listener);
+            }
+            if (rule.getAlarmTimeout() > 0)
+            {
+               createLabel(clientArea, 1, false, String.format(i18n.tr("with timeout %s generating event %s"), Duration.format(rule.getAlarmTimeout()), session.getEventName(rule.getAlarmTimeoutEvent())), listener);
+            }
+            if (rule.getAlarmFlapCount() > 0)
+            {
+               createLabel(clientArea, 1, false, String.format(i18n.tr("with flap detection after %d terminations within %s"), rule.getAlarmFlapCount(), Duration.format(rule.getAlarmFlapWindow())), listener);
             }
             if ((rule.getRcaScriptName() != null) && !rule.getRcaScriptName().isEmpty())
             {

@@ -821,6 +821,8 @@ private:
 
    uint32_t getErrors() const;
 
+   void checkFlapDetectionSettings(ImportContext *context);
+
 public:
    EPRule(uint32_t id);
    EPRule(DB_RESULT hResult, int row, const wchar_t *chainName);

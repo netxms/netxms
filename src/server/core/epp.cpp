@@ -142,6 +142,7 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
 	m_alarmTimeoutEvent = config.getSubEntryValueAsUInt(_T("alarmTimeoutEvent"), 0, EVENT_ALARM_TIMEOUT);
    m_alarmFlapCount = config.getSubEntryValueAsUInt(L"alarmFlapCount");
    m_alarmFlapWindow = config.getSubEntryValueAsUInt(L"alarmFlapWindow");
+   checkFlapDetectionSettings(context);
    m_alarmKey = MemCopyString(config.getSubEntryValue(_T("alarmKey")));
    m_alarmMessage = MemCopyString(config.getSubEntryValue(_T("alarmMessage")));
    m_alarmImpact = MemCopyString(config.getSubEntryValue(_T("alarmImpact")));
@@ -578,6 +579,7 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_chainCalls(0, 4, Owners
    m_alarmTimeout = json_object_get_uint32(json, "alarmTimeout");
    m_alarmFlapCount = json_object_get_uint32(json, "alarmFlapCount");
    m_alarmFlapWindow = json_object_get_uint32(json, "alarmFlapWindow");
+   checkFlapDetectionSettings(context);
 
    // Import alarm timeout event - export records use the event name, while toJson() uses the numeric event code
    json_t *alarmTimeoutEventJson = json_object_get(json, "alarmTimeoutEvent");
@@ -797,6 +799,7 @@ EPRule::EPRule(DB_RESULT hResult, int row, const wchar_t *chainName) : m_chainCa
    m_alarmCategoryScriptName = DBGetField(hResult, row, 24, nullptr, 0);
    m_alarmFlapCount = DBGetFieldUInt32(hResult, row, 25);
    m_alarmFlapWindow = DBGetFieldUInt32(hResult, row, 26);
+   checkFlapDetectionSettings(nullptr);
 }
 
 /**
@@ -868,6 +871,7 @@ EPRule::EPRule(const NXCPMessage& msg, const wchar_t *chainName) : m_chainCalls(
 	m_alarmTimeoutEvent = msg.getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
    m_alarmFlapCount = msg.getFieldAsUInt32(VID_ALARM_FLAP_COUNT);
    m_alarmFlapWindow = msg.getFieldAsUInt32(VID_ALARM_FLAP_WINDOW);
+   checkFlapDetectionSettings(nullptr);
 	m_rcaScriptName = msg.getFieldAsString(VID_RCA_SCRIPT_NAME);
 	m_alarmCategoryScriptName = msg.getFieldAsString(VID_ALARM_CATEGORY_SCRIPT);
 
@@ -917,6 +921,22 @@ EPRule::EPRule(const NXCPMessage& msg, const wchar_t *chainName) : m_chainCalls(
 
    m_incidentAIAnalysisDepth = msg.getFieldAsInt32(VID_INCIDENT_AI_DEPTH);
    m_incidentAIPrompt = msg.getFieldAsString(VID_INCIDENT_AI_PROMPT);
+}
+
+/**
+ * Disable alarm flap detection when its settings are inconsistent (threshold set without detection window).
+ * Warning goes to import context when provided, otherwise to server log.
+ */
+void EPRule::checkFlapDetectionSettings(ImportContext *context)
+{
+   if ((m_alarmFlapCount == 0) || (m_alarmFlapWindow > 0))
+      return;
+
+   if (context != nullptr)
+      context->log(NXLOG_WARNING, L"EPRule::EPRule()", L"Event processing rule %s has alarm flap detection threshold %u without detection window - flap detection disabled", m_guid.toString().cstr(), m_alarmFlapCount);
+   else
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Event processing rule %s has alarm flap detection threshold %u without detection window - flap detection disabled", m_guid.toString().cstr(), m_alarmFlapCount);
+   m_alarmFlapCount = 0;
 }
 
 /**

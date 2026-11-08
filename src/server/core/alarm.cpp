@@ -3428,26 +3428,26 @@ bool InitAlarmManager()
 }
 
 /**
- * Restore flap detection settings of flapping alarms loaded from database from their event processing
- * policy rules. Alarms which rule is missing or has flap detection disabled leave flapping state
- * (or are terminated if termination is pending) on first watchdog pass.
+ * Restore flap detection settings of alarms loaded from database from their event processing policy rules
+ * (settings are not persisted with alarm). Flapping alarms which rule is missing or has flap detection
+ * disabled leave flapping state (or are terminated if termination is pending) on first watchdog pass.
  */
 static void RestoreFlapDetectionSettings()
 {
-   struct FlappingAlarm
+   struct AlarmRuleRef
    {
       uint32_t alarmId;
       uuid ruleGuid;
    };
-   StructArray<FlappingAlarm> alarms;
+   StructArray<AlarmRuleRef> alarms(0, 1024);
 
    s_alarmList.lock();
    s_alarmList.forEach(
       [&alarms] (Alarm *alarm) -> EnumerationCallbackResult
       {
-         if (alarm->isFlapping())
+         if (!alarm->getRuleGuid().isNull())
          {
-            FlappingAlarm *a = alarms.addPlaceholder();
+            AlarmRuleRef *a = alarms.addPlaceholder();
             a->alarmId = alarm->getAlarmId();
             a->ruleGuid = alarm->getRuleGuid();
          }
@@ -3458,23 +3458,43 @@ static void RestoreFlapDetectionSettings()
    if (alarms.isEmpty())
       return;
 
-   // Rule lookup is done without holding alarm list lock (event processing threads lock alarm list while holding policy lock)
+   // Rule lookup is done without holding alarm list lock (event processing threads lock alarm list while holding policy lock).
+   // Alarms created by the same rule share settings, so each rule is looked up once.
+   struct FlapSettings
+   {
+      uint32_t count;
+      uint32_t window;
+   };
+   HashMap<uuid, FlapSettings> settingsByRule(Ownership::True);
    EventProcessingPolicy *policy = GetEventProcessingPolicy();
+   int restored = 0;
    for(int i = 0; i < alarms.size(); i++)
    {
-      FlappingAlarm *a = alarms.get(i);
-      shared_ptr<EPRule> rule = policy->findRule(a->ruleGuid);
-      uint32_t count = (rule != nullptr) ? rule->getAlarmFlapCount() : 0;
-      uint32_t window = (count > 0) ? rule->getAlarmFlapWindow() : 0;
+      AlarmRuleRef *a = alarms.get(i);
+      FlapSettings *settings = settingsByRule.get(a->ruleGuid);
+      if (settings == nullptr)
+      {
+         settings = new FlapSettings();
+         shared_ptr<EPRule> rule = policy->findRule(a->ruleGuid);
+         settings->count = (rule != nullptr) ? rule->getAlarmFlapCount() : 0;
+         settings->window = (settings->count > 0) ? rule->getAlarmFlapWindow() : 0;
+         settingsByRule.set(a->ruleGuid, settings);
+      }
+      if (settings->count == 0)
+         continue;   // Default for loaded alarms
 
       s_alarmList.lock();
       Alarm *alarm = s_alarmList.find(a->alarmId);
       if (alarm != nullptr)
-         alarm->setFlapDetectionSettings(count, window);
+      {
+         alarm->setFlapDetectionSettings(settings->count, settings->window);
+         restored++;
+      }
       s_alarmList.unlock();
 
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Restored flap detection settings for alarm %u (count=%u, window=%u)", a->alarmId, count, window);
+      nxlog_debug_tag(DEBUG_TAG, 6, L"Restored flap detection settings for alarm %u (count=%u, window=%u)", a->alarmId, settings->count, settings->window);
    }
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Flap detection settings restored for %d of %d loaded alarms", restored, alarms.size());
 }
 
 /**
