@@ -49,15 +49,17 @@ Found threshold configuration for non-existing DCI [999002]. Delete?
 1 VPN connector networks refer to non-existing VPN connector [999146] (vpn_connector_networks.vpn_id). Delete them?
 1 resource tags refer to non-existing resource [999147] (resource_tags.resource_id). Delete them?
 1 observation point hosts refer to non-existing observation point [999148] (observation_point_hosts.point_id). Delete them?
+1 observation point hosts refer to non-existing observation point [990002] (observation_point_hosts.point_id). Delete them?
+1 observation point hosts refer to non-existing observation point [0] (observation_point_hosts.point_id). Delete them?
 1 agent policies refer to non-existing template [999149] (ap_common.owner_id). Delete them?
 1 condition input mappings refer to non-existing condition [999150] (cond_dci_map.condition_id). Delete them?
 1 port stop list entries refer to non-existing object [999151] (port_stop_list.object_id). Delete them?
-1 object AI data records refer to non-existing object [999152] (object_ai_data.object_id). Delete them?
+1 object AI memory entries refer to non-existing object [999152] (ai_memory.scope_id). Delete them?
 1 interface IP addresses refer to non-existing interface [0] (interface_address_list.iface_id). Delete them?
 # Task 3: class table, DCI, reset and report-only relations
 1 radio interface records refer to non-existing node or access point [999240] (radios.owner_id). Delete them?
 1 cluster resources refer to non-existing cluster [999241] (cluster_resources.cluster_id). Delete them?
-1 dashboard associations refer to non-existing dashboard [999242] (dashboard_associations.dashboard_id). Delete them?
+1 dashboard associations refer to non-existing dashboard or network map [999242] (dashboard_associations.dashboard_id). Delete them?
 1 table DCI columns refer to non-existing table DCI [999243] (dc_table_columns.table_id). Delete them?
 1 table threshold conditions refer to non-existing table threshold [999244] (dct_threshold_conditions.threshold_id). Delete them?
 1 table threshold instances refer to non-existing table threshold [999245] (dct_threshold_instances.threshold_id). Delete them?
@@ -172,3 +174,11 @@ Invalid object ID 999966 used in policy rule [chain 0, rule 990086]. Delete it f
 Invalid object ID 999967 is the only source filter of policy rule [chain 0, rule 990086], deleting it would change how the rule matches sources
 # Customer-copy follow-up: object 8 is not a built-in
 1 access control entries refer to non-existing object [8] (acl.object_id). Delete them?
+1 rule source filters refer to non-existing rule [chain 999306, rule 0] (policy_source_list). Delete them?
+1 rule event filters refer to non-existing rule [chain 0, rule 999308] (policy_event_list). Delete them?
+1 traffic observer analyzer node references refer to non-existing node [999971] (traffic_observers.node_id). Reset them?
+Observation point "check-orphan-point" [999972] refers to non-existing traffic observer [999973]. Delete it?
+1 observation point hosts refer to non-existing observation point [999972] (observation_point_hosts.point_id). Delete them?
+1 observation point host node links refer to non-existing node [999974] (observation_point_hosts.node_id). Reset them?
+1 device configuration backups refer to non-existing node [999975] (device_configs.node_id). Delete them?
+1 cached agent configurations refer to non-existing node [999976] (agent_config_cache.node_id). Delete them?

@@ -17,7 +17,7 @@
 #   3. inject-defects.sql, forced check; log must contain every line of expected-first-run.txt and
 #      none of unexpected-first-run.txt; assert-after-first-run.sql must pass
 #   4. cleanup-report-only.sql, check must be clean; assert-after-cleanup.sql must pass
-#   5. every batch that prints "SQL query failed" fails the run
+#   5. every batch or check that prints "SQL query failed" fails the run
 #
 # Assertion files are ordinary SQL batches: a false condition inserts a duplicate key into
 # nxdbmgr_check_assert, which fails the statement (see baseline.sql).
@@ -111,6 +111,9 @@ run_check()
    [ $rc -eq 0 ] || fail "check '$name' exited with $rc (see $WORK/$name.log)"
    grep -q "Database check aborted" "$WORK/$name.log" && fail "check '$name' was aborted (see $WORK/$name.log)"
    grep -q "Database check completed" "$WORK/$name.log" || fail "check '$name' did not complete (see $WORK/$name.log)"
+   if grep -q "SQL query failed" "$WORK/$name.log"; then
+      fail "check '$name' had a failed SQL query (see $WORK/$name.log)"
+   fi
 }
 
 # assert_clean <log name>

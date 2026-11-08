@@ -49,11 +49,11 @@ INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM bus
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM asset_properties WHERE asset_id=999145)=0 THEN 142 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM vpn_connector_networks WHERE vpn_id=999146)=0 THEN 143 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM resource_tags WHERE resource_id=999147)=0 THEN 144 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
-INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM observation_point_hosts WHERE point_id=999148)=0 THEN 145 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM observation_point_hosts WHERE point_id IN (999148,990002,0))=0 AND (SELECT count(*) FROM observation_point_hosts WHERE point_id=990094 AND node_id=990002)=1 THEN 145 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM ap_common WHERE owner_id=999149)=0 THEN 146 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM cond_dci_map WHERE condition_id=999150)=0 THEN 147 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM port_stop_list WHERE object_id=999151)=0 THEN 148 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
-INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM object_ai_data WHERE object_id=999152)=0 THEN 149 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM ai_memory WHERE scope_type='2' AND scope_id=999152)=0 THEN 149 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM interface_address_list WHERE iface_id=0)=0 AND (SELECT count(*) FROM interface_address_list WHERE iface_id=990004)=1 THEN 150 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM acl WHERE object_id=990002 AND user_id=1)=1 AND (SELECT count(*) FROM object_custom_attributes WHERE object_id=990002 AND attr_name='site')=1 AND (SELECT count(*) FROM nsmap WHERE subnet_id=990007)=0 AND (SELECT count(*) FROM subnets WHERE id=990007)=1 THEN 151 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 
@@ -125,3 +125,17 @@ INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM pol
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM acl WHERE object_id IN (3,4) AND user_id=1)=2 AND (SELECT count(*) FROM container_members WHERE container_id=3 AND object_id=990041)=1 THEN 175 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 /* 176: built-in EPP sources retained, acl row for 8 deleted */
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM policy_source_list WHERE chain_id=0 AND rule_id=990087 AND object_id=1)=1 AND (SELECT count(*) FROM policy_source_list WHERE chain_id=0 AND rule_id=990088 AND object_id=3 AND exclusion='1')=1 AND (SELECT count(*) FROM policy_source_list WHERE chain_id=0 AND rule_id=990089 AND object_id=4)=1 AND (SELECT count(*) FROM policy_source_list WHERE rule_id IN (990087,990088) AND object_id=990002)=2 AND (SELECT count(*) FROM acl WHERE object_id=8 AND user_id=1)=0 THEN 176 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+
+/* 177: ai_memory rows outside object scope and valid object scope rows are kept */
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM ai_memory WHERE id IN (990090,990091,990092))=3 THEN 177 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+
+/* 178: dashboard associations with a network map and a dashboard template are kept */
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM dashboard_associations WHERE object_id=990002 AND dashboard_id IN (990095,990096))=2 THEN 178 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+
+/* 179: source and event rows of missing rules deleted */
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM policy_source_list WHERE object_id=999968)=0 AND (SELECT count(*) FROM policy_event_list WHERE event_code=999969)=0 THEN 179 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+
+/* 180: traffic observer analyzer node reset, orphan observation point removed with its properties and host row, host node link reset */
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM traffic_observers WHERE id=999970 AND node_id=0)=1 AND (SELECT count(*) FROM observation_points WHERE id=999972)=0 AND (SELECT count(*) FROM object_properties WHERE object_id=999972)=0 AND (SELECT count(*) FROM observation_point_hosts WHERE point_id=999972)=0 AND (SELECT count(*) FROM observation_point_hosts WHERE point_id=990094 AND host_key='badnode' AND node_id=0)=1 AND (SELECT count(*) FROM traffic_observers WHERE id=990093 AND node_id=990002)=1 AND (SELECT count(*) FROM observation_points WHERE id=990094 AND observer_id=990093)=1 THEN 180 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+/* 181: node-owned configuration rows of missing nodes deleted, rows of node 990002 kept */
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM device_configs WHERE node_id=999975)=0 AND (SELECT count(*) FROM agent_config_cache WHERE node_id=999976)=0 AND (SELECT count(*) FROM device_configs WHERE node_id=990002)=1 AND (SELECT count(*) FROM agent_config_cache WHERE node_id=990002)=1 THEN 181 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
