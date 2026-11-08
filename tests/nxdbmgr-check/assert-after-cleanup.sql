@@ -25,3 +25,6 @@ INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM int
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM policy_source_list WHERE rule_id IN (990070,990072,990076,990079,990080) AND object_id=990002)=5 AND (SELECT count(*) FROM policy_event_list WHERE rule_id IN (990074,990082,990083) AND event_code=17)=3 THEN 208 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 /* 209: built-in references survive the clean run */
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM acl WHERE object_id IN (3,4) AND user_id=1)=2 AND (SELECT count(*) FROM container_members WHERE container_id=3 AND object_id=990041)=1 AND (SELECT count(*) FROM policy_source_list WHERE object_id IN (1,3,4))=3 THEN 209 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+
+/* 210: dashboard associations with a network map and a dashboard template survive the clean run */
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM dashboard_associations WHERE object_id=990002 AND dashboard_id IN (990095,990096))=2 THEN 210 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;

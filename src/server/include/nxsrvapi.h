@@ -40,6 +40,18 @@
 #include <interface_types.h>
 
 /**
+ * Built-in object IDs
+ */
+#define BUILTIN_OID_NETWORK               1
+#define BUILTIN_OID_SERVICEROOT           2
+#define BUILTIN_OID_TEMPLATEROOT          3
+#define BUILTIN_OID_ZONE0                 4
+#define BUILTIN_OID_ASSETROOT             5
+#define BUILTIN_OID_NETWORKMAPROOT        6
+#define BUILTIN_OID_DASHBOARDROOT         7
+#define BUILTIN_OID_BUSINESSSERVICEROOT   9
+
+/**
  * Default files
  */
 #ifdef _WIN32

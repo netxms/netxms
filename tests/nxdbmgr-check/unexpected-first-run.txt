@@ -34,9 +34,9 @@ Interface [990050]
 Interface [990051]
 Node [990002] path check
 # Task 9: existing event codes and alarm_timeout_event=0 are never reported
-non-existing event code 0.
-non-existing event code 500.
-non-existing event code 17.
+non-existing event code 0 (
+non-existing event code 500 (
+non-existing event code 17 (
 # Task 10: forwarder name is not a channel, seeded channel exists
 action [990060]
 action [990061]
@@ -56,3 +56,17 @@ Invalid object ID 3 used in policy
 Invalid object ID 3 is the
 Invalid object ID 4 used in policy
 Invalid object ID 4 is the
+# Baseline traffic observer and observation point are valid
+[990093]
+[990094]
+# Network map and dashboard template are valid dashboard association targets
+[990095]
+[990096]
+# Rows of missing rules are swept before the policy stage, which must not report them
+Invalid object ID 999968
+Invalid event code 0x000F4221
+# Injected traffic observer and observation point have properties rows, only their references are wrong
+non-existing object [999970]
+non-existing object [999972]
+Object properties [999970]
+Object properties [999972]

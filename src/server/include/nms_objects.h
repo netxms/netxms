@@ -103,18 +103,6 @@ DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t object
 #define LAST_EVENT_NETWORK_LOSS  2  /* SYS_NETWORK_CONN_LOST event current node outage is attributed to */
 
 /**
- * Built-in object IDs
- */
-#define BUILTIN_OID_NETWORK               1
-#define BUILTIN_OID_SERVICEROOT           2
-#define BUILTIN_OID_TEMPLATEROOT          3
-#define BUILTIN_OID_ZONE0                 4
-#define BUILTIN_OID_ASSETROOT             5
-#define BUILTIN_OID_NETWORKMAPROOT        6
-#define BUILTIN_OID_DASHBOARDROOT         7
-#define BUILTIN_OID_BUSINESSSERVICEROOT   9
-
-/**
  * Special object ID meaning "context" or "current object"
  */
 #define BUILTIN_OID_CONTEXT_OBJECT        ((uint32_t)0xFFFFFFFF)

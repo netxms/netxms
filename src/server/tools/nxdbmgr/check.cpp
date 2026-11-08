@@ -587,10 +587,19 @@ static const struct
 };
 
 /**
- * Mirror of BUILTIN_OID_* from nms_objects.h, which nxdbmgr does not include. These objects have
- * properties rows but no class table row.
+ * Built-in objects valid as references even without a properties row in older databases
  */
-static const uint32_t s_builtinObjectIds[] = { 1, 2, 3, 4, 5, 6, 7, 9 };
+static const uint32_t s_builtinObjectIds[] =
+{
+   BUILTIN_OID_NETWORK,
+   BUILTIN_OID_SERVICEROOT,
+   BUILTIN_OID_TEMPLATEROOT,
+   BUILTIN_OID_ZONE0,
+   BUILTIN_OID_ASSETROOT,
+   BUILTIN_OID_NETWORKMAPROOT,
+   BUILTIN_OID_DASHBOARDROOT,
+   BUILTIN_OID_BUSINESSSERVICEROOT
+};
 
 /**
  * Check if object ID belongs to a built-in object
@@ -604,7 +613,7 @@ static bool IsBuiltinObjectId(uint32_t id)
 }
 
 /**
- * Build "(SELECT id[,'table' AS t] FROM t1 UNION ALL ...)" over all class tables
+ * Build a union over all class tables, optionally including table names and their order
  */
 static StringBuffer BuildClassTableUnion(bool withTableName)
 {
@@ -615,7 +624,7 @@ static StringBuffer BuildClassTableUnion(bool withTableName)
          sb.append(L" UNION ALL ");
       sb.append(L"SELECT id");
       if (withTableName)
-         sb.append(L",'").append(s_objectClassTables[i].table).append(L"' AS t");
+         sb.append(L",'").append(s_objectClassTables[i].table).append(L"' AS t,").append(static_cast<uint32_t>(i)).append(L" AS table_order");
       sb.append(L" FROM ").append(s_objectClassTables[i].table);
    }
    sb.append(L")");
@@ -670,39 +679,28 @@ static void CheckGhostObjectProperties()
 static void CheckDuplicateObjectIds()
 {
    StartStage(L"Duplicate object IDs");
-   StringBuffer query(L"SELECT u.id FROM ");
-   query.append(BuildClassTableUnion(false)).append(L" u GROUP BY u.id HAVING count(*) > 1 ORDER BY u.id");
+   StringBuffer query(L"SELECT u.id,u.t,c.object_class FROM ");
+   query.append(BuildClassTableUnion(true))
+        .append(L" u LEFT OUTER JOIN object_containers c ON c.id=u.id WHERE u.id IN (SELECT d.id FROM ")
+        .append(BuildClassTableUnion(false)).append(L" d GROUP BY d.id HAVING count(*) > 1) ORDER BY u.id,u.table_order");
    DB_RESULT hResult = CheckSelect(query);
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      for(int i = 0; (i < count) && !s_checkAborted; i++)
+      for(int i = 0; (i < count) && !s_checkAborted; )
       {
          uint32_t id = DBGetFieldULong(hResult, i, 0);
-
-         StringBuffer tableQuery(L"SELECT u.t FROM ");
-         tableQuery.append(BuildClassTableUnion(true)).append(L" u WHERE u.id=").append(id);
-         DB_RESULT hTables = CheckSelect(tableQuery);
-         if (hTables == nullptr)
-            break;
-
          StringList tables;
-         for(int j = 0; j < DBGetNumRows(hTables); j++)
-            tables.addPreallocated(DBGetField(hTables, j, 0, nullptr, 0));
-         DBFreeResult(hTables);
-
          int containerClass = -1;
-         if (tables.contains(L"object_containers"))
+         do
          {
-            StringBuffer classQuery(L"SELECT object_class FROM object_containers WHERE id=");
-            classQuery.append(id);
-            DB_RESULT hClass = CheckSelect(classQuery);
-            if (hClass == nullptr)
-               break;
-            if (DBGetNumRows(hClass) > 0)
-               containerClass = DBGetFieldLong(hClass, 0, 0);
-            DBFreeResult(hClass);
+            wchar_t *table = DBGetField(hResult, i, 1, nullptr, 0);
+            if (!wcscmp(table, L"object_containers"))
+               containerClass = DBGetFieldLong(hResult, i, 2);
+            tables.addPreallocated(table);
+            i++;
          }
+         while((i < count) && (DBGetFieldULong(hResult, i, 0) == id));
 
          bool extension = false;
          if ((tables.size() == 2) && (containerClass != -1))
@@ -1163,117 +1161,32 @@ static void CheckClusters()
 }
 
 /**
- * Check traffic observer and observation point objects and their host records
+ * Observation points must belong to an existing traffic observer. Deleting a point removes the
+ * object, so its properties row goes with it; host rows are left to the orphan relation stage.
  */
-static void CheckTrafficObservers()
+static void CheckObservationPointOwners()
 {
-   StartStage(L"Traffic observer object properties");
-   CheckMissingObjectProperties(L"traffic_observers", L"traffic observer", 0);
-   EndStage();
-
-   StartStage(L"Observation point object properties");
-   CheckMissingObjectProperties(L"observation_points", L"observation point", 0);
-   EndStage();
-
-   wchar_t name[MAX_OBJECT_NAME], query[256];
-
-   StartStage(L"Traffic observer analyzer nodes");
-   DB_RESULT hResult = SQLSelect(L"SELECT id,node_id FROM traffic_observers WHERE node_id<>0");
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      SetStageWorkTotal(count);
-      for(int i = 0; i < count; i++)
-      {
-         uint32_t observerId = DBGetFieldULong(hResult, i, 0);
-         uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
-         if (!IsDatabaseRecordExist(g_dbHandle, L"nodes", L"id", nodeId))
-         {
-            g_dbCheckErrors++;
-            if (GetYesNoEx(L"Traffic observer \"%s\" [%u] refers to non-existing node [%u] as analyzer node. Dereference?",
-                     DBMgrGetObjectName(observerId, name), observerId, nodeId))
-            {
-               nx_swprintf(query, 256, L"UPDATE traffic_observers SET node_id=0 WHERE id=%u", observerId);
-               if (SQLQuery(query))
-                  g_dbCheckFixes++;
-            }
-         }
-         UpdateStageProgress(1);
-      }
-      DBFreeResult(hResult);
-   }
-   EndStage();
-
    StartStage(L"Observation point owners");
-   hResult = SQLSelect(L"SELECT id,observer_id FROM observation_points");
+   DB_RESULT hResult = CheckSelect(L"SELECT p.id,p.observer_id FROM observation_points p LEFT OUTER JOIN traffic_observers o ON o.id=p.observer_id WHERE o.id IS NULL");
    if (hResult != nullptr)
    {
+      wchar_t name[MAX_OBJECT_NAME], query[256];
       int count = DBGetNumRows(hResult);
-      SetStageWorkTotal(count);
-      for(int i = 0; i < count; i++)
+      for(int i = 0; (i < count) && !s_checkAborted; i++)
       {
          uint32_t pointId = DBGetFieldULong(hResult, i, 0);
          uint32_t observerId = DBGetFieldULong(hResult, i, 1);
-         if (!IsDatabaseRecordExist(g_dbHandle, L"traffic_observers", L"id", observerId))
+         g_dbCheckErrors++;
+         if (GetYesNoEx(L"Observation point \"%s\" [%u] refers to non-existing traffic observer [%u]. Delete it?",
+                  DBMgrGetObjectName(pointId, name), pointId, observerId))
          {
-            g_dbCheckErrors++;
-            if (GetYesNoEx(L"Observation point \"%s\" [%u] refers to non-existing traffic observer [%u]. Delete it?",
-                     DBMgrGetObjectName(pointId, name), pointId, observerId))
-            {
-               nx_swprintf(query, 256, L"DELETE FROM observation_points WHERE id=%u", pointId);
-               if (SQLQuery(query))
-               {
-                  nx_swprintf(query, 256, L"DELETE FROM observation_point_hosts WHERE point_id=%u", pointId);
-                  SQLQuery(query);
-                  nx_swprintf(query, 256, L"DELETE FROM object_properties WHERE object_id=%u", pointId);
-                  SQLQuery(query);
-                  g_dbCheckFixes++;
-               }
-            }
-         }
-         UpdateStageProgress(1);
-      }
-      DBFreeResult(hResult);
-   }
-   EndStage();
-
-   StartStage(L"Observation point host records");
-   hResult = SQLSelect(L"SELECT DISTINCT point_id FROM observation_point_hosts");
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         uint32_t pointId = DBGetFieldULong(hResult, i, 0);
-         if (!IsDatabaseRecordExist(g_dbHandle, L"observation_points", L"id", pointId))
-         {
-            g_dbCheckErrors++;
-            if (GetYesNoEx(L"Host records refer to non-existing observation point [%u]. Delete them?", pointId))
-            {
-               nx_swprintf(query, 256, L"DELETE FROM observation_point_hosts WHERE point_id=%u", pointId);
-               if (SQLQuery(query))
-                  g_dbCheckFixes++;
-            }
-         }
-      }
-      DBFreeResult(hResult);
-   }
-   hResult = SQLSelect(L"SELECT DISTINCT node_id FROM observation_point_hosts WHERE node_id<>0");
-   if (hResult != nullptr)
-   {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         uint32_t nodeId = DBGetFieldULong(hResult, i, 0);
-         if (!IsDatabaseRecordExist(g_dbHandle, L"nodes", L"id", nodeId))
-         {
-            g_dbCheckErrors++;
-            if (GetYesNoEx(L"Host records refer to non-existing node [%u]. Unlink them?", nodeId))
-            {
-               nx_swprintf(query, 256, L"UPDATE observation_point_hosts SET node_id=0 WHERE node_id=%u", nodeId);
-               if (SQLQuery(query))
-                  g_dbCheckFixes++;
-            }
+            nx_swprintf(query, 256, L"DELETE FROM observation_points WHERE id=%u", pointId);
+            if (!CheckQuery(query))
+               break;
+            nx_swprintf(query, 256, L"DELETE FROM object_properties WHERE object_id=%u", pointId);
+            if (!CheckQuery(query))
+               break;
+            g_dbCheckFixes++;
          }
       }
       DBFreeResult(hResult);
@@ -2777,6 +2690,7 @@ struct OrphanRelation
    OrphanFix fix;
    bool zeroAllowed;             // true: zero means "not set" and is skipped
    const wchar_t *warning;       // appended to the prompt, may be nullptr
+   const wchar_t *childFilter;   // single child column condition without table alias, e.g. "scope_type='2'", may be nullptr
 };
 
 /**
@@ -2830,20 +2744,22 @@ static const OrphanRelation s_orphanRelations[] =
    { OrphanStage::Object, L"dashboard elements", L"dashboard_elements", L"dashboard_id", L"object_properties", L"object_id", L"dashboard", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"dashboard template instances", L"dashboard_template_instances", L"dashboard_template_id", L"object_properties", L"object_id", L"dashboard template", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"dashboard associations", L"dashboard_associations", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"dashboard associations", L"dashboard_associations", L"dashboard_id", L"object_properties", L"object_id", L"dashboard or network map", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"business service downtime records", L"business_service_downtime", L"service_id", L"object_properties", L"object_id", L"business service", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"asset properties", L"asset_properties", L"asset_id", L"object_properties", L"object_id", L"asset", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"VPN connector networks", L"vpn_connector_networks", L"vpn_id", L"object_properties", L"object_id", L"VPN connector", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"resource tags", L"resource_tags", L"resource_id", L"object_properties", L"object_id", L"resource", OrphanFix::DeleteRow, true, nullptr },
-   { OrphanStage::Object, L"observation point hosts", L"observation_point_hosts", L"point_id", L"object_properties", L"object_id", L"observation point", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"agent policies", L"ap_common", L"owner_id", L"object_properties", L"object_id", L"template", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"condition input mappings", L"cond_dci_map", L"condition_id", L"object_properties", L"object_id", L"condition", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"port stop list entries", L"port_stop_list", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { OrphanStage::Object, L"object AI data records", L"object_ai_data", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"object AI memory entries", L"ai_memory", L"scope_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr, L"scope_type='2'" },
 
    // Class table parents
+   { OrphanStage::Object, L"observation point hosts", L"observation_point_hosts", L"point_id", L"observation_points", L"id", L"observation point", OrphanFix::DeleteRow, false, nullptr },
    { OrphanStage::Object, L"radio interface records", L"radios", L"owner_id", L"(SELECT id FROM nodes UNION SELECT id FROM access_points)", L"id", L"node or access point", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"cluster resources", L"cluster_resources", L"cluster_id", L"clusters", L"id", L"cluster", OrphanFix::DeleteRow, true, nullptr },
-   { OrphanStage::Object, L"dashboard associations", L"dashboard_associations", L"dashboard_id", L"dashboards", L"id", L"dashboard", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"device configuration backups", L"device_configs", L"node_id", L"nodes", L"id", L"node", OrphanFix::DeleteRow, false, nullptr },
+   { OrphanStage::Object, L"cached agent configurations", L"agent_config_cache", L"node_id", L"nodes", L"id", L"node", OrphanFix::DeleteRow, false, nullptr },
 
    // DCI parents, then table threshold satellites
    { OrphanStage::DataCollection, L"DCI custom schedules", L"dci_schedules", L"item_id", L"(SELECT item_id FROM items UNION SELECT item_id FROM dc_tables)", L"item_id", L"DCI", OrphanFix::DeleteRow, true, nullptr },
@@ -2864,6 +2780,8 @@ static const OrphanRelation s_orphanRelations[] =
    { OrphanStage::Object, L"MQTT proxy assignments", L"nodes", L"mqtt_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
    { OrphanStage::Object, L"Modbus proxy assignments", L"nodes", L"modbus_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
    { OrphanStage::Object, L"physical container assignments of nodes", L"nodes", L"physical_container_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
+   { OrphanStage::Object, L"traffic observer analyzer node references", L"traffic_observers", L"node_id", L"nodes", L"id", L"node", OrphanFix::ResetToZero, true, nullptr },
+   { OrphanStage::Object, L"observation point host node links", L"observation_point_hosts", L"node_id", L"nodes", L"id", L"node", OrphanFix::ResetToZero, true, nullptr },
    { OrphanStage::Object, L"parent interface references", L"interfaces", L"parent_iface", L"object_properties", L"object_id", L"interface", OrphanFix::ResetToZero, true, nullptr },
    { OrphanStage::Object, L"drill-down object references", L"object_properties", L"drilldown_object_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
    { OrphanStage::Object, L"condition source object references", L"conditions", L"source_object", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
@@ -2957,6 +2875,8 @@ static void CheckOrphanRelation(const OrphanRelation& r)
         .append(L" WHERE ");
    if (r.zeroAllowed)
       query.append(L"c.").append(r.childKey).append(L"<>0 AND ");
+   if (r.childFilter != nullptr)
+      query.append(L"c.").append(r.childFilter).append(L" AND ");
    query.append(L"p.").append(r.parentKey).append(L" IS NULL GROUP BY c.").append(r.childKey);
 
    DB_RESULT hResult = CheckSelect(query);
@@ -2986,10 +2906,14 @@ static void CheckOrphanRelation(const OrphanRelation& r)
             case OrphanFix::DeleteRow:
                message.append(L". Delete them?");
                fix.append(L"DELETE FROM ").append(r.childTable).append(L" WHERE ").append(r.childKey).append(L"=").append(id);
+               if (r.childFilter != nullptr)
+                  fix.append(L" AND ").append(r.childFilter);
                break;
             case OrphanFix::ResetToZero:
                message.append(L". Reset them?");
                fix.append(L"UPDATE ").append(r.childTable).append(L" SET ").append(r.childKey).append(L"=0 WHERE ").append(r.childKey).append(L"=").append(id);
+               if (r.childFilter != nullptr)
+                  fix.append(L" AND ").append(r.childFilter);
                break;
             case OrphanFix::ReportOnly:
                WriteToTerminalEx(L"\n%s\n", message.cstr());
@@ -3007,53 +2931,23 @@ static void CheckOrphanRelation(const OrphanRelation& r)
 }
 
 /**
- * Check all relations from s_orphanRelations, one stage per OrphanStage in array order
+ * Check relations of one group from s_orphanRelations as one stage, in array order
  */
-static void CheckOrphanRelations()
+static void CheckOrphanRelations(OrphanStage stage, const wchar_t *name)
 {
-   static const struct
+   int total = 0;
+   for(size_t i = 0; i < sizeof(s_orphanRelations) / sizeof(OrphanRelation); i++)
+      if (s_orphanRelations[i].stage == stage)
+         total++;
+   StartStage(name, total);
+   for(size_t i = 0; (i < sizeof(s_orphanRelations) / sizeof(OrphanRelation)) && !s_checkAborted; i++)
    {
-      OrphanStage stage;
-      const wchar_t *name;
-   } stages[] =
-   {
-      { OrphanStage::Object, L"Object references" },
-      { OrphanStage::DataCollection, L"Data collection references" },
-      { OrphanStage::EventPolicy, L"Event processing policy references" },
-      { OrphanStage::ReportOnly, L"References reported only" }
-   };
-   for(size_t j = 0; (j < sizeof(stages) / sizeof(stages[0])) && !s_checkAborted; j++)
-   {
-      int total = 0;
-      for(size_t i = 0; i < sizeof(s_orphanRelations) / sizeof(OrphanRelation); i++)
-         if (s_orphanRelations[i].stage == stages[j].stage)
-            total++;
-      StartStage(stages[j].name, total);
-      for(size_t i = 0; (i < sizeof(s_orphanRelations) / sizeof(OrphanRelation)) && !s_checkAborted; i++)
-      {
-         if (s_orphanRelations[i].stage != stages[j].stage)
-            continue;
-         CheckOrphanRelation(s_orphanRelations[i]);
-         UpdateStageProgress(1);
-      }
-      EndStage();
+      if (s_orphanRelations[i].stage != stage)
+         continue;
+      CheckOrphanRelation(s_orphanRelations[i]);
+      UpdateStageProgress(1);
    }
-}
-
-/**
- * Interface object stages
- */
-static void CheckInterfaces()
-{
-   CheckComponents(L"Interface", L"interfaces");
-}
-
-/**
- * Network service object stages
- */
-static void CheckNetworkServices()
-{
-   CheckComponents(L"Network service", L"network_services");
+   EndStage();
 }
 
 /**
@@ -3066,15 +2960,17 @@ static void (*s_checkStages[])() =
    CheckDuplicateObjectIds,
    CheckDuplicateObjectGuids,
    CheckNodes,
-   CheckInterfaces,
-   CheckNetworkServices,
+   []() { CheckComponents(L"Interface", L"interfaces"); },
+   []() { CheckComponents(L"Network service", L"network_services"); },
    CheckClusters,
-   CheckTrafficObservers,
+   CheckObservationPointOwners,
    CheckContainerCycles,
    CheckDuplicateSubnets,
    CheckTemplateToTargetMapping,
    CheckObjectProperties,
    CheckContainerMembership,
+   []() { CheckOrphanRelations(OrphanStage::EventPolicy, L"Event processing policy references"); },
+   CheckEppRelations,
    CheckEPP,
    CheckMapLinks,
    CheckDataTables,
@@ -3095,8 +2991,9 @@ static void (*s_checkStages[])() =
    CheckBusinessServiceCheckState,
    CheckBusinessServiceDowntime,
    CheckAssetNodeLinks,
-   CheckOrphanRelations,
-   CheckEppRelations
+   []() { CheckOrphanRelations(OrphanStage::Object, L"Object references"); },
+   []() { CheckOrphanRelations(OrphanStage::DataCollection, L"Data collection references"); },
+   []() { CheckOrphanRelations(OrphanStage::ReportOnly, L"References reported only"); }
 };
 
 /**
