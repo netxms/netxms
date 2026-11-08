@@ -35,6 +35,13 @@
 typedef std::function<std::string(json_t*, uint32_t)> AIToolHandler;
 
 /**
+ * AI tool flags
+ */
+#define AI_TOOL_READ_ONLY     0x0001   // Tool does not modify server, object, or device state
+#define AI_TOOL_DESTRUCTIVE   0x0002   // Tool may delete data or perform an action that cannot be undone
+#define AI_TOOL_NOT_FOR_MCP   0x0004   // Tool is used only by AI assistant, tasks, or operator and is not exposed to MCP clients
+
+/**
  * AI tool descriptor
  */
 struct AITool
@@ -60,11 +67,11 @@ struct AITool
    std::string description;
    std::vector<Parameter> parameters;
    AIToolHandler handler;
-   bool chatOnly;  // Tool only makes sense within interactive chat context and is not exposed to MCP clients
+   uint32_t flags;  // AI_TOOL_* flags
 
    AITool(const std::string& name, const std::string& description,
-      const std::vector<Parameter>& parameters, AIToolHandler handler, bool chatOnly = false)
-      : name(name), description(description), parameters(parameters), handler(handler), chatOnly(chatOnly)
+      const std::vector<Parameter>& parameters, AIToolHandler handler, uint32_t flags = 0)
+      : name(name), description(description), parameters(parameters), handler(handler), flags(flags)
    {
    }
 };
@@ -909,11 +916,11 @@ struct AISkill
 /**
  * Register AI tool. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAITool(const char *name, const char *description, const std::vector<AITool::Parameter>& parameters, AIToolHandler handler);
+void NXCORE_EXPORTABLE RegisterAITool(const char *name, const char *description, const std::vector<AITool::Parameter>& parameters, AIToolHandler handler, uint32_t flags = 0);
 
 /**
  * Get unified tool list for MCP clients: global tools plus tools from all skills flattened into one namespace,
- * excluding disabled and chat-only items. Each element is a JSON object with name, description, and MCP input schema.
+ * excluding disabled items and tools flagged with AI_TOOL_NOT_FOR_MCP. Each element is a JSON object with name, description, and MCP input schema.
  * Caller must call json_decref on result.
  */
 json_t NXCORE_EXPORTABLE *GetMCPToolsAsJson();

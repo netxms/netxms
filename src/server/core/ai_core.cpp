@@ -768,14 +768,14 @@ json_t *RebuildToolDeclarations(const std::unordered_map<std::string, shared_ptr
 /**
  * Register global AI tool. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAITool(const char *name, const char *description, const std::vector<AITool::Parameter>& parameters, AIToolHandler handler)
+void NXCORE_EXPORTABLE RegisterAITool(const char *name, const char *description, const std::vector<AITool::Parameter>& parameters, AIToolHandler handler, uint32_t flags)
 {
    if (s_globalTools.find(name) != s_globalTools.end())
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Global AI tool \"%hs\" already registered", name);
       return;
    }
-   s_globalTools.emplace(name, make_shared<AITool>(name, description, parameters, handler));
+   s_globalTools.emplace(name, make_shared<AITool>(name, description, parameters, handler, flags));
 }
 
 /**
@@ -952,7 +952,9 @@ static std::string CallGlobalAITool(const char *name, json_t *arguments, uint32_
 }
 
 /**
- * Build MCP tool descriptor for AI tool (input schema is built the same way as internal LLM tool declarations)
+ * Build MCP tool descriptor for AI tool (input schema is built the same way as internal LLM tool declarations).
+ * Annotations are sent only for explicitly classified tools; for other tools MCP clients apply specification
+ * defaults (tool may modify its environment and updates may be destructive).
  */
 static json_t *BuildMCPToolDescriptor(const AITool& function)
 {
@@ -960,6 +962,19 @@ static json_t *BuildMCPToolDescriptor(const AITool& function)
    json_object_set_new(tool, "name", json_string(function.name.c_str()));
    json_object_set_new(tool, "description", json_string(function.description.c_str()));
    json_object_set_new(tool, "inputSchema", BuildParameterSchema(function.parameters));
+   if (function.flags & AI_TOOL_READ_ONLY)
+   {
+      json_t *annotations = json_object();
+      json_object_set_new(annotations, "readOnlyHint", json_true());
+      json_object_set_new(tool, "annotations", annotations);
+   }
+   else if (function.flags & AI_TOOL_DESTRUCTIVE)
+   {
+      json_t *annotations = json_object();
+      json_object_set_new(annotations, "readOnlyHint", json_false());
+      json_object_set_new(annotations, "destructiveHint", json_true());
+      json_object_set_new(tool, "annotations", annotations);
+   }
    return tool;
 }
 
@@ -978,7 +993,7 @@ json_t NXCORE_EXPORTABLE *GetMCPToolsAsJson()
    for(const auto& pair : s_globalTools)
    {
       const AITool& function = *pair.second;
-      if (function.chatOnly || disabledTools.count(function.name))
+      if ((function.flags & AI_TOOL_NOT_FOR_MCP) || disabledTools.count(function.name))
          continue;
       json_array_append_new(tools, BuildMCPToolDescriptor(function));
       names.insert(function.name);
@@ -989,7 +1004,7 @@ json_t NXCORE_EXPORTABLE *GetMCPToolsAsJson()
    CollectSkillTools(skillTools, disabledSkills);
    for(const auto& function : skillTools)
    {
-      if (function->chatOnly || disabledTools.count(function->name) || !names.insert(function->name).second)
+      if ((function->flags & AI_TOOL_NOT_FOR_MCP) || disabledTools.count(function->name) || !names.insert(function->name).second)
          continue;
       json_array_append_new(tools, BuildMCPToolDescriptor(*function));
    }
@@ -1015,7 +1030,7 @@ std::string NXCORE_EXPORTABLE CallMCPTool(const char *name, json_t *arguments, u
          function = FindSkillTool(name);
    }
 
-   if ((function == nullptr) || function->chatOnly)
+   if ((function == nullptr) || (function->flags & AI_TOOL_NOT_FOR_MCP))
    {
       if (found != nullptr)
          *found = false;
@@ -3146,7 +3161,7 @@ bool InitAIAssistant()
       [] (json_t *arguments, uint32_t userId) -> std::string
       {
          return GetRegisteredSkills();
-      });
+      }, AI_TOOL_READ_ONLY | AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(
       "register-ai-task",
@@ -3176,19 +3191,19 @@ bool InitAIAssistant()
          uint32_t taskId = RegisterAITask(String(description, "utf-8"), userId, String(prompt, "utf-8"), startTime);
          char buffer[32];
          return std::string(IntegerToString(taskId, buffer));
-      });
+      }, AI_TOOL_NOT_FOR_MCP);
    RegisterAITool(
       "ai-task-list",
       "Get list of registered AI tasks.",
       { },
-      F_AITaskList);
+      F_AITaskList, AI_TOOL_READ_ONLY | AI_TOOL_NOT_FOR_MCP);
    RegisterAITool(
       "delete-ai-task",
       "Delete registered AI task.",
       {
          { "task_id", "ID of the task to delete", "integer" }
       },
-      F_DeleteAITask);
+      F_DeleteAITask, AI_TOOL_DESTRUCTIVE | AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(
       "netxms-version",
@@ -3197,7 +3212,7 @@ bool InitAIAssistant()
       [] (json_t *arguments, uint32_t userId) -> std::string
       {
          return std::string("Running NetXMS server version is " NETXMS_VERSION_STRING_A);
-      });
+      }, AI_TOOL_READ_ONLY);
 
    RegisterAITool(
       "get-ai-provider-stats",
@@ -3205,7 +3220,7 @@ bool InitAIAssistant()
       "Counters are cumulative since server start and change with every API call. "
       "Always call this tool again when the user asks for current or updated numbers - never reuse previous results.",
       {},
-      F_GetAIProviderStats);
+      F_GetAIProviderStats, AI_TOOL_READ_ONLY);
 
    RegisterAITool(
       "write-log-message",
@@ -3226,7 +3241,7 @@ bool InitAIAssistant()
          { "type", "Message type: 'informational' or 'alert'" },
          { "relatedObjectId", "Optional: ID of related NetXMS object", "integer" },
          { "expirationMinutes", "Optional: minutes until message expires (default 7 days)", "integer" }
-      }, F_CreateAIMessage);
+      }, F_CreateAIMessage, AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(
       "create-approval-request",
@@ -3239,7 +3254,7 @@ bool InitAIAssistant()
          { "taskPrompt", "The prompt for the AI task to execute when approved" },
          { "relatedObjectId", "Optional: ID of related NetXMS object", "integer" },
          { "expirationMinutes", "Optional: minutes until request expires (default 24 hours)", "integer" }
-      }, F_CreateApprovalRequest);
+      }, F_CreateApprovalRequest, AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(
       "get-node-ai-tools",
@@ -3249,7 +3264,7 @@ bool InitAIAssistant()
       {
          { "node", "Node ID or name" }
       },
-      F_GetNodeAITools);
+      F_GetNodeAITools, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "execute-agent-tool",
       "Execute an AI tool on a node's agent. This is the tool you use AFTER calling get-node-ai-tools to discover available tools. "

@@ -145,21 +145,21 @@ static void CreateAIToolList()
          { "object", "optional name or ID of node, device, server, workstation, or container or group of them" },
          { "state", "optional state filter: 'active' (outstanding + acknowledged, the default), 'outstanding', 'acknowledged', 'resolved', or 'all'" }
       },
-      F_AlarmList);
+      F_AlarmList, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "clear-notification-queue",
       "Clear notification channel's queue",
       {
          { "channel", "notification channel name (mandatory)" }
       },
-      F_ClearNotificationChannelQueue);
+      F_ClearNotificationChannelQueue, AI_TOOL_DESTRUCTIVE);
    RegisterAITool(
       "explain-object-status",
       "Get detailed list of factors that contributed to the current status of an object (node, device, server, workstation, container, etc.).",
       {
          { "object", "mandatory name or ID of an object" }
       },
-      F_ExplainObjectStatus);
+      F_ExplainObjectStatus, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "find-objects",
       "Find objects by name, IP address, class, parent object, or zone. At least one search criteria should be set.",
@@ -170,7 +170,7 @@ static void CreateAIToolList()
          { "parentId", "optional ID of parent object (container or group)", "integer" },
          { "zoneUIN", "optional zone UIN", "integer" }
       },
-      F_FindObjects);
+      F_FindObjects, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "force-poll",
       "Trigger an immediate poll on a monitored object instead of waiting for the next scheduled poll. "
@@ -192,14 +192,14 @@ static void CreateAIToolList()
       "get-notification-channels",
       "Get list of configured notification channels",
       {},
-      F_GetNotificationChannels);
+      F_GetNotificationChannels, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "get-object",
       "Find object by its name or ID",
       {
          { "object", "mandatory name or ID of an object (node, device, server, workstation, container, etc.)" }
       },
-      F_GetObject);
+      F_GetObject, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "get-object-timeline",
       "Get one chronological stream of everything that happened to a single object (node, device, sensor, etc.) within a time window. "
@@ -225,7 +225,7 @@ static void CreateAIToolList()
          { "min_severity", "minimum severity for the generic 'event' category only: normal, warning, minor, major, critical (default: normal)" },
          { "limit_per_category", "maximum number of records per category, 1-200 (default: 50)", "integer" }
       },
-      F_GetObjectTimeline);
+      F_GetObjectTimeline, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "get-node-health",
       "Get one-call OS-level health snapshot of a node (server, workstation, VM) with pre-evaluated findings. "
@@ -245,7 +245,7 @@ static void CreateAIToolList()
          { "object", "mandatory name or ID of a node" },
          { "top", "number of top processes to return in each ranking, 1-50 (default: 5)", "integer" }
       },
-      F_GetNodeHealth);
+      F_GetNodeHealth, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "send-notification",
       "Send notification to given recipient using one of configured notification channels.",
@@ -275,7 +275,7 @@ static void CreateAIToolList()
          { "dci_tag", "optional glob pattern; limit the DCI anomalies section to DCIs whose user tag matches the pattern" },
          { "include_quiet", "if true, also include objects in maintenance mode and administratively unmanaged objects. Default: false", "boolean" }
       },
-      F_OperationalStatus);
+      F_OperationalStatus, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "server-stats",
       "Get stats (basic internal performance metrics like number of objects, nodes, sensors, interfaces, metrics, data collection items) of NetXMS server itself.",
@@ -283,7 +283,7 @@ static void CreateAIToolList()
       [] (json_t *arguments, uint32_t userId) -> std::string
       {
          return JsonToString(GetServerStats());
-      });
+      }, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "snmp-read",
       "Read SNMP variable from given node",
@@ -291,7 +291,7 @@ static void CreateAIToolList()
          { "object", "name or ID of a node" },
          { "oid", "SNMP OID of the variable to read" }
       },
-      F_SNMPRead);
+      F_SNMPRead, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "snmp-walk",
       "Walk SNMP MIB from given node",
@@ -300,7 +300,7 @@ static void CreateAIToolList()
           { "oid", "SNMP OID to start walk from" },
           { "limit", "maximum number of variables to return (default: 1000)", "integer" }
       },
-      F_SNMPWalk);
+      F_SNMPWalk, AI_TOOL_READ_ONLY);
 }
 
 /**
@@ -319,7 +319,7 @@ static void CreateAISkillList()
             {
                { "alarm", "numeric alarm ID (mandatory)", "integer" }
             },
-            F_GetAlarmDetails),
+            F_GetAlarmDetails, AI_TOOL_READ_ONLY),
          AITool(
             "acknowledge-alarm",
             "Acknowledge one or more alarms, signaling that an operator is aware of the condition. Only alarms in the outstanding state can be acknowledged. Returns a per-alarm result with success/failure for each ID.",
@@ -345,7 +345,7 @@ static void CreateAISkillList()
                { "alarms", "array of alarm IDs to terminate (mandatory)", "array", "integer" },
                { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)", "boolean" }
             },
-            F_TerminateAlarm),
+            F_TerminateAlarm, AI_TOOL_DESTRUCTIVE),
          AITool(
             "add-alarm-comment",
             "Add an operator comment to an alarm to document analysis findings, actions taken, or context for other operators. The comment is appended to the alarm's comment history.",
@@ -430,7 +430,7 @@ static void CreateAISkillList()
                { "object", "name or ID of an object (mandatory)" },
                { "metric", "name or ID of the metric to delete (mandatory)" }
             },
-            F_DeleteMetric),
+            F_DeleteMetric, AI_TOOL_DESTRUCTIVE),
          AITool(
             "get-metric-details",
             "Get full configuration details of a single data collection item (metric), including all properties, flags, thresholds count, transformation script, and metadata. Use this before editing a metric to see its current configuration.",
@@ -438,7 +438,7 @@ static void CreateAISkillList()
                { "object", "name or ID of an object (mandatory)" },
                { "metric", "name or ID of the metric (mandatory)" }
             },
-            F_GetMetricDetails),
+            F_GetMetricDetails, AI_TOOL_READ_ONLY),
          AITool(
             "get-metrics",
             "Get data collection items (metrics) and their current values for given object",
@@ -446,7 +446,7 @@ static void CreateAISkillList()
                { "object", "name or ID of an object (node, device, server, workstation, container, etc.)" },
                { "filter", "optional filter to select specific metrics by name or description (partial match, case insensitive)" }
             },
-            F_GetMetrics),
+            F_GetMetrics, AI_TOOL_READ_ONLY),
          AITool(
             "get-historical-data",
             "Get historical time series data for analysis and anomaly detection. Returns data points with timestamps and values for specified time period.",
@@ -457,7 +457,7 @@ static void CreateAISkillList()
                { "timeTo", "end time as string in the same formats as timeFrom (optional, defaults to now)" },
                { "maxDataPoints", "optional maximum number of data points to return; if set, data will be aggregated into time buckets with min/max/avg values; default is 500; set to 0 for raw data", "integer" }
             },
-            F_GetHistoricalData),
+            F_GetHistoricalData, AI_TOOL_READ_ONLY),
          AITool(
             "get-thresholds",
             "Get all thresholds configured on a data collection item (metric).",
@@ -465,14 +465,14 @@ static void CreateAISkillList()
                { "object", "name or ID of an object (mandatory)" },
                { "metric", "name or ID of the metric (mandatory)" }
             },
-            F_GetThresholds),
+            F_GetThresholds, AI_TOOL_READ_ONLY),
          AITool(
             "get-object-thresholds",
             "Get all thresholds configured across every data collection item and table on an object (node, device, etc.) in a single call. Returns one row per threshold with the data collection item name and ID, threshold ID, condition, and the names of the events generated on activation and deactivation. Use this to answer questions like which events can be generated from thresholds on a given node.",
             {
                { "object", "name or ID of an object (mandatory)" }
             },
-            F_GetObjectThresholds),
+            F_GetObjectThresholds, AI_TOOL_READ_ONLY),
          AITool(
             "add-threshold",
             "Add a threshold to a data collection item for alerting when values exceed limits.",
@@ -519,7 +519,7 @@ static void CreateAISkillList()
                { "metric", "name or ID of the metric (mandatory)" },
                { "thresholdId", "threshold ID to delete (mandatory)", "integer" }
             },
-            F_DeleteThreshold)
+            F_DeleteThreshold, AI_TOOL_DESTRUCTIVE)
       }
    );
 
@@ -559,19 +559,19 @@ static void CreateAISkillList()
                { "code", "event code (provide code or name)", "integer" },
                { "name", "event name (provide code or name)" }
             },
-            F_DeleteEventTemplate),
+            F_DeleteEventTemplate, AI_TOOL_DESTRUCTIVE),
          AITool(
             "get-event-processing-action",
             "Get specific server-side action used in event processing by its ID. Server-side actions define operations that can be executed in response to events, such as sending notifications, executing commands, or running scripts.",
             {
                { "id", "action ID (numeric)", "integer" }
             },
-            F_GetEventProcessingAction),
+            F_GetEventProcessingAction, AI_TOOL_READ_ONLY),
          AITool(
             "get-event-processing-actions",
             "Get list of server-side actions used in event processing. Server-side actions define operations that can be executed in response to events, such as sending notifications, executing commands, or running scripts.",
             {},
-            F_GetEventProcessingActions),
+            F_GetEventProcessingActions, AI_TOOL_READ_ONLY),
          AITool(
             "get-event-template",
             "Get event template definition by code or name. Event templates define the structure and properties of events that can be generated in NetXMS.",
@@ -579,12 +579,12 @@ static void CreateAISkillList()
                { "code", "event template code (numeric ID)", "integer" },
                { "name", "event template name (either code or name must be provided)" }
             },
-            F_GetEventTemplate),
+            F_GetEventTemplate, AI_TOOL_READ_ONLY),
          AITool(
             "get-event-processing-policy",
             "Get the complete event processing policy configuration. The policy defines rules for how events are processed, including conditions, actions, and correlations. Every chain with its rules is in 'chains'; the main chain (the entry point of event processing) has ID 0.",
             {},
-            F_GetEventProcessingPolicy),
+            F_GetEventProcessingPolicy, AI_TOOL_READ_ONLY),
          AITool(
             "create-epp-rule",
             "Create a new event processing policy rule in the main chain or in the chain given by 'chain'. Returns the created rule (with its assigned GUID) and the new chain version. Position the rule with after_guid / before_guid / position (default: append at end).",
@@ -696,7 +696,7 @@ static void CreateAISkillList()
             {
                { "guid", "GUID of the rule to delete (mandatory)" }
             },
-            F_DeleteEppRule),
+            F_DeleteEppRule, AI_TOOL_DESTRUCTIVE),
          AITool(
             "enable-epp-rule",
             "Enable a previously disabled event processing policy rule. The rule may belong to any chain.",
@@ -754,7 +754,7 @@ static void CreateAISkillList()
             {
                { "id", "action ID (mandatory)", "integer" }
             },
-            F_DeleteServerAction)
+            F_DeleteServerAction, AI_TOOL_DESTRUCTIVE)
       }
    );
 
@@ -769,14 +769,14 @@ static void CreateAISkillList()
             {
                { "object", "name or ID of a node" }
             },
-            F_GetNodeHardwareComponents),
+            F_GetNodeHardwareComponents, AI_TOOL_READ_ONLY),
          AITool(
             "get-node-interfaces",
             "Get list of network interfaces for given node",
             {
                { "object", "name or ID of a node" }
             },
-            F_GetNodeInterfaces),
+            F_GetNodeInterfaces, AI_TOOL_READ_ONLY),
          AITool(
             "get-node-software-packages",
             "Get list of software packages for given node (servers, workstations, network devices, etc.). Returns information about installed software packages including name, version, vendor, installation date, etc.",
@@ -784,7 +784,7 @@ static void CreateAISkillList()
                { "object", "name or ID of a node" },
                { "filter", "optional filter to select specific packages by name or description (partial names allowed)" }
             },
-            F_GetNodeSoftwarePackages)
+            F_GetNodeSoftwarePackages, AI_TOOL_READ_ONLY)
       }
    );
 
@@ -797,21 +797,21 @@ static void CreateAISkillList()
             "get-traffic-observers",
             "List configured traffic observers (traffic analyzer instances) with connection state, backend product and version, and supported capabilities. Call this first to check whether traffic data is available at all.",
             {},
-            F_GetTrafficObservers),
+            F_GetTrafficObservers, AI_TOOL_READ_ONLY),
          AITool(
             "get-observation-points",
             "List observation points (monitored interfaces or segments of a traffic analyzer) with state, scope, local networks, sampling rate, and number of matched nodes.",
             {
                { "observer", "optional name or ID of a traffic observer to restrict the list" }
             },
-            F_GetObservationPoints),
+            F_GetObservationPoints, AI_TOOL_READ_ONLY),
          AITool(
             "get-node-traffic-context",
             "Check whether a node is seen by any observation point and return current host-level traffic counters (bytes, packets, active flows, TCP retransmits, backend alerts) from each point that observes it. Use this as the entry point when investigating a node.",
             {
                { "object", "name or ID of a node (mandatory)" }
             },
-            F_GetNodeTrafficContext),
+            F_GetNodeTrafficContext, AI_TOOL_READ_ONLY),
          AITool(
             "get-node-traffic-peers",
             "Get hosts the node is currently communicating with (conversation peers), with role (client or server), bytes sent and received, and flow count. Peers that are monitored nodes are annotated with node ID and name. Returns most active peers first.",
@@ -820,7 +820,7 @@ static void CreateAISkillList()
                { "point", "optional name or ID of an observation point when the node is seen by several" },
                { "limit", "maximum number of peers to return per observation point (default 50)", "integer" }
             },
-            F_GetNodeTrafficPeers),
+            F_GetNodeTrafficPeers, AI_TOOL_READ_ONLY),
          AITool(
             "get-node-traffic-l7-breakdown",
             "Get per-application (layer 7 protocol) breakdown of the node's traffic: bytes sent and received, packets, and flows per detected application.",
@@ -829,14 +829,14 @@ static void CreateAISkillList()
                { "point", "optional name or ID of an observation point when the node is seen by several" },
                { "limit", "maximum number of applications to return (default 50)", "integer" }
             },
-            F_GetNodeTrafficL7Breakdown),
+            F_GetNodeTrafficL7Breakdown, AI_TOOL_READ_ONLY),
          AITool(
             "get-observation-point-statistics",
             "Get current aggregate statistics of an observation point: throughput in and out, cumulative bytes and packets, active hosts and flows, dropped packets, and TCP retransmits.",
             {
                { "point", "name or ID of an observation point (mandatory)" }
             },
-            F_GetObservationPointStatistics),
+            F_GetObservationPointStatistics, AI_TOOL_READ_ONLY),
          AITool(
             "get-observation-point-top-talkers",
             "Get hosts generating most traffic on an observation point. Hosts that are monitored nodes are annotated with node ID and name.",
@@ -844,7 +844,7 @@ static void CreateAISkillList()
                { "point", "name or ID of an observation point (mandatory)" },
                { "limit", "maximum number of hosts to return (default 50)", "integer" }
             },
-            F_GetObservationPointTopTalkers),
+            F_GetObservationPointTopTalkers, AI_TOOL_READ_ONLY),
          AITool(
             "get-observation-point-l7-breakdown",
             "Get per-application (layer 7 protocol) traffic breakdown for the whole observation point.",
@@ -852,7 +852,7 @@ static void CreateAISkillList()
                { "point", "name or ID of an observation point (mandatory)" },
                { "limit", "maximum number of applications to return (default 50)", "integer" }
             },
-            F_GetObservationPointL7Breakdown),
+            F_GetObservationPointL7Breakdown, AI_TOOL_READ_ONLY),
          AITool(
             "get-observation-point-dscp-breakdown",
             "Get traffic breakdown by DSCP (QoS) class for an observation point.",
@@ -860,7 +860,7 @@ static void CreateAISkillList()
                { "point", "name or ID of an observation point (mandatory)" },
                { "limit", "maximum number of classes to return (default 50)", "integer" }
             },
-            F_GetObservationPointDSCPBreakdown),
+            F_GetObservationPointDSCPBreakdown, AI_TOOL_READ_ONLY),
          AITool(
             "get-observation-point-active-hosts",
             "List hosts currently active on an observation point with IP, VLAN, MAC, name, first and last seen time, and the matched NetXMS node if any. Use the filter to narrow large host sets; unmatched hosts are devices seen on the wire that are not monitored by NetXMS.",
@@ -870,7 +870,7 @@ static void CreateAISkillList()
                { "unmatched_only", "set to true to return only hosts not matched to any monitored node", "boolean" },
                { "limit", "maximum number of hosts to return (default 50)", "integer" }
             },
-            F_GetObservationPointActiveHosts)
+            F_GetObservationPointActiveHosts, AI_TOOL_READ_ONLY)
       }
    );
 
@@ -939,7 +939,7 @@ static void CreateAISkillList()
             {
                { "incident_id", "ID of the incident (mandatory)", "integer" }
             },
-            F_GetIncidentDetails),
+            F_GetIncidentDetails, AI_TOOL_READ_ONLY),
          AITool(
             "get-incident-related-events",
             "Get events related to an incident within a time window around its creation for correlation analysis.",
@@ -947,7 +947,7 @@ static void CreateAISkillList()
                { "incident_id", "ID of the incident (mandatory)", "integer" },
                { "time_window", "Time window before and after incident creation, as duration with unit suffix (e.g. '30m', '2h', '1d'); number without unit means seconds (default: 1h)" }
             },
-            F_GetIncidentRelatedEvents),
+            F_GetIncidentRelatedEvents, AI_TOOL_READ_ONLY),
          AITool(
             "get-incident-history",
             "Get historical incidents for a specific object to identify recurring issues and patterns.",
@@ -955,14 +955,14 @@ static void CreateAISkillList()
                { "object", "Name or ID of the object to get incident history for (mandatory)" },
                { "max_count", "Maximum number of historical incidents to return (default: 20)", "integer" }
             },
-            F_GetIncidentHistory),
+            F_GetIncidentHistory, AI_TOOL_READ_ONLY),
          AITool(
             "get-incident-topology-context",
             "Get topology context for an incident including upstream and downstream objects with their current status.",
             {
                { "incident_id", "ID of the incident (mandatory)", "integer" }
             },
-            F_GetIncidentTopologyContext),
+            F_GetIncidentTopologyContext, AI_TOOL_READ_ONLY),
          AITool(
             "add-incident-comment",
             "Add a comment to an incident for documenting analysis findings, updates, or notes.",
@@ -1002,14 +1002,14 @@ static void CreateAISkillList()
             {
                { "incident_id", "ID of the incident (mandatory)", "integer" }
             },
-            F_SuggestIncidentAssignee),
+            F_SuggestIncidentAssignee, AI_TOOL_READ_ONLY),
          AITool(
             "get-open-incidents",
             "Get all open (not closed) incidents for a specific object. Returns incidents in states: Open, In Progress, Blocked, or Resolved.",
             {
                { "object", "Name or ID of the object to get open incidents for (mandatory)" }
             },
-            F_GetOpenIncidents),
+            F_GetOpenIncidents, AI_TOOL_READ_ONLY),
          AITool(
             "create-incident",
             "Create a new incident for tracking an issue. Use when detecting patterns, anomalies, or issues that warrant unified tracking.",
@@ -1041,14 +1041,14 @@ static void CreateAISkillList()
             "list-logs",
             "List all available logs that the user has permission to access. Use this to discover available log sources including custom logs from server modules.",
             {},
-            F_ListLogs),
+            F_ListLogs, AI_TOOL_READ_ONLY),
          AITool(
             "get-log-schema",
             "Get detailed schema information for a specific log including column names, types, and descriptions.",
             {
                { "log_name", "name of the log to get schema for (required)" }
             },
-            F_GetLogSchema),
+            F_GetLogSchema, AI_TOOL_READ_ONLY),
          AITool(
             "search-log",
             "Search any log table with flexible filtering. Works with built-in logs and custom module logs.",
@@ -1061,7 +1061,7 @@ static void CreateAISkillList()
                { "filters", "optional JSON object with column-specific filters", "object" },
                { "limit", "max results (default: 100, max: 1000)", "integer" }
             },
-            F_SearchLog),
+            F_SearchLog, AI_TOOL_READ_ONLY),
          AITool(
             "search-syslog",
             "Search syslog messages with flexible filtering by time, source, severity, facility, and text content.",
@@ -1075,7 +1075,7 @@ static void CreateAISkillList()
                { "tag", "syslog tag filter" },
                { "limit", "max results (default: 100, max: 1000)", "integer" }
             },
-            F_SearchSyslog),
+            F_SearchSyslog, AI_TOOL_READ_ONLY),
          AITool(
             "search-windows-events",
             "Search Windows event log entries collected from monitored Windows hosts.",
@@ -1090,7 +1090,7 @@ static void CreateAISkillList()
                { "text_pattern", "text search pattern" },
                { "limit", "max results (default: 100)", "integer" }
             },
-            F_SearchWindowsEvents),
+            F_SearchWindowsEvents, AI_TOOL_READ_ONLY),
          AITool(
             "search-snmp-traps",
             "Search SNMP traps received from network devices.",
@@ -1103,7 +1103,7 @@ static void CreateAISkillList()
                { "varbind_pattern", "text search in varbind data" },
                { "limit", "max results (default: 100)", "integer" }
             },
-            F_SearchSnmpTraps),
+            F_SearchSnmpTraps, AI_TOOL_READ_ONLY),
          AITool(
             "search-events",
             "Search NetXMS system events generated by thresholds, polling, and scripts.",
@@ -1118,7 +1118,7 @@ static void CreateAISkillList()
                { "text_pattern", "text search in message" },
                { "limit", "max results (default: 100)", "integer" }
             },
-            F_SearchEvents),
+            F_SearchEvents, AI_TOOL_READ_ONLY),
          AITool(
             "get-log-statistics",
             "Get log volume statistics for capacity planning and trend analysis.",
@@ -1129,7 +1129,7 @@ static void CreateAISkillList()
                { "time_to", "end time (default: now)" },
                { "group_by", "grouping: hour, day, source, severity (default: hour)" }
             },
-            F_GetLogStatistics),
+            F_GetLogStatistics, AI_TOOL_READ_ONLY),
          AITool(
             "correlate-logs",
             "Cross-correlate log entries across multiple sources within a time window for root cause analysis.",
@@ -1141,7 +1141,7 @@ static void CreateAISkillList()
                { "log_types", "array of log types to include (default: all)", "array", "string" },
                { "limit_per_source", "max entries per source (default: 50)", "integer" }
             },
-            F_CorrelateLogs),
+            F_CorrelateLogs, AI_TOOL_READ_ONLY),
          AITool(
             "analyze-log-patterns",
             "Analyze log patterns for anomaly detection, burst identification, recurring patterns, and new message detection.",
@@ -1152,7 +1152,7 @@ static void CreateAISkillList()
                { "time_to", "analysis end (default: now)" },
                { "pattern_type", "pattern type: frequency, burst, recurring, new, all (default: all)" }
             },
-            F_AnalyzeLogPatterns)
+            F_AnalyzeLogPatterns, AI_TOOL_READ_ONLY)
       }
    );
 
@@ -1167,14 +1167,14 @@ static void CreateAISkillList()
             {
                { "object", "name or ID of a node (mandatory)" }
             },
-            F_GetBackupStatus),
+            F_GetBackupStatus, AI_TOOL_READ_ONLY),
          AITool(
             "get-backup-list",
             "Get list of available configuration backups for a device with timestamps, sizes, and SHA-256 hashes.",
             {
                { "object", "name or ID of a node (mandatory)" }
             },
-            F_GetBackupList),
+            F_GetBackupList, AI_TOOL_READ_ONLY),
          AITool(
             "get-backup-content",
             "Get full configuration content from a specific backup or the latest backup. Returns both running and startup configs.",
@@ -1182,7 +1182,7 @@ static void CreateAISkillList()
                { "object", "name or ID of a node (mandatory)" },
                { "backupId", "backup ID to retrieve (optional, defaults to latest backup)", "integer" }
             },
-            F_GetBackupContent),
+            F_GetBackupContent, AI_TOOL_READ_ONLY),
          AITool(
             "start-backup",
             "Trigger an immediate device configuration backup job. Device must be registered for backup.",
@@ -1199,7 +1199,7 @@ static void CreateAISkillList()
                { "backupId2", "second backup ID (mandatory)" },
                { "configType", "config type to compare: running or startup (default: running)" }
             },
-            F_CompareBackups)
+            F_CompareBackups, AI_TOOL_READ_ONLY)
       }
    );
 
@@ -1212,14 +1212,14 @@ static void CreateAISkillList()
             "list-dashboard-element-types",
             "List all supported dashboard element types with a one-line description of each. Call this first to discover what can be placed on a dashboard.",
             {},
-            F_ListDashboardElementTypes),
+            F_ListDashboardElementTypes, AI_TOOL_READ_ONLY),
          AITool(
             "describe-dashboard-element-type",
             "Get the full configuration schema and a filled example for one dashboard element type.",
             {
                { "type", "element type name as returned by list-dashboard-element-types (mandatory)" }
             },
-            F_DescribeDashboardElementType),
+            F_DescribeDashboardElementType, AI_TOOL_READ_ONLY),
          AITool(
             "create-dashboard",
             "Create a new empty dashboard. Returns the new dashboard ID used by the other dashboard tools.",
@@ -1237,7 +1237,7 @@ static void CreateAISkillList()
             {
                { "dashboard", "name or ID of the dashboard (mandatory)" }
             },
-            F_GetDashboard),
+            F_GetDashboard, AI_TOOL_READ_ONLY),
          AITool(
             "update-dashboard",
             "Update dashboard-level properties. Only the properties supplied are changed; omitted ones are left as-is.",
@@ -1279,7 +1279,7 @@ static void CreateAISkillList()
                { "dashboard", "name or ID of the dashboard (mandatory)" },
                { "guid", "GUID of the element to remove (mandatory)" }
             },
-            F_RemoveDashboardElement),
+            F_RemoveDashboardElement, AI_TOOL_DESTRUCTIVE),
          AITool(
             "move-dashboard-element",
             "Move an element to a new position in the dashboard's element order. The element GUID is preserved.",
@@ -1303,14 +1303,14 @@ static void CreateAISkillList()
             {
                { "filter", "optional filter to select definitions by name, description, or URL (partial match, case insensitive)" }
             },
-            F_ListWebServices),
+            F_ListWebServices, AI_TOOL_READ_ONLY),
          AITool(
             "get-web-service",
             "Get full configuration of a single web service definition, including the metric name template to use when creating a data collection item based on it. Credentials are never returned.",
             {
                { "service", "name or ID of the web service definition (mandatory)" }
             },
-            F_GetWebService),
+            F_GetWebService, AI_TOOL_READ_ONLY),
          AITool(
             "query-web-service",
             "Call a web service against a monitored object and return the raw response document, HTTP response code, and the actual URL that was called. The request is sent by the agent on the object's effective web service proxy, exactly as it would be during data collection, and always hits the live service rather than the agent response cache. Use this to see what an API actually returns before proposing data extraction paths, and to diagnose failing web service metrics. Large documents are truncated.",

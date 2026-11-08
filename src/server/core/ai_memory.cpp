@@ -1086,7 +1086,8 @@ static void RegisterScopeTools(AIMemoryScope scope, const char *rememberName, co
    rememberParams.emplace_back("title", "Short descriptive title, unique within scope (mandatory, max 127 bytes)");
    rememberParams.emplace_back("content", "Content of the note, one to three sentences (mandatory)");
    RegisterAITool(rememberName, rememberDescription, rememberParams,
-      [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Remember(scope, arguments, userId); });
+      [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Remember(scope, arguments, userId); },
+      AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(updateName, updateDescription,
       {
@@ -1094,13 +1095,15 @@ static void RegisterScopeTools(AIMemoryScope scope, const char *rememberName, co
          { "title", "New title (optional)" },
          { "content", "New content (optional)" }
       },
-      [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Update(scope, arguments, userId); });
+      [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Update(scope, arguments, userId); },
+      AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(forgetName, forgetDescription,
       {
          { "id", "Memory entry ID (mandatory)", "integer" }
       },
-      [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Forget(scope, arguments, userId); });
+      [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Forget(scope, arguments, userId); },
+      AI_TOOL_DESTRUCTIVE | AI_TOOL_NOT_FOR_MCP);
 }
 
 /**
@@ -1162,7 +1165,7 @@ void InitAIMemory()
          { "object", "Optional: name or ID of the object (object scope only; all readable object entries if omitted)" },
          { "search", "Optional: case-insensitive text to search for in title and content" }
       },
-      F_Recall);
+      F_Recall, AI_TOOL_READ_ONLY | AI_TOOL_NOT_FOR_MCP);
 }
 
 /**

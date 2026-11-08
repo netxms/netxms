@@ -2861,7 +2861,7 @@ void InitAIOperators()
          { "object", "Optional: name or ID of the NetXMS object this observation relates to" },
          { "references", "Optional: array of references supporting the observation (alarm IDs, event IDs, DCI IDs, etc.)", "array", "string" }
       },
-      F_RecordObservation);
+      F_RecordObservation, AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(
       "create-check",
@@ -2880,7 +2880,7 @@ void InitAIOperators()
          { "cooldown", "Optional: minimum seconds between two action applications (default 0)", "integer" },
          { "renotify_interval", "Optional: seconds after which the action is applied again while the check stays fired (default 0 = only on the quiet->fired edge)", "integer" }
       },
-      F_CreateCheck);
+      F_CreateCheck, AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(
       "update-check",
@@ -2898,7 +2898,7 @@ void InitAIOperators()
          { "renotify_interval", "Optional: new renotify interval in seconds", "integer" },
          { "enabled", "Optional: enable or disable the check", "boolean" }
       },
-      F_UpdateCheck);
+      F_UpdateCheck, AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(
       "delete-check",
@@ -2906,7 +2906,7 @@ void InitAIOperators()
       {
          { "id", "Check ID", "integer" }
       },
-      F_DeleteCheck);
+      F_DeleteCheck, AI_TOOL_DESTRUCTIVE | AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(
       "test-check",
@@ -2916,7 +2916,7 @@ void InitAIOperators()
          { "source", "NXSL source code to test" },
          { "object", "Optional: name or ID of the object bound as $object" }
       },
-      F_TestCheck);
+      F_TestCheck, AI_TOOL_NOT_FOR_MCP);
 
    s_threadPool = ThreadPoolCreate(AI_OPERATOR_COMPONENT,
       ConfigReadInt(L"ThreadPool.AIOperator.BaseSize", 4),
