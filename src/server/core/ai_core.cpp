@@ -2921,10 +2921,152 @@ void OnAIConfigurationChange(const wchar_t *name, const wchar_t *value)
 }
 
 /**
- * Initialize AI assistant
+ * Initialize AI assistant. Tools, skills, script-defined tools and disabled item lists are initialized
+ * unconditionally so that they are available through the MCP endpoint even when no LLM provider is
+ * configured. Everything that needs a model (chat, memory, tasks, messages, operators, workers) is
+ * initialized only when a default provider exists. Returns false when no provider is configured.
  */
 bool InitAIAssistant()
 {
+   NXSL_Library *scriptLibrary = GetServerScriptLibrary();
+   scriptLibrary->lock();
+   scriptLibrary->forEach(
+      [] (const NXSL_LibraryScript *script) -> void
+      {
+         if (script->getMetadataEntryAsBoolean(L"ai_tool"))
+            RegisterAIFunctionScriptHandler(script, false);
+      });
+   scriptLibrary->unlock();
+
+   LoadAIDisabledLists();
+
+   RegisterAIAssistantFunction(
+      "get-available-skills",
+      "Get list of available AI assistant skills that can be loaded to extend capabilities. Each skill provides specialized functions for specific domains like data collection, event processing, inventory management, etc.",
+      {},
+      [] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         return GetRegisteredSkills();
+      });
+
+   RegisterAIAssistantFunction(
+      "register-ai-task",
+      "Register new AI task for autonomous background execution. "
+      "Use AI tasks when: "
+      "(1) work should continue without user interaction, "
+      "(2) task needs multiple iterations to complete (e.g., processing many items, investigation requiring multiple passes), "
+      "(3) task needs to preserve state/context between iterations, "
+      "(4) user indicates 'take your time', 'work through this', 'multiple passes', or 'let me know when done'. "
+      "Do NOT use AI tasks for time-based recurring operations (daily, weekly) - use scheduled tasks for those instead.",
+      {
+          { "description", "Task description" },
+          { "prompt", "Initial prompt for the task" },
+          { "delay", "Optional delay in seconds before first execution", "integer" }
+      },
+      [] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         const char *description = json_object_get_string_utf8(arguments, "description", nullptr);
+         const char *prompt = json_object_get_string_utf8(arguments, "prompt", nullptr);
+         if ((description == nullptr) || (description[0] == 0))
+            return std::string("Error: task description must be provided");
+         if ((prompt == nullptr) || (prompt[0] == 0))
+            return std::string("Error: task prompt must be provided");
+
+         uint32_t delay = json_object_get_uint32(arguments, "delay", 0);
+         time_t startTime = (delay > 0) ? time(nullptr) + delay : 0;
+         uint32_t taskId = RegisterAITask(String(description, "utf-8"), userId, String(prompt, "utf-8"), startTime);
+         char buffer[32];
+         return std::string(IntegerToString(taskId, buffer));
+      });
+   RegisterAIAssistantFunction(
+      "ai-task-list",
+      "Get list of registered AI tasks.",
+      { },
+      F_AITaskList);
+   RegisterAIAssistantFunction(
+      "delete-ai-task",
+      "Delete registered AI task.",
+      {
+         { "task_id", "ID of the task to delete", "integer" }
+      },
+      F_DeleteAITask);
+
+   RegisterAIAssistantFunction(
+      "netxms-version",
+      "Get running version of NetXMS server.",
+      {},
+      [] (json_t *arguments, uint32_t userId) -> std::string
+      {
+         return std::string("Running NetXMS server version is " NETXMS_VERSION_STRING_A);
+      });
+
+   RegisterAIAssistantFunction(
+      "get-ai-provider-stats",
+      "Get list of configured AI/LLM providers with their context window size and real-time usage statistics (requests, input/output tokens, failures). "
+      "Counters are cumulative since server start and change with every API call. "
+      "Always call this function again when the user asks for current or updated numbers - never reuse previous results.",
+      {},
+      F_GetAIProviderStats);
+
+   RegisterAIAssistantFunction(
+      "write-log-message",
+      "Write message to NetXMS server log.",
+      {
+         { "message", "log message text" }
+      },
+      F_WriteLogMessage);
+
+   RegisterAIAssistantFunction(
+      "create-ai-message",
+      "Create an informational message or alert for the user to review later. "
+      "Use this when you want to communicate findings, reports, or analysis results "
+      "to the user without blocking the current task execution.",
+      {
+         { "title", "Short title for the message (max 255 chars)" },
+         { "text", "Full message content" },
+         { "type", "Message type: 'informational' or 'alert'" },
+         { "relatedObjectId", "Optional: ID of related NetXMS object", "integer" },
+         { "expirationMinutes", "Optional: minutes until message expires (default 7 days)", "integer" }
+      }, F_CreateAIMessage);
+
+   RegisterAIAssistantFunction(
+      "create-approval-request",
+      "Create an approval request that, when approved by the user, spawns a new AI task. "
+      "Use this when you identify an action that requires user authorization before execution, "
+      "such as service restarts, configuration changes, or potentially disruptive operations.",
+      {
+         { "title", "Short title describing what needs approval (max 255 chars)" },
+         { "text", "Full description of what will happen on approval" },
+         { "taskPrompt", "The prompt for the AI task to execute when approved" },
+         { "relatedObjectId", "Optional: ID of related NetXMS object", "integer" },
+         { "expirationMinutes", "Optional: minutes until request expires (default 24 hours)", "integer" }
+      }, F_CreateApprovalRequest);
+
+   RegisterAIAssistantFunction(
+      "get-node-ai-tools",
+      "Discover AI tools available on a node's agent (call this ONCE per node, then use execute-agent-tool). "
+      "Returns tool names and their parameter schemas. After calling this function, immediately proceed to call "
+      "execute-agent-tool with the appropriate tool_name and parameters - do NOT call get-node-ai-tools again for the same node.",
+      {
+         { "node", "Node ID or name" }
+      },
+      F_GetNodeAITools);
+   RegisterAIAssistantFunction(
+      "execute-agent-tool",
+      "Execute an AI tool on a node's agent. This is the function you use AFTER calling get-node-ai-tools to discover available tools. "
+      "Pass the tool name from the discovery response and the required parameters according to the tool's schema.",
+      {
+         { "node", "Node ID or name (same node used in get-node-ai-tools)" },
+         { "tool_name", "Name of the tool to execute (from get-node-ai-tools response)" },
+         { "parameters", "Tool parameters as JSON object matching the tool's parameter schema", "object" }
+      },
+      F_ExecuteAgentTool);
+
+   RegisterSchedulerTaskHandler(L"Execute.AIAgentTask", ExecuteAIAgentTask, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
+
+   nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));
+   nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(GetRegisteredSkillCount()));
+
    // Initialize providers
    const wchar_t *defaultProviderName = g_serverConfig.getValue(L"/AI/DefaultProvider", L"");
 
@@ -3059,10 +3201,11 @@ bool InitAIAssistant()
       }
    }
 
-   // Verify we have at least a default provider
+   // Without a default provider the LLM-driven parts (chat, tasks, operators, workers) stay disabled,
+   // but registered tools and skills remain available through the MCP endpoint
    if (s_defaultProvider == nullptr)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("AI assistant initialization failed (no providers configured)"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"No AI providers configured, AI assistant is disabled (AI tools remain available through MCP endpoint)");
       return false;
    }
 
@@ -3075,161 +3218,16 @@ bool InitAIAssistant()
    nxlog_debug_tag(DEBUG_TAG, 3, L"AI tool-call iteration limits: interactive=%d, background=%d",
       s_maxInteractiveIterations, s_maxBackgroundIterations);
 
-   NXSL_Library *scriptLibrary = GetServerScriptLibrary();
-   scriptLibrary->lock();
-   scriptLibrary->forEach(
-      [] (const NXSL_LibraryScript *script) -> void
-      {
-         if (script->getMetadataEntryAsBoolean(L"ai_tool"))
-            RegisterAIFunctionScriptHandler(script, false);
-      });
-   scriptLibrary->unlock();
-
-   if (s_globalFunctions.empty() && (GetRegisteredSkillCount() == 0))
-   {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("AI assistant disabled (no functions or skills registered)"));
-      return true;
-   }
-
-   LoadAIDisabledLists();
-
-   RegisterAIAssistantFunction(
-      "get-available-skills",
-      "Get list of available AI assistant skills that can be loaded to extend capabilities. Each skill provides specialized functions for specific domains like data collection, event processing, inventory management, etc.",
-      {},
-      [] (json_t *arguments, uint32_t userId) -> std::string
-      {
-         return GetRegisteredSkills();
-      });
-
-   RegisterAIAssistantFunction(
-      "register-ai-task",
-      "Register new AI task for autonomous background execution. "
-      "Use AI tasks when: "
-      "(1) work should continue without user interaction, "
-      "(2) task needs multiple iterations to complete (e.g., processing many items, investigation requiring multiple passes), "
-      "(3) task needs to preserve state/context between iterations, "
-      "(4) user indicates 'take your time', 'work through this', 'multiple passes', or 'let me know when done'. "
-      "Do NOT use AI tasks for time-based recurring operations (daily, weekly) - use scheduled tasks for those instead.",
-      {
-          { "description", "Task description" },
-          { "prompt", "Initial prompt for the task" },
-          { "delay", "Optional delay in seconds before first execution", "integer" }
-      },
-      [] (json_t *arguments, uint32_t userId) -> std::string
-      {
-         const char *description = json_object_get_string_utf8(arguments, "description", nullptr);
-         const char *prompt = json_object_get_string_utf8(arguments, "prompt", nullptr);
-         if ((description == nullptr) || (description[0] == 0))
-            return std::string("Error: task description must be provided");
-         if ((prompt == nullptr) || (prompt[0] == 0))
-            return std::string("Error: task prompt must be provided");
-
-         uint32_t delay = json_object_get_uint32(arguments, "delay", 0);
-         time_t startTime = (delay > 0) ? time(nullptr) + delay : 0;
-         uint32_t taskId = RegisterAITask(String(description, "utf-8"), userId, String(prompt, "utf-8"), startTime);
-         char buffer[32];
-         return std::string(IntegerToString(taskId, buffer));
-      });
-   RegisterAIAssistantFunction(
-      "ai-task-list",
-      "Get list of registered AI tasks.",
-      { },
-      F_AITaskList);
-   RegisterAIAssistantFunction(
-      "delete-ai-task",
-      "Delete registered AI task.",
-      {
-         { "task_id", "ID of the task to delete", "integer" }
-      },
-      F_DeleteAITask);
-
-   RegisterAIAssistantFunction(
-      "netxms-version",
-      "Get running version of NetXMS server.",
-      {},
-      [] (json_t *arguments, uint32_t userId) -> std::string
-      {
-         return std::string("Running NetXMS server version is " NETXMS_VERSION_STRING_A);
-      });
-
-   RegisterAIAssistantFunction(
-      "get-ai-provider-stats",
-      "Get list of configured AI/LLM providers with their context window size and real-time usage statistics (requests, input/output tokens, failures). "
-      "Counters are cumulative since server start and change with every API call. "
-      "Always call this function again when the user asks for current or updated numbers - never reuse previous results.",
-      {},
-      F_GetAIProviderStats);
-
-   RegisterAIAssistantFunction(
-      "write-log-message",
-      "Write message to NetXMS server log.",
-      {
-         { "message", "log message text" }
-      },
-      F_WriteLogMessage);
-
-   RegisterAIAssistantFunction(
-      "create-ai-message",
-      "Create an informational message or alert for the user to review later. "
-      "Use this when you want to communicate findings, reports, or analysis results "
-      "to the user without blocking the current task execution.",
-      {
-         { "title", "Short title for the message (max 255 chars)" },
-         { "text", "Full message content" },
-         { "type", "Message type: 'informational' or 'alert'" },
-         { "relatedObjectId", "Optional: ID of related NetXMS object", "integer" },
-         { "expirationMinutes", "Optional: minutes until message expires (default 7 days)", "integer" }
-      }, F_CreateAIMessage);
-
-   RegisterAIAssistantFunction(
-      "create-approval-request",
-      "Create an approval request that, when approved by the user, spawns a new AI task. "
-      "Use this when you identify an action that requires user authorization before execution, "
-      "such as service restarts, configuration changes, or potentially disruptive operations.",
-      {
-         { "title", "Short title describing what needs approval (max 255 chars)" },
-         { "text", "Full description of what will happen on approval" },
-         { "taskPrompt", "The prompt for the AI task to execute when approved" },
-         { "relatedObjectId", "Optional: ID of related NetXMS object", "integer" },
-         { "expirationMinutes", "Optional: minutes until request expires (default 24 hours)", "integer" }
-      }, F_CreateApprovalRequest);
-
-   RegisterAIAssistantFunction(
-      "get-node-ai-tools",
-      "Discover AI tools available on a node's agent (call this ONCE per node, then use execute-agent-tool). "
-      "Returns tool names and their parameter schemas. After calling this function, immediately proceed to call "
-      "execute-agent-tool with the appropriate tool_name and parameters - do NOT call get-node-ai-tools again for the same node.",
-      {
-         { "node", "Node ID or name" }
-      },
-      F_GetNodeAITools);
-   RegisterAIAssistantFunction(
-      "execute-agent-tool",
-      "Execute an AI tool on a node's agent. This is the function you use AFTER calling get-node-ai-tools to discover available tools. "
-      "Pass the tool name from the discovery response and the required parameters according to the tool's schema.",
-      {
-         { "node", "Node ID or name (same node used in get-node-ai-tools)" },
-         { "tool_name", "Name of the tool to execute (from get-node-ai-tools response)" },
-         { "parameters", "Tool parameters as JSON object matching the tool's parameter schema", "object" }
-      },
-      F_ExecuteAgentTool);
-
    InitAIMemory();
    InitAITasks();
    InitializeAIMessageManager();
    InitAIOperators();
-   s_aiTaskThreadPool = ThreadPoolCreate(_T("AI-TASKS"),
-         ConfigReadInt(_T("ThreadPool.AITasks.BaseSize"), 4),
-         ConfigReadInt(_T("ThreadPool.AITasks.MaxSize"), 16));
+   s_aiTaskThreadPool = ThreadPoolCreate(L"AI-TASKS",
+         ConfigReadInt(L"ThreadPool.AITasks.BaseSize", 4),
+         ConfigReadInt(L"ThreadPool.AITasks.MaxSize", 16));
    ThreadCreate(AITaskSchedulerThread, s_aiTaskThreadPool);
 
-   RegisterSchedulerTaskHandler(L"Execute.AIAgentTask", ExecuteAIAgentTask, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
-
    RegisterComponent(AI_ASSISTANT_COMPONENT);
-
-   nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));
-   nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(GetRegisteredSkillCount()));
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("AI assistant initialized"));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"AI assistant initialized");
    return true;
 }
