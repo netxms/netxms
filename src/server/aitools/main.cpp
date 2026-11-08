@@ -90,6 +90,7 @@ std::string F_GetTrafficObservers(json_t *arguments, uint32_t userId);
 std::string F_GetObject(json_t *arguments, uint32_t userId);
 std::string F_GetObjectTimeline(json_t *arguments, uint32_t userId);
 std::string F_GetNodeHealth(json_t *arguments, uint32_t userId);
+std::string F_CheckConnectivity(json_t *arguments, uint32_t userId);
 std::string F_SendNotification(json_t *arguments, uint32_t userId);
 std::string F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId);
 std::string F_SNMPWalk(json_t *arguments, uint32_t userId);
@@ -246,6 +247,25 @@ static void CreateAIToolList()
          { "top", "number of top processes to return in each ranking, 1-50 (default: 5)", "integer" }
       },
       F_GetNodeHealth, AI_TOOL_READ_ONLY);
+   RegisterAITool(
+      "check-connectivity",
+      "Run live reachability test to a single target host from a node with NetXMS agent or from the NetXMS server itself, "
+      "and report DNS resolution, ICMP ping and TCP connect or protocol check results in one call. "
+      "Use this to answer 'is it the network, DNS or the service?' - it sends real packets, unlike topology-based path analysis. "
+      "Run once without 'from' and once with 'from' to compare server-origin and node-origin results. "
+      "Host name targets are resolved both at server and at source ('resolvedAtServer', 'resolvedAtSource'); address resolved at source is tested. "
+      "Object targets are tested on their primary IP address. "
+      "Protocol checks other than plain TCP connect are performed only from nodes (netsvc subagent); from server only TCP connect is done. "
+      "Field 'verdict' is one of: reachable, host-unreachable, port-closed, protocol-error (port open but TLS handshake or protocol response failed), "
+      "dns-failure, source-cannot-test (source agent not reachable or ping/netsvc subagent not loaded - this says nothing about the target). "
+      "ICMP may be filtered, so host-unreachable with only ICMP tested is not conclusive.",
+      {
+         { "target", "mandatory target: object name or ID, host name, or IP address" },
+         { "from", "name or ID of a node with NetXMS agent to run checks from (default: NetXMS server)" },
+         { "port", "TCP port to test (default: protocol's well-known port; mandatory for protocol tcp)", "integer" },
+         { "protocol", "protocol check: tcp (default when port is given), ssh, telnet, http, https, tls; without port and protocol only ICMP is tested" }
+      },
+      F_CheckConnectivity, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "send-notification",
       "Send notification to given recipient using one of configured notification channels.",

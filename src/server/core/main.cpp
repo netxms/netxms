@@ -210,8 +210,8 @@ uint32_t g_instancePollingInterval;
 uint32_t g_icmpPollingInterval;
 uint32_t g_autobindPollingInterval;
 uint32_t g_mapUpdatePollingInterval;
-uint32_t g_icmpPingSize;
-uint32_t g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
+NXCORE_EXPORTABLE_VAR(uint32_t g_icmpPingSize);
+NXCORE_EXPORTABLE_VAR(uint32_t g_icmpPingTimeout) = 1500;    // ICMP ping timeout (milliseconds)
 uint32_t g_auditFlags;
 uint32_t g_pollsBetweenPrimaryIpUpdate = 1;
 int64_t g_offlineDataRelevanceTime = 86400000;  // Default offline data relevance time (milliseconds)

@@ -45,6 +45,7 @@ This skill provides comprehensive incident management and analysis capabilities 
 2. **Gather Context**: Use `get-incident-details` to understand the incident's current state and linked alarms
 3. **Analyze Events**: Use `get-incident-related-events` to find correlated events around the incident timeframe, and the global `get-object-timeline` tool for the source object's full history (threshold and reachability changes, alarm state changes, maintenance, configuration changes, deployments) leading up to the incident
    - When the source object is a server or workstation node, use the global `get-node-health` tool to check whether the host itself is healthy (CPU, memory, disks, failed services, recent reboot, clock offset, interface errors, agent problems) in one call
+   - When the incident involves a service or host that cannot be reached, use the global `check-connectivity` tool to test DNS, ICMP and TCP reachability live from the server or from a node near the affected host
 4. **Check History**: Use `get-incident-history` to identify if this is a recurring issue
 5. **Assess Impact**: Use `get-incident-topology-context` to understand affected infrastructure
 6. **Correlate Alarms**: Use `link-alarms-to-incident` to associate related alarms
