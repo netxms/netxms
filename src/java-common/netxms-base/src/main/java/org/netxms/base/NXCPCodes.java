@@ -588,6 +588,7 @@ public class NXCPCodes
    public static final int CMD_GET_EFFECTIVE_RESPONSIBLE_USERS = 0x023A;
    public static final int CMD_GET_DHCP_SCOPES = 0x023B;
    public static final int CMD_GET_DHCP_LEASES = 0x023C;
+   public static final int CMD_GET_AGENT_LOG_FILE = 0x023D;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

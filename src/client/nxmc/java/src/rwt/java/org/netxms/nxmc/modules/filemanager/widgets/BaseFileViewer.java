@@ -83,7 +83,7 @@ public class BaseFileViewer extends Composite
 
    /**
     * Create file viewer
-    * 
+    *
     * @param parent
     * @param style
     */
@@ -164,7 +164,7 @@ public class BaseFileViewer extends Composite
          public void widgetSelected(SelectionEvent e)
          {
          }
-         
+
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -255,18 +255,7 @@ public class BaseFileViewer extends Composite
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final String content = loadFile(file);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  boolean scrollOnAppend = text.isScrollOnAppend();
-                  if (scrollToEnd)
-                     text.setScrollOnAppend(true);
-                  setContent(content);
-                  if (scrollToEnd && !scrollOnAppend)
-                     text.setScrollOnAppend(false);
-               }
-            });
+            runInUIThread(() -> showContent(content, scrollToEnd));
          }
 
          @Override
@@ -277,6 +266,22 @@ public class BaseFileViewer extends Composite
       };
       job.setUser(false);
       job.start();
+   }
+
+   /**
+    * Show given text in viewer
+    *
+    * @param content text to show
+    * @param scrollToEnd if true, scroll to end of text
+    */
+   public void showContent(String content, boolean scrollToEnd)
+   {
+      boolean scrollOnAppend = text.isScrollOnAppend();
+      if (scrollToEnd)
+         text.setScrollOnAppend(true);
+      setContent(content);
+      if (scrollToEnd && !scrollOnAppend)
+         text.setScrollOnAppend(false);
    }
 
    /**
@@ -309,7 +314,7 @@ public class BaseFileViewer extends Composite
       content = new StringBuilder();
       text.setText(""); //$NON-NLS-1$
    }
-   
+
    /**
     * Select all
     */
@@ -326,7 +331,7 @@ public class BaseFileViewer extends Composite
 
    /**
     * Check if copy can be performed
-    * 
+    *
     * @return
     */
    public boolean canCopy()
@@ -406,7 +411,7 @@ public class BaseFileViewer extends Composite
 
    /**
     * Add text selection listener
-    * 
+    *
     * @param listener
     */
    public void addSelectionListener(SelectionListener listener)
@@ -415,7 +420,7 @@ public class BaseFileViewer extends Composite
 
    /**
     * Remove selection listener
-    * 
+    *
     * @param listener
     */
    public void removeSelectionListener(SelectionListener listener)
@@ -514,7 +519,7 @@ public class BaseFileViewer extends Composite
 
    /**
     * Filter text using append filter
-    * 
+    *
     * @param text text to filter
     * @return filtered text
     */
@@ -571,17 +576,17 @@ public class BaseFileViewer extends Composite
    private void doSearch(boolean typing)
    {
    }
-   
+
    /**
     * Do search backwards
     */
    private void doReverseSearch()
    {
    }
-   
+
    /**
     * Remove escape sequences from input string
-    * 
+    *
     * @param s
     * @return
     */
@@ -622,11 +627,11 @@ public class BaseFileViewer extends Composite
 
    /**
     * Load file content into string
-    * 
+    *
     * @param file
     * @return
     */
-   protected static String loadFile(final File file)
+   public static String loadFile(final File file)
    {
       StringBuilder content = new StringBuilder();
       FileReader reader = null;
@@ -675,8 +680,8 @@ public class BaseFileViewer extends Composite
     * Set text top index (compatibility layer for RAP)
     */
    protected void setTextTopIndex()
-   {      
-   }   
+   {
+   }
 
    /**
     * Set scroll behavior on append (compatibility layer for RAP)

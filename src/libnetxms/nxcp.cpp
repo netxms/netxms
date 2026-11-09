@@ -615,7 +615,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_DCI_DATA_EXPORT_METRICS"),
       _T("CMD_GET_EFFECTIVE_RESPONSIBLE_USERS"),
       _T("CMD_GET_DHCP_SCOPES"),
-      _T("CMD_GET_DHCP_LEASES")
+      _T("CMD_GET_DHCP_LEASES"),
+      _T("CMD_GET_AGENT_LOG_FILE")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -631,7 +632,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_DEPLOY_REPORT_PACKAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_DHCP_LEASES))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_AGENT_LOG_FILE))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

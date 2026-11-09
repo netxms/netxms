@@ -1670,6 +1670,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_AGENT_FILE:
          getAgentFile(*request);
          break;
+      case CMD_GET_AGENT_LOG_FILE:
+         getAgentLogFile(*request);
+         break;
       case CMD_CANCEL_FILE_MONITORING:
          cancelFileMonitoring(*request);
          break;
@@ -13040,6 +13043,100 @@ void ClientSession::getAgentFile(const NXCPMessage& request)
 
 	if (!success) // In case of success download task will send response message with all required information
 	   sendMessage(response);
+}
+
+/**
+ * Get agent's own log file (tail limited by VID_FILE_SIZE_LIMIT, 0 for whole file)
+ */
+void ClientSession::getAgentLogFile(const NXCPMessage& request)
+{
+   uint32_t rcc;
+   bool abortForwarded = false;  // agent aborted transfer and its abort was already passed to client
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object == nullptr)
+   {
+      rcc = RCC_INVALID_OBJECT_ID;
+   }
+   else if (object->getObjectClass() != OBJECT_NODE)
+   {
+      rcc = RCC_INCOMPATIBLE_OPERATION;
+   }
+   else if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_DOWNLOAD))
+   {
+      writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on download of agent log file from node %s", object->getName());
+      rcc = RCC_ACCESS_DENIED;
+   }
+   else
+   {
+      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Initiated download of agent log file from node %s", object->getName());
+      shared_ptr<AgentConnectionEx> agentConnection = static_cast<Node&>(*object).createAgentConnection();
+      if (agentConnection != nullptr)
+      {
+         agentConnection->setDeleteFileOnDownloadFailure(false);
+
+         NXCPMessage msg(CMD_GET_AGENT_LOG_FILE, 0, agentConnection->getProtocolVersion());
+         msg.setField(VID_FILE_SIZE_LIMIT, request.getFieldAsUInt64(VID_FILE_SIZE_LIMIT));
+         msg.setField(VID_COMPRESSION_METHOD, static_cast<int16_t>(isCompressionEnabled() ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE));
+
+         // Forwarding callback may still run on agent connection thread pool after this handler returns;
+         // it touches this session only under forwardingState mutex and while closed flag is not set
+         struct ForwardingState
+         {
+            Mutex mutex;
+            bool closed = false;
+            bool abortForwarded = false;
+         };
+         auto forwardingState = make_shared<ForwardingState>();
+         uint32_t requestId = request.getId();
+         NXCPMessage *agentResponse = agentConnection->customRequest(&msg, L"agent.log", false, nullptr,
+            [this, requestId, forwardingState] (NXCPMessage *agentMsg)
+            {
+               LockGuard lockGuard(forwardingState->mutex);
+               if (!forwardingState->closed)
+               {
+                  if (agentMsg->getCode() == CMD_ABORT_FILE_TRANSFER)
+                     forwardingState->abortForwarded = true;
+                  agentMsg->setId(requestId);
+                  sendMessage(agentMsg);
+               }
+            });
+
+         uint32_t agentRcc;
+         if (agentResponse != nullptr)
+         {
+            agentRcc = agentResponse->getFieldAsUInt32(VID_RCC);
+            delete agentResponse;
+         }
+         else
+         {
+            agentRcc = agentConnection->isConnected() ? ERR_REQUEST_TIMEOUT : ERR_CONNECTION_BROKEN;
+         }
+         // Drop file download state so that late data from agent is not forwarded
+         if (agentRcc != ERR_SUCCESS)
+            agentConnection->disconnect();
+         forwardingState->mutex.lock();
+         forwardingState->closed = true;
+         abortForwarded = forwardingState->abortForwarded;
+         forwardingState->mutex.unlock();
+         debugPrintf(5, L"getAgentLogFile: download from node %s [%u] completed with agent RCC=%u (%s)", object->getName(), object->getId(), agentRcc, AgentErrorCodeToText(agentRcc));
+         rcc = AgentErrorToRCC(agentRcc);
+      }
+      else
+      {
+         rcc = RCC_NO_CONNECTION_TO_AGENT;
+      }
+   }
+
+   if ((rcc != RCC_SUCCESS) && !abortForwarded)
+   {
+      NXCPMessage abortCmd(CMD_ABORT_FILE_TRANSFER, request.getId());
+      abortCmd.setField(VID_JOB_CANCELLED, false);
+      sendMessage(abortCmd);
+   }
+
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, rcc);
+   sendMessage(response);
 }
 
 /**

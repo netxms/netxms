@@ -915,6 +915,7 @@ enum SessionState
 #define RCC_INVALID_TIME_ZONE             ((uint32_t)200)
 #define RCC_CERT_MAPPING_CONFLICT         ((uint32_t)201)
 #define RCC_POLICY_FILES_NOT_EXPORTABLE   ((uint32_t)202)
+#define RCC_NO_AGENT_LOG_FILE             ((uint32_t)203)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

@@ -420,6 +420,7 @@ private:
    void authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void getConfig(NXCPMessage *response);
    void getEffectiveConfig(NXCPMessage *response);
+   void getAgentLogFile(const NXCPMessage& request, NXCPMessage *response);
    void updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg);
    void getParameter(NXCPMessage *request, NXCPMessage *response);
    void getList(NXCPMessage *request, NXCPMessage *response);

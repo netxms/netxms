@@ -776,6 +776,7 @@ __PACK_END__
 #define CMD_GET_EFFECTIVE_RESPONSIBLE_USERS 0x023A
 #define CMD_GET_DHCP_SCOPES               0x023B
 #define CMD_GET_DHCP_LEASES               0x023C
+#define CMD_GET_AGENT_LOG_FILE            0x023D
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

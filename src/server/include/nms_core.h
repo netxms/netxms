@@ -851,6 +851,7 @@ private:
 	void registerAgent(const NXCPMessage& request);
 	void getServerFile(const NXCPMessage& request);
 	void getAgentFile(const NXCPMessage& request);
+   void getAgentLogFile(const NXCPMessage& request);
    void cancelFileMonitoring(const NXCPMessage& request);
 	void testDCITransformation(const NXCPMessage& request);
 	void getBackgroundTaskState(const NXCPMessage& request);

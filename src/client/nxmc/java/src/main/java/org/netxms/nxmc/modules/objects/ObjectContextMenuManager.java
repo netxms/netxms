@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -89,7 +90,9 @@ import org.netxms.nxmc.modules.dashboards.CloneAsDashboardAction;
 import org.netxms.nxmc.modules.dashboards.CloneAsDashboardTemplateAction;
 import org.netxms.nxmc.modules.dashboards.ExportDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ImportDashboardAction;
+import org.netxms.nxmc.modules.filemanager.FileDownloadHelper;
 import org.netxms.nxmc.modules.filemanager.UploadFileToAgent;
+import org.netxms.nxmc.modules.filemanager.views.AgentLogViewer;
 import org.netxms.nxmc.modules.networkmaps.views.IPTopologyMapView;
 import org.netxms.nxmc.modules.networkmaps.views.InternalTopologyMapView;
 import org.netxms.nxmc.modules.networkmaps.views.L2TopologyMapView;
@@ -152,6 +155,8 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionOpenSshTerminal;
    private Action actionEditAgentConfig;
    private Action actionShowEffectiveAgentConfig;
+   private Action actionShowAgentLog;
+   private Action actionDownloadAgentLog;
    private Action actionExecuteScript;
    private Action actionOpenMibExprorer;
    private Action actionOpenAgentExplorer;
@@ -371,6 +376,22 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             openEffectiveAgentConfigView();
+         }
+      };
+
+      actionShowAgentLog = new Action(i18n.tr("Show agent log"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png")) {
+         @Override
+         public void run()
+         {
+            openAgentLogViewer();
+         }
+      };
+
+      actionDownloadAgentLog = new Action(i18n.tr("Download agent log...")) {
+         @Override
+         public void run()
+         {
+            downloadAgentLog();
          }
       };
 
@@ -913,6 +934,11 @@ public class ObjectContextMenuManager extends MenuManager
       {
          menu.add(actionEditAgentConfig);
          menu.add(actionShowEffectiveAgentConfig);
+         if ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_DOWNLOAD) != 0)
+         {
+            menu.add(actionShowAgentLog);
+            menu.add(actionDownloadAgentLog);
+         }
       }
       if (containsNodesWithAgent(selection))
       {
@@ -1646,6 +1672,54 @@ public class ObjectContextMenuManager extends MenuManager
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new AgentEffectiveConfigurationView((Node)object, contextId));
+   }
+
+   /**
+    * Open viewer for the tail of agent log
+    */
+   private void openAgentLogViewer()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Node))
+         return;
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new AgentLogViewer((Node)object, contextId));
+   }
+
+   /**
+    * Download full agent log and hand it to the user for saving
+    */
+   private void downloadAgentLog()
+   {
+      final AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Node))
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Downloading agent log"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final File file = session.downloadAgentLogFile(object.getObjectId(), 0);
+            runInUIThread(() -> {
+               try
+               {
+                  FileDownloadHelper.saveLocalFile(view.getWindow().getShell(), file, object.getObjectName().replaceAll("[\\\\/:*?\"<>|]", "_") + "-nxagentd.log");
+               }
+               catch(Exception e)
+               {
+                  MessageDialogHelper.openError(view.getWindow().getShell(), i18n.tr("Error"), i18n.tr("Cannot save agent log: {0}", e.getLocalizedMessage()));
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot download agent log from node {0}", object.getObjectName());
+         }
+      }.start();
    }
 
    /**

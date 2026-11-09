@@ -3193,12 +3193,18 @@ void AgentConnection::resetFileDownload()
 void AgentConnection::processFileData(NXCPMessage *msg)
 {
    m_downloadActivityTimestamp = time(nullptr);
-   if (m_sendToClientMessageCallback != nullptr)
+   // Callback is copied under lock and called without it, so disconnect() cannot destroy it while it runs
+   lock();
+   std::function<void (NXCPMessage*)> sendToClientMessageCallback = m_sendToClientMessageCallback;
+   unlock();
+   if (sendToClientMessageCallback != nullptr)
    {
-      m_sendToClientMessageCallback(msg);
+      sendToClientMessageCallback(msg);
       if (msg->isEndOfFile())
       {
+         lock();
          m_sendToClientMessageCallback = nullptr;
+         unlock();
          onFileDownload(true);
       }
       else
@@ -3270,10 +3276,13 @@ void AgentConnection::processFileData(NXCPMessage *msg)
  */
 void AgentConnection::processFileTransferAbort(NXCPMessage *msg)
 {
-   if (m_sendToClientMessageCallback != nullptr)
+   lock();
+   std::function<void (NXCPMessage*)> sendToClientMessageCallback = m_sendToClientMessageCallback;
+   m_sendToClientMessageCallback = nullptr;
+   unlock();
+   if (sendToClientMessageCallback != nullptr)
    {
-      m_sendToClientMessageCallback(msg);
-      m_sendToClientMessageCallback = nullptr;
+      sendToClientMessageCallback(msg);
    }
    else
    {

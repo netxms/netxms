@@ -13643,6 +13643,31 @@ public class NXCSession
    }
 
    /**
+    * Download agent's own log file. If <code>maxFileSize</code> is set to non-zero value then last
+    * <code>maxFileSize</code> bytes will be retrieved. Agent must list the server in <code>MasterServers</code>.
+    *
+    * @param nodeId node object ID
+    * @param maxFileSize maximum download size, 0 == UNLIMITED
+    * @return local file with log content
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public File downloadAgentLogFile(long nodeId, long maxFileSize) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_LOG_FILE);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      msg.setFieldInt64(NXCPCodes.VID_FILE_SIZE_LIMIT, maxFileSize);
+      sendMessage(msg);
+
+      ReceivedFile file = waitForFile(msg.getMessageId(), 120000);
+      if (file.getStatus() != ReceivedFile.TIMEOUT)
+         waitForRCC(msg.getMessageId());
+      if (file.isFailed())
+         throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
+      return file.getFile();
+   }
+
+   /**
     * Cancel file monitoring
     *
     * @param monitorId file monitor ID (previously returned by <code>downloadFileFromAgent</code>

@@ -148,6 +148,7 @@
 #define ERR_TLS_REQUIRED               ((uint32_t)942)
 #define ERR_EXEC_TIMEOUT               ((uint32_t)943)
 #define ERR_FILE_TRANSFER_FAILED       ((uint32_t)944)
+#define ERR_NO_LOG_FILE                ((uint32_t)945)
 
 /**
  * Bulk data reconciliation DCI processing status codes

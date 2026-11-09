@@ -95,6 +95,7 @@ static struct
    { ERR_TLS_REQUIRED, _T("TLS connection required") },
    { ERR_EXEC_TIMEOUT, _T("Command execution time limit exceeded") },
    { ERR_FILE_TRANSFER_FAILED, _T("File transfer failed") },
+   { ERR_NO_LOG_FILE, _T("Agent log is not written to a file") },
    { 0xFFFFFFFF, nullptr }
 };
 
@@ -121,6 +122,7 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
       case ERR_ACCESS_DENIED:
       case ERR_BAD_SIGNATURE:
          return RCC_AGENT_ACCESS_DENIED;
+      case ERR_FILE_OPEN_ERROR:
       case ERR_FILE_TRANSFER_FAILED:
       case ERR_IO_FAILURE:
          return RCC_IO_ERROR;
@@ -131,6 +133,8 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
          return RCC_COMM_FAILURE;
       case ERR_NO_SUCH_INSTANCE:
          return RCC_NO_SUCH_INSTANCE;
+      case ERR_UNKNOWN_COMMAND:
+         return RCC_NOT_IMPLEMENTED;
       case ERR_REQUEST_TIMEOUT:
          return RCC_TIMEOUT;
       case ERR_EXEC_TIMEOUT:
@@ -159,6 +163,8 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
          return RCC_DOWNGRADE_NOT_ALLOWED;
       case ERR_PROXY_CONNECT_FAILED:
          return RCC_ZONE_PROXY_NOT_AVAILABLE;
+      case ERR_NO_LOG_FILE:
+         return RCC_NO_AGENT_LOG_FILE;
    }
    return RCC_AGENT_ERROR;
 }

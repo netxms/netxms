@@ -720,6 +720,9 @@ void CommSession::processCommand(NXCPMessage *request)
          case CMD_GET_AGENT_EFFECTIVE_CONFIG:
             getEffectiveConfig(&response);
             break;
+         case CMD_GET_AGENT_LOG_FILE:
+            getAgentLogFile(*request, &response);
+            break;
          case CMD_ENABLE_AGENT_TRAPS:
             m_acceptTraps = true;
             m_serverAcksTraps = request->getFieldAsBoolean(VID_TRAP_ACK_SUPPORTED);
@@ -1497,6 +1500,63 @@ void CommSession::getEffectiveConfig(NXCPMessage *response)
    {
       response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
+}
+
+/**
+ * Send agent's own log file to server (tail limited by VID_FILE_SIZE_LIMIT, 0 for whole file)
+ */
+void CommSession::getAgentLogFile(const NXCPMessage& request, NXCPMessage *response)
+{
+   if (!m_masterServer)
+   {
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
+      return;
+   }
+
+   if (!_tcsicmp(g_szLogFile, _T("{syslog}")) || !_tcsicmp(g_szLogFile, _T("{eventlog}")) ||
+       !_tcsicmp(g_szLogFile, _T("{systemd}")) || !_tcsicmp(g_szLogFile, _T("{stdout}")) || (g_failFlags & FAIL_OPEN_LOG))
+   {
+      debugPrintf(5, _T("CommSession::getAgentLogFile(): agent log is not written to a file"));
+      response->setField(VID_RCC, ERR_NO_LOG_FILE);
+      return;
+   }
+
+   // Size is taken from open file: on Windows file size in directory entry lags behind while agent keeps log open for writing
+   int fd = _topen(g_szLogFile, O_RDONLY | O_BINARY);
+   if (fd == -1)
+   {
+      debugPrintf(5, _T("CommSession::getAgentLogFile(): cannot open log file %s"), g_szLogFile);
+      response->setField(VID_RCC, ERR_FILE_OPEN_ERROR);
+      return;
+   }
+   NX_STAT_STRUCT st;
+   int statResult = NX_FSTAT(fd, &st);
+   _close(fd);
+   if (statResult != 0)
+   {
+      debugPrintf(5, _T("CommSession::getAgentLogFile(): cannot get size of log file %s"), g_szLogFile);
+      response->setField(VID_RCC, ERR_FILE_OPEN_ERROR);
+      return;
+   }
+   int64_t size = static_cast<int64_t>(st.st_size);
+
+   int64_t limit = request.getFieldAsInt64(VID_FILE_SIZE_LIMIT);
+   off64_t offset = ((limit > 0) && (size > limit)) ? static_cast<off64_t>(size - limit) : 0;
+   auto compressionMethod = static_cast<NXCPStreamCompressionMethod>(request.getFieldAsInt16(VID_COMPRESSION_METHOD));
+   uint32_t requestId = request.getId();
+   debugPrintf(5, _T("CommSession::getAgentLogFile(): sending log file %s (size ") INT64_FMT _T(", offset ") INT64_FMT _T(")"), g_szLogFile, size, static_cast<int64_t>(offset));
+   shared_ptr<CommSession> session = self();
+   if (!ThreadCreate(
+      [session, requestId, offset, compressionMethod] ()
+      {
+         if (!session->sendFile(requestId, g_szLogFile, offset, compressionMethod, nullptr))
+            session->debugPrintf(5, _T("CommSession::getAgentLogFile(): log file transfer failed"));
+      }))
+   {
+      response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+      return;
+   }
+   response->setField(VID_RCC, ERR_SUCCESS);
 }
 
 /**
