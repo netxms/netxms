@@ -1582,6 +1582,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UPDATE_RESPONSIBLE_USERS:
          updateResponsibleUsers(*request);
          break;
+      case CMD_GET_EFFECTIVE_RESPONSIBLE_USERS:
+         getEffectiveResponsibleUsers(*request);
+         break;
       case CMD_GET_ADDR_LIST:
          getAddrList(*request);
          break;
@@ -11479,6 +11482,45 @@ void ClientSession::updateResponsibleUsers(const NXCPMessage& request)
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(m_userId, OBJECT_ACCESS_EDIT_RESP_USERS))
       {
          object->setResponsibleUsersFromMessage(request, this);
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get effective list of responsible users for object (own entries followed by
+ * entries inherited from ancestors, each with the ID of the contributing object)
+ */
+void ClientSession::getEffectiveResponsibleUsers(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         unique_ptr<StructArray<ResponsibleUser>> users = object->getAllResponsibleUsers();
+         response.setField(VID_RESPONSIBLE_USERS_COUNT, users->size());
+         uint32_t fieldId = VID_RESPONSIBLE_USERS_BASE;
+         for(int i = 0; i < users->size(); i++)
+         {
+            const ResponsibleUser *r = users->get(i);
+            response.setField(fieldId++, r->userId);
+            response.setField(fieldId++, r->tag);
+            response.setField(fieldId++, r->sourceObjectId);
+            fieldId += 7;
+         }
          response.setField(VID_RCC, RCC_SUCCESS);
       }
       else

@@ -4575,7 +4575,11 @@ void NetObj::getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, 
                }
             }
             if (!found)
-               list->add(r);
+            {
+               ResponsibleUser inherited = *r;
+               inherited.sourceObjectId = obj->getId();
+               list->add(inherited);
+            }
          }
       }
       obj->unlockResponsibleUsersList();
@@ -4585,7 +4589,10 @@ void NetObj::getAllResponsibleUsersInternal(StructArray<ResponsibleUser> *list, 
 }
 
 /**
- * Get all responsible users for object
+ * Get all responsible users for object, including users inherited from ancestors.
+ * Object's own entries come first; an inherited entry is skipped when the same user
+ * is already in the list, so the nearest assignment wins. Each entry's sourceObjectId
+ * is set to the ID of the object that contributed it.
  */
 unique_ptr<StructArray<ResponsibleUser>> NetObj::getAllResponsibleUsers(const TCHAR *tag) const
 {
@@ -4602,6 +4609,9 @@ unique_ptr<StructArray<ResponsibleUser>> NetObj::getAllResponsibleUsers(const TC
       }
    }
    unlockResponsibleUsersList();
+
+   for(int i = 0; i < responsibleUsers->size(); i++)
+      responsibleUsers->get(i)->sourceObjectId = m_id;
 
    getAllResponsibleUsersInternal(responsibleUsers, tag);
    return unique_ptr<StructArray<ResponsibleUser>>(responsibleUsers);

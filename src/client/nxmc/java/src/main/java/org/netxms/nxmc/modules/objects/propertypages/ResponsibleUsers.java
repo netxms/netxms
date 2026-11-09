@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.jface.viewers.ICellModifier;
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -40,6 +42,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -59,11 +62,14 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.dialogs.UserSelectionDialog;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Object`s "responsible users" property page
+ * Object`s "responsible users" property page. Shows object's own responsible users (editable) together with users inherited
+ * from ancestor objects (read-only, with the object they come from). An inherited entry is hidden when the same user is
+ * assigned on the object itself, matching server-side resolution where the nearest assignment wins.
  */
 public class ResponsibleUsers extends ObjectPropertyPage
 {
@@ -71,6 +77,8 @@ public class ResponsibleUsers extends ObjectPropertyPage
 
    private TableViewer viewer;
    private Map<Integer, ResponsibleUserInfo> users = new HashMap<>();
+   private List<ResponsibleUserInfo> inheritedUsers = new ArrayList<>();
+   private Button deleteButton;
    private NXCSession session = Registry.getSession();
 
    /**
@@ -99,7 +107,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
    protected Control createContents(Composite parent)
    {
       for(ResponsibleUser r : object.getResponsibleUsers())
-         users.put(r.userId, new ResponsibleUserInfo(r));
+         users.put(r.userId, new ResponsibleUserInfo(r, false));
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
       dialogArea.setLayout(new GridLayout());
@@ -111,7 +119,11 @@ public class ResponsibleUsers extends ObjectPropertyPage
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            return ((ResponsibleUserInfo)e1).getName().compareToIgnoreCase(((ResponsibleUserInfo)e2).getName());
+            ResponsibleUserInfo r1 = (ResponsibleUserInfo)e1;
+            ResponsibleUserInfo r2 = (ResponsibleUserInfo)e2;
+            if (r1.inherited != r2.inherited)
+               return r1.inherited ? 1 : -1;
+            return r1.getName().compareToIgnoreCase(r2.getName());
          }
       });
       viewer.getTable().setHeaderVisible(true);
@@ -122,13 +134,20 @@ public class ResponsibleUsers extends ObjectPropertyPage
       column = new TableColumn(viewer.getTable(), SWT.NONE);
       column.setText(i18n.tr("Tag"));
       column.setWidth(120);
+      column = new TableColumn(viewer.getTable(), SWT.NONE);
+      column.setText(i18n.tr("Inherited from"));
+      column.setWidth(200);
 
-      final List<String> tags = new ArrayList<String>(session.getResponsibleUserTags());
-      tags.add("");
+      // Selectable tags: configured allowed tags, empty tag, and tags already in use on this object (may have been set outside allowed list)
+      Set<String> tagSet = session.getResponsibleUserTags();
+      tagSet.add("");
+      for(ResponsibleUserInfo r : users.values())
+         tagSet.add(r.tag);
+      final List<String> tags = new ArrayList<String>(tagSet);
       tags.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
 
-      viewer.setColumnProperties(new String[] { "name", "tag" });
-      viewer.setCellEditors(new CellEditor[] { null, new ComboBoxCellEditor(viewer.getTable(), tags.toArray(new String[tags.size()]), SWT.READ_ONLY | SWT.DROP_DOWN) });
+      viewer.setColumnProperties(new String[] { "name", "tag", "source" });
+      viewer.setCellEditors(new CellEditor[] { null, new ComboBoxCellEditor(viewer.getTable(), tags.toArray(new String[tags.size()]), SWT.READ_ONLY | SWT.DROP_DOWN), null });
       viewer.setCellModifier(new ICellModifier() {
          @Override
          public void modify(Object element, String property, Object value)
@@ -155,11 +174,9 @@ public class ResponsibleUsers extends ObjectPropertyPage
          @Override
          public boolean canModify(Object element, String property)
          {
-            return property.equals("tag");
+            return property.equals("tag") && !((ResponsibleUserInfo)element).inherited;
          }
       });
-
-      viewer.setInput(users.values().toArray());
 
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -189,12 +206,12 @@ public class ResponsibleUsers extends ObjectPropertyPage
                AbstractUserObject[] selection = dlg.getSelection();
                for(AbstractUserObject user : selection)
                   users.put(user.getId(), new ResponsibleUserInfo(user));
-               viewer.setInput(users.values().toArray());
+               refreshViewer();
             }
          }
       });
 
-      final Button deleteButton = new Button(buttons, SWT.PUSH);
+      deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(i18n.tr("&Delete"));
       deleteButton.setEnabled(false);
       deleteButton.addSelectionListener(new SelectionAdapter() {
@@ -204,9 +221,11 @@ public class ResponsibleUsers extends ObjectPropertyPage
             IStructuredSelection selection = viewer.getStructuredSelection();
             for(Object o : selection.toList())
             {
-               users.remove(((ResponsibleUserInfo)o).userId);
+               ResponsibleUserInfo r = (ResponsibleUserInfo)o;
+               if (!r.inherited)
+                  users.remove(r.userId);
             }
-            viewer.setInput(users.values().toArray());
+            refreshViewer();
          }
       });
 
@@ -214,44 +233,91 @@ public class ResponsibleUsers extends ObjectPropertyPage
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            deleteButton.setEnabled(!event.getSelection().isEmpty());
+            updateDeleteButton();
          }
       });
 
-      syncUsersAndRefresh();
+      refreshViewer();
+      loadInheritedUsers();
       return dialogArea;
    }
 
    /**
-    * Synchronize users and refresh view
+    * Enable "Delete" button only when selection contains at least one of object's own entries
     */
-   void syncUsersAndRefresh()
+   private void updateDeleteButton()
    {
-      if (session.isUserDatabaseSynchronized())
-         return;
+      boolean enabled = false;
+      for(Object o : viewer.getStructuredSelection().toList())
+      {
+         if (!((ResponsibleUserInfo)o).inherited)
+         {
+            enabled = true;
+            break;
+         }
+      }
+      deleteButton.setEnabled(enabled);
+   }
 
-      Job job = new Job(i18n.tr("Synchronizing users"), null) {
+   /**
+    * Set viewer input to object's own entries followed by inherited entries not overridden locally
+    */
+   private void refreshViewer()
+   {
+      List<ResponsibleUserInfo> input = new ArrayList<>(users.size() + inheritedUsers.size());
+      input.addAll(users.values());
+      for(ResponsibleUserInfo r : inheritedUsers)
+      {
+         if (!users.containsKey(r.userId))
+            input.add(r);
+      }
+      viewer.setInput(input.toArray());
+      updateDeleteButton();
+   }
+
+   /**
+    * Load effective list of responsible users from server, keep inherited entries, and make sure all referenced users are
+    * available locally.
+    */
+   private void loadInheritedUsers()
+   {
+      Job job = new Job(i18n.tr("Loading inherited responsible users"), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            HashSet<Integer> uids = new HashSet<Integer>();
-            for(ResponsibleUser r : object.getResponsibleUsers())
-               uids.add(r.userId);
-            if (session.syncMissingUsers(uids))
+            final List<ResponsibleUser> inherited = new ArrayList<>();
+            for(ResponsibleUser r : session.getEffectiveResponsibleUsers(object.getObjectId()))
             {
-               runInUIThread(() -> {
-                  users.clear();
-                  for(ResponsibleUser r : object.getResponsibleUsers())
-                     users.put(r.userId, new ResponsibleUserInfo(r));
-                  viewer.setInput(users.values().toArray());
-               });
+               if (r.sourceObjectId != object.getObjectId())
+                  inherited.add(r);
             }
+
+            if (!session.isUserDatabaseSynchronized())
+            {
+               HashSet<Integer> uids = new HashSet<Integer>();
+               for(ResponsibleUser r : object.getResponsibleUsers())
+                  uids.add(r.userId);
+               for(ResponsibleUser r : inherited)
+                  uids.add(r.userId);
+               session.syncMissingUsers(uids);
+            }
+
+            runInUIThread(() -> {
+               if (viewer.getControl().isDisposed())
+                  return;
+               for(ResponsibleUserInfo r : users.values())
+                  r.resolveUser();
+               inheritedUsers.clear();
+               for(ResponsibleUser r : inherited)
+                  inheritedUsers.add(new ResponsibleUserInfo(r, true));
+               refreshViewer();
+            });
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot synchronize users";
+            return i18n.tr("Cannot load inherited responsible users");
          }
       };
       job.setUser(false);
@@ -302,7 +368,7 @@ public class ResponsibleUsers extends ObjectPropertyPage
    {
       super.performDefaults();
       users.clear();
-      viewer.setInput(new AbstractUserObject[0]);
+      refreshViewer();
    }
 
    /**
@@ -313,12 +379,16 @@ public class ResponsibleUsers extends ObjectPropertyPage
       int userId;
       AbstractUserObject user;
       String tag;
+      boolean inherited;
+      long sourceObjectId;
 
-      ResponsibleUserInfo(ResponsibleUser r)
+      ResponsibleUserInfo(ResponsibleUser r, boolean inherited)
       {
          userId = r.userId;
          user = session.findUserDBObjectById(userId, null);
          tag = r.tag;
+         this.inherited = inherited;
+         sourceObjectId = r.sourceObjectId;
       }
 
       public ResponsibleUserInfo(AbstractUserObject user)
@@ -326,6 +396,12 @@ public class ResponsibleUsers extends ObjectPropertyPage
          userId = user.getId();
          this.user = user;
          tag = "";
+      }
+
+      void resolveUser()
+      {
+         if (user == null)
+            user = session.findUserDBObjectById(userId, null);
       }
 
       public String getName()
@@ -342,8 +418,10 @@ public class ResponsibleUsers extends ObjectPropertyPage
    /**
     * Label provider for responsible users list
     */
-   private static class ResponsibleUsersLabelProvider extends LabelProvider implements ITableLabelProvider
+   private class ResponsibleUsersLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
    {
+      private Color inheritedColor = ThemeEngine.getForegroundColor("List.DisabledItem");
+
       /**
        * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
        */
@@ -364,7 +442,36 @@ public class ResponsibleUsers extends ObjectPropertyPage
       public String getColumnText(Object element, int columnIndex)
       {
          ResponsibleUserInfo r = (ResponsibleUserInfo)element;
-         return (columnIndex == 0) ? r.getLabel() : r.tag;
+         switch(columnIndex)
+         {
+            case 0:
+               return r.getLabel();
+            case 1:
+               return r.tag;
+            case 2:
+               if (!r.inherited)
+                  return "";
+               return session.getObjectName(r.sourceObjectId);
+         }
+         return null;
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+       */
+      @Override
+      public Color getForeground(Object element)
+      {
+         return ((ResponsibleUserInfo)element).inherited ? inheritedColor : null;
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+       */
+      @Override
+      public Color getBackground(Object element)
+      {
+         return null;
       }
    }
 }

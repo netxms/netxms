@@ -313,6 +313,8 @@ int H_ObjectAssetPropertyDelete(Context *context)
 /**
  * Handler for GET /v1/objects/:object-id/responsible-users
  * Returns array of the object's own responsible users: [ { userId, tag } ].
+ * With query parameter effective=true returns the effective list (own entries
+ * followed by entries inherited from ancestors), each extended with sourceObjectId.
  */
 int H_ObjectResponsibleUsers(Context *context)
 {
@@ -321,7 +323,8 @@ int H_ObjectResponsibleUsers(Context *context)
    if (object == nullptr)
       return httpCode;
 
-   unique_ptr<StructArray<ResponsibleUser>> users = object->getResponsibleUsers();
+   bool effective = context->getQueryParameterAsBoolean("effective", false);
+   unique_ptr<StructArray<ResponsibleUser>> users = effective ? object->getAllResponsibleUsers() : object->getResponsibleUsers();
    json_t *output = json_array();
    for(int i = 0; i < users->size(); i++)
    {
@@ -329,6 +332,8 @@ int H_ObjectResponsibleUsers(Context *context)
       json_t *entry = json_object();
       json_object_set_new(entry, "userId", json_integer(r->userId));
       json_object_set_new(entry, "tag", json_string_t(r->tag));
+      if (effective)
+         json_object_set_new(entry, "sourceObjectId", json_integer(r->sourceObjectId));
       json_array_append_new(output, entry);
    }
    context->setResponseData(output);

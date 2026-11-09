@@ -2931,10 +2931,11 @@ public class NXCSession
       String tags = response.getFieldAsString(NXCPCodes.VID_RESPONSIBLE_USER_TAGS);
       if (tags != null)
       {
-         String[] elements = tags.split(",");
-         for(String e : elements)
+         for(String e : tags.split(","))
          {
-            responsibleUserTags.add(e.trim());
+            String tag = e.trim();
+            if (!tag.isEmpty())
+               responsibleUserTags.add(tag);
          }
       }
 
@@ -8880,6 +8881,30 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_COMMENTS, comments);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get effective list of responsible users for given object: object's own entries followed by entries inherited from ancestor
+    * objects. An inherited entry is omitted when the same user is already in the list, so the nearest assignment wins. Field
+    * <code>sourceObjectId</code> of each entry identifies the object that contributed it.
+    *
+    * @param objectId Object's ID
+    * @return effective list of responsible users
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<ResponsibleUser> getEffectiveResponsibleUsers(long objectId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EFFECTIVE_RESPONSIBLE_USERS);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_RESPONSIBLE_USERS_COUNT);
+      List<ResponsibleUser> users = new ArrayList<ResponsibleUser>(count);
+      long fieldId = NXCPCodes.VID_RESPONSIBLE_USERS_BASE;
+      for(int i = 0; i < count; i++, fieldId += 10)
+         users.add(new ResponsibleUser(response, fieldId));
+      return users;
    }
 
    /**

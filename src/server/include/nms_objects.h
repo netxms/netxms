@@ -1332,13 +1332,16 @@ public:
  */
 #define MAX_RESPONSIBLE_USER_TAG_LEN   32
 
- /**
-  * Responsible user information
-  */
+/**
+ * Responsible user information. Field sourceObjectId is meaningful only in lists
+ * returned by NetObj::getAllResponsibleUsers(), where it identifies the object that
+ * contributed the entry (the object itself or one of its ancestors).
+ */
 struct ResponsibleUser
 {
    uint32_t userId;
    TCHAR tag[MAX_RESPONSIBLE_USER_TAG_LEN];
+   uint32_t sourceObjectId;
 };
 
 /**

@@ -27,6 +27,11 @@ public class ResponsibleUser
 {
    public int userId;
    public String tag;
+   /**
+    * ID of the object that contributed this entry; set only in lists returned by
+    * NXCSession.getEffectiveResponsibleUsers(), 0 otherwise.
+    */
+   public long sourceObjectId;
 
    /**
     * Create new responsible user object.
@@ -50,6 +55,7 @@ public class ResponsibleUser
    {
       userId = msg.getFieldAsInt32(baseId);
       tag = msg.getFieldAsString(baseId + 1);
+      sourceObjectId = msg.getFieldAsInt64(baseId + 2);
    }
 
    /**

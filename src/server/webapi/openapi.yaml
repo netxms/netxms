@@ -6289,14 +6289,24 @@ paths:
       operationId: getObjectResponsibleUsers
       summary: Get object responsible users
       description: |
-        Retrieve the object's own responsible users (users inherited from parent objects
-        are not included). Each entry pairs a user or group ID with its tag.
+        Retrieve the object's responsible users. Each entry pairs a user or group ID with its tag.
+        By default only the object's own entries are returned. With `effective=true` the list
+        also includes users inherited from ancestor objects: own entries come first, an inherited
+        entry is omitted when the same user is already present (the nearest assignment wins),
+        and every entry carries `sourceObjectId` identifying the object that contributed it.
       parameters:
         - name: object-id
           in: path
           required: true
           schema:
             type: integer
+        - name: effective
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Include users inherited from ancestor objects and report the source object of each entry.
       responses:
         '200':
           description: Array of responsible users.
@@ -6311,10 +6321,13 @@ paths:
                       type: integer
                     tag:
                       type: string
+                    sourceObjectId:
+                      type: integer
+                      description: ID of the object that contributed the entry (the object itself or an ancestor). Present only when `effective=true`.
         '401':
           description: Unauthorized
         '403':
-          description: User does not have modify access to the object
+          description: User does not have read access to the object
         '404':
           description: Object with given ID does not exist
       security:

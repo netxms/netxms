@@ -585,6 +585,7 @@ public class NXCPCodes
    public static final int CMD_EXPORT_DCI_DATA = 0x0237;
    public static final int CMD_GET_DCI_DATA_EXPORT_FILE = 0x0238;
    public static final int CMD_GET_DCI_DATA_EXPORT_METRICS = 0x0239;
+   public static final int CMD_GET_EFFECTIVE_RESPONSIBLE_USERS = 0x023A;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
