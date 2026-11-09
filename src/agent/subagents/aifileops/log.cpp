@@ -24,27 +24,37 @@
 #include <netxms-regex.h>
 
 /**
- * Helper: Read all lines from file into array
+ * Line buffer size. Lines longer than this are truncated.
  */
-static bool ReadFileLines(const TCHAR *path, StringList *lines, int maxLines = DEFAULT_MAX_LINES)
+#define LINE_BUFFER_SIZE   65536
+
+/**
+ * Helper: read next line from file into buffer and strip line terminator. Remainder of
+ * a line that does not fit into the buffer is discarded, so each call consumes exactly
+ * one line and line numbers stay consistent across all log tools. Returns false at end of file.
+ */
+static bool ReadLine(FILE *f, char *buffer, size_t size)
 {
-   FILE *f = _tfopen(path, _T("r"));
-   if (f == nullptr)
+   if (fgets(buffer, static_cast<int>(size), f) == nullptr)
       return false;
 
-   char buffer[65536];
-   while (fgets(buffer, sizeof(buffer), f) != nullptr && lines->size() < maxLines)
+   size_t len = strlen(buffer);
+   if ((len > 0) && (buffer[len - 1] == '\n'))
    {
-      // Remove trailing newline
-      size_t len = strlen(buffer);
-      if (len > 0 && buffer[len - 1] == '\n')
-         buffer[len - 1] = 0;
-      if (len > 1 && buffer[len - 2] == '\r')
-         buffer[len - 2] = 0;
-      lines->addUTF8String(buffer);
+      buffer[--len] = 0;
+      if ((len > 0) && (buffer[len - 1] == '\r'))
+         buffer[--len] = 0;
    }
-
-   fclose(f);
+   else if (len == size - 1)
+   {
+      char discard[1024];
+      while (fgets(discard, sizeof(discard), f) != nullptr)
+      {
+         size_t l = strlen(discard);
+         if ((l > 0) && (discard[l - 1] == '\n'))
+            break;
+      }
+   }
    return true;
 }
 
@@ -116,6 +126,19 @@ uint32_t H_LogGrep(json_t *params, json_t **result, AbstractCommSession *session
    int maxMatches = json_object_get_int32(params, "max_matches", 100);
    bool caseInsensitive = json_object_get_boolean(params, "case_insensitive", false);
 
+   if (contextBefore < 0)
+      contextBefore = 0;
+   else if (contextBefore > MAX_CONTEXT_LINES)
+      contextBefore = MAX_CONTEXT_LINES;
+   if (contextAfter < 0)
+      contextAfter = 0;
+   else if (contextAfter > MAX_CONTEXT_LINES)
+      contextAfter = MAX_CONTEXT_LINES;
+   if (maxMatches < 1)
+      maxMatches = 1;
+   else if (maxMatches > DEFAULT_MAX_MATCHES)
+      maxMatches = DEFAULT_MAX_MATCHES;
+
    // Compile regex
    const char *errorMessage;
    pcre *re = CompilePattern(pattern, caseInsensitive, &errorMessage);
@@ -125,69 +148,94 @@ uint32_t H_LogGrep(json_t *params, json_t **result, AbstractCommSession *session
       return ERR_BAD_ARGUMENTS;
    }
 
-   // Read file
-   StringList lines;
-   if (!ReadFileLines(file, &lines))
+   FILE *f = _tfopen(file, _T("r"));
+   if (f == nullptr)
    {
       pcre_free(re);
-      SetError(result, "FILE_ERROR", "Failed to open or read file");
+      SetError(result, "FILE_ERROR", "Failed to open file");
       return ERR_FILE_OPEN_ERROR;
    }
 
-   // Find matches
+   // Ring buffer of preceding lines for context_before; line N is stored at index (N - 1) % contextBefore
+   char **history = (contextBefore > 0) ? MemAllocArray<char*>(contextBefore) : nullptr;
+
    *result = json_object();
    json_t *matches = json_array();
+   char buffer[LINE_BUFFER_SIZE];
+   int64_t lineNum = 0;
    int matchCount = 0;
+   int pendingAfter = 0;   // Number of lines still needed as context_after for recent matches
+   bool truncated = false;
 
-   for (int i = 0; i < lines.size() && matchCount < maxMatches; i++)
+   while (ReadLine(f, buffer, sizeof(buffer)))
    {
-      char *lineUtf8 = UTF8StringFromTString(lines.get(i));
-      if (MatchPattern(re, lineUtf8))
+      lineNum++;
+
+      // Match limit reached and trailing context collected - stop without scanning rest of the file
+      if ((matchCount >= maxMatches) && (pendingAfter == 0))
+      {
+         truncated = true;
+         break;
+      }
+
+      // Add this line as context_after to all recent matches that are close enough
+      if (pendingAfter > 0)
+      {
+         for (size_t i = json_array_size(matches); i > 0; i--)
+         {
+            json_t *m = json_array_get(matches, i - 1);
+            if (json_integer_value(json_object_get(m, "line_number")) < lineNum - contextAfter)
+               break;
+            json_array_append_new(json_object_get(m, "context_after"), json_string(buffer));
+         }
+         pendingAfter--;
+      }
+
+      if ((matchCount < maxMatches) && MatchPattern(re, buffer))
       {
          json_t *match = json_object();
-         json_object_set_new(match, "line_number", json_integer(i + 1));
-         json_object_set_new(match, "content", json_string(lineUtf8));
+         json_object_set_new(match, "line_number", json_integer(lineNum));
+         json_object_set_new(match, "content", json_string(buffer));
 
-         // Add context before
          if (contextBefore > 0)
          {
             json_t *before = json_array();
-            int start = (i - contextBefore > 0) ? i - contextBefore : 0;
-            for (int j = start; j < i; j++)
-            {
-               char *ctx = UTF8StringFromTString(lines.get(j));
-               json_array_append_new(before, json_string(ctx));
-               MemFree(ctx);
-            }
+            for (int64_t j = std::max(lineNum - contextBefore, static_cast<int64_t>(1)); j < lineNum; j++)
+               json_array_append_new(before, json_string(history[(j - 1) % contextBefore]));
             json_object_set_new(match, "context_before", before);
          }
 
-         // Add context after
          if (contextAfter > 0)
          {
-            json_t *after = json_array();
-            int end = (i + contextAfter < lines.size()) ? i + contextAfter : lines.size() - 1;
-            for (int j = i + 1; j <= end; j++)
-            {
-               char *ctx = UTF8StringFromTString(lines.get(j));
-               json_array_append_new(after, json_string(ctx));
-               MemFree(ctx);
-            }
-            json_object_set_new(match, "context_after", after);
+            json_object_set_new(match, "context_after", json_array());
+            pendingAfter = contextAfter;
          }
 
          json_array_append_new(matches, match);
          matchCount++;
       }
-      MemFree(lineUtf8);
+
+      if (contextBefore > 0)
+      {
+         int slot = static_cast<int>((lineNum - 1) % contextBefore);
+         MemFree(history[slot]);
+         history[slot] = MemCopyStringA(buffer);
+      }
    }
 
+   fclose(f);
    pcre_free(re);
+   if (history != nullptr)
+   {
+      for (int i = 0; i < contextBefore; i++)
+         MemFree(history[i]);
+      MemFree(history);
+   }
 
    json_object_set_new(*result, "matches", matches);
    json_object_set_new(*result, "match_count", json_integer(matchCount));
-   json_object_set_new(*result, "total_lines", json_integer(lines.size()));
-   json_object_set_new(*result, "truncated", json_boolean(matchCount >= maxMatches));
+   json_object_set_new(*result, "total_lines_scanned", json_integer(truncated ? lineNum - 1 : lineNum));
+   json_object_set_new(*result, "truncated", json_boolean(truncated));
 
    return ERR_SUCCESS;
 }
@@ -220,24 +268,17 @@ uint32_t H_LogRead(json_t *params, json_t **result, AbstractCommSession *session
 
    *result = json_object();
    json_t *lines = json_array();
-   char buffer[65536];
+   char buffer[LINE_BUFFER_SIZE];
    int lineNum = 0;
    int linesRead = 0;
 
-   while (fgets(buffer, sizeof(buffer), f) != nullptr)
+   while (ReadLine(f, buffer, sizeof(buffer)))
    {
       lineNum++;
       if (lineNum < startLine)
          continue;
       if (lineNum > endLine)
          break;
-
-      // Remove trailing newline
-      size_t len = strlen(buffer);
-      if (len > 0 && buffer[len - 1] == '\n')
-         buffer[len - 1] = 0;
-      if (len > 1 && buffer[len - 2] == '\r')
-         buffer[len - 2] = 0;
 
       json_t *lineObj = json_object();
       json_object_set_new(lineObj, "number", json_integer(lineNum));
@@ -272,31 +313,43 @@ uint32_t H_LogTail(json_t *params, json_t **result, AbstractCommSession *session
    if (numLines > DEFAULT_MAX_LINES)
       numLines = DEFAULT_MAX_LINES;
 
-   StringList lines;
-   if (!ReadFileLines(file, &lines))
+   FILE *f = _tfopen(file, _T("r"));
+   if (f == nullptr)
    {
-      SetError(result, "FILE_ERROR", "Failed to open or read file");
+      SetError(result, "FILE_ERROR", "Failed to open file");
       return ERR_FILE_OPEN_ERROR;
    }
 
+   // First pass: count lines
+   char buffer[LINE_BUFFER_SIZE];
+   int64_t totalLines = 0;
+   while (ReadLine(f, buffer, sizeof(buffer)))
+      totalLines++;
+
+   // Second pass: skip to the first requested line and return the rest
+   rewind(f);
+   int64_t skip = (totalLines > numLines) ? totalLines - numLines : 0;
+   for (int64_t i = 0; (i < skip) && ReadLine(f, buffer, sizeof(buffer)); i++)
+      ;
+
    *result = json_object();
    json_t *linesArray = json_array();
-
-   int startIdx = (lines.size() > numLines) ? lines.size() - numLines : 0;
-   for (int i = startIdx; i < lines.size(); i++)
+   int linesReturned = 0;
+   while ((linesReturned < numLines) && ReadLine(f, buffer, sizeof(buffer)))
    {
       json_t *lineObj = json_object();
-      json_object_set_new(lineObj, "number", json_integer(i + 1));
-      char *content = UTF8StringFromTString(lines.get(i));
-      json_object_set_new(lineObj, "content", json_string(content));
-      MemFree(content);
+      json_object_set_new(lineObj, "number", json_integer(skip + linesReturned + 1));
+      json_object_set_new(lineObj, "content", json_string(buffer));
       json_array_append_new(linesArray, lineObj);
+      linesReturned++;
    }
 
+   fclose(f);
+
    json_object_set_new(*result, "lines", linesArray);
-   json_object_set_new(*result, "lines_returned", json_integer(lines.size() - startIdx));
-   json_object_set_new(*result, "total_lines", json_integer(lines.size()));
-   json_object_set_new(*result, "start_line", json_integer(startIdx + 1));
+   json_object_set_new(*result, "lines_returned", json_integer(linesReturned));
+   json_object_set_new(*result, "total_lines", json_integer(totalLines));
+   json_object_set_new(*result, "start_line", json_integer(skip + 1));
 
    return ERR_SUCCESS;
 }
@@ -326,19 +379,12 @@ uint32_t H_LogHead(json_t *params, json_t **result, AbstractCommSession *session
 
    *result = json_object();
    json_t *linesArray = json_array();
-   char buffer[65536];
+   char buffer[LINE_BUFFER_SIZE];
    int lineNum = 0;
 
-   while (fgets(buffer, sizeof(buffer), f) != nullptr && lineNum < numLines)
+   while ((lineNum < numLines) && ReadLine(f, buffer, sizeof(buffer)))
    {
       lineNum++;
-
-      // Remove trailing newline
-      size_t len = strlen(buffer);
-      if (len > 0 && buffer[len - 1] == '\n')
-         buffer[len - 1] = 0;
-      if (len > 1 && buffer[len - 2] == '\r')
-         buffer[len - 2] = 0;
 
       json_t *lineObj = json_object();
       json_object_set_new(lineObj, "number", json_integer(lineNum));
@@ -347,7 +393,7 @@ uint32_t H_LogHead(json_t *params, json_t **result, AbstractCommSession *session
    }
 
    // Check if there are more lines
-   bool hasMore = (fgets(buffer, sizeof(buffer), f) != nullptr);
+   bool hasMore = ReadLine(f, buffer, sizeof(buffer));
    fclose(f);
 
    json_object_set_new(*result, "lines", linesArray);
@@ -396,11 +442,11 @@ uint32_t H_LogFind(json_t *params, json_t **result, AbstractCommSession *session
 
    *result = json_object();
    json_t *lineNumbers = json_array();
-   char buffer[65536];
+   char buffer[LINE_BUFFER_SIZE];
    int lineNum = 0;
    int matchCount = 0;
 
-   while (fgets(buffer, sizeof(buffer), f) != nullptr)
+   while (ReadLine(f, buffer, sizeof(buffer)))
    {
       lineNum++;
       if (MatchPattern(re, buffer))
@@ -472,11 +518,11 @@ uint32_t H_LogTimeRange(json_t *params, json_t **result, AbstractCommSession *se
 
    *result = json_object();
    json_t *lines = json_array();
-   char buffer[65536];
+   char buffer[LINE_BUFFER_SIZE];
    int lineNum = 0;
    int linesReturned = 0;
 
-   while (fgets(buffer, sizeof(buffer), f) != nullptr && linesReturned < maxLines)
+   while ((linesReturned < maxLines) && ReadLine(f, buffer, sizeof(buffer)))
    {
       lineNum++;
 
@@ -487,11 +533,6 @@ uint32_t H_LogTimeRange(json_t *params, json_t **result, AbstractCommSession *se
          time_t lineTime = ParseTimestamp(timestamp);
          if (lineTime >= startTime && lineTime <= endTime)
          {
-            // Remove trailing newline
-            size_t bufLen = strlen(buffer);
-            if (bufLen > 0 && buffer[bufLen - 1] == '\n')
-               buffer[bufLen - 1] = 0;
-
             json_t *lineObj = json_object();
             json_object_set_new(lineObj, "number", json_integer(lineNum));
             json_object_set_new(lineObj, "content", json_string(buffer));
@@ -569,10 +610,10 @@ uint32_t H_LogStats(json_t *params, json_t **result, AbstractCommSession *sessio
       return ERR_FILE_OPEN_ERROR;
    }
 
-   char buffer[65536];
+   char buffer[LINE_BUFFER_SIZE];
    int64_t totalLines = 0;
 
-   while (fgets(buffer, sizeof(buffer), f) != nullptr)
+   while (ReadLine(f, buffer, sizeof(buffer)))
    {
       totalLines++;
       for (size_t i = 0; i < numPatterns; i++)
