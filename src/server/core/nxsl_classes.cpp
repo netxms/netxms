@@ -3144,6 +3144,74 @@ NXSL_METHOD_DEFINITION(Node, readAgentParameter)
 }
 
 /**
+ * Node::getDHCPScopes() method - returns array of DHCPScope objects or null on failure
+ */
+NXSL_METHOD_DEFINITION(Node, getDHCPScopes)
+{
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_AGENT, node))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   ObjectArray<DhcpScopeInfo> scopes(0, 32, Ownership::False);
+   if (node->getDhcpScopes(&scopes) == DCE_SUCCESS)
+   {
+      NXSL_Array *a = new NXSL_Array(vm);
+      for(int i = 0; i < scopes.size(); i++)
+         a->append(vm->createValue(vm->createObject(&g_nxslDHCPScopeClass, scopes.get(i))));
+      *result = vm->createValue(a);
+   }
+   else
+   {
+      scopes.setOwner(Ownership::True);
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
+ * Node::getDHCPLeases([scopeId]) method - returns array of DHCPLease objects or null on failure
+ */
+NXSL_METHOD_DEFINITION(Node, getDHCPLeases)
+{
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   if ((argc > 0) && !argv[0]->isNull() && !argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_AGENT, node))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   const wchar_t *scopeId = ((argc > 0) && argv[0]->isString()) ? argv[0]->getValueAsCString() : nullptr;
+   if ((scopeId != nullptr) && ((*scopeId == 0) || (wcschr(scopeId, L'"') != nullptr)))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   ObjectArray<DhcpLeaseInfo> leases(0, 256, Ownership::False);
+   if (node->getDhcpLeases(scopeId, &leases) == DCE_SUCCESS)
+   {
+      NXSL_Array *a = new NXSL_Array(vm);
+      for(int i = 0; i < leases.size(); i++)
+         a->append(vm->createValue(vm->createObject(&g_nxslDHCPLeaseClass, leases.get(i))));
+      *result = vm->createValue(a);
+   }
+   else
+   {
+      leases.setOwner(Ownership::True);
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
  * Node::readAgentList(name) method
  */
 NXSL_METHOD_DEFINITION(Node, readAgentList)
@@ -3798,6 +3866,8 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, openNETCONFSession, 0);
    NXSL_REGISTER_METHOD(Node, openSSHSession, -1);
    NXSL_REGISTER_METHOD(Node, getBlockedPorts, 1);
+   NXSL_REGISTER_METHOD(Node, getDHCPLeases, -1);
+   NXSL_REGISTER_METHOD(Node, getDHCPScopes, 0);
    NXSL_REGISTER_METHOD(Node, getInstalledPackages, -1);
    NXSL_REGISTER_METHOD(Node, getInterface, 1);
    NXSL_REGISTER_METHOD(Node, getInterfaceByIndex, 1);
@@ -4233,6 +4303,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isVirtual"))
    {
       value = vm->createValue(node->isVirtual());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isDHCPServer"))
+   {
+      value = vm->createValue(node->isDHCPServer());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isVRRP"))
    {
@@ -5463,6 +5537,142 @@ NXSL_Value *NXSL_WirelessStationClass::getAttr(NXSL_Object *object, const NXSL_I
 void NXSL_WirelessStationClass::onObjectDelete(NXSL_Object *object)
 {
    delete static_cast<WirelessStationInfo*>(object->getData());
+}
+
+/**
+ * NXSL class DHCPScope: constructor
+ */
+NXSL_DHCPScopeClass::NXSL_DHCPScopeClass()
+{
+   setName(L"DHCPScope");
+}
+
+/**
+ * NXSL class DHCPScope: get attribute
+ */
+NXSL_Value *NXSL_DHCPScopeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto scope = static_cast<DhcpScopeInfo*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("declinedAddresses"))
+   {
+      value = vm->createValue(scope->declinedAddresses);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("freeAddresses"))
+   {
+      value = vm->createValue(scope->freeAddresses);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
+   {
+      value = vm->createValue(scope->id);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isEnabled"))
+   {
+      value = vm->createValue(scope->enabled);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
+   {
+      value = vm->createValue(scope->name);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("network"))
+   {
+      value = scope->network.isValid() ? NXSL_InetAddressClass::createObject(vm, scope->network) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ranges"))
+   {
+      value = vm->createValue(scope->ranges);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("totalAddresses"))
+   {
+      value = vm->createValue(scope->totalAddresses);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("usedAddresses"))
+   {
+      value = vm->createValue(scope->usedAddresses);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("utilization"))
+   {
+      value = vm->createValue((scope->totalAddresses > 0) ? static_cast<double>(scope->usedAddresses) * 100.0 / static_cast<double>(scope->totalAddresses) : 0.0);
+   }
+   return value;
+}
+
+/**
+ * NXSL class DHCPScope: destroy object
+ */
+void NXSL_DHCPScopeClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<DhcpScopeInfo*>(object->getData());
+}
+
+/**
+ * NXSL class DHCPLease: constructor
+ */
+NXSL_DHCPLeaseClass::NXSL_DHCPLeaseClass()
+{
+   setName(L"DHCPLease");
+}
+
+/**
+ * NXSL class DHCPLease: get attribute
+ */
+NXSL_Value *NXSL_DHCPLeaseClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto lease = static_cast<DhcpLeaseInfo*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("clientId"))
+   {
+      value = vm->createValue(lease->clientId);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("expiration"))
+   {
+      value = vm->createValue(static_cast<int64_t>(lease->expiration));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("hostname"))
+   {
+      value = vm->createValue(lease->hostname);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddress"))
+   {
+      value = NXSL_InetAddressClass::createObject(vm, lease->ipAddress);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastTransaction"))
+   {
+      value = vm->createValue(static_cast<int64_t>(lease->lastTransaction));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddress"))
+   {
+      value = lease->macAddress.isValid() ? NXSL_MacAddressClass::createObject(vm, lease->macAddress) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("scopeId"))
+   {
+      value = vm->createValue(lease->scopeId);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
+   {
+      value = vm->createValue(static_cast<int32_t>(lease->state));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
+   {
+      value = vm->createValue(static_cast<int32_t>(lease->type));
+   }
+   return value;
+}
+
+/**
+ * NXSL class DHCPLease: destroy object
+ */
+void NXSL_DHCPLeaseClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<DhcpLeaseInfo*>(object->getData());
 }
 
 /**
@@ -12081,4 +12291,6 @@ NXSL_WebServiceClass g_nxslWebServiceClass;
 NXSL_WebServiceResponseClass g_nxslWebServiceResponseClass;
 NXSL_WirelessDomainClass g_nxslWirelessDomainClass;
 NXSL_WirelessStationClass g_nxslWirelessStationClass;
+NXSL_DHCPLeaseClass g_nxslDHCPLeaseClass;
+NXSL_DHCPScopeClass g_nxslDHCPScopeClass;
 NXSL_ZoneClass g_nxslZoneClass;

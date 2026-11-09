@@ -358,6 +358,83 @@ struct WirelessStationInfo
 };
 
 /**
+ * DHCP scope information
+ */
+struct DhcpScopeInfo
+{
+   MutableString id;
+   InetAddress network;    // Network address with mask bits set
+   MutableString name;
+   MutableString ranges;   // Address ranges in human readable form
+   bool enabled;
+   uint64_t totalAddresses;
+   uint64_t usedAddresses;
+   uint64_t declinedAddresses;
+   uint64_t freeAddresses;
+
+   DhcpScopeInfo()
+   {
+      enabled = true;
+      totalAddresses = 0;
+      usedAddresses = 0;
+      declinedAddresses = 0;
+      freeAddresses = 0;
+   }
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const
+   {
+      uint32_t fieldId = baseId;
+      msg->setField(fieldId++, id);
+      msg->setField(fieldId++, network);
+      msg->setField(fieldId++, name);
+      msg->setField(fieldId++, ranges);
+      msg->setField(fieldId++, enabled);
+      msg->setField(fieldId++, totalAddresses);
+      msg->setField(fieldId++, usedAddresses);
+      msg->setField(fieldId++, declinedAddresses);
+      msg->setField(fieldId++, freeAddresses);
+   }
+};
+
+/**
+ * DHCP lease information
+ */
+struct DhcpLeaseInfo
+{
+   InetAddress ipAddress;  // Leased address; mask bits set to delegated prefix length for IPv6 prefix delegation
+   MutableString scopeId;
+   MacAddress macAddress;
+   MutableString clientId; // DHCPv4 client identifier or DHCPv6 DUID
+   MutableString hostname;
+   int16_t type;           // DHCP_LEASE_TYPE_xxx
+   int16_t state;          // DHCP_LEASE_STATE_xxx
+   time_t lastTransaction; // 0 if unknown
+   time_t expiration;      // 0 if lease does not expire or expiration time is unknown
+
+   DhcpLeaseInfo()
+   {
+      type = DHCP_LEASE_TYPE_DYNAMIC;
+      state = DHCP_LEASE_STATE_ACTIVE;
+      lastTransaction = 0;
+      expiration = 0;
+   }
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const
+   {
+      uint32_t fieldId = baseId;
+      msg->setField(fieldId++, ipAddress);
+      msg->setField(fieldId++, scopeId);
+      msg->setField(fieldId++, macAddress);
+      msg->setField(fieldId++, clientId);
+      msg->setField(fieldId++, hostname);
+      msg->setField(fieldId++, type);
+      msg->setField(fieldId++, state);
+      msg->setFieldFromTime(fieldId++, lastTransaction);
+      msg->setFieldFromTime(fieldId++, expiration);
+   }
+};
+
+/**
  * Bridge port number mapping to interface index
  */
 struct BridgePort

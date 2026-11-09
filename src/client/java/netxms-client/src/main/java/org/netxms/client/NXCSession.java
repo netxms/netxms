@@ -144,6 +144,8 @@ import org.netxms.client.datacollection.TransformationTestResult;
 import org.netxms.client.datacollection.WebServiceCallResult;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.datacollection.WinPerfObject;
+import org.netxms.client.dhcp.DhcpLease;
+import org.netxms.client.dhcp.DhcpScope;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.AlarmComment;
@@ -14238,6 +14240,53 @@ public class NXCSession
          fieldId += 10;
       }
       return stations;
+   }
+
+   /**
+    * Get DHCP scopes from DHCP server node.
+    *
+    * @param nodeId DHCP server node object ID
+    * @return list of DHCP scopes
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<DhcpScope> getDhcpScopes(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DHCP_SCOPES);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<DhcpScope> scopes = new ArrayList<DhcpScope>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 20)
+         scopes.add(new DhcpScope(response, fieldId));
+      return scopes;
+   }
+
+   /**
+    * Get DHCP leases from DHCP server node.
+    *
+    * @param nodeId DHCP server node object ID
+    * @param scopeId scope ID to get leases for or null to get leases from all scopes
+    * @return list of DHCP leases
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<DhcpLease> getDhcpLeases(long nodeId, String scopeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DHCP_LEASES);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      if (scopeId != null)
+         msg.setField(NXCPCodes.VID_SCOPE_ID, scopeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<DhcpLease> leases = new ArrayList<DhcpLease>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 20)
+         leases.add(new DhcpLease(response, fieldId));
+      return leases;
    }
 
    /**

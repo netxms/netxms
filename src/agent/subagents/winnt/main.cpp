@@ -42,6 +42,10 @@ LONG H_CpuInterrupts(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstrac
 LONG H_CpuUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CpuVendorId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_DhcpLeaseTable(const TCHAR *metric, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_DhcpScopeList(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_DhcpScopeMetric(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_DhcpScopeTable(const TCHAR *metric, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_FileSystemInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -97,6 +101,7 @@ LONG H_WindowsFirewallState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Ab
 LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
 
+void ConfigureDhcpServerManagement(Config *config);
 void StartCPUStatCollector();
 void StopCPUStatCollector();
 void StartIOStatCollector();
@@ -175,6 +180,7 @@ static bool SubAgentInit(Config *config)
 {
    ReadCPUVendorId();
    SMBIOS_Parse(SMBIOS_Reader);
+   ConfigureDhcpServerManagement(config);
    StartCPUStatCollector();
    StartIOStatCollector();
    return true;
@@ -195,6 +201,12 @@ static void SubAgentShutdown()
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
    { _T("Agent.Desktop"), H_AgentDesktop, nullptr, DCI_DT_STRING, _T("Desktop associated with agent process") },
+
+   { _T("DHCP.Scope.Declined(*)"), H_DhcpScopeMetric, _T("D"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_DECLINED },
+   { _T("DHCP.Scope.Free(*)"), H_DhcpScopeMetric, _T("F"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_FREE },
+   { _T("DHCP.Scope.Total(*)"), H_DhcpScopeMetric, _T("T"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_TOTAL },
+   { _T("DHCP.Scope.Used(*)"), H_DhcpScopeMetric, _T("U"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_USED },
+   { _T("DHCP.Scope.Utilization(*)"), H_DhcpScopeMetric, _T("P"), DCI_DT_FLOAT, DCIDESC_DHCP_SCOPE_UTILIZATION },
 
    { _T("Disk.Free(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_FREE_BYTES, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
    { _T("Disk.FreePerc(*)"), H_FileSystemInfo, (TCHAR *)FSINFO_FREE_SPACE_PCT, DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
@@ -443,6 +455,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
+   { _T("DHCP.Scopes"), H_DhcpScopeList, nullptr, _T("List of DHCP scopes") },
    { _T("FileSystem.MountPoints"), H_MountPoints, nullptr, _T("List of file system mount points") },
    { _T("Hardware.Batteries"), SMBIOS_ListHandler, _T("B"), _T("List of hardware batteries") },
    { _T("Hardware.MemoryDevices"), SMBIOS_ListHandler, _T("M"), _T("List of memory devices") },
@@ -469,6 +482,9 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
+   { _T("DHCP.Leases"), H_DhcpLeaseTable, _T("A"), _T("IP_ADDRESS"), DCTDESC_DHCP_LEASES },
+   { _T("DHCP.Leases(*)"), H_DhcpLeaseTable, _T("S"), _T("IP_ADDRESS"), DCTDESC_DHCP_SCOPE_LEASES },
+   { _T("DHCP.Scopes"), H_DhcpScopeTable, nullptr, _T("ID"), DCTDESC_DHCP_SCOPES },
    { _T("FileSystem.Volumes"), H_FileSystems, nullptr, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES },
    { _T("Hardware.Batteries"), SMBIOS_TableHandler, _T("B"), _T("HANDLE"), DCTDESC_HARDWARE_BATTERIES },
    { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVICES },

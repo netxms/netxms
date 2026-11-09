@@ -1808,6 +1808,12 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_WIRELESS_STATIONS:
          getWirelessStations(*request);
          break;
+      case CMD_GET_DHCP_SCOPES:
+         getDhcpScopes(*request);
+         break;
+      case CMD_GET_DHCP_LEASES:
+         getDhcpLeases(*request);
+         break;
       case CMD_GET_SUMMARY_TABLES:
          getSummaryTables(*request);
          break;
@@ -15555,6 +15561,108 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
+   sendMessage(response);
+}
+
+/**
+ * Convert data collection error from DHCP information read to RCC
+ */
+static uint32_t RCCFromDhcpReadError(DataCollectionError e)
+{
+   switch(e)
+   {
+      case DCE_SUCCESS:
+         return RCC_SUCCESS;
+      case DCE_COMM_ERROR:
+         return RCC_COMM_FAILURE;
+      case DCE_NOT_SUPPORTED:
+         return RCC_DCI_NOT_SUPPORTED;
+      case DCE_NO_SUCH_INSTANCE:
+         return RCC_NO_SUCH_INSTANCE;
+      case DCE_ACCESS_DENIED:
+         return RCC_ACCESS_DENIED;
+      default:
+         return RCC_AGENT_ERROR;
+   }
+}
+
+/**
+ * Find DHCP server node for DHCP information request. Sets RCC in response and returns nullptr on failure.
+ */
+shared_ptr<Node> ClientSession::findDhcpServerNode(const NXCPMessage& request, NXCPMessage *response)
+{
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   if (object == nullptr)
+   {
+      response->setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      return shared_ptr<Node>();
+   }
+   if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+   {
+      response->setField(VID_RCC, RCC_ACCESS_DENIED);
+      return shared_ptr<Node>();
+   }
+   if (!static_cast<Node&>(*object).isDHCPServer())
+   {
+      response->setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      return shared_ptr<Node>();
+   }
+   return static_pointer_cast<Node>(object);
+}
+
+/**
+ * Get DHCP scopes from DHCP server node
+ */
+void ClientSession::getDhcpScopes(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<Node> node = findDhcpServerNode(request, &response);
+   if (node != nullptr)
+   {
+      ObjectArray<DhcpScopeInfo> scopes(0, 32, Ownership::True);
+      uint32_t rcc = RCCFromDhcpReadError(node->getDhcpScopes(&scopes));
+      if (rcc == RCC_SUCCESS)
+      {
+         uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+         for(int i = 0; i < scopes.size(); i++, fieldId += 20)
+            scopes.get(i)->fillMessage(&response, fieldId);
+         response.setField(VID_NUM_ELEMENTS, scopes.size());
+      }
+      response.setField(VID_RCC, rcc);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Get DHCP leases from DHCP server node
+ */
+void ClientSession::getDhcpLeases(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<Node> node = findDhcpServerNode(request, &response);
+   if (node != nullptr)
+   {
+      wchar_t scopeId[256] = L"";
+      if (request.isFieldExist(VID_SCOPE_ID))
+         request.getFieldAsString(VID_SCOPE_ID, scopeId, 256);
+      if (wcschr(scopeId, L'"') == nullptr)
+      {
+         ObjectArray<DhcpLeaseInfo> leases(0, 256, Ownership::True);
+         uint32_t rcc = RCCFromDhcpReadError(node->getDhcpLeases((scopeId[0] != 0) ? scopeId : nullptr, &leases));
+         if (rcc == RCC_SUCCESS)
+         {
+            uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+            for(int i = 0; i < leases.size(); i++, fieldId += 20)
+               leases.get(i)->fillMessage(&response, fieldId);
+            response.setField(VID_NUM_ELEMENTS, leases.size());
+         }
+         response.setField(VID_RCC, rcc);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      }
+   }
    sendMessage(response);
 }
 

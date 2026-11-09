@@ -371,6 +371,8 @@ int H_TopologyOSPF(Context *context);
 int H_TopologyInternal(Context *context);
 int H_WirelessRadios(Context *context);
 int H_WirelessStations(Context *context);
+int H_DhcpLeases(Context *context);
+int H_DhcpScopes(Context *context);
 int H_ArpCache(Context *context);
 int H_RoutingTable(Context *context);
 int H_SwitchForwardingDatabase(Context *context);
@@ -1086,6 +1088,12 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/switch-forwarding-database")
       .GET(H_SwitchForwardingDatabase)
+      .build();
+   RouteBuilder("v1/objects/:object-id/dhcp/leases")
+      .GET(H_DhcpLeases)
+      .build();
+   RouteBuilder("v1/objects/:object-id/dhcp/scopes")
+      .GET(H_DhcpScopes)
       .build();
    RouteBuilder("v1/objects/:object-id/wireless/radios")
       .GET(H_WirelessRadios)

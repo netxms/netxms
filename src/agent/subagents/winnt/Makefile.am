@@ -10,6 +10,7 @@
 
 EXTRA_DIST = \
 	cpu.cpp \
+	dhcp.cpp \
 	disk.cpp \
 	fs.cpp \
 	hypervisor.cpp \

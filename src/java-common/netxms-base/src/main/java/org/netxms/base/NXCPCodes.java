@@ -586,6 +586,8 @@ public class NXCPCodes
    public static final int CMD_GET_DCI_DATA_EXPORT_FILE = 0x0238;
    public static final int CMD_GET_DCI_DATA_EXPORT_METRICS = 0x0239;
    public static final int CMD_GET_EFFECTIVE_RESPONSIBLE_USERS = 0x023A;
+   public static final int CMD_GET_DHCP_SCOPES = 0x023B;
+   public static final int CMD_GET_DHCP_LEASES = 0x023C;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

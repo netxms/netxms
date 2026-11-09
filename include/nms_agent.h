@@ -358,6 +358,11 @@ static inline bool ValidateComponentToken(const AgentComponentToken *token, cons
 #define DCIDESC_AGENT_USER_AGENTS_COUNT              _T("Number of connected user agents")
 #define DCIDESC_AGENT_VERSION                        _T("Agent's version")
 #define DCIDESC_AGENT_WEBSVCPROXY_ISENABLED          _T("Check if web service proxy is enabled")
+#define DCIDESC_DHCP_SCOPE_DECLINED                  _T("DHCP scope {instance}: declined addresses")
+#define DCIDESC_DHCP_SCOPE_FREE                      _T("DHCP scope {instance}: free addresses")
+#define DCIDESC_DHCP_SCOPE_TOTAL                     _T("DHCP scope {instance}: total addresses")
+#define DCIDESC_DHCP_SCOPE_USED                      _T("DHCP scope {instance}: used addresses")
+#define DCIDESC_DHCP_SCOPE_UTILIZATION               _T("DHCP scope {instance}: utilization")
 #define DCIDESC_FILE_COUNT                           _T("Number of files {instance}")
 #define DCIDESC_FILE_FOLDERCOUNT                     _T("Number of folders {instance}")
 #define DCIDESC_FILE_HASH_CRC32                      _T("CRC32 checksum of {instance}")
@@ -757,6 +762,9 @@ static inline bool ValidateComponentToken(const AgentComponentToken *token, cons
 #define DCTDESC_AGENT_SUBAGENTS                      _T("Loaded subagents")
 #define DCTDESC_AGENT_ZONE_CONFIGURATIONS            _T("Loaded zone configurations")
 #define DCTDESC_AGENT_ZONE_PROXIES                   _T("Zone proxies")
+#define DCTDESC_DHCP_LEASES                          _T("DHCP leases")
+#define DCTDESC_DHCP_SCOPE_LEASES                    _T("DHCP leases in scope {instance}")
+#define DCTDESC_DHCP_SCOPES                          _T("DHCP scopes")
 #define DCTDESC_FILESYSTEM_VOLUMES                   _T("File system volumes")
 #define DCTDESC_HARDWARE_BATTERIES                   _T("Hardware: batteries")
 #define DCTDESC_HARDWARE_MEMORY_DEVICES              _T("Hardware: memory devices")
@@ -1630,6 +1638,65 @@ TFTPError LIBNXAGENT_EXPORTABLE TFTPRead(const TCHAR *fileName, const TCHAR *rem
 TFTPError LIBNXAGENT_EXPORTABLE TFTPRead(ByteStream *output, const TCHAR *remoteFileName, const InetAddress& addr, uint16_t port = 69, std::function<void (size_t)> progressCallback = std::function<void (size_t)>());
 TFTPError LIBNXAGENT_EXPORTABLE TFTPRead(std::ostream *stream, const TCHAR *remoteFileName, const InetAddress& addr, uint16_t port = 69, std::function<void (size_t)> progressCallback = std::function<void (size_t)>());
 const TCHAR LIBNXAGENT_EXPORTABLE *TFTPErrorMessage(TFTPError code);
+
+/**
+ * Column indexes in DHCP.Scopes table (columns are created by CreateDHCPScopeTableColumns)
+ */
+enum DHCPScopeTableColumn
+{
+   DHCP_SCOPE_COL_ID = 0,
+   DHCP_SCOPE_COL_IP_VERSION = 1,
+   DHCP_SCOPE_COL_NETWORK = 2,
+   DHCP_SCOPE_COL_NAME = 3,
+   DHCP_SCOPE_COL_RANGES = 4,
+   DHCP_SCOPE_COL_ENABLED = 5,
+   DHCP_SCOPE_COL_TOTAL = 6,
+   DHCP_SCOPE_COL_USED = 7,
+   DHCP_SCOPE_COL_DECLINED = 8,
+   DHCP_SCOPE_COL_FREE = 9,
+   DHCP_SCOPE_COL_UTILIZATION = 10
+};
+
+/**
+ * Column indexes in DHCP.Leases table (columns are created by CreateDHCPLeaseTableColumns)
+ */
+enum DHCPLeaseTableColumn
+{
+   DHCP_LEASE_COL_IP_ADDRESS = 0,
+   DHCP_LEASE_COL_PREFIX_LENGTH = 1,
+   DHCP_LEASE_COL_SCOPE_ID = 2,
+   DHCP_LEASE_COL_MAC_ADDRESS = 3,
+   DHCP_LEASE_COL_CLIENT_ID = 4,
+   DHCP_LEASE_COL_HOSTNAME = 5,
+   DHCP_LEASE_COL_TYPE = 6,
+   DHCP_LEASE_COL_STATE = 7,
+   DHCP_LEASE_COL_LAST_TRANSACTION = 8,
+   DHCP_LEASE_COL_EXPIRATION = 9
+};
+
+/**
+ * Number of free addresses in DHCP scope
+ */
+static inline uint64_t DHCPScopeFreeAddresses(uint64_t total, uint64_t used, uint64_t declined)
+{
+   return (total > used + declined) ? total - used - declined : 0;
+}
+
+/**
+ * DHCP scope utilization (used addresses as percentage of total)
+ */
+static inline double DHCPScopeUtilization(uint64_t total, uint64_t used)
+{
+   return (total > 0) ? static_cast<double>(used) * 100.0 / static_cast<double>(total) : 0;
+}
+
+/**
+ * Helpers for generic DHCP server tables (DHCP.Scopes and DHCP.Leases) shared by all DHCP server subagents
+ */
+void LIBNXAGENT_EXPORTABLE CreateDHCPScopeTableColumns(Table *table);
+void LIBNXAGENT_EXPORTABLE AddDHCPScopeTableRow(Table *table, const TCHAR *id, int ipVersion, const TCHAR *network, const TCHAR *name, const TCHAR *ranges, bool enabled,
+      uint64_t total, uint64_t used, uint64_t declined);
+void LIBNXAGENT_EXPORTABLE CreateDHCPLeaseTableColumns(Table *table);
 
 /**
  * Wrapper for SleepAndCheckForShutdownEx (for backward compatibility)

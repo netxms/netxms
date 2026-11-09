@@ -901,6 +901,9 @@ private:
 	void updateMappingTable(const NXCPMessage& request);
 	void deleteMappingTable(const NXCPMessage& request);
 	void getWirelessStations(const NXCPMessage& request);
+   void getDhcpScopes(const NXCPMessage& request);
+   void getDhcpLeases(const NXCPMessage& request);
+   shared_ptr<Node> findDhcpServerNode(const NXCPMessage& request, NXCPMessage *response);
    void getSummaryTables(const NXCPMessage& request);
    void getSummaryTableDetails(const NXCPMessage& request);
    void modifySummaryTable(const NXCPMessage& request);

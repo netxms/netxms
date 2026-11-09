@@ -54,7 +54,9 @@ dataexport	DCI history export (tagged DCI export tool)
 db2		DB2 monitoring subagent messages
 dbquery		DBquery subagent messages
 devbackup	Native device configuration backup module
+dhcp		DHCP server information retrieval
 dload			DLL/shared library load unload information
+dnsmasq		dnsmasq DHCP server subagent messages
 
 db.*		Database related
 db.agent	Agent database
@@ -133,6 +135,8 @@ job.*		Server jobs related
 job.manager	Job manager
 
 housekeeper	Housekeeper messages
+
+kea		ISC Kea DHCP server subagent messages
 
 kpi		KPI engine (computation methods, sample attributes)
 kpi.direct	Direct KPI computation provider (kpidirect module)
@@ -351,6 +355,7 @@ websvc		Web services
 wincert		Windows certificate store metrics
 winevt		Windows event collection (server side)
 winnt		WINNT platform subagent messages
+winnt.dhcp	Windows DHCP Server information (winnt subagent)
 wol		Wake-on-lan functions
 wts		Agent: WTS session enumeration and process start in user sessions
 

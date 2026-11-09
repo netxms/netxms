@@ -4741,6 +4741,7 @@ public:
    bool isValidLldpRemLocalPortNum() const { auto d = getDriverWithData(); return d.first->isValidLldpRemLocalPortNum(this, d.second.get()); }
    bool isWirelessController() const { return is_bit_set(m_capabilities, NC_IS_WIFI_CONTROLLER); }
    bool isWirelessAccessPoint() const { return is_bit_set(m_capabilities, NC_IS_WIFI_AP); }
+   bool isDHCPServer() const { return is_bit_set(m_capabilities, NC_IS_DHCP_SERVER); }
    bool isNewPolicyTypeFormatSupported() const { return is_bit_set(m_capabilities, NC_IS_NEW_POLICY_TYPES); }
    bool isRegisteredForBackup() const { return is_bit_set(m_capabilities, NC_REGISTERED_FOR_BACKUP); }
 
@@ -4907,6 +4908,9 @@ public:
    ObjectArray<WirelessStationInfo> *getWirelessStations(uint32_t apId = 0) const;
    NXSL_Value *getWirelessStationsForNXSL(NXSL_VM *vm, uint32_t apId = 0) const;
    json_t *getRadioInterfacesAsJson() const;
+
+   DataCollectionError getDhcpScopes(ObjectArray<DhcpScopeInfo> *scopes);
+   DataCollectionError getDhcpLeases(const wchar_t *scopeId, ObjectArray<DhcpLeaseInfo> *leases);
    void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
 
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);

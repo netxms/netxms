@@ -6761,6 +6761,27 @@ bool Node::confPollAgent()
       }
       unlockProperties();
 
+      // Check if agent provides DHCP server information
+      shared_ptr<Table> dhcpScopes;
+      bool agentDHCPPresent = (getTableFromAgent(L"DHCP.Scopes", &dhcpScopes) == DCE_SUCCESS);
+      lockProperties();
+      if (agentDHCPPresent)
+      {
+         if (!(m_capabilities & NC_IS_DHCP_SERVER))
+            hasChanges = true;
+         m_capabilities |= NC_IS_DHCP_SERVER;
+         sendPollerMsg(L"   DHCP server information is available from agent\r\n");
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s): DHCP server information is available from agent (%d scopes)", m_name, dhcpScopes->getNumRows());
+      }
+      else
+      {
+         if (m_capabilities & NC_IS_DHCP_SERVER)
+            hasChanges = true;
+         m_capabilities &= ~NC_IS_DHCP_SERVER;
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s): DHCP server information is not available from agent", m_name);
+      }
+      unlockProperties();
+
       // Server ID should be set on this connection before updating configuration elements on agent side
       if (pAgentConn->setServerId(g_serverId) == ERR_SUCCESS)
       {
@@ -16981,6 +17002,7 @@ static FlagNameMapping s_capabilityMapping[] =
    { NC_SSH_INTERACTIVE_CHANNEL, "sshInteractiveChannel" },
    { NC_SSH_COMMAND_CHANNEL, "sshCommandChannel" },
    { NC_HAS_AGENT_LLDP, "hasAgentLldp" },
+   { NC_IS_DHCP_SERVER, "isDhcpServer" },
    { 0, nullptr }
 };
 

@@ -122,6 +122,7 @@ import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.CommentsView;
 import org.netxms.nxmc.modules.objects.views.DeviceConfigBackupView;
 import org.netxms.nxmc.modules.objects.views.DeviceView;
+import org.netxms.nxmc.modules.objects.views.DhcpView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.HardwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
@@ -255,6 +256,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new AgentFileManager());
       addMainView(new AlarmsView());
       addMainView(new ArpCacheView());
+      addMainView(new DhcpView());
       addMainView(new AssetSummaryView());
       addMainView(new AssetView());
       addMainView(new BusinessServiceAvailabilityView());

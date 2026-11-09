@@ -320,6 +320,23 @@ enum RoomElementType
 #define NC_HAS_AGENT_LLDP          _ULL(0x2000000000)  /* Agent exposes LLDP.Neighbors table (lldpd) */
 #define NC_IS_NETCONF              _ULL(0x4000000000)  /* Node supports NETCONF protocol */
 #define NC_HAS_TLS_TUNNEL          _ULL(0x8000000000)  /* Agent supports inbound TLS tunnel connections */
+#define NC_IS_DHCP_SERVER          _ULL(0x10000000000) /* Node is DHCP server and provides scope and lease information */
+
+/**
+ * DHCP lease types (TYPE column of DHCP.Leases agent table)
+ */
+#define DHCP_LEASE_TYPE_DYNAMIC     0
+#define DHCP_LEASE_TYPE_RESERVATION 1
+
+/**
+ * DHCP lease states (STATE column of DHCP.Leases agent table)
+ */
+#define DHCP_LEASE_STATE_ACTIVE     0
+#define DHCP_LEASE_STATE_EXPIRED    1
+#define DHCP_LEASE_STATE_DECLINED   2
+#define DHCP_LEASE_STATE_RELEASED   3
+#define DHCP_LEASE_STATE_OFFERED    4
+#define DHCP_LEASE_STATE_INACTIVE   5  /* Reservation without active lease */
 
 /**
  * Agent TLS connection mode for node

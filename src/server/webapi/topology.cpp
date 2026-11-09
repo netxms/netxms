@@ -651,3 +651,173 @@ int H_WirelessStations(Context *context)
    json_decref(output);
    return 200;
 }
+
+/**
+ * Load DHCP server node for DHCP information request
+ */
+static shared_ptr<Node> LoadDhcpServerNode(Context *context, int *httpCode)
+{
+   shared_ptr<Node> node = LoadNodeForTableRequest(context, httpCode);
+   if ((node != nullptr) && !node->isDHCPServer())
+   {
+      context->setErrorResponse("Node is not a DHCP server");
+      *httpCode = 400;
+      return shared_ptr<Node>();
+   }
+   return node;
+}
+
+/**
+ * Set error response for failed DHCP information read and return HTTP code
+ */
+static int DhcpReadErrorResponse(Context *context, DataCollectionError rc)
+{
+   switch(rc)
+   {
+      case DCE_COMM_ERROR:
+         context->setErrorResponse("Cannot communicate with agent");
+         return 503;
+      case DCE_NOT_SUPPORTED:
+         context->setErrorResponse("Requested information is not supported by DHCP server");
+         return 501;
+      case DCE_NO_SUCH_INSTANCE:
+         context->setErrorResponse("No such scope");
+         return 404;
+      default:
+         context->setErrorResponse("Cannot read DHCP information from agent");
+         return 502;
+   }
+}
+
+/**
+ * Get symbolic name of DHCP lease type
+ */
+static const char *DhcpLeaseTypeName(int16_t type)
+{
+   switch(type)
+   {
+      case DHCP_LEASE_TYPE_DYNAMIC:
+         return "DYNAMIC";
+      case DHCP_LEASE_TYPE_RESERVATION:
+         return "RESERVATION";
+      default:
+         return "UNKNOWN";
+   }
+}
+
+/**
+ * Get symbolic name of DHCP lease state
+ */
+static const char *DhcpLeaseStateName(int16_t state)
+{
+   switch(state)
+   {
+      case DHCP_LEASE_STATE_ACTIVE:
+         return "ACTIVE";
+      case DHCP_LEASE_STATE_EXPIRED:
+         return "EXPIRED";
+      case DHCP_LEASE_STATE_DECLINED:
+         return "DECLINED";
+      case DHCP_LEASE_STATE_RELEASED:
+         return "RELEASED";
+      case DHCP_LEASE_STATE_OFFERED:
+         return "OFFERED";
+      case DHCP_LEASE_STATE_INACTIVE:
+         return "INACTIVE";
+      default:
+         return "UNKNOWN";
+   }
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/dhcp/scopes
+ */
+int H_DhcpScopes(Context *context)
+{
+   int httpCode;
+   shared_ptr<Node> node = LoadDhcpServerNode(context, &httpCode);
+   if (node == nullptr)
+      return httpCode;
+
+   ObjectArray<DhcpScopeInfo> scopes(0, 32, Ownership::True);
+   DataCollectionError rc = node->getDhcpScopes(&scopes);
+   if (rc != DCE_SUCCESS)
+      return DhcpReadErrorResponse(context, rc);
+
+   json_t *entries = json_array();
+   for(int i = 0; i < scopes.size(); i++)
+   {
+      const DhcpScopeInfo *scope = scopes.get(i);
+      json_t *entry = json_object();
+      json_object_set_new(entry, "id", json_string_t(scope->id));
+      json_object_set_new(entry, "network", scope->network.isValid() ? scope->network.toJson() : json_null());
+      json_object_set_new(entry, "name", json_string_t(scope->name));
+      json_object_set_new(entry, "ranges", json_string_t(scope->ranges));
+      json_object_set_new(entry, "enabled", json_boolean(scope->enabled));
+      json_object_set_new(entry, "totalAddresses", json_integer(scope->totalAddresses));
+      json_object_set_new(entry, "usedAddresses", json_integer(scope->usedAddresses));
+      json_object_set_new(entry, "declinedAddresses", json_integer(scope->declinedAddresses));
+      json_object_set_new(entry, "freeAddresses", json_integer(scope->freeAddresses));
+      json_object_set_new(entry, "utilization", (scope->totalAddresses > 0) ?
+               json_real(static_cast<double>(scope->usedAddresses) * 100.0 / static_cast<double>(scope->totalAddresses)) : json_null());
+      json_array_append_new(entries, entry);
+   }
+
+   json_t *output = json_object();
+   json_object_set_new(output, "entries", entries);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/dhcp/leases
+ * Optional query parameter "scope" limits result to leases from given scope.
+ */
+int H_DhcpLeases(Context *context)
+{
+   int httpCode;
+   shared_ptr<Node> node = LoadDhcpServerNode(context, &httpCode);
+   if (node == nullptr)
+      return httpCode;
+
+   String scopeId(context->getQueryParameter("scope"), "utf8");
+   if (scopeId.contains(L"\""))
+   {
+      context->setErrorResponse("Invalid scope ID");
+      return 400;
+   }
+
+   ObjectArray<DhcpLeaseInfo> leases(0, 256, Ownership::True);
+   DataCollectionError rc = node->getDhcpLeases(scopeId.isEmpty() ? nullptr : scopeId.cstr(), &leases);
+   if (rc != DCE_SUCCESS)
+      return DhcpReadErrorResponse(context, rc);
+
+   uint32_t userId = context->getUserId();
+   json_t *entries = json_array();
+   for(int i = 0; i < leases.size(); i++)
+   {
+      const DhcpLeaseInfo *lease = leases.get(i);
+      bool hasMac = lease->macAddress.isValid();
+      json_t *entry = json_object();
+      json_object_set_new(entry, "ipAddress", json_string_t(lease->ipAddress.toString()));
+      json_object_set_new(entry, "prefixLength", json_integer(lease->ipAddress.getMaskBits()));
+      json_object_set_new(entry, "scopeId", json_string_t(lease->scopeId));
+      json_object_set_new(entry, "macAddress", hasMac ? json_string_t(lease->macAddress.toString()) : json_null());
+      json_object_set_new(entry, "vendor", hasMac ? VendorToJson(lease->macAddress) : json_null());
+      json_object_set_new(entry, "clientId", json_string_t(lease->clientId));
+      json_object_set_new(entry, "hostname", json_string_t(lease->hostname));
+      json_object_set_new(entry, "type", json_string(DhcpLeaseTypeName(lease->type)));
+      json_object_set_new(entry, "state", json_string(DhcpLeaseStateName(lease->state)));
+      json_object_set_new(entry, "lastTransaction", json_time_string(lease->lastTransaction));
+      json_object_set_new(entry, "expiration", json_time_string(lease->expiration));
+      SetNodeReference(entry, hasMac ? FindNodeByMAC(lease->macAddress) : FindNodeByIP(node->getZoneUIN(), lease->ipAddress), userId);
+      json_array_append_new(entries, entry);
+   }
+
+   json_t *output = json_object();
+   json_object_set_new(output, "entries", entries);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}

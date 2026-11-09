@@ -66,6 +66,7 @@ public class Capabilities extends TableElement
       addFlag(i18n.tr("Agent"), (node.getCapabilities() & AbstractNode.NC_IS_NATIVE_AGENT) != 0);
       addFlag(i18n.tr("Bridge"), (node.getCapabilities() & AbstractNode.NC_IS_BRIDGE) != 0);
       addFlag("CDP", (node.getCapabilities() & AbstractNode.NC_IS_CDP) != 0);
+      addFlag(i18n.tr("DHCP server"), (node.getCapabilities() & AbstractNode.NC_IS_DHCP_SERVER) != 0);
       addFlag("EtherNet/IP", (node.getCapabilities() & AbstractNode.NC_IS_ETHERNET_IP) != 0);
       addFlag(i18n.tr("Entity MIB"), (node.getCapabilities() & AbstractNode.NC_HAS_ENTITY_MIB) != 0);
       addFlag(i18n.tr("Emulated Entity MIB"), (node.getCapabilities() & AbstractNode.NC_EMULATED_ENTITY_MIB) != 0);

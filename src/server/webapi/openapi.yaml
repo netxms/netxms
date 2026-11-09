@@ -9312,6 +9312,101 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/dhcp/scopes:
+    get:
+      operationId: getDhcpScopes
+      summary: Get DHCP scopes
+      description: >-
+        List DHCP scopes (subnets or address pools) configured on the given DHCP server node, with address usage
+        counters. Information is read from the node's agent at request time.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: DHCP server node object ID
+      responses:
+        '200':
+          description: DHCP scopes retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DhcpScope'
+        '400':
+          description: Invalid object ID, object is not a node, or node is not a DHCP server
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+        '501':
+          description: Requested information is not supported by DHCP server
+        '502':
+          description: Cannot read DHCP information from agent
+        '503':
+          description: Cannot communicate with agent
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/dhcp/leases:
+    get:
+      operationId: getDhcpLeases
+      summary: Get DHCP leases
+      description: >-
+        List DHCP leases and host reservations on the given DHCP server node. Reservations without an active lease
+        are reported with state INACTIVE. Information is read from the node's agent at request time; large servers
+        should be queried per scope.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: DHCP server node object ID
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Scope ID (as returned by the scopes endpoint) to limit the result to. All scopes when omitted.
+      responses:
+        '200':
+          description: DHCP leases retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DhcpLease'
+        '400':
+          description: Invalid object ID or scope ID, object is not a node, or node is not a DHCP server
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID or requested scope does not exist
+        '501':
+          description: Lease information is not supported by DHCP server (for example, Kea lease_cmds hook is not loaded)
+        '502':
+          description: Cannot read DHCP information from agent
+        '503':
+          description: Cannot communicate with agent
+      security:
+        - BearerAuth: []
   /v1/objects/{object-id}/status-explanation:
     get:
       operationId: getObjectStatusExplanation
@@ -20110,6 +20205,98 @@ components:
         ownerName:
           type: string
           description: Name of the node or access point object owning this radio
+    DhcpScope:
+      type: object
+      description: DHCP scope (subnet or address pool)
+      properties:
+        id:
+          type: string
+          description: Scope ID, unique within the DHCP server
+        network:
+          allOf:
+            - $ref: '#/components/schemas/InetAddress'
+          type: object
+          nullable: true
+          description: Scope network address. Null when not known.
+        name:
+          type: string
+          description: Scope name (empty if not set)
+        ranges:
+          type: string
+          description: Address ranges in human readable form
+        enabled:
+          type: boolean
+          description: True if scope is enabled
+        totalAddresses:
+          type: integer
+          description: Total number of addresses in scope
+        usedAddresses:
+          type: integer
+          description: Number of currently leased addresses
+        declinedAddresses:
+          type: integer
+          description: Number of declined addresses
+        freeAddresses:
+          type: integer
+          description: Number of free addresses
+        utilization:
+          type: number
+          nullable: true
+          description: Used addresses as percentage of total. Null when total is 0.
+    DhcpLease:
+      type: object
+      description: DHCP lease or host reservation
+      properties:
+        ipAddress:
+          type: string
+          description: Leased IP address or delegated IPv6 prefix
+        prefixLength:
+          type: integer
+          description: Prefix length (32 or 128 for single address, delegated prefix length for IPv6 prefix delegation)
+        scopeId:
+          type: string
+          description: ID of the scope this lease belongs to (empty if unknown)
+        macAddress:
+          type: string
+          nullable: true
+          description: Client MAC address in colon-separated notation. Null when not known.
+        vendor:
+          type: string
+          nullable: true
+          description: NIC vendor resolved from the OUI database. Null when MAC address or vendor is not known.
+        clientId:
+          type: string
+          description: DHCPv4 client identifier or DHCPv6 DUID
+        hostname:
+          type: string
+          description: Client host name
+        type:
+          type: string
+          enum: [DYNAMIC, RESERVATION, UNKNOWN]
+          description: Lease type
+        state:
+          type: string
+          enum: [ACTIVE, EXPIRED, DECLINED, RELEASED, OFFERED, INACTIVE, UNKNOWN]
+          description: Lease state. INACTIVE means host reservation without active lease.
+        lastTransaction:
+          type: string
+          format: date-time
+          nullable: true
+          description: Time of last transaction with client. Null when not known.
+        expiration:
+          type: string
+          format: date-time
+          nullable: true
+          description: Lease expiration time. Null when lease does not expire or expiration time is not known.
+        nodeId:
+          type: integer
+          description: >-
+            ID of the node matching the lease's MAC address (or IP address in DHCP server's zone when MAC address is
+            not known), or 0 when no node matches or the caller has no read access to it.
+        nodeName:
+          type: string
+          nullable: true
+          description: Name of the matching node. Null when nodeId is 0.
     WirelessStation:
       type: object
       description: Wireless station (client) associated with an access point

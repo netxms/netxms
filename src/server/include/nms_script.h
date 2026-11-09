@@ -130,6 +130,30 @@ public:
 };
 
 /**
+ * NXSL "DHCPScope" class
+ */
+class NXSL_DHCPScopeClass : public NXSL_Class
+{
+public:
+   NXSL_DHCPScopeClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
+ * NXSL "DHCPLease" class
+ */
+class NXSL_DHCPLeaseClass : public NXSL_Class
+{
+public:
+   NXSL_DHCPLeaseClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * NXSL "MobileDevice" class
  */
 class NXSL_MobileDeviceClass : public NXSL_DCTargetClass
@@ -1052,6 +1076,8 @@ extern NXSL_WebServiceClass g_nxslWebServiceClass;
 extern NXSL_WebServiceResponseClass g_nxslWebServiceResponseClass;
 extern NXSL_WirelessDomainClass g_nxslWirelessDomainClass;
 extern NXSL_WirelessStationClass g_nxslWirelessStationClass;
+extern NXSL_DHCPLeaseClass g_nxslDHCPLeaseClass;
+extern NXSL_DHCPScopeClass g_nxslDHCPScopeClass;
 extern NXSL_ZoneClass g_nxslZoneClass;
 
 int SetCustomAttributeFromNXSL(NObject *object, const wchar_t *name, NXSL_Value *value, StateChange inheritable);

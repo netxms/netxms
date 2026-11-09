@@ -2032,7 +2032,7 @@ fi
 
 AC_CHECK_HEADERS([sys/ptrace.h])
 AC_CHECK_HEADERS([net/nh.h sys/sockio.h byteswap.h sys/sysctl.h sys/param.h])
-AC_CHECK_HEADERS([malloc.h endian.h sys/syscall.h])
+AC_CHECK_HEADERS([malloc.h endian.h sys/syscall.h ifaddrs.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,[[
 #include <sys/types.h>
 #include <sys/time.h>
@@ -4629,10 +4629,12 @@ AC_CONFIG_FILES([
 	src/agent/subagents/aifileops/Makefile
 	src/agent/subagents/asterisk/Makefile
 	src/agent/subagents/bind9/Makefile
+	src/agent/subagents/kea/Makefile
 	src/agent/subagents/darwin/Makefile
 	src/agent/subagents/db2/Makefile
 	src/agent/subagents/dbquery/Makefile
 	src/agent/subagents/devemu/Makefile
+	src/agent/subagents/dnsmasq/Makefile
 	src/agent/subagents/ds18x20/Makefile
 	src/agent/subagents/entsoe/Makefile
 	src/agent/subagents/fbdev/Makefile

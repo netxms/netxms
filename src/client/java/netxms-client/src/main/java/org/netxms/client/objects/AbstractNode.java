@@ -98,6 +98,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final long NC_HAS_AGENT_LLDP         = 0x2000000000L;
    public static final long NC_IS_NETCONF             = 0x4000000000L;
    public static final long NC_HAS_TLS_TUNNEL         = 0x8000000000L;
+   public static final long NC_IS_DHCP_SERVER         = 0x10000000000L;
 
 	// Node flags
    public static final int NF_DISABLE_NETCONF           = 0x00002000;
@@ -1031,6 +1032,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	{
 		return (capabilities & NC_IS_WIFI_CONTROLLER) != 0;
 	}
+
+   /**
+    * Check if this node is a DHCP server providing scope and lease information.
+    *
+    * @return true if node is a DHCP server
+    */
+   public boolean isDhcpServer()
+   {
+      return (capabilities & NC_IS_DHCP_SERVER) != 0;
+   }
 
    /**
     * Check if this node is a wireless access point.
