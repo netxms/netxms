@@ -35,6 +35,7 @@
 #define DEFAULT_MAX_MATCHES      1000
 #define DEFAULT_MAX_FILE_SIZE    (10 * 1024 * 1024)  // 10 MB
 #define DEFAULT_CONTEXT_LINES    3
+#define MAX_CONTEXT_LINES        100
 
 // Write operation limits
 #define MAX_WRITE_SIZE           (10 * 1024 * 1024)  // 10 MB max content size
