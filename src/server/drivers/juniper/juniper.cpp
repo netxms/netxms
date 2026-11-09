@@ -439,7 +439,8 @@ void JuniperDriver::getSSHDriverHints(SSHDriverHints *hints) const
    //   user@hostname>           (operational mode)
    //   user@hostname#           (configuration mode)
    //   user@hostname:instance>  (with routing instance)
-   hints->enabledPromptPattern = "^[\\w.-]+@[\\w.-]+(:[\\w.-]+)?[>#]\\s*$";
+   //   user>                    (host name not configured)
+   hints->enabledPromptPattern = "^[\\w.-]+(@[\\w.-]*)?(:[\\w.-]+)?[>#]\\s*$";
 
    // Enter JunOS CLI from Unix shell; no-op if already in CLI
    // (escalatePrivilege detects m_privileged=true and skips)
@@ -544,6 +545,34 @@ static bool GetRunningConfigViaNETCONF(DeviceContext *ctx, ByteStream *output)
 }
 
 /**
+ * Remove status line printed by Junos CLI before each prompt on virtual chassis or cluster capable devices
+ * ({master:0}, {backup:1}, {primary:node0}, etc.) from the end of command output. Prompt itself is removed
+ * by SSH channel, but this line is not.
+ */
+static void RemoveTrailingStatusLine(ByteStream *output)
+{
+   const char *data = reinterpret_cast<const char*>(output->buffer());
+   size_t end = output->size();
+   while ((end > 0) && isspace(static_cast<unsigned char>(data[end - 1])))
+      end--;
+
+   size_t start = end;
+   while ((start > 0) && (data[start - 1] != '\n'))
+      start--;
+
+   if ((end - start < 3) || (data[start] != '{') || (data[end - 1] != '}') || (memchr(&data[start], ' ', end - start) != nullptr))
+      return;
+
+   nxlog_debug_tag(JUNIPER_DEBUG_TAG, 6, _T("RemoveTrailingStatusLine: status line removed from command output"));
+
+   // Remove status line and empty lines before it, keep single line terminator
+   while ((start > 0) && isspace(static_cast<unsigned char>(data[start - 1])))
+      start--;
+   output->truncate(start);
+   output->write('\n');
+}
+
+/**
  * Get running configuration from device
  */
 bool JuniperDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
@@ -558,7 +587,10 @@ bool JuniperDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
       return false;
-   return ssh->executeCommand("show configuration", output);
+   if (!ssh->executeCommand("show configuration", output))
+      return false;
+   RemoveTrailingStatusLine(output);
+   return true;
 }
 
 /**
