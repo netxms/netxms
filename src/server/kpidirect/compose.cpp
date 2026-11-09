@@ -221,6 +221,13 @@ void Composition::compose(EnergyComponent c)
       return;
    }
 
+   // Proxies only apply to METERED and PROXIED slots
+   if ((entry.state == SlotState::NOT_APPLICABLE) || (entry.state == SlotState::ABSENT) || (entry.state == SlotState::LEVEL_AMBIGUOUS))
+   {
+      for(const ProxyDeclaration *p : proxies)
+         addDiagnostic(&cc.diagnostics, c, ComputationDiagnosticCode::PROXY_IGNORED_STATE, p->id);
+   }
+
    switch(entry.state)
    {
       case SlotState::NOT_APPLICABLE:
@@ -232,14 +239,10 @@ void Composition::compose(EnergyComponent c)
          cc.value.attributes.upper = 0;
          cc.basis.lowest = 0;
          memset(cc.basis.share, 0, sizeof(cc.basis.share));
-         for(const ProxyDeclaration *p : proxies)
-            addDiagnostic(&cc.diagnostics, c, ComputationDiagnosticCode::PROXY_IGNORED_STATE, p->id);
          cc.done = true;
          break;
       case SlotState::ABSENT:
       case SlotState::LEVEL_AMBIGUOUS:
-         for(const ProxyDeclaration *p : proxies)
-            addDiagnostic(&cc.diagnostics, c, ComputationDiagnosticCode::PROXY_IGNORED_STATE, p->id);
          setMissing(c, (entry.state == SlotState::ABSENT) ? ComputationDiagnosticCode::SLOT_ABSENT : ComputationDiagnosticCode::SLOT_LEVEL_AMBIGUOUS);
          break;
       case SlotState::PROXIED:
