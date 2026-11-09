@@ -250,10 +250,8 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 			switch(p.getAdminState())
 			{
 				case Interface.ADMIN_STATE_DOWN:
-					status = ObjectStatus.DISABLED;
-					break;
 				case Interface.ADMIN_STATE_TESTING:
-					status = ObjectStatus.TESTING;
+					status = ObjectStatus.DISABLED;
 					break;
 				case Interface.ADMIN_STATE_UP:
 					switch(p.getOperState())
@@ -262,7 +260,8 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 							status = ObjectStatus.CRITICAL;
 							break;
 						case Interface.OPER_STATE_TESTING:
-							status = ObjectStatus.TESTING;
+						case Interface.OPER_STATE_DORMANT:
+							status = ObjectStatus.MINOR;
 							break;
 						case Interface.OPER_STATE_UP:
 							status = ObjectStatus.NORMAL;

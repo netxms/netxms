@@ -1288,7 +1288,6 @@ public:
    static const int STATUS_UNKNOWN = 5;
    static const int STATUS_UNMANAGED = 6;
    static const int STATUS_DISABLED = 7;
-   static const int STATUS_TESTING = 8;
 };
 ```
 

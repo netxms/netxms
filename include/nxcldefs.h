@@ -225,7 +225,6 @@ enum RoomElementType
 #define STATUS_UNKNOWN        5
 #define STATUS_UNMANAGED      6
 #define STATUS_DISABLED       7
-#define STATUS_TESTING        8
 
 /**
  * Event and alarm severity

@@ -26536,11 +26536,6 @@ msgstr "גדול"
 msgid "Unmanaged"
 msgstr "לא מנוהל"
 
-#: src/rwt/java/org/netxms/nxmc/resources/StatusDisplayInfo.java:67
-#: src/swt/java/org/netxms/nxmc/resources/StatusDisplayInfo.java:62
-msgid "Testing"
-msgstr "בדיקות"
-
 #: src/rwt/java/org/netxms/nxmc/base/preferencepages/ThemesPage.java:99
 #: src/swt/java/org/netxms/nxmc/base/preferencepages/ThemesPage.java:96
 msgid "Active theme"

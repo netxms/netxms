@@ -63,7 +63,7 @@ public class StatusSelector extends Composite
 		label.setLayoutData(gd);
 		
 		combo = new Combo(this, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER);
-		for(int i = 0; i <= Math.min(maxSeverity, ObjectStatus.TESTING.getValue()); i++)
+		for(int i = 0; i <= Math.min(maxSeverity, ObjectStatus.DISABLED.getValue()); i++)
 			combo.add(StatusDisplayInfo.getStatusText(i));
 		combo.select(0);
 		gd = new GridData();

@@ -1170,16 +1170,16 @@ CodeLookupElement g_severityNames[] =
  */
 const wchar_t NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps)
 {
-   static const wchar_t *statusText[] = { L"NORMAL", L"WARNING", L"MINOR", L"MAJOR", L"CRITICAL", L"UNKNOWN", L"UNMANAGED", L"DISABLED", L"TESTING" };
-   static const wchar_t *statusTextSmall[] = { L"Normal", L"Warning", L"Minor", L"Major", L"Critical", L"Unknown", L"Unmanaged", L"Disabled", L"Testing" };
+   static const wchar_t *statusText[] = { L"NORMAL", L"WARNING", L"MINOR", L"MAJOR", L"CRITICAL", L"UNKNOWN", L"UNMANAGED", L"DISABLED" };
+   static const wchar_t *statusTextSmall[] = { L"Normal", L"Warning", L"Minor", L"Major", L"Critical", L"Unknown", L"Unmanaged", L"Disabled" };
 
    if (allCaps)
    {
-      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusText[status] : L"INTERNAL ERROR";
+      return ((status >= STATUS_NORMAL) && (status <= STATUS_DISABLED)) ? statusText[status] : L"INTERNAL ERROR";
    }
    else
    {
-      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusTextSmall[status] : L"INTERNAL ERROR";
+      return ((status >= STATUS_NORMAL) && (status <= STATUS_DISABLED)) ? statusTextSmall[status] : L"INTERNAL ERROR";
    }
 }
 

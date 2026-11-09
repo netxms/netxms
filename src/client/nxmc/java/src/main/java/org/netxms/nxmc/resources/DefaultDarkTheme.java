@@ -118,8 +118,6 @@ public class DefaultDarkTheme extends Theme
       elements.put("Status.Unmanaged.Fill", new ThemeElement(new RGB(100, 116, 139), new RGB(255, 255, 255)));
       elements.put("Status.Disabled", new ThemeElement(new RGB(42, 54, 70), new RGB(148, 163, 184)));
       elements.put("Status.Disabled.Fill", new ThemeElement(new RGB(71, 85, 105), new RGB(255, 255, 255)));
-      elements.put("Status.Testing", new ThemeElement(new RGB(59, 7, 100), new RGB(233, 213, 255)));
-      elements.put("Status.Testing.Fill", new ThemeElement(new RGB(192, 132, 252), new RGB(28, 25, 23)));
       elements.put("TextInput.Error", new ThemeElement(new RGB(48, 0, 0), null));
       elements.put("Window.Header", new ThemeElement(new RGB(17, 60, 81), new RGB(192, 192, 192), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 13));
       elements.put("Window.Header.Highlight", new ThemeElement(new RGB(71, 113, 134), new RGB(192, 192, 192)));

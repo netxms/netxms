@@ -3098,7 +3098,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("Status::UNKNOWN", STATUS_UNKNOWN);
       NXSL_ENV_CONSTANT("Status::UNMANAGED", STATUS_UNMANAGED);
       NXSL_ENV_CONSTANT("Status::DISABLED", STATUS_DISABLED);
-      NXSL_ENV_CONSTANT("Status::TESTING", STATUS_TESTING);
+      NXSL_ENV_CONSTANT("Status::TESTING", 8);  // Retained for compatibility with existing scripts only; server never produces this status
 
       // Status colors
       NXSL_ENV_CONSTANT("StatusColor::NORMAL", _T("rgb(0, 192, 0)"));
@@ -3109,7 +3109,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("StatusColor::UNKNOWN", _T("rgb(0, 0, 128)"));
       NXSL_ENV_CONSTANT("StatusColor::UNMANAGED", _T("rgb(192, 192, 192)"));
       NXSL_ENV_CONSTANT("StatusColor::DISABLED", _T("rgb(128, 64, 0)"));
-      NXSL_ENV_CONSTANT("StatusColor::TESTING", _T("rgb(255, 128, 255)"));
+      NXSL_ENV_CONSTANT("StatusColor::TESTING", _T("rgb(255, 128, 255)"));  // Retained for compatibility with existing scripts only
    }
 
    return NXSL_Environment::getConstantValue(name, vm);

@@ -60,8 +60,7 @@ static const struct
    { "Critical", "31;1" },
    { "Unknown", "90" },
    { "Unmanaged", "90" },
-   { "Disabled", "90" },
-   { "Testing", "35" }
+   { "Disabled", "90" }
 };
 
 /**

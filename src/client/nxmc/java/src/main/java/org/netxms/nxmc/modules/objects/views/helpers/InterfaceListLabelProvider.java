@@ -285,7 +285,6 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 					case Interface.OPER_STATE_DOWN:
 						return StatusDisplayInfo.getStatusTextColor((iface.getAdminState() == Interface.ADMIN_STATE_DOWN) ? ObjectStatus.DISABLED : ObjectStatus.CRITICAL);
 					case Interface.OPER_STATE_TESTING:
-						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.TESTING);
                case Interface.OPER_STATE_DORMANT:
                   return StatusDisplayInfo.getStatusTextColor(ObjectStatus.MINOR);
                case Interface.OPER_STATE_NOT_PRESENT:
@@ -298,9 +297,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 					case Interface.ADMIN_STATE_UP:
 						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.NORMAL);
 					case Interface.ADMIN_STATE_DOWN:
-						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.DISABLED);
 					case Interface.ADMIN_STATE_TESTING:
-						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.TESTING);
+						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.DISABLED);
 				}
 				return StatusDisplayInfo.getStatusTextColor(ObjectStatus.UNKNOWN);
 			default:

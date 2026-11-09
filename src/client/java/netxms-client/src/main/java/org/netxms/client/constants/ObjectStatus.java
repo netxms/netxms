@@ -35,8 +35,7 @@ public enum ObjectStatus
    CRITICAL(4),
    UNKNOWN(5),
    UNMANAGED(6),
-   DISABLED(7),
-   TESTING(8);
+   DISABLED(7);
 
    private static Logger logger = LoggerFactory.getLogger(ObjectStatus.class);
    private static Map<Integer, ObjectStatus> lookupTable = new HashMap<Integer, ObjectStatus>();

@@ -33,18 +33,18 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class StatusDisplayInfo
 {
-   private static final String[] THEME_TAGS = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
+   private static final String[] THEME_TAGS = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled" };
 
    private static I18n i18n = LocalizationHelper.getI18n(StatusDisplayInfo.class);
-	private static String[] statusText = new String[9];
-	private static ImageDescriptor[] statusImageDescriptors = new ImageDescriptor[9];
-	private static Image[] statusImages = new Image[9];
-   private static ImageDescriptor[] overlayImageDescriptors = new ImageDescriptor[9];
+	private static String[] statusText = new String[8];
+	private static ImageDescriptor[] statusImageDescriptors = new ImageDescriptor[8];
+	private static Image[] statusImages = new Image[8];
+   private static ImageDescriptor[] overlayImageDescriptors = new ImageDescriptor[8];
    private static ColorCache colorCache;
-   private static Color[] statusFillColor = new Color[9];
-   private static Color[] statusBackgroundColor = new Color[9];
-   private static Color[] statusTextColor = new Color[9];
-   private static Color[] statusFillTextColor = new Color[9];
+   private static Color[] statusFillColor = new Color[8];
+   private static Color[] statusBackgroundColor = new Color[8];
+   private static Color[] statusTextColor = new Color[8];
+   private static Color[] statusFillTextColor = new Color[8];
 
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
@@ -59,7 +59,6 @@ public final class StatusDisplayInfo
       statusText[ObjectStatus.UNKNOWN.getValue()] = i18n.tr("Unknown");
       statusText[ObjectStatus.UNMANAGED.getValue()] = i18n.tr("Unmanaged");
       statusText[ObjectStatus.DISABLED.getValue()] = i18n.tr("Disabled");
-      statusText[ObjectStatus.TESTING.getValue()] = i18n.tr("Testing");
 
       statusImageDescriptors[ObjectStatus.NORMAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/normal.png");
       statusImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/warning.png");
@@ -69,7 +68,6 @@ public final class StatusDisplayInfo
       statusImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/unknown.png");
       statusImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/unmanaged.png");
       statusImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/disabled.png");
-      statusImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/testing.png");
 
 		for(int i = 0; i < statusImageDescriptors.length; i++)
 			statusImages[i] = statusImageDescriptors[i].createImage();
@@ -81,7 +79,6 @@ public final class StatusDisplayInfo
 		overlayImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unknown.gif");
 		overlayImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unmanaged.gif");
 		overlayImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/disabled.gif");
-		overlayImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/testing.png");
 		
 		colorCache = new ColorCache();
 		updateStatusColors();

@@ -34,18 +34,18 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class StatusDisplayInfo
 {
-   private static final String[] THEME_TAGS = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
+   private static final String[] THEME_TAGS = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled" };
 
    private I18n i18n = LocalizationHelper.getI18n(StatusDisplayInfo.class);
-   private String[] statusText = new String[9];
-   private ImageDescriptor[] statusImageDescriptors = new ImageDescriptor[9];
-   private Image[] statusImages = new Image[9];
-   private ImageDescriptor[] overlayImageDescriptors = new ImageDescriptor[9];
+   private String[] statusText = new String[8];
+   private ImageDescriptor[] statusImageDescriptors = new ImageDescriptor[8];
+   private Image[] statusImages = new Image[8];
+   private ImageDescriptor[] overlayImageDescriptors = new ImageDescriptor[8];
    private ColorCache colorCache;
-   private Color[] statusFillColor = new Color[9];
-   private Color[] statusBackgroundColor = new Color[9];
-   private Color[] statusTextColor = new Color[9];
-   private Color[] statusFillTextColor = new Color[9];
+   private Color[] statusFillColor = new Color[8];
+   private Color[] statusBackgroundColor = new Color[8];
+   private Color[] statusTextColor = new Color[8];
+   private Color[] statusFillTextColor = new Color[8];
 
 	/**
     * Initialize static members. Intended to be called once by library activator.
@@ -64,7 +64,6 @@ public final class StatusDisplayInfo
       instance.statusText[ObjectStatus.UNKNOWN.getValue()] = instance.i18n.tr("Unknown");
       instance.statusText[ObjectStatus.UNMANAGED.getValue()] = instance.i18n.tr("Unmanaged");
       instance.statusText[ObjectStatus.DISABLED.getValue()] = instance.i18n.tr("Disabled");
-      instance.statusText[ObjectStatus.TESTING.getValue()] = instance.i18n.tr("Testing");
 
       instance.statusImageDescriptors[ObjectStatus.NORMAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/normal.png");
       instance.statusImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/warning.png");
@@ -74,7 +73,6 @@ public final class StatusDisplayInfo
       instance.statusImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/unknown.png");
       instance.statusImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/unmanaged.png");
       instance.statusImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/disabled.png");
-      instance.statusImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/testing.png");
 
       for(int i = 0; i < instance.statusImageDescriptors.length; i++)
          instance.statusImages[i] = instance.statusImageDescriptors[i].createImage(display);
@@ -86,7 +84,6 @@ public final class StatusDisplayInfo
       instance.overlayImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unknown.gif");
       instance.overlayImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unmanaged.gif");
       instance.overlayImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/disabled.gif");
-      instance.overlayImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/testing.png");
 
       instance.colorCache = new ColorCache();
       instance.updateStatusColors();

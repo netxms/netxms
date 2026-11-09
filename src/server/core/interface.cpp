@@ -913,8 +913,6 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 					newStatus = (expectedState == IF_EXPECTED_STATE_UP) ? STATUS_CRITICAL : STATUS_NORMAL;
 					break;
 				case IF_OPER_STATE_TESTING:
-					newStatus = STATUS_TESTING;
-					break;
 				case IF_OPER_STATE_DORMANT:
                newStatus = (expectedState == IF_EXPECTED_STATE_UP) ? STATUS_MINOR : STATUS_NORMAL;
                break;
@@ -936,7 +934,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 			newStatus = STATUS_DISABLED;
 			break;
 		case IF_ADMIN_STATE_TESTING:
-			newStatus = STATUS_TESTING;
+			newStatus = STATUS_DISABLED;
 			break;
 		default:
 			newStatus = STATUS_UNKNOWN;

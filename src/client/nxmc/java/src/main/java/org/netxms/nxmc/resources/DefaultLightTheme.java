@@ -118,8 +118,6 @@ public class DefaultLightTheme extends Theme
       elements.put("Status.Unmanaged.Fill", new ThemeElement(new RGB(148, 163, 184), new RGB(28, 25, 23)));
       elements.put("Status.Disabled", new ThemeElement(new RGB(226, 232, 240), new RGB(148, 163, 184)));
       elements.put("Status.Disabled.Fill", new ThemeElement(new RGB(203, 213, 225), new RGB(28, 25, 23)));
-      elements.put("Status.Testing", new ThemeElement(new RGB(243, 232, 255), new RGB(107, 33, 168)));
-      elements.put("Status.Testing.Fill", new ThemeElement(new RGB(168, 85, 247), new RGB(255, 255, 255)));
       elements.put("TextInput.Error", new ThemeElement(new RGB(255, 0, 0), null));
       elements.put("Window.Header", new ThemeElement(new RGB(17, 60, 81), new RGB(224, 224, 224), "Metropolis Medium,Segoe UI,Liberation Sans,.AppleSystemUIFont,Verdana,Helvetica", 13));
       elements.put("Window.Header.Highlight", new ThemeElement(new RGB(0, 72, 104), new RGB(224, 224, 224)));

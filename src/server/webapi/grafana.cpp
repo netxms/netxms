@@ -32,8 +32,7 @@ static const char *s_severityNames[] =
    "Critical",
    "Unknown",
    "Unmanaged",
-   "Disabled",
-   "Testing"
+   "Disabled"
 };
 
 static const char *s_stateNames[] =

@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.7 to 71.8
+ */
+static bool H_UpgradeFromV7()
+{
+   // Object status TESTING (8) is no longer produced by the server; convert any stored value to UNKNOWN
+   CHK_EXEC(SQLQuery(L"UPDATE object_properties SET status=5 WHERE status=8"));
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 71.6 to 71.7
  */
 static bool H_UpgradeFromV6()
@@ -195,6 +206,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  71, 8,  H_UpgradeFromV7  },
    { 6,  71, 7,  H_UpgradeFromV6  },
    { 5,  71, 6,  H_UpgradeFromV5  },
    { 4,  71, 5,  H_UpgradeFromV4  },
