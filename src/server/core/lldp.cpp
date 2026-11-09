@@ -248,7 +248,7 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idSubType,
          node->getName(), node->getId(), port.portNumber, port.ifDescr, port.ifIndex);
       if (port.ifIndex != 0)
          ifc = node->findInterfaceByIndex(port.ifIndex);
-      if ((ifc == nullptr) && node->isBridge() && !node->getDriver()->isLldpRemTableUsingIfIndex(node, node->getDriverData()))
+      if ((ifc == nullptr) && node->isBridge() && !node->isLldpRemTableUsingIfIndex())
          ifc = node->findBridgePort(port.portNumber);
       if (ifc == nullptr)  // unable to find interface by bridge port number or device is not a bridge
          ifc = node->findInterfaceByIndex(port.portNumber);
@@ -303,13 +303,13 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idSubType,
 			if (ifc == nullptr)
 			{
 			   // Attempt to get alternative interface identification from driver
-			   NetworkDeviceDriver *driver = node->getDriver();
-			   if (driver != nullptr)
+			   auto driver = node->getDriverWithData();
+			   if (driver.first != nullptr)
 			   {
 			      SNMP_Transport *snmp = node->createSnmpTransport();
 			      InterfaceId iid;
 			      NodeDeviceContext context(node->self(), snmp);
-			      if ((snmp != nullptr) && driver->lldpNameToInterfaceId(&context, node, node->getDriverData(), ifName, &iid))
+			      if ((snmp != nullptr) && driver.first->lldpNameToInterfaceId(&context, node, driver.second.get(), ifName, &iid))
 			      {
 			         switch(iid.type)
 			         {
@@ -635,7 +635,7 @@ static uint32_t FindLocalInterfaceIndex(Node *node, const SNMP_ObjectId& oid, bo
    // In that case do not attempt local port search by interface index or bridge port number.
    if (localPort == 0)
       localPort = lldpMibVersion2 ? oid.getElement(14) : oid.getElement(oid.length() - 2);
-   bool doRemoteLookup = (localPort == 0) || !node->getDriver()->isValidLldpRemLocalPortNum(node, node->getDriverData());
+   bool doRemoteLookup = (localPort == 0) || !node->isValidLldpRemLocalPortNum();
 
    nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindLocalInterfaceIndex(%s [%u], %s): localPort=%u doRemoteLookup=%s"),
          node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), localPort, BooleanToString(doRemoteLookup));
@@ -672,7 +672,7 @@ static uint32_t FindLocalInterfaceIndex(Node *node, const SNMP_ObjectId& oid, bo
          //         IEEE 802.1D or an IEEE 802.1Q bridge, the LldpPortNumber
          //         will have the same value as the corresponding interface's
          //         InterfaceIndex object.
-         if (node->isBridge() && !node->getDriver()->isLldpRemTableUsingIfIndex(node, node->getDriverData()))
+         if (node->isBridge() && !node->isLldpRemTableUsingIfIndex())
          {
             shared_ptr<Interface> localIf = node->findBridgePort(localPort);
             if (localIf != nullptr)

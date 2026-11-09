@@ -4393,7 +4393,7 @@ protected:
    TCHAR *m_lldpNodeId;         // lldpLocChassisId combined with lldpLocChassisIdSubtype, or nullptr for non-LLDP nodes
    ObjectArray<LLDP_LOCAL_PORT_INFO> *m_lldpLocalPortInfo;
    NetworkDeviceDriver *m_driver;
-   DriverData *m_driverData;
+   shared_ptr<DriverData> m_driverData;   // Replaced together with m_driver under properties lock
    ObjectArray<AgentParameterDefinition> *m_agentParameters; // List of metrics supported by agent
    ObjectArray<AgentTableDefinition> *m_agentTables; // List of supported tables
    ObjectArray<AgentListDefinition> *m_agentLists; // List of supported lists
@@ -4735,7 +4735,8 @@ public:
    bool isLLDPV2MIBSupported() const { return is_bit_set(m_capabilities, NC_LLDP_V2_MIB); }
    bool isAgentLLDPSupported() const { return is_bit_set(m_capabilities, NC_HAS_AGENT_LLDP); }
    bool isLocalManagement() const { return is_bit_set(m_capabilities, NC_IS_LOCAL_MGMT); }
-   bool isFdbUsingIfIndex() const { return m_driver->isFdbUsingIfIndex(this, m_driverData); }
+   bool isLldpRemTableUsingIfIndex() const { auto d = getDriverWithData(); return d.first->isLldpRemTableUsingIfIndex(this, d.second.get()); }
+   bool isValidLldpRemLocalPortNum() const { auto d = getDriverWithData(); return d.first->isValidLldpRemLocalPortNum(this, d.second.get()); }
    bool isWirelessController() const { return is_bit_set(m_capabilities, NC_IS_WIFI_CONTROLLER); }
    bool isWirelessAccessPoint() const { return is_bit_set(m_capabilities, NC_IS_WIFI_AP); }
    bool isNewPolicyTypeFormatSupported() const { return is_bit_set(m_capabilities, NC_IS_NEW_POLICY_TYPES); }
@@ -5062,8 +5063,17 @@ public:
    void updateIcmpStatisticPeriod(uint32_t period);
 
    NetworkDeviceDriver *getDriver() const { return m_driver; }
-   DriverData *getDriverData() const { return m_driverData; }
-   void setDriverData(DriverData *data) { m_driverData = data; }
+   /**
+    * Get network device driver together with its data in one consistent read. Callers outside of node's
+    * poller lock must use this method, as configuration poll can replace both at any time.
+    */
+   std::pair<NetworkDeviceDriver*, shared_ptr<DriverData>> getDriverWithData() const
+   {
+      lockProperties();
+      std::pair<NetworkDeviceDriver*, shared_ptr<DriverData>> result(m_driver, m_driverData);
+      unlockProperties();
+      return result;
+   }
    const char *getAgentAIToolsSchema() const { return m_agentAIToolsSchema; }
    bool hasAgentAITools() const { return m_agentAIToolsSchema != nullptr; }
 

@@ -1285,7 +1285,8 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 	bool modified = false;
 
 	NodeDeviceContext context(node->self(), transport);
-	node->getDriver()->get8021xPortState(&context, node, node->getDriverData(), m_index, &paeState, &backendState);
+	auto driver = node->getDriverWithData();
+	driver.first->get8021xPortState(&context, node, driver.second.get(), m_index, &paeState, &backendState);
 
 	if (m_dot1xPaeAuthState != static_cast<int16_t>(paeState))
 	{
