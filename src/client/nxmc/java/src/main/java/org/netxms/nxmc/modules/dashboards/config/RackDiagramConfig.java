@@ -33,6 +33,9 @@ public class RackDiagramConfig extends DashboardElementConfig
    @Element(required = false)
    private RackDisplayMode view = RackDisplayMode.FULL; // Named "view" to maintain compatibility with older versions
 
+   @Element(required = false)
+   private boolean fitToView = false;
+
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
     */
@@ -86,5 +89,25 @@ public class RackDiagramConfig extends DashboardElementConfig
    public void setDisplayMode(RackDisplayMode view)
    {
       this.view = view;
+   }
+
+   /**
+    * Check if rack should always be scaled down to fit into element area instead of keeping minimal readable size.
+    *
+    * @return true if rack should always fit into element area
+    */
+   public boolean isFitToView()
+   {
+      return fitToView;
+   }
+
+   /**
+    * Set if rack should always be scaled down to fit into element area.
+    *
+    * @param fitToView true if rack should always fit into element area
+    */
+   public void setFitToView(boolean fitToView)
+   {
+      this.fitToView = fitToView;
    }
 }

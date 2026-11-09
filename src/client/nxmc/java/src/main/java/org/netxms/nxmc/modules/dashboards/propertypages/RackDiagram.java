@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.dashboards.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -52,6 +53,7 @@ public class RackDiagram extends DashboardElementPropertyPage
    private ObjectSelector objectSelector;
    private TitleConfigurator title;
    private Combo displayMode;
+   private Button checkFitToView;
 
    /**
     * Create page.
@@ -60,7 +62,7 @@ public class RackDiagram extends DashboardElementPropertyPage
     */
    public RackDiagram(DashboardElementConfig elementConfig)
    {
-      super(LocalizationHelper.getI18n(RackDiagram.class).tr("Alarm Viewer"), elementConfig);
+      super(LocalizationHelper.getI18n(RackDiagram.class).tr("Rack Diagram"), elementConfig);
    }
 
    /**
@@ -69,7 +71,7 @@ public class RackDiagram extends DashboardElementPropertyPage
    @Override
    public String getId()
    {
-      return "alarm-viewer";
+      return "rack-diagram";
    }
 
    /**
@@ -130,6 +132,14 @@ public class RackDiagram extends DashboardElementPropertyPage
       displayMode.setItems(RACK_DISPLAY_MODES); 
       displayMode.setText(RACK_DISPLAY_MODES[config.getDisplayMode().getValue()]);
 
+      checkFitToView = new Button(dialogArea, SWT.CHECK);
+      checkFitToView.setText(i18n.tr("Always fit to view"));
+      checkFitToView.setToolTipText(i18n.tr("Scale rack down to fit into element area instead of keeping minimal readable size and scrolling"));
+      checkFitToView.setSelection(config.isFitToView());
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      checkFitToView.setLayoutData(gd);
+
       return dialogArea;
    }
 
@@ -142,6 +152,7 @@ public class RackDiagram extends DashboardElementPropertyPage
       title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
       config.setDisplayMode(RackDisplayMode.getByValue(displayMode.getSelectionIndex()));
+      config.setFitToView(checkFitToView.getSelection());
       return true;
    }
 }

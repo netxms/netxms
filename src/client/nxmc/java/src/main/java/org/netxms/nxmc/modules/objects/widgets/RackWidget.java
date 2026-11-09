@@ -76,6 +76,8 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
    private static final int MAX_BORDER_WIDTH = 30;
    private static final int MIN_BORDER_WIDTH = 15;
    private static final int MIN_WIDTH = MIN_UNIT_WIDTH + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MIN_BORDER_WIDTH * 2 + MIN_BORDER_WIDTH / 2;
+   private static final int MIN_FIT_UNIT_HEIGHT = 2; // Minimal unit height in "fit to view" mode
+   private static final int MIN_FIT_BORDER_WIDTH = 2; // Minimal border width in "fit to view" mode
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", ".AppleSystemUIFont", "Verdana", "Arial" };
    private static final String[] SIDE_LABELS = { "Front", "Back" };
 
@@ -114,6 +116,7 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
    private Set<ElementSelectionListener> selectionListeners = new HashSet<ElementSelectionListener>(0);
    private RackOrientation side;
    private View view;
+   private boolean fitToView = false;
 
    /**
     * @param parent
@@ -194,8 +197,9 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
       double unitHeight = Math.min((double)rect.height / (double)rack.getHeight(), FULL_UNIT_HEIGHT);
       int unitWidth = (int)(unitHeight * UNIT_WH_RATIO);
       int borderWidth = unitWidth / BORDER_WIDTH_RATIO;
-      if (borderWidth < MIN_BORDER_WIDTH)
-         borderWidth = MIN_BORDER_WIDTH;
+      final int minBorderWidth = fitToView ? MIN_FIT_BORDER_WIDTH : MIN_BORDER_WIDTH;
+      if (borderWidth < minBorderWidth)
+         borderWidth = minBorderWidth;
       else if (borderWidth > MAX_BORDER_WIDTH)
          borderWidth = MAX_BORDER_WIDTH;
       rect.height -= borderWidth + borderWidth / 2;
@@ -244,6 +248,7 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
       // Draw unit numbers
       int[] unitBaselines = new int[rack.getHeight() + 1];
       gc.setFont(WidgetHelper.getBestFittingFont(gc, labelFonts, "00", UNIT_NUMBER_WIDTH, (int)unitHeight - 2)); //$NON-NLS-1$
+      boolean drawUnitNumbers = gc.textExtent("00").y <= (int)unitHeight; // Units can be too small for numbers in "fit to view" mode //$NON-NLS-1$
       gc.setForeground(ThemeEngine.getForegroundColor("Rack"));
       gc.setBackground(ThemeEngine.getBackgroundColor("Rack"));
       gc.setLineWidth(1);
@@ -253,10 +258,13 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
       for(int u = 1; u <= rack.getHeight(); u++)
       {
          int y = (int)dy;
-         gc.drawLine(MARGIN_WIDTH, y, UNIT_NUMBER_WIDTH, y);
-         String label = Integer.toString(u);
-         Point textExtent = gc.textExtent(label);
-         gc.drawText(label, UNIT_NUMBER_WIDTH - textExtent.x, y - (int)unitHeight / 2 - textExtent.y / 2);
+         if (drawUnitNumbers)
+         {
+            gc.drawLine(MARGIN_WIDTH, y, UNIT_NUMBER_WIDTH, y);
+            String label = Integer.toString(u);
+            Point textExtent = gc.textExtent(label);
+            gc.drawText(label, UNIT_NUMBER_WIDTH - textExtent.x, y - (int)unitHeight / 2 - textExtent.y / 2);
+         }
          if (rack.isTopBottomNumbering())
          {
             unitBaselines[u] = y;
@@ -476,38 +484,19 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
          return idealSize;
 
       if (hHint == SWT.DEFAULT)
-      {
-         if (wHint >= idealSize.x)
-            return idealSize;
+         return (wHint >= idealSize.x) ? idealSize : computeSizeForWidth(wHint);
 
-         // Roughly estimate unit width
-         int unitWidth = wHint - (MAX_BORDER_WIDTH * 2 + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MAX_BORDER_WIDTH / 2);
-         if (unitWidth < MIN_UNIT_WIDTH)
-         {
-            unitWidth = MIN_UNIT_WIDTH;
-            wHint = MIN_UNIT_WIDTH + MIN_BORDER_WIDTH * 2 + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MIN_BORDER_WIDTH / 2;
-         }
-
-         double unitHeight = (double)unitWidth / UNIT_WH_RATIO;
-         unitWidth = (int)(unitHeight * UNIT_WH_RATIO);
-         int borderWidth = unitWidth / BORDER_WIDTH_RATIO;
-         if (borderWidth < MIN_BORDER_WIDTH)
-            borderWidth = MIN_BORDER_WIDTH;
-
-         unitWidth = (int)((double)(hHint - ((borderWidth + 1) / 2) * 2 - MARGIN_HEIGHT * 2) / (double)rack.getHeight() * UNIT_WH_RATIO);
-
-         return new Point(unitWidth + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2 + borderWidth / 2,
-               (int)(rack.getHeight() * unitHeight) + MARGIN_HEIGHT * 2 + borderWidth * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT);
-      }
+      final int minUnitHeight = fitToView ? MIN_FIT_UNIT_HEIGHT : MIN_UNIT_HEIGHT;
+      final int minBorderWidth = fitToView ? MIN_FIT_BORDER_WIDTH : MIN_BORDER_WIDTH;
 
       double unitHeight = (double)(hHint - MAX_BORDER_WIDTH * 2 - MARGIN_HEIGHT * 2 - MARGIN_HEIGHT / 2 - TITLE_HEIGHT) / (double)rack.getHeight();
-      if (unitHeight <= MIN_UNIT_HEIGHT) // correct unit height
-         unitHeight = (double)(hHint - MIN_BORDER_WIDTH * 2 - MARGIN_HEIGHT * 2 - MARGIN_HEIGHT / 2 - TITLE_HEIGHT) / (double)rack.getHeight();
-      if (unitHeight < MIN_UNIT_HEIGHT)
+      if (unitHeight <= minUnitHeight) // correct unit height
+         unitHeight = (double)(hHint - minBorderWidth * 2 - MARGIN_HEIGHT * 2 - MARGIN_HEIGHT / 2 - TITLE_HEIGHT) / (double)rack.getHeight();
+      if (unitHeight < minUnitHeight)
       {
-         int extraH = MARGIN_HEIGHT * 2 + MIN_BORDER_WIDTH * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT;
-         hHint = rack.getHeight() * MIN_UNIT_HEIGHT + extraH;
-         unitHeight = MIN_UNIT_HEIGHT;
+         int extraH = MARGIN_HEIGHT * 2 + minBorderWidth * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT;
+         hHint = rack.getHeight() * minUnitHeight + extraH;
+         unitHeight = minUnitHeight;
       }
       else if (unitHeight > FULL_UNIT_HEIGHT)
       {
@@ -518,8 +507,8 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
 
       int unitWidth = (int)(unitHeight * UNIT_WH_RATIO);
       int borderWidth = unitWidth / BORDER_WIDTH_RATIO;
-      if (borderWidth < MIN_BORDER_WIDTH)
-         borderWidth = MIN_BORDER_WIDTH;
+      if (borderWidth < minBorderWidth)
+         borderWidth = minBorderWidth;
       else if (borderWidth > MAX_BORDER_WIDTH)
          borderWidth = MAX_BORDER_WIDTH;
 
@@ -529,7 +518,52 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
       if ((wHint == SWT.DEFAULT) || (width <= wHint))
          return new Point(width, hHint);
 
+      if (fitToView)
+      {
+         // Width is the limiting dimension - scale rack down to fit by width
+         Point size = computeSizeForWidth(wHint);
+         return new Point(size.x, Math.min(size.y, hHint));
+      }
+
       return new Point(Math.max(MIN_WIDTH, wHint), hHint);
+   }
+
+   /**
+    * Compute widget size for given width (height is derived from width keeping rack proportions).
+    *
+    * @param wHint width hint
+    * @return widget size
+    */
+   private Point computeSizeForWidth(int wHint)
+   {
+      final int minUnitWidth = fitToView ? (int)(MIN_FIT_UNIT_HEIGHT * UNIT_WH_RATIO) : MIN_UNIT_WIDTH;
+      final int minBorderWidth = fitToView ? MIN_FIT_BORDER_WIDTH : MIN_BORDER_WIDTH;
+
+      // Roughly estimate unit width assuming widest border, then adjust border to actual unit width
+      int unitWidth = wHint - (MAX_BORDER_WIDTH * 2 + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + MAX_BORDER_WIDTH / 2);
+      int borderWidth = Math.max(minBorderWidth, Math.min(MAX_BORDER_WIDTH, unitWidth / BORDER_WIDTH_RATIO));
+      unitWidth = wHint - (borderWidth * 2 + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth / 2);
+      if (unitWidth < minUnitWidth)
+      {
+         unitWidth = minUnitWidth;
+         borderWidth = minBorderWidth;
+         wHint = unitWidth + borderWidth * 2 + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth / 2;
+      }
+
+      double unitHeight = (double)unitWidth / UNIT_WH_RATIO;
+      return new Point(wHint, (int)(rack.getHeight() * unitHeight) + MARGIN_HEIGHT * 2 + borderWidth * 2 + MARGIN_HEIGHT / 2 + TITLE_HEIGHT);
+   }
+
+   /**
+    * Set "fit to view" mode. In this mode widget does not enforce minimal readable size and is scaled down to fit into size
+    * provided by parent.
+    *
+    * @param fitToView true to enable "fit to view" mode
+    */
+   public void setFitToView(boolean fitToView)
+   {
+      this.fitToView = fitToView;
+      redraw();
    }
 
    /**

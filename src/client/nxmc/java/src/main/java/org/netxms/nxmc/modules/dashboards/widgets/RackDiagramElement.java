@@ -154,9 +154,15 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
          });
 
          if (config.getDisplayMode() == RackDisplayMode.FULL || config.getDisplayMode() == RackDisplayMode.FRONT)
-            setRackFrontWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT, view));
+         {
+            rackFrontWidget = new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT, view);
+            rackFrontWidget.setFitToView(config.isFitToView());
+         }
          if (((config.getDisplayMode() == RackDisplayMode.FULL) && !rack.isFrontSideOnly()) || config.getDisplayMode() == RackDisplayMode.BACK)
-            setRackRearWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR, view));
+         {
+            rackRearWidget = new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR, view);
+            rackRearWidget.setFitToView(config.isFitToView());
+         }
 
          scroller.setContent(rackArea);
          scroller.setExpandHorizontal(true);
