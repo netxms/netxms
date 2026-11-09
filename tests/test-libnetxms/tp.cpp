@@ -169,11 +169,11 @@ void TestThreadPoolDiscardedRequests()
    auto counter = make_shared<int>(0);
    ThreadPoolScheduleRelative(p, 3600000, NeverExecutedTask, counter);
    ThreadPoolScheduleAbsolute(p, time(nullptr) + 3600, NeverExecutedTask, counter);
-   AssertEquals(counter.use_count(), 3L);
+   AssertEquals(static_cast<int32_t>(counter.use_count()), 3);
 
    ThreadPoolDestroy(p);
    AssertEquals(*counter, 0);
-   AssertEquals(counter.use_count(), 1L);   // Wrapper data released without executing the task
+   AssertEquals(static_cast<int32_t>(counter.use_count()), 1);   // Wrapper data released without executing the task
 
    EndTest();
 }
@@ -191,7 +191,7 @@ static void CountAndMaxWaitThread(void *arg)
 void TestThreadCountAndMaxWaitTime()
 {
    StartTest(_T("Thread pool - serialized count and max wait time"));
-   ThreadPool *threadPool = ThreadPoolCreate(_T("MAIN"), 8, 256);    
+   ThreadPool *threadPool = ThreadPoolCreate(_T("MAIN"), 8, 256);
 
    s_waitTimeTestLock1.lock();
    s_waitTimeTestLock2.lock();
@@ -205,7 +205,7 @@ void TestThreadCountAndMaxWaitTime()
 
    AssertEquals(ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test1")), 2);
    AssertEquals(ThreadPoolGetSerializedRequestCount(threadPool,  _T("Test2")), 0);
-   
+
    s_waitTimeTestLock1.unlock();
    ThreadSleepMs(100);
    AssertTrue(ThreadPoolGetSerializedRequestMaxWaitTime(threadPool,  _T("Test1")) >= 140);
