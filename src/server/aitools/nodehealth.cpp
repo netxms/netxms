@@ -163,9 +163,9 @@ static bool IsIgnoredFileSystemType(const wchar_t *fsType)
 static void EvaluateDiskUsage(Findings *findings, const char *name, double usedPerc, uint64_t freeBytes)
 {
    if (usedPerc >= 95)
-      findings->add("critical", "disks", "%s %.1f%% used (%" PRIu64 " MB available)", name, usedPerc, freeBytes / _ULL(1048576));
+      findings->add("critical", "disks", "%s %.1f%% used (" UINT64_FMTA " MB available)", name, usedPerc, freeBytes / _ULL(1048576));
    else if (usedPerc >= 90)
-      findings->add("warning", "disks", "%s %.1f%% used (%" PRIu64 " MB available)", name, usedPerc, freeBytes / _ULL(1048576));
+      findings->add("warning", "disks", "%s %.1f%% used (" UINT64_FMTA " MB available)", name, usedPerc, freeBytes / _ULL(1048576));
 }
 
 /**
@@ -365,7 +365,7 @@ static json_t *BuildInterfaceSection(const std::vector<SampledInterface>& interf
       if (hasErrors || hasDrops)
       {
          // Dropped packets alone are common on busy interfaces (unknown protocols, tagged frames, etc.), so they are only informational
-         findings->add(hasErrors ? "warning" : "info", "interfaces", "interface %s: %" PRIu64 " input errors, %" PRIu64 " output errors, %" PRIu64 " input drops, %" PRIu64 " output drops during %d s sample",
+         findings->add(hasErrors ? "warning" : "info", "interfaces", "interface %s: " UINT64_FMTA " input errors, " UINT64_FMTA " output errors, " UINT64_FMTA " input drops, " UINT64_FMTA " output drops during %d s sample",
             name, deltas[0], deltas[1], deltas[2], deltas[3], static_cast<int>(elapsed / 1000));
       }
 

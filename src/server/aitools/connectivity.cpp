@@ -409,7 +409,7 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
    char inputText[256];
    if (json_is_integer(targetArg))
    {
-      snprintf(inputText, sizeof(inputText), "%" PRId64, static_cast<int64_t>(json_integer_value(targetArg)));
+      snprintf(inputText, sizeof(inputText), INT64_FMTA, static_cast<int64_t>(json_integer_value(targetArg)));
       targetObject = FindObjectById(static_cast<uint32_t>(json_integer_value(targetArg)));
       if (targetObject == nullptr)
          return std::string("Target object not found");
