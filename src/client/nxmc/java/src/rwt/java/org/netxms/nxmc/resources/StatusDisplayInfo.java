@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.ColorCache;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -65,25 +66,17 @@ public final class StatusDisplayInfo
       instance.statusText[ObjectStatus.UNMANAGED.getValue()] = instance.i18n.tr("Unmanaged");
       instance.statusText[ObjectStatus.DISABLED.getValue()] = instance.i18n.tr("Disabled");
 
-      instance.statusImageDescriptors[ObjectStatus.NORMAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/normal.png");
-      instance.statusImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/warning.png");
-      instance.statusImageDescriptors[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/minor.png");
-      instance.statusImageDescriptors[ObjectStatus.MAJOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/major.png");
-      instance.statusImageDescriptors[ObjectStatus.CRITICAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/critical.png");
-      instance.statusImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/unknown.png");
-      instance.statusImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/unmanaged.png");
-      instance.statusImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/disabled.png");
+      String basePath = WidgetHelper.isSystemDarkTheme(display) ? "icons/status/dark/" : "icons/status/light/";
+      for(int i = 0; i < THEME_TAGS.length; i++)
+      {
+         String name = THEME_TAGS[i].toLowerCase();
+         instance.statusImageDescriptors[i] = ResourceManager.getImageDescriptor(basePath + name + ".png");
+         if (i != ObjectStatus.NORMAL.getValue())
+            instance.overlayImageDescriptors[i] = ResourceManager.getImageDescriptor(basePath + "overlay/" + name + ".png");
+      }
 
       for(int i = 0; i < instance.statusImageDescriptors.length; i++)
          instance.statusImages[i] = instance.statusImageDescriptors[i].createImage(display);
-
-      instance.overlayImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/warning.png");
-      instance.overlayImageDescriptors[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/minor.png");
-      instance.overlayImageDescriptors[ObjectStatus.MAJOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/major.png");
-      instance.overlayImageDescriptors[ObjectStatus.CRITICAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/critical.png");
-      instance.overlayImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unknown.gif");
-      instance.overlayImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unmanaged.gif");
-      instance.overlayImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/disabled.gif");
 
       instance.colorCache = new ColorCache();
       instance.updateStatusColors();
