@@ -127,11 +127,21 @@ std::string F_ExecuteAgentTool(json_t *arguments, uint32_t userId)
 
    if (rcc != ERR_SUCCESS)
    {
-      json_t *error = json_object();
-      json_object_set_new(error, "error", json_string("Tool execution failed"));
-      json_object_set_new(error, "error_code", json_integer(rcc));
+      // "Error:" prefix marks the result as failed for MCP clients; agent output carries the tool's own error details
+      char errorText[256];
+      size_t bytes = wchar_to_utf8(AgentErrorCodeToText(rcc), -1, errorText, sizeof(errorText) - 1);
+      errorText[bytes] = 0;
+
+      char prefix[384];
+      snprintf(prefix, sizeof(prefix), "Error: agent tool execution failed (agent error %u: %s)", rcc, errorText);
+      std::string response(prefix);
+      if ((result != nullptr) && (result[0] != 0))
+      {
+         response.append("\n");
+         response.append(result);
+      }
       MemFree(result);
-      return JsonToString(error);
+      return response;
    }
 
    std::string response = (result != nullptr) ? result : "{}";
