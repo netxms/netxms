@@ -199,6 +199,7 @@ Source: "..\..\..\out\x64\Release\bin\symbol-ws.ndd"; DestDir: "{app}\lib\ndd"; 
 Source: "..\..\..\out\x64\Release\bin\tb.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\tplink.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\ubnt.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\unix.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\westerstrand.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\zyxel.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 ; Fan-out drivers

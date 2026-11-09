@@ -76,7 +76,7 @@ bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t
    StructArray<SSHCredentials> credentials = GetSSHCredentials(zoneUIN);
 
    bool success = false;
-   for (int i = 0; i < ports.size(); i++)
+   for (int i = 0; (i < ports.size()) && !success; i++)
    {
       uint16_t port = ports.get(i);
       for (int j = 0; j < credentials.size(); j++)

@@ -59,17 +59,13 @@ bool LinkLayerNeighbors::isDuplicate(const LL_NEIGHBOR_INFO& info)
  */
 static bool AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
 {
-   if (!node->isSNMPSupported())
+   NodeDeviceContext context(node->self());
+   auto driver = node->getUsableDriverWithData(&context);
+   if (driver.first == nullptr)
       return true;
 
-   SNMP_Transport *snmp = node->createSnmpTransport();
-   if (snmp == nullptr)
-      return true;
-
-   auto driver = node->getDriverWithData();
    nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("Collecting topology information from driver %s for node %s [%u]"), driver.first->getName(), node->getName(), node->getId());
    bool ignoreStandardMibs = false;
-   NodeDeviceContext context(node->self(), snmp);
    ObjectArray<LinkLayerNeighborInfo> *neighbors = driver.first->getLinkLayerNeighbors(&context, driver.second.get(), &ignoreStandardMibs);
    if (neighbors != nullptr)
    {
@@ -140,7 +136,6 @@ static bool AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
    {
       nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("Driver for node %s [%u] cannot provide link layer topology information"), node->getName(), node->getId());
    }
-   delete snmp;
    return !ignoreStandardMibs;
 }
 

@@ -11,7 +11,7 @@
 DRIVERS = arista at avaya bdcom bulat cambium cisco dell dlink edgecore eltex \
 	etherwan extreme fortinet hirschmann hpe huawei ignitenet juniper \
 	lenovo mds mellanox mikrotik moxa net-snmp netonix origo ping3 planet qtech \
-	rittal saf siemens symbol-ws tb tplink ubnt westerstrand zyxel
+	rittal saf siemens symbol-ws tb tplink ubnt unix westerstrand zyxel
 
 SUBDIRS = $(DRIVERS)
 
@@ -20,7 +20,7 @@ pkglib_LTLIBRARIES = arista.la at.la avaya.la bdcom.la bulat.la cambium.la cisco
 	fortinet.la hirschmann.la hpe.la huawei.la ignitenet.la juniper.la \
 	lenovo.la mds.la mellanox.la mikrotik.la moxa.la net-snmp.la netonix.la origo.la \
 	ping3.la planet.la qtech.la rittal.la saf.la siemens.la symbol-ws.la \
-	tb.la tplink.la ubnt.la westerstrand.la zyxel.la
+	tb.la tplink.la ubnt.la unix.la westerstrand.la zyxel.la
 
 arista_la_SOURCES = arista/arista.cpp arista/eos.cpp
 arista_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
@@ -279,6 +279,13 @@ ubnt_la_SOURCES = ubnt/airmax.cpp ubnt/edgeswitch.cpp ubnt/ubnt.cpp
 ubnt_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 ubnt_la_LDFLAGS = -module -avoid-version
 ubnt_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
+
+unix_la_SOURCES = unix/bsd.cpp unix/linux.cpp unix/unix.cpp
+unix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+unix_la_LDFLAGS = -module -avoid-version
+unix_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 

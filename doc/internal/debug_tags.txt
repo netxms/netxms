@@ -191,6 +191,7 @@ ndd.moxa.edr    MOXA-EDR network device driver
 ndd.net-snmp	net-snmp network device driver
 ndd.qtech	Qtech network device driver
 ndd.saf		SAF network device driver
+ndd.unix	UNIX-like systems (SSH) network device drivers
 ndd.westerstrand        Westerstrand network device driver
 
 netconf		NETCONF subagent and protocol support library

@@ -308,6 +308,10 @@ uint32_t NetworkDeviceDriver::getSupportedTransports() const
  * works with any transport set and does its own availability checks. Must be a
  * subset of getSupportedTransports(). Default implementation requires SNMP.
  *
+ * Availability of SSH interactive channel is detected with SSH hints of the driver
+ * currently bound to the node, so a driver that should be selected for devices
+ * without SNMP should not require it (it can still declare it as supported).
+ *
  * @return bit mask of NDD_TRANSPORT_* constants
  */
 uint32_t NetworkDeviceDriver::getRequiredTransports() const
@@ -327,9 +331,12 @@ const TCHAR *NetworkDeviceDriver::getCustomTestOID()
 }
 
 /**
- * Check if given device can be potentially supported by driver
+ * Check if given device can be potentially supported by driver. Called during driver selection
+ * only when SNMP is available for the device; without SNMP every driver compatible with available
+ * transports gets the same baseline priority instead. Must not perform any I/O.
  *
  * @param oid Device OID
+ * @return driver priority for this device (0 if not supported, maximum 255)
  */
 int NetworkDeviceDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 {
@@ -337,15 +344,20 @@ int NetworkDeviceDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 }
 
 /**
- * Check if given device is supported by driver
+ * Check if given device is supported by driver. Called for candidates in priority order until one
+ * confirms; all candidates share one device context. Default implementation confirms any device
+ * accessible via SNMP (SNMP drivers normally decide in isPotentialDevice()), so driver that can be
+ * selected for devices without SNMP must override this method and probe the device. Probing over SSH
+ * must use command channel only - interactive session setup depends on driver hints and cannot be
+ * shared between candidates.
  *
  * @param context device context
- * @param oid Device OID
+ * @param oid Device OID (not meaningful if SNMP is not available in context)
  * @return true if device is supported
  */
 bool NetworkDeviceDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
-	return true;
+   return context->isSNMPAvailable();
 }
 
 /**
@@ -774,6 +786,9 @@ bool NetworkDeviceDriver::getInterfaceSpeed(SNMP_Transport *snmp, uint32_t ifInd
 InterfaceList *NetworkDeviceDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+      return nullptr;
+
    bool success = false;
 
    wchar_t debugId[128];
@@ -1009,6 +1024,12 @@ void NetworkDeviceDriver::getInterfaceState(DeviceContext *context, NObject *nod
          uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+   {
+      *adminState = IF_ADMIN_STATE_UNKNOWN;
+      *operState = IF_OPER_STATE_UNKNOWN;
+      return;
+   }
    uint32_t oid[128] = { 1, 3, 6, 1, 2, 1, 2, 2, 1, 7 };
    size_t oidLen;
    if (ifTableSuffixLen > 0)
@@ -1096,7 +1117,7 @@ void NetworkDeviceDriver::getInterfaceState(DeviceContext *context, NObject *nod
 bool NetworkDeviceDriver::is8021xSupported(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
-   return CheckSNMPIntegerValue(snmp, { 1, 0, 8802, 1, 1, 1, 1, 1, 1, 0 }, 1);
+   return (snmp != nullptr) && CheckSNMPIntegerValue(snmp, { 1, 0, 8802, 1, 1, 1, 1, 1, 1, 0 }, 1);
 }
 
 /**
@@ -1117,6 +1138,8 @@ void NetworkDeviceDriver::get8021xPortState(DeviceContext *context, NObject *nod
    SNMP_Transport *snmp = context->getSNMPTransport();
    *paeState = PAE_STATE_UNKNOWN;
    *backendState = BACKEND_STATE_UNKNOWN;
+   if (snmp == nullptr)
+      return;
 
    uint32_t oid[12] = { 1, 0, 8802, 1, 1, 1, 1, 2, 1, 1, 1, 0 };
    oid[11] = ifIndex;
@@ -1219,6 +1242,8 @@ static void ProcessVlanPortRecord(SNMP_Variable *var, VlanList *vlanList, bool t
 VlanList *NetworkDeviceDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+      return nullptr;
 	VlanList *vlanList = new VlanList();
 
    // dot1qVlanStaticName
@@ -1310,6 +1335,8 @@ void NetworkDeviceDriver::getModuleLayout(DeviceContext *context, NObject *node,
 StructArray<BridgePort> *NetworkDeviceDriver::getBridgePorts(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+      return nullptr;
    auto bports = new StructArray<BridgePort>(0, 64);
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 1, 4, 1, 2 },
       [bports] (SNMP_Variable *var) -> uint32_t
@@ -1452,6 +1479,8 @@ static uint32_t Dot1qTpFdbHandler(SNMP_Variable *var, SNMP_Transport *snmp, Stru
 StructArray<ForwardingDatabaseEntry> *NetworkDeviceDriver::getForwardingDatabase(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+      return nullptr;
    auto fdb = new StructArray<ForwardingDatabaseEntry>(64, 64);
 
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 2, 2, 1, 2 },
@@ -1765,6 +1794,8 @@ static uint32_t HandlerArpIpNetToPhysical(SNMP_Variable *var, SNMP_Transport *tr
 shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(DeviceContext *context, DriverData *driverData)
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+      return shared_ptr<ArpCache>();
    shared_ptr<ArpCache> arpCache = make_shared<ArpCache>();
 
    // Try ipNetToPhysicalTable (RFC 4293) first - supports both IPv4 and IPv6

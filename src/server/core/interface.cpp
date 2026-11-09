@@ -867,6 +867,20 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 		}
    }
 
+   if (needPoll && node->getInterfaceStateFromDriver(*this, &adminState, &operState, &speed))
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Interface::StatusPoll(%d,%s): new state from network device driver: adminState=%d operState=%d speed=" UINT64_FMT, m_id, m_name, adminState, operState, speed);
+      if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
+      {
+         sendPollerMsg(POLLER_INFO L"      Interface status retrieved from network device driver\r\n");
+         needPoll = false;
+      }
+      else
+      {
+         sendPollerMsg(POLLER_WARNING L"      Unable to retrieve interface status from network device driver\r\n");
+      }
+   }
+
    if (needPoll)
    {
       // ICMP is used only for interfaces whose addresses are known to belong to this node: pseudo-interface
@@ -1213,7 +1227,12 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 	bool modified = false;
 
 	NodeDeviceContext context(node->self(), transport);
-	auto driver = node->getDriverWithData();
+	auto driver = node->getUsableDriverWithData(&context);
+	if (driver.first == nullptr)
+	{
+	   sendPollerMsg(_T("      Device driver cannot be used with available transports, 802.1x status check skipped\r\n"));
+	   return;
+	}
 	driver.first->get8021xPortState(&context, node, driver.second.get(), m_index, &paeState, &backendState);
 
 	if (m_dot1xPaeAuthState != static_cast<int16_t>(paeState))

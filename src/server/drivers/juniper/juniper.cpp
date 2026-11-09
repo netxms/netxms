@@ -41,6 +41,15 @@ const TCHAR *JuniperDriver::getVersion()
 }
 
 /**
+ * Get transports that this driver can use. Regular methods use SNMP (which stays the only required
+ * transport); configuration backup and restore use NETCONF, with interactive SSH as backup fallback.
+ */
+uint32_t JuniperDriver::getSupportedTransports() const
+{
+   return NDD_TRANSPORT_SNMP | NDD_TRANSPORT_SSH_INTERACTIVE | NDD_TRANSPORT_NETCONF;
+}
+
+/**
  * Check if given device can be potentially supported by driver
  *
  * @param oid Device OID

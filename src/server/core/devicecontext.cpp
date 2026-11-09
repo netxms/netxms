@@ -30,8 +30,8 @@
  * NodeDeviceContext constructor. Externally supplied SNMP transport is not owned
  * by the context; if none is supplied, transport is created on first use.
  */
-NodeDeviceContext::NodeDeviceContext(const shared_ptr<Node>& node, SNMP_Transport *snmpTransport) : m_node(node),
-      m_snmpTransport(snmpTransport), m_ownSnmpTransport(false)
+NodeDeviceContext::NodeDeviceContext(const shared_ptr<Node>& node, SNMP_Transport *snmpTransport, uint32_t allowedTransports) : m_node(node),
+      m_snmpTransport(snmpTransport), m_ownSnmpTransport(false), m_allowedTransports(allowedTransports)
 {
 }
 
@@ -47,11 +47,20 @@ NodeDeviceContext::~NodeDeviceContext()
 }
 
 /**
+ * Check if given SSH channel is available. Channel capability bits are not cleared when
+ * isSSH capability expires, so SSH itself is checked as well.
+ */
+static inline bool IsSSHChannelAvailable(const Node& node, uint64_t channelCapability)
+{
+   return ((node.getCapabilities() & (NC_IS_SSH | channelCapability)) == (NC_IS_SSH | channelCapability)) && ((node.getFlags() & NF_DISABLE_SSH) == 0);
+}
+
+/**
  * Check if SSH command channel is available
  */
 bool NodeDeviceContext::isSSHCommandChannelAvailable()
 {
-   return (m_node->getCapabilities() & NC_SSH_COMMAND_CHANNEL) != 0;
+   return (m_allowedTransports & NDD_TRANSPORT_SSH_COMMAND) && IsSSHChannelAvailable(*m_node, NC_SSH_COMMAND_CHANNEL);
 }
 
 /**
@@ -59,7 +68,7 @@ bool NodeDeviceContext::isSSHCommandChannelAvailable()
  */
 bool NodeDeviceContext::isSSHInteractiveChannelAvailable()
 {
-   return (m_node->getCapabilities() & NC_SSH_INTERACTIVE_CHANNEL) != 0;
+   return (m_allowedTransports & NDD_TRANSPORT_SSH_INTERACTIVE) && IsSSHChannelAvailable(*m_node, NC_SSH_INTERACTIVE_CHANNEL);
 }
 
 /**
@@ -67,7 +76,7 @@ bool NodeDeviceContext::isSSHInteractiveChannelAvailable()
  */
 bool NodeDeviceContext::isSNMPAvailable()
 {
-   return (m_node->getCapabilities() & NC_IS_SNMP) != 0;
+   return (m_allowedTransports & NDD_TRANSPORT_SNMP) && ((m_node->getCapabilities() & NC_IS_SNMP) != 0) && ((m_node->getFlags() & NF_DISABLE_SNMP) == 0);
 }
 
 /**
@@ -77,6 +86,9 @@ SSHInteractiveChannel *NodeDeviceContext::getInteractiveSSH()
 {
    if (m_sshChannel != nullptr)
       return m_sshChannel.get();
+
+   if (!(m_allowedTransports & NDD_TRANSPORT_SSH_INTERACTIVE))
+      return nullptr;
 
    m_sshChannel = m_node->openInteractiveSSHChannel(nullptr, nullptr, 0);
    if (m_sshChannel == nullptr)
@@ -111,6 +123,9 @@ SSHInteractiveChannel *NodeDeviceContext::getInteractiveSSH()
  */
 bool NodeDeviceContext::executeSSHCommand(const char *command, ByteStream *output)
 {
+   if (!(m_allowedTransports & NDD_TRANSPORT_SSH_COMMAND))
+      return false;
+
    uint32_t proxyId = m_node->getEffectiveSshProxy();
    shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
    if (proxyNode == nullptr)
@@ -143,7 +158,7 @@ bool NodeDeviceContext::executeSSHCommand(const char *command, ByteStream *outpu
  */
 bool NodeDeviceContext::isNETCONFAvailable()
 {
-   return ((m_node->getCapabilities() & NC_IS_NETCONF) != 0) && ((m_node->getFlags() & (NF_DISABLE_SSH | NF_DISABLE_NETCONF)) == 0);
+   return (m_allowedTransports & NDD_TRANSPORT_NETCONF) && ((m_node->getCapabilities() & NC_IS_NETCONF) != 0) && ((m_node->getFlags() & (NF_DISABLE_SSH | NF_DISABLE_NETCONF)) == 0);
 }
 
 /**
@@ -151,6 +166,12 @@ bool NodeDeviceContext::isNETCONFAvailable()
  */
 int NodeDeviceContext::executeNETCONFRequests(int count, const char * const *requests, char **replies, uint32_t timeout)
 {
+   if (!(m_allowedTransports & NDD_TRANSPORT_NETCONF))
+   {
+      memset(replies, 0, count * sizeof(char*));
+      return -1;
+   }
+
    uint32_t agentRcc;
    int received = ExecuteNetconfRpcBatch(*m_node, count, requests, replies, timeout, &agentRcc);
    if (received < count)
@@ -168,6 +189,9 @@ SNMP_Transport *NodeDeviceContext::getSNMPTransport()
 {
    if (m_snmpTransport != nullptr)
       return m_snmpTransport;
+
+   if (!isSNMPAvailable())
+      return nullptr;
 
    m_snmpTransport = m_node->createSnmpTransport();
    m_ownSnmpTransport = (m_snmpTransport != nullptr);

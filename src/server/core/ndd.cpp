@@ -147,87 +147,129 @@ void LoadNetworkDeviceDrivers()
 }
 
 /**
+ * Priority assigned to transport-compatible drivers when device's SNMP object ID cannot be used
+ */
+#define BASELINE_DRIVER_PRIORITY 10
+
+/**
  * Information about selected (potential) driver
  */
-struct __selected_driver
+struct SelectedDriver
 {
-	int priority;
-	NetworkDeviceDriver *driver;
+   int priority;
+   int index;   // Position in driver list, resolves ties by registration order
+   NetworkDeviceDriver *driver;
 };
 
 /**
- * Compare two drivers by priority
+ * Compare two drivers by priority (higher priority first, then by registration order)
  */
 static int CompareDrivers(const void *e1, const void *e2)
 {
-	return -(((struct __selected_driver *)e1)->priority - ((struct __selected_driver *)e2)->priority);
+   const SelectedDriver *d1 = static_cast<const SelectedDriver*>(e1);
+   const SelectedDriver *d2 = static_cast<const SelectedDriver*>(e2);
+   if (d1->priority != d2->priority)
+      return d2->priority - d1->priority;
+   return d1->index - d2->index;
 }
 
 /**
- * Find appropriate device driver for given node
- *
- * @param node Node object to test
- * @returns Pointer to device driver object
+ * Check if driver can be used with given set of available transports: all required
+ * transports must be available and at least one supported transport must be available.
  */
-NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *snmpTransport)
+bool IsDriverUsable(NetworkDeviceDriver *driver, uint32_t availableTransports)
 {
-   TCHAR driverName[64];
-   return FindDriverForNode(node->getName(), node->getSNMPObjectId(),
-            node->getCustomAttribute(_T("snmp.driver"), driverName, 64), snmpTransport);
+   uint32_t required = driver->getRequiredTransports();
+   return ((required & availableTransports) == required) && ((driver->getSupportedTransports() & availableTransports) != 0);
 }
 
 /**
- * Find appropriate device driver for given network device
- *
- * @param name Node name
- * @param snmpObjectId SNMP object ID
- * @param defaultDriver default driver to use
- * @param snmpTransport transport
- * @returns Pointer to device driver object
+ * Select device driver using transports available in given device context. Candidates are ranked by
+ * isPotentialDevice() when SNMP is available, otherwise every transport-compatible driver gets baseline
+ * priority. Candidates are confirmed by isDeviceSupported() with shared device context. If no candidate
+ * confirms, manually selected driver is used if it is compatible with available transports. Generic
+ * driver is returned as last resort; on device without SNMP it is a placeholder that should not be called.
  */
-NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const SNMP_ObjectId& snmpObjectId, const TCHAR *defaultDriver, SNMP_Transport *snmpTransport)
+static NetworkDeviceDriver *SelectDriver(const wchar_t *name, const SNMP_ObjectId& snmpObjectId, const wchar_t *manualDriverName, DeviceContext *context)
 {
-	struct __selected_driver selection[MAX_DEVICE_DRIVERS];
-	int selected = 0;
+   uint32_t availableTransports = context->getAvailableTransports();
+   bool useObjectId = (availableTransports & NDD_TRANSPORT_SNMP) != 0;
+   nxlog_debug_tag(DEBUG_TAG, 6, L"FindDriverForNode(%s): available transports 0x%04X", name, availableTransports);
 
-	for(int i = 0; i < s_numDrivers; i++)
-	{
-		int pri = s_drivers[i]->isPotentialDevice(snmpObjectId);
-		if (pri > 0)
-		{
-			if (pri > 255)
-				pri = 255;
-			selection[selected].priority = pri;
-			selection[selected].driver = s_drivers[i];
-			selected++;
-			nxlog_debug_tag(DEBUG_TAG, 6, _T("FindDriverForNode(%s): found potential device driver %s with priority %d"),
-			          name, s_drivers[i]->getName(), pri);
-		}
-	}
-
-	if (selected > 0)
-	{
-		qsort(selection, selected, sizeof(struct __selected_driver), CompareDrivers);
-		SnmpDeviceContext context(snmpTransport);
-		for(int i = 0 ; i < selected; i++)
-		{
-			if (selection[i].driver->isDeviceSupported(&context, snmpObjectId))
-				return selection[i].driver;
-		}
-	}
-
-   // Manual driver selection
-   if (defaultDriver != nullptr)
+   SelectedDriver selection[MAX_DEVICE_DRIVERS];
+   int selected = 0;
+   for(int i = 0; i < s_numDrivers; i++)
    {
-      NetworkDeviceDriver *driver = FindDriverByName(defaultDriver);
-      if (driver != nullptr)
+      NetworkDeviceDriver *driver = s_drivers[i];
+      if (!IsDriverUsable(driver, availableTransports))
+         continue;
+
+      int pri = useObjectId ? driver->isPotentialDevice(snmpObjectId) : BASELINE_DRIVER_PRIORITY;
+      if (pri <= 0)
+         continue;
+
+      if (pri > 255)
+         pri = 255;
+      selection[selected].priority = pri;
+      selection[selected].index = i;
+      selection[selected].driver = driver;
+      selected++;
+      nxlog_debug_tag(DEBUG_TAG, 6, L"FindDriverForNode(%s): found potential device driver %s with priority %d", name, driver->getName(), pri);
+   }
+
+   if (selected > 0)
+   {
+      qsort(selection, selected, sizeof(SelectedDriver), CompareDrivers);
+      for(int i = 0; i < selected; i++)
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("FindDriverForNode(%s): device driver %s selected manually"), name, driver->getName());
-         return driver;
+         if (selection[i].driver->isDeviceSupported(context, snmpObjectId))
+            return selection[i].driver;
       }
    }
 
-	return &s_defaultDriver;
+   // Manual driver selection
+   if ((manualDriverName != nullptr) && (manualDriverName[0] != 0))
+   {
+      NetworkDeviceDriver *driver = FindDriverByName(manualDriverName);
+      if (IsDriverUsable(driver, availableTransports))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, L"FindDriverForNode(%s): device driver %s selected manually", name, driver->getName());
+         return driver;
+      }
+      nxlog_debug_tag(DEBUG_TAG, 6, L"FindDriverForNode(%s): manually selected device driver %s ignored (incompatible with available transports)", name, driver->getName());
+   }
+
+   if (!useObjectId)
+      nxlog_debug_tag(DEBUG_TAG, 6, L"FindDriverForNode(%s): no device driver confirmed for device without SNMP", name);
+   return &s_defaultDriver;
+}
+
+/**
+ * Find appropriate device driver for given node, using transports available on that node
+ * (SNMP object ID and custom attribute snmp.driver are taken from node object)
+ *
+ * @param node Node object to test
+ * @param context device context for given node, shared by all candidate drivers
+ * @returns Pointer to device driver object
+ */
+NetworkDeviceDriver *FindDriverForNode(Node *node, DeviceContext *context)
+{
+   wchar_t driverName[64];
+   return SelectDriver(node->getName(), node->getSNMPObjectId(), node->getCustomAttribute(L"snmp.driver", driverName, 64), context);
+}
+
+/**
+ * Find appropriate device driver for network device accessible via SNMP only (used before node object is created)
+ *
+ * @param name device name for logging
+ * @param snmpObjectId SNMP object ID
+ * @param snmpTransport SNMP transport
+ * @returns Pointer to device driver object
+ */
+NetworkDeviceDriver *FindDriverForNode(const wchar_t *name, const SNMP_ObjectId& snmpObjectId, SNMP_Transport *snmpTransport)
+{
+   SnmpDeviceContext context(snmpTransport);
+   return SelectDriver(name, snmpObjectId, nullptr, &context);
 }
 
 /**

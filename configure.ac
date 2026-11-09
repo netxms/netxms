@@ -4798,6 +4798,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/tb/Makefile
 	src/server/drivers/tplink/Makefile
 	src/server/drivers/ubnt/Makefile
+	src/server/drivers/unix/Makefile
 	src/server/drivers/westerstrand/Makefile
 	src/server/drivers/zyxel/Makefile
 	src/server/include/Makefile

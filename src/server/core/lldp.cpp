@@ -303,13 +303,12 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idSubType,
 			if (ifc == nullptr)
 			{
 			   // Attempt to get alternative interface identification from driver
-			   auto driver = node->getDriverWithData();
+			   NodeDeviceContext context(node->self());
+			   auto driver = node->getUsableDriverWithData(&context);
 			   if (driver.first != nullptr)
 			   {
-			      SNMP_Transport *snmp = node->createSnmpTransport();
 			      InterfaceId iid;
-			      NodeDeviceContext context(node->self(), snmp);
-			      if ((snmp != nullptr) && driver.first->lldpNameToInterfaceId(&context, node, driver.second.get(), ifName, &iid))
+			      if (driver.first->lldpNameToInterfaceId(&context, node, driver.second.get(), ifName, &iid))
 			      {
 			         switch(iid.type)
 			         {
@@ -327,7 +326,6 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idSubType,
                         break;
 			         }
 			      }
-			      delete snmp;
 			   }
 	         if (ifc == nullptr)
 			   {

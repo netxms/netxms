@@ -37,6 +37,7 @@
 #define NDD_TRANSPORT_SNMP             0x0001
 #define NDD_TRANSPORT_SSH_COMMAND      0x0002
 #define NDD_TRANSPORT_SSH_INTERACTIVE  0x0004
+#define NDD_TRANSPORT_NETCONF          0x0008
 
 /**
  * Begin driver list
@@ -601,6 +602,10 @@ class ComponentTree;
  * getSNMPTransport()). Configuration backup/restore methods are called with whatever
  * transports are available regardless of the required set, and drivers choosing a
  * protocol there should use the availability checks.
+ *
+ * getSNMPTransport() returns nullptr when SNMP is not available, and default implementations
+ * of SNMP-based driver methods return empty result in that case, so a driver that does not
+ * require SNMP may leave them not overridden.
  */
 class LIBNXSRV_EXPORTABLE DeviceContext
 {
@@ -611,6 +616,23 @@ public:
    virtual bool isSSHInteractiveChannelAvailable() = 0;
    virtual bool isSNMPAvailable() = 0;
    virtual bool isNETCONFAvailable() = 0;
+
+   /**
+    * Get transports available in this context as bit mask of NDD_TRANSPORT_* constants
+    */
+   uint32_t getAvailableTransports()
+   {
+      uint32_t transports = 0;
+      if (isSNMPAvailable())
+         transports |= NDD_TRANSPORT_SNMP;
+      if (isSSHCommandChannelAvailable())
+         transports |= NDD_TRANSPORT_SSH_COMMAND;
+      if (isSSHInteractiveChannelAvailable())
+         transports |= NDD_TRANSPORT_SSH_INTERACTIVE;
+      if (isNETCONFAvailable())
+         transports |= NDD_TRANSPORT_NETCONF;
+      return transports;
+   }
 
    virtual SSHInteractiveChannel *getInteractiveSSH() = 0;
    virtual bool executeSSHCommand(const char *command, ByteStream *output) = 0;

@@ -4311,6 +4311,8 @@ public:
    static AdditionalSnmpAgent *createFromJson(json_t *json, uint32_t *rcc);
 };
 
+class NodeDeviceContext;
+
 /**
  * Node
  */
@@ -4568,9 +4570,11 @@ protected:
    void checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn);
    void updatePrimaryIpAddr();
    bool confPollAgent();
-   bool confPollSnmp();
-   bool confPollSsh();
-   bool confPollNetconf();
+   SNMP_Transport *confPollSnmp(bool *modified);
+   bool confPollSnmpCapabilities(SNMP_Transport *snmpTransport, NodeDeviceContext *deviceContext);
+   bool confPollSsh(uint32_t *transports);
+   bool confPollNetconf(uint32_t *transports);
+   bool confPollDeviceDriver(NodeDeviceContext *deviceContext);
    bool confPollSmclp();
    bool confPollVnc();
    bool confPollEthernetIP();
@@ -4580,7 +4584,7 @@ protected:
    bool updateHardwareComponents(PollerInfo *poller, uint32_t requestId);
    bool updateSoftwarePackages(PollerInfo *poller, uint32_t requestId);
    bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, TCHAR **value);
-   void checkBridgeMib(SNMP_Transport *snmp);
+   void checkBridgeMib(SNMP_Transport *snmp, NodeDeviceContext *deviceContext);
    void checkIfXTable(SNMP_Transport *snmp);
    SNMP_Transport *createSnmpTransportInternal(const InetAddress& targetAddr, uint16_t port, bool pollerMessageOnFailure, uint32_t *proxyNodeId, bool *proxyConnectionFailed);
    NetworkPathCheckResult checkNetworkPath(uint32_t requestId, const StatusPollProxyEvidence& proxyEvidence);
@@ -4591,6 +4595,7 @@ protected:
    void icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr);
 
    bool checkSshConnection();
+   bool checkSshInteractiveChannel(const SSHDriverHints& hints);
    bool checkNetconfConnection();
 
    void updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyRole);
@@ -4883,6 +4888,7 @@ public:
    shared_ptr<Interface> findInterfaceByLocation(const InterfacePhysicalLocation& location) const;
    shared_ptr<Interface> findBridgePort(uint32_t bridgePortNumber) const;
    bool isMyIP(const InetAddress& addr) const;
+   bool getInterfaceStateFromDriver(const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
    void getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
    void getInterfaceStateFromAgent(uint32_t ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
    shared_ptr<RoutingTable> readRoutingTable();
@@ -5082,6 +5088,7 @@ public:
       unlockProperties();
       return result;
    }
+   std::pair<NetworkDeviceDriver*, shared_ptr<DriverData>> getUsableDriverWithData(DeviceContext *context) const;
    const char *getAgentAIToolsSchema() const { return m_agentAIToolsSchema; }
    bool hasAgentAITools() const { return m_agentAIToolsSchema != nullptr; }
 
@@ -5103,7 +5110,8 @@ public:
  * Concrete DeviceContext implementation backed by a Node object. Provides SNMP and SSH
  * access using the node's configured credentials. SNMP transport can be supplied by the
  * caller (not owned by the context) or created lazily on first use; SSH channels are
- * always opened lazily.
+ * always opened lazily. Availability can be further restricted to given set of transports
+ * (bit mask of NDD_TRANSPORT_* constants), e.g. to those confirmed during current poll.
  */
 class NXCORE_EXPORTABLE NodeDeviceContext : public DeviceContext
 {
@@ -5112,9 +5120,10 @@ private:
    shared_ptr<SSHInteractiveChannel> m_sshChannel;
    SNMP_Transport *m_snmpTransport;
    bool m_ownSnmpTransport;
+   uint32_t m_allowedTransports;
 
 public:
-   NodeDeviceContext(const shared_ptr<Node>& node, SNMP_Transport *snmpTransport = nullptr);
+   NodeDeviceContext(const shared_ptr<Node>& node, SNMP_Transport *snmpTransport = nullptr, uint32_t allowedTransports = 0xFFFFFFFF);
    ~NodeDeviceContext();
 
    bool isSSHCommandChannelAvailable() override;

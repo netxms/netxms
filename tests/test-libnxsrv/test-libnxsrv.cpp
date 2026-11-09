@@ -1513,7 +1513,11 @@ static void TestDriverDefaults()
    AssertEquals(driver.getSupportedTransports(), static_cast<uint32_t>(NDD_TRANSPORT_SNMP));
    AssertEquals(driver.getRequiredTransports(), static_cast<uint32_t>(NDD_TRANSPORT_SNMP));
    AssertEquals(driver.isPotentialDevice(SNMP_ObjectId({ 1, 3, 6, 1, 4, 1, 9999 })), 1);
-   AssertTrue(driver.isDeviceSupported(nullptr, SNMP_ObjectId({ 1, 3, 6, 1, 4, 1, 9999 })));
+   MockSnmpTransport probeTransport;
+   SnmpDeviceContext snmpContext(&probeTransport);
+   AssertTrue(driver.isDeviceSupported(&snmpContext, SNMP_ObjectId({ 1, 3, 6, 1, 4, 1, 9999 })));
+   SnmpDeviceContext noSnmpContext(nullptr);
+   AssertFalse(driver.isDeviceSupported(&noSnmpContext, SNMP_ObjectId({ 1, 3, 6, 1, 4, 1, 9999 })));
    AssertFalse(driver.hasMetrics());
    AssertEquals(driver.getModulesOrientation(nullptr, node.get(), nullptr), NDD_ORIENTATION_HORIZONTAL);
    AssertEquals(driver.getClusterMode(nullptr, node.get(), nullptr), CLUSTER_MODE_STANDALONE);

@@ -2043,16 +2043,14 @@ shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
          arpCache = conn->getArpCache();
       }
    }
-   else if (m_capabilities & NC_IS_SNMP)
+   else
    {
-      SNMP_Transport *transport = createSnmpTransport();
-      if (transport != nullptr)
+      NodeDeviceContext context(self());
+      auto driver = getUsableDriverWithData(&context);
+      if (driver.first != nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Reading ARP cache for node %s [%u] via SNMP"), m_name, m_id);
-         NodeDeviceContext context(self(), transport);
-         auto driver = getDriverWithData();
+         nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Reading ARP cache for node %s [%u] via device driver %s"), m_name, m_id, driver.first->getName());
          arpCache = driver.first->getArpCache(&context, driver.second.get());
-         delete transport;
       }
    }
 
@@ -2092,10 +2090,11 @@ InterfaceList *Node::getInterfaceList()
    {
       ifList = GetLocalInterfaceList();
    }
-   if ((ifList == nullptr) && (m_capabilities & NC_IS_SNMP) && !(m_flags & NF_DISABLE_SNMP))
+   if (ifList == nullptr)
    {
-      SNMP_Transport *snmpTransport = createSnmpTransport();
-      if (snmpTransport != nullptr)
+      NodeDeviceContext context(self());
+      auto driver = getUsableDriverWithData(&context);
+      if (driver.first != nullptr)
       {
          bool useIfXTable;
          if (m_nUseIfXTable == IFXTABLE_DEFAULT)
@@ -2107,14 +2106,13 @@ InterfaceList *Node::getInterfaceList()
             useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED);
          }
 
-         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, L"Node::getInterfaceList(node=%s [%u]): calling driver (useIfXTable=%s)",
-                  m_name, m_id, BooleanToString(useIfXTable));
-         NodeDeviceContext context(self(), snmpTransport);
-         auto driver = getDriverWithData();
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, L"Node::getInterfaceList(node=%s [%u]): calling driver %s (useIfXTable=%s)",
+                  m_name, m_id, driver.first->getName(), BooleanToString(useIfXTable));
          ifList = driver.first->getInterfaces(&context, this, driver.second.get(), useIfXTable);
          if (ifList != nullptr)
          {
-            if (ConfigReadBoolean(L"Objects.Interfaces.IgnoreIfNotPresent", false))
+            SNMP_Transport *snmpTransport = context.getSNMPTransport();
+            if ((snmpTransport != nullptr) && ConfigReadBoolean(L"Objects.Interfaces.IgnoreIfNotPresent", false))
             {
                uint32_t oid[11] = { 1, 3, 6, 1, 2, 1, 2, 2, 1, 8, 0 };
                for(int i = 0; i < ifList->size(); i++)
@@ -2153,12 +2151,10 @@ InterfaceList *Node::getInterfaceList()
                }
             }
          }
-
-         delete snmpTransport;
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): cannot create SNMP transport"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): device driver cannot be used with available transports"), m_name, m_id);
       }
    }
 
@@ -4056,20 +4052,19 @@ restart_status_poll:
             }
          }
       }
-      if (!geoLocationRetrieved && isSNMPSupported())
+      if (!geoLocationRetrieved)
       {
-         SNMP_Transport *transport = createSnmpTransport();
-         if (transport != nullptr)
+         NodeDeviceContext context(self());
+         auto driver = getUsableDriverWithData(&context);
+         if (driver.first != nullptr)
          {
-            NodeDeviceContext context(self(), transport);
-            GeoLocation location = m_driver->getGeoLocation(&context, this, m_driverData.get());
+            GeoLocation location = driver.first->getGeoLocation(&context, this, driver.second.get());
             if (location.getType() != GL_UNSET)
             {
-               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): location set to %s, %s from SNMP device driver"), m_name, m_id, location.getLatitudeAsString(), location.getLongitudeAsString());
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): location set to %s, %s from device driver"), m_name, m_id, location.getLatitudeAsString(), location.getLongitudeAsString());
                setGeoLocation(location);
                geoLocationRetrieved = true;
             }
-            delete transport;
          }
       }
       if (!geoLocationRetrieved)
@@ -5049,16 +5044,16 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestI
          success = true;
    }
 
-   if (!success && (m_capabilities & NC_IS_SNMP))
+   if (!success)
    {
-      SNMP_Transport *snmp = createSnmpTransport();
-      if (snmp != nullptr)
+      NodeDeviceContext context(self());
+      auto driver = getUsableDriverWithData(&context);
+      if (driver.first != nullptr)
       {
-         NodeDeviceContext context(self(), snmp);
-         success = m_driver->getHardwareInformation(&context, this, m_driverData.get(), &hwInfo);
-         delete snmp;
+         success = driver.first->getHardwareInformation(&context, this, driver.second.get(), &hwInfo);
       }
-      if ((!success || (hwInfo.vendor[0] == 0) || (hwInfo.productName[0] == 0) || (hwInfo.productVersion[0] == 0) || (hwInfo.serialNumber[0] == 0)) && (m_capabilities & NC_HAS_ENTITY_MIB))
+      if ((!success || (hwInfo.vendor[0] == 0) || (hwInfo.productName[0] == 0) || (hwInfo.productVersion[0] == 0) || (hwInfo.serialNumber[0] == 0)) &&
+          ((m_capabilities & (NC_IS_SNMP | NC_HAS_ENTITY_MIB)) == (NC_IS_SNMP | NC_HAS_ENTITY_MIB)))
       {
          // Try to get hardware information from ENTITY MIB
          lockProperties();
@@ -5502,8 +5497,15 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   if (confPollSnmp())
+   // Transports confirmed during this poll
+   uint32_t transports = 0;
+
+   bool snmpModified = false;
+   unique_ptr<SNMP_Transport> snmpTransport(confPollSnmp(&snmpModified));
+   if (snmpModified)
       modified |= MODIFY_NODE_PROPERTIES;
+   if (snmpTransport != nullptr)
+      transports |= NDD_TRANSPORT_SNMP;
 
    // Check if SNMP was marked as unreachable before full poll
    if ((m_capabilities & NC_IS_SNMP) && !(m_expectedCapabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
@@ -5517,12 +5519,12 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   if (confPollSsh())
+   if (confPollSsh(&transports))
       modified |= MODIFY_NODE_PROPERTIES;
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   if (confPollNetconf())
+   if (confPollNetconf(&transports))
       modified |= MODIFY_NODE_PROPERTIES;
 
    // Check if NETCONF was marked as unreachable before full poll
@@ -5544,6 +5546,18 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH connectivity restored"), m_name);
       m_pollCountSSH = 0;
    }
+
+   POLL_CANCELLATION_CHECKPOINT();
+
+   // Select network device driver using all transports confirmed so far, then run SNMP checks that depend on it
+   {
+      NodeDeviceContext deviceContext(self(), snmpTransport.get(), transports);
+      if (confPollDeviceDriver(&deviceContext))
+         modified |= MODIFY_NODE_PROPERTIES;
+      if ((snmpTransport != nullptr) && confPollSnmpCapabilities(snmpTransport.get(), &deviceContext))
+         modified |= MODIFY_NODE_PROPERTIES;
+   }
+   snmpTransport.reset();
 
    POLL_CANCELLATION_CHECKPOINT();
 
@@ -6268,41 +6282,36 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
    *hypervisorType = 0;
    *hypervisorInfo = 0;
 
-   if (m_capabilities & NC_IS_SNMP)
+   bool vtypeReportedByDevice = false;
+   NodeDeviceContext context(self());
+   auto driver = getUsableDriverWithData(&context);
+   if (driver.first != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"), m_name, m_id, m_driver->getName());
-
-      bool vtypeReportedByDevice = false;
-      SNMP_Transport *snmp = createSnmpTransport();
-      if (snmp != nullptr)
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::detectNodeType(%s [%d]): driver name is %s"), m_name, m_id, driver.first->getName());
+      VirtualizationType vt;
+      vtypeReportedByDevice = driver.first->getVirtualizationType(&context, this, driver.second.get(), &vt);
+      if (vtypeReportedByDevice)
       {
-         VirtualizationType vt;
-         NodeDeviceContext context(self(), snmp);
-         vtypeReportedByDevice = m_driver->getVirtualizationType(&context, this, m_driverData.get(), &vt);
-         delete snmp;
-         if (vtypeReportedByDevice)
-         {
-            if (vt != VTYPE_NONE)
-               type = (vt == VTYPE_FULL) ? NODE_TYPE_VIRTUAL : NODE_TYPE_CONTAINER;
-            else
-              type = NODE_TYPE_PHYSICAL;
-         }
-      }
-
-      if (!vtypeReportedByDevice)
-      {
-         // Assume physical device if it supports SNMP and driver is not "GENERIC" nor "NET-SNMP"
-         if (_tcscmp(m_driver->getName(), _T("GENERIC")) && _tcscmp(m_driver->getName(), _T("NET-SNMP")))
-         {
-            type = NODE_TYPE_PHYSICAL;
-         }
+         if (vt != VTYPE_NONE)
+            type = (vt == VTYPE_FULL) ? NODE_TYPE_VIRTUAL : NODE_TYPE_CONTAINER;
          else
+           type = NODE_TYPE_PHYSICAL;
+      }
+   }
+
+   if ((m_capabilities & NC_IS_SNMP) && !vtypeReportedByDevice)
+   {
+      // Assume physical device if it supports SNMP and driver is not "GENERIC" nor "NET-SNMP"
+      if (_tcscmp(m_driver->getName(), _T("GENERIC")) && _tcscmp(m_driver->getName(), _T("NET-SNMP")))
+      {
+         type = NODE_TYPE_PHYSICAL;
+      }
+      else
+      {
+         if (m_capabilities & NC_IS_PRINTER)
          {
-            if (m_capabilities & NC_IS_PRINTER)
-            {
-               // Assume that printers are physical devices
-               type = NODE_TYPE_PHYSICAL;
-            }
+            // Assume that printers are physical devices
+            type = NODE_TYPE_PHYSICAL;
          }
       }
    }
@@ -7117,18 +7126,17 @@ static uint32_t IndicatorSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *
 }
 
 /**
- * Configuration poll: check for SNMP
+ * Configuration poll: check for SNMP and read SNMP object ID. Returns SNMP transport (to be destroyed
+ * by caller) if SNMP agent responds, nullptr otherwise. Sets modified to true if node properties were changed.
  */
-bool Node::confPollSnmp()
+SNMP_Transport *Node::confPollSnmp(bool *modified)
 {
    if (((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && !ConfigReadBoolean(_T("Objects.Nodes.ConfigurationPoll.AlwaysCheckSNMP"), true)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_SNMP))
    {
       sendPollerMsg(_T("   SNMP polling is %s\r\n"), (m_flags & NF_DISABLE_SNMP) ? _T("disabled") : _T("not possible"));
-      return false;
+      return nullptr;
    }
-
-   bool hasChanges = false;
 
    sendPollerMsg(_T("   Checking SNMP...\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_name);
@@ -7150,7 +7158,7 @@ bool Node::confPollSnmp()
       {
          sendPollerMsg(_T("   Node is not responding to SNMP using current settings and SNMP settings are locked\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMP settings are locked, skip SnmpCheckCommSettings()"), m_name);
-         return false;
+         return nullptr;
       }
    }
    if (pTransport == nullptr)
@@ -7164,7 +7172,7 @@ bool Node::confPollSnmp()
    {
       sendPollerMsg(_T("   No response from SNMP agent\r\n"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
-      return false;
+      return nullptr;
    }
 
    lockProperties();
@@ -7196,32 +7204,85 @@ bool Node::confPollSnmp()
    if (!m_snmpObjectId.equals(snmpObjectId))
    {
       m_snmpObjectId = snmpObjectId;
-      hasChanges = true;
+      *modified = true;
    }
    unlockProperties();
 
-   // Select device driver
-   NetworkDeviceDriver *driver = FindDriverForNode(this, pTransport);
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): selected device driver %s"), m_name, driver->getName());
-   lockProperties();
-   if (driver != m_driver)
+   return pTransport;
+}
+
+/**
+ * Configuration poll: select network device driver using transports confirmed during this poll (as
+ * reported by given device context) and let selected driver analyze device. Driver selection is skipped
+ * if transports required by current driver did not respond but are still in node's capabilities (device
+ * is probably only temporarily unreachable), so binding is not changed because of short outage.
+ */
+bool Node::confPollDeviceDriver(NodeDeviceContext *deviceContext)
+{
+   uint32_t transports = deviceContext->getAvailableTransports();
+   if (transports == 0)
+      return false;
+
+   if (!IsDriverUsable(m_driver, transports))
+   {
+      NodeDeviceContext capabilityContext(self());
+      if (IsDriverUsable(m_driver, capabilityContext.getAvailableTransports()))
+      {
+         sendPollerMsg(_T("   Device does not respond via transports required by network device driver %s, driver check skipped\r\n"), m_driver->getName());
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): transports required by device driver %s did not respond (available 0x%04X), driver selection skipped"),
+                  m_name, m_driver->getName(), transports);
+         return false;
+      }
+   }
+
+   // Candidates use separate device context, so SSH session that candidate may open is not reused by selected driver
+   NetworkDeviceDriver *driver;
+   {
+      NodeDeviceContext selectionContext(self(), deviceContext->getSNMPTransport(), transports);
+      driver = FindDriverForNode(this, &selectionContext);
+   }
+   bool usable = IsDriverUsable(driver, transports);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): selected device driver %s%s"), m_name, driver->getName(), usable ? _T("") : _T(" (not usable with available transports)"));
+
+   bool driverChanged = (driver != m_driver);
+   if (driverChanged)
    {
       // Data created by previous driver is of driver-specific type and cannot be passed to new driver
+      lockProperties();
       m_driver = driver;
       m_driverData.reset();
-      sendPollerMsg(_T("   New network device driver selected: %s\r\n"), m_driver->getName());
-   }
-   else
-   {
-      sendPollerMsg(_T("   Use previously selected network device driver %s\r\n"), m_driver->getName());
-   }
-   unlockProperties();
+      unlockProperties();
 
-   NodeDeviceContext deviceContext(self(), pTransport);
+      // Availability of SSH interactive channel was checked with SSH hints of previous driver
+      if ((m_capabilities & NC_IS_SSH) && !(m_flags & NF_DISABLE_SSH))
+      {
+         SSHDriverHints hints;
+         m_driver->getSSHDriverHints(&hints);
+         bool available = checkSshInteractiveChannel(hints);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH interactive channel %s with hints from driver %s"), m_name, available ? _T("available") : _T("not available"), m_driver->getName());
+         lockProperties();
+         if (available)
+            m_capabilities |= NC_SSH_INTERACTIVE_CHANNEL;
+         else
+            m_capabilities &= ~NC_SSH_INTERACTIVE_CHANNEL;
+         unlockProperties();
+      }
+   }
+
+   if (!usable)
+   {
+      sendPollerMsg(_T("   No network device driver available for this device\r\n"));
+      return driverChanged;
+   }
+
+   if (driverChanged)
+      sendPollerMsg(_T("   New network device driver selected: %s\r\n"), m_driver->getName());
+   else
+      sendPollerMsg(_T("   Use previously selected network device driver %s\r\n"), m_driver->getName());
 
    // Allow driver to gather additional info
    DriverData *driverData = m_driverData.get();
-   m_driver->analyzeDevice(&deviceContext, m_snmpObjectId, this, &driverData);
+   m_driver->analyzeDevice(deviceContext, m_snmpObjectId, this, &driverData);
    if (driverData != m_driverData.get())
    {
       lockProperties();
@@ -7234,7 +7295,7 @@ bool Node::confPollSnmp()
    }
 
    NDD_MODULE_LAYOUT layout;
-   m_driver->getModuleLayout(&deviceContext, this, m_driverData.get(), 1, &layout); // TODO module set to 1
+   m_driver->getModuleLayout(deviceContext, this, m_driverData.get(), 1, &layout); // TODO module set to 1
    if (layout.numberingScheme == NDD_PN_UNKNOWN)
    {
       // Try to find port numbering information in database
@@ -7245,7 +7306,7 @@ bool Node::confPollSnmp()
 
    if (m_driver->hasMetrics())
    {
-      ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(&deviceContext, this, m_driverData.get());
+      ObjectArray<AgentParameterDefinition> *metrics = m_driver->getAvailableMetrics(deviceContext, this, m_driverData.get());
       if (metrics != nullptr)
       {
          sendPollerMsg(_T("   %d metrics provided by network device driver\r\n"), metrics->size());
@@ -7255,6 +7316,23 @@ bool Node::confPollSnmp()
          unlockProperties();
       }
    }
+
+   return driverChanged;
+}
+
+/**
+ * Configuration poll: collect system information and check capabilities available via SNMP.
+ * Called after device driver selection.
+ */
+bool Node::confPollSnmpCapabilities(SNMP_Transport *pTransport, NodeDeviceContext *deviceContext)
+{
+   bool hasChanges = false;
+
+   // Driver is not called if transports it requires did not respond during this poll;
+   // capabilities and data reported by driver are kept in that case
+   bool driverUsable = IsDriverUsable(m_driver, deviceContext->getAvailableTransports());
+   if (!driverUsable)
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): device driver %s cannot be used with available transports, driver checks skipped"), m_name, m_driver->getName());
 
    sendPollerMsg(_T("   Collecting system information from SNMP agent...\r\n"));
 
@@ -7281,7 +7359,7 @@ bool Node::confPollSnmp()
    }
 
    checkIfXTable(pTransport);
-   checkBridgeMib(pTransport);
+   checkBridgeMib(pTransport, deviceContext);
 
    // Check for ENTITY-MIB support
    // Some Cisco devices do not support entLastChangeTime but do support necessary tables
@@ -7297,7 +7375,7 @@ bool Node::confPollSnmp()
    }
    else
    {
-      bool emulationSupported = m_driver->isEntityMibEmulationSupported(&deviceContext, this, m_driverData.get());
+      bool emulationSupported = driverUsable ? m_driver->isEntityMibEmulationSupported(deviceContext, this, m_driverData.get()) : ((m_capabilities & NC_EMULATED_ENTITY_MIB) != 0);
       lockProperties();
       m_capabilities &= ~NC_HAS_ENTITY_MIB;
       if (emulationSupported)
@@ -7314,11 +7392,11 @@ bool Node::confPollSnmp()
       _sntprintf(debugInfo, 256, _T("%s [%u]"), m_name, m_id);
       components = BuildComponentTree(pTransport, debugInfo);
    }
-   else if (m_capabilities & NC_EMULATED_ENTITY_MIB)
+   else if ((m_capabilities & NC_EMULATED_ENTITY_MIB) && driverUsable)
    {
-      components = m_driver->buildComponentTree(&deviceContext, this, m_driverData.get());
+      components = m_driver->buildComponentTree(deviceContext, this, m_driverData.get());
    }
-   shared_ptr<DeviceView> deviceView = m_driver->buildDeviceView(&deviceContext, this, m_driverData.get(), (components != nullptr) ? components->getRoot() : nullptr);
+   shared_ptr<DeviceView> deviceView = driverUsable ? m_driver->buildDeviceView(deviceContext, this, m_driverData.get(), (components != nullptr) ? components->getRoot() : nullptr) : shared_ptr<DeviceView>();
 
    lockProperties();
 
@@ -7461,16 +7539,14 @@ bool Node::confPollSnmp()
    }
 
    // Check for 802.1x support
-   if (m_driver->is8021xSupported(&deviceContext, this, m_driverData.get()))
+   if (driverUsable)
    {
+      bool supported = m_driver->is8021xSupported(deviceContext, this, m_driverData.get());
       lockProperties();
-      m_capabilities |= NC_IS_8021X;
-      unlockProperties();
-   }
-   else
-   {
-      lockProperties();
-      m_capabilities &= ~NC_IS_8021X;
+      if (supported)
+         m_capabilities |= NC_IS_8021X;
+      else
+         m_capabilities &= ~NC_IS_8021X;
       unlockProperties();
    }
 
@@ -7493,7 +7569,11 @@ bool Node::confPollSnmp()
    }
 
    // Get wireless controller data
-   if (m_driver->isWirelessController(&deviceContext, this, m_driverData.get()))
+   if (!driverUsable)
+   {
+      // Keep wireless capabilities reported by driver
+   }
+   else if (m_driver->isWirelessController(deviceContext, this, m_driverData.get()))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is a wireless controller"), m_name);
       sendPollerMsg(_T("   This device is a wireless controller\r\n"));
@@ -7509,7 +7589,11 @@ bool Node::confPollSnmp()
    }
 
    // Get wireless access point data
-   if (m_driver->isWirelessAccessPoint(&deviceContext, this, m_driverData.get()))
+   if (!driverUsable)
+   {
+      // Keep wireless capabilities reported by driver
+   }
+   else if (m_driver->isWirelessAccessPoint(deviceContext, this, m_driverData.get()))
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): node is a wireless access point"), m_name);
       sendPollerMsg(_T("   This device is a wireless access point\r\n"));
@@ -7518,7 +7602,7 @@ bool Node::confPollSnmp()
       m_capabilities |= NC_IS_WIFI_AP;
       unlockProperties();
 
-      StructArray<RadioInterfaceInfo> *radioInterfaces = m_driver->getRadioInterfaces(&deviceContext, this, m_driverData.get());
+      StructArray<RadioInterfaceInfo> *radioInterfaces = m_driver->getRadioInterfaces(deviceContext, this, m_driverData.get());
       if (radioInterfaces != nullptr)
       {
          sendPollerMsg(POLLER_INFO _T("   %d radio interfaces found\r\n"), radioInterfaces->size());
@@ -7549,7 +7633,6 @@ bool Node::confPollSnmp()
       unlockProperties();
    }
 
-   delete pTransport;
    return hasChanges;
 }
 
@@ -7583,7 +7666,7 @@ bool Node::checkNetconfConnection()
 /**
  * Configuration poll: check for NETCONF support (uses SSH credentials)
  */
-bool Node::confPollNetconf()
+bool Node::confPollNetconf(uint32_t *transports)
 {
    if ((m_flags & (NF_DISABLE_SSH | NF_DISABLE_NETCONF)) || !m_ipAddress.isValidUnicast())
       return false;
@@ -7621,6 +7704,7 @@ bool Node::confPollNetconf()
       m_netconfCapabilities = std::move(capabilities);
       unlockProperties();
 
+      *transports |= NDD_TRANSPORT_NETCONF;
       ExitFromUnreachableState();
    }
    else
@@ -7633,9 +7717,26 @@ bool Node::confPollNetconf()
 }
 
 /**
+ * Check if SSH interactive channel can be used with prompt patterns and terminal type from given SSH driver hints
+ */
+bool Node::checkSshInteractiveChannel(const SSHDriverHints& hints)
+{
+   SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
+   bool available = SSHCheckInteractiveChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
+         sshLogin, getSshPassword(), m_sshKeyId, hints.promptPattern, hints.terminalType);
+   if (!available && (hints.enabledPromptPattern != nullptr))
+   {
+      // Retry with enabled prompt pattern
+      available = SSHCheckInteractiveChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
+            sshLogin, getSshPassword(), m_sshKeyId, hints.enabledPromptPattern, hints.terminalType);
+   }
+   return available;
+}
+
+/**
  * Configuration poll: check for SSH
  */
-bool Node::confPollSsh()
+bool Node::confPollSsh(uint32_t *transports)
 {
    if ((m_flags & NF_DISABLE_SSH) || !m_ipAddress.isValidUnicast())
       return false;
@@ -7663,7 +7764,9 @@ bool Node::confPollSsh()
          m_sshPassword = credentials.password;
          m_sshKeyId = credentials.keyId;
          unlockProperties();
+         sshLogin = getSshLogin();
          modified = true;
+         success = true;
       }
    }
 
@@ -7697,14 +7800,7 @@ bool Node::confPollSsh()
 
       // Check interactive shell channel using driver hints or defaults
       sendPollerMsg(_T("   Checking SSH interactive channel...\r\n"));
-      bool shellChannelAvailable = SSHCheckInteractiveChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
-            sshLogin, getSshPassword(), m_sshKeyId, hints.promptPattern, hints.terminalType);
-      if (!shellChannelAvailable && (hints.enabledPromptPattern != nullptr))
-      {
-         // Retry with enabled prompt pattern
-         shellChannelAvailable = SSHCheckInteractiveChannel(getEffectiveSshProxy(), m_ipAddress, m_sshPort,
-               sshLogin, getSshPassword(), m_sshKeyId, hints.enabledPromptPattern, hints.terminalType);
-      }
+      bool shellChannelAvailable = checkSshInteractiveChannel(hints);
       if (shellChannelAvailable)
       {
          sendPollerMsg(POLLER_INFO _T("   SSH interactive channel is available\r\n"));
@@ -7761,6 +7857,11 @@ bool Node::confPollSsh()
       }
 
       unlockProperties();
+
+      if (commandChannelAvailable)
+         *transports |= NDD_TRANSPORT_SSH_COMMAND;
+      if (shellChannelAvailable)
+         *transports |= NDD_TRANSPORT_SSH_INTERACTIVE;
 
       ExitFromUnreachableState();
 
@@ -7944,7 +8045,7 @@ bool Node::querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TC
 /**
  * Configuration poll: check for BRIDGE MIB
  */
-void Node::checkBridgeMib(SNMP_Transport *snmp)
+void Node::checkBridgeMib(SNMP_Transport *snmp, NodeDeviceContext *deviceContext)
 {
    // Older Cisco Nexus software (7.x probably) does not return base bridge address but still
    // support some parts of bridge MIB. We do mark such devices as isBridge to allow more correct
@@ -7958,13 +8059,15 @@ void Node::checkBridgeMib(SNMP_Transport *snmp)
       // Devices running MC-LAG / V-STP use an additional bridge ID in STP that is shared by both members
       // of the pair (normally the bridge MAC of one of them). Read it via driver so STP topology can
       // recognize the node's own designated ports and avoid false inter-switch links toward the MC-LAG peer.
-      NodeDeviceContext context(self(), snmp);
-      MacAddress stpBridgeId = m_driver->getStpBridgeId(&context, this, m_driverData.get());
+      // Previous value is kept if driver cannot be used with transports available during this poll.
+      bool driverUsable = IsDriverUsable(m_driver, deviceContext->getAvailableTransports());
+      MacAddress stpBridgeId = driverUsable ? m_driver->getStpBridgeId(deviceContext, this, m_driverData.get()) : MacAddress();
 
       lockProperties();
       m_capabilities |= NC_IS_BRIDGE;
       m_baseBridgeAddress = MacAddress(baseBridgeAddress, 6);
-      m_stpBridgeId = stpBridgeId;
+      if (driverUsable)
+         m_stpBridgeId = stpBridgeId;
       unlockProperties();
 
       // Check for Spanning Tree (IEEE 802.1d) MIB support
@@ -9756,21 +9859,34 @@ StringList *Node::getAvailableMetricFromSmclp()
 }
 
 /**
+ * Get network device driver together with its data if driver can be used with transports available in
+ * given device context. For driver that requires SNMP this also means that SNMP transport can be created,
+ * so driver methods can rely on it. Returns nullptr as driver if driver cannot be used.
+ */
+std::pair<NetworkDeviceDriver*, shared_ptr<DriverData>> Node::getUsableDriverWithData(DeviceContext *context) const
+{
+   auto driver = getDriverWithData();
+   if (!IsDriverUsable(driver.first, context->getAvailableTransports()) ||
+       ((driver.first->getRequiredTransports() & NDD_TRANSPORT_SNMP) && (context->getSNMPTransport() == nullptr)))
+   {
+      driver.first = nullptr;
+      driver.second.reset();
+   }
+   return driver;
+}
+
+/**
  * Get metric value from network device driver
  */
 DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *buffer, size_t size)
 {
-   auto driver = getDriverWithData();
-   if ((driver.first == nullptr) || !driver.first->hasMetrics())
+   NodeDeviceContext context(self());
+   auto driver = getUsableDriverWithData(&context);
+   if (driver.first == nullptr)
+      return getDriver()->hasMetrics() ? DCE_COMM_ERROR : DCE_NOT_SUPPORTED;
+   if (!driver.first->hasMetrics())
       return DCE_NOT_SUPPORTED;
-
-   SNMP_Transport *transport = createSnmpTransport();
-   if (transport == nullptr)
-      return DCE_COMM_ERROR;
-   NodeDeviceContext context(self(), transport);
-   DataCollectionError rc = driver.first->getMetric(&context, this, driver.second.get(), metric, buffer, size);
-   delete transport;
-   return rc;
+   return driver.first->getMetric(&context, this, driver.second.get(), metric, buffer, size);
 }
 
 /**
@@ -14316,15 +14432,14 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    sendPollerMsg(_T("Starting topology poll of node %s\r\n"), m_name);
    nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Started topology poll of node %s [%d]"), m_name, m_id);
 
-   if (isSNMPSupported())
    {
-      poller->setStatus(_T("reading VLANs"));
-      SNMP_Transport *snmp = createSnmpTransportForPoller();
-      if (snmp != nullptr)
+      unique_ptr<SNMP_Transport> snmp(isSNMPSupported() ? createSnmpTransportForPoller() : nullptr);
+      NodeDeviceContext context(self(), snmp.get());
+      auto driver = getUsableDriverWithData(&context);
+      if (driver.first != nullptr)
       {
-         NodeDeviceContext context(self(), snmp);
-         VlanList *vlanList = m_driver->getVlans(&context, this, m_driverData.get());
-         delete snmp;
+         poller->setStatus(_T("reading VLANs"));
+         VlanList *vlanList = driver.first->getVlans(&context, this, driver.second.get());
 
          m_topologyMutex.lock();
          if (vlanList != nullptr)
@@ -14362,16 +14477,16 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
 
       shared_ptr<ForwardingDatabase> fdb;
 
-      SNMP_Transport *snmp = createSnmpTransport();
-      if (snmp != nullptr)
+      NodeDeviceContext context(self());
+      auto driver = getUsableDriverWithData(&context);
+      if (driver.first != nullptr)
       {
-         NodeDeviceContext context(self(), snmp);
-         StructArray<ForwardingDatabaseEntry> *fdbEntries = m_driver->getForwardingDatabase(&context, this, m_driverData.get());
+         StructArray<ForwardingDatabaseEntry> *fdbEntries = driver.first->getForwardingDatabase(&context, this, driver.second.get());
          if (fdbEntries != nullptr)
          {
             StructArray<BridgePort> *bridgePorts = nullptr;
-            if (!m_driver->isFdbUsingIfIndex(this, m_driverData.get()))
-               bridgePorts = m_driver->getBridgePorts(&context, this, m_driverData.get());
+            if (!driver.first->isFdbUsingIfIndex(this, driver.second.get()))
+               bridgePorts = driver.first->getBridgePorts(&context, this, driver.second.get());
             fdb = make_shared<ForwardingDatabase>(m_id, *fdbEntries, bridgePorts);
             delete bridgePorts;
             delete fdbEntries;
@@ -14395,8 +14510,6 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
             nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Failed to get switch forwarding database from node %s [%u]"), m_name, m_id);
             sendPollerMsg(POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
          }
-
-         delete snmp;
       }
    }
    else
@@ -14548,12 +14661,11 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    if (m_capabilities & (NC_IS_WIFI_CONTROLLER | NC_IS_WIFI_AP))
    {
       poller->setStatus(_T("reading wireless stations"));
-      SNMP_Transport *snmp = createSnmpTransport();
-      if (snmp != nullptr)
+      NodeDeviceContext context(self());
+      auto driver = getUsableDriverWithData(&context);
+      if (driver.first != nullptr)
       {
-         NodeDeviceContext context(self(), snmp);
-         ObjectArray<WirelessStationInfo> *stations = m_driver->getWirelessStations(&context, this, m_driverData.get());
-         delete snmp;
+         ObjectArray<WirelessStationInfo> *stations = driver.first->getWirelessStations(&context, this, driver.second.get());
          if (stations != nullptr)
          {
             sendPollerMsg(_T("   %d wireless stations found\r\n"), stations->size());
@@ -16016,12 +16128,41 @@ NXSL_Value *Node::getWirelessStationsForNXSL(NXSL_VM *vm, uint32_t apId) const
 }
 
 /**
+ * Get state of interface via network device driver that does not require SNMP (drivers that require SNMP are
+ * called by getInterfaceStateFromSNMP). Returns false if there is no such driver or transports it requires
+ * are marked as unreachable.
+ */
+bool Node::getInterfaceStateFromDriver(const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
+{
+   NodeDeviceContext context(self());
+   auto driver = getUsableDriverWithData(&context);
+   if (driver.first == nullptr)
+      return false;
+
+   uint32_t required = driver.first->getRequiredTransports();
+   if ((required & NDD_TRANSPORT_SNMP) ||
+       ((required & (NDD_TRANSPORT_SSH_COMMAND | NDD_TRANSPORT_SSH_INTERACTIVE)) && (m_state & NSF_SSH_UNREACHABLE)) ||
+       ((required & NDD_TRANSPORT_NETCONF) && (m_state & NSF_NETCONF_UNREACHABLE)))
+      return false;
+
+   driver.first->getInterfaceState(&context, this, driver.second.get(), iface.getIfIndex(), iface.getIfName(), iface.getIfType(),
+      iface.getIfTableSuffixLen(), iface.getIfTableSuffix(), adminState, operState, speed);
+   return true;
+}
+
+/**
  * Get state of interface from SNMP-capable device via network device driver
  */
 void Node::getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
    NodeDeviceContext context(self(), pTransport);
-   auto driver = getDriverWithData();
+   auto driver = getUsableDriverWithData(&context);
+   if (driver.first == nullptr)
+   {
+      *adminState = IF_ADMIN_STATE_UNKNOWN;
+      *operState = IF_OPER_STATE_UNKNOWN;
+      return;
+   }
    driver.first->getInterfaceState(&context, this, driver.second.get(), iface.getIfIndex(), iface.getIfName(), iface.getIfType(),
       iface.getIfTableSuffixLen(), iface.getIfTableSuffix(), adminState, operState, speed);
 }
@@ -16032,7 +16173,9 @@ void Node::getInterfaceStateFromSNMP(SNMP_Transport *pTransport, const Interface
 AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
    NodeDeviceContext context(self(), snmpTransport);
-   auto driver = getDriverWithData();
+   auto driver = getUsableDriverWithData(&context);
+   if (driver.first == nullptr)
+      return AP_UNKNOWN;
    return driver.first->getAccessPointState(&context, this, driver.second.get(), ap->getIndex(), ap->getMacAddress(), ap->getIpAddress(), radioInterfaces);
 }
 
@@ -16041,18 +16184,16 @@ AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmp
  */
 ObjectArray<AccessPointInfo> *Node::getAccessPoints()
 {
-   SNMP_Transport *snmp = createSnmpTransport();
-   if (snmp == nullptr)
+   NodeDeviceContext context(self());
+   auto driver = getUsableDriverWithData(&context);
+   if (driver.first == nullptr)
       return nullptr;
-   NodeDeviceContext context(self(), snmp);
-   auto driver = getDriverWithData();
    ObjectArray<AccessPointInfo> *accessPoints = driver.first->getAccessPoints(&context, this, driver.second.get());
    if (accessPoints != nullptr)
    {
       for(AccessPointInfo *ap : *accessPoints)
          ap->setControllerId(m_id);
    }
-   delete snmp;
    return accessPoints;
 }
 

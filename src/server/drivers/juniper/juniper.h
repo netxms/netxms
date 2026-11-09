@@ -40,6 +40,8 @@ public:
 	virtual const TCHAR *getName() override;
 	virtual const TCHAR *getVersion() override;
 
+   virtual uint32_t getSupportedTransports() const override;
+
 	virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
 	virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
