@@ -517,11 +517,15 @@ public class DataExportView extends View
             final DataExportResult mapping = request.isKeepMapping() ? session.downloadDataExportFile(taskId, true, DOWNLOAD_TIMEOUT) : null;
 
             getDisplay().syncExec(() -> {
+               boolean mappingHandedOver = false;
                try
                {
                   boolean saved = FileDownloadHelper.saveLocalFile(getWindow().getShell(), archive.getFile(), baseName + ".zip");
                   if (saved && (mapping != null))
+                  {
+                     mappingHandedOver = true;
                      FileDownloadHelper.saveLocalFile(getWindow().getShell(), mapping.getFile(), baseName + "-mapping.csv");
+                  }
                   statusLabel.setText(i18n.tr("Export completed: {0} metric(s), {1} sample(s), {2} bytes", archive.getMetricCount(), archive.getSampleCount(), archive.getFileSize()));
                   if (saved)
                      addMessage(MessageArea.INFORMATION, i18n.tr("Export saved as {0}", baseName + ".zip"));
@@ -530,8 +534,7 @@ public class DataExportView extends View
                {
                   addMessage(MessageArea.ERROR, i18n.tr("Cannot save export file: {0}", e.getLocalizedMessage()));
                }
-               archive.getFile().delete();
-               if (mapping != null)
+               if ((mapping != null) && !mappingHandedOver)
                   mapping.getFile().delete();
             });
          }

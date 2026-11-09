@@ -69,7 +69,7 @@ public class FileDownloadHelper
       {
          FileDialog dlg = new FileDialog(view.getWindow().getShell(), SWT.SAVE);
          dlg.setText(i18n.tr("Start Download"));
-         String[] filterExtensions = { "*.*" }; 
+         String[] filterExtensions = { "*.*" };
          dlg.setFilterExtensions(filterExtensions);
          String[] filterNames = { i18n.tr("All Files") };
          dlg.setFilterNames(filterNames);
@@ -138,7 +138,7 @@ public class FileDownloadHelper
                      total += f.getSize();
                   }
                }
-               
+
                monitor.beginTask(i18n.tr("Downloading files"), (int)total);
                for(AgentFile f : files)
                {
@@ -165,10 +165,10 @@ public class FileDownloadHelper
       };
       job.start();
    }
-   
+
    /**
     * Download file from agent.
-    * 
+    *
     * @param remoteName remote file name
     * @param localName local file name
     */
@@ -211,11 +211,11 @@ public class FileDownloadHelper
 
    /**
     * Recursively download directory from agent to local pc
-    * 
+    *
     * @param sf
     * @param localFileName
-    * @throws IOException 
-    * @throws NXCException 
+    * @throws IOException
+    * @throws NXCException
     */
    private static void downloadDir(NXCSession session, long objectId, final AgentFile sf, String localFileName, final IProgressMonitor monitor) throws NXCException, IOException
    {
@@ -245,7 +245,8 @@ public class FileDownloadHelper
 
    /**
     * Hand a locally available file to the user for saving. On desktop this opens a native Save dialog
-    * and copies the file to the chosen destination. On web this triggers a browser download.
+    * and copies the file to the chosen destination. On web this triggers a browser download. The local
+    * file is deleted afterwards (on desktop when this method returns, on web after it is served).
     *
     * @param shell parent shell for the save dialog
     * @param localFile already-downloaded local file (e.g. server temp file)
@@ -255,14 +256,21 @@ public class FileDownloadHelper
     */
    public static boolean saveLocalFile(Shell shell, File localFile, String suggestedName) throws IOException
    {
-      FileDialog dlg = new FileDialog(shell, SWT.SAVE);
-      dlg.setFileName(suggestedName);
-      dlg.setOverwrite(true);
-      String target = dlg.open();
-      if (target == null)
-         return false;
-      Files.copy(localFile.toPath(), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
-      return true;
+      try
+      {
+         FileDialog dlg = new FileDialog(shell, SWT.SAVE);
+         dlg.setFileName(suggestedName);
+         dlg.setOverwrite(true);
+         String target = dlg.open();
+         if (target == null)
+            return false;
+         Files.copy(localFile.toPath(), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
+         return true;
+      }
+      finally
+      {
+         localFile.delete();
+      }
    }
 
    /**

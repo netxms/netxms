@@ -53,7 +53,7 @@ public class FileDownloadHelper
 
    /**
     * Download file from agent
-    * @param agentFileManager 
+    * @param agentFileManager
     */
    public static void startDownload(long objectId, IStructuredSelection selection, AgentFileManager agentFileManager)
    {
@@ -67,7 +67,7 @@ public class FileDownloadHelper
             downloadFile(session, objectId, file.getFullName(), file.getName());
          }
          else
-         {      
+         {
             Job job = new Job(i18n.tr("Download from agent"), null) {
                @Override
                protected void run(final IProgressMonitor monitor) throws Exception
@@ -112,10 +112,10 @@ public class FileDownloadHelper
          }
       }
    }
-   
+
    /**
     * Download file from agent.
-    * 
+    *
     * @param remoteName remote file name
     * @param localName local file name
     */
@@ -167,14 +167,14 @@ public class FileDownloadHelper
       };
       job.start();
    }
-   
+
    /**
     * Recursively download directory from agent to local pc
-    * 
+    *
     * @param sf
     * @param localFileName
-    * @throws IOException 
-    * @throws NXCException 
+    * @throws IOException
+    * @throws NXCException
     */
    private static void downloadDir(NXCSession session, long objectId, final AgentFile sf, String localFileName, ZipOutputStream zos, final IProgressMonitor monitor) throws NXCException, IOException
    {
@@ -215,7 +215,7 @@ public class FileDownloadHelper
                zos.putNextEntry(zipEntry);
                byte[] bytes = new byte[1024];
                int length;
-               while ((length = fis.read(bytes)) >= 0) 
+               while ((length = fis.read(bytes)) >= 0)
                {
                   zos.write(bytes, 0, length);
                }
@@ -228,7 +228,7 @@ public class FileDownloadHelper
 
    /**
     * Hand a locally available file to the user for saving. On web this registers the file with
-    * {@link DownloadServiceHandler} and triggers a browser download.
+    * {@link DownloadServiceHandler} and triggers a browser download. The local file is deleted after it is served.
     *
     * @param shell unused on web; present for API symmetry with desktop
     * @param localFile already-downloaded local file (e.g. server temp file)
