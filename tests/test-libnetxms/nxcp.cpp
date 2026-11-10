@@ -2,6 +2,7 @@
 #include <nms_util.h>
 #include <nxcpapi.h>
 #include <testtools.h>
+#include <sstream>
 
 /**
  * NULL-safe _tcscmp()
@@ -336,4 +337,59 @@ void TestNXCPMessageCodeName()
    // After unregister the code is unknown again
    AssertEquals(NXCPMessageCodeName(TEST_CUSTOM_CODE, buffer), _T("CMD_0x0500"));
    EndTest();
+}
+
+/**
+ * Communication channel that counts sent messages and fails every send when requested
+ */
+class TestCommChannel : public AbstractCommChannel
+{
+private:
+   bool m_failSend;
+
+public:
+   int sendCount;
+
+   TestCommChannel(bool failSend) : AbstractCommChannel()
+   {
+      m_failSend = failSend;
+      sendCount = 0;
+   }
+
+   virtual ssize_t send(const void *data, size_t size, Mutex *mutex) override
+   {
+      sendCount++;
+      return m_failSend ? -1 : static_cast<ssize_t>(size);
+   }
+   virtual ssize_t recv(void *buffer, size_t size, uint32_t timeout) override { return -1; }
+   virtual int poll(uint32_t timeout, bool write) override { return -1; }
+   virtual void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context) override { }
+   virtual int shutdown() override { return 0; }
+   virtual void close() override { }
+};
+
+/**
+ * Test file sending over encrypted NXCP channel
+ */
+void TestSendFileOverEncryptedChannel()
+{
+   std::string content(256 * 1024, 'x');
+   NXCPEncryptionContext *ectx = NXCPEncryptionContext::create(NXCP_SUPPORT_AES_256);
+
+   StartTest(_T("SendFileOverNXCP - encrypted channel"));
+   AssertNotNull(ectx);
+   std::istringstream okStream(content);
+   TestCommChannel okChannel(false);
+   AssertTrue(SendFileOverNXCP(&okChannel, 1, &okStream, ectx, 0, nullptr, nullptr, nullptr, NXCP_STREAM_COMPRESSION_NONE, nullptr, 0));
+   AssertTrue(okChannel.sendCount > 2);
+   EndTest();
+
+   StartTest(_T("SendFileOverNXCP - encrypted channel send failure"));
+   std::istringstream failStream(content);
+   TestCommChannel failChannel(true);
+   AssertFalse(SendFileOverNXCP(&failChannel, 1, &failStream, ectx, 0, nullptr, nullptr, nullptr, NXCP_STREAM_COMPRESSION_NONE, nullptr, 0));
+   AssertEquals(failChannel.sendCount, 2);  // first data block and abort
+   EndTest();
+
+   delete ectx;
 }
