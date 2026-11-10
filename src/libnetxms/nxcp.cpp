@@ -852,11 +852,12 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
          if (ectx != nullptr)
          {
             NXCP_ENCRYPTED_MESSAGE *emsg = ectx->encryptMessage(msg);
-            if (emsg != nullptr)
-            {
-               channel->send(emsg, ntohl(emsg->size), mutex);
-               MemFree(emsg);
-            }
+            if (emsg == nullptr)
+               break;
+            ssize_t rc = channel->send(emsg, ntohl(emsg->size), mutex);
+            MemFree(emsg);
+            if (rc <= 0)
+               break;	// Send error
          }
          else
          {
