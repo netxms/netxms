@@ -1691,11 +1691,15 @@ static inline double DHCPScopeUtilization(uint64_t total, uint64_t used)
 }
 
 /**
- * Helpers for generic DHCP server tables (DHCP.Scopes and DHCP.Leases) shared by all DHCP server subagents
+ * Helpers for generic DHCP server tables (DHCP.Scopes and DHCP.Leases) shared by all DHCP server subagents.
+ * The variant without "declined" argument is for servers that do not report declined addresses: DECLINED
+ * cell is left empty, which tells the server that the value is unknown.
  */
 void LIBNXAGENT_EXPORTABLE CreateDHCPScopeTableColumns(Table *table);
 void LIBNXAGENT_EXPORTABLE AddDHCPScopeTableRow(Table *table, const TCHAR *id, int ipVersion, const TCHAR *network, const TCHAR *name, const TCHAR *ranges, bool enabled,
       uint64_t total, uint64_t used, uint64_t declined);
+void LIBNXAGENT_EXPORTABLE AddDHCPScopeTableRow(Table *table, const TCHAR *id, int ipVersion, const TCHAR *network, const TCHAR *name, const TCHAR *ranges, bool enabled,
+      uint64_t total, uint64_t used);
 void LIBNXAGENT_EXPORTABLE CreateDHCPLeaseTableColumns(Table *table);
 
 /**

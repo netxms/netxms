@@ -82,7 +82,13 @@ DataCollectionError Node::getDhcpScopes(ObjectArray<DhcpScopeInfo> *scopes)
       scope->enabled = (cEnabled == -1) || (table->getAsInt(i, cEnabled) != 0);
       scope->totalAddresses = table->getAsUInt64(i, cTotal);
       scope->usedAddresses = table->getAsUInt64(i, cUsed);
-      scope->declinedAddresses = table->getAsUInt64(i, cDeclined);
+      // Empty DECLINED cell means that DHCP server does not report declined addresses
+      const wchar_t *declined = (cDeclined != -1) ? table->getAsString(i, cDeclined) : nullptr;
+      if ((declined != nullptr) && (*declined != 0))
+      {
+         scope->declinedAddresses = table->getAsUInt64(i, cDeclined);
+         scope->declinedAddressesKnown = true;
+      }
       if (cFree != -1)
       {
          scope->freeAddresses = table->getAsUInt64(i, cFree);

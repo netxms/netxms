@@ -202,7 +202,6 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
    { _T("Agent.Desktop"), H_AgentDesktop, nullptr, DCI_DT_STRING, _T("Desktop associated with agent process") },
 
-   { _T("DHCP.Scope.Declined(*)"), H_DhcpScopeMetric, _T("D"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_DECLINED },
    { _T("DHCP.Scope.Free(*)"), H_DhcpScopeMetric, _T("F"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_FREE },
    { _T("DHCP.Scope.Total(*)"), H_DhcpScopeMetric, _T("T"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_TOTAL },
    { _T("DHCP.Scope.Used(*)"), H_DhcpScopeMetric, _T("U"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_USED },

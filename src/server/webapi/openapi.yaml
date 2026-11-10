@@ -20235,7 +20235,8 @@ components:
           description: Number of currently leased addresses
         declinedAddresses:
           type: integer
-          description: Number of declined addresses
+          nullable: true
+          description: Number of declined addresses. Null when DHCP server does not report it (Microsoft DHCP Server, dnsmasq).
         freeAddresses:
           type: integer
           description: Number of free addresses

@@ -61,7 +61,9 @@ public class DhcpScopeComparator extends ViewerComparator
             result = Long.compareUnsigned(s1.getUsedAddresses(), s2.getUsedAddresses());
             break;
          case DhcpView.SCOPE_DECLINED:
-            result = Long.compareUnsigned(s1.getDeclinedAddresses(), s2.getDeclinedAddresses());
+            result = Boolean.compare(s1.isDeclinedAddressesKnown(), s2.isDeclinedAddressesKnown());
+            if ((result == 0) && s1.isDeclinedAddressesKnown())
+               result = Long.compareUnsigned(s1.getDeclinedAddresses(), s2.getDeclinedAddresses());
             break;
          case DhcpView.SCOPE_FREE:
             result = Long.compareUnsigned(s1.getFreeAddresses(), s2.getFreeAddresses());

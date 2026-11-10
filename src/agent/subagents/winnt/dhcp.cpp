@@ -25,6 +25,8 @@
 
 #include "winnt_subagent.h"
 #include <nxcldefs.h>
+#include <map>
+#include <set>
 
 /**
  * DHCP Server Management API definitions (from Microsoft documentation for dhcpsapi.h).
@@ -200,6 +202,12 @@ static Mutex s_apiLock;
 static WCHAR s_serverAddress[256] = L"127.0.0.1";
 
 /**
+ * Set when DHCP server address is configured explicitly. Local DHCPServer service state is not
+ * checked in that case because the managed server is usually not on the agent host.
+ */
+static bool s_serverAddressConfigured = false;
+
+/**
  * Cache time for scope information (seconds)
  */
 static const time_t s_cacheTime = 5;
@@ -241,6 +249,137 @@ static bool LoadDhcpApi()
 }
 
 /**
+ * Free memory block allocated by DHCP server management API (nullptr is ignored)
+ */
+static inline void FreeRpcMemory(void *p)
+{
+   if (p != nullptr)
+      s_DhcpRpcFreeMemory(p);
+}
+
+/*
+ * DHCP server management API allocates every embedded pointer of a returned structure
+ * as a separate block, so each one has to be freed individually before the structure itself.
+ */
+
+/**
+ * Free strings embedded into NXDHCP_HOST_INFO (structure itself is not freed)
+ */
+static void FreeHostInfoFields(NXDHCP_HOST_INFO *host)
+{
+   FreeRpcMemory(host->NetBiosName);
+   FreeRpcMemory(host->HostName);
+}
+
+/**
+ * Free NXDHCP_IP_ARRAY returned by DHCP API
+ */
+static void FreeIpArray(NXDHCP_IP_ARRAY *a)
+{
+   if (a == nullptr)
+      return;
+   FreeRpcMemory(a->Elements);
+   s_DhcpRpcFreeMemory(a);
+}
+
+/**
+ * Free NXDHCP_SUBNET_INFO returned by DHCP API
+ */
+static void FreeSubnetInfo(NXDHCP_SUBNET_INFO *info)
+{
+   if (info == nullptr)
+      return;
+   FreeRpcMemory(info->SubnetName);
+   FreeRpcMemory(info->SubnetComment);
+   FreeHostInfoFields(&info->PrimaryHost);
+   s_DhcpRpcFreeMemory(info);
+}
+
+/**
+ * Free NXDHCP_SUBNET_ELEMENT_INFO_ARRAY returned by DHCP API
+ */
+static void FreeSubnetElements(NXDHCP_SUBNET_ELEMENT_INFO_ARRAY *a)
+{
+   if (a == nullptr)
+      return;
+   if (a->Elements != nullptr)
+   {
+      for(DWORD i = 0; i < a->NumElements; i++)
+      {
+         NXDHCP_SUBNET_ELEMENT_DATA& e = a->Elements[i];
+         switch(e.ElementType)
+         {
+            case NXDhcpIpRanges:
+               FreeRpcMemory(e.Element.IpRange);
+               break;
+            case NXDhcpSecondaryHosts:
+               if (e.Element.SecondaryHost != nullptr)
+               {
+                  FreeHostInfoFields(e.Element.SecondaryHost);
+                  s_DhcpRpcFreeMemory(e.Element.SecondaryHost);
+               }
+               break;
+            case NXDhcpReservedIps:
+               if (e.Element.ReservedIp != nullptr)
+               {
+                  if (e.Element.ReservedIp->ReservedForClient != nullptr)
+                  {
+                     FreeRpcMemory(e.Element.ReservedIp->ReservedForClient->Data);
+                     s_DhcpRpcFreeMemory(e.Element.ReservedIp->ReservedForClient);
+                  }
+                  s_DhcpRpcFreeMemory(e.Element.ReservedIp);
+               }
+               break;
+            case NXDhcpExcludedIpRanges:
+               FreeRpcMemory(e.Element.ExcludeIpRange);
+               break;
+            case NXDhcpIpUsedClusters:
+               FreeRpcMemory(e.Element.IpUsedCluster);
+               break;
+         }
+      }
+      s_DhcpRpcFreeMemory(a->Elements);
+   }
+   s_DhcpRpcFreeMemory(a);
+}
+
+/**
+ * Free NXDHCP_CLIENT_INFO_ARRAY_V5 returned by DHCP API
+ */
+static void FreeClientInfoArray(NXDHCP_CLIENT_INFO_ARRAY_V5 *a)
+{
+   if (a == nullptr)
+      return;
+   if (a->Clients != nullptr)
+   {
+      for(DWORD i = 0; i < a->NumElements; i++)
+      {
+         NXDHCP_CLIENT_INFO_V5 *c = a->Clients[i];
+         if (c == nullptr)
+            continue;
+         FreeRpcMemory(c->ClientHardwareAddress.Data);
+         FreeRpcMemory(c->ClientName);
+         FreeRpcMemory(c->ClientComment);
+         FreeHostInfoFields(&c->OwnerHost);
+         s_DhcpRpcFreeMemory(c);
+      }
+      s_DhcpRpcFreeMemory(a->Clients);
+   }
+   s_DhcpRpcFreeMemory(a);
+}
+
+/**
+ * Free NXDHCP_MIB_INFO returned by DHCP API
+ */
+static void FreeMibInfo(NXDHCP_MIB_INFO *mib)
+{
+   if (mib == nullptr)
+      return;
+   FreeRpcMemory(mib->ScopeInfo);
+   s_DhcpRpcFreeMemory(mib);
+}
+
+/**
  * Check if DHCP Server service is installed and running. Returns SYSINFO_RC_SUCCESS if it is,
  * SYSINFO_RC_UNSUPPORTED if service is not installed, and SYSINFO_RC_ERROR if it is not running.
  */
@@ -271,9 +410,12 @@ static LONG CheckDhcpService()
  */
 static LONG CheckDhcpAvailable()
 {
-   LONG rc = CheckDhcpService();
-   if (rc != SYSINFO_RC_SUCCESS)
-      return rc;
+   if (!s_serverAddressConfigured)
+   {
+      LONG rc = CheckDhcpService();
+      if (rc != SYSINFO_RC_SUCCESS)
+         return rc;
+   }
    return LoadDhcpApi() ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
 }
 
@@ -331,20 +473,6 @@ static time_t DateTimeToUnixTime(const NXDHCP_DATE_TIME& dt)
 }
 
 /**
- * Reservation information
- */
-struct DhcpReservation
-{
-   NXDHCP_IP_ADDRESS address;
-   String macAddress;
-
-   DhcpReservation(NXDHCP_IP_ADDRESS a, const String& mac) : macAddress(mac)
-   {
-      address = a;
-   }
-};
-
-/**
  * Scope information
  */
 struct DhcpScope
@@ -357,10 +485,10 @@ struct DhcpScope
    bool enabled;
    uint64_t total;
    uint64_t used;
-   ObjectArray<DhcpReservation> reservations;
+   std::map<NXDHCP_IP_ADDRESS, String> reservations;  // Reserved address -> MAC address
 
    DhcpScope(const String& _id, NXDHCP_IP_ADDRESS _subnet, NXDHCP_IP_MASK _mask, const TCHAR *_name, bool _enabled) :
-         id(_id), name(_name), reservations(0, 16, Ownership::True)
+         id(_id), name(_name)
    {
       subnet = _subnet;
       mask = _mask;
@@ -414,10 +542,10 @@ static void ReadSubnetElements(DhcpScope *scope)
             }
             else if ((e.ElementType == NXDhcpReservedIps) && (e.Element.ReservedIp != nullptr))
             {
-               scope->reservations.add(new DhcpReservation(e.Element.ReservedIp->ReservedIpAddress, ClientUidToMacAddress(e.Element.ReservedIp->ReservedForClient)));
+               scope->reservations.emplace(e.Element.ReservedIp->ReservedIpAddress, ClientUidToMacAddress(e.Element.ReservedIp->ReservedForClient));
             }
          }
-         s_DhcpRpcFreeMemory(elements);
+         FreeSubnetElements(elements);
       } while(rc == ERROR_MORE_DATA);
    }
    scope->ranges = ranges;
@@ -459,11 +587,11 @@ static shared_ptr<ObjectArray<DhcpScope>> ReadScopes()
          bool enabled = (info->SubnetState == NXDhcpSubnetEnabled) || (info->SubnetState == NXDhcpSubnetEnabledSwitched);
          auto scope = new DhcpScope(ScopeId(info->SubnetAddress, info->SubnetMask), info->SubnetAddress, info->SubnetMask,
                CHECK_NULL_EX(info->SubnetName), enabled);
-         s_DhcpRpcFreeMemory(info);
+         FreeSubnetInfo(info);
          ReadSubnetElements(scope);
          scopes->add(scope);
       }
-      s_DhcpRpcFreeMemory(subnets);
+      FreeIpArray(subnets);
    } while(rc == ERROR_MORE_DATA);
 
    // Address usage counters
@@ -485,7 +613,7 @@ static shared_ptr<ObjectArray<DhcpScope>> ReadScopes()
             }
          }
       }
-      s_DhcpRpcFreeMemory(mib);
+      FreeMibInfo(mib);
    }
    else
    {
@@ -545,9 +673,6 @@ LONG H_DhcpScopeMetric(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abst
 
    switch(*arg)
    {
-      case 'D':
-         ret_uint64(value, 0);
-         break;
       case 'F':
          ret_uint64(value, DHCPScopeFreeAddresses(scope->total, scope->used, 0));
          break;
@@ -596,11 +721,12 @@ LONG H_DhcpScopeTable(const TCHAR *metric, const TCHAR *arg, Table *value, Abstr
    if (scopes == nullptr)
       return SYSINFO_RC_ERROR;
 
+   // Microsoft DHCP Server does not provide number of declined addresses per scope
    CreateDHCPScopeTableColumns(value);
    for(int i = 0; i < scopes->size(); i++)
    {
       DhcpScope *s = scopes->get(i);
-      AddDHCPScopeTableRow(value, s->id, 4, s->id, s->name, s->ranges, s->enabled, s->total, s->used, 0);
+      AddDHCPScopeTableRow(value, s->id, 4, s->id, s->name, s->ranges, s->enabled, s->total, s->used);
    }
    return SYSINFO_RC_SUCCESS;
 }
@@ -610,7 +736,7 @@ LONG H_DhcpScopeTable(const TCHAR *metric, const TCHAR *arg, Table *value, Abstr
  */
 static bool AddScopeLeases(DhcpScope *scope, Table *table)
 {
-   IntegerArray<NXDHCP_IP_ADDRESS> leasedAddresses;
+   std::set<NXDHCP_IP_ADDRESS> leasedAddresses;
    NXDHCP_RESUME_HANDLE resumeHandle = 0;
    DWORD rc;
    do
@@ -635,16 +761,7 @@ static bool AddScopeLeases(DhcpScope *scope, Table *table)
          if (c == nullptr)
             continue;
 
-         bool reserved = false;
-         for(int j = 0; j < scope->reservations.size(); j++)
-         {
-            if (scope->reservations.get(j)->address == c->ClientIpAddress)
-            {
-               reserved = true;
-               break;
-            }
-         }
-
+         bool reserved = (scope->reservations.find(c->ClientIpAddress) != scope->reservations.end());
          time_t expiration = DateTimeToUnixTime(c->ClientLeaseExpires);
          int state;
          switch(c->AddressState & 0x03)
@@ -677,23 +794,22 @@ static bool AddScopeLeases(DhcpScope *scope, Table *table)
          table->set(DHCP_LEASE_COL_STATE, static_cast<int32_t>(state));
          table->set(DHCP_LEASE_COL_LAST_TRANSACTION, static_cast<int64_t>(0));
          table->set(DHCP_LEASE_COL_EXPIRATION, static_cast<int64_t>(expiration));
-         leasedAddresses.add(c->ClientIpAddress);
+         leasedAddresses.insert(c->ClientIpAddress);
       }
-      s_DhcpRpcFreeMemory(clients);
+      FreeClientInfoArray(clients);
    } while(rc == ERROR_MORE_DATA);
 
    // Reservations without client record
-   for(int i = 0; i < scope->reservations.size(); i++)
+   for(auto it = scope->reservations.begin(); it != scope->reservations.end(); it++)
    {
-      DhcpReservation *r = scope->reservations.get(i);
-      if (leasedAddresses.contains(r->address))
+      if (leasedAddresses.find(it->first) != leasedAddresses.end())
          continue;
       TCHAR ipText[32];
       table->addRow();
-      table->set(DHCP_LEASE_COL_IP_ADDRESS, FormatAddress(r->address, ipText));
+      table->set(DHCP_LEASE_COL_IP_ADDRESS, FormatAddress(it->first, ipText));
       table->set(DHCP_LEASE_COL_PREFIX_LENGTH, static_cast<int32_t>(32));
       table->set(DHCP_LEASE_COL_SCOPE_ID, scope->id.cstr());
-      table->set(DHCP_LEASE_COL_MAC_ADDRESS, r->macAddress.cstr());
+      table->set(DHCP_LEASE_COL_MAC_ADDRESS, it->second.cstr());
       table->set(DHCP_LEASE_COL_TYPE, static_cast<int32_t>(DHCP_LEASE_TYPE_RESERVATION));
       table->set(DHCP_LEASE_COL_STATE, static_cast<int32_t>(DHCP_LEASE_STATE_INACTIVE));
       table->set(DHCP_LEASE_COL_LAST_TRANSACTION, static_cast<int64_t>(0));
@@ -744,6 +860,10 @@ LONG H_DhcpLeaseTable(const TCHAR *metric, const TCHAR *arg, Table *value, Abstr
 void ConfigureDhcpServerManagement(Config *config)
 {
    const TCHAR *address = config->getValue(_T("/WinNT/DHCPServerAddress"));
-   if (address != nullptr)
+   if ((address != nullptr) && (*address != 0))
+   {
       wcslcpy(s_serverAddress, address, 256);
+      s_serverAddressConfigured = true;
+      nxlog_debug_tag(DEBUG_TAG_DHCP, 3, _T("Using DHCP server at %s"), s_serverAddress);
+   }
 }

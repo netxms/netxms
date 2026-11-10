@@ -43,10 +43,10 @@ void LIBNXAGENT_EXPORTABLE CreateDHCPScopeTableColumns(Table *table)
 }
 
 /**
- * Add row to DHCP.Scopes table
+ * Add row to DHCP.Scopes table with all columns except DECLINED
  */
-void LIBNXAGENT_EXPORTABLE AddDHCPScopeTableRow(Table *table, const TCHAR *id, int ipVersion, const TCHAR *network, const TCHAR *name, const TCHAR *ranges, bool enabled,
-      uint64_t total, uint64_t used, uint64_t declined)
+static void AddScopeRow(Table *table, const TCHAR *id, int ipVersion, const TCHAR *network, const TCHAR *name, const TCHAR *ranges, bool enabled,
+      uint64_t total, uint64_t used, uint64_t free)
 {
    table->addRow();
    table->set(DHCP_SCOPE_COL_ID, id);
@@ -57,9 +57,27 @@ void LIBNXAGENT_EXPORTABLE AddDHCPScopeTableRow(Table *table, const TCHAR *id, i
    table->set(DHCP_SCOPE_COL_ENABLED, static_cast<int32_t>(enabled ? 1 : 0));
    table->set(DHCP_SCOPE_COL_TOTAL, total);
    table->set(DHCP_SCOPE_COL_USED, used);
-   table->set(DHCP_SCOPE_COL_DECLINED, declined);
-   table->set(DHCP_SCOPE_COL_FREE, DHCPScopeFreeAddresses(total, used, declined));
+   table->set(DHCP_SCOPE_COL_FREE, free);
    table->set(DHCP_SCOPE_COL_UTILIZATION, DHCPScopeUtilization(total, used), 2);
+}
+
+/**
+ * Add row to DHCP.Scopes table
+ */
+void LIBNXAGENT_EXPORTABLE AddDHCPScopeTableRow(Table *table, const TCHAR *id, int ipVersion, const TCHAR *network, const TCHAR *name, const TCHAR *ranges, bool enabled,
+      uint64_t total, uint64_t used, uint64_t declined)
+{
+   AddScopeRow(table, id, ipVersion, network, name, ranges, enabled, total, used, DHCPScopeFreeAddresses(total, used, declined));
+   table->set(DHCP_SCOPE_COL_DECLINED, declined);
+}
+
+/**
+ * Add row to DHCP.Scopes table for DHCP server that does not report declined addresses (DECLINED cell is left empty)
+ */
+void LIBNXAGENT_EXPORTABLE AddDHCPScopeTableRow(Table *table, const TCHAR *id, int ipVersion, const TCHAR *network, const TCHAR *name, const TCHAR *ranges, bool enabled,
+      uint64_t total, uint64_t used)
+{
+   AddScopeRow(table, id, ipVersion, network, name, ranges, enabled, total, used, DHCPScopeFreeAddresses(total, used, 0));
 }
 
 /**

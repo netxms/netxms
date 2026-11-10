@@ -58,7 +58,7 @@ public class DhcpScopeLabelProvider extends LabelProvider implements ITableLabel
          case DhcpView.SCOPE_USED:
             return Long.toUnsignedString(scope.getUsedAddresses());
          case DhcpView.SCOPE_DECLINED:
-            return Long.toUnsignedString(scope.getDeclinedAddresses());
+            return scope.isDeclinedAddressesKnown() ? Long.toUnsignedString(scope.getDeclinedAddresses()) : "";
          case DhcpView.SCOPE_FREE:
             return Long.toUnsignedString(scope.getFreeAddresses());
          case DhcpView.SCOPE_UTILIZATION:

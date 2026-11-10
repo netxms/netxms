@@ -5560,7 +5560,7 @@ NXSL_Value *NXSL_DHCPScopeClass::getAttr(NXSL_Object *object, const NXSL_Identif
    auto scope = static_cast<DhcpScopeInfo*>(object->getData());
    if (NXSL_COMPARE_ATTRIBUTE_NAME("declinedAddresses"))
    {
-      value = vm->createValue(scope->declinedAddresses);
+      value = scope->declinedAddressesKnown ? vm->createValue(scope->declinedAddresses) : vm->createValue();
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("freeAddresses"))
    {

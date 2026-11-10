@@ -35,6 +35,7 @@ public class DhcpScope
    private long usedAddresses;
    private long declinedAddresses;
    private long freeAddresses;
+   private boolean declinedAddressesKnown;
 
    /**
     * Create scope object from NXCP message.
@@ -53,6 +54,7 @@ public class DhcpScope
       usedAddresses = msg.getFieldAsInt64(baseId + 6);
       declinedAddresses = msg.getFieldAsInt64(baseId + 7);
       freeAddresses = msg.getFieldAsInt64(baseId + 8);
+      declinedAddressesKnown = msg.getFieldAsBoolean(baseId + 9);
    }
 
    /**
@@ -126,13 +128,23 @@ public class DhcpScope
    }
 
    /**
-    * Get number of declined addresses.
+    * Get number of declined addresses. Valid only if {@link #isDeclinedAddressesKnown()} returns true.
     *
     * @return number of declined addresses
     */
    public long getDeclinedAddresses()
    {
       return declinedAddresses;
+   }
+
+   /**
+    * Check if DHCP server reports number of declined addresses (some servers, like Microsoft DHCP Server or dnsmasq, do not).
+    *
+    * @return true if number of declined addresses is known
+    */
+   public boolean isDeclinedAddressesKnown()
+   {
+      return declinedAddressesKnown;
    }
 
    /**

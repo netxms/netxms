@@ -837,9 +837,6 @@ static LONG H_ScopeMetric(const TCHAR *metric, const TCHAR *arg, TCHAR *value, A
 
    switch(*arg)
    {
-      case 'D':
-         ret_uint64(value, 0);
-         break;
       case 'F':
          ret_uint64(value, DHCPScopeFreeAddresses(scope->total, scope->used, 0));
          break;
@@ -885,7 +882,7 @@ static LONG H_ScopeTable(const TCHAR *metric, const TCHAR *arg, Table *value, Ab
    {
       String network = s.network.isValid() ? s.id : String();
       String name(s.name.c_str(), "utf8");
-      AddDHCPScopeTableRow(value, s.id, s.ipVersion(), network, name, s.ranges, true, s.total, s.used, 0);
+      AddDHCPScopeTableRow(value, s.id, s.ipVersion(), network, name, s.ranges, true, s.total, s.used);  // dnsmasq does not track declined addresses
    }
    return SYSINFO_RC_SUCCESS;
 }
@@ -1024,7 +1021,6 @@ static bool SubAgentInit(Config *config)
  */
 static NETXMS_SUBAGENT_PARAM s_metrics[] =
 {
-   { _T("DHCP.Scope.Declined(*)"), H_ScopeMetric, _T("D"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_DECLINED },
    { _T("DHCP.Scope.Free(*)"), H_ScopeMetric, _T("F"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_FREE },
    { _T("DHCP.Scope.Total(*)"), H_ScopeMetric, _T("T"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_TOTAL },
    { _T("DHCP.Scope.Used(*)"), H_ScopeMetric, _T("U"), DCI_DT_UINT64, DCIDESC_DHCP_SCOPE_USED },

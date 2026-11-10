@@ -372,6 +372,7 @@ struct DhcpScopeInfo
    uint64_t usedAddresses;
    uint64_t declinedAddresses;
    uint64_t freeAddresses;
+   bool declinedAddressesKnown;  // false if DHCP server does not report declined addresses
 
    DhcpScopeInfo()
    {
@@ -380,6 +381,7 @@ struct DhcpScopeInfo
       usedAddresses = 0;
       declinedAddresses = 0;
       freeAddresses = 0;
+      declinedAddressesKnown = false;
    }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const
@@ -394,6 +396,7 @@ struct DhcpScopeInfo
       msg->setField(fieldId++, usedAddresses);
       msg->setField(fieldId++, declinedAddresses);
       msg->setField(fieldId++, freeAddresses);
+      msg->setField(fieldId++, declinedAddressesKnown);
    }
 };
 

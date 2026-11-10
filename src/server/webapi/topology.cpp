@@ -756,7 +756,7 @@ int H_DhcpScopes(Context *context)
       json_object_set_new(entry, "enabled", json_boolean(scope->enabled));
       json_object_set_new(entry, "totalAddresses", json_integer(scope->totalAddresses));
       json_object_set_new(entry, "usedAddresses", json_integer(scope->usedAddresses));
-      json_object_set_new(entry, "declinedAddresses", json_integer(scope->declinedAddresses));
+      json_object_set_new(entry, "declinedAddresses", scope->declinedAddressesKnown ? json_integer(scope->declinedAddresses) : json_null());
       json_object_set_new(entry, "freeAddresses", json_integer(scope->freeAddresses));
       json_object_set_new(entry, "utilization", (scope->totalAddresses > 0) ?
                json_real(static_cast<double>(scope->usedAddresses) * 100.0 / static_cast<double>(scope->totalAddresses)) : json_null());
