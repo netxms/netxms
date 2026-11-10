@@ -170,12 +170,24 @@ std::string F_GetIncidentRelatedEvents(json_t *arguments, uint32_t userId)
    json_t *eventsArray = json_array();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   wchar_t query[1024];
-   nx_swprintf(query, 1024,
-      L"SELECT event_id,event_code,event_timestamp,event_source,event_severity,event_message "
-      L"FROM event_log WHERE event_source IN (%s) AND event_timestamp BETWEEN " INT64_FMT L" AND " INT64_FMT
-      L" ORDER BY event_timestamp DESC LIMIT 100",
-      objectIdList.cstr(), static_cast<int64_t>(startTime), static_cast<int64_t>(endTime));
+   StringBuffer query;
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      query.appendFormattedString(
+         L"SELECT event_id,event_code,date_part('epoch',event_timestamp)::int AS event_timestamp,event_source,event_severity,event_message "
+         L"FROM event_log WHERE event_source IN (%s) AND event_timestamp BETWEEN to_timestamp(%u) AND to_timestamp(%u)"
+         L" ORDER BY event_timestamp DESC",
+         objectIdList.cstr(), static_cast<uint32_t>(startTime), static_cast<uint32_t>(endTime));
+   }
+   else
+   {
+      query.appendFormattedString(
+         L"SELECT event_id,event_code,event_timestamp,event_source,event_severity,event_message "
+         L"FROM event_log WHERE event_source IN (%s) AND event_timestamp BETWEEN %u AND %u"
+         L" ORDER BY event_timestamp DESC",
+         objectIdList.cstr(), static_cast<uint32_t>(startTime), static_cast<uint32_t>(endTime));
+   }
+   ApplyQueryRowLimit(query, 100);
 
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != nullptr)
@@ -218,28 +230,13 @@ static std::string QueryObjectIncidents(const shared_ptr<NetObj>& object, bool o
    json_t *incidentsArray = json_array();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   wchar_t query[512];
+   StringBuffer query(L"SELECT id,creation_time,last_change_time,state,assigned_user_id,title,close_time FROM incidents WHERE source_object_id=");
+   query.append(object->getId());
    if (openOnly)
-   {
-      nx_swprintf(query, 512,
-         L"SELECT id,creation_time,last_change_time,state,assigned_user_id,title,close_time "
-         L"FROM incidents WHERE source_object_id=%u AND state<4 ORDER BY creation_time DESC",
-         object->getId());
-   }
-   else if (maxCount > 0)
-   {
-      nx_swprintf(query, 512,
-         L"SELECT id,creation_time,last_change_time,state,assigned_user_id,title,close_time "
-         L"FROM incidents WHERE source_object_id=%u ORDER BY creation_time DESC LIMIT %u",
-         object->getId(), maxCount);
-   }
-   else
-   {
-      nx_swprintf(query, 512,
-         L"SELECT id,creation_time,last_change_time,state,assigned_user_id,title,close_time "
-         L"FROM incidents WHERE source_object_id=%u ORDER BY creation_time DESC",
-         object->getId());
-   }
+      query.append(L" AND state<4");
+   query.append(L" ORDER BY creation_time DESC");
+   if (maxCount > 0)
+      ApplyQueryRowLimit(query, static_cast<int>(maxCount));
 
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != nullptr)
@@ -294,7 +291,9 @@ std::string F_GetIncidentHistory(json_t *arguments, uint32_t userId)
       return std::string("Access denied");
 
    uint32_t maxCount = json_object_get_uint32(arguments, "max_count", 20);
-   if (maxCount > 100)
+   if (maxCount < 1)
+      maxCount = 1;
+   else if (maxCount > 100)
       maxCount = 100;
 
    return QueryObjectIncidents(object, false, maxCount);

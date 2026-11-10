@@ -162,3 +162,40 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
    }
    return RCC_AGENT_ERROR;
 }
+
+/**
+ * Limit number of rows returned by given SELECT query using syntax of current database. Query must start with
+ * SELECT (optionally followed by DISTINCT) and must be complete, including ORDER BY clause if any. Limit values
+ * below 1 are treated as 1.
+ */
+void LIBNXSRV_EXPORTABLE ApplyQueryRowLimit(StringBuffer& query, int limit)
+{
+   if (limit < 1)
+      limit = 1;
+
+   wchar_t buffer[64];
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         {
+            size_t pos = 6;  // after SELECT
+            while(query.charAt(pos) == L' ')
+               pos++;
+            if (!_tcsnicmp(query.cstr() + pos, L"DISTINCT ", 9))
+               pos += 9;
+            nx_swprintf(buffer, 64, L"TOP %d ", limit);
+            query.insert(pos, buffer);
+         }
+         break;
+      case DB_SYNTAX_ORACLE:
+         query.insert(0, L"SELECT * FROM (");
+         query.appendFormattedString(L") WHERE ROWNUM<=%d", limit);
+         break;
+      case DB_SYNTAX_DB2:
+         query.appendFormattedString(L" FETCH FIRST %d ROWS ONLY", limit);
+         break;
+      default:
+         query.appendFormattedString(L" LIMIT %d", limit);
+         break;
+   }
+}
