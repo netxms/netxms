@@ -54,6 +54,7 @@ public class LanguagePage extends PropertyPage
       new Language("fr", "Français - French"),
       new Language("pt-BR", "Português - Portuguese (Brazil)"),
       new Language("ru", "Русский - Russian"),
+      new Language("zh-CN", "简体中文 - Chinese (Simplified)"),
       new Language("zh-TW", "繁體中文 - Chinese (Traditional)")
    };
 

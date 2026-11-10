@@ -106,23 +106,23 @@ msgstr "簡短時間範例"
 msgid "Use server time &zone"
 msgstr "使用伺服器時區(&Z)"
 
-#: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:65
+#: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:66
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/Translations.java:188
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:124
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:125
 #: src/rwt/java/org/netxms/nxmc/Startup.java:303
 #: src/swt/java/org/netxms/nxmc/Startup.java:205
 msgid "Language"
 msgstr "語言"
 
-#: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:85
+#: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:86
 msgid "Selected language"
 msgstr "選取的語言"
 
-#: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:148
+#: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:149
 msgid "You have to relogin for language change to take effect"
 msgstr "必須重新登入，語言變更才會生效"
 
-#: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:148
+#: src/main/java/org/netxms/nxmc/base/preferencepages/LanguagePage.java:149
 msgid "You have to restart client for language change to take effect"
 msgstr "必須重新啟動用戶端，語言變更才會生效"
 
@@ -282,7 +282,7 @@ msgstr "自訂期間可於用戶端偏好設定中調整（黏性警報認可請
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/InputFields.java:305
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/InputFields.java:341
 #: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/ObjectToolSelectionDialog.java:128
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:215
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:216
 #: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/EditColumnDialog.java:210
 #: src/main/java/org/netxms/nxmc/modules/events/dialogs/EventReferenceViewDialog.java:88
 #: src/main/java/org/netxms/nxmc/modules/events/dialogs/EppChainPropertiesDialog.java:275
@@ -2152,7 +2152,7 @@ msgstr "ID"
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/InputFields.java:271
 #: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/CreateNewToolDialog.java:85
 #: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/InputFieldEditDialog.java:93
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:141
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:142
 #: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/EditColumnDialog.java:106
 #: src/main/java/org/netxms/nxmc/modules/objecttools/views/ObjectToolsEditor.java:107
 #: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleCustomAttribute.java:96
@@ -3063,7 +3063,7 @@ msgstr "電話號碼"
 #: src/main/java/org/netxms/nxmc/modules/agentmanagement/views/DeploymentJobManager.java:105
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/General.java:121
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/Translations.java:190
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:150
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:151
 #: src/main/java/org/netxms/nxmc/modules/objecttools/views/ObjectToolsEditor.java:107
 #: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleIncident.java:134
 #: src/main/java/org/netxms/nxmc/modules/events/dialogs/EditEventTemplateDialog.java:170
@@ -6487,7 +6487,7 @@ msgid "This tool requires confirmation before execution"
 msgstr "此工具在執行前需要確認"
 
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/General.java:292
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:155
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:156
 msgid "Confirmation message"
 msgstr "確認訊息"
 
@@ -6501,13 +6501,13 @@ msgstr "在節點命令中顯示此工具"
 
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/General.java:332
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/Translations.java:192
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:160
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:161
 msgid "Command name"
 msgstr "命令名稱"
 
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/General.java:341
 #: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/Translations.java:193
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:165
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:166
 msgid "Command short name"
 msgstr "命令簡稱"
 
@@ -6726,18 +6726,22 @@ msgid "Russian"
 msgstr "俄文"
 
 #: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:61
+msgid "Chinese (Simplified)"
+msgstr "簡體中文"
+
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:62
 msgid "Chinese (Traditional)"
 msgstr "繁體中文"
 
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:104
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:105
 msgid "Add Translation"
 msgstr "新增翻譯"
 
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:104
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:105
 msgid "Edit Translation"
 msgstr "編輯翻譯"
 
-#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:215
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/TranslationEditDialog.java:216
 msgid "Please select a language."
 msgstr "請選擇語言。"
 

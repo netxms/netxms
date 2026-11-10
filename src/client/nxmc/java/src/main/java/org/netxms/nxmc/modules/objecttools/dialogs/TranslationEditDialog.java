@@ -58,6 +58,7 @@ public class TranslationEditDialog extends Dialog
       new Language("fr", i18n.tr("French")),
       new Language("pt-BR", i18n.tr("Portuguese (Brazil)")),
       new Language("ru", i18n.tr("Russian")),
+      new Language("zh-CN", i18n.tr("Chinese (Simplified)")),
       new Language("zh-TW", i18n.tr("Chinese (Traditional)"))
    };
 
