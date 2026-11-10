@@ -13,6 +13,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Agent.DefaultProtocolCompressionMode','1','1',1,0,'C','Default agent protocol compression mode','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Agent.EnableRegistration','1','1',1,0,'B','Enable/disable agent self-registration','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Agent.RestartWaitTime','0','0',1,0,'I','Period of time after agent restart for which agent will not be considered unreachable.','seconds');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Agent.TLS.ReverseTunnels','2','2',1,0,'C','Mode of server-initiated (reverse) TLS tunnels to agents on nodes with agent TLS mode Allowed: disabled (never used), allowed (used only when agent rejects non-TLS connection), or preferred (used whenever agent supports TLS tunnels).','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Agent.UploadBandwidthLimit','0','0',1,0,'I','Bandwidth limit for file uploads from server to agent (0 = unlimited).','KB/s');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Agent.Upgrade.WaitTime','600','600',1,0,'I','Maximum wait time in seconds for agent restart after upgrade. If agent cannot be contacted after this time period, upgrade process is considered as failed.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AgentPolicy.MaxFileSize','134217728','134217728',1,0,'I','Maximum file size for exported files in agent policies','bytes');
@@ -468,6 +469,9 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.De
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultEncryptionPolicy','3','Required');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultProtocolCompressionMode','1','Enabled');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultProtocolCompressionMode','2','Disabled');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.TLS.ReverseTunnels','0','Disabled');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.TLS.ReverseTunnels','1','Allowed');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.TLS.ReverseTunnels','2','Preferred');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','0','1.0');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','1','1.1');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','2','1.2');

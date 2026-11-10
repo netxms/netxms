@@ -4374,6 +4374,7 @@ protected:
    uuid m_agentId;
    TCHAR *m_agentCertSubject;
    int16_t m_agentTlsMode;
+   bool m_agentEnforcesTls;  // Agent rejected legacy connection with ERR_TLS_REQUIRED (not persisted)
    bool m_agentCertFingerprintSet;
    BYTE m_agentCertFingerprint[SHA256_DIGEST_SIZE];
    BYTE m_mismatchedCertFingerprint[SHA256_DIGEST_SIZE];  // Last reported mismatched fingerprint (for event dampening, not persisted)

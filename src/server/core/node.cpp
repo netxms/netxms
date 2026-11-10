@@ -387,6 +387,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_lastAgentPushRequestId = 0;
    m_agentCertSubject = nullptr;
    m_agentTlsMode = AGENT_TLS_MODE_ALLOWED;
+   m_agentEnforcesTls = false;
    m_agentCertFingerprintSet = false;
    memset(m_mismatchedCertFingerprint, 0, SHA256_DIGEST_SIZE);
    m_agentCertMappingMethod = MAP_CERTIFICATE_BY_CN;
@@ -535,6 +536,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_lastAgentPushRequestId = 0;
    m_agentCertSubject = nullptr;
    m_agentTlsMode = AGENT_TLS_MODE_ALLOWED;
+   m_agentEnforcesTls = false;
    m_agentCertFingerprintSet = false;
    memset(m_mismatchedCertFingerprint, 0, SHA256_DIGEST_SIZE);
    m_agentCertMappingMethod = MAP_CERTIFICATE_BY_CN;
@@ -8759,6 +8761,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
       // Agent enforces TLS connections; record capability and retry through TLS tunnel
       nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::connectToAgent(%s [%u]): agent requires TLS connection, retrying through TLS tunnel"), m_name, m_id);
       updateTlsTunnelCapability(true);
+      m_agentEnforcesTls = true;
 
       tunnel = establishReverseAgentTunnel(&legacyAllowed);
       if (tunnel != nullptr)
@@ -12312,6 +12315,8 @@ void Node::writeOSPFDataToMessage(NXCPMessage *msg)
  */
 void Node::updateTlsTunnelCapability(bool supported)
 {
+   if (!supported)
+      m_agentEnforcesTls = false;
    if (supported == ((m_capabilities & NC_HAS_TLS_TUNNEL) != 0))
       return;
    nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::updateTlsTunnelCapability(%s [%u]): agent %s TLS tunnel connections"),
@@ -12326,9 +12331,32 @@ void Node::updateTlsTunnelCapability(bool supported)
 }
 
 /**
+ * Global reverse agent tunnel mode (Agent.TLS.ReverseTunnels), applies to nodes with agent TLS mode ALLOWED
+ */
+#define REVERSE_TUNNEL_MODE_DISABLED   0
+#define REVERSE_TUNNEL_MODE_ALLOWED    1
+#define REVERSE_TUNNEL_MODE_PREFERRED  2
+static int s_reverseTunnelMode = REVERSE_TUNNEL_MODE_PREFERRED;
+
+/**
+ * Update global reverse agent tunnel mode from server configuration
+ */
+void UpdateAgentReverseTunnelMode()
+{
+   int mode = ConfigReadInt(L"Agent.TLS.ReverseTunnels", REVERSE_TUNNEL_MODE_PREFERRED);
+   if ((mode < REVERSE_TUNNEL_MODE_DISABLED) || (mode > REVERSE_TUNNEL_MODE_PREFERRED))
+      mode = REVERSE_TUNNEL_MODE_PREFERRED;
+   s_reverseTunnelMode = mode;
+   nxlog_debug_tag(DEBUG_TAG_AGENT, 2, L"Reverse agent TLS tunnel mode set to %s",
+      (mode == REVERSE_TUNNEL_MODE_DISABLED) ? L"DISABLED" : ((mode == REVERSE_TUNNEL_MODE_ALLOWED) ? L"ALLOWED" : L"PREFERRED"));
+}
+
+/**
  * Establish reverse (server-initiated) TLS tunnel to the node's agent if node settings allow it.
  * Returns tunnel or null pointer. Sets *legacyAllowed to false if fallback to legacy
- * connection should not be attempted.
+ * connection should not be attempted. For nodes with agent TLS mode ALLOWED, global
+ * reverse tunnel mode decides if tunnel is used: never (DISABLED), only if agent rejected
+ * legacy connection (ALLOWED), or whenever agent supports TLS tunnels (PREFERRED).
  */
 shared_ptr<AgentTunnel> Node::establishReverseAgentTunnel(bool *legacyAllowed)
 {
@@ -12337,8 +12365,20 @@ shared_ptr<AgentTunnel> Node::establishReverseAgentTunnel(bool *legacyAllowed)
    if (m_agentTlsMode == AGENT_TLS_MODE_DISABLED)
       return shared_ptr<AgentTunnel>();
 
-   if ((m_agentTlsMode == AGENT_TLS_MODE_ALLOWED) && !(m_capabilities & NC_HAS_TLS_TUNNEL))
-      return shared_ptr<AgentTunnel>();
+   if (m_agentTlsMode == AGENT_TLS_MODE_ALLOWED)
+   {
+      int mode = s_reverseTunnelMode;
+      if (mode == REVERSE_TUNNEL_MODE_DISABLED)
+      {
+         if (m_agentEnforcesTls)
+            nxlog_debug_tag(DEBUG_TAG_AGENT, 5, L"Node::establishReverseAgentTunnel(%s [%u]): agent requires TLS but reverse tunnels are disabled by server configuration (only agent-initiated tunnel can be used)", m_name, m_id);
+         return shared_ptr<AgentTunnel>();
+      }
+      if ((mode == REVERSE_TUNNEL_MODE_ALLOWED) && !m_agentEnforcesTls)
+         return shared_ptr<AgentTunnel>();
+      if ((mode == REVERSE_TUNNEL_MODE_PREFERRED) && !(m_capabilities & NC_HAS_TLS_TUNNEL))
+         return shared_ptr<AgentTunnel>();
+   }
 
    if (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)
       return shared_ptr<AgentTunnel>();  // Direct connections to agent are disabled
@@ -12647,6 +12687,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
          // Agent enforces TLS connections; record capability and retry through TLS tunnel
          nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::createAgentConnection(%s [%u]): agent requires TLS connection, retrying through TLS tunnel"), m_name, m_id);
          updateTlsTunnelCapability(true);
+         m_agentEnforcesTls = true;
 
          tunnel = establishReverseAgentTunnel(&legacyAllowed);
          if (tunnel != nullptr)
