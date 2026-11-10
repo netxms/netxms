@@ -122,7 +122,6 @@ public class ExpansionTest extends AbstractSessionTest
       eventStatusText.add(ObjectStatus.UNKNOWN);
       eventStatusText.add(ObjectStatus.UNMANAGED);
       eventStatusText.add(ObjectStatus.DISABLED);
-      eventStatusText.add(ObjectStatus.TESTING);
 
       SimpleDateFormat outputFormatter = new SimpleDateFormat("dd.MMM.yyyy HH:mm:ss");
 
