@@ -288,6 +288,11 @@ unix_la_LDFLAGS = -module -avoid-version
 unix_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
+if USE_INTERNAL_JANSSON
+unix_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+unix_la_LIBADD += -ljansson
+endif
 
 westerstrand_la_SOURCES = westerstrand/westerstrand.cpp
 westerstrand_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build

@@ -5,5 +5,6 @@
 
 DRIVER = unix
 SOURCES = bsd.cpp linux.cpp unix.cpp
+DRV_LIBS = -lnxjansson
 
 include $(TOPDIR)/src/server/drivers/ndd-common.mk
