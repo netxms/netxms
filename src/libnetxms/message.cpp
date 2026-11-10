@@ -88,6 +88,27 @@ static size_t CalculateFieldSize(const NXCP_MESSAGE_FIELD *field, bool networkBy
 }
 
 /**
+ * Calculate size of field in received message (network byte order) and validate it against number of bytes
+ * available in message data starting at field position. Returns 0 if field does not fit into available data.
+ */
+static size_t CalculateReceivedFieldSize(const NXCP_MESSAGE_FIELD *field, size_t available)
+{
+   if (available < 8)
+      return 0;
+   if ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY))
+   {
+      if (available < 12)
+         return 0;
+      size_t length = ntohl(field->df_string.length);
+      if (length > available - 12)
+         return 0;
+      return length + 12;
+   }
+   size_t size = CalculateFieldSize(field, true);
+   return (size <= available) ? size : 0;
+}
+
+/**
  * Field hash map entry. Hash key is data.fieldId (host byte order); it is the first member of the packed
  * NXCP_MESSAGE_FIELD structure, so &data is used as key pointer to avoid taking address of packed member.
  */
@@ -302,7 +323,16 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
             m_version = -1;   // error indicator
             return;
          }
-         msgDataSize = ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) - NXCP_HEADER_SIZE;
+         size_t uncompressedSize = ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE));
+         if (uncompressedSize < NXCP_HEADER_SIZE)
+         {
+            TCHAR buffer[256];
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: invalid uncompressed size %u for compressed message %s with ID %u"),
+               static_cast<unsigned int>(uncompressedSize), NXCPMessageCodeName(m_code, buffer), m_id);
+            m_version = -1;   // error indicator
+            return;
+         }
+         msgDataSize = uncompressedSize - NXCP_HEADER_SIZE;
 
          z_stream stream;
          stream.zalloc = ZLibAlloc;
@@ -347,22 +377,9 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
       {
          NXCP_MESSAGE_FIELD *field = (NXCP_MESSAGE_FIELD *)(msgData + pos);
 
-         // Validate position inside message
-         if (pos > msgDataSize - 8)
-         {
-            m_version = -1;   // error indicator
-            break;
-         }
-         if ((pos > msgDataSize - 12) &&
-             ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY)))
-         {
-            m_version = -1;   // error indicator
-            break;
-         }
-
-         // Calculate and validate field size
-         size_t fieldSize = CalculateFieldSize(field, true);
-         if (pos + fieldSize > msgDataSize)
+         // Validate position inside message and field size
+         size_t fieldSize = (pos < msgDataSize) ? CalculateReceivedFieldSize(field, msgDataSize - pos) : 0;
+         if (fieldSize == 0)
          {
             m_version = -1;   // error indicator
             break;
@@ -1709,7 +1726,13 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    BYTE *allocatedMsgData;
    if ((flags & MF_COMPRESSED) && (version >= 4))
    {
-      msgDataSize = (size_t)ntohl(*((UINT32 *)((BYTE *)msg + NXCP_HEADER_SIZE))) - NXCP_HEADER_SIZE;
+      size_t uncompressedSize = (size >= NXCP_HEADER_SIZE + 4) ? ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) : 0;
+      if (uncompressedSize < NXCP_HEADER_SIZE)
+      {
+         out.append(_T("  ** message format error (invalid compressed message size)\n"));
+         return out;
+      }
+      msgDataSize = uncompressedSize - NXCP_HEADER_SIZE;
 
       z_stream stream;
       stream.zalloc = Z_NULL;
@@ -1754,24 +1777,11 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    {
       const NXCP_MESSAGE_FIELD *field = reinterpret_cast<const NXCP_MESSAGE_FIELD*>(msgData + pos);
 
-      // Validate position inside message
-      if (pos > msgDataSize - 8)
+      // Validate position inside message and field size
+      size_t fieldSize = (pos < msgDataSize) ? CalculateReceivedFieldSize(field, msgDataSize - pos) : 0;
+      if (fieldSize == 0)
       {
-         out += _T("  ** message format error (pos > msgDataSize - 8)\n");
-         break;
-      }
-      if ((pos > msgDataSize - 12) &&
-          ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY)))
-      {
-         out.appendFormattedString(_T("  ** message format error (pos > msgDataSize - 12 and field type %d)\n"), (int)field->type);
-         break;
-      }
-
-      // Calculate and validate field size
-      size_t fieldSize = CalculateFieldSize(field, true);
-      if (pos + fieldSize > msgDataSize)
-      {
-         out.appendFormattedString(_T("  ** message format error (invalid field size %d at offset 0x%06X)\n"), (int)fieldSize, (int)pos);
+         out.appendFormattedString(_T("  ** message format error (invalid field at offset 0x%06X)\n"), (int)pos);
          break;
       }
 
