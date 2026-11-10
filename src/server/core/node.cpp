@@ -8802,7 +8802,17 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
       return false;
    }
 
-   // Check if tunnel is available
+   // Keep existing connection if it is still alive
+   if ((m_agentConnection != nullptr) && (m_agentConnection->nop() == ERR_SUCCESS))
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 7, L"Node::connectToAgent(%s [%u]): already connected", m_name, m_id);
+      if (newConnection != nullptr)
+         *newConnection = false;
+      setLastAgentCommTime();
+      return true;
+   }
+
+   // New connection or reconnect is needed - check if tunnel is available
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
    bool legacyAllowed = true;
    if (tunnel == nullptr)
@@ -8854,17 +8864,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
    }
    else
    {
-      // Check if we already connected
-      if (m_agentConnection->nop() == ERR_SUCCESS)
-      {
-         nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): already connected"), m_name, m_id);
-         if (newConnection != nullptr)
-            *newConnection = false;
-         setLastAgentCommTime();
-         return true;
-      }
-
-      // Close current connection or clean up after broken connection
+      // Clean up after broken connection
       m_agentConnection->disconnect();
       m_agentConnection->setTunnel(tunnel);
       nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): existing connection reset"), m_name, m_id);
