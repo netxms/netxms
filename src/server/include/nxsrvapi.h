@@ -1813,6 +1813,8 @@ int LIBNXSRV_EXPORTABLE ExecuteServerCommandLineTool(ServerCommandLineTool *tool
 
 const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(uint32_t err);
 uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err);
+
+void LIBNXSRV_EXPORTABLE ApplyQueryRowLimit(StringBuffer& query, int limit);
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 void LIBNXSRV_EXPORTABLE DisableAgentConnections();
 

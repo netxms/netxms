@@ -465,10 +465,7 @@ static int CollectRecentEvents(uint32_t userId, const NetObj *scope, int minSeve
    StringBuffer query;
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
 
-   if (g_dbSyntax == DB_SYNTAX_MSSQL)
-      query.appendFormattedString(_T("SELECT TOP %d event_id,"), fetchLimit);
-   else
-      query.append(_T("SELECT event_id,"));
+   query.append(_T("SELECT event_id,"));
 
    if (useTsdbTimestamp)
       query.append(_T("date_part('epoch',event_timestamp)::int AS event_timestamp,"));
@@ -519,18 +516,7 @@ static int CollectRecentEvents(uint32_t userId, const NetObj *scope, int minSeve
 
    query.append(_T(" ORDER BY event_timestamp DESC"));
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-         query.appendFormattedString(_T(" LIMIT %d"), fetchLimit);
-         break;
-      case DB_SYNTAX_DB2:
-         query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), fetchLimit);
-         break;
-   }
+   ApplyQueryRowLimit(query, fetchLimit);
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("F_OperationalStatus: events query: %s"), query.cstr());
 

@@ -514,7 +514,9 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    const char *textPattern = json_object_get_string_utf8(arguments, "text_pattern", nullptr);
    int32_t limit = json_object_get_int32(arguments, "limit", 100);
-   if (limit > 1000)
+   if (limit < 1)
+      limit = 1;
+   else if (limit > 1000)
       limit = 1000;
 
    // Parse time range
@@ -575,15 +577,7 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
    StringBuffer query;
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MSSQL:
-         query.appendFormattedString(_T("SELECT TOP %d "), limit);
-         break;
-      default:
-         query.append(_T("SELECT "));
-         break;
-   }
+   query.append(_T("SELECT "));
 
    // Build column list
    bool firstCol = true;
@@ -700,18 +694,7 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
    // Order by timestamp descending
    query.appendFormattedString(_T(" ORDER BY %s DESC"), timestampColumn);
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-         query.appendFormattedString(_T(" LIMIT %d"), limit);
-         break;
-      case DB_SYNTAX_DB2:
-         query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limit);
-         break;
-   }
+   ApplyQueryRowLimit(query, limit);
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("F_SearchLog: executing query: %s"), query.cstr());
 
@@ -837,7 +820,9 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
    const char *textPattern = json_object_get_string_utf8(arguments, "text_pattern", nullptr);
    const char *tagFilter = json_object_get_string_utf8(arguments, "tag", nullptr);
    int32_t limit = json_object_get_int32(arguments, "limit", 100);
-   if (limit > 1000)
+   if (limit < 1)
+      limit = 1;
+   else if (limit > 1000)
       limit = 1000;
 
    // Parse time range
@@ -900,15 +885,7 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
    StringBuffer query;
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MSSQL:
-         query.appendFormattedString(_T("SELECT TOP %d msg_id,"), limit);
-         break;
-      default:
-         query.append(_T("SELECT msg_id,"));
-         break;
-   }
+   query.append(_T("SELECT msg_id,"));
 
    if (useTsdbTimestamp)
       query.append(_T("date_part('epoch',msg_timestamp)::int AS msg_timestamp,"));
@@ -971,21 +948,7 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
 
    query.append(_T(" ORDER BY msg_timestamp DESC"));
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-         query.appendFormattedString(_T(" LIMIT %d"), limit);
-         break;
-      case DB_SYNTAX_ORACLE:
-         // Oracle needs ROWNUM in a subquery - simplified for now
-         break;
-      case DB_SYNTAX_DB2:
-         query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limit);
-         break;
-   }
+   ApplyQueryRowLimit(query, limit);
 
    // Execute query
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -1063,7 +1026,9 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
    const char *eventSource = json_object_get_string_utf8(arguments, "event_source", nullptr);
    const char *textPattern = json_object_get_string_utf8(arguments, "text_pattern", nullptr);
    int32_t limit = json_object_get_int32(arguments, "limit", 100);
-   if (limit > 1000)
+   if (limit < 1)
+      limit = 1;
+   else if (limit > 1000)
       limit = 1000;
 
    // Parse time range
@@ -1126,15 +1091,7 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
    StringBuffer query;
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MSSQL:
-         query.appendFormattedString(_T("SELECT TOP %d id,"), limit);
-         break;
-      default:
-         query.append(_T("SELECT id,"));
-         break;
-   }
+   query.append(_T("SELECT id,"));
 
    if (useTsdbTimestamp)
       query.append(_T("date_part('epoch',event_timestamp)::int AS event_timestamp,date_part('epoch',origin_timestamp)::int AS origin_timestamp,"));
@@ -1205,18 +1162,7 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
 
    query.append(_T(" ORDER BY event_timestamp DESC"));
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-         query.appendFormattedString(_T(" LIMIT %d"), limit);
-         break;
-      case DB_SYNTAX_DB2:
-         query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limit);
-         break;
-   }
+   ApplyQueryRowLimit(query, limit);
 
    // Execute query
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -1293,7 +1239,9 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
    const char *ipAddress = json_object_get_string_utf8(arguments, "ip_address", nullptr);
    const char *varbindPattern = json_object_get_string_utf8(arguments, "varbind_pattern", nullptr);
    int32_t limit = json_object_get_int32(arguments, "limit", 100);
-   if (limit > 1000)
+   if (limit < 1)
+      limit = 1;
+   else if (limit > 1000)
       limit = 1000;
 
    // Parse time range
@@ -1314,15 +1262,7 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
    StringBuffer query;
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MSSQL:
-         query.appendFormattedString(_T("SELECT TOP %d trap_id,"), limit);
-         break;
-      default:
-         query.append(_T("SELECT trap_id,"));
-         break;
-   }
+   query.append(_T("SELECT trap_id,"));
 
    if (useTsdbTimestamp)
       query.append(_T("date_part('epoch',trap_timestamp)::int AS trap_timestamp,"));
@@ -1370,18 +1310,7 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
 
    query.append(_T(" ORDER BY trap_timestamp DESC"));
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-         query.appendFormattedString(_T(" LIMIT %d"), limit);
-         break;
-      case DB_SYNTAX_DB2:
-         query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limit);
-         break;
-   }
+   ApplyQueryRowLimit(query, limit);
 
    // Execute query
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -1474,7 +1403,9 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
    const char *originFilter = json_object_get_string_utf8(arguments, "origin", nullptr);
    const char *tagsFilter = json_object_get_string_utf8(arguments, "tags", nullptr);
    int32_t limit = json_object_get_int32(arguments, "limit", 100);
-   if (limit > 1000)
+   if (limit < 1)
+      limit = 1;
+   else if (limit > 1000)
       limit = 1000;
 
    // Parse time range
@@ -1562,15 +1493,7 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
    StringBuffer query;
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MSSQL:
-         query.appendFormattedString(_T("SELECT TOP %d event_id,"), limit);
-         break;
-      default:
-         query.append(_T("SELECT event_id,"));
-         break;
-   }
+   query.append(_T("SELECT event_id,"));
 
    if (useTsdbTimestamp)
       query.append(_T("date_part('epoch',event_timestamp)::int AS event_timestamp,date_part('epoch',origin_timestamp)::int AS origin_timestamp,"));
@@ -1627,18 +1550,7 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
 
    query.append(_T(" ORDER BY event_timestamp DESC"));
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-         query.appendFormattedString(_T(" LIMIT %d"), limit);
-         break;
-      case DB_SYNTAX_DB2:
-         query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limit);
-         break;
-   }
+   ApplyQueryRowLimit(query, limit);
 
    nxlog_debug_tag(DEBUG_TAG, 7, _T("F_SearchEvents: executing query: %s"), query.cstr());
 
@@ -1873,11 +1785,12 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
       StringBuffer statsQuery;
       statsQuery.appendFormattedString(_T("SELECT %s, COUNT(*) AS cnt FROM %s WHERE %s GROUP BY %s ORDER BY cnt DESC"),
                                         objectIdColumn, tableName, whereClause.cstr(), objectIdColumn);
+      ApplyQueryRowLimit(statsQuery, 20);  // Top 20 sources
 
       hResult = DBSelect(hdb, statsQuery);
       if (hResult != nullptr)
       {
-         int count = std::min(DBGetNumRows(hResult), 20);  // Top 20 sources
+         int count = DBGetNumRows(hResult);
          for (int i = 0; i < count; i++)
          {
             json_t *stat = json_object();
@@ -1932,26 +1845,12 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
    topSourcesQuery.appendFormattedString(_T("SELECT %s, COUNT(*) AS cnt FROM %s WHERE %s GROUP BY %s ORDER BY cnt DESC"),
                                           objectIdColumn, tableName, whereClause.cstr(), objectIdColumn);
 
-   switch(g_dbSyntax)
-   {
-      case DB_SYNTAX_MSSQL:
-         // Already limited by TOP in SELECT
-         break;
-      case DB_SYNTAX_MYSQL:
-      case DB_SYNTAX_PGSQL:
-      case DB_SYNTAX_SQLITE:
-      case DB_SYNTAX_TSDB:
-         topSourcesQuery.append(_T(" LIMIT 10"));
-         break;
-      case DB_SYNTAX_DB2:
-         topSourcesQuery.append(_T(" FETCH FIRST 10 ROWS ONLY"));
-         break;
-   }
+   ApplyQueryRowLimit(topSourcesQuery, 10);
 
    hResult = DBSelect(hdb, topSourcesQuery);
    if (hResult != nullptr)
    {
-      int count = std::min(DBGetNumRows(hResult), 10);
+      int count = DBGetNumRows(hResult);
       for (int i = 0; i < count; i++)
       {
          json_t *source = json_object();
@@ -2028,7 +1927,9 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
 
    bool includeNeighbors = json_object_get_boolean(arguments, "include_neighbors", true);
    int32_t limitPerSource = json_object_get_int32(arguments, "limit_per_source", 50);
-   if (limitPerSource > 200)
+   if (limitPerSource < 1)
+      limitPerSource = 1;
+   else if (limitPerSource > 200)
       limitPerSource = 200;
 
    // Resolve primary object
@@ -2146,15 +2047,7 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
    if (includeSyslog)
    {
       StringBuffer query;
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MSSQL:
-            query.appendFormattedString(_T("SELECT TOP %d "), limitPerSource);
-            break;
-         default:
-            query.append(_T("SELECT "));
-            break;
-      }
+      query.append(_T("SELECT "));
 
       if (useTsdbTimestamp)
          query.append(_T("date_part('epoch',msg_timestamp)::int AS msg_timestamp,"));
@@ -2172,18 +2065,7 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
 
       query.appendFormattedString(_T(" AND source_object_id IN (%s) ORDER BY msg_timestamp"), objectIdList.cstr());
 
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-         case DB_SYNTAX_TSDB:
-            query.appendFormattedString(_T(" LIMIT %d"), limitPerSource);
-            break;
-         case DB_SYNTAX_DB2:
-            query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limitPerSource);
-            break;
-      }
+      ApplyQueryRowLimit(query, limitPerSource);
 
       DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
@@ -2214,15 +2096,7 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
    if (includeSnmpTraps)
    {
       StringBuffer query;
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MSSQL:
-            query.appendFormattedString(_T("SELECT TOP %d "), limitPerSource);
-            break;
-         default:
-            query.append(_T("SELECT "));
-            break;
-      }
+      query.append(_T("SELECT "));
 
       if (useTsdbTimestamp)
          query.append(_T("date_part('epoch',trap_timestamp)::int AS trap_timestamp,"));
@@ -2240,18 +2114,7 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
 
       query.appendFormattedString(_T(" AND object_id IN (%s) ORDER BY trap_timestamp"), objectIdList.cstr());
 
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-         case DB_SYNTAX_TSDB:
-            query.appendFormattedString(_T(" LIMIT %d"), limitPerSource);
-            break;
-         case DB_SYNTAX_DB2:
-            query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limitPerSource);
-            break;
-      }
+      ApplyQueryRowLimit(query, limitPerSource);
 
       DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
@@ -2286,15 +2149,7 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
    if (includeEvents)
    {
       StringBuffer query;
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MSSQL:
-            query.appendFormattedString(_T("SELECT TOP %d "), limitPerSource);
-            break;
-         default:
-            query.append(_T("SELECT "));
-            break;
-      }
+      query.append(_T("SELECT "));
 
       if (useTsdbTimestamp)
          query.append(_T("date_part('epoch',event_timestamp)::int AS event_timestamp,"));
@@ -2312,18 +2167,7 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
 
       query.appendFormattedString(_T(" AND event_source IN (%s) ORDER BY event_timestamp"), objectIdList.cstr());
 
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-         case DB_SYNTAX_TSDB:
-            query.appendFormattedString(_T(" LIMIT %d"), limitPerSource);
-            break;
-         case DB_SYNTAX_DB2:
-            query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limitPerSource);
-            break;
-      }
+      ApplyQueryRowLimit(query, limitPerSource);
 
       DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
@@ -2365,15 +2209,7 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
    if (includeWindowsEvents)
    {
       StringBuffer query;
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MSSQL:
-            query.appendFormattedString(_T("SELECT TOP %d "), limitPerSource);
-            break;
-         default:
-            query.append(_T("SELECT "));
-            break;
-      }
+      query.append(_T("SELECT "));
 
       if (useTsdbTimestamp)
          query.append(_T("date_part('epoch',event_timestamp)::int AS event_timestamp,"));
@@ -2391,18 +2227,7 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
 
       query.appendFormattedString(_T(" AND node_id IN (%s) ORDER BY event_timestamp"), objectIdList.cstr());
 
-      switch(g_dbSyntax)
-      {
-         case DB_SYNTAX_MYSQL:
-         case DB_SYNTAX_PGSQL:
-         case DB_SYNTAX_SQLITE:
-         case DB_SYNTAX_TSDB:
-            query.appendFormattedString(_T(" LIMIT %d"), limitPerSource);
-            break;
-         case DB_SYNTAX_DB2:
-            query.appendFormattedString(_T(" FETCH FIRST %d ROWS ONLY"), limitPerSource);
-            break;
-      }
+      ApplyQueryRowLimit(query, limitPerSource);
 
       DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != nullptr)
