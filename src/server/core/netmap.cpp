@@ -1910,7 +1910,7 @@ void NetworkMap::updateLinkDataSource(NetworkMapLinkContainer *linkContainer)
  */
 void NetworkMap::updateLinks()
 {
-   ObjectArray<NetworkMapLink> colorUpdateList(0, 128, Ownership::True);
+   ObjectArray<NetworkMapLinkContainer> colorUpdateList(0, 128, Ownership::True);
    ObjectArray<NetworkMapLinkContainer> stylingUpdateList(0, 128, Ownership::True);
 
    lockProperties();
@@ -1920,8 +1920,8 @@ void NetworkMap::updateLinks()
       if (link->getColorSource() == MAP_LINK_COLOR_SOURCE_SCRIPT)
       {
          // Replace element IDs with actual object IDs in temporary link object
-         auto temp = new NetworkMapLink(*link);
-         temp->setConnectedElements(m_mapContent.objectIdFromElementId(link->getElement1()), m_mapContent.objectIdFromElementId(link->getElement2()));
+         auto temp = new NetworkMapLinkContainer(*link);
+         temp->get()->setConnectedElements(m_mapContent.objectIdFromElementId(link->getElement1()), m_mapContent.objectIdFromElementId(link->getElement2()));
          colorUpdateList.add(temp);
       }
 
@@ -1940,7 +1940,8 @@ void NetworkMap::updateLinks()
 
    for(int i = 0; i < colorUpdateList.size(); i++)
    {
-      NetworkMapLink *link = colorUpdateList.get(i);
+      NetworkMapLinkContainer *linkContainer = colorUpdateList.get(i);
+      NetworkMapLink *link = linkContainer->get();
       ScriptVMHandle vm = CreateServerScriptVM(link->getColorProvider(), self());
       if (vm.isValid())
       {
@@ -1951,6 +1952,7 @@ void NetworkMap::updateLinks()
             vm->setGlobalVariable("$endpoint1", endpoint1->createNXSLObject(vm));
          if (endpoint2 != nullptr)
             vm->setGlobalVariable("$endpoint2", endpoint2->createNXSLObject(vm));
+         vm->setGlobalVariable("$link", vm->createValue(vm->createObject(&g_nxslNetworkMapLinkClass, linkContainer)));
          if (vm->run())
          {
             NXSL_Value *result = vm->getResult();
@@ -2055,7 +2057,7 @@ void NetworkMap::updateLinks()
    }
    for(int i = 0; i < colorUpdateList.size(); i++)
    {
-      NetworkMapLink *linkUpdate = colorUpdateList.get(i);
+      NetworkMapLink *linkUpdate = colorUpdateList.get(i)->get();
       for(int j = 0; j < m_mapContent.m_links.size(); j++)
       {
          NetworkMapLink *link = m_mapContent.m_links.get(j);
