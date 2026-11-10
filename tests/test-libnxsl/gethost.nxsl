@@ -5,7 +5,7 @@ assert("dns.google" == ResolveAddress("8.8.8.8"));
 assert(null == ResolveAddress("169.254.15.16"));
 
 assert("127.0.0.1" == ResolveHostname("localhost"));
-assert("5.9.112.213" == ResolveHostname("mail.netxms.org"));
+assert("198.51.100.1" == ResolveHostname("resolver-test.omicronlab.dev"));
 assert(null == ResolveHostname("non.existing"));
 
 return 0;
