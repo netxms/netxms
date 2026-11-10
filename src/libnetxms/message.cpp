@@ -74,9 +74,9 @@ static size_t CalculateFieldSize(const NXCP_MESSAGE_FIELD *field, bool networkBy
       case NXCP_DT_UTF8_STRING:
       case NXCP_DT_BINARY:
          if (networkByteOrder)
-            size = ntohl(field->df_string.length) + 12;
+            size = static_cast<size_t>(ntohl(field->df_string.length)) + 12;
          else
-            size = field->df_string.length + 12;
+            size = static_cast<size_t>(field->df_string.length) + 12;
          break;
       default:
          size = 8;
@@ -315,16 +315,19 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          NXCP_MESSAGE_FIELD *field = (NXCP_MESSAGE_FIELD *)(msgData + pos);
 
          // Validate position inside message
-         if (pos > msgDataSize - 8)
+         if (pos + 8 > msgDataSize)
          {
             m_version = -1;   // error indicator
             break;
          }
-         if ((pos > msgDataSize - 12) &&
-             ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY)))
+         if ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY))
          {
-            m_version = -1;   // error indicator
-            break;
+            // Length is checked against remaining space before field size calculation to avoid integer wrap
+            if ((pos + 12 > msgDataSize) || (ntohl(field->df_string.length) > msgDataSize - pos - 12))
+            {
+               m_version = -1;   // error indicator
+               break;
+            }
          }
 
          // Calculate and validate field size
@@ -1567,16 +1570,24 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       const NXCP_MESSAGE_FIELD *field = reinterpret_cast<const NXCP_MESSAGE_FIELD*>(msgData + pos);
 
       // Validate position inside message
-      if (pos > msgDataSize - 8)
+      if (pos + 8 > msgDataSize)
       {
          out += _T("  ** message format error (pos > msgDataSize - 8)\n");
          break;
       }
-      if ((pos > msgDataSize - 12) &&
-          ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY)))
+      if ((field->type == NXCP_DT_STRING) || (field->type == NXCP_DT_UTF8_STRING) || (field->type == NXCP_DT_BINARY))
       {
-         out.appendFormattedString(_T("  ** message format error (pos > msgDataSize - 12 and field type %d)\n"), (int)field->type);
-         break;
+         if (pos + 12 > msgDataSize)
+         {
+            out.appendFormattedString(_T("  ** message format error (pos > msgDataSize - 12 and field type %d)\n"), (int)field->type);
+            break;
+         }
+         // Length is checked against remaining space before field size calculation to avoid integer wrap
+         if (ntohl(field->df_string.length) > msgDataSize - pos - 12)
+         {
+            out.appendFormattedString(_T("  ** message format error (invalid field length %u at offset 0x%06X)\n"), ntohl(field->df_string.length), (int)pos);
+            break;
+         }
       }
 
       // Calculate and validate field size
