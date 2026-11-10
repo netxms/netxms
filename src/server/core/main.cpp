@@ -775,6 +775,7 @@ static void LoadGlobalConfig()
    g_agentConnectionRetries = ConfigReadInt(_T("Agent.ConnectionRetries"), 0);
    g_agentRestartWaitTime = ConfigReadInt(_T("Agent.RestartWaitTime"), 0);
    g_agentUploadBandwidthLimit = ConfigReadInt(_T("Agent.UploadBandwidthLimit"), 0);
+   UpdateAgentReverseTunnelMode();
    g_thresholdRepeatInterval = ConfigReadInt(_T("DataCollection.ThresholdRepeatInterval"), 0);
    g_requiredPolls = ConfigReadInt(_T("Objects.PollCountForStatusChange"), 1);
    g_offlineDataRelevanceTime = ConfigReadInt(_T("DataCollection.OfflineDataRelevanceTime"), 86400) * 1000L; // Config value is in seconds

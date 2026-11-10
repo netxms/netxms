@@ -26,11 +26,31 @@
 #include <openssl/x509.h>
 
 /**
- * Upgrade from 70.59 to 71.0
+ * Upgrade from 70.60 to 71.0
+ */
+static bool H_UpgradeFromV60()
+{
+   CHK_EXEC(SetMajorSchemaVersion(71, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 70.59 to 70.60
  */
 static bool H_UpgradeFromV59()
 {
-   CHK_EXEC(SetMajorSchemaVersion(71, 0));
+   CHK_EXEC(CreateConfigParam(L"Agent.TLS.ReverseTunnels", L"2",
+         L"Mode of server-initiated (reverse) TLS tunnels to agents on nodes with agent TLS mode Allowed: disabled (never used), allowed (used only when agent rejects non-TLS connection), or preferred (used whenever agent supports TLS tunnels).",
+         nullptr, 'C', true, false, false, false));
+
+   static const wchar_t *batch =
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.TLS.ReverseTunnels','0','Disabled')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.TLS.ReverseTunnels','1','Allowed')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.TLS.ReverseTunnels','2','Preferred')\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(60));
    return true;
 }
 
@@ -1945,7 +1965,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 59, 71, 0,  H_UpgradeFromV59 },
+   { 60, 71, 0,  H_UpgradeFromV60 },
+   { 59, 70, 60, H_UpgradeFromV59 },
    { 58, 70, 59, H_UpgradeFromV58 },
    { 57, 70, 58, H_UpgradeFromV57 },
    { 56, 70, 57, H_UpgradeFromV56 },

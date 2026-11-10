@@ -24,6 +24,30 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.8 to 71.9
+ */
+static bool H_UpgradeFromV8()
+{
+   if (GetSchemaLevelForMajorVersion(70) < 60)
+   {
+      CHK_EXEC(CreateConfigParam(L"Agent.TLS.ReverseTunnels", L"2",
+            L"Mode of server-initiated (reverse) TLS tunnels to agents on nodes with agent TLS mode Allowed: disabled (never used), allowed (used only when agent rejects non-TLS connection), or preferred (used whenever agent supports TLS tunnels).",
+            nullptr, 'C', true, false, false, false));
+
+      static const wchar_t *batch =
+         L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.TLS.ReverseTunnels','0','Disabled')\n"
+         L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.TLS.ReverseTunnels','1','Allowed')\n"
+         L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.TLS.ReverseTunnels','2','Preferred')\n"
+         L"<END>";
+      CHK_EXEC(SQLBatch(batch));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(70, 60));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 71.7 to 71.8
  */
 static bool H_UpgradeFromV7()
@@ -206,6 +230,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  71, 9,  H_UpgradeFromV8  },
    { 7,  71, 8,  H_UpgradeFromV7  },
    { 6,  71, 7,  H_UpgradeFromV6  },
    { 5,  71, 6,  H_UpgradeFromV5  },
