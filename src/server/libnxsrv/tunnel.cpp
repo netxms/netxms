@@ -51,6 +51,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_context = context;
    m_ssl = ssl;
    m_requestId = 0;
+   m_receivedMessageCount = 0;
    m_commandTimeout = REQUEST_TIMEOUT;
    m_nodeId = nodeId;
    m_zoneUIN = zoneUIN;
@@ -144,6 +145,8 @@ MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
       return result;
    }
 
+   InterlockedIncrement(&m_receivedMessageCount);
+
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
    {
       wchar_t buffer[64];
@@ -167,6 +170,20 @@ MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
          }
       }
       delete msg;
+   }
+   else if (msg->getCode() == CMD_REQUEST_COMPLETED)
+   {
+      // Responses are passed to waiting threads directly from socket poller thread,
+      // so that request completion does not depend on availability of thread pool workers
+      m_channelLock.lock();
+      int index = m_abandonedChannelRequests.indexOf(msg->getId());
+      if (index != -1)
+         m_abandonedChannelRequests.remove(index);
+      m_channelLock.unlock();
+      if (index != -1)
+         ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, m_threadPoolKey, self(), &AgentTunnel::closeAbandonedChannel, msg);
+      else
+         m_queue.put(msg);
    }
    else
    {
@@ -461,6 +478,24 @@ shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
    if (response == nullptr)
    {
       debugPrintf(4, _T("createChannel: request timeout"));
+
+      // Agent may still create the channel and respond later. Request is registered as abandoned
+      // so that channel created by late response is closed instead of being left open on agent side.
+      m_channelLock.lock();
+      m_abandonedChannelRequests.add(request.getId());
+      m_channelLock.unlock();
+
+      // Response could arrive after timeout but before registration
+      response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 0);
+      if (response != nullptr)
+      {
+         m_channelLock.lock();
+         int index = m_abandonedChannelRequests.indexOf(request.getId());
+         if (index != -1)
+            m_abandonedChannelRequests.remove(index);
+         m_channelLock.unlock();
+         closeAbandonedChannel(response);
+      }
       return shared_ptr<AgentTunnelCommChannel>();
    }
 
@@ -491,6 +526,23 @@ shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
       debugPrintf(4, _T("createChannel: tunnel disconnected during channel setup"));
 
    return channel;
+}
+
+/**
+ * Close channel created by agent in response to channel creation request that already timed out on server side
+ */
+void AgentTunnel::closeAbandonedChannel(NXCPMessage *response)
+{
+   if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
+   {
+      uint32_t channelId = response->getFieldAsUInt32(VID_CHANNEL_ID);
+      debugPrintf(4, _T("Closing channel %u created by late response to request %u"), channelId, response->getId());
+
+      NXCPMessage msg(CMD_CLOSE_CHANNEL, InterlockedIncrement(&m_requestId));
+      msg.setField(VID_CHANNEL_ID, channelId);
+      sendMessage(msg);
+   }
+   delete response;
 }
 
 /**
@@ -962,6 +1014,18 @@ OutboundAgentTunnel::OutboundAgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock
          int32_t zoneUIN, BackgroundSocketPollerHandle *socketPoller) : AgentTunnel(context, ssl, sock, addr, nodeId, zoneUIN, socketPoller),
          m_setupCondition(true)
 {
+   m_keepaliveMessageCount = 0;
+}
+
+/**
+ * Process tunnel messages specific to outbound tunnels
+ */
+bool OutboundAgentTunnel::processCustomMessage(NXCPMessage *msg)
+{
+   if (msg->getCode() != CMD_KEEPALIVE)
+      return false;
+   delete msg; // Keepalive response is only needed as proof of activity and already counted by receiver
+   return true;
 }
 
 /**
@@ -988,33 +1052,46 @@ void OutboundAgentTunnel::onTunnelClose()
 
 /**
  * Keepalive timer for outbound tunnel. Agent will close inbound connection without traffic
- * on idle timeout, so server should ping the agent periodically.
+ * on idle timeout, so server should ping the agent periodically. Timer does not wait for
+ * response - it only sends request and schedules check after command timeout, so that
+ * thread pool workers are never blocked by unresponsive tunnels.
  */
 void OutboundAgentTunnel::keepaliveTimer(const shared_ptr<OutboundAgentTunnel>& tunnel)
 {
    if (tunnel->m_state != AGENT_TUNNEL_BOUND)
       return;
 
+   tunnel->m_keepaliveMessageCount = tunnel->m_receivedMessageCount;
+
    NXCPMessage msg(CMD_KEEPALIVE, InterlockedIncrement(&tunnel->m_requestId));
-   if (tunnel->sendMessage(msg))
-   {
-      NXCPMessage *response = tunnel->waitForMessage(CMD_KEEPALIVE, msg.getId());
-      if (response == nullptr)
-      {
-         tunnel->debugPrintf(4, _T("Keepalive check failed (request timeout)"));
-         tunnel->shutdown();
-         return;
-      }
-      delete response;
-   }
-   else
+   if (!tunnel->sendMessage(msg))
    {
       tunnel->debugPrintf(4, _T("Keepalive check failed (cannot send message)"));
       tunnel->shutdown();
       return;
    }
 
-   ThreadPoolScheduleRelative(g_agentConnectionThreadPool, KEEPALIVE_INTERVAL, keepaliveTimer, tunnel);
+   ThreadPoolScheduleRelative(g_agentConnectionThreadPool, tunnel->m_commandTimeout, keepaliveCheck, tunnel);
+}
+
+/**
+ * Check result of keepalive request. Any message received from agent since request was sent
+ * (keepalive response, channel data, etc.) is accepted as proof that tunnel is alive.
+ */
+void OutboundAgentTunnel::keepaliveCheck(const shared_ptr<OutboundAgentTunnel>& tunnel)
+{
+   if (tunnel->m_state != AGENT_TUNNEL_BOUND)
+      return;
+
+   if (tunnel->m_receivedMessageCount == tunnel->m_keepaliveMessageCount)
+   {
+      tunnel->debugPrintf(4, _T("Keepalive check failed (no messages from agent within %u ms)"), tunnel->m_commandTimeout);
+      tunnel->shutdown();
+      return;
+   }
+
+   ThreadPoolScheduleRelative(g_agentConnectionThreadPool,
+      (tunnel->m_commandTimeout < KEEPALIVE_INTERVAL) ? KEEPALIVE_INTERVAL - tunnel->m_commandTimeout : 1000, keepaliveTimer, tunnel);
 }
 
 /**
