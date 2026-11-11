@@ -178,6 +178,47 @@ void TestThreadPoolDiscardedRequests()
    EndTest();
 }
 
+/**
+ * Context for shutdown mode submission test
+ */
+struct ShutdownSubmitContext
+{
+   ThreadPool *pool;
+   shared_ptr<int> counter;
+   bool submitted;
+};
+
+/**
+ * Task that waits for pool to enter shutdown mode and then submits more tasks
+ */
+static void SubmitInShutdownMode(ShutdownSubmitContext *ctx)
+{
+   ThreadSleepMs(500);  // ThreadPoolDestroy is called by main thread right after this task is queued
+   ThreadPoolExecute(ctx->pool, NeverExecutedTask, ctx->counter);
+   ThreadPoolExecuteSerialized(ctx->pool, _T("KEY"), NeverExecutedTask, ctx->counter);
+   ThreadPoolScheduleRelative(ctx->pool, 3600000, NeverExecutedTask, ctx->counter);
+   ctx->submitted = true;
+}
+
+void TestThreadPoolShutdownModeRequests()
+{
+   StartTest(_T("Thread pool - requests submitted in shutdown mode"));
+
+   ShutdownSubmitContext ctx;
+   ctx.pool = ThreadPoolCreate(_T("TEST7"), 2, 4, 0);
+   ctx.counter = make_shared<int>(0);
+   ctx.submitted = false;
+
+   ThreadPoolExecute(ctx.pool, SubmitInShutdownMode, &ctx);
+   ThreadPoolDestroy(ctx.pool);  // Sets shutdown mode, then waits for running task to complete
+
+   AssertTrue(ctx.submitted);
+   AssertEquals(*ctx.counter, 0);
+   AssertEquals(static_cast<int32_t>(ctx.counter.use_count()), 1);   // Wrapper data released without executing the task
+
+   EndTest();
+}
+
 static Mutex s_waitTimeTestLock1;
 static Mutex s_waitTimeTestLock2;
 
