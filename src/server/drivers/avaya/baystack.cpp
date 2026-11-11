@@ -154,9 +154,7 @@ InterfaceList *BayStackDriver::getInterfaces(DeviceContext *context, NObject *no
 	   uint32_t slot = ifList->get(i)->index / slotSize + 1;
 		if ((slot > 0) && (slot <= 8))
 		{
-			ifList->get(i)->location.module = slot;
-			ifList->get(i)->location.port = ifList->get(i)->index % slotSize;
-			ifList->get(i)->isPhysicalPort = true;
+			ifList->get(i)->setPhysicalLocation(0, slot, 0, ifList->get(i)->index % slotSize);
 		}
 	}
 

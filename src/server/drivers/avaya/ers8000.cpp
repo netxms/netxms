@@ -104,15 +104,11 @@ InterfaceList *PassportDriver::getInterfaces(DeviceContext *context, NObject *no
 		// Some 1600 may report physical ports with indexes started at 1, not 64
 		if ((slot == 0) && is1600Series)
 		{
-			ifList->get(i)->location.module = slot;
-			ifList->get(i)->location.port = ifList->get(i)->index;
-			ifList->get(i)->isPhysicalPort = true;
+			ifList->get(i)->setPhysicalLocation(0, slot, 0, ifList->get(i)->index);
 		}
 		else if ((slot > 0) && (slot <= maxSlot))
 		{
-			ifList->get(i)->location.module = slot;
-			ifList->get(i)->location.port = ifList->get(i)->index % 64 + 1;
-			ifList->get(i)->isPhysicalPort = true;
+			ifList->get(i)->setPhysicalLocation(0, slot, 0, ifList->get(i)->index % 64 + 1);
 		}
 	}
 

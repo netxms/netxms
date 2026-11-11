@@ -139,9 +139,7 @@ InterfaceList *HirschmannHiOSDriver::getInterfaces(DeviceContext *context, NObje
 	         int port = _tcstol(p, &eptr, 10);
 	         if (*eptr == 0)
 	         {
-	            iface->isPhysicalPort = true;
-	            iface->location.module = module;
-	            iface->location.port = port;
+	            iface->setPhysicalLocation(0, module, 0, port);
 	         }
 	      }
 	   }

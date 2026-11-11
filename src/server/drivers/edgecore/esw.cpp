@@ -182,9 +182,7 @@ InterfaceList *EdgecoreEnterpriseSwitchDriver::getInterfaces(DeviceContext *cont
 
       if (_pcre_exec_t(re, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->description), static_cast<int>(_tcslen(iface->description)), 0, 0, pmatch, 30) == 3)
       {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = IntegerFromCGroup(iface->description, pmatch, 1);
-         iface->location.port = IntegerFromCGroup(iface->description, pmatch, 2);
+         iface->setPhysicalLocation(IntegerFromCGroup(iface->description, pmatch, 1), 0, 0, IntegerFromCGroup(iface->description, pmatch, 2));
       }
 	}
 

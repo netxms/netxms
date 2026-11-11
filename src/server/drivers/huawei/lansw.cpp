@@ -99,10 +99,7 @@ InterfaceList *HuaweiSWDriver::getInterfaces(DeviceContext *context, NObject *no
       InterfaceInfo *iface = ifList->get(i);
       if (iface->type == 6)
       {
-         iface->location.chassis = 1;
-         iface->isPhysicalPort = true;
-         iface->location.module = 0;
-         iface->location.port = port++;
+         iface->setPhysicalLocation(1, 0, 0, port++);
       }
    }
 

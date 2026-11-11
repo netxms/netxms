@@ -7242,11 +7242,14 @@ void ClientSession::createObject(const NXCPMessage& request)
                         ifInfo.ipAddrList.add(addr);
                      ifInfo.type = request.getFieldAsUInt32(VID_IF_TYPE);
                      request.getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
-                     ifInfo.location.chassis = request.getFieldAsUInt32(VID_PHY_CHASSIS);
-                     ifInfo.location.module = request.getFieldAsUInt32(VID_PHY_MODULE);
-                     ifInfo.location.pic = request.getFieldAsUInt32(VID_PHY_PIC);
-                     ifInfo.location.port = request.getFieldAsUInt32(VID_PHY_PORT);
-                     ifInfo.isPhysicalPort = request.getFieldAsBoolean(VID_IS_PHYS_PORT);
+                     if (request.getFieldAsBoolean(VID_IS_PHYS_PORT))
+                     {
+                        // Lane is optional and should be within 0..127 range; port is considered not split otherwise
+                        int32_t lane = request.isFieldExist(VID_PHY_LANE) ? request.getFieldAsInt32(VID_PHY_LANE) : INTERFACE_LANE_NONE;
+                        ifInfo.setPhysicalLocation(request.getFieldAsUInt32(VID_PHY_CHASSIS), request.getFieldAsUInt32(VID_PHY_MODULE),
+                           request.getFieldAsUInt32(VID_PHY_PIC), request.getFieldAsUInt32(VID_PHY_PORT),
+                           ((lane >= 0) && (lane <= 127)) ? static_cast<int8_t>(lane) : INTERFACE_LANE_NONE);
+                     }
                      object = static_cast<Node&>(*parent).createNewInterface(&ifInfo, true, false);
                   }
                   break;

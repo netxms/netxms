@@ -152,12 +152,13 @@ InterfaceList *DLinkDriver::getInterfaces(DeviceContext *context, NObject *node,
 		InterfaceInfo *iface = ifList->get(i);
 		if (iface->index < 1024)
 		{
-			iface->isPhysicalPort = true;
-			if (!ParsePortLocationFromDescription(iface->description, &iface->location.module, &iface->location.port))
+			uint32_t module, port;
+			if (!ParsePortLocationFromDescription(iface->description, &module, &port))
 			{
-			   iface->location.module = (iface->index / DEFAULT_SLOT_SIZE) + 1;
-			   iface->location.port = iface->index % DEFAULT_SLOT_SIZE;
+			   module = (iface->index / DEFAULT_SLOT_SIZE) + 1;
+			   port = iface->index % DEFAULT_SLOT_SIZE;
 			}
+			iface->setPhysicalLocation(0, module, 0, port);
 		}
 	}
 

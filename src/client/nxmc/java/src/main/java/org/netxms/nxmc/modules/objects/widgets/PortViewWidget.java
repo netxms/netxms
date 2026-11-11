@@ -137,7 +137,7 @@ public class PortViewWidget extends DashboardComposite
 		List<Interface> interfaces = new ArrayList<Interface>();
 		for(AbstractObject o: object.getAllChildren(AbstractObject.OBJECT_INTERFACE))
 		{
-			if (((Interface)o).isPhysicalPort())
+         if (((Interface)o).isPhysicalPort() && ((Interface)o).isPhysicalLocationValid())
 				interfaces.add((Interface)o);
 		}
 		Collections.sort(interfaces, new Comparator<Interface>() {
@@ -147,7 +147,11 @@ public class PortViewWidget extends DashboardComposite
 				if (i1.getModule() == i2.getModule())
             {
                if (i1.getPIC() == i2.getPIC())
+               {
+                  if (i1.getPort() == i2.getPort())
+                     return i1.getLane() - i2.getLane();
                   return i1.getPort() - i2.getPort();
+               }
                return i1.getPIC() - i2.getPIC();
             }
 				return i1.getModule() - i2.getModule();
@@ -260,21 +264,14 @@ public class PortViewWidget extends DashboardComposite
 
 		for(Port p : ports)
 		{
-		   // Some devices has slots and ports numbering started at 0, so
-		   // port 0/0 could be valid - in that case check interface object
-		   // for physical port flag
-		   if ((p.getModule() == 0) && (p.getPort() == 0))
+         // Port without known location could be logical interface on top of physical port
+         if (!p.isLocationValid())
 		   {
 		      Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
-		      if (iface == null)
-		         continue;
-            if (!iface.isPhysicalPort())
-            {
-               Interface parent = iface.getParentInterface();
-               if ((parent == null) || !parent.isPhysicalPort())  
-                  continue;
-               p = new Port(parent.getObjectId(), parent.getIfIndex(), parent.getChassis(), parent.getModule(), parent.getPIC(), parent.getPort());
-            }
+            Interface parent = (iface != null) ? iface.getParentInterface() : null;
+            if ((parent == null) || !parent.isPhysicalPort() || !parent.isPhysicalLocationValid())
+               continue;
+            p = new Port(parent);
 		   }
 			SlotViewWidget sv = slots.get(((long)p.getChassis() << 32) | (long)p.getModule());
 			if (sv != null)

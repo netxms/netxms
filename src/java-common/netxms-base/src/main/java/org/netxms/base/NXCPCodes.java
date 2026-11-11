@@ -1674,6 +1674,8 @@ public class NXCPCodes
    public static final long VID_ALARM_FLAP_COUNT = 1076;
    public static final long VID_ALARM_FLAP_WINDOW = 1077;
    public static final long VID_IS_FLAPPING = 1078;
+   public static final long VID_PHY_LANE = 1079;
+   public static final long VID_PHY_LOCATION_VALID = 1080;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

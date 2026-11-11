@@ -147,6 +147,8 @@ public class InterfaceListComparator extends ViewerComparator
 	               result = iface1.getPIC() - iface2.getPIC();
 	            if (result == 0)
 	               result = iface1.getPort() - iface2.getPort();
+               if (result == 0)
+                  result = iface1.getLane() - iface2.getLane();
 			   }
 			   else if (iface1.isPhysicalPort())
 			   {

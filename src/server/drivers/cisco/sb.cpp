@@ -197,9 +197,7 @@ InterfaceList *CiscoSbDriver::getInterfaces(DeviceContext *context, NObject *nod
                {
                   if (module->interfaces[n] == iface->index)
                   {
-                     iface->isPhysicalPort = true;
-                     iface->location.module = module->index;
-                     iface->location.port = (n / SB_MAX_INTERFACES_PER_ROW) * module->columns + n % SB_MAX_INTERFACES_PER_ROW + 1;
+                     iface->setPhysicalLocation(0, module->index, 0, (n / SB_MAX_INTERFACES_PER_ROW) * module->columns + n % SB_MAX_INTERFACES_PER_ROW + 1);
                      break;
                   }
                }
@@ -227,9 +225,7 @@ InterfaceList *CiscoSbDriver::getInterfaces(DeviceContext *context, NObject *nod
          InterfaceInfo *iface = ifList->get(i);
          if (iface->index < 1000)
          {
-            iface->isPhysicalPort = true;
-            iface->location.module = (iface->index - 1) / 110 + 1;
-            iface->location.port = (iface->index - 1) % 110 + 1;
+            iface->setPhysicalLocation(0, (iface->index - 1) / 110 + 1, 0, (iface->index - 1) % 110 + 1);
             if (highBase)
                iface->location.port -= 48;
          }

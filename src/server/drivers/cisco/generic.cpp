@@ -97,10 +97,7 @@ InterfaceList *GenericCiscoDriver::getInterfaces(DeviceContext *context, NObject
       InterfaceInfo *iface = ifList->get(i);
       if (_pcre_exec_t(reFex.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
       {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
-         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
-         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
+         iface->setPhysicalLocation(IntegerFromCGroup(iface->name, pmatch, 2), IntegerFromCGroup(iface->name, pmatch, 3), 0, IntegerFromCGroup(iface->name, pmatch, 4));
          if ((iface->location.chassis == 1) && !occupiedModules.contains(iface->location.module))
             occupiedModules.add(iface->location.module);
       }
@@ -120,10 +117,7 @@ InterfaceList *GenericCiscoDriver::getInterfaces(DeviceContext *context, NObject
                   iface->name, module);
             continue;
          }
-         iface->isPhysicalPort = true;
-         iface->location.chassis = 1;
-         iface->location.module = module;
-         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
+         iface->setPhysicalLocation(1, module, 0, IntegerFromCGroup(iface->name, pmatch, 3));
       }
    }
 

@@ -159,9 +159,7 @@ InterfaceList *CiscoEswDriver::getInterfaces(DeviceContext *context, NObject *no
 		// Mark physical ports
 		if ((iface->type == IFTYPE_ETHERNET_CSMACD) && (iface->index <= 48))
 		{
-			iface->isPhysicalPort = true;
-			iface->location.module = 1;
-			iface->location.port = iface->index;
+			iface->setPhysicalLocation(0, 1, 0, iface->index);
 		}
 
 		// Set maximum speed based on ESW-specific logic

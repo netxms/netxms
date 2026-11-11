@@ -80,10 +80,7 @@ InterfaceList *LenovoRackDriver::getInterfaces(DeviceContext *context, NObject *
       InterfaceInfo *iface = ifList->get(i);
       if (iface->type == IFTYPE_ETHERNET_CSMACD)
       {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = 1;
-         iface->location.module = 0;
-         iface->location.port = port++;
+         iface->setPhysicalLocation(1, 0, 0, port++);
       }
    }
 

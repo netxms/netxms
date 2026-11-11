@@ -102,26 +102,17 @@ InterfaceList *ProCurveDriver::getInterfaces(DeviceContext *context, NObject *no
 		InterfaceInfo *iface = ifList->get(i);
 		if (iface->type == IFTYPE_ETHERNET_CSMACD)
 		{
-			iface->isPhysicalPort = true;
 			if (isModular)
 			{
-			   int p = iface->index % slotSize;
+			   uint32_t p = iface->index % slotSize;
 			   if (p != 0)
-			   {
-               iface->location.module = (iface->index / slotSize) + 1;
-               iface->location.port = p;
-			   }
+               iface->setPhysicalLocation(0, (iface->index / slotSize) + 1, 0, p);
 			   else
-			   {
-			      // Last port in slot
-               iface->location.module = iface->index / slotSize;
-               iface->location.port = slotSize;
-			   }
+               iface->setPhysicalLocation(0, iface->index / slotSize, 0, slotSize);   // Last port in slot
 			}
 			else
 			{
-				iface->location.module = 1;
-				iface->location.port = iface->index;
+				iface->setPhysicalLocation(0, 1, 0, iface->index);
 			}
 		}
 	}

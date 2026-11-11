@@ -133,10 +133,8 @@ InterfaceList *MoxaEDRDriver::getInterfaces(DeviceContext *context, NObject *nod
 	   if (iface->index >= 128)
 	      continue;   // Logical interface
 
-      iface->isPhysicalPort = true;
+      iface->setPhysicalLocation(0, 1, 0, iface->index);
       iface->bridgePort = iface->index;
-      iface->location.module = 1;
-      iface->location.port = iface->index;
       if (!iface->ipAddrList.isEmpty())
       {
          // Find correct interface

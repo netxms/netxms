@@ -108,11 +108,7 @@ static uint32_t PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, Interf
    InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
    if (iface != nullptr)
    {
-      iface->isPhysicalPort = true;
-      iface->location.chassis = var->getName().getElement(17);
-      iface->location.module = var->getName().getElement(18);
-      iface->location.pic = var->getName().getElement(19);
-      iface->location.port = var->getName().getElement(20);
+      iface->setPhysicalLocation(var->getName().getElement(17), var->getName().getElement(18), var->getName().getElement(19), var->getName().getElement(20));
    }
    return SNMP_ERR_SUCCESS;
 }

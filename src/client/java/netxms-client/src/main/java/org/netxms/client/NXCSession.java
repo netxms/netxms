@@ -7530,6 +7530,8 @@ public class NXCSession
             msg.setFieldInt32(NXCPCodes.VID_PHY_MODULE, data.getModule());
             msg.setFieldInt32(NXCPCodes.VID_PHY_PIC, data.getPIC());
             msg.setFieldInt32(NXCPCodes.VID_PHY_PORT, data.getPort());
+            if (data.getLane() >= 0)
+               msg.setFieldInt32(NXCPCodes.VID_PHY_LANE, data.getLane());
             msg.setFieldInt16(NXCPCodes.VID_IS_PHYS_PORT, data.isPhysicalPort() ? 1 : 0);
             break;
          case AbstractObject.OBJECT_MOBILEDEVICE:

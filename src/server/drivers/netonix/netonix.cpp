@@ -78,9 +78,7 @@ InterfaceList *NetonixDriver::getInterfaces(DeviceContext *context, NObject *nod
 	for(int i = 0; i < ifList->size(); i++)
 	{
 		InterfaceInfo *iface = ifList->get(i);
-      iface->isPhysicalPort = true;
-      iface->location.module = 1;
-      iface->location.port = iface->index;
+      iface->setPhysicalLocation(0, 1, 0, iface->index);
 	}
 
    return ifList;

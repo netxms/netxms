@@ -176,10 +176,8 @@ InterfaceList *JuniperDriver::getInterfaces(DeviceContext *context, NObject *nod
          if ((slot == 0) || (pic == 0) || (port == 0))
             continue;
 
-         iface->isPhysicalPort = true;
-         iface->location.module = slot - 1;  // Juniper numbers slots from 0 but reports in SNMP as n + 1
-         iface->location.pic = pic - 1;  // Juniper numbers PICs from 0 but reports in SNMP as n + 1
-         iface->location.port = port - 1;  // Juniper numbers ports from 0 but reports in SNMP as n + 1
+         // Juniper numbers slots, PICs, and ports from 0 but reports them in SNMP as n + 1
+         iface->setPhysicalLocation(0, slot - 1, pic - 1, port - 1);
       }
 
       // Attach logical interfaces to physical

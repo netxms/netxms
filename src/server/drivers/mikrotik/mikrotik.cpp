@@ -174,9 +174,7 @@ InterfaceList *MikrotikDriver::getInterfaces(DeviceContext *context, NObject *no
       InterfaceInfo *iface = ifList->get(i);
       if (iface->type == IFTYPE_ETHERNET_CSMACD)
       {
-         iface->isPhysicalPort = true;
-         iface->location.module = 1;
-         iface->location.port = iface->index;
+         iface->setPhysicalLocation(0, 1, 0, iface->index);
          iface->bridgePort = iface->index;
       }
    }

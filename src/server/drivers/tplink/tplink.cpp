@@ -105,10 +105,7 @@ InterfaceList* TPLinkDriver::getInterfaces(DeviceContext *context, NObject *node
       if (_pcre_exec_t(reFex, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
       {
          nxlog_debug_tag(DEBUG_TAG_TPLINK, 6, _T("TPLinkDriver::getInterfaces: ifName=\"%s\" ifIndex=%u"), iface->name, iface->index);
-         iface->isPhysicalPort = true;
-         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
-         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
-         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
+         iface->setPhysicalLocation(IntegerFromCGroup(iface->name, pmatch, 2), IntegerFromCGroup(iface->name, pmatch, 3), 0, IntegerFromCGroup(iface->name, pmatch, 4));
       }
    }
 

@@ -67,12 +67,10 @@ InterfaceList *ArubaCXDriver::getInterfaces(DeviceContext *context, NObject *nod
       return nullptr;
 
    // Physical ports are named member/slot/port (e.g. 1/1/24). Split (breakout) ports have an
-   // additional lane number (e.g. 1/1/49:1), and InterfacePhysicalLocation has no field to hold it -
-   // putting the lane into "pic" would invert the chassis/module/pic/port hierarchy. Such interfaces
-   // are intentionally left without physical location until location model can represent a lane.
+   // additional lane number (e.g. 1/1/49:1).
    const char *eptr;
    int eoffset;
-   PCRE *re = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^([0-9]+)/([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
+   PCRE *re = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^([0-9]+)/([0-9]+)/([0-9]+)(?::([0-9]+))?$")), PCRE_COMMON_FLAGS, &eptr, &eoffset, nullptr);
    if (re == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_AOSCX, 5, _T("ArubaCXDriver::getInterfaces: cannot compile port name regexp: %hs at offset %d"), eptr, eoffset);
@@ -83,14 +81,18 @@ InterfaceList *ArubaCXDriver::getInterfaces(DeviceContext *context, NObject *nod
    for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
-      if ((iface->type == IFTYPE_ETHERNET_CSMACD) &&
-          (_pcre_exec_t(re, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4))
-      {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 1);
-         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
-         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
-      }
+      if (iface->type != IFTYPE_ETHERNET_CSMACD)
+         continue;
+
+      int rc = _pcre_exec_t(re, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30);
+      if (rc < 4)
+         continue;
+
+      uint32_t lane = (rc == 5) ? IntegerFromCGroup(iface->name, pmatch, 4) : 0;
+      if (lane > 127)
+         continue;
+      iface->setPhysicalLocation(IntegerFromCGroup(iface->name, pmatch, 1), IntegerFromCGroup(iface->name, pmatch, 2), 0, IntegerFromCGroup(iface->name, pmatch, 3),
+         (rc == 5) ? static_cast<int8_t>(lane) : INTERFACE_LANE_NONE);
    }
 
    _pcre_free_t(re);

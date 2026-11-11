@@ -2645,6 +2645,8 @@ public:
    uint32_t getModule() const { return m_physicalLocation.module; }
    uint32_t getPIC() const { return m_physicalLocation.pic; }
    uint32_t getPort() const { return m_physicalLocation.port; }
+   int32_t getLane() const { return m_physicalLocation.lane; }
+   bool isSplitPort() const { return m_physicalLocation.isSplit(); }
    InterfacePhysicalLocation getPhysicalLocation() const { return GetAttributeWithLock(m_physicalLocation, m_mutexProperties); }
    uint32_t getPeerNodeId() const { return m_peerNodeId; }
    uint32_t getPeerInterfaceId() const { return m_peerInterfaceId; }

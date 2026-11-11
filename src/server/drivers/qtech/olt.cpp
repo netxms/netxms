@@ -76,9 +76,7 @@ static uint32_t HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, In
 {
    uint32_t slot = pVar->getName().getElement(14);
    InterfaceInfo *info = new InterfaceInfo(pVar->getValueAsUInt() + slot * 1000);
-   info->location.module = slot;
-   info->location.port = info->index - slot * 1000;
-   info->isPhysicalPort = true;
+   info->setPhysicalLocation(0, slot, 0, info->index - slot * 1000);
    ifList->add(info);
    return SNMP_ERR_SUCCESS;
 }

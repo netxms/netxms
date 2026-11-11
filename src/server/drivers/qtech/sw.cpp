@@ -129,29 +129,19 @@ InterfaceList* QtechSWDriver::getInterfaces(DeviceContext *context, NObject *nod
       if (!_tcsncmp(iface->name, _T("Mg0"), 3))
       {
          // Standalone management port
-         iface->isPhysicalPort = true;
-         iface->location.chassis = 1;
-         iface->location.port = 0;
+         iface->setPhysicalLocation(1, 0, 0, 0);
       }
       else if (_pcre_exec_t(reBase.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
       {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = 1;
-         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
-         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
+         iface->setPhysicalLocation(1, IntegerFromCGroup(iface->name, pmatch, 2), 0, IntegerFromCGroup(iface->name, pmatch, 3));
       }
       else if (_pcre_exec_t(reStack.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
       {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
-         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
-         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
+         iface->setPhysicalLocation(IntegerFromCGroup(iface->name, pmatch, 2), IntegerFromCGroup(iface->name, pmatch, 3), 0, IntegerFromCGroup(iface->name, pmatch, 4));
       }
       else if (_pcre_exec_t(reMgmt.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 2)
       {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 1);
-         iface->location.port = 0;
+         iface->setPhysicalLocation(IntegerFromCGroup(iface->name, pmatch, 1), 0, 0, 0);
       }
    }
 

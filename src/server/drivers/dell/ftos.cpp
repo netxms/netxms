@@ -229,13 +229,12 @@ InterfaceList *DellFTOSDriver::getInterfaces(DeviceContext *context, NObject *no
 
    // Physical ports are named "<Type> unit/port" (e.g. "TenGigabitEthernet 1/24", "fortyGigE 1/49"), where unit
    // is stack unit number for stackable switches or slot number for chassis-based systems. Breakout ports carry
-   // an additional lane number (e.g. "TenGigabitEthernet 1/49/1"), and InterfacePhysicalLocation has no field to
-   // hold it - such interfaces are intentionally left without physical location. Out-of-band management port
+   // an additional lane number (e.g. "TenGigabitEthernet 1/49/1"). Out-of-band management port
    // ("ManagementEthernet 1/1") is excluded by the explicit list of front panel port types.
    const char *eptr;
    int eoffset;
    PCREHandle re(_pcre_compile_t(
-         reinterpret_cast<const PCRE_TCHAR*>(_T("^(FastEthernet|GigabitEthernet|TenGigabitEthernet|TwentyFiveGigE|FortyGigE|HundredGigE)\\s*([0-9]+)/([0-9]+)$")),
+         reinterpret_cast<const PCRE_TCHAR*>(_T("^(FastEthernet|GigabitEthernet|TenGigabitEthernet|TwentyFiveGigE|FortyGigE|HundredGigE)\\s*([0-9]+)/([0-9]+)(?:/([0-9]+))?$")),
          PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr));
    if (re == nullptr)
    {
@@ -252,17 +251,20 @@ InterfaceList *DellFTOSDriver::getInterfaces(DeviceContext *context, NObject *no
 
       // Name may come from ifName or ifDescr depending on ifXTable availability, so try both
       const TCHAR *text = iface->name;
-      if (_pcre_exec_t(re.get(), nullptr, reinterpret_cast<const PCRE_TCHAR*>(text), static_cast<int>(_tcslen(text)), 0, 0, pmatch, 30) != 4)
+      int rc = _pcre_exec_t(re.get(), nullptr, reinterpret_cast<const PCRE_TCHAR*>(text), static_cast<int>(_tcslen(text)), 0, 0, pmatch, 30);
+      if (rc < 4)
       {
          text = iface->description;
-         if (_pcre_exec_t(re.get(), nullptr, reinterpret_cast<const PCRE_TCHAR*>(text), static_cast<int>(_tcslen(text)), 0, 0, pmatch, 30) != 4)
+         rc = _pcre_exec_t(re.get(), nullptr, reinterpret_cast<const PCRE_TCHAR*>(text), static_cast<int>(_tcslen(text)), 0, 0, pmatch, 30);
+         if (rc < 4)
             continue;
       }
 
-      iface->isPhysicalPort = true;
-      iface->location.chassis = 1;
-      iface->location.module = IntegerFromCGroup(text, pmatch, 2);
-      iface->location.port = IntegerFromCGroup(text, pmatch, 3);
+      uint32_t lane = (rc == 5) ? IntegerFromCGroup(text, pmatch, 4) : 0;
+      if (lane > 127)
+         continue;
+      iface->setPhysicalLocation(1, IntegerFromCGroup(text, pmatch, 2), 0, IntegerFromCGroup(text, pmatch, 3),
+         (rc == 5) ? static_cast<int8_t>(lane) : INTERFACE_LANE_NONE);
    }
 
    return ifList;

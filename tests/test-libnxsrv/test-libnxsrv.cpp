@@ -450,6 +450,9 @@ static void TestVlanList()
    AssertEquals(msg.getFieldAsUInt32(fieldId + 1), 1005u);   // port 0 object ID
    AssertEquals(msg.getFieldAsUInt32(fieldId + 2), 1u);      // port 0 chassis
    AssertEquals(msg.getFieldAsUInt32(fieldId + 5), 5u);      // port 0 port number
+   AssertEquals(msg.getFieldAsInt16(fieldId + 6), -1);       // port 0 lane (not split)
+   AssertTrue(msg.getFieldAsBoolean(fieldId + 7));           // port 0 location is valid
+   AssertFalse(msg.getFieldAsBoolean(fieldId + 15));         // port 1 is not resolved, location is not valid
    EndTest();
 
    StartTest(_T("VlanInfo - toJson"));
@@ -596,6 +599,61 @@ static void TestComponentTree()
    AssertEquals(location.module, 2u);
    AssertEquals(location.pic, 3u);
    AssertEquals(location.port, 5u);
+   AssertTrue(location.valid);
+   AssertFalse(location.isSplit());
+   EndTest();
+
+   StartTest(_T("InterfacePhysicalLocation - validity and lane"));
+   InterfacePhysicalLocation unknown1, unknown2;
+   AssertFalse(unknown1.valid);
+   AssertFalse(unknown1.isSplit());
+   unknown2.port = 7;   // coordinates of invalid location are ignored
+   AssertTrue(unknown1.equals(unknown2));
+
+   InterfacePhysicalLocation zero(0, 0, 0, 0);
+   AssertTrue(zero.valid);
+   AssertFalse(zero.equals(unknown1));
+   AssertFalse(unknown1.equals(zero));
+
+   InterfacePhysicalLocation cage(1, 1, 0, 49);
+   InterfacePhysicalLocation lane0(1, 1, 0, 49, 0);
+   InterfacePhysicalLocation lane1(1, 1, 0, 49, 1);
+   AssertFalse(cage.isSplit());
+   AssertTrue(lane0.isSplit());
+   AssertFalse(cage.equals(lane0));
+   AssertFalse(lane0.equals(lane1));
+   AssertTrue(lane1.equals(InterfacePhysicalLocation(1, 1, 0, 49, 1)));
+
+   wchar_t text[64];
+   AssertEquals(cage.toString(text, 64), L"1/1/0/49");
+   AssertEquals(lane0.toString(text, 64), L"1/1/0/49:0");
+   AssertEquals(lane1.toString(text, 64), L"1/1/0/49:1");
+   AssertEquals(unknown1.toString(text, 64), L"");
+
+   json_t *json = cage.toJson();
+   AssertTrue(json_object_get(json, "lane") == nullptr);
+   json_decref(json);
+   json = lane0.toJson();
+   AssertEquals(json_object_get_int32(json, "lane", -1), 0);
+   json_decref(json);
+   EndTest();
+
+   StartTest(_T("InterfaceList - find by physical location"));
+   InterfaceList ifList;
+   InterfaceInfo *iface = new InterfaceInfo(1);
+   iface->setPhysicalLocation(0, 0, 0, 0);
+   ifList.add(iface);
+   iface = new InterfaceInfo(2);
+   iface->isPhysicalPort = true;    // physical port with unknown location
+   ifList.add(iface);
+   iface = new InterfaceInfo(3);
+   iface->setPhysicalLocation(1, 1, 0, 49, 2);
+   ifList.add(iface);
+   AssertNotNull(ifList.findByPhysicalLocation(0, 0, 0, 0));
+   AssertEquals(ifList.findByPhysicalLocation(0, 0, 0, 0)->index, 1u);
+   AssertNull(ifList.findByPhysicalLocation(InterfacePhysicalLocation()));
+   AssertNull(ifList.findByPhysicalLocation(1, 1, 0, 49));
+   AssertNotNull(ifList.findByPhysicalLocation(1, 1, 0, 49, 2));
    EndTest();
 }
 

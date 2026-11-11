@@ -96,10 +96,7 @@ InterfaceList *OrigoDriver::getInterfaces(DeviceContext *context, NObject *node,
       InterfaceInfo *iface = ifList->get(i);
       if (iface->type == IFTYPE_ETHERNET_CSMACD)
       {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = 1;
-         iface->location.module = 0;
-         iface->location.port = iface->index;
+         iface->setPhysicalLocation(1, 0, 0, iface->index);
       }
    }
 

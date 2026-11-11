@@ -2313,6 +2313,9 @@ shared_ptr<Interface> Node::findInterfaceByAlias(const TCHAR *alias) const
  */
 shared_ptr<Interface> Node::findInterfaceByLocation(const InterfacePhysicalLocation& location) const
 {
+   if (!location.valid)
+      return shared_ptr<Interface>();
+
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
       if (getChildList().get(i)->getObjectClass() == OBJECT_INTERFACE)
@@ -2660,9 +2663,8 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
    bool bSyntheticMask = false;
    TCHAR buffer[64];
 
-   nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface(\"%s\", ifIndex=%u, ifType=%u, bp=%d, chassis=%u, module=%u, pic=%u, port=%u) called for node %s [%u]"),
-         info->name, info->index, info->type, info->bridgePort, info->location.chassis, info->location.module,
-         info->location.pic, info->location.port, m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, L"Node::createNewInterface(\"%s\", ifIndex=%u, ifType=%u, bp=%d, location=\"%s\") called for node %s [%u]",
+         info->name, info->index, info->type, info->bridgePort, info->location.toString(buffer, 64), m_name, m_id);
    for(int i = 0; i < info->ipAddrList.size(); i++)
    {
       const InetAddress& addr = info->ipAddrList.get(i);
@@ -8168,18 +8170,19 @@ void Node::updateInterfacesFromEntityMib(const Component *component)
                m_name, m_id, iface->getName());
          }
 
-         // Set physical location if not already set by driver
-         InterfacePhysicalLocation currentLoc = iface->getPhysicalLocation();
-         if (currentLoc.equals(InterfacePhysicalLocation()))
+         // Set physical location if not already set by driver. ENTITY MIB cannot provide lane number, so interfaces
+         // of a split port could get identical locations - only first one is accepted.
+         if (!iface->getPhysicalLocation().valid)
          {
             InterfacePhysicalLocation loc = InterfacePhysicalLocationFromEntityMib(component);
-            if (!loc.equals(InterfacePhysicalLocation()))
+            if (loc.valid && (findInterfaceByLocation(loc) == nullptr))
             {
                iface->setPhysicalLocation(loc);
                updated = true;
+               wchar_t buffer[64];
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5,
-                  _T("Node::updateInterfacesFromEntityMib(%s [%u]): interface %s location set to %u/%u/%u/%u"),
-                  m_name, m_id, iface->getName(), loc.chassis, loc.module, loc.pic, loc.port);
+                  L"Node::updateInterfacesFromEntityMib(%s [%u]): interface %s location set to %s",
+                  m_name, m_id, iface->getName(), loc.toString(buffer, 64));
             }
          }
 

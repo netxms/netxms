@@ -150,8 +150,7 @@ InterfaceList *PlanetIndustrialSwDriver::getInterfaces(DeviceContext *context, N
             uint32_t portNumber = wcstoul(&iface->description[5], &eptr, 10);
             if ((*eptr == 0) && (portNumber > 0))
             {
-               iface->location.module = 1;
-               iface->location.port = portNumber;
+               iface->setPhysicalLocation(0, 1, 0, portNumber);
                nxlog_debug_tag(DEBUG_TAG, 6, L"PlanetIndustrialSwDriver::getInterfaces(%s [%u]): Interface %u (%s): parsed location %d.%d.%d",
                   node->getName(), node->getId(), iface->index, iface->name, iface->location.module, iface->location.pic, iface->location.port);
             }

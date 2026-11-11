@@ -749,6 +749,8 @@ CREATE TABLE interfaces
   phy_module integer not null,
   phy_pic integer not null, /* Physical Interface Card */
   phy_port integer not null,
+  phy_lane integer not null, /* Lane number on split (breakout) port, -1 if port is not split */
+  phy_location_valid char(1) not null, /* '1' if physical location is known */
   peer_node_id integer not null,
   peer_if_id integer not null,
   peer_proto integer not null,

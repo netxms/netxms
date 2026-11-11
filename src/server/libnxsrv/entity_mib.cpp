@@ -410,7 +410,10 @@ InterfacePhysicalLocation LIBNXSRV_EXPORTABLE InterfacePhysicalLocationFromEntit
    InterfacePhysicalLocation location;
 
    if (port->getPosition() > 0)
+   {
       location.port = port->getPosition();
+      location.valid = true;
+   }
 
    const Component *parent = port->getParent();
    bool moduleFound = false;
@@ -430,6 +433,7 @@ InterfacePhysicalLocation LIBNXSRV_EXPORTABLE InterfacePhysicalLocationFromEntit
             if (!moduleFound)
             {
                location.module = pos;
+               location.valid = true;
                moduleFound = true;
             }
             else
@@ -442,6 +446,7 @@ InterfacePhysicalLocation LIBNXSRV_EXPORTABLE InterfacePhysicalLocationFromEntit
          case COMPONENT_CLASS_CHASSIS:
          case COMPONENT_CLASS_STACK:
             location.chassis = pos;
+            location.valid = true;
             break;
       }
       parent = parent->getParent();

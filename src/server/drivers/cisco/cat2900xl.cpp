@@ -76,9 +76,7 @@ static uint32_t HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, I
 	if (iface != nullptr)
 	{
 		size_t nameLen = var->getName().length();
-		iface->location.module = var->getName().getElement(nameLen - 2);
-		iface->location.port = var->getName().getElement(nameLen - 1);
-		iface->isPhysicalPort = true;
+		iface->setPhysicalLocation(0, var->getName().getElement(nameLen - 2), 0, var->getName().getElement(nameLen - 1));
 	}
 	return SNMP_ERR_SUCCESS;
 }

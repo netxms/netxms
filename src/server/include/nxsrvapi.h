@@ -298,7 +298,15 @@ public:
 };
 
 /**
- * Interface physical location
+ * Lane number indicating that port is not split into lanes (breakout is not configured)
+ */
+#define INTERFACE_LANE_NONE   (-1)
+
+/**
+ * Interface physical location. Coordinates are ordered from outermost to innermost: chassis, module, PIC, port, lane.
+ * Lane identifies individual interface on a split (breakout) port and is INTERFACE_LANE_NONE for port that is not split;
+ * lane numbers are stored as reported by device, so 0 is a valid lane number. Location with "valid" flag not set means
+ * that location is not known, and values of all coordinates should be ignored.
  */
 struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
 {
@@ -306,6 +314,8 @@ struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
    uint32_t module;
    uint32_t pic;
    uint32_t port;
+   int8_t lane;
+   bool valid;
 
    InterfacePhysicalLocation()
    {
@@ -313,24 +323,44 @@ struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
       module = 0;
       pic = 0;
       port = 0;
+      lane = INTERFACE_LANE_NONE;
+      valid = false;
    }
 
-   InterfacePhysicalLocation(uint32_t _chassis, uint32_t _module, uint32_t _pic, uint32_t _port)
+   InterfacePhysicalLocation(uint32_t _chassis, uint32_t _module, uint32_t _pic, uint32_t _port, int8_t _lane = INTERFACE_LANE_NONE)
    {
       chassis = _chassis;
       module = _module;
       pic = _pic;
       port = _port;
+      lane = _lane;
+      valid = true;
+   }
+
+   bool isSplit() const
+   {
+      return lane != INTERFACE_LANE_NONE;
    }
 
    bool equals(const InterfacePhysicalLocation& l) const
    {
-      return (port == l.port) && (pic == l.pic) && (module == l.module) && (chassis == l.chassis);
+      if (!valid || !l.valid)
+         return valid == l.valid;
+      return (port == l.port) && (lane == l.lane) && (pic == l.pic) && (module == l.module) && (chassis == l.chassis);
    }
 
+   /**
+    * Get text representation of location (chassis/module/pic/port or chassis/module/pic/port:lane for split port).
+    * Returns empty string if location is not valid.
+    */
    wchar_t *toString(wchar_t *buffer, size_t size) const
    {
-      nx_swprintf(buffer, size, L"%u/%u/%u/%u", chassis, module, pic, port);
+      if (!valid)
+         buffer[0] = 0;
+      else if (isSplit())
+         nx_swprintf(buffer, size, L"%u/%u/%u/%u:%d", chassis, module, pic, port, static_cast<int>(lane));
+      else
+         nx_swprintf(buffer, size, L"%u/%u/%u/%u", chassis, module, pic, port);
       return buffer;
    }
 
@@ -341,6 +371,8 @@ struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
       json_object_set_new(root, "module", json_integer(module));
       json_object_set_new(root, "pic", json_integer(pic));
       json_object_set_new(root, "port", json_integer(port));
+      if (isSplit())
+         json_object_set_new(root, "lane", json_integer(lane));
       return root;
    }
 };
@@ -402,6 +434,15 @@ public:
    }
 
    bool hasAddress(const InetAddress& addr) { return ipAddrList.hasAddress(addr); }
+
+   /**
+    * Mark interface as physical port with known location
+    */
+   void setPhysicalLocation(uint32_t chassis, uint32_t module, uint32_t pic, uint32_t port, int8_t lane = INTERFACE_LANE_NONE)
+   {
+      isPhysicalPort = true;
+      location = InterfacePhysicalLocation(chassis, module, pic, port, lane);
+   }
 };
 
 /**
@@ -428,7 +469,10 @@ public:
 	InterfaceInfo *get(int index) const { return m_interfaces.get(index); }
 	InterfaceInfo *findByIfIndex(uint32_t ifIndex) const;
    InterfaceInfo *findByPhysicalLocation(const InterfacePhysicalLocation &loc) const;
-   InterfaceInfo *findByPhysicalLocation(int chassis, int module, int pic, int port) const { return findByPhysicalLocation(InterfacePhysicalLocation(chassis, module, pic, port)); }
+   InterfaceInfo *findByPhysicalLocation(uint32_t chassis, uint32_t module, uint32_t pic, uint32_t port, int8_t lane = INTERFACE_LANE_NONE) const
+   {
+      return findByPhysicalLocation(InterfacePhysicalLocation(chassis, module, pic, port, lane));
+   }
    InterfaceInfo *findByIpAddress(const InetAddress& addr) const;
 
 	void setData(void *data) { m_data = data; }

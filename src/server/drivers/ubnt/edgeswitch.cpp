@@ -144,10 +144,7 @@ InterfaceList *UbiquitiEdgeSwitchDriver::getInterfaces(DeviceContext *context, N
       if ((iface->type == IFTYPE_ETHERNET_CSMACD) &&
           (_pcre_exec_t(re, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 3))
       {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = 1;
-         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 1);
-         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 2);
+         iface->setPhysicalLocation(1, IntegerFromCGroup(iface->name, pmatch, 1), 0, IntegerFromCGroup(iface->name, pmatch, 2));
       }
    }
    _pcre_free_t(re);

@@ -389,6 +389,7 @@ public class Objects extends AbstractObjectHandler
       createData.setChassis(JsonTools.getIntFromJson(data, "chassis", createData.getChassis()));
       createData.setModule(JsonTools.getIntFromJson(data, "module", createData.getModule()));
       createData.setPIC(JsonTools.getIntFromJson(data, "pic", createData.getPIC()));
+      createData.setLane(JsonTools.getIntFromJson(data, "lane", createData.getLane()));
       createData.setPort(JsonTools.getIntFromJson(data, "port", createData.getPort()));
       createData.setPhysicalPort(JsonTools.getBooleanFromJson(data, "physicalPort", createData.isPhysicalPort()));
       createData.setCreateStatusDci(JsonTools.getBooleanFromJson(data, "createStatusDci", createData.isCreateStatusDci()));

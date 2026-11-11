@@ -97,6 +97,7 @@ public class NXCObjectCreationData
 	private int module;
 	private int pic;
 	private int port;
+   private int lane;
 	private boolean physicalPort;
 	private boolean createStatusDci;
 	private String deviceId;
@@ -192,6 +193,7 @@ public class NXCObjectCreationData
 		module = 0;
 		pic = 0;
 		port = 0;
+      lane = -1;
 		physicalPort = false;
 		createStatusDci = false;
 		sshLogin = "";
@@ -839,6 +841,22 @@ public class NXCObjectCreationData
    public void setChassis(int chassis)
    {
       this.chassis = chassis;
+   }
+
+   /**
+    * @return lane number on split (breakout) port or -1 if port is not split
+    */
+   public int getLane()
+   {
+      return lane;
+   }
+
+   /**
+    * @param lane lane number on split (breakout) port or -1 if port is not split
+    */
+   public void setLane(int lane)
+   {
+      this.lane = lane;
    }
 
    /**
@@ -1633,7 +1651,7 @@ public class NXCObjectCreationData
             ", etherNetIpProxyId=" + etherNetIpProxyId + ", modbusProxyId=" + modbusProxyId + ", icmpProxyId=" + icmpProxyId + ", sshProxyId=" + sshProxyId + ", webServiceProxyId=" +
             webServiceProxyId + ", mapType=" + mapType + ", seedObjectIds=" + seedObjectIds + ", zoneUIN=" + zoneUIN + ", serviceType=" + serviceType + ", ipProtocol=" + ipProtocol + ", ipPort=" +
             ipPort + ", request=" + request + ", response=" + response + ", linkedNodeId=" + linkedNodeId + ", template=" + template + ", macAddress=" + macAddress + ", ifIndex=" + ifIndex +
-            ", ifType=" + ifType + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic + ", port=" + port + ", physicalPort=" + physicalPort + ", createStatusDci=" + createStatusDci +
+            ", ifType=" + ifType + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic + ", port=" + port + ", lane=" + lane + ", physicalPort=" + physicalPort + ", createStatusDci=" + createStatusDci +
             ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" + chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" +
             sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", model=" + model + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", gatewayNodeId=" +
             gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + ", linkedObjectId=" + linkedObjectId + ", componentSerial=" + componentSerial +

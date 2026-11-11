@@ -107,9 +107,7 @@ InterfaceList *ExtremeDriver::getInterfaces(DeviceContext *context, NObject *nod
       if ((port <= 0) || (*eptr != 0))
          continue;
 
-      iface->isPhysicalPort = true;
-      iface->location.module = slot;
-      iface->location.port = port;
+      iface->setPhysicalLocation(0, slot, 0, port);
    }
 	return ifList;
 }

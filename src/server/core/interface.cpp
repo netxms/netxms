@@ -234,7 +234,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
 		L"phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,"
 		L"admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,"
       L"ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,max_speed,iftable_suffix,"
-      L"state_before_maintenance,last_known_speed FROM interfaces WHERE id=?");
+      L"state_before_maintenance,last_known_speed,phy_lane,phy_location_valid FROM interfaces WHERE id=?");
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -255,6 +255,8 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
 		m_physicalLocation.module = DBGetFieldULong(hResult, 0, 7);
 		m_physicalLocation.pic = DBGetFieldULong(hResult, 0, 8);
 		m_physicalLocation.port = DBGetFieldULong(hResult, 0, 9);
+      m_physicalLocation.lane = static_cast<int8_t>(DBGetFieldLong(hResult, 0, 34));
+      m_physicalLocation.valid = (DBGetFieldLong(hResult, 0, 35) != 0);
 		m_peerNodeId = DBGetFieldULong(hResult, 0, 10);
 		m_peerInterfaceId = DBGetFieldULong(hResult, 0, 11);
 		m_description = DBGetFieldAsSharedString(hResult, 0, 12);
@@ -426,7 +428,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          L"peer_proto", L"mtu", L"speed", L"parent_iface", L"iftable_suffix", L"last_known_oper_state",
          L"last_known_admin_state", L"if_alias", L"ospf_area", L"ospf_if_type", L"ospf_if_state",
          L"stp_port_state", L"if_name", L"peer_last_updated", L"max_speed", L"state_before_maintenance",
-         L"last_known_speed",
+         L"last_known_speed", L"phy_lane", L"phy_location_valid",
          nullptr
       };
 
@@ -491,8 +493,10 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          });
          DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, dataBeforeMaintenance.cstr(), DB_BIND_STATIC, MAX_DB_STRING - 1);
          DBBind(hStmt, 34, DB_SQLTYPE_BIGINT, m_lastKnownSpeed);
+         DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_physicalLocation.lane));
+         DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_physicalLocation.valid ? L"1" : L"0", DB_BIND_STATIC);
 
-         DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -1329,6 +1333,8 @@ void Interface::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_PHY_MODULE, m_physicalLocation.module);
    msg->setField(VID_PHY_PIC, m_physicalLocation.pic);
    msg->setField(VID_PHY_PORT, m_physicalLocation.port);
+   msg->setField(VID_PHY_LANE, static_cast<int16_t>(m_physicalLocation.lane));
+   msg->setField(VID_PHY_LOCATION_VALID, m_physicalLocation.valid);
    msg->setField(VID_MAC_ADDR, m_macAddress);
 	msg->setField(VID_REQUIRED_POLLS, static_cast<int16_t>(m_requiredPollCount));
 	msg->setField(VID_PEER_NODE_ID, m_peerNodeId);
@@ -2285,7 +2291,8 @@ json_t *Interface::toJson(uint32_t flags)
    json_object_set_new(root, "ifTableSuffixLen", json_integer(m_ifTableSuffixLen));
    json_object_set_new(root, "ifTableSuffix", json_integer_array(m_ifTableSuffix, m_ifTableSuffixLen));
    json_object_set_new(root, "vlans", json_integer_array(m_vlans));
-   json_object_set_new(root, "physicalLocation", m_physicalLocation.toJson());
+   if (m_physicalLocation.valid)
+      json_object_set_new(root, "physicalLocation", m_physicalLocation.toJson());
 
    if (m_flags & IF_OSPF_INTERFACE)
    {

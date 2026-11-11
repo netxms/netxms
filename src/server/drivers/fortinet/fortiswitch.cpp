@@ -137,9 +137,7 @@ InterfaceList *FortiSwitchDriver::getInterfaces(DeviceContext *context, NObject 
          uint32_t portNumber = _tcstoul(&iface->name[4], &eptr, 10);
          if ((*eptr == 0) && (portNumber > 0))
          {
-            iface->isPhysicalPort = true;
-            iface->location.module = 1;
-            iface->location.port = portNumber;
+            iface->setPhysicalLocation(0, 1, 0, portNumber);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("FortiSwitchDriver::getInterfaces(%s [%u]): interface %u (%s): parsed location %u.%u.%u"),
                node->getName(), node->getId(), iface->index, iface->name, iface->location.module, iface->location.pic, iface->location.port);
          }

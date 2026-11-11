@@ -94,23 +94,12 @@ InterfaceList *LenovoFlexDriver::getInterfaces(DeviceContext *context, NObject *
       if (iface->type != IFTYPE_ETHERNET_CSMACD)
          continue;
 
-      iface->isPhysicalPort = true;
-      iface->location.chassis = 1;
       if (iface->index > FLEX_EXTERNAL_PORT_LIMIT)
-      {
-         iface->location.module = 2;
-         iface->location.port = managementPort++;
-      }
+         iface->setPhysicalLocation(1, 2, 0, managementPort++);
       else if (iface->index > FLEX_INTERNAL_PORT_LIMIT)
-      {
-         iface->location.module = 1;
-         iface->location.port = externalPort++;
-      }
+         iface->setPhysicalLocation(1, 1, 0, externalPort++);
       else
-      {
-         iface->location.module = 0;
-         iface->location.port = internalPort++;
-      }
+         iface->setPhysicalLocation(1, 0, 0, internalPort++);
       nxlog_debug_tag(DEBUG_TAG_LENOVO_FLEX, 6, _T("LenovoFlexDriver::getInterfaces(%s [%u]): ifIndex=%u module=%d port=%d"),
             node->getName(), node->getId(), iface->index, iface->location.module, iface->location.port);
    }

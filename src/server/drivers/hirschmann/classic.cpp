@@ -136,10 +136,7 @@ InterfaceList *HirschmannClassicDriver::getInterfaces(DeviceContext *context, NO
                int port = _tcstol(parts.get(2), &eptr, 10);
                if (*eptr == 0)
                {
-                  iface->isPhysicalPort = true;
-                  iface->location.chassis = chassis;
-                  iface->location.module = module;
-                  iface->location.port = port;
+                  iface->setPhysicalLocation(chassis, module, 0, port);
                }
             }
          }

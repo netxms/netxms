@@ -121,8 +121,7 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(DeviceContext *context, NObjec
             {
                if (cp == 1)   // 1 == true
                {
-                  iface->isPhysicalPort = true;
-                  iface->location.port = iface->index;
+                  iface->setPhysicalLocation(0, 0, 0, iface->index);
                }
             }
          }
@@ -146,9 +145,7 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(DeviceContext *context, NObjec
                    (response->getVariable(1)->getType() != ASN_NO_SUCH_OBJECT) &&
                    (response->getVariable(1)->getType() != ASN_NO_SUCH_INSTANCE))
                {
-                  iface->location.module = response->getVariable(0)->getValueAsInt();
-                  iface->location.port = response->getVariable(1)->getValueAsInt();
-                  iface->isPhysicalPort = true;
+                  iface->setPhysicalLocation(0, response->getVariable(0)->getValueAsInt(), 0, response->getVariable(1)->getValueAsInt());
                }
                delete response;
             }

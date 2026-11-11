@@ -53,7 +53,9 @@ public class VlanInfo
          int module = msg.getFieldAsInt32(fieldId++);
          int pic = msg.getFieldAsInt32(fieldId++);
          int port = msg.getFieldAsInt32(fieldId++);
-			ports[i] = new Port(objectId, ifIndex, chassis, module, pic, port);
+         int lane = msg.getFieldAsInt32(fieldId++);
+         boolean locationValid = msg.getFieldAsBoolean(fieldId++);
+         ports[i] = new Port(objectId, ifIndex, chassis, module, pic, port, lane, locationValid);
 		}
       nextFieldId = fieldId;
 	}
@@ -91,18 +93,16 @@ public class VlanInfo
 	}
 
    /**
-    * Check if given port is within VLAN
-    * @param chassis chassis
-    * @param module module
-    * @param pic pic
-    * @param port port
-    * @return if given port is within VLAN
+    * Check if given port is within VLAN (ports are matched by physical location).
+    *
+    * @param port port to check
+    * @return true if given port is within VLAN
     */
-   public boolean containsPort(int chassis, int module, int pic, int port)
+   public boolean containsPort(Port port)
    {
       for(Port p : ports)
       {
-         if ((p.getChassis() == chassis) && (p.getModule() == module) && (p.getPIC() == pic) && (p.getPort() == port))
+         if (p.isSameLocation(port))
             return true;
       }
       return false;

@@ -44,7 +44,7 @@ InterfaceInfo *InterfaceList::findByPhysicalLocation(const InterfacePhysicalLoca
    for(int i = 0; i < m_interfaces.size(); i++)
    {
       InterfaceInfo *iface = m_interfaces.get(i);
-      if (iface->isPhysicalPort && iface->location.equals(location))
+      if (iface->isPhysicalPort && iface->location.valid && iface->location.equals(location))
          return iface;
    }
    return nullptr;

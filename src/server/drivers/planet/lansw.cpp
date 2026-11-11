@@ -157,8 +157,7 @@ InterfaceList *PlanetLanSwDriver::getInterfaces(DeviceContext *context, NObject 
          InterfaceInfo *iface = ifList->findByIfIndex(ifIndex);
          if (iface != nullptr)
          {
-            iface->location.module = var->getValueAsInt();
-            iface->isPhysicalPort = true;
+            iface->setPhysicalLocation(0, var->getValueAsInt(), 0, 0);
             nxlog_debug_tag(DEBUG_TAG, 6, L"PlanetLanSwDriver::getInterfaces(%s): Interface %u (%s): slot number %d", debugId, ifIndex, iface->name, iface->location.module);
          }
          return SNMP_ERR_SUCCESS;
@@ -173,9 +172,7 @@ InterfaceList *PlanetLanSwDriver::getInterfaces(DeviceContext *context, NObject 
          if (iface != nullptr)
          {
             uint32_t n = var->getValueAsUInt();
-            iface->location.pic = (n >> 16) & 0x0F;
-            iface->location.port = n & 0xFFFF;
-            iface->isPhysicalPort = true;
+            iface->setPhysicalLocation(0, iface->location.module, (n >> 16) & 0x0F, n & 0xFFFF);  // keep slot number set from nmscardIfSlotNumber
             nxlog_debug_tag(DEBUG_TAG, 6, L"PlanetLanSwDriver::getInterfaces(%s): Interface %u (%s): port location %d.%d.%d", debugId, ifIndex, iface->name,
                iface->location.module, iface->location.pic, iface->location.port);
          }
@@ -225,16 +222,13 @@ InterfaceList *PlanetLanSwDriver::getInterfaces(DeviceContext *context, NObject 
 
          if (_pcre_exec_t(reBase, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
          {
-            iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
-            iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
+            iface->setPhysicalLocation(0, IntegerFromCGroup(iface->name, pmatch, 2), 0, IntegerFromCGroup(iface->name, pmatch, 3));
             nxlog_debug_tag(DEBUG_TAG, 6, L"PlanetLanSwDriver::getInterfaces(%s): Interface %u (%s): parsed location %d.%d.%d", debugId, iface->index, iface->name,
                iface->location.module, iface->location.pic, iface->location.port);
          }
          else if (_pcre_exec_t(reFex, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
          {
-            iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
-            iface->location.pic = IntegerFromCGroup(iface->name, pmatch, 3);
-            iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
+            iface->setPhysicalLocation(0, IntegerFromCGroup(iface->name, pmatch, 2), IntegerFromCGroup(iface->name, pmatch, 3), IntegerFromCGroup(iface->name, pmatch, 4));
             nxlog_debug_tag(DEBUG_TAG, 6, L"PlanetLanSwDriver::getInterfaces(%s): Interface %u (%s): parsed location %d.%d.%d", debugId, iface->index, iface->name,
                iface->location.module, iface->location.pic, iface->location.port);
          }

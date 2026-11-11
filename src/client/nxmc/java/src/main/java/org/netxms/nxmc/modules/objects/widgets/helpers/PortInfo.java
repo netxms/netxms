@@ -31,6 +31,7 @@ public class PortInfo
 	private int module;
 	private int pic;
    private int port;
+   private int lane;
 	private ObjectStatus status;
 	private int adminState;
 	private int operState;
@@ -48,6 +49,7 @@ public class PortInfo
 		module = iface.getModule();
 		pic = iface.getPIC();
 		port = iface.getPort();
+      lane = iface.getLane();
 		status = iface.getStatus();
 		adminState = iface.getAdminState();
 		operState = iface.getOperState();
@@ -108,6 +110,14 @@ public class PortInfo
 	{
 		return port;
 	}
+
+   /**
+    * @return lane number on split (breakout) port or -1 if port is not split
+    */
+   public int getLane()
+   {
+      return lane;
+   }
 
 	/**
 	 * @return the highlighted

@@ -114,14 +114,11 @@ InterfaceList *MellanoxOnyxDriver::getInterfaces(DeviceContext *context, NObject
       if (rc < 3)
          continue;
 
-      // InterfacePhysicalLocation has no field for a split port lane, so only the first lane
-      // represents the physical port; remaining lanes are left without physical location.
-      if ((rc == 4) && (IntegerFromCGroup(iface->name, pmatch, 3) > 1))
+      uint32_t lane = (rc == 4) ? IntegerFromCGroup(iface->name, pmatch, 3) : 0;
+      if (lane > 127)
          continue;
-
-      iface->isPhysicalPort = true;
-      iface->location.module = IntegerFromCGroup(iface->name, pmatch, 1);
-      iface->location.port = IntegerFromCGroup(iface->name, pmatch, 2);
+      iface->setPhysicalLocation(0, IntegerFromCGroup(iface->name, pmatch, 1), 0, IntegerFromCGroup(iface->name, pmatch, 2),
+         (rc == 4) ? static_cast<int8_t>(lane) : INTERFACE_LANE_NONE);
    }
 
    _pcre_free_t(re);

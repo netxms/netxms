@@ -109,9 +109,7 @@ InterfaceList *PowerConnectDriver::getInterfaces(DeviceContext *context, NObject
 		InterfaceInfo *iface = ifList->get(i);
 		if (iface->type == IFTYPE_ETHERNET_CSMACD)
 		{
-			iface->isPhysicalPort = true;
-			iface->location.module = (iface->index / slotSize) + 1;
-			iface->location.port = iface->index % slotSize;
+			iface->setPhysicalLocation(0, (iface->index / slotSize) + 1, 0, iface->index % slotSize);
 		}
 	}
 

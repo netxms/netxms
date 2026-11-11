@@ -24,6 +24,24 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.9 to 71.10
+ */
+static bool H_UpgradeFromV9()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE interfaces ADD phy_lane integer\n"
+      L"ALTER TABLE interfaces ADD phy_location_valid char(1)\n"
+      L"UPDATE interfaces SET phy_lane=-1,phy_location_valid='0'\n"
+      L"UPDATE interfaces SET phy_location_valid='1' WHERE phy_chassis<>0 OR phy_module<>0 OR phy_pic<>0 OR phy_port<>0\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"interfaces", L"phy_lane"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"interfaces", L"phy_location_valid"));
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 71.8 to 71.9
  */
 static bool H_UpgradeFromV8()
@@ -230,6 +248,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  71, 10, H_UpgradeFromV9  },
    { 8,  71, 9,  H_UpgradeFromV8  },
    { 7,  71, 8,  H_UpgradeFromV7  },
    { 6,  71, 7,  H_UpgradeFromV6  },

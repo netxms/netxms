@@ -72,6 +72,10 @@ NXSL_Value *NXSL_DiscoveredInterfaceClass::getAttr(NXSL_Object *object, const NX
    {
       value = vm->createValue(iface->isPhysicalPort);
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lane"))
+   {
+      value = iface->location.isSplit() ? vm->createValue(static_cast<int32_t>(iface->location.lane)) : vm->createValue();
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddr"))
    {
       TCHAR buffer[64];

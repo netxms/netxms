@@ -151,14 +151,28 @@ InterfaceList *AristaEOSDriver::getInterfaces(DeviceContext *context, NObject *n
          lane = (rc >= 3) ? IntegerFromCGroup(iface->name, pmatch, 2) : 0;
       }
 
-      // InterfacePhysicalLocation has no field for a breakout lane, so only the first lane
-      // represents the physical port; remaining lanes are left without physical location.
-      if (lane > 1)
+      if (lane > MAX_LANES_PER_PORT)
+         continue;
+      iface->setPhysicalLocation(0, module, 0, port, (lane > 0) ? static_cast<int8_t>(lane) : INTERFACE_LANE_NONE);
+   }
+
+   // Breakout capable port is named with lane number 1 even when it is not split, so lane 1 alone
+   // does not mean that port is split - it is only when other lanes of the same port are present.
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      InterfaceInfo *iface = ifList->get(i);
+      if (!iface->isPhysicalPort || (iface->location.lane != 1))
          continue;
 
-      iface->isPhysicalPort = true;
-      iface->location.module = module;
-      iface->location.port = port;
+      bool split = false;
+      for(int j = 0; (j < ifList->size()) && !split; j++)
+      {
+         const InterfaceInfo *other = ifList->get(j);
+         split = other->isPhysicalPort && other->location.isSplit() && (other->location.lane != 1) &&
+                 (other->location.module == iface->location.module) && (other->location.port == iface->location.port);
+      }
+      if (!split)
+         iface->location.lane = INTERFACE_LANE_NONE;
    }
 
    _pcre_free_t(re);

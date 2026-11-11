@@ -190,38 +190,104 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
       if (labelFont != null)
          e.gc.setFont(labelFont);
 
+      finder.clear();
+
+      List<List<PortInfo>> cages = buildCages();
       int pic = 0;
       Point pos = null;
-      PortCalculator portCalculator = createPortCalculator(nameSize.x);
-		for(PortInfo p : ports)
+      PortCalculator portCalculator = createPortCalculator(nameSize.x, cages.size());
+      for(List<PortInfo> cage : cages)
 		{
-         if (p.getPIC() != pic)
+         if (cage.get(0).getPIC() != pic)
          {
-            pic = p.getPIC();
+            pic = cage.get(0).getPIC();
             if (pos != null)
-               portCalculator = createPortCalculator(pos.x + portWidth);
+               portCalculator = createPortCalculator(pos.x + portWidth, cages.size());
          }
          pos = portCalculator.calculateNextPos();
-         drawPort(p, pos, e.gc);
+         drawCage(cage, pos, e.gc);
 		}
 	}
+
+   /**
+    * Group ports into cages. Each cage corresponds to one port on device front panel and contains either single port or all
+    * interfaces (lanes) of a split (breakout) port. Ports are expected to be sorted by PIC, port, and lane.
+    *
+    * @return list of cages
+    */
+   private List<List<PortInfo>> buildCages()
+   {
+      List<List<PortInfo>> cages = new ArrayList<List<PortInfo>>();
+      List<PortInfo> cage = null;
+      for(PortInfo p : ports)
+      {
+         if ((cage == null) || (cage.get(0).getPIC() != p.getPIC()) || (cage.get(0).getPort() != p.getPort()))
+         {
+            cage = new ArrayList<PortInfo>(4);
+            cages.add(cage);
+         }
+         cage.add(p);
+      }
+      return cages;
+   }
+
+   /**
+    * Draw single cage. Cage with one port is drawn as single rectangle, and lanes of split port are drawn as subdivisions of the
+    * cage rectangle (in one row for two lanes, in two rows otherwise).
+    *
+    * @param cage ports in cage
+    * @param point coordinates of top left corner
+    * @param gc graphics context
+    */
+   private void drawCage(List<PortInfo> cage, Point point, GC gc)
+   {
+      final String label = Integer.toString(cage.get(0).getPort());
+      if (cage.size() == 1)
+      {
+         drawPort(cage.get(0), new Rectangle(point.x, point.y, portWidth, portHeight), gc);
+      }
+      else
+      {
+         int rows = (cage.size() > 2) ? 2 : 1;
+         int columns = (cage.size() + rows - 1) / rows;
+         for(int i = 0; i < cage.size(); i++)
+         {
+            int row = i / columns;
+            int column = i % columns;
+            int x1 = point.x + portWidth * column / columns;
+            int x2 = point.x + portWidth * (column + 1) / columns;
+            int y1 = point.y + portHeight * row / rows;
+            int y2 = point.y + portHeight * (row + 1) / rows;
+            drawPort(cage.get(i), new Rectangle(x1, y1, x2 - x1, y2 - y1), gc);
+         }
+
+         int width = gc.getLineWidth();
+         gc.setLineWidth(2);
+         gc.drawRectangle(point.x, point.y, portWidth, portHeight);
+         gc.setLineWidth(width);
+      }
+
+      Point ext = gc.textExtent(label);
+      gc.drawText(label, point.x + (portWidth - ext.x) / 2, point.y + (portHeight - ext.y) / 2, true);
+   }
 
    /**
     * Create new port calculator based on numbering scheme
     *
     * @param baseX base X coordinate
+    * @param portCount number of ports on device front panel shown in this slot
     * @return port calculator
     */
-   private PortCalculator createPortCalculator(int baseX)
+   private PortCalculator createPortCalculator(int baseX, int portCount)
    {
       switch(numberingScheme)
       {
          case NDD_PN_DU_LR:
             return new PortCalculatorDownUpLeftRight(baseX, rowCount, scale);
          case NDD_PN_LR_UD:
-            return new PortCalculatorLeftRightUpDown(baseX, ports.size(), rowCount, scale);
+            return new PortCalculatorLeftRightUpDown(baseX, portCount, rowCount, scale);
          case NDD_PN_LR_DU:
-            return new PortCalculatorLeftRightDownUp(baseX, ports.size(), rowCount, scale);
+            return new PortCalculatorLeftRightDownUp(baseX, portCount, rowCount, scale);
          case NDD_PN_CUSTOM:
          case NDD_PN_UNKNOWN:
          case NDD_PN_UD_LR:
@@ -231,17 +297,14 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
    }
 
 	/**
-	 * Draw single port
-	 * 
-	 * @param p port information
-	 * @param x X coordinate of top left corner
-	 * @param y Y coordinate of top left corner
-	 */
-	private void drawPort(PortInfo p, Point point, GC gc)
+    * Draw single port (or single lane of a split port)
+    *
+    * @param p port information
+    * @param rect rectangle occupied by the port
+    * @param gc graphics context
+    */
+   private void drawPort(PortInfo p, Rectangle rect, GC gc)
 	{
-		final String label = Integer.toString(p.getPort());
-		Rectangle rect = new Rectangle(point.x, point.y, portWidth, portHeight);
-
 		finder.addPortLocation(rect, p);
 
 		if (displayMode == DISPLAY_MODE_STATE)
@@ -305,9 +368,6 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 			gc.drawRectangle(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4);
 			gc.setLineStyle(SWT.LINE_SOLID);
 		}
-
-		Point ext = gc.textExtent(label);
-      gc.drawText(label, point.x + (portWidth - ext.x) / 2, point.y + (portHeight - ext.y) / 2, true);
 	}
 
    /**
@@ -320,14 +380,15 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
       int maxX = 0;
       int maxY = 0;
       Point pos = null;
-      PortCalculator portCalculator = createPortCalculator(nameSize.x);
-      for(PortInfo p : ports)
+      List<List<PortInfo>> cages = buildCages();
+      PortCalculator portCalculator = createPortCalculator(nameSize.x, cages.size());
+      for(List<PortInfo> cage : cages)
       {
-         if (p.getPIC() != pic)
+         if (cage.get(0).getPIC() != pic)
          {
-            pic = p.getPIC();
+            pic = cage.get(0).getPIC();
             if (pos != null)
-               portCalculator = createPortCalculator(pos.x + portWidth);
+               portCalculator = createPortCalculator(pos.x + portWidth, cages.size());
          }
          pos = portCalculator.calculateNextPos();
          if (pos.x > maxX)
@@ -372,7 +433,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	void addHighlight(Port p)
 	{
 		for(PortInfo pi : ports)
-			if (pi.getPort() == p.getPort())
+         if ((pi.getPIC() == p.getPIC()) && (pi.getPort() == p.getPort()) && (pi.getLane() == p.getLane()))
 				pi.setHighlighted(true);
 	}
 
@@ -499,6 +560,15 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
             }
 	      };
 	   }
+
+      /**
+       * Remove all registered port locations
+       */
+      private void clear()
+      {
+         portLocations.clear();
+         sortedRectangles.clear();
+      }
 
 	   /**
 	    * Add port and its rectangle to the map

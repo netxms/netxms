@@ -99,30 +99,21 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 		for(Port p : vlan.getPorts())
 		{
 			Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
-			if (iface != null)
+         if ((iface != null) && !iface.isPhysicalPort())
 			{
-				if (!iface.isPhysicalPort())
-				{
-				   Interface parent = iface.getParentInterface();
-				   if ((parent != null) && parent.isPhysicalPort())
-				   {
-				      physicalPorts.add(new Port(parent.getObjectId(), parent.getIfIndex(), parent.getChassis(), parent.getModule(), parent.getPIC(), parent.getPort()));
-				   }
-				}
-				else
-				{
-				   physicalPorts.add(p);
-				}
+            Interface parent = iface.getParentInterface();
+            if ((parent != null) && parent.isPhysicalPort())
+               p = new Port(parent);
+            else
+               continue;
 			}
-			else
-			{
+         if (p.isLocationValid())
 			   physicalPorts.add(p);
-			}
 		}
-		
+
 		if (physicalPorts.isEmpty())
 			return "";
-		
+
 		Collections.sort(physicalPorts, new Comparator<Port>() {
          @Override
          public int compare(Port p1, Port p2)
@@ -134,88 +125,89 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
                diff = p1.getPIC() - p2.getPIC();
             if (diff == 0)
                diff = p1.getPort() - p2.getPort();
+            if (diff == 0)
+               diff = p1.getLane() - p2.getLane();
             return diff;
          }
       });
-		
-      int chassis = physicalPorts.get(0).getChassis();
-		int module = physicalPorts.get(0).getModule();
-      int pic = physicalPorts.get(0).getPIC();
-		int lastPort = physicalPorts.get(0).getPort();
-		int firstPort = lastPort;
 
+      // Consecutive ports of same PIC, as well as consecutive lanes of same split port, are shown as range
       StringBuilder sb = new StringBuilder();
-
-		sb.append(chassis);
-		sb.append('/');
-      sb.append(module);
-      sb.append('/');
-      sb.append(pic);
-      sb.append('/');
-		sb.append(firstPort);
-		
-		int i;
-		for(i = 1; i < physicalPorts.size(); i++)
+      Port first = physicalPorts.get(0);
+      Port last = first;
+      for(int i = 1; i < physicalPorts.size(); i++)
 		{
-			if ((physicalPorts.get(i).getChassis() == chassis) &&
-			    (physicalPorts.get(i).getModule() == module) &&
-			    (physicalPorts.get(i).getPIC() == pic) &&
-			    (physicalPorts.get(i).getPort() == lastPort + 1))
+         Port p = physicalPorts.get(i);
+         if (isNextInSeries(last, p))
 			{
-				lastPort++;
+            last = p;
 				continue;
 			}
-			
-			// If previous series was not single port, add ending port
-			if (physicalPorts.get(i - 1).getPort() != firstPort)
-			{
-				if (lastPort - firstPort > 1)
-					sb.append(" - ");
-				else
-				   sb.append(", ");
-		      sb.append(chassis);
-		      sb.append('/');
-		      sb.append(module);
-		      sb.append('/');
-		      sb.append(pic);
-				sb.append('/');
-				sb.append(lastPort);
-			}
-			
-         chassis = physicalPorts.get(i).getChassis();
-         module = physicalPorts.get(i).getModule();
-			pic = physicalPorts.get(i).getPIC();
-			lastPort = physicalPorts.get(i).getPort();
-			firstPort = lastPort;
-			
-			sb.append(", ");
-	      sb.append(chassis);
-	      sb.append('/');
-	      sb.append(module);
-	      sb.append('/');
-	      sb.append(pic);
-			sb.append('/');
-			sb.append(lastPort);
+         appendPortSeries(sb, first, last);
+         first = p;
+         last = p;
 		}
-
-		// If previous series was not single port, add ending port
-		if (physicalPorts.get(i - 1).getPort() != firstPort)
-		{
-			if (lastPort - firstPort > 1)
-				sb.append(" - ");
-			else
-			   sb.append(", ");
-	      sb.append(chassis);
-	      sb.append('/');
-	      sb.append(module);
-	      sb.append('/');
-	      sb.append(pic);
-			sb.append('/');
-			sb.append(lastPort);
-		}
-		
+      appendPortSeries(sb, first, last);
 		return sb.toString();
 	}
+
+   /**
+    * Check if given port directly follows previous one (next port on same PIC or next lane on same split port).
+    *
+    * @param prev previous port
+    * @param next port to check
+    * @return true if given port directly follows previous one
+    */
+   private static boolean isNextInSeries(Port prev, Port next)
+   {
+      if ((prev.getChassis() != next.getChassis()) || (prev.getModule() != next.getModule()) || (prev.getPIC() != next.getPIC()))
+         return false;
+      if ((prev.getLane() < 0) && (next.getLane() < 0))
+         return next.getPort() == prev.getPort() + 1;
+      return (prev.getLane() >= 0) && (next.getLane() >= 0) && (next.getPort() == prev.getPort()) && (next.getLane() == prev.getLane() + 1);
+   }
+
+   /**
+    * Append series of ports to port list.
+    *
+    * @param sb string builder for port list
+    * @param first first port in series
+    * @param last last port in series
+    */
+   private static void appendPortSeries(StringBuilder sb, Port first, Port last)
+   {
+      if (sb.length() > 0)
+         sb.append(", ");
+      appendPortLocation(sb, first);
+      if (last != first)
+      {
+         int distance = (first.getLane() >= 0) ? (last.getLane() - first.getLane()) : (last.getPort() - first.getPort());
+         sb.append((distance > 1) ? " - " : ", ");
+         appendPortLocation(sb, last);
+      }
+   }
+
+   /**
+    * Append port location to port list.
+    *
+    * @param sb string builder for port list
+    * @param p port
+    */
+   private static void appendPortLocation(StringBuilder sb, Port p)
+   {
+      sb.append(p.getChassis());
+      sb.append('/');
+      sb.append(p.getModule());
+      sb.append('/');
+      sb.append(p.getPIC());
+      sb.append('/');
+      sb.append(p.getPort());
+      if (p.getLane() >= 0)
+      {
+         sb.append(':');
+         sb.append(p.getLane());
+      }
+   }
 
    /**
     * Build list of interfaces in VLAN
@@ -265,6 +257,7 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
    @Override
    public Color getBackground(Object element)
    {
-      return (selectedPort != null) && ((VlanInfo)element).containsPort(selectedPort.getChassis(), selectedPort.getModule(), selectedPort.getPIC(), selectedPort.getPort()) ? HIGHLIGHT : null;
+      return (selectedPort != null) && ((VlanInfo)element).containsPort(new Port(selectedPort.getInterfaceObjectId(), 0, selectedPort.getChassis(), selectedPort.getModule(),
+            selectedPort.getPIC(), selectedPort.getPort(), selectedPort.getLane(), true)) ? HIGHLIGHT : null;
    }
 }

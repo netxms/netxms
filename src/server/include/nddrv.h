@@ -29,7 +29,7 @@
 /**
  * API version
  */
-#define NDDRV_API_VERSION           14
+#define NDDRV_API_VERSION           15
 
 /**
  * Device transport types (bit masks for NetworkDeviceDriver::getSupportedTransports() and getRequiredTransports())

@@ -133,6 +133,8 @@ void VlanList::fillMessage(NXCPMessage *msg)
          msg->setField(fieldId++, p->location.module);
          msg->setField(fieldId++, p->location.pic);
          msg->setField(fieldId++, p->location.port);
+         msg->setField(fieldId++, static_cast<int16_t>(p->location.lane));
+         msg->setField(fieldId++, p->location.valid);
 		}
 	}
 }
@@ -151,6 +153,7 @@ void VlanInfo::add(uint32_t portId, bool tagged)
 
    VlanPortInfo *port = m_ports.addPlaceholder();
    ZeroInit(port);
+   port->location = InterfacePhysicalLocation();
    port->portId = portId;
    port->tagged = tagged;
 }
@@ -208,7 +211,8 @@ json_t *VlanInfo::toJson() const
       json_t *port = json_object();
       json_object_set_new(port, "ifIndex", json_integer(p->ifIndex));
       json_object_set_new(port, "objectId", json_integer(p->objectId));
-      json_object_set_new(port, "physicalLocation", p->location.toJson());
+      if (p->location.valid)
+         json_object_set_new(port, "physicalLocation", p->location.toJson());
       json_array_append_new(ports, port);
    }
    json_object_set_new(root, "ports", ports);

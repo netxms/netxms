@@ -149,13 +149,10 @@ static inline uint64_t SpeedFromWorkMode(uint32_t mode)
 static uint32_t HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, InterfaceList *ifList)
 {
    InterfaceInfo *iface = new InterfaceInfo(0);
-   iface->isPhysicalPort = true;
    iface->type = IFTYPE_ETHERNET_CSMACD;
 
    SNMP_ObjectId oid = var->getName();
-   iface->location.module = oid.getElement(oid.length() - 3);
-   iface->location.pic = oid.getElement(oid.length() - 1);
-   iface->location.port = oid.getElement(oid.length() - 1);
+   iface->setPhysicalLocation(0, oid.getElement(oid.length() - 3), oid.getElement(oid.length() - 1), oid.getElement(oid.length() - 1));
    iface->index = (iface->location.chassis << 24) | (iface->location.module << 16) | (iface->location.pic << 8) | iface->location.port;
 
    iface->ifTableSuffixLength = 3;

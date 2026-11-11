@@ -423,6 +423,8 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 	private int module;
    private int pic;
 	private int port;
+   private int lane;
+   private boolean physicalLocationValid;
 	private MacAddress macAddress;
 	private List<InetAddressEx> ipAddressList;
 	private int requiredPollCount;
@@ -466,6 +468,8 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 		module = msg.getFieldAsInt32(NXCPCodes.VID_PHY_MODULE);
       pic = msg.getFieldAsInt32(NXCPCodes.VID_PHY_PIC);
 		port = msg.getFieldAsInt32(NXCPCodes.VID_PHY_PORT);
+      lane = msg.getFieldAsInt32(NXCPCodes.VID_PHY_LANE);
+      physicalLocationValid = msg.getFieldAsBoolean(NXCPCodes.VID_PHY_LOCATION_VALID);
 		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
 		requiredPollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
 		peerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_NODE_ID);
@@ -628,14 +632,51 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 		return port;
 	}
 	
-	/**
-	 * Get string describing interface physical location in form chassis/module/pic/port
-	 * 
-	 * @return string describing interface physical location in form chassis/module/pic/port or emoty string if interface is not physical port
-	 */
+   /**
+    * Get lane number for interface on split (breakout) port. Lane numbers are reported as numbered by the device, so 0 is a
+    * valid lane number.
+    *
+    * @return lane number or -1 if port is not split
+    */
+   public int getLane()
+   {
+      return lane;
+   }
+
+   /**
+    * Check if this interface is one of the interfaces of split (breakout) port.
+    *
+    * @return true if this interface is one of the interfaces of split (breakout) port
+    */
+   public boolean isSplitPort()
+   {
+      return lane >= 0;
+   }
+
+   /**
+    * Check if physical location of this interface is known. If it is not, values of location coordinates (chassis, module, PIC,
+    * port, and lane) should be ignored.
+    *
+    * @return true if physical location of this interface is known
+    */
+   public boolean isPhysicalLocationValid()
+   {
+      return physicalLocationValid;
+   }
+
+   /**
+    * Get string describing interface physical location in form chassis/module/pic/port (or chassis/module/pic/port:lane for
+    * interface on split port).
+    * 
+    * @return string describing interface physical location or empty string if interface is not physical port or location is not
+    *         known
+    */
 	public String getPhysicalLocation()
 	{
-	   return isPhysicalPort() ? (chassis + "/" + module + "/" + pic + "/" + port) : "";
+      if (!isPhysicalPort() || !physicalLocationValid)
+         return "";
+      String location = chassis + "/" + module + "/" + pic + "/" + port;
+      return (lane >= 0) ? (location + ":" + lane) : location;
 	}
 
 	/**

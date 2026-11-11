@@ -19642,6 +19642,9 @@ components:
         port:
           type: integer
           description: (Interface) Physical port number.
+        lane:
+          type: integer
+          description: (Interface) Lane number (0..127) for interface on a split (breakout) port. Omit if port is not split.
         physicalPort:
           type: boolean
           description: (Interface) Whether the interface is a physical port.

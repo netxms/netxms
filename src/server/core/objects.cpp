@@ -3330,11 +3330,14 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
             MacAddress mac = MacAddress::parse(json_object_get_string(json, "macAddress", L"").cstr());
             if (mac.length() == MAC_ADDR_LENGTH)
                memcpy(ifInfo.macAddr, mac.value(), MAC_ADDR_LENGTH);
-            ifInfo.location.chassis = json_object_get_uint32(json, "chassis");
-            ifInfo.location.module = json_object_get_uint32(json, "module");
-            ifInfo.location.pic = json_object_get_uint32(json, "pic");
-            ifInfo.location.port = json_object_get_uint32(json, "port");
-            ifInfo.isPhysicalPort = json_object_get_boolean(json, "physicalPort");
+            if (json_object_get_boolean(json, "physicalPort"))
+            {
+               // Lane is optional and should be within 0..127 range; port is considered not split otherwise
+               int32_t lane = json_object_get_int32(json, "lane", INTERFACE_LANE_NONE);
+               ifInfo.setPhysicalLocation(json_object_get_uint32(json, "chassis"), json_object_get_uint32(json, "module"),
+                  json_object_get_uint32(json, "pic"), json_object_get_uint32(json, "port"),
+                  ((lane >= 0) && (lane <= 127)) ? static_cast<int8_t>(lane) : INTERFACE_LANE_NONE);
+            }
             object = static_cast<Node&>(*parent).createNewInterface(&ifInfo, true, false);
          }
          break;
