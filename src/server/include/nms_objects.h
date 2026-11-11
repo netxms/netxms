@@ -383,8 +383,8 @@ struct INDEX_HEAD;
 class NXCORE_EXPORTABLE AbstractIndexBase
 {
 protected:
-   INDEX_HEAD* volatile m_primary;
-   INDEX_HEAD* volatile m_secondary;
+   std::atomic<INDEX_HEAD*> m_primary;   // all accesses are seq_cst; reader/writer handshake depends on it
+   INDEX_HEAD *m_secondary;              // accessed only by writer under m_writerLock
    Mutex m_writerLock;
    bool m_owner;
    bool m_startupMode;
@@ -698,8 +698,8 @@ struct HashIndexHead;
 class NXCORE_EXPORTABLE HashIndexBase
 {
 private:
-   HashIndexHead* volatile m_primary;
-   HashIndexHead* volatile m_secondary;
+   std::atomic<HashIndexHead*> m_primary;   // all accesses are seq_cst; reader/writer handshake depends on it
+   HashIndexHead *m_secondary;              // accessed only by writer under m_writerLock
    Mutex m_writerLock;
    size_t m_keyLength;
 

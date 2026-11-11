@@ -39,8 +39,13 @@ struct HashIndexElement
 struct HashIndexHead
 {
    HashIndexElement *elements;
-   VolatileCounter readers;
-   VolatileCounter writers;
+   std::atomic<int32_t> readers;
+   std::atomic<int32_t> writers;
+
+   HashIndexHead() : readers(0), writers(0)
+   {
+      elements = nullptr;
+   }
 };
 
 /**
@@ -48,8 +53,8 @@ struct HashIndexHead
  */
 HashIndexBase::HashIndexBase(size_t keyLength) : m_writerLock(MutexType::FAST)
 {
-   m_primary = MemAllocStruct<HashIndexHead>();
-   m_secondary = MemAllocStruct<HashIndexHead>();
+   m_primary = new HashIndexHead();
+   m_secondary = new HashIndexHead();
    m_keyLength = keyLength;
 }
 
@@ -58,14 +63,15 @@ HashIndexBase::HashIndexBase(size_t keyLength) : m_writerLock(MutexType::FAST)
  */
 HashIndexBase::~HashIndexBase()
 {
+   HashIndexHead *primary = m_primary;
    HashIndexElement *entry, *tmp;
-   HASH_ITER(hh, m_primary->elements, entry, tmp)
+   HASH_ITER(hh, primary->elements, entry, tmp)
    {
-      HASH_DEL(m_primary->elements, entry);
+      HASH_DEL(primary->elements, entry);
       entry->object.~shared_ptr();
       MemFree(entry);
    }
-   MemFree(m_primary);
+   delete primary;
 
    HASH_ITER(hh, m_secondary->elements, entry, tmp)
    {
@@ -73,7 +79,7 @@ HashIndexBase::~HashIndexBase()
       entry->object.~shared_ptr();
       MemFree(entry);
    }
-   MemFree(m_secondary);
+   delete m_secondary;
 }
 
 /**
@@ -81,15 +87,17 @@ HashIndexBase::~HashIndexBase()
  */
 void HashIndexBase::swapAndWait()
 {
-   m_secondary = InterlockedExchangeObjectPointer(&m_primary, m_secondary);
-   InterlockedIncrement(&m_secondary->writers);
-   std::atomic_thread_fence(std::memory_order_seq_cst);
+   m_secondary = m_primary.exchange(m_secondary);
+   m_secondary->writers++;
    while(m_secondary->readers > 0)
       ThreadSleepMs(10);
 }
 
 /**
- * Acquire index
+ * Acquire index. Reader announces itself and then checks for writer, while writer (swapAndWait)
+ * announces itself and then checks for readers. This is only safe when each side's store is
+ * ordered before its own subsequent load, so primary pointer and both counters are std::atomic
+ * accessed with default (sequentially consistent) ordering.
  */
 HashIndexHead *HashIndexBase::acquireIndex() const
 {
@@ -97,11 +105,10 @@ HashIndexHead *HashIndexBase::acquireIndex() const
    while(true)
    {
       h = m_primary;
-      InterlockedIncrement(&h->readers);
-      std::atomic_thread_fence(std::memory_order_seq_cst);
+      h->readers++;
       if ((h->writers == 0) && (h == m_primary))
          break;
-      InterlockedDecrement(&h->readers);
+      h->readers--;
    }
    return h;
 }
@@ -111,7 +118,7 @@ HashIndexHead *HashIndexBase::acquireIndex() const
  */
 static inline void ReleaseIndex(HashIndexHead *h)
 {
-   InterlockedDecrement(&h->readers);
+   h->readers--;
 }
 
 /**
@@ -147,7 +154,7 @@ bool HashIndexBase::put(const void *key, const shared_ptr<NetObj>& object)
    SetElement(m_secondary, key, m_keyLength, object);
    swapAndWait();
    bool replace = SetElement(m_secondary, key, m_keyLength, object);
-   InterlockedDecrement(&m_secondary->writers);
+   m_secondary->writers--;
    m_writerLock.unlock();
    return replace;
 }
@@ -176,7 +183,7 @@ void HashIndexBase::remove(const void *key)
    RemoveElement(m_secondary, key, m_keyLength);
    swapAndWait();
    RemoveElement(m_secondary, key, m_keyLength);
-   InterlockedDecrement(&m_secondary->writers);
+   m_secondary->writers--;
    m_writerLock.unlock();
 }
 

@@ -40,8 +40,16 @@ struct INDEX_HEAD
    size_t size;
    size_t allocated;
    uint64_t maxKey;
-   VolatileCounter readers;
-   VolatileCounter writers;
+   std::atomic<int32_t> readers;
+   std::atomic<int32_t> writers;
+
+   INDEX_HEAD() : readers(0), writers(0)
+   {
+      elements = nullptr;
+      size = 0;
+      allocated = 0;
+      maxKey = 0;
+   }
 };
 
 /**
@@ -57,8 +65,8 @@ static void DefaultObjectDestructor(void *object, AbstractIndexBase *index)
  */
 AbstractIndexBase::AbstractIndexBase(Ownership owner) : m_writerLock(MutexType::FAST)
 {
-	m_primary = MemAllocStruct<INDEX_HEAD>();
-   m_secondary = MemAllocStruct<INDEX_HEAD>();
+   m_primary = new INDEX_HEAD();
+   m_secondary = new INDEX_HEAD();
 	m_owner = static_cast<bool>(owner);
 	m_startupMode = false;
 	m_dirty = false;
@@ -70,15 +78,16 @@ AbstractIndexBase::AbstractIndexBase(Ownership owner) : m_writerLock(MutexType::
  */
 AbstractIndexBase::~AbstractIndexBase()
 {
+   INDEX_HEAD *primary = m_primary;
    if (m_owner)
    {
-      for(size_t i = 0; i < m_primary->size; i++)
-         destroyObject(m_primary->elements[i].object);
+      for(size_t i = 0; i < primary->size; i++)
+         destroyObject(primary->elements[i].object);
    }
-	MemFree(m_primary->elements);
-   MemFree(m_primary);
+   MemFree(primary->elements);
+   delete primary;
    MemFree(m_secondary->elements);
-   MemFree(m_secondary);
+   delete m_secondary;
 }
 
 /**
@@ -101,24 +110,25 @@ void AbstractIndexBase::setStartupMode(bool startupMode)
    m_startupMode = startupMode;
    if (!startupMode)
    {
-      if (m_primary->size > 0)
+      INDEX_HEAD *primary = m_primary;
+      if (primary->size > 0)
       {
-         qsort(m_primary->elements, m_primary->size, sizeof(INDEX_ELEMENT), IndexCompare);
-         m_primary->maxKey = m_primary->elements[m_primary->size - 1].key;
+         qsort(primary->elements, primary->size, sizeof(INDEX_ELEMENT), IndexCompare);
+         primary->maxKey = primary->elements[primary->size - 1].key;
       }
       else
       {
-         m_primary->maxKey = 0;
+         primary->maxKey = 0;
       }
 
-      m_secondary->maxKey = m_primary->maxKey;
-      m_secondary->allocated = m_primary->allocated;
-      m_secondary->size = m_primary->size;
+      m_secondary->maxKey = primary->maxKey;
+      m_secondary->allocated = primary->allocated;
+      m_secondary->size = primary->size;
       MemFree(m_secondary->elements);
       if (m_secondary->allocated > 0)
       {
          m_secondary->elements = MemAllocArray<INDEX_ELEMENT>(m_secondary->allocated);
-         memcpy(m_secondary->elements, m_primary->elements, m_secondary->size * sizeof(INDEX_ELEMENT));
+         memcpy(m_secondary->elements, primary->elements, m_secondary->size * sizeof(INDEX_ELEMENT));
       }
       else
       {
@@ -133,15 +143,17 @@ void AbstractIndexBase::setStartupMode(bool startupMode)
  */
 void AbstractIndexBase::swapAndWait()
 {
-   m_secondary = InterlockedExchangeObjectPointer(&m_primary, m_secondary);
-   InterlockedIncrement(&m_secondary->writers);
-   std::atomic_thread_fence(std::memory_order_seq_cst);
+   m_secondary = m_primary.exchange(m_secondary);
+   m_secondary->writers++;
    while(m_secondary->readers > 0)
       ThreadSleepMs(10);
 }
 
 /**
- * Acquire index
+ * Acquire index. Reader announces itself and then checks for writer, while writer (swapAndWait)
+ * announces itself and then checks for readers. This is only safe when each side's store is
+ * ordered before its own subsequent load, so primary pointer and both counters are std::atomic
+ * accessed with default (sequentially consistent) ordering.
  */
 INDEX_HEAD *AbstractIndexBase::acquireIndex() const
 {
@@ -149,11 +161,10 @@ INDEX_HEAD *AbstractIndexBase::acquireIndex() const
    while(true)
    {
       h = m_primary;
-      InterlockedIncrement(&h->readers);
-      std::atomic_thread_fence(std::memory_order_seq_cst);
+      h->readers++;
       if ((h->writers == 0) && (h == m_primary))
          break;
-      InterlockedDecrement(&h->readers);
+      h->readers--;
    }
    return h;
 }
@@ -163,7 +174,7 @@ INDEX_HEAD *AbstractIndexBase::acquireIndex() const
  */
 static inline void ReleaseIndex(INDEX_HEAD *h)
 {
-   InterlockedDecrement(&h->readers);
+   h->readers--;
 }
 
 /**
@@ -177,15 +188,16 @@ bool AbstractIndexBase::put(uint64_t key, void *object)
 {
    if (m_startupMode)
    {
-      if (m_primary->size == m_primary->allocated)
+      INDEX_HEAD *primary = m_primary;
+      if (primary->size == primary->allocated)
       {
-         m_primary->allocated += 1024;
-         m_primary->elements = MemReallocArray<INDEX_ELEMENT>(m_primary->elements, m_primary->allocated);
+         primary->allocated += 1024;
+         primary->elements = MemReallocArray<INDEX_ELEMENT>(primary->elements, primary->allocated);
       }
 
-      m_primary->elements[m_primary->size].key = key;
-      m_primary->elements[m_primary->size].object = object;
-      m_primary->size++;
+      primary->elements[primary->size].key = key;
+      primary->elements[primary->size].object = object;
+      primary->size++;
       m_dirty = true;
       return false;
    }
@@ -234,15 +246,16 @@ bool AbstractIndexBase::put(uint64_t key, void *object)
 	}
 	else
 	{
-	   if (m_primary->allocated > m_secondary->allocated)
+	   INDEX_HEAD *primary = m_primary;
+	   if (primary->allocated > m_secondary->allocated)
 	   {
-	      m_secondary->allocated = m_primary->allocated;
+	      m_secondary->allocated = primary->allocated;
          m_secondary->elements = MemReallocArray<INDEX_ELEMENT>(m_secondary->elements, m_secondary->allocated);
 	   }
-	   m_secondary->size = m_primary->size;
+	   m_secondary->size = primary->size;
       if (key < m_secondary->maxKey)
       {
-         memcpy(m_secondary->elements, m_primary->elements, m_secondary->size * sizeof(INDEX_ELEMENT));
+         memcpy(m_secondary->elements, primary->elements, m_secondary->size * sizeof(INDEX_ELEMENT));
       }
       else
       {
@@ -252,7 +265,7 @@ bool AbstractIndexBase::put(uint64_t key, void *object)
       }
 	}
 
-   InterlockedDecrement(&m_secondary->writers);
+   m_secondary->writers--;
 
    m_writerLock.unlock();
 	return replace;
@@ -267,19 +280,20 @@ void AbstractIndexBase::remove(uint64_t key)
 {
    if (m_startupMode)
    {
+      INDEX_HEAD *primary = m_primary;
       if (m_dirty)
       {
-         qsort(m_primary->elements, m_primary->size, sizeof(INDEX_ELEMENT), IndexCompare);
-         m_primary->maxKey = (m_primary->size > 0) ? m_primary->elements[m_primary->size - 1].key : 0;
+         qsort(primary->elements, primary->size, sizeof(INDEX_ELEMENT), IndexCompare);
+         primary->maxKey = (primary->size > 0) ? primary->elements[primary->size - 1].key : 0;
          m_dirty = false;
       }
-      ssize_t pos = findElement(m_primary, key);
+      ssize_t pos = findElement(primary, key);
       if (pos != -1)
       {
          if (m_owner)
-            destroyObject(m_primary->elements[pos].object);
-         m_primary->size--;
-         memmove(&m_primary->elements[pos], &m_primary->elements[pos + 1], sizeof(INDEX_ELEMENT) * (m_primary->size - pos));
+            destroyObject(primary->elements[pos].object);
+         primary->size--;
+         memmove(&primary->elements[pos], &primary->elements[pos + 1], sizeof(INDEX_ELEMENT) * (primary->size - pos));
       }
       return;
    }
@@ -303,7 +317,7 @@ void AbstractIndexBase::remove(uint64_t key)
       if (m_secondary->maxKey == key)
          m_secondary->maxKey = (m_secondary->size > 0) ? m_secondary->elements[m_secondary->size - 1].key : 0;
 
-      InterlockedDecrement(&m_secondary->writers);
+      m_secondary->writers--;
    }
 
    m_writerLock.unlock();
@@ -334,7 +348,7 @@ void AbstractIndexBase::clear()
    m_secondary->maxKey = 0;
    MemFreeAndNull(m_secondary->elements);
 
-   InterlockedDecrement(&m_secondary->writers);
+   m_secondary->writers--;
 
    m_writerLock.unlock();
 }
@@ -385,8 +399,9 @@ void *AbstractIndexBase::get(uint64_t key) const
 {
    if (m_startupMode && m_dirty)
    {
-      qsort(m_primary->elements, m_primary->size, sizeof(INDEX_ELEMENT), IndexCompare);
-      m_primary->maxKey = (m_primary->size > 0) ? m_primary->elements[m_primary->size - 1].key : 0;
+      INDEX_HEAD *primary = m_primary;
+      qsort(primary->elements, primary->size, sizeof(INDEX_ELEMENT), IndexCompare);
+      primary->maxKey = (primary->size > 0) ? primary->elements[primary->size - 1].key : 0;
       const_cast<AbstractIndexBase*>(this)->m_dirty = false;   // This is internal marker, changing it does not break const contract
    }
    INDEX_HEAD *index = acquireIndex();
