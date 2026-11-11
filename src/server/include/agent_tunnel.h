@@ -134,7 +134,9 @@ protected:
    bool m_extProvCertificate;
    StructArray<MacAddress> m_macAddressList;
    SharedHashMap<uint32_t, AgentTunnelCommChannel> m_channels;
+   IntegerArray<uint32_t> m_abandonedChannelRequests;   // IDs of channel creation requests that timed out
    Mutex m_channelLock;
+   VolatileCounter m_receivedMessageCount;
 
    AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
             BackgroundSocketPollerHandle *socketPoller);
@@ -151,6 +153,7 @@ protected:
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_queue.waitForMessage(code, id, timeout); }
 
    void processChannelClose(uint32_t channelId);
+   void closeAbandonedChannel(NXCPMessage *response);
 
    void setup(const NXCPMessage *request);
 
@@ -240,13 +243,16 @@ class LIBNXSRV_EXPORTABLE OutboundAgentTunnel : public AgentTunnel
 private:
    Condition m_setupCondition;
    std::function<void(OutboundAgentTunnel*)> m_closeCallback;
+   VolatileCounter m_keepaliveMessageCount;  // Value of received message counter at the time of last keepalive request
 
    OutboundAgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
             BackgroundSocketPollerHandle *socketPoller);
 
    static void keepaliveTimer(const shared_ptr<OutboundAgentTunnel>& tunnel);
+   static void keepaliveCheck(const shared_ptr<OutboundAgentTunnel>& tunnel);
 
 protected:
+   virtual bool processCustomMessage(NXCPMessage *msg) override;
    virtual void onSetupComplete() override;
    virtual void onTunnelClose() override;
 
