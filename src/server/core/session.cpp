@@ -1462,9 +1462,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_ENUM_USER_VARIABLES:
          enumUserVariables(*request);
          break;
-      case CMD_COPY_USER_VARIABLE:
-         copyUserVariable(*request);
-         break;
       case CMD_CHANGE_ZONE:
          changeObjectZone(*request);
          break;
@@ -9726,113 +9723,6 @@ void ClientSession::deleteUserVariable(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   sendMessage(response);
-}
-
-/**
- * Copy or move user variables to another user. VID_NAME holds variable name pattern
- * ('*' is a wildcard). Existing variables of destination user are overwritten.
- */
-void ClientSession::copyUserVariable(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
-   {
-      uint32_t srcUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
-      uint32_t dstUserId = request.getFieldAsUInt32(VID_DST_USER_ID);
-      bool move = request.getFieldAsBoolean(VID_MOVE_FLAG);
-
-      StringBuffer pattern = request.getFieldAsString(VID_NAME, MAX_USERVAR_NAME_LENGTH);
-      pattern.replace(L"*", L"%");
-
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_name,var_value FROM user_profiles WHERE user_id=? AND var_name LIKE ?");
-      if (hStmt != nullptr)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, srcUserId);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pattern, DB_BIND_STATIC);
-         DB_RESULT hResult = DBSelectPrepared(hStmt);
-         DBFreeStatement(hStmt);
-         if (hResult != nullptr)
-         {
-            uint32_t rcc = RCC_SUCCESS;
-            int rows = DBGetNumRows(hResult);
-            for(int i = 0; (i < rows) && (rcc == RCC_SUCCESS); i++)
-            {
-               wchar_t name[MAX_USERVAR_NAME_LENGTH];
-               DBGetField(hResult, i, 0, name, MAX_USERVAR_NAME_LENGTH);
-
-               bool exist = false;
-               hStmt = DBPrepare(hdb, L"SELECT var_name FROM user_profiles WHERE user_id=? AND var_name=?");
-               if (hStmt == nullptr)
-               {
-                  rcc = RCC_DB_FAILURE;
-                  break;
-               }
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dstUserId);
-               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-               DB_RESULT hResult2 = DBSelectPrepared(hStmt);
-               if (hResult2 != nullptr)
-               {
-                  exist = (DBGetNumRows(hResult2) > 0);
-                  DBFreeResult(hResult2);
-               }
-               DBFreeStatement(hStmt);
-
-               hStmt = DBPrepare(hdb, exist ?
-                        L"UPDATE user_profiles SET var_value=? WHERE user_id=? AND var_name=?" :
-                        L"INSERT INTO user_profiles (var_value,user_id,var_name) VALUES (?,?,?)");
-               if (hStmt == nullptr)
-               {
-                  rcc = RCC_DB_FAILURE;
-                  break;
-               }
-               DBBind(hStmt, 1, DB_SQLTYPE_TEXT, DBGetField(hResult, i, 1, nullptr, 0), DB_BIND_DYNAMIC);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dstUserId);
-               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-               if (!DBExecute(hStmt))
-                  rcc = RCC_DB_FAILURE;
-               DBFreeStatement(hStmt);
-
-               if (move && (rcc == RCC_SUCCESS))
-               {
-                  hStmt = DBPrepare(hdb, L"DELETE FROM user_profiles WHERE user_id=? AND var_name=?");
-                  if (hStmt == nullptr)
-                  {
-                     rcc = RCC_DB_FAILURE;
-                     break;
-                  }
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, srcUserId);
-                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-                  if (!DBExecute(hStmt))
-                     rcc = RCC_DB_FAILURE;
-                  DBFreeStatement(hStmt);
-               }
-
-               if (rcc == RCC_SUCCESS)
-                  writeAuditLog(AUDIT_SECURITY, true, 0, L"User variable %s %s from [%u] to [%u]", name, move ? L"moved" : L"copied", srcUserId, dstUserId);
-            }
-            DBFreeResult(hResult);
-            response.setField(VID_RCC, rcc);
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_DB_FAILURE);
-         }
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_DB_FAILURE);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SECURITY, false, 0, L"Access denied on copy user variable");
    }
 
    sendMessage(response);

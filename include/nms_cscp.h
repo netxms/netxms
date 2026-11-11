@@ -376,7 +376,7 @@ __PACK_END__
 #define CMD_UNLINK_ASSET                  0x00AA
 #define CMD_GET_USER_SESSIONS             0x00AB
 #define CMD_GET_ARP_CACHE                 0x00AC
-#define CMD_COPY_USER_VARIABLE            0x00AD
+// unused 0x00AD
 #define CMD_RESOLVE_DCI_NAMES             0x00AE
 #define CMD_GET_MY_CONFIG                 0x00AF
 #define CMD_GET_AGENT_CONFIGURATION_LIST  0x00B0
@@ -681,12 +681,12 @@ __PACK_END__
 #define CMD_GET_DC_OBJECT                 0x01DB
 #define CMD_START_RT_DCI_READ             0x01DC
 #define CMD_STOP_RT_DCI_READ              0x01DD
-#define CMD_GET_AI_TASKS            0x01DE
-#define CMD_DELETE_AI_TASK          0x01DF
-#define CMD_ADD_AI_TASK             0x01E0
+#define CMD_GET_AI_TASKS                  0x01DE
+#define CMD_DELETE_AI_TASK                0x01DF
+#define CMD_ADD_AI_TASK                   0x01E0
 #define CMD_CREATE_AI_ASSISTANT_CHAT      0x01E1
 #define CMD_DELETE_AI_ASSISTANT_CHAT      0x01E2
-#define CMD_AI_TOOL_CALL              0x01E3
+#define CMD_AI_TOOL_CALL                  0x01E3
 #define CMD_CLEAR_NOTIFICATION_QUEUE      0x01E4
 #define CMD_DECOMMISSION_NODE             0x01E5
 #define CMD_GET_INCIDENTS                 0x01E6
@@ -700,8 +700,8 @@ __PACK_END__
 #define CMD_ADD_INCIDENT_COMMENT          0x01EE
 #define CMD_GET_INCIDENT_ACTIVITY         0x01EF
 #define CMD_INCIDENT_UPDATE               0x01F0
-#define CMD_AI_ASSISTANT_QUESTION             0x01F1
-#define CMD_AI_ASSISTANT_RESPONSE             0x01F2
+#define CMD_AI_ASSISTANT_QUESTION         0x01F1
+#define CMD_AI_ASSISTANT_RESPONSE         0x01F2
 #define CMD_SETUP_SSH_CHANNEL             0x01F3
 #define CMD_SSH_CHANNEL_DATA              0x01F4
 #define CMD_CLOSE_SSH_CHANNEL             0x01F5
@@ -721,7 +721,7 @@ __PACK_END__
 #define CMD_GET_L2_NETWORK_PATH           0x0203
 #define CMD_GET_CLOUD_CONNECTOR_NAMES     0x0204
 #define CMD_GET_CONNECTION_HISTORY        0x0205
-#define CMD_GET_AI_SKILLS_AND_TOOLS   0x0206
+#define CMD_GET_AI_SKILLS_AND_TOOLS       0x0206
 #define CMD_MODIFY_AI_DISABLED_LIST       0x0207
 #define CMD_GET_POLICY_FILE               0x0208
 #define CMD_SETUP_AGENT_UPGRADE           0x0209
@@ -1010,7 +1010,6 @@ __PACK_END__
 #define VID_MAP_ID                  ((uint32_t)216)
 #define VID_NUM_MAPS                ((uint32_t)217)
 #define VID_NUM_MODULES             ((uint32_t)218)
-#define VID_DST_USER_ID             ((uint32_t)219)
 #define VID_MOVE_FLAG               ((uint32_t)220)
 #define VID_CHANGE_PASSWD_FLAG      ((uint32_t)221)
 #define VID_GUID                    ((uint32_t)222)

@@ -196,7 +196,6 @@ public class NXCPCodes
    public static final int CMD_UNLINK_ASSET = 0x00AA;
    public static final int CMD_GET_USER_SESSIONS = 0x00AB;
    public static final int CMD_GET_ARP_CACHE = 0x00AC;
-	public static final int CMD_COPY_USER_VARIABLE = 0x00AD;
 	public static final int CMD_RESOLVE_DCI_NAMES = 0x00AE;
 	public static final int CMD_GET_MY_CONFIG = 0x00AF;
 	public static final int CMD_GET_AGENT_CONFIGURATION_LIST = 0x00B0;
@@ -821,7 +820,6 @@ public class NXCPCodes
 	public static final long VID_MAP_ID = 216;
 	public static final long VID_NUM_MAPS = 217;
 	public static final long VID_NUM_MODULES = 218;
-	public static final long VID_DST_USER_ID = 219;
 	public static final long VID_MOVE_FLAG = 220;
 	public static final long VID_CHANGE_PASSWD_FLAG = 221;
 	public static final long VID_GUID = 222;

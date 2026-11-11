@@ -784,7 +784,6 @@ private:
    void getListsList(const NXCPMessage& request);
    void getUserVariable(const NXCPMessage& request);
    void setUserVariable(const NXCPMessage& request);
-   void copyUserVariable(const NXCPMessage& request);
    void enumUserVariables(const NXCPMessage& request);
    void deleteUserVariable(const NXCPMessage& request);
    void changeObjectZone(const NXCPMessage& request);
