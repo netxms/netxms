@@ -3189,12 +3189,6 @@ NXSL_METHOD_DEFINITION(Node, getDHCPLeases)
    }
 
    const wchar_t *scopeId = ((argc > 0) && argv[0]->isString()) ? argv[0]->getValueAsCString() : nullptr;
-   if ((scopeId != nullptr) && ((*scopeId == 0) || (wcschr(scopeId, L'"') != nullptr)))
-   {
-      *result = vm->createValue();
-      return 0;
-   }
-
    ObjectArray<DhcpLeaseInfo> leases(0, 256, Ownership::False);
    if (node->getDhcpLeases(scopeId, &leases) == DCE_SUCCESS)
    {

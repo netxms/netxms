@@ -104,13 +104,19 @@ DataCollectionError Node::getDhcpScopes(ObjectArray<DhcpScopeInfo> *scopes)
 
 /**
  * Get DHCP leases from node. If scope ID is nullptr, leases from all scopes are returned.
- * Information is read from agent's DHCP.Leases table.
+ * Information is read from agent's DHCP.Leases table. Empty scope ID or scope ID containing
+ * double quote cannot be passed as metric argument and is reported as non-existing scope.
  */
 DataCollectionError Node::getDhcpLeases(const wchar_t *scopeId, ObjectArray<DhcpLeaseInfo> *leases)
 {
    StringBuffer metric(L"DHCP.Leases");
    if (scopeId != nullptr)
    {
+      if ((*scopeId == 0) || (wcschr(scopeId, L'"') != nullptr))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Node::getDhcpLeases(%s [%u]): invalid scope ID \"%s\"", m_name, m_id, scopeId);
+         return DCE_NO_SUCH_INSTANCE;
+      }
       metric.append(L"(\"");
       metric.append(scopeId);
       metric.append(L"\")");

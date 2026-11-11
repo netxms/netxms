@@ -9392,7 +9392,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/DhcpLease'
         '400':
-          description: Invalid object ID or scope ID, object is not a node, or node is not a DHCP server
+          description: Invalid object ID, object is not a node, or node is not a DHCP server
         '401':
           description: Unauthorized
         '403':

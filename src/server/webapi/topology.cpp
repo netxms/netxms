@@ -782,12 +782,6 @@ int H_DhcpLeases(Context *context)
       return httpCode;
 
    String scopeId(context->getQueryParameter("scope"), "utf8");
-   if (scopeId.contains(L"\""))
-   {
-      context->setErrorResponse("Invalid scope ID");
-      return 400;
-   }
-
    ObjectArray<DhcpLeaseInfo> leases(0, 256, Ownership::True);
    DataCollectionError rc = node->getDhcpLeases(scopeId.isEmpty() ? nullptr : scopeId.cstr(), &leases);
    if (rc != DCE_SUCCESS)

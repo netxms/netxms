@@ -15745,23 +15745,16 @@ void ClientSession::getDhcpLeases(const NXCPMessage& request)
       wchar_t scopeId[256] = L"";
       if (request.isFieldExist(VID_SCOPE_ID))
          request.getFieldAsString(VID_SCOPE_ID, scopeId, 256);
-      if (wcschr(scopeId, L'"') == nullptr)
+      ObjectArray<DhcpLeaseInfo> leases(0, 256, Ownership::True);
+      uint32_t rcc = RCCFromDhcpReadError(node->getDhcpLeases((scopeId[0] != 0) ? scopeId : nullptr, &leases));
+      if (rcc == RCC_SUCCESS)
       {
-         ObjectArray<DhcpLeaseInfo> leases(0, 256, Ownership::True);
-         uint32_t rcc = RCCFromDhcpReadError(node->getDhcpLeases((scopeId[0] != 0) ? scopeId : nullptr, &leases));
-         if (rcc == RCC_SUCCESS)
-         {
-            uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-            for(int i = 0; i < leases.size(); i++, fieldId += 20)
-               leases.get(i)->fillMessage(&response, fieldId);
-            response.setField(VID_NUM_ELEMENTS, leases.size());
-         }
-         response.setField(VID_RCC, rcc);
+         uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+         for(int i = 0; i < leases.size(); i++, fieldId += 20)
+            leases.get(i)->fillMessage(&response, fieldId);
+         response.setField(VID_NUM_ELEMENTS, leases.size());
       }
-      else
-      {
-         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-      }
+      response.setField(VID_RCC, rcc);
    }
    sendMessage(response);
 }
