@@ -924,11 +924,21 @@ EPRule::EPRule(const NXCPMessage& msg, const wchar_t *chainName) : m_chainCalls(
 }
 
 /**
- * Disable alarm flap detection when its settings are inconsistent (threshold set without detection window).
+ * Validate alarm flap detection settings: threshold is limited to MAX_ALARM_FLAP_COUNT, and flap detection is
+ * disabled when settings are inconsistent (threshold set without detection window).
  * Warning goes to import context when provided, otherwise to server log.
  */
 void EPRule::checkFlapDetectionSettings(ImportContext *context)
 {
+   if (m_alarmFlapCount > MAX_ALARM_FLAP_COUNT)
+   {
+      if (context != nullptr)
+         context->log(NXLOG_WARNING, L"EPRule::EPRule()", L"Event processing rule %s has alarm flap detection threshold %u above allowed maximum - changed to %u", m_guid.toString().cstr(), m_alarmFlapCount, MAX_ALARM_FLAP_COUNT);
+      else
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Event processing rule %s has alarm flap detection threshold %u above allowed maximum - changed to %u", m_guid.toString().cstr(), m_alarmFlapCount, MAX_ALARM_FLAP_COUNT);
+      m_alarmFlapCount = MAX_ALARM_FLAP_COUNT;
+   }
+
    if ((m_alarmFlapCount == 0) || (m_alarmFlapWindow > 0))
       return;
 

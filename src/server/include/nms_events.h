@@ -59,6 +59,11 @@ static inline const char *EventOriginName(EventOrigin origin)
 #define MAX_DOWNTIME_TAG_LENGTH  16
 
 /**
+ * Maximum value for alarm flap detection threshold in event processing rule
+ */
+#define MAX_ALARM_FLAP_COUNT     10000u
+
+/**
  * Script execution contexts
  */
 #define SCRIPT_CONTEXT_ACTION       _T("Action")

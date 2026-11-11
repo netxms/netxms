@@ -1158,10 +1158,26 @@ static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, json_t *snaps
    if (json_is_integer(v)) json_object_set(rule, "alarmTimeout", v);
 
    v = json_object_get(arguments, "alarm_flap_count");
-   if (json_is_integer(v)) json_object_set(rule, "alarmFlapCount", v);
+   if (json_is_integer(v))
+   {
+      if ((json_integer_value(v) < 0) || (json_integer_value(v) > MAX_ALARM_FLAP_COUNT))
+      {
+         *error = "alarm_flap_count must be between 0 and 10000";
+         return false;
+      }
+      json_object_set(rule, "alarmFlapCount", v);
+   }
 
    v = json_object_get(arguments, "alarm_flap_window");
-   if (json_is_integer(v)) json_object_set(rule, "alarmFlapWindow", v);
+   if (json_is_integer(v))
+   {
+      if ((json_integer_value(v) < 0) || (json_integer_value(v) > 0x7FFFFFFF))
+      {
+         *error = "alarm_flap_window must be a non-negative number of seconds";
+         return false;
+      }
+      json_object_set(rule, "alarmFlapWindow", v);
+   }
 
    if ((json_object_get_uint32(rule, "alarmFlapCount") > 0) && (json_object_get_uint32(rule, "alarmFlapWindow") == 0))
    {

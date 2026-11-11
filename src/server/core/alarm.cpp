@@ -306,7 +306,8 @@ static void RecordAlarmTermination(const Alarm *alarm)
    }
    history->window = alarm->getFlapDetectionWindow();
    history->terminations.add(static_cast<int64_t>(time(nullptr)));
-   while(history->terminations.size() > static_cast<int>(alarm->getFlapDetectionCount()))
+   int limit = static_cast<int>(std::min(alarm->getFlapDetectionCount(), static_cast<uint32_t>(MAX_ALARM_FLAP_COUNT)));
+   while(history->terminations.size() > limit)
       history->terminations.remove(0);
 }
 
