@@ -150,10 +150,10 @@ InterfaceList *CiscoNexusDriver::getInterfaces(DeviceContext *context, NObject *
       nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("CiscoNexusDriver::getInterfaces: cannot compile base regexp: %hs at offset %d"), eptr, eoffset);
       return ifList;
    }
-   PCRE *reFex = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
-   if (reFex == nullptr)
+   PCRE *reExt = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^(Ethernet|fc)([0-9]+)/([0-9]+)/([0-9]+)$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (reExt == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("CiscoNexusDriver::getInterfaces: cannot compile FEX regexp: %hs at offset %d"), eptr, eoffset);
+      nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("CiscoNexusDriver::getInterfaces: cannot compile FEX/breakout regexp: %hs at offset %d"), eptr, eoffset);
       _pcre_free_t(reBase);
       return ifList;
    }
@@ -166,14 +166,26 @@ InterfaceList *CiscoNexusDriver::getInterfaces(DeviceContext *context, NObject *
       {
          iface->setPhysicalLocation(1, IntegerFromCGroup(iface->name, pmatch, 2), 0, IntegerFromCGroup(iface->name, pmatch, 3));
       }
-      else if (_pcre_exec_t(reFex, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
+      else if (_pcre_exec_t(reExt, nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
       {
-         iface->setPhysicalLocation(IntegerFromCGroup(iface->name, pmatch, 2), IntegerFromCGroup(iface->name, pmatch, 3), 0, IntegerFromCGroup(iface->name, pmatch, 4));
+         // Three-component name is either FEX host interface (Ethernet<chassis>/<slot>/<port>, with FEX
+         // chassis ID always in range 100-199) or split (breakout) port lane (Ethernet<slot>/<port>/<lane>)
+         uint32_t first = IntegerFromCGroup(iface->name, pmatch, 2);
+         if ((first >= 100) && (first <= 199))
+         {
+            iface->setPhysicalLocation(first, IntegerFromCGroup(iface->name, pmatch, 3), 0, IntegerFromCGroup(iface->name, pmatch, 4));
+         }
+         else if (first < 100)
+         {
+            uint32_t lane = IntegerFromCGroup(iface->name, pmatch, 4);
+            if ((lane > 0) && (lane <= 127))
+               iface->setPhysicalLocation(1, first, 0, IntegerFromCGroup(iface->name, pmatch, 3), static_cast<int8_t>(lane));
+         }
       }
    }
 
    _pcre_free_t(reBase);
-   _pcre_free_t(reFex);
+   _pcre_free_t(reExt);
    return ifList;
 }
 
