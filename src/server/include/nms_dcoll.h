@@ -37,16 +37,16 @@ class ImportContext;
  * JSON (REST API). Each table is terminated by a { 0, nullptr } element and is used both for
  * emitting symbolic names (CodeToText) and for parsing them back (CodeFromText / json_object_update_enum).
  */
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciOriginNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciStatusNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciPollingScheduleTypeNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciRetentionTypeNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciInstanceDiscoveryMethodNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciDeltaCalculationNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciSnmpRawTypeNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciThresholdFunctionNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciThresholdOperationNames[];
-extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dctColumnAggregationNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dciOriginNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dciStatusNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dciPollingScheduleTypeNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dciRetentionTypeNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dciInstanceDiscoveryMethodNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dciDeltaCalculationNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dciSnmpRawTypeNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dciThresholdFunctionNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dciThresholdOperationNames[];
+extern NXCORE_EXPORTABLE CodeLookupElement g_dctColumnAggregationNames[];
 
 json_t NXCORE_EXPORTABLE *TableToJson(const Table& table);
 

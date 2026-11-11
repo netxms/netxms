@@ -62,16 +62,16 @@
  * NDD module entry point
  */
 #define DECLARE_NDD_MODULE_ENTRY_POINT \
-extern "C" __EXPORT_VAR(int nddAPIVersion); \
-__EXPORT_VAR(int nddAPIVersion) = NDDRV_API_VERSION; \
+extern "C" __EXPORT int nddAPIVersion; \
+__EXPORT int nddAPIVersion = NDDRV_API_VERSION; \
 extern "C" __EXPORT ObjectArray<NetworkDeviceDriver> *nddCreateInstances() { return s_createInstances(); }
 
 /**
  * NDD module entry point - single driver
  */
 #define DECLARE_NDD_ENTRY_POINT(implClass) \
-extern "C" __EXPORT_VAR(int nddAPIVersion); \
-__EXPORT_VAR(int nddAPIVersion) = NDDRV_API_VERSION; \
+extern "C" __EXPORT int nddAPIVersion; \
+__EXPORT int nddAPIVersion = NDDRV_API_VERSION; \
 extern "C" __EXPORT ObjectArray<NetworkDeviceDriver> *nddCreateInstances() { \
    ObjectArray<NetworkDeviceDriver> *drivers = new ObjectArray<NetworkDeviceDriver>(4, 4, Ownership::False); \
    drivers->add(new implClass); \

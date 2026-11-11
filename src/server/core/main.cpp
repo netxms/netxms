@@ -187,18 +187,18 @@ void LDAPSyncThread();
 /**
  * Global variables
  */
-NXCORE_EXPORTABLE_VAR(TCHAR g_szConfigFile[MAX_PATH]) = _T("{search}");
-NXCORE_EXPORTABLE_VAR(TCHAR g_szLogFile[MAX_PATH]) = DEFAULT_LOG_FILE;
+NXCORE_EXPORTABLE TCHAR g_szConfigFile[MAX_PATH] = _T("{search}");
+NXCORE_EXPORTABLE TCHAR g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 uint32_t g_logRotationMode = NXLOG_ROTATION_BY_SIZE;
 uint64_t g_maxLogSize = 16384 * 1024;
 uint32_t g_logHistorySize = 4;
 TCHAR g_szDailyLogFileSuffix[64] = _T("");
-NXCORE_EXPORTABLE_VAR(TCHAR g_szDumpDir[MAX_PATH]) = DEFAULT_DUMP_DIR;
+NXCORE_EXPORTABLE TCHAR g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
 char g_codePage[256] = "";
 char g_curlSSLBackend[32] = "";
-NXCORE_EXPORTABLE_VAR(TCHAR g_szListenAddress[MAX_PATH]) = _T("*");
+NXCORE_EXPORTABLE TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 #ifndef _WIN32
-NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[MAX_PATH]) = _T("/var/run/netxmsd.pid");
+NXCORE_EXPORTABLE TCHAR g_szPIDFile[MAX_PATH] = _T("/var/run/netxmsd.pid");
 #endif
 uint32_t g_discoveryPollingInterval;
 uint32_t g_statusPollingInterval;
@@ -210,16 +210,16 @@ uint32_t g_instancePollingInterval;
 uint32_t g_icmpPollingInterval;
 uint32_t g_autobindPollingInterval;
 uint32_t g_mapUpdatePollingInterval;
-NXCORE_EXPORTABLE_VAR(uint32_t g_icmpPingSize);
-NXCORE_EXPORTABLE_VAR(uint32_t g_icmpPingTimeout) = 1500;    // ICMP ping timeout (milliseconds)
+NXCORE_EXPORTABLE uint32_t g_icmpPingSize;
+NXCORE_EXPORTABLE uint32_t g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 uint32_t g_auditFlags;
 uint32_t g_pollsBetweenPrimaryIpUpdate = 1;
 int64_t g_offlineDataRelevanceTime = 86400000;  // Default offline data relevance time (milliseconds)
 PrimaryIPUpdateMode g_primaryIpUpdateMode = PrimaryIPUpdateMode::NEVER;
-NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[MAX_PATH]) = _T("");
-NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
-NXCORE_EXPORTABLE_VAR(uint32_t g_processAffinityMask) = DEFAULT_AFFINITY_MASK;
-NXCORE_EXPORTABLE_VAR(uint64_t g_serverId) = 0;
+NXCORE_EXPORTABLE TCHAR g_netxmsdDataDir[MAX_PATH] = _T("");
+NXCORE_EXPORTABLE TCHAR g_netxmsdLibDir[MAX_PATH] = _T("");
+NXCORE_EXPORTABLE uint32_t g_processAffinityMask = DEFAULT_AFFINITY_MASK;
+NXCORE_EXPORTABLE uint64_t g_serverId = 0;
 RSA_KEY g_serverKey = nullptr;
 time_t g_serverStartTime = 0;
 uint32_t g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
@@ -234,7 +234,7 @@ SNMP_Version g_snmpMinVersion = SNMP_VERSION_1;
 uint32_t g_snmpTrapStormCountThreshold = 0;
 uint32_t g_snmpTrapStormDurationThreshold = 15;
 DB_DRIVER g_dbDriver = nullptr;
-NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool) = nullptr;
+NXCORE_EXPORTABLE ThreadPool *g_mainThreadPool = nullptr;
 int16_t g_defaultAgentCacheMode = AGENT_CACHE_OFF;
 InetAddressList g_peerNodeAddrList;
 Condition g_dbPasswordReady(true);

@@ -174,8 +174,8 @@ typedef struct
  * Define module metadata
  */
 #define DEFINE_MODULE_METADATA(name,vendor,version,tag) \
-extern "C" __EXPORT_VAR(NXMODULE_METADATA NXM_metadata); \
-__EXPORT_VAR(NXMODULE_METADATA NXM_metadata) = \
+extern "C" __EXPORT NXMODULE_METADATA NXM_metadata; \
+__EXPORT NXMODULE_METADATA NXM_metadata = \
 { sizeof(struct NXMODULE_METADATA), METADATA_UNICODE, \
    "$$$NXMINFO>$$$", \
    name, vendor, \

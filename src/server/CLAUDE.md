@@ -2,7 +2,7 @@
 
 ## Exporting Functions for Modules
 
-Server core is a shared library. External modules (e.g., `webapi/`, `jira/`, `ntcb/`) link against it. Any function or class defined in `core/` that needs to be called from a module must be marked with `NXCORE_EXPORTABLE` in its declaration (in the header under `include/`); exported variables use `NXCORE_EXPORTABLE_VAR(v)`. Without this, the symbol is not visible to modules and linking fails at runtime.
+Server core is a shared library. External modules (e.g., `webapi/`, `jira/`, `ntcb/`) link against it. Any function or class defined in `core/` that needs to be called from a module must be marked with `NXCORE_EXPORTABLE` in its declaration (in the header under `include/`); exported variables use the same macro (`extern NXCORE_EXPORTABLE int g_var;`). Without this, the symbol is not visible to modules and linking fails at runtime.
 
 When exporting a function for module use, also export the sibling functions declared alongside it in the same header group (unless clearly internal) — a module rarely calls exactly one function from a subsystem, and exporting the whole family up front avoids a churn of one-symbol export edits and rebuild/reinstall cycles later.
 

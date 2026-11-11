@@ -27,7 +27,7 @@
 
 #define NMS_THREADS_H_INCLUDED
 
-extern LIBNETXMS_EXPORTABLE_VAR(int g_defaultThreadStackSize);
+extern LIBNETXMS_EXPORTABLE int g_defaultThreadStackSize;
 
 #if defined(_WIN32)
 

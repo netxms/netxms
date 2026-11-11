@@ -41,7 +41,7 @@ void LIBNETXMS_EXPORTABLE SetupLibCURLTrust(CURL *curl, const char *caBundle);
 
 #if !defined(_WIN32) && defined(SSL_OP_IGNORE_UNEXPECTED_EOF)
 
-extern LIBNETXMS_EXPORTABLE_VAR(bool g_curlOpenSSL3Backend);
+extern LIBNETXMS_EXPORTABLE bool g_curlOpenSSL3Backend;
 
 static inline CURLcode __nx_SSL_CTX_setup_cb(CURL *curl, void *sslctx, void *context)
 {

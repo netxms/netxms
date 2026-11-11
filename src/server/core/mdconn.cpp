@@ -28,7 +28,7 @@
 /**
  * Mobile device thread pool
  */
-NXCORE_EXPORTABLE_VAR(ThreadPool *g_mobileThreadPool) = nullptr;
+NXCORE_EXPORTABLE ThreadPool *g_mobileThreadPool = nullptr;
 
 /**
  * Static data

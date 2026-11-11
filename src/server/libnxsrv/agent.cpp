@@ -41,7 +41,7 @@
 /**
  * Agent connection thread pool
  */
-LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool) = nullptr;
+LIBNXSRV_EXPORTABLE ThreadPool *g_agentConnectionThreadPool = nullptr;
 
 /**
  * Unique connection ID

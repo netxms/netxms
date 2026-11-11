@@ -29,7 +29,7 @@
 /**
  * Client thread pool
  */
-NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool) = nullptr;
+NXCORE_EXPORTABLE ThreadPool *g_clientThreadPool = nullptr;
 
 /**
  * Maximum number of client sessions

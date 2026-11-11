@@ -27,10 +27,8 @@
 
 #ifdef NXCORE_EXPORTS
 #define NXCORE_EXPORTABLE __EXPORT
-#define NXCORE_EXPORTABLE_VAR(v)  __EXPORT_VAR(v)
 #else
 #define NXCORE_EXPORTABLE __IMPORT
-#define NXCORE_EXPORTABLE_VAR(v)  __IMPORT_VAR(v)
 #endif
 
 #define LIBNXCL_NO_DECLARATIONS  1
@@ -2066,24 +2064,24 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(uint32_t currObjectId, int maxD
 /**
  * Global variables
  */
-extern NXCORE_EXPORTABLE_VAR(TCHAR g_szConfigFile[]);
-extern NXCORE_EXPORTABLE_VAR(TCHAR g_szLogFile[]);
+extern NXCORE_EXPORTABLE TCHAR g_szConfigFile[];
+extern NXCORE_EXPORTABLE TCHAR g_szLogFile[];
 extern uint32_t g_logRotationMode;
 extern uint64_t g_maxLogSize;
 extern uint32_t g_logHistorySize;
 extern TCHAR g_szDailyLogFileSuffix[64];
-extern NXCORE_EXPORTABLE_VAR(TCHAR g_szDumpDir[]);
-extern NXCORE_EXPORTABLE_VAR(TCHAR g_szListenAddress[]);
+extern NXCORE_EXPORTABLE TCHAR g_szDumpDir[];
+extern NXCORE_EXPORTABLE TCHAR g_szListenAddress[];
 #ifndef _WIN32
-extern NXCORE_EXPORTABLE_VAR(TCHAR g_szPIDFile[]);
+extern NXCORE_EXPORTABLE TCHAR g_szPIDFile[];
 #endif
-extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[]);
-extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[]);
-extern NXCORE_EXPORTABLE_VAR(uint32_t g_processAffinityMask);
-extern NXCORE_EXPORTABLE_VAR(uint64_t g_serverId);
+extern NXCORE_EXPORTABLE TCHAR g_netxmsdDataDir[];
+extern NXCORE_EXPORTABLE TCHAR g_netxmsdLibDir[];
+extern NXCORE_EXPORTABLE uint32_t g_processAffinityMask;
+extern NXCORE_EXPORTABLE uint64_t g_serverId;
 extern RSA_KEY g_serverKey;
-extern NXCORE_EXPORTABLE_VAR(uint32_t g_icmpPingSize);
-extern NXCORE_EXPORTABLE_VAR(uint32_t g_icmpPingTimeout);
+extern NXCORE_EXPORTABLE uint32_t g_icmpPingSize;
+extern NXCORE_EXPORTABLE uint32_t g_icmpPingTimeout;
 extern uint32_t g_auditFlags;
 extern time_t g_serverStartTime;
 extern uint32_t g_agentCommandTimeout;
@@ -2117,10 +2115,10 @@ extern VolatileCounter64 g_otherWriteRequests;
 struct DELAYED_SQL_REQUEST;
 extern ObjectQueue<DELAYED_SQL_REQUEST> g_dbWriterQueue;
 
-extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool);
-extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool);
-extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mobileThreadPool);
-extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_pollerThreadPool);
+extern NXCORE_EXPORTABLE ThreadPool *g_mainThreadPool;
+extern NXCORE_EXPORTABLE ThreadPool *g_clientThreadPool;
+extern NXCORE_EXPORTABLE ThreadPool *g_mobileThreadPool;
+extern NXCORE_EXPORTABLE ThreadPool *g_pollerThreadPool;
 
 extern wchar_t g_startupSqlScriptPath[];
 extern wchar_t g_dbSessionSetupSqlScriptPath[];

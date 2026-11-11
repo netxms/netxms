@@ -26,10 +26,8 @@
 
 #ifdef LIBNXSRV_EXPORTS
 #define LIBNXSRV_EXPORTABLE __EXPORT
-#define LIBNXSRV_EXPORTABLE_VAR(v) __EXPORT_VAR(v)
 #else
 #define LIBNXSRV_EXPORTABLE __IMPORT
-#define LIBNXSRV_EXPORTABLE_VAR(v) __IMPORT_VAR(v)
 #endif
 
 #include <nxcpapi.h>
@@ -1867,10 +1865,10 @@ const wchar_t LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(uint32_t code);
 /**
  * Variables
  */
-extern LIBNXSRV_EXPORTABLE_VAR(VolatileCounter64 g_flags);
-extern LIBNXSRV_EXPORTABLE_VAR(CodeLookupElement g_dciDataTypeNames[]);
-extern LIBNXSRV_EXPORTABLE_VAR(ThreadPool *g_agentConnectionThreadPool);
-extern LIBNXSRV_EXPORTABLE_VAR(int g_dbSyntax);
+extern LIBNXSRV_EXPORTABLE VolatileCounter64 g_flags;
+extern LIBNXSRV_EXPORTABLE CodeLookupElement g_dciDataTypeNames[];
+extern LIBNXSRV_EXPORTABLE ThreadPool *g_agentConnectionThreadPool;
+extern LIBNXSRV_EXPORTABLE int g_dbSyntax;
 
 /**
  * Helper functions for checking server flags

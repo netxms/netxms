@@ -136,10 +136,10 @@ public:
  * NCD module entry point
  */
 #define DECLARE_NCD_ENTRY_POINT(name, configTemplate) \
-extern "C" __EXPORT_VAR(int NcdAPIVersion); \
-__EXPORT_VAR(int NcdAPIVersion) = NCDRV_API_VERSION; \
-extern "C" __EXPORT_VAR(const char *NcdName); \
-__EXPORT_VAR(const char *NcdName) = #name; \
+extern "C" __EXPORT int NcdAPIVersion; \
+__EXPORT int NcdAPIVersion = NCDRV_API_VERSION; \
+extern "C" __EXPORT const char *NcdName; \
+__EXPORT const char *NcdName = #name; \
 extern "C" __EXPORT const NCConfigurationTemplate *NcdGetConfigurationTemplate() { return (configTemplate); } \
 extern "C" __EXPORT NCDriver *NcdCreateInstance(Config *config, NCDriverStorageManager *storageManager)
 

@@ -35,12 +35,12 @@
  * Database driver entry point declaration
  */
 #define DB_DRIVER_ENTRY_POINT(name, callTable) \
-extern "C" __EXPORT_VAR(int drvAPIVersion); \
-extern "C" __EXPORT_VAR(const char *drvName); \
-extern "C" __EXPORT_VAR(DBDriverCallTable *drvCallTable); \
-__EXPORT_VAR(int drvAPIVersion) = DBDRV_API_VERSION; \
-__EXPORT_VAR(const char *drvName) = name; \
-__EXPORT_VAR(DBDriverCallTable *drvCallTable) = &callTable;
+extern "C" __EXPORT int drvAPIVersion; \
+extern "C" __EXPORT const char *drvName; \
+extern "C" __EXPORT DBDriverCallTable *drvCallTable; \
+__EXPORT int drvAPIVersion = DBDRV_API_VERSION; \
+__EXPORT const char *drvName = name; \
+__EXPORT DBDriverCallTable *drvCallTable = &callTable;
 
 /**
  * Max error text length

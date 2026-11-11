@@ -43,7 +43,7 @@ static char s_curlSSLBackend[64] = "unknown";
 /**
  * libcurl OpenSSL 3 backaend indicator
  */
-LIBNETXMS_EXPORTABLE_VAR(bool g_curlOpenSSL3Backend) = false;
+LIBNETXMS_EXPORTABLE bool g_curlOpenSSL3Backend = false;
 
 /**
  * Select TLS backend in multi-backend libcurl build. Must be called before curl_global_init().

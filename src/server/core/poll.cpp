@@ -36,7 +36,7 @@ void StopDiscoveryPoller();
 /**
  * Thread pool for pollers
  */
-NXCORE_EXPORTABLE_VAR(ThreadPool *g_pollerThreadPool) = nullptr;
+NXCORE_EXPORTABLE ThreadPool *g_pollerThreadPool = nullptr;
 
 /**
  * Active pollers
