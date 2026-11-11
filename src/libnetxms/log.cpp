@@ -40,18 +40,17 @@ typedef Buffer<TCHAR, LOCAL_MSG_BUFFER_SIZE> msg_buffer_t;
  */
 struct DebugTagManager
 {
-   DebugTagTree* volatile active;
-   DebugTagTree* volatile secondary;
+   std::atomic<DebugTagTree*> active;  // all accesses are seq_cst; reader/writer handshake depends on it
+   DebugTagTree *secondary;            // accessed only by writer under s_mutexDebugTagTreeWrite
 
-   DebugTagManager()
+   DebugTagManager() : active(new DebugTagTree())
    {
-      active = new DebugTagTree();
       secondary = new DebugTagTree();
    }
 
    ~DebugTagManager()
    {
-      delete active;
+      delete active.load();
       delete secondary;
    }
 };
@@ -79,7 +78,7 @@ static StringBuffer s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static Condition s_writerStopCondition(true);
 static NxLogDebugWriter s_debugWriter = nullptr;
-static volatile DebugTagManager s_tagTree;
+static DebugTagManager s_tagTree;
 static Mutex s_mutexDebugTagTreeWrite(MutexType::FAST);
 static NxLogRotationHook s_rotationHook = nullptr;
 
@@ -88,8 +87,8 @@ static NxLogRotationHook s_rotationHook = nullptr;
  */
 static inline void SwapAndWait()
 {
-   s_tagTree.secondary = InterlockedExchangeObjectPointer(&s_tagTree.active, s_tagTree.secondary);
-   InterlockedIncrement(&s_tagTree.secondary->m_writers);
+   s_tagTree.secondary = s_tagTree.active.exchange(s_tagTree.secondary);
+   s_tagTree.secondary->m_writers++;
    while(s_tagTree.secondary->m_readers > 0)
       ThreadSleepMs(10);
 }
@@ -156,7 +155,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
    s_tagTree.secondary->setRootDebugLevel(level); // Update the secondary tree
    SwapAndWait();
    s_tagTree.secondary->setRootDebugLevel(level); // Update the previously active tree
-   InterlockedDecrement(&s_tagTree.secondary->m_writers);
+   s_tagTree.secondary->m_writers--;
    s_mutexDebugTagTreeWrite.unlock();
 }
 
@@ -187,7 +186,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level_tag(const TCHAR *tag, int level,
       SwapAndWait();
       s_tagTree.secondary->remove(tag);
    }
-   InterlockedDecrement(&s_tagTree.secondary->m_writers);
+   s_tagTree.secondary->m_writers--;
    s_mutexDebugTagTreeWrite.unlock();
 }
 
@@ -225,12 +224,17 @@ void LIBNETXMS_EXPORTABLE nxlog_reset_debug_level_tags()
    s_tagTree.secondary->clear();
    SwapAndWait();
    s_tagTree.secondary->clear();
-   InterlockedDecrement(&s_tagTree.secondary->m_writers);
+   s_tagTree.secondary->m_writers--;
    s_mutexDebugTagTreeWrite.unlock();
 }
 
 /**
- * Acquire active tag tree for reading
+ * Acquire active tag tree for reading. Reader announces itself and then checks for writer,
+ * while writer (SwapAndWait) announces itself and then checks for readers. This is only safe
+ * when each side's store is ordered before its own subsequent load, so active tree pointer and
+ * both counters are std::atomic accessed with default (sequentially consistent) ordering.
+ * Active tree pointer is re-checked because tree could have been swapped out and released by
+ * writer between reading the pointer and incrementing reader count.
  */
 inline DebugTagTree *AcquireTagTree()
 {
@@ -238,10 +242,10 @@ inline DebugTagTree *AcquireTagTree()
    while(true)
    {
       tagTree = s_tagTree.active;
-      InterlockedIncrement(&tagTree->m_readers);
-      if (tagTree->m_writers == 0)
+      tagTree->m_readers++;
+      if ((tagTree->m_writers == 0) && (tagTree == s_tagTree.active))
          break;
-      InterlockedDecrement(&tagTree->m_readers);
+      tagTree->m_readers--;
    }
    return tagTree;
 }
@@ -251,7 +255,7 @@ inline DebugTagTree *AcquireTagTree()
  */
 inline void ReleaseTagTree(DebugTagTree *tagTree)
 {
-   InterlockedDecrement(&tagTree->m_readers);
+   tagTree->m_readers--;
 }
 
 /**

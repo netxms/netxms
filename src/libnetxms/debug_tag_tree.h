@@ -62,10 +62,10 @@ private:
    DebugTagTreeNode *m_root;
 
 public:
-   VolatileCounter m_readers;
-   VolatileCounter m_writers;
+   std::atomic<int32_t> m_readers;
+   std::atomic<int32_t> m_writers;
 
-   DebugTagTree() { m_root = new DebugTagTreeNode(); m_readers = 0; m_writers = 0; }
+   DebugTagTree() : m_readers(0), m_writers(0) { m_root = new DebugTagTreeNode(); }
    ~DebugTagTree() { delete m_root; }
 
    int getDebugLevel(const TCHAR *tags);
