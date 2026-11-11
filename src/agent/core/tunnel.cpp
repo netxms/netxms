@@ -64,7 +64,7 @@ static VolatileCounter s_nextChannelId = 0;
 class TunnelCommChannel : public AbstractCommChannel
 {
 private:
-   Tunnel *m_tunnel;
+   shared_ptr<Tunnel> m_tunnel;  // Keeps tunnel alive while channel is in use
    uint32_t m_id;
    bool m_active;
    VolatileCounter m_closed;
@@ -78,7 +78,7 @@ private:
 #endif
 
 public:
-   TunnelCommChannel(Tunnel *tunnel);
+   TunnelCommChannel(const shared_ptr<Tunnel>& tunnel);
    virtual ~TunnelCommChannel();
 
    virtual ssize_t send(const void *data, size_t size, Mutex *mutex = nullptr) override;
@@ -99,6 +99,7 @@ public:
 class Tunnel
 {
 protected:
+   weak_ptr<Tunnel> m_self;
    InetAddress m_address;
    SOCKET m_socket;
    SSL_CTX *m_context;
@@ -134,6 +135,8 @@ protected:
 
 public:
    virtual ~Tunnel();
+
+   shared_ptr<Tunnel> self() { return m_self.lock(); }
 
    virtual void disconnect();
    virtual const TCHAR *getDisplayName() const = 0;
@@ -189,8 +192,9 @@ public:
    virtual const TCHAR *getDisplayName() const override { return m_hostname; }
    const TCHAR *getHostname() const { return m_hostname; }
 
-   static OutboundTunnel *createFromConfig(const TCHAR *config);
-   static OutboundTunnel *createFromConfig(const ConfigEntry& ce);
+   static shared_ptr<OutboundTunnel> create(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint = nullptr);
+   static shared_ptr<OutboundTunnel> createFromConfig(const TCHAR *config);
+   static shared_ptr<OutboundTunnel> createFromConfig(const ConfigEntry& ce);
 };
 
 /**
@@ -199,7 +203,6 @@ public:
 class InboundTunnel : public Tunnel
 {
 private:
-   weak_ptr<InboundTunnel> m_self;
    TCHAR m_displayName[64];
 
    InboundTunnel(SOCKET socket, SSL *ssl, const InetAddress& peer);
@@ -215,8 +218,6 @@ public:
 
    virtual void disconnect() override;
    virtual const TCHAR *getDisplayName() const override { return m_displayName; }
-
-   shared_ptr<InboundTunnel> self() { return m_self.lock(); }
 
    bool setup();
 
@@ -287,7 +288,7 @@ Tunnel::~Tunnel()
 /**
  * Outbound tunnel constructor
  */
-OutboundTunnel::OutboundTunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint = nullptr)
+OutboundTunnel::OutboundTunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint)
    : Tunnel(InetAddress())
 {
    m_hostname = MemCopyString(hostname);
@@ -1656,7 +1657,7 @@ shared_ptr<TunnelCommChannel> Tunnel::createChannel()
    m_channelLock.lock();
    if (m_channels.size() < (int)g_maxCommSessions)
    {
-      channel = make_shared<TunnelCommChannel>(this);
+      channel = make_shared<TunnelCommChannel>(self());
       m_channels.set(channel->getId(), channel);
       debugPrintf(5, _T("New channel created (ID=%d)"), channel->getId());
    }
@@ -1717,10 +1718,20 @@ ssize_t Tunnel::sendChannelData(uint32_t id, const void *data, size_t len)
 }
 
 /**
+ * Create outbound tunnel object
+ */
+shared_ptr<OutboundTunnel> OutboundTunnel::create(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint)
+{
+   auto tunnel = shared_ptr<OutboundTunnel>(new OutboundTunnel(hostname, port, certificate, pkeyPassword, fingerprint));
+   tunnel->m_self = tunnel;
+   return tunnel;
+}
+
+/**
  * Create tunnel object from configuration record
  * Record format is address[:port][,certificate[%password]]
  */
-OutboundTunnel *OutboundTunnel::createFromConfig(const TCHAR *config)
+shared_ptr<OutboundTunnel> OutboundTunnel::createFromConfig(const TCHAR *config)
 {
    StringBuffer sb(config);
 
@@ -1754,13 +1765,13 @@ OutboundTunnel *OutboundTunnel::createFromConfig(const TCHAR *config)
       if ((port < 1) || (port > 65535))
          return nullptr;
    }
-   return new OutboundTunnel(sb.cstr(), port, certificate, password);
+   return create(sb.cstr(), port, certificate, password);
 }
 
 /**
  * Create tunnel object from ConfigEntry
  */
-OutboundTunnel *OutboundTunnel::createFromConfig(const ConfigEntry& ce)
+shared_ptr<OutboundTunnel> OutboundTunnel::createFromConfig(const ConfigEntry& ce)
 {
    const TCHAR *hostname = ce.getSubEntryValue(_T("Hostname"), 0, nullptr);
    if (hostname == nullptr)
@@ -1793,12 +1804,12 @@ OutboundTunnel *OutboundTunnel::createFromConfig(const ConfigEntry& ce)
 
    StringBuffer fingerprintString = ce.getSubEntryValue(_T("ServerCertificateFingerprint"), 0, nullptr);
    if (fingerprintString.isEmpty())
-      return new OutboundTunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password);
+      return create(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password);
 
    fingerprintString.replace(_T(":"), _T(""));
    BYTE fingerprint[SHA256_DIGEST_SIZE];
    StrToBin(fingerprintString, fingerprint, SHA256_DIGEST_SIZE);
-   return new OutboundTunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password, fingerprint);
+   return create(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password, fingerprint);
 }
 
 /**
@@ -1874,7 +1885,7 @@ bool InboundTunnel::setup()
    m_queue = new MsgWaitQueue();
    m_connected = true;
    m_lastMessageTime = GetMonotonicClockTime();
-   ThreadCreate(self(), &InboundTunnel::recvThreadWrapper);
+   ThreadCreate(static_pointer_cast<InboundTunnel>(self()), &InboundTunnel::recvThreadWrapper);
 
    NXCPMessage msg(CMD_SETUP_AGENT_TUNNEL, InterlockedIncrement(&m_requestId), 4);  // Use version 4 during setup
    prepareSetupMessage(&msg, false);
@@ -2224,10 +2235,9 @@ void SetupInboundTunnel(SOCKET s, const InetAddress& peer)
 /**
  * Channel constructor
  */
-TunnelCommChannel::TunnelCommChannel(Tunnel *tunnel) : AbstractCommChannel(), m_buffer(32768, 32768)
+TunnelCommChannel::TunnelCommChannel(const shared_ptr<Tunnel>& tunnel) : AbstractCommChannel(), m_tunnel(tunnel), m_buffer(32768, 32768)
 {
    m_id = InterlockedIncrement(&s_nextChannelId);
-   m_tunnel = tunnel;
    m_active = true;
    m_closed = 0;
 #ifdef _WIN32
@@ -2448,7 +2458,7 @@ void TunnelCommChannel::putData(const BYTE *data, size_t size)
 /**
  * Configured tunnels
  */
-static ObjectArray<OutboundTunnel> s_tunnels(0, 8, Ownership::True);
+static SharedObjectArray<OutboundTunnel> s_tunnels(0, 8);
 
 #endif	/* _WITH_ENCRYPTION */
 
@@ -2462,7 +2472,7 @@ void ParseTunnelList(const StringSet& tunnels)
    while(it.hasNext())
    {
       const TCHAR *config = it.next();
-      OutboundTunnel *t = OutboundTunnel::createFromConfig(config);
+      shared_ptr<OutboundTunnel> t = OutboundTunnel::createFromConfig(config);
       if (t != nullptr)
       {
          s_tunnels.add(t);
@@ -2484,7 +2494,7 @@ void ParseTunnelList(const ObjectArray<ConfigEntry>& config)
 #ifdef _WITH_ENCRYPTION
    for (ConfigEntry *ce : config)
    {
-      OutboundTunnel *t = OutboundTunnel::createFromConfig(*ce);
+      shared_ptr<OutboundTunnel> t = OutboundTunnel::createFromConfig(*ce);
       if (t != nullptr)
       {
          s_tunnels.add(t);
