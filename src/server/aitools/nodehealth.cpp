@@ -457,15 +457,6 @@ static json_t *BuildInterfaceSectionFromDCI(Node *node, uint32_t userId, Finding
 }
 
 /**
- * Process sample from System.Processes table
- */
-struct ProcessSample
-{
-   uint64_t cpuTime;
-   bool seen;
-};
-
-/**
  * Build top processes section (by RSS from latest sample, by CPU from delta between two samples)
  */
 static json_t *BuildProcessSection(const shared_ptr<Table>& first, const shared_ptr<Table>& second, int64_t elapsed, int top)
