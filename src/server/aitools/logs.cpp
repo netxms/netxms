@@ -351,6 +351,7 @@ static const char *GetColumnTypeName(int type)
       case LC_COMPLETION_STATUS: return "completion_status";
       case LC_ACTION_CODE:      return "action_code";
       case LC_ATM_TXN_CODE:     return "atm_txn_code";
+      case LC_ATM_TXN_OUTCOME:  return "atm_txn_outcome";
       case LC_ASSET_OPERATION:  return "asset_operation";
       case LC_DEPLOYMENT_STATUS: return "deployment_status";
       case LC_AI_TASK_STATUS:   return "ai_task_status";
@@ -733,6 +734,7 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
                case LC_COMPLETION_STATUS:
                case LC_ACTION_CODE:
                case LC_ATM_TXN_CODE:
+               case LC_ATM_TXN_OUTCOME:
                case LC_ASSET_OPERATION:
                case LC_DEPLOYMENT_STATUS:
                case LC_AI_TASK_STATUS:

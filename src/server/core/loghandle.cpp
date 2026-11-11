@@ -562,6 +562,7 @@ static json_t *ColumnValueToJson(DB_RESULT hResult, int row, int column, const L
       case LC_ALARM_STATE:
       case LC_ASSET_OPERATION:
       case LC_ATM_TXN_CODE:
+      case LC_ATM_TXN_OUTCOME:
       case LC_COMPLETION_STATUS:
       case LC_CONNECTION_EVENT:
       case LC_DEPLOYMENT_STATUS:
