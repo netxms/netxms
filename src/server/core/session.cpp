@@ -17399,25 +17399,35 @@ void ClientSession::startRealTimeDciRead(const NXCPMessage& request)
             {
                response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
             }
-            else if (m_rtDciFeeds.size() >= MAX_RT_DCI_FEEDS_PER_SESSION)
-            {
-               debugPrintf(4, L"startRealTimeDciRead: feed limit reached");
-               response.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
-            }
             else
             {
-               uint32_t interval = request.getFieldAsUInt32(VID_POLLING_INTERVAL);
-               if (interval < 1)
-                  interval = 1;
-               else if (interval > 3600)
-                  interval = 3600;
+               // Requests are processed concurrently, so checks and feed registration must be atomic
+               LockGuard lockGuard(m_rtDciFeedStartLock);
+               if (m_rtDciFeeds.contains(request.getId()))
+               {
+                  debugPrintf(4, L"startRealTimeDciRead: feed [%u] already exists", request.getId());
+                  response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+               }
+               else if (m_rtDciFeeds.size() >= MAX_RT_DCI_FEEDS_PER_SESSION)
+               {
+                  debugPrintf(4, L"startRealTimeDciRead: feed limit reached");
+                  response.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
+               }
+               else
+               {
+                  uint32_t interval = request.getFieldAsUInt32(VID_POLLING_INTERVAL);
+                  if (interval < 1)
+                     interval = 1;
+                  else if (interval > 3600)
+                     interval = 3600;
 
-               auto feed = make_shared<RealTimeDciFeed>(request.getId(), m_id, static_cast<DCItem&>(*dci), interval);
-               m_rtDciFeeds.set(request.getId(), feed);
-               RealTimeDciFeed::start(feed);
-               debugPrintf(5, L"Real-time read feed [%u] started for DCI \"%s\" [%u] on %s [%u] (interval %u s)",
-                     request.getId(), dci->getDescription().cstr(), dciId, object->getName(), object->getId(), interval);
-               response.setField(VID_RCC, RCC_SUCCESS);
+                  auto feed = make_shared<RealTimeDciFeed>(request.getId(), m_id, static_cast<DCItem&>(*dci), interval);
+                  m_rtDciFeeds.set(request.getId(), feed);
+                  RealTimeDciFeed::start(feed);
+                  debugPrintf(5, L"Real-time read feed [%u] started for DCI \"%s\" [%u] on %s [%u] (interval %u s)",
+                        request.getId(), dci->getDescription().cstr(), dciId, object->getName(), object->getId(), interval);
+                  response.setField(VID_RCC, RCC_SUCCESS);
+               }
             }
          }
          else

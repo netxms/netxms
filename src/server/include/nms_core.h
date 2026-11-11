@@ -615,6 +615,7 @@ private:
 	Mutex m_tcpProxyLock;
 	VolatileCounter m_tcpProxyChannelId;
 	SynchronizedSharedHashMap<uint32_t, RealTimeDciFeed> m_rtDciFeeds;
+	Mutex m_rtDciFeedStartLock;   // Makes feed ID and feed limit checks atomic with feed registration
 	HashSet<uint32_t> m_pendingObjectNotifications;
    Mutex m_pendingObjectNotificationsLock;
    bool m_objectNotificationScheduled;
