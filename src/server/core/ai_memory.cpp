@@ -313,14 +313,19 @@ void AIMemoryEntry::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 }
 
 /**
+ * Check if given user can manage AI memory (system account or holder of "manage AI memory" right)
+ */
+static inline bool CanManageAIMemory(uint32_t userId)
+{
+   return (userId == 0) || ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_MEMORY) != 0);
+}
+
+/**
  * Check if given user can write entries of given scope. Users with "manage AI memory" right can write any scope.
  */
 static uint32_t CheckWriteAccess(AIMemoryScope scope, uint32_t scopeId, uint32_t userId)
 {
-   if (userId == 0)
-      return RCC_SUCCESS;
-
-   if (GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_MEMORY)
+   if (CanManageAIMemory(userId))
       return RCC_SUCCESS;
 
    switch(scope)
@@ -453,6 +458,13 @@ uint32_t NXCORE_EXPORTABLE CreateAIMemoryEntry(AIMemoryScope scope, uint32_t sco
    if (rcc != RCC_SUCCESS)
       return rcc;
 
+   if (locked && !byModel && !CanManageAIMemory(userId))
+   {
+      if (errorText != nullptr)
+         *errorText = "Locking memory entries requires \"Manage AI memory\" right";
+      return RCC_ACCESS_DENIED;
+   }
+
    rcc = ValidateEntryText(scope, title, content, errorText);
    if (rcc != RCC_SUCCESS)
       return rcc;
@@ -537,6 +549,7 @@ uint32_t NXCORE_EXPORTABLE ModifyAIMemoryEntry(uint32_t entryId, json_t *changes
    const char *title = json_object_get_string_utf8(changes, "title", nullptr);
    const char *content = json_object_get_string_utf8(changes, "content", nullptr);
    json_t *lockedField = byModel ? nullptr : json_object_get(changes, "locked");
+   bool canChangeLock = json_is_boolean(lockedField) && CanManageAIMemory(userId);
 
    rcc = ValidateEntryText(entry->getScope(), title, content, errorText);
    if (rcc != RCC_SUCCESS)
@@ -565,6 +578,14 @@ uint32_t NXCORE_EXPORTABLE ModifyAIMemoryEntry(uint32_t entryId, json_t *changes
       s_entriesLock.unlock();
       if (errorText != nullptr)
          *errorText = "Entry is locked by administrator and cannot be changed by the model";
+      return RCC_ACCESS_DENIED;
+   }
+
+   if (json_is_boolean(lockedField) && (json_boolean_value(lockedField) != entry->isLocked()) && !canChangeLock)
+   {
+      s_entriesLock.unlock();
+      if (errorText != nullptr)
+         *errorText = "Changing lock state of memory entry requires \"Manage AI memory\" right";
       return RCC_ACCESS_DENIED;
    }
 
@@ -622,18 +643,40 @@ uint32_t NXCORE_EXPORTABLE DeleteAIMemoryEntry(uint32_t entryId, bool byModel, u
       return RCC_ACCESS_DENIED;
 
    s_entriesLock.writeLock();
-   s_entries.erase(entryId);
-   s_entriesLock.unlock();
 
+   // Re-read stored entry: it could have been replaced or deleted since access check
+   auto it = s_entries.find(entryId);
+   if (it == s_entries.end())
+   {
+      s_entriesLock.unlock();
+      return RCC_NO_SUCH_RECORD;
+   }
+   if (byModel && it->second->isLocked())
+   {
+      s_entriesLock.unlock();
+      return RCC_ACCESS_DENIED;
+   }
+
+   // Entry is removed from memory only after successful database delete
+   bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, L"DELETE FROM ai_memory WHERE id=?");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, entryId);
-      DBExecute(hStmt);
+      success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
+   if (!success)
+   {
+      s_entriesLock.unlock();
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot delete memory entry [%u] from database", entryId);
+      return RCC_DB_FAILURE;
+   }
+
+   s_entries.erase(it);
+   s_entriesLock.unlock();
 
    nxlog_debug_tag(DEBUG_TAG, 4, L"Memory entry [%u] \"%hs\" deleted by %s on behalf of user [%u]", entryId, entry->getTitle().c_str(), byModel ? L"model" : L"user", userId);
    return RCC_SUCCESS;
@@ -776,6 +819,26 @@ static void SortByUpdateTime(std::vector<shared_ptr<AIMemoryEntry>>& entries)
 }
 
 /**
+ * Append entry text to prompt line as single line of plain text: line breaks and control characters are replaced
+ * with spaces and angle brackets are escaped, so that entry text cannot close the enclosing block or imitate
+ * another entry.
+ */
+static void AppendPromptText(std::string& line, const std::string& text)
+{
+   for(char ch : text)
+   {
+      if (ch == '<')
+         line.append("&lt;");
+      else if (ch == '>')
+         line.append("&gt;");
+      else if (static_cast<unsigned char>(ch) < ' ')
+         line.append(1, ' ');
+      else
+         line.append(1, ch);
+   }
+}
+
+/**
  * Format memory entries into system prompt block
  */
 std::string NXCORE_EXPORTABLE FormatAIMemoryPromptBlock(const std::vector<shared_ptr<AIMemoryEntry>>& entries, size_t maxSize, const char *tag, const char *intro)
@@ -799,8 +862,18 @@ std::string NXCORE_EXPORTABLE FormatAIMemoryPromptBlock(const std::vector<shared
       std::string line("- [#");
       line.append(std::to_string(entry->getId())).append(", updated ");
       line.append(FormatISO8601Timestamp(entry->getUpdatedAt()).substr(0, 10));
-      line.append(entry->isCreatedByModel() ? ", recorded by assistant] " : ", recorded by administrator] ");
-      line.append(entry->getTitle()).append(": ").append(entry->getContent()).append("\n");
+      // Only environment scope is writable exclusively by holders of "manage AI memory" right
+      if (entry->isCreatedByModel())
+         line.append(", recorded by assistant");
+      else
+         line.append((entry->getScope() == AIMemoryScope::ENVIRONMENT) ? ", recorded by administrator" : ", recorded by user");
+      if (entry->isLocked())
+         line.append(", locked by administrator");
+      line.append("] ");
+      AppendPromptText(line, entry->getTitle());
+      line.append(": ");
+      AppendPromptText(line, entry->getContent());
+      line.append("\n");
       if ((maxSize > 0) && (block.length() + line.length() + closing.length() + noteReserve > maxSize))
       {
          omitted++;
@@ -934,9 +1007,10 @@ static std::string F_Remember(AIMemoryScope scope, json_t *arguments, uint32_t u
 }
 
 /**
- * Get entry referenced by "id" argument and check that it belongs to given scope
+ * Get entry referenced by "id" argument and check that it belongs to given scope. User scope entries of other users
+ * are reported as not found regardless of acting user's rights: user memory is private to its user.
  */
-static shared_ptr<AIMemoryEntry> GetToolEntry(AIMemoryScope scope, json_t *arguments, std::string *error)
+static shared_ptr<AIMemoryEntry> GetToolEntry(AIMemoryScope scope, json_t *arguments, uint32_t userId, std::string *error)
 {
    uint32_t id = json_object_get_uint32(arguments, "id", 0);
    if (id == 0)
@@ -945,7 +1019,7 @@ static shared_ptr<AIMemoryEntry> GetToolEntry(AIMemoryScope scope, json_t *argum
       return shared_ptr<AIMemoryEntry>();
    }
    shared_ptr<AIMemoryEntry> entry = GetAIMemoryEntry(id);
-   if (entry == nullptr)
+   if ((entry == nullptr) || ((entry->getScope() == AIMemoryScope::USER) && (entry->getScopeId() != userId)))
    {
       *error = "Memory entry not found";
       return shared_ptr<AIMemoryEntry>();
@@ -964,7 +1038,7 @@ static shared_ptr<AIMemoryEntry> GetToolEntry(AIMemoryScope scope, json_t *argum
 static std::string F_Update(AIMemoryScope scope, json_t *arguments, uint32_t userId)
 {
    std::string error;
-   shared_ptr<AIMemoryEntry> entry = GetToolEntry(scope, arguments, &error);
+   shared_ptr<AIMemoryEntry> entry = GetToolEntry(scope, arguments, userId, &error);
    if (entry == nullptr)
       return error;
 
@@ -992,7 +1066,7 @@ static std::string F_Update(AIMemoryScope scope, json_t *arguments, uint32_t use
 static std::string F_Forget(AIMemoryScope scope, json_t *arguments, uint32_t userId)
 {
    std::string error;
-   shared_ptr<AIMemoryEntry> entry = GetToolEntry(scope, arguments, &error);
+   shared_ptr<AIMemoryEntry> entry = GetToolEntry(scope, arguments, userId, &error);
    if (entry == nullptr)
       return error;
 
@@ -1064,6 +1138,9 @@ static std::string F_Recall(json_t *arguments, uint32_t userId)
    entries.erase(std::remove_if(entries.begin(), entries.end(),
       [userId, &pattern] (const shared_ptr<AIMemoryEntry>& entry)
       {
+         // User memory is private to its user regardless of acting user's rights
+         if ((entry->getScope() == AIMemoryScope::USER) && (entry->getScopeId() != userId))
+            return true;
          if (!CanReadAIMemoryEntry(*entry, userId))
             return true;
          if (pattern.empty())
