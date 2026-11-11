@@ -16178,15 +16178,16 @@ NXSL_Value *Node::getWirelessStationsForNXSL(NXSL_VM *vm, uint32_t apId) const
  */
 bool Node::getInterfaceStateFromDriver(const Interface& iface, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
-   NodeDeviceContext context(self());
-   auto driver = getUsableDriverWithData(&context);
-   if (driver.first == nullptr)
-      return false;
-
+   // Required transports are checked before device context is used, so that no transport is created for driver that will not be called
+   auto driver = getDriverWithData();
    uint32_t required = driver.first->getRequiredTransports();
    if ((required & NDD_TRANSPORT_SNMP) ||
        ((required & (NDD_TRANSPORT_SSH_COMMAND | NDD_TRANSPORT_SSH_INTERACTIVE)) && (m_state & NSF_SSH_UNREACHABLE)) ||
        ((required & NDD_TRANSPORT_NETCONF) && (m_state & NSF_NETCONF_UNREACHABLE)))
+      return false;
+
+   NodeDeviceContext context(self());
+   if (!IsDriverUsable(driver.first, context.getAvailableTransports()))
       return false;
 
    driver.first->getInterfaceState(&context, this, driver.second.get(), iface.getIfIndex(), iface.getIfName(), iface.getIfType(),
