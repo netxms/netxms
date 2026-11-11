@@ -686,7 +686,8 @@ static bool ReadLeaseFile(const char *path, std::vector<Lease> *leases)
       // IPv6: <expiry> <iaid> <ip> <hostname> <duid>, preceded by "duid <server-duid>" line
       char *fields[5];
       int count = 0;
-      for(char *p = strtok(line, " \t\r\n"); (p != nullptr) && (count < 5); p = strtok(nullptr, " \t\r\n"))
+      char *context = nullptr;
+      for(char *p = strtok_r(line, " \t\r\n", &context); (p != nullptr) && (count < 5); p = strtok_r(nullptr, " \t\r\n", &context))
          fields[count++] = p;
       if ((count < 3) || !strcmp(fields[0], "duid"))
          continue;
