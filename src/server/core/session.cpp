@@ -536,6 +536,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
                   }
                }
                m_tcpProxyLock.unlock();
+               conn->setTcpProxyCallback(nullptr);
             }
 
             NXCPMessage response(CMD_CLOSE_TCP_PROXY, 0);
@@ -621,28 +622,27 @@ void ClientSession::finalize()
       } while(m_refCount > 0);
    }
 
-   // Close SSH terminal channels. Data handlers registered on agent connections capture this session;
-   // closeSSHChannel() removes the handler before sending close request to the agent. Records are detached
-   // from the list under lock so that onSshTerminalData() cannot queue messages for this session afterwards
-   // (anything queued before that point is covered by reference count check in destructor).
-   ObjectArray<TcpProxy> sshChannels(0, 16, Ownership::True);
+   // Close TCP proxy and SSH terminal channels. Agent connections keep raw pointer to this session as TCP proxy
+   // callback, and SSH data handlers registered on them capture this session. Records are detached from the list
+   // under lock so that callbacks cannot queue messages for this session afterwards (anything queued before that
+   // point is covered by reference count check in destructor). setTcpProxyCallback() and closeSSHChannel() wait
+   // for callback invocation in progress on agent connection receiver thread, which acquires m_tcpProxyLock,
+   // so they are called without holding it.
+   ObjectArray<TcpProxy> proxyChannels(0, 16, Ownership::True);
    m_tcpProxyLock.lock();
-   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
+   while(!m_tcpProxyConnections.isEmpty())
    {
-      TcpProxy *p = m_tcpProxyConnections.get(i);
-      if (p->sshChannel)
-      {
-         sshChannels.add(p);
-         m_tcpProxyConnections.unlink(i);
-         i--;
-      }
+      proxyChannels.add(m_tcpProxyConnections.get(0));
+      m_tcpProxyConnections.unlink(0);
    }
    m_tcpProxyLock.unlock();
-   for(int i = 0; i < sshChannels.size(); i++)
+   for(int i = 0; i < proxyChannels.size(); i++)
    {
-      TcpProxy *p = sshChannels.get(i);
-      p->agentConnection->closeSSHChannel(p->agentChannelId);
-      debugPrintf(5, _T("SSH terminal channel %u closed on session shutdown"), p->clientChannelId);
+      TcpProxy *p = proxyChannels.get(i);
+      p->agentConnection->setTcpProxyCallback(nullptr);
+      if (p->sshChannel)
+         p->agentConnection->closeSSHChannel(p->agentChannelId);
+      debugPrintf(5, _T("%s channel %u closed on session shutdown"), p->sshChannel ? _T("SSH terminal") : _T("TCP proxy"), p->clientChannelId);
    }
 
    CloseAllLogsForSession(m_id);
@@ -16833,6 +16833,7 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
                      m_tcpProxyLock.lock();
                      m_tcpProxyConnections.remove(proxy);
                      m_tcpProxyLock.unlock();
+                     conn->setTcpProxyCallback(nullptr);
                      msg.setField(VID_RCC, AgentErrorToRCC(rcc));
                      debugPrintf(4, _T("TCP proxy to %s:%d via node %s [%u] setup failed (%s)"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), AgentErrorCodeToText(rcc));
                   }
@@ -17028,6 +17029,7 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
    }
    else
    {
+      conn->setTcpProxyCallback(nullptr);
       if (channelLost)
       {
          // Channel was closed (by remote side or by session shutdown) while setup was in progress
@@ -17119,6 +17121,7 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
 
    if (conn != nullptr)
    {
+      conn->setTcpProxyCallback(nullptr);
       if (sshChannel)
       {
          conn->closeSSHChannel(agentChannelId);
@@ -17253,7 +17256,11 @@ void ClientSession::onTcpProxyData(AgentConnectionEx *conn, uint32_t agentChanne
    m_tcpProxyLock.unlock();
 
    if (clientChannelId != 0)
+   {
+      if (size == 0)
+         conn->setTcpProxyCallback(nullptr);   // record is removed, connection is no longer used by this session
       sendTcpProxyDataToClient(clientChannelId, data, size, errorIndicator);
+   }
 }
 
 /**
@@ -17264,6 +17271,7 @@ void ClientSession::onSshTerminalData(uint32_t clientChannelId, const void *data
    // Message to client is queued while holding the lock: session shutdown detaches records under the same lock
    // and then waits for reference count (incremented by queueing) to drop, so a message cannot be queued for
    // a session that is already destroyed.
+   shared_ptr<AgentConnectionEx> closedConnection;
    m_tcpProxyLock.lock();
    for(int i = 0; i < m_tcpProxyConnections.size(); i++)
    {
@@ -17273,6 +17281,7 @@ void ClientSession::onSshTerminalData(uint32_t clientChannelId, const void *data
          if (size == 0) // close indicator; agent side has already released the channel
          {
             debugPrintf(5, L"Received SSH terminal channel %u close notification", clientChannelId);
+            closedConnection = p->agentConnection;
             m_tcpProxyConnections.remove(i);
          }
          sendTcpProxyDataToClient(clientChannelId, data, size, errorIndicator);
@@ -17280,6 +17289,10 @@ void ClientSession::onSshTerminalData(uint32_t clientChannelId, const void *data
       }
    }
    m_tcpProxyLock.unlock();
+
+   // Callback is removed outside of the lock because TCP proxy callbacks acquire it while holding callback lock
+   if (closedConnection != nullptr)
+      closedConnection->setTcpProxyCallback(nullptr);
 }
 
 /**
@@ -17330,6 +17343,7 @@ void ClientSession::onTcpProxyAgentDisconnect(AgentConnectionEx *conn)
       }
    }
    m_tcpProxyLock.unlock();
+   conn->setTcpProxyCallback(nullptr);
 
    if (!clientChannelList.isEmpty())
    {
