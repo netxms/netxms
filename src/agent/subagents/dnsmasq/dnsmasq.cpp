@@ -881,7 +881,7 @@ static LONG H_ScopeTable(const TCHAR *metric, const TCHAR *arg, Table *value, Ab
    CreateDHCPScopeTableColumns(value);
    for(const Scope& s : state->scopes)
    {
-      String network = s.network.isValid() ? s.id : String();
+      String network = s.network.isValid() ? String(s.id) : String();
       String name(s.name.c_str(), "utf8");
       AddDHCPScopeTableRow(value, s.id, s.ipVersion(), network, name, s.ranges, true, s.total, s.used);  // dnsmasq does not track declined addresses
    }
