@@ -501,7 +501,7 @@ static bool H_UpgradeFromV46()
 {
    // Decommissioned state is now derived from decommission_time: clear stale state bit
    // and reset time for nodes that had lost the bit (they stay non-decommissioned)
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE nodes SET decommission_time=0 WHERE decommission_time<>0 AND id IN (SELECT object_id FROM object_properties WHERE BITAND(state,16777216)=0 AND BITAND(state_before_maint,16777216)=0)"));
       CHK_EXEC(SQLQuery(L"UPDATE object_properties SET state=state-16777216 WHERE BITAND(state,16777216)<>0 AND object_id IN (SELECT id FROM nodes)"));
@@ -553,7 +553,7 @@ static bool H_UpgradeFromV45()
    CHK_EXEC(SQLQuery(L"DROP TABLE object_ai_data"));
 
    // Add SYSTEM_ACCESS_MANAGE_AI_MEMORY (bit 60 = 0x1000000000000000 = 1152921504606846976) to Admins group and AI operator account
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+1152921504606846976 WHERE id=1073741825 AND BITAND(system_access, 1152921504606846976)=0"));
       CHK_EXEC(SQLQuery(L"UPDATE users SET system_access=system_access+1152921504606846976 WHERE name='ai-operator' AND BITAND(system_access, 1152921504606846976)=0"));
@@ -756,7 +756,7 @@ static bool H_UpgradeFromV37()
 static bool H_UpgradeFromV36()
 {
    // Add SYSTEM_ACCESS_HTTP_REQUESTS (bit 59 = 0x800000000000000 = 576460752303423488) to Admins group
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+576460752303423488 WHERE id=1073741825 AND BITAND(system_access, 576460752303423488)=0"));
    }
@@ -1134,7 +1134,7 @@ static bool H_UpgradeFromV24()
    bool requireWriteAccess = !wcsicmp(buffer, L"true") || (wcstol(buffer, nullptr, 0) != 0);
    uint32_t baseRights = requireWriteAccess ? 2 : 3;   // OBJECT_ACCESS_MODIFY : OBJECT_ACCESS_READ | OBJECT_ACCESS_MODIFY
 
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQueryFormatted(L"UPDATE acl SET access_rights=access_rights+2147483648 WHERE (BITAND(access_rights, 2147483648)=0) AND (BITAND(access_rights, %u)<>0)", baseRights));
    }
@@ -1159,7 +1159,7 @@ static bool H_UpgradeFromV24()
 static bool H_UpgradeFromV23()
 {
    // Add OBJECT_ACCESS_READ_DC_CONFIG (0x40000000) to all ACL entries with READ access set
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE acl SET access_rights=access_rights+1073741824 WHERE (BITAND(access_rights, 1073741824)=0) AND (BITAND(access_rights, 1)<>0)"));
    }
@@ -1307,7 +1307,7 @@ static bool H_UpgradeFromV18()
 static bool H_UpgradeFromV17()
 {
    // Add OBJECT_ACCESS_READ_DEVICE_CONFIG (0x20000000) to all ACL entries with MODIFY access set
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE acl SET access_rights=access_rights+536870912 WHERE (BITAND(access_rights, 536870912)=0) AND (BITAND(access_rights, 2)<>0)"));
    }
@@ -1794,7 +1794,7 @@ static bool H_UpgradeFromV6()
    }
 
    // Add SYSTEM_ACCESS_MANAGE_AI_OPERATORS (bit 58 = 0x400000000000000 = 288230376151711744) to Admins group
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+288230376151711744 WHERE id=1073741825 AND BITAND(system_access, 288230376151711744)=0"));
    }

@@ -371,9 +371,6 @@ public final class Server implements Daemon
       String url;
       switch(type)
       {
-         case INFORMIX:
-            url = "jdbc:informix-sqli://" + server + "/" + name;
-            break;
          case MARIADB:
             url = "jdbc:mariadb://" + server + "/" + name;
             break;

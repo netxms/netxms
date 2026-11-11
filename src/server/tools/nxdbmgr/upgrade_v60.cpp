@@ -658,7 +658,7 @@ static bool H_UpgradeFromV24()
 static bool H_UpgradeFromV23()
 {
    // Add SYSTEM_ACCESS_SEARCH_NETWORK (bit 52 = 0x10000000000000 = 4503599627370496) to Admins group
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+4503599627370496 WHERE id=1073741825 AND BITAND(system_access, 4503599627370496)=0"));
    }
@@ -748,7 +748,7 @@ static bool H_UpgradeFromV20()
 static bool H_UpgradeFromV19()
 {
    // Add SYSTEM_ACCESS_VIEW_WELCOME_PAGE (bit 51 = 0x8000000000000 = 2251799813685248) to Admins group
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+2251799813685248 WHERE id=1073741825 AND BITAND(system_access, 2251799813685248)=0")));
    }
@@ -950,7 +950,7 @@ static bool H_UpgradeFromV15()
 static bool H_UpgradeFromV14()
 {
    // Add OBJECT_ACCESS_MANAGE_POLICIES (0x01000000) to all ACL entries with MODIFY access set for Admins group
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(_T("UPDATE acl SET access_rights=access_rights+16777216 WHERE user_id=1073741825 AND (BITAND(access_rights, 16777216)=0) AND (BITAND(access_rights, 2)<>0)")));
    }

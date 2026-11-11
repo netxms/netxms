@@ -23,7 +23,6 @@ package org.netxms.reporting;
  */
 public enum DatabaseType
 {
-   INFORMIX("com.informix.jdbc.IfxDriver"),
    MARIADB("com.mariadb.jdbc.Driver"),
    MSSQL("com.microsoft.sqlserver.jdbc.SQLServerDriver"),
    MYSQL("com.mysql.jdbc.Driver"),
@@ -67,10 +66,6 @@ public enum DatabaseType
       else if (lowerKey.contains("mysql"))
       {
          return MYSQL;
-      }
-      else if (lowerKey.contains("informix"))
-      {
-         return INFORMIX;
       }
       else if (lowerKey.contains("sqlite"))
       {

@@ -1844,7 +1844,7 @@ static bool H_UpgradeFromV55()
          _T("  configuration $SQL:TEXT null,")
          _T("PRIMARY KEY(user_id,name))")));
 
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(_T("UPDATE users SET system_access=system_access+281474976710656 WHERE (BITAND(system_access, 1) = 1)")));
       CHK_EXEC(SQLQuery(_T("UPDATE user_groups SET system_access=system_access+281474976710656 WHERE (BITAND(system_access, 1) = 1)")));
@@ -2039,7 +2039,7 @@ static bool H_UpgradeFromV48()
 {
    if (GetSchemaLevelForMajorVersion(38) < 11)
    {
-      if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+      if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
          CHK_EXEC(SQLQuery(_T("UPDATE nodes SET last_agent_comm_time=0 WHERE (BITAND(capabilities, 2) = 0) AND (last_agent_comm_time > 0)")));
       else
          CHK_EXEC(SQLQuery(_T("UPDATE nodes SET last_agent_comm_time=0 WHERE ((capabilities & 2) = 0) AND (last_agent_comm_time > 0)")));

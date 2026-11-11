@@ -391,7 +391,7 @@ static bool H_UpgradeFromV31()
 static bool H_UpgradeFromV30()
 {
    // Add OBJECT_ACCESS_QUERY_WEBSVC (0x08000000) to all ACL entries with MODIFY access set for Admins group
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE acl SET access_rights=access_rights+134217728 WHERE user_id=1073741825 AND (BITAND(access_rights, 134217728)=0) AND (BITAND(access_rights, 2)<>0)"));
    }
@@ -819,7 +819,7 @@ static bool H_UpgradeFromV19()
 static bool H_UpgradeFromV18()
 {
    // Add SYSTEM_ACCESS_SCAN_NETWORK (bit 57 = 0x200000000000000 = 144115188075855872) to Admins group
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+144115188075855872 WHERE id=1073741825 AND BITAND(system_access, 144115188075855872)=0"));
    }
@@ -1330,7 +1330,7 @@ static bool H_UpgradeFromV7()
    // Users still on legacy unsalted SHA-1 hashes cannot be migrated to Argon2id at-rest
    // (the plaintext is needed). Force a password change on next login so dormant accounts
    // do not remain on unsalted SHA-1 indefinitely.
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE users SET flags=flags+8 WHERE BITAND(flags,8)=0 AND password NOT LIKE '$%' AND password<>''"));
    }
@@ -1490,7 +1490,7 @@ static bool H_UpgradeFromV2()
    // Add SYSTEM_ACCESS_VIEW_NOTIFICATION_LOG (bit 55 = 0x80000000000000 = 36028797018963968)
    // and SYSTEM_ACCESS_VIEW_ACTION_LOG (bit 56 = 0x100000000000000 = 72057594037927936) to Admins group
    // (combined mask = 0x180000000000000 = 108086391056891904)
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+108086391056891904 WHERE id=1073741825 AND BITAND(system_access, 108086391056891904)=0"));
    }

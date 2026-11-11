@@ -284,9 +284,6 @@ StringList LIBNXDB_EXPORTABLE *DBGetTableList(DB_HANDLE hdb)
       case DB_SYNTAX_DB2:
          query = _T("SELECT lower(name) FROM sysibm.systables WHERE type='T'");
          break;
-      case DB_SYNTAX_INFORMIX:
-         query = _T("SELECT lower(tabname) FROM informix.systables WHERE tabtype='T'");
-         break;
       case DB_SYNTAX_MSSQL:
          query = _T("SELECT lower(name) FROM sysobjects WHERE xtype='U'");
          break;
@@ -334,7 +331,6 @@ bool LIBNXDB_EXPORTABLE DBRenameTable(DB_HANDLE hdb, const TCHAR *oldName, const
    switch(syntax)
    {
       case DB_SYNTAX_DB2:
-      case DB_SYNTAX_INFORMIX:
       case DB_SYNTAX_MYSQL:
          _sntprintf(query, 1024, _T("RENAME TABLE %s TO %s"), oldName, newName);
          break;
@@ -857,7 +853,6 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
    switch(syntax)
    {
       case DB_SYNTAX_DB2:
-      case DB_SYNTAX_INFORMIX:
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_ORACLE:
          _sntprintf(query, 1024, _T("ALTER TABLE %s DROP PRIMARY KEY"), table);
@@ -937,10 +932,6 @@ bool LIBNXDB_EXPORTABLE DBAddPrimaryKey(DB_HANDLE hdb, const TCHAR *table, const
    bool success;
    switch(syntax)
    {
-      case DB_SYNTAX_INFORMIX:
-         _sntprintf(query, 1024, _T("ALTER TABLE %s ADD CONSTRAINT PRIMARY KEY (%s)"), table, columns);
-         success = ExecuteQuery(hdb, query);
-         break;
       case DB_SYNTAX_DB2:
       case DB_SYNTAX_MSSQL:
       case DB_SYNTAX_ORACLE:

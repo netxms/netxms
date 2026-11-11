@@ -994,9 +994,6 @@ static StringBuffer BuildJobHistoryQuery(int limit)
       case DB_SYNTAX_MSSQL:
          query.appendFormattedString(L"SELECT TOP %d ", limit);
          break;
-      case DB_SYNTAX_INFORMIX:
-         query.appendFormattedString(L"SELECT FIRST %d ", limit);
-         break;
       case DB_SYNTAX_ORACLE:
          query.append(L"SELECT * FROM (SELECT ");
          break;

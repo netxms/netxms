@@ -301,9 +301,6 @@ StringBuffer LogHandle::buildQuerySql(LogFilter *filter, int64_t maxRecordId, ui
       case DB_SYNTAX_MSSQL:
          query.appendFormattedString(_T("SELECT TOP %u %s FROM %s"), m_rowCountLimit, m_queryColumns.cstr(), m_log->table);
          break;
-      case DB_SYNTAX_INFORMIX:
-         query.appendFormattedString(_T("SELECT FIRST %u %s FROM %s"), m_rowCountLimit, m_queryColumns.cstr(), m_log->table);
-         break;
       case DB_SYNTAX_ORACLE:
          query.appendFormattedString(_T("SELECT * FROM (SELECT %s FROM %s"), m_queryColumns.cstr(), m_log->table);
          break;

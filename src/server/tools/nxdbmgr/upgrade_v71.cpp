@@ -120,7 +120,7 @@ static bool H_UpgradeFromV5()
 {
    // Mark existing pseudo-interfaces with IF_PSEUDO flag (0x00000800 = 2048); previously they were identified by index 1, type other(1) and name "unknown".
    // Bit is cleared on all interfaces first because interface flags saved by older versions may contain undefined bits.
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE object_properties SET flags=flags-2048 WHERE BITAND(flags, 2048)<>0 AND object_id IN (SELECT id FROM interfaces)"));
    }
@@ -140,7 +140,7 @@ static bool H_UpgradeFromV5()
 static bool H_UpgradeFromV4()
 {
    // Clear retired node flag NF_PING_PRIMARY_IP (0x04000000 = 67108864) - primary IP is now always checked with ICMP ping
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE object_properties SET flags=flags-67108864 WHERE BITAND(flags, 67108864)<>0 AND object_id IN (SELECT id FROM nodes)"));
    }
@@ -171,7 +171,7 @@ static bool H_UpgradeFromV2()
 {
    // Add RF_ACCEPT_CORRELATED (0x4000 = 16384) to default rules "Terminate node down alarms when node is up" and "End downtime",
    // because SYS_NODE_UP can now be correlated (recovery after NetXMS server network connectivity loss)
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE event_policy SET flags=flags+16384 WHERE rule_guid IN ('4fa20604-b56f-4f12-bb5d-2c3243a126c9','256c2abd-3e14-4e02-9606-7c78c77e1a78') AND BITAND(flags, 16384)=0"));
    }
@@ -221,7 +221,7 @@ static bool H_UpgradeFromV1()
 static bool H_UpgradeFromV0()
 {
    // Add SYSTEM_ACCESS_NXSL_FILE_IO (bit 61 = 0x2000000000000000 = 2305843009213693952) to Admins group
-   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
    {
       CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+2305843009213693952 WHERE id=1073741825 AND BITAND(system_access, 2305843009213693952)=0"));
    }
