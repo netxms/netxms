@@ -1621,9 +1621,9 @@ void DumpUsers(CONSOLE_CTX pCtx)
       UserDatabaseObject *object = it.next();
 		if (!object->isGroup())
       {
-         TCHAR szGUID[64];
-         UINT64 systemRights = GetEffectiveSystemRights((User *)object);
-         ConsolePrintf(pCtx, _T("%-20s %-36s 0x") UINT64X_FMT(_T("016")) _T("\n"), object->getName(), object->getGuidAsText(szGUID), systemRights);
+         TCHAR guidText[64];
+         uint64_t systemRights = GetEffectiveSystemRights(static_cast<User*>(object));
+         ConsolePrintf(pCtx, _T("%-20s %-36s 0x") UINT64X_FMT(_T("016")) _T("\n"), object->getName(), object->getGuidAsText(guidText), systemRights);
 		}
 	}
    s_userDatabaseLock.unlock();
