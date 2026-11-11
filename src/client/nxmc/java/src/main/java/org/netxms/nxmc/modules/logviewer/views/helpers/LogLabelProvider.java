@@ -58,6 +58,7 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
    private final String[] DEPLOYMENT_STATUS_TEXTS = getDeploymentStatusTexts(i18n);
    private static final String[] AI_TASK_STATUS_CHARS = { "S", "R", "C", "F", "U" };
    private final String[] OBSERVATION_STATE_TEXTS = { i18n.tr("New"), i18n.tr("Acknowledged"), i18n.tr("Dismissed") };
+   private final String[] ATM_TXN_OUTCOME_TEXTS = getAtmTransactionOutcomeTexts(i18n);
 
 	private LogColumn[] columns;
 	private NXCSession session;
@@ -336,6 +337,15 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
             {
                return value;
             }
+         case LogColumn.LC_ATM_TXN_OUTCOME:
+            try
+            {
+               return ATM_TXN_OUTCOME_TEXTS[Integer.parseInt(value)];
+            }
+            catch(Exception e)
+            {
+               return value;
+            }
 			default:
 				return value;
 		}
@@ -433,6 +443,19 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
          i18n.tr("Scheduled"), i18n.tr("Pending"), i18n.tr("Initializing"), i18n.tr("Transferring file"),
          i18n.tr("Installing"), i18n.tr("Waiting for agent"), i18n.tr("Completed"), i18n.tr("Failed"), i18n.tr("Cancelled")
       };
+   }
+
+   /**
+    * Get ATM transaction outcome texts
+    *
+    * @param i18n i18n object or null
+    * @return ATM transaction outcome texts
+    */
+   public static final String[] getAtmTransactionOutcomeTexts(I18n i18n)
+   {
+      if (i18n == null)
+         i18n = LocalizationHelper.getI18n(LogLabelProvider.class);
+      return new String[] { i18n.tr("Unknown"), i18n.tr("Success"), i18n.tr("Declined"), i18n.tr("Failed"), i18n.tr("Cancelled") };
    }
 
    /**
