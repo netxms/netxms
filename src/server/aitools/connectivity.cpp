@@ -230,7 +230,8 @@ static TestOutcome CheckServiceFromNode(Node *source, const InetAddress& addr, c
    if ((protocol->serviceType == NETSRV_TLS) && (hostName != nullptr))
    {
       // Network service check command passes only IP address, so TLS handshake would use address as SNI and fail
-      // on servers selecting certificate by name; metric takes host name, which source agent resolves itself
+      // on servers selecting certificate by name; metric takes host name, which source agent resolves itself, so caller
+      // passes host name only when it resolves at source to the address being tested
       wchar_t metric[512], value[MAX_RESULT_LENGTH];
       nx_swprintf(metric, 512, L"NetworkService.TLSStatus(%hs,%u)", hostName, static_cast<uint32_t>(port));
       int64_t startTime = GetMonotonicClockTime();
@@ -307,37 +308,29 @@ static TestOutcome CheckServiceFromNode(Node *source, const InetAddress& addr, c
  */
 static TestOutcome ConnectFromServer(const InetAddress& addr, uint16_t port, json_t *tcp)
 {
-   SOCKET s = CreateSocket(addr.getFamily(), SOCK_STREAM, 0);
-   if (s == INVALID_SOCKET)
-   {
-      json_object_set_new(tcp, "status", json_string("cannot-test"));
-      json_object_set_new(tcp, "error", json_string("server cannot create socket"));
-      return TestOutcome::CANNOT_TEST;
-   }
-
-   SockAddrBuffer saBuffer;
-   struct sockaddr *sa = addr.fillSockAddr(&saBuffer, port);
-   bool isTimeout;
    int64_t startTime = GetMonotonicClockTime();
-   int rc = ConnectEx(s, sa, SA_LEN(sa), SERVER_TCP_CONNECT_TIMEOUT, &isTimeout);
+   TcpPingResult result = TcpPing(addr, port, SERVER_TCP_CONNECT_TIMEOUT);
    uint32_t elapsed = static_cast<uint32_t>(GetMonotonicClockTime() - startTime);
-   closesocket(s);
 
    json_object_set_new(tcp, "responseTimeMs", json_integer(elapsed));
-   if (rc == 0)
+   switch(result)
    {
-      json_object_set_new(tcp, "status", json_string("open"));
-      return TestOutcome::SUCCESS;
+      case TCP_PING_SUCCESS:
+         json_object_set_new(tcp, "status", json_string("open"));
+         return TestOutcome::SUCCESS;
+      case TCP_PING_TIMEOUT:
+         json_object_set_new(tcp, "status", json_string("timeout"));
+         json_object_set_new(tcp, "error", json_string("no response to connection request (filtered or host down)"));
+         return TestOutcome::NO_RESPONSE;
+      case TCP_PING_REJECT:
+         json_object_set_new(tcp, "status", json_string("connect-failed"));
+         json_object_set_new(tcp, "error", json_string("connection refused"));
+         return TestOutcome::REJECTED;
+      default:
+         json_object_set_new(tcp, "status", json_string("connect-failed"));
+         json_object_set_new(tcp, "error", json_string("connection failed (network or host unreachable, or local socket error)"));
+         return TestOutcome::REJECTED;
    }
-   if (isTimeout)
-   {
-      json_object_set_new(tcp, "status", json_string("timeout"));
-      json_object_set_new(tcp, "error", json_string("no response to connection request (filtered or host down)"));
-      return TestOutcome::NO_RESPONSE;
-   }
-   json_object_set_new(tcp, "status", json_string("connect-failed"));
-   json_object_set_new(tcp, "error", json_string("connection refused or network unreachable"));
-   return TestOutcome::REJECTED;
 }
 
 /**
@@ -395,7 +388,7 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
    {
       // Server is represented by management node object; probing from server requires the same right as probing from any other node
       shared_ptr<NetObj> mgmtNode = FindObjectById(g_dwMgmtNode, OBJECT_NODE);
-      if ((mgmtNode != nullptr) && !mgmtNode->checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
+      if ((mgmtNode == nullptr) || !mgmtNode->checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
          return std::string("Access denied: checks from server require agent read access to management server node");
    }
 
@@ -495,6 +488,7 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
 
    json_t *notes = json_array();
    bool dnsFailure = false;
+   bool hostNameMatchesAtSource = false;  // true if source resolves host name to the address being tested
    if (hostName[0] != 0)
    {
       json_object_set_new(target, "hostName", json_string(hostName));
@@ -534,11 +528,15 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
                if (targetAddress.isValid())
                   json_array_append_new(notes, json_string("host name does not resolve at source; address resolved at server is tested instead"));
             }
-            else if (targetAddress.isValid())
+            else
             {
-               json_array_append_new(notes, json_string("name resolution at source could not be checked; address resolved at server is tested"));
+               // Source did not answer, so nothing is known about name resolution there
+               dnsFailure = false;
+               if (targetAddress.isValid())
+                  json_array_append_new(notes, json_string("name resolution at source could not be checked; address resolved at server is tested"));
             }
          }
+         hostNameMatchesAtSource = sourceAddress.isValid() && sourceAddress.equals(targetAddress);
       }
       delete serverList;
    }
@@ -572,6 +570,12 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
             {
                json_object_set_new(tcp, "status", json_string("not-performed"));
                json_object_set_new(tcp, "error", json_string("HTTP check of IPv6 address requires target host name; use protocol tcp"));
+            }
+            else if ((protocol->serviceType == NETSRV_TLS) && (hostName[0] != 0) && !hostNameMatchesAtSource)
+            {
+               // Check by host name would be resolved by source agent and fail or reach different host
+               json_array_append_new(notes, json_string("host name does not resolve to tested address at source; TLS check is done by IP address (address used as SNI, so handshake may fail on servers selecting certificate by name)"));
+               tcpOutcome = CheckServiceFromNode(source, targetAddress, protocol, port, nullptr, tcp);
             }
             else
             {
