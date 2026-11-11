@@ -163,7 +163,7 @@ static const char *s_keySkEd25519 =
    "-----END OPENSSH PRIVATE KEY-----\n";
 
 
-static const wchar_t *s_keyName = L"test key ü";
+static const wchar_t *s_keyName = L"test key \xFC";
 static const char *s_keyNameUtf8 = "test key \xC3\xBC";
 
 /**
