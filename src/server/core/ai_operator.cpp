@@ -99,6 +99,17 @@ static uint32_t GetDefaultOwnerUserId()
 }
 
 /**
+ * Check if given user is allowed to select given account as AI operator instance owner. Instance executes with
+ * owner's rights, so without the right to manage users (which already allows granting any rights) user can only
+ * select own account or the default AI operator account.
+ */
+static bool IsOwnerSelectionAllowed(uint32_t ownerUserId, uint32_t userId)
+{
+   return (ownerUserId == userId) || (ownerUserId == GetDefaultOwnerUserId()) ||
+      ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_USERS) != 0);
+}
+
+/**
  * Create new AI operator instance
  */
 AIOperatorInstance::AIOperatorInstance(const wchar_t *name, uint32_t ownerUserId)
@@ -596,9 +607,9 @@ void AIOperatorInstance::clearExecutingState()
 }
 
 /**
- * Modify AI operator instance from JSON configuration
+ * Modify AI operator instance from JSON configuration on behalf of given user
  */
-uint32_t AIOperatorInstance::modifyFromJSON(json_t *config)
+uint32_t AIOperatorInstance::modifyFromJSON(json_t *config, uint32_t userId)
 {
    LockGuard lockGuard(m_mutex);
 
@@ -641,6 +652,11 @@ uint32_t AIOperatorInstance::modifyFromJSON(json_t *config)
       return RCC_INVALID_ARGUMENT;
    if (ownerUserId != m_ownerUserId)
    {
+      if (!IsOwnerSelectionAllowed(ownerUserId, userId))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\": user [%u] is not allowed to set user [%u] as owner", m_id, m_name, userId, ownerUserId);
+         return RCC_ACCESS_DENIED;
+      }
       uint32_t rcc = ValidateOwnerUserId(ownerUserId);
       if (rcc != RCC_SUCCESS)
          return rcc;
@@ -818,9 +834,9 @@ void AIOperatorInstance::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 }
 
 /**
- * Create AI operator instance from JSON configuration
+ * Create AI operator instance from JSON configuration on behalf of given user
  */
-uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t *instanceId)
+uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t userId, uint32_t *instanceId)
 {
    const char *name = json_object_get_string_utf8(config, "name", nullptr);
    if ((name == nullptr) || (*name == 0))
@@ -830,6 +846,11 @@ uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t *in
    uint32_t ownerUserId = GetDefaultOwnerUserId();
    if (!UpdateIntegerAttribute(config, "ownerUserId", &ownerUserId))
       return RCC_INVALID_ARGUMENT;
+   if (!IsOwnerSelectionAllowed(ownerUserId, userId))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Cannot create AI operator instance \"%hs\": user [%u] is not allowed to set user [%u] as owner", name, userId, ownerUserId);
+      return RCC_ACCESS_DENIED;
+   }
    uint32_t rcc = ValidateOwnerUserId(ownerUserId);
    if (rcc != RCC_SUCCESS)
    {
@@ -842,7 +863,7 @@ uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t *in
    wname[63] = 0;
 
    shared_ptr<AIOperatorInstance> instance = make_shared<AIOperatorInstance>(wname, ownerUserId);
-   rcc = instance->modifyFromJSON(config);
+   rcc = instance->modifyFromJSON(config, userId);
    if (rcc != RCC_SUCCESS)
    {
       // Instructions history record could be written before instance record save failed
@@ -867,16 +888,16 @@ uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t *in
 }
 
 /**
- * Modify AI operator instance from JSON configuration
+ * Modify AI operator instance from JSON configuration on behalf of given user
  */
-uint32_t NXCORE_EXPORTABLE ModifyAIOperatorInstance(uint32_t instanceId, json_t *config)
+uint32_t NXCORE_EXPORTABLE ModifyAIOperatorInstance(uint32_t instanceId, json_t *config, uint32_t userId)
 {
    s_instancesLock.lock();
    shared_ptr<AIOperatorInstance> instance = s_instances.getShared(instanceId);
    s_instancesLock.unlock();
    if (instance == nullptr)
       return RCC_INVALID_TASK_ID;
-   return instance->modifyFromJSON(config);
+   return instance->modifyFromJSON(config, userId);
 }
 
 /**

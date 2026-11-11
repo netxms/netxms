@@ -21993,7 +21993,7 @@ void ClientSession::modifyAiOperator(const NXCPMessage& request)
 
       uint32_t instanceId = request.getFieldAsUInt32(VID_AI_OPERATOR_ID);
       bool create = (instanceId == 0);
-      uint32_t rcc = create ? CreateAIOperatorInstance(config, &instanceId) : ModifyAIOperatorInstance(instanceId, config);
+      uint32_t rcc = create ? CreateAIOperatorInstance(config, m_userId, &instanceId) : ModifyAIOperatorInstance(instanceId, config, m_userId);
       json_decref(config);
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
@@ -22002,6 +22002,10 @@ void ClientSession::modifyAiOperator(const NXCPMessage& request)
          writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] %s", instanceId, create ? L"created" : L"modified");
          if (ownerGiven)
             writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] owner set to user [%u]", instanceId, request.getFieldAsUInt32(VID_USER_ID));
+      }
+      else if (rcc == RCC_ACCESS_DENIED)
+      {
+         writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on setting user [%u] as owner of AI operator instance", request.getFieldAsUInt32(VID_USER_ID));
       }
    }
    else
