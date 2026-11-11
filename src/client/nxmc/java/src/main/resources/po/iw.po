@@ -1535,7 +1535,7 @@ msgstr ""
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/helpers/EventForwarderLabelProvider.java:36
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/helpers/NotificationChannelLabelProvider.java:36
 msgid "Success"
-msgstr ""
+msgstr "הצלחה"
 
 #: src/main/java/org/netxms/nxmc/modules/reporting/widgets/helpers/ReportResultLabelProvider.java:79
 #: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/TestTransformationDlg.java:195
@@ -1925,7 +1925,7 @@ msgstr ""
 #: src/rwt/java/org/netxms/nxmc/resources/StatusDisplayInfo.java:65
 #: src/swt/java/org/netxms/nxmc/resources/StatusDisplayInfo.java:60
 msgid "Unknown"
-msgstr ""
+msgstr "לא ידוע"
 
 #: src/main/java/org/netxms/nxmc/modules/traffic/views/helpers/ObservationPointListLabelProvider.java:68
 msgid "unsampled"
@@ -5405,12 +5405,12 @@ msgstr ""
 #: src/main/java/org/netxms/nxmc/modules/serverconfig/views/helpers/ChatBotLabelProvider.java:76
 #: src/main/java/org/netxms/nxmc/modules/ai/views/helpers/AiTaskLabelProvider.java:42
 msgid "Failed"
-msgstr ""
+msgstr "נכשל"
 
 #: src/main/java/org/netxms/nxmc/modules/agentmanagement/views/helpers/DeploymentJobLabelProvider.java:45
 #: src/main/java/org/netxms/nxmc/modules/logviewer/views/helpers/LogLabelProvider.java:434
 msgid "Cancelled"
-msgstr ""
+msgstr "בוטל"
 
 #: src/main/java/org/netxms/nxmc/modules/agentmanagement/views/AgentExplorer.java:86
 msgid "Agent Explorer"
@@ -18815,7 +18815,7 @@ msgstr ""
 #: src/main/java/org/netxms/nxmc/modules/objects/views/helpers/DhcpLeaseLabelProvider.java:42
 #: src/main/java/org/netxms/nxmc/modules/objects/views/DhcpView.java:122
 msgid "Declined"
-msgstr ""
+msgstr "נדחה"
 
 #: src/main/java/org/netxms/nxmc/modules/objects/views/helpers/DhcpLeaseLabelProvider.java:42
 msgid "Released"

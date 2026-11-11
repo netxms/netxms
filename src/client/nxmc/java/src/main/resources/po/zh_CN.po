@@ -18871,7 +18871,7 @@ msgstr "已过期"
 #: src/main/java/org/netxms/nxmc/modules/objects/views/helpers/DhcpLeaseLabelProvider.java:42
 #: src/main/java/org/netxms/nxmc/modules/objects/views/DhcpView.java:122
 msgid "Declined"
-msgstr ""
+msgstr "已拒绝"
 
 #: src/main/java/org/netxms/nxmc/modules/objects/views/helpers/DhcpLeaseLabelProvider.java:42
 msgid "Released"

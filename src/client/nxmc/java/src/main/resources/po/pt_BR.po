@@ -18866,7 +18866,7 @@ msgstr "Vencido"
 #: src/main/java/org/netxms/nxmc/modules/objects/views/helpers/DhcpLeaseLabelProvider.java:42
 #: src/main/java/org/netxms/nxmc/modules/objects/views/DhcpView.java:122
 msgid "Declined"
-msgstr ""
+msgstr "Recusado"
 
 #: src/main/java/org/netxms/nxmc/modules/objects/views/helpers/DhcpLeaseLabelProvider.java:42
 msgid "Released"

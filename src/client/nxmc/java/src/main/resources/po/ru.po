@@ -5485,9 +5485,8 @@ msgstr "Неудачно"
 
 #: src/main/java/org/netxms/nxmc/modules/agentmanagement/views/helpers/DeploymentJobLabelProvider.java:45
 #: src/main/java/org/netxms/nxmc/modules/logviewer/views/helpers/LogLabelProvider.java:434
-#, fuzzy
 msgid "Cancelled"
-msgstr "Отмена"
+msgstr "Отменено"
 
 #: src/main/java/org/netxms/nxmc/modules/agentmanagement/views/AgentExplorer.java:86
 #, fuzzy
@@ -19050,7 +19049,7 @@ msgstr ""
 #: src/main/java/org/netxms/nxmc/modules/objects/views/helpers/DhcpLeaseLabelProvider.java:42
 #: src/main/java/org/netxms/nxmc/modules/objects/views/DhcpView.java:122
 msgid "Declined"
-msgstr ""
+msgstr "Отклонено"
 
 #: src/main/java/org/netxms/nxmc/modules/objects/views/helpers/DhcpLeaseLabelProvider.java:42
 msgid "Released"
