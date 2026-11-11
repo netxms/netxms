@@ -1,6 +1,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxsl.h>
+#include <nxcldefs.h>
 #include <testtools.h>
 #include <netxms-version.h>
 
@@ -154,6 +155,26 @@ public:
 };
 
 /**
+ * Security context that grants only exact match of given system access rights
+ */
+class SystemAccessSecurityContext : public NXSL_SecurityContext
+{
+private:
+   uint64_t m_grantedAccess;
+
+public:
+   SystemAccessSecurityContext(uint64_t grantedAccess) : NXSL_SecurityContext()
+   {
+      m_grantedAccess = grantedAccess;
+   }
+
+   virtual bool validateAccess(int subsystem, uint64_t requiredAccess, const void *object) override
+   {
+      return (subsystem == NXSL_AC_SYSTEM) && (requiredAccess == m_grantedAccess);
+   }
+};
+
+/**
  * Run inline script with file I/O functions enabled and return its integer result
  */
 static int32_t RunFileIOScript(const char *source, const TCHAR *fileName, NXSL_SecurityContext *securityContext)
@@ -181,6 +202,32 @@ static int32_t RunFileIOScript(const char *source, const TCHAR *fileName, NXSL_S
 }
 
 /**
+ * Script that succeeds only if file I/O functions are permitted
+ */
+static const char *s_allowedScript =
+   "import IO;\n"
+   "if (!FileAccess($1, 0)) return 1;\n"
+   "f = OpenFile($1);\n"
+   "if (f == null) return 2;\n"
+   "f.close();\n"
+   "return 0;";
+
+/**
+ * Script that succeeds only if every file I/O function is denied
+ */
+static const char *s_deniedScript =
+   "import IO;\n"
+   "if (FileAccess($1, 0)) return 1;\n"
+   "if (OpenFile($1) != null) return 2;\n"
+   "if (OpenFile($1, \"w\") != null) return 3;\n"
+   "if (CopyFile($1, $1 .. \".copy\")) return 4;\n"
+   "if (RenameFile($1, $1 .. \".renamed\")) return 5;\n"
+   "if (CreateDirectory($1 .. \".dir\")) return 6;\n"
+   "if (RemoveDirectory($1 .. \".dir\")) return 7;\n"
+   "if (DeleteFile($1)) return 8;\n"
+   "return 0;";
+
+/**
  * Test access control for file I/O functions
  */
 static void TestFileIOAccessControl()
@@ -202,26 +249,17 @@ static void TestFileIOAccessControl()
    fclose(f);
 
    // Without security context every function works
-   AssertEquals(RunFileIOScript(
-      "import IO;\n"
-      "if (!FileAccess($1, 0)) return 1;\n"
-      "f = OpenFile($1);\n"
-      "if (f == null) return 2;\n"
-      "f.close();\n"
-      "return 0;", fileName, nullptr), 0);
+   AssertEquals(RunFileIOScript(s_allowedScript, fileName, nullptr), 0);
 
    // Denying security context: functions fail without touching the file system
-   AssertEquals(RunFileIOScript(
-      "import IO;\n"
-      "if (FileAccess($1, 0)) return 1;\n"
-      "if (OpenFile($1) != null) return 2;\n"
-      "if (OpenFile($1, \"w\") != null) return 3;\n"
-      "if (CopyFile($1, $1 .. \".copy\")) return 4;\n"
-      "if (RenameFile($1, $1 .. \".renamed\")) return 5;\n"
-      "if (CreateDirectory($1 .. \".dir\")) return 6;\n"
-      "if (RemoveDirectory($1 .. \".dir\")) return 7;\n"
-      "if (DeleteFile($1)) return 8;\n"
-      "return 0;", fileName, new DenyAllSecurityContext()), 0);
+   AssertEquals(RunFileIOScript(s_deniedScript, fileName, new DenyAllSecurityContext()), 0);
+   AssertTrue(_taccess(fileName, 0) == 0);
+
+   // Security context granting file I/O system access right: every function works
+   AssertEquals(RunFileIOScript(s_allowedScript, fileName, new SystemAccessSecurityContext(SYSTEM_ACCESS_NXSL_FILE_IO)), 0);
+
+   // Security context granting different system access right: functions fail
+   AssertEquals(RunFileIOScript(s_deniedScript, fileName, new SystemAccessSecurityContext(SYSTEM_ACCESS_HTTP_REQUESTS)), 0);
    AssertTrue(_taccess(fileName, 0) == 0);
 
    // Without security context again - file is intact and can be deleted
