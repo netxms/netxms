@@ -84,6 +84,7 @@ public class DhcpView extends ObjectView
    private Action actionExportLeases;
    private Action actionExportAllLeases;
    private String selectedScopeId = null;
+   private boolean scopeInputUpdate = false;
 
    /**
     * Constructor
@@ -126,6 +127,8 @@ public class DhcpView extends ObjectView
       scopeViewer.setLabelProvider(new DhcpScopeLabelProvider());
       scopeViewer.setComparator(new DhcpScopeComparator());
       scopeViewer.addSelectionChangedListener((event) -> {
+         if (scopeInputUpdate)
+            return; // selection is restored by restoreScopeSelection() after input change
          DhcpScope scope = (DhcpScope)scopeViewer.getStructuredSelection().getFirstElement();
          String scopeId = (scope != null) ? scope.getId() : null;
          if ((scopeId == null) ? (selectedScopeId != null) : !scopeId.equals(selectedScopeId))
@@ -252,7 +255,15 @@ public class DhcpView extends ObjectView
          {
             final List<DhcpScope> scopes = session.getDhcpScopes(objectId);
             runInUIThread(() -> {
-               scopeViewer.setInput(scopes.toArray());
+               scopeInputUpdate = true;
+               try
+               {
+                  scopeViewer.setInput(scopes.toArray());
+               }
+               finally
+               {
+                  scopeInputUpdate = false;
+               }
                restoreScopeSelection(scopes);
             });
          }
