@@ -218,46 +218,6 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       if (rackRearWidget != null)
          rackRearWidget.setMenu(menuMgr.createContextMenu(rackRearWidget));
    }
-   
-   /**
-    * Get rear rack widget
-    * 
-    * @return Rear rack widget
-    */
-   public RackWidget getRackRearWidget()
-   {
-      return rackRearWidget;
-   }
-
-   /**
-    * Set rear rack widget
-    * 
-    * @param rackRearWidget to set
-    */
-   public void setRackRearWidget(RackWidget rackRearWidget)
-   {
-      this.rackRearWidget = rackRearWidget;
-   }
-
-   /**
-    * Get front rack widget
-    * 
-    * @return Front rack widget
-    */
-   public RackWidget getRackFrontWidget()
-   {
-      return rackFrontWidget;
-   }
-
-   /**
-    * Set front rack widget
-    * 
-    * @param rackFrontWidget to set
-    */
-   public void setRackFrontWidget(RackWidget rackFrontWidget)
-   {
-      this.rackFrontWidget = rackFrontWidget;
-   }
 
    /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
