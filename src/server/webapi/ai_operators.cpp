@@ -44,6 +44,10 @@ static int MapAIOperatorRCC(Context *context, uint32_t rcc)
       case RCC_INVALID_USER_ID:
          context->setErrorResponse("Invalid owner: user does not exist, is a group or the system account, or has no AI assistant access right");
          return 400;
+      case RCC_ACCESS_DENIED:
+         context->setErrorResponse("Not allowed to set this user as owner: without the right to manage users only own account or the default AI operator account can be selected");
+         context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on setting owner of AI operator instance");
+         return 403;
       case RCC_ACCOUNT_DISABLED:
          context->setErrorResponse("Invalid owner: user account is disabled");
          return 400;
@@ -86,7 +90,7 @@ int H_AiOperatorCreate(Context *context)
    }
 
    uint32_t instanceId;
-   uint32_t rcc = CreateAIOperatorInstance(request, &instanceId);
+   uint32_t rcc = CreateAIOperatorInstance(request, context->getUserId(), &instanceId);
    if (rcc != RCC_SUCCESS)
       return MapAIOperatorRCC(context, rcc);
 
@@ -143,7 +147,7 @@ int H_AiOperatorUpdate(Context *context)
    }
 
    uint32_t instanceId = context->getPlaceholderValueAsUInt32(L"operator-id");
-   uint32_t rcc = ModifyAIOperatorInstance(instanceId, request);
+   uint32_t rcc = ModifyAIOperatorInstance(instanceId, request, context->getUserId());
    if (rcc != RCC_SUCCESS)
       return MapAIOperatorRCC(context, rcc);
 

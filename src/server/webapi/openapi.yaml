@@ -15029,7 +15029,8 @@ components:
           description: >-
             Owner user account the instance executes as. Must be an existing, enabled user (not a group
             or the system account) with the AI assistant access right. Defaults to the built-in
-            "ai-operator" account on creation.
+            "ai-operator" account on creation. Without the right to manage users, only the caller's own
+            account or the built-in "ai-operator" account can be selected (403 otherwise).
         enabled:
           type: boolean
           description: Enable or disable the instance

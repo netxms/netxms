@@ -423,7 +423,7 @@ public:
    bool isInstructionsLocked() const { return m_instructionsLocked; }
    bool hasPendingInterrupts() const { return m_interruptPending; }
 
-   uint32_t modifyFromJSON(json_t *config);
+   uint32_t modifyFromJSON(json_t *config, uint32_t userId);
    void setEnabled(bool enabled);
    void resetMemento();
 
@@ -454,13 +454,16 @@ void InitAIOperators();
 /**
  * Create AI operator instance from JSON configuration. Instance ID is returned via instanceId.
  * Owner defaults to the out-of-band AI operator account unless "ownerUserId" is given in configuration.
+ * User (userId) on whose behalf instance is created can select as owner only own account or the default
+ * AI operator account, unless holding the right to manage users (RCC_ACCESS_DENIED otherwise).
  */
-uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t *instanceId);
+uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t userId, uint32_t *instanceId);
 
 /**
- * Modify AI operator instance from JSON configuration
+ * Modify AI operator instance from JSON configuration. Owner change is subject to the same restrictions
+ * as owner selection in CreateAIOperatorInstance.
  */
-uint32_t NXCORE_EXPORTABLE ModifyAIOperatorInstance(uint32_t instanceId, json_t *config);
+uint32_t NXCORE_EXPORTABLE ModifyAIOperatorInstance(uint32_t instanceId, json_t *config, uint32_t userId);
 
 /**
  * Delete AI operator instance (also deletes its observations, standing checks, and instructions history)
