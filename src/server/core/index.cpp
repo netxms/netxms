@@ -135,6 +135,7 @@ void AbstractIndexBase::swapAndWait()
 {
    m_secondary = InterlockedExchangeObjectPointer(&m_primary, m_secondary);
    InterlockedIncrement(&m_secondary->writers);
+   std::atomic_thread_fence(std::memory_order_seq_cst);
    while(m_secondary->readers > 0)
       ThreadSleepMs(10);
 }
@@ -149,7 +150,8 @@ INDEX_HEAD *AbstractIndexBase::acquireIndex() const
    {
       h = m_primary;
       InterlockedIncrement(&h->readers);
-      if (h->writers == 0)
+      std::atomic_thread_fence(std::memory_order_seq_cst);
+      if ((h->writers == 0) && (h == m_primary))
          break;
       InterlockedDecrement(&h->readers);
    }
