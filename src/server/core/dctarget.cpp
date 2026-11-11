@@ -1378,8 +1378,19 @@ void DataCollectionTarget::queueItemsForPolling()
                }
             }
 
+            // Requests are serialized per polled device. Sensor collects Modbus data itself, but through its gateway node,
+            // so gateway node ID is used to avoid concurrent connections to the gateway.
+            uint32_t serializationId = sourceNodeId;
+            if (serializationId == 0)
+            {
+               if ((getObjectClass() == OBJECT_SENSOR) && (object->getDataSource() == DS_MODBUS))
+                  serializationId = static_cast<Sensor*>(this)->getGatewayNodeId();
+               if (serializationId == 0)
+                  serializationId = m_id;
+            }
+
             wchar_t key[32];
-            _sntprintf(key, 32, L"%08X/%s", (sourceNodeId != 0) ? sourceNodeId : m_id, object->getDataProviderName());
+            _sntprintf(key, 32, L"%08X/%s", serializationId, object->getDataProviderName());
             ThreadPoolExecuteSerialized(g_dataCollectorThreadPool, key, DataCollector, m_dcObjects.getShared(i));
          }
          else
