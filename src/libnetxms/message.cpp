@@ -300,7 +300,16 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
             m_version = -1;   // error indicator
             return;
          }
-         msgDataSize = ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) - NXCP_HEADER_SIZE;
+         size_t uncompressedSize = ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE));
+         if (uncompressedSize < NXCP_HEADER_SIZE)
+         {
+            TCHAR buffer[256];
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: invalid uncompressed size %u for compressed message %s with ID %u"),
+               static_cast<unsigned int>(uncompressedSize), NXCPMessageCodeName(m_code, buffer), m_id);
+            m_version = -1;   // error indicator
+            return;
+         }
+         msgDataSize = uncompressedSize - NXCP_HEADER_SIZE;
 
          z_stream stream;
          stream.zalloc = ZLibAlloc;
@@ -1618,7 +1627,13 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    BYTE *allocatedMsgData;
    if ((flags & MF_COMPRESSED) && (version >= 4))
    {
-      msgDataSize = (size_t)ntohl(*((UINT32 *)((BYTE *)msg + NXCP_HEADER_SIZE))) - NXCP_HEADER_SIZE;
+      size_t uncompressedSize = (size >= NXCP_HEADER_SIZE + 4) ? ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) : 0;
+      if (uncompressedSize < NXCP_HEADER_SIZE)
+      {
+         out.append(_T("  ** message format error (invalid compressed message size)\n"));
+         return out;
+      }
+      msgDataSize = uncompressedSize - NXCP_HEADER_SIZE;
 
       z_stream stream;
       stream.zalloc = Z_NULL;
