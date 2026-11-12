@@ -157,6 +157,7 @@ Data-point attributes (per value) and resource attributes (per node).
 | 7.8 | tag attrs on related object | included (collected from all three: template, owner, related) |
 | 7.9 | Resource attributes | each resource carries `service.name`, `host.name`, `host.id` (object GUID) |
 | 7.10 | `ServiceName` config override | `service.name` = override value for all resources; unset → `service.name` = host name |
+| 7.11 | DCI user tag / system tag set | `netxms.dci.user_tag` / `netxms.dci.system_tag` = tag value; empty tag → attribute absent |
 
 ## 8. Opt-out selection (`pds:ignore` / `otel:ignore`)
 

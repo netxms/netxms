@@ -401,6 +401,12 @@ bool OtlpMetricExportDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, T
    SharedString instance = dci->getInstanceName();
    if (!instance.isEmpty())
       rec.attributes.emplace_back(std::string("netxms.instance"), WideToUtf8(instance.cstr()));
+   SharedString userTag = dci->getUserTag();
+   if (!userTag.isEmpty())
+      rec.attributes.emplace_back(std::string("netxms.dci.user_tag"), WideToUtf8(userTag.cstr()));
+   SharedString systemTag = dci->getSystemTag();
+   if (!systemTag.isEmpty())
+      rec.attributes.emplace_back(std::string("netxms.dci.system_tag"), WideToUtf8(systemTag.cstr()));
 
    bool reachedBatch = false;
    m_bufferLock.lock();
