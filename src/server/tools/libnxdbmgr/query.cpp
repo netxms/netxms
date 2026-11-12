@@ -103,7 +103,7 @@ const wchar_t *g_sqlTypes[7][5] =
  */
 const wchar_t LIBNXDBMGR_EXPORTABLE *GetSQLTypeName(int type)
 {
-   if ((type < 0) || (type >= 4))
+   if ((type < 0) || (type > SQL_TYPE_DOUBLE) || (g_dbSyntax < 0) || (g_dbSyntax >= static_cast<int>(sizeof(g_sqlTypes) / sizeof(g_sqlTypes[0]))))
       return L"ERROR";
    return g_sqlTypes[g_dbSyntax][type];
 }
