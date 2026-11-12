@@ -87,7 +87,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt)
 /**
  * Non-standard SQL data type names
  */
-const wchar_t *g_sqlTypes[8][5] =
+const wchar_t *g_sqlTypes[7][5] =
 {
    { L"longtext",     L"text",           L"bigint",     L"longblob",       L"double"           }, // MySQL
    { L"text",         L"varchar(4000)",  L"bigint",     L"bytea",          L"double precision" }, // PostgreSQL
@@ -95,7 +95,6 @@ const wchar_t *g_sqlTypes[8][5] =
    { L"clob",         L"varchar(4000)",  L"number(20)", L"blob",           L"binary_double"    }, // Oracle
    { L"varchar",      L"varchar(4000)",  L"bigint",     L"blob",           L"double"           }, // SQLite
    { L"long varchar", L"varchar(4000)",  L"bigint",     L"blob",           L"double"           }, // DB/2
-   { L"text",         L"lvarchar(4000)", L"bigint",     L"blob",           L"float"            }, // Informix
    { L"text",         L"varchar(4000)",  L"bigint",     L"bytea",          L"double precision" }  // TimescaleDB
 };
 

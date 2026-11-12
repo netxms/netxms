@@ -59,7 +59,7 @@
 #define DB_SYNTAX_ORACLE   3
 #define DB_SYNTAX_SQLITE   4
 #define DB_SYNTAX_DB2      5
-#define DB_SYNTAX_TSDB     7
+#define DB_SYNTAX_TSDB     6
 #define DB_SYNTAX_UNKNOWN	-1
 
 /**
