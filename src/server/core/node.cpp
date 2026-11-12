@@ -5560,6 +5560,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          modified |= MODIFY_NODE_PROPERTIES;
       if ((snmpTransport != nullptr) && confPollSnmpCapabilities(snmpTransport.get(), &deviceContext))
          modified |= MODIFY_NODE_PROPERTIES;
+      if (confPollDhcpServer(&deviceContext))
+         modified |= MODIFY_NODE_PROPERTIES;
    }
    snmpTransport.reset();
 
@@ -6771,27 +6773,6 @@ bool Node::confPollAgent()
             hasChanges = true;
          m_capabilities &= ~NC_HAS_AGENT_LLDP;
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s): LLDP information is not available from agent", m_name);
-      }
-      unlockProperties();
-
-      // Check if agent provides DHCP server information
-      shared_ptr<Table> dhcpScopes;
-      bool agentDHCPPresent = (getTableFromAgent(L"DHCP.Scopes", &dhcpScopes) == DCE_SUCCESS);
-      lockProperties();
-      if (agentDHCPPresent)
-      {
-         if (!(m_capabilities & NC_IS_DHCP_SERVER))
-            hasChanges = true;
-         m_capabilities |= NC_IS_DHCP_SERVER;
-         sendPollerMsg(L"   DHCP server information is available from agent\r\n");
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s): DHCP server information is available from agent (%d scopes)", m_name, dhcpScopes->getNumRows());
-      }
-      else
-      {
-         if (m_capabilities & NC_IS_DHCP_SERVER)
-            hasChanges = true;
-         m_capabilities &= ~NC_IS_DHCP_SERVER;
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s): DHCP server information is not available from agent", m_name);
       }
       unlockProperties();
 
@@ -10009,6 +9990,10 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
    {
       rc = GetNodeObservationPointsTable(this, result);
    }
+   else if (!wcsicmp(name, L"DHCP.Scopes"))
+   {
+      rc = getDhcpScopeTable(result);
+   }
    else if (!_tcsicmp(name, _T("Hardware.Components")))
    {
       lockProperties();
@@ -10314,6 +10299,10 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          _tcscpy(buffer, _T("-1"));
       }
+   }
+   else if (!wcsnicmp(name, L"DHCP.Scope.", 11))
+   {
+      rc = getDhcpScopeMetric(name, buffer, size);
    }
    else if (!wcsicmp(name, L"AgentTraffic.BytesReceived"))
    {

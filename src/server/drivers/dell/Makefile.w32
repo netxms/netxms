@@ -4,6 +4,6 @@
 #
 
 DRIVER = dell
-SOURCES = dell.cpp ftos.cpp os10.cpp powerconnect.cpp
+SOURCES = dell.cpp dhcp.cpp ftos.cpp os10.cpp powerconnect.cpp
 
 include $(TOPDIR)/src/server/drivers/ndd-common.mk

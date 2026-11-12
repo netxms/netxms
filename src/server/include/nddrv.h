@@ -384,6 +384,19 @@ struct DhcpScopeInfo
       declinedAddressesKnown = false;
    }
 
+   /**
+    * Set scope network and scope ID derived from it in "address/bits" form (same form as used by agent's DHCP.Scopes table)
+    */
+   void setNetwork(const InetAddress& n)
+   {
+      network = n;
+      wchar_t text[80];
+      n.toString(text);
+      size_t len = wcslen(text);
+      nx_swprintf(&text[len], 80 - len, L"/%d", n.getMaskBits());
+      id = text;
+   }
+
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const
    {
       uint32_t fieldId = baseId;
@@ -437,6 +450,20 @@ struct DhcpLeaseInfo
       msg->setFieldFromTime(fieldId++, expiration);
    }
 };
+
+/**
+ * Find DHCP scope which network contains given address
+ */
+static inline DhcpScopeInfo *FindDhcpScopeForAddress(const ObjectArray<DhcpScopeInfo>& scopes, const InetAddress& address)
+{
+   for(int i = 0; i < scopes.size(); i++)
+   {
+      DhcpScopeInfo *scope = scopes.get(i);
+      if (scope->network.isValid() && scope->network.contains(address))
+         return scope;
+   }
+   return nullptr;
+}
 
 /**
  * Bridge port number mapping to interface index
@@ -751,6 +778,8 @@ public:
    virtual DataCollectionError getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size);
    virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData);
    virtual shared_ptr<ArpCache> getArpCache(DeviceContext *context, DriverData *driverData);
+   virtual DataCollectionError getDhcpScopes(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpScopeInfo> *scopes);
+   virtual DataCollectionError getDhcpLeases(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpLeaseInfo> *leases);
    virtual ObjectArray<LinkLayerNeighborInfo> *getLinkLayerNeighbors(DeviceContext *context, DriverData *driverData, bool *ignoreStandardMibs);
    virtual void getSSHDriverHints(SSHDriverHints *hints) const;
 

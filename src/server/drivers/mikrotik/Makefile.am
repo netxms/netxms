@@ -1,3 +1,3 @@
 EXTRA_DIST = \
 	mikrotik.h \
-	data.cpp mikrotik.cpp
+	data.cpp dhcp.cpp mikrotik.cpp

@@ -4450,6 +4450,10 @@ protected:
    shared_ptr<NetworkPath> m_lastKnownNetworkPath;
    shared_ptr<ForwardingDatabase> m_fdb;
    shared_ptr<ArpCache> m_arpCache;
+   shared_ptr<ObjectArray<DhcpScopeInfo>> m_dhcpScopeCache;  // Short-lived DHCP scope cache for internal metrics
+   time_t m_dhcpScopeCacheTimestamp = 0;
+   DataCollectionError m_dhcpScopeCacheError = DCE_SUCCESS;
+   Mutex m_dhcpScopeCacheLock;
    shared_ptr<LinkLayerNeighbors> m_linkLayerNeighbors;
    shared_ptr<VlanList> m_vlans;
    shared_ptr<VrrpInfo> m_vrrpInfo;
@@ -4578,10 +4582,14 @@ protected:
    bool confPollSsh(uint32_t *transports);
    bool confPollNetconf(uint32_t *transports);
    bool confPollDeviceDriver(NodeDeviceContext *deviceContext);
+   bool confPollDhcpServer(NodeDeviceContext *deviceContext);
    bool confPollSmclp();
    bool confPollVnc();
    bool confPollEthernetIP();
    bool confPollModbus();
+   DataCollectionError getCachedDhcpScopes(shared_ptr<ObjectArray<DhcpScopeInfo>> *scopes);
+   DataCollectionError getDhcpScopeTable(shared_ptr<Table> *result);
+   DataCollectionError getDhcpScopeMetric(const wchar_t *name, wchar_t *buffer, size_t size);
    NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
    bool updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestId);
    bool updateHardwareComponents(PollerInfo *poller, uint32_t requestId);

@@ -47,6 +47,8 @@ public:
    virtual bool isWirelessAccessPoint(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual DataCollectionError getDhcpScopes(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpScopeInfo> *scopes) override;
+   virtual DataCollectionError getDhcpLeases(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpLeaseInfo> *leases) override;
    virtual bool hasMetrics() override;
    virtual DataCollectionError getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
    virtual ObjectArray<AgentParameterDefinition>* getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData) override;

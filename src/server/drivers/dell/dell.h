@@ -79,6 +79,8 @@ public:
    virtual void analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual DataCollectionError getDhcpScopes(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpScopeInfo> *scopes) override;
+   virtual DataCollectionError getDhcpLeases(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpLeaseInfo> *leases) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
    virtual bool isConfigBackupSupported() override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;

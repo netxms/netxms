@@ -1811,6 +1811,41 @@ shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(DeviceContext *context, Dr
 }
 
 /**
+ * Get DHCP scopes configured on device that acts as DHCP server. Driver may use any transport available in
+ * device context (for example, SNMP for pool statistics with fallback to CLI over SSH), and must check
+ * availability of transports not declared as required. Scopes should be identified by network address in
+ * "address/bits" form (see DhcpScopeInfo::setNetwork), so they match scopes reported by agents.
+ * Default implementation returns DCE_NOT_SUPPORTED.
+ *
+ * @param context device context
+ * @param node node object
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @param scopes array to add scopes to
+ * @return DCE_SUCCESS on success, DCE_NOT_SUPPORTED if device is not a DHCP server or driver cannot read DHCP information, or other error code
+ */
+DataCollectionError NetworkDeviceDriver::getDhcpScopes(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpScopeInfo> *scopes)
+{
+   return DCE_NOT_SUPPORTED;
+}
+
+/**
+ * Get DHCP leases from all scopes on device that acts as DHCP server. Scope ID in each lease must match ID of the
+ * scope returned by getDhcpScopes (empty if address does not belong to any known scope). Driver that can read
+ * scopes but has no source of lease information with transports available in device context (typical for
+ * SNMP-only access) should return DCE_NOT_SUPPORTED. Default implementation returns DCE_NOT_SUPPORTED.
+ *
+ * @param context device context
+ * @param node node object
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @param leases array to add leases to
+ * @return DCE_SUCCESS on success, DCE_NOT_SUPPORTED if lease information is not available, or other error code
+ */
+DataCollectionError NetworkDeviceDriver::getDhcpLeases(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpLeaseInfo> *leases)
+{
+   return DCE_NOT_SUPPORTED;
+}
+
+/**
  * Get link layer neighbors.
  *
  * @param context device context

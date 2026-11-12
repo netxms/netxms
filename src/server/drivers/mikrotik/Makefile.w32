@@ -4,6 +4,6 @@
 #
 
 DRIVER = mikrotik
-SOURCES = data.cpp mikrotik.cpp
+SOURCES = data.cpp dhcp.cpp mikrotik.cpp
 
 include $(TOPDIR)/src/server/drivers/ndd-common.mk

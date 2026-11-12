@@ -32,6 +32,8 @@ import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.NXCException;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.dhcp.DhcpLease;
 import org.netxms.client.dhcp.DhcpScope;
 import org.netxms.client.objects.AbstractNode;
@@ -39,6 +41,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.DhcpLeaseComparator;
@@ -78,6 +81,7 @@ public class DhcpView extends ObjectView
 
    private SortableTableViewer scopeViewer;
    private SortableTableViewer leaseViewer;
+   private int leaseListUnavailableMessageId = 0;
    private Action actionCopyScopes;
    private Action actionCopyLeases;
    private Action actionExportScopes;
@@ -249,6 +253,7 @@ public class DhcpView extends ObjectView
          return;
 
       clearMessages();
+      leaseListUnavailableMessageId = 0;
       new Job(i18n.tr("Reading DHCP scopes"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -312,7 +317,23 @@ public class DhcpView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<DhcpLease> leases = session.getDhcpLeases(objectId, scopeId);
+            List<DhcpLease> leases;
+            try
+            {
+               leases = session.getDhcpLeases(objectId, scopeId);
+            }
+            catch(NXCException e)
+            {
+               // Device provides scope information but no lease list (for example, SNMP-only network device)
+               if (e.getErrorCode() != RCC.DCI_NOT_SUPPORTED)
+                  throw e;
+               runInUIThread(() -> {
+                  leaseViewer.setInput(new Object[0]);
+                  if (leaseListUnavailableMessageId == 0)
+                     leaseListUnavailableMessageId = addMessage(MessageArea.INFORMATION, i18n.tr("Lease list is not available for this DHCP server"));
+               });
+               return;
+            }
             runInUIThread(() -> {
                if ((scopeId == null) ? (selectedScopeId == null) : scopeId.equals(selectedScopeId))
                   leaseViewer.setInput(leases.toArray());

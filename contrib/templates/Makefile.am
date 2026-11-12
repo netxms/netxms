@@ -18,6 +18,7 @@ templates_DATA = \
 	cisco_performance.json \
 	cyberpower.xml \
 	dell_hw.xml \
+	dhcp_server.json \
 	dell_idrac.xml \
 	eaton_ups.xml \
 	generic_unix.xml \
