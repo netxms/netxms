@@ -177,9 +177,11 @@ void *MsgWaitQueue::waitForMessage(bool isBinary, uint16_t code, uint32_t id, ui
    m_mutex.unlock();
 
    waiter->wakeupCondition.wait(timeout);
-   void *msg = waiter->msg;
 
    m_mutex.lock();
+
+   void *msg = waiter->msg;
+
    for(WaitQueueWaiter *w = m_waiters, *p = nullptr; w != nullptr; p = w, w = w->next)
    {
       if (w == waiter)
