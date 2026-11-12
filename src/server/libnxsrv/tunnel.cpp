@@ -178,12 +178,15 @@ MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
       m_channelLock.lock();
       int index = m_abandonedChannelRequests.indexOf(msg->getId());
       if (index != -1)
+      {
          m_abandonedChannelRequests.remove(index);
-      m_channelLock.unlock();
-      if (index != -1)
          ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, m_threadPoolKey, self(), &AgentTunnel::closeAbandonedChannel, msg);
+      }
       else
+      {
          m_queue.put(msg);
+      }
+      m_channelLock.unlock();
    }
    else
    {
