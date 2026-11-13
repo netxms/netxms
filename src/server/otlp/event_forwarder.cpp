@@ -254,9 +254,19 @@ void OtlpEventForwarderDriver::buildRecord(OtlpExportRecord& rec, const Event& e
    if (event.getDciId() != 0)
       rec.attributes.emplace_back("dci.id", static_cast<int64_t>(event.getDciId()));
 
-   StringBuffer tags = event.getTagsAsList();
+   const StringSet& tags = event.getTags();
    if (!tags.isEmpty())
-      rec.attributes.emplace_back("event.tags", tags.cstr());
+   {
+      std::vector<std::string> tagList;
+      tagList.reserve(tags.size());
+      tags.forEach(
+         [&tagList] (const wchar_t *tag) -> bool
+         {
+            tagList.push_back(WideToUtf8(tag));
+            return true;
+         });
+      rec.attributes.emplace_back("event.tags", std::move(tagList));
+   }
 
    // Named event parameters
    for(int i = 0; i < event.getParametersCount(); i++)

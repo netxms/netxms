@@ -71,25 +71,43 @@ static inline std::string WideToUtf8(const wchar_t *ws)
 }
 
 /**
- * Exported record attribute - either a UTF-8 string or a 64-bit integer value
+ * Exported attribute value type
+ */
+enum class OtlpAttributeType
+{
+   STRING,
+   INT,
+   DOUBLE,
+   STRING_ARRAY
+};
+
+/**
+ * Exported record attribute - UTF-8 string, 64-bit integer, double, or array of UTF-8 strings
  */
 struct OtlpExportAttribute
 {
    std::string key;
+   OtlpAttributeType type;
    std::string stringValue;
-   int64_t intValue;
-   bool isInt;
+   union
+   {
+      int64_t intValue;
+      double doubleValue;
+   };
+   std::vector<std::string> arrayValue;
 
-   OtlpExportAttribute(std::string&& k, std::string&& v) : key(std::move(k)), stringValue(std::move(v)), intValue(0), isInt(false) { }
-   OtlpExportAttribute(const char *k, const char *v) : key(k), stringValue(v), intValue(0), isInt(false) { }
-   OtlpExportAttribute(const char *k, const std::string& v) : key(k), stringValue(v), intValue(0), isInt(false) { }
-   OtlpExportAttribute(const char *k, const wchar_t *v) : key(k), stringValue(WideToUtf8(v)), intValue(0), isInt(false) { }
-   OtlpExportAttribute(const char *k, const uuid& guid) : key(k), intValue(0), isInt(false)
+   OtlpExportAttribute(std::string&& k, std::string&& v) : key(std::move(k)), type(OtlpAttributeType::STRING), stringValue(std::move(v)), intValue(0) { }
+   OtlpExportAttribute(const char *k, const char *v) : key(k), type(OtlpAttributeType::STRING), stringValue(v), intValue(0) { }
+   OtlpExportAttribute(const char *k, const std::string& v) : key(k), type(OtlpAttributeType::STRING), stringValue(v), intValue(0) { }
+   OtlpExportAttribute(const char *k, const wchar_t *v) : key(k), type(OtlpAttributeType::STRING), stringValue(WideToUtf8(v)), intValue(0) { }
+   OtlpExportAttribute(const char *k, const uuid& guid) : key(k), type(OtlpAttributeType::STRING), intValue(0)
    {
       char buffer[64];
       stringValue = guid.toStringA(buffer);
    }
-   OtlpExportAttribute(const char *k, int64_t v) : key(k), intValue(v), isInt(true) { }
+   OtlpExportAttribute(const char *k, int64_t v) : key(k), type(OtlpAttributeType::INT), intValue(v) { }
+   OtlpExportAttribute(const char *k, double v) : key(k), type(OtlpAttributeType::DOUBLE), doubleValue(v) { }
+   OtlpExportAttribute(const char *k, std::vector<std::string>&& v) : key(k), type(OtlpAttributeType::STRING_ARRAY), intValue(0), arrayValue(std::move(v)) { }
 };
 
 /**
@@ -99,10 +117,26 @@ template<typename T> static inline void AddAttribute(T *parent, const OtlpExport
 {
    auto kv = parent->add_attributes();
    kv->set_key(attr.key);
-   if (attr.isInt)
-      kv->mutable_value()->set_int_value(attr.intValue);
-   else
-      kv->mutable_value()->set_string_value(attr.stringValue);
+   auto value = kv->mutable_value();
+   switch(attr.type)
+   {
+      case OtlpAttributeType::INT:
+         value->set_int_value(attr.intValue);
+         break;
+      case OtlpAttributeType::DOUBLE:
+         value->set_double_value(attr.doubleValue);
+         break;
+      case OtlpAttributeType::STRING_ARRAY:
+      {
+         auto array = value->mutable_array_value();
+         for(const std::string& element : attr.arrayValue)
+            array->add_values()->set_string_value(element);
+         break;
+      }
+      default:
+         value->set_string_value(attr.stringValue);
+         break;
+   }
 }
 
 /**

@@ -322,6 +322,7 @@ public:
    StringBuffer expandText(const wchar_t *textTemplate, const Alarm *alarm = nullptr) const;
    void setMessage(const wchar_t *text) { MemFree(m_messageText); m_messageText = MemCopyStringW(text); }
 
+   const StringSet& getTags() const { return m_tags; }
    bool hasTag(const wchar_t *tag) const { return m_tags.contains(tag); }
    void addTag(const wchar_t *tag) { if (*tag != 0) m_tags.add(tag); }
    void removeTag(const wchar_t *tag) { m_tags.remove(tag); }
