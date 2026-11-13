@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -77,21 +77,6 @@ GeoLocation::GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accur
 }
 
 /**
- * Copy constructor
- */
-GeoLocation::GeoLocation(const GeoLocation &src)
-{
-	m_type = src.m_type;
-	m_lat = src.m_lat;
-	m_lon = src.m_lon;
-	_tcslcpy(m_latStr, src.m_latStr, 20);
-	_tcslcpy(m_lonStr, src.m_lonStr, 20);
-	m_isValid = src.m_isValid;
-   m_accuracy = src.m_accuracy;
-	m_timestamp = src.m_timestamp;
-}
-
-/**
  * Create geolocation object from data in NXCP message
  */
 GeoLocation::GeoLocation(const NXCPMessage &msg)
@@ -141,29 +126,6 @@ GeoLocation::GeoLocation(const NXCPMessage &msg)
 }
 
 /**
- * Destructor
- */
-GeoLocation::~GeoLocation()
-{
-}
-
-/**
- * Assignment operator
- */
-GeoLocation& GeoLocation::operator =(const GeoLocation &src)
-{
-	m_type = src.m_type;
-	m_lat = src.m_lat;
-	m_lon = src.m_lon;
-	_tcslcpy(m_latStr, src.m_latStr, 20);
-	_tcslcpy(m_lonStr, src.m_lonStr, 20);
-	m_isValid = src.m_isValid;
-	m_accuracy = src.m_accuracy;
-	m_timestamp = src.m_timestamp;
-	return *this;
-}
-
-/**
  * Fill NXCP message
  */
 void GeoLocation::fillMessage(NXCPMessage &msg) const
@@ -194,7 +156,7 @@ json_t *GeoLocation::toJson() const
  */
 int GeoLocation::getIntegerDegree(double pos)
 {
-	return (int)(fabs(pos) + DBL_EPSILON);
+	return static_cast<int>(fabs(pos) + DBL_EPSILON);
 }
 
 /**
@@ -203,7 +165,7 @@ int GeoLocation::getIntegerDegree(double pos)
 int GeoLocation::getIntegerMinutes(double pos)
 {
 	double d = fabs(pos) + DBL_EPSILON;
-	return (int)((d - (double)((int)d)) * 60.0);
+	return static_cast<int>((d - (double)((int)d)) * 60.0);
 }
 
 /**

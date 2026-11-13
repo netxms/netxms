@@ -1600,7 +1600,7 @@ public:
    uint32_t getCategoryId() const { return m_categoryId; }
    void setCategoryId(uint32_t id) { m_categoryId = id; setModified(MODIFY_COMMON_PROPERTIES); }
 
-   const GeoLocation& getGeoLocation() const { return m_geoLocation; }
+   GeoLocation getGeoLocation() const { return GetAttributeWithLock(m_geoLocation, m_mutexProperties); }
    void setGeoLocation(const GeoLocation& geoLocation);
    void cleanGeoLocationHistoryTable(DB_HANDLE hdb, int64_t retentionTime);
 
