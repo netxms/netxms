@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -63,11 +63,7 @@ public:
 	GeoLocation();
 	GeoLocation(int type, double lat, double lon, int accuracy = 0, time_t timestamp = 0);
 	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy = 0, time_t timestamp = 0);
-	GeoLocation(const GeoLocation &src);
 	GeoLocation(const NXCPMessage &msg);
-	~GeoLocation();
-
-	GeoLocation& operator =(const GeoLocation &src);
 
 	void setType(int type) { m_type = type; }
 	void setTimestamp(time_t timestamp) { m_timestamp = timestamp; }
