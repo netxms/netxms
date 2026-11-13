@@ -472,7 +472,7 @@ retry_wait:
 	}
 
 #ifdef _WIN32
-	if ((rc < 0) && (m_buffer != m_localBuffer) && (WSAGetLastError() == WSAEMSGSIZE))
+	if ((rc < 0) && (m_buffer == m_localBuffer) && (WSAGetLastError() == WSAEMSGSIZE))
 	{
 	   m_buffer = static_cast<BYTE*>(MemAlloc(SNMP_DEFAULT_MSG_MAX_SIZE));
 	}
@@ -503,9 +503,10 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sock
    size_t pduLength = SnmpGetMessageLength(m_buffer, m_bytesInBuffer);
    if ((pduLength == 0) || (pduLength > m_bytesInBuffer))
    {
-      clearBuffer();
-      if ((m_buffer == m_localBuffer) && (pduLength > m_bytesInBuffer))
+      // Datagram that fills local buffer completely is most likely truncated; switch to large buffer to receive retransmission
+      if ((m_buffer == m_localBuffer) && (m_bytesInBuffer == sizeof(m_localBuffer)))
          m_buffer = static_cast<BYTE*>(MemAlloc(SNMP_DEFAULT_MSG_MAX_SIZE));
+      clearBuffer();
       return 0;
    }
 
