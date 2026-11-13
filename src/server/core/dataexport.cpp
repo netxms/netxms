@@ -31,11 +31,12 @@
 #include <nxstat.h>
 #include <cmath>
 #include <algorithm>
+#include <set>
 
 #define DEBUG_TAG L"dataexport"
 
 #define DDIR_EXPORT              FS_PATH_SEPARATOR L"export"
-#define EXPORT_FORMAT_VERSION    2
+#define EXPORT_FORMAT_VERSION    3
 #define RAW_READ_CHUNK_MS        (31LL * 86400LL * 1000LL)     // History is read in one-month chunks to bound memory use
 #define EXPORT_RETENTION_MS      3600000                       // Undownloaded export files and failed export state are forgotten after one hour
 #define MAX_TAG_PATTERNS         1024                          // Upper bound for tag pattern count in NXCP request
@@ -680,6 +681,151 @@ static bool WriteMetricCatalog(ZipArchiveWriter& archive, std::vector<ExportedMe
 }
 
 /**
+ * Get node hardware type name
+ */
+static const char *NodeHardwareTypeName(NodeType type)
+{
+   static const char *names[] = { "", "physical", "virtual", "controller", "container" };
+   return ((type >= 0) && (static_cast<size_t>(type) < sizeof(names) / sizeof(names[0]))) ? names[type] : "";
+}
+
+/**
+ * Get sensor device class name
+ */
+static const char *SensorDeviceClassName(SensorDeviceClass deviceClass)
+{
+   static const char *names[] = { "other", "ups", "water_meter", "electricity_meter", "temperature", "humidity",
+      "temperature_humidity", "co2", "power_supply", "current", "water_leak", "smoke" };
+   return ((deviceClass >= 0) && (deviceClass < SENSOR_MAX_DEVICE_CLASS)) ? names[deviceClass] : "other";
+}
+
+/**
+ * Inventory attributes of metric owner (empty where not applicable to object class)
+ */
+struct ObjectInventory
+{
+   const char *hardwareType = "";
+   SharedString hardwareSubtype;
+   SharedString vendor;
+   SharedString model;
+   SharedString productCode;
+   SharedString hardwareVersion;
+   SharedString serialNumber;
+   SharedString snmpObjectId;
+   SharedString platform;
+   SharedString osName;
+   SharedString osVersion;
+   SharedString agentVersion;
+   SharedString driver;
+   SharedString hypervisorType;
+};
+
+/**
+ * Collect inventory attributes of object
+ */
+static void CollectObjectInventory(const NetObj& object, ObjectInventory *inventory)
+{
+   switch(object.getObjectClass())
+   {
+      case OBJECT_NODE:
+      {
+         const Node& node = static_cast<const Node&>(object);
+         inventory->hardwareType = NodeHardwareTypeName(node.getType());
+         inventory->hardwareSubtype = node.getSubType();
+         inventory->vendor = node.getVendor();
+         inventory->model = node.getProductName();
+         inventory->productCode = node.getProductCode();
+         inventory->hardwareVersion = node.getProductVersion();
+         inventory->serialNumber = node.getSerialNumber();
+         SNMP_ObjectId oid = node.getSNMPObjectId();
+         if (oid.isValid())
+         {
+            wchar_t buffer[MAX_OID_LEN * 6];
+            inventory->snmpObjectId = oid.toString(buffer, MAX_OID_LEN * 6);
+         }
+         inventory->platform = node.getPlatformName();
+         inventory->agentVersion = node.getAgentVersion();
+         inventory->driver = node.getDriverName();
+         inventory->hypervisorType = node.getHypervisorType();
+         break;
+      }
+      case OBJECT_SENSOR:
+      {
+         const Sensor& sensor = static_cast<const Sensor&>(object);
+         inventory->hardwareType = SensorDeviceClassName(sensor.getDeviceClass());
+         inventory->vendor = sensor.getVendor();
+         inventory->model = sensor.getModel();
+         inventory->serialNumber = sensor.getSerialNumber();
+         break;
+      }
+      case OBJECT_ACCESSPOINT:
+      {
+         const AccessPoint& ap = static_cast<const AccessPoint&>(object);
+         inventory->vendor = ap.getVendor();
+         inventory->model = ap.getModel();
+         inventory->serialNumber = ap.getSerialNumber();
+         break;
+      }
+      case OBJECT_MOBILEDEVICE:
+      {
+         const MobileDevice& device = static_cast<const MobileDevice&>(object);
+         inventory->vendor = device.getVendor();
+         inventory->model = device.getModel();
+         inventory->serialNumber = device.getSerialNumber();
+         inventory->osName = device.getOsName();
+         inventory->osVersion = device.getOsVersion();
+         break;
+      }
+   }
+}
+
+/**
+ * Write inventory of metric owners (objects.csv), one row per distinct owner in metric catalog order. Must be called
+ * after metric catalog so that anonymized names match. Anonymized inventory omits object identifiers and serial numbers.
+ */
+static bool WriteObjectInventory(ZipArchiveWriter& archive, const std::vector<ExportedMetric>& metrics, Anonymizer& anonymizer)
+{
+   if (!archive.beginEntry("objects.csv"))
+      return false;
+   archive.write("object_id,name,class,hardware_type,hardware_subtype,vendor,model,product_code,hardware_version,serial_number,"
+                 "snmp_object_id,platform,os_name,os_version,agent_version,driver,hypervisor_type\n");
+
+   std::set<uint32_t> written;
+   for(const ExportedMetric& m : metrics)
+   {
+      if (!written.insert(m.owner->getId()).second)
+         continue;
+
+      ObjectInventory inventory;
+      CollectObjectInventory(*m.owner, &inventory);
+
+      std::string line;
+      if (anonymizer.isEnabled())
+         AppendCsvField(line, "");
+      else
+         AppendCsvField(line, static_cast<uint64_t>(m.owner->getId()));
+      AppendCsvField(line, anonymizer.objectName(*m.owner).c_str());
+      AppendCsvField(line, m.owner->getObjectClassName());
+      AppendCsvField(line, inventory.hardwareType);
+      AppendCsvField(line, inventory.hardwareSubtype.cstr());
+      AppendCsvField(line, inventory.vendor.cstr());
+      AppendCsvField(line, inventory.model.cstr());
+      AppendCsvField(line, inventory.productCode.cstr());
+      AppendCsvField(line, inventory.hardwareVersion.cstr());
+      AppendCsvField(line, anonymizer.isEnabled() ? L"" : inventory.serialNumber.cstr());
+      AppendCsvField(line, inventory.snmpObjectId.cstr());
+      AppendCsvField(line, inventory.platform.cstr());
+      AppendCsvField(line, inventory.osName.cstr());
+      AppendCsvField(line, inventory.osVersion.cstr());
+      AppendCsvField(line, inventory.agentVersion.cstr());
+      AppendCsvField(line, inventory.driver.cstr());
+      AppendCsvField(line, inventory.hypervisorType.cstr(), true);
+      archive.write(line);
+   }
+   return archive.endEntry();
+}
+
+/**
  * Write raw samples of one metric. Returns number of rows written or -1 on database error.
  */
 static int64_t WriteRawSamples(ZipArchiveWriter& archive, const ExportedMetric& m, int64_t timeFrom, int64_t timeTo)
@@ -804,7 +950,7 @@ static int64_t WriteTieredSamples(ZipArchiveWriter& archive, const ExportedMetri
  */
 static bool WriteManifest(ZipArchiveWriter& archive, const DataExportRequest& request, const DataExportInfo& info)
 {
-   static const char *dataFiles[][2] = { { "metrics", "metrics.csv" }, { "data", "data.csv" } };
+   static const char *dataFiles[][2] = { { "metrics", "metrics.csv" }, { "objects", "objects.csv" }, { "data", "data.csv" } };
 
    json_t *manifest = json_object();
    json_object_set_new(manifest, "formatVersion", json_integer(EXPORT_FORMAT_VERSION));
@@ -832,7 +978,7 @@ static bool WriteManifest(ZipArchiveWriter& archive, const DataExportRequest& re
    json_object_set_new(manifest, "skippedCount", json_integer(info.skippedCount));
    json_object_set_new(manifest, "sampleCount", json_integer(static_cast<json_int_t>(info.sampleCount)));
    json_t *files = json_object();
-   for(int i = 0; i < 2; i++)
+   for(int i = 0; i < 3; i++)
    {
       BYTE digest[SHA256_DIGEST_SIZE];
       if (!archive.getEntryDigest(dataFiles[i][1], digest))
@@ -896,6 +1042,8 @@ static bool RunDataExport(const DataExportRequest& request, DataExportInfo *info
    Anonymizer anonymizer(request.anonymize);
    if (!WriteMetricCatalog(archive, metrics, anonymizer, info->userId))
       return task->failure(L"Cannot write metric catalog");
+   if (!WriteObjectInventory(archive, metrics, anonymizer))
+      return task->failure(L"Cannot write object inventory");
 
    if (!archive.beginEntry("data.csv"))
       return task->failure(L"Cannot write sample data");

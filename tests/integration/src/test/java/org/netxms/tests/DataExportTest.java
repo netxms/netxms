@@ -42,6 +42,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.DciTier;
+import org.netxms.client.constants.NodeType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -263,8 +264,9 @@ public class DataExportTest extends AbstractSessionTest
          try (ZipFile zip = new ZipFile(result.getFile()))
          {
             String manifest = readEntry(zip, "manifest.json");
-            assertTrue(manifest.contains("\"formatVersion\": 2"));
+            assertTrue(manifest.contains("\"formatVersion\": 3"));
             assertTrue(manifest.contains("\"sha256\": \"" + entryDigest(zip, "metrics.csv") + "\""), "manifest must contain digest of metrics.csv");
+            assertTrue(manifest.contains("\"sha256\": \"" + entryDigest(zip, "objects.csv") + "\""), "manifest must contain digest of objects.csv");
             assertTrue(manifest.contains("\"sha256\": \"" + entryDigest(zip, "data.csv") + "\""), "manifest must contain digest of data.csv");
             assertTrue(manifest.contains("\"anonymized\": false"));
             assertTrue(manifest.contains("\"metricCount\": 2"));
@@ -295,6 +297,21 @@ public class DataExportTest extends AbstractSessionTest
             assertEquals((node.getTimeZone() != null) ? node.getTimeZone() : "", energyRow[columns.get("time_zone")]);
             assertEquals((node.getTimeZoneRule() != null) ? node.getTimeZoneRule() : "", energyRow[columns.get("time_zone_rule")]);
             assertEquals("facility_path", metrics.get(0)[metrics.get(0).length - 1]);
+
+            List<String[]> objects = parseCsv(readEntry(zip, "objects.csv"));
+            assertEquals(2, objects.size(), "both metrics are owned by one node");
+            Map<String, Integer> objectColumns = columnIndexes(objects.get(0));
+            String[] nodeRow = objects.get(1);
+            assertEquals(String.valueOf(node.getObjectId()), nodeRow[objectColumns.get("object_id")]);
+            assertEquals(node.getObjectName(), nodeRow[objectColumns.get("name")]);
+            assertEquals("Node", nodeRow[objectColumns.get("class")]);
+            assertEquals((node.getNodeType() == NodeType.UNKNOWN) ? "" : node.getNodeType().name().toLowerCase(), nodeRow[objectColumns.get("hardware_type")]);
+            assertEquals(emptyIfNull(node.getHardwareVendor()), nodeRow[objectColumns.get("vendor")]);
+            assertEquals(emptyIfNull(node.getHardwareProductName()), nodeRow[objectColumns.get("model")]);
+            assertEquals(emptyIfNull(node.getHardwareSerialNumber()), nodeRow[objectColumns.get("serial_number")]);
+            assertEquals(emptyIfNull(node.getSnmpOID()), nodeRow[objectColumns.get("snmp_object_id")]);
+            assertEquals(emptyIfNull(node.getPlatformName()), nodeRow[objectColumns.get("platform")]);
+            assertEquals(emptyIfNull(node.getAgentVersion()), nodeRow[objectColumns.get("agent_version")]);
 
             List<String[]> data = parseCsv(readEntry(zip, "data.csv"));
             assertEquals("metric_id,timestamp,value,min,max,count,quality,lower_bound,upper_bound,completeness,method_id", String.join(",", data.get(0)));
@@ -348,6 +365,16 @@ public class DataExportTest extends AbstractSessionTest
             assertEquals("eed.eit", metrics.get(1)[1]);
             assertEquals("", metrics.get(1)[2], "anonymized catalog must not contain owner ID");
             assertTrue(metrics.get(1)[3].startsWith("node-"), "owner name must be class-based pseudonym");
+
+            String objectsText = readEntry(zip, "objects.csv");
+            assertFalse(objectsText.contains(node.getObjectName()), "anonymized inventory must not contain object name");
+            List<String[]> objects = parseCsv(objectsText);
+            assertEquals(2, objects.size());
+            Map<String, Integer> objectColumns = columnIndexes(objects.get(0));
+            assertEquals("", objects.get(1)[objectColumns.get("object_id")], "anonymized inventory must not contain object ID");
+            assertEquals(metrics.get(1)[3], objects.get(1)[objectColumns.get("name")], "inventory must use same pseudonym as catalog");
+            assertEquals("", objects.get(1)[objectColumns.get("serial_number")], "anonymized inventory must not contain serial number");
+            assertEquals(emptyIfNull(node.getSnmpOID()), objects.get(1)[objectColumns.get("snmp_object_id")]);
          }
          result.getFile().delete();
 
@@ -368,5 +395,13 @@ public class DataExportTest extends AbstractSessionTest
          dcc.close();
          session.disconnect();
       }
+   }
+
+   /**
+    * Convert null to empty string (CSV has no null values)
+    */
+   private static String emptyIfNull(String s)
+   {
+      return (s != null) ? s : "";
    }
 }

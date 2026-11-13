@@ -4666,7 +4666,7 @@ public:
 
    NodeType getType() const { return m_type; }
    bool isVirtual() const { return (m_type == NODE_TYPE_VIRTUAL) || (m_type == NODE_TYPE_CONTAINER); }
-   const TCHAR *getSubType() { return m_subType; }
+   const TCHAR *getSubType() const { return m_subType; }
    const TCHAR *getHypervisorType() const { return m_hypervisorType; }
    SharedString getHypervisorInfo() const { return GetAttributeWithLock(m_hypervisorInfo, m_mutexProperties); }
    SharedString getVendor() const { return GetAttributeWithLock(m_vendor, m_mutexProperties); }
