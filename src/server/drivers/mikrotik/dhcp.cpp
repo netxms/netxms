@@ -253,6 +253,35 @@ static void ParsePoolRanges(const wchar_t *text, StructArray<PoolRange> *ranges)
 }
 
 /**
+ * Normalize RouterOS client ID. RouterOS prints binary client ID as colon separated hex bytes without
+ * leading zeroes (like 1:7e:28:b3:2:43:67); such value is converted to fixed two digit form (01:7e:28:b3:02:43:67).
+ * Textual client ID is returned unchanged.
+ */
+static String NormalizeClientId(const wchar_t *text)
+{
+   StringBuffer result;
+   const wchar_t *p = text;
+   while (*p != 0)
+   {
+      const wchar_t *start = p;
+      while (iswxdigit(*p))
+         p++;
+      size_t len = p - start;
+      if ((len == 0) || (len > 2) || ((*p != L':') && (*p != 0)) || ((*p == L':') && (*(p + 1) == 0)))
+         return String(text);
+      if (!result.isEmpty())
+         result.append(L':');
+      if (len == 1)
+         result.append(L'0');
+      for (const wchar_t *c = start; c < p; c++)
+         result.append(static_cast<wchar_t>(towlower(*c)));
+      if (*p == L':')
+         p++;
+   }
+   return String(result);
+}
+
+/**
  * Scope being built from RouterOS DHCP configuration
  */
 struct ScopeBuilder
@@ -464,7 +493,7 @@ static DataCollectionError ReadDhcpData(DeviceContext *context, DriverData *driv
       if ((clientId == nullptr) || (*clientId == 0))
          clientId = record->get(L"active-client-id");
       if (clientId != nullptr)
-         lease->clientId = clientId;
+         lease->clientId = NormalizeClientId(clientId);
       const wchar_t *hostname = record->get(L"host-name");
       if (hostname != nullptr)
          lease->hostname = hostname;
