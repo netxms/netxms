@@ -11241,25 +11241,14 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
       switch(msg.getFieldAsInt16(VID_ICMP_COLLECTION_MODE))
       {
          case 1:
-            m_icmpStatCollectionMode = IcmpStatCollectionMode::ON;
+            setIcmpStatCollectionMode(IcmpStatCollectionMode::ON);
             break;
          case 2:
-            m_icmpStatCollectionMode = IcmpStatCollectionMode::OFF;
+            setIcmpStatCollectionMode(IcmpStatCollectionMode::OFF);
             break;
          default:
-            m_icmpStatCollectionMode = IcmpStatCollectionMode::DEFAULT;
+            setIcmpStatCollectionMode(IcmpStatCollectionMode::DEFAULT);
             break;
-      }
-      if (isIcmpStatCollectionEnabled())
-      {
-         if (m_icmpStatCollectors == nullptr)
-            m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(Ownership::True);
-         if (!m_icmpStatCollectors->contains(_T("PRI")))
-            m_icmpStatCollectors->set(_T("PRI"), new IcmpStatCollector(ConfigReadInt(_T("ICMP.StatisticPeriod"), 60)));
-      }
-      else
-      {
-         delete_and_null(m_icmpStatCollectors);
       }
    }
 
@@ -11769,9 +11758,207 @@ uint32_t Node::modifyJsonAgentConfig(json_t *agent)
 }
 
 /**
- * Modify node from JSON document (WebAPI path). Handles primary host name along with the
- * "polling", "snmp" and "agent" property groups; all other fields are delegated to the base
- * class implementation. Runs under the property lock (see NetObj::modifyFromJSON).
+ * Set ICMP statistic collection mode, creating or destroying statistic collectors as
+ * needed. Must be called with object properties locked.
+ */
+void Node::setIcmpStatCollectionMode(IcmpStatCollectionMode mode)
+{
+   m_icmpStatCollectionMode = mode;
+   if (isIcmpStatCollectionEnabled())
+   {
+      if (m_icmpStatCollectors == nullptr)
+         m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(Ownership::True);
+      if (!m_icmpStatCollectors->contains(L"PRI"))
+         m_icmpStatCollectors->set(L"PRI", new IcmpStatCollector(ConfigReadInt(L"ICMP.StatisticPeriod", 60)));
+   }
+   else
+   {
+      delete_and_null(m_icmpStatCollectors);
+   }
+}
+
+/**
+ * ICMP statistic collection mode to JSON name
+ */
+static const char *IcmpStatCollectionModeToName(IcmpStatCollectionMode mode)
+{
+   switch(mode)
+   {
+      case IcmpStatCollectionMode::ON:
+         return "on";
+      case IcmpStatCollectionMode::OFF:
+         return "off";
+      default:
+         return "default";
+   }
+}
+
+/**
+ * ICMP statistic collection mode from JSON name
+ */
+static bool IcmpStatCollectionModeFromName(const char *name, IcmpStatCollectionMode *mode)
+{
+   if (!stricmp(name, "default"))
+      *mode = IcmpStatCollectionMode::DEFAULT;
+   else if (!stricmp(name, "on"))
+      *mode = IcmpStatCollectionMode::ON;
+   else if (!stricmp(name, "off"))
+      *mode = IcmpStatCollectionMode::OFF;
+   else
+      return false;
+   return true;
+}
+
+/**
+ * Update port number from a JSON object property. Field is left unchanged when the property
+ * is absent. Returns false if the property is present but is not an integer in range 1..65535.
+ */
+static bool UpdatePortFromJson(json_t *object, const char *tag, uint16_t *port)
+{
+   json_t *value = json_object_get(object, tag);
+   if (value == nullptr)
+      return true;
+   if (!json_is_integer(value))
+      return false;
+   json_int_t n = json_integer_value(value);
+   if ((n < 1) || (n > 65535))
+      return false;
+   *port = static_cast<uint16_t>(n);
+   return true;
+}
+
+/**
+ * Apply the "ssh", "vnc", "modbus", "etherNetIp", "netconf" and "icmp" property groups from
+ * a JSON document (WebAPI path). Mirrors the corresponding fields of
+ * Node::modifyFromMessageInternal. Runs under the property lock. Returns an RCC_* code.
+ */
+uint32_t Node::modifyJsonProtocolGroups(json_t *json)
+{
+   json_t *ssh = json_object_get(json, "ssh");
+   if (ssh != nullptr)
+   {
+      if (!json_is_object(ssh) ||
+          !UpdatePortFromJson(ssh, "port", &m_sshPort) ||
+          !json_object_update_integer(ssh, "proxy", &m_sshProxy) ||
+          !json_object_update_integer(ssh, "keyId", &m_sshKeyId) ||
+          !UpdateSharedStringFromJson(ssh, "login", &m_sshLogin) ||
+          !UpdateSharedStringFromJson(ssh, "password", &m_sshPassword))
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   json_t *vnc = json_object_get(json, "vnc");
+   if (vnc != nullptr)
+   {
+      if (!json_is_object(vnc) ||
+          !UpdatePortFromJson(vnc, "port", &m_vncPort) ||
+          !json_object_update_integer(vnc, "proxy", &m_vncProxy) ||
+          !UpdateSharedStringFromJson(vnc, "password", &m_vncPassword))
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   json_t *modbus = json_object_get(json, "modbus");
+   if (modbus != nullptr)
+   {
+      int32_t unitId = m_modbusUnitId;
+      if (!json_is_object(modbus) ||
+          !UpdatePortFromJson(modbus, "tcpPort", &m_modbusTcpPort) ||
+          !json_object_update_integer(modbus, "unitId", &unitId) ||
+          !json_object_update_integer(modbus, "proxy", &m_modbusProxy))
+         return RCC_INVALID_ARGUMENT;
+      if ((unitId < 0) || (unitId > 255))
+         return RCC_INVALID_ARGUMENT;
+      m_modbusUnitId = static_cast<uint16_t>(unitId);
+   }
+
+   json_t *eip = json_object_get(json, "etherNetIp");
+   if (eip != nullptr)
+   {
+      if (!json_is_object(eip))
+         return RCC_INVALID_ARGUMENT;
+
+      // Address different from primary; null or empty string reverts to using primary address
+      json_t *address = json_object_get(eip, "address");
+      if (address != nullptr)
+      {
+         if (json_is_string(address) && (*json_string_value(address) != 0))
+         {
+            InetAddress a = InetAddress::parse(json_string_value(address));
+            if (!a.isValidUnicast())
+               return RCC_INVALID_ARGUMENT;
+            m_eipAddress = a;
+         }
+         else if (json_is_string(address) || json_is_null(address))
+         {
+            m_eipAddress = InetAddress();
+         }
+         else
+         {
+            return RCC_INVALID_ARGUMENT;
+         }
+      }
+
+      if (!UpdatePortFromJson(eip, "port", &m_eipPort) ||
+          !json_object_update_integer(eip, "proxy", &m_eipProxy))
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   json_t *netconf = json_object_get(json, "netconf");
+   if (netconf != nullptr)
+   {
+      if (!json_is_object(netconf) ||
+          !UpdatePortFromJson(netconf, "port", &m_netconfPort) ||
+          !json_object_update_integer(netconf, "proxy", &m_netconfProxy))
+         return RCC_INVALID_ARGUMENT;
+   }
+
+   json_t *icmp = json_object_get(json, "icmp");
+   if (icmp != nullptr)
+   {
+      if (!json_is_object(icmp) || !json_object_update_integer(icmp, "proxy", &m_icmpProxy))
+         return RCC_INVALID_ARGUMENT;
+
+      json_t *value = json_object_get(icmp, "statCollectionMode");
+      if (value != nullptr)
+      {
+         IcmpStatCollectionMode mode;
+         if (!json_is_string(value) || !IcmpStatCollectionModeFromName(json_string_value(value), &mode))
+            return RCC_INVALID_ARGUMENT;
+         setIcmpStatCollectionMode(mode);
+      }
+
+      // Additional ICMP targets. JSON array fully replaces the existing list.
+      json_t *targets = json_object_get(icmp, "targets");
+      if (targets != nullptr)
+      {
+         if (!json_is_array(targets))
+            return RCC_INVALID_ARGUMENT;
+
+         InetAddressList newTargets;
+         size_t i;
+         json_t *element;
+         json_array_foreach(targets, i, element)
+         {
+            if (!json_is_string(element))
+               return RCC_INVALID_ARGUMENT;
+            InetAddress a = InetAddress::parse(json_string_value(element));
+            if (!a.isValidUnicast())
+               return RCC_INVALID_ARGUMENT;
+            if (!newTargets.hasAddress(a))
+               newTargets.add(a);
+         }
+         m_icmpTargets.clear();
+         m_icmpTargets.add(newTargets);
+      }
+   }
+
+   return RCC_SUCCESS;
+}
+
+/**
+ * Modify node from JSON document (WebAPI path). Handles primary host name, per-protocol
+ * property groups ("polling", "snmp", "agent", "ssh", "vnc", "modbus", "etherNetIp", "netconf",
+ * "icmp"), physical placement, and node level scalars; all other fields are delegated to the
+ * base class implementation. Runs under the property lock (see NetObj::modifyFromJSON).
  */
 uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
 {
@@ -11882,6 +12069,22 @@ uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *sessio
       if (rcc != RCC_SUCCESS)
          return rcc;
    }
+
+   uint32_t protocolGroupsRCC = modifyJsonProtocolGroups(json);
+   if (protocolGroupsRCC != RCC_SUCCESS)
+      return protocolGroupsRCC;
+
+   if (!json_object_update_integer(json, "mqttProxy", &m_mqttProxy))
+      return RCC_INVALID_ARGUMENT;
+
+   if (!json_object_update_string_utf8(json, "syslogCodepage", m_syslogCodepage, sizeof(m_syslogCodepage)))
+      return RCC_INVALID_ARGUMENT;
+
+   uint32_t setFlags = 0, flagMask = 0;
+   if (!json_object_update_flag(json, "externalGateway", NF_EXTERNAL_GATEWAY, &setFlags, &flagMask))
+      return RCC_INVALID_ARGUMENT;
+   if (flagMask != 0)
+      updateFlags(setFlags, flagMask);
 
    json_t *physicalPlacement = json_object_get(json, "physicalPlacement");
    if (physicalPlacement != nullptr)
@@ -17345,7 +17548,6 @@ json_t *Node::toJson(uint32_t flags)
    json_object_set_new(root, "downSince", json_time_string(m_downSince));
    json_object_set_new(root, "bootTime", json_time_string(m_bootTime));
 
-   json_object_set_new(root, "icmpProxyNodeId", json_integer(m_icmpProxy));
    json_object_set_new(root, "lastEvents", json_integer_array(m_lastEvents, MAX_LAST_EVENTS));
    json_object_set_new(root, "baseBridgeAddress", m_baseBridgeAddress.toJson());
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
@@ -17364,35 +17566,61 @@ json_t *Node::toJson(uint32_t flags)
    json_object_set_new(root, "physicalPlacement", physicalPlacement);
    json_object_set_new(root, "syslogMessageCount", json_integer(m_syslogMessageCount));
    json_object_set_new(root, "snmpTrapCount", json_integer(m_snmpTrapCount));
+   // Per-protocol property groups. Same shape as accepted on the write path
+   // (see modifyJsonProtocolGroups); credentials are included only for privileged callers.
+   json_t *ssh = json_object();
+   json_object_set_new(ssh, "port", json_integer(m_sshPort));
+   json_object_set_new(ssh, "proxy", json_integer(m_sshProxy));
+   json_object_set_new(ssh, "keyId", json_integer(m_sshKeyId));
    if (includeSensitiveData)
    {
-      json_object_set_new(root, "sshLogin", json_string_t(m_sshLogin));
-      json_object_set_new(root, "sshPassword", json_string_t(m_sshPassword));
-      json_object_set_new(root, "sshKeyId", json_integer(m_sshKeyId));
+      json_object_set_new(ssh, "login", json_string_t(m_sshLogin));
+      json_object_set_new(ssh, "password", json_string_t(m_sshPassword));
    }
-   json_object_set_new(root, "sshPort", json_integer(m_sshPort));
-   json_object_set_new(root, "sshProxy", json_integer(m_sshProxy));
-   json_object_set_new(root, "netconfPort", json_integer(m_netconfPort));
-   json_object_set_new(root, "netconfProxy", json_integer(m_netconfProxy));
+   json_object_set_new(root, "ssh", ssh);
+
+   json_t *vnc = json_object();
+   json_object_set_new(vnc, "port", json_integer(m_vncPort));
+   json_object_set_new(vnc, "proxy", json_integer(m_vncProxy));
+   if (includeSensitiveData)
+      json_object_set_new(vnc, "password", json_string_t(m_vncPassword));
+   json_object_set_new(root, "vnc", vnc);
+
+   json_t *modbus = json_object();
+   json_object_set_new(modbus, "tcpPort", json_integer(m_modbusTcpPort));
+   json_object_set_new(modbus, "unitId", json_integer(m_modbusUnitId));
+   json_object_set_new(modbus, "proxy", json_integer(m_modbusProxy));
+   json_object_set_new(root, "modbus", modbus);
+
+   json_t *eip = json_object();
+   json_object_set_new(eip, "address", m_eipAddress.isValidUnicast() ? json_string_t(m_eipAddress.toString()) : json_null());
+   json_object_set_new(eip, "port", json_integer(m_eipPort));
+   json_object_set_new(eip, "proxy", json_integer(m_eipProxy));
+   json_object_set_new(root, "etherNetIp", eip);
+
+   json_t *netconf = json_object();
+   json_object_set_new(netconf, "port", json_integer(m_netconfPort));
+   json_object_set_new(netconf, "proxy", json_integer(m_netconfProxy));
+   json_object_set_new(root, "netconf", netconf);
+
+   json_t *icmp = json_object();
+   json_object_set_new(icmp, "proxy", json_integer(m_icmpProxy));
+   json_object_set_new(icmp, "statCollectionMode", json_string(IcmpStatCollectionModeToName(m_icmpStatCollectionMode)));
+   json_t *icmpTargets = json_array();
+   for(int i = 0; i < m_icmpTargets.size(); i++)
+      json_array_append_new(icmpTargets, json_string_t(m_icmpTargets.get(i).toString()));
+   json_object_set_new(icmp, "targets", icmpTargets);
+   json_object_set_new(root, "icmp", icmp);
+
+   json_object_set_new(root, "mqttProxy", json_integer(m_mqttProxy));
+   json_object_set_new(root, "syslogCodepage", json_string_a(m_syslogCodepage));
+   json_object_set_new(root, "externalGateway", json_boolean((m_flags & NF_EXTERNAL_GATEWAY) != 0));
    json_object_set_new(root, "portNumberingScheme", json_integer(m_portNumberingScheme));
    json_object_set_new(root, "portRowCount", json_integer(m_portRowCount));
-   json_object_set_new(root, "icmpStatCollectionMode", json_integer((int)m_icmpStatCollectionMode));
-   json_object_set_new(root, "icmpTargets", m_icmpTargets.toJson());
-   json_object_set_new(root, "eipPort", json_integer(m_eipPort));
-   json_object_set_new(root, "eipAddress", m_eipAddress.isValidUnicast() ? m_eipAddress.toJson() : json_null());
-   json_object_set_new(root, "eipProxy", json_integer(m_eipProxy));
    json_object_set_new(root, "cipDeviceType", json_integer(m_cipDeviceType));
    json_object_set_new(root, "cipVendorCode", json_integer(m_cipVendorCode));
    json_object_set_new(root, "cipStatus", json_integer(m_cipStatus));
    json_object_set_new(root, "cipState", json_integer(m_cipState));
-   json_object_set_new(root, "syslogCodepage", json_string_a(m_syslogCodepage));
-   json_object_set_new(root, "modbusUnitId", json_integer(m_modbusUnitId));
-   json_object_set_new(root, "modbusTCPPort", json_integer(m_modbusTcpPort));
-   json_object_set_new(root, "modbusProxyNodeId", json_integer(m_modbusProxy));
-   if (includeSensitiveData)
-      json_object_set_new(root, "vncPassword", json_string_t(m_vncPassword));
-   json_object_set_new(root, "vncPort", json_integer(m_vncPort));
-   json_object_set_new(root, "vncProxy", json_integer(m_vncProxy));
    json_object_set_new(root, "radioInterfaces", json_struct_array(m_radioInterfaces));
    unlockProperties();
 

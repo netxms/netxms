@@ -236,6 +236,31 @@ uint32_t DataCollectionTarget::modifyFromMessageInternal(const NXCPMessage& msg,
 }
 
 /**
+ * Modify object from JSON document (WebAPI path). Runs under the property lock.
+ */
+uint32_t DataCollectionTarget::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   if (!json_object_update_integer(json, "webServiceProxy", &m_webServiceProxy))
+      return RCC_INVALID_ARGUMENT;
+
+   return super::modifyFromJSONInternal(json, session);
+}
+
+/**
+ * Serialize object to JSON
+ */
+json_t *DataCollectionTarget::toJson(uint32_t flags)
+{
+   json_t *root = super::toJson(flags);
+
+   lockProperties();
+   json_object_set_new(root, "webServiceProxy", json_integer(m_webServiceProxy));
+   unlockProperties();
+
+   return root;
+}
+
+/**
  * Create object from database data
  */
 bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)

@@ -271,6 +271,13 @@ uint32_t Chassis::modifyFromJSONInternal(json_t *json, GenericClientSession *ses
       ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Chassis::updateControllerBinding);
    }
 
+   // Flag change schedules controller rebinding on its own (see updateFlags)
+   uint32_t setFlags = 0, flagMask = 0;
+   if (!json_object_update_flag(json, "bindUnderController", CHF_BIND_UNDER_CONTROLLER, &setFlags, &flagMask))
+      return RCC_INVALID_ARGUMENT;
+   if (flagMask != 0)
+      updateFlags(setFlags, flagMask);
+
    return super::modifyFromJSONInternal(json, session);
 }
 
@@ -505,6 +512,7 @@ json_t *Chassis::toJson(uint32_t flags)
 
    lockProperties();
    json_object_set_new(root, "controllerId", json_integer(m_controllerId));
+   json_object_set_new(root, "bindUnderController", json_boolean((m_flags & CHF_BIND_UNDER_CONTROLLER) != 0));
    json_object_set_new(root, "rackHeight", json_integer(m_rackHeight));
    json_object_set_new(root, "rackPosition", json_integer(m_rackPosition));
    json_object_set_new(root, "rackOrientation", json_integer(m_rackOrientation));

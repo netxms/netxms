@@ -4815,7 +4815,8 @@ paths:
         semantics (RFC 7396) — fields present in the body are updated, fields omitted are
         left untouched, and explicit `null` clears the field. Returns the updated object
         in the same shape as `GET /v1/objects/{object-id}`. Class-specific property groups
-        (snmp, agent, polling, etc.) are exposed as separate sub-resources.
+        are accepted as nested objects; `polling`, `snmp` and `agent` are also exposed as
+        separate sub-resources.
 
         Requires modify access to the object. A user holding only the "edit comments" access
         right may send a patch document containing `comments` as its only property.
@@ -4926,6 +4927,68 @@ paths:
                     rejected with `400` if it does not resolve to an existing node, and
                     with `409` if that node is a descendant of the chassis, which would
                     create a loop.
+                bindUnderController:
+                  type: boolean
+                  description: >-
+                    Chassis only. Whether the chassis is bound under its controller node
+                    in the object tree.
+                polling:
+                  allOf:
+                    - $ref: '#/components/schemas/PollingConfig'
+                  description: Node only. Polling settings.
+                snmp:
+                  allOf:
+                    - $ref: '#/components/schemas/SnmpConfig'
+                  description: Node only. SNMP communication settings.
+                agent:
+                  allOf:
+                    - $ref: '#/components/schemas/AgentConfig'
+                  description: Node only. NetXMS agent communication settings.
+                ssh:
+                  allOf:
+                    - $ref: '#/components/schemas/SshConfig'
+                  description: Node only. SSH communication settings.
+                vnc:
+                  allOf:
+                    - $ref: '#/components/schemas/VncConfig'
+                  description: Node only. VNC communication settings.
+                modbus:
+                  allOf:
+                    - $ref: '#/components/schemas/ModbusConfig'
+                  description: Node and Sensor only. Modbus communication settings. Only `unitId` applies to a sensor.
+                etherNetIp:
+                  allOf:
+                    - $ref: '#/components/schemas/EtherNetIpConfig'
+                  description: Node only. EtherNet/IP communication settings.
+                netconf:
+                  allOf:
+                    - $ref: '#/components/schemas/NetconfConfig'
+                  description: Node only. NETCONF communication settings.
+                icmp:
+                  allOf:
+                    - $ref: '#/components/schemas/IcmpConfig'
+                  description: Node only. ICMP polling settings.
+                mqttProxy:
+                  type: integer
+                  nullable: true
+                  description: Node only. ID of the node used as MQTT proxy. `null` or `0` selects the default.
+                syslogCodepage:
+                  type: string
+                  nullable: true
+                  description: >-
+                    Node only. Codepage of syslog messages received from the node. `null`
+                    or empty string selects the server default.
+                externalGateway:
+                  type: boolean
+                  description: >-
+                    Node only. Whether the node's primary address is an external gateway
+                    (remote management address), which may be shared with other nodes.
+                webServiceProxy:
+                  type: integer
+                  nullable: true
+                  description: >-
+                    Data collection targets only. ID of the node used as web service proxy.
+                    `null` or `0` selects the default.
                 width:
                   type: integer
                   minimum: 1
@@ -19499,6 +19562,145 @@ components:
             Certificate mapping data (interpretation depends on certificateMappingMethod). For publicKey method, accepts
             SHA-256 fingerprint of DER encoded SubjectPublicKeyInfo, hex encoded DER public key, or PEM encoded public key
             or certificate; always stored and returned as fingerprint (64 hex characters).
+    SshConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        SSH communication property group for a node. Embedded as `ObjectDetails.ssh`; accepted
+        by PATCH /v1/objects/{id} with merge-patch semantics (omitted fields are left unchanged).
+      properties:
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          description: SSH TCP port.
+        proxy:
+          type: integer
+          nullable: true
+          description: ID of the node used as SSH proxy, or 0 for default.
+        keyId:
+          type: integer
+          nullable: true
+          description: ID of the SSH key used for authentication, or 0 for none.
+        login:
+          type: string
+          nullable: true
+          description: >-
+            SSH login name. Returned only when the caller has modify or read-credentials
+            access to the object. `null` or empty string clears it.
+        password:
+          type: string
+          nullable: true
+          description: >-
+            SSH password. Returned only when the caller has modify or read-credentials
+            access to the object. `null` or empty string clears it.
+    VncConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        VNC communication property group for a node. Embedded as `ObjectDetails.vnc`; accepted
+        by PATCH /v1/objects/{id} with merge-patch semantics (omitted fields are left unchanged).
+      properties:
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          description: VNC TCP port.
+        proxy:
+          type: integer
+          nullable: true
+          description: ID of the node used as VNC proxy, or 0 for default.
+        password:
+          type: string
+          nullable: true
+          description: >-
+            VNC password. Returned only when the caller has modify or read-credentials
+            access to the object. `null` or empty string clears it.
+    ModbusConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        Modbus communication property group. Embedded as `ObjectDetails.modbus` for nodes and
+        sensors; accepted by PATCH /v1/objects/{id} with merge-patch semantics (omitted fields
+        are left unchanged). A sensor has only `unitId`.
+      properties:
+        tcpPort:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          description: (Node) Modbus TCP port.
+        unitId:
+          type: integer
+          minimum: 0
+          maximum: 255
+          description: Modbus unit ID.
+        proxy:
+          type: integer
+          nullable: true
+          description: (Node) ID of the node used as Modbus proxy, or 0 for default.
+    EtherNetIpConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        EtherNet/IP communication property group for a node. Embedded as
+        `ObjectDetails.etherNetIp`; accepted by PATCH /v1/objects/{id} with merge-patch
+        semantics (omitted fields are left unchanged).
+      properties:
+        address:
+          type: string
+          nullable: true
+          description: >-
+            IP address used for EtherNet/IP communication when it differs from the node's
+            primary address. `null` means the primary address is used.
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          description: EtherNet/IP TCP port.
+        proxy:
+          type: integer
+          nullable: true
+          description: ID of the node used as EtherNet/IP proxy, or 0 for default.
+    NetconfConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        NETCONF communication property group for a node. Embedded as `ObjectDetails.netconf`;
+        accepted by PATCH /v1/objects/{id} with merge-patch semantics (omitted fields are left
+        unchanged). NETCONF uses the credentials of the `ssh` group.
+      properties:
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          description: NETCONF TCP port.
+        proxy:
+          type: integer
+          nullable: true
+          description: ID of the node used as NETCONF proxy, or 0 for default.
+    IcmpConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        ICMP polling property group for a node. Embedded as `ObjectDetails.icmp`; accepted by
+        PATCH /v1/objects/{id} with merge-patch semantics (omitted fields are left unchanged).
+      properties:
+        proxy:
+          type: integer
+          nullable: true
+          description: ID of the node used as ICMP proxy, or 0 for default.
+        statCollectionMode:
+          type: string
+          enum: [default, on, off]
+          description: ICMP response statistic collection mode; `default` follows the server-wide setting.
+        targets:
+          type: array
+          items:
+            type: string
+          description: >-
+            Additional IP addresses included in ICMP polling of the node. On update the
+            supplied list replaces the existing one; every element must be a valid unicast
+            address.
     ObjectCreationRequest:
       type: object
       required:
@@ -19580,47 +19782,44 @@ components:
         creationFlags:
           type: integer
           description: (Node) Bit mask controlling node creation (disable polling protocols, create unmanaged, etc.).
-        agentPort:
-          type: integer
-        snmpPort:
-          type: integer
-        etherNetIpPort:
-          type: integer
-        etherNetIpAddress:
-          type: string
-        modbusTcpPort:
-          type: integer
-        modbusUnitId:
-          type: integer
-          description: (Node/Sensor) Modbus unit ID.
-        sshLogin:
-          type: string
-        sshPassword:
-          type: string
-        sshPort:
-          type: integer
-        vncPassword:
-          type: string
-        vncPort:
-          type: integer
-        agentProxy:
-          type: integer
-        snmpProxy:
-          type: integer
+        agent:
+          allOf:
+            - $ref: '#/components/schemas/AgentConfig'
+          description: (Node) NetXMS agent communication settings.
+        snmp:
+          allOf:
+            - $ref: '#/components/schemas/SnmpConfig'
+          description: (Node) SNMP communication settings.
+        ssh:
+          allOf:
+            - $ref: '#/components/schemas/SshConfig'
+          description: (Node) SSH communication settings.
+        vnc:
+          allOf:
+            - $ref: '#/components/schemas/VncConfig'
+          description: (Node) VNC communication settings.
+        modbus:
+          allOf:
+            - $ref: '#/components/schemas/ModbusConfig'
+          description: (Node/Sensor) Modbus communication settings. Only `unitId` applies to a sensor.
+        etherNetIp:
+          allOf:
+            - $ref: '#/components/schemas/EtherNetIpConfig'
+          description: (Node) EtherNet/IP communication settings.
+        netconf:
+          allOf:
+            - $ref: '#/components/schemas/NetconfConfig'
+          description: (Node) NETCONF communication settings.
+        icmp:
+          allOf:
+            - $ref: '#/components/schemas/IcmpConfig'
+          description: (Node) ICMP polling settings.
         mqttProxy:
           type: integer
-        modbusProxy:
-          type: integer
-        etherNetIpProxy:
-          type: integer
-        icmpProxy:
-          type: integer
-        sshProxy:
-          type: integer
-        vncProxy:
-          type: integer
+          description: (Node) ID of the node used as MQTT proxy, or 0 for default.
         webServiceProxy:
           type: integer
+          description: (Data collection targets) ID of the node used as web service proxy, or 0 for default.
         # --- Interface ---
         ifIndex:
           type: integer
@@ -19822,6 +20021,57 @@ components:
           description: >-
             Placement in a rack or chassis. Present on nodes and chassis; `containerId` is 0
             when the object is not placed anywhere.
+        polling:
+          allOf:
+            - $ref: '#/components/schemas/PollingConfig'
+          description: Polling settings. Present on nodes.
+        snmp:
+          allOf:
+            - $ref: '#/components/schemas/SnmpConfig'
+          description: SNMP communication settings. Present on nodes.
+        agent:
+          allOf:
+            - $ref: '#/components/schemas/AgentConfig'
+          description: NetXMS agent communication settings. Present on nodes.
+        ssh:
+          allOf:
+            - $ref: '#/components/schemas/SshConfig'
+          description: SSH communication settings. Present on nodes.
+        vnc:
+          allOf:
+            - $ref: '#/components/schemas/VncConfig'
+          description: VNC communication settings. Present on nodes.
+        modbus:
+          allOf:
+            - $ref: '#/components/schemas/ModbusConfig'
+          description: Modbus communication settings. Present on nodes and sensors.
+        etherNetIp:
+          allOf:
+            - $ref: '#/components/schemas/EtherNetIpConfig'
+          description: EtherNet/IP communication settings. Present on nodes.
+        netconf:
+          allOf:
+            - $ref: '#/components/schemas/NetconfConfig'
+          description: NETCONF communication settings. Present on nodes.
+        icmp:
+          allOf:
+            - $ref: '#/components/schemas/IcmpConfig'
+          description: ICMP polling settings. Present on nodes.
+        mqttProxy:
+          type: integer
+          description: ID of the node used as MQTT proxy, or 0 for default. Present on nodes.
+        syslogCodepage:
+          type: string
+          description: Codepage of syslog messages received from the node; empty for server default. Present on nodes.
+        externalGateway:
+          type: boolean
+          description: Whether the node's primary address is an external gateway. Present on nodes.
+        webServiceProxy:
+          type: integer
+          description: ID of the node used as web service proxy, or 0 for default. Present on data collection targets.
+        bindUnderController:
+          type: boolean
+          description: Whether the chassis is bound under its controller node in the object tree. Present on chassis.
         responsibleUsers:
           type: array
           description: Users or groups responsible for the object (the object's own list; entries inherited from parent objects are not included).

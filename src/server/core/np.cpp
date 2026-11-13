@@ -139,27 +139,43 @@ NewNodeData::NewNodeData(json_t *json, const InetAddress& ipAddress) : ipAddr(ip
 {
    ipAddr.setMaskBits(0);  // netmask for new node is always autodetected
    creationFlags = json_object_get_uint32(json, "creationFlags");
-   agentPort = static_cast<uint16_t>(json_object_get_uint32(json, "agentPort", AGENT_LISTEN_PORT));
-   snmpPort = static_cast<uint16_t>(json_object_get_uint32(json, "snmpPort", SNMP_DEFAULT_PORT));
-   eipPort = static_cast<uint16_t>(json_object_get_uint32(json, "etherNetIpPort", ETHERNET_IP_DEFAULT_PORT));
-   eipAddress = InetAddress::parse(json_object_get_string(json, "etherNetIpAddress", L"").cstr());
-   modbusTcpPort = static_cast<uint16_t>(json_object_get_uint32(json, "modbusTcpPort", 502));
-   modbusUnitId = static_cast<uint16_t>(json_object_get_uint32(json, "modbusUnitId", 255));
    wcslcpy(name, json_object_get_string(json, "name", L"").cstr(), MAX_OBJECT_NAME);
-   agentProxyId = json_object_get_uint32(json, "agentProxy");
-   snmpProxyId = json_object_get_uint32(json, "snmpProxy");
+
+   // Per-protocol settings use the same property groups as object modification; values not
+   // consumed here are applied when creation document is passed to modifyFromJSON()
+   json_t *agent = json_object_get(json, "agent");
+   agentPort = static_cast<uint16_t>(json_object_get_uint32(agent, "port", AGENT_LISTEN_PORT));
+   agentProxyId = json_object_get_uint32(agent, "proxy");
+
+   json_t *snmp = json_object_get(json, "snmp");
+   snmpPort = static_cast<uint16_t>(json_object_get_uint32(snmp, "port", SNMP_DEFAULT_PORT));
+   snmpProxyId = json_object_get_uint32(snmp, "proxy");
+
+   json_t *eip = json_object_get(json, "etherNetIp");
+   eipPort = static_cast<uint16_t>(json_object_get_uint32(eip, "port", ETHERNET_IP_DEFAULT_PORT));
+   eipAddress = InetAddress::parse(json_object_get_string(eip, "address", L"").cstr());
+   eipProxyId = json_object_get_uint32(eip, "proxy");
+
+   json_t *modbus = json_object_get(json, "modbus");
+   modbusTcpPort = static_cast<uint16_t>(json_object_get_uint32(modbus, "tcpPort", 502));
+   modbusUnitId = static_cast<uint16_t>(json_object_get_uint32(modbus, "unitId", 255));
+   modbusProxyId = json_object_get_uint32(modbus, "proxy");
+
+   icmpProxyId = json_object_get_uint32(json_object_get(json, "icmp"), "proxy");
+
+   json_t *ssh = json_object_get(json, "ssh");
+   sshProxyId = json_object_get_uint32(ssh, "proxy");
+   wcslcpy(sshLogin, json_object_get_string(ssh, "login", L"").cstr(), MAX_USER_NAME);
+   wcslcpy(sshPassword, json_object_get_string(ssh, "password", L"").cstr(), MAX_PASSWORD);
+   sshPort = static_cast<uint16_t>(json_object_get_uint32(ssh, "port", SSH_PORT));
+   sshKeyId = json_object_get_uint32(ssh, "keyId");
+
+   json_t *vnc = json_object_get(json, "vnc");
+   vncProxyId = json_object_get_uint32(vnc, "proxy");
+   wcslcpy(vncPassword, json_object_get_string(vnc, "password", L"").cstr(), MAX_PASSWORD);
+   vncPort = static_cast<uint16_t>(json_object_get_uint32(vnc, "port", 5900));
+
    mqttProxyId = json_object_get_uint32(json, "mqttProxy");
-   modbusProxyId = json_object_get_uint32(json, "modbusProxy");
-   eipProxyId = json_object_get_uint32(json, "etherNetIpProxy");
-   icmpProxyId = json_object_get_uint32(json, "icmpProxy");
-   sshProxyId = json_object_get_uint32(json, "sshProxy");
-   wcslcpy(sshLogin, json_object_get_string(json, "sshLogin", L"").cstr(), MAX_USER_NAME);
-   wcslcpy(sshPassword, json_object_get_string(json, "sshPassword", L"").cstr(), MAX_PASSWORD);
-   sshPort = static_cast<uint16_t>(json_object_get_uint32(json, "sshPort", SSH_PORT));
-   sshKeyId = 0;
-   vncProxyId = json_object_get_uint32(json, "vncProxy");
-   wcslcpy(vncPassword, json_object_get_string(json, "vncPassword", L"").cstr(), MAX_PASSWORD);
-   vncPort = static_cast<uint16_t>(json_object_get_uint32(json, "vncPort", 5900));
    zoneUIN = json_object_get_int32(json, "zoneUIN");
    doConfPoll = false;
    origin = NODE_ORIGIN_MANUAL;

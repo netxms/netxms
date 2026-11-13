@@ -2957,6 +2957,7 @@ protected:
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlockedEssential(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
 
    virtual void onDataCollectionLoad() override;
    virtual void onDataCollectionChange() override;
@@ -3054,6 +3055,8 @@ public:
    virtual uint32_t getEffectiveSourceNode(DCObject *dco);
 
    uint32_t getEffectiveWebServiceProxy();
+
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
 
@@ -3574,6 +3577,7 @@ protected:
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -4531,6 +4535,8 @@ protected:
    virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
    uint32_t modifyJsonSnmpConfig(json_t *snmp);
    uint32_t modifyJsonAgentConfig(json_t *agent);
+   uint32_t modifyJsonProtocolGroups(json_t *json);
+   void setIcmpStatCollectionMode(IcmpStatCollectionMode mode);
    uint32_t updateAgentCertificateMapping(CertificateMappingMethod method, const wchar_t *data);
    json_t *chassisPlacementToJsonLocked() const;
    virtual void updateFlags(uint32_t flags, uint32_t mask) override;

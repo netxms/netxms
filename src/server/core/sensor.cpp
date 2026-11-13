@@ -68,7 +68,7 @@ Sensor::Sensor(const wchar_t *name, json_t *json) : super(name, Pollable::STATUS
    m_serialNumber = json_object_get_string(json, "serialNumber", L"");
    m_deviceAddress = json_object_get_string(json, "deviceAddress", L"");
    m_gatewayNodeId = json_object_get_uint32(json, "gatewayNode");
-   m_modbusUnitId = static_cast<uint16_t>(json_object_get_uint32(json, "modbusUnitId", 255));
+   m_modbusUnitId = static_cast<uint16_t>(json_object_get_uint32(json_object_get(json, "modbus"), "unitId", 255));
    m_capabilities = 0;
    m_status = STATUS_NORMAL;
 }
@@ -215,7 +215,9 @@ json_t *Sensor::toJson(uint32_t flags)
    json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
    json_object_set_new(root, "deviceAddress", json_string_t(m_deviceAddress));
    json_object_set_new(root, "gatewayNode", json_integer(m_gatewayNodeId));
-   json_object_set_new(root, "modbusUnitId", json_integer(m_modbusUnitId));
+   json_t *modbus = json_object();
+   json_object_set_new(modbus, "unitId", json_integer(m_modbusUnitId));
+   json_object_set_new(root, "modbus", modbus);
    json_object_set_new(root, "capabilityFlags", json_integer(m_capabilities));
    unlockProperties();
 
@@ -262,6 +264,26 @@ uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession
       m_modbusUnitId = msg.getFieldAsUInt16(VID_MODBUS_UNIT_ID);
 
    return super::modifyFromMessageInternal(msg, session);
+}
+
+/**
+ * Modify object from JSON document (WebAPI path). Handles the "modbus" property group;
+ * all other fields are delegated to the base class. Runs under the property lock.
+ */
+uint32_t Sensor::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   json_t *modbus = json_object_get(json, "modbus");
+   if (modbus != nullptr)
+   {
+      int32_t unitId = m_modbusUnitId;
+      if (!json_is_object(modbus) || !json_object_update_integer(modbus, "unitId", &unitId))
+         return RCC_INVALID_ARGUMENT;
+      if ((unitId < 0) || (unitId > 255))
+         return RCC_INVALID_ARGUMENT;
+      m_modbusUnitId = static_cast<uint16_t>(unitId);
+   }
+
+   return super::modifyFromJSONInternal(json, session);
 }
 
 /**
