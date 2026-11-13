@@ -73,9 +73,7 @@ enum class OtlpMetricKind
 struct MetricExportRecord
 {
    uint32_t nodeId;
-   std::string serviceName;   // resource service.name
-   std::string hostName;      // resource host.name
-   std::string hostGuid;      // resource host.id (object GUID)
+   std::vector<OtlpExportAttribute> resourceAttributes;
    std::string name;
    std::string description;
    std::string unit;
@@ -368,7 +366,7 @@ bool OtlpMetricExportDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, T
          nxlog_debug_tag(DEBUG_TAG_METRICS, 7, L"Metric %s [%u] not sent: ignore flag set on related object %s", dci->getName().cstr(), dci->getId(), relatedObject->getName());
          return true;
       }
-      rec.attributes.emplace_back(std::string("netxms.related_object"), WideToUtf8(relatedObject->getName()));
+      rec.attributes.emplace_back("netxms.related_object", relatedObject->getName());
    }
 
    // Metric name - for sources where the native name is an address rather than a meaningful
@@ -390,23 +388,25 @@ bool OtlpMetricExportDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, T
    rec.timeUnixNano = static_cast<uint64_t>(timestamp.asMilliseconds()) * 1000000ULL;
 
    rec.nodeId = owner->getId();
-   rec.hostName = WideToUtf8(owner->getName());
-   char guidText[64];
-   rec.hostGuid = owner->getGuid().toStringA(guidText);
-   rec.serviceName = !m_serviceNameOverride.empty() ? m_serviceNameOverride : rec.hostName;
+   if (!m_serviceNameOverride.empty())
+      rec.resourceAttributes.emplace_back("service.name", m_serviceNameOverride);
+   else
+      rec.resourceAttributes.emplace_back("service.name", owner->getName());
+   rec.resourceAttributes.emplace_back("host.name", owner->getName());
+   rec.resourceAttributes.emplace_back("host.id", owner->getGuid());
 
    rec.attributes.emplace_back("netxms.dci.id", static_cast<int64_t>(dci->getId()));
    const wchar_t *dataSource = dci->getDataProviderName();
-   rec.attributes.emplace_back(std::string("netxms.data_source"), WideToUtf8(dataSource));
+   rec.attributes.emplace_back("netxms.data_source", dataSource);
    SharedString instance = dci->getInstanceName();
    if (!instance.isEmpty())
-      rec.attributes.emplace_back(std::string("netxms.instance"), WideToUtf8(instance.cstr()));
+      rec.attributes.emplace_back("netxms.instance", instance.cstr());
    SharedString userTag = dci->getUserTag();
    if (!userTag.isEmpty())
-      rec.attributes.emplace_back(std::string("netxms.dci.user_tag"), WideToUtf8(userTag.cstr()));
+      rec.attributes.emplace_back("netxms.dci.user_tag", userTag.cstr());
    SharedString systemTag = dci->getSystemTag();
    if (!systemTag.isEmpty())
-      rec.attributes.emplace_back(std::string("netxms.dci.system_tag"), WideToUtf8(systemTag.cstr()));
+      rec.attributes.emplace_back("netxms.dci.system_tag", systemTag.cstr());
 
    bool reachedBatch = false;
    m_bufferLock.lock();
@@ -485,10 +485,7 @@ bool OtlpMetricExportDriver::sendBatch(const std::vector<MetricExportRecord>& ba
       if (si == scopeByNode.end())
       {
          metrics_v1::ResourceMetrics *resourceMetrics = request.add_resource_metrics();
-         auto resource = resourceMetrics->mutable_resource();
-         AddStringAttribute(resource, "service.name", rec.serviceName);
-         AddStringAttribute(resource, "host.name", rec.hostName);
-         AddStringAttribute(resource, "host.id", rec.hostGuid);
+         AddAttributes(resourceMetrics->mutable_resource(), rec.resourceAttributes);
          scopeMetrics = resourceMetrics->add_scope_metrics();
          scopeMetrics->mutable_scope()->set_name("netxms");
          scopeByNode[rec.nodeId] = scopeMetrics;
@@ -540,15 +537,7 @@ bool OtlpMetricExportDriver::sendBatch(const std::vector<MetricExportRecord>& ba
          dp->set_as_int(rec.intValue);
       else
          dp->set_as_double(rec.doubleValue);
-      for(const OtlpExportAttribute& attr : rec.attributes)
-      {
-         auto kv = dp->add_attributes();
-         kv->set_key(attr.key);
-         if (attr.isInt)
-            kv->mutable_value()->set_int_value(attr.intValue);
-         else
-            kv->mutable_value()->set_string_value(attr.stringValue);
-      }
+      AddAttributes(dp, rec.attributes);
    }
 
    std::string payload;

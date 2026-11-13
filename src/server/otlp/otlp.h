@@ -81,17 +81,37 @@ struct OtlpExportAttribute
    bool isInt;
 
    OtlpExportAttribute(std::string&& k, std::string&& v) : key(std::move(k)), stringValue(std::move(v)), intValue(0), isInt(false) { }
+   OtlpExportAttribute(const char *k, const char *v) : key(k), stringValue(v), intValue(0), isInt(false) { }
+   OtlpExportAttribute(const char *k, const std::string& v) : key(k), stringValue(v), intValue(0), isInt(false) { }
+   OtlpExportAttribute(const char *k, const wchar_t *v) : key(k), stringValue(WideToUtf8(v)), intValue(0), isInt(false) { }
+   OtlpExportAttribute(const char *k, const uuid& guid) : key(k), intValue(0), isInt(false)
+   {
+      char buffer[64];
+      stringValue = guid.toStringA(buffer);
+   }
    OtlpExportAttribute(const char *k, int64_t v) : key(k), intValue(v), isInt(true) { }
 };
 
 /**
- * Add a string attribute to a protobuf message that exposes add_attributes() (Resource, LogRecord, NumberDataPoint)
+ * Add an attribute to a protobuf message that exposes add_attributes() (Resource, LogRecord, NumberDataPoint)
  */
-template<typename T> static inline void AddStringAttribute(T *parent, const char *key, const std::string& value)
+template<typename T> static inline void AddAttribute(T *parent, const OtlpExportAttribute& attr)
 {
    auto kv = parent->add_attributes();
-   kv->set_key(key);
-   kv->mutable_value()->set_string_value(value);
+   kv->set_key(attr.key);
+   if (attr.isInt)
+      kv->mutable_value()->set_int_value(attr.intValue);
+   else
+      kv->mutable_value()->set_string_value(attr.stringValue);
+}
+
+/**
+ * Add a list of attributes to a protobuf message that exposes add_attributes()
+ */
+template<typename T> static inline void AddAttributes(T *parent, const std::vector<OtlpExportAttribute>& attributes)
+{
+   for(const OtlpExportAttribute& attr : attributes)
+      AddAttribute(parent, attr);
 }
 
 /**

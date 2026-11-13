@@ -82,10 +82,8 @@ static const char *SeverityText(uint32_t severity)
 struct OtlpExportRecord
 {
    uint32_t nodeId;
-   std::string serviceName;   // resource service.name
-   std::string hostName;      // resource host.name
-   std::string hostGuid;      // resource host.id (object GUID)
-   std::string recipient;     // resource netxms.recipient (driver-specific, optional)
+   std::string recipient;     // driver-specific recipient (optional), part of resource identity
+   std::vector<OtlpExportAttribute> resourceAttributes;
    uint64_t timeUnixNano;
    uint64_t observedTimeUnixNano;
    int severityNumber;
@@ -229,16 +227,16 @@ void OtlpEventForwarderDriver::buildRecord(OtlpExportRecord& rec, const Event& e
    {
       rec.nodeId = source->getId();
       nodeName = WideToUtf8(source->getName());
-      char guidText[64];
-      rec.hostGuid = source->getGuid().toStringA(guidText);
    }
    else
    {
       rec.nodeId = 0;
       nodeName = "netxms-server";
    }
-   rec.serviceName = !m_serviceNameOverride.empty() ? m_serviceNameOverride : nodeName;
-   rec.hostName = nodeName;
+   rec.resourceAttributes.emplace_back("service.name", !m_serviceNameOverride.empty() ? m_serviceNameOverride : nodeName);
+   rec.resourceAttributes.emplace_back("host.name", nodeName);
+   if (source != nullptr)
+      rec.resourceAttributes.emplace_back("host.id", source->getGuid());
 
    rec.timeUnixNano = static_cast<uint64_t>(event.getTimestamp()) * 1000000000ULL;
    rec.observedTimeUnixNano = static_cast<uint64_t>(GetCurrentTimeMs()) * 1000000ULL;
@@ -251,14 +249,14 @@ void OtlpEventForwarderDriver::buildRecord(OtlpExportRecord& rec, const Event& e
 
    rec.attributes.emplace_back("event.id", static_cast<int64_t>(event.getId()));
    rec.attributes.emplace_back("event.code", static_cast<int64_t>(event.getCode()));
-   rec.attributes.emplace_back(std::string("event.name"), WideToUtf8(event.getName()));
-   rec.attributes.emplace_back(std::string("event.origin"), std::string(EventOriginName(event.getOrigin())));
+   rec.attributes.emplace_back("event.name", event.getName());
+   rec.attributes.emplace_back("event.origin", EventOriginName(event.getOrigin()));
    if (event.getDciId() != 0)
       rec.attributes.emplace_back("dci.id", static_cast<int64_t>(event.getDciId()));
 
    StringBuffer tags = event.getTagsAsList();
    if (!tags.isEmpty())
-      rec.attributes.emplace_back(std::string("event.tags"), WideToUtf8(tags.cstr()));
+      rec.attributes.emplace_back("event.tags", tags.cstr());
 
    // Named event parameters
    for(int i = 0; i < event.getParametersCount(); i++)
@@ -291,7 +289,10 @@ bool OtlpEventForwarderDriver::forward(const Event& event, const TCHAR *recipien
    OtlpExportRecord rec;
    buildRecord(rec, event, source);
    if ((recipient != nullptr) && (recipient[0] != 0))
+   {
       rec.recipient = WideToUtf8(recipient);
+      rec.resourceAttributes.emplace_back("netxms.recipient", rec.recipient);
+   }
 
    bool reachedBatch = false;
    m_bufferLock.lock();
@@ -375,13 +376,7 @@ bool OtlpEventForwarderDriver::sendBatch(const std::vector<OtlpExportRecord>& ba
       if (it == scopeByResource.end())
       {
          logs_v1::ResourceLogs *resourceLogs = request.add_resource_logs();
-         auto resource = resourceLogs->mutable_resource();
-         AddStringAttribute(resource, "service.name", rec.serviceName);
-         AddStringAttribute(resource, "host.name", rec.hostName);
-         if (!rec.hostGuid.empty())
-            AddStringAttribute(resource, "host.id", rec.hostGuid);
-         if (!rec.recipient.empty())
-            AddStringAttribute(resource, "netxms.recipient", rec.recipient);
+         AddAttributes(resourceLogs->mutable_resource(), rec.resourceAttributes);
          scopeLogs = resourceLogs->add_scope_logs();
          scopeLogs->mutable_scope()->set_name("netxms");
          scopeByResource[resourceKey] = scopeLogs;
@@ -398,15 +393,7 @@ bool OtlpEventForwarderDriver::sendBatch(const std::vector<OtlpExportRecord>& ba
       logRecord->set_severity_text(rec.severityText);
       if (!rec.body.empty())
          logRecord->mutable_body()->set_string_value(rec.body);
-      for(const OtlpExportAttribute& attr : rec.attributes)
-      {
-         auto kv = logRecord->add_attributes();
-         kv->set_key(attr.key);
-         if (attr.isInt)
-            kv->mutable_value()->set_int_value(attr.intValue);
-         else
-            kv->mutable_value()->set_string_value(attr.stringValue);
-      }
+      AddAttributes(logRecord, rec.attributes);
    }
 
    std::string payload;
