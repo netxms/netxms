@@ -158,6 +158,15 @@ Data-point attributes (per value) and resource attributes (per node).
 | 7.9 | Resource attributes | each resource carries `service.name`, `host.name`, `host.id` (object GUID) |
 | 7.10 | `ServiceName` config override | `service.name` = override value for all resources; unset → `service.name` = host name |
 | 7.11 | DCI user tag / system tag set | `netxms.dci.user_tag` / `netxms.dci.system_tag` = tag value; empty tag → attribute absent |
+| 7.12 | Node placed in rack R inside room M inside facility F | resource carries `netxms.facility` / `netxms.facility.id` (GUID), `netxms.room` / `.room.id`, `netxms.rack` / `.rack.id`, `netxms.rack.position` (int, unit label as shown in rack view), `netxms.rack.units` (int, device height) |
+| 7.13 | Node mounted in chassis that is placed in rack R | `netxms.rack` = R; `netxms.rack.position` / `.units` taken from the chassis placement |
+| 7.14 | DCI owned by the rack / room / facility itself | the object is its own `netxms.rack` / `netxms.room` / `netxms.facility`; no `netxms.rack.position` |
+| 7.15 | Rename facility, change rack position | next batch carries new name / position without server restart |
+| 7.16 | Move node to another rack (physical container change) or unbind facility | next batch reflects new structure (cache dropped on parent list change); removed level → attribute absent |
+| 7.17 | Zoning enabled, DCI on node | `netxms.zone.uin` (int) and `netxms.zone` (zone name); zoning disabled or owner class without zone (rack, sensor, facility) → both absent |
+| 7.18 | Geolocation on node, or only on facility | `geo.location.lat` / `.lon` (double) from the node, otherwise from nearest of rack, room, facility; none set → absent |
+| 7.19 | Postal address on facility: country `lv`, region `LV-RIX`, city, postcode | `geo.country.iso_code` = `LV`, `geo.region.iso_code` = `LV-RIX`, `geo.locality.name`, `geo.postal_code`; free-text country/region (e.g. `Latvia`) → ISO attribute absent |
+| 7.20 | Event forwarder, event from node or interface in rack | log resource carries the same location attributes as metrics of that node |
 
 ## 8. Opt-out selection (`pds:ignore` / `otel:ignore`)
 

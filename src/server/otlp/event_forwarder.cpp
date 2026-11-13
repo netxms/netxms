@@ -386,7 +386,10 @@ bool OtlpEventForwarderDriver::sendBatch(const std::vector<OtlpExportRecord>& ba
       if (it == scopeByResource.end())
       {
          logs_v1::ResourceLogs *resourceLogs = request.add_resource_logs();
-         AddAttributes(resourceLogs->mutable_resource(), rec.resourceAttributes);
+         auto resource = resourceLogs->mutable_resource();
+         AddAttributes(resource, rec.resourceAttributes);
+         if (rec.nodeId != 0)
+            AddAttributes(resource, GetLocationAttributes(rec.nodeId));
          scopeLogs = resourceLogs->add_scope_logs();
          scopeLogs->mutable_scope()->set_name("netxms");
          scopeByResource[resourceKey] = scopeLogs;

@@ -485,7 +485,9 @@ bool OtlpMetricExportDriver::sendBatch(const std::vector<MetricExportRecord>& ba
       if (si == scopeByNode.end())
       {
          metrics_v1::ResourceMetrics *resourceMetrics = request.add_resource_metrics();
-         AddAttributes(resourceMetrics->mutable_resource(), rec.resourceAttributes);
+         auto resource = resourceMetrics->mutable_resource();
+         AddAttributes(resource, rec.resourceAttributes);
+         AddAttributes(resource, GetLocationAttributes(rec.nodeId));
          scopeMetrics = resourceMetrics->add_scope_metrics();
          scopeMetrics->mutable_scope()->set_name("netxms");
          scopeByNode[rec.nodeId] = scopeMetrics;

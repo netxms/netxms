@@ -738,6 +738,8 @@ public:
    const uuid& getGuid() const { return m_guid; }
    const TCHAR *getName() const { return m_name; }
 
+   static uint32_t getParentListChangeCount();
+
    bool isChild(uint32_t id) const;
    bool isDirectChild(uint32_t id) const;
    bool isParent(uint32_t id) const;

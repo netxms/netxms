@@ -98,6 +98,21 @@ json_t *CustomAttribute::toJson(const TCHAR *name) const
 }
 
 /**
+ * Number of parent list changes on all objects (wraps around)
+ */
+static VolatileCounter s_parentListChangeCount = 0;
+
+/**
+ * Get number of parent list changes on all objects. Value wraps around and is only meaningful
+ * for comparison with a previously read value: caches derived from ancestor relations are valid
+ * while it stays unchanged.
+ */
+uint32_t NObject::getParentListChangeCount()
+{
+   return static_cast<uint32_t>(s_parentListChangeCount);
+}
+
+/**
  * Default constructor for the class
  */
 NObject::NObject() : m_childList(0, 32), m_parentList(8, 8), m_customAttributes(Ownership::True), m_customAttributeLock(MutexType::FAST)
@@ -120,6 +135,7 @@ NObject::~NObject()
 void NObject::clearParentList()
 {
    m_parentList.clear();
+   InterlockedIncrement(&s_parentListChangeCount);
 }
 
 /**
@@ -183,6 +199,7 @@ void NObject::addParentReference(const shared_ptr<NObject>& object)
    }
    m_parentList.add(object);
    unlockParentList();
+   InterlockedIncrement(&s_parentListChangeCount);
 }
 
 /**
@@ -218,6 +235,8 @@ void NObject::deleteParentReference(uint32_t objectId)
 
    if (success)
    {
+      InterlockedIncrement(&s_parentListChangeCount);
+
       StringList removeList;
 
       lockCustomAttributes();
