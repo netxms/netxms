@@ -34,14 +34,19 @@ private:
    uint32_t m_requestId;
    shared_ptr<AbstractCommSession> m_session;
    uint32_t m_completionCode;
+   uint32_t m_timeout;
+   int64_t m_deadline;
 
 protected:
    virtual void onOutput(const char *text, size_t length) override;
    virtual void endOfOutput() override;
 
 public:
-   ExternalActionExecutor(const TCHAR *command, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput);
+   ExternalActionExecutor(const TCHAR *command, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput, uint32_t timeout);
    virtual ~ExternalActionExecutor();
+
+   uint32_t getTimeout() const { return m_timeout; }
+   int64_t getDeadline() const { return m_deadline; }
 
    /**
     * Set code to be reported to server as command execution result. Must be called before process is
@@ -69,51 +74,49 @@ static ACTION *FindAction(const TCHAR *name)
 }
 
 /**
- * Add action
+ * Get entry for action registration - existing entry with given name (with command line of external action released)
+ * or new entry in action list
  */
-bool AddAction(const TCHAR *name, bool isExternal, const void *arg,
-         uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&),
-         const TCHAR *subAgent, const TCHAR *description)
+static ACTION *PrepareActionEntry(const TCHAR *name, const TCHAR *description)
 {
    ACTION *action = FindAction(name);
    if (action != nullptr)
    {
-      // Update existing entry in action list
-      _tcslcpy(action->description, description, MAX_DB_STRING);
       if (action->isExternal)
          MemFree(action->handler.cmdLine);
-      action->isExternal = isExternal;
-      if (isExternal)
-      {
-         action->handler.cmdLine = MemCopyString((const TCHAR*)arg);
-      }
-      else
-      {
-         action->handler.sa.handler = handler;
-         action->handler.sa.arg = arg;
-         action->handler.sa.subagentName = subAgent;
-      }
    }
    else
    {
-      // Create new entry in action list
-      ACTION newAction;
-      _tcslcpy(newAction.name, name, MAX_PARAM_NAME);
-      newAction.isExternal = isExternal;
-      _tcslcpy(newAction.description, description, MAX_DB_STRING);
-      if (isExternal)
-      {
-         newAction.handler.cmdLine = MemCopyString(static_cast<const TCHAR*>(arg));
-      }
-      else
-      {
-         newAction.handler.sa.handler = handler;
-         newAction.handler.sa.arg = arg;
-         newAction.handler.sa.subagentName = subAgent;
-      }
-      s_actions.add(newAction);
+      action = s_actions.addPlaceholder();
+      _tcslcpy(action->name, name, MAX_PARAM_NAME);
    }
-   return true;
+   _tcslcpy(action->description, CHECK_NULL_EX(description), MAX_DB_STRING);
+   return action;
+}
+
+/**
+ * Add internal action (implemented by agent core or subagent)
+ */
+void AddInternalAction(const TCHAR *name, uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&), const void *arg,
+         const TCHAR *subagentName, const TCHAR *description)
+{
+   ACTION *action = PrepareActionEntry(name, description);
+   action->isExternal = false;
+   action->handler.sa.handler = handler;
+   action->handler.sa.arg = arg;
+   action->handler.sa.subagentName = subagentName;
+   action->timeout = 0;
+}
+
+/**
+ * Add external action (command line executed by agent)
+ */
+void AddExternalAction(const TCHAR *name, const TCHAR *cmdLine, const TCHAR *description, uint32_t timeout)
+{
+   ACTION *action = PrepareActionEntry(name, description);
+   action->isExternal = true;
+   action->handler.cmdLine = MemCopyString(cmdLine);
+   action->timeout = timeout;
 }
 
 /**
@@ -129,10 +132,25 @@ bool AddActionFromConfig(const TCHAR *config)
 
    TCHAR *name = Trim(sb.substring(0, index, nullptr));
    TCHAR *cmdLine = Trim(sb.substring(index + 1, -1, nullptr));
-   bool result = AddAction(name, true, cmdLine, nullptr, nullptr, _T(""));
+   AddExternalAction(name, cmdLine, _T(""), 0);
    MemFree(name);
    MemFree(cmdLine);
-   return result;
+   return true;
+}
+
+/**
+ * Add action from config section [Action/<name>] with entries Command (mandatory), Description, and Timeout
+ */
+bool AddActionFromConfig(const ConfigEntry *config)
+{
+   const TCHAR *cmdLine = config->getSubEntryValue(_T("Command"));
+   if ((cmdLine == nullptr) || (*cmdLine == 0))
+      return false;
+
+   uint32_t timeout = config->getSubEntryValueAsUInt(_T("Timeout"), 0, 0);
+   AddExternalAction(config->getName(), cmdLine, config->getSubEntryValue(_T("Description"), 0, _T("")), timeout);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("External action \"%s\" added from configuration section (timeout=%u)"), config->getName(), timeout);
+   return true;
 }
 
 /**
@@ -175,19 +193,44 @@ void GetActionList(NXCPMessage *msg)
 }
 
 /**
- * Delete executor after completion or timeout
+ * Interval between checks of running external action (milliseconds)
  */
-static void ExecutorCleanup(ExternalActionExecutor *executor)
+static const int64_t EXECUTOR_WATCHDOG_INTERVAL = 1000;
+
+/**
+ * Stop and delete executor if watchdog task is discarded by thread pool without execution (on agent shutdown)
+ */
+static void ExecutorDiscard(ExternalActionExecutor *executor)
 {
-   if (executor->isRunning())
+   executor->stop();
+   delete executor;
+}
+
+/**
+ * Watchdog for running external action - deletes executor when process completes and terminates process on timeout
+ */
+static void ExecutorWatchdog(ExternalActionExecutor *executor)
+{
+   if (executor->waitForCompletion(0))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("External action \"%s\" completed, executor deleted"), executor->getCommand());
+      delete executor;
+      return;
+   }
+
+   int64_t now = GetMonotonicClockTime();
+   if (now >= executor->getDeadline())
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("External action \"%s\" terminated after exceeding execution time limit of %u seconds"),
-            executor->getCommand(), g_externalCommandTimeout / 1000);
+            executor->getCommand(), executor->getTimeout() / 1000);
       executor->setCompletionCode(ERR_EXEC_TIMEOUT);
       executor->stop();
+      delete executor;
+      return;
    }
-   delete executor;
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("ExecutorCleanup call completed"));
+
+   ThreadPoolScheduleRelative(g_executorThreadPool, static_cast<uint32_t>(std::min(executor->getDeadline() - now, EXECUTOR_WATCHDOG_INTERVAL)),
+         ExecutorWatchdog, executor, ExecutorDiscard);
 }
 
 /**
@@ -215,11 +258,12 @@ static uint32_t ExecuteAction(const TCHAR *name, const StringList& args, const s
    uint32_t rcc;
    if (action->isExternal)
    {
-      ExternalActionExecutor *executor = new ExternalActionExecutor(action->handler.cmdLine, args, session, requestId, sendOutput);
+      uint32_t timeout = (action->timeout != 0) ? action->timeout : g_externalCommandTimeout;
+      ExternalActionExecutor *executor = new ExternalActionExecutor(action->handler.cmdLine, args, session, requestId, sendOutput, timeout);
       if (executor->execute())
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Execution of external action %s (%s) started"), name, executor->getCommand());
-         ThreadPoolScheduleRelative(g_executorThreadPool, g_externalCommandTimeout, ExecutorCleanup, executor);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Execution of external action %s (%s) started (timeout %u ms)"), name, executor->getCommand(), timeout);
+         ExecutorWatchdog(executor);
          rcc = ERR_SUCCESS;
       }
       else
@@ -282,12 +326,14 @@ static StringBuffer ExpandCommandLineMacros(const TCHAR *command, const StringLi
  * External action executor constructor
  */
 ExternalActionExecutor::ExternalActionExecutor(const TCHAR *command, const StringList& args, const shared_ptr<AbstractCommSession>& session,
-      uint32_t requestId, bool sendOutput) : ProcessExecutor(ExpandCommandLineMacros(command, args), true), m_session(session)
+      uint32_t requestId, bool sendOutput, uint32_t timeout) : ProcessExecutor(ExpandCommandLineMacros(command, args), true), m_session(session)
 {
    m_sendOutput = sendOutput;
    m_replaceNullCharacters = true;
    m_requestId = requestId;
    m_completionCode = ERR_SUCCESS;
+   m_timeout = timeout;
+   m_deadline = GetMonotonicClockTime() + timeout;
 }
 
 /**

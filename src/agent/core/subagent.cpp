@@ -135,7 +135,7 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (*SubAgentRegis
 
 					// Add actions provided by this subagent to common list
 					for(size_t i = 0; i < info->numActions; i++)
-						AddAction(info->actions[i].name, false, info->actions[i].arg, info->actions[i].handler, info->name, info->actions[i].description);
+						AddInternalAction(info->actions[i].name, info->actions[i].handler, info->actions[i].arg, info->name, info->actions[i].description);
 
 					// Register AI tools provided by this subagent
 					RegisterAIToolsFromSubagent(info);

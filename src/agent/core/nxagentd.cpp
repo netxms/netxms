@@ -1374,20 +1374,20 @@ BOOL Initialize()
       }
 
       // Add built-in actions
-      AddAction(_T("Agent.Restart"), false, nullptr, H_RestartAgent, _T("CORE"), _T("Restart agent"));
-      AddAction(_T("Agent.RotateLog"), false, nullptr, H_RotateLog, _T("CORE"), _T("Rotate agent log"));
+      AddInternalAction(_T("Agent.Restart"), H_RestartAgent, nullptr, _T("CORE"), _T("Restart agent"));
+      AddInternalAction(_T("Agent.RotateLog"), H_RotateLog, nullptr, _T("CORE"), _T("Rotate agent log"));
 #ifndef _WIN32
-      AddAction(_T("Process.Terminate"), false, nullptr, H_TerminateProcess, _T("CORE"), _T("Terminate process"));
+      AddInternalAction(_T("Process.Terminate"), H_TerminateProcess, nullptr, _T("CORE"), _T("Terminate process"));
 #endif
-      AddAction(_T("ExternalDataProvider.Enable"), false, nullptr, H_EnableExternalDataProvider, _T("CORE"), _T("Enable external data provider"));
-      AddAction(_T("ExternalDataProvider.Disable"), false, nullptr, H_DisableExternalDataProvider, _T("CORE"), _T("Disable external data provider"));
-      AddAction(_T("TFTP.Put"), false, nullptr, H_TFTPPut, _T("CORE"), _T("Transfer file to remote system via TFTP"));
+      AddInternalAction(_T("ExternalDataProvider.Enable"), H_EnableExternalDataProvider, nullptr, _T("CORE"), _T("Enable external data provider"));
+      AddInternalAction(_T("ExternalDataProvider.Disable"), H_DisableExternalDataProvider, nullptr, _T("CORE"), _T("Disable external data provider"));
+      AddInternalAction(_T("TFTP.Put"), H_TFTPPut, nullptr, _T("CORE"), _T("Transfer file to remote system via TFTP"));
       if (config->getValueAsBoolean(_T("/CORE/EnableArbitraryCommandExecution"), false))
       {
          nxlog_write(NXLOG_INFO, _T("Arbitrary command execution enabled"));
-         AddAction(_T("System.Execute"), false, nullptr, H_SystemExecute, _T("CORE"), _T("Execute system command"));
+         AddInternalAction(_T("System.Execute"), H_SystemExecute, nullptr, _T("CORE"), _T("Execute system command"));
 #ifdef _WIN32
-         AddAction(_T("System.ExecuteInAllSessions"), false, nullptr, H_SystemExecuteInAllSessions, _T("CORE"), _T("Execute system command in all sessions"));
+         AddInternalAction(_T("System.ExecuteInAllSessions"), H_SystemExecuteInAllSessions, nullptr, _T("CORE"), _T("Execute system command in all sessions"));
 #endif
       }
       else
@@ -1436,6 +1436,18 @@ BOOL Initialize()
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add action \"%s\""), action);
    }
    delete s_actionList;
+
+   // Parse actions defined as configuration sections
+   unique_ptr<ObjectArray<ConfigEntry>> actionSections = config->getSubEntries(_T("/Action"));
+   if (actionSections != nullptr)
+   {
+      for(int i = 0; i < actionSections->size(); i++)
+      {
+         ConfigEntry *e = actionSections->get(i);
+         if (!AddActionFromConfig(e))
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add action \"%s\" (missing command)"), e->getName());
+      }
+   }
 
    // Parse external parameters
    if (s_backgroundExternalMetrics != nullptr)

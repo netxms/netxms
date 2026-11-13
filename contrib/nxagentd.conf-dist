@@ -329,6 +329,29 @@
 # Password = secret
 
 #
+# Action
+#
+# Add action handled by external command. To add multiple actions, you should
+# use multiple Action entries. Use $1 .. $9 in command line to substitute
+# arguments passed from server. Execution time is limited by
+# ExternalCommandTimeout.
+#
+# Syntax:
+# Action = <action_name>:<command_line>
+#
+# Examples:
+# Action = Ping:ping -c 3 $1
+#
+# Action can also be defined as configuration section, which allows setting
+# description and individual execution timeout (in milliseconds) that
+# overrides ExternalCommandTimeout for this action.
+#
+# [Action/LongBackup]
+# Command = /opt/scripts/backup.sh $1
+# Description = Full backup
+# Timeout = 600000
+
+#
 # ExternalParameter
 #
 # Add parameter handled by external command. To add multiple parameters, you

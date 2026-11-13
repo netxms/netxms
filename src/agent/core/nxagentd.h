@@ -254,6 +254,7 @@ struct ACTION
       } sa;
    } handler;
    TCHAR description[MAX_DB_STRING];
+   uint32_t timeout;    // Execution timeout for external action in milliseconds (0 = use ExternalCommandTimeout)
 };
 
 /**
@@ -897,8 +898,10 @@ void UnloadAllSubAgents();
 bool ProcessCommandBySubAgent(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
 bool ProcessBinaryMessageBySubAgent(NXCPMessage *msg, AbstractCommSession *session);
 void NotifySubAgents(uint32_t code, void *data);
-bool AddAction(const TCHAR *name, bool isExternal, const void *arg, uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&), const TCHAR *subAgent, const TCHAR *description);
+void AddInternalAction(const TCHAR *name, uint32_t (*handler)(const shared_ptr<ActionExecutionContext>&), const void *arg, const TCHAR *subagentName, const TCHAR *description);
+void AddExternalAction(const TCHAR *name, const TCHAR *cmdLine, const TCHAR *description, uint32_t timeout);
 bool AddActionFromConfig(const TCHAR *config);
+bool AddActionFromConfig(const ConfigEntry *config);
 
 void RegisterAIToolsFromSubagent(const NETXMS_SUBAGENT_INFO *info);
 char *GenerateAIToolsSchema(AbstractCommSession *session);
