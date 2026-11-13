@@ -52,6 +52,8 @@ static uint16_t m_port = 161;
 static SNMP_Version m_snmpVersion = SNMP_VERSION_2C;
 static uint32_t m_timeout = 3000;
 static const char *s_codepage = nullptr;
+static bool s_useBulk = true;              // -B flag: do not use GETBULK requests
+static uint32_t s_bulkRepetitions = SNMP_DEFAULT_BULK_REPETITIONS;  // -b option: number of repetitions for GETBULK requests
 static bool s_rawOutput = false;           // -R flag: disable display hints
 static bool s_noMib = false;               // -M flag: skip MIB loading
 static bool s_numericOids = false;         // -n flag: numeric OIDs only
@@ -133,7 +135,7 @@ static void FormatOIDName(const SNMP_ObjectId& oid, TCHAR *buffer, size_t buffer
 /**
  * Walk callback
  */
-static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
+static uint32_t WalkCallback(SNMP_Variable *var)
 {
    TCHAR buffer[1024], typeName[256], oidName[512];
 
@@ -216,7 +218,7 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
       transport.setSecurityContext(SNMP_SecurityContext(m_community));
    }
 
-   result = SnmpWalk(&transport, pszRootOid, WalkCallback, nullptr);
+   result = s_useBulk ? SnmpBulkWalk(&transport, pszRootOid, s_bulkRepetitions, WalkCallback) : SnmpWalk(&transport, pszRootOid, WalkCallback);
    if (result != SNMP_ERR_SUCCESS)
    {
       _tprintf(_T("SNMP Error: %s\n"), SnmpGetErrorText(result));
@@ -240,7 +242,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:c:C:e:E:hm:Mn:Np:Ru:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:b:Bc:C:e:E:hm:Mn:Np:Ru:v:w:")) != -1)
    {
       switch(ch)
       {
@@ -249,6 +251,8 @@ int main(int argc, char *argv[])
                      _T("Valid options are:\n")
                      _T("   -a <method>   : Authentication method for SNMP v3 USM. Valid methods are MD5, SHA1, SHA224, SHA256, SHA384, SHA512\n")
                      _T("   -A <passwd>   : User's authentication password for SNMP v3 USM\n")
+                     _T("   -b <count>    : Number of repetitions in GETBULK requests. Default is %d\n")
+                     _T("   -B            : Do not use GETBULK requests (GETBULK is never used with SNMP version 1)\n")
                      _T("   -c <string>   : Community string. Default is \"public\"\n")
                      _T("   -C <codepage> : Codepage for remote system\n")
                      _T("   -e <method>   : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
@@ -263,9 +267,24 @@ int main(int argc, char *argv[])
                      _T("   -u <user>     : User name for SNMP v3 USM\n")
                      _T("   -v <version>  : SNMP version to use (valid values is 1, 2c, and 3)\n")
                      _T("   -w <seconds>  : Request timeout (default is 3 seconds)\n")
-                     _T("\n"));
+                     _T("\n"), SNMP_DEFAULT_BULK_REPETITIONS);
             iExit = 0;
             bStart = FALSE;
+            break;
+         case 'b':   // Number of repetitions for GETBULK
+            value = strtoul(optarg, &eptr, 0);
+            if ((*eptr != 0) || (value < 2) || (value > 1000))
+            {
+               _tprintf(_T("Invalid number of repetitions %hs\n"), optarg);
+               bStart = FALSE;
+            }
+            else
+            {
+               s_bulkRepetitions = value;
+            }
+            break;
+         case 'B':   // Do not use GETBULK
+            s_useBulk = false;
             break;
          case 'c':   // Community
             strlcpy(m_community, optarg, 256);

@@ -97,7 +97,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *bas
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
 
-   uint32_t rc = SnmpWalk(transport, baseOid,
+   uint32_t rc = SnmpBulkWalk(transport, baseOid, SNMP_DEFAULT_BULK_REPETITIONS,
       [s, limit] (SNMP_Variable *var) -> uint32_t
       {
          if ((limit != 0) && (s->m_values.size() >= limit))
@@ -120,7 +120,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const uint32_t *
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
 
-   uint32_t rc = SnmpWalk(transport, baseOid, oidLen,
+   uint32_t rc = SnmpBulkWalk(transport, baseOid, oidLen, SNMP_DEFAULT_BULK_REPETITIONS,
       [s, limit] (SNMP_Variable *var) -> uint32_t
       {
          if ((limit != 0) && (s->m_values.size() >= limit))

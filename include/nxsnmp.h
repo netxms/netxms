@@ -64,6 +64,11 @@
  */
 #define SNMP_DEFAULT_MSG_MAX_SIZE   ((size_t)65507)
 
+/**
+ * Default number of repetitions for GETBULK requests
+ */
+#define SNMP_DEFAULT_BULK_REPETITIONS  40
+
 //
 // OID comparision results
 //
@@ -1040,6 +1045,11 @@ public:
    void setErrorCode(SNMP_ErrorCode errorCode, uint32_t errorIndex = 0) { m_errorCode = static_cast<uint32_t>(errorCode); m_errorIndex = errorIndex; }
 
    /**
+    * Set parameters of GETBULK request (encoded in place of error code and error index)
+    */
+   void setBulkParameters(uint32_t nonRepeaters, uint32_t maxRepetitions) { m_errorCode = nonRepeaters; m_errorIndex = maxRepetitions; }
+
+   /**
     * USM check that stopped parsing of received message: SNMP_ERR_AUTH_FAILURE (message signature does not match),
     * SNMP_ERR_DECRYPTION (scoped PDU cannot be decrypted) or SNMP_ERR_SUCCESS. Only message header fields
     * (version, message ID, flags, security model, authoritative engine, user name) are valid when non-zero.
@@ -1434,6 +1444,8 @@ bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, c
 bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, std::initializer_list<uint32_t> oid, int32_t value);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpBulkWalk(SNMP_Transport *transport, const TCHAR *rootOid, uint32_t maxRepetitions, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpBulkWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, uint32_t maxRepetitions, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *rootOid);
 

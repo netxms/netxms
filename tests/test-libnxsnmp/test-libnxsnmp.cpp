@@ -1075,6 +1075,281 @@ static void TestGetResponseHandling()
 }
 
 /**
+ * Behavior of simulated agent on GETBULK request
+ */
+enum class BulkBehavior
+{
+   ANSWER,              // Answer normally
+   TIMEOUT,             // Never answer
+   TIMEOUT_AFTER_FIRST, // Answer first request, then stop answering
+   GENERIC_ERROR        // Answer with genErr
+};
+
+/**
+ * Simulated SNMP agent for walk tests. MIB contains integer objects 1.3.6.1.2.1.2.2.1.1.1 .. 1.3.6.1.2.1.2.2.1.1.<rows>
+ * followed by single object 1.3.6.1.2.1.2.2.1.2.1.
+ */
+class WalkSimulatorTransport : public SNMP_Transport
+{
+private:
+   uint32_t m_rows;
+   BulkBehavior m_bulkBehavior;
+   uint32_t m_maxBulkSize;    // tooBig is returned to GETBULK with larger number of repetitions
+   SNMP_PDU *m_response;
+
+   /**
+    * Bind object following given one to response PDU. Returns false if end of MIB reached.
+    */
+   bool bindNext(SNMP_ObjectId *position)
+   {
+      SNMP_ObjectId next { 1, 3, 6, 1, 2, 1, 2, 2, 1, 1, 0 };
+      for(uint32_t i = 1; i <= m_rows + 1; i++)
+      {
+         if (i <= m_rows)
+         {
+            next.changeElement(10, i);
+         }
+         else
+         {
+            next.changeElement(9, 2);
+            next.changeElement(10, 1);
+         }
+         int cr = next.compare(*position);
+         if ((cr == OID_FOLLOWING) || (cr == OID_LONGER))
+         {
+            SNMP_Variable *v = new SNMP_Variable(next);
+            v->setValueFromUInt32(ASN_INTEGER, i);
+            m_response->bindVariable(v);
+            *position = next;
+            return true;
+         }
+      }
+      m_response->bindVariable(new SNMP_Variable(*position, ASN_END_OF_MIBVIEW));
+      return false;
+   }
+
+public:
+   int m_bulkRequests;
+   int m_nextRequests;
+   bool m_bulkEncodingValid;
+
+   WalkSimulatorTransport(uint32_t rows, BulkBehavior bulkBehavior, uint32_t maxBulkSize = 100)
+   {
+      m_rows = rows;
+      m_bulkBehavior = bulkBehavior;
+      m_maxBulkSize = maxBulkSize;
+      m_response = nullptr;
+      m_bulkRequests = 0;
+      m_nextRequests = 0;
+      m_bulkEncodingValid = true;
+      m_reliable = true;
+   }
+
+   virtual ~WalkSimulatorTransport()
+   {
+      delete m_response;
+   }
+
+   virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override
+   {
+      delete_and_null(m_response);
+      if (pdu->getNumVariables() != 1)
+         return 1;
+
+      SNMP_ObjectId position(pdu->getVariable(0)->getName());
+      if (pdu->getCommand() == SNMP_GET_NEXT_REQUEST)
+      {
+         m_nextRequests++;
+         m_response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
+         bindNext(&position);
+         return 1;
+      }
+
+      if (pdu->getCommand() != SNMP_GET_BULK_REQUEST)
+         return 1;
+
+      m_bulkRequests++;
+
+      // Extract non-repeaters and max-repetitions from encoded PDU: A5 <len> 02 <len> <request ID> 02 01 <non-repeaters> 02 01 <max-repetitions>
+      SNMP_SecurityContext securityContext("public");
+      SNMP_PDUBuffer encodedPDU;
+      size_t size = pdu->encode(&encodedPDU, &securityContext);
+      const BYTE *p = static_cast<const BYTE*>(memchr(encodedPDU, ASN_GET_BULK_REQUEST_PDU, size));
+      if ((p == nullptr) || (p[2] != ASN_INTEGER))
+      {
+         m_bulkEncodingValid = false;
+         return 1;
+      }
+      p += 4 + p[3];
+      if ((p[0] != ASN_INTEGER) || (p[1] != 1) || (p[2] != 0) || (p[3] != ASN_INTEGER) || (p[4] != 1) || (p[5] == 0))
+      {
+         m_bulkEncodingValid = false;
+         return 1;
+      }
+      uint32_t maxRepetitions = p[5];
+
+      if ((m_bulkBehavior == BulkBehavior::TIMEOUT) || ((m_bulkBehavior == BulkBehavior::TIMEOUT_AFTER_FIRST) && (m_bulkRequests > 1)))
+         return 1;
+
+      m_response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
+      if (m_bulkBehavior == BulkBehavior::GENERIC_ERROR)
+      {
+         m_response->setErrorCode(SNMP_PDU_ERR_GENERIC);
+      }
+      else if (maxRepetitions > m_maxBulkSize)
+      {
+         m_response->setErrorCode(SNMP_PDU_ERR_TOO_BIG);
+      }
+      else
+      {
+         for(uint32_t i = 0; i < maxRepetitions; i++)
+            if (!bindNext(&position))
+               break;
+      }
+      return 1;
+   }
+
+   virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender, socklen_t *addrSize, SNMP_SecurityContext (*contextFinder)(struct sockaddr *, socklen_t)) override
+   {
+      if (m_response == nullptr)
+         return 0;   // Timeout
+      *pdu = m_response;
+      m_response = nullptr;
+      return 1;
+   }
+
+   virtual InetAddress getPeerIpAddress() override { return InetAddress::LOOPBACK; }
+   virtual uint16_t getPort() override { return 161; }
+   virtual bool isProxyTransport() override { return false; }
+};
+
+/**
+ * Walk simulated agent and check that all rows are delivered exactly once and in order
+ */
+static uint32_t WalkSimulator(WalkSimulatorTransport *transport, uint32_t maxRepetitions, uint32_t *count)
+{
+   bool valid = true;
+   uint32_t rows = 0;
+   auto handler =
+      [&valid, &rows] (SNMP_Variable *v) -> uint32_t
+      {
+         rows++;
+         if ((v->getName().length() != 11) || (v->getName().value()[10] != rows) || (v->getValueAsUInt() != rows))
+            valid = false;
+         return SNMP_ERR_SUCCESS;
+      };
+   static const uint32_t rootOid[] = { 1, 3, 6, 1, 2, 1, 2, 2, 1, 1 };
+   uint32_t rc = (maxRepetitions != 0) ?
+      SnmpBulkWalk(transport, rootOid, 10, maxRepetitions, handler) :
+      SnmpWalk(transport, rootOid, 10, handler);
+   *count = valid ? rows : 0xFFFFFFFF;
+   return rc;
+}
+
+/**
+ * Test MIB walk using GETNEXT and GETBULK
+ */
+static void TestWalk()
+{
+   uint32_t count;
+
+   StartTest(_T("SnmpWalk"));
+   WalkSimulatorTransport t1(60, BulkBehavior::ANSWER);
+   AssertEquals(WalkSimulator(&t1, 0, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 60u);
+   AssertEquals(t1.m_bulkRequests, 0);
+   AssertEquals(t1.m_nextRequests, 61);
+   EndTest();
+
+   StartTest(_T("SnmpBulkWalk"));
+   WalkSimulatorTransport t2(60, BulkBehavior::ANSWER);
+   AssertEquals(WalkSimulator(&t2, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 60u);
+   AssertTrue(t2.m_bulkEncodingValid);
+   AssertEquals(t2.m_bulkRequests, 3);
+   AssertEquals(t2.m_nextRequests, 0);
+
+   // Table ends exactly at the end of response and at the end of MIB
+   WalkSimulatorTransport t3(50, BulkBehavior::ANSWER);
+   AssertEquals(WalkSimulator(&t3, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 50u);
+   AssertEquals(t3.m_bulkRequests, 3);
+   AssertEquals(t3.m_nextRequests, 0);
+
+   WalkSimulatorTransport t4(0, BulkBehavior::ANSWER);
+   AssertEquals(WalkSimulator(&t4, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 0u);
+   EndTest();
+
+   StartTest(_T("SnmpBulkWalk - SNMPv1"));
+   WalkSimulatorTransport t5(60, BulkBehavior::ANSWER);
+   t5.setSnmpVersion(SNMP_VERSION_1);
+   AssertEquals(WalkSimulator(&t5, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 60u);
+   AssertEquals(t5.m_bulkRequests, 0);
+   AssertEquals(t5.m_nextRequests, 61);
+   EndTest();
+
+   StartTest(_T("SnmpBulkWalk - fallback to GETNEXT"));
+   WalkSimulatorTransport t6(60, BulkBehavior::TIMEOUT);
+   AssertEquals(WalkSimulator(&t6, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 60u);
+   AssertEquals(t6.m_bulkRequests, 1);
+   AssertEquals(t6.m_nextRequests, 61);
+
+   WalkSimulatorTransport t7(60, BulkBehavior::GENERIC_ERROR);
+   AssertEquals(WalkSimulator(&t7, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 60u);
+   AssertEquals(t7.m_bulkRequests, 1);
+   AssertEquals(t7.m_nextRequests, 61);
+
+   // GETBULK stops working in the middle of the walk
+   WalkSimulatorTransport t8(60, BulkBehavior::TIMEOUT_AFTER_FIRST);
+   AssertEquals(WalkSimulator(&t8, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 60u);
+   AssertEquals(t8.m_bulkRequests, 2);
+   AssertEquals(t8.m_nextRequests, 36);
+   EndTest();
+
+   StartTest(_T("SnmpBulkWalk - response too big"));
+   WalkSimulatorTransport t9(60, BulkBehavior::ANSWER, 10);
+   AssertEquals(WalkSimulator(&t9, 40, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 60u);
+   AssertEquals(t9.m_bulkRequests, 9);   // 40 and 20 rejected, then 7 requests with 10 repetitions
+   AssertEquals(t9.m_nextRequests, 0);
+
+   // Agent cannot fit even two repetitions
+   WalkSimulatorTransport t10(60, BulkBehavior::ANSWER, 1);
+   AssertEquals(WalkSimulator(&t10, 8, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 60u);
+   AssertEquals(t10.m_bulkRequests, 3);  // 8, 4, 2
+   AssertEquals(t10.m_nextRequests, 61);
+   EndTest();
+
+   StartTest(_T("SNMP_Snapshot"));
+   WalkSimulatorTransport t11(60, BulkBehavior::ANSWER);
+   SNMP_Snapshot *snapshot = SNMP_Snapshot::create(&t11, { 1, 3, 6, 1, 2, 1, 2, 2, 1, 1 });
+   AssertNotNull(snapshot);
+   AssertTrue(t11.m_bulkRequests > 0);
+   AssertEquals(t11.m_nextRequests, 0);
+   AssertEquals(snapshot->getAsUInt32({ 1, 3, 6, 1, 2, 1, 2, 2, 1, 1, 1 }), 1u);
+   AssertEquals(snapshot->getAsUInt32({ 1, 3, 6, 1, 2, 1, 2, 2, 1, 1, 60 }), 60u);
+   AssertNull(snapshot->get({ 1, 3, 6, 1, 2, 1, 2, 2, 1, 1, 61 }));
+   AssertNull(snapshot->get({ 1, 3, 6, 1, 2, 1, 2, 2, 1, 2, 1 }));
+   delete snapshot;
+
+   WalkSimulatorTransport t12(60, BulkBehavior::TIMEOUT);
+   snapshot = SNMP_Snapshot::create(&t12, _T(".1.3.6.1.2.1.2.2.1.1"));
+   AssertNotNull(snapshot);
+   AssertEquals(snapshot->getAsUInt32({ 1, 3, 6, 1, 2, 1, 2, 2, 1, 1, 60 }), 60u);
+   delete snapshot;
+
+   WalkSimulatorTransport t13(60, BulkBehavior::ANSWER);
+   AssertNull(SNMP_Snapshot::create(&t13, { 1, 3, 6, 1, 2, 1, 2, 2, 1, 1 }, 30));
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -1089,6 +1364,7 @@ int main(int argc, char *argv[])
    TestPDUEncoding();
    TestV1TrapEncoding();
    TestGetResponseHandling();
+   TestWalk();
    TestPDUPrivacy(SNMP_ENCRYPT_DES, _T("SNMPv3 privacy (DES)"));
    TestPDUPrivacy(SNMP_ENCRYPT_AES_128, _T("SNMPv3 privacy (AES-128)"));
    return 0;

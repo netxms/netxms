@@ -342,9 +342,10 @@ static inline uint64_t HashObjectId(const uint32_t *value, size_t length)
 }
 
 /**
- * Enumerate multiple values by walking through MIB, starting at given root
+ * Walk the MIB starting at given root. If maxRepetitions is greater than 1 and SNMP version is 2c or higher, GETBULK
+ * requests are used; walk continues with GETNEXT requests from current position if agent fails to answer GETBULK request.
  */
-uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors, bool failOnShutdown)
+static uint32_t WalkMIB(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, uint32_t maxRepetitions, const std::function<uint32_t (SNMP_Variable*)>& handler, bool failOnShutdown)
 {
    if (transport == nullptr)
       return SNMP_ERR_COMM;
@@ -369,6 +370,8 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t
    size_t milestoneIteration = 1;
    uint64_t milestoneHash = 0;
 
+   bool useBulk = (maxRepetitions > 1) && (transport->getSnmpVersion() != SNMP_VERSION_1);
+
    // Walk the MIB
    uint32_t result;
    bool running = true;
@@ -380,107 +383,177 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t
          break;
       }
 
-      SNMP_PDU requestPDU(SNMP_GET_NEXT_REQUEST, static_cast<uint32_t>(InterlockedIncrement(&s_requestId)) & 0x7FFFFFFF, transport->getSnmpVersion());
+      SNMP_PDU requestPDU(useBulk ? SNMP_GET_BULK_REQUEST : SNMP_GET_NEXT_REQUEST, static_cast<uint32_t>(InterlockedIncrement(&s_requestId)) & 0x7FFFFFFF, transport->getSnmpVersion());
+      if (useBulk)
+         requestPDU.setBulkParameters(0, maxRepetitions);
       requestPDU.bindVariable(new SNMP_Variable(objectName, nameLength));
       SNMP_PDU *responsePDU;
       result = transport->doRequest(&requestPDU, &responsePDU);
-
-      // Analyze response
-      if (result == SNMP_ERR_SUCCESS)
+      if (result != SNMP_ERR_SUCCESS)
       {
-         if ((responsePDU->getNumVariables() > 0) &&
-             (responsePDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+         if (useBulk && ((result == SNMP_ERR_TIMEOUT) || (result == SNMP_ERR_PARSE) || (result == SNMP_ERR_BAD_RESPONSE)))
          {
-            SNMP_Variable *var = responsePDU->getVariable(0);
+            nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GETBULK request, continue with GETNEXT"), result);
+            useBulk = false;
+            continue;
+         }
+         nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GET request"), result);
+         break;
+      }
 
-            if ((var->getType() != ASN_NO_SUCH_OBJECT) &&
-                (var->getType() != ASN_NO_SUCH_INSTANCE) &&
-                (var->getType() != ASN_END_OF_MIBVIEW))
+      if ((responsePDU->getNumVariables() == 0) || (responsePDU->getErrorCode() != SNMP_PDU_ERR_SUCCESS))
+      {
+         if (useBulk)
+         {
+            // Retry from same position with smaller response size or with GETNEXT, which also sorts out end of MIB indication from actual error
+            if ((responsePDU->getErrorCode() == SNMP_PDU_ERR_TOO_BIG) && (maxRepetitions >= 4))
             {
-               // Check if response left the requested subtree
-               if ((var->getName().length() < rootOidLen) ||
-                   memcmp(rootOid, var->getName().value(), rootOidLen * sizeof(uint32_t)))
-               {
-                  delete responsePDU;
-                  break;
-               }
-
-               // Loop detection
-               int cr = var->getName().compare(objectName, nameLength);
-               if (cr == OID_EQUAL)
-               {
-                  // Got same object again
-                  delete responsePDU;
-                  break;
-               }
-               uint64_t responseHash = HashObjectId(var->getName().value(), var->getName().length());
-
-               // Brent milestone: O(1) check that catches cycles of any length.
-               // On power-of-2 iterations, refresh the milestone with the current hash;
-               // on all other iterations, compare the current hash against the stored milestone.
-               walkIteration++;
-               if (walkIteration == milestoneIteration)
-               {
-                  milestoneHash = responseHash;
-                  milestoneIteration *= 2;
-               }
-               else if (responseHash == milestoneHash)
-               {
-                  delete responsePDU;
-                  goto stop_walk;
-               }
-
-               // Dense ring: scan recent hashes only when the agent moved backward.
-               // Catches short cycles within one period without scanning on every forward step.
-               if ((cr == OID_PRECEDING) || (cr == OID_SHORTER))
-               {
-                  for (size_t i = 0; i < recentCount; i++)
-                  {
-                     if (recentHashes[i] == responseHash)
-                     {
-                        delete responsePDU;
-                        goto stop_walk;
-                     }
-                  }
-               }
-               recentHashes[recentNext] = responseHash;
-               recentNext = (recentNext + 1) % SNMP_WALK_LOOP_DETECT_RING_SIZE;
-               if (recentCount < SNMP_WALK_LOOP_DETECT_RING_SIZE)
-                  recentCount++;
-
-               nameLength = var->getName().length();
-               memcpy(objectName, var->getName().value(), nameLength * sizeof(uint32_t));
-
-               // Call user's callback function for processing
-               result = handler(var);
-               if (result != SNMP_ERR_SUCCESS)
-               {
-                  running = false;
-               }
+               maxRepetitions /= 2;
             }
             else
             {
-               // Consider no object/no instance as end of walk signal instead of failure
+               nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("SNMP GETBULK request rejected by agent (PDU error %d), continue with GETNEXT"), static_cast<int>(responsePDU->getErrorCode()));
+               useBulk = false;
+            }
+            delete responsePDU;
+            continue;
+         }
+
+         // Some SNMP agents sends NO_SUCH_NAME PDU error after last element in MIB
+         if (responsePDU->getErrorCode() != SNMP_PDU_ERR_NO_SUCH_NAME)
+            result = SNMP_ERR_AGENT;
+         delete responsePDU;
+         break;
+      }
+
+      // Only first variable is expected in response to GETNEXT
+      int count = useBulk ? responsePDU->getNumVariables() : 1;
+      for(int i = 0; i < count; i++)
+      {
+         SNMP_Variable *var = responsePDU->getVariable(i);
+
+         // Consider no object/no instance as end of walk signal instead of failure
+         if ((var->getType() == ASN_NO_SUCH_OBJECT) ||
+             (var->getType() == ASN_NO_SUCH_INSTANCE) ||
+             (var->getType() == ASN_END_OF_MIBVIEW))
+         {
+            running = false;
+            break;
+         }
+
+         // Check if response left the requested subtree
+         if ((var->getName().length() < rootOidLen) ||
+             memcmp(rootOid, var->getName().value(), rootOidLen * sizeof(uint32_t)))
+         {
+            running = false;
+            break;
+         }
+
+         // Loop detection
+         int cr = var->getName().compare(objectName, nameLength);
+         if (cr == OID_EQUAL)
+         {
+            // Got same object again
+            running = false;
+            break;
+         }
+         uint64_t responseHash = HashObjectId(var->getName().value(), var->getName().length());
+
+         // Brent milestone: O(1) check that catches cycles of any length.
+         // On power-of-2 iterations, refresh the milestone with the current hash;
+         // on all other iterations, compare the current hash against the stored milestone.
+         walkIteration++;
+         if (walkIteration == milestoneIteration)
+         {
+            milestoneHash = responseHash;
+            milestoneIteration *= 2;
+         }
+         else if (responseHash == milestoneHash)
+         {
+            running = false;
+            break;
+         }
+
+         // Dense ring: scan recent hashes only when the agent moved backward.
+         // Catches short cycles within one period without scanning on every forward step.
+         if ((cr == OID_PRECEDING) || (cr == OID_SHORTER))
+         {
+            bool loopDetected = false;
+            for (size_t j = 0; j < recentCount; j++)
+            {
+               if (recentHashes[j] == responseHash)
+               {
+                  loopDetected = true;
+                  break;
+               }
+            }
+            if (loopDetected)
+            {
                running = false;
+               break;
             }
          }
-         else
+         recentHashes[recentNext] = responseHash;
+         recentNext = (recentNext + 1) % SNMP_WALK_LOOP_DETECT_RING_SIZE;
+         if (recentCount < SNMP_WALK_LOOP_DETECT_RING_SIZE)
+            recentCount++;
+
+         nameLength = var->getName().length();
+         memcpy(objectName, var->getName().value(), nameLength * sizeof(uint32_t));
+
+         // Call user's callback function for processing
+         result = handler(var);
+         if (result != SNMP_ERR_SUCCESS)
          {
-            // Some SNMP agents sends NO_SUCH_NAME PDU error after last element in MIB
-            if (responsePDU->getErrorCode() != SNMP_PDU_ERR_NO_SUCH_NAME)
-               result = SNMP_ERR_AGENT;
             running = false;
+            break;
          }
-         delete responsePDU;
       }
-      else
-      {
-         nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GET request"), result);
-         running = false;
-      }
+      delete responsePDU;
    }
-stop_walk:
    return result;
+}
+
+/**
+ * Enumerate multiple values by walking through MIB, starting at given root
+ */
+uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors, bool failOnShutdown)
+{
+   return WalkMIB(transport, rootOid, rootOidLen, 0, handler, failOnShutdown);
+}
+
+/**
+ * Enumerate multiple values by walking through MIB, starting at given root. Uses GETBULK requests with given number of
+ * repetitions if SNMP version is 2c or higher, and falls back to GETNEXT if agent does not answer GETBULK requests.
+ */
+uint32_t LIBNXSNMP_EXPORTABLE SnmpBulkWalk(SNMP_Transport *transport, const TCHAR *rootOid, uint32_t maxRepetitions, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors, bool failOnShutdown)
+{
+   if (transport == nullptr)
+      return SNMP_ERR_COMM;
+
+   uint32_t rootOidBin[MAX_OID_LEN];
+   size_t rootOidLen = SnmpParseOID(rootOid, rootOidBin, MAX_OID_LEN);
+   if (rootOidLen == 0)
+   {
+      if (logErrors)
+      {
+         InetAddress a = transport->getPeerIpAddress();
+         TCHAR temp[64];
+         nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 5, _T("Error parsing SNMP OID \"%s\" in SnmpBulkWalk (destination IP address %s)"), rootOid, a.toString(temp));
+      }
+      return SNMP_ERR_BAD_OID;
+   }
+
+   return WalkMIB(transport, rootOidBin, rootOidLen, maxRepetitions, handler, failOnShutdown);
+}
+
+/**
+ * Enumerate multiple values by walking through MIB, starting at given root. Uses GETBULK requests with given number of
+ * repetitions if SNMP version is 2c or higher, and falls back to GETNEXT if agent does not answer GETBULK requests.
+ */
+uint32_t LIBNXSNMP_EXPORTABLE SnmpBulkWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, uint32_t maxRepetitions, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors, bool failOnShutdown)
+{
+   return WalkMIB(transport, rootOid, rootOidLen, maxRepetitions, handler, failOnShutdown);
 }
 
 /**
