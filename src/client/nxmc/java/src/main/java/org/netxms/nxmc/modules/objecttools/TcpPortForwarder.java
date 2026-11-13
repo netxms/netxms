@@ -140,6 +140,7 @@ public class TcpPortForwarder
                      synchronized(sessions)
                      {
                         sessions.put(session.getId(), session);
+                        session.start();
                      }
                      if (messageId != 0)
                      {
@@ -334,9 +335,15 @@ public class TcpPortForwarder
             }
          }, "Session-" + id + "-Proxy");
          proxyReaderThread.setDaemon(true);
+      }
 
-         socketReaderThread.start();
+      /**
+       * Start session threads. Proxy reader goes first because socket reader joins it on exit.
+       */
+      public void start()
+      {
          proxyReaderThread.start();
+         socketReaderThread.start();
       }
 
       /**
@@ -344,6 +351,10 @@ public class TcpPortForwarder
        */
       public void close()
       {
+         Socket socket = this.socket;
+         if (socket == null)
+            return; // Already closed by reader threads
+
          try
          {
             socket.shutdownInput();

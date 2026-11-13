@@ -24,6 +24,18 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.10 to 71.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(CreateConfigParam(L"Client.RemoteControl.BlankScreenOnConnect", L"0",
+         L"Request UltraVNC servers to disable local input and blank the monitor when a remote control session starts. Ignored for other VNC servers.",
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 71.9 to 71.10
  */
 static bool H_UpgradeFromV9()
@@ -248,6 +260,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 10, 71, 11, H_UpgradeFromV10 },
    { 9,  71, 10, H_UpgradeFromV9  },
    { 8,  71, 9,  H_UpgradeFromV8  },
    { 7,  71, 8,  H_UpgradeFromV7  },
