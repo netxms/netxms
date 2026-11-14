@@ -24,6 +24,17 @@
 #include <netxms_maps.h>
 
 /**
+ * Get symbolic name of sensor device class
+ */
+const char NXCORE_EXPORTABLE *SensorDeviceClassName(SensorDeviceClass deviceClass)
+{
+   static const char *names[] = { "other", "ups", "water_meter", "electricity_meter", "temperature", "humidity",
+      "temperature_humidity", "co2", "power_supply", "current", "water_leak", "smoke" };
+   static_assert(sizeof(names) / sizeof(names[0]) == SENSOR_MAX_DEVICE_CLASS, "sensor device class name table is out of sync with SensorDeviceClass");
+   return ((deviceClass >= 0) && (deviceClass < SENSOR_MAX_DEVICE_CLASS)) ? names[deviceClass] : "other";
+}
+
+/**
  * Default empty Sensor class constructior
  */
 Sensor::Sensor() : super(Pollable::STATUS | Pollable::CONFIGURATION)

@@ -155,7 +155,10 @@ Data-point attributes (per value) and resource attributes (per node).
 | 7.6 | Empty-valued `tag:x=` | attribute skipped (value `[0]==0`) |
 | 7.7 | tag attrs on **template** of an instance-discovery DCI | resolved via parent template (`templateId==ownerId` branch) and included |
 | 7.8 | tag attrs on related object | included (collected from all three: template, owner, related) |
-| 7.9 | Resource attributes | each resource carries `service.name`, `host.name`, `host.id` (object GUID) |
+| 7.9 | Resource attributes | each resource carries `service.name`, `netxms.object.id` (int), `netxms.object.guid`, `netxms.object.class` (symbolic, e.g. `Node`, `Sensor`, `Rack`) |
+| 7.9a | Host identity | DCI on node → `host.name` (node name) and `host.id` (= `netxms.object.guid`); DCI on sensor, rack, room, facility, power domain, cooling zone, cluster, access point etc. → `host.name` / `host.id` absent |
+| 7.9b | Hardware identity | node, sensor, access point, mobile device with vendor / model (node: product name) / serial number set → `hw.vendor`, `hw.model`, `hw.serial_number`; empty value → attribute absent; other classes → absent |
+| 7.9c | Sensor device class | DCI on sensor → `netxms.sensor.class` = symbolic class (`ups`, `water_meter`, `temperature_humidity`, ...); other classes → absent |
 | 7.10 | `ServiceName` config override | `service.name` = override value for all resources; unset → `service.name` = host name |
 | 7.11 | DCI user tag / system tag set | `netxms.dci.user_tag` / `netxms.dci.system_tag` = tag value; empty tag → attribute absent |
 | 7.12 | Node placed in rack R inside room M inside facility F | resource carries `netxms.facility` / `netxms.facility.id` (GUID), `netxms.room` / `.room.id`, `netxms.rack` / `.rack.id`, `netxms.rack.position` (int, unit label as shown in rack view), `netxms.rack.units` (int, device height) |
@@ -166,7 +169,8 @@ Data-point attributes (per value) and resource attributes (per node).
 | 7.17 | Zoning enabled, DCI on node | `netxms.zone.uin` (int) and `netxms.zone` (zone name); zoning disabled or owner class without zone (rack, sensor, facility) → both absent |
 | 7.18 | Geolocation on node, or only on facility | `geo.location.lat` / `.lon` (double) from the node, otherwise from nearest of rack, room, facility; none set → absent |
 | 7.19 | Postal address on facility: country `lv`, region `LV-RIX`, city, postcode | `geo.country.iso_code` = `LV`, `geo.region.iso_code` = `LV-RIX`, `geo.locality.name`, `geo.postal_code`; free-text country/region (e.g. `Latvia`) → ISO attribute absent |
-| 7.20 | Event forwarder, event from node or interface in rack | log resource carries the same location attributes as metrics of that node |
+| 7.20 | Event forwarder, event from node in rack | log resource carries the same location attributes as metrics of that node |
+| 7.20a | Event forwarder, event from node / sensor / container | log resource carries the same identity attributes as 7.9-7.9c (`host.*` only for node source); event without source object → only `service.name` = `netxms-server` |
 | 7.21 | Node bound to power domains `PDU-A` (PDU, feed `A`) and `PDU-B` (PDU, feed `B`) | `netxms.power.domains` = `["PDU-A","PDU-B"]`, `netxms.power.domain_ids` = their GUIDs, `netxms.power.feeds` = `["A","B"]`, `netxms.power.domain_types` = `["PDU","PDU"]` (OTLP array values, parallel, ordered by domain object ID); domain without feed tag → empty string element |
 | 7.22 | Node not bound to any power domain, mounted in rack bound to `UPS-1` | power attributes taken from the rack (`["UPS-1"]`, type `UPS`); node bound to own domain → rack domains ignored (nearest level wins) |
 | 7.23 | Power chain grid entry → UPS → PDU, node bound to PDU | only the PDU is reported (immediate domains only, no upstream chain) |

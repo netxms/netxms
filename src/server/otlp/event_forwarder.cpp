@@ -234,9 +234,8 @@ void OtlpEventForwarderDriver::buildRecord(OtlpExportRecord& rec, const Event& e
       nodeName = "netxms-server";
    }
    rec.resourceAttributes.emplace_back("service.name", !m_serviceNameOverride.empty() ? m_serviceNameOverride : nodeName);
-   rec.resourceAttributes.emplace_back("host.name", nodeName);
    if (source != nullptr)
-      rec.resourceAttributes.emplace_back("host.id", source->getGuid());
+      AddObjectIdentityAttributes(&rec.resourceAttributes, *source);
 
    rec.timeUnixNano = static_cast<uint64_t>(event.getTimestamp()) * 1000000000ULL;
    rec.observedTimeUnixNano = static_cast<uint64_t>(GetCurrentTimeMs()) * 1000000ULL;

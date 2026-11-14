@@ -155,6 +155,12 @@ template<typename T> static inline void AddAttributes(T *parent, const std::vect
 std::vector<OtlpExportAttribute> GetLocationAttributes(uint32_t objectId);
 
 /**
+ * Add identity attributes (object ID, GUID and class, host identity for nodes, hardware identity)
+ * of given object to OTLP resource attribute list
+ */
+void AddObjectIdentityAttributes(std::vector<OtlpExportAttribute> *attributes, const NetObj& object);
+
+/**
  * Node property used for matching
  */
 enum OTLPNodeProperty

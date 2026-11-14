@@ -3557,6 +3557,11 @@ static inline SensorDeviceClass SensorDeviceClassFromInt(int n)
 }
 
 /**
+ * Get symbolic name of sensor device class (lowercase, e.g. "water_meter")
+ */
+const char NXCORE_EXPORTABLE *SensorDeviceClassName(SensorDeviceClass deviceClass);
+
+/**
  * Mobile device class
  */
 class NXCORE_EXPORTABLE Sensor : public DataCollectionTarget

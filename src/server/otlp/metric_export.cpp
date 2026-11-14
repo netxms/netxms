@@ -392,8 +392,7 @@ bool OtlpMetricExportDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, T
       rec.resourceAttributes.emplace_back("service.name", m_serviceNameOverride);
    else
       rec.resourceAttributes.emplace_back("service.name", owner->getName());
-   rec.resourceAttributes.emplace_back("host.name", owner->getName());
-   rec.resourceAttributes.emplace_back("host.id", owner->getGuid());
+   AddObjectIdentityAttributes(&rec.resourceAttributes, *owner);
 
    rec.attributes.emplace_back("netxms.dci.id", static_cast<int64_t>(dci->getId()));
    const wchar_t *dataSource = dci->getDataProviderName();

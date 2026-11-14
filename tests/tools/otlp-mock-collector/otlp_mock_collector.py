@@ -100,6 +100,52 @@ def fmt_ts(ns):
         return str(ns)
 
 
+def check_resource_identity(res_attrs, problems):
+    """Check identity resource attributes (src/server/otlp/identity.cpp)."""
+    label = res_attrs.get("netxms.object.id", "?")
+    # Always present on every resource
+    for required in ("service.name", "netxms.object.id", "netxms.object.guid", "netxms.object.class"):
+        if required not in res_attrs:
+            problems.append("resource %s missing attribute '%s'" % (label, required))
+    if "netxms.object.id" in res_attrs and not isinstance(res_attrs["netxms.object.id"], int):
+        problems.append("resource %s: netxms.object.id is not an integer" % label)
+
+    object_class = res_attrs.get("netxms.object.class")
+    if object_class is None:
+        return
+    if not isinstance(object_class, str) or object_class.isdigit():
+        problems.append("resource %s: netxms.object.class %r is not a symbolic class name" % (label, object_class))
+        return
+
+    # Host identity only for nodes
+    if object_class == "Node":
+        for required in ("host.name", "host.id"):
+            if required not in res_attrs:
+                problems.append("resource %s (Node) missing attribute '%s'" % (label, required))
+        if "host.id" in res_attrs and res_attrs["host.id"] != res_attrs.get("netxms.object.guid"):
+            problems.append("resource %s: host.id %r differs from netxms.object.guid %r" %
+                            (label, res_attrs["host.id"], res_attrs.get("netxms.object.guid")))
+    else:
+        for unexpected in ("host.name", "host.id"):
+            if unexpected in res_attrs:
+                problems.append("resource %s (%s) carries '%s' (only nodes are hosts)" % (label, object_class, unexpected))
+
+    # Sensor device class
+    if object_class == "Sensor":
+        sensor_class = res_attrs.get("netxms.sensor.class")
+        if sensor_class is None:
+            problems.append("resource %s (Sensor) missing attribute 'netxms.sensor.class'" % label)
+        elif not isinstance(sensor_class, str) or sensor_class.isdigit():
+            problems.append("resource %s: netxms.sensor.class %r is not a symbolic name" % (label, sensor_class))
+    elif "netxms.sensor.class" in res_attrs:
+        problems.append("resource %s (%s) carries 'netxms.sensor.class'" % (label, object_class))
+
+    # Hardware identity is optional, but never sent empty
+    for key in ("hw.vendor", "hw.model", "hw.serial_number"):
+        if key in res_attrs and res_attrs[key] in ("", None):
+            problems.append("resource %s: '%s' is present but empty" % (label, key))
+
+
 def decode_request(body):
     """Decode raw protobuf into a structured python dict and run assertions."""
     req = PB.ExportMetricsServiceRequest()
@@ -110,10 +156,7 @@ def decode_request(body):
     resources = []
     for rm in req.resource_metrics:
         res_attrs = attrs_to_dict(rm.resource.attributes)
-        # Driver always sets these three resource attributes (metric_export.cpp sendBatch)
-        for required in ("service.name", "host.name", "host.id"):
-            if required not in res_attrs:
-                problems.append("resource missing attribute '%s'" % required)
+        check_resource_identity(res_attrs, problems)
         scopes = []
         for sm in rm.scope_metrics:
             metrics = []
@@ -189,8 +232,13 @@ def pretty_print(decoded, args):
           (stats["requests"], len(decoded["resources"]), decoded["data_point_count"]))
     for r in decoded["resources"]:
         ra = r["resource_attributes"]
-        print("  Resource: service.name=%r host.name=%r host.id=%r" %
-              (ra.get("service.name"), ra.get("host.name"), ra.get("host.id")))
+        print("  Resource: service.name=%r object=%r class=%r guid=%r" %
+              (ra.get("service.name"), ra.get("netxms.object.id"), ra.get("netxms.object.class"), ra.get("netxms.object.guid")))
+        if "host.name" in ra or "host.id" in ra:
+            print("    host.name=%r host.id=%r" % (ra.get("host.name"), ra.get("host.id")))
+        hw = [(k, ra[k]) for k in ("netxms.sensor.class", "hw.vendor", "hw.model", "hw.serial_number") if k in ra]
+        if hw:
+            print("    " + " ".join("%s=%r" % kv for kv in hw))
         for sc in r["scopes"]:
             print("    Scope: %s" % sc["scope"])
             for m in sc["metrics"]:

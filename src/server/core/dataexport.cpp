@@ -690,16 +690,6 @@ static const char *NodeHardwareTypeName(NodeType type)
 }
 
 /**
- * Get sensor device class name
- */
-static const char *SensorDeviceClassName(SensorDeviceClass deviceClass)
-{
-   static const char *names[] = { "other", "ups", "water_meter", "electricity_meter", "temperature", "humidity",
-      "temperature_humidity", "co2", "power_supply", "current", "water_leak", "smoke" };
-   return ((deviceClass >= 0) && (deviceClass < SENSOR_MAX_DEVICE_CLASS)) ? names[deviceClass] : "other";
-}
-
-/**
  * Inventory attributes of metric owner (empty where not applicable to object class)
  */
 struct ObjectInventory
