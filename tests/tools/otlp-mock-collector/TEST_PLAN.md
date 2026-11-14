@@ -167,6 +167,17 @@ Data-point attributes (per value) and resource attributes (per node).
 | 7.18 | Geolocation on node, or only on facility | `geo.location.lat` / `.lon` (double) from the node, otherwise from nearest of rack, room, facility; none set → absent |
 | 7.19 | Postal address on facility: country `lv`, region `LV-RIX`, city, postcode | `geo.country.iso_code` = `LV`, `geo.region.iso_code` = `LV-RIX`, `geo.locality.name`, `geo.postal_code`; free-text country/region (e.g. `Latvia`) → ISO attribute absent |
 | 7.20 | Event forwarder, event from node or interface in rack | log resource carries the same location attributes as metrics of that node |
+| 7.21 | Node bound to power domains `PDU-A` (PDU, feed `A`) and `PDU-B` (PDU, feed `B`) | `netxms.power.domains` = `["PDU-A","PDU-B"]`, `netxms.power.domain_ids` = their GUIDs, `netxms.power.feeds` = `["A","B"]`, `netxms.power.domain_types` = `["PDU","PDU"]` (OTLP array values, parallel, ordered by domain object ID); domain without feed tag → empty string element |
+| 7.22 | Node not bound to any power domain, mounted in rack bound to `UPS-1` | power attributes taken from the rack (`["UPS-1"]`, type `UPS`); node bound to own domain → rack domains ignored (nearest level wins) |
+| 7.23 | Power chain grid entry → UPS → PDU, node bound to PDU | only the PDU is reported (immediate domains only, no upstream chain) |
+| 7.24 | Node or its rack bound to cooling zone `CZ-1` (nested in cooling plant) | `netxms.cooling.zone` = `CZ-1`, `netxms.cooling.zone.id` = its GUID (nearest zone, plant not reported); none → both absent |
+| 7.25 | DCI owned by a power domain / cooling zone itself | the object is its own `netxms.power.domains` / `netxms.cooling.zone` |
+| 7.26 | Rename power domain, change feed tag or type, bind node to another domain | next batch reflects the change without server restart |
+
+Array-valued attributes (`netxms.power.*`) are sent as OTLP `array_value`. Backends without
+array support flatten them: Prometheus remote write / OTel Collector `prometheusremotewrite`
+exporter turns them into a JSON-encoded string label (e.g. `["A","B"]`), so dashboards there
+must match on the string form.
 
 ## 8. Opt-out selection (`pds:ignore` / `otel:ignore`)
 

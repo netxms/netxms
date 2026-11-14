@@ -149,8 +149,8 @@ template<typename T> static inline void AddAttributes(T *parent, const std::vect
 }
 
 /**
- * Get location attributes (facility, room, rack, rack placement, zone, geolocation) for OTLP resource
- * representing given object. Returns empty list if object no longer exists.
+ * Get location attributes (facility, room, rack, rack placement, zone, geolocation, power domains,
+ * cooling zone) for OTLP resource representing given object. Returns empty list if object no longer exists.
  */
 std::vector<OtlpExportAttribute> GetLocationAttributes(uint32_t objectId);
 
