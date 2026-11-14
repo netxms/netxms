@@ -3228,9 +3228,9 @@ protected:
    uint32_t m_domainId;
    uint32_t m_controllerId;
    MacAddress m_macAddress;
-   TCHAR *m_vendor;
-   TCHAR *m_model;
-   TCHAR *m_serialNumber;
+   SharedString m_vendor;
+   SharedString m_model;
+   SharedString m_serialNumber;
    StructArray<RadioInterfaceInfo> m_radioInterfaces;
    AccessPointState m_apState;
    AccessPointState m_prevState;
@@ -3252,7 +3252,6 @@ protected:
 public:
    AccessPoint();
    AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& macAddr);
-   virtual ~AccessPoint();
 
    shared_ptr<AccessPoint> self() { return static_pointer_cast<AccessPoint>(NObject::self()); }
    shared_ptr<const AccessPoint> self() const { return static_pointer_cast<const AccessPoint>(NObject::self()); }
@@ -3289,9 +3288,9 @@ public:
    shared_ptr<Node> getController() const { return static_pointer_cast<Node>(FindObjectById(m_controllerId, OBJECT_NODE)); }
    String getControllerName() const;
    bool isIncludedInIcmpPoll() const { return (m_flags & APF_INCLUDE_IN_ICMP_POLL) ? true : false; }
-   const TCHAR *getVendor() const { return CHECK_NULL_EX(m_vendor); }
-   const TCHAR *getModel() const { return CHECK_NULL_EX(m_model); }
-   const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
+   SharedString getVendor() const { return GetAttributeWithLock(m_vendor, m_mutexProperties); }
+   SharedString getModel() const { return GetAttributeWithLock(m_model, m_mutexProperties); }
+   SharedString getSerialNumber() const { return GetAttributeWithLock(m_serialNumber, m_mutexProperties); }
    std::vector<MacAddress> getRadioBSSID() const;
    NXSL_Value *getRadioInterfacesForNXSL(NXSL_VM *vm) const;
    json_t *getRadioInterfacesAsJson() const;
