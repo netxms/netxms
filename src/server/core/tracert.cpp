@@ -313,7 +313,7 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& sr
          if ((peer == nullptr) || !peer->isBridge())
             continue;
 
-         shared_ptr<ForwardingDatabase> fdb = peer->getSwitchForwardingDatabase();
+         shared_ptr<ForwardingDatabase> fdb = peer->getCachedSwitchForwardingDatabase();
          if (fdb == nullptr)
             continue;
 
@@ -330,7 +330,7 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& sr
    // Step 4: If source itself is a bridge, check its own FDB
    if ((firstSwitchId == 0) && src->isBridge())
    {
-      shared_ptr<ForwardingDatabase> fdb = src->getSwitchForwardingDatabase();
+      shared_ptr<ForwardingDatabase> fdb = src->getCachedSwitchForwardingDatabase();
       if (fdb != nullptr)
       {
          bool isStatic;
@@ -367,7 +367,7 @@ shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& sr
       if (switchNode == nullptr)
          break;
 
-      shared_ptr<ForwardingDatabase> fdb = switchNode->getSwitchForwardingDatabase();
+      shared_ptr<ForwardingDatabase> fdb = switchNode->getCachedSwitchForwardingDatabase();
       if (fdb == nullptr)
          break;
 

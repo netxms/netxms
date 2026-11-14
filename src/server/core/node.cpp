@@ -4368,7 +4368,7 @@ NetworkPathCheckResult Node::checkNetworkPathLayer2Trace(const shared_ptr<Node>&
          break;
       }
 
-      shared_ptr<ForwardingDatabase> fdb = switchNode->getSwitchForwardingDatabase();
+      shared_ptr<ForwardingDatabase> fdb = switchNode->getCachedSwitchForwardingDatabase();
       if (fdb == nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathLayer2Trace(%s [%d]): no FDB available on switch %s [%d]",
@@ -8094,6 +8094,54 @@ void Node::checkIfXTable(SNMP_Transport *snmp)
 }
 
 /**
+ * Read switch forwarding database from device using given driver. Returns nullptr on failure.
+ */
+shared_ptr<ForwardingDatabase> Node::readSwitchForwardingDatabase(NetworkDeviceDriver *driver, DeviceContext *context, DriverData *driverData)
+{
+   StructArray<ForwardingDatabaseEntry> *fdbEntries = driver->getForwardingDatabase(context, this, driverData);
+   if (fdbEntries == nullptr)
+      return shared_ptr<ForwardingDatabase>();
+
+   StructArray<BridgePort> *bridgePorts = nullptr;
+   if (!driver->isFdbUsingIfIndex(this, driverData))
+      bridgePorts = driver->getBridgePorts(context, this, driverData);
+   shared_ptr<ForwardingDatabase> fdb = make_shared<ForwardingDatabase>(m_id, *fdbEntries, bridgePorts);
+   delete bridgePorts;
+   delete fdbEntries;
+   return fdb;
+}
+
+/**
+ * Get switch forwarding database. If it was not collected by topology poll yet, it is read from device
+ * and cached until next topology poll.
+ */
+shared_ptr<ForwardingDatabase> Node::getSwitchForwardingDatabase()
+{
+   shared_ptr<ForwardingDatabase> fdb = getCachedSwitchForwardingDatabase();
+   if ((fdb != nullptr) || !isBridge())
+      return fdb;
+
+   NodeDeviceContext context(self());
+   auto driver = getUsableDriverWithData(&context);
+   if (driver.first == nullptr)
+      return fdb;
+
+   fdb = readSwitchForwardingDatabase(driver.first, &context, driver.second.get());
+   if (fdb == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, L"Failed to read switch forwarding database from node %s [%u] on demand", m_name, m_id);
+      return fdb;
+   }
+   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, L"Switch forwarding database read from node %s [%u] on demand", m_name, m_id);
+
+   // Topology poll could complete while database was being read
+   LockGuard lockGuard(m_topologyMutex);
+   if (m_fdb == nullptr)
+      m_fdb = fdb;
+   return m_fdb;
+}
+
+/**
  * Check if SNMP agent supports GETBULK requests. Updates node capabilities and enables or disables
  * use of GETBULK on given transport, so the rest of current poll already works according to check result.
  */
@@ -10242,7 +10290,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
    }
    else if (!_tcsicmp(name, _T("Topology.SwitchForwardingDatabase")))
    {
-      shared_ptr<ForwardingDatabase> fdb = getSwitchForwardingDatabase();
+      shared_ptr<ForwardingDatabase> fdb = getCachedSwitchForwardingDatabase();
       if (fdb != nullptr)
       {
          *result = fdb->getAsTable();
@@ -14759,16 +14807,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
       auto driver = getUsableDriverWithData(&context);
       if (driver.first != nullptr)
       {
-         StructArray<ForwardingDatabaseEntry> *fdbEntries = driver.first->getForwardingDatabase(&context, this, driver.second.get());
-         if (fdbEntries != nullptr)
-         {
-            StructArray<BridgePort> *bridgePorts = nullptr;
-            if (!driver.first->isFdbUsingIfIndex(this, driver.second.get()))
-               bridgePorts = driver.first->getBridgePorts(&context, this, driver.second.get());
-            fdb = make_shared<ForwardingDatabase>(m_id, *fdbEntries, bridgePorts);
-            delete bridgePorts;
-            delete fdbEntries;
-         }
+         fdb = readSwitchForwardingDatabase(driver.first, &context, driver.second.get());
 
          shared_ptr<ForwardingDatabase> prevFdb;
          m_topologyMutex.lock();
@@ -15156,7 +15195,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
  */
 void Node::addHostConnections(LinkLayerNeighbors *nbs)
 {
-   shared_ptr<ForwardingDatabase> fdb = getSwitchForwardingDatabase();
+   shared_ptr<ForwardingDatabase> fdb = getCachedSwitchForwardingDatabase();
    if (fdb == nullptr)
       return;
 

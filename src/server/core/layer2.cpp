@@ -205,7 +205,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindInterfaceConnectionPoint(const MacAddre
 	{
 		Node *node = static_cast<Node*>(nodes->get(i));
 
-      shared_ptr<ForwardingDatabase> fdb = node->getSwitchForwardingDatabase();
+      shared_ptr<ForwardingDatabase> fdb = node->getCachedSwitchForwardingDatabase();
 		if (fdb != nullptr)
 		{
 			nxlog_debug_tag(DEBUG_TAG, 6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%u]"), macAddrText, node->getName(), (int)node->getId());
@@ -356,7 +356,7 @@ static void FindMACsByPattern(const BYTE* macPattern, size_t macPatternSize, Has
       }
 
       // Check node forwarding database
-      shared_ptr<ForwardingDatabase> fdb = node->getSwitchForwardingDatabase();
+      shared_ptr<ForwardingDatabase> fdb = node->getCachedSwitchForwardingDatabase();
       if (fdb != nullptr)
          fdb->findMacAddressByPattern(macPattern, macPatternSize, matchedMacs);
 

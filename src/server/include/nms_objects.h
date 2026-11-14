@@ -4608,6 +4608,7 @@ protected:
    void checkBridgeMib(SNMP_Transport *snmp, NodeDeviceContext *deviceContext);
    void checkIfXTable(SNMP_Transport *snmp);
    void checkSnmpGetBulk(SNMP_Transport *snmp);
+   shared_ptr<ForwardingDatabase> readSwitchForwardingDatabase(NetworkDeviceDriver *driver, DeviceContext *context, DriverData *driverData);
    SNMP_Transport *createSnmpTransportInternal(const InetAddress& targetAddr, uint16_t port, bool pollerMessageOnFailure, uint32_t *proxyNodeId, bool *proxyConnectionFailed);
    NetworkPathCheckResult checkNetworkPath(uint32_t requestId, const StatusPollProxyEvidence& proxyEvidence);
    NetworkPathCheckResult checkNetworkPathLayer2(uint32_t requestId, bool secondPass, const StatusPollProxyEvidence& proxyEvidence);
@@ -5087,7 +5088,8 @@ public:
 
    shared_ptr<NetworkMapObjectList> getAndUpdateL2Topology(uint32_t *status, int radius, bool useL1Topology);
    shared_ptr<NetworkMapObjectList> buildL2Topology(int radius, bool includeEndNodes, bool useL1Topology, bool includeWiFiClients, NetworkMap *filterProvider);
-   shared_ptr<ForwardingDatabase> getSwitchForwardingDatabase() const { return GetAttributeWithLock(m_fdb, m_topologyMutex); }
+   shared_ptr<ForwardingDatabase> getSwitchForwardingDatabase();
+   shared_ptr<ForwardingDatabase> getCachedSwitchForwardingDatabase() const { return GetAttributeWithLock(m_fdb, m_topologyMutex); }
    shared_ptr<NetObj> findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
    void addHostConnections(LinkLayerNeighbors *nbs);
    void addExistingConnections(LinkLayerNeighbors *nbs);
