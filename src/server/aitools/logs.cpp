@@ -352,6 +352,7 @@ static const char *GetColumnTypeName(int type)
       case LC_ACTION_CODE:      return "action_code";
       case LC_ATM_TXN_CODE:     return "atm_txn_code";
       case LC_ATM_TXN_OUTCOME:  return "atm_txn_outcome";
+      case LC_ATM_TXN_ENTRY_MODE: return "atm_txn_entry_mode";
       case LC_ASSET_OPERATION:  return "asset_operation";
       case LC_DEPLOYMENT_STATUS: return "deployment_status";
       case LC_AI_TASK_STATUS:   return "ai_task_status";

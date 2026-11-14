@@ -55,6 +55,7 @@
 #define LC_AI_OP_EXEC_STATUS  22
 #define LC_OBSERVATION_STATE  23
 #define LC_ATM_TXN_OUTCOME    24
+#define LC_ATM_TXN_ENTRY_MODE 25
 
 /**
  * Column filter types
