@@ -4433,6 +4433,7 @@ protected:
    NetworkPathCheckResult m_pathCheckResult;
    Mutex m_agentMutex;
    Mutex m_routingTableMutex;
+   Mutex m_routingTableReadMutex;
    Mutex m_topologyMutex;
    shared_ptr<AgentConnectionEx> m_agentConnection;
    ProxyAgentConnection *m_proxyConnections;

@@ -885,6 +885,7 @@ public:
    bool isEmpty() const { return m_routes.isEmpty(); }
    const ROUTE *get(int index) const { return m_routes.get(index); }
    time_t timestamp() const { return m_timestamp; }
+   void updateTimestamp() { m_timestamp = time(nullptr); }
 
    void add(const ROUTE& r)
    {

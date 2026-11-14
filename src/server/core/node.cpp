@@ -30,7 +30,7 @@
 #include <device-backup.h>
 #include <netxms_maps.h>
 
-#define ROUTING_TABLE_CACHE_TIMEOUT  120  // Routing table cache timeout in seconds
+#define ROUTING_TABLE_CACHE_TIMEOUT  600  // Maximum age of cached routing table that can be returned without reading it from node, in seconds
 
 #define SMCLP_ALLOWED_SYMBOLS L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/-_"
 
@@ -13489,7 +13489,8 @@ uint32_t Node::getInterfaceCount(Interface **lastInterface)
 }
 
 /**
- * Read routing table from node
+ * Read routing table from node and update cached version on success. Caller must hold routing table read mutex,
+ * so that there is only one reader for the node at any given time.
  */
 shared_ptr<RoutingTable> Node::readRoutingTable()
 {
@@ -13515,32 +13516,43 @@ shared_ptr<RoutingTable> Node::readRoutingTable()
    }
 
    if (routingTable != nullptr)
+   {
       routingTable->sort();
+      routingTable->updateTimestamp();   // Cache age is counted from the moment when reading was completed
+
+      routingTableLock();
+      m_routingTable = routingTable;
+      routingTableUnlock();
+   }
 
    return routingTable;
 }
 
 /**
- * Get cached routing table if available, read from node otherwise and updated cached version.
+ * Check if routing table can be used without reading it from node again
+ */
+static inline bool IsRoutingTableFresh(const shared_ptr<RoutingTable>& routingTable)
+{
+   return (routingTable != nullptr) && (routingTable->timestamp() >= time(nullptr) - ROUTING_TABLE_CACHE_TIMEOUT);
+}
+
+/**
+ * Get routing table. Cached version is returned if it is not older than cache timeout, otherwise routing table
+ * is read from node and cached version is updated.
  */
 shared_ptr<RoutingTable> Node::getRoutingTable()
 {
-   routingTableLock();
-   auto routingTable = m_routingTable;
-   routingTableUnlock();
+   shared_ptr<RoutingTable> routingTable = getCachedRoutingTable();
+   if (IsRoutingTableFresh(routingTable))
+      return routingTable;
 
-   if ((routingTable == nullptr) || (routingTable->timestamp() < time(nullptr) - ROUTING_TABLE_CACHE_TIMEOUT))
-   {
-      routingTable = readRoutingTable();
-      if (routingTable != nullptr)
-      {
-         routingTableLock();
-         m_routingTable = routingTable;
-         routingTableUnlock();
-      }
-   }
+   // Cached version could be updated by routing table poll or another request while waiting for the mutex
+   LockGuard lockGuard(m_routingTableReadMutex);
+   routingTable = getCachedRoutingTable();
+   if (IsRoutingTableFresh(routingTable))
+      return routingTable;
 
-   return routingTable;
+   return readRoutingTable();
 }
 
 /**
@@ -13683,7 +13695,9 @@ void Node::routingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t
    unlockProperties();
 
    pollerLock(routing);
-   getRoutingTable();   // will update m_routingTable if needed
+   m_routingTableReadMutex.lock();
+   readRoutingTable();   // will update m_routingTable on success
+   m_routingTableReadMutex.unlock();
    pollerUnlock();
 }
 

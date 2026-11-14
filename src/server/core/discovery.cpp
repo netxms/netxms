@@ -1169,7 +1169,8 @@ void Node::discoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rq
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - reading routing table"), m_name, m_ipAddress.toString().cstr());
       sendPollerMsg(L"Reading routing table...\r\n");
-      shared_ptr<RoutingTable> rt = getRoutingTable();
+      // Routing table is only a source of potential addresses here, so version collected by routing table poll is good enough regardless of its age
+      shared_ptr<RoutingTable> rt = getCachedRoutingTable();
       if (rt != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - read %d entries from routing table"), m_name, m_ipAddress.toString().cstr(), rt->size());
