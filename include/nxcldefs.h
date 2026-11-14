@@ -321,6 +321,7 @@ enum RoomElementType
 #define NC_IS_NETCONF              _ULL(0x4000000000)  /* Node supports NETCONF protocol */
 #define NC_HAS_TLS_TUNNEL          _ULL(0x8000000000)  /* Agent supports inbound TLS tunnel connections */
 #define NC_IS_DHCP_SERVER          _ULL(0x10000000000) /* Node is DHCP server and provides scope and lease information */
+#define NC_SNMP_GETBULK            _ULL(0x20000000000) /* SNMP agent on node supports GETBULK requests */
 
 /**
  * DHCP lease types (TYPE column of DHCP.Leases agent table)

@@ -1239,9 +1239,11 @@ static uint32_t WalkSimulator(WalkSimulatorTransport *transport, uint32_t maxRep
          return SNMP_ERR_SUCCESS;
       };
    static const uint32_t rootOid[] = { 1, 3, 6, 1, 2, 1, 2, 2, 1, 1 };
-   uint32_t rc = (maxRepetitions != 0) ?
-      SnmpBulkWalk(transport, rootOid, 10, maxRepetitions, handler) :
-      SnmpWalk(transport, rootOid, 10, handler);
+   if (maxRepetitions != 0)
+      transport->setBulkRepetitions(maxRepetitions);
+   else
+      transport->setBulkRequestsEnabled(false);
+   uint32_t rc = SnmpWalk(transport, rootOid, 10, handler);
    *count = valid ? rows : 0xFFFFFFFF;
    return rc;
 }
@@ -1253,7 +1255,7 @@ static void TestWalk()
 {
    uint32_t count;
 
-   StartTest(_T("SnmpWalk"));
+   StartTest(_T("SnmpWalk - GETBULK disabled"));
    WalkSimulatorTransport t1(60, BulkBehavior::ANSWER);
    AssertEquals(WalkSimulator(&t1, 0, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
    AssertEquals(count, 60u);
@@ -1261,7 +1263,7 @@ static void TestWalk()
    AssertEquals(t1.m_nextRequests, 61);
    EndTest();
 
-   StartTest(_T("SnmpBulkWalk"));
+   StartTest(_T("SnmpWalk - GETBULK"));
    WalkSimulatorTransport t2(60, BulkBehavior::ANSWER);
    AssertEquals(WalkSimulator(&t2, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
    AssertEquals(count, 60u);
@@ -1281,7 +1283,7 @@ static void TestWalk()
    AssertEquals(count, 0u);
    EndTest();
 
-   StartTest(_T("SnmpBulkWalk - SNMPv1"));
+   StartTest(_T("SnmpWalk - GETBULK, SNMPv1"));
    WalkSimulatorTransport t5(60, BulkBehavior::ANSWER);
    t5.setSnmpVersion(SNMP_VERSION_1);
    AssertEquals(WalkSimulator(&t5, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
@@ -1290,18 +1292,26 @@ static void TestWalk()
    AssertEquals(t5.m_nextRequests, 61);
    EndTest();
 
-   StartTest(_T("SnmpBulkWalk - fallback to GETNEXT"));
+   StartTest(_T("SnmpWalk - GETBULK, fallback to GETNEXT"));
    WalkSimulatorTransport t6(60, BulkBehavior::TIMEOUT);
    AssertEquals(WalkSimulator(&t6, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
    AssertEquals(count, 60u);
    AssertEquals(t6.m_bulkRequests, 1);
    AssertEquals(t6.m_nextRequests, 61);
 
+   // GETBULK stays disabled on transport after it was not answered
+   AssertFalse(t6.isBulkRequestsEnabled());
+   AssertEquals(WalkSimulator(&t6, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(count, 60u);
+   AssertEquals(t6.m_bulkRequests, 1);
+   AssertEquals(t6.m_nextRequests, 122);
+
    WalkSimulatorTransport t7(60, BulkBehavior::GENERIC_ERROR);
    AssertEquals(WalkSimulator(&t7, 25, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
    AssertEquals(count, 60u);
    AssertEquals(t7.m_bulkRequests, 1);
    AssertEquals(t7.m_nextRequests, 61);
+   AssertTrue(t7.isBulkRequestsEnabled());
 
    // GETBULK stops working in the middle of the walk
    WalkSimulatorTransport t8(60, BulkBehavior::TIMEOUT_AFTER_FIRST);
@@ -1311,7 +1321,7 @@ static void TestWalk()
    AssertEquals(t8.m_nextRequests, 36);
    EndTest();
 
-   StartTest(_T("SnmpBulkWalk - response too big"));
+   StartTest(_T("SnmpWalk - GETBULK, response too big"));
    WalkSimulatorTransport t9(60, BulkBehavior::ANSWER, 10);
    AssertEquals(WalkSimulator(&t9, 40, &count), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
    AssertEquals(count, 60u);

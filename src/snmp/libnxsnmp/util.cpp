@@ -342,10 +342,11 @@ static inline uint64_t HashObjectId(const uint32_t *value, size_t length)
 }
 
 /**
- * Walk the MIB starting at given root. If maxRepetitions is greater than 1 and SNMP version is 2c or higher, GETBULK
- * requests are used; walk continues with GETNEXT requests from current position if agent fails to answer GETBULK request.
+ * Enumerate multiple values by walking through MIB, starting at given root. GETBULK requests are used if they are enabled
+ * on transport and SNMP version is 2c or higher; walk continues with GETNEXT requests from current position if agent fails
+ * to answer GETBULK request. GETBULK is disabled on transport for subsequent walks if request was not answered at all.
  */
-static uint32_t WalkMIB(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, uint32_t maxRepetitions, const std::function<uint32_t (SNMP_Variable*)>& handler, bool failOnShutdown)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors, bool failOnShutdown)
 {
    if (transport == nullptr)
       return SNMP_ERR_COMM;
@@ -370,7 +371,8 @@ static uint32_t WalkMIB(SNMP_Transport *transport, const uint32_t *rootOid, size
    size_t milestoneIteration = 1;
    uint64_t milestoneHash = 0;
 
-   bool useBulk = (maxRepetitions > 1) && (transport->getSnmpVersion() != SNMP_VERSION_1);
+   bool useBulk = transport->isBulkWalkPossible();
+   uint32_t maxRepetitions = transport->getBulkRepetitions();
 
    // Walk the MIB
    uint32_t result;
@@ -395,6 +397,7 @@ static uint32_t WalkMIB(SNMP_Transport *transport, const uint32_t *rootOid, size
          {
             nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GETBULK request, continue with GETNEXT"), result);
             useBulk = false;
+            transport->setBulkRequestsEnabled(false);
             continue;
          }
          nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GET request"), result);
@@ -409,6 +412,7 @@ static uint32_t WalkMIB(SNMP_Transport *transport, const uint32_t *rootOid, size
             if ((responsePDU->getErrorCode() == SNMP_PDU_ERR_TOO_BIG) && (maxRepetitions >= 4))
             {
                maxRepetitions /= 2;
+               transport->setBulkRepetitions(maxRepetitions);
             }
             else
             {
@@ -512,48 +516,6 @@ static uint32_t WalkMIB(SNMP_Transport *transport, const uint32_t *rootOid, size
       delete responsePDU;
    }
    return result;
-}
-
-/**
- * Enumerate multiple values by walking through MIB, starting at given root
- */
-uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors, bool failOnShutdown)
-{
-   return WalkMIB(transport, rootOid, rootOidLen, 0, handler, failOnShutdown);
-}
-
-/**
- * Enumerate multiple values by walking through MIB, starting at given root. Uses GETBULK requests with given number of
- * repetitions if SNMP version is 2c or higher, and falls back to GETNEXT if agent does not answer GETBULK requests.
- */
-uint32_t LIBNXSNMP_EXPORTABLE SnmpBulkWalk(SNMP_Transport *transport, const TCHAR *rootOid, uint32_t maxRepetitions, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors, bool failOnShutdown)
-{
-   if (transport == nullptr)
-      return SNMP_ERR_COMM;
-
-   uint32_t rootOidBin[MAX_OID_LEN];
-   size_t rootOidLen = SnmpParseOID(rootOid, rootOidBin, MAX_OID_LEN);
-   if (rootOidLen == 0)
-   {
-      if (logErrors)
-      {
-         InetAddress a = transport->getPeerIpAddress();
-         TCHAR temp[64];
-         nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 5, _T("Error parsing SNMP OID \"%s\" in SnmpBulkWalk (destination IP address %s)"), rootOid, a.toString(temp));
-      }
-      return SNMP_ERR_BAD_OID;
-   }
-
-   return WalkMIB(transport, rootOidBin, rootOidLen, maxRepetitions, handler, failOnShutdown);
-}
-
-/**
- * Enumerate multiple values by walking through MIB, starting at given root. Uses GETBULK requests with given number of
- * repetitions if SNMP version is 2c or higher, and falls back to GETNEXT if agent does not answer GETBULK requests.
- */
-uint32_t LIBNXSNMP_EXPORTABLE SnmpBulkWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, uint32_t maxRepetitions, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors, bool failOnShutdown)
-{
-   return WalkMIB(transport, rootOid, rootOidLen, maxRepetitions, handler, failOnShutdown);
 }
 
 /**

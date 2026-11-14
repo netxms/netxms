@@ -79,6 +79,7 @@ public class Capabilities extends TableElement
       addFlag(i18n.tr("Router"), (node.getCapabilities() & AbstractNode.NC_IS_ROUTER) != 0);
       addFlag("SMCLP", (node.getCapabilities() & AbstractNode.NC_IS_SMCLP) != 0);
       addFlag("SNMP", (node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0);
+      addFlag("SNMP GETBULK", (node.getCapabilities() & AbstractNode.NC_SNMP_GETBULK) != 0);
       if ((node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0)
       {
          addFlag("SNMP ifXTable", (node.getCapabilities() & AbstractNode.NC_HAS_IFXTABLE) != 0);

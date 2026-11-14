@@ -99,6 +99,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final long NC_IS_NETCONF             = 0x4000000000L;
    public static final long NC_HAS_TLS_TUNNEL         = 0x8000000000L;
    public static final long NC_IS_DHCP_SERVER         = 0x10000000000L;
+   public static final long NC_SNMP_GETBULK           = 0x20000000000L;
 
 	// Node flags
    public static final int NF_DISABLE_NETCONF           = 0x00002000;

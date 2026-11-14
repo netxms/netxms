@@ -1107,6 +1107,8 @@ protected:
 	bool m_updatePeerOnRecv;
 	bool m_deliverPduOnSecurityFailure;
 	bool m_reliable;
+	bool m_bulkRequestsEnabled;
+	uint32_t m_bulkRepetitions;
 	SNMP_Version m_snmpVersion;
 	SNMP_Codepage m_codepage;
 
@@ -1121,6 +1123,8 @@ public:
 	   m_updatePeerOnRecv = false;
 	   m_deliverPduOnSecurityFailure = false;
 	   m_reliable = false;
+	   m_bulkRequestsEnabled = true;
+	   m_bulkRepetitions = SNMP_DEFAULT_BULK_REPETITIONS;
 	   m_snmpVersion = SNMP_VERSION_2C;
 	}
    virtual ~SNMP_Transport();
@@ -1159,6 +1163,21 @@ public:
 
 	void setSnmpVersion(SNMP_Version version) { m_snmpVersion = version; }
 	SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
+
+	/**
+	 * Control use of GETBULK requests by MIB walk (SnmpWalk and everything built on top of it). Enabled by default;
+	 * GETBULK is never used with SNMP version 1. Walk disables GETBULK on transport by itself if agent does not answer it.
+	 */
+	void setBulkRequestsEnabled(bool enabled) { m_bulkRequestsEnabled = enabled; }
+	bool isBulkRequestsEnabled() const { return m_bulkRequestsEnabled; }
+	bool isBulkWalkPossible() const { return m_bulkRequestsEnabled && (m_bulkRepetitions > 1) && (m_snmpVersion != SNMP_VERSION_1); }
+
+	/**
+	 * Set number of repetitions requested by MIB walk in each GETBULK request. Walk reduces it on transport
+	 * by itself if agent reports that response is too big.
+	 */
+	void setBulkRepetitions(uint32_t repetitions) { m_bulkRepetitions = repetitions; }
+	uint32_t getBulkRepetitions() const { return m_bulkRepetitions; }
 
    void setCodepage(const char* codepage) { strlcpy(m_codepage.codepage, codepage, 16); }
 };
@@ -1444,8 +1463,6 @@ bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, c
 bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, std::initializer_list<uint32_t> oid, int32_t value);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
-uint32_t LIBNXSNMP_EXPORTABLE SnmpBulkWalk(SNMP_Transport *transport, const TCHAR *rootOid, uint32_t maxRepetitions, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
-uint32_t LIBNXSNMP_EXPORTABLE SnmpBulkWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, uint32_t maxRepetitions, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *rootOid);
 

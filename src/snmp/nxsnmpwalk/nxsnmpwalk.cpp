@@ -218,7 +218,9 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
       transport.setSecurityContext(SNMP_SecurityContext(m_community));
    }
 
-   result = s_useBulk ? SnmpBulkWalk(&transport, pszRootOid, s_bulkRepetitions, WalkCallback) : SnmpWalk(&transport, pszRootOid, WalkCallback);
+   transport.setBulkRequestsEnabled(s_useBulk);
+   transport.setBulkRepetitions(s_bulkRepetitions);
+   result = SnmpWalk(&transport, pszRootOid, WalkCallback);
    if (result != SNMP_ERR_SUCCESS)
    {
       _tprintf(_T("SNMP Error: %s\n"), SnmpGetErrorText(result));

@@ -7102,15 +7102,6 @@ bool Node::confPollModbus()
 }
 
 /**
- * SNMP walker callback which sets indicator to true after first varbind and aborts walk
- */
-static uint32_t IndicatorSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, bool *flag)
-{
-   *flag = true;
-   return SNMP_ERR_COMM;
-}
-
-/**
  * Configuration poll: check for SNMP and read SNMP object ID. Returns SNMP transport (to be destroyed
  * by caller) if SNMP agent responds, nullptr otherwise. Sets modified to true if node properties were changed.
  */
@@ -7343,6 +7334,7 @@ bool Node::confPollSnmpCapabilities(SNMP_Transport *pTransport, NodeDeviceContex
       unlockProperties();
    }
 
+   checkSnmpGetBulk(pTransport);
    checkIfXTable(pTransport);
    checkBridgeMib(pTransport, deviceContext);
 
@@ -7433,9 +7425,8 @@ bool Node::confPollSnmpCapabilities(SNMP_Transport *pTransport, NodeDeviceContex
    unlockProperties();
 
    // Check for printer MIB support
-   bool present = false;
-   SnmpWalk(pTransport, _T(".1.3.6.1.2.1.43"), IndicatorSnmpWalkerCallback, &present);
-   if (present)
+   SNMP_Variable printerMibObject;
+   if (SnmpGetVariable(pTransport, { 1, 3, 6, 1, 2, 1, 43 }, &printerMibObject, SG_GET_NEXT_REQUEST) == SNMP_ERR_SUCCESS)
    {
       lockProperties();
       m_capabilities |= NC_IS_PRINTER;
@@ -8087,9 +8078,8 @@ void Node::checkBridgeMib(SNMP_Transport *snmp, NodeDeviceContext *deviceContext
  */
 void Node::checkIfXTable(SNMP_Transport *snmp)
 {
-   bool present = false;
-   SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1 }, IndicatorSnmpWalkerCallback, &present);
-   if (present)
+   SNMP_Variable ifName;
+   if (SnmpGetVariable(snmp, { 1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1 }, &ifName, SG_GET_NEXT_REQUEST) == SNMP_ERR_SUCCESS)
    {
       lockProperties();
       m_capabilities |= NC_HAS_IFXTABLE;
@@ -8101,6 +8091,57 @@ void Node::checkIfXTable(SNMP_Transport *snmp)
       m_capabilities &= ~NC_HAS_IFXTABLE;
       unlockProperties();
    }
+}
+
+/**
+ * Check if SNMP agent supports GETBULK requests. Updates node capabilities and enables or disables
+ * use of GETBULK on given transport, so the rest of current poll already works according to check result.
+ */
+void Node::checkSnmpGetBulk(SNMP_Transport *snmp)
+{
+   bool supported = false;
+   if (snmp->getSnmpVersion() != SNMP_VERSION_1)
+   {
+      // Request same number of repetitions as MIB walk does, starting from MIB-II root where any agent has enough
+      // objects to fill the response, so that agents and network paths unable to pass large responses fail the check.
+      // Number of repetitions is halved up to two times if agent reports that response is too big.
+      uint32_t repetitions = snmp->getBulkRepetitions();
+      for(int pass = 0; pass < 3; pass++)
+      {
+         SNMP_PDU request(SNMP_GET_BULK_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+         request.setBulkParameters(0, repetitions);
+         request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1 }));
+         SNMP_PDU *response = nullptr;
+         uint32_t rc = snmp->doRequest(&request, &response);
+         if (rc != SNMP_ERR_SUCCESS)
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, L"ConfPoll(%s): SNMP GETBULK request with %u repetitions failed (%s)", m_name, repetitions, SnmpGetErrorText(rc));
+            break;
+         }
+
+         uint32_t errorCode = response->getErrorCode();
+         supported = (errorCode == SNMP_PDU_ERR_SUCCESS) && (response->getNumVariables() > 1);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, L"ConfPoll(%s): response to SNMP GETBULK request with %u repetitions has error code %u and %d variables",
+            m_name, repetitions, errorCode, static_cast<int>(response->getNumVariables()));
+         delete response;
+
+         if ((errorCode != SNMP_PDU_ERR_TOO_BIG) || (repetitions < 4))
+            break;
+         repetitions /= 2;
+      }
+      if (supported)
+         snmp->setBulkRepetitions(repetitions);
+   }
+
+   sendPollerMsg(L"   SNMP GETBULK requests are %s\r\n", supported ? L"supported" : L"not supported");
+   snmp->setBulkRequestsEnabled(supported);
+
+   lockProperties();
+   if (supported)
+      m_capabilities |= NC_SNMP_GETBULK;
+   else
+      m_capabilities &= ~NC_SNMP_GETBULK;
+   unlockProperties();
 }
 
 /**
@@ -14060,6 +14101,7 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
          return nullptr;
       }
       transport->setSnmpVersion(effectiveVersion);
+      transport->setBulkRequestsEnabled((m_capabilities & NC_SNMP_GETBULK) != 0);
       if (m_snmpCodepage[0] != 0)
       {
          transport->setCodepage(m_snmpCodepage);
@@ -17381,6 +17423,7 @@ static FlagNameMapping s_capabilityMapping[] =
    { NC_SSH_COMMAND_CHANNEL, "sshCommandChannel" },
    { NC_HAS_AGENT_LLDP, "hasAgentLldp" },
    { NC_IS_DHCP_SERVER, "isDhcpServer" },
+   { NC_SNMP_GETBULK, "snmpGetBulk" },
    { 0, nullptr }
 };
 
