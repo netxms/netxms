@@ -19785,7 +19785,9 @@ components:
           description: (Node/Interface/Subnet) IP address. For a node it is the primary IP address used when no primary name is given.
         creationFlags:
           type: integer
-          description: (Node) Bit mask controlling node creation (disable polling protocols, create unmanaged, etc.).
+          description: |
+            (Node) Bit mask controlling node creation (disable polling protocols, create unmanaged, etc.).
+            Bit 0x0100 marks the node as an external gateway and skips the duplicate IP address check.
         agent:
           allOf:
             - $ref: '#/components/schemas/AgentConfig'
@@ -19821,6 +19823,9 @@ components:
         mqttProxy:
           type: integer
           description: (Node) ID of the node used as MQTT proxy, or 0 for default.
+        syslogCodepage:
+          type: string
+          description: (Node) Codepage of syslog messages received from the node; empty for server default.
         webServiceProxy:
           type: integer
           description: (Data collection targets) ID of the node used as web service proxy, or 0 for default.
@@ -19887,6 +19892,9 @@ components:
         controllerId:
           type: integer
           description: (Chassis) Controller node ID.
+        bindUnderController:
+          type: boolean
+          description: (Chassis) Whether the chassis is bound under its controller node in the object tree.
         height:
           type: integer
           description: (Rack) Rack height in units (default 42). (Room) Room height in millimetres; 0 means undeclared.
