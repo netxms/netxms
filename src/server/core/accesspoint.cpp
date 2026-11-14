@@ -30,9 +30,6 @@ AccessPoint::AccessPoint() : super(Pollable::CONFIGURATION), m_macAddress(MacAdd
    m_domainId = 0;
    m_controllerId = 0;
    m_index = 0;
-	m_vendor = nullptr;
-	m_model = nullptr;
-	m_serialNumber = nullptr;
 	m_apState = AP_UP;
    m_prevState = m_apState;
    m_gracePeriodStartTime = 0;
@@ -50,9 +47,6 @@ AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& ma
 	m_domainId = 0;
    m_controllerId = 0;
    m_index = index;
-	m_vendor = nullptr;
-	m_model = nullptr;
-	m_serialNumber = nullptr;
 	m_apState = AP_UP;
    m_prevState = m_apState;
    m_gracePeriodStartTime = 0;
@@ -61,16 +55,6 @@ AccessPoint::AccessPoint(const TCHAR *name, uint32_t index, const MacAddress& ma
    m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
    m_downSince = 0;
-}
-
-/**
- * Destructor
- */
-AccessPoint::~AccessPoint()
-{
-	MemFree(m_vendor);
-	MemFree(m_model);
-	MemFree(m_serialNumber);
 }
 
 /**
@@ -108,9 +92,9 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *pre
 		return false;
 
 	m_macAddress = DBGetFieldMacAddr(hResult, 0, 0);
-	m_vendor = DBGetField(hResult, 0, 1, nullptr, 0);
-	m_model = DBGetField(hResult, 0, 2, nullptr, 0);
-	m_serialNumber = DBGetField(hResult, 0, 3, nullptr, 0);
+	m_vendor = DBGetFieldAsSharedString(hResult, 0, 1);
+	m_model = DBGetFieldAsSharedString(hResult, 0, 2);
+	m_serialNumber = DBGetFieldAsSharedString(hResult, 0, 3);
 	m_domainId = DBGetFieldULong(hResult, 0, 4);
    m_controllerId = DBGetFieldULong(hResult, 0, 5);
 	m_apState = (AccessPointState)DBGetFieldLong(hResult, 0, 6);
@@ -258,7 +242,7 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
 void AccessPoint::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageLockedEssential(msg, userId);
-   msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
+   msg->setField(VID_MODEL, m_model);
    msg->setField(VID_MAC_ADDR, m_macAddress);
 
    msg->setField(VID_RADIO_COUNT, static_cast<uint16_t>(m_radioInterfaces.size()));
@@ -288,8 +272,8 @@ void AccessPoint::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_DOMAIN_ID, m_domainId);
    msg->setField(VID_CONTROLLER_ID, m_controllerId);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
-	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
-	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+	msg->setField(VID_VENDOR, m_vendor);
+	msg->setField(VID_SERIAL_NUMBER, m_serialNumber);
    msg->setField(VID_STATE, static_cast<uint16_t>(m_apState));
    msg->setField(VID_AP_INDEX, m_index);
    msg->setField(VID_PEER_NODE_ID, m_peerNodeId);
@@ -421,16 +405,9 @@ String AccessPoint::getWirelessDomainName() const
 void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber)
 {
 	lockProperties();
-
-	MemFree(m_vendor);
-	m_vendor = MemCopyString(vendor);
-
-	MemFree(m_model);
-	m_model = MemCopyString(model);
-
-	MemFree(m_serialNumber);
-	m_serialNumber = MemCopyString(serialNumber);
-
+	m_vendor = vendor;
+	m_model = model;
+	m_serialNumber = serialNumber;
 	setModified(MODIFY_AP_PROPERTIES);
 	unlockProperties();
 }
@@ -485,9 +462,9 @@ void AccessPoint::updateState(AccessPointState state)
          .param(_T("controllerId"), m_controllerId, EventBuilder::OBJECT_ID_FORMAT)
          .param(_T("macAddr"), m_macAddress)
          .param(_T("ipAddr"), m_ipAddress)
-         .param(_T("vendor"), CHECK_NULL_EX(m_vendor))
-         .param(_T("model"), CHECK_NULL_EX(m_model))
-         .param(_T("serialNumber"), CHECK_NULL_EX(m_serialNumber))
+         .param(_T("vendor"), getVendor())
+         .param(_T("model"), getModel())
+         .param(_T("serialNumber"), getSerialNumber())
          .param(_T("state"), state)
          .post();
    }
@@ -537,7 +514,7 @@ void AccessPoint::statusPollFromController(ClientSession *session, uint32_t requ
 
    AccessPointState state;
    if (bridge != nullptr)
-      state = bridge->getAccessPointState(getWirelessDomain().get(), m_index, m_macAddress, m_ipAddress, m_serialNumber, m_radioInterfaces);
+      state = bridge->getAccessPointState(getWirelessDomain().get(), m_index, m_macAddress, m_ipAddress, getSerialNumber(), m_radioInterfaces);
    else if (controller != nullptr)
       state = controller->getAccessPointState(this, snmpTransport, m_radioInterfaces);
    else
@@ -794,7 +771,7 @@ DataCollectionError AccessPoint::getInternalMetric(const TCHAR *name, TCHAR *buf
          {
             TCHAR attribute[256];
             AgentGetParameterArg(name, 1, attribute, 256);
-            rc = bridge->getAccessPointMetric(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, m_serialNumber, attribute, buffer, size);
+            rc = bridge->getAccessPointMetric(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, getSerialNumber(), attribute, buffer, size);
          }
       }
    }
@@ -820,7 +797,7 @@ ObjectArray<WirelessStationInfo> *AccessPoint::getWirelessStations() const
    if (bridge == nullptr)
       return nullptr;
 
-   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, m_serialNumber);
+   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, getSerialNumber());
    if (wirelessStations == nullptr)
       return nullptr;
 
@@ -850,7 +827,7 @@ NXSL_Value *AccessPoint::getWirelessStationsForNXSL(NXSL_VM *vm) const
    if (bridge == nullptr)
       return vm->createValue();
 
-   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, m_serialNumber);
+   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, getSerialNumber());
    if (wirelessStations == nullptr)
       return vm->createValue();
 
@@ -889,7 +866,7 @@ bool AccessPoint::writeWsListToMessage(NXCPMessage *msg) const
    if (bridge == nullptr)
       return false;
 
-   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, m_serialNumber);
+   ObjectArray<WirelessStationInfo> *wirelessStations = bridge->getAccessPointWirelessStations(wirelessDomain.get(), m_index, m_macAddress, m_ipAddress, getSerialNumber());
    if (wirelessStations == nullptr)
       return false;
 

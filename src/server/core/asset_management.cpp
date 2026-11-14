@@ -1277,7 +1277,7 @@ static inline SharedString GetSerialNumber(const NetObj& object)
    switch(object.getObjectClass())
    {
       case OBJECT_ACCESSPOINT:
-         return SharedString(static_cast<const AccessPoint&>(object).getSerialNumber());
+         return static_cast<const AccessPoint&>(object).getSerialNumber();
       case OBJECT_NODE:
          return static_cast<const Node&>(object).getSerialNumber();
       case OBJECT_SENSOR:
