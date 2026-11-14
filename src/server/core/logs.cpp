@@ -528,7 +528,8 @@ static const char *s_columnTypeNames[] =
    "text", "severity", "objectId", "userId", "eventCode", "timestamp", "integer", "alarmState",
    "alarmHelpdeskState", "zoneUIN", "eventOrigin", "textDetails", "jsonDetails", "completionStatus",
    "actionCode", "atmTransactionCode", "assetOperation", "deploymentStatus", "aiTaskStatus",
-   "macAddress", "connectionEvent", "timestamp", "aiOperatorExecutionStatus", "observationState"
+   "macAddress", "connectionEvent", "timestamp", "aiOperatorExecutionStatus", "observationState",
+   "atmTransactionOutcome", "atmTransactionEntryMode"
 };
 
 /**

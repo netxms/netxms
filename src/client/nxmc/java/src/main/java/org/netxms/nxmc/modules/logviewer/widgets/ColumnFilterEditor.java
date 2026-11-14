@@ -227,6 +227,9 @@ public class ColumnFilterEditor extends DashboardComposite
          case LogColumn.LC_ASSET_OPERATION:
             editor = new AssetOperationConditionEditor(this);
             break;
+         case LogColumn.LC_ATM_TXN_ENTRY_MODE:
+            editor = new AtmTransactionEntryModeConditionEditor(this);
+            break;
          case LogColumn.LC_ATM_TXN_OUTCOME:
             editor = new AtmTransactionOutcomeConditionEditor(this);
             break;

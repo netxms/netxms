@@ -59,6 +59,8 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
    private static final String[] AI_TASK_STATUS_CHARS = { "S", "R", "C", "F", "U" };
    private final String[] OBSERVATION_STATE_TEXTS = { i18n.tr("New"), i18n.tr("Acknowledged"), i18n.tr("Dismissed") };
    private final String[] ATM_TXN_OUTCOME_TEXTS = getAtmTransactionOutcomeTexts(i18n);
+   public static final String[] ATM_TXN_ENTRY_MODE_CODES = { "-", "E", "C", "M", "Q", "N" };
+   private final String[] ATM_TXN_ENTRY_MODE_TEXTS = getAtmTransactionEntryModeTexts(i18n);
 
 	private LogColumn[] columns;
 	private NXCSession session;
@@ -337,6 +339,8 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
             {
                return value;
             }
+         case LogColumn.LC_ATM_TXN_ENTRY_MODE:
+            return getAtmTransactionEntryModeText(value, ATM_TXN_ENTRY_MODE_TEXTS);
          case LogColumn.LC_ATM_TXN_OUTCOME:
             try
             {
@@ -443,6 +447,36 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
          i18n.tr("Scheduled"), i18n.tr("Pending"), i18n.tr("Initializing"), i18n.tr("Transferring file"),
          i18n.tr("Installing"), i18n.tr("Waiting for agent"), i18n.tr("Completed"), i18n.tr("Failed"), i18n.tr("Cancelled")
       };
+   }
+
+   /**
+    * Get ATM transaction entry mode texts (in same order as codes in ATM_TXN_ENTRY_MODE_CODES)
+    *
+    * @param i18n i18n object or null
+    * @return ATM transaction entry mode texts
+    */
+   public static final String[] getAtmTransactionEntryModeTexts(I18n i18n)
+   {
+      if (i18n == null)
+         i18n = LocalizationHelper.getI18n(LogLabelProvider.class);
+      return new String[] { i18n.tr("Unknown"), i18n.tr("EMV chip"), i18n.tr("Contactless"), i18n.tr("Magnetic stripe"), i18n.tr("QR code"), i18n.tr("No card") };
+   }
+
+   /**
+    * Get display text for ATM transaction entry mode code
+    *
+    * @param code entry mode code as stored in transaction log
+    * @param texts entry mode texts as returned by getAtmTransactionEntryModeTexts
+    * @return display text or code itself if it is not known
+    */
+   public static final String getAtmTransactionEntryModeText(String code, String[] texts)
+   {
+      for(int i = 0; i < ATM_TXN_ENTRY_MODE_CODES.length; i++)
+      {
+         if (ATM_TXN_ENTRY_MODE_CODES[i].equals(code))
+            return texts[i];
+      }
+      return code;
    }
 
    /**
