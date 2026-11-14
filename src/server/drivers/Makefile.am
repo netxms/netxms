@@ -15,6 +15,11 @@ DRIVERS = arista at avaya bdcom bulat cambium cisco dell dlink edgecore eltex \
 
 SUBDIRS = $(DRIVERS)
 
+# Drivers removed or renamed in earlier releases. "make install" over an existing
+# tree never deletes them, and the server tries to load every *.ndd it finds.
+OBSOLETE_DRIVERS = airespace avaya-ers baystack cat2900xl catalyst cisco-esw \
+	cisco-sb dell-pwc ers8000 h3c hpsw netscreen ntws procurve qtech-olt symbol_ws
+
 pkglib_LTLIBRARIES = arista.la at.la avaya.la bdcom.la bulat.la cambium.la cisco.la \
 	dell.la dlink.la edgecore.la eltex.la etherwan.la extreme.la \
 	fortinet.la hirschmann.la hpe.la huawei.la ignitenet.la juniper.la \
@@ -309,4 +314,4 @@ zyxel_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../libnxsrv/libnxsrv.la
 
 install-exec-hook:
-	mkdir -p $(DESTDIR)$(pkglibdir)/ndd ; for _DRIVER in $(DRIVERS); do if test "x`uname -s`" = "xAIX"; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$$_DRIVER.a $(DESTDIR)$(pkglibdir)/$$_DRIVER@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$$_DRIVER.a; fi ; mv -f $(DESTDIR)$(pkglibdir)/$$_DRIVER@SHLIB_SUFFIX@ $(DESTDIR)$(pkglibdir)/ndd/$$_DRIVER.ndd ; rm -f $(DESTDIR)$(pkglibdir)/$$_DRIVER.la; done
+	mkdir -p $(DESTDIR)$(pkglibdir)/ndd ; for _DRIVER in $(OBSOLETE_DRIVERS); do rm -f $(DESTDIR)$(pkglibdir)/ndd/$$_DRIVER.ndd; done ; for _DRIVER in $(DRIVERS); do if test "x`uname -s`" = "xAIX"; then OBJECT_MODE=@OBJECT_MODE@ $(AR) x $(DESTDIR)$(pkglibdir)/$$_DRIVER.a $(DESTDIR)$(pkglibdir)/$$_DRIVER@SHLIB_SUFFIX@ ; rm -f $(DESTDIR)$(pkglibdir)/$$_DRIVER.a; fi ; mv -f $(DESTDIR)$(pkglibdir)/$$_DRIVER@SHLIB_SUFFIX@ $(DESTDIR)$(pkglibdir)/ndd/$$_DRIVER.ndd ; rm -f $(DESTDIR)$(pkglibdir)/$$_DRIVER.la; done
