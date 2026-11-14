@@ -1350,11 +1350,78 @@ static void TestWalk()
 }
 
 /**
+ * Test receiving of UDP datagram larger than transport's initial receive buffer. First datagram is truncated and
+ * dropped, but transport should switch to large buffer and receive retransmission in full.
+ */
+static void TestUDPLargeResponse()
+{
+   StartTest(_T("SNMP_UDPTransport - large response"));
+
+   SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
+   AssertTrue(hSocket != INVALID_SOCKET);
+
+   struct sockaddr_in addr;
+   memset(&addr, 0, sizeof(addr));
+   addr.sin_family = AF_INET;
+   addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+   AssertEquals(bind(hSocket, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)), 0);
+   socklen_t addrLen = sizeof(addr);
+   AssertEquals(getsockname(hSocket, reinterpret_cast<struct sockaddr*>(&addr), &addrLen), 0);
+
+   SNMP_UDPTransport receiver(hSocket);   // Takes ownership of socket
+
+   SNMP_UDPTransport sender;
+   AssertEquals(sender.createUDPTransport(InetAddress::LOOPBACK, ntohs(addr.sin_port)), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+
+   BYTE value[3000];
+   for(size_t i = 0; i < sizeof(value); i++)
+      value[i] = static_cast<BYTE>(i);
+
+   SNMP_PDU response(SNMP_RESPONSE, 42, SNMP_VERSION_2C);
+   SNMP_Variable *v = new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, 1, 0 });
+   v->setValueFromByteArray(ASN_OCTET_STRING, value, sizeof(value));
+   response.bindVariable(v);
+
+   // Initial datagram is truncated to local buffer size and discarded
+   int bytes = sender.sendMessage(&response, 0);
+   AssertTrue(bytes > 2048);
+   SNMP_PDU *pdu = nullptr;
+   int rc = receiver.readMessage(&pdu, 2000);
+#ifdef _WIN32
+   AssertTrue(rc < 0);  // recvfrom() fails with WSAEMSGSIZE
+#else
+   AssertEquals(rc, 0);
+#endif
+   AssertNull(pdu);
+
+   // Retransmission should be received in full
+   AssertEquals(sender.sendMessage(&response, 0), bytes);
+   rc = receiver.readMessage(&pdu, 2000);
+   AssertEquals(rc, bytes);
+   AssertNotNull(pdu);
+   AssertEquals(pdu->getCommand(), SNMP_RESPONSE);
+   AssertEquals(pdu->getRequestId(), 42u);
+   AssertEquals(pdu->getNumVariables(), 1);
+   SNMP_Variable *rv = pdu->getVariable(0);
+   AssertEquals(rv->getType(), static_cast<uint32_t>(ASN_OCTET_STRING));
+   AssertEquals(rv->getValueLength(), static_cast<int>(sizeof(value)));
+   AssertTrue(memcmp(rv->getValue(), value, sizeof(value)) == 0);
+   delete pdu;
+
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
+
+#ifdef _WIN32
+   WSADATA wsaData;
+   WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
 
    TestOidConversion();
    TestOidClass();
@@ -1365,6 +1432,7 @@ int main(int argc, char *argv[])
    TestV1TrapEncoding();
    TestGetResponseHandling();
    TestWalk();
+   TestUDPLargeResponse();
    TestPDUPrivacy(SNMP_ENCRYPT_DES, _T("SNMPv3 privacy (DES)"));
    TestPDUPrivacy(SNMP_ENCRYPT_AES_128, _T("SNMPv3 privacy (AES-128)"));
    return 0;
