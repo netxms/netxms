@@ -33,11 +33,17 @@
 **   AuthToken = secret                 # sent as "Authorization: Bearer <token>"
 **   Header = X-Custom: value           # additional HTTP header (can be repeated)
 **   VerifyPeer = yes                   # TLS peer verification
-**   ServiceName = netxms               # override resource service.name (default: node name)
+**   ServiceName = netxms               # default resource service.name
+**   ServiceNameFallbackSource = object-name  # service.name when ServiceName is not set:
+**                                      # object-name (default) or fixed ("netxms")
+**   ServiceNamespace = monitoring      # default resource service.namespace (if not set: not sent)
 **   BatchSize = 100
 **   FlushInterval = 5                  # seconds
 **   Timeout = 30                       # HTTP timeout in seconds
 **   QueueSizeLimit = 10000             # 0 to disable limit
+**
+** Custom attributes otel:service.name and otel:service.namespace of DCI owner object (own or
+** inherited) take precedence over ServiceName and ServiceNamespace.
 **
 **/
 
@@ -96,7 +102,8 @@ private:
    std::string m_url;
    curl_slist *m_headers;
    bool m_verifyPeer;
-   std::string m_serviceNameOverride;
+   std::string m_defaultServiceName;
+   std::string m_defaultServiceNamespace;
    uint32_t m_batchSize;
    uint32_t m_flushInterval;       // seconds
    long m_timeout;                 // seconds
@@ -184,7 +191,9 @@ bool OtlpMetricExportDriver::init(Config *config)
    }
 
    m_verifyPeer = config->getValueAsBoolean(L"/OpenTelemetry/MetricExport/VerifyPeer", true);
-   m_serviceNameOverride = WideToUtf8(config->getValue(L"/OpenTelemetry/MetricExport/ServiceName", L""));
+   m_defaultServiceName = WideToUtf8(config->getValue(L"/OpenTelemetry/MetricExport/ServiceName", L""));
+   ApplyServiceNameFallbackSource(WideToUtf8(config->getValue(L"/OpenTelemetry/MetricExport/ServiceNameFallbackSource", L"object-name")).c_str(), &m_defaultServiceName);
+   m_defaultServiceNamespace = WideToUtf8(config->getValue(L"/OpenTelemetry/MetricExport/ServiceNamespace", L""));
 
    m_batchSize = config->getValueAsUInt(L"/OpenTelemetry/MetricExport/BatchSize", DEFAULT_BATCH_SIZE);
    if (m_batchSize == 0)
@@ -388,10 +397,7 @@ bool OtlpMetricExportDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, T
    rec.timeUnixNano = static_cast<uint64_t>(timestamp.asMilliseconds()) * 1000000ULL;
 
    rec.nodeId = owner->getId();
-   if (!m_serviceNameOverride.empty())
-      rec.resourceAttributes.emplace_back("service.name", m_serviceNameOverride);
-   else
-      rec.resourceAttributes.emplace_back("service.name", owner->getName());
+   AddServiceAttributes(&rec.resourceAttributes, owner.get(), m_defaultServiceName, m_defaultServiceNamespace);
    AddObjectIdentityAttributes(&rec.resourceAttributes, *owner);
 
    rec.attributes.emplace_back("netxms.dci.id", static_cast<int64_t>(dci->getId()));

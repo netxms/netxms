@@ -39,6 +39,55 @@ static void AddHardwareAttributes(std::vector<OtlpExportAttribute> *attributes, 
 }
 
 /**
+ * Apply service name fallback source setting to exporter default service name. Fallback source
+ * selects service name for objects without otel:service.name custom attribute when exporter has
+ * no default service name configured: "object-name" keeps default service name empty (object name
+ * will be used), "fixed" sets it to the product name.
+ */
+void ApplyServiceNameFallbackSource(const char *source, std::string *defaultName)
+{
+   if (!stricmp(source, "fixed"))
+   {
+      if (defaultName->empty())
+         *defaultName = "netxms";
+   }
+   else if (stricmp(source, "object-name"))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_OTLP, L"Invalid OTLP service name fallback source \"%hs\" (expected \"object-name\" or \"fixed\"), using \"object-name\"", source);
+   }
+}
+
+/**
+ * Add service attributes (service.name and optional service.namespace) to OTLP resource attribute
+ * list. Each value is taken from custom attribute of given object (otel:service.name and
+ * otel:service.namespace, own or inherited), then from exporter default. Without both, service
+ * name is the object name ("netxms-server" if there is no object) and service namespace is not set.
+ */
+void AddServiceAttributes(std::vector<OtlpExportAttribute> *attributes, const NetObj *object, const std::string& defaultName, const std::string& defaultNamespace)
+{
+   SharedString name, ns;
+   if (object != nullptr)
+   {
+      name = object->getCustomAttribute(L"otel:service.name");
+      ns = object->getCustomAttribute(L"otel:service.namespace");
+   }
+
+   if (!name.isEmpty())
+      attributes->emplace_back("service.name", name.cstr());
+   else if (!defaultName.empty())
+      attributes->emplace_back("service.name", defaultName);
+   else if (object != nullptr)
+      attributes->emplace_back("service.name", object->getName());
+   else
+      attributes->emplace_back("service.name", "netxms-server");
+
+   if (!ns.isEmpty())
+      attributes->emplace_back("service.namespace", ns.cstr());
+   else if (!defaultNamespace.empty())
+      attributes->emplace_back("service.namespace", defaultNamespace);
+}
+
+/**
  * Add identity attributes of given object to OTLP resource attribute list. Host identity
  * (host.name, host.id) is only set for nodes, so that sensors, racks, facility objects and
  * other non-host objects do not appear as hosts in backends that build host inventories.

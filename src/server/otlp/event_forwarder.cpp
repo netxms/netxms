@@ -26,6 +26,12 @@
 ** internal flush thread in batches (grouped by source node = OTLP resource), keeping the
 ** per-event call fast and amortizing HTTP round-trips.
 **
+** Resource service.name and service.namespace are taken from custom attributes otel:service.name
+** and otel:service.namespace of event source object (own or inherited), then from "serviceName"
+** and "serviceNamespace" in forwarder configuration. Without both, service namespace is not sent
+** and service name is selected by "serviceNameFallbackSource" in forwarder configuration:
+** "object-name" (default) for the source object name or "fixed" for "netxms".
+**
 **/
 
 #include "otlp.h"
@@ -101,7 +107,8 @@ private:
    std::string m_url;
    curl_slist *m_headers;
    bool m_verifyPeer;
-   std::string m_serviceNameOverride;
+   std::string m_defaultServiceName;
+   std::string m_defaultServiceNamespace;
    uint32_t m_batchSize;
    uint32_t m_flushInterval;       // seconds
    long m_timeout;                 // seconds
@@ -147,8 +154,16 @@ OtlpEventForwarderDriver::OtlpEventForwarderDriver(json_t *configuration) :
    m_verifyPeer = json_object_get_boolean(configuration, "verifyPeer", true);
 
    char *serviceName = json_object_get_string_a(configuration, "serviceName", "");
-   m_serviceNameOverride = serviceName;
+   m_defaultServiceName = serviceName;
    MemFree(serviceName);
+
+   char *fallbackSource = json_object_get_string_a(configuration, "serviceNameFallbackSource", "object-name");
+   ApplyServiceNameFallbackSource(fallbackSource, &m_defaultServiceName);
+   MemFree(fallbackSource);
+
+   char *serviceNamespace = json_object_get_string_a(configuration, "serviceNamespace", "");
+   m_defaultServiceNamespace = serviceNamespace;
+   MemFree(serviceNamespace);
 
    m_batchSize = json_object_get_uint32(configuration, "batchSize", DEFAULT_BATCH_SIZE);
    if (m_batchSize == 0)
@@ -222,18 +237,8 @@ OtlpEventForwarderDriver::~OtlpEventForwarderDriver()
  */
 void OtlpEventForwarderDriver::buildRecord(OtlpExportRecord& rec, const Event& event, const shared_ptr<NetObj>& source)
 {
-   std::string nodeName;
-   if (source != nullptr)
-   {
-      rec.nodeId = source->getId();
-      nodeName = WideToUtf8(source->getName());
-   }
-   else
-   {
-      rec.nodeId = 0;
-      nodeName = "netxms-server";
-   }
-   rec.resourceAttributes.emplace_back("service.name", !m_serviceNameOverride.empty() ? m_serviceNameOverride : nodeName);
+   rec.nodeId = (source != nullptr) ? source->getId() : 0;
+   AddServiceAttributes(&rec.resourceAttributes, source.get(), m_defaultServiceName, m_defaultServiceNamespace);
    if (source != nullptr)
       AddObjectIdentityAttributes(&rec.resourceAttributes, *source);
 

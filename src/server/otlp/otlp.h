@@ -155,6 +155,17 @@ template<typename T> static inline void AddAttributes(T *parent, const std::vect
 std::vector<OtlpExportAttribute> GetLocationAttributes(uint32_t objectId);
 
 /**
+ * Apply service name fallback source setting ("object-name" or "fixed") to exporter default service name
+ */
+void ApplyServiceNameFallbackSource(const char *source, std::string *defaultName);
+
+/**
+ * Add service attributes (service.name, service.namespace) to OTLP resource attribute list, resolved
+ * from custom attributes of given object (can be null), then from provided exporter defaults
+ */
+void AddServiceAttributes(std::vector<OtlpExportAttribute> *attributes, const NetObj *object, const std::string& defaultName, const std::string& defaultNamespace);
+
+/**
  * Add identity attributes (object ID, GUID and class, host identity for nodes, hardware identity)
  * of given object to OTLP resource attribute list
  */
