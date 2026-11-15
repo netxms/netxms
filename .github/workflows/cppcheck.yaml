@@ -12,12 +12,12 @@ jobs:
   cppcheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Update apt cache
         run: sudo apt-get update
       - name: Install dependencies
         run: sudo apt-get install -y libpq-dev libcurl4-openssl-dev libssh-dev
-          libmosquitto-dev libjq-dev cppcheck libpcre3-dev libmicrohttpd-dev
+          libmosquitto-dev libjq-dev cppcheck libpcre2-dev libmicrohttpd-dev
           libargon2-dev libjansson-dev
       - name: Prepare release build
         run: ./build/prepare_release_build.sh
@@ -26,7 +26,7 @@ jobs:
       - name: configure
         run: ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql
       - name: restore cppcheck cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: /tmp/cppcheck
           key: ${{ runner.os }}-cppcheck-${{ github.ref_name }}
@@ -35,7 +35,7 @@ jobs:
           mkdir -p /tmp/cppcheck
           cppcheck -q --platform=unix64 --language=c++ --max-ctu-depth=3 -I . -I build -I include -I src/server/include -I src/nxcproxy -j $(nproc) --std=c++17 --cppcheck-build-dir=/tmp/cppcheck src
       - name: save cppcheck cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: /tmp/cppcheck
           key: ${{ runner.os }}-cppcheck-${{ github.ref_name }}
