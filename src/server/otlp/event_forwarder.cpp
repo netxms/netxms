@@ -32,6 +32,8 @@
 ** and service name is selected by "serviceNameFallbackSource" in forwarder configuration:
 ** "object-name" (default) for the source object name or "fixed" for "netxms".
 **
+** Events without source object are sent with resource of management server node.
+**
 **/
 
 #include "otlp.h"
@@ -237,10 +239,12 @@ OtlpEventForwarderDriver::~OtlpEventForwarderDriver()
  */
 void OtlpEventForwarderDriver::buildRecord(OtlpExportRecord& rec, const Event& event, const shared_ptr<NetObj>& source)
 {
-   rec.nodeId = (source != nullptr) ? source->getId() : 0;
-   AddServiceAttributes(&rec.resourceAttributes, source.get(), m_defaultServiceName, m_defaultServiceNamespace);
-   if (source != nullptr)
-      AddObjectIdentityAttributes(&rec.resourceAttributes, *source);
+   // Events without source object are reported on behalf of management server itself
+   shared_ptr<NetObj> resourceObject = (source != nullptr) ? source : FindObjectById(g_dwMgmtNode, OBJECT_NODE);
+   rec.nodeId = (resourceObject != nullptr) ? resourceObject->getId() : 0;
+   AddServiceAttributes(&rec.resourceAttributes, resourceObject.get(), m_defaultServiceName, m_defaultServiceNamespace);
+   if (resourceObject != nullptr)
+      AddObjectIdentityAttributes(&rec.resourceAttributes, *resourceObject);
 
    rec.timeUnixNano = static_cast<uint64_t>(event.getTimestamp()) * 1000000000ULL;
    rec.observedTimeUnixNano = static_cast<uint64_t>(GetCurrentTimeMs()) * 1000000ULL;
