@@ -1,12 +1,12 @@
 /*
  * noVNC: HTML5 VNC client
- * Copyright (C) 2019 The noVNC Authors
+ * Copyright (C) 2019 The noVNC authors
  * Licensed under MPL 2.0 (see LICENSE.txt)
  *
  * See README.md for usage and integration instructions.
  */
 
-// Fallback for all uncought errors
+// Fallback for all uncaught errors
 function handleError(event, err) {
     try {
         const msg = document.getElementById('noVNC_fallback_errormsg');
@@ -14,6 +14,14 @@ function handleError(event, err) {
         // Work around Firefox bug:
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1685038
         if (event.message === "ResizeObserver loop completed with undelivered notifications.") {
+            return false;
+        }
+
+        // Errors without a location can't come from our own same-origin
+        // scripts, so ignore them. Firefox for iOS triggers this from its
+        // injected password manager script when non-input elements get focus:
+        // https://github.com/mozilla-mobile/firefox-ios/issues/36259
+        if ((event.message === "Script error.") && !event.filename) {
             return false;
         }
 

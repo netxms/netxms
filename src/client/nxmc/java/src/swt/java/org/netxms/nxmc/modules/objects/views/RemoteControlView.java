@@ -18,10 +18,17 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.window.Window;
@@ -47,6 +54,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
@@ -123,18 +131,16 @@ public class RemoteControlView extends AdHocObjectView
    private Label status;
    private ScrolledComposite scroller;
    private Canvas canvas;
-   private VernacularClient vncClient;
+   private VncConnection connection;
    private ImageData lastFrame;
    private Cursor serverCursor;
-   private Exception lastError;
    private int screenWidth = 640;
    private int screenHeight = 480;
    private int screenOffsetX = 0;
    private int screenOffsetY = 0;
-   private boolean connected = false;
-   private volatile boolean stopFlag = false;
    private Action actionConnect;
    private Action actionDisconnect;
+   private Action actionBlankScreen;
 
    /**
     * Create VNC viewer
@@ -167,14 +173,14 @@ public class RemoteControlView extends AdHocObjectView
       layout.verticalSpacing = 0;
       parent.setLayout(layout);
 
-      // control bar 
+      // control bar
       Composite controlBar = new Composite(parent, SWT.NONE);
       controlBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       layout = new GridLayout();
       layout.numColumns = 4;
       controlBar.setLayout(layout);
-      
+
       status = new Label(controlBar, SWT.NONE);
       status.setText(i18n.tr("Disconnected"));
       status.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
@@ -183,10 +189,10 @@ public class RemoteControlView extends AdHocObjectView
       addKeyCombinationButton(controlBar, "Ctrl+Esc", new int[] { 0xffe3, 0xff1b });
       addKeyCombinationButton(controlBar, "Ctrl+Alt+Del", new int[] { 0xffe3, 0xffe9, 0xffff });
 
-      // separator 
+      // separator
       new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      // screen content 
+      // screen content
       scroller = new ScrolledComposite(parent, SWT.H_SCROLL | SWT.V_SCROLL);
       scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       scroller.setBackground(getDisplay().getSystemColor(SWT.COLOR_GRAY));
@@ -220,7 +226,9 @@ public class RemoteControlView extends AdHocObjectView
       canvas.addPaintListener((e) -> {
          if (lastFrame != null)
          {
-            e.gc.drawImage(new Image(getDisplay(), lastFrame), screenOffsetX, screenOffsetY);
+            Image image = new Image(getDisplay(), lastFrame);
+            e.gc.drawImage(image, screenOffsetX, screenOffsetY);
+            image.dispose();
          }
       });
 
@@ -228,15 +236,17 @@ public class RemoteControlView extends AdHocObjectView
          @Override
          public void mouseUp(MouseEvent e)
          {
-            if ((vncClient != null) && vncClient.isRunning())
-               vncClient.updateMouseButton(e.button, false);
+            VernacularClient client = getActiveClient();
+            if (client != null)
+               client.updateMouseButton(e.button, false);
          }
 
          @Override
          public void mouseDown(MouseEvent e)
          {
-            if ((vncClient != null) && vncClient.isRunning())
-               vncClient.updateMouseButton(e.button, true);
+            VernacularClient client = getActiveClient();
+            if (client != null)
+               client.updateMouseButton(e.button, true);
          }
 
          @Override
@@ -249,8 +259,9 @@ public class RemoteControlView extends AdHocObjectView
          @Override
          public void mouseMove(MouseEvent e)
          {
-            if ((vncClient != null) && vncClient.isRunning())
-               vncClient.moveMouse(e.x - screenOffsetX, e.y - screenOffsetY);
+            VernacularClient client = getActiveClient();
+            if (client != null)
+               client.moveMouse(e.x - screenOffsetX, e.y - screenOffsetY);
          }
       });
 
@@ -289,11 +300,25 @@ public class RemoteControlView extends AdHocObjectView
          @Override
          public void run()
          {
-            if (connected)
-               stopFlag = true;
+            if (connection != null)
+               connection.close();
+            actionBlankScreen.setEnabled(false);
          }
       };
       actionDisconnect.setEnabled(false);
+
+      actionBlankScreen = new Action(i18n.tr("&Blank remote screen"), IAction.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            VernacularClient client = getActiveClient();
+            if (client != null)
+               client.setBlankRemoteScreen(isChecked());
+         }
+      };
+      actionBlankScreen.setImageDescriptor(ResourceManager.getImageDescriptor("icons/blank-screen.png"));
+      actionBlankScreen.setToolTipText(i18n.tr("Disable local input and blank the monitor on the remote system (UltraVNC only). Blanking requires the \"Enable Blank Monitor on Viewer Request\" option on the server, and the request is ignored for view-only connections."));
+      actionBlankScreen.setEnabled(false);
    }
 
    /**
@@ -304,6 +329,7 @@ public class RemoteControlView extends AdHocObjectView
    {
       manager.add(actionConnect);
       manager.add(actionDisconnect);
+      manager.add(actionBlankScreen);
       super.fillLocalToolBar(manager);
    }
 
@@ -315,6 +341,7 @@ public class RemoteControlView extends AdHocObjectView
    {
       manager.add(actionConnect);
       manager.add(actionDisconnect);
+      manager.add(actionBlankScreen);
       super.fillLocalMenu(manager);
    }
 
@@ -333,10 +360,13 @@ public class RemoteControlView extends AdHocObjectView
          @Override
          public void widgetSelected(SelectionEvent e)
          {
+            VernacularClient client = getActiveClient();
+            if (client == null)
+               return;
             for(int i = 0; i < keys.length; i++)
-               vncClient.updateKey(keys[i], true);
+               client.updateKey(keys[i], true);
             for(int i = keys.length - 1; i >= 0; i--)
-               vncClient.updateKey(keys[i], false);
+               client.updateKey(keys[i], false);
          }
       });
 
@@ -351,36 +381,49 @@ public class RemoteControlView extends AdHocObjectView
     */
    private void connect()
    {
-      if (connected)
+      if (connection != null)
          return;
 
-      connected = true;
       actionConnect.setEnabled(false);
+      actionDisconnect.setEnabled(true);
 
       status.setText(i18n.tr("Connecting..."));
 
       final Node node = (Node)getObject();
       final NXCSession session = Registry.getSession();
+      final Display display = getDisplay();
+      final boolean blankScreen = session.getClientConfigurationHintAsBoolean("RemoteControl.BlankScreenOnConnect", false);
 
       VernacularConfig config = new VernacularConfig();
+      final VncConnection c = new VncConnection(config);
+      connection = c;
+
       config.setColorDepth(ColorDepth.BPP_24_TRUE);
-      config.setErrorListener((e) -> {
-         lastError = e;
-         logger.debug("VNC error", e);
+      config.setBlankRemoteScreen(blankScreen);
+      config.setErrorListener(c::failed);
+      config.setRemoteClipboardListener(text -> runIfCurrent(display, c, () -> WidgetHelper.copyToClipboard(text)));
+      config.setJpegDecoder((data, width, height) -> {
+         BufferedImage image = ImageIO.read(new ByteArrayInputStream(data));
+         if (image == null)
+            throw new IOException("Failed to decode JPEG data");
+         int[] pixels = new int[width * height];
+         image.getRGB(0, 0, width, height, pixels, 0, width);
+         return pixels;
       });
-      config.setRemoteClipboardListener(text -> getDisplay().asyncExec(() -> WidgetHelper.copyToClipboard(text)));
 
       config.setPasswordSupplier(() -> {
          String password = node.getVncPassword();
          if (password.isEmpty())
          {
             final String[] result = new String[1];
-            getDisplay().syncExec(() -> {
+            display.syncExec(() -> {
+               if ((connection != c) || c.isClosed() || canvas.isDisposed())
+                  return;
                PasswordRequestDialog dlg = new PasswordRequestDialog(getWindow().getShell(), i18n.tr("Password Request"), i18n.tr("Remote system requires password authentication"));
                if (dlg.open() == Window.OK)
-               {
                   result[0] = dlg.getPassword();
-               }
+               else
+                  c.close();
             });
             if (result[0] != null)
                password = result[0];
@@ -390,87 +433,73 @@ public class RemoteControlView extends AdHocObjectView
 
       config.setScreenUpdateListener(image -> {
          final ImageData fb = convertToSWT(image);
-         getDisplay().asyncExec(() -> updateScreen(fb));
+         runIfCurrent(display, c, () -> updateScreen(fb));
       });
 
       config.setUseLocalMousePointer(true);
       config.setMousePointerUpdateListener((x, y, image) -> {
          final ImageData cursor = convertToSWT(image);
-         getDisplay().asyncExec(() -> updateCursor(cursor, x, y));
+         runIfCurrent(display, c, () -> updateCursor(cursor, x, y));
       });
 
-      vncClient = new VernacularClient(config);
-      lastError = null;
       Job job = new Job(i18n.tr("Connecting to VNC server"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            TcpPortForwarder tcpPortForwarder = new TcpPortForwarder(session, node.getObjectId(), (node.getCapabilities() & AbstractNode.NC_IS_LOCAL_VNC) != 0, node.getVncPort(), 0);
-            tcpPortForwarder.setDisplay(getDisplay());
-            tcpPortForwarder.setMessageArea(RemoteControlView.this);
-            tcpPortForwarder.run();
-
-            logger.debug("Establishing VNC session with node {}", node.getObjectName());
-            vncClient.start("127.0.0.1", tcpPortForwarder.getLocalPort());
-            if (!vncClient.isRunning())
-            {
-               logger.debug("Cannot establish VNC session with node {}", node.getObjectName());
-               if (lastError != null)
-                  throw new Exception(lastError.getMessage(), lastError);
-               else
-                  throw new Exception("Connection error");
-            }
-
-            logger.debug("VNC client started for node {}", node.getObjectName());
-            runInUIThread(() -> {
-               status.setText(i18n.tr("Connected | {0}x{1}", screenWidth, screenHeight));
-               canvas.setVisible(true);
-               actionDisconnect.setEnabled(true);
-            });
-
             try
             {
-               while(!stopFlag)
+               TcpPortForwarder tcpPortForwarder = new TcpPortForwarder(session, node.getObjectId(), (node.getCapabilities() & AbstractNode.NC_IS_LOCAL_VNC) != 0, node.getVncPort(), 0);
+               tcpPortForwarder.setDisplay(display);
+               tcpPortForwarder.setMessageArea(RemoteControlView.this);
+               if (!c.attach(tcpPortForwarder))
                {
-                  Thread.sleep(1000);
+                  tcpPortForwarder.close();
+                  return;
                }
+               tcpPortForwarder.run();
+
+               Socket socket = new Socket(InetAddress.getLoopbackAddress(), tcpPortForwarder.getLocalPort());
+               if (!c.attach(socket))
+               {
+                  socket.close();
+                  return;
+               }
+
+               logger.debug("Establishing VNC session with node {}", node.getObjectName());
+               c.client.start(socket);
+               if (c.client.isRunning())
+               {
+                  logger.debug("VNC client started for node {}", node.getObjectName());
+                  final boolean serverInputSupported = c.client.isServerInputSupported();
+                  runIfCurrent(display, c, () -> {
+                     status.setText(i18n.tr("Connected | {0}x{1}", screenWidth, screenHeight));
+                     canvas.setVisible(true);
+                     actionBlankScreen.setEnabled(serverInputSupported);
+                     actionBlankScreen.setChecked(blankScreen && serverInputSupported);
+                  });
+               }
+               // Client may already be stopped while its error listener has not run yet
+               c.waitForEnd();
+            }
+            catch(Exception e)
+            {
+               c.failed(e);
             }
             finally
             {
-               vncClient.stop();
-               vncClient = null;
-               tcpPortForwarder.close();
-               logger.debug("VNC client stopped for node {}", node.getObjectName());
-
-               runInUIThread(() -> {
-                  if (!status.isDisposed())
-                  {
-                     status.setText(i18n.tr("Disconnected"));
-                  }
-                  if (!canvas.isDisposed())
-                  {
-                     canvas.setCursor(null);
-                     canvas.setVisible(false);
-                  }
-                  actionConnect.setEnabled(true);
-                  actionDisconnect.setEnabled(false);
-                  connected = false;
-                  stopFlag = false;
-               });
+               try
+               {
+                  c.close();
+                  logger.debug("VNC client stopped for node {}", node.getObjectName());
+               }
+               finally
+               {
+                  runInUIThread(() -> disconnected(c));
+               }
             }
-         }
-
-         /**
-          * @see org.netxms.nxmc.base.jobs.Job#jobFailureHandler(java.lang.Exception)
-          */
-         @Override
-         protected void jobFailureHandler(Exception e)
-         {
-            runInUIThread(() -> {
-               status.setText(i18n.tr("Connection failed"));
-               connected = false;
-               stopFlag = false;
-            });
+            Exception error = c.getError();
+            if (error != null)
+               throw error;
          }
 
          @Override
@@ -484,6 +513,51 @@ public class RemoteControlView extends AdHocObjectView
    }
 
    /**
+    * Reset view state after given connection ends. Does nothing if that connection is no longer current.
+    *
+    * @param c ended connection
+    */
+   private void disconnected(VncConnection c)
+   {
+      if ((connection != c) || canvas.isDisposed())
+         return;
+
+      connection = null;
+      status.setText((c.getError() != null) ? i18n.tr("Connection failed") : i18n.tr("Disconnected"));
+      canvas.setCursor(null);
+      canvas.setVisible(false);
+      actionConnect.setEnabled(true);
+      actionDisconnect.setEnabled(false);
+      actionBlankScreen.setEnabled(false);
+      actionBlankScreen.setChecked(false);
+   }
+
+   /**
+    * Run given code in UI thread if given connection is still current.
+    *
+    * @param display display to use
+    * @param c connection
+    * @param r code to run
+    */
+   private void runIfCurrent(Display display, VncConnection c, Runnable r)
+   {
+      display.asyncExec(() -> {
+         if ((connection == c) && !c.isClosed() && !canvas.isDisposed())
+            r.run();
+      });
+   }
+
+   /**
+    * Get VNC client of current connection if it is running.
+    *
+    * @return running VNC client or null
+    */
+   private VernacularClient getActiveClient()
+   {
+      return ((connection != null) && connection.client.isRunning()) ? connection.client : null;
+   }
+
+   /**
     * Send key update to remote machine.
     *
     * @param keyCode SWT key code
@@ -491,7 +565,8 @@ public class RemoteControlView extends AdHocObjectView
     */
    private void sendKeyUpdate(int keyCode, boolean pressed)
    {
-      if ((vncClient == null) || !vncClient.isRunning())
+      VernacularClient client = getActiveClient();
+      if (client == null)
          return;
 
       int vncKeyCode;
@@ -506,7 +581,7 @@ public class RemoteControlView extends AdHocObjectView
             return; // Unsupported key
          vncKeyCode = k;
       }
-      vncClient.updateKey(vncKeyCode, pressed);
+      client.updateKey(vncKeyCode, pressed);
    }
 
    /**
@@ -558,10 +633,109 @@ public class RemoteControlView extends AdHocObjectView
    @Override
    public void dispose()
    {
-      stopFlag = true;
+      if (connection != null)
+         connection.close();
       if (!canvas.isDisposed())
          canvas.setCursor(null);
+      if (serverCursor != null)
+         serverCursor.dispose();
       super.dispose();
+   }
+
+   /**
+    * Single connection attempt: VNC client, port forwarder and local socket. Can be closed from any thread at any
+    * stage, which also aborts a pending handshake.
+    */
+   private static final class VncConnection
+   {
+      final VernacularClient client;
+      private TcpPortForwarder forwarder;
+      private Socket socket;
+      private Exception error;
+      private boolean closed = false;
+
+      VncConnection(VernacularConfig config)
+      {
+         client = new VernacularClient(config);
+      }
+
+      synchronized boolean attach(TcpPortForwarder forwarder)
+      {
+         if (closed)
+            return false;
+         this.forwarder = forwarder;
+         return true;
+      }
+
+      synchronized boolean attach(Socket socket)
+      {
+         if (closed)
+            return false;
+         this.socket = socket;
+         return true;
+      }
+
+      /**
+       * Record connection failure. Failures after close are caused by close itself and are ignored.
+       */
+      synchronized void failed(Exception e)
+      {
+         if (closed || (error != null))
+            return;
+         error = e;
+         logger.debug("VNC error", e);
+         notifyAll();
+      }
+
+      synchronized boolean isClosed()
+      {
+         return closed;
+      }
+
+      synchronized Exception getError()
+      {
+         return error;
+      }
+
+      synchronized void waitForEnd() throws InterruptedException
+      {
+         while(!closed && (error == null))
+            wait();
+      }
+
+      void close()
+      {
+         TcpPortForwarder forwarder;
+         Socket socket;
+         synchronized(this)
+         {
+            if (closed)
+               return;
+            closed = true;
+            notifyAll();
+            forwarder = this.forwarder;
+            socket = this.socket;
+         }
+         try
+         {
+            client.stop();
+         }
+         finally
+         {
+            if (socket != null)
+            {
+               try
+               {
+                  socket.close();
+               }
+               catch(IOException e)
+               {
+               }
+            }
+            if (forwarder != null)
+               forwarder.close();
+         }
+      }
    }
 
    /**

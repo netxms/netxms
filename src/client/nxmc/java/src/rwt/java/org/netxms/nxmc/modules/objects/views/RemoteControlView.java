@@ -102,6 +102,9 @@ public class RemoteControlView extends AdHocObjectView
                StringBuilder url = new StringBuilder(pageLocation);
                url.append("?autoconnect=true&path=");
                url.append(WidgetHelper.getPageRelativeUrl(pageLocation, "vncviewer/" + tcpPortForwarder.getId()));
+               // Empty host overrides a host saved in the browser's local storage, which would make noVNC ignore the relative path
+               url.append("&host=&ultravnc_blank_screen=");
+               url.append(session.getClientConfigurationHintAsBoolean("RemoteControl.BlankScreenOnConnect", false));
                if ((node.getVncPassword() != null) && !node.getVncPassword().isEmpty())
                {
                   try

@@ -26,6 +26,18 @@
 #include <openssl/x509.h>
 
 /**
+ * Upgrade from 70.60 to 70.61
+ */
+static bool H_UpgradeFromV60()
+{
+   CHK_EXEC(CreateConfigParam(L"Client.RemoteControl.BlankScreenOnConnect", L"0",
+         L"Request UltraVNC servers to disable local input and blank the monitor when a remote control session starts. Ignored for other VNC servers.",
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(61));
+   return true;
+}
+
+/**
  * Upgrade from 70.59 to 70.60
  */
 static bool H_UpgradeFromV59()
@@ -1956,6 +1968,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 60, 70, 61, H_UpgradeFromV60 },
    { 59, 70, 60, H_UpgradeFromV59 },
    { 58, 70, 59, H_UpgradeFromV58 },
    { 57, 70, 58, H_UpgradeFromV57 },
