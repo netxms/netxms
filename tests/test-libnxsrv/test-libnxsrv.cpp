@@ -910,7 +910,7 @@ static void TestAgentErrorMappings()
 
 /**
  * Mock SNMP transport serving canned responses from an in-memory sorted MIB.
- * Supports GET and GETNEXT requests, which is sufficient for SnmpGet/SnmpWalk
+ * Supports GET, GETNEXT and GETBULK requests, which is sufficient for SnmpGet/SnmpWalk
  * based code paths in libnxsrv.
  */
 class MockSnmpTransport : public SNMP_Transport
@@ -1025,6 +1025,25 @@ public:
 
    virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override
    {
+      if (pdu->getCommand() == SNMP_GET_BULK_REQUEST)
+      {
+         delete m_response;
+         m_response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
+         SNMP_ObjectId position = pdu->getVariable(0)->getName();
+         for(uint32_t i = 0; i < getBulkRepetitions(); i++)
+         {
+            SNMP_Variable *v = findNext(position);
+            if (v == nullptr)
+            {
+               m_response->bindVariable(new SNMP_Variable(position, ASN_END_OF_MIBVIEW));
+               break;
+            }
+            m_response->bindVariable(new SNMP_Variable(*v));
+            position = v->getName();
+         }
+         return 1;
+      }
+
       if ((pdu->getCommand() != SNMP_GET_REQUEST) && (pdu->getCommand() != SNMP_GET_NEXT_REQUEST))
          return 0;
 
