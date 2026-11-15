@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.11 to 71.12
+ */
+static bool H_UpgradeFromV11()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE interfaces ADD aggregate_iface integer\n"
+      L"UPDATE interfaces SET aggregate_iface=0\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"interfaces", L"aggregate_iface"));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 71.10 to 71.11
  */
 static bool H_UpgradeFromV10()
@@ -264,6 +279,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 11, 71, 12, H_UpgradeFromV11 },
    { 10, 71, 11, H_UpgradeFromV10 },
    { 9,  71, 10, H_UpgradeFromV9  },
    { 8,  71, 9,  H_UpgradeFromV8  },

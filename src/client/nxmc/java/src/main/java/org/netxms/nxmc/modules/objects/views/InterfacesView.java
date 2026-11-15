@@ -88,6 +88,7 @@ public class InterfacesView extends NodeSubObjectTableView
    public static final int COLUMN_PEER_IP_ADDRESS = 30;
    public static final int COLUMN_PEER_PROTOCOL = 31;
    public static final int COLUMN_PEER_LAST_UPDATED = 32;
+   public static final int COLUMN_AGGREGATE = 33;
 
    private InterfaceListLabelProvider labelProvider;
    private Action actionCopyMacAddressToClipboard;
@@ -190,9 +191,10 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("Peer NIC vendor"),
          i18n.tr("Peer IP"),
          i18n.tr("Peer discovery protocol"),
-         i18n.tr("Peer last updated")
+         i18n.tr("Peer last updated"),
+         i18n.tr("Aggregate")
       };
-      final int[] widths = { 150, 60, 150, 150, 70, 150, 100, 70, 90, 150, 100, 100, 90, 120, 200, 80, 80, 80, 80, 150, 150, 100, 120, 90, 80, 80, 80, 80, 80, 80, 80, 80, 120 };
+      final int[] widths = { 150, 60, 150, 150, 70, 150, 100, 70, 90, 150, 100, 100, 90, 120, 200, 80, 80, 80, 80, 150, 150, 100, 120, 90, 80, 80, 80, 80, 80, 80, 80, 80, 120, 150 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI, "InterfacesView.TableViewer");
       labelProvider = new InterfaceListLabelProvider(viewer);
       viewer.setLabelProvider(labelProvider);

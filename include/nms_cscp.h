@@ -1871,6 +1871,7 @@ __PACK_END__
 #define VID_IS_FLAPPING             ((uint32_t)1078)
 #define VID_PHY_LANE                ((uint32_t)1079)
 #define VID_PHY_LOCATION_VALID      ((uint32_t)1080)
+#define VID_AGGREGATE_INTERFACE     ((uint32_t)1081)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

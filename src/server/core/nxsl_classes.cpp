@@ -4927,6 +4927,11 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
 		value = vm->createValue(iface->getAdminState());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("aggregateInterface"))
+   {
+      shared_ptr<NetObj> aggregate = FindObjectById(iface->getAggregateInterfaceId(), OBJECT_INTERFACE);
+      value = (aggregate != nullptr) ? aggregate->createNXSLObject(vm) : vm->createValue();
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("bridgePortNumber"))
    {
 		value = vm->createValue(iface->getBridgePortNumber());

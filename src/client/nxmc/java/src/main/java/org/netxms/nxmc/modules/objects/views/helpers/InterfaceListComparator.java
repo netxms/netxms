@@ -116,6 +116,9 @@ public class InterfaceListComparator extends ViewerComparator
             if ((result == 0) && iface1.isOSPF())
                result = iface1.getOSPFType().getText().compareTo(iface2.getOSPFType().getText());
             break;
+         case InterfacesView.COLUMN_AGGREGATE:
+            result = ComparatorHelper.compareStringsNatural(getAggregateInterfaceName(iface1), getAggregateInterfaceName(iface2));
+            break;
          case InterfacesView.COLUMN_PEER_INTERFACE:
             result = ComparatorHelper.compareStringsNatural(getPeerInterfaceName(iface1), getPeerInterfaceName(iface2));
             break;
@@ -251,6 +254,18 @@ public class InterfaceListComparator extends ViewerComparator
    {
       Interface peer = session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       return (peer != null) ? peer.getObjectName() : "";
+   }
+
+   /**
+    * Get name of link aggregation interface given interface is member of
+    *
+    * @param iface interface
+    * @return link aggregation interface name or empty string
+    */
+   private String getAggregateInterfaceName(Interface iface)
+   {
+      Interface aggregate = iface.getAggregateInterface();
+      return (aggregate != null) ? aggregate.getObjectName() : "";
    }
 
    /**

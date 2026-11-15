@@ -157,6 +157,66 @@ bool MikrotikDriver::getHardwareInformation(DeviceContext *context, NObject *nod
 }
 
 /**
+ * Find interface by name
+ */
+static InterfaceInfo *FindInterfaceByName(InterfaceList *ifList, const wchar_t *name)
+{
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      InterfaceInfo *iface = ifList->get(i);
+      if (!wcscmp(iface->name, name))
+         return iface;
+   }
+   return nullptr;
+}
+
+/**
+ * Read bonding membership. RouterOS does not provide it via SNMP, so it is read via SSH from "slaves" property of bonding interfaces.
+ */
+static void ReadBondingMembership(DeviceContext *context, NObject *node, InterfaceList *ifList)
+{
+   if (!context->isSSHCommandChannelAvailable() && !context->isSSHInteractiveChannelAvailable())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"ReadBondingMembership(%s [%u]): SSH is not available, bonding membership cannot be read", node->getName(), node->getId());
+      return;
+   }
+
+   unique_ptr<ObjectArray<TerseRecord>> bondings(ExecuteTersePrint(context, "/interface bonding print terse without-paging"));
+   if (bondings == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"ReadBondingMembership(%s [%u]): cannot read list of bonding interfaces", node->getName(), node->getId());
+      return;
+   }
+
+   for(int i = 0; i < bondings->size(); i++)
+   {
+      TerseRecord *r = bondings->get(i);
+      const wchar_t *name = r->get(L"name");
+      const wchar_t *slaves = r->get(L"slaves");
+      if ((name == nullptr) || (slaves == nullptr))
+         continue;
+
+      InterfaceInfo *bonding = FindInterfaceByName(ifList, name);
+      if (bonding == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, L"ReadBondingMembership(%s [%u]): bonding interface \"%s\" not found in interface list", node->getName(), node->getId(), name);
+         continue;
+      }
+
+      StringList members(slaves, L",");
+      for(int j = 0; j < members.size(); j++)
+      {
+         InterfaceInfo *member = FindInterfaceByName(ifList, members.get(j));
+         if ((member != nullptr) && (member != bonding))
+         {
+            member->aggregateIndex = bonding->index;
+            nxlog_debug_tag(DEBUG_TAG, 7, L"ReadBondingMembership(%s [%u]): interface \"%s\" is member of \"%s\"", node->getName(), node->getId(), member->name, name);
+         }
+      }
+   }
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param context device context
@@ -169,6 +229,7 @@ InterfaceList *MikrotikDriver::getInterfaces(DeviceContext *context, NObject *no
     if (ifList == nullptr)
         return nullptr;
 
+   bool hasBondings = false;
    for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
@@ -177,7 +238,15 @@ InterfaceList *MikrotikDriver::getInterfaces(DeviceContext *context, NObject *no
          iface->setPhysicalLocation(0, 1, 0, iface->index);
          iface->bridgePort = iface->index;
       }
+      else if (iface->type == IFTYPE_IEEE8023ADLAG)
+      {
+         hasBondings = true;
+      }
    }
+
+   if (hasBondings)
+      ReadBondingMembership(context, node, ifList);
+
    return ifList;
 }
 

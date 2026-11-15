@@ -8620,6 +8620,29 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
             }
          }
       }
+
+      // Set link aggregation membership
+      for(int j = 0; j < ifList->size(); j++)
+      {
+         InterfaceInfo *ifInfo = ifList->get(j);
+         shared_ptr<Interface> iface = findInterfaceByIndex(ifInfo->index);
+         if (iface == nullptr)
+            continue;
+
+         shared_ptr<Interface> aggregate = (ifInfo->aggregateIndex != 0) ? findInterfaceByIndex(ifInfo->aggregateIndex) : shared_ptr<Interface>();
+         uint32_t aggregateId = ((aggregate != nullptr) && (aggregate != iface)) ? aggregate->getId() : 0;
+         if (iface->getAggregateInterfaceId() != aggregateId)
+         {
+            iface->setAggregateInterface(aggregateId);
+            if (aggregateId != 0)
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, L"Node::updateInterfaceConfiguration(%s [%u]): interface %s [%u] is member of link aggregation %s [%u]",
+                        m_name, m_id, iface->getName(), iface->getId(), aggregate->getName(), aggregate->getId());
+            else
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, L"Node::updateInterfaceConfiguration(%s [%u]): interface %s [%u] is no longer member of link aggregation",
+                        m_name, m_id, iface->getName(), iface->getId());
+            hasChanges = true;
+         }
+      }
    }
    else if (!(m_flags & NF_EXTERNAL_GATEWAY))    /* pIfList == nullptr or empty */
    {

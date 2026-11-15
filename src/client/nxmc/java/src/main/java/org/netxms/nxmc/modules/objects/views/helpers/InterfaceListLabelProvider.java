@@ -134,6 +134,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
             return iface.isOSPF() ? iface.getOSPFState().getText() : "";
          case InterfacesView.COLUMN_OSPF_TYPE:
             return iface.isOSPF() ? iface.getOSPFType().getText() : "";
+         case InterfacesView.COLUMN_AGGREGATE:
+            return getAggregateInterfaceName(iface);
          case InterfacesView.COLUMN_PEER_INTERFACE:
             return getPeerInterfaceName(iface);
          case InterfacesView.COLUMN_PEER_IP_ADDRESS:
@@ -256,6 +258,18 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
    {
       Interface peer = session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       return (peer != null) ? peer.getObjectName() : null;
+   }
+
+   /**
+    * Get name of link aggregation interface given interface is member of
+    *
+    * @param iface interface
+    * @return link aggregation interface name or null
+    */
+   private String getAggregateInterfaceName(Interface iface)
+   {
+      Interface aggregate = iface.getAggregateInterface();
+      return (aggregate != null) ? aggregate.getObjectName() : null;
    }
 
 	/**

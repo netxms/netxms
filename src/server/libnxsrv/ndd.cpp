@@ -776,6 +776,70 @@ bool NetworkDeviceDriver::getInterfaceSpeed(SNMP_Transport *snmp, uint32_t ifInd
 }
 
 /**
+ * Read link aggregation membership from device. Membership is read from dot3adAggPortAttachedAggID (IEEE8023-LAG-MIB)
+ * first, then ifStackTable is used for interfaces still without known aggregate. Only ifStackTable entries where higher
+ * layer is link aggregation interface are accepted, because that table also describes VLAN and sub-interface stacking.
+ */
+static void ReadLinkAggregationMembership(SNMP_Transport *snmp, InterfaceList *ifList, const wchar_t *debugId)
+{
+   // dot3adAggPortAttachedAggID - indexed by ifIndex of the port, value is ifIndex of aggregator (0 if not attached).
+   // Port that is not part of any aggregation can be reported as attached to its own individual aggregator.
+   SnmpWalk(snmp, { 1, 2, 840, 10006, 300, 43, 1, 2, 1, 1, 13 },
+      [ifList, debugId] (SNMP_Variable *v) -> uint32_t
+      {
+         uint32_t portIndex = v->getName().getLastElement();
+         uint32_t aggregateIndex = v->getValueAsUInt();
+         if ((aggregateIndex != 0) && (aggregateIndex != portIndex))
+         {
+            InterfaceInfo *port = ifList->findByIfIndex(portIndex);
+            if ((port != nullptr) && (ifList->findByIfIndex(aggregateIndex) != nullptr))
+            {
+               port->aggregateIndex = aggregateIndex;
+               nxlog_debug_tag(DEBUG_TAG, 7, L"NetworkDeviceDriver::getInterfaces(%s): interface %u is member of link aggregation %u (IEEE8023-LAG-MIB)", debugId, portIndex, aggregateIndex);
+            }
+         }
+         return SNMP_ERR_SUCCESS;
+      });
+
+   bool hasAggregates = false;
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      if (ifList->get(i)->type == IFTYPE_IEEE8023ADLAG)
+      {
+         hasAggregates = true;
+         break;
+      }
+   }
+   if (!hasAggregates)
+      return;
+
+   // ifStackStatus - indexed by ifIndex of higher layer and ifIndex of lower layer
+   SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 31, 1, 2, 1, 3 },
+      [ifList, debugId] (SNMP_Variable *v) -> uint32_t
+      {
+         const SNMP_ObjectId& name = v->getName();
+         int32_t status = v->getValueAsInt();
+         if ((name.length() != 13) || ((status != 1) && (status != 2)))   // accept only active and notInService
+            return SNMP_ERR_SUCCESS;
+
+         uint32_t higherIndex = name.getElement(11);
+         uint32_t lowerIndex = name.getElement(12);
+         if ((higherIndex == 0) || (lowerIndex == 0) || (higherIndex == lowerIndex))
+            return SNMP_ERR_SUCCESS;
+
+         InterfaceInfo *higher = ifList->findByIfIndex(higherIndex);
+         InterfaceInfo *lower = ifList->findByIfIndex(lowerIndex);
+         if ((higher != nullptr) && (lower != nullptr) && (higher->type == IFTYPE_IEEE8023ADLAG) &&
+             (lower->type != IFTYPE_IEEE8023ADLAG) && (lower->aggregateIndex == 0))
+         {
+            lower->aggregateIndex = higherIndex;
+            nxlog_debug_tag(DEBUG_TAG, 7, L"NetworkDeviceDriver::getInterfaces(%s): interface %u is member of link aggregation %u (ifStackTable)", debugId, lowerIndex, higherIndex);
+         }
+         return SNMP_ERR_SUCCESS;
+      });
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param context device context
@@ -995,7 +1059,11 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(DeviceContext *context, NObjec
 		nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%s): SNMP WALK 1.3.6.1.2.1.2.2.1.1 failed (%s)"), debugId, SnmpGetErrorText(rc));
 	}
 
-   if (!success)
+   if (success)
+   {
+      ReadLinkAggregationMembership(snmp, ifList, debugId);
+   }
+   else
    {
       delete_and_null(ifList);
    }

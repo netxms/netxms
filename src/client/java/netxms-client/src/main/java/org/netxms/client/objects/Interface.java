@@ -442,6 +442,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 	private int dot1xBackendState;
 	private SnmpObjectId ifTableSuffix;
    private long parentInterfaceId;
+   private long aggregateInterfaceId;
    private long[] vlans;
    private InetAddress ospfArea;
    private OSPFInterfaceState ospfState;
@@ -485,6 +486,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
 		dot1xBackendState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_BACKEND_STATE);
 		ifTableSuffix = new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_IFTABLE_SUFFIX));
 		parentInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PARENT_INTERFACE);
+      aggregateInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_AGGREGATE_INTERFACE);
 		vlans = msg.getFieldAsUInt32Array(NXCPCodes.VID_VLAN_LIST);
       ifAlias = msg.getFieldAsString(NXCPCodes.VID_IF_ALIAS);
       ospfArea = msg.getFieldAsInetAddress(NXCPCodes.VID_OSPF_AREA);
@@ -1134,6 +1136,26 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
    public Interface getParentInterface()
    {
       return session.findObjectById(parentInterfaceId, Interface.class);
+   }
+
+   /**
+    * Get ID of link aggregation interface this interface is member of.
+    *
+    * @return link aggregation interface object ID or 0
+    */
+   public long getAggregateInterfaceId()
+   {
+      return aggregateInterfaceId;
+   }
+
+   /**
+    * Get link aggregation interface this interface is member of.
+    *
+    * @return link aggregation interface object or null
+    */
+   public Interface getAggregateInterface()
+   {
+      return session.findObjectById(aggregateInterfaceId, Interface.class);
    }
 
    /**

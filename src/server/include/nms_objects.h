@@ -2502,6 +2502,7 @@ private:
 
 protected:
    uint32_t m_parentInterfaceId;
+   uint32_t m_aggregateInterfaceId;  // link aggregation interface this interface is member of
    uint32_t m_index;
    MacAddress m_macAddress;
    InetAddressList m_ipAddressList;
@@ -2593,6 +2594,7 @@ public:
    uint32_t getParentNodeId() const;
    String getParentNodeName() const;
    uint32_t getParentInterfaceId() const { return m_parentInterfaceId; }
+   uint32_t getAggregateInterfaceId() const { return GetAttributeWithLock(m_aggregateInterfaceId, m_mutexProperties); }
 
    void saveStateBeforeMaintenance(uint32_t nodeId);
    void generateEventsAfterMaintenace(uint32_t parentId);
@@ -2779,6 +2781,15 @@ public:
    {
       m_parentInterfaceId = parentInterfaceId;
       setModified(MODIFY_INTERFACE_PROPERTIES);
+   }
+   void setAggregateInterface(uint32_t aggregateInterfaceId)
+   {
+      LockGuard lockGuard(m_mutexProperties);
+      if (m_aggregateInterfaceId != aggregateInterfaceId)
+      {
+         m_aggregateInterfaceId = aggregateInterfaceId;
+         setModified(MODIFY_INTERFACE_PROPERTIES);
+      }
    }
    void setExpectedState(int state)
    {

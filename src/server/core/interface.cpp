@@ -69,6 +69,7 @@ static const char *InterfaceOperStateToText(InterfaceOperState state)
 Interface::Interface() : super(), m_macAddress(MacAddress::ZERO), m_beforeMaintenaceData(Ownership::True)
 {
    m_parentInterfaceId = 0;
+   m_aggregateInterfaceId = 0;
    m_index = 0;
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
@@ -112,6 +113,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
           : super(), m_macAddress(MacAddress::ZERO), m_description(_T("unknown")), m_ifName(_T("unknown")), m_beforeMaintenaceData(Ownership::True)
 {
    m_parentInterfaceId = 0;
+   m_aggregateInterfaceId = 0;
    m_flags = IF_PSEUDO | (bSyntheticMask ? IF_SYNTHETIC_MASK : 0);
    if (addrList.isLoopbackOnly())
 		m_flags |= IF_LOOPBACK;
@@ -168,6 +170,7 @@ Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *
       m_flags = 0;
 
    m_parentInterfaceId = 0;
+   m_aggregateInterfaceId = 0;
    _tcslcpy(m_name, objectName, MAX_OBJECT_NAME);
    m_index = index;
    m_type = ifType;
@@ -234,7 +237,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
 		L"phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,"
 		L"admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,"
       L"ospf_area,ospf_if_type,ospf_if_state,stp_port_state,peer_last_updated,max_speed,iftable_suffix,"
-      L"state_before_maintenance,last_known_speed,phy_lane,phy_location_valid FROM interfaces WHERE id=?");
+      L"state_before_maintenance,last_known_speed,phy_lane,phy_location_valid,aggregate_iface FROM interfaces WHERE id=?");
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -271,6 +274,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepa
 		m_mtu = DBGetFieldULong(hResult, 0, 20);
       m_speed = DBGetFieldUInt64(hResult, 0, 21);
       m_parentInterfaceId = DBGetFieldULong(hResult, 0, 22);
+      m_aggregateInterfaceId = DBGetFieldULong(hResult, 0, 36);
       m_lastKnownOperState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 23));
       m_lastKnownAdminState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 24));
       m_ospfArea = DBGetFieldIPAddr(hResult, 0, 25);
@@ -428,7 +432,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          L"peer_proto", L"mtu", L"speed", L"parent_iface", L"iftable_suffix", L"last_known_oper_state",
          L"last_known_admin_state", L"if_alias", L"ospf_area", L"ospf_if_type", L"ospf_if_state",
          L"stp_port_state", L"if_name", L"peer_last_updated", L"max_speed", L"state_before_maintenance",
-         L"last_known_speed", L"phy_lane", L"phy_location_valid",
+         L"last_known_speed", L"phy_lane", L"phy_location_valid", L"aggregate_iface",
          nullptr
       };
 
@@ -495,8 +499,9 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 34, DB_SQLTYPE_BIGINT, m_lastKnownSpeed);
          DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_physicalLocation.lane));
          DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_physicalLocation.valid ? L"1" : L"0", DB_BIND_STATIC);
+         DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_aggregateInterfaceId);
 
-         DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -1351,6 +1356,7 @@ void Interface::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 	msg->setField(VID_ZONE_UIN, m_zoneUIN);
    msg->setFieldFromInt32Array(VID_IFTABLE_SUFFIX, m_ifTableSuffixLen, m_ifTableSuffix);
    msg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
+   msg->setField(VID_AGGREGATE_INTERFACE, m_aggregateInterfaceId);
    msg->setFieldFromInt32Array(VID_VLAN_LIST, m_vlans);
    msg->setField(VID_OSPF_AREA, InetAddress(m_ospfArea));
    msg->setField(VID_OSPF_INTERFACE_TYPE, static_cast<uint16_t>(m_ospfType));
@@ -1651,6 +1657,11 @@ void Interface::onObjectDelete(const NetObj& object)
 		m_peerInterfaceId = 0;
 		setModified(MODIFY_INTERFACE_PROPERTIES);
 	}
+   if (m_aggregateInterfaceId == objectId)
+   {
+      m_aggregateInterfaceId = 0;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+   }
    unlockProperties();
 	super::onObjectDelete(object);
 }
@@ -2268,6 +2279,7 @@ json_t *Interface::toJson(uint32_t flags)
    json_object_set_new(root, "bridgePortNumber", json_integer(m_bridgePortNumber));
    json_object_set_new(root, "peerNodeId", json_integer(m_peerNodeId));
    json_object_set_new(root, "peerInterfaceId", json_integer(m_peerInterfaceId));
+   json_object_set_new(root, "aggregateInterfaceId", json_integer(m_aggregateInterfaceId));
    json_object_set_new(root, "peerDiscoveryProtocol", json_integer(m_peerDiscoveryProtocol));
    json_object_set_new(root, "peerDiscoveryProtocolText", json_string_t(GetLinkLayerProtocolName(m_peerDiscoveryProtocol)));
    json_object_set_new(root, "adminState", json_integer(m_adminState));

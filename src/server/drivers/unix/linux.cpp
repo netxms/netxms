@@ -181,7 +181,7 @@ static uint32_t InterfaceTypeFromLink(const char *linkType, const char *kind)
          return IFTYPE_L2VLAN;
       if (!strcmp(kind, "bridge"))
          return IFTYPE_BRIDGE;
-      if (!strcmp(kind, "bond"))
+      if (!strcmp(kind, "bond") || !strcmp(kind, "team"))
          return IFTYPE_IEEE8023ADLAG;
       return IFTYPE_ETHERNET_CSMACD;
    }
@@ -269,6 +269,32 @@ InterfaceList *LinuxDriver::getInterfaces(DeviceContext *context, NObject *node,
       }
 
       ifList->add(iface);
+   }
+
+   // Members of bonding and team devices report them as master
+   json_array_foreach(root, i, element)
+   {
+      json_t *linkInfo = json_object_get(element, "linkinfo");
+      const char *slaveKind = (linkInfo != nullptr) ? json_object_get_string_utf8(linkInfo, "info_slave_kind", "") : "";
+      const char *master = json_object_get_string_utf8(element, "master", nullptr);
+      if ((master == nullptr) || (strcmp(slaveKind, "bond") && strcmp(slaveKind, "team")))
+         continue;
+
+      InterfaceInfo *iface = ifList->findByIfIndex(json_object_get_uint32(element, "ifindex", 0));
+      if (iface == nullptr)
+         continue;
+
+      wchar_t masterName[MAX_DB_STRING];
+      CopyUTF8String(masterName, master, MAX_DB_STRING);
+      for(int j = 0; j < ifList->size(); j++)
+      {
+         InterfaceInfo *m = ifList->get(j);
+         if (!wcscmp(m->name, masterName))
+         {
+            iface->aggregateIndex = m->index;
+            break;
+         }
+      }
    }
    json_decref(root);
 

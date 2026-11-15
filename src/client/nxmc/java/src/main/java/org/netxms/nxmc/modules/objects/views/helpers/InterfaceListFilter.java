@@ -58,6 +58,7 @@ public class InterfaceListFilter extends NodeSubObjectFilter
             matchMac(iface, token) ||
             matchIp(iface, token) ||
             matchPeerInterface(iface, token) ||
+            matchAggregate(iface, token) ||
             matchPeerNode(iface, token) ||
             matchPeerMac(iface, token) ||
             matchPeerIp(iface, token) ||
@@ -205,6 +206,19 @@ public class InterfaceListFilter extends NodeSubObjectFilter
    private boolean matchPeerInterface(Interface iface, String token)
    {
       return Long.toString(iface.getPeerInterfaceId()).toLowerCase().contains(token);
+   }
+
+   /**
+    * Match name of link aggregation interface given interface is member of
+    *
+    * @param iface interface
+    * @param token filter token
+    * @return true if matched
+    */
+   private boolean matchAggregate(Interface iface, String token)
+   {
+      Interface aggregate = iface.getAggregateInterface();
+      return (aggregate != null) && aggregate.getObjectName().toLowerCase().contains(token);
    }
 
    /**

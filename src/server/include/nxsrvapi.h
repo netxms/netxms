@@ -395,6 +395,7 @@ private:
       isPhysicalPort = false;
       excludeFromTopology = false;
       parentIndex = 0;
+      aggregateIndex = 0;
    }
 
 public:
@@ -415,6 +416,7 @@ public:
    uint32_t ifTableSuffix[16];   // actual ifTable suffix
    int ifTableSuffixLength;
    uint32_t parentIndex;
+   uint32_t aggregateIndex;   // Index of link aggregation interface this interface is member of, 0 if none
 
    InterfaceInfo(uint32_t ifIndex)
    {

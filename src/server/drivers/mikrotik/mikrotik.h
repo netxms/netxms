@@ -29,6 +29,20 @@
 #define DEBUG_TAG _T("ndd.mikrotik")
 
 /**
+ * Record from "print terse" output: flags and property map
+ */
+struct TerseRecord
+{
+   StringMap properties;
+   MutableString flags;
+
+   const wchar_t *get(const wchar_t *name) const { return properties.get(name); }
+   bool hasFlag(wchar_t flag) const { return wcschr(flags, flag) != nullptr; }
+};
+
+ObjectArray<TerseRecord> *ExecuteTersePrint(DeviceContext *context, const char *command);
+
+/**
  * Driver's class
  */
 class MikrotikDriver : public NetworkDeviceDriver

@@ -202,7 +202,16 @@ InterfaceList *JuniperDriver::getInterfaces(DeviceContext *context, NObject *nod
 
          InterfaceInfo *parent = ifList->findByPhysicalLocation(0, slot - 1, pic - 1, port - 1);
          if (parent != nullptr)
+         {
             iface->parentIndex = parent->index;
+
+            // Link aggregation membership is reported by device for logical unit, move it to physical port
+            if (iface->aggregateIndex != 0)
+            {
+               parent->aggregateIndex = iface->aggregateIndex;
+               iface->aggregateIndex = 0;
+            }
+         }
       }
 
       delete chassisTable;

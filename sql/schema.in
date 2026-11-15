@@ -738,6 +738,7 @@ CREATE TABLE interfaces
   id integer not null,
   node_id integer not null,
   parent_iface integer not null,
+  aggregate_iface integer not null, /* Link aggregation interface this interface is member of, 0 if none */
   if_type integer not null,
   if_index integer not null,
   mtu integer not null,

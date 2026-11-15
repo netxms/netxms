@@ -23,18 +23,6 @@
 #include "mikrotik.h"
 
 /**
- * Record from "print terse" output: flags and property map
- */
-struct TerseRecord
-{
-   StringMap properties;
-   MutableString flags;
-
-   const wchar_t *get(const wchar_t *name) const { return properties.get(name); }
-   bool hasFlag(wchar_t flag) const { return wcschr(flags, flag) != nullptr; }
-};
-
-/**
  * Parse single line of RouterOS "print terse" output. Line format is
  *    <index> [<flags>] <name>=<value> <name>=<value> ...
  * where value may be quoted. Returns false if line is not a record line (empty line, comment, error message).
@@ -103,7 +91,7 @@ static bool ParseTerseLine(const wchar_t *line, TerseRecord *record)
  * Execute RouterOS command and parse "print terse" output. Uses SSH command channel if available,
  * interactive channel otherwise. Returns nullptr if command cannot be executed.
  */
-static ObjectArray<TerseRecord> *ExecuteTersePrint(DeviceContext *context, const char *command)
+ObjectArray<TerseRecord> *ExecuteTersePrint(DeviceContext *context, const char *command)
 {
    StringList *lines;
    if (context->isSSHCommandChannelAvailable())
