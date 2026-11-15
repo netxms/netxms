@@ -28,9 +28,13 @@
  */
 static bool H_UpgradeFromV10()
 {
-   CHK_EXEC(CreateConfigParam(L"Client.RemoteControl.BlankScreenOnConnect", L"0",
-         L"Request UltraVNC servers to disable local input and blank the monitor when a remote control session starts. Ignored for other VNC servers.",
-         nullptr, 'B', true, false, false, false));
+   if (GetSchemaLevelForMajorVersion(70) < 61)
+   {
+      CHK_EXEC(CreateConfigParam(L"Client.RemoteControl.BlankScreenOnConnect", L"0",
+            L"Request UltraVNC servers to disable local input and blank the monitor when a remote control session starts. Ignored for other VNC servers.",
+            nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(70, 61));
+   }
    CHK_EXEC(SetMinorSchemaVersion(11));
    return true;
 }
