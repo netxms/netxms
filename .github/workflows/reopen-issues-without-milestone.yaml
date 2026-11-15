@@ -13,7 +13,7 @@ jobs:
       - name: Check and reopen
         if: github.event.issue.milestone == null && github.event.issue.state_reason ==
           'completed'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const overrideKeyword = '/force';
