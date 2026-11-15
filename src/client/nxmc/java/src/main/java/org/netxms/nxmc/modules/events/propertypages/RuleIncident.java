@@ -81,10 +81,7 @@ public class RuleIncident extends RuleBasePropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            boolean enabled = checkCreateIncident.getSelection();
-            checkAIAnalysis.setEnabled(enabled);
-            incidentOptionsGroup.setVisible(enabled);
-            ((GridData)incidentOptionsGroup.getLayoutData()).exclude = !enabled;
+            updateControls();
             dialogArea.layout(true, true);
          }
       });
@@ -96,9 +93,7 @@ public class RuleIncident extends RuleBasePropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            boolean enabled = checkAIAnalysis.getSelection() && checkCreateIncident.getSelection();
-            incidentAIAnalysisGroup.setVisible(enabled);
-            ((GridData)incidentAIAnalysisGroup.getLayoutData()).exclude = !enabled;
+            updateControls();
             dialogArea.layout(true, true);
          }
       });
@@ -108,9 +103,7 @@ public class RuleIncident extends RuleBasePropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.TOP;
-      gd.exclude = (rule.getFlags() & EventProcessingPolicyRule.CREATE_INCIDENT) == 0;
       incidentOptionsGroup.setLayoutData(gd);
-      incidentOptionsGroup.setVisible((rule.getFlags() & EventProcessingPolicyRule.CREATE_INCIDENT) != 0);
       layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = 0;
@@ -144,10 +137,7 @@ public class RuleIncident extends RuleBasePropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.TOP;
-      gd.exclude = (rule.getFlags() & EventProcessingPolicyRule.CREATE_INCIDENT) == 0;
       incidentAIAnalysisGroup.setLayoutData(gd);
-      incidentAIAnalysisGroup.setVisible(
-            (rule.getFlags() & (EventProcessingPolicyRule.CREATE_INCIDENT | EventProcessingPolicyRule.AI_ANALYZE_INCIDENT)) == (EventProcessingPolicyRule.CREATE_INCIDENT | EventProcessingPolicyRule.AI_ANALYZE_INCIDENT));
       layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = 0;
@@ -160,7 +150,7 @@ public class RuleIncident extends RuleBasePropertyPage
       incidentAIAnalysysDepth.add(i18n.tr("Standard"));
       incidentAIAnalysysDepth.add(i18n.tr("Deep"));
       incidentAIAnalysysDepth.select(rule.getIncidentAIAnalysisDepth());
-      
+
       incidentAIAutoAssign = new Button(incidentAIAnalysisGroup, SWT.CHECK);
       incidentAIAutoAssign.setText(i18n.tr("Automatically assign incident to suggested owner"));
       incidentAIAutoAssign.setSelection((rule.getFlags() & EventProcessingPolicyRule.AI_AUTO_ASSIGN) != 0);
@@ -174,7 +164,28 @@ public class RuleIncident extends RuleBasePropertyPage
       gd.heightHint = 100;
       insidentAIPrompt.setLayoutData(gd);
 
+      updateControls();
       return dialogArea;
+   }
+
+   /**
+    * Update enabled state and visibility of controls according to check box selection.
+    */
+   private void updateControls()
+   {
+      boolean createIncident = checkCreateIncident.getSelection();
+      checkAIAnalysis.setEnabled(createIncident);
+      setGroupVisible(incidentOptionsGroup, createIncident);
+      setGroupVisible(incidentAIAnalysisGroup, createIncident && checkAIAnalysis.getSelection());
+   }
+
+   /**
+    * Show or hide given group and exclude it from layout when hidden.
+    */
+   private static void setGroupVisible(Composite group, boolean visible)
+   {
+      group.setVisible(visible);
+      ((GridData)group.getLayoutData()).exclude = !visible;
    }
 
    /**
