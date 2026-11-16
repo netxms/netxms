@@ -118,6 +118,159 @@ void TestMsgWaitQueue()
 }
 
 /**
+ * Set uncompressed size declared by compressed structured message
+ */
+static void SetDeclaredSize(NXCP_MESSAGE *msg, uint32_t size)
+{
+   size = htonl(size);
+   memcpy(reinterpret_cast<BYTE*>(msg) + NXCP_HEADER_SIZE, &size, 4);
+}
+
+/**
+ * Get uncompressed size declared by compressed structured message
+ */
+static uint32_t GetDeclaredSize(const NXCP_MESSAGE *msg)
+{
+   uint32_t size;
+   memcpy(&size, reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE, 4);
+   return ntohl(size);
+}
+
+/**
+ * Check that compressed message is rejected by deserialize()
+ */
+static void AssertRejected(const NXCP_MESSAGE *msg)
+{
+   NXCPMessage *parsed = NXCPMessage::deserialize(msg);
+   AssertNull(parsed);
+}
+
+/**
+ * Test validation of uncompressed size declared by compressed messages
+ */
+static void TestCompressedMessageValidation()
+{
+   static const uint32_t HUGE_SIZE = 0x10000000;
+   static const size_t ZERO_BLOCK_SIZE = 1024 * 1024;
+
+   StartTest(_T("NXCP message compression - declared size of structured message"));
+
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, 1);
+   msg.setField(100, longText);
+   NXCP_MESSAGE *binMsg = msg.serialize(true);
+   AssertTrue((ntohs(binMsg->flags) & MF_COMPRESSED) != 0);
+   uint32_t declaredSize = GetDeclaredSize(binMsg);
+   AssertFalse(NXCPMessage::dump(binMsg, NXCP_VERSION).contains(_T("format error")));
+
+   SetDeclaredSize(binMsg, HUGE_SIZE);
+   AssertRejected(binMsg);
+   AssertTrue(NXCPMessage::dump(binMsg, NXCP_VERSION).contains(_T("format error")));
+
+   binMsg->flags |= htons(MF_STREAM);
+   AssertRejected(binMsg);
+   AssertTrue(NXCPMessage::dump(binMsg, NXCP_VERSION).contains(_T("format error")));
+   binMsg->flags &= ~htons(MF_STREAM);
+
+   SetDeclaredSize(binMsg, declaredSize + 8);
+   AssertRejected(binMsg);
+   AssertTrue(NXCPMessage::dump(binMsg, NXCP_VERSION).contains(_T("Cannot decompress message")));
+
+   SetDeclaredSize(binMsg, declaredSize - 8);
+   AssertRejected(binMsg);
+   AssertTrue(NXCPMessage::dump(binMsg, NXCP_VERSION).contains(_T("Cannot decompress message")));
+
+   SetDeclaredSize(binMsg, declaredSize);
+   NXCPMessage *parsed = NXCPMessage::deserialize(binMsg);
+   AssertNotNull(parsed);
+   delete parsed;
+   MemFree(binMsg);
+
+   EndTest();
+
+   StartTest(_T("NXCP message compression - declared size above message size limit"));
+
+   // Compressed payload is long enough for declared size to pass compression ratio check
+   static const size_t LARGE_MESSAGE_SIZE = 1400000;
+   static const uint32_t OVERSIZE = 0x50000000;
+   AssertTrue(static_cast<uint64_t>(LARGE_MESSAGE_SIZE - NXCP_HEADER_SIZE - 4) * 1032 > OVERSIZE);
+   binMsg = static_cast<NXCP_MESSAGE*>(MemAllocZeroed(LARGE_MESSAGE_SIZE));
+   binMsg->code = htons(CMD_REQUEST_COMPLETED);
+   binMsg->flags = htons(MF_COMPRESSED | MF_NXCP_VERSION(NXCP_VERSION));
+   binMsg->size = htonl(static_cast<uint32_t>(LARGE_MESSAGE_SIZE));
+   SetDeclaredSize(binMsg, OVERSIZE);
+   AssertRejected(binMsg);
+   AssertTrue(NXCPMessage::dump(binMsg, NXCP_VERSION).contains(_T("format error")));
+
+   binMsg->flags = htons(MF_BINARY | MF_COMPRESSED | MF_NXCP_VERSION(NXCP_VERSION));
+   binMsg->numFields = htonl(OVERSIZE);
+   AssertRejected(binMsg);
+   MemFree(binMsg);
+
+   EndTest();
+
+   StartTest(_T("NXCP message compression - declared size of binary message"));
+
+   char text[1024];
+   memset(text, 'A', sizeof(text));
+   binMsg = CreateRawNXCPMessage(CMD_FILE_DATA, 1, 0, text, sizeof(text), nullptr, true);
+   AssertTrue((ntohs(binMsg->flags) & MF_COMPRESSED) != 0);
+
+   binMsg->numFields = htonl(HUGE_SIZE);
+   AssertRejected(binMsg);
+
+   binMsg->numFields = htonl(sizeof(text) + 1);
+   AssertRejected(binMsg);
+
+   binMsg->numFields = htonl(sizeof(text) - 1);
+   AssertRejected(binMsg);
+
+   // Java sender does not put size of binary data into first four bytes of payload
+   binMsg->numFields = htonl(sizeof(text));
+   SetDeclaredSize(binMsg, NXCP_HEADER_SIZE + 7);
+   parsed = NXCPMessage::deserialize(binMsg);
+   AssertNotNull(parsed);
+   AssertEquals(parsed->getBinaryDataSize(), sizeof(text));
+   AssertTrue(!memcmp(parsed->getBinaryData(), text, sizeof(text)));
+   delete parsed;
+   MemFree(binMsg);
+
+   EndTest();
+
+   StartTest(_T("NXCP message compression - highest compression ratio"));
+
+   BYTE *zeroes = MemAllocArray<BYTE>(ZERO_BLOCK_SIZE);
+
+   NXCPMessage zmsg(CMD_REQUEST_COMPLETED, 2);
+   zmsg.setField(1, zeroes, ZERO_BLOCK_SIZE);
+   binMsg = zmsg.serialize(true);
+   AssertTrue((ntohs(binMsg->flags) & MF_COMPRESSED) != 0);
+   AssertTrue(ZERO_BLOCK_SIZE / (ntohl(binMsg->size) - NXCP_HEADER_SIZE - 4) > 900);
+   parsed = NXCPMessage::deserialize(binMsg);
+   AssertNotNull(parsed);
+   size_t size;
+   const BYTE *data = parsed->getBinaryFieldPtr(1, &size);
+   AssertEquals(size, ZERO_BLOCK_SIZE);
+   AssertTrue(!memcmp(data, zeroes, ZERO_BLOCK_SIZE));
+   delete parsed;
+   AssertFalse(NXCPMessage::dump(binMsg, NXCP_VERSION).contains(_T("format error")));
+   MemFree(binMsg);
+
+   binMsg = CreateRawNXCPMessage(CMD_FILE_DATA, 2, 0, zeroes, ZERO_BLOCK_SIZE, nullptr, true);
+   AssertTrue((ntohs(binMsg->flags) & MF_COMPRESSED) != 0);
+   AssertTrue(ZERO_BLOCK_SIZE / (ntohl(binMsg->size) - NXCP_HEADER_SIZE - 4) > 900);
+   parsed = NXCPMessage::deserialize(binMsg);
+   AssertNotNull(parsed);
+   AssertEquals(parsed->getBinaryDataSize(), ZERO_BLOCK_SIZE);
+   AssertTrue(!memcmp(parsed->getBinaryData(), zeroes, ZERO_BLOCK_SIZE));
+   delete parsed;
+   MemFree(binMsg);
+
+   MemFree(zeroes);
+
+   EndTest();
+}
+
+/**
  * Test message class
  */
 void TestMessageClass()
@@ -258,6 +411,8 @@ void TestMessageClass()
    MemFree(binMsg);
 
    EndTest();
+
+   TestCompressedMessageValidation();
 
 #if !WITH_ADDRESS_SANITIZER
    StartTest(_T("NXCP message compression performance"));

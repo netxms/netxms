@@ -209,22 +209,48 @@ NXCPMessage *NXCPMessage::deserialize(const NXCP_MESSAGE *rawMsg, int version)
 }
 
 /**
- * Calculate size hint for message memory pool
+ * Check if compressed data of given size can inflate into declared number of bytes (deflate cannot expand beyond 1032:1).
+ * Declared size is also limited by the largest message size accepted by message receiver, which keeps size
+ * arithmetic within 32 bits.
  */
-static inline size_t SizeHint(const NXCP_MESSAGE *msg)
+static inline bool IsValidUncompressedSize(size_t uncompressedSize, size_t compressedSize)
 {
-   bool compressed = (ntohs(msg->flags) & MF_COMPRESSED) != 0;
+   return (uncompressedSize <= 0x3FFFFFFF) && (static_cast<uint64_t>(uncompressedSize) <= static_cast<uint64_t>(compressedSize) * 1032);
+}
+
+/**
+ * Calculate size hint for message memory pool. Size of uncompressed data is taken into account
+ * only for messages that will be inflated and only if it passes the same check as at inflate time.
+ */
+static inline size_t SizeHint(const NXCP_MESSAGE *msg, int version)
+{
+   uint16_t flags = ntohs(msg->flags);
    size_t msgSize = ntohl(msg->size);
    size_t size = msgSize + 1024;
-   if (compressed && (msgSize >= NXCP_HEADER_SIZE + sizeof(uint32_t)))
-      size += ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) - NXCP_HEADER_SIZE;
+   int encodedVersion = flags >> 12;
+   if ((flags & MF_COMPRESSED) && (((encodedVersion != 0) ? encodedVersion : version) >= 4) && (msgSize >= NXCP_HEADER_SIZE + 4))
+   {
+      size_t uncompressedSize = 0;
+      if (flags & MF_BINARY)
+      {
+         if (!(flags & MF_STREAM))
+            uncompressedSize = ntohl(msg->numFields);
+      }
+      else if (!(flags & MF_CONTROL))
+      {
+         uncompressedSize = ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE));
+         uncompressedSize = (uncompressedSize >= NXCP_HEADER_SIZE) ? uncompressedSize - NXCP_HEADER_SIZE : 0;
+      }
+      if (IsValidUncompressedSize(uncompressedSize, msgSize - NXCP_HEADER_SIZE - 4))
+         size += uncompressedSize;
+   }
    return size + 4096 - (size % 4096);
 }
 
 /**
  * Create NXCPMessage object from serialized message
  */
-NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint(msg))
+NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint(msg, version))
 {
    m_flags = ntohs(msg->flags);
    m_code = ntohs(msg->code);
@@ -264,6 +290,14 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
             m_version = -1;   // error indicator
             return;
          }
+         if (!IsValidUncompressedSize(m_dataSize, msgSize - NXCP_HEADER_SIZE - 4))
+         {
+            TCHAR buffer[256];
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: invalid uncompressed size %u for compressed binary message %s with ID %u"),
+               static_cast<unsigned int>(m_dataSize), NXCPMessageCodeName(m_code, buffer), m_id);
+            m_version = -1;   // error indicator
+            return;
+         }
 
          z_stream stream;
          stream.zalloc = ZLibAlloc;
@@ -286,7 +320,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          stream.next_out = m_data;
          stream.avail_out = (UINT32)m_dataSize;
 
-         if (inflate(&stream, Z_FINISH) != Z_STREAM_END)
+         if ((inflate(&stream, Z_FINISH) != Z_STREAM_END) || (stream.avail_out != 0))
          {
             inflateEnd(&stream);
             TCHAR buffer[256];
@@ -336,7 +370,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
             return;
          }
          size_t uncompressedSize = ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE));
-         if (uncompressedSize < NXCP_HEADER_SIZE)
+         if ((uncompressedSize < NXCP_HEADER_SIZE) || !IsValidUncompressedSize(uncompressedSize - NXCP_HEADER_SIZE, msgSize - NXCP_HEADER_SIZE - 4))
          {
             TCHAR buffer[256];
             nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: invalid uncompressed size %u for compressed message %s with ID %u"),
@@ -367,7 +401,7 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
          stream.next_out = msgData;
          stream.avail_out = (UINT32)msgDataSize;
 
-         if (inflate(&stream, Z_FINISH) != Z_STREAM_END)
+         if ((inflate(&stream, Z_FINISH) != Z_STREAM_END) || (stream.avail_out != 0))
          {
             inflateEnd(&stream);
             TCHAR buffer[256];
@@ -1744,7 +1778,7 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    if ((flags & MF_COMPRESSED) && (version >= 4))
    {
       size_t uncompressedSize = (size >= NXCP_HEADER_SIZE + 4) ? ntohl(*reinterpret_cast<const uint32_t*>(reinterpret_cast<const BYTE*>(msg) + NXCP_HEADER_SIZE)) : 0;
-      if (uncompressedSize < NXCP_HEADER_SIZE)
+      if ((uncompressedSize < NXCP_HEADER_SIZE) || !IsValidUncompressedSize(uncompressedSize - NXCP_HEADER_SIZE, size - NXCP_HEADER_SIZE - 4))
       {
          out.append(_T("  ** message format error (invalid compressed message size)\n"));
          return out;
@@ -1771,7 +1805,7 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
       stream.next_out = allocatedMsgData;
       stream.avail_out = (UINT32)msgDataSize;
 
-      if (inflate(&stream, Z_FINISH) != Z_STREAM_END)
+      if ((inflate(&stream, Z_FINISH) != Z_STREAM_END) || (stream.avail_out != 0))
       {
          inflateEnd(&stream);
          MemFree(allocatedMsgData);

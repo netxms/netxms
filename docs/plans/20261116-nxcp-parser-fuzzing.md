@@ -124,15 +124,20 @@ After a successful inflate nothing compares the produced length with the declare
 the tail of the buffer unwritten. Require the lengths to match: the C++ senders (`serialize()`,
 `CreateRawNXCPMessage()`) and the Java sender all declare exactly what they deflate.
 
-- [ ] failing unit test in `tests/test-libnetxms/nxcp.cpp`: small compressed structured and binary messages
+- [x] failing unit test in `tests/test-libnetxms/nxcp.cpp`: small compressed structured and binary messages
       declaring a huge uncompressed size are rejected by `deserialize()`; `dump()` reports a format error for them
-- [ ] declared size validated against the compressed payload length at the three inflate sites; size hint no
+- [x] declared size validated against the compressed payload length at the three inflate sites; size hint no
       longer grows from unvalidated metadata
-- [ ] inflated length must equal the declared length
-- [ ] unit test added for the highest-ratio legitimate case (long run of one byte), structured and binary
-- [ ] Java client still exchanges compressed structured and binary messages with the server (one integration
+- [x] inflated length must equal the declared length
+- [x] unit test added for the highest-ratio legitimate case (long run of one byte), structured and binary
+- [x] Java client still exchanges compressed structured and binary messages with the server (one integration
       test from `tests/integration` that transfers a file)
-- [ ] `test-libnetxms` passes in normal and `--enable-sanitizer` builds
+- [x] `test-libnetxms` passes in normal and `--enable-sanitizer` builds
+- ➕ The pool size hint now takes the protocol version, so it adds the declared size only for messages that one
+  of the two constructor branches will inflate, and only when the size passes the same ratio check.
+- ➕ Integration test used: `AgentFileManagerTest` (upload to and download from the agent through the server)
+  against a scratch SQLite server built from this branch. File transfers use stream compression, so the Java
+  per-message binary layout is covered by the unit test, not by this run.
 
 ### Task 2: Fix private/netxms#47 (raw receive buffer used for debug dump)
 
