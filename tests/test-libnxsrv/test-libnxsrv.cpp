@@ -550,6 +550,47 @@ static void TestComponentTree()
    delete orphan;   // not owned by the tree
    EndTest();
 
+   StartTest(_T("Component - element with index 0 is its own parent"));
+   ObjectArray<Component> selfParentElements(16, 16);
+   selfParentElements.add(new Component(0, COMPONENT_CLASS_CHASSIS, 0, -1, 0, _T("device"), _T("Device"), _T(""), _T(""), _T(""), _T("")));
+   shared_ptr<ComponentTree> selfParentTree = BuildTestTree(&selfParentElements);
+   AssertEquals(selfParentTree->getRoot()->getIndex(), 0u);
+   AssertEquals(selfParentTree->getRoot()->getChildren().size(), 0);
+   AssertNull(selfParentTree->getRoot()->getParent());
+   EndTest();
+
+   StartTest(_T("Component - element with index 0 inside tree"));
+   ObjectArray<Component> zeroIndexElements(16, 16);
+   CreateComponents(&zeroIndexElements);
+   Component *zeroIndex = new Component(0, COMPONENT_CLASS_FAN, 2, 3, 0, _T("fan"), _T("Fan"), _T(""), _T(""), _T(""), _T(""));
+   zeroIndexElements.add(zeroIndex);
+   shared_ptr<ComponentTree> zeroIndexTree = BuildTestTree(&zeroIndexElements);
+   AssertNull(zeroIndexTree->getRoot()->getParent());   // root is not pulled in under element with index 0
+   AssertTrue(zeroIndex->getParent() == zeroIndexTree->getRoot()->getChildren().get(0));
+   AssertEquals(zeroIndex->getChildren().size(), 0);
+   AssertEquals(zeroIndexTree->getRoot()->getChildren().get(0)->getChildren().size(), 3);
+   EndTest();
+
+   StartTest(_T("Component - duplicate indexes forming a loop"));
+   ObjectArray<Component> loopElements(16, 16);
+   loopElements.add(new Component(1, COMPONENT_CLASS_CHASSIS, 0, 1, 0, _T("chassis"), _T(""), _T(""), _T(""), _T(""), _T("")));
+   loopElements.add(new Component(2, COMPONENT_CLASS_MODULE, 1, 1, 0, _T("module"), _T(""), _T(""), _T(""), _T(""), _T("")));
+   loopElements.add(new Component(1, COMPONENT_CLASS_MODULE, 2, 1, 0, _T("duplicate"), _T(""), _T(""), _T(""), _T(""), _T("")));
+   loopElements.add(new Component(3, COMPONENT_CLASS_PORT, 1, 2, 0, _T("port"), _T(""), _T(""), _T(""), _T(""), _T("")));
+   shared_ptr<ComponentTree> loopTree = BuildTestTree(&loopElements);
+   int attached = 0;
+   for(int i = 0; i < loopElements.size(); i++)
+      if (loopElements.get(i)->getParent() != nullptr)
+         attached++;
+   AssertEquals(attached, 3);   // every element except root is attached exactly once
+   // Tree is built depth first, so port is claimed by duplicate of its parent before root gets to it
+   AssertEquals(loopTree->getRoot()->getChildren().size(), 1);   // module
+   const Component *duplicate = loopTree->getRoot()->getChildren().get(0)->getChildren().get(0);
+   AssertEquals(duplicate->getName(), _T("duplicate"));
+   AssertEquals(duplicate->getChildren().size(), 1);   // port
+   AssertEquals(duplicate->getChildren().get(0)->getChildren().size(), 0);
+   EndTest();
+
    StartTest(_T("ComponentTree - equals"));
    ObjectArray<Component> elements2(16, 16);
    CreateComponents(&elements2);
@@ -1120,6 +1161,32 @@ static void TestBuildComponentTree()
    AssertNull(emptyTree.get());
    EndTest();
 
+   StartTest(_T("BuildComponentTree - single element with index 0"));
+   MockSnmpTransport zeroIndexTransport;
+   AddMockComponent(&zeroIndexTransport, 0, COMPONENT_CLASS_CHASSIS, 0, -1, _T("WB-3P-PTP5"), _T("Wireless bridge"), _T(""), _T(""));
+   shared_ptr<ComponentTree> zeroIndexTree = BuildComponentTree(&zeroIndexTransport, _T("test"));
+   AssertNotNull(zeroIndexTree.get());
+   AssertEquals(zeroIndexTree->getRoot()->getIndex(), 0u);
+   AssertEquals(zeroIndexTree->getRoot()->getName(), _T("WB-3P-PTP5"));
+   AssertEquals(zeroIndexTree->getRoot()->getChildren().size(), 0);
+   EndTest();
+
+   StartTest(_T("BuildComponentTree - duplicate indexes"));
+   MockSnmpTransport duplicateTransport;
+   AddMockComponent(&duplicateTransport, 1, COMPONENT_CLASS_CHASSIS, 0, -1, _T("chassis"), _T("Test Chassis"), _T(""), _T(""));
+   AddMockComponent(&duplicateTransport, 2, COMPONENT_CLASS_MODULE, 1, 1, _T("module1"), _T("Module 1"), _T(""), _T(""));
+   AddMockComponent(&duplicateTransport, 3, COMPONENT_CLASS_PORT, 2, 1, _T("port1"), _T("Port 1"), _T(""), _T(""));
+   // Rows with longer instance identifier collapse to index already seen
+   duplicateTransport.setString(_T(".1.3.6.1.2.1.47.1.1.1.1.7.2.1"), _T("module1-dup"));
+   duplicateTransport.setString(_T(".1.3.6.1.2.1.47.1.1.1.1.7.3.1"), _T("port1-dup"));
+   shared_ptr<ComponentTree> duplicateTree = BuildComponentTree(&duplicateTransport, _T("test"));
+   AssertNotNull(duplicateTree.get());
+   AssertEquals(duplicateTree->getRoot()->getChildren().size(), 1);
+   AssertEquals(duplicateTree->getRoot()->getChildren().get(0)->getName(), _T("module1"));
+   AssertEquals(duplicateTree->getRoot()->getChildren().get(0)->getChildren().size(), 1);
+   AssertEquals(duplicateTree->getRoot()->getChildren().get(0)->getChildren().get(0)->getName(), _T("port1"));
+   EndTest();
+
    StartTest(_T("BuildComponentTree - missing root element"));
    MockSnmpTransport orphanTransport;
    AddMockComponent(&orphanTransport, 2, COMPONENT_CLASS_MODULE, 99, 1, _T("module1"), _T("Module 1"), _T(""), _T(""));
@@ -1437,9 +1504,7 @@ static void TestDriverArpCache()
    AssertNotNull(entry);
    AssertEquals(entry->ifIndex, 7u);
    AssertTrue(entry->macAddr.equals(MacAddress(mac1, 6)));
-   EndTest();
 
-   StartTest(_T("NetworkDeviceDriver - getArpCache from ipNetToPhysicalTable without address length octet"));
    MockSnmpTransport ciscoTransport;
    static const BYTE mac3[6] = { 0x00, 0x18, 0xAE, 0x7C, 0x16, 0x53 };
    static const BYTE mac4[6] = { 0x00, 0x18, 0xAE, 0x7E, 0x59, 0xC5 };

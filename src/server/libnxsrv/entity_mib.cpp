@@ -236,14 +236,16 @@ static int ComponentComparator(const Component **c1, const Component **c2)
 }
 
 /**
- * Build element tree
+ * Build element tree. Each element is attached to at most one parent, and elements with parent index 0
+ * are never attached (those are root candidates), so result is always a tree even when device reports
+ * element with index 0 or duplicate indexes.
  */
 void Component::buildTree(ObjectArray<Component> *elements)
 {
 	for(int i = 0; i < elements->size(); i++)
 	{
 		Component *e = elements->get(i);
-		if (e->m_parentIndex == m_index)
+		if ((e->m_parentIndex == m_index) && (e->m_parentIndex != 0) && (e != this) && (e->m_parent == nullptr))
 		{
 		   m_children.add(e);
 		   e->m_parent = this;
@@ -338,15 +340,28 @@ NXSL_Array *Component::getChildrenForNXSL(NXSL_VM *vm, NXSL_ComponentHandle *han
  */
 static uint32_t EntityWalker(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
+	auto elements = static_cast<ObjectArray<Component>*>(arg);
+
+	// Row can be delivered more than once (walk wrap-around on buggy agent, or instance identifier longer than one element)
+	uint32_t index = var->getName().getElement(12);
+	for(int i = 0; i < elements->size(); i++)
+	{
+	   if (elements->get(i)->getIndex() == index)
+	   {
+	      nxlog_debug_tag(DEBUG_TAG, 6, _T("EntityWalker: ignoring duplicate element with index %u"), index);
+	      return SNMP_ERR_SUCCESS;
+	   }
+	}
+
 	TCHAR buffer[256];
-	Component *element = new Component(var->getName().getElement(12), var->getValueAsString(buffer, 256));
+	Component *element = new Component(index, var->getValueAsString(buffer, 256));
 	uint32_t rc = element->updateFromSnmp(transport);
 	if (rc != SNMP_ERR_SUCCESS)
 	{
 		delete element;
 		return rc;
 	}	
-	static_cast<ObjectArray<Component>*>(arg)->add(element);
+	elements->add(element);
 	return SNMP_ERR_SUCCESS;
 }
 
