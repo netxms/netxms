@@ -256,7 +256,10 @@ std::string F_EndMaintenance(json_t *arguments, uint32_t userId)
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MAINTENANCE))
       return std::string("Access denied");
 
-   if (!object->isInMaintenanceMode())
+   if (!object->isMaintenanceApplicable())
+      return std::string("Maintenance mode is not applicable for this object");
+
+   if (object->isDataCollectionTarget() && !object->isInMaintenanceMode())
       return std::string("Object is not in maintenance mode");
 
    object->leaveMaintenanceMode(userId);
