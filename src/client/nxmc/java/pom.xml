@@ -393,6 +393,18 @@
                         </configuration>
                      </execution>
                      <execution>
+                        <id>add-test-sources</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                           <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                           <sources>
+                              <source>${basedir}/src/swt/test/java</source>
+                           </sources>
+                        </configuration>
+                     </execution>
+                     <execution>
                         <id>add-resource</id>
                         <phase>generate-resources</phase>
                         <goals>
@@ -761,6 +773,12 @@
          <version>1.0.0</version>
          <scope>${lib.scope}</scope>
       </dependency>
+      <dependency>
+         <groupId>org.junit.jupiter</groupId>
+         <artifactId>junit-jupiter</artifactId>
+         <version>5.12.2</version>
+         <scope>test</scope>
+      </dependency>
    </dependencies>
    <build>
       <finalName>${build.finalName}</finalName>
@@ -774,6 +792,11 @@
                <source>17</source>
                <target>17</target>
             </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.3.1</version>
          </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>

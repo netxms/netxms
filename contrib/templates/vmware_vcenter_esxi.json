@@ -312,7 +312,7 @@
             "instanceRetentionTime": -1,
             "comments": "VM uptime in seconds.",
             "isDisabled": false,
-            "unitName": "Uptime",
+            "unitName": "TimeSpan",
             "multiplier": 0,
             "mappingTableId": 0,
             "allThresholdsRearmEvent": 0,

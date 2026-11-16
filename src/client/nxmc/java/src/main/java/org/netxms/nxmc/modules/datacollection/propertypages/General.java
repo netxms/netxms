@@ -106,7 +106,7 @@ public class General extends AbstractDCIPropertyPage
       "rpm",
       "s",
       "T",
-      "Uptime", //special
+      "TimeSpan", //special
       "W",
       "V",
       "Ω"

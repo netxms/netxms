@@ -64,6 +64,7 @@ int F_ByteStream(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
 int F_DateTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
 int F_FormatNumber(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_FormatTimeSpan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetCurrentTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetCurrentTimeMs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -76,7 +77,6 @@ int F_LevenshteinDistance(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 int F_MacAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetMonotonicClockTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SimilarityScore(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -208,6 +208,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "Base64Encode", F_Base64Encode, -1, true },
    { "FormatMetricPrefix", F_FormatMetricPrefix, -1 },
    { "FormatNumber", F_FormatNumber, -1 },
+   { "FormatTimeSpan", F_FormatTimeSpan, -1 },
    { "GetCurrentTime", F_GetCurrentTime, 0 },
    { "GetCurrentTimeMs", F_GetCurrentTimeMs, 0 },
    { "GetMonotonicClockTime", F_GetMonotonicClockTime, 0 },
@@ -215,7 +216,7 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "JsonParse", F_JsonParse, -1 },
    { "LevenshteinDistance", F_LevenshteinDistance, -1 },
    { "ReadPersistentStorage", F_ReadPersistentStorage, 1 },
-	{ "SecondsToUptime", F_SecondsToUptime, 1 },
+   { "SecondsToUptime", F_FormatTimeSpan, 1, true },
    { "SimilarityScore", F_SimilarityScore, -1 },
    { "SplitString", F_SplitString, 2, true },
    { "WritePersistentStorage", F_WritePersistentStorage, 2 }

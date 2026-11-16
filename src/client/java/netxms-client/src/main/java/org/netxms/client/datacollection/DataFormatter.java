@@ -289,9 +289,9 @@ public class DataFormatter
                final String f = "%" + new String(Arrays.copyOfRange(format, i, j + 1));
                i = j;
 
-               if (useUnits && unit.getName().equals("Uptime"))
+               if (useUnits && unit.getName().equals("TimeSpan"))
                {      
-                  sb.append(timeFormatter.formatUptime((long)Double.parseDouble(value)));
+                  sb.append(timeFormatter.formatTimeSpan((long)Double.parseDouble(value)));
                }
                else if (useUnits && unit.getName().equals("Epoch time"))
                {

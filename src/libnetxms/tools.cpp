@@ -5688,10 +5688,11 @@ void LIBNETXMS_EXPORTABLE URLEncode(const wchar_t *src, StringBuffer *output)
 }
 
 /**
- * Seconds to uptime
+ * Format time span in seconds as "[-]n days, hh:mm[:ss]"
  */
-String LIBNETXMS_EXPORTABLE SecondsToUptime(uint64_t arg, bool withSeconds)
+String LIBNETXMS_EXPORTABLE FormatTimeSpan(int64_t seconds, bool withSeconds)
 {
+   uint64_t arg = (seconds < 0) ? 0 - static_cast<uint64_t>(seconds) : static_cast<uint64_t>(seconds);
    uint32_t d, h, n;
    d = (UINT32)(arg / 86400);
    arg -= d * 86400;
@@ -5715,6 +5716,8 @@ String LIBNETXMS_EXPORTABLE SecondsToUptime(uint64_t arg, bool withSeconds)
    }
 
    StringBuffer sb;
+   if (seconds < 0)
+      sb.append(_T('-'));
    if (withSeconds)
       sb.appendFormattedString(_T("%u days, %2u:%02u:%02u"), d, h, n, static_cast<uint32_t>(arg));
    else
@@ -5821,11 +5824,11 @@ String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *v
       }
    }
 
-   if (useUnits && !_tcsicmp(unitName, _T("Uptime")))
+   if (useUnits && !_tcsicmp(unitName, _T("TimeSpan")))
    {
       TCHAR *eptr;
-      uint64_t time = _tcstoull(value, &eptr, 10);
-      return (*eptr != 0) ? String(value) : SecondsToUptime(time, true);
+      int64_t time = _tcstoll(value, &eptr, 10);
+      return (*eptr != 0) ? String(value) : FormatTimeSpan(time, true);
    }
 
    if (useUnits && !_tcsicmp(unitName, _T("Epoch time")))

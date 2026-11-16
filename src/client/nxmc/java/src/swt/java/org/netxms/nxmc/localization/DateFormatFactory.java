@@ -41,7 +41,7 @@ public class DateFormatFactory
     */
    private static final TimeFormatter TIME_FORMATTER = new TimeFormatter() {
       @Override
-      public String formatUptime(long seconds)
+      public String formatTimeSpan(long seconds)
       {
          return formatTimeDifference(seconds, true);
       }
@@ -238,6 +238,11 @@ public class DateFormatFactory
    public static String formatTimeDifference(long seconds, boolean showSeconds)
    {
       StringBuilder sb = new StringBuilder();
+      if (seconds < 0)
+      {
+         sb.append('-');
+         seconds = -seconds;
+      }
       long days = seconds / 86400;
       if (days > 0)
       {

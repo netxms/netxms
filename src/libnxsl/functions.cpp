@@ -201,16 +201,18 @@ int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
 }
 
 /**
- * Convert seconds since uptime to string
- * PATCH: by Edgar Chupit
+ * Format time span in seconds as string
+ * FormatTimeSpan(seconds, withSeconds = false)
  */
-int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_FormatTimeSpan(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
    if (!argv[0]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
-   uint64_t arg = argv[0]->getValueAsUInt64();
-   *ppResult = vm->createValue(SecondsToUptime(arg, false));
+   *ppResult = vm->createValue(FormatTimeSpan(argv[0]->getValueAsInt64(), (argc > 1) && argv[1]->isTrue()));
    return 0;
 }
 

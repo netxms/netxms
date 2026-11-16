@@ -235,6 +235,18 @@
 			</Overload>
 		</KeyWord>
 		
+		<KeyWord name="FormatTimeSpan" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Format time span in seconds as string in format &quot;[-]n days, hh:mm&quot; or &quot;[-]n days, hh:mm:ss&quot; if withSeconds is true.
+			
+			Returns
+			  Formatted time span.">
+				<Param name="seconds" />
+				<Param name="withSeconds" />
+			</Overload>
+		</KeyWord>
+		
 		<KeyWord name="FindSituation" func="yes">
 			<Overload retVal="" descr="
 			Description
@@ -759,7 +771,7 @@
 		<KeyWord name="SecondsToUptime" func="yes">
 			<Overload retVal="" descr="
 			Description
-			  Format system uptime in seconds as string in format &quot;n days, hh:mm&quot;.
+			  Deprecated, use FormatTimeSpan. Format system uptime in seconds as string in format &quot;n days, hh:mm&quot;.
 			
 			Returns
 			  System uptime in format &quot;n days, hh:mm&quot;.">

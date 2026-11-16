@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.12 to 71.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(SQLQuery(L"UPDATE items SET units_name='TimeSpan' WHERE units_name='Uptime'"));
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 71.11 to 71.12
  */
 static bool H_UpgradeFromV11()
@@ -279,6 +289,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 71, 13, H_UpgradeFromV12 },
    { 11, 71, 12, H_UpgradeFromV11 },
    { 10, 71, 11, H_UpgradeFromV10 },
    { 9,  71, 10, H_UpgradeFromV9  },

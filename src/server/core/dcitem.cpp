@@ -54,6 +54,14 @@ static uint32_t ResolveImportedMappingTableId(json_t *json, ImportContext *conte
 }
 
 /**
+ * Unit name from imported configuration; configuration exported by an older server uses "Uptime" for "TimeSpan"
+ */
+static const wchar_t *ImportedUnitName(const wchar_t *unitName)
+{
+   return ((unitName != nullptr) && !wcsicmp(unitName, L"Uptime")) ? L"TimeSpan" : unitName;
+}
+
+/**
  * Thread pool for threshold repeat events
  */
 extern ThreadPool *g_thresholdRepeatPool;
@@ -386,7 +394,7 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
 /**
  * Create DCItem from import file
  */
-DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5, ImportContext *context) : DCObject(config, owner, nxslV5, context), m_unitName(config->getSubEntryValue(_T("unitName")))
+DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner, bool nxslV5, ImportContext *context) : DCObject(config, owner, nxslV5, context), m_unitName(ImportedUnitName(config->getSubEntryValue(_T("unitName"))))
 {
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_transformedDataType = (BYTE)config->getSubEntryValueAsInt(_T("transformedDataType"), 0, DCI_DT_NULL);
@@ -477,7 +485,7 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, Impor
    String predictionEngine = json_object_get_string(json, "predictionEngine", _T(""));
    _tcslcpy(m_predictionEngine, predictionEngine, MAX_NPE_NAME_LEN);
 
-   m_unitName = json_object_get_string(json, "unitName", _T(""));
+   m_unitName = ImportedUnitName(json_object_get_string(json, "unitName", _T("")));
 
    json_t *thresholdsArray = json_object_get(json, "thresholds");
    if (json_is_array(thresholdsArray))
@@ -3390,7 +3398,7 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext *c
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_sampleSaveInterval = config->getSubEntryValueAsInt(_T("sampleSaveInterval"), 0, 1);
    m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
-   m_unitName = config->getSubEntryValue(_T("unitName"));
+   m_unitName = ImportedUnitName(config->getSubEntryValue(_T("unitName")));
    m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
    m_mappingTableId = config->getSubEntryValueAsUInt(_T("mappingTableId"));
    m_allThresholdsRearmEvent = config->getSubEntryValueAsUInt(_T("allThresholdsRearmEvent"));
@@ -3431,7 +3439,7 @@ void DCItem::updateFromImport(json_t *json, ImportContext *context)
    m_sampleCount = static_cast<BYTE>(json_object_get_int32(json, "samples"));
    m_sampleSaveInterval = json_object_get_int32(json, "sampleSaveInterval", 1);
    m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
-   m_unitName = json_object_get_string(json, "unitName", _T(""));
+   m_unitName = ImportedUnitName(json_object_get_string(json, "unitName", _T("")));
    m_multiplier = json_object_get_int32(json, "multiplier");
    m_mappingTableId = ResolveImportedMappingTableId(json, context);
    m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");

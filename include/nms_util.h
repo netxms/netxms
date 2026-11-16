@@ -6158,7 +6158,7 @@ uint32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optStri
 uint64_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optString, const char *option, uint64_t defVal);
 uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, const char *option, const uuid& defVal);
 
-String LIBNETXMS_EXPORTABLE SecondsToUptime(uint64_t arg, bool withSeconds);
+String LIBNETXMS_EXPORTABLE FormatTimeSpan(int64_t seconds, bool withSeconds);
 String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, int multiplierPower, int precision, const TCHAR *unit = nullptr);
 String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value);
 String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value, int useMultiplier);

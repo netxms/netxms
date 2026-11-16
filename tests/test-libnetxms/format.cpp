@@ -110,8 +110,10 @@ void TestFormatDCIValue()
    EndTest();
 
    StartTest(_T("FormatDCIValue - special units"));
-   AssertEquals(FormatDCIValue(_T("Uptime"), _T("90061")).cstr(), _T("1 days,  1:01:01"));
-   AssertEquals(FormatDCIValue(_T("Uptime"), _T("abc")).cstr(), _T("abc"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("90061")).cstr(), _T("1 days,  1:01:01"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("-90061")).cstr(), _T("-1 days,  1:01:01"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("-43")).cstr(), _T("-0 days,  0:00:43"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("abc")).cstr(), _T("abc"));
    AssertEquals(FormatDCIValue(_T("Epoch time"), _T("abc")).cstr(), _T("abc"));
    EndTest();
 

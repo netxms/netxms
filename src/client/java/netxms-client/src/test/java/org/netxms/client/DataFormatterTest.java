@@ -42,7 +42,7 @@ public class DataFormatterTest
 
    private static final TimeFormatter TIME_FORMATTER = new TimeFormatter() {
       @Override
-      public String formatUptime(long seconds)
+      public String formatTimeSpan(long seconds)
       {
          return Long.toString(seconds);
       }
@@ -234,5 +234,12 @@ public class DataFormatterTest
       assertEquals("1.23" + THIN_SPACE + "MA", format("1234567", DataType.INT32, "A", DciValue.MULTIPLIERS_DEFAULT));
       assertEquals("999" + THIN_SPACE + "A", format("999", DataType.INT32, "A", DciValue.MULTIPLIERS_DEFAULT));
       assertEquals("0" + THIN_SPACE + "A", format("0", DataType.INT32, "A", DciValue.MULTIPLIERS_DEFAULT));
+   }
+
+   @Test
+   public void testFormatTimeSpan()
+   {
+      assertEquals("90061", format("90061", DataType.INT64, "TimeSpan", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("-43", format("-43", DataType.INT64, "TimeSpan", DciValue.MULTIPLIERS_DEFAULT));
    }
 }

@@ -106,7 +106,7 @@ public class ScriptEditor extends CompositeWithMessageArea
          "try", "uint32", "uint64", "when", "while", "with", "FALSE", "NULL", "TRUE");
 
    private static final Set<String> BUILTIN_FUNCTIONS = Set.of("_exit", "assert", "chr", "classof", "d2x", "ord", "print", "println", "range", "sleep", "time", "trace", "typeof", "x2d",
-         "FormatMetricPrefix", "FormatNumber", "GetCurrentTime", "GetCurrentTimeMs", "GetMonotonicClockTime", "GetThreadPoolNames", "JsonParse", "ReadPersistentStorage", "SecondsToUptime",
+         "FormatMetricPrefix", "FormatNumber", "FormatTimeSpan", "GetCurrentTime", "GetCurrentTimeMs", "GetMonotonicClockTime", "GetThreadPoolNames", "JsonParse", "ReadPersistentStorage", "SecondsToUptime",
          "WritePersistentStorage", "Base64::Decode", "Base64::Encode", "Crypto::MD5", "Crypto::SHA1", "Crypto::SHA256", "Math::Abs", "Math::Acos", "Math::Asin", "Math::Atan", "Math::Atan2",
          "Math::Atanh", "Math::Average", "Math::Ceil", "Math::Cos", "Math::Cosh", "Math::Exp", "Math::Floor", "Math::Log", "Math::Log10", "Math::Max", "Math::MeanAbsoluteDeviation", "Math::Min",
          "Math::Pow", "Math::Pow10", "Math::Random", "Math::Round", "Math::Sin", "Math::Sinh", "Math::StandardDeviation", "Math::Sqrt", "Math::Sum", "Math::Tan", "Math::Tanh", "Math::Weierstrass",

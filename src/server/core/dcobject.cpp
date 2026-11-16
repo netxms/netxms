@@ -2503,11 +2503,11 @@ String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameter
       }
    }
 
-   if (useUnits && !_tcsicmp(m_unitName, _T("Uptime")))
+   if (useUnits && !_tcsicmp(m_unitName, _T("TimeSpan")))
    {
       TCHAR *eptr;
-      uint64_t time = _tcstoull(value, &eptr, 10);
-      return (*eptr != 0) ? String(value) : SecondsToUptime(time, true);
+      int64_t time = _tcstoll(value, &eptr, 10);
+      return (*eptr != 0) ? String(value) : FormatTimeSpan(time, true);
    }
 
    if (useUnits && !_tcsicmp(m_unitName, _T("Epoch time")))

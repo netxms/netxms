@@ -24,12 +24,12 @@ package org.netxms.client.datacollection;
 public interface TimeFormatter
 {
    /**
-    * Format uptime number to human readable format
+    * Format time span in seconds to human readable format
     * 
-    * @param seconds number of seconds since uptime
-    * @return uptime in human readable format
+    * @param seconds time span in seconds
+    * @return time span in human readable format
     */
-   public String formatUptime(long seconds);
+   public String formatTimeSpan(long seconds);
 
    /**
     * Format date and time UNIX timestamp to human readable format
