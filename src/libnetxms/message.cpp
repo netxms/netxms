@@ -234,6 +234,18 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
    int v = getEncodedProtocolVersion();
    m_version = (v != 0) ? v : version; // Use encoded version if present
 
+   if (ntohl(msg->size) < NXCP_HEADER_SIZE)
+   {
+      TCHAR buffer[256];
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: invalid size %u for message %s with ID %u"),
+         static_cast<unsigned int>(ntohl(msg->size)), NXCPMessageCodeName(m_code, buffer), m_id);
+      m_data = nullptr;
+      m_dataSize = 0;
+      m_controlData = 0;
+      m_version = -1;   // error indicator
+      return;
+   }
+
    // Parse data fields
    if (m_flags & MF_BINARY)
    {
@@ -1710,6 +1722,11 @@ StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
    // header
    out.appendFormattedString(_T("  ** code=0x%04X (%s) version=%d flags=0x%04X id=%d size=%d numFields=%d\n"),
       code, NXCPMessageCodeName(code, buffer), flags >> 12, flags & 0x0FFF, id, size, numFields);
+   if (size < NXCP_HEADER_SIZE)
+   {
+      out.append(_T("  ** message format error (invalid message size)\n"));
+      return out;
+   }
    if (flags & MF_BINARY)
    {
       out += _T("  ** binary message\n");

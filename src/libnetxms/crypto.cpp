@@ -911,15 +911,26 @@ bool NXCPEncryptionContext::decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *de
       return false;
 
    msg->size = ntohl(msg->size);
-   int dataSize;
-   EVP_DecryptUpdate(m_decryptor, decryptionBuffer, &dataSize, msg->data,
-                     msg->size - NXCP_EH_UNENCRYPTED_BYTES - msg->padding);
-   EVP_DecryptFinal(m_decryptor, decryptionBuffer + dataSize, &dataSize);
+   if (msg->size <= static_cast<uint32_t>(NXCP_EH_UNENCRYPTED_BYTES) + msg->padding)
+      return false;  // No encrypted data in the envelope
 
+   int dataSize;
+   if (!EVP_DecryptUpdate(m_decryptor, decryptionBuffer, &dataSize, msg->data,
+                          static_cast<int>(msg->size - NXCP_EH_UNENCRYPTED_BYTES - msg->padding)))
+      return false;
+   size_t decryptedSize = dataSize;
+   if (!EVP_DecryptFinal(m_decryptor, decryptionBuffer + decryptedSize, &dataSize))
+      return false;
+   decryptedSize += dataSize;
+   if (decryptedSize < NXCP_EH_ENCRYPTED_BYTES + NXCP_HEADER_SIZE)
+      return false;  // Decrypted data is too short to contain message header
+
+   // Decrypted message is passed to the parser as is, so its size should be validated
+   // the same way as the size of clear text message
    NXCP_MESSAGE *clearMsg = (NXCP_MESSAGE *)(decryptionBuffer + NXCP_EH_ENCRYPTED_BYTES);
    uint32_t msgSize = ntohl(clearMsg->size);
-   if (msgSize > msg->size)
-      return false;  // Message decrypted incorrectly, because it can't be larger than encrypted
+   if ((msgSize < NXCP_HEADER_SIZE) || (msgSize % 8 != 0) || (msgSize > decryptedSize - NXCP_EH_ENCRYPTED_BYTES))
+      return false;  // Impossible value in message size field
    uint32_t crc32 = CalculateCRC32((BYTE *)clearMsg, msgSize, 0);
    if (crc32 != ntohl(((NXCP_ENCRYPTED_PAYLOAD_HEADER *)decryptionBuffer)->dwChecksum))
       return false;  // Bad checksum

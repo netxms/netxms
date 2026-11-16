@@ -391,5 +391,55 @@ void TestSendFileOverEncryptedChannel()
    AssertEquals(failChannel.sendCount, 2);  // first data block and abort
    EndTest();
 
+   StartTest(_T("NXCP encryption - inner message size validation"));
+   BYTE decryptionBuffer[1024];
+   NXCPMessage validMsg(CMD_KEEPALIVE, 42);
+   validMsg.setField(1, _T("test"));
+   NXCP_MESSAGE *rawMsg = validMsg.serialize();
+   NXCP_ENCRYPTED_MESSAGE *emsg = ectx->encryptMessage(rawMsg);
+   AssertNotNull(emsg);
+   AssertTrue(ectx->decryptMessage(emsg, decryptionBuffer));
+   NXCPMessage *decodedMsg = NXCPMessage::deserialize(reinterpret_cast<NXCP_MESSAGE*>(emsg));
+   AssertNotNull(decodedMsg);
+   AssertEquals(static_cast<int>(decodedMsg->getCode()), static_cast<int>(CMD_KEEPALIVE));
+   AssertEquals(static_cast<int>(decodedMsg->getId()), 42);
+   delete decodedMsg;
+   MemFree(emsg);
+   MemFree(rawMsg);
+
+   // Inner message with matching checksum and size that is below header size or not aligned
+   static const uint32_t invalidSizes[] = { 0, 8, 12, 20 };
+   for(int i = 0; i < 4; i++)
+   {
+      BYTE source[64];
+      memset(source, 0, sizeof(source));
+      NXCP_MESSAGE *badMsg = reinterpret_cast<NXCP_MESSAGE*>(source);
+      badMsg->code = htons(CMD_KEEPALIVE);
+      badMsg->size = htonl(invalidSizes[i]);
+      badMsg->numFields = htonl(0x7FFFFFFF);
+      emsg = ectx->encryptMessage(badMsg);
+      AssertNotNull(emsg);
+      AssertFalse(ectx->decryptMessage(emsg, decryptionBuffer));
+      MemFree(emsg);
+   }
+
+   // Envelope with padding larger than encrypted data
+   rawMsg = validMsg.serialize();
+   emsg = ectx->encryptMessage(rawMsg);
+   AssertNotNull(emsg);
+   emsg->padding = 255;
+   AssertFalse(ectx->decryptMessage(emsg, decryptionBuffer));
+   MemFree(emsg);
+   MemFree(rawMsg);
+
+   // Parser rejects message with size below header size
+   NXCP_MESSAGE shortMsg;
+   memset(&shortMsg, 0, sizeof(shortMsg));
+   shortMsg.code = htons(CMD_KEEPALIVE);
+   shortMsg.size = htonl(8);
+   shortMsg.numFields = htonl(0x7FFFFFFF);
+   AssertNull(NXCPMessage::deserialize(&shortMsg));
+   EndTest();
+
    delete ectx;
 }
