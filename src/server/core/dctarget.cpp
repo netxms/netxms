@@ -2318,6 +2318,16 @@ int DataCollectionTarget::getAdditionalMostCriticalStatus(StringBuffer *explanat
  */
 void DataCollectionTarget::enterMaintenanceMode(uint32_t userId, const TCHAR *comments)
 {
+   // Entering maintenance mode again would overwrite state saved on first entry
+   lockProperties();
+   bool alreadyInMaintenance = (m_maintenanceEventId != 0);
+   unlockProperties();
+   if (alreadyInMaintenance)
+   {
+      nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 5, _T("%s [%u] is already in maintenance mode"), m_name, m_id);
+      return;
+   }
+
    TCHAR userName[MAX_USER_NAME];
    ResolveUserId(userId, userName, true);
 
@@ -2366,6 +2376,15 @@ void DataCollectionTarget::enterMaintenanceMode(uint32_t userId, const TCHAR *co
  */
 void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
 {
+   lockProperties();
+   bool inMaintenance = (m_maintenanceEventId != 0);
+   unlockProperties();
+   if (!inMaintenance)
+   {
+      nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 5, _T("%s [%u] is not in maintenance mode"), m_name, m_id);
+      return;
+   }
+
    TCHAR userName[MAX_USER_NAME];
    ResolveUserId(userId, userName, true);
 

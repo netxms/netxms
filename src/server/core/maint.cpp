@@ -44,11 +44,11 @@ static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& para
       return;
    }
 
-   // Maintenance state checks are only valid for objects that track maintenance mode themselves;
-   // for containers maintenance enter/leave recurses into child objects and state check is done there
+   // Only data collection targets track maintenance mode themselves; for other objects (containers, subnets, etc.)
+   // maintenance enter/leave recurses into child objects and each child checks its own state
    if (enter)
    {
-      if (object->isMaintenanceApplicable() && object->isInMaintenanceMode())
+      if (object->isDataCollectionTarget() && object->isInMaintenanceMode())
       {
          nxlog_debug_tag(DEBUG_TAG, 4, L"ScheduledMaintenance: object %s [%u] is already in maintenance mode, scheduled maintenance entry ignored",
                   object->getName(), object->getId());
@@ -81,7 +81,7 @@ static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& para
    }
    else
    {
-      if (object->isMaintenanceApplicable() && !object->isInMaintenanceMode())
+      if (object->isDataCollectionTarget() && !object->isInMaintenanceMode())
       {
          nxlog_debug_tag(DEBUG_TAG, 4, L"ScheduledMaintenance: object %s [%u] is not in maintenance mode, scheduled maintenance exit ignored",
                   object->getName(), object->getId());
