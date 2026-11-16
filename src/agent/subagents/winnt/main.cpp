@@ -55,6 +55,7 @@ LONG H_HypervisorVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
 LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_InterfaceNames(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_InterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_IoDeviceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_IoStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IoStatsTotal(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -489,6 +490,7 @@ static NETXMS_SUBAGENT_TABLE s_tables[] =
    { _T("Hardware.MemoryDevices"), SMBIOS_TableHandler, _T("M"), _T("HANDLE"), DCTDESC_HARDWARE_MEMORY_DEVICES },
    { _T("Hardware.Processors"), SMBIOS_TableHandler, _T("P"), _T("HANDLE"), DCTDESC_HARDWARE_PROCESSORS },
    { _T("Hardware.StorageDevices"), H_StorageDeviceTable, nullptr, _T("NUMBER"), DCTDESC_HARDWARE_STORAGE_DEVICES },
+   { _T("Net.Interfaces"), H_InterfaceTable, nullptr, _T("INDEX"), DCTDESC_NETWORK_INTERFACES },
    { _T("System.ActiveUserSessions"), H_ActiveUserSessionsTable, nullptr, _T("ID"), DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS },
    { _T("System.InstalledProducts"), H_InstalledProducts, nullptr, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
 	{ _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES },

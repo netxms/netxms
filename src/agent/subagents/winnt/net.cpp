@@ -22,6 +22,12 @@
 
 #include "winnt_subagent.h"
 #include <lm.h>
+#include <interface_types.h>
+#include <functional>
+
+#if (_WIN32_WINNT >= 0x0600)
+#include <wbemcli.h>
+#endif
 
 /**
  * Check availability of remote share
@@ -246,6 +252,257 @@ LONG H_InterfaceNames(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abs
 
    MemFree(buffer);
    return result;
+}
+
+#if (_WIN32_WINNT >= 0x0600)
+
+/**
+ * Read pairs of "Name" and "Team" properties from instances of NIC teaming (LBFO) WMI class
+ */
+static bool ReadLbfoObjects(IWbemServices *services, const WCHAR *query, std::function<void (const WCHAR*, const WCHAR*)> handler)
+{
+   BSTR language = SysAllocString(L"WQL");
+   BSTR queryText = SysAllocString(query);
+   IEnumWbemClassObject *enumObject = nullptr;
+   HRESULT hr = services->ExecQuery(language, queryText, WBEM_FLAG_RETURN_IMMEDIATELY | WBEM_FLAG_FORWARD_ONLY, nullptr, &enumObject);
+   SysFreeString(language);
+   SysFreeString(queryText);
+   if (hr != S_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("ReadLbfoObjects: query \"%s\" failed (0x%08x)"), query, hr);
+      return false;
+   }
+
+   IWbemClassObject *object;
+   ULONG count;
+   while((hr = enumObject->Next(WBEM_INFINITE, 1, &object, &count)) == S_OK)
+   {
+      VARIANT name, team;
+      VariantInit(&name);
+      VariantInit(&team);
+      if ((object->Get(L"Name", 0, &name, nullptr, nullptr) == S_OK) && (object->Get(L"Team", 0, &team, nullptr, nullptr) == S_OK) &&
+          (name.vt == VT_BSTR) && (team.vt == VT_BSTR) && (name.bstrVal != nullptr) && (team.bstrVal != nullptr))
+      {
+         handler(name.bstrVal, team.bstrVal);
+      }
+      VariantClear(&name);
+      VariantClear(&team);
+      object->Release();
+   }
+   enumObject->Release();
+
+   if (hr != WBEM_S_FALSE)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("ReadLbfoObjects: cannot read results of query \"%s\" (0x%08x)"), query, hr);
+      return false;
+   }
+   return true;
+}
+
+/**
+ * Read NIC teaming (LBFO) configuration. On success, "aggregates" maps name of each team member adapter to name of
+ * primary team interface, and "teamInterfaces" contains names of all primary team interfaces. Returns false if
+ * teaming configuration cannot be read (for example, on Windows versions without LBFO support).
+ */
+static bool ReadLbfoConfiguration(StringMap *aggregates, StringSet *teamInterfaces)
+{
+   HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+   if ((hr != S_OK) && (hr != S_FALSE))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("ReadLbfoConfiguration: call to CoInitializeEx failed (0x%08x)"), hr);
+      return false;
+   }
+
+   // CoInitializeSecurity can only succeed once per process; RPC_E_TOO_LATE means that security is already set
+   // (same settings are used by WMI subagent)
+   hr = CoInitializeSecurity(nullptr, -1, nullptr, nullptr, RPC_C_AUTHN_LEVEL_PKT, RPC_C_IMP_LEVEL_IMPERSONATE, nullptr, EOAC_NONE, nullptr);
+   if ((hr != S_OK) && (hr != RPC_E_TOO_LATE))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("ReadLbfoConfiguration: call to CoInitializeSecurity failed (0x%08x)"), hr);
+      CoUninitialize();
+      return false;
+   }
+
+   bool success = false;
+   IWbemLocator *locator;
+   hr = CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER, IID_IWbemLocator, reinterpret_cast<void**>(&locator));
+   if (hr == S_OK)
+   {
+      BSTR ns = SysAllocString(L"root\\StandardCimv2");
+      IWbemServices *services;
+      hr = locator->ConnectServer(ns, nullptr, nullptr, nullptr, 0, nullptr, nullptr, &services);
+      SysFreeString(ns);
+      if (hr == S_OK)
+      {
+         StringMap primaryInterfaces;  // team name -> primary team interface name
+         success = ReadLbfoObjects(services, L"SELECT Name,Team FROM MSFT_NetLbfoTeamNic WHERE Primary=TRUE",
+            [&primaryInterfaces, teamInterfaces] (const WCHAR *name, const WCHAR *team) -> void
+            {
+               primaryInterfaces.set(team, name);
+               teamInterfaces->add(name);
+            });
+         if (success)
+         {
+            success = ReadLbfoObjects(services, L"SELECT Name,Team FROM MSFT_NetLbfoTeamMember",
+               [&primaryInterfaces, aggregates] (const WCHAR *name, const WCHAR *team) -> void
+               {
+                  const TCHAR *teamInterface = primaryInterfaces.get(team);
+                  if (teamInterface != nullptr)
+                     aggregates->set(name, teamInterface);
+               });
+         }
+         services->Release();
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("ReadLbfoConfiguration: cannot connect to WMI namespace root\\StandardCimv2 (0x%08x)"), hr);
+      }
+      locator->Release();
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("ReadLbfoConfiguration: call to CoCreateInstance(WbemLocator) failed (0x%08x)"), hr);
+   }
+
+   CoUninitialize();
+   return success;
+}
+
+#endif   /* _WIN32_WINNT >= 0x0600 */
+
+/**
+ * Get interface index for adapter
+ */
+static uint32_t GetAdapterIndex(IP_ADAPTER_ADDRESSES *iface)
+{
+   if (iface->IfIndex != 0)
+      return iface->IfIndex;
+   if (iface->Ipv6IfIndex != 0)
+      return iface->Ipv6IfIndex;
+#if (_WIN32_WINNT >= 0x0600)
+   // Adapter without IP protocols bound to it (member of NIC team, for example)
+   NET_IFINDEX index;
+   if (ConvertInterfaceLuidToIndex(&iface->Luid, &index) == NO_ERROR)
+      return index;
+#endif
+   return 0;
+}
+
+/**
+ * Handler for Net.Interfaces table
+ */
+LONG H_InterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+#if (_WIN32_WINNT >= 0x0600)
+   // All NDIS interfaces are requested because adapters without IP protocols bound to them (which is the case
+   // for members of NIC team) are not returned otherwise; unrelated interfaces are filtered out below
+   const ULONG flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_INCLUDE_ALL_INTERFACES;
+#else
+   const ULONG flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
+#endif
+   ULONG size = 0;
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, nullptr, nullptr, &size) != ERROR_BUFFER_OVERFLOW)
+      return SYSINFO_RC_ERROR;
+
+   IP_ADAPTER_ADDRESSES *buffer = static_cast<IP_ADAPTER_ADDRESSES*>(MemAlloc(size));
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, nullptr, buffer, &size) != ERROR_SUCCESS)
+   {
+      MemFree(buffer);
+      return SYSINFO_RC_ERROR;
+   }
+
+   value->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"), true);
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+   value->addColumn(_T("ALIAS"), DCI_DT_STRING, _T("Alias"));
+   value->addColumn(_T("TYPE"), DCI_DT_UINT, _T("Type"));
+   value->addColumn(_T("MTU"), DCI_DT_UINT, _T("MTU"));
+   value->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC address"));
+   value->addColumn(_T("IP_ADDRESSES"), DCI_DT_STRING, _T("IP addresses"));
+   value->addColumn(_T("PEER_IP"), DCI_DT_STRING, _T("Peer IP addresses"));
+   value->addColumn(_T("SPEED"), DCI_DT_UINT64, _T("Speed"));
+   value->addColumn(_T("MAX_SPEED"), DCI_DT_UINT64, _T("Max speed"));
+
+#if (_WIN32_WINNT >= 0x0600)
+   // Column AGGREGATE is provided only if NIC teaming configuration can be read, so that server
+   // can distinguish between "not a member of any team" and "membership is unknown"
+   StringMap aggregates;
+   StringSet teamInterfaces;
+   bool teamingInfoAvailable = ReadLbfoConfiguration(&aggregates, &teamInterfaces);
+   if (teamingInfoAvailable)
+      value->addColumn(_T("AGGREGATE"), DCI_DT_UINT, _T("Aggregate interface index"));
+#endif
+
+   for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != nullptr; iface = iface->Next)
+   {
+#if (_WIN32_WINNT >= 0x0600)
+      // Skip interfaces without IP protocols bound to them (filter drivers, kernel debugger, etc.) unless it is a NIC team member
+      const TCHAR *aggregateName = aggregates.get(iface->FriendlyName);
+      if (!iface->Ipv4Enabled && !iface->Ipv6Enabled && (aggregateName == nullptr))
+         continue;
+#endif
+
+      uint32_t ifIndex = GetAdapterIndex(iface);
+      if (ifIndex == 0)
+         continue;
+
+      value->addRow();
+      value->set(0, ifIndex);
+      value->set(1, iface->FriendlyName);
+      value->set(4, static_cast<uint32_t>(iface->Mtu & 0x7FFFFFFF));
+
+      TCHAR macAddr[32];
+      if (iface->PhysicalAddressLength > 0)
+         value->set(5, BinToStr(iface->PhysicalAddress, iface->PhysicalAddressLength, macAddr));
+      else
+         value->set(5, _T("000000000000"));
+
+      StringBuffer addrList;
+      for(IP_ADAPTER_UNICAST_ADDRESS *a = iface->FirstUnicastAddress; a != nullptr; a = a->Next)
+      {
+         InetAddress addr = InetAddress::createFromSockaddr(a->Address.lpSockaddr);
+#if (_WIN32_WINNT >= 0x0600)
+         // OnLinkPrefixLength was added to IP_ADAPTER_UNICAST_ADDRESS in
+         // Vista; on XP the address keeps its default (host) mask.
+         addr.setMaskBits(a->OnLinkPrefixLength);
+#endif
+         if (!addrList.isEmpty())
+            addrList.append(_T(", "));
+         addrList.append(addr.toString());
+         addrList.append(_T('/'));
+         addrList.append(addr.getMaskBits());
+      }
+      value->set(6, addrList);
+
+#if (_WIN32_WINNT >= 0x0600)
+      value->set(3, static_cast<uint32_t>(teamInterfaces.contains(iface->FriendlyName) ? IFTYPE_IEEE8023ADLAG : iface->IfType));
+
+      // Link speed is reported as all ones when it is unknown (no link, for example)
+      if (iface->TransmitLinkSpeed != static_cast<ULONG64>(-1))
+         value->set(8, static_cast<uint64_t>(iface->TransmitLinkSpeed));
+
+      if (teamingInfoAvailable)
+      {
+         uint32_t aggregateIndex = 0;
+         if (aggregateName != nullptr)
+         {
+            for(IP_ADAPTER_ADDRESSES *a = buffer; a != nullptr; a = a->Next)
+            {
+               if (!_tcscmp(a->FriendlyName, aggregateName))
+               {
+                  aggregateIndex = GetAdapterIndex(a);
+                  break;
+               }
+            }
+         }
+         value->set(10, aggregateIndex);
+      }
+#else
+      value->set(3, static_cast<uint32_t>(iface->IfType));
+#endif
+   }
+
+   MemFree(buffer);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**

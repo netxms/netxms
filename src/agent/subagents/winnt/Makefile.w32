@@ -5,6 +5,7 @@
 
 SUBAGENT = winnt
 SOURCES = cpu.cpp dhcp.cpp disk.cpp fs.cpp hypervisor.cpp iostat.cpp main.cpp net.cpp procinfo.cpp prod.cpp registry.cpp system.cpp usb.cpp
-SA_LIBS = -lnxdb -lntdll
+# -lwbemuuid provides WMI GUIDs (NIC teaming information in net.cpp); -luuid must follow it
+SA_LIBS = -lnxdb -lntdll -lwbemuuid -luuid
 
 include $(TOPDIR)/src/agent/subagents/subagent-common.mk
