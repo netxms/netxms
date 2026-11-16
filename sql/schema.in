@@ -1356,7 +1356,9 @@ CREATE VIEW idata AS
 /**
  * Hourly DCI data aggregates - per-storage-class continuous aggregates over the
  * raw idata_sc_<class> hypertables. The regex in the WHERE clause excludes
- * string DCIs whose idata_value cannot be cast to double precision.
+ * string DCIs whose idata_value cannot be cast to double precision. Decimal dot
+ * is given as bracket expression because backslash is an escape character in
+ * string literals for sessions opened by NetXMS database driver.
  *
  * Created WITH NO DATA; refresh and retention policies are attached at runtime
  * by the server when the DataCollection.Aggregation.Enabled master switch is on.
@@ -1369,7 +1371,7 @@ CREATE MATERIALIZED VIEW idata_1h_sc_default WITH (timescaledb.continuous) AS
           avg(idata_value::double precision) AS avg_value,
           count(*) AS sample_count
    FROM idata_sc_default
-   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   WHERE idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$'
    GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
    WITH NO DATA;
 
@@ -1381,7 +1383,7 @@ CREATE MATERIALIZED VIEW idata_1h_sc_7 WITH (timescaledb.continuous) AS
           avg(idata_value::double precision) AS avg_value,
           count(*) AS sample_count
    FROM idata_sc_7
-   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   WHERE idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$'
    GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
    WITH NO DATA;
 
@@ -1393,7 +1395,7 @@ CREATE MATERIALIZED VIEW idata_1h_sc_30 WITH (timescaledb.continuous) AS
           avg(idata_value::double precision) AS avg_value,
           count(*) AS sample_count
    FROM idata_sc_30
-   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   WHERE idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$'
    GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
    WITH NO DATA;
 
@@ -1405,7 +1407,7 @@ CREATE MATERIALIZED VIEW idata_1h_sc_90 WITH (timescaledb.continuous) AS
           avg(idata_value::double precision) AS avg_value,
           count(*) AS sample_count
    FROM idata_sc_90
-   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   WHERE idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$'
    GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
    WITH NO DATA;
 
@@ -1417,7 +1419,7 @@ CREATE MATERIALIZED VIEW idata_1h_sc_180 WITH (timescaledb.continuous) AS
           avg(idata_value::double precision) AS avg_value,
           count(*) AS sample_count
    FROM idata_sc_180
-   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   WHERE idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$'
    GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
    WITH NO DATA;
 
@@ -1429,7 +1431,7 @@ CREATE MATERIALIZED VIEW idata_1h_sc_other WITH (timescaledb.continuous) AS
           avg(idata_value::double precision) AS avg_value,
           count(*) AS sample_count
    FROM idata_sc_other
-   WHERE idata_value ~ '^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$'
+   WHERE idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$'
    GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp)
    WITH NO DATA;
 

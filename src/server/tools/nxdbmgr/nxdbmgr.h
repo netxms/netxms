@@ -68,6 +68,7 @@ bool SetMajorSchemaVersion(int32_t nextMajor, int32_t nextMinor);
 bool SetMinorSchemaVersion(int32_t nextMinor);
 INT32 GetSchemaLevelForMajorVersion(int32_t major);
 bool SetSchemaLevelForMajorVersion(int32_t major, int32_t level);
+bool RebuildAggregatesWithIncorrectNumericFilter();
 
 void RegisterOnlineUpgrade(int major, int minor);
 void UnregisterOnlineUpgrade(int major, int minor);

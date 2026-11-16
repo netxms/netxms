@@ -70,7 +70,7 @@ static inline const wchar_t *GetIdataValueNumericFilter()
    {
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_TSDB:
-         return L" AND idata_value ~ '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$'";
+         return L" AND idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$'";
       case DB_SYNTAX_MYSQL:
          return L" AND idata_value REGEXP '^[-+]?[0-9]*\\\\.?[0-9]+([eE][-+]?[0-9]+)?$'";
       case DB_SYNTAX_ORACLE:

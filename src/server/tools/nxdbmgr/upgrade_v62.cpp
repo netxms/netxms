@@ -1228,7 +1228,7 @@ static bool CreateAggregateCAGGsForStorageClass(const wchar_t *cls)
       L"max(idata_value::double precision) AS max_value, "
       L"avg(idata_value::double precision) AS avg_value, count(*) AS sample_count "
       L"FROM idata_sc_%ls "
-      L"WHERE idata_value ~ '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$' "
+      L"WHERE idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$' "
       L"GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp) "
       L"WITH NO DATA", cls, cls);
    if (!SQLQuery(query))

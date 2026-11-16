@@ -26,6 +26,19 @@
 #include <openssl/x509.h>
 
 /**
+ * Upgrade from 70.61 to 70.62 (manages transactions itself)
+ */
+static bool H_UpgradeFromV61()
+{
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC_NO_SP(RebuildAggregatesWithIncorrectNumericFilter());
+   }
+   CHK_EXEC_NO_SP(SetMinorSchemaVersion(62));
+   return true;
+}
+
+/**
  * Upgrade from 70.60 to 70.61
  */
 static bool H_UpgradeFromV60()
@@ -1967,7 +1980,9 @@ static struct
    int nextMajor;
    int nextMinor;
    bool (*upgradeProc)();
+   bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 61, 70, 62, H_UpgradeFromV61, true },
    { 60, 70, 61, H_UpgradeFromV60 },
    { 59, 70, 60, H_UpgradeFromV59 },
    { 58, 70, 59, H_UpgradeFromV58 },
@@ -2054,6 +2069,14 @@ bool MajorSchemaUpgrade_V70()
          return false;
       }
       WriteToTerminalEx(L"Upgrading from version 70.%d to %d.%d\n", minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
+      if (s_dbUpgradeMap[i].ownTransactions)
+      {
+         if (!s_dbUpgradeMap[i].upgradeProc())
+            return false;
+         if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
+            return false;
+         continue;
+      }
       DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {
