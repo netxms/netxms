@@ -171,13 +171,24 @@ static InterfaceInfo *FindInterfaceByName(InterfaceList *ifList, const wchar_t *
 }
 
 /**
+ * Mark bonding membership of all interfaces as unknown
+ */
+static void SetBondingMembershipUnknown(InterfaceList *ifList)
+{
+   for(int i = 0; i < ifList->size(); i++)
+      ifList->get(i)->aggregateIndex = AGGREGATE_INDEX_UNKNOWN;
+}
+
+/**
  * Read bonding membership. RouterOS does not provide it via SNMP, so it is read via SSH from "slaves" property of bonding interfaces.
+ * If it cannot be read, membership is marked as unknown so that information from previous successful read is kept.
  */
 static void ReadBondingMembership(DeviceContext *context, NObject *node, InterfaceList *ifList)
 {
    if (!context->isSSHCommandChannelAvailable() && !context->isSSHInteractiveChannelAvailable())
    {
       nxlog_debug_tag(DEBUG_TAG, 6, L"ReadBondingMembership(%s [%u]): SSH is not available, bonding membership cannot be read", node->getName(), node->getId());
+      SetBondingMembershipUnknown(ifList);
       return;
    }
 
@@ -185,6 +196,7 @@ static void ReadBondingMembership(DeviceContext *context, NObject *node, Interfa
    if (bondings == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"ReadBondingMembership(%s [%u]): cannot read list of bonding interfaces", node->getName(), node->getId());
+      SetBondingMembershipUnknown(ifList);
       return;
    }
 

@@ -216,6 +216,30 @@ InterfaceList *JuniperDriver::getInterfaces(DeviceContext *context, NObject *nod
 
       delete chassisTable;
 	}
+
+   // Attach logical units of link aggregation interfaces (aeN.M) to aggregate interface, they have no physical location
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      InterfaceInfo *iface = ifList->get(i);
+      if ((iface->type != IFTYPE_PROP_VIRTUAL) || (iface->parentIndex != 0))
+         continue;
+
+      const wchar_t *separator = wcsrchr(iface->name, L'.');
+      if (separator == nullptr)
+         continue;
+
+      size_t prefixLength = separator - iface->name;
+      for(int j = 0; j < ifList->size(); j++)
+      {
+         InterfaceInfo *aggregate = ifList->get(j);
+         if ((aggregate->type == IFTYPE_IEEE8023ADLAG) && (wcslen(aggregate->name) == prefixLength) && !wcsncmp(aggregate->name, iface->name, prefixLength))
+         {
+            iface->parentIndex = aggregate->index;
+            break;
+         }
+      }
+   }
+
 	return ifList;
 }
 

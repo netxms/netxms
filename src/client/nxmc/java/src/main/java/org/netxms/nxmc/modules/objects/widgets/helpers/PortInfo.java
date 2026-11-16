@@ -32,6 +32,7 @@ public class PortInfo
 	private int pic;
    private int port;
    private int lane;
+   private long aggregateId;
 	private ObjectStatus status;
 	private int adminState;
 	private int operState;
@@ -50,6 +51,7 @@ public class PortInfo
 		pic = iface.getPIC();
 		port = iface.getPort();
       lane = iface.getLane();
+      aggregateId = iface.getAggregateInterfaceId();
 		status = iface.getStatus();
 		adminState = iface.getAdminState();
 		operState = iface.getOperState();
@@ -117,6 +119,14 @@ public class PortInfo
    public int getLane()
    {
       return lane;
+   }
+
+   /**
+    * @return object ID of link aggregation interface this port is member of or 0
+    */
+   public long getAggregateId()
+   {
+      return aggregateId;
    }
 
 	/**

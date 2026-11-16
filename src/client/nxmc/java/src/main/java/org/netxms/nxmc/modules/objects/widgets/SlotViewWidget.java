@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -100,6 +101,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
    private ObjectPopupDialog tooltipDialog = null;
    private RGB colorBackground = ThemeEngine.getBackgroundColorDefinition("DeviceView.Port");
    private RGB colorHighlight = ThemeEngine.getBackgroundColorDefinition("DeviceView.PortHighlight");
+   private Map<Long, RGB> aggregateColors = null;
 
 	/**
 	 * @param parent
@@ -168,6 +170,16 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
    public int getScale()
    {
       return scale;
+   }
+
+   /**
+    * Set colors for marking members of link aggregation interfaces.
+    *
+    * @param aggregateColors marker colors by object ID of link aggregation interface
+    */
+   public void setAggregateColors(Map<Long, RGB> aggregateColors)
+   {
+      this.aggregateColors = aggregateColors;
    }
 
    /**
@@ -349,6 +361,17 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
       gc.setAlpha(127);
       gc.fillRectangle(rect);
       gc.setAlpha(255);
+
+      // Members of same link aggregation interface are marked with bar of same color
+      RGB aggregateColor = ((aggregateColors != null) && (p.getAggregateId() != 0)) ? aggregateColors.get(p.getAggregateId()) : null;
+      if (aggregateColor != null)
+      {
+         int height = Math.max(rect.height / 5, 3);
+         gc.setBackground(colors.create(aggregateColor));
+         gc.fillRectangle(rect.x, rect.y + rect.height - height, rect.width, height);
+         gc.drawLine(rect.x, rect.y + rect.height - height, rect.x + rect.width, rect.y + rect.height - height);
+      }
+
 		gc.drawRectangle(rect);
 		
       if (p.isHighlighted() && displayMode != DISPLAY_MODE_NONE)

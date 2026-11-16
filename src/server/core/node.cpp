@@ -8625,6 +8625,9 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
       for(int j = 0; j < ifList->size(); j++)
       {
          InterfaceInfo *ifInfo = ifList->get(j);
+         if (ifInfo->aggregateIndex == AGGREGATE_INDEX_UNKNOWN)
+            continue;   // membership cannot be determined at the moment, keep existing information
+
          shared_ptr<Interface> iface = findInterfaceByIndex(ifInfo->index);
          if (iface == nullptr)
             continue;

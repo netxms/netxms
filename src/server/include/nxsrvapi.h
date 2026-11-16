@@ -376,6 +376,12 @@ struct LIBNXSRV_EXPORTABLE InterfacePhysicalLocation
 };
 
 /**
+ * Value for InterfaceInfo::aggregateIndex indicating that link aggregation membership could not be determined
+ * (existing membership information should be kept)
+ */
+#define AGGREGATE_INDEX_UNKNOWN  0xFFFFFFFF
+
+/**
  * Interface information structure used by discovery functions and AgentConnection class
  */
 class InterfaceInfo
@@ -416,7 +422,7 @@ public:
    uint32_t ifTableSuffix[16];   // actual ifTable suffix
    int ifTableSuffixLength;
    uint32_t parentIndex;
-   uint32_t aggregateIndex;   // Index of link aggregation interface this interface is member of, 0 if none
+   uint32_t aggregateIndex;   // Index of link aggregation interface this interface is member of, 0 if none, AGGREGATE_INDEX_UNKNOWN if cannot be determined
 
    InterfaceInfo(uint32_t ifIndex)
    {

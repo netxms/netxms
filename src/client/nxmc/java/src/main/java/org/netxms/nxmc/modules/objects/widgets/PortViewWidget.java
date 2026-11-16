@@ -29,7 +29,10 @@ import java.util.Set;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -43,6 +46,8 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.DashboardComposite;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortSelectionListener;
+import org.netxms.nxmc.tools.ColorCache;
+import org.netxms.nxmc.tools.ComparatorHelper;
 import org.netxms.nxmc.tools.FontTools;
 
 /**
@@ -50,6 +55,12 @@ import org.netxms.nxmc.tools.FontTools;
  */
 public class PortViewWidget extends DashboardComposite
 {
+   // Marker colors for members of link aggregation interfaces
+   private static final RGB[] AGGREGATE_COLORS = {
+      new RGB(0, 114, 178), new RGB(230, 159, 0), new RGB(204, 121, 167), new RGB(86, 180, 233),
+      new RGB(148, 103, 189), new RGB(240, 228, 66), new RGB(213, 94, 0), new RGB(0, 158, 115)
+   };
+
 	private long nodeId;
 	private NXCSession session;
 	private Map<Long, PortInfo> ports = new HashMap<Long, PortInfo>();
@@ -59,6 +70,9 @@ public class PortViewWidget extends DashboardComposite
 	private int portDisplayMode = SlotViewWidget.DISPLAY_MODE_STATE;
    private int portScale = 100;
 	private boolean headerVisible = false;
+   private boolean aggregateLegendVisible = false;
+   private Composite aggregateLegend = null;
+   private ColorCache colors;
 	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
 	private PortSelectionListener listener;
 
@@ -71,6 +85,7 @@ public class PortViewWidget extends DashboardComposite
 		super(parent, style);
 
       session = Registry.getSession();
+      colors = new ColorCache(this);
 
 		RowLayout layout = new RowLayout();
 		layout.type = SWT.VERTICAL;
@@ -111,6 +126,11 @@ public class PortViewWidget extends DashboardComposite
 		}
 		slots.clear();
 		ports.clear();
+      if (aggregateLegend != null)
+      {
+         aggregateLegend.dispose();
+         aggregateLegend = null;
+      }
 
 		if (headerVisible)
 		{
@@ -175,6 +195,30 @@ public class PortViewWidget extends DashboardComposite
 			sv.addPort(p);
 		}
 
+      // Assign marker colors to link aggregation interfaces with member ports shown in this view
+      List<Interface> aggregates = new ArrayList<Interface>();
+      for(Interface iface : interfaces)
+      {
+         Interface aggregate = iface.getAggregateInterface();
+         if ((aggregate != null) && !aggregates.contains(aggregate))
+            aggregates.add(aggregate);
+      }
+      Collections.sort(aggregates, new Comparator<Interface>() {
+         @Override
+         public int compare(Interface i1, Interface i2)
+         {
+            return ComparatorHelper.compareStringsNatural(i1.getObjectName(), i2.getObjectName());
+         }
+      });
+      Map<Long, RGB> aggregateColors = new HashMap<Long, RGB>();
+      for(int i = 0; i < aggregates.size(); i++)
+         aggregateColors.put(aggregates.get(i).getObjectId(), AGGREGATE_COLORS[i % AGGREGATE_COLORS.length]);
+      for(SlotViewWidget sv : slots.values())
+         sv.setAggregateColors(aggregateColors);
+
+      if (aggregateLegendVisible && !aggregates.isEmpty())
+         createAggregateLegend(aggregates, aggregateColors);
+
       layout(true, true);
 
 		for(SlotViewWidget sv : slots.values())
@@ -183,6 +227,35 @@ public class PortViewWidget extends DashboardComposite
 			sv.addSelectionListener(listener);
 		}
 	}
+
+   /**
+    * Create legend for link aggregation markers.
+    *
+    * @param aggregates link aggregation interfaces
+    * @param aggregateColors marker colors by object ID of link aggregation interface
+    */
+   private void createAggregateLegend(List<Interface> aggregates, Map<Long, RGB> aggregateColors)
+   {
+      aggregateLegend = new Composite(this, SWT.NONE);
+      aggregateLegend.setBackground(getBackground());
+      RowLayout layout = new RowLayout(SWT.HORIZONTAL);
+      layout.wrap = true;
+      layout.center = true;
+      layout.spacing = 4;
+      aggregateLegend.setLayout(layout);
+
+      for(Interface aggregate : aggregates)
+      {
+         Label marker = new Label(aggregateLegend, SWT.BORDER);
+         Color color = colors.create(aggregateColors.get(aggregate.getObjectId()));
+         marker.setBackground(color);
+         marker.setLayoutData(new RowData(12, 12));
+
+         Label name = new Label(aggregateLegend, SWT.NONE);
+         name.setBackground(getBackground());
+         name.setText(aggregate.getObjectName() + "   ");
+      }
+   }
 
 	/**
 	 * @return the nodeId
@@ -254,36 +327,65 @@ public class PortViewWidget extends DashboardComposite
    }
 
    /**
-	 * Set port highlight
-	 * 
-	 * @param ports
-	 */
+    * Check if legend for link aggregation markers is visible.
+    *
+    * @return true if legend for link aggregation markers is visible
+    */
+   public boolean isAggregateLegendVisible()
+   {
+      return aggregateLegendVisible;
+   }
+
+   /**
+    * Show or hide legend for link aggregation markers. Takes effect on next refresh.
+    *
+    * @param aggregateLegendVisible true to show legend for link aggregation markers
+    */
+   public void setAggregateLegendVisible(boolean aggregateLegendVisible)
+   {
+      this.aggregateLegendVisible = aggregateLegendVisible;
+   }
+
+   /**
+    * Set port highlight. Logical interfaces are highlighted as physical ports they are running over, and link aggregation
+    * interfaces as their member ports.
+    * 
+    * @param ports ports to highlight
+    */
 	public void setHighlight(Port[] ports)
 	{
 		clearHighlight(false);
 
 		for(Port p : ports)
 		{
-         // Port without known location could be logical interface on top of physical port
-         if (!p.isLocationValid())
+		   Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
+		   if (iface != null)
 		   {
-		      Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
-            Interface parent = (iface != null) ? iface.getParentInterface() : null;
-            if ((parent == null) || !parent.isPhysicalPort() || !parent.isPhysicalLocationValid())
-               continue;
-            p = new Port(parent);
+		      for(Interface physicalPort : iface.getPhysicalPorts())
+		         addHighlight(new Port(physicalPort));
 		   }
-			SlotViewWidget sv = slots.get(((long)p.getChassis() << 32) | (long)p.getModule());
-			if (sv != null)
-			{
-				sv.addHighlight(p);
-			}
+		   else if (p.isLocationValid())
+		   {
+		      addHighlight(p);
+		   }
 		}
 
 		for(SlotViewWidget sv : slots.values())
 			sv.redraw();
 	}
 	
+   /**
+    * Add highlight for port with known location.
+    *
+    * @param p port to highlight
+    */
+   private void addHighlight(Port p)
+   {
+      SlotViewWidget sv = slots.get(((long)p.getChassis() << 32) | (long)p.getModule());
+      if (sv != null)
+         sv.addHighlight(p);
+   }
+
 	/**
 	 * Clear port highlight.
 	 * 

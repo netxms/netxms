@@ -21,7 +21,9 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -95,22 +97,7 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 	 */
 	private String buildPortList(VlanInfo vlan)
 	{
-		List<Port> physicalPorts = new ArrayList<Port>();
-		for(Port p : vlan.getPorts())
-		{
-			Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
-         if ((iface != null) && !iface.isPhysicalPort())
-			{
-            Interface parent = iface.getParentInterface();
-            if ((parent != null) && parent.isPhysicalPort())
-               p = new Port(parent);
-            else
-               continue;
-			}
-         if (p.isLocationValid())
-			   physicalPorts.add(p);
-		}
-
+      List<Port> physicalPorts = getPhysicalPorts(vlan);
 		if (physicalPorts.isEmpty())
 			return "";
 
@@ -150,6 +137,36 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
       appendPortSeries(sb, first, last);
 		return sb.toString();
 	}
+
+   /**
+    * Get physical ports in VLAN. Logical interfaces are replaced by physical ports they are running over, and link aggregation
+    * interfaces by their member ports.
+    *
+    * @param vlan VLAN object
+    * @return list of physical ports with known location
+    */
+   private List<Port> getPhysicalPorts(VlanInfo vlan)
+   {
+      List<Port> physicalPorts = new ArrayList<Port>();
+      Set<Long> processed = new HashSet<Long>();
+      for(Port p : vlan.getPorts())
+      {
+         Interface iface = session.findObjectById(p.getObjectId(), Interface.class);
+         if (iface != null)
+         {
+            for(Interface physicalPort : iface.getPhysicalPorts())
+            {
+               if (processed.add(physicalPort.getObjectId()))
+                  physicalPorts.add(new Port(physicalPort));
+            }
+         }
+         else if (p.isLocationValid())
+         {
+            physicalPorts.add(p);
+         }
+      }
+      return physicalPorts;
+   }
 
    /**
     * Check if given port directly follows previous one (next port on same PIC or next lane on same split port).
@@ -257,7 +274,16 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
    @Override
    public Color getBackground(Object element)
    {
-      return (selectedPort != null) && ((VlanInfo)element).containsPort(new Port(selectedPort.getInterfaceObjectId(), 0, selectedPort.getChassis(), selectedPort.getModule(),
-            selectedPort.getPIC(), selectedPort.getPort(), selectedPort.getLane(), true)) ? HIGHLIGHT : null;
+      if (selectedPort == null)
+         return null;
+
+      Port port = new Port(selectedPort.getInterfaceObjectId(), 0, selectedPort.getChassis(), selectedPort.getModule(), selectedPort.getPIC(), selectedPort.getPort(),
+            selectedPort.getLane(), true);
+      for(Port p : getPhysicalPorts((VlanInfo)element))
+      {
+         if (p.isSameLocation(port))
+            return HIGHLIGHT;
+      }
+      return null;
    }
 }

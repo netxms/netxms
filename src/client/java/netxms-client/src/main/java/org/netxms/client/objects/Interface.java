@@ -1159,6 +1159,70 @@ public class Interface extends GenericObject implements ZoneMember, NodeComponen
    }
 
    /**
+    * Get interfaces that are members of this link aggregation interface.
+    *
+    * @return list of member interfaces (empty if this interface is not a link aggregation interface or has no known members)
+    */
+   public List<Interface> getAggregateMembers()
+   {
+      List<Interface> members = new ArrayList<Interface>();
+      AbstractNode node = getParentNode();
+      if (node != null)
+      {
+         for(AbstractObject o : node.getAllChildren(AbstractObject.OBJECT_INTERFACE))
+         {
+            if (((Interface)o).aggregateInterfaceId == objectId)
+               members.add((Interface)o);
+         }
+      }
+      return members;
+   }
+
+   /**
+    * Get physical ports with known location that carry traffic of this interface: interface itself if it is a physical port,
+    * member ports if it is a link aggregation interface, or physical ports of parent interface if it is a logical interface.
+    *
+    * @return list of physical ports (empty if interface is not related to any physical port with known location)
+    */
+   public List<Interface> getPhysicalPorts()
+   {
+      List<Interface> ports = new ArrayList<Interface>();
+      collectPhysicalPorts(ports, 0);
+      return ports;
+   }
+
+   /**
+    * Collect physical ports that carry traffic of this interface.
+    *
+    * @param ports list to fill
+    * @param depth current recursion depth
+    */
+   private void collectPhysicalPorts(List<Interface> ports, int depth)
+   {
+      if (isPhysicalPort() && isPhysicalLocationValid())
+      {
+         if (!ports.contains(this))
+            ports.add(this);
+         return;
+      }
+
+      if (depth >= 4)
+         return;
+
+      List<Interface> members = getAggregateMembers();
+      if (!members.isEmpty())
+      {
+         for(Interface m : members)
+            m.collectPhysicalPorts(ports, depth + 1);
+         return;
+      }
+
+      Interface parent = getParentInterface();
+      if (parent != null)
+         parent.collectPhysicalPorts(ports, depth + 1);
+   }
+
+   /**
     * @return the vlans
     */
    public long[] getVlans()

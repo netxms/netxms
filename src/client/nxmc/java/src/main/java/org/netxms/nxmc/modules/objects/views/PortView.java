@@ -225,6 +225,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
       scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       portView = new PortViewWidget(scroller, SWT.NONE);
       portView.setPortDisplayMode(SlotViewWidget.DISPLAY_MODE_STATE);
+      portView.setAggregateLegendVisible(true);
       portView.setNodeId(getObjectId());
       portView.addSelectionListener(new PortSelectionListener() {
           @Override

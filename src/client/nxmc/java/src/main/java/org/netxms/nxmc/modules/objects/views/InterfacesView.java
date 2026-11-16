@@ -71,24 +71,24 @@ public class InterfacesView extends NodeSubObjectTableView
    public static final int COLUMN_UTILIZATION = 13;
    public static final int COLUMN_TYPE = 14;
    public static final int COLUMN_PHYSICAL_LOCATION = 15;
-   public static final int COLUMN_ADMIN_STATE = 16;
-   public static final int COLUMN_OPER_STATE = 17;
-   public static final int COLUMN_EXPECTED_STATE = 18;
-   public static final int COLUMN_STP_STATE = 19;
-   public static final int COLUMN_STATUS = 20;
-   public static final int COLUMN_OSPF_AREA = 21;
-   public static final int COLUMN_OSPF_TYPE = 22;
-   public static final int COLUMN_OSPF_STATE = 23;
-   public static final int COLUMN_8021X_PAE_STATE = 24;
-   public static final int COLUMN_8021X_BACKEND_STATE = 25;
-   public static final int COLUMN_PEER_NODE = 26;
-   public static final int COLUMN_PEER_INTERFACE = 27;
-   public static final int COLUMN_PEER_MAC_ADDRESS = 28;
-   public static final int COLUMN_PEER_NIC_VENDOR = 29;
-   public static final int COLUMN_PEER_IP_ADDRESS = 30;
-   public static final int COLUMN_PEER_PROTOCOL = 31;
-   public static final int COLUMN_PEER_LAST_UPDATED = 32;
-   public static final int COLUMN_AGGREGATE = 33;
+   public static final int COLUMN_AGGREGATE = 16;
+   public static final int COLUMN_ADMIN_STATE = 17;
+   public static final int COLUMN_OPER_STATE = 18;
+   public static final int COLUMN_EXPECTED_STATE = 19;
+   public static final int COLUMN_STP_STATE = 20;
+   public static final int COLUMN_STATUS = 21;
+   public static final int COLUMN_OSPF_AREA = 22;
+   public static final int COLUMN_OSPF_TYPE = 23;
+   public static final int COLUMN_OSPF_STATE = 24;
+   public static final int COLUMN_8021X_PAE_STATE = 25;
+   public static final int COLUMN_8021X_BACKEND_STATE = 26;
+   public static final int COLUMN_PEER_NODE = 27;
+   public static final int COLUMN_PEER_INTERFACE = 28;
+   public static final int COLUMN_PEER_MAC_ADDRESS = 29;
+   public static final int COLUMN_PEER_NIC_VENDOR = 30;
+   public static final int COLUMN_PEER_IP_ADDRESS = 31;
+   public static final int COLUMN_PEER_PROTOCOL = 32;
+   public static final int COLUMN_PEER_LAST_UPDATED = 33;
 
    private InterfaceListLabelProvider labelProvider;
    private Action actionCopyMacAddressToClipboard;
@@ -175,6 +175,7 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("Utilization"),
          i18n.tr("Type"),
          i18n.tr("Location"),
+         i18n.tr("Aggregate"),
          i18n.tr("Admin state"),
          i18n.tr("Oper state"),
          i18n.tr("Expected state"),
@@ -191,10 +192,9 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("Peer NIC vendor"),
          i18n.tr("Peer IP"),
          i18n.tr("Peer discovery protocol"),
-         i18n.tr("Peer last updated"),
-         i18n.tr("Aggregate")
+         i18n.tr("Peer last updated")
       };
-      final int[] widths = { 150, 60, 150, 150, 70, 150, 100, 70, 90, 150, 100, 100, 90, 120, 200, 80, 80, 80, 80, 150, 150, 100, 120, 90, 80, 80, 80, 80, 80, 80, 80, 80, 120, 150 };
+      final int[] widths = { 150, 60, 150, 150, 70, 150, 100, 70, 90, 150, 100, 100, 90, 120, 200, 80, 150, 80, 80, 80, 150, 150, 100, 120, 90, 80, 80, 80, 80, 80, 80, 80, 80, 120 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI, "InterfacesView.TableViewer");
       labelProvider = new InterfaceListLabelProvider(viewer);
       viewer.setLabelProvider(labelProvider);
