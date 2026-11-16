@@ -86,7 +86,9 @@ Maven must run online for `tests/integration` - offline mode (`-o`) cannot resol
 `127.0.0.1` and `admin`/`netxms` (see `TestConstants.java`); override them with
 `-DConfigFile=<properties file>` containing `server.address`, `server.login` and `server.password`.
 The tests locate their target node through `TestHelper.findManagementServer()`, so the server must have a node with the
-`NC_IS_LOCAL_MGMT` capability.
+`NC_IS_LOCAL_MGMT` capability. `findManagementServer()` also sets that node's agent port to `agent.port` (default
+5019, the port of the Jenkins test agent), so against a local agent on 4700 run with `-Dagent.port=4700`; otherwise the
+first test leaves the server unable to reach its own agent.
 
 ## C++ Development Guidelines
 
