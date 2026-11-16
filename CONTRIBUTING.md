@@ -167,7 +167,7 @@ Only after issue approval:
 2. **Install dependencies (Ubuntu/Debian)**:
    ```bash
    sudo apt-get update
-   sudo apt-get install build-essential g++ automake git gitk libtool flex bison libssl-dev libjansson-dev autoconf valgrind gdb libcurl4-openssl-dev postgresql-client maven mariadb-client libpcre3-dev mosquitto-dev libmariadb-dev libpq-dev default-jdk libasan8 libexpat1-dev libmicrohttpd-dev
+   sudo apt-get install build-essential g++ automake git gitk libtool flex bison libssl-dev libjansson-dev autoconf valgrind gdb libcurl4-openssl-dev postgresql-client maven mariadb-client libpcre2-dev libmosquitto-dev libmariadb-dev libpq-dev default-jdk libasan8 libexpat1-dev libmicrohttpd-dev
    ```
 
 3. **Configure and build**:
@@ -175,13 +175,10 @@ Configure NetXMS to be built in `/opt/netxms` with desired options:
 
    ```bash
    mkdir /opt/netxms
-   cd ./build
-   ./updatetag.pl #run once after clone to generate version.h
-   cd ..
-   ./reconf #run once after clone 
-   ./configure --prefix=/opt/netxms --with-sqlite --with-server --with-agent --with-tests --enable-debug --enable-sanitizer #choose --with-mysql --with-pgsql --with-oracle --with-mssql as needed
-   make
-   make install 
+   ./init-source-tree # run once after clone: generates build tag files and runs autoreconf
+   ./configure --prefix=/opt/netxms --with-sqlite --with-server --with-agent --with-tests --enable-debug --enable-sanitizer # choose --with-mysql --with-pgsql --with-oracle --with-mssql as needed
+   make -j$(nproc)
+   make install
    ```
 
 > note: --enable-sanitizer is optional, it enables address sanitizer for memory issue detection, sanitizer and valgrind usage is mutually exclusive
