@@ -638,7 +638,7 @@ int H_ObjectStatusExplanation(Context *context)
 static bool HasDescendantsMatchingClassFilter(const shared_ptr<NetObj>& object, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
 {
    uint32_t objectId = object->getId();
-   
+
    // Prevent infinite recursion and respect maximum depth
    if (visited.count(objectId) > 0 || currentDepth >= maxDepth)
       return false;
@@ -676,7 +676,7 @@ static bool HasDescendantsMatchingClassFilter(const shared_ptr<NetObj>& object, 
 static json_t *BuildNestedObjectTree(const shared_ptr<NetObj>& object, uint32_t userId, const std::unordered_set<int> &classFilter, std::unordered_set<uint32_t> &visited, int maxDepth, int currentDepth)
 {
    uint32_t objectId = object->getId();
-   
+
    if (visited.count(objectId) > 0 || currentDepth >= maxDepth)
       return json_array();
 
@@ -1409,5 +1409,60 @@ int H_TakeScreenshot(Context *context)
    MemFree(data);
 
    context->writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Screenshot taken for session \"%s\""), sessionName);
+   return 200;
+}
+
+/**
+ * Handler for /v1/objects/:object-id/agent-log
+ */
+int H_ObjectAgentLog(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (object->getObjectClass() != OBJECT_NODE)
+      return 400;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_DOWNLOAD))
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on download of agent log file from node %s", object->getName());
+      return 403;
+   }
+
+   shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
+   if (conn == nullptr)
+   {
+      context->setErrorResponse("No connection to agent");
+      return 500;
+   }
+
+   wchar_t guid[64], localFile[MAX_PATH];
+   nx_swprintf(localFile, MAX_PATH, L"%s" FS_PATH_SEPARATOR L"agent-log-%s.tmp", g_netxmsdDataDir, uuid::generate().toString(guid));
+   uint32_t rcc = conn->getAgentLogFile(localFile, context->getQueryParameterAsUInt32("sizeLimit"));
+   if (rcc != ERR_SUCCESS)
+   {
+      _wremove(localFile);
+      context->setAgentErrorResponse(rcc);
+      return 500;
+   }
+
+   size_t size;
+   BYTE *data = LoadFile(localFile, &size);
+   _wremove(localFile);
+   if (data == nullptr)
+   {
+      context->setErrorResponse("Cannot read received agent log file");
+      return 500;
+   }
+
+   context->setResponseData(data, size, "text/plain; charset=utf-8");
+   MemFree(data);
+
+   context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Downloaded agent log file from node %s", object->getName());
    return 200;
 }

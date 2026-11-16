@@ -6068,6 +6068,71 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/agent-log:
+    get:
+      operationId: getObjectAgentLog
+      summary: Get NetXMS agent's own log file
+      description: |
+        Download the log file of the NetXMS agent running on the node. The agent must list this
+        server in `MasterServers` and write its log to a file (`LogFile` is not `{syslog}`,
+        `{eventlog}`, `{systemd}` or `{stdout}`). The file manager subagent is not needed.
+
+        This endpoint applies to Node objects only; requesting it for any other object class
+        returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sizeLimit
+          description: |
+            Maximum number of bytes to return, counted from the end of the file. 0 or absent
+            returns the whole file. The tail starts at an arbitrary byte, so its first line is
+            usually incomplete. Data written by the agent during transfer is included, so the
+            response can be slightly larger than the limit.
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Agent log file content.
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Object is not a node.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have download access to the object
+        '404':
+          description: Object with given ID does not exist
+        '500':
+          description: |
+            Agent error or no connection to agent. For an agent error the response document contains
+            `agentErrorCode` and `agentErrorText`: 945 means the agent log is not written to a file,
+            400 (unknown command) means the agent is too old to support this request, 403 means the
+            server is not listed in agent's `MasterServers`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                  agentErrorCode:
+                    type: integer
+                  agentErrorText:
+                    type: string
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/custom-attributes:
     get:
       operationId: getObjectCustomAttributes

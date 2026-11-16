@@ -3002,6 +3002,22 @@ uint32_t AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, 
 }
 
 /**
+ * Download agent's own log file into local file (tail of given size, 0 for whole file)
+ */
+uint32_t AgentConnection::getAgentLogFile(const TCHAR *localFile, uint64_t sizeLimit)
+{
+   NXCPMessage request(CMD_GET_AGENT_LOG_FILE, 0, m_nProtocolVersion);
+   request.setField(VID_FILE_SIZE_LIMIT, sizeLimit);
+   request.setField(VID_COMPRESSION_METHOD, static_cast<int16_t>(NXCP_STREAM_COMPRESSION_LZ4));
+   NXCPMessage *response = customRequest(&request, localFile);
+   if (response == nullptr)
+      return m_isConnected ? ERR_REQUEST_TIMEOUT : ERR_CONNECTION_BROKEN;
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   delete response;
+   return rcc;
+}
+
+/**
  * Resolve hostname by IP address in local network
  */
 TCHAR *AgentConnection::getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, size_t bufLen)

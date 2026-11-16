@@ -218,6 +218,7 @@ int H_ObjectAssetProperties(Context *context);
 int H_ObjectAssetPropertyUpdate(Context *context);
 int H_ObjectAssetPropertyDelete(Context *context);
 int H_ObjectAgentGet(Context *context);
+int H_ObjectAgentLog(Context *context);
 int H_ObjectAgentUpdate(Context *context);
 int H_ObjectAutoBindUpdate(Context *context);
 int H_ObjectCreate(Context *context);
@@ -989,6 +990,9 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/agent")
       .GET(H_ObjectAgentGet)
       .PATCH(H_ObjectAgentUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/agent-log")
+      .GET(H_ObjectAgentLog)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/available-metrics/agent")
       .GET(H_AvailableAgentMetrics)

@@ -1424,6 +1424,7 @@ public:
    uint32_t uninstallPolicy(const uuid& guid);
    uint32_t getUserSessions(ObjectArray<UserSession> **sessions);
    uint32_t takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
+   uint32_t getAgentLogFile(const TCHAR *localFile, uint64_t sizeLimit);
    TCHAR *getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, size_t bufLen);
    uint32_t setupTcpProxy(const InetAddress& ipAddr, uint16_t port, uint32_t *channelId);
    uint32_t closeTcpProxy(uint32_t channelId);
