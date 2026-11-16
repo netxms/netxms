@@ -2,7 +2,7 @@
 ** NetXMS subagent for FreeBSD
 ** Copyright (C) 2004 Alex Kirhenshtein
 ** Copyright (C) 2008 Mark Ibell
-** Copyright (C) 2016-2023 Raden Solutions
+** Copyright (C) 2016-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <net/ethernet.h>
+#include <net/if_lagg.h>
 
 #if __FreeBSD__ >= 13
 #include <net/if_mib.h>
@@ -75,6 +76,7 @@ struct IFLIST
    int index;
    int type;
    int mtu;
+   int aggregate;   // index of lagg interface this interface is a port of, or 0
 };
 
 /**
@@ -412,6 +414,58 @@ LONG H_NetRoutingTable(const TCHAR *param, const TCHAR *arg, StringList *value, 
 }
 
 /**
+ * Resolve link aggregation (lagg) membership. FreeBSD reports lagg ports with type IFT_IEEE8023ADLAG (IFT_INFINIBANDLAG
+ * for InfiniBand) and lagg interface itself with type of its ports (IFT_ETHER or IFT_INFINIBAND). This function sets
+ * type of lagg interface to IFT_IEEE8023ADLAG, restores original type of its ports, and sets aggregate interface index for ports.
+ */
+static void ResolveLinkAggregation(IFLIST *ifList, int ifCount)
+{
+   int s = socket(AF_INET, SOCK_DGRAM, 0);
+   if (s == -1)
+   {
+      nxlog_debug_tag(SUBAGENT_DEBUG_TAG, 5, _T("ResolveLinkAggregation: cannot create socket (%s)"), _tcserror(errno));
+      return;
+   }
+
+   // Lagg ports are identified first, while lagg interfaces still have their original type
+   for(int i = 0; i < ifCount; i++)
+   {
+      IFLIST *iface = &ifList[i];
+      if ((iface->type != IFT_IEEE8023ADLAG) && (iface->type != IFT_INFINIBANDLAG))
+         continue;
+
+      struct lagg_reqport rp;
+      memset(&rp, 0, sizeof(rp));
+      strlcpy(rp.rp_ifname, iface->name, sizeof(rp.rp_ifname));
+      strlcpy(rp.rp_portname, iface->name, sizeof(rp.rp_portname));
+      if (ioctl(s, SIOCGLAGGPORT, &rp) != 0)
+         continue;   // not a lagg port
+
+      for(int j = 0; j < ifCount; j++)
+      {
+         if (!strcmp(ifList[j].name, rp.rp_ifname))
+         {
+            iface->aggregate = ifList[j].index;
+            iface->type = ifList[j].type;
+            break;
+         }
+      }
+   }
+
+   // Lagg interface is identified by successful SIOCGLAGG call (port list is not requested)
+   for(int i = 0; i < ifCount; i++)
+   {
+      struct lagg_reqall ra;
+      memset(&ra, 0, sizeof(ra));
+      strlcpy(ra.ra_ifname, ifList[i].name, sizeof(ra.ra_ifname));
+      if (ioctl(s, SIOCGLAGG, &ra) == 0)
+         ifList[i].type = IFT_IEEE8023ADLAG;
+   }
+
+   close(s);
+}
+
+/**
  * Dump full interface info to string list
  */
 static void DumpInterfaceInfo(IFLIST *pList, int nIfCount, StringList *value)
@@ -539,9 +593,14 @@ static LONG GetInterfaceList(StringList *value, bool namesOnly)
    if (nRet == SYSINFO_RC_SUCCESS)
    {
       if (namesOnly)
+      {
          DumpInterfaceNames(ifList, nIfCount, value);
+      }
       else
+      {
+         ResolveLinkAggregation(ifList, nIfCount);
          DumpInterfaceInfo(ifList, nIfCount, value);
+      }
    }
 
    for (int i = 0; i < nIfCount; i++)
@@ -668,6 +727,9 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
       value->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC address"));
       value->addColumn(_T("IP_ADDRESSES"), DCI_DT_STRING, _T("IP addresses"));
       value->addColumn(_T("PEER_IP"), DCI_DT_STRING, _T("Peer IP addresses"));
+      value->addColumn(_T("AGGREGATE"), DCI_DT_UINT, _T("Aggregate interface index"));
+
+      ResolveLinkAggregation(ifList, ifCount);
 
       char macAddr[32], ipText[64];
       for(int i = 0; i < ifCount; i++)
@@ -704,6 +766,7 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
          value->set(6, ipList);
          if (havePeer)
             value->set(7, peerList);
+         value->set(8, iface->aggregate);
       }
    }
 
