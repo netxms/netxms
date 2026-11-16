@@ -15090,7 +15090,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
                if (id1 < id2)
                   return -1;
                if (id1 > id2)
-                  return -1;
+                  return 1;
 
                uint32_t ifIndex1 = static_cast<const OSPFNeighbor*>(a1)->ifIndex;
                uint32_t ifIndex2 = static_cast<const OSPFNeighbor*>(a2)->ifIndex;

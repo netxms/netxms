@@ -142,15 +142,19 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, NetworkMap *fil
       shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(info->objectId, OBJECT_NODE));
       if ((node != nullptr) && (node->isBridge() || includeEndNodes))
       {
-         BuildL2Topology(topology, node.get(), filterProvider, depth - 1, includeEndNodes, useL1Topology, includeWiFiClients);
          shared_ptr<Interface> ifLocal = static_pointer_cast<Interface>(FindObjectById(info->ifLocal, OBJECT_INTERFACE));
          shared_ptr<Interface> ifRemote = static_pointer_cast<Interface>(FindObjectById(info->ifRemote, OBJECT_INTERFACE));
-         uint32_t ifLocalIndex = ifLocal->getIfIndex();
-         uint32_t ifRemoteIndex = ifRemote->getIfIndex();
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildL1Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s"),
-               root->getName(), root->getId(), node->getName(), node->getId(), ifLocalIndex,
-               (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), ifRemoteIndex,
-               (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
+         if ((ifLocal == nullptr) || (ifRemote == nullptr))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, L"BuildL1Topology: root=%s [%u], node=%s [%u]: interface object is missing (ifLocal=[%u] ifRemote=[%u]), link ignored",
+                  root->getName(), root->getId(), node->getName(), node->getId(), info->ifLocal, info->ifRemote);
+            continue;
+         }
+
+         BuildL2Topology(topology, node.get(), filterProvider, depth - 1, includeEndNodes, useL1Topology, includeWiFiClients);
+         nxlog_debug_tag(DEBUG_TAG, 5, L"BuildL1Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s",
+               root->getName(), root->getId(), node->getName(), node->getId(), ifLocal->getIfIndex(), ifLocal->getName(),
+               ifRemote->getIfIndex(), ifRemote->getName());
          topology.linkObjects(root->getId(), ifLocal.get(), node->getId(), ifRemote.get(), info->routeInfo);
       }
    }
