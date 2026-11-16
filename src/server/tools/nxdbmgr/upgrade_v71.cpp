@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.13 to 71.14 (manages transactions itself)
+ */
+static bool H_UpgradeFromV13()
+{
+   if (GetSchemaLevelForMajorVersion(70) < 62)
+   {
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         CHK_EXEC_NO_SP(RebuildAggregatesWithIncorrectNumericFilter());
+      }
+      CHK_EXEC_NO_SP(SetSchemaLevelForMajorVersion(70, 62));
+   }
+   CHK_EXEC_NO_SP(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 71.12 to 71.13
  */
 static bool H_UpgradeFromV12()
@@ -288,7 +305,9 @@ static struct
    int nextMajor;
    int nextMinor;
    bool (*upgradeProc)();
+   bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 13, 71, 14, H_UpgradeFromV13, true },
    { 12, 71, 13, H_UpgradeFromV12 },
    { 11, 71, 12, H_UpgradeFromV11 },
    { 10, 71, 11, H_UpgradeFromV10 },
@@ -327,6 +346,14 @@ bool MajorSchemaUpgrade_V71()
          return false;
       }
       WriteToTerminalEx(L"Upgrading from version 71.%d to %d.%d\n", minor, s_dbUpgradeMap[i].nextMajor, s_dbUpgradeMap[i].nextMinor);
+      if (s_dbUpgradeMap[i].ownTransactions)
+      {
+         if (!s_dbUpgradeMap[i].upgradeProc())
+            return false;
+         if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
+            return false;
+         continue;
+      }
       DBBegin(g_dbHandle);
       if (s_dbUpgradeMap[i].upgradeProc())
       {

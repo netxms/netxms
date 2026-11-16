@@ -222,7 +222,7 @@ static inline const TCHAR *GetIdataValueNumericFilter()
    {
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_TSDB:
-         return _T(" AND idata_value ~ '^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$'");
+         return _T(" AND idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$'");
       case DB_SYNTAX_MYSQL:
          return _T(" AND idata_value REGEXP '^[-+]?[0-9]*\\\\.?[0-9]+([eE][-+]?[0-9]+)?$'");
       case DB_SYNTAX_ORACLE:

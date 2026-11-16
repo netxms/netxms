@@ -24,6 +24,248 @@
 #include <nxevent.h>
 
 /**
+ * Storage classes that have TimescaleDB continuous aggregates
+ */
+static const wchar_t *s_aggregateStorageClasses[] = { L"default", L"7", L"30", L"90", L"180", L"other" };
+
+/**
+ * Columns of continuous aggregate materialization hypertable
+ */
+#define AGGREGATE_COLUMNS L"item_id,bucket_start,min_value,max_value,avg_value,sample_count"
+
+/**
+ * Get qualified name of materialization hypertable for given continuous aggregate. Name is set to empty string
+ * if aggregate does not exist. Optionally reports if aggregate definition has numeric value filter with dot
+ * given as bracket expression (aggregate that does not exist is reported as having correct filter).
+ */
+static bool GetMaterializationHypertable(const wchar_t *aggregate, wchar_t *name, size_t size, bool *correctFilter = nullptr)
+{
+   wchar_t query[512];
+   nx_swprintf(query, 512,
+      L"SELECT quote_ident(materialization_hypertable_schema) || '.' || quote_ident(materialization_hypertable_name),"
+      L"position('[.]' in view_definition) FROM timescaledb_information.continuous_aggregates "
+      L"WHERE view_schema=current_schema() AND view_name='%ls'", aggregate);
+   name[0] = 0;
+   if (correctFilter != nullptr)
+      *correctFilter = true;
+
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == nullptr)
+      return false;
+
+   if (DBGetNumRows(hResult) > 0)
+   {
+      DBGetField(hResult, 0, 0, name, size);
+      if (correctFilter != nullptr)
+         *correctFilter = (DBGetFieldLong(hResult, 0, 1) > 0);
+   }
+   DBFreeResult(hResult);
+   return true;
+}
+
+/**
+ * Save materialized data of continuous aggregates that have incorrect numeric value filter into ordinary tables
+ * (idata_1h_sc_<class>_saved and idata_1d_sc_<class>_saved), then drop those aggregates and create them again
+ * with correct filter. Should be called within transaction.
+ */
+static bool RecreateAggregatesWithIncorrectFilter()
+{
+   bool viewsDropped = false;
+   wchar_t query[1024];
+   for(size_t i = 0; i < sizeof(s_aggregateStorageClasses) / sizeof(s_aggregateStorageClasses[0]); i++)
+   {
+      const wchar_t *cls = s_aggregateStorageClasses[i];
+
+      wchar_t aggregate[64], hourlyData[256], dailyData[256];
+      bool correctFilter;
+      nx_swprintf(aggregate, 64, L"idata_1h_sc_%ls", cls);
+      CHK_EXEC(GetMaterializationHypertable(aggregate, hourlyData, 256, &correctFilter));
+      if (correctFilter)
+         continue;
+      nx_swprintf(aggregate, 64, L"idata_1d_sc_%ls", cls);
+      CHK_EXEC(GetMaterializationHypertable(aggregate, dailyData, 256));
+
+      WriteToTerminalEx(L"Rebuilding continuous aggregates for storage class \x1b[1m%ls\x1b[0m\n", cls);
+
+      if (!viewsDropped)
+      {
+         CHK_EXEC(SQLQuery(L"DROP VIEW IF EXISTS idata_1h"));
+         CHK_EXEC(SQLQuery(L"DROP VIEW IF EXISTS idata_1d"));
+         viewsDropped = true;
+      }
+
+      nx_swprintf(query, 1024, L"CREATE TABLE idata_1h_sc_%ls_saved AS SELECT " AGGREGATE_COLUMNS L" FROM %ls", cls, hourlyData);
+      CHK_EXEC(SQLQuery(query));
+      if (dailyData[0] != 0)
+      {
+         nx_swprintf(query, 1024, L"CREATE TABLE idata_1d_sc_%ls_saved AS SELECT " AGGREGATE_COLUMNS L" FROM %ls", cls, dailyData);
+         CHK_EXEC(SQLQuery(query));
+      }
+
+      // Daily aggregate is built on top of hourly one and is dropped by CASCADE
+      nx_swprintf(query, 1024, L"DROP MATERIALIZED VIEW idata_1h_sc_%ls CASCADE", cls);
+      CHK_EXEC(SQLQuery(query));
+
+      nx_swprintf(query, 1024,
+         L"CREATE MATERIALIZED VIEW idata_1h_sc_%ls WITH (timescaledb.continuous) AS "
+         L"SELECT item_id, time_bucket(interval '1 hour', idata_timestamp) AS bucket_start, "
+         L"min(idata_value::double precision) AS min_value, "
+         L"max(idata_value::double precision) AS max_value, "
+         L"avg(idata_value::double precision) AS avg_value, count(*) AS sample_count "
+         L"FROM idata_sc_%ls "
+         L"WHERE idata_value ~ '^[-+]?[0-9]*[.]?[0-9]+([eE][-+]?[0-9]+)?$' "
+         L"GROUP BY item_id, time_bucket(interval '1 hour', idata_timestamp) "
+         L"WITH NO DATA", cls, cls);
+      CHK_EXEC(SQLQuery(query));
+
+      nx_swprintf(query, 1024,
+         L"CREATE MATERIALIZED VIEW idata_1d_sc_%ls WITH (timescaledb.continuous) AS "
+         L"SELECT item_id, time_bucket(interval '1 day', bucket_start) AS bucket_start, "
+         L"min(min_value) AS min_value, max(max_value) AS max_value, "
+         L"sum(avg_value * sample_count) / sum(sample_count) AS avg_value, "
+         L"sum(sample_count) AS sample_count "
+         L"FROM idata_1h_sc_%ls "
+         L"GROUP BY item_id, time_bucket(interval '1 day', bucket_start) "
+         L"WITH NO DATA", cls, cls);
+      CHK_EXEC(SQLQuery(query));
+   }
+
+   if (viewsDropped)
+   {
+      CHK_EXEC(SQLQuery(
+         L"CREATE VIEW idata_1h AS "
+         L"SELECT * FROM idata_1h_sc_default UNION ALL "
+         L"SELECT * FROM idata_1h_sc_7 UNION ALL "
+         L"SELECT * FROM idata_1h_sc_30 UNION ALL "
+         L"SELECT * FROM idata_1h_sc_90 UNION ALL "
+         L"SELECT * FROM idata_1h_sc_180 UNION ALL "
+         L"SELECT * FROM idata_1h_sc_other"));
+      CHK_EXEC(SQLQuery(
+         L"CREATE VIEW idata_1d AS "
+         L"SELECT * FROM idata_1d_sc_default UNION ALL "
+         L"SELECT * FROM idata_1d_sc_7 UNION ALL "
+         L"SELECT * FROM idata_1d_sc_30 UNION ALL "
+         L"SELECT * FROM idata_1d_sc_90 UNION ALL "
+         L"SELECT * FROM idata_1d_sc_180 UNION ALL "
+         L"SELECT * FROM idata_1d_sc_other"));
+   }
+   return true;
+}
+
+/**
+ * Move saved materialized data back into continuous aggregates of given storage class. Should be called within
+ * transaction. Hourly rows are restored up to and including given boundary bucket, replacing rows that were
+ * materialized from raw data; daily rows are restored up to (not including) day of boundary bucket.
+ */
+static bool MoveSavedAggregateData(const wchar_t *cls, int64_t boundary)
+{
+   wchar_t aggregate[64], hourlyData[256], dailyData[256];
+   nx_swprintf(aggregate, 64, L"idata_1h_sc_%ls", cls);
+   CHK_EXEC(GetMaterializationHypertable(aggregate, hourlyData, 256));
+   nx_swprintf(aggregate, 64, L"idata_1d_sc_%ls", cls);
+   CHK_EXEC(GetMaterializationHypertable(aggregate, dailyData, 256));
+   if ((hourlyData[0] == 0) || (dailyData[0] == 0))
+   {
+      WriteToTerminalEx(L"Continuous aggregates for storage class %ls are missing\n", cls);
+      return false;
+   }
+
+   wchar_t query[1024];
+   nx_swprintf(query, 1024, L"DELETE FROM %ls m USING idata_1h_sc_%ls_saved s WHERE m.item_id=s.item_id AND m.bucket_start=s.bucket_start", hourlyData, cls);
+   CHK_EXEC(SQLQuery(query));
+
+   nx_swprintf(query, 1024,
+      L"INSERT INTO %ls (" AGGREGATE_COLUMNS L") SELECT " AGGREGATE_COLUMNS L" FROM idata_1h_sc_%ls_saved "
+      L"WHERE bucket_start <= to_timestamp(" INT64_FMT L")", hourlyData, cls, boundary);
+   CHK_EXEC(SQLQuery(query));
+
+   nx_swprintf(aggregate, 64, L"idata_1d_sc_%ls_saved", cls);
+   int rc = DBIsTableExist(g_dbHandle, aggregate);
+   if (rc == DBIsTableExist_Failure)
+      return false;
+   if (rc == DBIsTableExist_Found)
+   {
+      nx_swprintf(query, 1024,
+         L"INSERT INTO %ls (" AGGREGATE_COLUMNS L") SELECT " AGGREGATE_COLUMNS L" FROM idata_1d_sc_%ls_saved "
+         L"WHERE bucket_start < time_bucket(interval '1 day', to_timestamp(" INT64_FMT L"))", dailyData, cls, boundary);
+      CHK_EXEC(SQLQuery(query));
+
+      nx_swprintf(query, 1024, L"DROP TABLE idata_1d_sc_%ls_saved", cls);
+      CHK_EXEC(SQLQuery(query));
+   }
+
+   nx_swprintf(query, 1024, L"DROP TABLE idata_1h_sc_%ls_saved", cls);
+   CHK_EXEC(SQLQuery(query));
+   return true;
+}
+
+/**
+ * Restore saved materialized data of continuous aggregates for given storage class (does nothing if there is
+ * no saved data). Should be called outside of transaction.
+ *
+ * Just created continuous aggregate is considered invalid in whole time range, so any refresh replaces
+ * materialized data within refresh window with data calculated from raw values - which would delete restored
+ * rows for the time range where raw values are already dropped by retention. To avoid that, range up to oldest
+ * raw value is refreshed while aggregates are still empty, and saved rows are inserted after that.
+ */
+static bool RestoreAggregateData(const wchar_t *cls)
+{
+   wchar_t query[1024];
+   nx_swprintf(query, 1024, L"idata_1h_sc_%ls_saved", cls);
+   int rc = DBIsTableExist(g_dbHandle, query);
+   if (rc == DBIsTableExist_Failure)
+      return false;
+   if (rc != DBIsTableExist_Found)
+      return true;
+
+   // Start of hourly bucket with oldest raw value. That bucket is likely to be only partially covered by raw data.
+   nx_swprintf(query, 1024, L"SELECT CAST(extract(epoch FROM time_bucket(interval '1 hour', coalesce(min(idata_timestamp), now()))) AS bigint) FROM idata_sc_%ls", cls);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == nullptr)
+      return false;
+   int64_t boundary = DBGetFieldInt64(hResult, 0, 0);
+   DBFreeResult(hResult);
+
+   nx_swprintf(query, 1024, L"CALL refresh_continuous_aggregate('idata_1h_sc_%ls', NULL, to_timestamp(" INT64_FMT L"))", cls, boundary + 3600);
+   CHK_EXEC_NO_SP(SQLQuery(query));
+   nx_swprintf(query, 1024, L"CALL refresh_continuous_aggregate('idata_1d_sc_%ls', NULL, time_bucket(interval '1 day', to_timestamp(" INT64_FMT L")))", cls, boundary);
+   CHK_EXEC_NO_SP(SQLQuery(query));
+
+   CHK_EXEC_NO_SP(DBBegin(g_dbHandle));
+   if (!MoveSavedAggregateData(cls, boundary))
+   {
+      DBRollback(g_dbHandle);
+      return false;
+   }
+   return DBCommit(g_dbHandle);
+}
+
+/**
+ * Rebuild TimescaleDB continuous aggregates which were created with numeric value filter that accepts any
+ * character in place of decimal dot, preserving already materialized data. Must be called outside of
+ * transaction because continuous aggregate refresh cannot be executed within transaction block. Can be called
+ * again after failure: aggregates are saved and created anew in single transaction, and presence of saved data
+ * tables indicates that data still has to be restored.
+ */
+bool RebuildAggregatesWithIncorrectNumericFilter()
+{
+   CHK_EXEC_NO_SP(DBBegin(g_dbHandle));
+   if (!RecreateAggregatesWithIncorrectFilter())
+   {
+      DBRollback(g_dbHandle);
+      return false;
+   }
+   CHK_EXEC_NO_SP(DBCommit(g_dbHandle));
+
+   for(size_t i = 0; i < sizeof(s_aggregateStorageClasses) / sizeof(s_aggregateStorageClasses[0]); i++)
+   {
+      if (!RestoreAggregateData(s_aggregateStorageClasses[i]))
+         return false;
+   }
+   return true;
+}
+
+/**
  * Externals
  */
 bool MajorSchemaUpgrade_V21();
