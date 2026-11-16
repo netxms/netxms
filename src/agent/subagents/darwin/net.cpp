@@ -23,6 +23,7 @@
 #include <interface_types.h>
 
 #include <sys/ioctl.h>
+#include <sys/sockio.h>
 #include <sys/sysctl.h>
 #include <net/if.h>
 #include <net/if_media.h>
@@ -36,6 +37,7 @@
 #include <ifaddrs.h>
 #include <nlist.h>
 
+#include "darwin.h"
 #include "net.h"
 
 typedef struct t_Addr
@@ -53,7 +55,67 @@ typedef struct t_IfList
 	ADDR *addr;
 	int addrCount;
 	int index;
+	int type;
+	int aggregate;   // index of bond interface this interface is a member of, or 0
 } IFLIST;
+
+/**
+ * Bond interface status request structures (from xnu bsd/net/if_bond_var.h, which is not part of public SDK)
+ */
+#define IF_BOND_OP_GET_STATUS       3
+#define IF_BOND_STATUS_REQ_VERSION  1
+
+#pragma pack(4)
+
+/**
+ * Bond member status (struct if_bond_status)
+ */
+struct BondMemberStatus
+{
+   char ifName[IFNAMSIZ];
+   uint16_t portPriority;
+   uint8_t state;
+   uint8_t selectedState;
+   struct
+   {
+      uint8_t system[6];
+      uint16_t systemPriority;
+      uint16_t key;
+      uint16_t port;
+      uint16_t portPriority;
+      uint8_t state;
+      uint8_t reserved;
+   } partnerState;
+   uint32_t reserved[8];
+};
+
+/**
+ * Bond status request (struct if_bond_req with struct if_bond_status_req)
+ */
+struct BondStatusRequest
+{
+   uint32_t op;
+   struct
+   {
+      int version;
+      int total;     // returned number of members
+      int count;     // number of members that will fit into buffer
+      union
+      {
+         void *buffer;
+         uint64_t buffer64;
+      } buffer;
+      uint16_t key;
+      uint8_t mode;
+      uint8_t reserved0;
+      uint32_t reserved[3];
+   } status;
+};
+
+#pragma pack()
+
+static_assert(sizeof(BondMemberStatus) == 68, "BondMemberStatus does not match struct if_bond_status");
+static_assert(sizeof(BondStatusRequest) == 40, "BondStatusRequest does not match struct if_bond_req");
 
 struct nlist nl[] = {
 #define N_IFNET 0
@@ -349,6 +411,69 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
 	return nRet;
 }
 
+/**
+ * Resolve bond interface membership. Bond interface is identified by successful SIOCGIFBOND call (its type
+ * reported by the system is IFT_ETHER once it has members). Bond interfaces get type IFTYPE_IEEE8023ADLAG,
+ * and their members get index of bond interface as aggregate.
+ */
+static void ResolveBondMembership(IFLIST *ifList, int ifCount)
+{
+   int s = socket(AF_INET, SOCK_DGRAM, 0);
+   if (s == -1)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ResolveBondMembership: cannot create socket (%s)"), _tcserror(errno));
+      return;
+   }
+
+   for(int i = 0; i < ifCount; i++)
+   {
+      BondStatusRequest request;
+      memset(&request, 0, sizeof(request));
+      request.op = IF_BOND_OP_GET_STATUS;
+      request.status.version = IF_BOND_STATUS_REQ_VERSION;
+
+      struct ifreq ifr;
+      memset(&ifr, 0, sizeof(ifr));
+      strlcpy(ifr.ifr_name, ifList[i].name, sizeof(ifr.ifr_name));
+      ifr.ifr_data = reinterpret_cast<caddr_t>(&request);
+      if (ioctl(s, SIOCGIFBOND, &ifr) != 0)
+         continue;   // not a bond interface
+
+      ifList[i].type = IFTYPE_IEEE8023ADLAG;
+      if (request.status.total <= 0)
+         continue;
+
+      // Member count returned by first call (without buffer) is used to size buffer for the second one
+      int count = request.status.total;
+      Buffer<BondMemberStatus, 16 * sizeof(BondMemberStatus)> members(count);
+      request.status.count = count;
+      request.status.buffer.buffer64 = 0;
+      request.status.buffer.buffer = members;
+      if (ioctl(s, SIOCGIFBOND, &ifr) != 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ResolveBondMembership: cannot get member list for bond interface %hs (%s)"), ifList[i].name, _tcserror(errno));
+         continue;
+      }
+
+      count = std::min(count, request.status.total);
+      for(int j = 0; j < count; j++)
+      {
+         char name[IFNAMSIZ];
+         strlcpy(name, members[j].ifName, sizeof(name));
+         for(int k = 0; k < ifCount; k++)
+         {
+            if (!strcmp(ifList[k].name, name))
+            {
+               ifList[k].aggregate = ifList[i].index;
+               break;
+            }
+         }
+      }
+   }
+
+   close(s);
+}
+
 LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
@@ -379,6 +504,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 
 				memset(&(pList[nIfCount-1]), 0, sizeof(IFLIST));
 				pList[nIfCount-1].name = pNext->ifa_name;
+				pList[nIfCount-1].type = IFTYPE_OTHER;
 				pName = pNext->ifa_name;
 			}
 
@@ -424,6 +550,8 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 
 		if (nRet == SYSINFO_RC_SUCCESS)
 		{
+			ResolveBondMembership(pList, nIfCount);
+
 			int j;
 			char szOut[1024], macAddr[32];
 
@@ -433,7 +561,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 				{
 					snprintf(szOut, sizeof(szOut), "%d 0.0.0.0/0 %d %s %s",
 							pList[i].index,
-							IFTYPE_OTHER,
+							pList[i].type,
 							BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
 							pList[i].name);
 #ifdef UNICODE
@@ -452,7 +580,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 									pList[i].index,
 									inet_ntoa(pList[i].addr[j].ip),
 									pList[i].addr[j].mask,
-									IFTYPE_OTHER,
+									pList[i].type,
 							                BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
 									pList[i].name,
 									j - 1);
@@ -463,7 +591,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, A
 									pList[i].index,
 									inet_ntoa(pList[i].addr[j].ip),
 									pList[i].addr[j].mask,
-									IFTYPE_OTHER,
+									pList[i].type,
 							                BinToStrA((BYTE *)pList[i].mac, 6, macAddr),
 									pList[i].name);
 						}
@@ -529,6 +657,7 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
 			ifList = tmp;
 			memset(&ifList[ifCount - 1], 0, sizeof(IFLIST));
 			ifList[ifCount - 1].name = p->ifa_name;
+			ifList[ifCount - 1].type = IFTYPE_OTHER;
 			name = p->ifa_name;
 		}
 
@@ -579,6 +708,9 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
 		value->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC address"));
 		value->addColumn(_T("IP_ADDRESSES"), DCI_DT_STRING, _T("IP addresses"));
 		value->addColumn(_T("PEER_IP"), DCI_DT_STRING, _T("Peer IP addresses"));
+		value->addColumn(_T("AGGREGATE"), DCI_DT_UINT, _T("Aggregate interface index"));
+
+		ResolveBondMembership(ifList, ifCount);
 
 		char macAddr[32];
 		for(int i = 0; i < ifCount; i++)
@@ -586,7 +718,7 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
 			value->addRow();
 			value->set(0, ifList[i].index);
 			value->set(1, ifList[i].name);
-			value->set(3, IFTYPE_OTHER);
+			value->set(3, ifList[i].type);
 			value->set(4, 0);
 			value->set(5, BinToStrA((BYTE *)ifList[i].mac, 6, macAddr));
 
@@ -614,6 +746,7 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
 			value->set(6, ipList);
 			if (havePeer)
 				value->set(7, peerList);
+			value->set(8, ifList[i].aggregate);
 		}
 	}
 
