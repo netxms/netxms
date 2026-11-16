@@ -975,6 +975,7 @@ InterfaceList *AgentConnection::parseInterfaceTable(Table *data)
    int cIPList = data->getColumnIndex(_T("IP_ADDRESSES"));
    int cSpeed = data->getColumnIndex(_T("SPEED"));
    int cMaxSpeed = data->getColumnIndex(_T("MAX_SPEED"));
+   int cAggregate = data->getColumnIndex(_T("AGGREGATE"));
 
    if ((cIndex == -1) || (cName == -1) || (cMAC == -1) || (cIPList == -1))
       return nullptr;
@@ -998,6 +999,7 @@ InterfaceList *AgentConnection::parseInterfaceTable(Table *data)
          iface->speed = data->getAsUInt64(i, cSpeed);
       if (cMaxSpeed != -1)
          iface->maxSpeed = data->getAsUInt64(i, cMaxSpeed);
+      iface->aggregateIndex = (cAggregate != -1) ? data->getAsUInt(i, cAggregate) : AGGREGATE_INDEX_UNKNOWN;
       StrToBin(data->getAsString(i, cMAC, _T("000000000000")), iface->macAddr, MAC_ADDR_LENGTH);
 
       StringBuffer::split(data->getAsString(i, cIPList, _T("")), _T(","), true,
@@ -1058,6 +1060,7 @@ InterfaceList *AgentConnection::parseInterfaceList(StringList *data)
       if (iface == nullptr)
       {
          iface = new InterfaceInfo(ifIndex);
+         iface->aggregateIndex = AGGREGATE_INDEX_UNKNOWN;   // list format does not carry link aggregation membership
          newInterface = true;
       }
 

@@ -477,6 +477,7 @@ struct LinuxInterfaceInfo
    int index;
    int type;
    int mtu;
+   int master;    // index of master interface (bond, team, bridge, etc.) or 0 if interface is not enslaved
    BYTE macAddr[8];
    char name[IFNAMSIZ];
    char alias[256];
@@ -488,6 +489,7 @@ struct LinuxInterfaceInfo
       index = 0;
       type = IFTYPE_OTHER;
       mtu = 0;
+      master = 0;
       memset(macAddr, 0, sizeof(macAddr));
       name[0] = 0;
       alias[0] = 0;
@@ -500,6 +502,7 @@ struct LinuxInterfaceInfo
 static LinuxInterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
 {
    LinuxInterfaceInfo *ifInfo = new LinuxInterfaceInfo();
+   bool linkAggregation = false;
 
    auto interface = reinterpret_cast<ifinfomsg*>(NLMSG_DATA(messageHeader));
    int len = messageHeader->nlmsg_len - NLMSG_LENGTH(sizeof(struct ifinfomsg));
@@ -523,6 +526,24 @@ static LinuxInterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
          case IFLA_IFALIAS:
             strlcpy(ifInfo->alias, (char *)RTA_DATA(attribute), sizeof(ifInfo->alias));
             break;
+         case IFLA_MASTER:
+            if (RTA_PAYLOAD(attribute) >= sizeof(int))
+               memcpy(&ifInfo->master, RTA_DATA(attribute), sizeof(int));
+            break;
+         case IFLA_LINKINFO:
+            {
+               int nestedLen = static_cast<int>(RTA_PAYLOAD(attribute));
+               for(struct rtattr *nested = static_cast<struct rtattr*>(RTA_DATA(attribute)); RTA_OK(nested, nestedLen); nested = RTA_NEXT(nested, nestedLen))
+               {
+                  if (nested->rta_type == IFLA_INFO_KIND)
+                  {
+                     char kind[32];
+                     strlcpy(kind, static_cast<char*>(RTA_DATA(nested)), std::min(sizeof(kind), static_cast<size_t>(RTA_PAYLOAD(nested)) + 1));
+                     linkAggregation = !strcmp(kind, "bond") || !strcmp(kind, "team");
+                  }
+               }
+            }
+            break;
       }
    }
 
@@ -537,6 +558,8 @@ static LinuxInterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
          break;
       }
    }
+   if (linkAggregation)
+      ifInfo->type = IFTYPE_IEEE8023ADLAG;
    return ifInfo;
 }
 
@@ -814,6 +837,7 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
    value->addColumn(_T("PEER_IP"), DCI_DT_STRING, _T("Peer IP addresses"));
    value->addColumn(_T("SPEED"), DCI_DT_UINT64, _T("Speed"));
    value->addColumn(_T("MAX_SPEED"), DCI_DT_UINT64, _T("Max speed"));
+   value->addColumn(_T("AGGREGATE"), DCI_DT_UINT, _T("Aggregate interface index"));
 
    TCHAR macAddr[32];
    for(int i = 0; i < ifList->size(); i++)
@@ -864,6 +888,23 @@ LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCo
          value->set(8, speed);
          value->set(9, maxSpeed);
       }
+
+      // Master interface is reported as aggregate only if it is bond or team (it can also be bridge, VRF, etc.)
+      uint32_t aggregate = 0;
+      if (iface->master != 0)
+      {
+         for(int j = 0; j < ifList->size(); j++)
+         {
+            LinuxInterfaceInfo *m = ifList->get(j);
+            if (m->index == iface->master)
+            {
+               if (m->type == IFTYPE_IEEE8023ADLAG)
+                  aggregate = static_cast<uint32_t>(m->index);
+               break;
+            }
+         }
+      }
+      value->set(10, aggregate);
    }
 
    delete ifList;
