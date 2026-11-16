@@ -18821,6 +18821,9 @@ components:
         flags:
           type: integer
           description: Element flags.
+        layer:
+          type: string
+          description: Name of the map layer the element belongs to (empty if none).
       required:
         - type
     NetworkMapLink:

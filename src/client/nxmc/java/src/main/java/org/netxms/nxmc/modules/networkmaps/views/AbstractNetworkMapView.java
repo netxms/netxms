@@ -139,6 +139,8 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             LocalizationHelper.getI18n(AbstractNetworkMapView.class).tr("Manhattan")
          };
 
+	protected static final String LAYOUT_SUBMENU_ID = "layout";
+
 	private static final int SELECTION_EMPTY = 0;
 	private static final int SELECTION_MIXED = 1;
 	private static final int SELECTION_OBJECTS = 2;
@@ -209,6 +211,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected Action actionFindObject;
 
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
+   protected final Set<String> hiddenLayers = new HashSet<String>();
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 	protected BendpointEditor bendpointEditor = null;
 	private SessionListener sessionListener;
@@ -313,6 +316,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    {
       // geoViewer lives alongside graphPanel inside a StackLayout on parent
       geoViewer = new org.netxms.nxmc.modules.networkmaps.widgets.GeoNetworkMapViewer(parent, SWT.NONE, this);
+      geoViewer.setHiddenLayers(hiddenLayers);
       applyGeoLinkDefaults();
       geoViewer.setLinkChangeCallback(new FigureChangeCallback() {
          @Override
@@ -815,7 +819,9 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          }
       });
       labelProvider = new MapLabelProvider(viewer);
-		viewer.setContentProvider(new MapContentProvider(viewer, labelProvider));
+      MapContentProvider contentProvider = new MapContentProvider(viewer, labelProvider);
+      contentProvider.setHiddenLayers(hiddenLayers);
+		viewer.setContentProvider(contentProvider);
 		viewer.setLabelProvider(labelProvider);
       viewer.setBackgroundColor(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND).getRGB());
 
@@ -1620,7 +1626,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	 */
 	protected IContributionItem createLayoutSubmenu()
 	{
-      MenuManager layout = new MenuManager(i18n.tr("&Layout"));
+      MenuManager layout = new MenuManager(i18n.tr("&Layout"), LAYOUT_SUBMENU_ID);
 		if (allowManualLayout)
 		{
 			layout.add(actionEnableAutomaticLayout);
@@ -1778,6 +1784,9 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                case SELECTION_LINKS:
                   fillLinkContextMenu(this);
                   break;
+               case SELECTION_MIXED:
+                  fillMixedContextMenu(this);
+                  break;
             }
          }
       };
@@ -1853,11 +1862,23 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                case SELECTION_LINKS:
                   fillLinkContextMenu(this);
                   break;
+               case SELECTION_MIXED:
+                  fillMixedContextMenu(this);
+                  break;
             }
          }
       };
       Menu menu = menuMgr.createContextMenu(geoViewer);
       geoViewer.setMenu(menu);
+   }
+
+   /**
+    * Fill context menu for selection containing elements of different kinds (objects, decorations, links).
+    *
+    * @param manager menu manager
+    */
+   protected void fillMixedContextMenu(IMenuManager manager)
+   {
    }
 
    /**

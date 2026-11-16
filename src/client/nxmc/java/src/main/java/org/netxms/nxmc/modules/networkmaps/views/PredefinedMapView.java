@@ -32,6 +32,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -201,6 +202,9 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    @Override
    protected void onObjectChange(final AbstractObject object)
    {
+      hiddenLayers.clear();
+      hiddenLayers.addAll(PreferenceStore.getInstance().getAsStringList(getGlobalId() + ".hiddenLayers"));
+
       Boolean cachedFlag = readOnlyFlagsCache.get(object.getObjectId());
       actionLock.setChecked(true);
       lockObjectMove(true);
@@ -779,6 +783,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	      }
 	   }
 		super.fillMapContextMenu(manager);
+		manager.insertBefore(LAYOUT_SUBMENU_ID, createLayersSubmenu());
 		manager.add(new Separator());
 		manager.add(actionMapProperties);
 	}
@@ -797,6 +802,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    		if (size >= 2 && getMapObject().getMapType() == MapType.CUSTOM)
    			manager.add(actionAutoLinkNodes);
    		manager.add(actionRemove);
+   		manager.add(createSetLayerSubmenu());
    		manager.add(new Separator());
 	   }
 		super.fillObjectContextMenu(manager, isPartial);
@@ -847,6 +853,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	   if (!readOnly)
 	   {
    		manager.add(actionRemove);
+   		manager.add(createSetLayerSubmenu());
          Object o = currentSelection().getFirstElement();
    		if (o instanceof NetworkMapDCIContainer)
    		{
@@ -870,6 +877,169 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	}
 
    /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillMixedContextMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillMixedContextMenu(IMenuManager manager)
+   {
+      if (!readOnly)
+      {
+         manager.add(actionRemove);
+         manager.add(createSetLayerSubmenu());
+      }
+   }
+
+   /**
+    * Create "Set layer" submenu for currently selected map elements.
+    *
+    * @return submenu
+    */
+   private IMenuManager createSetLayerSubmenu()
+   {
+      final List<NetworkMapElement> elements = new ArrayList<NetworkMapElement>();
+      if (isGeographicalCanvas())
+      {
+         for(Object o : currentSelection().toList())
+            elements.add(mapPage.findObjectElement(((AbstractObject)o).getObjectId()));
+      }
+      else
+      {
+         for(Object o : viewer.getStructuredSelection().toList())
+         {
+            if (o instanceof NetworkMapElement)
+               elements.add((NetworkMapElement)o);
+         }
+      }
+
+      MenuManager menu = new MenuManager(i18n.tr("Set &layer"));
+      for(final String layer : mapPage.getLayers())
+      {
+         Action action = new Action(layer.replace("&", "&&"), Action.AS_CHECK_BOX) {
+            @Override
+            public void run()
+            {
+               setElementLayer(elements, layer);
+            }
+         };
+         action.setChecked(elements.stream().allMatch(e -> e.getLayer().equals(layer)));
+         menu.add(action);
+      }
+      if (!menu.isEmpty())
+         menu.add(new Separator());
+      menu.add(new Action(i18n.tr("&New layer...")) {
+         @Override
+         public void run()
+         {
+            InputDialog dlg = new InputDialog(getWindow().getShell(), i18n.tr("New Layer"), i18n.tr("Layer name"), "",
+                  (text) -> text.trim().isEmpty() ? i18n.tr("Layer name cannot be empty") : null);
+            if (dlg.open() == Window.OK)
+               setElementLayer(elements, dlg.getValue());
+         }
+      });
+      Action actionNoLayer = new Action(i18n.tr("N&o layer")) {
+         @Override
+         public void run()
+         {
+            setElementLayer(elements, "");
+         }
+      };
+      actionNoLayer.setEnabled(elements.stream().anyMatch(e -> !e.getLayer().isEmpty()));
+      menu.add(actionNoLayer);
+      return menu;
+   }
+
+   /**
+    * Put given map elements on given layer and save map.
+    *
+    * @param elements map elements
+    * @param layer layer name (empty string to remove elements from their layers)
+    */
+   private void setElementLayer(List<NetworkMapElement> elements, String layer)
+   {
+      for(NetworkMapElement e : elements)
+         e.setLayer(layer);
+      saveMap();
+      onLayerVisibilityChange();
+   }
+
+   /**
+    * Create "Layers" submenu for controlling layer visibility.
+    *
+    * @return submenu
+    */
+   private IMenuManager createLayersSubmenu()
+   {
+      MenuManager menu = new MenuManager(i18n.tr("La&yers"));
+      menu.setRemoveAllWhenShown(true);
+      menu.addMenuListener((m) -> fillLayersMenu(m));
+      return menu;
+   }
+
+   /**
+    * Fill "Layers" submenu with current map layers.
+    *
+    * @param manager menu manager
+    */
+   private void fillLayersMenu(IMenuManager manager)
+   {
+      final Set<String> layers = (mapPage != null) ? mapPage.getLayers() : new HashSet<String>(0);
+      if (layers.isEmpty())
+      {
+         Action action = new Action(i18n.tr("No layers")) {};
+         action.setEnabled(false);
+         manager.add(action);
+         return;
+      }
+
+      manager.add(new Action(i18n.tr("&Show all")) {
+         @Override
+         public void run()
+         {
+            hiddenLayers.clear();
+            onLayerVisibilityChange();
+         }
+      });
+      manager.add(new Action(i18n.tr("&Hide all")) {
+         @Override
+         public void run()
+         {
+            hiddenLayers.addAll(layers);
+            onLayerVisibilityChange();
+         }
+      });
+      manager.add(new Separator());
+      for(final String layer : layers)
+      {
+         Action action = new Action(layer.replace("&", "&&"), Action.AS_CHECK_BOX) {
+            @Override
+            public void run()
+            {
+               if (isChecked())
+                  hiddenLayers.remove(layer);
+               else
+                  hiddenLayers.add(layer);
+               onLayerVisibilityChange();
+            }
+         };
+         action.setChecked(!hiddenLayers.contains(layer));
+         manager.add(action);
+      }
+   }
+
+   /**
+    * Save hidden layer set and redisplay map content.
+    */
+   private void onLayerVisibilityChange()
+   {
+      hiddenLayers.retainAll(mapPage.getLayers());
+      PreferenceStore.getInstance().set(getGlobalId() + ".hiddenLayers", hiddenLayers);
+      if (isGeographicalCanvas())
+         geoViewer.setContent(mapPage);
+      else
+         viewer.setInput(mapPage);
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillLocalMenu(IMenuManager)
     */
 	@Override
@@ -883,6 +1053,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    		manager.add(new Separator());
 	   }
       super.fillLocalMenu(manager);
+      manager.insertBefore(LAYOUT_SUBMENU_ID, createLayersSubmenu());
 		manager.add(new Separator());
 		manager.add(actionMapProperties);
 	}

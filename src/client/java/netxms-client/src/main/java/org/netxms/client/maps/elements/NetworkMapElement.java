@@ -27,7 +27,7 @@ public class NetworkMapElement
 {
    //Element flags
    public static final int AUTO_GENERATED = 1;
-   
+
    //Element types
 	public static final int MAP_ELEMENT_GENERIC = 0;
 	public static final int MAP_ELEMENT_OBJECT = 1;
@@ -41,10 +41,11 @@ public class NetworkMapElement
 	protected int x;
 	protected int y;
 	private int flags;
+   private String layer;
 
 	/**
 	 * Factory method for creating map element from NXCP message.
-	 * 
+	 *
 	 * @param msg NXCP message
 	 * @param baseId base variable ID
 	 * @return map element object
@@ -71,7 +72,7 @@ public class NetworkMapElement
 
 	/**
 	 * Create element from NXCP message.
-	 * 
+	 *
 	 * @param msg NXCP message
 	 * @param baseId base variable ID
 	 */
@@ -82,11 +83,12 @@ public class NetworkMapElement
 		x = msg.getFieldAsInt32(baseId + 2);
 		y = msg.getFieldAsInt32(baseId + 3);
 		flags = msg.getFieldAsInt32(baseId + 4);
+      layer = msg.getFieldAsString(baseId + 5);
 	}
-	
+
 	/**
 	 * Create new generic element.
-	 * 
+	 *
 	 * @param id element ID
 	 */
 	public NetworkMapElement(long id)
@@ -96,11 +98,12 @@ public class NetworkMapElement
 		x = 0;
 		y = 0;
 		flags = 0;
+      layer = "";
 	}
-	
+
 	/**
 	 * Fill NXCP message with element data
-	 * 
+	 *
 	 * @param msg NXCP message
 	 * @param baseId base variable ID
 	 */
@@ -111,6 +114,7 @@ public class NetworkMapElement
 		msg.setFieldInt32(baseId + 2, x);
 		msg.setFieldInt32(baseId + 3, y);
 		msg.setFieldInt32(baseId + 4, flags);
+      msg.setField(baseId + 5, layer);
 	}
 
 	/**
@@ -152,10 +156,10 @@ public class NetworkMapElement
 	{
 		return id;
 	}
-	
+
 	/**
 	 * Set elements's location
-	 * 
+	 *
 	 * @param x new X (horizontal) coordinate
 	 * @param y new Y (vertical) coordinate
 	 */
@@ -204,7 +208,7 @@ public class NetworkMapElement
    {
       this.flags = flags;
    }
-   
+
    /**
     * @param flags the flag to be added to current flags
     */
@@ -212,12 +216,32 @@ public class NetworkMapElement
    {
       this.flags |= flags;
    }
-   
+
    /**
     * @param flags the flag
     */
    public void removeFlag(int flags)
    {
       this.flags &= ~flags;
+   }
+
+   /**
+    * Get name of the layer this element belongs to.
+    *
+    * @return layer name (empty string if element is not on any layer)
+    */
+   public String getLayer()
+   {
+      return layer;
+   }
+
+   /**
+    * Set name of the layer this element belongs to.
+    *
+    * @param layer layer name (empty string or null to remove element from layer)
+    */
+   public void setLayer(String layer)
+   {
+      this.layer = (layer != null) ? layer.trim() : "";
    }
 }

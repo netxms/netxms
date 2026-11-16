@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 
@@ -45,7 +46,7 @@ public class NetworkMapPage
 
 	/**
 	 * Create empty named page.
-	 * 
+	 *
 	 * @param id page ID
 	 */
 	public NetworkMapPage(final String id, final long mapObjectId)
@@ -58,7 +59,7 @@ public class NetworkMapPage
 
    /**
     * Create empty named page.
-    * 
+    *
     * @param id page ID
     */
    public NetworkMapPage(final String id)
@@ -68,10 +69,10 @@ public class NetworkMapPage
       nextElementId = 1;
       nextLinkId = 1;
    }
-	
+
 	/**
 	 * Add element to map
-	 * 
+	 *
 	 * @param element element to add
 	 */
 	public void addElement(final NetworkMapElement element)
@@ -94,7 +95,7 @@ public class NetworkMapPage
 
 	/**
 	 * Add link between elements to map
-	 * 
+	 *
 	 * @param link link to add
 	 */
 	public void addLink(final NetworkMapLink link)
@@ -118,7 +119,7 @@ public class NetworkMapPage
 
 	/**
 	 * Add all links from given collection
-	 * 
+	 *
 	 * @param set set of links to add
 	 */
 	public void addAllLinks(Collection<NetworkMapLink> set)
@@ -129,7 +130,7 @@ public class NetworkMapPage
 
 	/**
 	 * Get map element by element ID.
-	 * 
+	 *
 	 * @param elementId element ID
 	 * @param requiredClass optional class filter (set to null to disable filtering)
 	 * @return map element or null
@@ -144,7 +145,7 @@ public class NetworkMapPage
 
 	/**
 	 * Remove element from map
-	 * 
+	 *
 	 * @param elementId map element ID
 	 */
 	public void removeElement(long elementId)
@@ -164,7 +165,7 @@ public class NetworkMapPage
 
 	/**
 	 * Remove map element representing NetXMS object by NetXMS object ID.
-	 * 
+	 *
 	 * @param objectId NetXMS object ID
 	 */
 	public void removeObjectElement(long objectId)
@@ -190,7 +191,7 @@ public class NetworkMapPage
 
 	/**
 	 * Remove link between objects
-	 * 
+	 *
 	 * @param link link to be removed
 	 */
 	public void removeLink(NetworkMapLink link)
@@ -200,7 +201,7 @@ public class NetworkMapPage
 
    /**
     * Remove link between objects
-    * 
+    *
     * @param id link ID
     */
    public void removeLink(long id)
@@ -250,7 +251,7 @@ public class NetworkMapPage
 
 	/**
 	 * Get IDs of all objects on map
-	 * 
+	 *
 	 * @return IDs of all objects on map
 	 */
 	public List<Long> getObjectIds()
@@ -266,7 +267,7 @@ public class NetworkMapPage
 
    /**
     * Get all object elements
-    * 
+    *
     * @return all object elements
     */
    public List<NetworkMapElement> getObjectElements()
@@ -279,20 +280,20 @@ public class NetworkMapPage
       }
       return objects;
    }
-   
+
 	/**
 	 * Create new unique element ID
-	 * 
+	 *
 	 * @return new unique element ID
 	 */
 	public long createElementId()
 	{
 		return nextElementId++;
 	}
-	
+
    /**
     * Create new unique link ID
-    * 
+    *
     * @return new unique link ID
     */
    public long createLinkId()
@@ -302,7 +303,7 @@ public class NetworkMapPage
 
 	/**
     * Find object element by NetXMS object ID.
-    * 
+    *
     * @param objectId NetXMS object ID
     * @return object element or null
     */
@@ -313,13 +314,13 @@ public class NetworkMapPage
 				return (NetworkMapObject)e;
 		return null;
 	}
-	
+
 	/**
 	 * Find links from source to destination
-	 * 
+	 *
 	 * @param source source element
 	 * @param destination destination element
-	 * @return link between source and destination or null if there are no such link 
+	 * @return link between source and destination or null if there are no such link
 	 */
 	public List<NetworkMapLink> findLinks(NetworkMapElement source, NetworkMapElement destination)
 	{
@@ -332,7 +333,7 @@ public class NetworkMapPage
 
 	/**
 	 * Find all links using given object as status source
-	 * 
+	 *
 	 * @param objectId status source object id
 	 * @return list of link using this object
 	 */
@@ -382,7 +383,7 @@ public class NetworkMapPage
 
    /**
     * Get all object used as status source for links
-    * 
+    *
     * @return set of status source objects
     */
    public Set<Long> getAllLinkStatusObjects()
@@ -402,7 +403,7 @@ public class NetworkMapPage
 
 	/**
 	 * Checks if two objects are connected
-	 * 
+	 *
 	 * @param elementId1 ID of first map element
 	 * @param elementId2 ID of second map element
 	 * @return true if given elements are connected
@@ -415,7 +416,7 @@ public class NetworkMapPage
 				return true;
 		return false;
 	}
-	
+
 	/**
 	 * Get objects and links in one array
 	 * @return Objects and links in one array
@@ -424,7 +425,7 @@ public class NetworkMapPage
 	{
 		Object[] list = new Object[elements.size() + links.size()];
 		int i = 0;
-		
+
 		for(NetworkMapElement e : elements.values())
 			list[i++] = e;
       for(NetworkMapLink l : links.values())
@@ -441,7 +442,7 @@ public class NetworkMapPage
 	public NetworkMapElement[] getConnectedElements(long root)
 	{
 		Set<NetworkMapElement> result = new HashSet<NetworkMapElement>(0);
-		
+
       for(NetworkMapLink link : links.values())
 		{
 			if (link.getElement1() == root)
@@ -457,7 +458,7 @@ public class NetworkMapPage
 
    /**
     * Update existing on the map element
-    * 
+    *
     * @param element element with data to update
     * @return true if element updated, false if element not found
     */
@@ -469,6 +470,22 @@ public class NetworkMapPage
          return true;
       }
       return false;
+   }
+
+   /**
+    * Get names of all layers used by elements of this page.
+    *
+    * @return sorted set of layer names
+    */
+   public Set<String> getLayers()
+   {
+      Set<String> layers = new TreeSet<String>();
+      for(NetworkMapElement e : elements.values())
+      {
+         if (!e.getLayer().isEmpty())
+            layers.add(e.getLayer());
+      }
+      return layers;
    }
 
    /**
@@ -491,6 +508,6 @@ public class NetworkMapPage
             return l;
       }
       return null;
-      
+
    }
 }

@@ -193,6 +193,16 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
    }
 
    /**
+    * Set layers whose elements are not displayed. Takes effect on next {@link #setContent(NetworkMapPage)}.
+    *
+    * @param hiddenLayers names of hidden layers
+    */
+   public void setHiddenLayers(Set<String> hiddenLayers)
+   {
+      this.hiddenLayers = hiddenLayers;
+   }
+
+   /**
     * Set map content. Elements without a resolvable object or geolocation are
     * kept in the page but not rendered; callers can surface the hidden count
     * via {@link #getUnplacedObjectCount()}.
@@ -521,6 +531,7 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
    // element id (cheap) instead of resolving link.getElement() through the
    // page's getElement() + instanceof + getObjectId() chain on every paint.
    private final Map<Long, Long> objectIdByElementId = new HashMap<>();
+   private Set<String> hiddenLayers = new HashSet<>(0);
 
    private void rebuildObjectList()
    {
@@ -535,7 +546,7 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
       NXCSession session = Registry.getSession();
       for(NetworkMapElement element : content.getElements())
       {
-         if (!(element instanceof NetworkMapObject))
+         if (!(element instanceof NetworkMapObject) || hiddenLayers.contains(element.getLayer()))
             continue;
          long objectId = ((NetworkMapObject)element).getObjectId();
          AbstractObject o = session.findObjectById(objectId);

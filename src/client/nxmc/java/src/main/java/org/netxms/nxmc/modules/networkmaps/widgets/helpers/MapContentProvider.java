@@ -62,6 +62,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
    private int parallelLinkMergeThreshold;
    private Map<Long, List<NetworkMapLink>> displayLinksBySource = new HashMap<Long, List<NetworkMapLink>>();
    private Map<Long, ParallelLinkGroup> groupByMemberId = new HashMap<Long, ParallelLinkGroup>();
+   private Set<String> hiddenLayers = new HashSet<String>(0);
 
 	/**
 	 * Constructor
@@ -192,7 +193,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 
 		List<NetworkMapElement> elements = new ArrayList<NetworkMapElement>(((NetworkMapPage)inputElement).getElements().size());
 		for(NetworkMapElement e : ((NetworkMapPage)inputElement).getElements())
-			if (!(e instanceof NetworkMapDecoration) && !(e instanceof NetworkMapDCIContainer) && !(e instanceof NetworkMapDCIImage) && !(e instanceof NetworkMapTextBox))
+			if (!(e instanceof NetworkMapDecoration) && !(e instanceof NetworkMapDCIContainer) && !(e instanceof NetworkMapDCIImage) && !(e instanceof NetworkMapTextBox) && !hiddenLayers.contains(e.getLayer()))
 				elements.add(e);
 		return elements.toArray();
 	}
@@ -224,6 +225,16 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
    public void setParallelLinkMergeThreshold(int threshold)
    {
       parallelLinkMergeThreshold = threshold;
+   }
+
+   /**
+    * Set layers whose elements are not displayed. Takes effect on next input change.
+    *
+    * @param hiddenLayers names of hidden layers
+    */
+   public void setHiddenLayers(Set<String> hiddenLayers)
+   {
+      this.hiddenLayers = hiddenLayers;
    }
 
    /**
@@ -346,8 +357,8 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 		List<NetworkMapElement> elements = new ArrayList<NetworkMapElement>(((NetworkMapPage)inputElement).getElements().size());
 		for(NetworkMapElement e : ((NetworkMapPage)inputElement).getElements())
       {
-			if ((e instanceof NetworkMapDecoration) || (e instanceof NetworkMapDCIContainer) ||
-			    (e instanceof NetworkMapDCIImage) || (e instanceof NetworkMapTextBox))
+			if (((e instanceof NetworkMapDecoration) || (e instanceof NetworkMapDCIContainer) ||
+			    (e instanceof NetworkMapDCIImage) || (e instanceof NetworkMapTextBox)) && !hiddenLayers.contains(e.getLayer()))
          {
 				elements.add(e);
          }

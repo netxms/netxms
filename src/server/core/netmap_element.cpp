@@ -43,7 +43,7 @@ NetworkMapElement::NetworkMapElement(uint32_t id, uint32_t flags)
 /**
  * Copy constructor
  */
-NetworkMapElement::NetworkMapElement(const NetworkMapElement &src)
+NetworkMapElement::NetworkMapElement(const NetworkMapElement &src) : m_layer(src.m_layer)
 {
    m_id = src.m_id;
    m_type = src.m_type;
@@ -55,7 +55,7 @@ NetworkMapElement::NetworkMapElement(const NetworkMapElement &src)
 /**
  * Generic element config constructor
  */
-NetworkMapElement::NetworkMapElement(uint32_t id, json_t *config, uint32_t flags)
+NetworkMapElement::NetworkMapElement(uint32_t id, json_t *config, uint32_t flags) : m_layer(json_object_get_string_utf8(config, "layer", ""), "utf8")
 {
 	m_id = id;
 	m_type = json_object_get_int32(config, "type", MAP_ELEMENT_GENERIC);
@@ -67,7 +67,7 @@ NetworkMapElement::NetworkMapElement(uint32_t id, json_t *config, uint32_t flags
 /**
  * Generic element NXCP constructor
  */
-NetworkMapElement::NetworkMapElement(const NXCPMessage& msg, uint32_t baseId)
+NetworkMapElement::NetworkMapElement(const NXCPMessage& msg, uint32_t baseId) : m_layer(msg.getFieldAsString(baseId + 5), -1, Ownership::True)
 {
 	m_id = msg.getFieldAsUInt32(baseId);
 	m_type = msg.getFieldAsInt16(baseId + 1);
@@ -91,6 +91,7 @@ void NetworkMapElement::updateConfig(json_t *config)
    json_object_set_new(config, "type", json_integer(m_type));
    json_object_set_new(config, "posX", json_integer(m_posX));
    json_object_set_new(config, "posY", json_integer(m_posY));
+   json_object_set_new(config, "layer", json_string_w(m_layer));
 }
 
 /**
@@ -103,6 +104,7 @@ void NetworkMapElement::fillMessage(NXCPMessage *msg, uint32_t baseId)
 	msg->setField(baseId + 2, (uint32_t)m_posX);
 	msg->setField(baseId + 3, (uint32_t)m_posY);
    msg->setField(baseId + 4, m_flags);
+   msg->setField(baseId + 5, m_layer);
 }
 
 /**
@@ -133,6 +135,7 @@ json_t *NetworkMapElement::toJson() const
    json_object_set_new(root, "posX", json_integer(m_posX));
    json_object_set_new(root, "posY", json_integer(m_posY));
    json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "layer", json_string_w(m_layer));
    return root;
 }
 

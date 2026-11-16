@@ -198,6 +198,7 @@ protected:
    int32_t m_posX;
    int32_t m_posY;
    uint32_t m_flags;
+   String m_layer;
 
    NetworkMapElement(const NetworkMapElement& src);
 
@@ -218,6 +219,7 @@ public:
    int32_t getPosX() const { return m_posX; }
    int32_t getPosY() const { return m_posY; }
    uint32_t getFlags() const { return m_flags; }
+   const String& getLayer() const { return m_layer; }
 
 	void setPosition(int32_t x, int32_t y);
 };
