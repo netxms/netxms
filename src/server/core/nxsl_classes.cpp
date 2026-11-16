@@ -8691,7 +8691,7 @@ NXSL_METHOD_DEFINITION(DCI, forcePoll)
 
 /**
  * DCI::generateAnomalyProfile() method
- * Triggers asynchronous generation of AI-based anomaly detection profile
+ * Starts new baseline for anomaly detection and triggers asynchronous regeneration of anomaly profile
  */
 NXSL_METHOD_DEFINITION(DCI, generateAnomalyProfile)
 {
@@ -8701,7 +8701,7 @@ NXSL_METHOD_DEFINITION(DCI, generateAnomalyProfile)
       *result = vm->createValue(false);
       return 0;
    }
-   GenerateAnomalyProfileAsync(dci->getId(), dci->getOwnerId());
+   RegenerateAnomalyProfileAsync(dci->getId(), dci->getOwnerId());
    *result = vm->createValue(true);
    return 0;
 }
@@ -8812,16 +8812,13 @@ NXSL_METHOD_DEFINITION(DCI, getValuesAsDataPoints)
 }
 
 /**
- * DCI::detectAnomalies(timeFrom, [timeTo], [threshold]) method
+ * DCI::detectAnomalies(timeFrom, [timeTo], [labels]) method
+ * See DetectAnomaliesForNXSL for description of arguments and return value
  */
 NXSL_METHOD_DEFINITION(DCI, detectAnomalies)
 {
    if ((argc < 1) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
-   if (!argv[0]->isInteger() || ((argc > 1) && !argv[1]->isInteger()))
-      return NXSL_ERR_NOT_INTEGER;
-   if ((argc > 2) && !argv[2]->isNumeric())
-      return NXSL_ERR_NOT_NUMBER;
 
    const DCObjectInfo *info = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
    shared_ptr<DataCollectionTarget> target;
@@ -8831,11 +8828,7 @@ NXSL_METHOD_DEFINITION(DCI, detectAnomalies)
       *result = vm->createValue();
       return 0;
    }
-   time_t timeFrom = static_cast<time_t>(argv[0]->getValueAsInt64());
-   time_t timeTo = (argc > 1) ? static_cast<time_t>(argv[1]->getValueAsInt64()) : time(nullptr);
-   double threshold = (argc > 2) ? argv[2]->getValueAsReal() : 0.75;
-   *result = DetectAnomaliesForNXSL(vm, *target, dci->getId(), timeFrom, timeTo, threshold);
-   return 0;
+   return DetectAnomaliesForNXSL(vm, *target, dci->getId(), argc, argv, result);
 }
 
 /**
@@ -9111,48 +9104,6 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("userTag"))
    {
       value = vm->createValue(dci->getUserTag());
-   }
-   return value;
-}
-
-/**
- * Implementation of "ScoredDciValue" class: constructor
- */
-NXSL_ScoredDciValueClass::NXSL_ScoredDciValueClass() : NXSL_Class()
-{
-   setName(_T("ScoredDciValue"));
-}
-
-/**
- * Object destructor for ScoredDciValue
- */
-void NXSL_ScoredDciValueClass::onObjectDelete(NXSL_Object *object)
-{
-   delete static_cast<ScoredDciValue*>(object->getData());
-}
-
-/**
- * Implementation of "ScoredDciValue" class: get attribute
- */
-NXSL_Value *NXSL_ScoredDciValueClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
-{
-   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
-   if (value != nullptr)
-      return value;
-
-   NXSL_VM *vm = object->vm();
-   const ScoredDciValue *v = static_cast<ScoredDciValue*>(object->getData());
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("score"))
-   {
-      value = vm->createValue(v->score);
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("timestamp"))
-   {
-      value = vm->createValue(v->timestamp);
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("value"))
-   {
-      value = vm->createValue(v->value);
    }
    return value;
 }
@@ -12272,7 +12223,6 @@ NXSL_PowerDomainClass g_nxslPowerDomainClass;
 NXSL_RackClass g_nxslRackClass;
 NXSL_RoomClass g_nxslRoomClass;
 NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
-NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 NXSL_SensorClass g_nxslSensorClass;
 NXSL_CloudDomainClass g_nxslCloudDomainClass;
 NXSL_ResourceClass g_nxslResourceClass;

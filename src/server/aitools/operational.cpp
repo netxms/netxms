@@ -611,7 +611,7 @@ static int CollectAnomalies(uint32_t userId, const NetObj *scope, bool includeQu
             if (dco->getType() != DCO_TYPE_ITEM)
                return false;
             DCItem *dci = static_cast<DCItem*>(dco);
-            return dci->isAnomalyDetected() || dci->isAnomalyDetectedAI();
+            return dci->isAnomalyDetected();
          }, userId);
 
       for(int j = 0; j < anomalies.size(); j++)
@@ -638,14 +638,15 @@ static int CollectAnomalies(uint32_t userId, const NetObj *scope, bool includeQu
          if (!userTag.isEmpty())
             json_object_set_new(entry, "tag", json_string_t(userTag.cstr()));
 
-         const char *detectedBy;
-         if (dci->isAnomalyDetected() && dci->isAnomalyDetectedAI())
-            detectedBy = "both";
-         else if (dci->isAnomalyDetectedAI())
-            detectedBy = "ai";
-         else
-            detectedBy = "statistical";
-         json_object_set_new(entry, "detected_by", json_string(detectedBy));
+         static const char *anomalyTypes[] = { "none", "range", "step", "drift" };
+         AnomalyScore score = dci->getAnomalyScore();
+         json_object_set_new(entry, "anomaly_type", json_string(anomalyTypes[static_cast<int>(score.type)]));
+         json_object_set_new(entry, "score", json_real(score.score));
+         if (score.scored)
+         {
+            json_object_set_new(entry, "expected_low", json_real(score.expectedLow));
+            json_object_set_new(entry, "expected_high", json_real(score.expectedHigh));
+         }
 
          ItemValue *lastValue = dci->getInternalLastValue();
          if (lastValue != nullptr)

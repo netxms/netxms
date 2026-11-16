@@ -125,6 +125,7 @@ bool SaveFirstFreeDCIId(DB_HANDLE hdb);
 #define DEBUG_TAG_BIZSVC            _T("bizsvc")
 #define DEBUG_TAG_CONF_POLL         _T("poll.conf")
 #define DEBUG_TAG_DC_AGENT          _T("dc.agent")
+#define DEBUG_TAG_DC_ANOMALY        _T("dc.anomaly")
 #define DEBUG_TAG_DC_CACHE          _T("dc.cache")
 #define DEBUG_TAG_DC_COLLECTOR      _T("dc.collector")
 #define DEBUG_TAG_DC_EIP            _T("dc.eip")
@@ -718,6 +719,7 @@ private:
 	void deleteDCIEntry(const NXCPMessage& request);
 	void forceDCIPoll(const NXCPMessage& request);
    void recalculateDCIValues(const NXCPMessage& request);
+   void regenerateAnomalyProfile(const NXCPMessage& request);
    void changeDCIStatus(const NXCPMessage& request);
    void getDataCollectionSummary(const NXCPMessage& request);
    void getReconciliationStatus(const NXCPMessage& request);

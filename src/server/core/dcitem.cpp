@@ -199,12 +199,25 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
    m_prevDeltaValue = shadowCopy ? src->m_prevDeltaValue : 0;
    m_cacheLoaded = shadowCopy ? src->m_cacheLoaded : false;
    m_anomalyDetected = shadowCopy ? src->m_anomalyDetected : false;
-   m_anomalyDetectedAI = shadowCopy ? src->m_anomalyDetectedAI : false;
-   m_anomalyProfile = (src->m_anomalyProfile != nullptr) ? json_deep_copy(src->m_anomalyProfile) : nullptr;
-   m_anomalyProfileTimestamp = src->m_anomalyProfileTimestamp;
-   m_sustainedHighStart = 0;
-   m_sustainedLowStart = 0;
-   m_recentAverage = std::nan("");
+   m_anomalySettings = src->m_anomalySettings;
+   if (shadowCopy)
+   {
+      m_anomalyModel = src->m_anomalyModel;
+      m_anomalyTuning = json_incref(src->m_anomalyTuning);
+      m_anomalyProfileTimestamp = src->m_anomalyProfileTimestamp;
+      m_anomalyBaselineStart = src->m_anomalyBaselineStart;
+      m_anomalyState = src->m_anomalyState;
+      m_anomalyScore = src->m_anomalyScore;
+      m_anomalyScoreTimestamp = src->m_anomalyScoreTimestamp;
+   }
+   else
+   {
+      m_anomalyTuning = nullptr;
+      m_anomalyProfileTimestamp = 0;
+      m_anomalyBaselineStart = 0;
+      clearAnomalyScore();
+   }
+   updateAnomalyEffectiveSettings();
    m_aiHint = src->m_aiHint;
 	m_multiplier = src->m_multiplier;
 	m_unitName = src->m_unitName;
@@ -248,7 +261,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
  *    all_rearmed_event,transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context,
  *    anomaly_profile,anomaly_profile_timestamp,ai_hint,
  *    aggregation_disabled,hourly_retention,daily_retention,aggregation_watermark,
- *    mapping_table_id,snmp_agent_name
+ *    mapping_table_id,snmp_agent_name,anomaly_settings,anomaly_baseline_start
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -305,13 +318,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_userTag = DBGetFieldAsSharedString(hResult, row, 41);
    m_thresholdDisableEndTime = DBGetFieldTime(hResult, row, 42);
    m_snmpContext = DBGetFieldAsSharedString(hResult, row, 43);
-   m_anomalyProfile = DBGetFieldJson(hResult, row, 44);
-   m_anomalyProfileTimestamp = static_cast<time_t>(DBGetFieldInt64(hResult, row, 45));
-   m_sustainedHighStart = 0;
-   m_sustainedLowStart = 0;
-   m_recentAverage = std::nan("");
    m_aiHint = DBGetFieldAsSharedString(hResult, row, 46);
-   m_anomalyDetectedAI = false;
    m_aggregationDisabled = (DBGetFieldLong(hResult, row, 47) != 0);
    m_hourlyRetention = DBGetFieldInt32(hResult, row, 48);
    m_dailyRetention = DBGetFieldInt32(hResult, row, 49);
@@ -319,12 +326,22 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_mappingTableId = DBGetFieldUInt32(hResult, row, 51);
    m_snmpAgentName = DBGetFieldAsSharedString(hResult, row, 52);
 
+   json_t *anomalySettings = DBGetFieldJson(hResult, row, 53);
+   m_anomalySettings = AnomalySettings(anomalySettings);
+   json_decref(anomalySettings);
+   m_anomalyBaselineStart = static_cast<time_t>(DBGetFieldInt64(hResult, row, 54));
+   m_anomalyTuning = nullptr;
+   clearAnomalyScore();
+   json_t *anomalyProfile = DBGetFieldJson(hResult, row, 44);
+   setAnomalyProfileFromJson(anomalyProfile, static_cast<time_t>(DBGetFieldInt64(hResult, row, 45)));
+   json_decref(anomalyProfile);
+
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
 
    // Load last raw value from database
    DB_STATEMENT hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_DCI_RAW_VALUE,
-         L"SELECT raw_value,last_poll_time,anomaly_detected FROM raw_dci_values WHERE item_id=?");
+         L"SELECT raw_value,last_poll_time,anomaly_detected,anomaly_state FROM raw_dci_values WHERE item_id=?");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -337,6 +354,9 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
             m_prevRawValue = DBGetField(hTempResult, 0, 0, buffer, MAX_DB_STRING);
             m_prevValueTimeStamp = DBGetFieldTimestamp(hTempResult, 0, 1);
             m_anomalyDetected = (DBGetFieldInt32(hTempResult, 0, 2) != 0);
+            json_t *anomalyState = DBGetFieldJson(hTempResult, 0, 3);
+            m_anomalyState.loadFromJson(anomalyState);
+            json_decref(anomalyState);
             m_lastPollTime = m_lastValueTimestamp = m_prevValueTimeStamp;
          }
          DBFreeResult(hTempResult);
@@ -370,12 +390,10 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
-   m_anomalyDetectedAI = false;
-   m_anomalyProfile = nullptr;
+   m_anomalyTuning = nullptr;
    m_anomalyProfileTimestamp = 0;
-   m_sustainedHighStart = 0;
-   m_sustainedLowStart = 0;
-   m_recentAverage = std::nan("");
+   m_anomalyBaselineStart = 0;
+   clearAnomalyScore();
 	m_multiplier = 0;
 	m_mappingTableId = 0;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
@@ -388,6 +406,7 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
 	m_dailyRetention = 0;
 	m_aggregationWatermark = 0;
 
+   updateAnomalyEffectiveSettings();
    updateCacheSizeInternal(false);
 }
 
@@ -407,12 +426,10 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
-   m_anomalyDetectedAI = false;
-   m_anomalyProfile = nullptr;
+   m_anomalyTuning = nullptr;
    m_anomalyProfileTimestamp = 0;
-   m_sustainedHighStart = 0;
-   m_sustainedLowStart = 0;
-   m_recentAverage = std::nan("");
+   m_anomalyBaselineStart = 0;
+   clearAnomalyScore();
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
 	m_mappingTableId = config->getSubEntryValueAsUInt(_T("mappingTableId"));
 	m_snmpRawValueType = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpRawValueType")));
@@ -430,6 +447,11 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
 		m_flags |= DCF_ALL_THRESHOLDS;
 	if (config->getSubEntryValueAsInt(_T("rawValueInOctetString")))
 		m_flags |= DCF_RAW_VALUE_OCTET_STRING;
+
+   // In oldest format same bits were used for schedule and retention type
+   if (config->findEntry(L"retentionType") != nullptr)
+      normalizeAnomalyDetectionFlags();
+   updateAnomalyEffectiveSettings();
 
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
 	if (thresholdsRoot != nullptr)
@@ -465,12 +487,10 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, Impor
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
-   m_anomalyDetectedAI = false;
-   m_anomalyProfile = nullptr;
+   m_anomalyTuning = nullptr;
    m_anomalyProfileTimestamp = 0;
-   m_sustainedHighStart = 0;
-   m_sustainedLowStart = 0;
-   m_recentAverage = std::nan("");
+   m_anomalyBaselineStart = 0;
+   clearAnomalyScore();
    m_multiplier = json_object_get_int32(json, "multiplier");
    m_mappingTableId = ResolveImportedMappingTableId(json, context);
    m_snmpRawValueType = static_cast<uint16_t>(json_object_get_int32(json, "snmpRawValueType"));
@@ -486,6 +506,10 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, Impor
    _tcslcpy(m_predictionEngine, predictionEngine, MAX_NPE_NAME_LEN);
 
    m_unitName = ImportedUnitName(json_object_get_string(json, "unitName", _T("")));
+
+   m_anomalySettings = AnomalySettings(json_object_get(json, "anomalySettings"));
+   normalizeAnomalyDetectionFlags();
+   updateAnomalyEffectiveSettings();
 
    json_t *thresholdsArray = json_object_get(json, "thresholds");
    if (json_is_array(thresholdsArray))
@@ -517,7 +541,7 @@ DCItem::~DCItem()
 {
 	delete m_thresholds;
    clearCache();
-   json_decref(m_anomalyProfile);
+   json_decref(m_anomalyTuning);
 }
 
 /**
@@ -614,7 +638,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       L"grace_period_start", L"related_object", L"polling_interval_src", L"retention_time_src",
       L"polling_schedule_type", L"retention_type", L"snmp_version", L"state_flags", L"all_rearmed_event",
       L"transformed_datatype", L"user_tag", L"thresholds_disable_end_time", L"snmp_context",
-      L"anomaly_profile", L"anomaly_profile_timestamp", L"ai_hint",
+      L"anomaly_settings", L"anomaly_baseline_start", L"anomaly_profile", L"anomaly_profile_timestamp", L"ai_hint",
       L"aggregation_disabled", L"hourly_retention", L"daily_retention", L"aggregation_watermark",
       L"mapping_table_id", L"snmp_agent_name", nullptr
    };
@@ -674,19 +698,21 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 42, DB_SQLTYPE_VARCHAR, m_userTag, DB_BIND_STATIC, MAX_DCI_TAG_LENGTH - 1);
    DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_thresholdDisableEndTime));
    DBBind(hStmt, 44, DB_SQLTYPE_VARCHAR, m_snmpContext, DB_BIND_STATIC);
-   DBBind(hStmt, 45, DB_SQLTYPE_TEXT, m_anomalyProfile, DB_BIND_STATIC);
-   DBBind(hStmt, 46, DB_SQLTYPE_BIGINT, static_cast<int64_t>(m_anomalyProfileTimestamp));
-   DBBind(hStmt, 47, DB_SQLTYPE_VARCHAR, m_aiHint, DB_BIND_STATIC, 2000);
+   DBBind(hStmt, 45, DB_SQLTYPE_TEXT, m_anomalySettings.isDefault() ? nullptr : m_anomalySettings.toJson(), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 46, DB_SQLTYPE_BIGINT, static_cast<int64_t>(m_anomalyBaselineStart));
+   DBBind(hStmt, 47, DB_SQLTYPE_TEXT, createAnomalyProfileDocument(), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 48, DB_SQLTYPE_BIGINT, static_cast<int64_t>(m_anomalyProfileTimestamp));
+   DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_aiHint, DB_BIND_STATIC, 2000);
    TCHAR am[2];
    am[0] = m_aggregationDisabled ? '1' : '0';
    am[1] = 0;
-   DBBind(hStmt, 48, DB_SQLTYPE_VARCHAR, am, DB_BIND_STATIC);
-   DBBind(hStmt, 49, DB_SQLTYPE_INTEGER, m_hourlyRetention);
-   DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, m_dailyRetention);
-   DBBind(hStmt, 51, DB_SQLTYPE_BIGINT, m_aggregationWatermark);
-   DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, m_mappingTableId);
-   DBBind(hStmt, 53, DB_SQLTYPE_VARCHAR, m_snmpAgentName, DB_BIND_STATIC, MAX_OBJECT_NAME - 1);
-   DBBind(hStmt, 54, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 50, DB_SQLTYPE_VARCHAR, am, DB_BIND_STATIC);
+   DBBind(hStmt, 51, DB_SQLTYPE_INTEGER, m_hourlyRetention);
+   DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, m_dailyRetention);
+   DBBind(hStmt, 53, DB_SQLTYPE_BIGINT, m_aggregationWatermark);
+   DBBind(hStmt, 54, DB_SQLTYPE_INTEGER, m_mappingTableId);
+   DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_snmpAgentName, DB_BIND_STATIC, MAX_OBJECT_NAME - 1);
+   DBBind(hStmt, 56, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -907,7 +933,8 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
          case ThresholdCheckResult::ACTIVATED:
             {
                shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());
-               EventBuilder(t->getEventCode(), m_ownerId)
+               EventBuilder builder(t->getEventCode(), m_ownerId);
+               builder
                   .dci(m_id)
                   .param(_T("dciName"), m_name)
                   .param(_T("dciDescription"), m_description)
@@ -923,8 +950,9 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
                   .param(_T("instanceValue"), m_instanceDiscoveryData)
                   .param(_T("instanceName"), m_instanceName)
-                  .param(_T("thresholdId"), thresholdId)
-                  .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
+                  .param(_T("thresholdId"), thresholdId);
+               addAnomalyEventParameters(&builder, *t);
+               builder.post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
 
                // Schedule repeat event if interval is configured
                uint32_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<uint32_t>(t->getRepeatInterval());
@@ -973,7 +1001,8 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
             if (resendActivationEvent)
             {
                shared_ptr<DCObject> sharedThis((originalDci != nullptr) ? originalDci : shared_from_this());
-               EventBuilder(t->getEventCode(), m_ownerId)
+               EventBuilder builder(t->getEventCode(), m_ownerId);
+               builder
                   .dci(m_id)
                   .param(_T("dciName"), m_name)
                   .param(_T("dciDescription"), m_description)
@@ -989,8 +1018,9 @@ void DCItem::checkThresholds(ItemValue &value, const shared_ptr<DCObject>& origi
                   .param(_T("thresholdDefinition"), t->getTextualDefinition())
                   .param(_T("instanceValue"), m_instanceDiscoveryData)
                   .param(_T("instanceName"), m_instanceName)
-                  .param(_T("thresholdId"), thresholdId)
-                  .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
+                  .param(_T("thresholdId"), thresholdId);
+               addAnomalyEventParameters(&builder, *t);
+               builder.post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
             }
             // Note: Repeat events are now handled by dedicated timer, not tied to polling
             if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -1039,6 +1069,11 @@ void DCItem::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_MAPPING_TABLE_ID, m_mappingTableId);
    pMsg->setField(VID_DEACTIVATION_EVENT, m_allThresholdsRearmEvent);
    pMsg->setField(VID_AI_HINT, m_aiHint);
+   json_t *anomalySettings = m_anomalySettings.toJson();
+   char *anomalySettingsText = json_dumps(anomalySettings, JSON_COMPACT);
+   pMsg->setFieldFromUtf8String(VID_ANOMALY_SETTINGS, anomalySettingsText);
+   MemFree(anomalySettingsText);
+   json_decref(anomalySettings);
    pMsg->setField(VID_DCI_AGGREGATION_DISABLED, m_aggregationDisabled);
    pMsg->setField(VID_DCI_HOURLY_RETENTION, m_hourlyRetention);
    pMsg->setField(VID_DCI_DAILY_RETENTION, m_dailyRetention);
@@ -1134,6 +1169,17 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 	   m_hourlyRetention = msg.getFieldAsInt32(VID_DCI_HOURLY_RETENTION);
 	if (msg.isFieldExist(VID_DCI_DAILY_RETENTION))
 	   m_dailyRetention = msg.getFieldAsInt32(VID_DCI_DAILY_RETENTION);
+   if (msg.isFieldExist(VID_ANOMALY_SETTINGS))
+   {
+      char *anomalySettingsText = msg.getFieldAsUtf8String(VID_ANOMALY_SETTINGS);
+      json_t *anomalySettings = json_loads(anomalySettingsText, 0, nullptr);
+      if (json_is_object(anomalySettings))
+         m_anomalySettings = AnomalySettings(anomalySettings);
+      json_decref(anomalySettings);
+      MemFree(anomalySettingsText);
+   }
+   normalizeAnomalyDetectionFlags();
+   updateAnomalyEffectiveSettings();
 
    // Update thresholds
    uint32_t numThresholds = msg.getFieldAsUInt32(VID_NUM_THRESHOLDS);
@@ -1332,29 +1378,7 @@ DataCollectionError DCItem::processNewValue(Timestamp timestamp, const wchar_t *
 
    if (timestamp > m_prevValueTimeStamp)
    {
-      if (m_flags & DCF_DETECT_ANOMALIES_IFOREST)
-      {
-         m_anomalyDetected =
-                  IsAnomalousValue(static_cast<DataCollectionTarget&>(*owner), *this, pValue->getDouble(), 0.75, 1, 30, 60) &&
-                  IsAnomalousValue(static_cast<DataCollectionTarget&>(*owner), *this, pValue->getDouble(), 0.75, 7, 10, 60);
-         nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 6, _T("Value %f is %s (isolation forest detector)"), pValue->getDouble(), m_anomalyDetected ? _T("an anomaly") : _T("not an anomaly"));
-      }
-      else
-      {
-         m_anomalyDetected = false;
-      }
-
-      if (m_flags & DCF_DETECT_ANOMALIES_AI)
-      {
-         m_anomalyDetectedAI = checkAnomalyAIProfile(*pValue);
-         nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 6, _T("Value %f is %s (AI detector)"), pValue->getDouble(), m_anomalyDetectedAI ? _T("an anomaly") : _T("not an anomaly"));
-         if (m_anomalyDetectedAI)
-            m_anomalyDetected = true;
-      }
-      else
-      {
-         m_anomalyDetectedAI = false;
-      }
+      checkForAnomaly(timestamp, *pValue);
 
       m_prevRawValue = rawValue;
       m_prevValueTimeStamp = timestamp;
@@ -2484,6 +2508,7 @@ void DCItem::fillLastValueMessage(NXCPMessage *msg)
 void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, const TCHAR *column, const TCHAR *instance)
 {
 	lock();
+   uint32_t recordBaseId = baseId;
    msg->setField(baseId++, m_ownerId);
    msg->setField(baseId++, m_id);
    msg->setField(baseId++, m_name);
@@ -2555,6 +2580,21 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
       msg->setField(baseId++, static_cast<uint16_t>(0));
 	}
 
+   // Anomaly detection state is at fixed offsets after threshold information
+   if (isAnomalyDetectionEnabled())
+   {
+      bool learning = isAnomalyModelLearning();
+      msg->setField(recordBaseId + 39, static_cast<uint16_t>(learning ? AnomalyType::NONE : m_anomalyScore.type));
+      if (!learning && m_anomalyScore.scored)
+      {
+         msg->setField(recordBaseId + 40, m_anomalyScore.score);
+         msg->setField(recordBaseId + 41, m_anomalyScore.expectedLow);
+         msg->setField(recordBaseId + 42, m_anomalyScore.expectedHigh);
+      }
+      msg->setField(recordBaseId + 43, learning);
+      msg->setField(recordBaseId + 44, (m_anomalyModel != nullptr) && (m_anomalyModel->getMode() == AnomalyDetectionMode::RATE));
+   }
+
 	unlock();
 }
 
@@ -2597,6 +2637,8 @@ json_t *DCItem::lastValueToJSON()
    json_object_set_new(data, "noValue", json_boolean(!hasValue()));
    json_object_set_new(data, "comments", json_string_t(m_comments));
    json_object_set_new(data, "anomalyDetected", json_boolean(m_anomalyDetected));
+   if (isAnomalyDetectionEnabled())
+      json_object_set_new(data, "anomaly", anomalyScoreToJson());
    json_object_set_new(data, "userTag", json_string_t(m_userTag));
    json_object_set_new(data, "thresholdDisableEndTime", json_integer(m_thresholdDisableEndTime));
    json_object_set_new(data, "mappingTableId", json_integer(m_mappingTableId));
@@ -3077,6 +3119,8 @@ void DCItem::updateFromTemplate(DCObject *src)
 	m_multiplier = item->m_multiplier;
 	m_unitName = item->m_unitName;
 	m_mappingTableId = item->m_mappingTableId;
+   m_anomalySettings = item->m_anomalySettings;
+   updateAnomalyEffectiveSettings();
 
    // Copy thresholds
    // ***************************
@@ -3183,6 +3227,8 @@ json_t *DCItem::createExportRecord() const
          json_object_set_new(root, "mappingTable", json_string_t(guid.toString()));
    }
    json_object_set_new(root, "allThresholdsRearmEvent", json_integer(m_allThresholdsRearmEvent));
+   if (!m_anomalySettings.isDefault())
+      json_object_set_new(root, "anomalySettings", m_anomalySettings.toJson());
 
    if (!m_transformationScriptSource.isBlank())
    {
@@ -3403,6 +3449,11 @@ void DCItem::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext *c
    m_mappingTableId = config->getSubEntryValueAsUInt(_T("mappingTableId"));
    m_allThresholdsRearmEvent = config->getSubEntryValueAsUInt(_T("allThresholdsRearmEvent"));
 
+   // In oldest format same bits were used for schedule and retention type
+   if (config->findEntry(L"retentionType") != nullptr)
+      normalizeAnomalyDetectionFlags();
+   updateAnomalyEffectiveSettings();
+
    ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
    if (thresholdsRoot != nullptr)
    {
@@ -3443,6 +3494,9 @@ void DCItem::updateFromImport(json_t *json, ImportContext *context)
    m_multiplier = json_object_get_int32(json, "multiplier");
    m_mappingTableId = ResolveImportedMappingTableId(json, context);
    m_allThresholdsRearmEvent = json_object_get_int32(json, "allThresholdsRearmEvent");
+   m_anomalySettings = AnomalySettings(json_object_get(json, "anomalySettings"));
+   normalizeAnomalyDetectionFlags();
+   updateAnomalyEffectiveSettings();
 
    json_t *thresholdsArray = json_object_get(json, "thresholds");
    if (json_is_array(thresholdsArray))
@@ -3502,6 +3556,7 @@ json_t *DCItem::toJson()
    json_object_set_new(root, "predictionEngine", json_string_t(m_predictionEngine));
    json_object_set_new(root, "allThresholdsRearmEvent", json_integer(m_allThresholdsRearmEvent));
    json_object_set_new(root, "aiHint", json_string_t(m_aiHint));
+   json_object_set_new(root, "anomalyDetection", anomalyDetectionToJson());
    json_object_set_new(root, "aggregationDisabled", json_boolean(m_aggregationDisabled));
    json_object_set_new(root, "hourlyRetention", json_integer(m_hourlyRetention));
    json_object_set_new(root, "dailyRetention", json_integer(m_dailyRetention));
@@ -3546,6 +3601,41 @@ uint32_t DCItem::updateFromJSON(json_t *json, bool create)
       unlock();
       return RCC_INVALID_ARGUMENT;
    }
+
+   // Anomaly detection: merge-patch over current settings, "enabled" and "llmTuning" control corresponding flags
+   json_t *anomalyDetection = json_object_get(json, "anomalyDetection");
+   if (json_is_object(anomalyDetection))
+   {
+      uint32_t setFlags = 0, mask = 0;
+      if (!json_object_update_flag(anomalyDetection, "enabled", DCF_DETECT_ANOMALIES_IFOREST, &setFlags, &mask) ||
+          !json_object_update_flag(anomalyDetection, "llmTuning", DCF_DETECT_ANOMALIES_AI, &setFlags, &mask))
+      {
+         unlock();
+         return RCC_INVALID_ARGUMENT;
+      }
+      m_flags = (m_flags & ~mask) | setFlags;
+
+      json_t *settings = m_anomalySettings.toJson();
+      const char *key;
+      json_t *value;
+      json_object_foreach(anomalyDetection, key, value)
+      {
+         json_t *current = json_object_get(settings, key);
+         if (json_is_object(current) && json_is_object(value))
+            json_object_update(current, value);
+         else
+            json_object_set(settings, key, value);
+      }
+      m_anomalySettings = AnomalySettings(settings);
+      json_decref(settings);
+   }
+   else if ((anomalyDetection != nullptr) && !json_is_null(anomalyDetection))
+   {
+      unlock();
+      return RCC_INVALID_ARGUMENT;
+   }
+   normalizeAnomalyDetectionFlags();
+   updateAnomalyEffectiveSettings();
 
    // Thresholds: whole-array replace, matching existing entries by id to preserve runtime state
    json_t *thresholdsArray = json_object_get(json, "thresholds");
@@ -3801,7 +3891,8 @@ uint32_t DCItem::postThresholdRepeatEvent(uint32_t thresholdId, uint64_t activat
 
    shared_ptr<DCObject> sharedThis = shared_from_this();
 
-   EventBuilder(t->getEventCode(), m_ownerId)
+   EventBuilder builder(t->getEventCode(), m_ownerId);
+   builder
       .dci(m_id)
       .param(_T("dciName"), m_name)
       .param(_T("dciDescription"), m_description)
@@ -3817,8 +3908,9 @@ uint32_t DCItem::postThresholdRepeatEvent(uint32_t thresholdId, uint64_t activat
       .param(_T("thresholdDefinition"), t->getTextualDefinition())
       .param(_T("instanceValue"), m_instanceDiscoveryData)
       .param(_T("instanceName"), m_instanceName)
-      .param(_T("thresholdId"), thresholdId)
-      .post(
+      .param(_T("thresholdId"), thresholdId);
+   addAnomalyEventParameters(&builder, *t);
+   builder.post(
          [sharedThis, thresholdId] (Event *e) -> void
          {
             static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage());
@@ -3862,44 +3954,138 @@ uint32_t DCItem::scheduleThresholdRepeatEvents()
 }
 
 /**
- * Set anomaly detection profile (JSON string)
+ * Names of anomaly types, directions, and detection modes
  */
-void DCItem::setAnomalyProfile(json_t *profile)
+static const char *s_anomalyTypeNames[] = { "none", "range", "step", "drift" };
+static const char *s_anomalyDirectionNames[] = { "both", "up", "down" };
+static const char *s_anomalyModeNames[] = { "auto", "value", "rate" };
+
+/**
+ * Clear result of last anomaly check
+ */
+void DCItem::clearAnomalyScore()
+{
+   m_anomalyScore.type = AnomalyType::NONE;
+   m_anomalyScore.learning = false;
+   m_anomalyScore.scored = false;
+   m_anomalyScore.score = 0;
+   m_anomalyScore.expectedLow = 0;
+   m_anomalyScore.expectedHigh = 0;
+   m_anomalyScore.driftOnset = 0;
+   m_anomalyScoreTimestamp = 0;
+}
+
+/**
+ * Update settings used for scoring. Sensitivity, direction, and hard bounds suggested by LLM take
+ * precedence over configured ones while LLM tuning is enabled.
+ */
+void DCItem::updateAnomalyEffectiveSettings()
+{
+   if ((m_anomalyTuning == nullptr) || !(m_flags & DCF_DETECT_ANOMALIES_AI))
+   {
+      m_anomalyEffectiveSettings = m_anomalySettings;
+      return;
+   }
+
+   static const char *tunableSettings[] = { "sensitivity", "direction", "hardBounds" };
+   json_t *settings = m_anomalySettings.toJson();
+   for(size_t i = 0; i < sizeof(tunableSettings) / sizeof(const char *); i++)
+   {
+      json_t *value = json_object_get(m_anomalyTuning, tunableSettings[i]);
+      if (value != nullptr)
+         json_object_set(settings, tunableSettings[i], value);
+   }
+   m_anomalyEffectiveSettings = AnomalySettings(settings);
+   json_decref(settings);
+}
+
+/**
+ * Set trained model and LLM tuning. Drift detector keeps its state unless detection mode has changed.
+ */
+void DCItem::setAnomalyProfileInternal(const shared_ptr<AnomalyModel>& model, json_t *tuning, time_t timestamp)
+{
+   if ((m_anomalyModel != nullptr) && (model != nullptr) && (m_anomalyModel->getMode() != model->getMode()))
+      m_anomalyState.reset();
+   m_anomalyModel = model;
+   if (tuning != m_anomalyTuning)
+   {
+      json_decref(m_anomalyTuning);
+      m_anomalyTuning = json_incref(tuning);
+   }
+   m_anomalyProfileTimestamp = timestamp;
+   updateAnomalyEffectiveSettings();
+}
+
+/**
+ * Set trained model and LLM tuning from profile document as stored in database
+ */
+void DCItem::setAnomalyProfileFromJson(json_t *profile, time_t timestamp)
+{
+   shared_ptr<AnomalyModel> model = AnomalyModel::createFromJson(profile);
+   json_t *tuning = json_object_get(profile, "tuning");
+   setAnomalyProfileInternal(model, json_is_object(tuning) ? tuning : nullptr, (model != nullptr) ? timestamp : 0);
+}
+
+/**
+ * Set anomaly detection profile - trained model and optional LLM tuning
+ */
+void DCItem::setAnomalyProfile(const shared_ptr<AnomalyModel>& model, json_t *tuning)
 {
    lock();
-   json_decref(m_anomalyProfile);
-   if (profile != nullptr)
-   {
-      m_anomalyProfile = json_incref(profile);
-      m_anomalyProfileTimestamp = time(nullptr);
-   }
-   else
-   {
-      m_anomalyProfile = nullptr;
-      m_anomalyProfileTimestamp = 0;
-   }
+   setAnomalyProfileInternal(model, tuning, time(nullptr));
    unlock();
 }
 
 /**
- * Save anomaly profile directly to database (targeted update of two columns only)
+ * Get copy of settings suggested by LLM (nullptr if there are none)
+ */
+json_t *DCItem::getAnomalyTuning() const
+{
+   lock();
+   json_t *tuning = (m_anomalyTuning != nullptr) ? json_deep_copy(m_anomalyTuning) : nullptr;
+   unlock();
+   return tuning;
+}
+
+/**
+ * Create anomaly profile document for saving in database (nullptr if there is no trained model)
+ */
+json_t *DCItem::createAnomalyProfileDocument() const
+{
+   if (m_anomalyModel == nullptr)
+      return nullptr;
+
+   json_t *profile = m_anomalyModel->toJson();
+   if (m_anomalyTuning != nullptr)
+      json_object_set(profile, "tuning", m_anomalyTuning);
+   return profile;
+}
+
+/**
+ * Save anomaly profile and baseline start time directly to database, without waiting for owning object to be saved
  */
 bool DCItem::saveAnomalyProfileToDatabase()
 {
+   lock();
+   json_t *profile = createAnomalyProfileDocument();
+   time_t timestamp = m_anomalyProfileTimestamp;
+   time_t baselineStart = m_anomalyBaselineStart;
+   unlock();
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"UPDATE items SET anomaly_profile=?,anomaly_profile_timestamp=? WHERE item_id=?");
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"UPDATE items SET anomaly_profile=?,anomaly_profile_timestamp=?,anomaly_baseline_start=? WHERE item_id=?");
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
+      json_decref(profile);
       return false;
    }
 
-   lock();
-   DBBind(hStmt, 1, DB_SQLTYPE_TEXT, m_anomalyProfile, DB_BIND_STATIC);
-   DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, static_cast<int64_t>(m_anomalyProfileTimestamp));
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 1, DB_SQLTYPE_TEXT, profile, DB_BIND_DYNAMIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, static_cast<int64_t>(timestamp));
+   DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<int64_t>(baselineStart));
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
    bool success = DBExecute(hStmt);
-   unlock();
 
    DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
@@ -3907,155 +4093,161 @@ bool DCItem::saveAnomalyProfileToDatabase()
 }
 
 /**
- * Check if current value is anomalous using AI profile
- * Returns true if anomaly detected
+ * Queue update of anomaly detector state in database
  */
-bool DCItem::checkAnomalyAIProfile(const ItemValue& value)
+void DCItem::saveAnomalyDetectorState() const
 {
-   if (m_anomalyProfile == nullptr)
-      return false;
+   json_t *state = m_anomalyState.toJson();
+   char *text = json_dumps(state, JSON_COMPACT);
+   json_decref(state);
 
-   double numValue = value.getDouble();
-   time_t now = time(nullptr);
-   struct tm timeInfo;
-#ifdef _WIN32
-   localtime_s(&timeInfo, &now);
-#else
-   localtime_r(&now, &timeInfo);
-#endif
+   wchar_t query[512];
+   nx_swprintf(query, 512, L"UPDATE raw_dci_values SET anomaly_state='%hs' WHERE item_id=%u", text, m_id);
+   MemFree(text);
+   QueueSQLRequest(query);
+}
 
-   // 1. Hard bounds check
-   json_t *hardBounds = json_object_get(m_anomalyProfile, "hardBounds");
-   if (hardBounds != nullptr && json_is_true(json_object_get(hardBounds, "enabled")))
+/**
+ * Start new baseline for anomaly detection: data collected before estimated start of current level shift
+ * (or before current time if drift is not detected) will not be used for training, and detector
+ * state is reset. Baseline start is left unchanged if there is no trained model yet.
+ *
+ * @return baseline start time
+ */
+time_t DCItem::startNewAnomalyBaseline()
+{
+   lock();
+   if (m_anomalyModel != nullptr)
    {
-      double minVal = json_number_value(json_object_get(hardBounds, "min"));
-      double maxVal = json_number_value(json_object_get(hardBounds, "max"));
-      if (numValue < minVal || numValue > maxVal)
-         return true;
+      time_t start = 0;
+      if ((m_anomalyState.driftUp > m_anomalyEffectiveSettings.driftH) && (m_anomalyState.driftUp >= m_anomalyState.driftDown))
+         start = m_anomalyState.driftUpOnset;
+      else if (m_anomalyState.driftDown > m_anomalyEffectiveSettings.driftH)
+         start = m_anomalyState.driftDownOnset;
+      m_anomalyBaselineStart = (start != 0) ? start : time(nullptr);
+
+      m_anomalyModel.reset();
+      m_anomalyProfileTimestamp = 0;
+      m_anomalyState.reset();
+      m_anomalyDetected = false;
+      clearAnomalyScore();
+      saveAnomalyDetectorState();
+   }
+   time_t baselineStart = m_anomalyBaselineStart;
+   unlock();
+   return baselineStart;
+}
+
+/**
+ * Replace anomaly profile, baseline start time and detector state with those read from database (see ReloadAnomalyProfiles)
+ */
+void DCItem::reloadAnomalyProfile(json_t *profile, time_t timestamp, time_t baselineStart, json_t *detectorState)
+{
+   lock();
+   setAnomalyProfileFromJson(profile, timestamp);
+   m_anomalyBaselineStart = baselineStart;
+   m_anomalyState.loadFromJson(detectorState);
+   unlock();
+}
+
+/**
+ * Check new value for being an anomaly. Should be called with DCI locked, for values in chronological order.
+ */
+void DCItem::checkForAnomaly(Timestamp timestamp, const ItemValue& value)
+{
+   if (!isAnomalyDetectionEnabled() || (m_anomalyModel == nullptr))
+   {
+      m_anomalyDetected = false;
+      clearAnomalyScore();
+      return;
    }
 
-   // 2. Seasonal deviation check
-   json_t *seasonal = json_object_get(m_anomalyProfile, "seasonalDetection");
-   if (seasonal != nullptr && json_is_true(json_object_get(seasonal, "enabled")))
+   time_t bucketStart = m_anomalyState.bucketStart;
+   m_anomalyScore = ScoreAnomalySample(*m_anomalyModel, m_anomalyEffectiveSettings, &m_anomalyState, timestamp.asTime(), value.getDouble());
+   m_anomalyScoreTimestamp = timestamp.asTime();
+   m_anomalyDetected = (m_anomalyScore.type != AnomalyType::NONE);
+
+   // Drift sums are updated when hour changes
+   if ((bucketStart != 0) && (m_anomalyState.bucketStart != bucketStart))
+      saveAnomalyDetectorState();
+
+   nxlog_debug_tag(DEBUG_TAG_DC_ANOMALY, m_anomalyDetected ? 6 : 8, L"DCI \"%s\" [%u]: value %f - %hs%s (score %f, expected range %f .. %f, drift %f / %f)",
+      m_name.cstr(), m_id, value.getDouble(), m_anomalyScore.learning ? "not checked" : s_anomalyTypeNames[static_cast<int>(m_anomalyScore.type)],
+      m_anomalyScore.learning ? L" (learning)" : L"", m_anomalyScore.score, m_anomalyScore.expectedLow, m_anomalyScore.expectedHigh,
+      m_anomalyState.driftUp, m_anomalyState.driftDown);
+}
+
+/**
+ * Add description of last anomaly check to activation event of anomaly threshold
+ */
+void DCItem::addAnomalyEventParameters(EventBuilder *builder, const Threshold& threshold) const
+{
+   if (threshold.getFunction() != F_ANOMALY)
+      return;
+
+   builder->paramUtf8String(L"anomalyType", s_anomalyTypeNames[static_cast<int>(m_anomalyScore.type)]);
+   builder->param(L"anomalyScore", m_anomalyScore.score);
+   if (m_anomalyScore.scored)
    {
-      json_t *hourlyBaselines = json_object_get(m_anomalyProfile, "hourlyBaselines");
-      if (json_is_array(hourlyBaselines))
+      builder->param(L"anomalyExpectedLow", m_anomalyScore.expectedLow);
+      builder->param(L"anomalyExpectedHigh", m_anomalyScore.expectedHigh);
+   }
+   else
+   {
+      builder->param(L"anomalyExpectedLow", L"");
+      builder->param(L"anomalyExpectedHigh", L"");
+   }
+   builder->param(L"anomalySlot", ((m_anomalyModel != nullptr) && (m_anomalyScoreTimestamp != 0)) ? m_anomalyModel->describeSlot(m_anomalyScoreTimestamp).cstr() : L"");
+   builder->paramUtf8String(L"anomalyDirection", s_anomalyDirectionNames[static_cast<int>(m_anomalyEffectiveSettings.direction)]);
+   builder->paramUtf8String(L"anomalyMode", (m_anomalyModel != nullptr) ? s_anomalyModeNames[static_cast<int>(m_anomalyModel->getMode())] : "");
+}
+
+/**
+ * Create JSON document describing result of last anomaly check
+ */
+json_t *DCItem::anomalyScoreToJson() const
+{
+   json_t *json = json_object();
+   bool learning = isAnomalyModelLearning();
+   json_object_set_new(json, "learning", json_boolean(learning));
+   if (!learning)
+   {
+      json_object_set_new(json, "type", json_string(s_anomalyTypeNames[static_cast<int>(m_anomalyScore.type)]));
+      json_object_set_new(json, "mode", json_string(s_anomalyModeNames[static_cast<int>(m_anomalyModel->getMode())]));
+      if (m_anomalyScore.scored)
       {
-         int hour = timeInfo.tm_hour;
-         json_t *baseline = json_array_get(hourlyBaselines, hour);
-         if (baseline != nullptr)
-         {
-            double mean = json_number_value(json_object_get(baseline, "mean"));
-            double stddev = json_number_value(json_object_get(baseline, "stddev"));
-            double sensitivity = json_number_value(json_object_get(seasonal, "sensitivity"));
-            if (sensitivity <= 0)
-               sensitivity = 2.5;
-
-            // Apply weekday factor if enabled
-            double weekdayFactor = 1.0;
-            if (json_is_true(json_object_get(seasonal, "useWeekdayFactors")))
-            {
-               static const char *dayNames[] = { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
-               json_t *weekdayFactors = json_object_get(m_anomalyProfile, "weekdayFactors");
-               if (weekdayFactors != nullptr)
-               {
-                  json_t *factor = json_object_get(weekdayFactors, dayNames[timeInfo.tm_wday]);
-                  if (factor != nullptr)
-                     weekdayFactor = json_number_value(factor);
-               }
-            }
-
-            double threshold = sensitivity * stddev * weekdayFactor;
-            if (fabs(numValue - mean) > threshold)
-               return true;
-         }
+         json_object_set_new(json, "score", json_real(m_anomalyScore.score));
+         json_object_set_new(json, "expectedLow", json_real(m_anomalyScore.expectedLow));
+         json_object_set_new(json, "expectedHigh", json_real(m_anomalyScore.expectedHigh));
+         json_object_set_new(json, "slot", json_string_t(m_anomalyModel->describeSlot(m_anomalyScoreTimestamp)));
       }
    }
+   return json;
+}
 
-   // 3. Rate of change check
-   json_t *changeDetection = json_object_get(m_anomalyProfile, "changeDetection");
-   if (changeDetection != nullptr && json_is_true(json_object_get(changeDetection, "enabled")))
+/**
+ * Create JSON document describing anomaly detection configuration and state of trained model
+ */
+json_t *DCItem::anomalyDetectionToJson() const
+{
+   json_t *json = m_anomalySettings.toJson();
+   json_object_set_new(json, "enabled", json_boolean((m_flags & DCF_DETECT_ANOMALIES_IFOREST) != 0));
+   json_object_set_new(json, "llmTuning", json_boolean((m_flags & DCF_DETECT_ANOMALIES_AI) != 0));
+   if (m_anomalyBaselineStart != 0)
+      json_object_set_new(json, "baselineStart", json_time_string(m_anomalyBaselineStart));
+   if (m_anomalyTuning != nullptr)
+      json_object_set_new(json, "tuning", json_deep_copy(m_anomalyTuning));
+   if (m_anomalyModel != nullptr)
    {
-      if (m_cacheSize > 0 && m_ppValueCache != nullptr && m_ppValueCache[0] != nullptr)
-      {
-         double prevValue = m_ppValueCache[0]->getDouble();
-         time_t prevTime = m_ppValueCache[0]->getTimeStamp().asTime();
-         double elapsedMinutes = difftime(now, prevTime) / 60.0;
-         if (elapsedMinutes > 0)
-         {
-            double delta = fabs(numValue - prevValue);
-            double maxRate = json_number_value(json_object_get(changeDetection, "maxRatePerMinute"));
-            if (maxRate > 0 && delta > maxRate * elapsedMinutes)
-               return true;
-         }
-      }
+      json_t *model = json_object();
+      json_object_set_new(model, "timestamp", json_time_string(m_anomalyProfileTimestamp));
+      json_object_set_new(model, "mode", json_string(s_anomalyModeNames[static_cast<int>(m_anomalyModel->getMode())]));
+      json_object_set_new(model, "learning", json_boolean(m_anomalyModel->isLearning(m_anomalyEffectiveSettings)));
+      json_object_set_new(model, "trainingDays", json_integer(m_anomalyModel->getTrainingDays()));
+      json_object_set_new(model, "trainedFrom", json_time_string(m_anomalyModel->getTrainedFrom()));
+      json_object_set_new(model, "trainedTo", json_time_string(m_anomalyModel->getTrainedTo()));
+      json_object_set_new(model, "individualWeekdays", json_boolean(m_anomalyModel->isUsingWeekdays()));
+      json_object_set_new(json, "model", model);
    }
-
-   // 4. Sustained high check
-   json_t *sustainedHigh = json_object_get(m_anomalyProfile, "sustainedHighDetection");
-   if (sustainedHigh != nullptr && json_is_true(json_object_get(sustainedHigh, "enabled")))
-   {
-      double threshold = json_number_value(json_object_get(sustainedHigh, "threshold"));
-      double durationMinutes = json_number_value(json_object_get(sustainedHigh, "durationMinutes"));
-      if (numValue > threshold)
-      {
-         if (m_sustainedHighStart == 0)
-            m_sustainedHighStart = now;  // Start tracking
-         else if (durationMinutes > 0 && difftime(now, m_sustainedHighStart) / 60.0 >= durationMinutes)
-            return true;  // Sustained high anomaly
-      }
-      else
-      {
-         m_sustainedHighStart = 0;  // Reset on value below threshold
-      }
-   }
-
-   // 5. Sustained low check
-   json_t *sustainedLow = json_object_get(m_anomalyProfile, "sustainedLowDetection");
-   if (sustainedLow != nullptr && json_is_true(json_object_get(sustainedLow, "enabled")))
-   {
-      double threshold = json_number_value(json_object_get(sustainedLow, "threshold"));
-      double durationMinutes = json_number_value(json_object_get(sustainedLow, "durationMinutes"));
-      if (numValue < threshold)
-      {
-         if (m_sustainedLowStart == 0)
-            m_sustainedLowStart = now;  // Start tracking
-         else if (durationMinutes > 0 && difftime(now, m_sustainedLowStart) / 60.0 >= durationMinutes)
-            return true;  // Sustained low anomaly
-      }
-      else
-      {
-         m_sustainedLowStart = 0;  // Reset on value above threshold
-      }
-   }
-
-   // 6. Sudden drop check (using exponential moving average)
-   json_t *dropDetection = json_object_get(m_anomalyProfile, "suddenDropDetection");
-   if (dropDetection != nullptr && json_is_true(json_object_get(dropDetection, "enabled")))
-   {
-      double dropPercent = json_number_value(json_object_get(dropDetection, "dropPercent"));
-      if (dropPercent > 0)
-      {
-         if (std::isnan(m_recentAverage))
-         {
-            // Initialize EMA with first value
-            m_recentAverage = numValue;
-         }
-         else
-         {
-            // Check for sudden drop before updating average
-            if (m_recentAverage > 0)
-            {
-               double dropThreshold = m_recentAverage * (1.0 - dropPercent / 100.0);
-               if (numValue < dropThreshold)
-                  return true;
-            }
-            // Update EMA: alpha=0.3 gives ~5-sample equivalent smoothing
-            constexpr double alpha = 0.3;
-            m_recentAverage = alpha * numValue + (1.0 - alpha) * m_recentAverage;
-         }
-      }
-   }
-
-   return false;
+   return json;
 }

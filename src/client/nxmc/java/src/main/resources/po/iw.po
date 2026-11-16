@@ -9878,13 +9878,49 @@ msgstr ""
 msgid "Instance name"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java:123
-msgid "Detect anomalies using isolation forest algorithm"
-msgstr ""
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Detect anomalies"
+msgstr "זיהוי חריגות"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java:127
-msgid "Detect anomalies using AI"
-msgstr ""
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Tune anomaly detection settings using AI"
+msgstr "כוונון הגדרות זיהוי החריגות באמצעות AI"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Anomaly sensitivity"
+msgstr "רגישות זיהוי החריגות"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Maximum deviation from expected value, in standard deviations, that is still considered normal. Lower value makes detection more sensitive."
+msgstr "הסטייה המרבית מהערך הצפוי (בסטיות תקן) שעדיין נחשבת תקינה. ערך נמוך יותר הופך את הזיהוי לרגיש יותר."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Report deviations"
+msgstr "דיווח על סטיות"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "In both directions"
+msgstr "בשני הכיוונים"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Up only"
+msgstr "כלפי מעלה בלבד"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Down only"
+msgstr "כלפי מטה בלבד"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Analyze"
+msgstr "ניתוח"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Automatic selection"
+msgstr "בחירה אוטומטית"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Rate of change"
+msgstr "קצב השינוי"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java:131
 msgid "Process all thresholds"
@@ -11853,6 +11889,32 @@ msgstr ""
 msgid "Disabled until {0}"
 msgstr ""
 
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Learning"
+msgstr "בלמידה"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Level shift"
+msgstr "שינוי רמה"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Out of expected range"
+msgstr "מחוץ לטווח הצפוי"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Sudden change"
+msgstr "שינוי פתאומי"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+#, java-format
+msgid "expected rate of change {0} .. {1} per second"
+msgstr "קצב שינוי צפוי {0} .. {1} לשנייה"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+#, java-format
+msgid "expected {0} .. {1}"
+msgstr "צפוי {0} .. {1}"
+
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java:159
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:958
 #: src/main/java/org/netxms/nxmc/modules/businessservice/views/helpers/BusinessServiceCheckLabelProvider.java:111
@@ -12296,6 +12358,34 @@ msgstr ""
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:368
 msgid "Clear collected data"
 msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Anomaly detection"
+msgstr "זיהוי חריגות"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Regenerate &anomaly profile"
+msgstr "יצירה מחדש של פרופיל ה&חריגות"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Regenerate Anomaly Profile"
+msgstr "יצירה מחדש של פרופיל החריגות"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Anomaly detection is not enabled for selected data collection items."
+msgstr "זיהוי חריגות אינו מופעל עבור פריטי איסוף הנתונים שנבחרו."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "New anomaly detection baseline will be started for selected data collection items. Data collected before the beginning of current level shift (or before this moment, if level shift is not detected) will be ignored, and anomalies will not be reported until enough data is collected. Continue?"
+msgstr "קו בסיס חדש לזיהוי חריגות יתחיל עבור פריטי איסוף הנתונים שנבחרו. נתונים שנאספו לפני תחילת שינוי הרמה הנוכחי (או לפני רגע זה, אם לא זוהה שינוי רמה) לא ייכללו, וחריגות לא ידווחו עד שייאספו מספיק נתונים. להמשיך?"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Initiating anomaly profile regeneration"
+msgstr "מתחיל יצירה מחדש של פרופיל החריגות"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Cannot start anomaly profile regeneration"
+msgstr "לא ניתן להתחיל יצירה מחדש של פרופיל החריגות"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:616
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/SummaryDataCollectionView.java:242
@@ -27975,3 +28065,4 @@ msgstr ""
 #, fuzzy, java-printf-format
 #~ msgid "%s - Connecting"
 #~ msgstr "מתחבר..."
+

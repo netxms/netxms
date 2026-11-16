@@ -1,368 +1,341 @@
-# AI-Powered Anomaly Detection for NetXMS
-
-Server-integrated anomaly detection using LLM-generated profiles for intelligent, metric-aware alerting.
+# DCI Anomaly Detection
 
 ## Overview
 
-This system combines statistical analysis with LLM intelligence to create efficient, customized anomaly detection:
+Anomaly detection tells when a collected value of a single-value DCI does not look like the values
+that DCI normally has at that time. It needs no thresholds from the administrator: the server learns
+a baseline from the DCI's own history and compares every new value with it.
 
-- **C++ computes statistics** from historical DCI data
-- **LLM tunes detection parameters** based on metric semantics and patterns
-- **C++ runtime engine** evaluates every sample without LLM calls
+The design goals are:
 
-The result is anomaly detection that understands context ("CPU spikes during backup are normal") while running at full collection speed.
+- **Nothing expensive on the poll path.** A value is checked against an in-memory model; there is no
+  database access and no model fitting under the DCI lock.
+- **Works without an LLM.** All detection is statistical. An LLM, when configured, only suggests
+  settings.
+- **Explainable result.** Every reported anomaly has a type, a score and the range that was expected.
+
+Anomaly detection is enabled per DCI. It produces an event only through a threshold with function
+`anomaly` (`F_ANOMALY`); without such threshold the result is visible in the last values view, in
+the WebAPI and to AI tools, but nothing is raised.
+
+Only numeric DCIs are supported. Collected values must be stored (DCIs with storage disabled cannot
+be trained).
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      PROFILE GENERATION (scheduled/on-demand)           │
-│                                                                         │
-│  ┌──────────────┐    ┌──────────────────┐    ┌───────────────────────┐ │
-│  │ Historical   │───▶│ C++ Statistics   │───▶│ LLM (via existing     │ │
-│  │ DCI Data     │    │ Calculator       │    │ AI infrastructure)    │ │
-│  └──────────────┘    └──────────────────┘    └───────────┬───────────┘ │
-│                                                          │             │
-│                                                          ▼             │
-│  ┌──────────────┐    ┌──────────────────┐    ┌───────────────────────┐ │
-│  │ anomaly_     │◀───│ Merge stats +    │◀───│ Tuning parameters     │ │
-│  │ profile JSON │    │ LLM parameters   │    │ (JSON response)       │ │
-│  └──────────────┘    └──────────────────┘    └───────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      RUNTIME DETECTION (every DCI poll)                 │
-│                                                                         │
-│  ┌──────────────┐    ┌──────────────────┐    ┌───────────────────────┐ │
-│  │ New Value    │───▶│ C++ Anomaly      │───▶│ m_anomalyDetected +   │ │
-│  │              │    │ Detector         │    │ source indicator      │ │
-│  └──────────────┘    │ (profile-based)  │    └───────────┬───────────┘ │
-│                      └──────────────────┘                │             │
-│                                              ┌───────────▼───────────┐ │
-│                                              │ F_ANOMALY threshold   │ │
-│                                              │ → Event generation    │ │
-│                                              └───────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
+  history (idata / hourly aggregates)
+            |
+            v
+  +-------------------+     background, once a day and on request
+  | training          |     anomaly_profile.cpp
+  | AnomalyModel::train
+  +-------------------+
+            |  AnomalyModel (immutable, shared_ptr)
+            v
+  +-------------------+     on each collected value, under DCI lock
+  | scoring           |     DCItem::checkForAnomaly -> ScoreAnomalySample
+  | AnomalyDetectorState
+  +-------------------+
+            |  AnomalyScore (type, score, expected range)
+            v
+   threshold with function "anomaly", last values, WebAPI, AI tools
 ```
 
-## Detection Methods
+| Part | Location |
+|---|---|
+| Engine (model, training, scoring), no server dependencies | `src/server/core/anomaly_engine.cpp`, `src/server/include/nxcore_anomaly.h` |
+| Loading of history, training tasks, LLM tuning, replay | `src/server/core/anomaly_profile.cpp` |
+| Per-DCI settings, model, detector state, persistence | `src/server/core/dcitem.cpp` |
+| Unit tests | `tests/test-libnxcore/anomaly.cpp` |
 
-The profile-based detector implements five detection methods, evaluated in order (short-circuit on first anomaly):
+Scoring depends on the model only through `ExpectedValue` (centre, scale, granularity, validity)
+returned by `AnomalyModel::getExpectedValue()`, and settings record identifiers of the source of
+expected values (`provider.id`, currently always `slot`) and of the level shift detector
+(`detector.id`, currently always `cusum`). This is preparation for other sources of expected values
+(for example models driven by other DCIs); there is no registry of providers yet.
 
-### 1. Hard Bounds
+## Baseline model
 
-Absolute limits that should never be exceeded.
+### Slots
+
+The model has 168 slots: hour of day by day of week, **in server local time**. Time zone of the
+monitored node is not considered. A value is always assigned to a slot by its own timestamp, not by
+the time when it is processed.
+
+Each slot has an expected level (centre). Days are the unit of evidence: values within one hour of
+one day are not independent, so a slot centre is only as good as the number of distinct days behind
+it. A centre is taken from the most specific granularity that has at least 6 days of data:
+
+1. same hour, same day of week - only for days of week that were found to differ, see below;
+2. same hour, weekdays or weekend;
+3. same hour, all days;
+4. all data.
+
+A day of week gets its own baseline only when training shows that it actually differs from the
+weekday/weekend level: at least 3 of its hours (out of at least 12 comparable ones) deviate by more
+than 1.5 between-day standard deviations. Otherwise four or five instances of each weekday in the
+training window would give a noisier baseline than the pooled one.
+
+### Data used for training
+
+- **Level** (slot centres, decision on individual days of week, spread used by level shift
+  detection) is trained from hourly averages over up to 84 days. Hourly aggregates
+  (see `DCI_Data_Aggregation.md`) are used when they are available for the DCI and cover at least
+  the same period as collected values; otherwise hourly averages are calculated in memory from
+  collected values.
+- **Spread** of a single value around the centre, and of change between consecutive values, is
+  trained from collected values over up to 30 days. Hourly averages hide variation within the hour
+  and cannot provide it. Spread is pooled by hour and day type, then by hour, then globally, until
+  there are at least 30 values.
+- **The most recent 7 days are not used.** Otherwise a level shift that is in progress would be
+  absorbed by the baseline before it can be reported. The lag is reduced while it would leave less
+  than the minimum number of training days.
+- Data older than the DCI's **baseline start** time is never used (see *Starting new baseline*).
+
+All statistics are robust: centre is a median, spread is median absolute deviation scaled to
+standard deviation (x 1.4826). Spread has a floor (relative to the level, and not less than
+resolution of the series), so a flat series does not make every change an anomaly.
+
+### Mode
+
+A model works either on the collected value or on its rate of change per second. With mode `auto`
+the rate of change is selected for strongly monotone series (95% of hourly changes have the same
+sign), such as counters collected without delta calculation or used disk space. Expected range is
+reported in the same terms as the model works in.
+
+### Learning state
+
+A model trained on fewer distinct days than `minTrainingDays` (7 by default) is *learning*: values
+are not checked and no anomalies are reported. This is the state of every DCI right after anomaly
+detection is enabled on a new DCI, and after new baseline is started.
+
+## Detection
+
+A value is checked in this order; the first match gives the anomaly type.
+
+| Type | Check |
+|---|---|
+| `range` | Value is outside of hard bounds (if set), or its robust z-score against the slot, `(x - centre) / scale`, exceeds `sensitivity`. |
+| `step` | Change from the previous value, compared with typical change between consecutive values, exceeds `sensitivity`. Catches a sharp jump that stays inside a wide slot range. Only in value mode, and only when the interval between values is not much longer than usual. |
+| `drift` | Sustained shift of level that stays inside the range of a single value (see below). |
+
+All checks honour `direction` (both, up only, down only).
+
+### Level shift (drift)
+
+Deviations from slot centre are averaged per hour. When the hour changes, the hourly mean is
+standardized and fed into a two-sided cumulative sum (CUSUM):
 
 ```
-if value < min OR value > max → ANOMALY
+S+ = max(0, S+ + z - k)        S- = max(0, S- - z - k)
 ```
 
-### 2. Seasonal Deviation
+Drift is reported while either sum is above `h`. The time when the sum last left zero is kept as the
+estimated onset of the shift.
 
-Time-aware statistical thresholds accounting for daily and weekly patterns.
+- `z` is limited to +/-4, so one extreme spike does not register as drift.
+- The sums cannot grow more than 2 above `h`, so the indication clears within hours after the level
+  returns to normal.
+- The scale used for standardization is the larger of two estimates: spread of hourly mean
+  deviation, and spread of *daily* mean deviation scaled to one hour. For independent hourly
+  deviations both are the same. On real data some days are simply busier than others, deviations of
+  consecutive hours are correlated, and the first estimate alone makes ordinary busy days look like
+  level shifts.
 
-```
-hour = currentHour()
-baseline = hourlyBaselines[hour]
-weekdayFactor = weekdayFactors[dayOfWeek()]
-deviation = |value - baseline.mean|
-threshold = sensitivity × baseline.stddev × weekdayFactor
+Defaults are `k = 1`, `h = 5`: shift of level by two standard deviations of hourly mean is reported
+in about 6 hours, by three - in 2 to 3 hours.
 
-if deviation > threshold → ANOMALY
-```
+### Scores
 
-### 3. Rate of Change
+| Type | Score |
+|---|---|
+| `range` | z-score of the value |
+| `step` | z-score of the change |
+| `drift` | cumulative sum (negative for downward shift) |
 
-Detects sudden spikes or drops between consecutive samples.
+## Settings
 
-```
-delta = |currentValue - previousValue|
-elapsedMinutes = (currentTime - previousTime) / 60
+Per-DCI settings are set by the user and are never changed by training.
 
-if delta > maxRatePerMinute × elapsedMinutes → ANOMALY
-```
+| Setting | Default | Meaning |
+|---|---|---|
+| `sensitivity` | 3.5 | Largest deviation, in standard deviations, that is still normal. Lower value is more sensitive. |
+| `direction` | `both` | Direction of deviations that are reported. |
+| `mode` | `auto` | `value`, `rate`, or selected by training. |
+| `minTrainingDays` | 7 | Days of data needed before values are checked. |
+| `hardBounds.min`, `hardBounds.max` | not set | Limits the value cannot cross under normal conditions. |
+| `detector.k` | 1.0 | Slack of level shift detector. |
+| `detector.h` | 5.0 | Decision threshold of level shift detector. |
 
-### 4. Sustained High
+Two DCI flags control the feature:
 
-Detects prolonged periods above a threshold.
+| Flag | Value | Meaning |
+|---|---|---|
+| `DCF_DETECT_ANOMALIES_IFOREST` | 0x0001 | Anomaly detection is enabled (name is historical) |
+| `DCF_DETECT_ANOMALIES_AI` | 0x0200 | Settings are tuned by LLM; implies the first flag |
 
-```
-if value > threshold for consecutive durationMinutes → ANOMALY
-```
+With default sensitivity and normally distributed noise about one value in 2000 is reported by the
+range check alone. Sample count of the anomaly threshold (number of consecutive anomalous values
+needed to activate it) is the intended way to ignore single-value deviations.
 
-### 5. Sudden Drop
+### LLM tuning
 
-Detects unexpected drops from recent baseline.
+When LLM tuning is enabled for a DCI and an AI provider is configured, after a model is trained the
+server sends a summary of training data and of the model (distribution of values, levels by hour,
+spread, mode) together
+with DCI description, units and AI hint (`items.ai_hint`) to the LLM and asks for sensitivity,
+direction, mode and hard bounds. The answer is validated (sensitivity is limited to 2 .. 8) and
+stored with the model as `tuning`.
 
-```
-recentAverage = average(recent N samples)
-dropPercent = (recentAverage - value) / recentAverage × 100
+- While the flag is set, tuned sensitivity, direction and hard bounds take precedence over
+  configured ones; tuned mode is used only if configured mode is `auto`.
+- Tuning is reused for 30 days, and requested again on regeneration requested by user.
+- Configured settings are not modified. Turning the flag off returns to them.
+- Without a provider, or if the request fails, detection runs on configured settings.
 
-if dropPercent > threshold → ANOMALY
-```
+## Training schedule
 
-## Profile JSON Structure
+- Scheduled task `System.RegenerateAnomalyProfiles` (daily, 12:00 by default) trains models of all
+  DCIs with anomaly detection enabled. Targets are collected first; training runs on the main
+  thread pool with at most 4 models trained in parallel.
+- Scheduled training replaces the model and keeps level shift detector state, unless the mode of
+  the model has changed.
+- If a new model cannot be trained (no data, database error), the existing one is kept.
 
-Stored in `items.anomaly_profile` column:
+### Starting new baseline
 
-```json
-{
-  "version": 1,
-  "generatedAt": 1706000000,
-  "dataRange": {
-    "start": 1703000000,
-    "end": 1706000000
-  },
+Regeneration requested by user (console menu item *Regenerate anomaly profile*, NXCP command
+`CMD_REGENERATE_ANOMALY_PROFILE`, WebAPI `POST .../regenerate-anomaly-profile`, NXSL method
+`DCI::generateAnomalyProfile()`) is how an operator accepts a new level as normal:
 
-  "hourlyBaselines": [
-    { "hour": 0, "mean": 12.5, "stddev": 3.2 },
-    { "hour": 1, "mean": 11.8, "stddev": 2.9 },
-    ...
-  ],
+- baseline start time is set to the onset of level shift currently being reported, or to current
+  time if there is none;
+- existing model and detector state are discarded, and a new model is trained from data collected
+  after baseline start;
+- until enough days are collected, the DCI is in learning state.
 
-  "weekdayFactors": {
-    "monday": 1.0,
-    "tuesday": 1.0,
-    "wednesday": 1.0,
-    "thursday": 1.0,
-    "friday": 1.0,
-    "saturday": 0.7,
-    "sunday": 0.6
-  },
+If the DCI has no model yet, baseline start is not moved.
 
-  "hardBounds": {
-    "enabled": true,
-    "min": 0,
-    "max": 100
-  },
+## Persistence and high availability
 
-  "seasonalDetection": {
-    "enabled": true,
-    "sensitivity": 2.5,
-    "useWeekdayFactors": true
-  },
+| Column | Content |
+|---|---|
+| `items.anomaly_settings` | Settings as JSON; NULL when all are default |
+| `items.anomaly_baseline_start` | Baseline start time |
+| `items.anomaly_profile` | Trained model (format version 2) with `tuning` |
+| `items.anomaly_profile_timestamp` | Time of last training |
+| `raw_dci_values.anomaly_state` | Level shift detector sums and their onset times, as JSON |
 
-  "changeDetection": {
-    "enabled": true,
-    "maxRatePerMinute": 15.0
-  },
+Detector state is written when an hourly bucket closes (one small update per DCI per hour) and when
+new baseline is started. Sum of the hour in progress is not saved, so a restart can delay a drift
+report by up to an hour and cannot cause a false one.
 
-  "sustainedHighDetection": {
-    "enabled": true,
-    "threshold": 85,
-    "durationMinutes": 10
-  },
+In an HA cluster both nodes share the database and no replication channel is involved. A node that
+becomes active reloads models, baseline start times and detector state of all DCIs in one pass
+(`ReloadAnomalyProfiles()`, called from the activation thread after threshold states are reloaded).
 
-  "suddenDropDetection": {
-    "enabled": false
-  }
-}
-```
+## Interfaces
 
-## AI Hints
+### Events
 
-Administrators can provide context to guide profile generation:
+Activation and repeat events of an anomaly threshold have additional named parameters:
+`anomalyType`, `anomalyScore`, `anomalyExpectedLow`, `anomalyExpectedHigh`, `anomalySlot`,
+`anomalyDirection`, `anomalyMode`.
 
-### Node-Level Hints
+### NXCP
 
-Apply to all DCIs on a node:
+- `VID_ANOMALY_SETTINGS` in DCI configuration: settings as JSON document.
+- Last value summary record, fixed offsets from record base, present only when anomaly detection is
+  enabled: 39 - anomaly type, 40 - score, 41 and 42 - expected range (40 to 42 only if the value was
+  checked), 43 - learning, 44 - model works on rate of change.
+- `CMD_REGENERATE_ANOMALY_PROFILE` (`VID_OBJECT_ID`, `VID_DCI_ID`); requires modify access to the object.
 
-- "Development server - expect irregular patterns"
-- "Batch processing server - high CPU at 2-4am is normal"
-- "Maintenance window: Sunday 3-5am"
+### WebAPI
 
-### DCI-Level Hints
+- DCI configuration has `anomalyDetection` object: settings, `enabled`, `llmTuning`, and read-only
+  `baselineStart`, `tuning` and `model`. Updates are merged into current settings.
+- Current value has `anomaly` object: `learning`, `type`, `mode`, `score`, `expectedLow`,
+  `expectedHigh`, `slot`.
+- `POST /v1/objects/{object-id}/data-collection/configuration/{dci-id}/regenerate-anomaly-profile`.
 
-Apply to specific metrics:
+See schemas `DCIAnomalyDetection` and `DCIAnomalyState` in `src/server/webapi/openapi.yaml`.
 
-- "Spikes during hourly backup jobs are expected"
-- "Critical metric - prefer false positives over missed anomalies"
-- "Counter resets at midnight are normal"
+### AI tools
 
-Hints are stored in `nodes.ai_hint` and `items.ai_hint` columns.
+`create-metric` and `edit-metric` accept `anomalyDetection` = `none`, `enabled` or `tuned`;
+`get-metric-details` reports it together with settings. The operational overview tool reports type,
+score and expected range for DCIs with anomalies.
 
-## Detection Flags
+### Management console
 
-Two independent flags in `items.flags`:
+- *Thresholds* page of DCI properties: enable detection, enable LLM tuning, sensitivity, direction,
+  mode. Other settings are available through WebAPI only.
+- Last values view: column *Anomaly detection* (learning, anomaly type, expected range).
+- *Regenerate anomaly profile* in *Actions* submenu of data collection views.
 
-| Flag | Description |
-|------|-------------|
-| `DCF_DETECT_ANOMALIES_IFOREST` | Isolation forest detection (existing) |
-| `DCF_DETECT_ANOMALIES_AI` | AI profile-based detection (new) |
+### Configuration export
 
-Both can be enabled simultaneously. Anomaly triggers if either detector fires. Events include source indicator.
+Settings are exported as `anomalySettings`. In configuration files and databases created before
+this design, the LLM flag alone enabled anomaly detection; import and database upgrade set the
+"enabled" flag for such DCIs.
 
-## Profile Generation
+## Replay
 
-### Workflow
+NXSL function `DetectAnomalies(object, dciId, timeFrom, [timeTo], [labels])` and method
+`DCI::detectAnomalies(timeFrom, [timeTo], [labels])` replay recorded history through anomaly
+detection, to see what would have been reported with current settings of the DCI.
 
-1. **Collect historical data** - Query 1-3 months from idata tables
-2. **Compute statistics in C++:**
-   - Hourly means and standard deviations
-   - Weekday vs weekend patterns
-   - Min/max/percentiles (p1, p5, p50, p95, p99)
-   - Rate of change statistics
-   - Sample outliers for context
-3. **Build LLM prompt** - Statistics + metric context + AI hints
-4. **LLM returns tuning parameters** - Which checks to enable, sensitivity values
-5. **Merge and store** - Combine computed baselines with LLM parameters
+- For each day of the period a model is trained as scheduled training would have trained it at the
+  start of that day - same selection of data, same lag - and values of that day are checked with
+  it. Detector state is carried from day to day.
+- Current settings of the DCI are used, including LLM tuning as it is now. Baseline start time is
+  ignored. Anomaly detection does not have to be enabled for the DCI.
+- Nothing is changed in the DCI.
 
-### Scheduling
+Result is a hash map:
 
-Profile generation uses the existing scheduled task mechanism:
+| Element | Content |
+|---|---|
+| `samples`, `checkedSamples`, `anomalousSamples`, `trainings` | Totals |
+| `days` | Per day: `start`, `samples`, `anomalousSamples`, `learning` |
+| `episodes` | Sequences of consecutive anomalous values: `start`, `end`, `type` (of first value), `samples`, and `score`, `value`, `expectedLow`, `expectedHigh`, `slot` of the value with highest score; `labelled` |
+| `episodesByType` | Number of episodes by type |
+| `evaluation` | Only when `labels` are given, see below |
 
-- **System task**: `System.RegenerateAnomalyProfiles`
-- **Default schedule**: Weekly (configurable by admin)
-- **Retry logic**: On LLM failure, schedule one-time retry with counter
-- **Cooldown**: Skip recently regenerated DCIs
+`labels` is an array of time ranges (`[start, end]`, UNIX timestamps) when anomalies are expected -
+known incidents. With labels the result has `evaluation`:
 
-### On-Demand Generation
+| Element | Content |
+|---|---|
+| `events` | Per labelled range: `detected`, and `delay` in seconds from its start to the first anomalous value |
+| `recall` | Share of labelled ranges that were detected |
+| `precision` | Share of episodes that overlap a labelled range |
+| `detectionDelay` | Average delay for detected ranges |
+| `falseAlarms`, `falseAlarmsByType` | Episodes outside of labelled ranges |
+| `falseAlarmsPerWeek` | False alarms per week of checked data |
 
-- Console context menu: "Generate Anomaly Profile"
-- NXSL function: `GenerateAnomalyProfile(dci)`
-- Execution: Asynchronous (non-blocking)
-
-### Requirements
-
-Profile generation requires:
-
-- Minimum 2 weeks of historical data
-- AI profile detection flag enabled on DCI
-- LLM service configured and available
-
-DCIs without a profile have AI anomaly detection disabled until first successful generation.
-
-## Database Schema
-
-### Items Table - New Columns
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `anomaly_profile` | TEXT | JSON profile |
-| `anomaly_profile_timestamp` | INTEGER | Generation timestamp |
-| `ai_hint` | VARCHAR(2000) | DCI-level AI hint |
-
-### Nodes Table - New Column
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `ai_hint` | VARCHAR(2000) | Node-level AI hint |
-
-### Items Flags - New Bit
-
-| Bit | Constant | Description |
-|-----|----------|-------------|
-| (new) | `DCF_DETECT_ANOMALIES_AI` | Enable AI profile detection |
-
-## LLM Integration
-
-Uses existing AI assistant infrastructure (`ai_core.cpp`):
-
-- Same LLM service URL and authentication
-- Same thread pool for background execution
-- Prompt template in `share/prompts/` or embedded
-
-### Prompt Structure
+Example:
 
 ```
-You are configuring anomaly detection for a network monitoring metric.
-
-METRIC INFORMATION:
-- Name: {dci_name}
-- Description: {dci_description}
-- Unit: {unit}
-- Polling interval: {interval} seconds
-- Node: {node_name} ({node_type})
-
-NODE CONTEXT: {node_ai_hint}
-METRIC CONTEXT: {dci_ai_hint}
-
-COMPUTED STATISTICS ({data_days} days):
-{statistics_json}
-
-Return anomaly detection parameters as JSON matching this schema:
-{response_schema}
-
-Guidelines:
-- Consider the metric type and expected behavior
-- Account for visible time-of-day and weekly patterns
-- Incorporate any provided context hints
-- Prefer fewer false positives for production stability
+r = DetectAnomalies($node, 931, time() - 86400 * 28, null, [[1794312000, 1794313800]]);
+println(r.evaluation.recall .. " " .. r.evaluation.falseAlarmsPerWeek);
+for(e : r.episodes)
+   println(strftime("%d.%m %H:%M", e.start) .. " " .. e.type .. " " .. e.score .. " " .. e.slot);
 ```
 
-### LLM Response Format
+## Isolation forest
 
-```json
-{
-  "hardBounds": { "enabled": true, "min": 0, "max": 100 },
-  "seasonalDetection": { "enabled": true, "sensitivity": 2.5, "useWeekdayFactors": true },
-  "changeDetection": { "enabled": true, "maxRatePerMinute": 15.0 },
-  "sustainedHighDetection": { "enabled": true, "threshold": 85, "durationMinutes": 10 },
-  "suddenDropDetection": { "enabled": false },
-  "reasoning": "Brief explanation of parameter choices..."
-}
-```
+`ad.cpp` keeps a univariate isolation forest (`FitIsolationForest`, `PredictIsolationForest`). It
+is not used for checking collected values; it is retained for multivariate detection over several
+DCIs of one object.
 
-## Console UI
+## Limitations
 
-### DCI Properties Dialog
-
-- Checkbox: "Enable AI-based anomaly detection"
-- Text field: "AI Hint" (optional)
-- Status display: Profile timestamp or "Not generated"
-
-### Node Properties Dialog
-
-- Text field: "AI Hint" (optional)
-
-### DCI Context Menu
-
-- Action: "Generate Anomaly Profile" (async)
-
-## Error Handling
-
-| Scenario | Behavior |
-|----------|----------|
-| LLM unreachable | Log warning, schedule retry |
-| Invalid LLM response | Log error, keep existing profile |
-| Insufficient history | Skip DCI, mark as "pending" |
-| Unreasonable values | Apply sanity bounds, log warning |
-| No profile exists | AI detection disabled until generated |
-
-## Performance Considerations
-
-### Runtime Detection
-
-- Profile parsed once on load, cached in memory
-- No database queries during detection
-- No LLM calls during detection
-- Short-circuit evaluation (stop on first anomaly)
-- Typical execution: < 1ms per sample
-
-### Profile Generation
-
-- Batch processing with rate limiting
-- Skip DCIs in cooldown period
-- Background thread pool execution
-- Non-blocking for console operations
-
-## Comparison: Isolation Forest vs AI Profile
-
-| Aspect | Isolation Forest | AI Profile |
-|--------|------------------|------------|
-| Training | Automatic | LLM-guided |
-| Time awareness | No | Yes (hourly/weekly) |
-| Semantic context | No | Yes (via hints) |
-| Customization | Limited | Per-metric tuning |
-| CPU overhead | Higher | Lower |
-| Interpretability | Low (score) | High (explicit rules) |
-
-Both methods can be enabled simultaneously for defense in depth.
-
-## Future Enhancements
-
-- **Multi-metric correlation**: Detect anomalies across related metrics
-- **Feedback loop**: Learn from operator actions (acknowledged vs dismissed)
-- **Automated tuning**: Adjust sensitivity based on false positive feedback
-- **Profile sharing**: Apply one profile to multiple similar DCIs
-- **Anomaly explanation**: LLM-generated explanations when anomalies fire
+- Slots are in server local time.
+- A DCI with fewer than 7 days of history reports nothing.
+- With `sampleSaveInterval` greater than 1 only part of collected values is stored, and spread is
+  trained from that part.
+- When retention time is shorter than 37 days, less data than intended is available for spread.
+- Holidays and other calendar exceptions are not known to the model.
+- Each DCI is analyzed on its own.

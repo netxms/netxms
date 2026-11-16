@@ -243,3 +243,37 @@ int H_DataCollectionConfigDelete(Context *context)
    json_decref(oldValue);
    return 204;
 }
+
+/**
+ * Handler for POST /v1/objects/:object-id/data-collection/configuration/:dci-id/regenerate-anomaly-profile
+ * Starts new baseline for anomaly detection and regenerates anomaly profile in background.
+ */
+int H_DataCollectionRegenerateAnomalyProfile(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<DataCollectionOwner> owner = LoadDataCollectionOwner(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (owner == nullptr)
+      return httpCode;
+
+   if (!owner->isDataCollectionTarget())
+   {
+      context->setErrorResponse("Object does not collect data");
+      return 400;
+   }
+
+   uint32_t dciId = context->getPlaceholderValueAsUInt32(L"dci-id");
+   shared_ptr<DCObject> dci = owner->getDCObjectById(dciId, context->getUserId());
+   if (dci == nullptr)
+      return 404;
+
+   if ((dci->getType() != DCO_TYPE_ITEM) || !static_cast<DCItem&>(*dci).isAnomalyDetectionEnabled())
+   {
+      context->setErrorResponse("Anomaly detection is not enabled for this data collection item");
+      return 400;
+   }
+
+   RegenerateAnomalyProfileAsync(dciId, owner->getId());
+   context->writeAuditLog(AUDIT_OBJECTS, true, owner->getId(), L"Anomaly profile regeneration for DCI \"%s\" [%u] on object \"%s\" [%u] started",
+         dci->getDescription().cstr(), dciId, owner->getName(), owner->getId());
+   return 202;
+}

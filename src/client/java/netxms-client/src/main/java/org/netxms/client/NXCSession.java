@@ -7172,6 +7172,25 @@ public class NXCSession
    }
 
    /**
+    * Regenerate anomaly profile of given DCI. If there is trained profile already, new baseline is started:
+    * data collected before estimated start of current level shift (or before current time if no shift is
+    * detected) will not be used for training, and DCI will be in learning state until enough data is collected.
+    *
+    * @param objectId object ID
+    * @param dciId DCI ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void regenerateAnomalyProfile(long objectId, long dciId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_REGENERATE_ANOMALY_PROFILE);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      msg.setFieldUInt32(NXCPCodes.VID_DCI_ID, dciId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Force DCI poll for given DCI
     *
     * @param nodeId Node object ID

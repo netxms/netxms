@@ -10012,13 +10012,49 @@ msgstr "Seuils"
 msgid "Instance name"
 msgstr "Nom de l'instance"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java:123
-msgid "Detect anomalies using isolation forest algorithm"
-msgstr ""
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Detect anomalies"
+msgstr "Détecter les anomalies"
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java:127
-msgid "Detect anomalies using AI"
-msgstr ""
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Tune anomaly detection settings using AI"
+msgstr "Ajuster les paramètres de détection d'anomalies à l'aide de l'IA"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Anomaly sensitivity"
+msgstr "Sensibilité de détection d'anomalies"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Maximum deviation from expected value, in standard deviations, that is still considered normal. Lower value makes detection more sensitive."
+msgstr "Écart maximal par rapport à la valeur attendue (en écarts-types) encore considéré comme normal. Une valeur plus faible rend la détection plus sensible."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Report deviations"
+msgstr "Signaler les écarts"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "In both directions"
+msgstr "Dans les deux sens"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Up only"
+msgstr "Vers le haut uniquement"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Down only"
+msgstr "Vers le bas uniquement"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Analyze"
+msgstr "Analyser"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Automatic selection"
+msgstr "Sélection automatique"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Rate of change"
+msgstr "Taux de variation"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java:131
 msgid "Process all thresholds"
@@ -12024,6 +12060,32 @@ msgstr ""
 msgid "Disabled until {0}"
 msgstr "Desactive"
 
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Learning"
+msgstr "Apprentissage"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Level shift"
+msgstr "Changement de niveau"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Out of expected range"
+msgstr "Hors de la plage attendue"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Sudden change"
+msgstr "Changement brusque"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+#, java-format
+msgid "expected rate of change {0} .. {1} per second"
+msgstr "taux de variation attendu {0} .. {1} par seconde"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+#, java-format
+msgid "expected {0} .. {1}"
+msgstr "attendu {0} .. {1}"
+
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java:159
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:958
 #: src/main/java/org/netxms/nxmc/modules/businessservice/views/helpers/BusinessServiceCheckLabelProvider.java:111
@@ -12476,6 +12538,34 @@ msgstr ""
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:368
 msgid "Clear collected data"
 msgstr "Effacer les donnees collectees"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Anomaly detection"
+msgstr "Détection d'anomalies"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Regenerate &anomaly profile"
+msgstr "Régénérer le profil d'&anomalies"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Regenerate Anomaly Profile"
+msgstr "Régénérer le profil d'anomalies"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Anomaly detection is not enabled for selected data collection items."
+msgstr "La détection d'anomalies n'est pas activée pour les éléments de collecte de données sélectionnés."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "New anomaly detection baseline will be started for selected data collection items. Data collected before the beginning of current level shift (or before this moment, if level shift is not detected) will be ignored, and anomalies will not be reported until enough data is collected. Continue?"
+msgstr "Une nouvelle base de référence de détection d'anomalies sera démarrée pour les éléments de collecte de données sélectionnés. Les données collectées avant le début du changement de niveau actuel (ou avant cet instant, si aucun changement de niveau n'est détecté) seront ignorées, et les anomalies ne seront pas signalées tant que suffisamment de données n'auront pas été collectées. Continuer ?"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Initiating anomaly profile regeneration"
+msgstr "Lancement de la régénération du profil d'anomalies"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Cannot start anomaly profile regeneration"
+msgstr "Impossible de lancer la régénération du profil d'anomalies"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:616
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/SummaryDataCollectionView.java:242
@@ -28538,3 +28628,4 @@ msgstr ""
 #, java-printf-format
 #~ msgid "Updating rack placement for node %s"
 #~ msgstr "Mise a jour de l'emplacement du rack pour le noeud %s"
+

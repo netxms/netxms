@@ -879,27 +879,52 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 }
 
 /**
- * Detect anomalies on DCI within given period and wrap result as NXSL array.
- * Returns NXSL NULL on failure.
+ * Replay recorded history of DCI through anomaly detection (see DetectAnomalies in anomaly_profile.cpp).
+ * Arguments: timeFrom, [timeTo], [labels]
+ *    timeFrom   start of replayed period (UNIX timestamp)
+ *    timeTo     end of replayed period (default is current time)
+ *    labels     array of time ranges when anomalies are expected (each range is an array of two UNIX timestamps);
+ *               if provided, result contains evaluation of detection quality
+ * Sets result to hash map with replay results, or to null on failure.
  */
-NXSL_Value *DetectAnomaliesForNXSL(NXSL_VM *vm, const DataCollectionTarget& target, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold)
+int DetectAnomaliesForNXSL(NXSL_VM *vm, const DataCollectionTarget& target, uint32_t dciId, int argc, NXSL_Value **argv, NXSL_Value **result)
 {
-   unique_ptr<StructArray<ScoredDciValue>> anomalies = DetectAnomalies(target, dciId, timeFrom, timeTo, threshold);
-   if (anomalies == nullptr)
-      return vm->createValue();
+   if (!argv[0]->isInteger() || ((argc > 1) && !argv[1]->isInteger() && !argv[1]->isNull()))
+      return NXSL_ERR_NOT_INTEGER;
 
-   NXSL_Array *array = new NXSL_Array(vm);
-   for(int i = 0; i < anomalies->size(); i++)
-      array->append(vm->createValue(vm->createObject(&g_nxslScoredDciValueClass, new ScoredDciValue(*anomalies->get(i)))));
-   return vm->createValue(array);
+   std::vector<std::pair<time_t, time_t>> labels;
+   if ((argc > 2) && !argv[2]->isNull())
+   {
+      if (!argv[2]->isArray())
+         return NXSL_ERR_NOT_ARRAY;
+
+      NXSL_Array *ranges = argv[2]->getValueAsArray();
+      for(int i = 0; i < ranges->size(); i++)
+      {
+         NXSL_Value *range = ranges->get(i);
+         if (!range->isArray())
+            return NXSL_ERR_NOT_ARRAY;
+         NXSL_Array *bounds = range->getValueAsArray();
+         if (bounds->size() != 2)
+            return NXSL_ERR_NOT_ARRAY;
+         if (!bounds->get(0)->isInteger() || !bounds->get(1)->isInteger())
+            return NXSL_ERR_NOT_INTEGER;
+         labels.push_back(std::pair<time_t, time_t>(static_cast<time_t>(bounds->get(0)->getValueAsInt64()), static_cast<time_t>(bounds->get(1)->getValueAsInt64())));
+      }
+   }
+
+   time_t timeFrom = static_cast<time_t>(argv[0]->getValueAsInt64());
+   time_t timeTo = ((argc > 1) && !argv[1]->isNull()) ? static_cast<time_t>(argv[1]->getValueAsInt64()) : time(nullptr);
+   json_t *replay = DetectAnomalies(target, dciId, timeFrom, timeTo, labels);
+   *result = (replay != nullptr) ? vm->createValueFromJson(replay, 8) : vm->createValue();
+   json_decref(replay);
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
- * Detect anomalies for DCI within given period
- * Format: DetectAnomalies(node, dciId, startTime, endTime, threshold)
- * End time is optional (default is current time)
- * Threshold is optional (default is 0.75)
- * Returns null on error and detected anomalies on success
+ * Replay recorded history of DCI through anomaly detection
+ * Format: DetectAnomalies(node, dciId, timeFrom, [timeTo], [labels])
+ * See DetectAnomaliesForNXSL for description of arguments and return value
  */
 static int F_DetectAnomalies(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
@@ -909,22 +934,15 @@ static int F_DetectAnomalies(int argc, NXSL_Value **argv, NXSL_Value **result, N
    if (!argv[0]->isObject())
       return NXSL_ERR_NOT_OBJECT;
 
-   if (!argv[1]->isInteger() || !argv[2]->isInteger() || ((argc > 3) && !argv[3]->isInteger()))
+   if (!argv[1]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   if ((argc > 4) && !argv[4]->isNumeric())
-      return NXSL_ERR_NOT_NUMBER;
-
    NXSL_Object *object = argv[0]->getValueAsObject();
-   if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
+   if (!object->getClass()->instanceOf(L"DataCollectionTarget"))
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-   *result = DetectAnomaliesForNXSL(vm, *node, argv[1]->getValueAsUInt32(),
-            static_cast<time_t>(argv[2]->getValueAsInt64()),
-            (argc > 3) ? static_cast<time_t>(argv[3]->getValueAsInt64()) : time(nullptr),
-            (argc > 4) ? argv[4]->getValueAsReal() : 0.75);
-   return NXSL_ERR_SUCCESS;
+   return DetectAnomaliesForNXSL(vm, *node, argv[1]->getValueAsUInt32(), argc - 2, &argv[2], result);
 }
 
 /**

@@ -24,6 +24,34 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.14 to 71.15
+ */
+static bool H_UpgradeFromV14()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE items ADD anomaly_settings $SQL:TEXT\n"
+      L"ALTER TABLE items ADD anomaly_baseline_start integer\n"
+      L"UPDATE items SET anomaly_baseline_start=0,anomaly_profile=NULL,anomaly_profile_timestamp=0\n"
+      L"ALTER TABLE raw_dci_values ADD anomaly_state varchar(255)\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"items", L"anomaly_baseline_start"));
+
+   // Flag 0x200 no longer enables anomaly detection on its own (it enables LLM tuning of detection enabled by flag 0x1)
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE items SET flags=flags+1 WHERE BITAND(flags, 513)=512"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE items SET flags=flags+1 WHERE (flags & 513)=512"));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 71.13 to 71.14 (manages transactions itself)
  */
 static bool H_UpgradeFromV13()
@@ -307,6 +335,7 @@ static struct
    bool (*upgradeProc)();
    bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 14, 71, 15, H_UpgradeFromV14 },
    { 13, 71, 14, H_UpgradeFromV13, true },
    { 12, 71, 13, H_UpgradeFromV12 },
    { 11, 71, 12, H_UpgradeFromV11 },

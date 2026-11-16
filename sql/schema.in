@@ -1087,9 +1087,11 @@ CREATE TABLE items
   related_object integer not null,
   all_rearmed_event integer not null, // Event code to be generated when all thresholds are rearmed
   thresholds_disable_end_time integer not null,
-  anomaly_profile SQL_TEXT null,       // AI anomaly detection profile (JSON)
+  anomaly_profile SQL_TEXT null,       // Anomaly detection profile - trained model and LLM tuning (JSON)
   anomaly_profile_timestamp integer not null,
-  ai_hint varchar(2000) null,          // Hint for AI anomaly profile generation
+  anomaly_settings SQL_TEXT null,      // Anomaly detection settings (JSON), null if all settings have default values
+  anomaly_baseline_start integer not null, // Data before this time is not used for anomaly profile training (0 if not set)
+  ai_hint varchar(2000) null,          // Hint for LLM tuning of anomaly detection
   aggregation_disabled char(1) not null, // Per-DCI aggregation opt-out: '0'=aggregate, '1'=disabled
   hourly_retention integer null,       // Per-DCI hourly aggregate retention override (days)
   daily_retention integer null,        // Per-DCI daily aggregate retention override (days)
@@ -1260,6 +1262,7 @@ CREATE TABLE raw_dci_values
   last_poll_time SQL_INT64 not null,
   cache_timestamp SQL_INT64 not null,
   anomaly_detected char(1) not null,
+  anomaly_state varchar(255) null,     // Anomaly detector runtime state (JSON)
   PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

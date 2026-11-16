@@ -16,7 +16,7 @@ This skill provides comprehensive data collection management capabilities for Ne
 - Support for multiple data sources: agent, SNMP, script, SSH, push, web service, device driver, MQTT, Modbus, and internal
 - Flexible data types: integers, counters, floats, strings
 - Transformation scripts for value processing
-- Anomaly detection (Isolation Forest, AI, or both)
+- Anomaly detection: values are compared with a baseline learned from history (per hour of day and day type) and checked for being out of expected range, sudden change, and level shift. Modes: `none`, `enabled`, `tuned` (enabled, with sensitivity and direction tuned by LLM). An anomaly produces an event only if the metric has a threshold with function `anomaly`. Detection reports nothing while the baseline is being learned (7 days of data by default).
 - Proxy polling via source node
 - Custom SNMP port configuration
 - Display flags: tooltip, overview, status calculation

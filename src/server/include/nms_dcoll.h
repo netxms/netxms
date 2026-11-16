@@ -24,8 +24,10 @@
 #define _nms_dcoll_h_
 
 #include <map>
+#include <nxcore_anomaly.h>
 
 class ImportContext;
+class EventBuilder;
 
 /**
  * Max. length for prediction engine name
@@ -616,13 +618,16 @@ protected:
    Timestamp m_prevValueTimeStamp;
    bool m_cacheLoaded;
    bool m_anomalyDetected;
-   bool m_anomalyDetectedAI;           // Anomaly detected by AI profile
-   json_t *m_anomalyProfile;           // Parsed profile (cached for runtime)
-   time_t m_anomalyProfileTimestamp;
-   time_t m_sustainedHighStart;        // Start time of sustained high period (0 if not in high state)
-   time_t m_sustainedLowStart;         // Start time of sustained low period (0 if not in low state)
-   double m_recentAverage;             // EMA for sudden drop detection (NaN if not initialized)
-   SharedString m_aiHint;              // Hint for AI anomaly profile generation
+   AnomalySettings m_anomalySettings;  // Anomaly detection settings as configured by user
+   AnomalySettings m_anomalyEffectiveSettings;  // Settings used for scoring (configured settings with LLM tuning applied)
+   shared_ptr<AnomalyModel> m_anomalyModel;     // Trained model (nullptr if not trained yet)
+   json_t *m_anomalyTuning;            // Settings suggested by LLM (nullptr if none)
+   time_t m_anomalyProfileTimestamp;   // Time of last model training
+   time_t m_anomalyBaselineStart;      // Data before this time is not used for training (0 if not set)
+   AnomalyDetectorState m_anomalyState;
+   AnomalyScore m_anomalyScore;        // Result of scoring last value
+   time_t m_anomalyScoreTimestamp;     // Timestamp of last scored value
+   SharedString m_aiHint;              // Hint for LLM tuning of anomaly detection
 	int m_multiplier;
 	SharedString m_unitName;
 	uint32_t m_mappingTableId;          // Mapping table for raw->display value mapping (0 = none)
@@ -645,6 +650,28 @@ protected:
 
    bool hasScriptThresholds() const;
    Threshold *getThresholdById(uint32_t id) const;
+
+   bool isNumeric() const
+   {
+      int dataType = getTransformedDataType();
+      return (dataType != DCI_DT_STRING) && (dataType != DCI_DT_NULL);
+   }
+   void normalizeAnomalyDetectionFlags()
+   {
+      if (m_flags & DCF_DETECT_ANOMALIES_AI)
+         m_flags |= DCF_DETECT_ANOMALIES_IFOREST;   // LLM tuning makes sense only for enabled anomaly detection
+   }
+   void setAnomalyProfileInternal(const shared_ptr<AnomalyModel>& model, json_t *tuning, time_t timestamp);
+   void setAnomalyProfileFromJson(json_t *profile, time_t timestamp);
+   void updateAnomalyEffectiveSettings();
+   void clearAnomalyScore();
+   void checkForAnomaly(Timestamp timestamp, const ItemValue& value);
+   void saveAnomalyDetectorState() const;
+   void addAnomalyEventParameters(EventBuilder *builder, const Threshold& threshold) const;
+   json_t *createAnomalyProfileDocument() const;
+   json_t *anomalyScoreToJson() const;
+   json_t *anomalyDetectionToJson() const;
+   bool isAnomalyModelLearning() const { return (m_anomalyModel == nullptr) || m_anomalyModel->isLearning(m_anomalyEffectiveSettings); }
 
    void markLastThresholdEvent(uint32_t thresholdId, int severity, const wchar_t *message)
    {
@@ -709,11 +736,16 @@ public:
 	int getUseMultiplier() const { return (m_flags & DCF_MULTIPLIERS_MASK) >> 16; }
 	SharedString getUnitName() const { return GetAttributeWithLock(m_unitName, m_mutex); }
 	uint32_t getMappingTableId() const { return m_mappingTableId; }
-	bool inAnomalyDetectionByAIEnabled() const { return (m_flags & DCF_DETECT_ANOMALIES_AI) != 0; }
+	bool isAnomalyDetectionEnabled() const { return ((m_flags & DCF_DETECT_ANOMALIES_IFOREST) != 0) && isNumeric(); }
+	bool isAnomalyTuningEnabled() const { return (m_flags & DCF_DETECT_ANOMALIES_AI) != 0; }
 	bool isAnomalyDetected() const { return m_anomalyDetected; }
-	bool isAnomalyDetectedAI() const { return m_anomalyDetectedAI; }
-	bool hasAnomalyProfile() const { return m_anomalyProfile != nullptr; }
+	AnomalyScore getAnomalyScore() const { return GetAttributeWithLock(m_anomalyScore, m_mutex); }
+	AnomalySettings getAnomalySettings() const { return GetAttributeWithLock(m_anomalySettings, m_mutex); }
+	AnomalySettings getAnomalyEffectiveSettings() const { return GetAttributeWithLock(m_anomalyEffectiveSettings, m_mutex); }
+	shared_ptr<AnomalyModel> getAnomalyModel() const { return GetAttributeWithLock(m_anomalyModel, m_mutex); }
+	json_t *getAnomalyTuning() const;
 	time_t getAnomalyProfileTimestamp() const { return m_anomalyProfileTimestamp; }
+	time_t getAnomalyBaselineStart() const { return m_anomalyBaselineStart; }
 	SharedString getAIHint() const { return GetAttributeWithLock(m_aiHint, m_mutex); }
 
 	bool isAggregationDisabled() const { return m_aggregationDisabled; }
@@ -727,9 +759,10 @@ public:
 	bool tryAdvanceAggregationWatermark(int64_t expectedStart, int64_t newWatermark, int64_t *currentOut);
 	bool setInitialAggregationWatermark(int64_t timestampMs);
 
-	void setAnomalyProfile(json_t *profile);
+	void setAnomalyProfile(const shared_ptr<AnomalyModel>& model, json_t *tuning);
 	bool saveAnomalyProfileToDatabase();
-	bool checkAnomalyAIProfile(const ItemValue& value);
+	time_t startNewAnomalyBaseline();
+	void reloadAnomalyProfile(json_t *profile, time_t timestamp, time_t baselineStart, json_t *detectorState);
 
 	uint64_t getCacheMemoryUsage() const;
 
@@ -1141,16 +1174,6 @@ public:
 };
 
 /**
- * DCI value with assigned score
- */
-struct ScoredDciValue
-{
-   Timestamp timestamp;
-   double value;
-   double score;
-};
-
-/**
  * NXSL exit codes
  */
 extern uuid g_nxslExitDCError;
@@ -1234,8 +1257,9 @@ void CalculateItemValueTotal(ItemValue *result, int dataType, const ItemValue *c
 void CalculateItemValueMin(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
 void CalculateItemValueMax(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
 
-unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarget& dcTarget, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold = 0.75);
-bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci, double value, double threshold, int period, int depth, int width);
+json_t *DetectAnomalies(const DataCollectionTarget& owner, uint32_t dciId, time_t timeFrom, time_t timeTo, const std::vector<std::pair<time_t, time_t>>& labels);
+void NXCORE_EXPORTABLE RegenerateAnomalyProfileAsync(uint32_t dciId, uint32_t ownerId);
+bool ReloadAnomalyProfiles();
 
 DataCollectionError GetQueueStatistics(const wchar_t *parameter, StatisticType type, wchar_t *value);
 void GetAllQueueStatistics(Table *table);

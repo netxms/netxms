@@ -8226,6 +8226,48 @@ paths:
         - BearerAuth: []
       tags:
         - Data Collection
+  /v1/objects/{object-id}/data-collection/configuration/{dci-id}/regenerate-anomaly-profile:
+    post:
+      operationId: regenerateAnomalyProfile
+      summary: Regenerate anomaly profile of data collection item
+      description: |
+        Start background regeneration of the anomaly detection profile of a data collection item.
+
+        If the item already has a trained profile, a new baseline is started: data collected before
+        the estimated start of the current level shift (or before current time if no shift is detected)
+        is no longer used for training, anomaly detector state is reset, and the item stays in learning
+        state until minimum number of training days is collected. If the item has no trained profile yet,
+        the profile is trained from available history.
+
+        Requires `OBJECT_ACCESS_MODIFY` on the object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object ID
+        - name: dci-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Data collection item ID
+      responses:
+        '202':
+          description: Profile regeneration started
+        '400':
+          description: Object is not a data collection target, or anomaly detection is not enabled for the item
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to given object
+        '404':
+          description: Object or data collection item not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
   /v1/push-data:
     post:
       operationId: pushData
@@ -20946,6 +20988,9 @@ components:
           type: integer
         aiHint:
           type: string
+          description: Hint for LLM tuning of anomaly detection settings
+        anomalyDetection:
+          $ref: '#/components/schemas/DCIAnomalyDetection'
         aggregationDisabled:
           type: boolean
         hourlyRetention:
@@ -21040,6 +21085,178 @@ components:
           type: boolean
         convertSnmpStringToHex:
           type: boolean
+    DCIAnomalyDetection:
+      type: object
+      description: |
+        Anomaly detection configuration of a single-value data collection item, and state of the
+        trained model. Values are compared with a baseline learned from collected data (per hour
+        of day and day type, in server local time) and checked for being out of expected range,
+        for sudden change between consecutive values, and for sustained level shift (drift).
+        On update merge-patch semantics apply: only properties present in the request are changed,
+        and nested objects are merged property by property (`hardBounds: null` removes hard bounds).
+        Read-only properties are ignored on update.
+      properties:
+        enabled:
+          type: boolean
+          description: True if anomaly detection is enabled for the item
+        llmTuning:
+          type: boolean
+          description: |
+            True if sensitivity, direction, mode and hard bounds are tuned by LLM (see `tuning`).
+            Has effect only if anomaly detection is enabled; setting it enables anomaly detection.
+        sensitivity:
+          type: number
+          default: 3.5
+          description: |
+            Maximum deviation from expected value, in standard deviations, that is still considered
+            normal (greater than 0, up to 100). Lower value makes detection more sensitive.
+        direction:
+          type: string
+          enum: [both, up, down]
+          default: both
+          description: Direction of deviations reported as anomalies
+        mode:
+          type: string
+          enum: [auto, value, rate]
+          default: auto
+          description: |
+            What is being analyzed: collected value or its rate of change per second. With `auto`
+            the mode is selected during training (rate of change for steadily growing or
+            decreasing series).
+        minTrainingDays:
+          type: integer
+          default: 7
+          description: |
+            Minimum number of days with collected data (1 to 365). Model trained on fewer days is
+            in learning state and anomalies are not reported.
+        hardBounds:
+          type: object
+          nullable: true
+          description: Limits that the value cannot cross under normal conditions (omitted if not set)
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+        provider:
+          type: object
+          readOnly: true
+          description: Source of expected values
+          properties:
+            id:
+              type: string
+              enum: [slot]
+        detector:
+          type: object
+          description: Level shift (drift) detector settings
+          properties:
+            id:
+              type: string
+              enum: [cusum]
+            k:
+              type: number
+              default: 1.0
+              description: Slack, in standard deviations of hourly mean deviation from baseline
+            h:
+              type: number
+              default: 5
+              description: Decision threshold for cumulative sum
+        baselineStart:
+          type: string
+          format: date-time
+          readOnly: true
+          description: |
+            Data collected before this time is not used for training (set when the anomaly
+            profile is regenerated on request; omitted if not set)
+        tuning:
+          type: object
+          readOnly: true
+          description: |
+            Settings suggested by LLM. While `llmTuning` is set they take precedence over
+            configured `sensitivity`, `direction` and `hardBounds`, and over `mode` if it is
+            configured as `auto`.
+          properties:
+            generatedAt:
+              type: integer
+              description: Time when settings were generated (Unix timestamp)
+            sensitivity:
+              type: number
+            direction:
+              type: string
+              enum: [both, up, down]
+            mode:
+              type: string
+              enum: [auto, value, rate]
+            hardBounds:
+              type: object
+              properties:
+                min:
+                  type: number
+                max:
+                  type: number
+        model:
+          type: object
+          readOnly: true
+          description: State of the trained model (omitted if the model is not trained yet)
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+              description: Time of last training
+            mode:
+              type: string
+              enum: [value, rate]
+              description: Mode used by the model
+            learning:
+              type: boolean
+              description: True if the model does not have enough data and anomalies are not reported
+            trainingDays:
+              type: integer
+              description: Number of days with data used for training
+            trainedFrom:
+              type: string
+              format: date-time
+            trainedTo:
+              type: string
+              format: date-time
+            individualWeekdays:
+              type: boolean
+              description: True if at least one day of week has its own baseline (otherwise weekdays and weekend are used)
+    DCIAnomalyState:
+      type: object
+      description: |
+        Result of anomaly check of the most recent value. Present only for items with anomaly
+        detection enabled.
+      properties:
+        learning:
+          type: boolean
+          description: True if the model does not have enough data yet; other properties are omitted in that case
+        type:
+          type: string
+          enum: [none, range, step, drift]
+          description: |
+            Type of detected anomaly: value outside of expected range, sudden change between
+            consecutive values, or sustained level shift
+        mode:
+          type: string
+          enum: [value, rate]
+          description: |
+            What is being analyzed: collected value or its rate of change per second. Expected
+            range is given in the same terms.
+        score:
+          type: number
+          description: |
+            Deviation from expected value in standard deviations (cumulative sum for `drift`).
+            Omitted, together with expected range and slot, if the value was not checked.
+        expectedLow:
+          type: number
+          description: Lower bound of expected range
+        expectedHigh:
+          type: number
+          description: Upper bound of expected range
+        slot:
+          type: string
+          description: Description of the part of baseline the value was compared with
     DCIValue:
       type: object
       description: Data Collection Item (DCI) current value
@@ -21116,7 +21333,9 @@ components:
           description: DCI comments
         anomalyDetected:
           type: boolean
-          description: True if anomaly was detected in recent values
+          description: True if anomaly was detected in most recent value
+        anomaly:
+          $ref: '#/components/schemas/DCIAnomalyState'
         userTag:
           type: string
           description: User-defined tag

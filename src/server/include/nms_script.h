@@ -491,18 +491,6 @@ public:
 };
 
 /**
- * NXSL "ScoredDciValue" class
- */
-class NXSL_ScoredDciValueClass : public NXSL_Class
-{
-public:
-   NXSL_ScoredDciValueClass();
-
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
-   virtual void onObjectDelete(NXSL_Object *object) override;
-};
-
-/**
  * NXSL "SNMP_Transport" class
  */
 class NXSL_SNMPTransportClass : public NXSL_Class
@@ -932,7 +920,7 @@ NXSL_Value *DCObjectValueToNXSL(NXSL_VM *vm, DCObject *dci, bool rawValue);
 NXSL_Value *DCItemAggregateValueToNXSL(NXSL_VM *vm, DCObject *dci, AggregationFunction func, time_t timeFrom, time_t timeTo);
 NXSL_Value *GetDCItemValuesForNXSL(NXSL_VM *vm, DCObject *dci, DataCollectionTarget *target,
          time_t timeFrom, time_t timeTo, bool rawValue, DciTier requestedTier, DciAggregationFunction aggFunction, bool asDataPoints);
-NXSL_Value *DetectAnomaliesForNXSL(NXSL_VM *vm, const DataCollectionTarget& target, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold);
+int DetectAnomaliesForNXSL(NXSL_VM *vm, const DataCollectionTarget& target, uint32_t dciId, int argc, NXSL_Value **argv, NXSL_Value **result);
 shared_ptr<DCObject> ResolveLiveDCObjectFromNXSL(const DCObjectInfo *info, shared_ptr<DataCollectionTarget> *targetOut);
 int ParseDciTierName(const wchar_t *name);
 int ParseDciAggFunctionName(const wchar_t *name);
@@ -1054,7 +1042,6 @@ extern NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 extern NXSL_RackClass g_nxslRackClass;
 extern NXSL_RoomClass g_nxslRoomClass;
 extern NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
-extern NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_CloudDomainClass g_nxslCloudDomainClass;
 extern NXSL_ResourceClass g_nxslResourceClass;

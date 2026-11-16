@@ -9850,12 +9850,48 @@ msgstr ""
 msgid "Instance name"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java:123
-msgid "Detect anomalies using isolation forest algorithm"
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Detect anomalies"
 msgstr ""
 
-#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java:127
-msgid "Detect anomalies using AI"
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Tune anomaly detection settings using AI"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Anomaly sensitivity"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Maximum deviation from expected value, in standard deviations, that is still considered normal. Lower value makes detection more sensitive."
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Report deviations"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "In both directions"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Up only"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Down only"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Analyze"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Automatic selection"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Rate of change"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java:131
@@ -11824,6 +11860,32 @@ msgstr ""
 msgid "Disabled until {0}"
 msgstr ""
 
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Learning"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Level shift"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Out of expected range"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Sudden change"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+#, java-format
+msgid "expected rate of change {0} .. {1} per second"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+#, java-format
+msgid "expected {0} .. {1}"
+msgstr ""
+
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java:159
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/DataCollectionView.java:958
 #: src/main/java/org/netxms/nxmc/modules/businessservice/views/helpers/BusinessServiceCheckLabelProvider.java:111
@@ -12265,6 +12327,34 @@ msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:368
 msgid "Clear collected data"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Anomaly detection"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Regenerate &anomaly profile"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Regenerate Anomaly Profile"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Anomaly detection is not enabled for selected data collection items."
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "New anomaly detection baseline will be started for selected data collection items. Data collected before the beginning of current level shift (or before this moment, if level shift is not detected) will be ignored, and anomalies will not be reported until enough data is collected. Continue?"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Initiating anomaly profile regeneration"
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java
+msgid "Cannot start anomaly profile regeneration"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/BaseDataCollectionView.java:616
@@ -27908,3 +27998,4 @@ msgid ""
 "For assistance, contact your network administrator or the owner of the NetXMS server.\n"
 "\n"
 msgstr ""
+

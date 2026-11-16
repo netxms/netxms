@@ -616,7 +616,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_EFFECTIVE_RESPONSIBLE_USERS"),
       _T("CMD_GET_DHCP_SCOPES"),
       _T("CMD_GET_DHCP_LEASES"),
-      _T("CMD_GET_AGENT_LOG_FILE")
+      _T("CMD_GET_AGENT_LOG_FILE"),
+      _T("CMD_REGENERATE_ANOMALY_PROFILE")
    };
    static const TCHAR *reportingMessageNames[] =
    {

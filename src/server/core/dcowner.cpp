@@ -290,7 +290,7 @@ void DataCollectionOwner::loadItemsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedS
         L"transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context,"
         L"anomaly_profile,anomaly_profile_timestamp,ai_hint,"
         L"aggregation_disabled,hourly_retention,daily_retention,aggregation_watermark,"
-        L"mapping_table_id,snmp_agent_name "
+        L"mapping_table_id,snmp_agent_name,anomaly_settings,anomaly_baseline_start "
         L"FROM items WHERE node_id=?");
 	if (hStmt != nullptr)
 	{

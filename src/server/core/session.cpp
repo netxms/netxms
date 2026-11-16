@@ -1249,6 +1249,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_RECALCULATE_DCI_VALUES:
          recalculateDCIValues(*request);
          break;
+      case CMD_REGENERATE_ANOMALY_PROFILE:
+         regenerateAnomalyProfile(*request);
+         break;
       case CMD_GET_MIB_TIMESTAMP:
          getMIBTimestamp(*request);
          break;
@@ -5284,6 +5287,51 @@ void ClientSession::recalculateDCIValues(const NXCPMessage& request)
    else  // No object with given ID
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Start new baseline for anomaly detection on given DCI and regenerate its anomaly profile in background
+ */
+void ClientSession::regenerateAnomalyProfile(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object == nullptr)
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+   else if (!object->isDataCollectionTarget())
+   {
+      response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+   }
+   else if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on regenerating anomaly profile");
+   }
+   else
+   {
+      uint32_t dciId = request.getFieldAsUInt32(VID_DCI_ID);
+      shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, m_userId);
+      if (dci == nullptr)
+      {
+         response.setField(VID_RCC, RCC_INVALID_DCI_ID);
+      }
+      else if ((dci->getType() != DCO_TYPE_ITEM) || !static_cast<DCItem&>(*dci).isAnomalyDetectionEnabled())
+      {
+         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+      else
+      {
+         RegenerateAnomalyProfileAsync(dciId, object->getId());
+         writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Anomaly profile regeneration for DCI \"%s\" [%u] on object \"%s\" [%u] started",
+                  dci->getDescription().cstr(), dciId, object->getName(), object->getId());
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
    }
 
    sendMessage(response);

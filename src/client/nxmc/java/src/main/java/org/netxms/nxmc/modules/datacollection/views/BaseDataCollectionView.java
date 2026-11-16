@@ -111,6 +111,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    public static final int LV_COLUMN_EVENT = 7;
    public static final int LV_COLUMN_MESSAGE = 8;
    public static final int LV_COLUMN_COMMENTS = 9;
+   public static final int LV_COLUMN_ANOMALY = 10;
 
    protected SortableTableViewer viewer;
 
@@ -134,6 +135,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    protected Action actionForcePoll;
    protected Action actionRecalculateData;
    protected Action actionClearData;
+   protected Action actionRegenerateAnomalyProfile;
 
    /**
     * @param name
@@ -163,8 +165,8 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       parent.setLayout(new FillLayout());
 
       // Setup table columns
-      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Display name"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Tag"), i18n.tr("Threshold"), i18n.tr("Event"), i18n.tr("Message"), i18n.tr("Comments") };
-      final int[] widths = { 250, 70, 250, 150, 120, 120, 150, 250, 250, 250 };
+      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Display name"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Tag"), i18n.tr("Threshold"), i18n.tr("Event"), i18n.tr("Message"), i18n.tr("Comments"), i18n.tr("Anomaly detection") };
+      final int[] widths = { 250, 70, 250, 150, 120, 120, 150, 250, 250, 250, 250 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 
       labelProvider = new LastValuesLabelProvider(viewer);
@@ -229,6 +231,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       actions.add(actionForcePoll);
       actions.add(actionRecalculateData);
       actions.add(actionClearData);
+      actions.add(actionRegenerateAnomalyProfile);
       manager.add(actions);
 
       MenuManager viewOptions = new MenuManager(i18n.tr("V&iew options"));
@@ -370,6 +373,14 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          public void run()
          {
             clearCollectedData();
+         }
+      };
+
+      actionRegenerateAnomalyProfile = new Action(i18n.tr("Regenerate &anomaly profile")) {
+         @Override
+         public void run()
+         {
+            regenerateAnomalyProfile();
          }
       };
    }
@@ -945,6 +956,63 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot start DCI data recalculation");
+         }
+      }.start();
+   }
+
+   /**
+    * Check if anomaly detection is enabled for given element of DCI list
+    *
+    * @param dci element of DCI list
+    * @return true if anomaly detection is enabled
+    */
+   protected boolean isAnomalyDetectionEnabled(Object dci)
+   {
+      DciValue value = (DciValue)dci;
+      return (value.getDcObjectType() == DataCollectionObject.DCO_TYPE_ITEM) && ((value.getFlags() & DataCollectionItem.DCF_DETECT_ANOMALIES_IFOREST) != 0);
+   }
+
+   /**
+    * Regenerate anomaly profile for selected DCIs
+    */
+   private void regenerateAnomalyProfile()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      final List<Pair<Long, Long>> dciList = new ArrayList<>();
+      for(Object dci : selection.toList())
+         if (isAnomalyDetectionEnabled(dci))
+            dciList.add(new Pair<Long, Long>(getObjectId(dci), getDciId(dci)));
+
+      if (dciList.isEmpty())
+      {
+         MessageDialogHelper.openInformation(getWindow().getShell(), i18n.tr("Regenerate Anomaly Profile"), i18n.tr("Anomaly detection is not enabled for selected data collection items."));
+         return;
+      }
+
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Regenerate Anomaly Profile"),
+            i18n.tr("New anomaly detection baseline will be started for selected data collection items. Data collected before the beginning of current level shift (or before this moment, if level shift is not detected) will be ignored, and anomalies will not be reported until enough data is collected. Continue?")))
+         return;
+
+      new Job(i18n.tr("Initiating anomaly profile regeneration"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            monitor.beginTask(i18n.tr("Initiating anomaly profile regeneration"), dciList.size());
+            for(Pair<Long, Long> d : dciList)
+            {
+               session.regenerateAnomalyProfile(d.getFirst(), d.getSecond());
+               monitor.worked(1);
+            }
+            monitor.done();
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot start anomaly profile regeneration");
          }
       }.start();
    }

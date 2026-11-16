@@ -23,7 +23,9 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AnomalyType;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
@@ -61,6 +63,9 @@ public class LastValuesComparator extends ViewerComparator
       int result = 0;
       switch((Integer)sortColumn.getData("ID"))
       {
+         case BaseDataCollectionView.LV_COLUMN_ANOMALY:
+            result = Integer.compare(getAnomalyRank(v1), getAnomalyRank(v2));
+            break;
          case BaseDataCollectionView.LV_COLUMN_COMMENTS:
             result = v1.getComments().compareToIgnoreCase(v2.getComments());
             break;
@@ -98,6 +103,21 @@ public class LastValuesComparator extends ViewerComparator
       }
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
+
+   /**
+    * Get rank of anomaly detection state for sorting (DCIs without anomaly detection first, then normal, learning, and anomalies).
+    *
+    * @param value DCI value
+    * @return rank of anomaly detection state
+    */
+   private static int getAnomalyRank(DciValue value)
+   {
+      if (value.getAnomalyType() != AnomalyType.NONE)
+         return 2 + value.getAnomalyType().getValue();
+      if (value.isAnomalyModelLearning())
+         return 2;
+      return ((value.getFlags() & DataCollectionItem.DCF_DETECT_ANOMALIES_IFOREST) != 0) ? 1 : 0;
+   }
 
    /**
     * Get threshold activation event name.

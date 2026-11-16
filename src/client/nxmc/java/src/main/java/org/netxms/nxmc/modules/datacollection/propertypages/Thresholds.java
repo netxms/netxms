@@ -38,9 +38,12 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.client.constants.AnomalyDetectionMode;
+import org.netxms.client.constants.AnomalyDirection;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.nxmc.base.widgets.DateTimeSelector;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -48,6 +51,7 @@ import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.EditThresholdDialog;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdLabelProvider;
 import org.netxms.nxmc.modules.events.widgets.EventSelector;
+import org.netxms.nxmc.tools.NumericTextFieldValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -65,8 +69,11 @@ public class Thresholds extends AbstractDCIPropertyPage
 	private DataCollectionItem dci;
 	private List<Threshold> thresholds;
 	private LabeledText instance;
-   private Button checkDetectAnomaliesIF;
-   private Button checkDetectAnomaliesAI;
+   private Button checkDetectAnomalies;
+   private Button checkAnomalyTuning;
+   private LabeledText anomalySensitivity;
+   private LabeledCombo anomalyDirection;
+   private LabeledCombo anomalyMode;
 	private Button checkAllThresholds;
    private Button disableProcessing;
    private Button disableUntil;
@@ -119,13 +126,54 @@ public class Thresholds extends AbstractDCIPropertyPage
 		if (dci.getTemplateId() == dci.getNodeId())	// DCI created by instance discovery
 			instance.getTextControl().setEditable(false);
 
-      checkDetectAnomaliesIF = new Button(dialogArea, SWT.CHECK);
-      checkDetectAnomaliesIF.setText(i18n.tr("Detect anomalies using isolation forest algorithm"));
-      checkDetectAnomaliesIF.setSelection(dci.isAnomalyDetectionEnabledIF());
+      checkDetectAnomalies = new Button(dialogArea, SWT.CHECK);
+      checkDetectAnomalies.setText(i18n.tr("Detect anomalies"));
+      checkDetectAnomalies.setSelection(dci.isAnomalyDetectionEnabled());
+      checkDetectAnomalies.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            updateAnomalyControls();
+         }
+      });
 
-      checkDetectAnomaliesAI = new Button(dialogArea, SWT.CHECK);
-      checkDetectAnomaliesAI.setText(i18n.tr("Detect anomalies using AI"));
-      checkDetectAnomaliesAI.setSelection(dci.isAnomalyDetectionEnabledAI());
+      checkAnomalyTuning = new Button(dialogArea, SWT.CHECK);
+      checkAnomalyTuning.setText(i18n.tr("Tune anomaly detection settings using AI"));
+      checkAnomalyTuning.setSelection(dci.isAnomalyTuningEnabled());
+
+      Composite anomalySettingsArea = new Composite(dialogArea, SWT.NONE);
+      GridLayout anomalySettingsLayout = new GridLayout();
+      anomalySettingsLayout.numColumns = 3;
+      anomalySettingsLayout.makeColumnsEqualWidth = true;
+      anomalySettingsLayout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      anomalySettingsLayout.marginWidth = 0;
+      anomalySettingsLayout.marginHeight = 0;
+      anomalySettingsArea.setLayout(anomalySettingsLayout);
+      anomalySettingsArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      anomalySensitivity = new LabeledText(anomalySettingsArea, SWT.NONE);
+      anomalySensitivity.setLabel(i18n.tr("Anomaly sensitivity"));
+      anomalySensitivity.setText(Double.toString(dci.getAnomalySensitivity()));
+      anomalySensitivity.getTextControl().setToolTipText(i18n.tr("Maximum deviation from expected value, in standard deviations, that is still considered normal. Lower value makes detection more sensitive."));
+      anomalySensitivity.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      anomalyDirection = new LabeledCombo(anomalySettingsArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
+      anomalyDirection.setLabel(i18n.tr("Report deviations"));
+      anomalyDirection.add(i18n.tr("In both directions"));
+      anomalyDirection.add(i18n.tr("Up only"));
+      anomalyDirection.add(i18n.tr("Down only"));
+      anomalyDirection.select(dci.getAnomalyDirection().getValue());
+      anomalyDirection.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      anomalyMode = new LabeledCombo(anomalySettingsArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
+      anomalyMode.setLabel(i18n.tr("Analyze"));
+      anomalyMode.add(i18n.tr("Automatic selection"));
+      anomalyMode.add(i18n.tr("Value"));
+      anomalyMode.add(i18n.tr("Rate of change"));
+      anomalyMode.select(dci.getAnomalyDetectionMode().getValue());
+      anomalyMode.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      updateAnomalyControls();
 
 		checkAllThresholds = new Button(dialogArea, SWT.CHECK);
       checkAllThresholds.setText(i18n.tr("Process all thresholds"));
@@ -429,6 +477,18 @@ public class Thresholds extends AbstractDCIPropertyPage
 		}
 	}
 
+   /**
+    * Enable or disable anomaly detection controls depending on anomaly detection being enabled
+    */
+   private void updateAnomalyControls()
+   {
+      boolean enabled = checkDetectAnomalies.getSelection();
+      checkAnomalyTuning.setEnabled(enabled);
+      anomalySensitivity.setEnabled(enabled);
+      anomalyDirection.setEnabled(enabled);
+      anomalyMode.setEnabled(enabled);
+   }
+
 	/**
 	 * Apply changes
 	 * 
@@ -436,8 +496,17 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
+      if (checkDetectAnomalies.getSelection())
+      {
+         if (!WidgetHelper.validateTextInput(anomalySensitivity, new NumericTextFieldValidator(0.1, 100.0)))
+            return false;
+         dci.setAnomalySensitivity(Double.parseDouble(anomalySensitivity.getText()));
+         dci.setAnomalyDirection(AnomalyDirection.getByValue(anomalyDirection.getSelectionIndex()));
+         dci.setAnomalyDetectionMode(AnomalyDetectionMode.getByValue(anomalyMode.getSelectionIndex()));
+      }
+
 		dci.setInstanceName(instance.getText());
-      dci.setAnomalyDetectionEnabled(checkDetectAnomaliesIF.getSelection(), checkDetectAnomaliesAI.getSelection());
+      dci.setAnomalyDetectionEnabled(checkDetectAnomalies.getSelection(), checkAnomalyTuning.getSelection());
       dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);

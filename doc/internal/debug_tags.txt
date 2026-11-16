@@ -7,7 +7,7 @@ agent.conn	Agent connections (server side)
 agent.policy	Agent policies (server side)
 agent.tunnel	Agent tunnels
 
-ai.anomaly	AI anomaly detection profiles
+ai.anomaly	LLM tuning of DCI anomaly detection settings
 ai.assistant	AI assistant core (including prompt injection guard)
 ai.memory	AI assistant memory store (environment, per-user, per-object entries)
 ai.messages	AI messages and user confirmation requests
@@ -76,6 +76,7 @@ db.writer	DB background writers
 dc.*            Data collection
 dc.agent.cache	Agent side cache
 dc.aggregation	DCI data aggregation (hourly/daily rollups)
+dc.anomaly	DCI anomaly detection (model training and scoring of collected values)
 dc.config	Data collection configuration
 dc.modbus       Modbus data collection
 dc.netconf      NETCONF data collection

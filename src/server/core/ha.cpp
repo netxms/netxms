@@ -501,6 +501,13 @@ static void ActivationThread(int64_t term)
       _exit(NETXMSD_EXIT_RESTART_STANDBY);
    }
 
+   // Same for anomaly profiles and anomaly detector state
+   if (!ReloadAnomalyProfiles())
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Anomaly profile reload failed at activation; restarting into standby");
+      _exit(NETXMSD_EXIT_RESTART_STANDBY);
+   }
+
    // Observation point host records are written by the matching pass directly, not through
    // the change journal - reload them so the index matches what the previous active persisted
    LoadObservationPointHosts();

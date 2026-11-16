@@ -55,6 +55,29 @@ static void ApplyFlagFromArguments(DCObject *dco, json_t *arguments, const char 
 }
 
 /**
+ * Error message for invalid anomaly detection mode
+ */
+static const char *s_invalidAnomalyDetectionMode =
+   "Invalid anomaly detection mode specified. Supported: none, enabled, tuned (enabled, with detection settings tuned by LLM). "
+   "Modes iforest, ai and both are no longer available: use enabled instead of iforest, and tuned instead of ai or both.";
+
+/**
+ * Helper: Convert anomaly detection mode name to DCI flags. Returns false if mode name is not valid.
+ */
+static bool ParseAnomalyDetectionMode(const char *mode, uint32_t *flags)
+{
+   if (!stricmp(mode, "none"))
+      *flags = 0;
+   else if (!stricmp(mode, "enabled"))
+      *flags = DCF_DETECT_ANOMALIES_IFOREST;
+   else if (!stricmp(mode, "tuned"))
+      *flags = DCF_DETECT_ANOMALIES_IFOREST | DCF_DETECT_ANOMALIES_AI;
+   else
+      return false;
+   return true;
+}
+
+/**
  * Get detailed configuration of a single metric
  */
 std::string F_GetMetricDetails(json_t *arguments, uint32_t userId)
@@ -182,16 +205,15 @@ std::string F_GetMetricDetails(json_t *arguments, uint32_t userId)
          json_object_set_new(output, "sampleSaveInterval", json_integer(dci->getSampleSaveInterval()));
 
       // Anomaly detection
-      bool iforest = (dci->getFlags() & DCF_DETECT_ANOMALIES_IFOREST) != 0;
-      bool ai = (dci->getFlags() & DCF_DETECT_ANOMALIES_AI) != 0;
-      if (iforest && ai)
-         json_object_set_new(output, "anomalyDetection", json_string("both"));
-      else if (iforest)
-         json_object_set_new(output, "anomalyDetection", json_string("iforest"));
-      else if (ai)
-         json_object_set_new(output, "anomalyDetection", json_string("ai"));
+      if (dci->isAnomalyDetectionEnabled())
+      {
+         json_object_set_new(output, "anomalyDetection", json_string(dci->isAnomalyTuningEnabled() ? "tuned" : "enabled"));
+         json_object_set_new(output, "anomalyDetectionSettings", dci->getAnomalySettings().toJson());
+      }
       else
+      {
          json_object_set_new(output, "anomalyDetection", json_string("none"));
+      }
 
       // Thresholds summary
       int thresholdCount = dci->getThresholdCount();
@@ -458,16 +480,9 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
    else
       return std::string("Invalid status specified");
 
-   const char *anomalyStr = json_object_get_string_utf8(arguments, "anomalyDetection", "none");
    uint32_t anomalyFlags = 0;
-   if (!stricmp(anomalyStr, "iforest"))
-      anomalyFlags = DCF_DETECT_ANOMALIES_IFOREST;
-   else if (!stricmp(anomalyStr, "ai"))
-      anomalyFlags = DCF_DETECT_ANOMALIES_AI;
-   else if (!stricmp(anomalyStr, "both"))
-      anomalyFlags = DCF_DETECT_ANOMALIES_IFOREST | DCF_DETECT_ANOMALIES_AI;
-   else if (stricmp(anomalyStr, "none") != 0)
-      return std::string("Invalid anomaly detection mode specified");
+   if (!ParseAnomalyDetectionMode(json_object_get_string_utf8(arguments, "anomalyDetection", "none"), &anomalyFlags))
+      return std::string(s_invalidAnomalyDetectionMode);
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
@@ -729,15 +744,12 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
    const char *anomalyStr = json_object_get_string_utf8(arguments, "anomalyDetection", nullptr);
    if (anomalyStr != nullptr)
    {
+      uint32_t anomalyFlags;
+      if (!ParseAnomalyDetectionMode(anomalyStr, &anomalyFlags))
+         return std::string(s_invalidAnomalyDetectionMode);
       dci->clearFlag(DCF_DETECT_ANOMALIES_IFOREST | DCF_DETECT_ANOMALIES_AI);
-      if (!stricmp(anomalyStr, "iforest"))
-         dci->setFlag(DCF_DETECT_ANOMALIES_IFOREST);
-      else if (!stricmp(anomalyStr, "ai"))
-         dci->setFlag(DCF_DETECT_ANOMALIES_AI);
-      else if (!stricmp(anomalyStr, "both"))
-         dci->setFlag(DCF_DETECT_ANOMALIES_IFOREST | DCF_DETECT_ANOMALIES_AI);
-      else if (stricmp(anomalyStr, "none") != 0)
-         return std::string("Invalid anomaly detection mode specified");
+      if (anomalyFlags != 0)
+         dci->setFlag(anomalyFlags);
    }
 
    // Boolean flags

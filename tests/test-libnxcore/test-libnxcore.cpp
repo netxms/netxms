@@ -33,6 +33,7 @@
 
 void TestAICheckLogic();
 void TestAIMemoryPromptBlock();
+void TestAnomalyDetection();
 void TestObjectIndex();
 void TestPhysicalPlacement();
 void TestSplitCommandLine();
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
 
    TestAICheckLogic();
    TestAIMemoryPromptBlock();
+   TestAnomalyDetection();
    TestObjectIndex();
    TestPhysicalPlacement();
    TestSplitCommandLine();

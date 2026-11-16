@@ -22,7 +22,13 @@ import java.util.ArrayList;
 import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.AnomalyDetectionMode;
+import org.netxms.client.constants.AnomalyDirection;
 import org.netxms.client.constants.DataType;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 
 /**
  * Data Collection Item representation
@@ -30,17 +36,20 @@ import org.netxms.client.constants.DataType;
 public class DataCollectionItem extends DataCollectionObject
 {
 	// DCI specific flags
-   public static final int DCF_DETECT_ANOMALIES_IFOREST = 0x00001;
+   public static final int DCF_DETECT_ANOMALIES_IFOREST = 0x00001;  // anomaly detection enabled
    public static final int DCF_ALL_THRESHOLDS           = 0x00002;
    public static final int DCF_RAW_VALUE_OCTET_STRING   = 0x00004;
    public static final int DCF_SHOW_ON_OBJECT_TOOLTIP   = 0x00008;
    public static final int DCF_AGGREGATE_FUNCTION_MASK  = 0x00070;
-   public static final int DCF_DETECT_ANOMALIES_AI      = 0x00200;
+   public static final int DCF_DETECT_ANOMALIES_AI      = 0x00200;  // tuning of anomaly detection settings by AI assistant enabled
    public static final int DCF_CALCULATE_NODE_STATUS    = 0x00400;
    public static final int DCF_SHOW_IN_OBJECT_OVERVIEW  = 0x00800;
    public static final int DCF_MULTIPLIERS_MASK         = 0x30000;
    public static final int DCF_STORE_CHANGES_ONLY       = 0x40000;
    public static final int DCF_USE_SNMP_MIB_ENUM        = 0x100000;
+
+   // Default anomaly detection sensitivity
+   public static final double DEFAULT_ANOMALY_SENSITIVITY = 3.5;
 
 	// Aggregation functions
 	public static final int DCF_FUNCTION_SUM = 0;
@@ -80,6 +89,7 @@ public class DataCollectionItem extends DataCollectionObject
    private boolean aggregationDisabled;
    private int hourlyRetention;
    private int dailyRetention;
+   private String anomalySettings; // JSON document, null if not set
 
 	/**
 	 * Create data collection item object from NXCP message
@@ -105,6 +115,7 @@ public class DataCollectionItem extends DataCollectionObject
       aggregationDisabled = msg.getFieldAsBoolean(NXCPCodes.VID_DCI_AGGREGATION_DISABLED);
       hourlyRetention = msg.getFieldAsInt32(NXCPCodes.VID_DCI_HOURLY_RETENTION);
       dailyRetention = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DAILY_RETENTION);
+      anomalySettings = msg.isFieldPresent(NXCPCodes.VID_ANOMALY_SETTINGS) ? msg.getFieldAsString(NXCPCodes.VID_ANOMALY_SETTINGS) : null;
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
@@ -194,6 +205,7 @@ public class DataCollectionItem extends DataCollectionObject
       aggregationDisabled = src.aggregationDisabled;
       hourlyRetention = src.hourlyRetention;
       dailyRetention = src.dailyRetention;
+      anomalySettings = src.anomalySettings;
       thresholds = new ArrayList<Threshold>(src.thresholds);
    }
 
@@ -221,6 +233,8 @@ public class DataCollectionItem extends DataCollectionObject
       msg.setField(NXCPCodes.VID_DCI_AGGREGATION_DISABLED, aggregationDisabled);
       msg.setFieldInt32(NXCPCodes.VID_DCI_HOURLY_RETENTION, hourlyRetention);
       msg.setFieldInt32(NXCPCodes.VID_DCI_DAILY_RETENTION, dailyRetention);
+      if (anomalySettings != null)
+         msg.setField(NXCPCodes.VID_ANOMALY_SETTINGS, anomalySettings);
 
 		msg.setFieldInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
@@ -498,42 +512,167 @@ public class DataCollectionItem extends DataCollectionObject
    }
 
    /**
-    * Check if anomaly detection using isolation forest is enabled for this DCI
+    * Check if anomaly detection is enabled for this DCI
     *
     * @return true if enabled
     */
-   public boolean isAnomalyDetectionEnabledIF()
+   public boolean isAnomalyDetectionEnabled()
    {
       return (flags & DCF_DETECT_ANOMALIES_IFOREST) != 0;
    }
 
    /**
-    * Check if anomaly detection using AI is enabled for this DCI
+    * Check if tuning of anomaly detection settings by AI assistant is enabled for this DCI. Has no effect if anomaly detection
+    * is not enabled.
     *
     * @return true if enabled
     */
-   public boolean isAnomalyDetectionEnabledAI()
+   public boolean isAnomalyTuningEnabled()
    {
       return (flags & DCF_DETECT_ANOMALIES_AI) != 0;
    }
 
    /**
     * Enable or disable anomaly detection for this DCI
-    * 
-    * @param enableIF true to enable isolation forest based anomaly detection
-    * @param enableAI true to enable AI based anomaly detection
+    *
+    * @param enable true to enable anomaly detection
+    * @param enableTuning true to enable tuning of anomaly detection settings by AI assistant
     */
-   public void setAnomalyDetectionEnabled(boolean enableIF, boolean enableAI)
+   public void setAnomalyDetectionEnabled(boolean enable, boolean enableTuning)
    {
-      if (enableAI)
-         flags |= DCF_DETECT_ANOMALIES_AI;
-      else
-         flags &= ~DCF_DETECT_ANOMALIES_AI;
-
-      if (enableIF)
+      if (enable)
          flags |= DCF_DETECT_ANOMALIES_IFOREST;
       else
          flags &= ~DCF_DETECT_ANOMALIES_IFOREST;
+
+      if (enable && enableTuning)
+         flags |= DCF_DETECT_ANOMALIES_AI;
+      else
+         flags &= ~DCF_DETECT_ANOMALIES_AI;
+   }
+
+   /**
+    * Get anomaly detection settings as JSON document. Document contains all settings known to the server, including those
+    * that do not have dedicated accessors in this class.
+    *
+    * @return anomaly detection settings as JSON document or null if not set
+    */
+   public String getAnomalySettings()
+   {
+      return anomalySettings;
+   }
+
+   /**
+    * Set anomaly detection settings as JSON document. Settings missing from the document are reset to defaults by the server.
+    *
+    * @param anomalySettings anomaly detection settings as JSON document or null to keep settings currently known to the server
+    */
+   public void setAnomalySettings(String anomalySettings)
+   {
+      this.anomalySettings = anomalySettings;
+   }
+
+   /**
+    * Parse anomaly detection settings document.
+    *
+    * @return parsed settings (empty object if settings are not set or cannot be parsed)
+    */
+   private JsonObject parseAnomalySettings()
+   {
+      if (anomalySettings != null)
+      {
+         try
+         {
+            JsonElement e = JsonParser.parseString(anomalySettings);
+            if (e.isJsonObject())
+               return e.getAsJsonObject();
+         }
+         catch(JsonParseException e)
+         {
+         }
+      }
+      return new JsonObject();
+   }
+
+   /**
+    * Get string element of anomaly detection settings.
+    *
+    * @param name element name
+    * @return element value or null if element is missing or is not a string
+    */
+   private String getAnomalySettingAsString(String name)
+   {
+      JsonElement e = parseAnomalySettings().get(name);
+      return ((e != null) && e.isJsonPrimitive() && e.getAsJsonPrimitive().isString()) ? e.getAsString() : null;
+   }
+
+   /**
+    * Get anomaly detection sensitivity (maximum deviation from expected value, in standard deviations, that is still
+    * considered normal). Lower values make detection more sensitive.
+    *
+    * @return anomaly detection sensitivity
+    */
+   public double getAnomalySensitivity()
+   {
+      JsonElement e = parseAnomalySettings().get("sensitivity");
+      return ((e != null) && e.isJsonPrimitive() && e.getAsJsonPrimitive().isNumber()) ? e.getAsDouble() : DEFAULT_ANOMALY_SENSITIVITY;
+   }
+
+   /**
+    * Set anomaly detection sensitivity (maximum deviation from expected value, in standard deviations, that is still
+    * considered normal).
+    *
+    * @param sensitivity new sensitivity (server accepts values greater than 0 and not greater than 100)
+    */
+   public void setAnomalySensitivity(double sensitivity)
+   {
+      JsonObject settings = parseAnomalySettings();
+      settings.addProperty("sensitivity", sensitivity);
+      anomalySettings = settings.toString();
+   }
+
+   /**
+    * Get direction of deviations reported as anomalies.
+    *
+    * @return direction of deviations reported as anomalies
+    */
+   public AnomalyDirection getAnomalyDirection()
+   {
+      return AnomalyDirection.getByName(getAnomalySettingAsString("direction"));
+   }
+
+   /**
+    * Set direction of deviations reported as anomalies.
+    *
+    * @param direction direction of deviations reported as anomalies
+    */
+   public void setAnomalyDirection(AnomalyDirection direction)
+   {
+      JsonObject settings = parseAnomalySettings();
+      settings.addProperty("direction", direction.getName());
+      anomalySettings = settings.toString();
+   }
+
+   /**
+    * Get anomaly detection mode.
+    *
+    * @return anomaly detection mode
+    */
+   public AnomalyDetectionMode getAnomalyDetectionMode()
+   {
+      return AnomalyDetectionMode.getByName(getAnomalySettingAsString("mode"));
+   }
+
+   /**
+    * Set anomaly detection mode.
+    *
+    * @param mode anomaly detection mode
+    */
+   public void setAnomalyDetectionMode(AnomalyDetectionMode mode)
+   {
+      JsonObject settings = parseAnomalySettings();
+      settings.addProperty("mode", mode.getName());
+      anomalySettings = settings.toString();
    }
 
    /**

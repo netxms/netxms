@@ -20,6 +20,7 @@ package org.netxms.client.datacollection;
 
 import java.util.Date;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.AnomalyType;
 import org.netxms.client.constants.DataCollectionError;
 import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
@@ -56,6 +57,12 @@ public abstract class DciValue
    protected int multiplier;
    protected boolean noValueObject;
    protected boolean anomalyDetected;
+   protected AnomalyType anomalyType = AnomalyType.NONE;
+   protected boolean anomalyModelLearning;
+   protected boolean anomalyRateMode;
+   protected Double anomalyScore;
+   protected Double anomalyExpectedLow;
+   protected Double anomalyExpectedHigh;
    protected long thresholdDisableEndTime;
    protected int mappingTableId;
 
@@ -123,6 +130,17 @@ public abstract class DciValue
 			activeThreshold = new Threshold(msg, fieldId);
 		else
 			activeThreshold = null;
+
+      // Anomaly detection state is at fixed offsets and present only if anomaly detection is enabled for DCI
+      anomalyType = AnomalyType.getByValue(msg.getFieldAsInt32(base + 39));
+      if (msg.isFieldPresent(base + 40))
+      {
+         anomalyScore = msg.getFieldAsDouble(base + 40);
+         anomalyExpectedLow = msg.getFieldAsDouble(base + 41);
+         anomalyExpectedHigh = msg.getFieldAsDouble(base + 42);
+      }
+      anomalyModelLearning = msg.getFieldAsBoolean(base + 43);
+      anomalyRateMode = msg.getFieldAsBoolean(base + 44);
 	}
 
    /**
@@ -367,6 +385,67 @@ public abstract class DciValue
    public boolean isAnomalyDetected()
    {
       return anomalyDetected;
+   }
+
+   /**
+    * Get type of anomaly detected in most recent value.
+    *
+    * @return type of anomaly detected in most recent value (NONE if there is no anomaly or anomaly detection is not enabled)
+    */
+   public AnomalyType getAnomalyType()
+   {
+      return anomalyType;
+   }
+
+   /**
+    * Check if anomaly detection model for this DCI is still learning (does not have enough data to score values).
+    *
+    * @return true if anomaly detection model is still learning
+    */
+   public boolean isAnomalyModelLearning()
+   {
+      return anomalyModelLearning;
+   }
+
+   /**
+    * Check if anomaly detection for this DCI works on rate of change instead of collected value. In that case expected range
+    * is range for rate of change per second.
+    *
+    * @return true if anomaly detection works on rate of change
+    */
+   public boolean isAnomalyRateMode()
+   {
+      return anomalyRateMode;
+   }
+
+   /**
+    * Get anomaly score of most recent value.
+    *
+    * @return anomaly score of most recent value or null if value was not scored
+    */
+   public Double getAnomalyScore()
+   {
+      return anomalyScore;
+   }
+
+   /**
+    * Get lower bound of range expected by anomaly detection model for most recent value.
+    *
+    * @return lower bound of expected range or null if value was not scored
+    */
+   public Double getAnomalyExpectedLow()
+   {
+      return anomalyExpectedLow;
+   }
+
+   /**
+    * Get upper bound of range expected by anomaly detection model for most recent value.
+    *
+    * @return upper bound of expected range or null if value was not scored
+    */
+   public Double getAnomalyExpectedHigh()
+   {
+      return anomalyExpectedHigh;
    }
 
    /**

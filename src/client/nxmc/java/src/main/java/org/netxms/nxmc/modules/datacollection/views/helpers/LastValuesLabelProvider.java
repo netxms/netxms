@@ -26,9 +26,11 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataCollectionError;
 import org.netxms.client.constants.DataCollectionObjectStatus;
+import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
@@ -110,6 +112,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	   DciValue dciValue = ((DciValue)element);
 		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
+         case BaseDataCollectionView.LV_COLUMN_ANOMALY:
+            return formatAnomalyState(dciValue);
          case BaseDataCollectionView.LV_COLUMN_COMMENTS:
             return dciValue.getComments().replace("\r", "").replace('\n', ' ');
          case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
@@ -139,6 +143,44 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 		}
 		return null;
 	}
+
+   /**
+    * Format state of anomaly detection
+    *
+    * @param value DCI value to format anomaly detection state for
+    * @return formatted anomaly detection state (empty string if anomaly detection is not enabled)
+    */
+   private String formatAnomalyState(DciValue value)
+   {
+      if (value.isAnomalyModelLearning())
+         return i18n.tr("Learning");
+
+      String type;
+      switch(value.getAnomalyType())
+      {
+         case DRIFT:
+            type = i18n.tr("Level shift");
+            break;
+         case RANGE:
+            type = i18n.tr("Out of expected range");
+            break;
+         case STEP:
+            type = i18n.tr("Sudden change");
+            break;
+         default:
+            type = null;
+            break;
+      }
+
+      if ((value.getAnomalyExpectedLow() == null) || (value.getAnomalyExpectedHigh() == null))
+         return (type != null) ? type : "";
+
+      DataFormatter formatter = value.createDataFormatter().setDataType(DataType.FLOAT).setDefaultForMultipliers(useMultipliers);
+      String low = formatter.format(Double.toString(value.getAnomalyExpectedLow()), DateFormatFactory.getTimeFormatter());
+      String high = formatter.format(Double.toString(value.getAnomalyExpectedHigh()), DateFormatFactory.getTimeFormatter());
+      String range = value.isAnomalyRateMode() ? i18n.tr("expected rate of change {0} .. {1} per second", low, high) : i18n.tr("expected {0} .. {1}", low, high);
+      return (type != null) ? type + " (" + range + ")" : range;
+   }
 
 	/**
     * Format threshold

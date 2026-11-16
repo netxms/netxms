@@ -381,6 +381,8 @@ public class DataCollectionView extends BaseDataCollectionView
       actions.add(actionForcePoll);
       actions.add(actionRecalculateData);
       actions.add(actionClearData);
+      if (!isTemplate)
+         actions.add(actionRegenerateAnomalyProfile);
       manager.add(actions);
 
       MenuManager viewOptions = new MenuManager(i18n.tr("V&iew options"));
@@ -665,6 +667,15 @@ public class DataCollectionView extends BaseDataCollectionView
    protected long getObjectId(Object dci)
    {
       return editMode ? ((DataCollectionObject)dci).getNodeId() : ((DciValue)dci).getNodeId();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#isAnomalyDetectionEnabled(java.lang.Object)
+    */
+   @Override
+   protected boolean isAnomalyDetectionEnabled(Object dci)
+   {
+      return editMode ? ((dci instanceof DataCollectionItem) && ((DataCollectionItem)dci).isAnomalyDetectionEnabled()) : super.isAnomalyDetectionEnabled(dci);
    }
 
    /**

@@ -146,6 +146,7 @@ int H_DataCollectionConfigGet(Context *context);
 int H_DataCollectionConfigCreate(Context *context);
 int H_DataCollectionConfigUpdate(Context *context);
 int H_DataCollectionConfigDelete(Context *context);
+int H_DataCollectionRegenerateAnomalyProfile(Context *context);
 int H_PushData(Context *context);
 int H_NotificationChannelClearQueue(Context *context);
 int H_NotificationChannelCreate(Context *context);
@@ -1020,6 +1021,9 @@ static bool InitModule(Config *config)
       .GET(H_DataCollectionConfigGet)
       .PATCH(H_DataCollectionConfigUpdate)
       .DELETE(H_DataCollectionConfigDelete)
+      .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/configuration/:dci-id/regenerate-anomaly-profile")
+      .POST(H_DataCollectionRegenerateAnomalyProfile)
       .build();
    RouteBuilder("v1/objects/:object-id/device-config-backups")
       .GET(H_DeviceConfigBackups)

@@ -588,6 +588,7 @@ public class NXCPCodes
    public static final int CMD_GET_DHCP_SCOPES = 0x023B;
    public static final int CMD_GET_DHCP_LEASES = 0x023C;
    public static final int CMD_GET_AGENT_LOG_FILE = 0x023D;
+   public static final int CMD_REGENERATE_ANOMALY_PROFILE = 0x023E;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1675,6 +1676,7 @@ public class NXCPCodes
    public static final long VID_PHY_LANE = 1079;
    public static final long VID_PHY_LOCATION_VALID = 1080;
    public static final long VID_AGGREGATE_INTERFACE = 1081;
+   public static final long VID_ANOMALY_SETTINGS = 1082;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

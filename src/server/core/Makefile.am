@@ -7,7 +7,7 @@ lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.cpp ad.cpp addrlist.cpp \
 			admin.cpp agent.cpp agent_policy.cpp ai_check_logic.cpp ai_core.cpp ai_memory.cpp ai_messages.cpp ai_operator.cpp ai_provider.cpp \
 			ai_provider_anthropic.cpp ai_provider_mistral.cpp ai_provider_ollama.cpp ai_provider_openai.cpp ai_remote.cpp ai_tasks.cpp \
-			anomaly_profile.cpp alarm.cpp alarm_category.cpp asset.cpp \
+			anomaly_engine.cpp anomaly_profile.cpp alarm.cpp alarm_category.cpp asset.cpp \
 			asset_management.cpp audit.cpp authtokens.cpp beacon.cpp bizservice.cpp \
 			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp cas_validator.cpp \
 			ccy.cpp cdp.cpp cert.cpp chassis.cpp chatbot.cpp circuit.cpp client.cpp cloud_connector.cpp cloud_domain.cpp cluster.cpp collector.cpp cooling_zone.cpp \

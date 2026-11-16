@@ -45,6 +45,7 @@ serverinclude_HEADERS = \
 	nxai.h \
 	nxcore_2fa.h \
 	nxcore_agent_tunnel.h \
+	nxcore_anomaly.h \
 	nxcore_discovery.h \
 	nxcore_ha.h \
 	nxcore_logs.h \

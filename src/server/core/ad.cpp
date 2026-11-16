@@ -26,24 +26,11 @@
 #include <algorithm>
 #include <cmath>
 
-#define DEBUG_TAG _T("ad")
-
 /**
- * Embedded Isolation Forest implementation (Liu et al., 2008)
- * Replaces external libisotree dependency. Only supports univariate numeric data
- * with default parameters matching isotree behavior (sample_size=nrows, limit_depth=true, ntrees=500).
+ * Embedded Isolation Forest implementation (Liu et al., 2008). Only supports univariate numeric data,
+ * without subsampling (sample_size=nrows) and with depth limit. Not used for checking of collected DCI values
+ * (see anomaly_engine.cpp for that).
  */
-
-/**
- * Isolation tree node
- */
-struct IsoTreeNode
-{
-   double splitValue;    // split threshold (for internal nodes)
-   size_t left;          // left child index (0 = leaf)
-   size_t right;         // right child index (0 = leaf)
-   double score;         // leaf score = depth + c(remaining_count)
-};
 
 /**
  * Harmonic number H(n) via Euler-Maclaurin expansion (matches isotree's harmonic() in utils.hpp)
@@ -154,7 +141,7 @@ static size_t BuildTree(std::vector<IsoTreeNode> &nodes, const double *data, siz
  * @param trees output: vector of trees (each tree is a vector of IsoTreeNode)
  * @param treeRoots output: root index for each tree
  */
-static void FitIsolationForest(const double *data, size_t nrows, size_t ntrees, std::vector<std::vector<IsoTreeNode>> &trees, std::vector<size_t> &treeRoots)
+void FitIsolationForest(const double *data, size_t nrows, size_t ntrees, std::vector<std::vector<IsoTreeNode>> &trees, std::vector<size_t> &treeRoots)
 {
    // max_depth = ceil(log2(nrows)) when limit_depth=true (isotree default)
    size_t maxDepth = (nrows <= 1) ? 1 : static_cast<size_t>(ceil(log2(static_cast<double>(nrows))));
@@ -210,7 +197,7 @@ static inline double ScorePoint(const std::vector<IsoTreeNode> &tree, size_t roo
  * @param treeRoots root index for each tree
  * @return vector of standardized anomaly scores (higher = more anomalous)
  */
-static std::vector<double> PredictIsolationForest(const double *data, size_t nrows, const std::vector<std::vector<IsoTreeNode>> &trees, const std::vector<size_t> &treeRoots)
+std::vector<double> PredictIsolationForest(const double *data, size_t nrows, const std::vector<std::vector<IsoTreeNode>> &trees, const std::vector<size_t> &treeRoots)
 {
    size_t ntrees = trees.size();
    double cn = ExpectedAvgDepth(nrows);
@@ -229,204 +216,4 @@ static std::vector<double> PredictIsolationForest(const double *data, size_t nro
    }
 
    return scores;
-}
-
-/**
- * Helper function to read last N values of given DCI
- */
-static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, const std::pair<Timestamp, Timestamp> *timeRanges, int numTimeRanges, bool hasV5Table = false)
-{
-   StringBuffer query;
-   if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
-   {
-      if (g_dbSyntax == DB_SYNTAX_TSDB)
-      {
-         query.append(_T("SELECT timestamptz_to_ms(idata_timestamp),idata_value FROM idata_sc_"));
-         query.append(DCObject::getStorageClassName(storageClass));
-         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?)"));
-      }
-      else
-      {
-         query.append(_T("SELECT idata_timestamp,idata_value FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
-      }
-   }
-   else if (hasV5Table)
-   {
-      query.append(_T("SELECT idata_timestamp,idata_value FROM (SELECT idata_timestamp,idata_value FROM idata_"));
-      query.append(nodeId);
-      query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
-      query.append(_T(" UNION ALL SELECT "));
-      query.append(V5TimestampToMs(false));
-      query.append(_T(",idata_value FROM idata_v5_"));
-      query.append(nodeId);
-      query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?) d"));
-   }
-   else
-   {
-      query.append(_T("SELECT idata_timestamp,idata_value FROM idata_"));
-      query.append(nodeId);
-      query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
-   }
-   query.append(_T(" ORDER BY idata_timestamp DESC"));
-
-   StructArray<ScoredDciValue> *values = new StructArray<ScoredDciValue>(0, 1024);
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, query, numTimeRanges > 1);
-   if (hStmt != nullptr)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dciId);
-      for(int n = 0; n < numTimeRanges; n++)
-      {
-         DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, timeRanges[n].first);
-         DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, timeRanges[n].second);
-         if (hasV5Table)
-         {
-            DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, dciId);
-            DBBind(hStmt, 5, DB_SQLTYPE_BIGINT, timeRanges[n].first.asMilliseconds() / 1000);
-            DBBind(hStmt, 6, DB_SQLTYPE_BIGINT, timeRanges[n].second.asMilliseconds() / 1000);
-         }
-         DB_RESULT hResult = DBSelectPrepared(hStmt);
-         if (hResult != nullptr)
-         {
-            int count = DBGetNumRows(hResult);
-            for(int i = 0; i < count; i++)
-            {
-               ScoredDciValue *v = values->addPlaceholder();
-               v->timestamp = DBGetFieldTimestamp(hResult, i, 0);
-               v->value = DBGetFieldDouble(hResult, i, 1);
-               v->score = 0;
-            }
-            DBFreeResult(hResult);
-         }
-      }
-      DBFreeStatement(hStmt);
-   }
-
-   DBConnectionPoolReleaseConnection(hdb);
-   return unique_ptr<StructArray<ScoredDciValue>>(values);
-}
-
-/**
- * Detect anomalies within given time range
- */
-unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarget& dcTarget, uint32_t dciId, time_t timeFrom, time_t timeTo, double threshold)
-{
-   shared_ptr<DCObject> dci = dcTarget.getDCObjectById(dciId, 0);
-   if ((dci == nullptr) || (dci->getType() != DCO_TYPE_ITEM))
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("DetectAnomalies: invalid DCI ID [%u] on object %s [%u]"), dciId, dcTarget.getName(), dcTarget.getId());
-      return unique_ptr<StructArray<ScoredDciValue>>();
-   }
-
-   std::pair<Timestamp, Timestamp> timeRange(Timestamp::fromTime(timeFrom), Timestamp::fromTime(timeTo));
-   auto series = LoadDciValues(dcTarget.getId(), dciId, dci->getStorageClass(), &timeRange, 1, dcTarget.hasV5IdataTable());
-   if (series == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("DetectAnomalies: cannot load data for DCI \"%s\" [%u] on object %s [%u]"), dci->getName().cstr(), dciId, dcTarget.getName(), dcTarget.getId());
-      return unique_ptr<StructArray<ScoredDciValue>>();
-   }
-
-   if (series->isEmpty())
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("DetectAnomalies: no data for DCI \"%s\" [%u] on object %s [%u]"), dci->getName().cstr(), dciId, dcTarget.getName(), dcTarget.getId());
-      return unique_ptr<StructArray<ScoredDciValue>>();
-   }
-
-   int count = series->size();
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("DetectAnomalies: %d data points loaded for DCI \"%s\" [%u] on object %s [%u]"), count, dci->getName().cstr(), dciId, dcTarget.getName(), dcTarget.getId());
-
-   double *points = MemAllocArrayNoInit<double>(count);
-   for(int i = 0; i < count; i++)
-      points[i] = series->get(i)->value;
-
-   std::vector<std::vector<IsoTreeNode>> trees;
-   std::vector<size_t> treeRoots;
-   FitIsolationForest(points, static_cast<size_t>(count), 500, trees, treeRoots);
-   std::vector<double> scores = PredictIsolationForest(points, static_cast<size_t>(count), trees, treeRoots);
-   MemFree(points);
-   for(int i = 0; i < count; i++)
-      series->get(i)->score = scores[i];
-
-   series->sort(
-      [] (const ScoredDciValue *v1, const ScoredDciValue *v2) -> int
-      {
-         return v1->score < v2->score ? 1 : (v1->score > v2->score ? -1 : 0);
-      });
-   for(int i = 0; i < count; i++)
-      if (series->get(i)->score < threshold)
-      {
-         return make_unique<StructArray<ScoredDciValue>>(series->getBuffer(), i);
-      }
-
-   return series;
-}
-
-/**
- * Check if given value is an anomaly
- * Period is number of days, depth is number of periods to look into, width is time interval around current time in minutes
- */
-bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci, double value, double threshold, int period, int depth, int width)
-{
-   if (depth > 90)
-      depth = 90;
-
-   // Construct time ranges for daily periods
-   Timestamp now = Timestamp::now();
-   Timestamp t = now - width * 30000;  // Half-interval in minutes to milliseconds
-   std::pair<Timestamp, Timestamp> timeRanges[90]; // up to 90 days back
-   int64_t w = static_cast<int64_t>(width) * 60000; // width in milliseconds
-   for(int i = 0; i < depth; i++)
-   {
-      t -= _LL(86400000) * period;
-      timeRanges[i].first = t;
-      timeRanges[i].second = t + w;
-   }
-
-   auto series = LoadDciValues(dcTarget.getId(), dci.getId(), dci.getStorageClass(), timeRanges, depth, dcTarget.hasV5IdataTable());
-   if (series == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("IsAnomalousValue(%s [%u], \"%s\"): cannot load DCI data"), dcTarget.getName(), dcTarget.getId(), dci.getName().cstr());
-      return false;
-   }
-
-   if (series->isEmpty())
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("IsAnomalousValue(%s [%u], \"%s\"): no data points for period [p=%d d=%d w=%d]"),
-            dcTarget.getName(), dcTarget.getId(), dci.getName().cstr(), period, depth, width);
-      return false;
-   }
-
-   ScoredDciValue *v = series->addPlaceholder();
-   v->timestamp = now;
-   v->value = value;
-
-   int count = series->size();
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("IsAnomalousValue(%s [%u], \"%s\"): %d data points loaded for period [p=%d d=%d w=%d]"),
-         dcTarget.getName(), dcTarget.getId(), dci.getName().cstr(), count - 1, period, depth, width);
-
-   double *points = MemAllocArrayNoInit<double>(count);
-   for(int i = 0; i < count; i++)
-      points[i] = series->get(i)->value;
-
-   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 7)
-   {
-      StringBuffer sb;
-      for(int i = 0; i < count; i++)
-      {
-         sb.append(points[i]);
-         sb.append(_T("  "));
-      }
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("IsAnomalousValue(%s [%u], \"%s\"): %s"), dcTarget.getName(), dcTarget.getId(), dci.getName().cstr(), sb.cstr());
-   }
-
-   std::vector<std::vector<IsoTreeNode>> trees;
-   std::vector<size_t> treeRoots;
-   FitIsolationForest(points, static_cast<size_t>(count), 500, trees, treeRoots);
-   std::vector<double> scores = PredictIsolationForest(points, static_cast<size_t>(count), trees, treeRoots);
-   MemFree(points);
-
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("IsAnomalousValue(%s [%u], \"%s\"): score for value %f and period [p=%d d=%d w=%d] is %f"),
-         dcTarget.getName(), dcTarget.getId(), dci.getName().cstr(), value, period, depth, width, scores[count - 1]);
-   return scores[count - 1] >= threshold;
 }

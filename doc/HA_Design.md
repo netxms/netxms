@@ -580,6 +580,15 @@ deactivation events after takeover. Only the last event severity/time/message
 still goes through the lazy writer, so the repeat interval of an active
 threshold may restart after a failover.
 
+Anomaly detection is handled the same way. Model training updates
+`items.anomaly_profile`, `anomaly_profile_timestamp` and
+`anomaly_baseline_start` directly, and the drift detector writes its sums to
+`raw_dci_values.anomaly_state` when an hourly bucket closes; none of this
+passes through the change journal. Activation reloads profiles, baseline start
+times and detector states in one query (`ReloadAnomalyProfiles`). Residuals
+accumulated within the current hour are not persisted, so a failover can delay
+a drift anomaly by at most one hour and cannot cause a false one.
+
 Values read while standing by go to the database directly
 (`MetaDataReadStrFromDatabase`): the journal truncation point and the
 cluster secret. Modules that cache configuration in their own initialization

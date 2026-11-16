@@ -777,6 +777,7 @@ __PACK_END__
 #define CMD_GET_DHCP_SCOPES               0x023B
 #define CMD_GET_DHCP_LEASES               0x023C
 #define CMD_GET_AGENT_LOG_FILE            0x023D
+#define CMD_REGENERATE_ANOMALY_PROFILE    0x023E
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1872,6 +1873,7 @@ __PACK_END__
 #define VID_PHY_LANE                ((uint32_t)1079)
 #define VID_PHY_LOCATION_VALID      ((uint32_t)1080)
 #define VID_AGGREGATE_INTERFACE     ((uint32_t)1081)
+#define VID_ANOMALY_SETTINGS        ((uint32_t)1082)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)
