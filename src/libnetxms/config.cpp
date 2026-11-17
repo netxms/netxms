@@ -1554,7 +1554,8 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
                   currentSection = new ConfigEntry(curr, parent, this, 0);
                }
             }
-            curr = s + 1;
+            if (s != nullptr)
+               curr = s + 1;
             parent = currentSection;
          } while(s != nullptr);
       }
