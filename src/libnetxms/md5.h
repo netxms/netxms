@@ -36,6 +36,8 @@
   <ghost@aladdin.com>.  Other authors are noted in the change history
   that follows (in reverse chronological order):
 
+  2026-11-17 Raden Solutions: removed byte order configuration macros
+	(byte order is taken from WORDS_BIGENDIAN).
   2002-04-13 lpd Removed support for non-ANSI compilers; removed
 	references to Ghostscript; clarified derivation from RFC 1321;
 	now handles byte order either statically or dynamically.
@@ -48,26 +50,6 @@
 
 #ifndef md5_INCLUDED
 #  define md5_INCLUDED
-
-/*
- * This package supports both compile-time and run-time determination of CPU
- * byte order.  If ARCH_IS_BIG_ENDIAN is defined as 0, the code will be
- * compiled to run only on little-endian CPUs; if ARCH_IS_BIG_ENDIAN is
- * defined as non-zero, the code will be compiled to run only on big-endian
- * CPUs; if ARCH_IS_BIG_ENDIAN is not defined, the code will be compiled to
- * run on either big- or little-endian CPUs, but will run slightly less
- * efficiently on either one than if ARCH_IS_BIG_ENDIAN is defined.
- */
-
-
-#ifndef ARCH_IS_BIG_ENDIAN
-#if WORDS_BIGENDIAN
-#define ARCH_IS_BIG_ENDIAN 1
-#else
-#define ARCH_IS_BIG_ENDIAN 0
-#endif
-#endif
-
 
 typedef unsigned char md5_byte_t; /* 8-bit byte */
 typedef unsigned int md5_word_t; /* 32-bit word */

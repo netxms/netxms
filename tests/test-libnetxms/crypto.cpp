@@ -50,6 +50,155 @@ void TestMD4()
 }
 
 /**
+ * MD5 test vectors (RFC 1321)
+ */
+struct
+{
+   const char *string;
+   const char *hash;
+} s_md5TestVectors[] =
+{
+   { "", "d41d8cd98f00b204e9800998ecf8427e" },
+   { "a", "0cc175b9c0f1b6a831c399e269772661" },
+   { "abc", "900150983cd24fb0d6963f7d28e17f72" },
+   { "message digest", "f96b697d7cb7938d525a2f31aaf161d0" },
+   { "abcdefghijklmnopqrstuvwxyz", "c3fcd3d76192e4007dfb496cca67e13b" },
+   { "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "d174ab98d277d9f5a5611c2c9f419d9f" },
+   { "12345678901234567890123456789012345678901234567890123456789012345678901234567890", "57edf4a22be3c955ac49da2e2107b67a" },
+   { nullptr, nullptr }
+};
+
+/**
+ * Test MD5
+ */
+void TestMD5()
+{
+   StartTest(_T("MD5 hash function"));
+
+   for(int i = 0; s_md5TestVectors[i].string != nullptr; i++)
+   {
+      BYTE expectedHash[MD5_DIGEST_SIZE];
+      StrToBinA(s_md5TestVectors[i].hash, expectedHash, MD5_DIGEST_SIZE);
+
+      BYTE actualHash[MD5_DIGEST_SIZE];
+      CalculateMD5Hash(s_md5TestVectors[i].string, strlen(s_md5TestVectors[i].string), actualHash);
+      AssertTrue(!memcmp(expectedHash, actualHash, MD5_DIGEST_SIZE));
+   }
+
+   // Incremental updates with every split point and unaligned input must match one-shot hash
+   BYTE data[1024];
+   for(size_t i = 0; i < sizeof(data); i++)
+      data[i] = static_cast<BYTE>(i * 7 + (i >> 8));
+   BYTE expectedHash[MD5_DIGEST_SIZE];
+   CalculateMD5Hash(data + 3, 300, expectedHash);
+   for(size_t split = 0; split <= 300; split++)
+   {
+      MD5_STATE state;
+      MD5Init(&state);
+      MD5Update(&state, data + 3, split);
+      MD5Update(&state, data + 3 + split, 300 - split);
+      BYTE actualHash[MD5_DIGEST_SIZE];
+      MD5Final(&state, actualHash);
+      AssertTrue(!memcmp(expectedHash, actualHash, MD5_DIGEST_SIZE));
+   }
+
+   EndTest();
+
+   StartTest(_T("MD5 hash for repeated pattern"));
+   static const size_t patternSizes[] = { 1, 3, 8, 10, 63, 64, 65, 200 };
+   for(size_t patternSize : patternSizes)
+   {
+      BYTE expanded[4096];
+      for(size_t i = 0; i < sizeof(expanded); i++)
+         expanded[i] = data[i % patternSize];
+      CalculateMD5Hash(expanded, sizeof(expanded), expectedHash);
+      BYTE actualHash[MD5_DIGEST_SIZE];
+      MD5HashForPattern(data, patternSize, sizeof(expanded), actualHash);
+      AssertTrue(!memcmp(expectedHash, actualHash, MD5_DIGEST_SIZE));
+   }
+   EndTest();
+}
+
+/**
+ * SHA-1 test vectors (FIPS 180-1)
+ */
+struct
+{
+   const char *string;
+   const char *hash;
+} s_sha1TestVectors[] =
+{
+   { "", "da39a3ee5e6b4b0d3255bfef95601890afd80709" },
+   { "abc", "a9993e364706816aba3e25717850c26c9cd0d89d" },
+   { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "84983e441c3bd26ebaae4aa1f95129e5e54670f1" },
+   { nullptr, nullptr }
+};
+
+/**
+ * Test SHA-1
+ */
+void TestSHA1()
+{
+   StartTest(_T("SHA-1 hash function"));
+
+   for(int i = 0; s_sha1TestVectors[i].string != nullptr; i++)
+   {
+      BYTE expectedHash[SHA1_DIGEST_SIZE];
+      StrToBinA(s_sha1TestVectors[i].hash, expectedHash, SHA1_DIGEST_SIZE);
+
+      BYTE actualHash[SHA1_DIGEST_SIZE];
+      CalculateSHA1Hash(s_sha1TestVectors[i].string, strlen(s_sha1TestVectors[i].string), actualHash);
+      AssertTrue(!memcmp(expectedHash, actualHash, SHA1_DIGEST_SIZE));
+   }
+
+   // One million repetitions of "a" (FIPS 180-1), hashed in uneven chunks
+   BYTE expectedHash[SHA1_DIGEST_SIZE];
+   StrToBinA("34aa973cd4c4daa4f61eeb2bdbad27316534016f", expectedHash, SHA1_DIGEST_SIZE);
+   char chunk[1000];
+   memset(chunk, 'a', sizeof(chunk));
+   SHA1_STATE state;
+   SHA1Init(&state);
+   for(size_t total = 0; total < 1000000; )
+   {
+      size_t size = std::min(static_cast<size_t>(997), 1000000 - total);
+      SHA1Update(&state, chunk, size);
+      total += size;
+   }
+   BYTE actualHash[SHA1_DIGEST_SIZE];
+   SHA1Final(&state, actualHash);
+   AssertTrue(!memcmp(expectedHash, actualHash, SHA1_DIGEST_SIZE));
+
+   // Incremental updates with every split point and unaligned input must match one-shot hash
+   BYTE data[1024];
+   for(size_t i = 0; i < sizeof(data); i++)
+      data[i] = static_cast<BYTE>(i * 7 + (i >> 8));
+   CalculateSHA1Hash(data + 3, 300, expectedHash);
+   for(size_t split = 0; split <= 300; split++)
+   {
+      SHA1Init(&state);
+      SHA1Update(&state, data + 3, split);
+      SHA1Update(&state, data + 3 + split, 300 - split);
+      SHA1Final(&state, actualHash);
+      AssertTrue(!memcmp(expectedHash, actualHash, SHA1_DIGEST_SIZE));
+   }
+
+   EndTest();
+
+   StartTest(_T("SHA-1 hash for repeated pattern"));
+   static const size_t patternSizes[] = { 1, 3, 8, 10, 63, 64, 65, 200 };
+   for(size_t patternSize : patternSizes)
+   {
+      BYTE expanded[4096];
+      for(size_t i = 0; i < sizeof(expanded); i++)
+         expanded[i] = data[i % patternSize];
+      CalculateSHA1Hash(expanded, sizeof(expanded), expectedHash);
+      SHA1HashForPattern(data, patternSize, sizeof(expanded), actualHash);
+      AssertTrue(!memcmp(expectedHash, actualHash, SHA1_DIGEST_SIZE));
+   }
+   EndTest();
+}
+
+/**
  * DES test vectors (FIPS known answers)
  */
 struct

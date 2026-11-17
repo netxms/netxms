@@ -78,24 +78,6 @@ A million repetitions of "a"
 #ifndef _sha1_h_
 #define _sha1_h_
 
-#include <string.h>
-
-#ifdef _WIN32
-
-#define LITTLE_ENDIAN
-
-#else
-
-#if WORDS_BIGENDIAN
-#undef LITTLE_ENDIAN
-#else
-#ifndef LITTLE_ENDIAN
-#define LITTLE_ENDIAN
-#endif
-#endif
-
-#endif   /* _WIN32 */
-
 typedef struct
 {
    uint32_t state[5];

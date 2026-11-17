@@ -62,6 +62,14 @@ By Victor Kirhenshtein (victor@securityprojects.org)
 Still 100% public domain
 Modified to be used as part of network management system agent
 
+-----------------
+Modified 11/26
+By Raden Solutions
+Still 100% public domain
+Block transform rewritten: multi-block processing with state kept in
+registers, message schedule in local array, endian-safe unaligned word
+loads; hardware SHA-1 instructions (SHA-NI) used on x86-64 when available.
+Padding is added in one step instead of byte by byte.
 
 */
 
@@ -75,93 +83,340 @@ A million repetitions of "a"
   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
 
-#define SHA1HANDSOFF
-
 #include <nms_common.h>
+#include <nms_util.h>
 #include "sha1.h"
 
-#define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
-
-/* blk0() and blk() perform the initial expand. */
-/* I got the idea of expanding during the round function from SSLeay */
-#ifdef LITTLE_ENDIAN
-#define blk0(i) (block->l[i] = (rol(block->l[i],24)&0xFF00FF00) \
-    |(rol(block->l[i],8)&0x00FF00FF))
-#else
-#define blk0(i) block->l[i]
+#if defined(__x86_64__) || defined(_M_X64)
+#if defined(_MSC_VER)
+#define SHA1_HW_X64
+#include <intrin.h>
+#include <immintrin.h>
+#define SHA1_HW_TARGET
+#elif (defined(__GNUC__) && !defined(__clang__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 9)))) || \
+      (defined(__clang__) && defined(__apple_build_version__) && (__clang_major__ >= 8)) || \
+      (defined(__clang__) && !defined(__apple_build_version__) && ((__clang_major__ > 3) || ((__clang_major__ == 3) && (__clang_minor__ >= 8))))
+#define SHA1_HW_X64
+#include <cpuid.h>
+#include <immintrin.h>
+#define SHA1_HW_TARGET __attribute__((target("sha,ssse3,sse4.1")))
 #endif
-#define blk(i) (block->l[i&15] = rol(block->l[(i+13)&15]^block->l[(i+8)&15] \
-    ^block->l[(i+2)&15]^block->l[i&15],1))
+#endif
 
-/* (R0+R1), R2, R3, R4 are the different operations used in SHA1 */
-#define R0(v,w,x,y,z,i) z+=((w&(x^y))^y)+blk0(i)+0x5A827999+rol(v,5);w=rol(w,30);
-#define R1(v,w,x,y,z,i) z+=((w&(x^y))^y)+blk(i)+0x5A827999+rol(v,5);w=rol(w,30);
-#define R2(v,w,x,y,z,i) z+=(w^x^y)+blk(i)+0x6ED9EBA1+rol(v,5);w=rol(w,30);
-#define R3(v,w,x,y,z,i) z+=(((w|x)&y)|(w&x))+blk(i)+0x8F1BBCDC+rol(v,5);w=rol(w,30);
-#define R4(v,w,x,y,z,i) z+=(w^x^y)+blk(i)+0xCA62C1D6+rol(v,5);w=rol(w,30);
-
-
-/* Hash a single 512-bit block. This is the core of the algorithm. */
-
-static void SHA1Transform(uint32_t state[5], const unsigned char buffer[64])
+/**
+ * Rotate 32 bit value left
+ */
+static inline uint32_t RotateLeft(uint32_t x, int n)
 {
-   uint32_t a, b, c, d, e;
-   typedef union
-   {
-      unsigned char c[64];
-      uint32_t l[16];
-   } CHAR64LONG16;
-   CHAR64LONG16 *block;
-#ifdef SHA1HANDSOFF
-   CHAR64LONG16 workspace;
-   block = &workspace;
-   memcpy(block, buffer, 64);
-#else
-    block = (CHAR64LONG16*)buffer;
-#endif
-   /* Copy context->state[] to working vars */
-   a = state[0];
-   b = state[1];
-   c = state[2];
-   d = state[3];
-   e = state[4];
-   /* 4 rounds of 20 operations each. Loop unrolled. */
-   R0(a,b,c,d,e, 0); R0(e,a,b,c,d, 1); R0(d,e,a,b,c, 2); R0(c,d,e,a,b, 3);
-   R0(b,c,d,e,a, 4); R0(a,b,c,d,e, 5); R0(e,a,b,c,d, 6); R0(d,e,a,b,c, 7);
-   R0(c,d,e,a,b, 8); R0(b,c,d,e,a, 9); R0(a,b,c,d,e,10); R0(e,a,b,c,d,11);
-   R0(d,e,a,b,c,12); R0(c,d,e,a,b,13); R0(b,c,d,e,a,14); R0(a,b,c,d,e,15);
-   R1(e,a,b,c,d,16); R1(d,e,a,b,c,17); R1(c,d,e,a,b,18); R1(b,c,d,e,a,19);
-   R2(a,b,c,d,e,20); R2(e,a,b,c,d,21); R2(d,e,a,b,c,22); R2(c,d,e,a,b,23);
-   R2(b,c,d,e,a,24); R2(a,b,c,d,e,25); R2(e,a,b,c,d,26); R2(d,e,a,b,c,27);
-   R2(c,d,e,a,b,28); R2(b,c,d,e,a,29); R2(a,b,c,d,e,30); R2(e,a,b,c,d,31);
-   R2(d,e,a,b,c,32); R2(c,d,e,a,b,33); R2(b,c,d,e,a,34); R2(a,b,c,d,e,35);
-   R2(e,a,b,c,d,36); R2(d,e,a,b,c,37); R2(c,d,e,a,b,38); R2(b,c,d,e,a,39);
-   R3(a,b,c,d,e,40); R3(e,a,b,c,d,41); R3(d,e,a,b,c,42); R3(c,d,e,a,b,43);
-   R3(b,c,d,e,a,44); R3(a,b,c,d,e,45); R3(e,a,b,c,d,46); R3(d,e,a,b,c,47);
-   R3(c,d,e,a,b,48); R3(b,c,d,e,a,49); R3(a,b,c,d,e,50); R3(e,a,b,c,d,51);
-   R3(d,e,a,b,c,52); R3(c,d,e,a,b,53); R3(b,c,d,e,a,54); R3(a,b,c,d,e,55);
-   R3(e,a,b,c,d,56); R3(d,e,a,b,c,57); R3(c,d,e,a,b,58); R3(b,c,d,e,a,59);
-   R4(a,b,c,d,e,60); R4(e,a,b,c,d,61); R4(d,e,a,b,c,62); R4(c,d,e,a,b,63);
-   R4(b,c,d,e,a,64); R4(a,b,c,d,e,65); R4(e,a,b,c,d,66); R4(d,e,a,b,c,67);
-   R4(c,d,e,a,b,68); R4(b,c,d,e,a,69); R4(a,b,c,d,e,70); R4(e,a,b,c,d,71);
-   R4(d,e,a,b,c,72); R4(c,d,e,a,b,73); R4(b,c,d,e,a,74); R4(a,b,c,d,e,75);
-   R4(e,a,b,c,d,76); R4(d,e,a,b,c,77); R4(c,d,e,a,b,78); R4(b,c,d,e,a,79);
-   /* Add the working vars back into context.state[] */
-   state[0] += a;
-   state[1] += b;
-   state[2] += c;
-   state[3] += d;
-   state[4] += e;
-   /* Wipe variables */
-   a = b = c = d = e = 0;
+   return (x << n) | (x >> (32 - n));
 }
 
-
-/* SHA1Init - Initialize new context */
-
-void I_SHA1Init(SHA1_CTX* context)
+/**
+ * Load 32 bit big endian value from arbitrary aligned memory location
+ */
+static inline uint32_t Load32BE(const unsigned char *p)
 {
-   /* SHA1 initialization constants */
+   uint32_t v;
+   memcpy(&v, p, 4);
+   return BigEndianToHost32(v);
+}
+
+/**
+ * SHA-1 steps. Round function is added before rotated "v" because "v" is the value computed
+ * by previous step and is on the critical dependency chain.
+ */
+#define SCHEDULE(i) (w[(i) & 15] = RotateLeft(w[((i) + 13) & 15] ^ w[((i) + 8) & 15] ^ w[((i) + 2) & 15] ^ w[(i) & 15], 1))
+#define R0(v, x, y, z, u, i) u += w[i] + 0x5A827999; u += (z) ^ ((x) & ((y) ^ (z))); u += RotateLeft(v, 5); x = RotateLeft(x, 30)
+#define R1(v, x, y, z, u, i) u += SCHEDULE(i) + 0x5A827999; u += (z) ^ ((x) & ((y) ^ (z))); u += RotateLeft(v, 5); x = RotateLeft(x, 30)
+#define R2(v, x, y, z, u, i) u += SCHEDULE(i) + 0x6ED9EBA1; u += (x) ^ (y) ^ (z); u += RotateLeft(v, 5); x = RotateLeft(x, 30)
+#define R3(v, x, y, z, u, i) u += SCHEDULE(i) + 0x8F1BBCDC; u += ((x) & (y)) + ((z) & ((x) ^ (y))); u += RotateLeft(v, 5); x = RotateLeft(x, 30)
+#define R4(v, x, y, z, u, i) u += SCHEDULE(i) + 0xCA62C1D6; u += (x) ^ (y) ^ (z); u += RotateLeft(v, 5); x = RotateLeft(x, 30)
+
+/**
+ * Process given number of 64 byte blocks (portable implementation)
+ */
+static void SHA1TransformGeneric(uint32_t state[5], const unsigned char *data, size_t blocks)
+{
+   uint32_t a = state[0], b = state[1], c = state[2], d = state[3], e = state[4];
+   for(; blocks > 0; blocks--, data += 64)
+   {
+      uint32_t w[16];
+      for(int i = 0; i < 16; i++)
+         w[i] = Load32BE(data + i * 4);
+
+      uint32_t sa = a, sb = b, sc = c, sd = d, se = e;
+
+      R0(a,b,c,d,e, 0); R0(e,a,b,c,d, 1); R0(d,e,a,b,c, 2); R0(c,d,e,a,b, 3);
+      R0(b,c,d,e,a, 4); R0(a,b,c,d,e, 5); R0(e,a,b,c,d, 6); R0(d,e,a,b,c, 7);
+      R0(c,d,e,a,b, 8); R0(b,c,d,e,a, 9); R0(a,b,c,d,e,10); R0(e,a,b,c,d,11);
+      R0(d,e,a,b,c,12); R0(c,d,e,a,b,13); R0(b,c,d,e,a,14); R0(a,b,c,d,e,15);
+      R1(e,a,b,c,d,16); R1(d,e,a,b,c,17); R1(c,d,e,a,b,18); R1(b,c,d,e,a,19);
+      R2(a,b,c,d,e,20); R2(e,a,b,c,d,21); R2(d,e,a,b,c,22); R2(c,d,e,a,b,23);
+      R2(b,c,d,e,a,24); R2(a,b,c,d,e,25); R2(e,a,b,c,d,26); R2(d,e,a,b,c,27);
+      R2(c,d,e,a,b,28); R2(b,c,d,e,a,29); R2(a,b,c,d,e,30); R2(e,a,b,c,d,31);
+      R2(d,e,a,b,c,32); R2(c,d,e,a,b,33); R2(b,c,d,e,a,34); R2(a,b,c,d,e,35);
+      R2(e,a,b,c,d,36); R2(d,e,a,b,c,37); R2(c,d,e,a,b,38); R2(b,c,d,e,a,39);
+      R3(a,b,c,d,e,40); R3(e,a,b,c,d,41); R3(d,e,a,b,c,42); R3(c,d,e,a,b,43);
+      R3(b,c,d,e,a,44); R3(a,b,c,d,e,45); R3(e,a,b,c,d,46); R3(d,e,a,b,c,47);
+      R3(c,d,e,a,b,48); R3(b,c,d,e,a,49); R3(a,b,c,d,e,50); R3(e,a,b,c,d,51);
+      R3(d,e,a,b,c,52); R3(c,d,e,a,b,53); R3(b,c,d,e,a,54); R3(a,b,c,d,e,55);
+      R3(e,a,b,c,d,56); R3(d,e,a,b,c,57); R3(c,d,e,a,b,58); R3(b,c,d,e,a,59);
+      R4(a,b,c,d,e,60); R4(e,a,b,c,d,61); R4(d,e,a,b,c,62); R4(c,d,e,a,b,63);
+      R4(b,c,d,e,a,64); R4(a,b,c,d,e,65); R4(e,a,b,c,d,66); R4(d,e,a,b,c,67);
+      R4(c,d,e,a,b,68); R4(b,c,d,e,a,69); R4(a,b,c,d,e,70); R4(e,a,b,c,d,71);
+      R4(d,e,a,b,c,72); R4(c,d,e,a,b,73); R4(b,c,d,e,a,74); R4(a,b,c,d,e,75);
+      R4(e,a,b,c,d,76); R4(d,e,a,b,c,77); R4(c,d,e,a,b,78); R4(b,c,d,e,a,79);
+
+      a += sa;
+      b += sb;
+      c += sc;
+      d += sd;
+      e += se;
+   }
+   state[0] = a;
+   state[1] = b;
+   state[2] = c;
+   state[3] = d;
+   state[4] = e;
+}
+
+#undef SCHEDULE
+#undef R0
+#undef R1
+#undef R2
+#undef R3
+#undef R4
+
+#ifdef SHA1_HW_X64
+
+/**
+ * Process given number of 64 byte blocks using x86 SHA extensions
+ */
+SHA1_HW_TARGET static void SHA1TransformSHANI(uint32_t state[5], const unsigned char *data, size_t blocks)
+{
+   const __m128i byteSwapMask = _mm_set_epi64x(0x0001020304050607LL, 0x08090A0B0C0D0E0FLL);
+
+   __m128i abcd = _mm_shuffle_epi32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(state)), 0x1B);
+   __m128i e0 = _mm_set_epi32(static_cast<int>(state[4]), 0, 0, 0);
+
+   for(; blocks > 0; blocks--, data += 64)
+   {
+      __m128i abcdSave = abcd;
+      __m128i e0Save = e0;
+      __m128i e1, m0, m1, m2, m3;
+
+      // Rounds 0-3
+      m0 = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(data + 0)), byteSwapMask);
+      e0 = _mm_add_epi32(e0, m0);
+      e1 = abcd;
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 0);
+
+      // Rounds 4-7
+      m1 = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(data + 16)), byteSwapMask);
+      e1 = _mm_sha1nexte_epu32(e1, m1);
+      e0 = abcd;
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 0);
+      m0 = _mm_sha1msg1_epu32(m0, m1);
+
+      // Rounds 8-11
+      m2 = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(data + 32)), byteSwapMask);
+      e0 = _mm_sha1nexte_epu32(e0, m2);
+      e1 = abcd;
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 0);
+      m1 = _mm_sha1msg1_epu32(m1, m2);
+      m0 = _mm_xor_si128(m0, m2);
+
+      // Rounds 12-15
+      m3 = _mm_shuffle_epi8(_mm_loadu_si128(reinterpret_cast<const __m128i*>(data + 48)), byteSwapMask);
+      e1 = _mm_sha1nexte_epu32(e1, m3);
+      e0 = abcd;
+      m0 = _mm_sha1msg2_epu32(m0, m3);
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 0);
+      m2 = _mm_sha1msg1_epu32(m2, m3);
+      m1 = _mm_xor_si128(m1, m3);
+
+      // Rounds 16-19
+      e0 = _mm_sha1nexte_epu32(e0, m0);
+      e1 = abcd;
+      m1 = _mm_sha1msg2_epu32(m1, m0);
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 0);
+      m3 = _mm_sha1msg1_epu32(m3, m0);
+      m2 = _mm_xor_si128(m2, m0);
+
+      // Rounds 20-23
+      e1 = _mm_sha1nexte_epu32(e1, m1);
+      e0 = abcd;
+      m2 = _mm_sha1msg2_epu32(m2, m1);
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 1);
+      m0 = _mm_sha1msg1_epu32(m0, m1);
+      m3 = _mm_xor_si128(m3, m1);
+
+      // Rounds 24-27
+      e0 = _mm_sha1nexte_epu32(e0, m2);
+      e1 = abcd;
+      m3 = _mm_sha1msg2_epu32(m3, m2);
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 1);
+      m1 = _mm_sha1msg1_epu32(m1, m2);
+      m0 = _mm_xor_si128(m0, m2);
+
+      // Rounds 28-31
+      e1 = _mm_sha1nexte_epu32(e1, m3);
+      e0 = abcd;
+      m0 = _mm_sha1msg2_epu32(m0, m3);
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 1);
+      m2 = _mm_sha1msg1_epu32(m2, m3);
+      m1 = _mm_xor_si128(m1, m3);
+
+      // Rounds 32-35
+      e0 = _mm_sha1nexte_epu32(e0, m0);
+      e1 = abcd;
+      m1 = _mm_sha1msg2_epu32(m1, m0);
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 1);
+      m3 = _mm_sha1msg1_epu32(m3, m0);
+      m2 = _mm_xor_si128(m2, m0);
+
+      // Rounds 36-39
+      e1 = _mm_sha1nexte_epu32(e1, m1);
+      e0 = abcd;
+      m2 = _mm_sha1msg2_epu32(m2, m1);
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 1);
+      m0 = _mm_sha1msg1_epu32(m0, m1);
+      m3 = _mm_xor_si128(m3, m1);
+
+      // Rounds 40-43
+      e0 = _mm_sha1nexte_epu32(e0, m2);
+      e1 = abcd;
+      m3 = _mm_sha1msg2_epu32(m3, m2);
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 2);
+      m1 = _mm_sha1msg1_epu32(m1, m2);
+      m0 = _mm_xor_si128(m0, m2);
+
+      // Rounds 44-47
+      e1 = _mm_sha1nexte_epu32(e1, m3);
+      e0 = abcd;
+      m0 = _mm_sha1msg2_epu32(m0, m3);
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 2);
+      m2 = _mm_sha1msg1_epu32(m2, m3);
+      m1 = _mm_xor_si128(m1, m3);
+
+      // Rounds 48-51
+      e0 = _mm_sha1nexte_epu32(e0, m0);
+      e1 = abcd;
+      m1 = _mm_sha1msg2_epu32(m1, m0);
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 2);
+      m3 = _mm_sha1msg1_epu32(m3, m0);
+      m2 = _mm_xor_si128(m2, m0);
+
+      // Rounds 52-55
+      e1 = _mm_sha1nexte_epu32(e1, m1);
+      e0 = abcd;
+      m2 = _mm_sha1msg2_epu32(m2, m1);
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 2);
+      m0 = _mm_sha1msg1_epu32(m0, m1);
+      m3 = _mm_xor_si128(m3, m1);
+
+      // Rounds 56-59
+      e0 = _mm_sha1nexte_epu32(e0, m2);
+      e1 = abcd;
+      m3 = _mm_sha1msg2_epu32(m3, m2);
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 2);
+      m1 = _mm_sha1msg1_epu32(m1, m2);
+      m0 = _mm_xor_si128(m0, m2);
+
+      // Rounds 60-63
+      e1 = _mm_sha1nexte_epu32(e1, m3);
+      e0 = abcd;
+      m0 = _mm_sha1msg2_epu32(m0, m3);
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 3);
+      m2 = _mm_sha1msg1_epu32(m2, m3);
+      m1 = _mm_xor_si128(m1, m3);
+
+      // Rounds 64-67
+      e0 = _mm_sha1nexte_epu32(e0, m0);
+      e1 = abcd;
+      m1 = _mm_sha1msg2_epu32(m1, m0);
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 3);
+      m3 = _mm_sha1msg1_epu32(m3, m0);
+      m2 = _mm_xor_si128(m2, m0);
+
+      // Rounds 68-71
+      e1 = _mm_sha1nexte_epu32(e1, m1);
+      e0 = abcd;
+      m2 = _mm_sha1msg2_epu32(m2, m1);
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 3);
+      m3 = _mm_xor_si128(m3, m1);
+
+      // Rounds 72-75
+      e0 = _mm_sha1nexte_epu32(e0, m2);
+      e1 = abcd;
+      m3 = _mm_sha1msg2_epu32(m3, m2);
+      abcd = _mm_sha1rnds4_epu32(abcd, e0, 3);
+
+      // Rounds 76-79
+      e1 = _mm_sha1nexte_epu32(e1, m3);
+      e0 = abcd;
+      abcd = _mm_sha1rnds4_epu32(abcd, e1, 3);
+
+      e0 = _mm_sha1nexte_epu32(e0, e0Save);
+      abcd = _mm_add_epi32(abcd, abcdSave);
+   }
+
+   _mm_storeu_si128(reinterpret_cast<__m128i*>(state), _mm_shuffle_epi32(abcd, 0x1B));
+   state[4] = static_cast<uint32_t>(_mm_extract_epi32(e0, 3));
+}
+
+/**
+ * Check if CPU supports SHA extensions (and SSSE3/SSE4.1 used together with them)
+ */
+static bool IsSHANISupported()
+{
+#ifdef _MSC_VER
+   int regs[4];
+   __cpuid(regs, 0);
+   if (regs[0] < 7)
+      return false;
+   __cpuid(regs, 1);
+   uint32_t ecx1 = static_cast<uint32_t>(regs[2]);
+   __cpuidex(regs, 7, 0);
+   uint32_t ebx7 = static_cast<uint32_t>(regs[1]);
+#else
+   unsigned int eax, ebx, ecx, edx;
+   if (__get_cpuid_max(0, nullptr) < 7)
+      return false;
+   __cpuid(1, eax, ebx, ecx, edx);
+   uint32_t ecx1 = ecx;
+   __cpuid_count(7, 0, eax, ebx, ecx, edx);
+   uint32_t ebx7 = ebx;
+#endif
+   return ((ecx1 & (1 << 9)) != 0) &&   // SSSE3
+          ((ecx1 & (1 << 19)) != 0) &&  // SSE4.1
+          ((ebx7 & (1 << 29)) != 0);    // SHA
+}
+
+static const bool s_useSHANI = IsSHANISupported();
+
+#endif   /* SHA1_HW_X64 */
+
+/**
+ * Process given number of 64 byte blocks
+ */
+static inline void SHA1Transform(uint32_t state[5], const unsigned char *data, size_t blocks)
+{
+#ifdef SHA1_HW_X64
+   if (s_useSHANI)
+   {
+      SHA1TransformSHANI(state, data, blocks);
+      return;
+   }
+#endif
+   SHA1TransformGeneric(state, data, blocks);
+}
+
+/**
+ * Initialize new context
+ */
+void I_SHA1Init(SHA1_CTX *context)
+{
    context->state[0] = 0x67452301;
    context->state[1] = 0xEFCDAB89;
    context->state[2] = 0x98BADCFE;
@@ -170,60 +425,60 @@ void I_SHA1Init(SHA1_CTX* context)
    context->count[0] = context->count[1] = 0;
 }
 
-
-/* Run your data through this. */
-
-void I_SHA1Update(SHA1_CTX* context, const unsigned char* data, unsigned int len)	/* JHB */
+/**
+ * Append data to hash
+ */
+void I_SHA1Update(SHA1_CTX *context, const unsigned char *data, unsigned int len)
 {
-   uint32_t i, j; /* JHB */
+   if (len == 0)
+      return;
 
-   j = (context->count[0] >> 3) & 63;
-   if ((context->count[0] += len << 3) < (len << 3))
+   unsigned int offset = (context->count[0] >> 3) & 63;
+
+   // Update message length (in bits)
+   uint32_t bits = static_cast<uint32_t>(len << 3);
+   context->count[0] += bits;
+   if (context->count[0] < bits)
       context->count[1]++;
-   context->count[1] += (len >> 29);
-   if ((j + len) > 63)
+   context->count[1] += len >> 29;
+
+   // Complete partial block accumulated by previous calls
+   if (offset != 0)
    {
-      memcpy(&context->buffer[j], data, (i = 64 - j));
-      SHA1Transform(context->state, context->buffer);
-      for (; i + 63 < len; i += 64)
-      {
-         SHA1Transform(context->state, &data[i]);
-      }
-      j = 0;
+      unsigned int copy = (offset + len > 64) ? 64 - offset : len;
+      memcpy(&context->buffer[offset], data, copy);
+      if (offset + copy < 64)
+         return;
+      data += copy;
+      len -= copy;
+      SHA1Transform(context->state, context->buffer, 1);
    }
-   else
-      i = 0;
-   memcpy(&context->buffer[j], &data[i], len - i);
+
+   // Process full blocks directly from input
+   if (len >= 64)
+   {
+      SHA1Transform(context->state, data, len / 64);
+      data += len & ~63u;
+      len &= 63;
+   }
+
+   // Save remaining partial block
+   if (len > 0)
+      memcpy(context->buffer, data, len);
 }
 
-
-/* Add padding and return the message digest. */
-
+/**
+ * Add padding and return the message digest. Context is wiped after use.
+ */
 void I_SHA1Final(SHA1_CTX *context, unsigned char *digest)
 {
-   uint32_t i; /* JHB */
-   unsigned char finalcount[8];
-
-   for (i = 0; i < 8; i++)
-   {
-      finalcount[i] = (unsigned char)((context->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8)) & 255); /* Endian independent */
-   }
-   I_SHA1Update(context, (unsigned char*)"\200", 1);
-   while ((context->count[0] & 504) != 448)
-   {
-      I_SHA1Update(context, (unsigned char*)"\0", 1);
-   }
-   I_SHA1Update(context, finalcount, 8); /* Should cause a SHA1Transform() */
-   for (i = 0; i < 20; i++)
-   {
-      digest[i] = (unsigned char)((context->state[i >> 2] >> ((3 - (i & 3)) * 8)) & 255);
-   }
-   /* Wipe variables */
-    SecureZeroMemory(context->buffer, 64);
-    SecureZeroMemory(context->state, 20);
-    SecureZeroMemory(context->count, 8);
-    SecureZeroMemory(finalcount, 8);	/* SWR */
-#ifdef SHA1HANDSOFF  /* make SHA1Transform overwrite it's own static vars */
-   SHA1Transform(context->state, context->buffer);
-#endif
+   static const unsigned char pad[64] = { 0x80 };
+   unsigned char length[8];
+   for(int i = 0; i < 8; i++)
+      length[i] = static_cast<unsigned char>(context->count[(i >= 4) ? 0 : 1] >> ((3 - (i & 3)) * 8));
+   I_SHA1Update(context, pad, ((55 - (context->count[0] >> 3)) & 63) + 1);
+   I_SHA1Update(context, length, 8);
+   for(int i = 0; i < 20; i++)
+      digest[i] = static_cast<unsigned char>(context->state[i >> 2] >> ((3 - (i & 3)) * 8));
+   SecureZeroMemory(context, sizeof(SHA1_CTX));
 }

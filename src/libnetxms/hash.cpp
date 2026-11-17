@@ -426,26 +426,28 @@ void LIBNETXMS_EXPORTABLE CalculateSHA512Hash(const void *data, size_t size, BYT
 template<typename C, void (*__Init)(C*), void (*__Update)(C*, const void*, size_t), void (*__Final)(C*, BYTE*), size_t __blockSize>
 static inline void HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
-   C context;
-   size_t count, patternIndex;
-   const unsigned char *src;
-   BYTE *dst, patternBuffer[__blockSize];
-
-   __Init(&context);
-   for(count = 0, src = static_cast<const unsigned char*>(data), patternIndex = 0; count < fullSize; count += __blockSize)
+   // Pattern repeated enough times so that every block starting within first copy is contiguous
+   // in memory and can be passed to hash function without copying. Empty pattern is hashed as zero bytes.
+   size_t expandedSize = __blockSize + patternSize;
+   Buffer<BYTE, 512> expanded(expandedSize);
+   if (patternSize > 0)
    {
-      dst = patternBuffer;
-      for(size_t i = 0; i < __blockSize; i++)
-      {
-         *dst++ = *src++;
-         patternIndex++;
-         if (patternIndex >= patternSize)
-         {
-            patternIndex = 0;
-            src = static_cast<const unsigned char*>(data);
-         }
-      }
-      __Update(&context, patternBuffer, __blockSize);
+      for(size_t i = 0; i < expandedSize; i += patternSize)
+         memcpy(expanded + i, data, std::min(patternSize, expandedSize - i));
+   }
+   else
+   {
+      memset(expanded, 0, expandedSize);
+   }
+
+   C context;
+   __Init(&context);
+   size_t offset = 0;
+   for(size_t count = 0; count < fullSize; count += __blockSize)
+   {
+      __Update(&context, expanded + offset, __blockSize);
+      if (patternSize > 0)
+         offset = (offset + __blockSize) % patternSize;
    }
    __Final(&context, hash);
 }

@@ -42,6 +42,8 @@ void TestSubProcess(const char *procname, bool debug);
 void TestGeoLocation();
 void TestRSA();
 void TestMD4();
+void TestMD5();
+void TestSHA1();
 void TestDES();
 void TestDESCBC();
 void TestDecryptPassword();
@@ -3996,6 +3998,8 @@ int main(int argc, char *argv[])
    TestGeoLocation();
    TestRSA();
    TestMD4();
+   TestMD5();
+   TestSHA1();
    TestDES();
    TestDESCBC();
    TestDecryptPassword();
