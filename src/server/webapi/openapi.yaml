@@ -21094,11 +21094,15 @@ components:
         for sudden change between consecutive values, and for sustained level shift (drift).
         On update merge-patch semantics apply: only properties present in the request are changed,
         and nested objects are merged property by property (`hardBounds: null` removes hard bounds).
-        Read-only properties are ignored on update.
+        Read-only properties are ignored on update. Request with a value that is out of range or
+        not one of the allowed names, or with `hardBounds.min` greater than `hardBounds.max`, is
+        rejected.
       properties:
         enabled:
           type: boolean
-          description: True if anomaly detection is enabled for the item
+          description: |
+            True if anomaly detection is enabled for the item. Setting it to false also turns
+            off `llmTuning`.
         llmTuning:
           type: boolean
           description: |

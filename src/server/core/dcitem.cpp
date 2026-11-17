@@ -3613,7 +3613,16 @@ uint32_t DCItem::updateFromJSON(json_t *json, bool create)
          unlock();
          return RCC_INVALID_ARGUMENT;
       }
-      m_flags = (m_flags & ~mask) | setFlags;
+      if ((mask & DCF_DETECT_ANOMALIES_IFOREST) && !(setFlags & DCF_DETECT_ANOMALIES_IFOREST))
+      {
+         // LLM tuning cannot be on for disabled anomaly detection, so disabling detection turns it off
+         if (setFlags & DCF_DETECT_ANOMALIES_AI)
+         {
+            unlock();
+            return RCC_INVALID_ARGUMENT;
+         }
+         mask |= DCF_DETECT_ANOMALIES_AI;
+      }
 
       json_t *settings = m_anomalySettings.toJson();
       const char *key;
@@ -3626,6 +3635,13 @@ uint32_t DCItem::updateFromJSON(json_t *json, bool create)
          else
             json_object_set(settings, key, value);
       }
+      if (!AnomalySettings::validate(settings))
+      {
+         json_decref(settings);
+         unlock();
+         return RCC_INVALID_ARGUMENT;
+      }
+      m_flags = (m_flags & ~mask) | setFlags;
       m_anomalySettings = AnomalySettings(settings);
       json_decref(settings);
    }

@@ -103,6 +103,8 @@ struct NXCORE_EXPORTABLE AnomalySettings
    AnomalySettings();
    AnomalySettings(json_t *json);
 
+   static bool validate(json_t *json);
+
    json_t *toJson() const;
    bool isDefault() const;
 };

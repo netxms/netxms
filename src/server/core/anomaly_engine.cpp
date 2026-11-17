@@ -250,6 +250,78 @@ AnomalySettings::AnomalySettings(json_t *json) : AnomalySettings()
 }
 
 /**
+ * Check that optional element of JSON object is a number within given range (null is accepted as "use default")
+ */
+static bool IsValidNumber(json_t *object, const char *tag, double min, bool minInclusive, double max)
+{
+   json_t *v = json_object_get(object, tag);
+   if ((v == nullptr) || json_is_null(v))
+      return true;
+   if (!json_is_number(v))
+      return false;
+   double n = json_number_value(v);
+   return (minInclusive ? (n >= min) : (n > min)) && (n <= max);
+}
+
+/**
+ * Check that optional element of JSON object is one of given names (null is accepted as "use default")
+ */
+static bool IsValidName(json_t *object, const char *tag, const char * const *names, int count)
+{
+   json_t *v = json_object_get(object, tag);
+   if ((v == nullptr) || json_is_null(v))
+      return true;
+   return json_is_string(v) && (IndexFromName(json_string_value(v), names, count, -1) != -1);
+}
+
+/**
+ * Validate settings document received from external source. Unlike constructor, which replaces
+ * invalid elements with defaults, this method reports them. Unknown elements are ignored.
+ */
+bool AnomalySettings::validate(json_t *json)
+{
+   if (!json_is_object(json))
+      return false;
+
+   if (!IsValidNumber(json, "sensitivity", 0, false, 100) ||
+       !IsValidName(json, "direction", s_directionNames, 3) ||
+       !IsValidName(json, "mode", s_modeNames, 3))
+      return false;
+
+   json_t *days = json_object_get(json, "minTrainingDays");
+   if ((days != nullptr) && !json_is_null(days) &&
+       (!json_is_integer(days) || (json_integer_value(days) < 1) || (json_integer_value(days) > 365)))
+      return false;
+
+   json_t *hardBounds = json_object_get(json, "hardBounds");
+   if ((hardBounds != nullptr) && !json_is_null(hardBounds))
+   {
+      if (!json_is_object(hardBounds) ||
+          !IsValidNumber(hardBounds, "min", -HUGE_VAL, true, HUGE_VAL) ||
+          !IsValidNumber(hardBounds, "max", -HUGE_VAL, true, HUGE_VAL))
+         return false;
+      double min = GetRealFromJson(hardBounds, "min"), max = GetRealFromJson(hardBounds, "max");
+      if (!std::isnan(min) && !std::isnan(max) && (min > max))
+         return false;
+   }
+
+   json_t *detector = json_object_get(json, "detector");
+   if ((detector != nullptr) && !json_is_null(detector))
+   {
+      if (!json_is_object(detector))
+         return false;
+      json_t *id = json_object_get(detector, "id");
+      if ((id != nullptr) && (!json_is_string(id) || strcmp(json_string_value(id), CHANGE_DETECTOR_ID)))
+         return false;
+      if (!IsValidNumber(detector, "k", 0, true, HUGE_VAL) ||
+          !IsValidNumber(detector, "h", 0, false, HUGE_VAL))
+         return false;
+   }
+
+   return true;
+}
+
+/**
  * Serialize settings to JSON
  */
 json_t *AnomalySettings::toJson() const

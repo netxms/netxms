@@ -190,6 +190,57 @@ static void TestSettings()
 }
 
 /**
+ * Check result of settings document validation
+ */
+static bool ValidateSettings(const char *text)
+{
+   json_t *json = json_loads(text, 0, nullptr);
+   bool valid = AnomalySettings::validate(json);
+   json_decref(json);
+   return valid;
+}
+
+/**
+ * Test validation of settings document
+ */
+static void TestSettingsValidation()
+{
+   StartTest(_T("Anomaly detection - settings validation"));
+
+   AnomalySettings defaults;
+   json_t *json = defaults.toJson();
+   AssertTrue(AnomalySettings::validate(json));
+   json_decref(json);
+
+   AssertTrue(ValidateSettings("{}"));
+   AssertTrue(ValidateSettings("{\"sensitivity\":2,\"direction\":\"up\",\"mode\":\"value\",\"minTrainingDays\":30,"
+      "\"hardBounds\":{\"min\":0,\"max\":100},\"detector\":{\"id\":\"cusum\",\"k\":0,\"h\":3}}"));
+   AssertTrue(ValidateSettings("{\"sensitivity\":100,\"hardBounds\":null,\"enabled\":true,\"model\":{\"mode\":\"rate\"}}"));
+   AssertTrue(ValidateSettings("{\"hardBounds\":{\"min\":null,\"max\":5}}"));
+   AssertTrue(ValidateSettings("{\"hardBounds\":{\"min\":5,\"max\":5}}"));
+
+   AssertFalse(ValidateSettings("[]"));
+   AssertFalse(ValidateSettings("{\"sensitivity\":0}"));
+   AssertFalse(ValidateSettings("{\"sensitivity\":-1}"));
+   AssertFalse(ValidateSettings("{\"sensitivity\":500}"));
+   AssertFalse(ValidateSettings("{\"sensitivity\":\"3.5\"}"));
+   AssertFalse(ValidateSettings("{\"direction\":\"sideways\"}"));
+   AssertFalse(ValidateSettings("{\"direction\":1}"));
+   AssertFalse(ValidateSettings("{\"mode\":\"delta\"}"));
+   AssertFalse(ValidateSettings("{\"minTrainingDays\":0}"));
+   AssertFalse(ValidateSettings("{\"minTrainingDays\":366}"));
+   AssertFalse(ValidateSettings("{\"minTrainingDays\":7.5}"));
+   AssertFalse(ValidateSettings("{\"hardBounds\":5}"));
+   AssertFalse(ValidateSettings("{\"hardBounds\":{\"min\":\"0\"}}"));
+   AssertFalse(ValidateSettings("{\"hardBounds\":{\"min\":10,\"max\":5}}"));
+   AssertFalse(ValidateSettings("{\"detector\":{\"id\":\"other\"}}"));
+   AssertFalse(ValidateSettings("{\"detector\":{\"k\":-0.5}}"));
+   AssertFalse(ValidateSettings("{\"detector\":{\"h\":0}}"));
+
+   EndTest();
+}
+
+/**
  * Test saving and loading of detector state
  */
 static void TestDetectorState()
@@ -649,6 +700,7 @@ static void TestDaylightSavingTime()
 void TestAnomalyDetection()
 {
    TestSettings();
+   TestSettingsValidation();
    TestDetectorState();
    TestSeasonalBaseline();
    TestWeekdayBaseline();
