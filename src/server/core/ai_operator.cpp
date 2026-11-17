@@ -2544,6 +2544,27 @@ static std::string F_TestCheck(json_t *arguments, uint32_t userId)
 }
 
 /**
+ * Check if observation reference has form <type>:<value> with known type. For all types except "text"
+ * value must start with numeric ID (value of "check" reference is <id>:<name>).
+ */
+static bool IsValidObservationReference(const char *ref)
+{
+   static const char *types[] = { "alarm", "event", "dci", "object", "incident", "check", "text", nullptr };
+
+   const char *separator = strchr(ref, ':');
+   if ((separator == nullptr) || (separator[1] == 0))
+      return false;
+
+   size_t typeLen = separator - ref;
+   for(int i = 0; types[i] != nullptr; i++)
+   {
+      if ((strlen(types[i]) == typeLen) && !memcmp(ref, types[i], typeLen))
+         return !strcmp(types[i], "text") || isdigit(static_cast<unsigned char>(separator[1]));
+   }
+   return false;
+}
+
+/**
  * AI assistant function: record-observation
  */
 static std::string F_RecordObservation(json_t *arguments, uint32_t userId)
@@ -2598,6 +2619,17 @@ static std::string F_RecordObservation(json_t *arguments, uint32_t userId)
    json_t *refsElement = json_object_get_array_ex(arguments, "references");
    if (refsElement != nullptr)
    {
+      size_t i;
+      json_t *e;
+      json_array_foreach(refsElement, i, e)
+      {
+         if (!json_is_string(e) || !IsValidObservationReference(json_string_value(e)))
+         {
+            json_decref(refsElement);
+            return std::string("Error: invalid reference at position ").append(std::to_string(i)).append(
+               " (expected \"alarm:<id>\", \"event:<id>\", \"dci:<id>\", \"object:<id>\", \"incident:<id>\", or \"text:<free-form text>\")");
+         }
+      }
       refs = JsonToString(refsElement);
    }
 
@@ -2883,7 +2915,9 @@ void InitAIOperators()
          { "severity", "Severity: 'normal', 'warning', 'minor', 'major', or 'critical'" },
          { "body", "Optional: detailed description of the observation" },
          { "object", "Optional: name or ID of the NetXMS object this observation relates to" },
-         { "references", "Optional: array of references supporting the observation (alarm IDs, event IDs, DCI IDs, etc.)", "array", "string" }
+         { "references", "Optional: array of typed references supporting the observation, each in form <type>:<id> - "
+                         "\"alarm:<alarm ID>\", \"event:<event log record ID>\", \"dci:<DCI ID>\", \"object:<object ID>\", \"incident:<incident ID>\"; "
+                         "use \"text:<free-form text>\" for anything else. Bare IDs are rejected.", "array", "string" }
       },
       F_RecordObservation);
 

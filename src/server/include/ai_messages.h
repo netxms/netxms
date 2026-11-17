@@ -116,7 +116,7 @@ public:
    bool isInitiator(uint32_t userId) const;
 
    bool markAsRead(uint32_t userId);
-   bool setStatus(AIMessageStatus status);
+   bool setFinalStatus(AIMessageStatus status);
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t userId) const;
    json_t *toJson(uint32_t userId) const;
@@ -179,9 +179,10 @@ uint32_t NXCORE_EXPORTABLE MarkAIMessageAsRead(uint32_t messageId, uint32_t user
  * Approve AI message (for approval requests)
  * @param messageId Message ID
  * @param userId User ID
+ * @param spawnedTaskId if not null, receives ID of AI task spawned by approval (0 if no task was spawned)
  * @return RCC code
  */
-uint32_t NXCORE_EXPORTABLE ApproveAIMessage(uint32_t messageId, uint32_t userId);
+uint32_t NXCORE_EXPORTABLE ApproveAIMessage(uint32_t messageId, uint32_t userId, uint32_t *spawnedTaskId = nullptr);
 
 /**
  * Reject AI message (for approval requests)

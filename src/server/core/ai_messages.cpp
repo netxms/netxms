@@ -75,7 +75,7 @@ static void CleanupThread()
          shared_ptr<AIMessage> msg = s_messages.get(msgId);
          if (msg != nullptr)
          {
-            msg->setStatus(AI_MSG_STATUS_EXPIRED);
+            msg->setFinalStatus(AI_MSG_STATUS_EXPIRED);
             msg->deleteFromDatabase();
             s_messages.remove(msgId);
             NotifyAIMessageRecipients(msgId, false);
@@ -286,27 +286,32 @@ bool AIMessage::markAsRead(uint32_t userId)
 }
 
 /**
- * Set message status
+ * Set final message status (approved, rejected, or expired). Status can be set only once - returns false
+ * if message already has final status.
  */
-bool AIMessage::setStatus(AIMessageStatus status)
+bool AIMessage::setFinalStatus(AIMessageStatus status)
 {
    lock();
+   if ((m_status != AI_MSG_STATUS_PENDING) && (m_status != AI_MSG_STATUS_READ))
+   {
+      unlock();
+      return false;
+   }
    m_status = status;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE ai_messages SET status=? WHERE id=?"));
-   bool success = false;
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<int>(status));
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
-      success = DBExecute(hStmt);
+      DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
 
    unlock();
-   return success;
+   return true;
 }
 
 /**
@@ -583,8 +588,11 @@ uint32_t NXCORE_EXPORTABLE MarkAIMessageAsRead(uint32_t messageId, uint32_t user
 /**
  * Approve AI message
  */
-uint32_t NXCORE_EXPORTABLE ApproveAIMessage(uint32_t messageId, uint32_t userId)
+uint32_t NXCORE_EXPORTABLE ApproveAIMessage(uint32_t messageId, uint32_t userId, uint32_t *spawnedTaskId)
 {
+   if (spawnedTaskId != nullptr)
+      *spawnedTaskId = 0;
+
    shared_ptr<AIMessage> msg = s_messages.get(messageId);
    if (msg == nullptr)
       return RCC_INVALID_MESSAGE_ID;
@@ -595,10 +603,9 @@ uint32_t NXCORE_EXPORTABLE ApproveAIMessage(uint32_t messageId, uint32_t userId)
    if (msg->getType() != AI_MESSAGE_APPROVAL_REQUEST)
       return RCC_INCOMPATIBLE_OPERATION;
 
-   if (msg->getStatus() != AI_MSG_STATUS_PENDING && msg->getStatus() != AI_MSG_STATUS_READ)
+   // Concurrent approval or rejection of same request is resolved here - only one caller can set final status
+   if (!msg->setFinalStatus(AI_MSG_STATUS_APPROVED))
       return RCC_INCOMPATIBLE_OPERATION;
-
-   msg->setStatus(AI_MSG_STATUS_APPROVED);
    NotifyAIMessageRecipients(messageId, false);
 
    // Spawn task if spawn data is available
@@ -622,6 +629,8 @@ uint32_t NXCORE_EXPORTABLE ApproveAIMessage(uint32_t messageId, uint32_t userId)
             _sntprintf(description, 300, _T("Approved: %s"), msg->getTitle());
             uint32_t taskId = RegisterAITask(description, userId, String(userPrompt, "utf-8"), 0);
             nxlog_debug_tag(DEBUG_TAG, 4, L"Spawned AI task %u from approved message %u", taskId, messageId);
+            if (spawnedTaskId != nullptr)
+               *spawnedTaskId = taskId;
          }
          else
          {
@@ -654,10 +663,8 @@ uint32_t NXCORE_EXPORTABLE RejectAIMessage(uint32_t messageId, uint32_t userId)
    if (msg->getType() != AI_MESSAGE_APPROVAL_REQUEST)
       return RCC_INCOMPATIBLE_OPERATION;
 
-   if (msg->getStatus() != AI_MSG_STATUS_PENDING && msg->getStatus() != AI_MSG_STATUS_READ)
+   if (!msg->setFinalStatus(AI_MSG_STATUS_REJECTED))
       return RCC_INCOMPATIBLE_OPERATION;
-
-   msg->setStatus(AI_MSG_STATUS_REJECTED);
    NotifyAIMessageRecipients(messageId, false);
 
    nxlog_debug_tag(DEBUG_TAG, 4, L"AI message %u rejected by user %u", messageId, userId);

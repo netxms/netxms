@@ -3374,6 +3374,9 @@ json_t NXCORE_EXPORTABLE *GetObjectToolsIntoJSON(uint32_t userId, bool fullAcces
       DBGetFieldUTF8(hResult, i, 9, buffer, sizeof(buffer));
       json_object_set_new(tool, "commandShortName", json_string(buffer));
 
+      uuid iconGuid = DBGetFieldGUID(hResult, i, 10);
+      json_object_set_new(tool, "icon", iconGuid.isNull() ? json_null() : iconGuid.toJson());
+
       json_object_set_new(tool, "remotePort", json_integer(DBGetFieldULong(hResult, i, 11)));
 
       DBGetFieldUTF8(hResult, i, 12, buffer, sizeof(buffer));
@@ -3495,8 +3498,7 @@ json_t NXCORE_EXPORTABLE *GetObjectToolIntoJSON(uint32_t toolId, uint32_t userId
       json_object_set_new(tool, "commandShortName", json_string_t(buffer));
 
       uuid iconGuid = DBGetFieldGUID(hResult, 0, 9);
-      if (!iconGuid.isNull())
-         json_object_set_new(tool, "icon", iconGuid.toJson());
+      json_object_set_new(tool, "icon", iconGuid.isNull() ? json_null() : iconGuid.toJson());
 
       json_object_set_new(tool, "remotePort", json_integer(DBGetFieldULong(hResult, 0, 10)));
 

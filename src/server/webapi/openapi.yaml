@@ -1610,7 +1610,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AiMessage'
+                allOf:
+                  - $ref: '#/components/schemas/AiMessage'
+                  - type: object
+                    properties:
+                      spawnedTaskId:
+                        type: integer
+                        description: ID of the AI task started by this approval; present only when approval started a task
         '400':
           description: Invalid message ID or status
         '403':
@@ -4899,6 +4905,28 @@ paths:
                     bidirectional peer link (any previous peer on either side is cleared) and
                     requires modify access on the peer interface. `null` or `0` clears the
                     current peer.
+                userFlags:
+                  type: object
+                  description: >-
+                    Interface only. User-changeable interface flags as named booleans; only
+                    flags present in the object are modified. Current values are returned in
+                    the interface's `userFlags` object.
+                  properties:
+                    excludeFromTopology:
+                      type: boolean
+                      description: Exclude interface from network topology
+                    includeInIcmpPoll:
+                      type: boolean
+                      description: Collect ICMP response statistics for interface addresses
+                    disableSnmpStatusPoll:
+                      type: boolean
+                      description: Do not use SNMP for reading interface status
+                    disableIcmpStatusPoll:
+                      type: boolean
+                      description: Do not use ICMP for reading interface status
+                    disableAgentStatusPoll:
+                      type: boolean
+                      description: Do not use NetXMS agent for reading interface status
                 primaryName:
                   type: string
                   description: >-
@@ -9428,24 +9456,98 @@ paths:
                     description: Human-readable status name
                   unmanaged:
                     type: boolean
-                    description: Present and true if object is unmanaged
+                    description: Present and true if object is unmanaged. All other fields below are omitted for unmanaged objects.
                   algorithm:
                     type: string
-                    description: Status calculation algorithm name
-                  childStatuses:
+                    description: Status calculation algorithm in effect (after resolving the server default)
+                    enum: [Most Critical, Single Threshold, Multiple Thresholds, Unknown]
+                  children:
                     type: array
-                    description: Status information for child objects
+                    description: Child objects that take part in the calculation; children whose propagated status is Unknown, Unmanaged or Disabled are not listed
                     items:
                       type: object
                       properties:
                         objectId:
                           type: integer
-                        objectName:
+                          description: Child object ID
+                        name:
                           type: string
+                          description: Child object name
+                        status:
+                          type: integer
+                          description: Child's own status
+                        statusText:
+                          type: string
+                        propagatedStatus:
+                          type: integer
+                          description: Status the child propagates to its parents after applying its propagation algorithm
+                        propagatedStatusText:
+                          type: string
+                        propagation:
+                          type: string
+                          description: Human-readable description of the child's status propagation algorithm
+                        contributor:
+                          type: boolean
+                          description: True if the child's propagated status is at or above the status calculated from children
+                  thresholdInfo:
+                    type: object
+                    description: Present only for threshold algorithms when at least one child has known status
+                    properties:
+                      totalChildren:
+                        type: integer
+                        description: Number of children with known propagated status
+                      thresholds:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            severity:
+                              type: string
+                              enum: [Warning, Minor, Major, Critical]
+                            threshold:
+                              type: integer
+                              description: Configured threshold (percentage of children)
+                            count:
+                              type: integer
+                              description: Number of children with propagated status at or above this severity
+                            percentage:
+                              type: integer
+                              description: Percentage of children with propagated status at or above this severity
+                  statusFromChildren:
+                    type: integer
+                    description: Status calculated from children
+                  statusFromChildrenText:
+                    type: string
+                  alarmSeverity:
+                    type: integer
+                    description: Severity of the most critical active alarm on the object (Unknown if none)
+                  alarmSeverityText:
+                    type: string
+                  additionalStatus:
+                    type: integer
+                    description: Most critical additional status (DCI thresholds, access point state, business service checks and similar)
+                  additionalStatusText:
+                    type: string
+                  additionalExplanation:
+                    type: string
+                    description: Explanation of the additional status; omitted when empty
+                  modules:
+                    type: array
+                    description: Server modules that report a status other than Unknown for this object
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: Module name
                         status:
                           type: integer
                         statusText:
                           type: string
+                  decidingFactor:
+                    type: string
+                    description: Which input determined the resulting status
+                    enum: [children, alarms, additional]
         '400':
           description: Invalid object ID
         '401':
@@ -17966,6 +18068,11 @@ components:
         commandShortName:
           type: string
           description: Short command name
+        icon:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID of the icon image in the image library; null when no icon is set
         remotePort:
           type: integer
           description: Remote port for TCP tunnel
@@ -18014,10 +18121,6 @@ components:
             filter:
               type: string
               description: Tool filter (matching OID for SNMP tools)
-            icon:
-              type: string
-              format: uuid
-              description: UUID of the icon image in the image library; absent when no icon is set
             acl:
               type: array
               description: |
@@ -20153,7 +20256,11 @@ components:
           description: Radio name
         bssid:
           type: string
-          description: BSSID as 12 hexadecimal digits without separators
+          description: BSSID in colon-separated notation
+        vendor:
+          type: string
+          nullable: true
+          description: Vendor resolved from the BSSID OUI; null when unknown
         ssid:
           type: string
           description: SSID

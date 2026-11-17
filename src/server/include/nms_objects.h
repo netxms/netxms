@@ -2552,6 +2552,7 @@ protected:
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
    virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
    virtual uint32_t modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session) override;
+   virtual void updateFlags(uint32_t flags, uint32_t mask) override;
 
    void setExpectedStateInternal(int state);
    void clearPeerData();

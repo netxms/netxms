@@ -159,8 +159,7 @@ json_t *RadioInterfaceInfo::toJson() const
    json_object_set_new(root, "index", json_integer(index));
    json_object_set_new(root, "ifIndex", json_integer(ifIndex));
    json_object_set_new(root, "name", json_string_t(name));
-   char bssidText[64];
-   json_object_set_new(root, "bssid", json_string(BinToStrA(bssid, MAC_ADDR_LENGTH, bssidText)));
+   json_object_set_new(root, "bssid", MacAddress(bssid, MAC_ADDR_LENGTH).toJson());
    json_object_set_new(root, "ssid", json_string_t(ssid));
    json_object_set_new(root, "band", json_integer(band));
    json_object_set_new(root, "channel", json_integer(channel));
