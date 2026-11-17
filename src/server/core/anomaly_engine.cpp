@@ -92,10 +92,35 @@
 #define ABSOLUTE_SPREAD_FLOOR       1e-9
 
 /**
- * Names for enum values in JSON
+ * Names of enum values. Used in persisted settings and model, WebAPI, event parameters and AI tool output.
  */
+static const char *s_typeNames[] = { "none", "range", "step", "drift" };
 static const char *s_directionNames[] = { "both", "up", "down" };
 static const char *s_modeNames[] = { "auto", "value", "rate" };
+
+/**
+ * Get name of anomaly type
+ */
+const char *AnomalyTypeName(AnomalyType type)
+{
+   return s_typeNames[static_cast<int>(type)];
+}
+
+/**
+ * Get name of anomaly direction
+ */
+const char *AnomalyDirectionName(AnomalyDirection direction)
+{
+   return s_directionNames[static_cast<int>(direction)];
+}
+
+/**
+ * Get name of anomaly detection mode
+ */
+const char *AnomalyDetectionModeName(AnomalyDetectionMode mode)
+{
+   return s_modeNames[static_cast<int>(mode)];
+}
 
 /**
  * Day names for slot description
@@ -134,6 +159,17 @@ static inline void LocalTime(time_t t, struct tm *lt)
 #else
    localtime_r(&t, lt);
 #endif
+}
+
+/**
+ * Get start of the local time hour that given timestamp belongs to. Slots are hours of local time,
+ * which are not aligned to UTC hours in time zones with offset that is not a whole number of hours.
+ */
+time_t GetAnomalyHourStart(time_t timestamp)
+{
+   struct tm lt;
+   LocalTime(timestamp, &lt);
+   return timestamp - lt.tm_min * 60 - lt.tm_sec;
 }
 
 /**
@@ -383,6 +419,7 @@ AnomalyModel::AnomalyModel()
    memset(m_levels, 0, sizeof(m_levels));
    m_stepCenter = 0;
    m_stepScale = 0;
+   m_slotChangeScale = 0;
    m_stepMaxGap = 0;
    m_driftScale = 0;
 }
@@ -425,6 +462,9 @@ shared_ptr<AnomalyModel> AnomalyModel::createFromJson(json_t *json)
    }
    model->m_stepCenter = json_number_value(json_object_get(json, "stepCenter"));
    model->m_stepScale = json_number_value(json_object_get(json, "stepScale"));
+   model->m_slotChangeScale = json_number_value(json_object_get(json, "slotChangeScale"));
+   if (!(model->m_slotChangeScale > model->m_stepScale))
+      model->m_slotChangeScale = model->m_stepScale;   // also covers model saved without this element
    model->m_stepMaxGap = json_object_get_int32(json, "stepMaxGap");
    model->m_driftScale = json_number_value(json_object_get(json, "driftScale"));
    return model;
@@ -467,6 +507,7 @@ json_t *AnomalyModel::toJson() const
 
    json_object_set_new(json, "stepCenter", json_real(m_stepCenter));
    json_object_set_new(json, "stepScale", json_real(m_stepScale));
+   json_object_set_new(json, "slotChangeScale", json_real(m_slotChangeScale));
    json_object_set_new(json, "stepMaxGap", json_integer(m_stepMaxGap));
    json_object_set_new(json, "driftScale", json_real(m_driftScale));
    return json;
@@ -517,7 +558,7 @@ String AnomalyModel::describeSlot(time_t timestamp) const
 }
 
 /**
- * Aggregate chronologically ordered raw samples into hourly averages (buckets are aligned to UTC hours)
+ * Aggregate chronologically ordered raw samples into hourly averages (buckets are aligned to hours of local time)
  */
 void AggregateAnomalySamplesHourly(const std::vector<AnomalySample>& raw, std::vector<AnomalySample> *hourly)
 {
@@ -529,7 +570,7 @@ void AggregateAnomalySamplesHourly(const std::vector<AnomalySample>& raw, std::v
       if (!std::isfinite(raw[i].value))
          continue;
 
-      time_t start = raw[i].timestamp - (raw[i].timestamp % 3600);
+      time_t start = GetAnomalyHourStart(raw[i].timestamp);
       if ((start != bucketStart) && (count > 0))
       {
          hourly->push_back({ bucketStart, sum / count });
@@ -787,11 +828,13 @@ shared_ptr<AnomalyModel> AnomalyModel::train(const std::vector<AnomalySample>& h
 
    // Spread of single sample around slot center, pooled by hour and day type, then by hour, then globally
    std::vector<std::vector<double>> deviationsByDayType(48);
+   std::vector<int> rawSlots(raw.size());
    for(size_t i = 0; i < raw.size(); i++)
    {
       struct tm lt;
       LocalTime(raw[i].timestamp, &lt);
-      deviationsByDayType[DayType(lt.tm_wday) * 24 + lt.tm_hour].push_back(fabs(raw[i].value - model->m_centers[SlotIndex(lt)]));
+      rawSlots[i] = SlotIndex(lt);
+      deviationsByDayType[DayType(lt.tm_wday) * 24 + lt.tm_hour].push_back(fabs(raw[i].value - model->m_centers[rawSlots[i]]));
    }
 
    double dayTypeScales[48], hourScales[24], globalScale = 0;
@@ -854,6 +897,20 @@ shared_ptr<AnomalyModel> AnomalyModel::train(const std::vector<AnomalySample>& h
             ToAbsoluteDeviations(changes, model->m_stepCenter);
             model->m_stepScale = std::max(Median(changes) * MAD_TO_SIGMA, Quantile(changes, 0.99) / P99_TO_SIGMA);
             ApplySpreadFloor(&model->m_stepScale, 0, resolution);
+
+            // Spread of change between samples from different slots after expected change of level is
+            // subtracted. Tells how precisely change of level between slots is followed: slot centers
+            // are estimates, and size of regular change differs from day to day.
+            model->m_slotChangeScale = model->m_stepScale;
+            changes.clear();
+            for(size_t i = 1; i < raw.size(); i++)
+            {
+               time_t interval = raw[i].timestamp - raw[i - 1].timestamp;
+               if ((interval > 0) && (interval <= model->m_stepMaxGap) && (rawSlots[i] != rawSlots[i - 1]))
+                  changes.push_back(fabs(raw[i].value - raw[i - 1].value - (model->m_centers[rawSlots[i]] - model->m_centers[rawSlots[i - 1]]) - model->m_stepCenter));
+            }
+            if (changes.size() >= MIN_SPREAD_SAMPLES)
+               model->m_slotChangeScale = std::max(model->m_stepScale, Quantile(changes, 0.99) / P99_TO_SIGMA);
          }
       }
    }
@@ -938,7 +995,7 @@ static void UpdateDriftSum(double *sum, time_t *onset, double z, const AnomalySe
  */
 static void UpdateDriftDetector(const AnomalyModel& model, const AnomalySettings& settings, AnomalyDetectorState *state, time_t timestamp, double residual)
 {
-   time_t bucketStart = timestamp - (timestamp % 3600);
+   time_t bucketStart = GetAnomalyHourStart(timestamp);
    if (bucketStart < state->bucketStart)
       return;  // out of order sample
 
@@ -991,6 +1048,7 @@ AnomalyScore ScoreAnomalySample(const AnomalyModel& model, const AnomalySettings
       return result;
 
    // Change since previous sample
+   time_t prevTimestamp = state->lastTimestamp;
    bool hasChange = (state->lastTimestamp != 0) && (timestamp > state->lastTimestamp);
    double interval = hasChange ? static_cast<double>(timestamp - state->lastTimestamp) : 0;
    double change = hasChange ? value - state->lastValue : 0;
@@ -1026,15 +1084,25 @@ AnomalyScore ScoreAnomalySample(const AnomalyModel& model, const AnomalySettings
    if (result.type != AnomalyType::NONE)
       return result;
 
-   // Step check
+   // Step check. Change that follows expected change of level between slots (start of business hours,
+   // scheduled job) is normal, so change has to be unusual both by itself and relative to the baseline.
    if ((model.getMode() == AnomalyDetectionMode::VALUE) && hasChange && (model.getStepScale() > 0) && (interval <= model.getStepMaxGap()))
    {
       double z = (change - model.getStepCenter()) / model.getStepScale();
       if (IsDeviation(z, settings))
       {
-         result.type = AnomalyType::STEP;
-         result.score = z;
-         return result;
+         double zb = z;
+         if (GetAnomalyHourStart(prevTimestamp) != GetAnomalyHourStart(timestamp))
+         {
+            double expectedChange = ev.center - model.getExpectedValue(prevTimestamp).center;
+            zb = (change - expectedChange - model.getStepCenter()) / model.getSlotChangeScale();
+         }
+         if (IsDeviation(zb, settings) && ((z > 0) == (zb > 0)))
+         {
+            result.type = AnomalyType::STEP;
+            result.score = (fabs(zb) < fabs(z)) ? zb : z;
+            return result;
+         }
       }
    }
 

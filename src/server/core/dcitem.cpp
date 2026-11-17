@@ -3970,13 +3970,6 @@ uint32_t DCItem::scheduleThresholdRepeatEvents()
 }
 
 /**
- * Names of anomaly types, directions, and detection modes
- */
-static const char *s_anomalyTypeNames[] = { "none", "range", "step", "drift" };
-static const char *s_anomalyDirectionNames[] = { "both", "up", "down" };
-static const char *s_anomalyModeNames[] = { "auto", "value", "rate" };
-
-/**
  * Clear result of last anomaly check
  */
 void DCItem::clearAnomalyScore()
@@ -4188,7 +4181,7 @@ void DCItem::checkForAnomaly(Timestamp timestamp, const ItemValue& value)
       saveAnomalyDetectorState();
 
    nxlog_debug_tag(DEBUG_TAG_DC_ANOMALY, m_anomalyDetected ? 6 : 8, L"DCI \"%s\" [%u]: value %f - %hs%s (score %f, expected range %f .. %f, drift %f / %f)",
-      m_name.cstr(), m_id, value.getDouble(), m_anomalyScore.learning ? "not checked" : s_anomalyTypeNames[static_cast<int>(m_anomalyScore.type)],
+      m_name.cstr(), m_id, value.getDouble(), m_anomalyScore.learning ? "not checked" : AnomalyTypeName(m_anomalyScore.type),
       m_anomalyScore.learning ? L" (learning)" : L"", m_anomalyScore.score, m_anomalyScore.expectedLow, m_anomalyScore.expectedHigh,
       m_anomalyState.driftUp, m_anomalyState.driftDown);
 }
@@ -4201,7 +4194,7 @@ void DCItem::addAnomalyEventParameters(EventBuilder *builder, const Threshold& t
    if (threshold.getFunction() != F_ANOMALY)
       return;
 
-   builder->paramUtf8String(L"anomalyType", s_anomalyTypeNames[static_cast<int>(m_anomalyScore.type)]);
+   builder->paramUtf8String(L"anomalyType", AnomalyTypeName(m_anomalyScore.type));
    builder->param(L"anomalyScore", m_anomalyScore.score);
    if (m_anomalyScore.scored)
    {
@@ -4214,8 +4207,8 @@ void DCItem::addAnomalyEventParameters(EventBuilder *builder, const Threshold& t
       builder->param(L"anomalyExpectedHigh", L"");
    }
    builder->param(L"anomalySlot", ((m_anomalyModel != nullptr) && (m_anomalyScoreTimestamp != 0)) ? m_anomalyModel->describeSlot(m_anomalyScoreTimestamp).cstr() : L"");
-   builder->paramUtf8String(L"anomalyDirection", s_anomalyDirectionNames[static_cast<int>(m_anomalyEffectiveSettings.direction)]);
-   builder->paramUtf8String(L"anomalyMode", (m_anomalyModel != nullptr) ? s_anomalyModeNames[static_cast<int>(m_anomalyModel->getMode())] : "");
+   builder->paramUtf8String(L"anomalyDirection", AnomalyDirectionName(m_anomalyEffectiveSettings.direction));
+   builder->paramUtf8String(L"anomalyMode", (m_anomalyModel != nullptr) ? AnomalyDetectionModeName(m_anomalyModel->getMode()) : "");
 }
 
 /**
@@ -4228,8 +4221,8 @@ json_t *DCItem::anomalyScoreToJson() const
    json_object_set_new(json, "learning", json_boolean(learning));
    if (!learning)
    {
-      json_object_set_new(json, "type", json_string(s_anomalyTypeNames[static_cast<int>(m_anomalyScore.type)]));
-      json_object_set_new(json, "mode", json_string(s_anomalyModeNames[static_cast<int>(m_anomalyModel->getMode())]));
+      json_object_set_new(json, "type", json_string(AnomalyTypeName(m_anomalyScore.type)));
+      json_object_set_new(json, "mode", json_string(AnomalyDetectionModeName(m_anomalyModel->getMode())));
       if (m_anomalyScore.scored)
       {
          json_object_set_new(json, "score", json_real(m_anomalyScore.score));
@@ -4257,7 +4250,7 @@ json_t *DCItem::anomalyDetectionToJson() const
    {
       json_t *model = json_object();
       json_object_set_new(model, "timestamp", json_time_string(m_anomalyProfileTimestamp));
-      json_object_set_new(model, "mode", json_string(s_anomalyModeNames[static_cast<int>(m_anomalyModel->getMode())]));
+      json_object_set_new(model, "mode", json_string(AnomalyDetectionModeName(m_anomalyModel->getMode())));
       json_object_set_new(model, "learning", json_boolean(m_anomalyModel->isLearning(m_anomalyEffectiveSettings)));
       json_object_set_new(model, "trainingDays", json_integer(m_anomalyModel->getTrainingDays()));
       json_object_set_new(model, "trainedFrom", json_time_string(m_anomalyModel->getTrainedFrom()));

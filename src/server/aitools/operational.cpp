@@ -638,9 +638,8 @@ static int CollectAnomalies(uint32_t userId, const NetObj *scope, bool includeQu
          if (!userTag.isEmpty())
             json_object_set_new(entry, "tag", json_string_t(userTag.cstr()));
 
-         static const char *anomalyTypes[] = { "none", "range", "step", "drift" };
          AnomalyScore score = dci->getAnomalyScore();
-         json_object_set_new(entry, "anomaly_type", json_string(anomalyTypes[static_cast<int>(score.type)]));
+         json_object_set_new(entry, "anomaly_type", json_string(AnomalyTypeName(score.type)));
          json_object_set_new(entry, "score", json_real(score.score));
          if (score.scored)
          {

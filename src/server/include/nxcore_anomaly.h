@@ -140,6 +140,7 @@ private:
    BYTE m_levels[ANOMALY_SLOT_COUNT];
    double m_stepCenter;             // typical change between consecutive samples
    double m_stepScale;              // spread of change between consecutive samples (0 if step check is not available)
+   double m_slotChangeScale;        // spread of change between consecutive samples from different slots, relative to expected change of level
    int32_t m_stepMaxGap;            // maximum interval between samples for step check, in seconds
    double m_driftScale;             // spread of hourly mean residual
 
@@ -163,6 +164,7 @@ public:
    bool isUsingWeekdays() const { return m_useWeekdays; }
    double getStepCenter() const { return m_stepCenter; }
    double getStepScale() const { return m_stepScale; }
+   double getSlotChangeScale() const { return m_slotChangeScale; }
    int32_t getStepMaxGap() const { return m_stepMaxGap; }
    double getDriftScale() const { return m_driftScale; }
    bool isLearning(const AnomalySettings& settings) const { return m_trainingDays < settings.minTrainingDays; }
@@ -206,6 +208,11 @@ struct AnomalyScore
    time_t driftOnset;         // estimated start of level shift (only for drift)
 };
 
+NXCORE_EXPORTABLE const char *AnomalyTypeName(AnomalyType type);
+NXCORE_EXPORTABLE const char *AnomalyDirectionName(AnomalyDirection direction);
+NXCORE_EXPORTABLE const char *AnomalyDetectionModeName(AnomalyDetectionMode mode);
+
+time_t GetAnomalyHourStart(time_t timestamp);
 NXCORE_EXPORTABLE void AggregateAnomalySamplesHourly(const std::vector<AnomalySample>& raw, std::vector<AnomalySample> *hourly);
 NXCORE_EXPORTABLE AnomalyScore ScoreAnomalySample(const AnomalyModel& model, const AnomalySettings& settings,
    AnomalyDetectorState *state, time_t timestamp, double value);

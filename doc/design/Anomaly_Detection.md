@@ -83,7 +83,10 @@ training window would give a noisier baseline than the pooled one.
   detection) is trained from hourly averages over up to 84 days. Hourly aggregates
   (see `DCI_Data_Aggregation.md`) are used when they are available for the DCI and cover at least
   the same period as collected values; otherwise hourly averages are calculated in memory from
-  collected values.
+  collected values. Averages are taken over hours of server local time, the same hours that slots
+  cover. Hourly aggregates are aligned to UTC hours, so they are not used when the server time zone
+  offset is not a whole number of hours (India, Nepal and similar): they would mix values of two
+  adjacent slots.
 - **Spread** of a single value around the centre, and of change between consecutive values, is
   trained from collected values over up to 30 days. Hourly averages hide variation within the hour
   and cannot provide it. Spread is pooled by hour and day type, then by hour, then globally, until
@@ -117,7 +120,7 @@ A value is checked in this order; the first match gives the anomaly type.
 | Type | Check |
 |---|---|
 | `range` | Value is outside of hard bounds (if set), or its robust z-score against the slot, `(x - centre) / scale`, exceeds `sensitivity`. |
-| `step` | Change from the previous value, compared with typical change between consecutive values, exceeds `sensitivity`. Catches a sharp jump that stays inside a wide slot range. Only in value mode, and only when the interval between values is not much longer than usual. |
+| `step` | Change from the previous value, compared with typical change between consecutive values, exceeds `sensitivity`. Catches a sharp jump that stays inside a wide slot range. A change that follows the expected change of level between two slots (start of business hours, scheduled job) is not reported: when two values belong to different slots, the change has to be unusual both by itself and after subtracting the difference between slot centres (the latter is compared with spread of such changes across slot boundaries, also learned from collected values). Only in value mode, and only when the interval between values is not much longer than usual. |
 | `drift` | Sustained shift of level that stays inside the range of a single value (see below). |
 
 All checks honour `direction` (both, up only, down only).

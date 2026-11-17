@@ -518,6 +518,87 @@ static void TestMonotoneSeries()
 }
 
 /**
+ * Level used by tests with regular change of level: high during business hours
+ */
+static double BusinessHoursLevel(int day, const struct tm& lt, int index)
+{
+   return (((lt.tm_hour >= 9) && (lt.tm_hour < 18)) ? 500.0 : 50.0) + Noise();
+}
+
+/**
+ * Replay generated series through the model and count samples with given anomaly type
+ */
+static int CountAnomalies(const AnomalyModel& model, const AnomalySettings& settings, const std::vector<AnomalySample>& series, AnomalyType type)
+{
+   AnomalyDetectorState state;
+   int count = 0;
+   for(size_t i = 0; i < series.size(); i++)
+      if (ScoreAnomalySample(model, settings, &state, series[i].timestamp, series[i].value).type == type)
+         count++;
+   return count;
+}
+
+/**
+ * Regular change of level between slots is not a step
+ */
+static void TestExpectedLevelChange()
+{
+   StartTest(_T("Anomaly detection - expected level change"));
+
+   // Sharp change of level at the same time every day
+   std::vector<AnomalySample> series;
+   Generate(TimeAt(2026, 1, 5, 0), 28, BusinessHoursLevel, &series);
+
+   AnomalySettings settings;
+   shared_ptr<AnomalyModel> model = Train(series, settings);
+   AssertNotNull(model.get());
+   AssertTrue(model->getStepScale() > 0);
+
+   std::vector<AnomalySample> replay;
+   Generate(TimeAt(2026, 2, 2, 0), 7, BusinessHoursLevel, &replay);
+   AssertEquals(CountAnomalies(*model, settings, replay, AnomalyType::STEP), 0);
+   AssertEquals(CountAnomalies(*model, settings, replay, AnomalyType::RANGE), 0);
+
+   // Same with level that slowly wanders, so slot range is wide and only step check can react
+   ValueGenerator generator = [] (int day, const struct tm& lt, int index) -> double { return BusinessHoursLevel(day, lt, index) + 50 * sin(index * 6.283185 / (5 * 86400 / SAMPLE_INTERVAL)); };
+   series.clear();
+   Generate(TimeAt(2026, 1, 5, 0), 28, generator, &series);
+   model = Train(series, settings);
+   AssertNotNull(model.get());
+   AssertTrue(model->getStepScale() > 0);
+
+   replay.clear();
+   Generate(TimeAt(2026, 2, 2, 0), 7, generator, &replay);
+   AssertEquals(CountAnomalies(*model, settings, replay, AnomalyType::STEP), 0);
+
+   time_t t = TimeAt(2026, 2, 3, 9);
+   ExpectedValue before = model->getExpectedValue(t - SAMPLE_INTERVAL);
+   ExpectedValue after = model->getExpectedValue(t);
+   AssertTrue(IsClose(after.center - before.center, 450, 5));
+   AssertTrue((before.scale > 15) && (after.scale > 15));
+
+   // Expected change at slot boundary
+   AnomalyDetectorState state;
+   AssertTrue(ScoreAnomalySample(*model, settings, &state, t - SAMPLE_INTERVAL, before.center).type == AnomalyType::NONE);
+   AssertTrue(ScoreAnomalySample(*model, settings, &state, t, after.center).type == AnomalyType::NONE);
+
+   // Change of similar size when level is not expected to change
+   AssertTrue(ScoreAnomalySample(*model, settings, &state, t + SAMPLE_INTERVAL, after.center - 30).type == AnomalyType::STEP);
+
+   // Change at slot boundary that is much larger than expected one
+   state.reset();
+   AssertTrue(ScoreAnomalySample(*model, settings, &state, t - SAMPLE_INTERVAL, before.center - 30).type == AnomalyType::NONE);
+   AssertTrue(ScoreAnomalySample(*model, settings, &state, t, after.center + 30).type == AnomalyType::STEP);
+
+   // Level does not change when it is expected to: value is far from the baseline, but there is no step
+   state.reset();
+   AssertTrue(ScoreAnomalySample(*model, settings, &state, t - SAMPLE_INTERVAL, before.center + 30).type == AnomalyType::NONE);
+   AssertTrue(ScoreAnomalySample(*model, settings, &state, t, before.center + 30).type != AnomalyType::STEP);
+
+   EndTest();
+}
+
+/**
  * Sudden change that stays within wide slot range
  */
 static void TestStepDetection()
@@ -692,6 +773,52 @@ static void TestDaylightSavingTime()
    EndTest();
 }
 
+/**
+ * Hourly averages follow hours of local time in time zone with offset that is not a whole number of hours
+ */
+static void TestFractionalTimeZone()
+{
+   StartTest(_T("Anomaly detection - time zone with half hour offset"));
+
+   char *savedTimeZone = MemCopyStringA(getenv("TZ"));
+   setenv("TZ", "IST-5:30", 1);
+   tzset();
+
+   std::vector<AnomalySample> series;
+   Generate(TimeAt(2026, 1, 5, 0), 28, BusinessHoursLevel, &series);
+
+   std::vector<AnomalySample> hourly;
+   AggregateAnomalySamplesHourly(series, &hourly);
+   AssertEquals(static_cast<int>(hourly.size()), 28 * 24);
+   AssertEquals(static_cast<int>(hourly[0].timestamp % 3600), 1800);
+   AssertTrue(hourly[0].timestamp == series[0].timestamp);
+
+   AnomalySettings settings;
+   shared_ptr<AnomalyModel> model = AnomalyModel::train(hourly, series, settings);
+   AssertNotNull(model.get());
+   AssertTrue(IsClose(model->getExpectedValue(TimeAt(2026, 2, 3, 8)).center, 50, 1));
+   AssertTrue(model->getExpectedValue(TimeAt(2026, 2, 3, 8)).scale < 3);
+   AssertTrue(IsClose(model->getExpectedValue(TimeAt(2026, 2, 3, 9)).center, 500, 1));
+   AssertTrue(IsClose(model->getExpectedValue(TimeAt(2026, 2, 3, 17)).center, 500, 1));
+   AssertTrue(model->getExpectedValue(TimeAt(2026, 2, 3, 17)).scale < 3);
+   AssertTrue(model->getDriftScale() < 3);
+
+   std::vector<AnomalySample> replay;
+   Generate(TimeAt(2026, 2, 2, 0), 7, BusinessHoursLevel, &replay);
+   AssertEquals(CountAnomalies(*model, settings, replay, AnomalyType::DRIFT), 0);
+   AssertEquals(CountAnomalies(*model, settings, replay, AnomalyType::RANGE), 0);
+   AssertEquals(CountAnomalies(*model, settings, replay, AnomalyType::STEP), 0);
+
+   if (savedTimeZone != nullptr)
+      setenv("TZ", savedTimeZone, 1);
+   else
+      unsetenv("TZ");
+   tzset();
+   MemFree(savedTimeZone);
+
+   EndTest();
+}
+
 #endif
 
 /**
@@ -708,8 +835,10 @@ void TestAnomalyDetection()
    TestFlatSeries();
    TestMonotoneSeries();
    TestStepDetection();
+   TestExpectedLevelChange();
    TestDriftDetection();
 #ifndef _WIN32
    TestDaylightSavingTime();
+   TestFractionalTimeZone();
 #endif
 }

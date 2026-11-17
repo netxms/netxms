@@ -197,7 +197,8 @@ static void CopySamples(const std::vector<AnomalySample>& source, time_t timeFro
  * recorded history, so that replayed models are trained on exactly same data as live ones would be.
  *
  * Expected level is trained from hourly averages. Aggregated data is used if it covers at least same period
- * as collected values, otherwise averages are calculated from collected values.
+ * as collected values and its buckets match hours of local time (they do not if time zone offset is not a
+ * whole number of hours), otherwise averages are calculated from collected values.
  *
  * @param collected collected values in chronological order
  * @param aggregated hourly aggregates in chronological order (empty if not available)
@@ -215,6 +216,8 @@ static bool SelectTrainingData(const std::vector<AnomalySample>& collected, cons
    CopySamples(aggregated, std::max(baselineStart, now - TRAINING_LAG - HOURLY_TRAINING_RANGE), now, hourly);
 
    bool hourlyTier = !hourly->empty() && (raw->empty() || (hourly->front().timestamp < raw->front().timestamp + 86400));
+   for(size_t i = 0; hourlyTier && (i < hourly->size()); i++)
+      hourlyTier = (GetAnomalyHourStart((*hourly)[i].timestamp) == (*hourly)[i].timestamp);
    if (!hourlyTier)
    {
       hourly->clear();
@@ -602,11 +605,10 @@ struct AnomalyEpisode
 
    json_t *toJson() const
    {
-      static const char *typeNames[] = { "none", "range", "step", "drift" };
       json_t *json = json_object();
       json_object_set_new(json, "start", json_integer(start));
       json_object_set_new(json, "end", json_integer(end));
-      json_object_set_new(json, "type", json_string(typeNames[static_cast<int>(type)]));
+      json_object_set_new(json, "type", json_string(AnomalyTypeName(type)));
       json_object_set_new(json, "samples", json_integer(samples));
       json_object_set_new(json, "score", json_real(peak.score));
       json_object_set_new(json, "value", json_real(peakValue));
@@ -654,8 +656,6 @@ struct AnomalyEpisode
  */
 json_t *DetectAnomalies(const DataCollectionTarget& owner, uint32_t dciId, time_t timeFrom, time_t timeTo, const std::vector<std::pair<time_t, time_t>>& labels)
 {
-   static const char *typeNames[] = { "none", "range", "step", "drift" };
-
    shared_ptr<DCObject> dco = owner.getDCObjectById(dciId, 0);
    if ((dco == nullptr) || (dco->getType() != DCO_TYPE_ITEM) || (timeTo <= timeFrom))
    {
@@ -796,7 +796,7 @@ json_t *DetectAnomalies(const DataCollectionTarget& owner, uint32_t dciId, time_
    json_object_set_new(result, "episodes", episodeList);
    json_t *byType = json_object();
    for(int i = 1; i < 4; i++)
-      json_object_set_new(byType, typeNames[i], json_integer(episodesByType[i]));
+      json_object_set_new(byType, AnomalyTypeName(static_cast<AnomalyType>(i)), json_integer(episodesByType[i]));
    json_object_set_new(result, "episodesByType", byType);
 
    if (!labels.empty())
@@ -828,7 +828,7 @@ json_t *DetectAnomalies(const DataCollectionTarget& owner, uint32_t dciId, time_
       json_object_set_new(evaluation, "falseAlarms", json_integer(falseAlarms));
       byType = json_object();
       for(int i = 1; i < 4; i++)
-         json_object_set_new(byType, typeNames[i], json_integer(falseAlarmsByType[i]));
+         json_object_set_new(byType, AnomalyTypeName(static_cast<AnomalyType>(i)), json_integer(falseAlarmsByType[i]));
       json_object_set_new(evaluation, "falseAlarmsByType", byType);
       if (checkedDays > 0)
          json_object_set_new(evaluation, "falseAlarmsPerWeek", json_real(falseAlarms * 7.0 / checkedDays));
