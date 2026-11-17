@@ -675,6 +675,19 @@ static const TCHAR *s_expectedStateText[] =
 };
 
 /**
+ * Interface flags that can be changed by user, as named booleans in JSON
+ */
+static const FlagNameMapping s_userFlags[] =
+{
+   { IF_EXCLUDE_FROM_TOPOLOGY, "excludeFromTopology" },
+   { IF_INCLUDE_IN_ICMP_POLL, "includeInIcmpPoll" },
+   { IF_DISABLE_SNMP_STATUS_POLL, "disableSnmpStatusPoll" },
+   { IF_DISABLE_ICMP_STATUS_POLL, "disableIcmpStatusPoll" },
+   { IF_DISABLE_AGENT_STATUS_POLL, "disableAgentStatusPoll" },
+   { 0, nullptr }
+};
+
+/**
  * PAE state text
  */
 static const TCHAR *paeStateText[] =
@@ -1413,6 +1426,22 @@ uint32_t Interface::modifyFromJSONInternal(json_t *json, GenericClientSession *s
    if (!json_object_update_integer(json, "requiredPollCount", &m_requiredPollCount))
       return RCC_INVALID_ARGUMENT;
 
+   // User flags as named booleans; only flags present in the document are changed
+   value = json_object_get(json, "userFlags");
+   if (value != nullptr)
+   {
+      if (!json_is_object(value))
+         return RCC_INVALID_ARGUMENT;
+      uint32_t setFlags = 0, mask = 0;
+      for(int i = 0; s_userFlags[i].name != nullptr; i++)
+      {
+         if (!json_object_update_flag(value, s_userFlags[i].name, static_cast<uint32_t>(s_userFlags[i].bit), &setFlags, &mask))
+            return RCC_INVALID_ARGUMENT;
+      }
+      if (mask != 0)
+         updateFlags(setFlags, mask);
+   }
+
    // Expected interface state
    value = json_object_get(json, "expectedState");
    if (value != nullptr)
@@ -1466,6 +1495,14 @@ uint32_t Interface::modifyFromJSONInternalStage2(json_t *json, GenericClientSess
    }
 
    return super::modifyFromJSONInternalStage2(json, session);
+}
+
+/**
+ * Update flags field. Only flags from IF_USER_FLAGS_MASK can be changed this way, other flags are maintained by server.
+ */
+void Interface::updateFlags(uint32_t flags, uint32_t mask)
+{
+   super::updateFlags(flags, mask & IF_USER_FLAGS_MASK);
 }
 
 /**
@@ -2264,6 +2301,7 @@ json_t *Interface::toJson(uint32_t flags)
    json_object_set_new(root, "macAddress", m_macAddress.toJson());
    json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "userFlags", json_boolean_object(m_flags, s_userFlags));
    int expectedState = (m_flags & IF_EXPECTED_STATE_MASK) >> 28;
    json_object_set_new(root, "expectedState", json_integer(expectedState));
    json_object_set_new(root, "expectedStateText", json_string_t(s_expectedStateText[expectedState]));
@@ -2279,7 +2317,9 @@ json_t *Interface::toJson(uint32_t flags)
    json_object_set_new(root, "bridgePortNumber", json_integer(m_bridgePortNumber));
    json_object_set_new(root, "peerNodeId", json_integer(m_peerNodeId));
    json_object_set_new(root, "peerInterfaceId", json_integer(m_peerInterfaceId));
+   json_object_set_new(root, "peerLastUpdated", json_time_string(m_peerLastUpdated));
    json_object_set_new(root, "aggregateInterfaceId", json_integer(m_aggregateInterfaceId));
+   json_object_set_new(root, "parentInterfaceId", json_integer(m_parentInterfaceId));
    json_object_set_new(root, "peerDiscoveryProtocol", json_integer(m_peerDiscoveryProtocol));
    json_object_set_new(root, "peerDiscoveryProtocolText", json_string_t(GetLinkLayerProtocolName(m_peerDiscoveryProtocol)));
    json_object_set_new(root, "adminState", json_integer(m_adminState));
@@ -2314,6 +2354,21 @@ json_t *Interface::toJson(uint32_t flags)
       json_object_set_new(root, "ospfState", json_integer(static_cast<json_int_t>(m_ospfState)));
    }
 
+   MacAddress macAddress = m_macAddress;
+   uint32_t peerInterfaceId = m_peerInterfaceId;
    unlockProperties();
+
+   const wchar_t *vendor = FindVendorByMac(macAddress);
+   json_object_set_new(root, "vendor", (vendor != nullptr) ? json_string_t(vendor) : json_null());
+
+   const wchar_t *peerVendor = nullptr;
+   if (peerInterfaceId != 0)
+   {
+      shared_ptr<NetObj> peer = FindObjectById(peerInterfaceId, OBJECT_INTERFACE);
+      if (peer != nullptr)
+         peerVendor = FindVendorByMac(static_cast<Interface&>(*peer).getMacAddress());
+   }
+   json_object_set_new(root, "peerVendor", (peerVendor != nullptr) ? json_string_t(peerVendor) : json_null());
+
    return root;
 }

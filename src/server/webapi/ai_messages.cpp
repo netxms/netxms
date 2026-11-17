@@ -165,6 +165,7 @@ int H_AiMessageStatusUpdate(Context *context)
 
    uint32_t userId = context->getUserId();
    uint32_t rcc;
+   uint32_t spawnedTaskId = 0;
    if (!strcmp(status, "read"))
    {
       rcc = MarkAIMessageAsRead(message->getId(), userId);
@@ -172,7 +173,7 @@ int H_AiMessageStatusUpdate(Context *context)
    else
    {
       bool approve = !strcmp(status, "approved");
-      rcc = approve ? ApproveAIMessage(message->getId(), userId) : RejectAIMessage(message->getId(), userId);
+      rcc = approve ? ApproveAIMessage(message->getId(), userId, &spawnedTaskId) : RejectAIMessage(message->getId(), userId);
       if (rcc == RCC_SUCCESS)
          context->writeAuditLog(AUDIT_AI, true, message->getRelatedObjectId(), L"AI approval request [%u] \"%s\" %s", message->getId(), message->getTitle(), approve ? L"approved" : L"rejected");
    }
@@ -180,6 +181,8 @@ int H_AiMessageStatusUpdate(Context *context)
       return MapAIMessageRCC(context, rcc);
 
    json_t *output = message->toJson(userId);
+   if (spawnedTaskId != 0)
+      json_object_set_new(output, "spawnedTaskId", json_integer(spawnedTaskId));
    context->setResponseData(output);
    json_decref(output);
    return 200;

@@ -541,6 +541,7 @@ static void AddRadioInterfaces(json_t *entries, const NetObj& owner)
    json_t *radio;
    json_array_foreach(radios, index, radio)
    {
+      json_object_set_new(radio, "vendor", VendorToJson(MacAddress::parse(json_object_get_string_utf8(radio, "bssid", ""))));
       json_object_set_new(radio, "ownerId", json_integer(owner.getId()));
       json_object_set_new(radio, "ownerName", json_string_t(owner.getName()));
    }
