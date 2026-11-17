@@ -349,8 +349,8 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
 				i++;
 				curr++;
 			}
-			while((*curr == 0) && (i < 7));
-         if ((i == 7) && (*curr == 0))
+			while((i < 8) && (*curr == 0));
+         if (i == 8)
          {
    			*out++ = _T(':');
             break;
@@ -398,8 +398,8 @@ char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer)
             i++;
             curr++;
          }
-         while((*curr == 0) && (i < 7));
-         if ((i == 7) && (*curr == 0))
+         while((i < 8) && (*curr == 0));
+         if (i == 8)
          {
             *out++ = ':';
             break;
