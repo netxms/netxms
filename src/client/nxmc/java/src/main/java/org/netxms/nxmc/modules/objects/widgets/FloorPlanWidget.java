@@ -1154,9 +1154,9 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
    }
 
    /**
-    * Create new passive element at the centre of the visible area.
+    * Create new passive element positioned at the centre of the visible area. Element is not added to the model.
     *
-    * @return new element (already added to the model)
+    * @return new element
     */
    public RoomPassiveElement createPassiveElement()
    {
@@ -1167,11 +1167,20 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
       e.y = s[1];
       e.width = DEFAULT_ELEMENT_SIZE;
       e.depth = DEFAULT_ELEMENT_SIZE;
+      return e;
+   }
+
+   /**
+    * Add passive element to the model and select it.
+    *
+    * @param e element to add
+    */
+   public void addPassiveElement(RoomPassiveElement e)
+   {
       model.getPassiveElements().add(e);
       model.markRoomModified();
       setSelection(e);
       modelChanged();
-      return e;
    }
 
    /**

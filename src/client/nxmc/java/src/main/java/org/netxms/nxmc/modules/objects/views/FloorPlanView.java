@@ -269,7 +269,7 @@ public class FloorPlanView extends ObjectView implements ISelectionProvider
          {
             RoomPassiveElement e = floorPlan.createPassiveElement();
             if (new RoomPassiveElementEditDialog(getWindow().getShell(), e).open() == Window.OK)
-               floorPlan.passiveElementChanged();
+               floorPlan.addPassiveElement(e);
          }
       };
       addKeyBinding("M1+N", actionAddElement);
@@ -437,6 +437,10 @@ public class FloorPlanView extends ObjectView implements ISelectionProvider
    {
       if (floorPlan != null)
       {
+         // Context change cannot be cancelled, so unsaved changes can only be saved or discarded
+         if (modified && MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Save Changes"),
+               i18n.tr("Floor plan of room {0} has unsaved changes. Save them?", floorPlan.getModel().getRoom().getObjectName())))
+            save();
          floorPlan.dispose();
          floorPlan = null;
       }
@@ -697,6 +701,7 @@ public class FloorPlanView extends ObjectView implements ISelectionProvider
       if (floorPlan == null)
          return;
 
+      final FloorPlanWidget savedPlan = floorPlan;
       final FloorPlanModel model = floorPlan.getModel();
       final Room room = model.getRoom();
       final List<NXCObjectModificationData> updates = new ArrayList<NXCObjectModificationData>();
@@ -736,9 +741,12 @@ public class FloorPlanView extends ObjectView implements ISelectionProvider
             for(NXCObjectModificationData md : updates)
                session.modifyObject(md);
             runInUIThread(() -> {
-               modified = false;
-               updateActionState();
-               addMessage(MessageArea.INFORMATION, i18n.tr("Floor plan saved"));
+               if (floorPlan == savedPlan)   // view may have been switched to another room while saving
+               {
+                  modified = false;
+                  updateActionState();
+               }
+               addMessage(MessageArea.INFORMATION, i18n.tr("Floor plan of room {0} saved", room.getObjectName()));
             });
          }
 
