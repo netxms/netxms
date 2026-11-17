@@ -60,6 +60,7 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr
    m_encryptionResult = 0;
    m_refCount = 0;
 	m_authenticated = false;
+   RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
 }
 
 /**
@@ -359,6 +360,8 @@ void MobileDeviceSession::login(const NXCPMessage& request)
 				{
 					dwResult = RCC_BAD_CERTIFICATE;
 				}
+				// Challenge is valid for single login attempt
+				RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
 				break;
 			default:
 				dwResult = RCC_UNSUPPORTED_AUTH_TYPE;

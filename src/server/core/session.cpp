@@ -256,6 +256,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_lastScreenshotObject = 0;
    m_lastScreenshotTime = 0;
    m_scriptExecutorId = 0;
+   RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
 }
 
 /**
@@ -2638,6 +2639,9 @@ uint32_t ClientSession::authenticateUserByCertificate(const NXCPMessage& request
    {
       rcc = RCC_BAD_CERTIFICATE;
    }
+
+   // Challenge is valid for single login attempt
+   RAND_bytes(m_challenge, CLIENT_CHALLENGE_SIZE);
    return rcc;
 }
 
