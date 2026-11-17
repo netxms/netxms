@@ -1730,6 +1730,7 @@ static TCHAR *GetStringFromFieldUTF8(void *df)
 StringBuffer NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
 {
    StringBuffer out;
+   out.setAllocationStep(65536);   // dump of message with many fields is megabytes long
 
    uint16_t flags = ntohs(msg->flags);
    uint16_t code = ntohs(msg->code);
