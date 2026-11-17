@@ -24,9 +24,7 @@
 #include "libnetxms.h"
 #include <nxcpapi.h>
 
-#ifdef _WITH_ENCRYPTION
 #include <openssl/ssl.h>
-#endif
 
 /**
  * Abstract message receiver constructor
@@ -297,7 +295,6 @@ void CommChannelMessageReceiver::cancel()
    m_channel->shutdown();
 }
 
-#ifdef _WITH_ENCRYPTION
 
 /**
  * TLS message receiver constructor
@@ -400,7 +397,6 @@ void TlsMessageReceiver::cancel()
 #endif
 }
 
-#endif /* _WITH_ENCRYPTION */
 
 /**
  * Pipe message receiver constructor

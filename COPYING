@@ -106,7 +106,6 @@ Third-party code within NetXMS components
   libnetxms/md5.cpp, md5.h            permissive          Aladdin Enterprises,
                                                           L. Peter Deutsch
   libnetxms/sha1.cpp, sha1.h          public domain       Steve Reid
-  libnetxms/sha2.cpp, sha2.h          BSD 3-Clause        Olivier Gay
   libnetxms/ice.c, ice.h              public domain       ICE, Matthew Kwan
   libnetxms/memmem.cpp                MIT                 musl, Rich Felker
   libnetxms/strlcpy.cpp, strlcat.cpp, ISC / BSD           Todd C. Miller

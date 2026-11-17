@@ -24,10 +24,8 @@
 #include "libnxsnmp.h"
 #include <nxcrypto.h>
 
-#ifdef _WITH_ENCRYPTION
 #ifndef OPENSSL_NO_AES
 #include <openssl/aes.h>
-#endif
 #endif
 
 /**
@@ -709,7 +707,6 @@ static inline int AESKeyLengthFromMethod(SNMP_EncryptionMethod method)
  */
 bool SNMP_PDU::decryptData(const BYTE *data, size_t length, BYTE *decryptedData, SNMP_SecurityContext *securityContext)
 {
-#ifdef _WITH_ENCRYPTION
 	if (securityContext == nullptr)
 		return false;	// Cannot decrypt message without valid security context
 
@@ -764,9 +761,6 @@ bool SNMP_PDU::decryptData(const BYTE *data, size_t length, BYTE *decryptedData,
 		return false;
 	}
 	return true;
-#else
-	return false;	// No encryption support
-#endif
 }
 
 /**
@@ -1048,7 +1042,6 @@ size_t SNMP_PDU::encode(SNMP_PDUBuffer *outBuffer, SNMP_SecurityContext *securit
 			bytes = encodeV3ScopedPDU(pduType, block, pduSize, currPos, bufferSize - packetSize);
 			if (securityContext->needEncryption())
 			{
-#ifdef _WITH_ENCRYPTION
 				if (securityContext->getPrivMethod() == SNMP_ENCRYPT_DES)
 				{
 					size_t encSize = (bytes % 8 == 0) ? bytes : (bytes + (8 - (bytes % 8)));
@@ -1095,10 +1088,6 @@ size_t SNMP_PDU::encode(SNMP_PDUBuffer *outBuffer, SNMP_SecurityContext *securit
 					bytes = 0;	// Error - unsupported method
 					goto cleanup;
 				}
-#else
-				bytes = 0;	// Error
-				goto cleanup;
-#endif
 			}
 			packetSize += bytes;
 		}

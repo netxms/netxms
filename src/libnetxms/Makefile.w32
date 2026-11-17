@@ -64,7 +64,6 @@ SOURCES = \
 	rbuffer.cpp \
 	serial.cpp \
 	sha1.cpp \
-	sha2.cpp \
 	socket_listener.cpp \
 	spoll.cpp \
 	squeue.cpp \

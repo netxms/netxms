@@ -29,7 +29,6 @@
 
 #define REQUEST_TIMEOUT	10000
 
-#ifdef _WITH_ENCRYPTION
 
 /**
  * Check if server address is valid
@@ -2460,14 +2459,12 @@ void TunnelCommChannel::putData(const BYTE *data, size_t size)
  */
 static SharedObjectArray<OutboundTunnel> s_tunnels(0, 8);
 
-#endif	/* _WITH_ENCRYPTION */
 
 /**
  * Parser server connection (tunnel) list
  */
 void ParseTunnelList(const StringSet& tunnels)
 {
-#ifdef _WITH_ENCRYPTION
    auto it = tunnels.begin();
    while(it.hasNext())
    {
@@ -2483,7 +2480,6 @@ void ParseTunnelList(const StringSet& tunnels)
          nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), config);
       }
    }
-#endif
 }
 
 /**
@@ -2491,7 +2487,6 @@ void ParseTunnelList(const StringSet& tunnels)
  */
 void ParseTunnelList(const ObjectArray<ConfigEntry>& config)
 {
-#ifdef _WITH_ENCRYPTION
    for (ConfigEntry *ce : config)
    {
       shared_ptr<OutboundTunnel> t = OutboundTunnel::createFromConfig(*ce);
@@ -2505,7 +2500,6 @@ void ParseTunnelList(const ObjectArray<ConfigEntry>& config)
          nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), ce->getName());
       }
    }
-#endif
 }
 
 /**
@@ -2513,7 +2507,6 @@ void ParseTunnelList(const ObjectArray<ConfigEntry>& config)
  */
 void CloseInboundTunnels()
 {
-#ifdef _WITH_ENCRYPTION
    s_inboundTunnelLock.lock();
    SharedObjectArray<InboundTunnel> tunnels(s_inboundTunnels.size(), 16);
    for(int i = 0; i < s_inboundTunnels.size(); i++)
@@ -2522,7 +2515,6 @@ void CloseInboundTunnels()
 
    for(int i = 0; i < tunnels.size(); i++)
       tunnels.get(i)->disconnect();
-#endif
 }
 
 /**
@@ -2530,7 +2522,6 @@ void CloseInboundTunnels()
  */
 void TunnelManager()
 {
-#ifdef _WITH_ENCRYPTION
    if (s_tunnels.size() == 0)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("No tunnels configured, tunnel manager will not start"));
@@ -2554,7 +2545,4 @@ void TunnelManager()
       s_tunnels.get(i)->disconnect();
 
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Tunnel manager stopped"));
-#else
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Agent built without encryption support, tunnel manager will not start"));
-#endif
 }

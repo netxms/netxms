@@ -29,7 +29,6 @@
 
 #define DEBUG_TAG    _T("crypto.cert")
 
-#ifdef _WITH_ENCRYPTION
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 static inline const ASN1_TIME *X509_get0_notAfter(const X509 *x)
@@ -460,4 +459,3 @@ X509_STORE LIBNETXMS_EXPORTABLE *CreateTrustedCertificatesStore(const StringSet&
    return store;
 }
 
-#endif   /* _WITH_ENCRYPTION */

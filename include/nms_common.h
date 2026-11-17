@@ -32,13 +32,8 @@
 #if !defined(_WIN32)
 
 #include <config.h>
-#if defined(WITH_OPENSSL)
-#define _WITH_ENCRYPTION   1
-#endif
 
 #else    /* _WIN32 */
-
-#define _WITH_ENCRYPTION   1
 
 #if !defined(WINDOWS_ONLY) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
@@ -193,7 +188,6 @@
 
 #define WITH_IPV6               1
 #define WITH_MICROHTTPD         1
-#define WITH_OPENSSL            1
 #define WITH_LDAP               1
 
 #define WITH_MODBUS             1

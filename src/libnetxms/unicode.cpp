@@ -1375,7 +1375,6 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const wchar_t *str, const wchar_t *format, 
 
 #endif /* !defined(_WIN32) */
 
-#if defined(_WITH_ENCRYPTION) && WITH_OPENSSL
 
 /**
  * Get OpenSSL error string as UNICODE string
@@ -1390,4 +1389,3 @@ wchar_t LIBNETXMS_EXPORTABLE *ERR_error_string_W(int errorCode, wchar_t *buffer)
    return buffer;
 }
 
-#endif

@@ -5662,9 +5662,7 @@ int LIBNETXMS_EXPORTABLE nx_vswscanf(const wchar_t *str, const wchar_t *format, 
 
 #endif	/* _WIN32 */
 
-#ifdef _WITH_ENCRYPTION
 wchar_t LIBNETXMS_EXPORTABLE *ERR_error_string_W(int errorCode, wchar_t *buffer);
-#endif
 
 #if defined(UNICODE) && !defined(_WIN32)
 

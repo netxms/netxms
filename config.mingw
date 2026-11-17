@@ -205,7 +205,6 @@ WITH_SSH = 1                 # SSH subagent
 WITH_MOSQUITTO = 1           # MQTT subagent
 
 # Other features
-WITH_ENCRYPTION = 1          # OpenSSL encryption (required)
 WITH_CURL = 1                # cURL support (for HTTP features)
 
 #####################################################################
@@ -253,11 +252,6 @@ BUILD_TYPE = Debug
 else
 COMMON_CFLAGS += -O2 -DNDEBUG
 BUILD_TYPE = Release
-endif
-
-# Encryption
-ifeq ($(WITH_ENCRYPTION),1)
-COMMON_CFLAGS += -D_WITH_ENCRYPTION
 endif
 
 #####################################################################

@@ -23,8 +23,6 @@
 #ifndef _nxcrypto_h_
 #define _nxcrypto_h_
 
-#if defined(_WITH_ENCRYPTION)
-
 #include <openssl/crypto.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
@@ -98,7 +96,9 @@ void LIBNETXMS_EXPORTABLE DESDecryptBlock(const DES_KEY_SCHEDULE *ks, const BYTE
 size_t LIBNETXMS_EXPORTABLE DESEncryptDataCBC(const DES_KEY_SCHEDULE *ks, const BYTE *iv, const BYTE *in, size_t length, BYTE *out);
 void LIBNETXMS_EXPORTABLE DESDecryptDataCBC(const DES_KEY_SCHEDULE *ks, const BYTE *iv, const BYTE *in, size_t length, BYTE *out);
 
-#ifdef _WITH_ENCRYPTION
+/**
+ * Message digest calculation state for OpenSSL based implementations
+ */
 struct MD_STATE
 {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
@@ -108,60 +108,53 @@ struct MD_STATE
 #endif
 };
 
-typedef MD_STATE MD5_STATE;
-#else
-typedef unsigned char MD5_STATE[128];
-#endif
+/**
+ * MD5 calculation state (built-in implementation, does not depend on crypto provider configuration)
+ */
+struct MD5_STATE
+{
+   uint32_t count[2];
+   uint32_t abcd[4];
+   BYTE buffer[64];
+};
 
 void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state);
 void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE MD5Final(MD5_STATE *state, BYTE *hash);
 
-#ifdef _WITH_ENCRYPTION
-typedef MD_STATE SHA1_STATE;
-#else
-typedef unsigned char SHA1_STATE[128];
-#endif
+/**
+ * SHA-1 calculation state (built-in implementation, does not depend on crypto provider configuration)
+ */
+struct SHA1_STATE
+{
+   uint32_t state[5];
+   uint32_t count[2];
+   BYTE buffer[64];
+};
 
 void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA1Final(SHA1_STATE *state, BYTE *hash);
 
-#ifdef _WITH_ENCRYPTION
 typedef MD_STATE SHA224_STATE;
-#else
-typedef unsigned char SHA224_STATE[192];
-#endif
 
 void LIBNETXMS_EXPORTABLE SHA224Init(SHA224_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA224Update(SHA224_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA224Final(SHA224_STATE *state, BYTE *hash);
 
-#ifdef _WITH_ENCRYPTION
 typedef MD_STATE SHA256_STATE;
-#else
-typedef unsigned char SHA256_STATE[192];
-#endif
 
 void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA256Final(SHA256_STATE *state, BYTE *hash);
 
-#ifdef _WITH_ENCRYPTION
 typedef MD_STATE SHA384_STATE;
-#else
-typedef unsigned char SHA384_STATE[192];
-#endif
 
 void LIBNETXMS_EXPORTABLE SHA384Init(SHA384_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA384Update(SHA384_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA384Final(SHA384_STATE *state, BYTE *hash);
 
-#ifdef _WITH_ENCRYPTION
 typedef MD_STATE SHA512_STATE;
-#else
-typedef unsigned char SHA512_STATE[192];
-#endif
 
 void LIBNETXMS_EXPORTABLE SHA512Init(SHA512_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA512Update(SHA512_STATE *state, const void *data, size_t size);
@@ -334,7 +327,5 @@ static inline size_t RSASize(RSA_KEY rsa)
 #ifdef _WIN32
 BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, uint32_t dwMsgLen, const CERT_CONTEXT *pCert, BYTE *pBuffer, size_t bufferSize, uint32_t *pdwSigLen);
 #endif   /* _WIN32 */
-
-#endif
 
 #endif

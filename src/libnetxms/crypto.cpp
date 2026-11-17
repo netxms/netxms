@@ -23,11 +23,8 @@
 
 #include "libnetxms.h"
 #include "ice.h"
-#include "sha2.h"
 #include <nxcpapi.h>
-#ifdef _WITH_ENCRYPTION
 #include <openssl/hmac.h>
-#endif
 
 #define DEBUG_TAG _T("crypto")
 
@@ -41,7 +38,6 @@
  * into OpenSSL library.
  */
 static uint32_t s_supportedCiphers =
-#ifdef _WITH_ENCRYPTION
 #ifndef OPENSSL_NO_AES
    NXCP_SUPPORT_AES_256 |
    NXCP_SUPPORT_AES_128 |
@@ -56,7 +52,6 @@ static uint32_t s_supportedCiphers =
 #ifndef OPENSSL_NO_DES
    NXCP_SUPPORT_3DES |
 #endif
-#endif   /* _WITH_ENCRYPTION */
    0;
 
 /**
@@ -65,7 +60,6 @@ static uint32_t s_supportedCiphers =
 static uint16_t s_noEncryptionFlag = 0;
 static const TCHAR *s_cipherNames[NETXMS_MAX_CIPHERS] = { _T("AES-256"), _T("Blowfish-256"), _T("IDEA"), _T("3DES"), _T("AES-128"), _T("Blowfish-128") };
 
-#ifdef _WITH_ENCRYPTION
 
 extern "C" typedef const EVP_CIPHER * (*CIPHER_FUNC)();
 static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
@@ -165,7 +159,6 @@ RSA_KEY LIBNETXMS_EXPORTABLE RSAKeyFromData(const BYTE *data, size_t size, bool 
  */
 RSA_KEY LIBNETXMS_EXPORTABLE RSALoadKey(const TCHAR *keyFile)
 {
-#ifdef _WITH_ENCRYPTION
    RSA_KEY pKey = nullptr;
    FILE *fp = _tfopen(keyFile, _T("rb"));
    if (fp != nullptr)
@@ -192,9 +185,6 @@ RSA_KEY LIBNETXMS_EXPORTABLE RSALoadKey(const TCHAR *keyFile)
       fclose(fp);
    }
    return pKey;
-#else
-   return nullptr;
-#endif
 }
 
 /**
@@ -308,7 +298,6 @@ RSA_KEY LIBNETXMS_EXPORTABLE RSAGenerateKey(int bits)
 #endif
 }
 
-#endif   /* _WITH_ENCRYPTION */
 
 /**
  * Initialize OpenSSL library
@@ -317,7 +306,6 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(uint32_t enabledCiphers)
 {
    s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
 
-#if _WITH_ENCRYPTION
    BYTE random[8192];
    int i;
 
@@ -387,9 +375,6 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(uint32_t enabledCiphers)
             SSLEAY_VERSION_NUMBER, SSLeay());
    }
 #endif
-#else
-   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
-#endif   /* _WITH_ENCRYPTION */
    return true;
 }
 
@@ -407,7 +392,6 @@ uint32_t LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphers()
 String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
 {
    StringBuffer s;
-#ifdef _WITH_ENCRYPTION
    uint32_t cipherBit = 1;
    for(int i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
@@ -424,7 +408,6 @@ String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
          s.append(s_cipherNames[i]);
       }
    }
-#endif
    return s;
 }
 
@@ -439,7 +422,6 @@ uint32_t LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg, NXCPEncry
    uint32_t dwResult = RCC_NOT_IMPLEMENTED;
 
 	*ppCtx = nullptr;
-#ifdef _WITH_ENCRYPTION
    if (msg->getCode() == CMD_REQUEST_SESSION_KEY)
    {
       uint32_t dwCiphers;
@@ -514,16 +496,6 @@ uint32_t LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg, NXCPEncry
       delete *ppCtx;
       *ppCtx = nullptr;
    }
-#else
-   if (msg->getCode() == CMD_REQUEST_SESSION_KEY)
-   {
-      *ppResponse = new NXCPMessage(nNXCPVersion);
-      (*ppResponse)->setCode(CMD_SESSION_KEY);
-      (*ppResponse)->setId(msg->getId());
-      (*ppResponse)->disableEncryption();
-      (*ppResponse)->setField(VID_RCC, dwResult);
-   }
-#endif
 
    return dwResult;
 }
@@ -533,14 +505,12 @@ uint32_t LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg, NXCPEncry
  */
 void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *msg, RSA_KEY serverKey, bool useX509Format)
 {
-#ifdef _WITH_ENCRYPTION
    msg->setCode(CMD_REQUEST_SESSION_KEY);
    msg->setField(VID_SUPPORTED_ENCRYPTION, s_supportedCiphers);
    size_t keyLen;
    BYTE *keyData = RSASerializePublicKey(serverKey, useX509Format, &keyLen);
 	msg->setField(VID_PUBLIC_KEY, keyData, keyLen);
    MemFree(keyData);
-#endif
 }
 
 /**
@@ -644,7 +614,6 @@ NXCPEncryptionContext::NXCPEncryptionContext() : m_encryptorLock(MutexType::FAST
    m_sessionKey = nullptr;
    m_keyLength = 0;
    m_cipher = -1;
-#ifdef _WITH_ENCRYPTION
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    m_encryptor = EVP_CIPHER_CTX_new();
    m_decryptor = EVP_CIPHER_CTX_new();
@@ -654,7 +623,6 @@ NXCPEncryptionContext::NXCPEncryptionContext() : m_encryptorLock(MutexType::FAST
    EVP_CIPHER_CTX_init(m_encryptor);
    EVP_CIPHER_CTX_init(m_decryptor);
 #endif
-#endif
 }
 
 /**
@@ -663,7 +631,6 @@ NXCPEncryptionContext::NXCPEncryptionContext() : m_encryptorLock(MutexType::FAST
 NXCPEncryptionContext::~NXCPEncryptionContext()
 {
    MemFree(m_sessionKey);
-#ifdef _WITH_ENCRYPTION
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    EVP_CIPHER_CTX_free(m_encryptor);
    EVP_CIPHER_CTX_free(m_decryptor);
@@ -673,7 +640,6 @@ NXCPEncryptionContext::~NXCPEncryptionContext()
    MemFree(m_encryptor);
    MemFree(m_decryptor);
 #endif
-#endif
 }
 
 /**
@@ -681,7 +647,6 @@ NXCPEncryptionContext::~NXCPEncryptionContext()
  */
 NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA_KEY privateKey)
 {
-#ifdef _WITH_ENCRYPTION
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 
    int cipher = msg->getFieldAsInt16(VID_CIPHER);
@@ -733,9 +698,6 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA_KEY p
       delete_and_null(ctx);
    }
 	return ctx;
-#else
-	return new NXCPEncryptionContext;
-#endif
 }
 
 /**
@@ -743,7 +705,6 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA_KEY p
  */
 bool NXCPEncryptionContext::initCipher(int cipher)
 {
-#ifdef _WITH_ENCRYPTION
    if (s_ciphers[cipher] == nullptr)
       return false;   // Unsupported cipher
 
@@ -786,9 +747,6 @@ bool NXCPEncryptionContext::initCipher(int cipher)
 
    m_cipher = cipher;
    return true;
-#else
-   return false;
-#endif
 }
 
 /**
@@ -798,7 +756,6 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(uint32_t ciphers)
 {
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 
-#ifdef _WITH_ENCRYPTION
    // Select cipher
    bool selected = false;
 
@@ -842,7 +799,6 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(uint32_t ciphers)
    ctx->m_sessionKey = MemAllocArrayNoInit<BYTE>(ctx->m_keyLength);
    RAND_bytes(ctx->m_sessionKey, ctx->m_keyLength);
    RAND_bytes(ctx->m_iv, EVP_MAX_IV_LENGTH);
-#endif
 
 	return ctx;
 }
@@ -855,7 +811,6 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
    if (msg->flags & s_noEncryptionFlag)
       return (NXCP_ENCRYPTED_MESSAGE *)MemCopyBlock(msg, ntohl(msg->size));
 
-#ifdef _WITH_ENCRYPTION
    m_encryptorLock.lock();
 
    if (!EVP_EncryptInit_ex(m_encryptor, nullptr, nullptr, m_sessionKey, m_iv))
@@ -896,9 +851,6 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
    emsg->size = htonl(msgSize);
 
    return emsg;
-#else    /* _WITH_ENCRYPTION */
-   return nullptr;
-#endif
 }
 
 /**
@@ -906,7 +858,6 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
  */
 bool NXCPEncryptionContext::decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer)
 {
-#ifdef _WITH_ENCRYPTION
    if (!EVP_DecryptInit_ex(m_decryptor, NULL, NULL, m_sessionKey, m_iv))
       return false;
 
@@ -937,9 +888,6 @@ bool NXCPEncryptionContext::decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *de
 
    memcpy(msg, clearMsg, msgSize);
    return true;
-#else    /* _WITH_ENCRYPTION */
-   return false;
-#endif
 }
 
 /**
@@ -947,13 +895,7 @@ bool NXCPEncryptionContext::decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *de
  */
 void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size)
 {
-#ifdef _WITH_ENCRYPTION
    RAND_bytes(buffer, (int)size);
-#else
-   srand((unsigned int)time(nullptr));
-   for(size_t i = 0; i < size; i++)
-      buffer[i] = (BYTE)(rand() % 256);
-#endif
 }
 
 /**
@@ -965,13 +907,9 @@ int32_t LIBNETXMS_EXPORTABLE GenerateRandomNumber(int32_t minValue, int32_t maxV
    if (range <= 0)
       return 0;
 
-#ifdef _WITH_ENCRYPTION
    uint32_t v;
    RAND_bytes(reinterpret_cast<BYTE*>(&v), sizeof(uint32_t));
    v = v & 0x7FFFFFFF;
-#else
-   uint32_t v = static_cast<uint32_t>(rand());
-#endif
    return (v % range) + minValue;
 }
 
@@ -980,44 +918,7 @@ int32_t LIBNETXMS_EXPORTABLE GenerateRandomNumber(int32_t minValue, int32_t maxV
  */
 void LIBNETXMS_EXPORTABLE SignMessage(const void *message, size_t mlen, const BYTE *key, size_t klen, BYTE *signature)
 {
-#ifdef _WITH_ENCRYPTION
    HMAC(EVP_sha256(), key, static_cast<int>(klen), reinterpret_cast<const BYTE*>(message), mlen, signature, nullptr);
-#else
-   BYTE keyBlock[SHA256_BLOCK_SIZE];
-   if (klen > SHA256_BLOCK_SIZE)
-   {
-      sha256_ctx kctx;
-      I_sha256_init(&kctx);
-      I_sha256_update(&kctx, key, static_cast<unsigned int>(klen));
-      I_sha256_final(&kctx, keyBlock);
-      memset(keyBlock + SHA256_DIGEST_SIZE, 0, SHA256_BLOCK_SIZE - SHA256_DIGEST_SIZE);
-   }
-   else
-   {
-      memcpy(keyBlock, key, klen);
-      if (klen < SHA256_BLOCK_SIZE)
-         memset(keyBlock + klen, 0, SHA256_BLOCK_SIZE - klen);
-   }
-
-   BYTE pad[SHA256_BLOCK_SIZE];
-   for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
-      pad[i] = keyBlock[i] ^ 0x36;
-
-   sha256_ctx ctx;
-   I_sha256_init(&ctx);
-   I_sha256_update(&ctx, pad, SHA256_BLOCK_SIZE);
-   I_sha256_update(&ctx, reinterpret_cast<const unsigned char*>(message), static_cast<unsigned int>(mlen));
-   BYTE innerHash[SHA256_DIGEST_SIZE];
-   I_sha256_final(&ctx, innerHash);
-
-   for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
-      pad[i] = keyBlock[i] ^ 0x5C;
-
-   I_sha256_init(&ctx);
-   I_sha256_update(&ctx, pad, SHA256_BLOCK_SIZE);
-   I_sha256_update(&ctx, innerHash, SHA256_DIGEST_SIZE);
-   I_sha256_final(&ctx, signature);
-#endif
 }
 
 /**
@@ -1035,11 +936,9 @@ bool LIBNETXMS_EXPORTABLE ValidateMessageSignature(const void *message, size_t m
  */
 void LIBNETXMS_EXPORTABLE LogOpenSSLErrorStack(int level)
 {
-#if defined(_WITH_ENCRYPTION) && WITH_OPENSSL
    nxlog_debug_tag(DEBUG_TAG, level, _T("OpenSSL error stack:"));
    long err;
    char buffer[128];
    while((err = ERR_get_error()) != 0)
       nxlog_debug_tag(DEBUG_TAG, level, _T("   %hs"), ERR_error_string(err, buffer));
-#endif
 }

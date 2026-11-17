@@ -42,9 +42,7 @@
 #include <sys/sysctl.h>
 #endif
 
-#ifdef _WITH_ENCRYPTION
 #include <openssl/ssl.h>
-#endif
 
 NETXMS_EXECUTABLE_HEADER(nxagentd)
 
@@ -1210,19 +1208,11 @@ BOOL Initialize()
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("libcurl initialization failed, HTTP client functionality will be unavailable"));
 
    // Initialize libssl
-#ifdef _WITH_ENCRYPTION
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    OPENSSL_init_ssl(0, nullptr);
 #else
    SSL_library_init();
    SSL_load_error_strings();
-#endif
-#else /* not _WITH_ENCRYPTION */
-   if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && !(g_dwFlags & AF_SUBAGENT_LOADER))
-   {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Encryption set as required in configuration but agent was build without encryption support"));
-      return false;
-   }
 #endif
 
    s_timerThreadPool = ThreadPoolCreate(_T("TIMER"), 2, 16);

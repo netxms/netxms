@@ -162,7 +162,6 @@ PLATFORM=`uname -s`
 CPUTYPE=`uname -p`
 COMPONENTS=""
 DISABLE_ICONV="no"
-DISABLE_ENCRYPTION="no"
 DISABLE_LMSENSORS="no"
 REQUIRE_LMSENSORS="no"
 DISABLE_SSH="no"
@@ -248,7 +247,6 @@ XEN_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
-WITH_ENCRYPTION="no"
 OPENSSL_LIBSSL="ssl"
 OPENSSL_LIBCRYPTO="crypto"
 SYSTEMD_SUPPORT="yes"
@@ -936,15 +934,6 @@ AC_ARG_ENABLE(ipv6,
 	fi
 ])
 
-AC_ARG_ENABLE(encryption,
-[AS_HELP_STRING(--disable-encryption,disable encryption support)],
-[
-	if test "x$enableval" = "xno"; then
-		DISABLE_ENCRYPTION="yes"
-		DISABLE_XMPP="yes"
-	fi
-])
-
 AC_ARG_ENABLE(lmsensors,
 [AS_HELP_STRING(--disable-lmsensors,disable lmsensors support)],
 [
@@ -1317,9 +1306,6 @@ check_substr "$COMPONENTS" "server"
 if test $? = 0; then
 	if test "x$DBDRIVER_SELECTED" != "xyes"; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
-	fi
-	if test "x$DISABLE_ENCRYPTION" = "xyes"; then
-		AC_MSG_ERROR(Encryption support is required for server build.)
 	fi
 	if test "x$BUILD_UNICODE" = "xno"; then
 		AC_MSG_ERROR(Only UNICODE server builds are supported.)
@@ -1997,12 +1983,11 @@ AC_LANG_POP([C++])
 # Checks for OpenSSL
 #--------------------------------------------------------------------
 
-if test "x$DISABLE_ENCRYPTION" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
-	AC_CHECK_HEADER(openssl/crypto.h,,AC_MSG_ERROR([OpenSSL is required for encryption support]))
+if test "x$DIST_BUILD" != "xyes"; then
+	AC_CHECK_HEADER(openssl/crypto.h,,AC_MSG_ERROR([OpenSSL is required]))
 
 	AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
 		[
-			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
 			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_aes_256_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
 			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_bf_cbc,
@@ -2012,7 +1997,6 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
 			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
-				WITH_ENCRYPTION="yes"
 				LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
 			else
 				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
@@ -2021,7 +2005,7 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 			AC_CHECK_FUNCS([X509_STORE_set_verify_cb X509_STORE_CTX_set_verify_cb])
 		],
 		[
-			AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required for encryption support)
+			AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required)
 		])
 fi
 
@@ -4429,7 +4413,6 @@ AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ARGON2], [test "x$HAVE_ARGON2" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
-AM_CONDITIONAL([USE_ENCRYPTION], [test "x${WITH_ENCRYPTION}" = "xyes"])
 AM_CONDITIONAL([USE_LIBJQ], [test "x$HAVE_LIBJQ" = "xyes"])
 AM_CONDITIONAL([WITH_PRIVATE_EXTENSIONS], [test "x$WITH_PRIVATE_EXTENSIONS" = "xyes"])
 
@@ -4911,11 +4894,6 @@ echo "Prefix                  : ${prefix}"
 echo "Platform                : ${PLATFORM}"
 echo "Shared library suffix   : ${SHLIB_SUFFIX}"
 echo "Shared library version  : ${NETXMS_LIBRARY_VERSION}"
-if test "x${WITH_ENCRYPTION}" = "xyes"; then
-	echo "Encryption enabled      : YES"
-else
-	echo "Encryption enabled      : NO"
-fi
 if test "x$IPV6_SUPPORT" = "xyes"; then
 	echo "IPv6 support            : YES"
 else

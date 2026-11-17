@@ -9,7 +9,7 @@ libnetxms_la_SOURCES = \
 	macaddr.cpp markdown.cpp md4.cpp md5.cpp memmem.cpp mempool.cpp \
 	message.cpp msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp npipe.cpp npipe_unix.cpp \
 	pa.cpp procexec.cpp pugixml.cpp qsort.cpp queue.cpp rbuffer.cpp serial.cpp \
-	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp squeue.cpp strcasestr.cpp \
+	sha1.cpp socket_listener.cpp spoll.cpp squeue.cpp strcasestr.cpp \
 	streamcomp.cpp string.cpp stringlist.cpp strlcat.cpp strlcpy.cpp strmap.cpp \
 	strmapbase.cpp strptime.cpp strset.cpp \
 	subproc.cpp table.cpp tasks.cpp tfw.cpp threads.cpp timegm.cpp tls_conn.cpp tzrule.cpp \
@@ -26,7 +26,7 @@ libnetxms_la_LIBADD += -ljansson
 endif
 
 EXTRA_DIST = \
-	libnetxms.h diff.h ice.h lz4.h md5.h sha1.h sha2.h strmap-internal.h unicode_cc.h \
+	libnetxms.h diff.h ice.h lz4.h md5.h sha1.h strmap-internal.h unicode_cc.h \
 	debug_tag_tree.h \
 	crashdump.cpp \
 	dir.cpp dirw.cpp \

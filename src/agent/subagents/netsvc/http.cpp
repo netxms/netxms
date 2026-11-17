@@ -227,9 +227,14 @@ LONG H_CheckHTTP(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 struct HashUpdateContext
 {
-   MD_STATE state;
-   void (*update)(MD_STATE*, const void*, size_t);
-   void (*final)(MD_STATE*, BYTE*);
+   union
+   {
+      MD5_STATE md5;
+      SHA1_STATE sha1;
+      SHA256_STATE sha256;
+   } state;
+   void (*update)(HashUpdateContext*, const void*, size_t);
+   void (*final)(HashUpdateContext*, BYTE*);
    size_t hashSize;
 };
 
@@ -239,7 +244,7 @@ struct HashUpdateContext
 static size_t HashUpdateCallback(char *ptr, size_t size, size_t nmemb, HashUpdateContext *context)
 {
    size_t bytes = size * nmemb;
-   context->update(&context->state, ptr, bytes);
+   context->update(context, ptr, bytes);
    return bytes;
 }
 
@@ -297,21 +302,21 @@ LONG H_HTTPChecksum(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstrac
    switch(*arg)
    {
       case '1':   // SHA1
-         SHA1Init(&context.state);
-         context.update = SHA1Update;
-         context.final = SHA1Final;
+         SHA1Init(&context.state.sha1);
+         context.update = [] (HashUpdateContext *c, const void *data, size_t size) -> void { SHA1Update(&c->state.sha1, data, size); };
+         context.final = [] (HashUpdateContext *c, BYTE *hash) -> void { SHA1Final(&c->state.sha1, hash); };
          context.hashSize = SHA1_DIGEST_SIZE;
          break;
       case '2':   // SHA256
-         SHA256Init(&context.state);
-         context.update = SHA256Update;
-         context.final = SHA256Final;
+         SHA256Init(&context.state.sha256);
+         context.update = [] (HashUpdateContext *c, const void *data, size_t size) -> void { SHA256Update(&c->state.sha256, data, size); };
+         context.final = [] (HashUpdateContext *c, BYTE *hash) -> void { SHA256Final(&c->state.sha256, hash); };
          context.hashSize = SHA256_DIGEST_SIZE;
          break;
       case '5':   // MD5
-         MD5Init(&context.state);
-         context.update = MD5Update;
-         context.final = MD5Final;
+         MD5Init(&context.state.md5);
+         context.update = [] (HashUpdateContext *c, const void *data, size_t size) -> void { MD5Update(&c->state.md5, data, size); };
+         context.final = [] (HashUpdateContext *c, BYTE *hash) -> void { MD5Final(&c->state.md5, hash); };
          context.hashSize = MD5_DIGEST_SIZE;
          break;
       default:
@@ -362,7 +367,7 @@ retry:
    curl_slist_free_all(resolveList);
 
    BYTE hash[SHA512_DIGEST_SIZE];
-   context.final(&context.state, hash);
+   context.final(&context, hash);
 
    // Call to context.final() still needed even in case of error to free any resources allocated by init function
    if (!success)

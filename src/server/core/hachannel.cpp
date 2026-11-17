@@ -220,7 +220,6 @@ static bool LoadClusterSecret()
    return true;
 }
 
-#ifdef _WITH_ENCRYPTION
 
 /**
  * Run TLS handshake with WANT_READ/WANT_WRITE retry on a non-blocking socket
@@ -924,7 +923,6 @@ static void SenderThread()
    }
 }
 
-#endif   /* _WITH_ENCRYPTION */
 
 /**
  * Applier thread (standby side): apply committed journal entries above the
@@ -1015,12 +1013,10 @@ static void ApplierThread()
          if (pendingGapSeq <= watermark)
             pendingGapSeq = 0;
          HAJournalSaveWatermark(watermark);
-#ifdef _WITH_ENCRYPTION
          NXCPMessage msg(HA_CMD_WATERMARK, 0, 5);
          msg.setField(VID_SEQUENCE_NUMBER, watermark);
          msg.setField(VID_FLAGS, GetLocalStateFlags());
          SendToPeer(msg);
-#endif
       }
    }
    nxlog_debug_tag(DEBUG_TAG, 2, L"Journal applier stopped");
@@ -1057,7 +1053,6 @@ void HAChannelFeedDataValue(uint32_t ownerId, uint32_t dciId, Timestamp timestam
    if (!s_dataFeedActive.load(std::memory_order_relaxed))
       return;
 
-#ifdef _WITH_ENCRYPTION
    LockGuard lockGuard(s_dataFeedLock);
    if (s_dataFeedMessage == nullptr)
    {
@@ -1088,7 +1083,6 @@ void HAChannelFeedDataValue(uint32_t ownerId, uint32_t dciId, Timestamp timestam
       }
       s_dataFeedMessage = nullptr;
    }
-#endif
 }
 
 /**
@@ -1165,7 +1159,6 @@ int64_t HAChannelGetAppliedWatermark()
  */
 bool HAChannelStart()
 {
-#ifdef _WITH_ENCRYPTION
    if (!LoadClusterSecret())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot load cluster secret");
@@ -1178,9 +1171,6 @@ bool HAChannelStart()
    else
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"PeerAddress is not configured; peer channel will accept inbound connections only");
    s_senderThread = ThreadCreateEx(SenderThread);
-#else
-   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Server built without encryption support; peer channel disabled (journal replay still provides standby synchronization)");
-#endif
    s_applierThread = ThreadCreateEx(ApplierThread);
    return true;
 }
@@ -1191,10 +1181,8 @@ bool HAChannelStart()
  */
 void HAChannelNotifyDemotion()
 {
-#ifdef _WITH_ENCRYPTION
    NXCPMessage msg(HA_CMD_DEMOTED, 0, 5);
    SendToPeer(msg);
-#endif
 }
 
 /**
@@ -1202,13 +1190,9 @@ void HAChannelNotifyDemotion()
  */
 bool NXCORE_EXPORTABLE HAChannelIsPeerConnected()
 {
-#ifdef _WITH_ENCRYPTION
    LockGuard lockGuard(s_sessionLock);
    return ((s_inboundSession != nullptr) && s_inboundSession->isAuthenticated()) ||
           ((s_outboundSession != nullptr) && s_outboundSession->isAuthenticated());
-#else
-   return false;
-#endif
 }
 
 /**
@@ -1250,7 +1234,6 @@ void HAChannelShutdown()
    s_shutdown = true;
    s_dataFeedActive = false;
    s_applierWakeup.set();
-#ifdef _WITH_ENCRYPTION
    s_dataFeedLock.lock();
    delete_and_null(s_dataFeedMessage);
    for(NXCPMessage *msg : s_dataFeedPending)
@@ -1263,16 +1246,13 @@ void HAChannelShutdown()
    if (s_outboundSession != nullptr)
       s_outboundSession->stop();
    s_sessionLock.unlock();
-#endif
    ThreadJoin(s_listenerThread);
    ThreadJoin(s_dialerThread);
    ThreadJoin(s_senderThread);
    ThreadJoin(s_applierThread);
-#ifdef _WITH_ENCRYPTION
    s_sessionLock.lock();
    delete_and_null(s_inboundSession);
    delete_and_null(s_outboundSession);
    s_sessionLock.unlock();
-#endif
    nxlog_debug_tag(DEBUG_TAG, 2, L"Peer channel stopped");
 }

@@ -86,7 +86,6 @@ int NXAgentDriver::send(const NotificationContext& context)
       RSA_KEY serverKey = nullptr;
       bool start = true;
       // Load server key if requested
-#ifdef _WITH_ENCRYPTION
       serverKey = RSALoadKey(m_keyFile);
       if (serverKey == nullptr)
       {
@@ -98,7 +97,6 @@ int NXAgentDriver::send(const NotificationContext& context)
             start = false;
          }
       }
-#endif
 
       if (start)
       {

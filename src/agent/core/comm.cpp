@@ -228,7 +228,6 @@ struct IncomingConnectionRequest
    bool upgradeServer;
 };
 
-#ifdef _WITH_ENCRYPTION
 
 /**
  * Reject legacy NXCP connection when TLS is required by agent configuration. Speaks minimal NXCP
@@ -287,7 +286,6 @@ static void RejectLegacyConnection(SOCKET socket, const InetAddress& addr)
    closesocket(socket);
 }
 
-#endif   /* _WITH_ENCRYPTION */
 
 /**
  * Setup incoming connection. Detects protocol (TLS handshake vs legacy NXCP) by peeking at
@@ -312,18 +310,11 @@ static void SetupIncomingConnection(IncomingConnectionRequest *request)
    TCHAR buffer[64];
    if (firstByte == 0x16)
    {
-#ifdef _WITH_ENCRYPTION
       nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("TLS connection detected from %s"), request->addr.toString(buffer));
       SetupInboundTunnel(request->socket, request->addr);
-#else
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_COMM, _T("Incoming TLS connection from %s rejected (agent built without encryption support)"), request->addr.toString(buffer));
-      shutdown(request->socket, SHUT_RDWR);
-      closesocket(request->socket);
-#endif
    }
    else
    {
-#ifdef _WITH_ENCRYPTION
       if (g_dwFlags & AF_REQUIRE_TLS)
       {
          nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("Rejecting legacy connection from %s (TLS required by agent configuration)"), request->addr.toString(buffer));
@@ -331,7 +322,6 @@ static void SetupIncomingConnection(IncomingConnectionRequest *request)
          delete request;
          return;
       }
-#endif
       shared_ptr<SocketCommChannel> channel = make_shared<SocketCommChannel>(request->socket, nullptr, Ownership::True);
       shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, request->addr, request->masterServer, request->controlServer, request->upgradeServer);
       if (RegisterSession(session))

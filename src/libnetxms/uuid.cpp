@@ -24,9 +24,7 @@
 #include "libnetxms.h"
 #include <uuid.h>
 
-#if _WITH_ENCRYPTION
 #include <openssl/rand.h>
-#endif
 
 /**
  * NULL GUID
@@ -281,10 +279,8 @@ static int get_random_fd()
  */
 static void get_random_bytes(void *buf, int nbytes)
 {
-#if _WITH_ENCRYPTION
    if (RAND_bytes(static_cast<unsigned char*>(buf), nbytes))
       return;
-#endif
 
 	char *cp = (char *)buf;
    int fd = get_random_fd();

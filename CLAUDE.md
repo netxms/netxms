@@ -150,6 +150,11 @@ Prefer NetXMS containers for object collections and ownership management. For ma
 
 - Before removing an `AC_CHECK_FUNCS` / `AC_CHECK_*` probe from `configure.ac` because no first-party code reads its `HAVE_*` macro, grep the bundled third-party sources too: `src/jansson/jansson_private_config.h` includes the top-level `config.h` (non-Windows) and `hashtable_seed.c` reads `HAVE_GETTIMEOFDAY` / `HAVE_GETPID`; `src/sqlite/sqlite3.c` reads `HAVE_USLEEP`. When the symbol is guaranteed on the relevant platforms, the preferred fix is to hardcode the `HAVE_*` in the bundled library's own private config header (platform-guarded), not to keep the configure probe.
 
+### Cryptography
+
+- OpenSSL is a mandatory dependency of every component (server, agent, libraries). Do not add `#ifdef`s or "built without encryption" runtime checks around TLS/crypto code.
+- MD4, MD5 and SHA-1 (`MD5Init`/`SHA1Init`/`CalculateMD5Hash`/... in `nxcrypto.h`) always use the built-in implementations in `src/libnetxms`, so protocol uses (SNMPv3 auth, legacy agent auth, file checksums) keep working when OpenSSL runs in FIPS mode or with a restricted provider configuration. Do not route them through OpenSSL EVP. SHA-2 goes through OpenSSL.
+
 ### Logging
 
 - Use `nxlog_debug_tag(tag, level, format, ...)` for debug output

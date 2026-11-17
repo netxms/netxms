@@ -282,11 +282,9 @@ private:
 	BYTE *m_sessionKey;
 	int m_keyLength;
 	BYTE m_iv[EVP_MAX_IV_LENGTH];
-#ifdef _WITH_ENCRYPTION
    Mutex m_encryptorLock;
    EVP_CIPHER_CTX *m_encryptor;
    EVP_CIPHER_CTX *m_decryptor;
-#endif
 
 	NXCPEncryptionContext();
    bool initCipher(int cipher);
@@ -395,7 +393,6 @@ public:
    virtual void cancel() override;
 };
 
-#ifdef _WITH_ENCRYPTION
 
 /**
  * Message receiver - SSL/TLS implementation
@@ -420,7 +417,6 @@ public:
    virtual void cancel() override;
 };
 
-#endif /* _WITH_ENCRYPTION */
 
 /**
  * Message receiver - UNIX socket/named pipe implementation
