@@ -432,6 +432,34 @@ void TestSendFileOverEncryptedChannel()
    MemFree(emsg);
    MemFree(rawMsg);
 
+   // Envelope with valid header, message and checksum, but invalid PKCS padding. Last cipher block
+   // contains only padding, so all other checks pass and only padding validation can reject it.
+   rawMsg = validMsg.serialize();
+   uint32_t rawMsgSize = ntohl(rawMsg->size);
+   BYTE plaintext[512];
+   memset(plaintext, 0, sizeof(plaintext));
+   NXCP_ENCRYPTED_PAYLOAD_HEADER *payloadHeader = reinterpret_cast<NXCP_ENCRYPTED_PAYLOAD_HEADER*>(plaintext);
+   payloadHeader->dwChecksum = htonl(CalculateCRC32(reinterpret_cast<BYTE*>(rawMsg), rawMsgSize, 0));
+   memcpy(plaintext + NXCP_EH_ENCRYPTED_BYTES, rawMsg, rawMsgSize);
+   size_t plaintextSize = NXCP_EH_ENCRYPTED_BYTES + rawMsgSize;
+   plaintextSize += (16 - plaintextSize % 16) % 16 + 16;  // Fill last data block and add padding block of zeroes (invalid PKCS padding)
+   AssertTrue(plaintextSize <= sizeof(plaintext));
+   emsg = static_cast<NXCP_ENCRYPTED_MESSAGE*>(MemAllocZeroed(NXCP_EH_UNENCRYPTED_BYTES + plaintextSize));
+   emsg->code = htons(CMD_ENCRYPTED_MESSAGE);
+   emsg->size = htonl(static_cast<uint32_t>(NXCP_EH_UNENCRYPTED_BYTES + plaintextSize));
+   EVP_CIPHER_CTX *encryptor = EVP_CIPHER_CTX_new();
+   AssertTrue(EVP_EncryptInit_ex(encryptor, EVP_aes_256_cbc(), nullptr, ectx->getSessionKey(), ectx->getIV()) == 1);
+   EVP_CIPHER_CTX_set_padding(encryptor, 0);
+   int outSize;
+   AssertTrue(EVP_EncryptUpdate(encryptor, emsg->data, &outSize, plaintext, static_cast<int>(plaintextSize)) == 1);
+   AssertEquals(outSize, static_cast<int>(plaintextSize));
+   AssertTrue(EVP_EncryptFinal_ex(encryptor, emsg->data + outSize, &outSize) == 1);
+   AssertEquals(outSize, 0);
+   EVP_CIPHER_CTX_free(encryptor);
+   AssertFalse(ectx->decryptMessage(emsg, decryptionBuffer));
+   MemFree(emsg);
+   MemFree(rawMsg);
+
    // Parser rejects message with size below header size
    NXCP_MESSAGE shortMsg;
    memset(&shortMsg, 0, sizeof(shortMsg));
