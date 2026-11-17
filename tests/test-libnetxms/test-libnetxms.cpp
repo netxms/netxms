@@ -29,6 +29,7 @@ void TestMsgWaitQueue();
 void TestMessageClass();
 void TestNXCPMessageCodeName();
 void TestSendFileOverEncryptedChannel();
+void TestMessageReceiverBuffer();
 void TestMutex();
 void TestUniqueLock();
 void TestCondition();
@@ -3968,6 +3969,7 @@ int main(int argc, char *argv[])
    TestMessageClass();
    TestNXCPMessageCodeName();
    TestSendFileOverEncryptedChannel();
+   TestMessageReceiverBuffer();
    TestMsgWaitQueue();
    TestGenericId();
    TestMacAddress();

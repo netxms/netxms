@@ -158,13 +158,19 @@ Only a successfully returned message defers its shift. Cases that need care:
 - A decryption failure is not terminal for every caller: the agent session and the mobile device session keep
   reading after it.
 
-- [ ] failing unit test with a test receiver subclass: two messages delivered in one read, and a message
+- [x] failing unit test with a test receiver subclass: two messages delivered in one read, and a message
       followed by a partial header; the raw buffer after each `readMessage()` holds the returned message
-- [ ] unit tests for the cases above: encrypted message without context followed by a clear one in the same
+- [x] unit tests for the cases above: encrypted message without context followed by a clear one in the same
       read, encrypted message followed by another message, read continuing after a decryption failure
-- [ ] buffer shift deferred for returned messages only; grow and skip paths unchanged in behaviour
-- [ ] `test-libnetxms` passes in normal and `--enable-sanitizer` builds
-- [ ] ticket updated with the fix commit
+- [x] buffer shift deferred for returned messages only; grow and skip paths unchanged in behaviour
+- [x] `test-libnetxms` passes in normal and `--enable-sanitizer` builds
+- [ ] ticket updated with the fix commit (left to the user, see Tandem)
+- ➕ The first test case also covers a call with `allowReadBytes` false, and a third case covers buffer growth
+  and the skip of an oversized message after a deferred shift.
+- ⚠️ After an encrypted message is dropped for lack of a context, `readMessage()` reads more bytes before it
+  parses what is already buffered. Existing behaviour, left as is; filed as
+  `docs/backlog/message-receiver-stalls-after-dropped-encrypted-message.md`. The unit test feeds a second block
+  because of it.
 
 ### Task 3: Fix private/netxms#48 (validation of decrypted messages)
 
@@ -333,6 +339,10 @@ rule. `tests/CLAUDE.md` gets the build gating of `tests/fuzz` and a pointer to t
 | 7 | claude | codex |
 | 8 | claude | codex |
 | 9 | codex | claude |
+
+⚠️ Roster change by the user during Task 1 review: Codex kept hitting guardrails, so the user told Claude to
+ignore it. From Task 1 on, Claude writes every task and no commit has had a per-task review; Task 1 was sent
+for review and the review never came back. The table above is the roster as first agreed.
 
 Decisions taken by the two agents before the run, without the user:
 
