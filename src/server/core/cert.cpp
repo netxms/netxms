@@ -588,31 +588,43 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 #else
 	EVP_PKEY *pKey = X509_get_pubkey(cert);
 #endif
-	if (pKey != nullptr)
-	{
-      BYTE hash[SHA1_DIGEST_SIZE];
-		CalculateSHA1Hash(challenge, CLIENT_CHALLENGE_SIZE, hash);
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-		EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pKey, nullptr);
-		if (ctx != nullptr)
-		{
-		   EVP_PKEY_verify_init(ctx);
-		   EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING);
-		   EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha1());
-		   isValid = (EVP_PKEY_verify(ctx, hash, SHA1_DIGEST_SIZE, signature, sigLen) != 0);
-		   EVP_PKEY_CTX_free(ctx);
-		}
-#else
-		if (EVP_PKEY_id(pKey) == EVP_PKEY_RSA)
+   if (pKey != nullptr)
+   {
+      // Login protocol defines challenge signature as RSA PKCS#1 v1.5 only
+      if (EVP_PKEY_base_id(pKey) == EVP_PKEY_RSA)
       {
+         BYTE hash[SHA1_DIGEST_SIZE];
+         CalculateSHA1Hash(challenge, CLIENT_CHALLENGE_SIZE, hash);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+         EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pKey, nullptr);
+         if (ctx != nullptr)
+         {
+            // EVP_PKEY_verify returns 1 only for valid signature, 0 for invalid, and negative value on error
+            if ((EVP_PKEY_verify_init(ctx) == 1) &&
+                (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) == 1) &&
+                (EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha1()) == 1))
+            {
+               isValid = (EVP_PKEY_verify(ctx, signature, sigLen, hash, SHA1_DIGEST_SIZE) == 1);
+            }
+            else
+            {
+               wchar_t buffer[256];
+               nxlog_debug_tag(DEBUG_TAG, 3, L"Cannot initialize signature verification for certificate \"%s\" for user %s (%s)",
+                  certSubject.cstr(), login, _ERR_error_tstring(ERR_get_error(), buffer));
+            }
+            EVP_PKEY_CTX_free(ctx);
+         }
+#else
          RSA *rsa = EVP_PKEY_get1_RSA(pKey);
-         isValid = (RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, const_cast<unsigned char*>(signature), static_cast<unsigned int>(sigLen), rsa) != 0);
+         isValid = (RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, const_cast<unsigned char*>(signature), static_cast<unsigned int>(sigLen), rsa) == 1);
          RSA_free(rsa);
-      }
-		else
-         nxlog_debug_tag(DEBUG_TAG, 3, _T("Unsupported key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject.cstr(), login);
 #endif
-	}
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 3, L"Unsupported key type %d in certificate \"%s\" for user %s", EVP_PKEY_base_id(pKey), certSubject.cstr(), login);
+      }
+   }
 
 	// Validate certificate
 	if (isValid)
