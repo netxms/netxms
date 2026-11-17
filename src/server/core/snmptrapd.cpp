@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nxcore_discovery.h>
+#include <socket_listener.h>
 
 #define DEBUG_TAG _T("snmp.trap")
 
@@ -559,14 +560,156 @@ bool ValidateTrapCredentialsForAdditionalAgents(SNMP_PDU *pdu, const shared_ptr<
  */
 static SNMP_Transport *CreateTransport(SOCKET hSocket)
 {
-   if (hSocket == INVALID_SOCKET)
-      return nullptr;
-
    auto t = new SNMP_UDPTransport(hSocket);
    t->enableEngineIdAutoupdate(true);
    t->setPeerUpdatedOnRecv(true);
    t->expandBuffer();
    return t;
+}
+
+/**
+ * SNMP trap UDP listener. Each bound socket is served by its own SNMP transport.
+ */
+class SNMPTrapListener : public DatagramSocketListener
+{
+private:
+   SNMP_Engine m_localEngine;
+   ObjectArray<SNMP_Transport> m_transports;  // Transport at index N serves socket at index N in m_sockets
+
+   void processPDU(SNMP_Transport *transport, SNMP_PDU *pdu, const SockAddrBuffer& addr);
+
+protected:
+   virtual bool isStopConditionReached() override
+   {
+      return IsShutdownInProgress();
+   }
+
+   virtual ConnectionProcessingResult processDatagram(SOCKET s) override;
+
+public:
+   SNMPTrapListener(uint16_t port, const SNMP_Engine& localEngine) : DatagramSocketListener(port), m_localEngine(localEngine), m_transports(0, 16, Ownership::True)
+   {
+      setName(L"SNMPTrapReceiver");
+   }
+
+   virtual ~SNMPTrapListener()
+   {
+      // Transports own their sockets, so sockets must not be closed again by base class destructor
+      m_transports.clear();
+      m_sockets.clear();
+   }
+
+   void createTransports()
+   {
+      for(int i = 0; i < m_sockets.size(); i++)
+         m_transports.add(CreateTransport(m_sockets.get(i)));
+   }
+};
+
+/**
+ * Read and process incoming SNMP PDU
+ */
+ConnectionProcessingResult SNMPTrapListener::processDatagram(SOCKET s)
+{
+   SNMP_Transport *transport = nullptr;
+   for(int i = 0; i < m_sockets.size(); i++)
+   {
+      if (m_sockets.get(i) == s)
+      {
+         transport = m_transports.get(i);
+         break;
+      }
+   }
+   if (transport == nullptr)
+      return CPR_COMPLETED;
+
+   SockAddrBuffer addr;
+   socklen_t addrLen = sizeof(SockAddrBuffer);
+   SNMP_PDU *pdu;
+   int bytes = transport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen, ContextFinder);
+   if ((bytes > 0) && (pdu != nullptr))
+   {
+      processPDU(transport, pdu, addr);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 8, L"SNMPTrapReceiver: error reading PDU from socket (rc=%d, errno=%d, errtext=\"%s\")", bytes, errno, _wcserror(errno));
+      // Sleep on error
+      ThreadSleepMs(100);
+   }
+   return CPR_COMPLETED;
+}
+
+/**
+ * Process received SNMP PDU (takes ownership of PDU object)
+ */
+void SNMPTrapListener::processPDU(SNMP_Transport *transport, SNMP_PDU *pdu, const SockAddrBuffer& addr)
+{
+   InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
+   // Engine ID discovery probe (RFC 3414 section 4) carries no credentials by design and must be
+   // answered before credential validation, otherwise INFORM senders never get past discovery
+   bool engineIdDiscovery = (pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0);
+   TrapCredentialCheckResult credCheck = engineIdDiscovery ? TrapCredentialCheckResult::OK : ValidateTrapCredentials(pdu, &transport->getSecurityContext());
+   shared_ptr<Node> sourceNode;
+   if (credCheck != TrapCredentialCheckResult::OK)
+   {
+      sourceNode = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
+      if (ValidateTrapCredentialsForAdditionalAgents(pdu, sourceNode))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPTrapReceiver: trap from %s matched credentials of additional SNMP agent", sourceAddr.toString().cstr());
+         credCheck = TrapCredentialCheckResult::OK;
+      }
+      else if (!IsTrapCredentialValidationEnabled(sourceNode))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPTrapReceiver: SNMP credential validation failed for trap from %s, but credential check is disabled", sourceAddr.toString().cstr());
+         credCheck = TrapCredentialCheckResult::OK;
+      }
+   }
+   if (credCheck != TrapCredentialCheckResult::OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SNMPTrapReceiver: SNMP credential validation failed for trap from %s, dropping"), (const TCHAR *)sourceAddr.toString());
+      if (sourceNode != nullptr)
+         sourceNode->reportSnmpTrapAuthFailure(credCheck, *pdu, sourceAddr);
+   }
+   else if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
+   {
+      if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
+      {
+         transport->getSecurityContext().setAuthoritativeEngine(m_localEngine);
+      }
+      EnqueueSNMPTrap(pdu, sourceAddr, 0, ntohs(SA_PORT(&addr)), transport);
+      pdu = nullptr; // prevent delete (PDU will be deleted by trap processor)
+   }
+   else if (engineIdDiscovery)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: EngineId discovery"));
+
+      SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
+      response->setReportable(false);
+      response->setMessageId(pdu->getMessageId());
+      response->setContextEngineId(m_localEngine.getId(), m_localEngine.getIdLen());
+
+      SNMP_Variable *var = new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 });
+      var->setValueFromUInt32(ASN_INTEGER, 2);
+      response->bindVariable(var);
+
+      SNMP_SecurityContext context;
+      m_localEngine.setTime(static_cast<uint32_t>(time(nullptr)));
+      context.setAuthoritativeEngine(m_localEngine);
+      context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+      context.setAuthMethod(SNMP_AUTH_NONE);
+      context.setPrivMethod(SNMP_ENCRYPT_NONE);
+      transport->setSecurityContext(std::move(context));
+
+      transport->sendMessage(response, 0);
+      delete response;
+   }
+   else if (pdu->getCommand() == SNMP_REPORT)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
+   }
+   delete pdu;
 }
 
 /**
@@ -596,250 +739,20 @@ static void ReceiverThread()
       engineIdLen = 12;
    }
    SNMP_Engine localEngine(engineId, engineIdLen);
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Local SNMP engine ID set to %s"), localEngine.toString().cstr());
 
-   uint16_t listenerPort = static_cast<uint16_t>(ConfigReadULong(_T("SNMP.Traps.ListenerPort"), 162));
-
-   SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
-#ifdef WITH_IPV6
-   SOCKET hSocket6 = CreateSocket(AF_INET6, SOCK_DGRAM, 0);
-#endif
-
-#ifdef WITH_IPV6
-   if ((hSocket == INVALID_SOCKET) && (hSocket6 == INVALID_SOCKET))
-#else
-   if (hSocket == INVALID_SOCKET)
-#endif
+   uint16_t listenerPort = static_cast<uint16_t>(ConfigReadULong(L"SNMP.Traps.ListenerPort", 162));
+   SNMPTrapListener listener(listenerPort, localEngine);
+   listener.setListenAddress(g_szListenAddress);
+   if (!listener.initialize())
    {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_debug_tag(DEBUG_TAG, 1, L"SNMP trap receiver aborted - cannot bind at least one socket");
       return;
    }
-
-   SetSocketExclusiveAddrUse(hSocket);
-   SetSocketReuseFlag(hSocket);
-#ifndef _WIN32
-   fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
-#endif
-
-#ifdef WITH_IPV6
-   SetSocketExclusiveAddrUse(hSocket6);
-   SetSocketReuseFlag(hSocket6);
-#ifndef _WIN32
-   fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
-#endif
-#ifdef IPV6_V6ONLY
-   int on = 1;
-   setsockopt(hSocket6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
-#endif
-#endif
-
-   // Fill in local address structure
-   struct sockaddr_in servAddr;
-   memset(&servAddr, 0, sizeof(struct sockaddr_in));
-   servAddr.sin_family = AF_INET;
-
-#ifdef WITH_IPV6
-   struct sockaddr_in6 servAddr6;
-   memset(&servAddr6, 0, sizeof(struct sockaddr_in6));
-   servAddr6.sin6_family = AF_INET6;
-#endif
-   if (!_tcscmp(g_szListenAddress, _T("*")))
-   {
-      servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-#ifdef WITH_IPV6
-      memset(servAddr6.sin6_addr.s6_addr, 0, 16);
-#endif
-   }
-   else
-   {
-      InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
-      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
-      {
-         servAddr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
-      }
-      else
-      {
-         servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-      }
-#ifdef WITH_IPV6
-      bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET6);
-      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET6))
-      {
-         memcpy(servAddr6.sin6_addr.s6_addr, bindAddress.getAddressV6(), 16);
-      }
-      else
-      {
-         memset(servAddr6.sin6_addr.s6_addr, 0, 15);
-         servAddr6.sin6_addr.s6_addr[15] = 1;
-      }
-#endif
-   }
-   servAddr.sin_port = htons(listenerPort);
-#ifdef WITH_IPV6
-   servAddr6.sin6_port = htons(listenerPort);
-#endif
-
-   // Bind socket
-   TCHAR buffer[64];
-   int bindFailures = 0;
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), listenerPort);
-   if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
-   {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv4 socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
-      bindFailures++;
-      closesocket(hSocket);
-      hSocket = INVALID_SOCKET;
-   }
-
-#ifdef WITH_IPV6
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), listenerPort);
-   if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
-   {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv6 socket for SNMP trap receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
-      bindFailures++;
-      closesocket(hSocket6);
-      hSocket6 = INVALID_SOCKET;
-   }
-#else
-   bindFailures++;
-#endif
-
-   // Abort if cannot bind to at least one socket
-   if (bindFailures == 2)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP trap receiver aborted - cannot bind at least one socket"));
-      return;
-   }
-
-   if (hSocket != INVALID_SOCKET)
-   {
-      TCHAR ipAddrText[64];
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening for SNMP traps on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), listenerPort);
-   }
-#ifdef WITH_IPV6
-   if (hSocket6 != INVALID_SOCKET)
-   {
-      TCHAR ipAddrText[64];
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Listening for SNMP traps on UDP socket %s:%u", InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), listenerPort);
-   }
-#endif
-
-   SNMP_Transport *snmp = CreateTransport(hSocket);
-#ifdef WITH_IPV6
-   SNMP_Transport *snmp6 = CreateTransport(hSocket6);
-#endif
+   listener.createTransports();
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"SNMP trap receiver started on port %u", listenerPort);
-
-   // Wait for packets
-   SocketPoller sp;
-   while(!IsShutdownInProgress())
-   {
-      sp.reset();
-      if (hSocket != INVALID_SOCKET)
-         sp.add(hSocket);
-#ifdef WITH_IPV6
-      if (hSocket6 != INVALID_SOCKET)
-         sp.add(hSocket6);
-#endif
-
-      int rc = sp.poll(1000);
-      if ((rc > 0) && !IsShutdownInProgress())
-      {
-         SockAddrBuffer addr;
-         socklen_t addrLen = sizeof(SockAddrBuffer);
-         SNMP_PDU *pdu;
-#ifdef WITH_IPV6
-         SNMP_Transport *transport = sp.isSet(hSocket) ? snmp : snmp6;
-#else
-         SNMP_Transport *transport = snmp;
-#endif
-         int bytes = transport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen, ContextFinder);
-         if ((bytes > 0) && (pdu != nullptr))
-         {
-            InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
-            // Engine ID discovery probe (RFC 3414 section 4) carries no credentials by design and must be
-            // answered before credential validation, otherwise INFORM senders never get past discovery
-            bool engineIdDiscovery = (pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0);
-            TrapCredentialCheckResult credCheck = engineIdDiscovery ? TrapCredentialCheckResult::OK : ValidateTrapCredentials(pdu, &transport->getSecurityContext());
-            shared_ptr<Node> sourceNode;
-            if (credCheck != TrapCredentialCheckResult::OK)
-            {
-               sourceNode = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
-               if (ValidateTrapCredentialsForAdditionalAgents(pdu, sourceNode))
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPTrapReceiver: trap from %s matched credentials of additional SNMP agent", sourceAddr.toString().cstr());
-                  credCheck = TrapCredentialCheckResult::OK;
-               }
-               else if (!IsTrapCredentialValidationEnabled(sourceNode))
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPTrapReceiver: SNMP credential validation failed for trap from %s, but credential check is disabled", sourceAddr.toString().cstr());
-                  credCheck = TrapCredentialCheckResult::OK;
-               }
-            }
-            if (credCheck != TrapCredentialCheckResult::OK)
-            {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("SNMPTrapReceiver: SNMP credential validation failed for trap from %s, dropping"), (const TCHAR *)sourceAddr.toString());
-               if (sourceNode != nullptr)
-                  sourceNode->reportSnmpTrapAuthFailure(credCheck, *pdu, sourceAddr);
-            }
-            else if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
-            {
-               if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
-               {
-                  transport->getSecurityContext().setAuthoritativeEngine(localEngine);
-               }
-               EnqueueSNMPTrap(pdu, sourceAddr, 0, ntohs(SA_PORT(&addr)), transport);
-               pdu = nullptr; // prevent delete (PDU will be deleted by trap processor)
-            }
-            else if (engineIdDiscovery)
-            {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: EngineId discovery"));
-
-               SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
-               response->setReportable(false);
-               response->setMessageId(pdu->getMessageId());
-               response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
-
-               SNMP_Variable *var = new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 });
-               var->setValueFromUInt32(ASN_INTEGER, 2);
-               response->bindVariable(var);
-
-               SNMP_SecurityContext context;
-               localEngine.setTime(static_cast<uint32_t>(time(nullptr)));
-               context.setAuthoritativeEngine(localEngine);
-               context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
-               context.setAuthMethod(SNMP_AUTH_NONE);
-               context.setPrivMethod(SNMP_ENCRYPT_NONE);
-               transport->setSecurityContext(std::move(context));
-
-               transport->sendMessage(response, 0);
-               delete response;
-            }
-            else if (pdu->getCommand() == SNMP_REPORT)
-            {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
-            }
-            delete pdu;
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 8, L"SNMPTrapReceiver: error reading PDU from socket (rc=%d, errno=%d, errtext=\"%s\")", bytes, errno, _wcserror(errno));
-            // Sleep on error
-            ThreadSleepMs(100);
-         }
-      }
-   }
-
-   delete snmp;
-#ifdef WITH_IPV6
-   delete snmp6;
-#endif
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP trap receiver stopped"));
+   listener.mainLoop();
+   nxlog_debug_tag(DEBUG_TAG, 1, L"SNMP trap receiver stopped");
 }
 
 /**
