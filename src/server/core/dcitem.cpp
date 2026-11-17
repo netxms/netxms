@@ -2581,6 +2581,7 @@ json_t *DCItem::lastValueToJSON()
    json_object_set_new(data, "noValue", json_boolean(!hasValue()));
    json_object_set_new(data, "comments", json_string_t(m_comments));
    json_object_set_new(data, "anomalyDetected", json_boolean(m_anomalyDetected));
+   json_object_set_new(data, "systemTag", json_string_t(m_systemTag));
    json_object_set_new(data, "userTag", json_string_t(m_userTag));
    json_object_set_new(data, "thresholdDisableEndTime", json_integer(m_thresholdDisableEndTime));
    json_object_set_new(data, "mappingTableId", json_integer(m_mappingTableId));

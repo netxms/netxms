@@ -7974,6 +7974,67 @@ paths:
         - BearerAuth: []
       tags:
         - Data Collection
+  /v1/objects/{object-id}/data-collection/query-metric:
+    get:
+      operationId: queryMetric
+      summary: Query current metric value
+      description: |
+        Read the current value of a single metric directly from its source, without a configured DCI
+        (equivalent of "Query..." in the DCI editor). The value is returned as collected, before any
+        DCI transformation.
+
+        Supported origins are `internal`, `script`, `websvc` and `trafficobserver` for any data collection
+        target, plus `agent`, `snmp`, `driver`, `smclp` and `netconf` for nodes. In addition to read access
+        to the object, the following object access rights are required depending on origin:
+        `agent` and `smclp` - read agent data; `snmp` and `driver` - read SNMP data;
+        `netconf` - read device configuration; `script` - modify.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+        - name: origin
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [internal, agent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp, trafficobserver, netconf, computed]
+            description: Data origin
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Metric name (agent metric name, SNMP OID, script name with optional parameters, etc.)
+      responses:
+        '200':
+          description: Metric value retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    description: Current metric value
+        '400':
+          description: Missing or invalid query parameter, object is not data collection target, or origin is not supported for this object
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have access rights required for given origin
+        '404':
+          description: Object with given ID does not exist, metric is not supported, or requested instance does not exist
+        '502':
+          description: Data source returned an error
+        '503':
+          description: Cannot communicate with data source
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
   /v1/objects/{object-id}/data-collection/configuration:
     get:
       operationId: listDataCollectionItems
@@ -20769,7 +20830,10 @@ components:
           description: DCI comments
         anomalyDetected:
           type: boolean
-          description: True if anomaly was detected in recent values
+          description: True if anomaly was detected in most recent value
+        systemTag:
+          type: string
+          description: System tag
         userTag:
           type: string
           description: User-defined tag
