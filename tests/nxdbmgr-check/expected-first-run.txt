@@ -182,3 +182,11 @@ Observation point "check-orphan-point" [999972] refers to non-existing traffic o
 1 observation point host node links refer to non-existing node [999974] (observation_point_hosts.node_id). Reset them?
 1 device configuration backups refer to non-existing node [999975] (device_configs.node_id). Delete them?
 1 cached agent configurations refer to non-existing node [999976] (agent_config_cache.node_id). Delete them?
+# Review 2: membership parents are checked before node linkage
+1 node to subnet links refer to non-existing subnet [999981] (nsmap.subnet_id). Delete them?
+Unlinked node object "only-orphan-subnet" [999980]. Delete it?
+1 container memberships refer to non-existing container [0] (container_members.container_id). Delete them?
+1 node to subnet links refer to non-existing subnet [0] (nsmap.subnet_id). Delete them?
+1 cluster memberships refer to non-existing cluster [0] (cluster_members.cluster_id). Delete them?
+# Review 4: object_containers row of an extension class without its extension row
+Missing container object 999982 properties. Create?
