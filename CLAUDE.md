@@ -102,6 +102,7 @@ Longer reference: [doc/CPP_DEVELOPER_GUIDE.md](doc/CPP_DEVELOPER_GUIDE.md).
 ### Strings
 
 - Server code is always Unicode and uses `L"..."` literals directly (see `src/server/CLAUDE.md`). Agent code and shared libraries that may be built in either mode use `TCHAR` and `_T("...")`.
+- String and character literals in C/C++ code (tests included) contain only ASCII; non-ASCII characters are written as escapes: `L"\x041F\x0440"` in wide literals, UTF-8 bytes `"\xD0\x9F"` in narrow ones, `П` inside NXSL scripts embedded in C++ strings. The compiler converts raw UTF-8 in a wide literal using its source/locale charset, and Oracle Developer Studio on Solaris produces different `wchar_t` values than GCC/clang, so code comparing against such a literal fails only on Solaris.
 - Choosing a class for a string member:
   - Set once at construction (ctor arg or move) → `String` (its `operator=` is deleted).
   - Reassigned wholesale but never appended/inserted → `MutableString` (assignable from `String` / `MutableString` / `const TCHAR*`).
