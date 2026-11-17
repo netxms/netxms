@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <netxms-version.h>
+#include <socket_listener.h>
 
 #define DEBUG_TAG _T("snmp.agent")
 
@@ -164,9 +165,6 @@ static void LoadUsmUser()
  */
 static SNMP_Transport *CreateTransport(SOCKET hSocket)
 {
-   if (hSocket == INVALID_SOCKET)
-      return nullptr;
-
    SNMP_Transport *t = new SNMP_UDPTransport(hSocket);
    t->setPeerUpdatedOnRecv(true);
    t->setDeliverPduOnSecurityFailure(true);
@@ -409,209 +407,114 @@ static void ProcessUsmRequest(SNMP_Transport *transport, SNMP_PDU *request, cons
 }
 
 /**
+ * SNMP agent UDP listener. Each bound socket is served by its own SNMP transport.
+ */
+class SNMPAgentListener : public DatagramSocketListener
+{
+private:
+   ObjectArray<SNMP_Transport> m_transports;  // Transport at index N serves socket at index N in m_sockets
+
+protected:
+   virtual bool isStopConditionReached() override
+   {
+      return IsShutdownInProgress();
+   }
+
+   virtual ConnectionProcessingResult processDatagram(SOCKET s) override;
+
+public:
+   SNMPAgentListener(uint16_t port) : DatagramSocketListener(port), m_transports(0, 16, Ownership::True)
+   {
+      setName(L"SNMPAgent");
+   }
+
+   virtual ~SNMPAgentListener()
+   {
+      // Transports own their sockets, so sockets must not be closed again by base class destructor
+      m_transports.clear();
+      m_sockets.clear();
+   }
+
+   void createTransports()
+   {
+      for(int i = 0; i < m_sockets.size(); i++)
+         m_transports.add(CreateTransport(m_sockets.get(i)));
+   }
+};
+
+/**
+ * Read and process incoming SNMP request
+ */
+ConnectionProcessingResult SNMPAgentListener::processDatagram(SOCKET s)
+{
+   SNMP_Transport *transport = nullptr;
+   for(int i = 0; i < m_sockets.size(); i++)
+   {
+      if (m_sockets.get(i) == s)
+      {
+         transport = m_transports.get(i);
+         break;
+      }
+   }
+   if (transport == nullptr)
+      return CPR_COMPLETED;
+
+   // Message is authenticated and decrypted while being read, so configured SNMPv3 user has to be in place before that
+   s_credentialsLock.lock();
+   transport->setSecurityContext(s_usmContext);
+   s_credentialsLock.unlock();
+
+   SockAddrBuffer addr;
+   socklen_t addrLen = sizeof(SockAddrBuffer);
+   SNMP_PDU *pdu;
+   int bytes = transport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen);
+   if ((bytes > 0) && (pdu != nullptr))
+   {
+      InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
+      nxlog_debug_tag(DEBUG_TAG, 6, L"SNMP agent received PDU of type %d from %s", pdu->getCommand(), sourceAddr.toString().cstr());
+
+      if (!IsVersionAllowed(pdu->getVersion()))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv%hs request from %s rejected: version not allowed", SnmpVersionToName(pdu->getVersion()), sourceAddr.toString().cstr());
+      }
+      else if (pdu->getVersion() == SNMP_VERSION_3)
+      {
+         ProcessUsmRequest(transport, pdu, sourceAddr);
+      }
+      else
+      {
+         ProcessCommunityRequest(transport, pdu, sourceAddr);
+      }
+      delete pdu;
+   }
+   else
+   {
+      // Sleep on error
+      ThreadSleepMs(100);
+   }
+   return CPR_COMPLETED;
+}
+
+/**
  * SNMP request receiver thread
  */
 static void SNMPAgentReceiver()
 {
    ThreadSetName("SNMPD");
 
-   uint16_t snmpdPort = static_cast<uint16_t>(ConfigReadULong(_T("SNMP.Agent.ListenerPort"), 161));
-
-   SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
-#ifdef WITH_IPV6
-   SOCKET hSocket6 = CreateSocket(AF_INET6, SOCK_DGRAM, 0);
-#endif
-
-#ifdef WITH_IPV6
-   if ((hSocket == INVALID_SOCKET) && (hSocket6 == INVALID_SOCKET))
-#else
-   if (hSocket == INVALID_SOCKET)
-#endif
+   uint16_t snmpdPort = static_cast<uint16_t>(ConfigReadULong(L"SNMP.Agent.ListenerPort", 161));
+   SNMPAgentListener listener(snmpdPort);
+   listener.setListenAddress(g_szListenAddress);
+   if (!listener.initialize())
    {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to create socket for SNMP agent (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_debug_tag(DEBUG_TAG, 1, L"SNMP agent cannot start - cannot bind at least one socket");
       return;
    }
+   listener.createTransports();
 
-   SetSocketExclusiveAddrUse(hSocket);
-   SetSocketReuseFlag(hSocket);
-#ifndef _WIN32
-   fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
-#endif
-
-#ifdef WITH_IPV6
-   SetSocketExclusiveAddrUse(hSocket6);
-   SetSocketReuseFlag(hSocket6);
-#ifndef _WIN32
-   fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
-#endif
-#ifdef IPV6_V6ONLY
-   int on = 1;
-   setsockopt(hSocket6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
-#endif
-#endif
-
-   // Fill in local address structure
-   struct sockaddr_in servAddr;
-   memset(&servAddr, 0, sizeof(struct sockaddr_in));
-   servAddr.sin_family = AF_INET;
-
-#ifdef WITH_IPV6
-   struct sockaddr_in6 servAddr6;
-   memset(&servAddr6, 0, sizeof(struct sockaddr_in6));
-   servAddr6.sin6_family = AF_INET6;
-#endif
-   if (!_tcscmp(g_szListenAddress, _T("*")))
-   {
-      servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-#ifdef WITH_IPV6
-      memset(servAddr6.sin6_addr.s6_addr, 0, 16);
-#endif
-   }
-   else
-   {
-      InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
-      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
-      {
-         servAddr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
-      }
-      else
-      {
-         servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-      }
-#ifdef WITH_IPV6
-      bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET6);
-      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET6))
-      {
-         memcpy(servAddr6.sin6_addr.s6_addr, bindAddress.getAddressV6(), 16);
-      }
-      else
-      {
-         memset(servAddr6.sin6_addr.s6_addr, 0, 15);
-         servAddr6.sin6_addr.s6_addr[15] = 1;
-      }
-#endif
-   }
-   servAddr.sin_port = htons(snmpdPort);
-#ifdef WITH_IPV6
-   servAddr6.sin6_port = htons(snmpdPort);
-#endif
-
-   // Bind socket
-   TCHAR buffer[64];
-   int bindFailures = 0;
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
-   if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
-   {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv4 socket for SNMP agent (%s)"), GetLastSocketErrorText(buffer, 1024));
-      bindFailures++;
-      closesocket(hSocket);
-      hSocket = INVALID_SOCKET;
-   }
-
-#ifdef WITH_IPV6
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
-   if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
-   {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv6 socket for SNMP agent (%s)"), GetLastSocketErrorText(buffer, 1024));
-      bindFailures++;
-      closesocket(hSocket6);
-      hSocket6 = INVALID_SOCKET;
-   }
-#else
-   bindFailures++;
-#endif
-
-   // Abort if cannot bind to at least one socket
-   if (bindFailures == 2)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP agent cannot start - cannot bind at least one socket"));
-      return;
-   }
-
-   if (hSocket != INVALID_SOCKET)
-   {
-      TCHAR ipAddrText[64];
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening for SNMP requests on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), snmpdPort);
-   }
-#ifdef WITH_IPV6
-   if (hSocket6 != INVALID_SOCKET)
-   {
-      TCHAR ipAddrText[64];
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening for SNMP requests on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), snmpdPort);
-   }
-#endif
-
-   SNMP_Transport *snmp = CreateTransport(hSocket);
-#ifdef WITH_IPV6
-   SNMP_Transport *snmp6 = CreateTransport(hSocket6);
-#endif
-
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("SNMP agent started on port %u"), snmpdPort);
-
-   // Wait for packets
-   SocketPoller sp;
-   while(!IsShutdownInProgress())
-   {
-      sp.reset();
-      if (hSocket != INVALID_SOCKET)
-         sp.add(hSocket);
-#ifdef WITH_IPV6
-      if (hSocket6 != INVALID_SOCKET)
-         sp.add(hSocket6);
-#endif
-
-      int rc = sp.poll(1000);
-      if ((rc > 0) && !IsShutdownInProgress())
-      {
-         SockAddrBuffer addr;
-         socklen_t addrLen = sizeof(SockAddrBuffer);
-         SNMP_PDU *pdu;
-#ifdef WITH_IPV6
-         SNMP_Transport *transport = sp.isSet(hSocket) ? snmp : snmp6;
-#else
-         SNMP_Transport *transport = snmp;
-#endif
-         // Message is authenticated and decrypted while being read, so configured SNMPv3 user has to be in place before that
-         s_credentialsLock.lock();
-         transport->setSecurityContext(s_usmContext);
-         s_credentialsLock.unlock();
-
-         int bytes = transport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen);
-         if ((bytes > 0) && (pdu != nullptr))
-         {
-            InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
-            nxlog_debug_tag(DEBUG_TAG, 6, L"SNMP agent received PDU of type %d from %s", pdu->getCommand(), sourceAddr.toString().cstr());
-
-            if (!IsVersionAllowed(pdu->getVersion()))
-            {
-               nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv%hs request from %s rejected: version not allowed", SnmpVersionToName(pdu->getVersion()), sourceAddr.toString().cstr());
-            }
-            else if (pdu->getVersion() == SNMP_VERSION_3)
-            {
-               ProcessUsmRequest(transport, pdu, sourceAddr);
-            }
-            else
-            {
-               ProcessCommunityRequest(transport, pdu, sourceAddr);
-            }
-            delete pdu;
-         }
-         else
-         {
-            // Sleep on error
-            ThreadSleepMs(100);
-         }
-      }
-   }
-
-   delete snmp;
-#ifdef WITH_IPV6
-   delete snmp6;
-#endif
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("SNMP agent stopped"));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"SNMP agent started on port %u", snmpdPort);
+   listener.mainLoop();
+   nxlog_debug_tag(DEBUG_TAG, 1, L"SNMP agent stopped");
 }
 
 /**

@@ -24,6 +24,7 @@
 #include <nxcore_syslog.h>
 #include <nxcore_discovery.h>
 #include <nxlpapi.h>
+#include <socket_listener.h>
 
 #define DEBUG_TAG _T("syslog")
 
@@ -1061,200 +1062,72 @@ static void CreateParserFromConfig()
 }
 
 /**
+ * Syslog UDP listener
+ */
+class SyslogListener : public DatagramSocketListener
+{
+protected:
+   virtual bool isStopConditionReached() override
+   {
+      return !s_running;
+   }
+
+   virtual ConnectionProcessingResult processDatagram(SOCKET s) override;
+
+public:
+   SyslogListener(uint16_t port) : DatagramSocketListener(port)
+   {
+      setName(L"Syslog");
+   }
+};
+
+/**
+ * Process incoming syslog message
+ */
+ConnectionProcessingResult SyslogListener::processDatagram(SOCKET s)
+{
+   char syslogMessage[MAX_SYSLOG_MSG_LEN + 1];
+   SockAddrBuffer addr;
+   socklen_t addrLen = sizeof(SockAddrBuffer);
+   int bytes = recvfrom(s, syslogMessage, MAX_SYSLOG_MSG_LEN, 0, (struct sockaddr *)&addr, &addrLen);
+   if (bytes > 0)
+   {
+      syslogMessage[bytes] = 0;
+      QueueSyslogMessage(syslogMessage, bytes, InetAddress::createFromSockaddr((struct sockaddr *)&addr));
+   }
+   else
+   {
+      // Sleep on error
+      ThreadSleepMs(100);
+   }
+   return CPR_COMPLETED;
+}
+
+/**
  * Syslog messages receiver thread
  */
 static void SyslogReceiver()
 {
    ThreadSetName("SyslogReceiver");
 
-   SOCKET hSocket = CreateSocket(AF_INET, SOCK_DGRAM, 0);
-#ifdef WITH_IPV6
-   SOCKET hSocket6 = CreateSocket(AF_INET6, SOCK_DGRAM, 0);
-#endif
-
-#ifdef WITH_IPV6
-   if ((hSocket == INVALID_SOCKET) && (hSocket6 == INVALID_SOCKET))
-#else
-   if (hSocket == INVALID_SOCKET)
-#endif
-   {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Unable to create socket for syslog receiver (%s)", GetLastSocketErrorText(buffer, 1024));
-      return;
-   }
-
-	SetSocketExclusiveAddrUse(hSocket);
-	SetSocketReuseFlag(hSocket);
-#ifndef _WIN32
-   fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
-#endif
-
-#ifdef WITH_IPV6
-   SetSocketExclusiveAddrUse(hSocket6);
-   SetSocketReuseFlag(hSocket6);
-#ifndef _WIN32
-   fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
-#endif
-#ifdef IPV6_V6ONLY
-   int on = 1;
-   setsockopt(hSocket6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
-#endif
-#endif
-
-   // Get listen port number
-   int port = ConfigReadInt(_T("Syslog.ListenPort"), 514);
+   int port = ConfigReadInt(L"Syslog.ListenPort", 514);
    if ((port < 1) || (port > 65535))
    {
-      nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid syslog listen port number %d, using default"), port);
+      nxlog_debug_tag(DEBUG_TAG, 2, L"Invalid syslog listen port number %d, using default", port);
       port = 514;
    }
 
-   // Fill in local address structure
-   struct sockaddr_in servAddr;
-   memset(&servAddr, 0, sizeof(struct sockaddr_in));
-   servAddr.sin_family = AF_INET;
-
-#ifdef WITH_IPV6
-   struct sockaddr_in6 servAddr6;
-   memset(&servAddr6, 0, sizeof(struct sockaddr_in6));
-   servAddr6.sin6_family = AF_INET6;
-#endif
-
-   if (!_tcscmp(g_szListenAddress, _T("*")))
+   SyslogListener listener(static_cast<uint16_t>(port));
+   listener.setListenAddress(g_szListenAddress);
+   if (!listener.initialize())
    {
-      servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-#ifdef WITH_IPV6
-      memset(servAddr6.sin6_addr.s6_addr, 0, 16);
-#endif
-   }
-   else
-   {
-      InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
-      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
-      {
-         servAddr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
-      }
-      else
-      {
-         servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-      }
-#ifdef WITH_IPV6
-      bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET6);
-      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET6))
-      {
-         memcpy(servAddr6.sin6_addr.s6_addr, bindAddress.getAddressV6(), 16);
-      }
-      else
-      {
-         memset(servAddr6.sin6_addr.s6_addr, 0, 15);
-         servAddr6.sin6_addr.s6_addr[15] = 1;
-      }
-#endif
-   }
-   servAddr.sin_port = htons((UINT16)port);
-#ifdef WITH_IPV6
-   servAddr6.sin6_port = htons((UINT16)port);
-#endif
-
-   // Bind socket
-   TCHAR buffer[64];
-   int bindFailures = 0;
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
-   if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
-   {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv4 socket for syslog receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
-      bindFailures++;
-      closesocket(hSocket);
-      hSocket = INVALID_SOCKET;
-   }
-
-#ifdef WITH_IPV6
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
-   if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
-   {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to bind IPv6 socket for syslog receiver (%s)"), GetLastSocketErrorText(buffer, 1024));
-      bindFailures++;
-      closesocket(hSocket6);
-      hSocket6 = INVALID_SOCKET;
-   }
-#else
-   bindFailures++;
-#endif
-
-   // Abort if cannot bind to at least one socket
-   if (bindFailures == 2)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog receiver aborted - cannot bind at least one socket"));
+      nxlog_debug_tag(DEBUG_TAG, 1, L"Syslog receiver aborted - cannot bind at least one socket");
       return;
    }
 
-   if (hSocket != INVALID_SOCKET)
-   {
-      TCHAR ipAddrText[64];
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening for syslog messages on UDP socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), port);
-   }
-#ifdef WITH_IPV6
-   if (hSocket6 != INVALID_SOCKET)
-   {
-      TCHAR ipAddrText[64];
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Listening for syslog messages on UDP socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), port);
-   }
-#endif
-
-   SocketPoller sp;
-
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog receiver thread started"));
-
-   // Wait for packets
-   while(s_running)
-   {
-      sp.reset();
-      if (hSocket != INVALID_SOCKET)
-         sp.add(hSocket);
-#ifdef WITH_IPV6
-      if (hSocket6 != INVALID_SOCKET)
-         sp.add(hSocket6);
-#endif
-
-      int rc = sp.poll(1000);
-      if (rc > 0)
-      {
-         char syslogMessage[MAX_SYSLOG_MSG_LEN + 1];
-         SockAddrBuffer addr;
-         socklen_t addrLen = sizeof(SockAddrBuffer);
-#ifdef WITH_IPV6
-         SOCKET s = sp.isSet(hSocket) ? hSocket : hSocket6;
-#else
-         SOCKET s = hSocket;
-#endif
-         int bytes = recvfrom(s, syslogMessage, MAX_SYSLOG_MSG_LEN, 0, (struct sockaddr *)&addr, &addrLen);
-         if (bytes > 0)
-         {
-            syslogMessage[bytes] = 0;
-            QueueSyslogMessage(syslogMessage, bytes, InetAddress::createFromSockaddr((struct sockaddr *)&addr));
-         }
-         else
-         {
-            // Sleep on error
-            ThreadSleepMs(100);
-         }
-      }
-      else if (rc == -1)
-      {
-         // Sleep on error
-         ThreadSleepMs(100);
-      }
-   }
-
-   if (hSocket != INVALID_SOCKET)
-      closesocket(hSocket);
-#ifdef WITH_IPV6
-   if (hSocket6 != INVALID_SOCKET)
-      closesocket(hSocket6);
-#endif
-
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog receiver thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Syslog receiver thread started");
+   listener.mainLoop();
+   nxlog_debug_tag(DEBUG_TAG, 1, L"Syslog receiver thread stopped");
 }
 
 /**
