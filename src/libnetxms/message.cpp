@@ -1433,10 +1433,9 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
             case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
                {
-                  // Fields are not padded in protocol version 1, so string may be not aligned
-                  BYTE *value = reinterpret_cast<BYTE*>(field) + 12;
-                  for(uint32_t i = 0; i + 1 < field->df_string.length; i += 2)
-                     std::swap(value[i], value[i + 1]);
+SUPPRESS_WARNING_PACKED_PUSH
+                  bswap_array_16(field->df_string.value, field->df_string.length / 2);
+SUPPRESS_WARNING_PACKED_POP
                   field->df_string.length = htonl(field->df_string.length);
                }
 #endif
