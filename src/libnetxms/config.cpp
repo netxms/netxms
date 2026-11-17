@@ -1536,7 +1536,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
          ConfigEntry *parent = m_root;
          TCHAR *curr = &buffer[1];
          TCHAR *s;
-         do
+         while(true)
          {
             s = _tcschr(curr, _T('/'));
             if (s != nullptr)
@@ -1554,10 +1554,10 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
                   currentSection = new ConfigEntry(curr, parent, this, 0);
                }
             }
-            if (s != nullptr)
-               curr = s + 1;
+            if (s == nullptr)
+               break;
             parent = currentSection;
-         } while(s != nullptr);
+         }
       }
       else
       {
