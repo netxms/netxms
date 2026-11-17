@@ -51,7 +51,7 @@
 /**
  * Text returned by /text endpoint (contains non-ASCII characters to check UTF-8 handling)
  */
-static const char s_textBody[] = "Hello, world! Привет";
+static const char s_textBody[] = "Hello, world! \xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82";
 
 /**
  * Embedded HTTP server
@@ -485,7 +485,7 @@ static void TestSimpleGet()
       assert(resp.success == true, "success");
       assert(resp.statusCode == 200, "status code");
       assert(resp.errorMessage == null, "no error message");
-      assert(resp.body == "Hello, world! Привет", "body (UTF-8)");
+      assert(resp.body == "Hello, world! \u041F\u0440\u0438\u0432\u0435\u0442", "body (UTF-8)");
       assert(resp.bodySize == 26, "body size in bytes");
       assert(resp.contentType == "text/plain; charset=utf-8", "contentType");
       assert(resp.getHeader("Content-Type") == "text/plain; charset=utf-8", "getHeader is case-insensitive");
@@ -495,7 +495,7 @@ static void TestSimpleGet()
       assert(resp.url == BASE .. "/text", "effective URL");
       assert(resp.responseTime >= 0, "response time");
       assert(resp.json == null, "non-JSON body is not parsed");
-      assert(resp.body == "Hello, world! Привет", "body can be read repeatedly");
+      assert(resp.body == "Hello, world! \u041F\u0440\u0438\u0432\u0435\u0442", "body can be read repeatedly");
 
       // Second execution of the same request object
       resp2 = r.execute();
@@ -513,7 +513,7 @@ static void TestEcho()
    StartTest(_T("NXSL HTTP: request headers, body and user agent"));
    RunScript(LR"NXSL(
       r = new HttpRequest("POST", BASE .. "/echo?a=1&b=two");
-      r.body = "payload Привет";
+      r.body = "payload \u041F\u0440\u0438\u0432\u0435\u0442";
       r.setHeader("X-Custom", "value");
       r.setHeader("Content-Type", "text/plain; charset=utf-8");
       resp = r.execute();
@@ -521,7 +521,7 @@ static void TestEcho()
       j = resp.json;
       assert(j != null, "JSON response parsed");
       assert(j.method == "POST", "method");
-      assert(j.body == "payload Привет", "body");
+      assert(j.body == "payload \u041F\u0440\u0438\u0432\u0435\u0442", "body");
       assert(j.bodySize == 20, "body size in bytes");
       assert(j.headers.get("x-custom") == "value", "custom header");
       assert(j.headers.get("content-type") == "text/plain; charset=utf-8", "content type header");
@@ -722,7 +722,7 @@ static void TestRedirects()
       assert(resp.success, "redirect followed");
       assert(resp.statusCode == 200, "final status code");
       assert(resp.url == BASE .. "/text", "effective URL after redirect");
-      assert(resp.body == "Hello, world! Привет", "body from final location");
+      assert(resp.body == "Hello, world! \u041F\u0440\u0438\u0432\u0435\u0442", "body from final location");
       assert(resp.getHeader("X-Redirect") == null, "headers from intermediate response discarded");
       assert(resp.getHeader("Location") == null, "Location header from intermediate response discarded");
 
@@ -1277,7 +1277,7 @@ static void TestObjectLifetime()
       }
 
       m = { "req": new HttpRequest(BASE .. "/text"), "session": s };
-      assert(m["req"].execute().body == "Hello, world! Привет", "request from hash map");
+      assert(m["req"].execute().body == "Hello, world! \u041F\u0440\u0438\u0432\u0435\u0442", "request from hash map");
       assert(m["session"].get(BASE .. "/text").success, "session from hash map");
 
       // Response outlives request and session objects
