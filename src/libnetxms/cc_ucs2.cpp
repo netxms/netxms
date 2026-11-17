@@ -108,7 +108,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, ch
       }
       else if (codepoint <= 0x7FF)
       {
-         if (dcount > dstLen - 2)
+         if (dcount + 2 > dstLen)
             break;   // no enough space in destination buffer
          *d++ = static_cast<char>((codepoint >> 6) | 0xC0);
          *d++ = static_cast<char>((codepoint & 0x3F) | 0x80);
@@ -116,7 +116,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, ch
       }
       else if (codepoint <= 0xFFFF)
       {
-         if (dcount > dstLen - 3)
+         if (dcount + 3 > dstLen)
             break;   // no enough space in destination buffer
          *d++ = static_cast<char>((codepoint >> 12) | 0xE0);
          *d++ = static_cast<char>(((codepoint >> 6) & 0x3F) | 0x80);
@@ -125,7 +125,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, ssize_t srcLen, ch
       }
       else if (codepoint <= 0x10FFFF)
       {
-         if (dcount > dstLen - 4)
+         if (dcount + 4 > dstLen)
             break;   // no enough space in destination buffer
          *d++ = static_cast<char>((codepoint >> 18) | 0xF0);
          *d++ = static_cast<char>(((codepoint >> 12) & 0x3F) | 0x80);

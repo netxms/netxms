@@ -125,7 +125,7 @@ size_t LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, ssize_t srcLen, UCS2CH
       }
       else if (ch <= 0x10FFFF)
       {
-         if (dcount > dstLen - 2)
+         if (dcount + 2 > dstLen)
             break;   // no enough space in destination buffer
          ch -= 0x10000;
          *d++ = static_cast<UCS2CHAR>((ch >> 10) | 0xD800);

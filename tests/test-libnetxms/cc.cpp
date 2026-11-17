@@ -516,3 +516,46 @@ void TestStringConversion()
    MemFree(ucs4TextTest);
    EndTest();
 }
+
+/**
+ * Convert into destination of given length placed at the end of heap block, so that address sanitizer detects writes
+ * past it; guard element after destination catches them in other builds. Returns true if destination was not overrun.
+ */
+template<typename S, typename D> static bool ConvertIntoSmallBuffer(size_t (*converter)(const S*, ssize_t, D*, size_t), const S *src, ssize_t srcLen, size_t dstLen)
+{
+   D *buffer = MemAllocArrayNoInit<D>(dstLen + 1);
+   memset(buffer, 0x7F, (dstLen + 1) * sizeof(D));
+   D guard = buffer[dstLen];
+   size_t count = converter(src, srcLen, buffer, dstLen);
+   bool success = (count <= dstLen) && (buffer[dstLen] == guard);
+   MemFree(buffer);
+   return success;
+}
+
+/**
+ * Test string conversion into buffers shorter than one encoded character
+ */
+void TestStringConversionSmallBuffers()
+{
+   static const UCS2CHAR ucs2Text[] = { 'a', 0x0444, 0x20AC, 0xD83D, 0xDE00, 0 };
+   static const UCS4CHAR ucs4Text[] = { 'a', 0x0444, 0x20AC, 0x1F600, 0 };
+   static const char utf8Text[] = "a\xD1\x84\xE2\x82\xAC\xF0\x9F\x98\x80";
+
+   StartTest(_T("String conversion into small buffers"));
+   for(size_t dstLen = 1; dstLen <= 8; dstLen++)
+   {
+      for(size_t offset = 0; offset < 4; offset++)
+      {
+         AssertTrue(ConvertIntoSmallBuffer(ucs2_to_utf8, &ucs2Text[offset], 5 - offset, dstLen));
+         AssertTrue(ConvertIntoSmallBuffer(ucs2_to_utf8, &ucs2Text[offset], -1, dstLen));
+         AssertTrue(ConvertIntoSmallBuffer(ucs4_to_utf8, &ucs4Text[offset], 4 - offset, dstLen));
+         AssertTrue(ConvertIntoSmallBuffer(ucs4_to_utf8, &ucs4Text[offset], -1, dstLen));
+         AssertTrue(ConvertIntoSmallBuffer(ucs4_to_ucs2, &ucs4Text[offset], 4 - offset, dstLen));
+         AssertTrue(ConvertIntoSmallBuffer(ucs4_to_ucs2, &ucs4Text[offset], -1, dstLen));
+      }
+      AssertTrue(ConvertIntoSmallBuffer(utf8_to_ucs2, utf8Text, strlen(utf8Text), dstLen));
+      AssertTrue(ConvertIntoSmallBuffer(utf8_to_ucs2, &utf8Text[6], 4, dstLen));
+      AssertTrue(ConvertIntoSmallBuffer(utf8_to_ucs2, &utf8Text[6], -1, dstLen));
+   }
+   EndTest();
+}

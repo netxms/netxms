@@ -47,7 +47,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const UCS4CHAR *src, ssize_t srcLen, UC
       }
       else if (ch <= 0x10FFFF)
       {
-         if (dcount > dstLen - 2)
+         if (dcount + 2 > dstLen)
             break;   // no enough space in destination buffer
          ch -= 0x10000;
          *d++ = static_cast<UCS2CHAR>((ch >> 10) | 0xD800);
@@ -98,7 +98,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, ssize_t srcLen, ch
       }
       else if (ch <= 0x7FF)
       {
-         if (dcount > dstLen - 2)
+         if (dcount + 2 > dstLen)
             break;   // no enough space in destination buffer
          *d++ = static_cast<char>((ch >> 6) | 0xC0);
          *d++ = static_cast<char>((ch & 0x3F) | 0x80);
@@ -106,7 +106,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, ssize_t srcLen, ch
       }
       else if (ch <= 0xFFFF)
       {
-         if (dcount > dstLen - 3)
+         if (dcount + 3 > dstLen)
             break;   // no enough space in destination buffer
 
          // Ignore UTF-16 surrogate halves
@@ -120,7 +120,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_utf8(const UCS4CHAR *src, ssize_t srcLen, ch
       }
       else if (ch <= 0x10FFFF)
       {
-         if (dcount > dstLen - 4)
+         if (dcount + 4 > dstLen)
             break;   // no enough space in destination buffer
          *d++ = static_cast<char>((ch >> 18) | 0xF0);
          *d++ = static_cast<char>(((ch >> 12) & 0x3F) | 0x80);
