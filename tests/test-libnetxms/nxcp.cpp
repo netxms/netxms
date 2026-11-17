@@ -822,6 +822,32 @@ void TestMessageReceiverBuffer()
    }
    EndTest();
 
+   StartTest(_T("Message receiver - invalid size of decrypted message"));
+   {
+      static const uint32_t invalidSizes[] = { 0, 8, 20 };
+      for(size_t i = 0; i < sizeof(invalidSizes) / sizeof(uint32_t); i++)
+      {
+         BYTE inner[64];
+         memset(inner, 0, sizeof(inner));
+         NXCP_MESSAGE *header = reinterpret_cast<NXCP_MESSAGE*>(inner);
+         header->code = htons(CMD_REQUEST_COMPLETED);
+         header->flags = htons(MF_CONTROL);
+         header->size = htonl(invalidSizes[i]);
+         NXCP_ENCRYPTED_MESSAGE *e = ectx->encryptMessage(header);
+
+         TestMessageReceiver receiver(4096, 4096);
+         receiver.setEncryptionContext(ectx);
+         receiver.append(e);
+         receiver.append(e1);
+         receiver.endBlock();
+         AssertNoMessage(&receiver, MSGRECV_DECRYPTION_FAILURE);
+         AssertNextMessage(&receiver, m1);
+         AssertNoMessage(&receiver, MSGRECV_CLOSED);
+         MemFree(e);
+      }
+   }
+   EndTest();
+
    MemFree(e1);
    MemFree(e3);
    MemFree(m1);

@@ -181,11 +181,14 @@ it is parsed; a violation is reported the way a decryption failure is. Where the
 implementer's choice: `decryptMessage()` already rejects one inconsistent case, so extending it keeps the
 checks together.
 
-- [ ] failing unit test: envelopes built with a test context whose inner message violates the contract are
+- [x] failing unit test: envelopes built with a test context whose inner message violates the contract are
       rejected by the receiver with a decryption or protocol error
-- [ ] valid encrypted messages still pass, including the existing encrypted file transfer test
-- [ ] `test-libnetxms` passes in normal and `--enable-sanitizer` builds
-- [ ] ticket updated with the fix commit
+- [x] valid encrypted messages still pass, including the existing encrypted file transfer test
+- [x] `test-libnetxms` passes in normal and `--enable-sanitizer` builds
+- [ ] ticket updated with the fix commit (left to the user, see Tandem)
+- ➕ The check is in `decryptMessage()` and is bounded by the number of bytes actually decrypted, not by the
+  envelope size: the old envelope bound let the checksum run past the decrypted data. An envelope whose
+  padding byte exceeds its size is rejected before decryption.
 
 ### Task 4: Per-request MemoryPool regions under address sanitizer
 
