@@ -199,6 +199,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
    m_prevDeltaValue = shadowCopy ? src->m_prevDeltaValue : 0;
    m_cacheLoaded = shadowCopy ? src->m_cacheLoaded : false;
    m_anomalyDetected = shadowCopy ? src->m_anomalyDetected : false;
+   m_anomalyTrainingRequestTime = 0;
    m_anomalySettings = src->m_anomalySettings;
    if (shadowCopy)
    {
@@ -286,6 +287,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
+   m_anomalyTrainingRequestTime = 0;
    m_flags = DBGetFieldUInt32(hResult, row, 13);
 	m_resourceId = DBGetFieldUInt32(hResult, row, 14);
 	m_sourceNode = DBGetFieldUInt32(hResult, row, 15);
@@ -390,6 +392,7 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
+   m_anomalyTrainingRequestTime = 0;
    m_anomalyTuning = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_anomalyBaselineStart = 0;
@@ -426,6 +429,7 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
+   m_anomalyTrainingRequestTime = 0;
    m_anomalyTuning = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_anomalyBaselineStart = 0;
@@ -487,6 +491,7 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, Impor
    m_prevDeltaValue = 0;
    m_cacheLoaded = false;
    m_anomalyDetected = false;
+   m_anomalyTrainingRequestTime = 0;
    m_anomalyTuning = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_anomalyBaselineStart = 0;
@@ -4160,11 +4165,61 @@ void DCItem::reloadAnomalyProfile(json_t *profile, time_t timestamp, time_t base
 }
 
 /**
+ * Maximum age of anomaly model, in seconds. Scheduled training updates models every day, so older model
+ * means that it was skipped by scheduled training.
+ */
+#define ANOMALY_MODEL_MAX_AGE                172800
+
+/**
+ * Minimum interval between model training requests made by DCI itself, in seconds
+ */
+#define ANOMALY_TRAINING_REQUEST_INTERVAL    3600
+
+/**
+ * Request model training if there is no model, model was not updated by scheduled training (detection was
+ * enabled or server was down at that time), or model was trained for different detection mode. This way
+ * change of configuration takes effect on next collected value, whatever way configuration was changed.
+ * Should be called with DCI locked.
+ */
+void DCItem::requestAnomalyModelTraining()
+{
+   time_t now = time(nullptr);
+   if ((m_anomalyModel != nullptr) && (now - m_anomalyProfileTimestamp < ANOMALY_MODEL_MAX_AGE) &&
+       (m_anomalyModel->getRequestedMode() == GetAnomalyTrainingMode(m_anomalySettings, (m_flags & DCF_DETECT_ANOMALIES_AI) ? m_anomalyTuning : nullptr)))
+      return;
+
+   if (now - m_anomalyTrainingRequestTime < ANOMALY_TRAINING_REQUEST_INTERVAL)
+      return;
+
+   m_anomalyTrainingRequestTime = now;
+   TrainAnomalyModelAsync(m_id, m_ownerId);
+}
+
+/**
  * Check new value for being an anomaly. Should be called with DCI locked, for values in chronological order.
  */
 void DCItem::checkForAnomaly(Timestamp timestamp, const ItemValue& value)
 {
-   if (!isAnomalyDetectionEnabled() || (m_anomalyModel == nullptr))
+   if (!isAnomalyDetectionEnabled())
+   {
+      // Model and detector state would be outdated by the time detection is enabled again
+      if (m_anomalyModel != nullptr)
+      {
+         m_anomalyModel.reset();
+         m_anomalyProfileTimestamp = 0;
+      }
+      if (m_anomalyState.lastTimestamp != 0)
+      {
+         m_anomalyState.reset();
+         saveAnomalyDetectorState();
+      }
+      m_anomalyDetected = false;
+      clearAnomalyScore();
+      return;
+   }
+
+   requestAnomalyModelTraining();
+   if (m_anomalyModel == nullptr)
    {
       m_anomalyDetected = false;
       clearAnomalyScore();

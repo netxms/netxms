@@ -485,18 +485,19 @@ static json_t *RequestTuning(const DCItem& dci, const DataCollectionTarget& owne
 }
 
 /**
- * Use detection mode suggested by LLM if mode is not set explicitly
+ * Get detection mode to request from training: configured mode, or mode suggested by LLM if mode is not set explicitly
  */
-static void ApplyTunedMode(AnomalySettings *settings, json_t *tuning)
+AnomalyDetectionMode GetAnomalyTrainingMode(const AnomalySettings& settings, json_t *tuning)
 {
-   if (settings->mode != AnomalyDetectionMode::AUTO)
-      return;
+   if (settings.mode != AnomalyDetectionMode::AUTO)
+      return settings.mode;
 
    const char *mode = json_object_get_string_utf8(tuning, "mode", "");
    if (!strcmp(mode, "value"))
-      settings->mode = AnomalyDetectionMode::VALUE;
-   else if (!strcmp(mode, "rate"))
-      settings->mode = AnomalyDetectionMode::RATE;
+      return AnomalyDetectionMode::VALUE;
+   if (!strcmp(mode, "rate"))
+      return AnomalyDetectionMode::RATE;
+   return AnomalyDetectionMode::AUTO;
 }
 
 /**
@@ -552,7 +553,7 @@ static bool TrainAnomalyModel(const shared_ptr<DCItem>& dci, const shared_ptr<Da
 
    json_t *tuning = dci->isAnomalyTuningEnabled() ? dci->getAnomalyTuning() : nullptr;
    AnomalySettings trainingSettings = settings;
-   ApplyTunedMode(&trainingSettings, tuning);
+   trainingSettings.mode = GetAnomalyTrainingMode(settings, tuning);
 
    shared_ptr<AnomalyModel> model = AnomalyModel::train(hourly, raw, trainingSettings);
    if (model == nullptr)
@@ -571,9 +572,8 @@ static bool TrainAnomalyModel(const shared_ptr<DCItem>& dci, const shared_ptr<Da
          json_decref(tuning);
          tuning = newTuning;
 
-         trainingSettings = settings;
-         ApplyTunedMode(&trainingSettings, tuning);
-         if ((trainingSettings.mode != AnomalyDetectionMode::AUTO) && (trainingSettings.mode != model->getMode()))
+         trainingSettings.mode = GetAnomalyTrainingMode(settings, tuning);
+         if (trainingSettings.mode != model->getRequestedMode())
             model = AnomalyModel::train(hourly, raw, trainingSettings);
       }
    }
@@ -681,7 +681,7 @@ json_t *DetectAnomalies(const DataCollectionTarget& owner, uint32_t dciId, time_
    if (dci.isAnomalyTuningEnabled())
    {
       json_t *tuning = dci.getAnomalyTuning();
-      ApplyTunedMode(&trainingSettings, tuning);
+      trainingSettings.mode = GetAnomalyTrainingMode(settings, tuning);
       json_decref(tuning);
    }
 
@@ -849,6 +849,50 @@ static inline void GetTrainingQueueKey(uint32_t ownerId, wchar_t *key)
 }
 
 /**
+ * Find DCI for background training
+ */
+static shared_ptr<DCItem> FindDCIForTraining(uint32_t dciId, uint32_t ownerId, shared_ptr<DataCollectionTarget> *owner)
+{
+   shared_ptr<NetObj> object = FindObjectById(ownerId);
+   if ((object == nullptr) || !object->isDataCollectionTarget())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot train anomaly model: object [%u] not found or is not a data collection target", ownerId);
+      return shared_ptr<DCItem>();
+   }
+
+   *owner = static_pointer_cast<DataCollectionTarget>(object);
+   shared_ptr<DCObject> dco = (*owner)->getDCObjectById(dciId, 0);
+   if ((dco == nullptr) || (dco->getType() != DCO_TYPE_ITEM))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot train anomaly model: DCI [%u] not found on object [%u]", dciId, ownerId);
+      return shared_ptr<DCItem>();
+   }
+   return static_pointer_cast<DCItem>(dco);
+}
+
+/**
+ * Train anomaly model of given DCI in background, on data selected by current baseline. Used when
+ * DCI finds that it has no model that matches its configuration (see DCItem::checkForAnomaly).
+ */
+void TrainAnomalyModelAsync(uint32_t dciId, uint32_t ownerId)
+{
+   wchar_t key[32];
+   GetTrainingQueueKey(ownerId, key);
+   ThreadPoolExecuteSerialized(g_mainThreadPool, key,
+      [dciId, ownerId] () -> void
+      {
+         shared_ptr<DataCollectionTarget> owner;
+         shared_ptr<DCItem> dci = FindDCIForTraining(dciId, ownerId, &owner);
+         if (dci == nullptr)
+            return;
+
+         nxlog_debug_tag(DEBUG_TAG, 5, L"DCI \"%s\" [%u] on %s [%u]: model is missing, outdated, or does not match configuration",
+            dci->getName().cstr(), dciId, owner->getName(), ownerId);
+         TrainAnomalyModel(dci, owner, false);
+      });
+}
+
+/**
  * Start new baseline for anomaly detection on given DCI and train new model in background.
  * See DCItem::startNewAnomalyBaseline() for baseline selection.
  */
@@ -859,22 +903,11 @@ void NXCORE_EXPORTABLE RegenerateAnomalyProfileAsync(uint32_t dciId, uint32_t ow
    ThreadPoolExecuteSerialized(g_mainThreadPool, key,
       [dciId, ownerId] () -> void
       {
-         shared_ptr<NetObj> object = FindObjectById(ownerId);
-         if ((object == nullptr) || !object->isDataCollectionTarget())
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, L"RegenerateAnomalyProfileAsync: object [%u] not found or is not a data collection target", ownerId);
+         shared_ptr<DataCollectionTarget> owner;
+         shared_ptr<DCItem> dci = FindDCIForTraining(dciId, ownerId, &owner);
+         if (dci == nullptr)
             return;
-         }
 
-         shared_ptr<DataCollectionTarget> owner = static_pointer_cast<DataCollectionTarget>(object);
-         shared_ptr<DCObject> dco = owner->getDCObjectById(dciId, 0);
-         if ((dco == nullptr) || (dco->getType() != DCO_TYPE_ITEM))
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, L"RegenerateAnomalyProfileAsync: DCI [%u] not found on object [%u]", dciId, ownerId);
-            return;
-         }
-
-         shared_ptr<DCItem> dci = static_pointer_cast<DCItem>(dco);
          time_t baselineStart = dci->startNewAnomalyBaseline();
          nxlog_debug_tag(DEBUG_TAG, 4, L"DCI \"%s\" [%u] on %s [%u]: profile regeneration requested (baseline starts at " INT64_FMT L")",
             dci->getName().cstr(), dciId, owner->getName(), ownerId, static_cast<int64_t>(baselineStart));

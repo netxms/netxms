@@ -205,6 +205,15 @@ stored with the model as `tuning`.
 - Scheduled training replaces the model and keeps level shift detector state, unless the mode of
   the model has changed.
 - If a new model cannot be trained (no data, database error), the existing one is kept.
+- A DCI requests training of its own model when a value is collected and the DCI has no model, the
+  model is older than two days (scheduled training did not update it: detection was just enabled,
+  or the server was down), or the model was trained for a detection mode other than the configured
+  one (the model records the mode training was requested with). So enabling anomaly detection or
+  changing the mode takes effect on the next collected value and does not wait for scheduled
+  training, whatever way the configuration was changed. Baseline start is not changed. Such
+  requests are made at most once per hour per DCI.
+- When anomaly detection is disabled for a DCI, its model and level shift detector state are
+  dropped on the next collected value, so they are not reused if detection is enabled again later.
 
 ### Starting new baseline
 

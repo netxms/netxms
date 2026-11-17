@@ -128,6 +128,7 @@ class NXCORE_EXPORTABLE AnomalyModel
 {
 private:
    AnomalyDetectionMode m_mode;     // VALUE or RATE
+   AnomalyDetectionMode m_requestedMode;  // mode that training was requested with (AUTO if mode was selected by training)
    time_t m_trainedFrom;
    time_t m_trainedTo;
    int32_t m_trainingDays;          // distinct local days with data
@@ -155,6 +156,7 @@ public:
    String describeSlot(time_t timestamp) const;
 
    AnomalyDetectionMode getMode() const { return m_mode; }
+   AnomalyDetectionMode getRequestedMode() const { return m_requestedMode; }
    time_t getTrainedFrom() const { return m_trainedFrom; }
    time_t getTrainedTo() const { return m_trainedTo; }
    int32_t getTrainingDays() const { return m_trainingDays; }

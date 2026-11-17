@@ -627,6 +627,7 @@ protected:
    AnomalyDetectorState m_anomalyState;
    AnomalyScore m_anomalyScore;        // Result of scoring last value
    time_t m_anomalyScoreTimestamp;     // Timestamp of last scored value
+   time_t m_anomalyTrainingRequestTime;   // Time of last model training request made by the DCI itself
    SharedString m_aiHint;              // Hint for LLM tuning of anomaly detection
 	int m_multiplier;
 	SharedString m_unitName;
@@ -665,6 +666,7 @@ protected:
    void setAnomalyProfileFromJson(json_t *profile, time_t timestamp);
    void updateAnomalyEffectiveSettings();
    void clearAnomalyScore();
+   void requestAnomalyModelTraining();
    void checkForAnomaly(Timestamp timestamp, const ItemValue& value);
    void saveAnomalyDetectorState() const;
    void addAnomalyEventParameters(EventBuilder *builder, const Threshold& threshold) const;
@@ -1258,6 +1260,8 @@ void CalculateItemValueMin(ItemValue *result, int dataType, const ItemValue *con
 void CalculateItemValueMax(ItemValue *result, int dataType, const ItemValue *const *valueList, size_t sampleCount);
 
 json_t *DetectAnomalies(const DataCollectionTarget& owner, uint32_t dciId, time_t timeFrom, time_t timeTo, const std::vector<std::pair<time_t, time_t>>& labels);
+AnomalyDetectionMode GetAnomalyTrainingMode(const AnomalySettings& settings, json_t *tuning);
+void TrainAnomalyModelAsync(uint32_t dciId, uint32_t ownerId);
 void NXCORE_EXPORTABLE RegenerateAnomalyProfileAsync(uint32_t dciId, uint32_t ownerId);
 bool ReloadAnomalyProfiles();
 

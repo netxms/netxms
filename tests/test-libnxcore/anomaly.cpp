@@ -489,6 +489,7 @@ static void TestMonotoneSeries()
    shared_ptr<AnomalyModel> model = Train(series, settings);
    AssertNotNull(model.get());
    AssertTrue(model->getMode() == AnomalyDetectionMode::RATE);
+   AssertTrue(model->getRequestedMode() == AnomalyDetectionMode::AUTO);
    AssertTrue(model->getStepScale() == 0);
 
    const AnomalySample& last = series[series.size() - 1];
@@ -513,6 +514,19 @@ static void TestMonotoneSeries()
    model = Train(series, settings);
    AssertNotNull(model.get());
    AssertTrue(model->getMode() == AnomalyDetectionMode::VALUE);
+   AssertTrue(model->getRequestedMode() == AnomalyDetectionMode::VALUE);
+
+   // Requested mode is kept in serialized model; model saved without it is treated as trained in automatic mode
+   json_t *json = model->toJson();
+   shared_ptr<AnomalyModel> copy = AnomalyModel::createFromJson(json);
+   AssertNotNull(copy.get());
+   AssertTrue(copy->getRequestedMode() == AnomalyDetectionMode::VALUE);
+   json_object_del(json, "requestedMode");
+   copy = AnomalyModel::createFromJson(json);
+   json_decref(json);
+   AssertNotNull(copy.get());
+   AssertTrue(copy->getMode() == AnomalyDetectionMode::VALUE);
+   AssertTrue(copy->getRequestedMode() == AnomalyDetectionMode::AUTO);
 
    EndTest();
 }

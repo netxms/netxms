@@ -407,6 +407,7 @@ bool AnomalySettings::isDefault() const
 AnomalyModel::AnomalyModel()
 {
    m_mode = AnomalyDetectionMode::VALUE;
+   m_requestedMode = AnomalyDetectionMode::AUTO;
    m_trainedFrom = 0;
    m_trainedTo = 0;
    m_trainingDays = 0;
@@ -446,6 +447,7 @@ shared_ptr<AnomalyModel> AnomalyModel::createFromJson(json_t *json)
 
    auto model = make_shared<AnomalyModel>();
    model->m_mode = (IndexFromName(json_object_get_string_utf8(json, "mode", nullptr), s_modeNames, 3, 1) == 2) ? AnomalyDetectionMode::RATE : AnomalyDetectionMode::VALUE;
+   model->m_requestedMode = static_cast<AnomalyDetectionMode>(IndexFromName(json_object_get_string_utf8(json, "requestedMode", nullptr), s_modeNames, 3, 0));
    model->m_trainedFrom = static_cast<time_t>(json_object_get_int64(json, "trainedFrom"));
    model->m_trainedTo = static_cast<time_t>(json_object_get_int64(json, "trainedTo"));
    model->m_trainingDays = json_object_get_int32(json, "trainingDays");
@@ -484,6 +486,7 @@ json_t *AnomalyModel::toJson() const
    json_object_set_new(json, "provider", provider);
 
    json_object_set_new(json, "mode", json_string(s_modeNames[static_cast<int>(m_mode)]));
+   json_object_set_new(json, "requestedMode", json_string(s_modeNames[static_cast<int>(m_requestedMode)]));
    json_object_set_new(json, "trainedFrom", json_integer(m_trainedFrom));
    json_object_set_new(json, "trainedTo", json_integer(m_trainedTo));
    json_object_set_new(json, "trainingDays", json_integer(m_trainingDays));
@@ -707,6 +710,7 @@ shared_ptr<AnomalyModel> AnomalyModel::train(const std::vector<AnomalySample>& h
 
    auto model = make_shared<AnomalyModel>();
    model->m_mode = mode;
+   model->m_requestedMode = settings.mode;
    model->m_trainedFrom = hourly[0].timestamp;
    model->m_trainedTo = hourly[hourly.size() - 1].timestamp;
    model->m_hourlySamples = static_cast<int32_t>(hourly.size());
