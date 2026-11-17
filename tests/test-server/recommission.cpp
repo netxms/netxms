@@ -126,6 +126,27 @@ void TestRecommission()
 
    EndTest();
 
+   StartTest(_T("Repeated maintenance mode enter and leave"));
+
+   // Second enter must keep state saved on first entry
+   node->enterMaintenanceMode(0, _T("test"));
+   AssertTrue(node->isInMaintenanceMode());
+   uint64_t maintenanceEventId = node->getMaintenanceEventId();
+   AssertTrue(maintenanceEventId != 0);
+   node->enterMaintenanceMode(0, _T("test"));
+   AssertTrue(node->isInMaintenanceMode());
+   AssertEquals(node->getMaintenanceEventId(), maintenanceEventId);
+
+   // Second leave must be ignored
+   node->leaveMaintenanceMode(0);
+   AssertFalse(node->isInMaintenanceMode());
+   AssertEquals(node->getMaintenanceEventId(), static_cast<uint64_t>(0));
+   node->leaveMaintenanceMode(0);
+   AssertFalse(node->isInMaintenanceMode());
+   AssertEquals(node->getMaintenanceEventId(), static_cast<uint64_t>(0));
+
+   EndTest();
+
    StartTest(_T("RECOMMISSION console command"));
 
    TCHAR command[256];
