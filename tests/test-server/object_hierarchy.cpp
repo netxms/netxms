@@ -67,7 +67,7 @@ static void TestRackCoolingZoneRule()
  */
 static void TestPowerDomainFacilityRule()
 {
-   StartTest(_T("Power domain with facility parent and power domain parent from different facility"));
+   StartTest(_T("Power domain with facility and power domain parent inconcictency"));
 
    shared_ptr<Facility> facility1 = CreateObject<Facility>(_T("facility-1"));
    shared_ptr<Facility> facility2 = CreateObject<Facility>(_T("facility-2"));

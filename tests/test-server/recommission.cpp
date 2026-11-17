@@ -175,7 +175,7 @@ void TestRecommission()
 
    EndTest();
 
-   StartTest(_T("Decommission with IP address cleanup releases address"));
+   StartTest(_T("Decommission with IP address cleanup"));
 
    InetAddress address = InetAddress::parse(_T("10.255.255.22"));
    NewNodeData data2(address);
@@ -193,13 +193,13 @@ void TestRecommission()
 
    EndTest();
 
-   StartTest(_T("Decommission with IP address cleanup releases interface addresses"));
+   StartTest(_T("Decommission with IP address cleanup (interface addresses)"));
    AssertTrue(IsZoningEnabled());
    CheckInterfaceAddressRelease(_T("10.255.255.23"));
    EndTest();
 
    // Zoning is enabled by default; run the same check with zoning disabled
-   StartTest(_T("Decommission with IP address cleanup releases interface addresses without zoning"));
+   StartTest(_T("Decommission with IP address cleanup (interface addresses w/o zoning)"));
    g_flags &= ~AF_ENABLE_ZONING;
    CheckInterfaceAddressRelease(_T("10.255.255.24"));
    g_flags |= AF_ENABLE_ZONING;

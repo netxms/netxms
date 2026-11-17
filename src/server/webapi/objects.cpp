@@ -1310,6 +1310,134 @@ int H_ObjectSetManaged(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/decommission
+ */
+int H_ObjectDecommission(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   // Decommissioned node is deleted by housekeeper, so same access rights as for delete are required
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_DELETE))
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on decommission node %s", object->getName());
+      return 403;
+   }
+
+   if (object->getObjectClass() != OBJECT_NODE)
+   {
+      context->setErrorResponse("Only nodes can be decommissioned");
+      return 400;
+   }
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"H_ObjectDecommission: empty request");
+      return 400;
+   }
+
+   time_t now = time(nullptr);
+   time_t expirationTime;
+   json_t *expirationTimeField = json_object_get(request, "expirationTime");
+   if (expirationTimeField == nullptr)
+   {
+      expirationTime = now + static_cast<time_t>(ConfigReadInt(L"Objects.Nodes.DefaultDecommissionExpirationTime", 30)) * 86400;
+   }
+   else if (json_is_integer(expirationTimeField))
+   {
+      expirationTime = static_cast<time_t>(json_integer_value(expirationTimeField));
+   }
+   else if (json_is_string(expirationTimeField))
+   {
+      expirationTime = ParseTimestamp(json_string_value(expirationTimeField), -1);
+      if (expirationTime == -1)
+      {
+         context->setErrorResponse("Invalid expirationTime format");
+         return 400;
+      }
+   }
+   else
+   {
+      context->setErrorResponse("Invalid expirationTime format");
+      return 400;
+   }
+
+   if (expirationTime <= now)
+   {
+      context->setErrorResponse("Expiration time must be in the future");
+      return 400;
+   }
+   // Decommission time is stored in database as 32 bit integer
+   if (expirationTime > 0x7FFFFFFF)
+   {
+      context->setErrorResponse("Expiration time is out of range");
+      return 400;
+   }
+
+   json_t *clearIpAddressesField = json_object_get(request, "clearIpAddresses");
+   if ((clearIpAddressesField != nullptr) && !json_is_boolean(clearIpAddressesField))
+   {
+      context->setErrorResponse("Invalid clearIpAddresses value");
+      return 400;
+   }
+   bool clearIpAddresses = json_is_true(clearIpAddressesField);
+
+   static_cast<Node&>(*object).decommission(expirationTime, clearIpAddresses);
+   context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Node %s decommissioned, expiration time %u, clear IP addresses: %s",
+      object->getName(), static_cast<uint32_t>(expirationTime), clearIpAddresses ? L"yes" : L"no");
+
+   json_t *response = json_object();
+   json_object_set_new(response, "expirationTime", json_time_string(expirationTime));
+   json_object_set_new(response, "clearIpAddresses", json_boolean(clearIpAddresses));
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
+ * Handler for /v1/objects/:object-id/recommission
+ */
+int H_ObjectRecommission(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   // Recommission cancels pending deletion, so same access rights as for decommission are required
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_DELETE))
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on recommission node %s", object->getName());
+      return 403;
+   }
+
+   if (object->getObjectClass() != OBJECT_NODE)
+   {
+      context->setErrorResponse("Only nodes can be recommissioned");
+      return 400;
+   }
+
+   if (!static_cast<Node&>(*object).isDecommissioned())
+   {
+      context->setErrorResponse("Node is not decommissioned");
+      return 409;
+   }
+
+   static_cast<Node&>(*object).recommission();
+   context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Node %s recommissioned", object->getName());
+   return 204;
+}
+
+/**
  * Handler for /v1/objects/:object-id/wake-up
  */
 int H_ObjectWakeUp(Context *context)

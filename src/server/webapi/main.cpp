@@ -276,6 +276,8 @@ int H_RoomFloorPlan(Context *context);
 int H_RoomPassiveElementCreate(Context *context);
 int H_RoomPassiveElementUpdate(Context *context);
 int H_RoomPassiveElementDelete(Context *context);
+int H_ObjectDecommission(Context *context);
+int H_ObjectRecommission(Context *context);
 int H_ObjectSetMaintenance(Context *context);
 int H_ObjectSetManaged(Context *context);
 int H_ObjectStatusExplanation(Context *context);
@@ -1031,6 +1033,9 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/device-config-backups/:backup-id")
       .GET(H_DeviceConfigBackupDetails)
       .build();
+   RouteBuilder("v1/objects/:object-id/decommission")
+      .POST(H_ObjectDecommission)
+      .build();
    RouteBuilder("v1/objects/:object-id/execute-agent-command")
       .POST(H_ObjectExecuteAgentCommand)
       .build();
@@ -1048,6 +1053,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/ssh-terminal")
       .POST(H_ObjectSshTerminalCreate)  // Open SSH channel, get WebSocket token
+      .build();
+   RouteBuilder("v1/objects/:object-id/recommission")
+      .POST(H_ObjectRecommission)
       .build();
    RouteBuilder("v1/objects/:object-id/restore-device-config")
       .POST(H_DeviceConfigRestore)
