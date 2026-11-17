@@ -7021,6 +7021,69 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/decommission:
+    post:
+      operationId: decommissionNode
+      summary: Decommission node
+      description: >-
+        Mark node for deletion. Node is set to unmanaged state immediately and deleted by housekeeper after expiration
+        time. Calling this endpoint for already decommissioned node updates its expiration time. Requires delete access
+        to the node.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expirationTime:
+                  oneOf:
+                    - type: integer
+                    - type: string
+                  description: >-
+                    Time when node will be deleted - UNIX timestamp, ISO 8601 string, or relative time ("+30d"). Must be
+                    in the future. If omitted, current time plus number of days set by server configuration variable
+                    Objects.Nodes.DefaultDecommissionExpirationTime is used.
+                clearIpAddresses:
+                  type: boolean
+                  default: false
+                  description: >-
+                    Clear primary IP address of the node and IP addresses of its interfaces and remove them from address
+                    indexes, so these addresses can be used by other nodes before decommissioned node is deleted.
+                    Addresses are not restored if node is recommissioned (see `POST /v1/objects/{object-id}/recommission`).
+      responses:
+        '200':
+          description: Node decommissioned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  expirationTime:
+                    type: string
+                    format: date-time
+                    description: Time when node will be deleted
+                  clearIpAddresses:
+                    type: boolean
+                    description: Whether IP addresses were cleared
+        '400':
+          description: Object is not a node, or invalid request (missing body, malformed, past or out of range expiration time, non-boolean clearIpAddresses)
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have delete access to given node
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/execute-agent-command:
     post:
       operationId: executeAgentCommand
@@ -8412,6 +8475,37 @@ paths:
       security:
         - BearerAuth: []
 
+  /v1/objects/{object-id}/recommission:
+    post:
+      operationId: recommissionNode
+      summary: Recommission node
+      description: >-
+        Clear decommissioned state of the node, so it is no longer scheduled for deletion. Node remains unmanaged; use
+        `POST /v1/objects/{object-id}/set-managed` to resume monitoring. IP addresses cleared during decommission are not
+        restored. Requires delete access to the node. Request body is not used.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Node recommissioned
+        '400':
+          description: Object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have delete access to given node
+        '404':
+          description: Object with given ID does not exist
+        '409':
+          description: Node is not decommissioned
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/restore-device-config:
     post:
       operationId: restoreDeviceConfig
