@@ -1542,6 +1542,42 @@ static void TestMacAddress()
 }
 
 /**
+ * Format IPv6 address placed into heap block of exact size, so that address sanitizer detects reads past its end
+ */
+static String FormatIPv6Address(const char *text)
+{
+   InetAddress a = InetAddress::parse(text);
+   BYTE *bytes = MemCopyBlock(a.getAddressV6(), 16);
+   TCHAR buffer[64];
+   Ip6ToStr(bytes, buffer);
+   char bufferA[64];
+   Ip6ToStrA(bytes, bufferA);
+   MemFree(bytes);
+   char *utf8 = UTF8StringFromTString(buffer);
+   AssertEquals(bufferA, utf8);
+   MemFree(utf8);
+   return String(buffer);
+}
+
+/**
+ * Test IPv6 address to string conversion
+ */
+static void TestIp6ToStr()
+{
+   StartTest(_T("Ip6ToStr"));
+   AssertEquals(FormatIPv6Address("::"), _T("::"));
+   AssertEquals(FormatIPv6Address("::1"), _T("::1"));
+   AssertEquals(FormatIPv6Address("1::"), _T("1::"));
+   AssertEquals(FormatIPv6Address("1::5"), _T("1::5"));
+   AssertEquals(FormatIPv6Address("2001:db8::1:0:0:1"), _T("2001:db8::1:0:0:1"));
+   AssertEquals(FormatIPv6Address("1:2:3:4:5:6:7:8"), _T("1:2:3:4:5:6:7:8"));
+   AssertEquals(FormatIPv6Address("1:2:3:4:5:6:0:8"), _T("1:2:3:4:5:6::8"));
+   AssertEquals(FormatIPv6Address("1:2:3:4:5:6:0:0"), _T("1:2:3:4:5:6::"));
+   AssertEquals(FormatIPv6Address("1:2:3:4:5:6:7:0"), _T("1:2:3:4:5:6:7::"));
+   EndTest();
+}
+
+/**
  * Test InetAddress class
  */
 static void TestInetAddress()
@@ -3970,6 +4006,7 @@ int main(int argc, char *argv[])
    TestGenericId();
    TestMacAddress();
    TestInetAddress();
+   TestIp6ToStr();
    TestIntegerToString();
    TestParseDuration();
    TestParseTimestamp();

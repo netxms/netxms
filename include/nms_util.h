@@ -1164,7 +1164,7 @@ public:
    }
 
    /**
-    * Drop all allocated memory except one region
+    * Drop all allocated memory except one region (all regions if built with address sanitizer)
     */
    void clear();
 
