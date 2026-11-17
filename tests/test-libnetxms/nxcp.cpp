@@ -413,6 +413,24 @@ void TestMessageClass()
 
    EndTest();
 
+   StartTest(_T("NXCP message serialization - protocol version 1"));
+
+   // Fields are not padded in version 1: binary field of odd length puts next field at odd offset
+   NXCPMessage v1msg(CMD_REQUEST_COMPLETED, 1, 1);
+   v1msg.setField(1, reinterpret_cast<const BYTE*>("12345"), 5);
+   v1msg.setField(2, _T("unaligned text"));
+   binMsg = v1msg.serialize();
+   dmsg = NXCPMessage::deserialize(binMsg);
+   AssertNotNull(dmsg);
+   AssertEquals(dmsg->getProtocolVersion(), 1);
+   AssertEquals(dmsg->getFieldAsString(2, buffer, 64), _T("unaligned text"));
+   AssertEquals(dmsg->getFieldAsBinary(1, reinterpret_cast<BYTE*>(buffer2), 64), static_cast<size_t>(5));
+   AssertTrue(!memcmp(buffer2, "12345", 5));
+   delete dmsg;
+   MemFree(binMsg);
+
+   EndTest();
+
    TestCompressedMessageValidation();
 
 #if !WITH_ADDRESS_SANITIZER
