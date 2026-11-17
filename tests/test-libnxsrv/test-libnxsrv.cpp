@@ -1465,6 +1465,152 @@ static void TestDriverInterfaces()
 }
 
 /**
+ * Add interface to mock ifTable
+ */
+static void AddMockInterface(MockSnmpTransport *transport, uint32_t ifIndex, const TCHAR *name, uint32_t ifType)
+{
+   TCHAR oid[64];
+   _sntprintf(oid, 64, _T(".1.3.6.1.2.1.2.2.1.1.%u"), ifIndex);
+   transport->setInteger(oid, static_cast<int32_t>(ifIndex));
+   _sntprintf(oid, 64, _T(".1.3.6.1.2.1.2.2.1.2.%u"), ifIndex);
+   transport->setString(oid, name);
+   _sntprintf(oid, 64, _T(".1.3.6.1.2.1.2.2.1.3.%u"), ifIndex);
+   transport->setInteger(oid, static_cast<int32_t>(ifType));
+}
+
+/**
+ * Add dot3adAggPortAttachedAggID entry to mock MIB
+ */
+static void AddMockLagMibEntry(MockSnmpTransport *transport, uint32_t portIndex, uint32_t aggregateIndex)
+{
+   TCHAR oid[64];
+   _sntprintf(oid, 64, _T(".1.2.840.10006.300.43.1.2.1.1.13.%u"), portIndex);
+   transport->setInteger(oid, static_cast<int32_t>(aggregateIndex));
+}
+
+/**
+ * Add ifStackStatus entry to mock MIB
+ */
+static void AddMockIfStackEntry(MockSnmpTransport *transport, uint32_t higherIndex, uint32_t lowerIndex, int32_t status)
+{
+   TCHAR oid[64];
+   _sntprintf(oid, 64, _T(".1.3.6.1.2.1.31.1.2.1.3.%u.%u"), higherIndex, lowerIndex);
+   transport->setInteger(oid, status);
+}
+
+/**
+ * Create mock transport with simulated link aggregation membership (IEEE8023-LAG-MIB and ifStackTable)
+ */
+static void SetupMockLinkAggregationMib(MockSnmpTransport *transport)
+{
+   transport->setInteger(_T(".1.3.6.1.2.1.2.1.0"), 12);   // ifNumber
+
+   AddMockInterface(transport, 1, _T("ge-0/0/1"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(transport, 2, _T("ge-0/0/2"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(transport, 3, _T("ge-0/0/3"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(transport, 4, _T("ge-0/0/4"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(transport, 5, _T("ae0"), IFTYPE_IEEE8023ADLAG);
+   AddMockInterface(transport, 6, _T("ae1"), IFTYPE_IEEE8023ADLAG);
+   AddMockInterface(transport, 7, _T("vlan100"), IFTYPE_L2VLAN);
+   AddMockInterface(transport, 8, _T("ge-0/0/8"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(transport, 9, _T("ge-0/0/9"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(transport, 10, _T("ge-0/0/10"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(transport, 11, _T("ge-0/0/11"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(transport, 12, _T("ge-0/0/12"), IFTYPE_ETHERNET_CSMACD);
+
+   transport->setIpAddress(_T(".1.3.6.1.2.1.4.20.1.1.192.168.1.1"), _T("192.168.1.1"));
+   transport->setInteger(_T(".1.3.6.1.2.1.4.20.1.2.192.168.1.1"), 5);
+   transport->setIpAddress(_T(".1.3.6.1.2.1.4.20.1.3.192.168.1.1"), _T("255.255.255.0"));
+
+   // dot3adAggPortAttachedAggID
+   AddMockLagMibEntry(transport, 1, 5);    // member of ae0
+   AddMockLagMibEntry(transport, 2, 5);    // member of ae0
+   AddMockLagMibEntry(transport, 3, 6);    // member of ae1 (ifStackTable says ae0)
+   AddMockLagMibEntry(transport, 9, 9);    // attached to own individual aggregator
+   AddMockLagMibEntry(transport, 10, 99);  // unknown aggregator
+   AddMockLagMibEntry(transport, 11, 0);   // not attached
+   AddMockLagMibEntry(transport, 50, 5);   // unknown port
+
+   // ifStackStatus
+   AddMockIfStackEntry(transport, 0, 5, 1);    // top of stack
+   AddMockIfStackEntry(transport, 0, 6, 1);
+   AddMockIfStackEntry(transport, 0, 7, 1);
+   AddMockIfStackEntry(transport, 5, 3, 1);    // conflicts with IEEE8023-LAG-MIB
+   AddMockIfStackEntry(transport, 5, 6, 1);    // aggregate stacked on aggregate
+   AddMockIfStackEntry(transport, 5, 12, 3);   // notReady
+   AddMockIfStackEntry(transport, 6, 4, 1);    // member of ae1 known only from ifStackTable
+   AddMockIfStackEntry(transport, 6, 11, 2);   // notInService
+   AddMockIfStackEntry(transport, 7, 8, 1);    // VLAN on physical port
+   AddMockIfStackEntry(transport, 8, 0, 1);    // bottom of stack
+}
+
+/**
+ * Test link aggregation membership retrieval by default NetworkDeviceDriver
+ */
+static void TestDriverLinkAggregation()
+{
+   StartTest(_T("NetworkDeviceDriver - getInterfaces link aggregation membership"));
+   MockSnmpTransport transport;
+   SetupMockLinkAggregationMib(&transport);
+
+   NetworkDeviceDriver driver;
+   SnmpDeviceContext context(&transport);
+   auto node = make_shared<TestObject>(502, _T("node"));
+
+   InterfaceList *ifList = driver.getInterfaces(&context, node.get(), nullptr, true);
+   AssertNotNull(ifList);
+   AssertEquals(ifList->size(), 12);
+
+   static const uint32_t expected[][2] = {
+      { 1, 5 },    // IEEE8023-LAG-MIB
+      { 2, 5 },    // IEEE8023-LAG-MIB
+      { 3, 6 },    // IEEE8023-LAG-MIB takes precedence over ifStackTable
+      { 4, 6 },    // ifStackTable
+      { 5, 0 },    // aggregate itself
+      { 6, 0 },    // aggregate cannot be member of another aggregate
+      { 7, 0 },
+      { 8, 0 },    // higher layer in ifStackTable is not an aggregate
+      { 9, 0 },    // own individual aggregator
+      { 10, 0 },   // aggregator not in interface list
+      { 11, 6 },   // ifStackTable, notInService
+      { 12, 0 }    // ifStackTable, notReady
+   };
+   for(size_t i = 0; i < sizeof(expected) / sizeof(expected[0]); i++)
+   {
+      InterfaceInfo *iface = ifList->findByIfIndex(expected[i][0]);
+      AssertNotNull(iface);
+      AssertEquals(iface->aggregateIndex, expected[i][1]);
+   }
+   AssertNull(ifList->findByIfIndex(50));
+   delete ifList;
+   EndTest();
+
+   StartTest(_T("NetworkDeviceDriver - getInterfaces link aggregation w/o ieee8023adLag"));
+   MockSnmpTransport transport2;
+   transport2.setInteger(_T(".1.3.6.1.2.1.2.1.0"), 4);
+   AddMockInterface(&transport2, 1, _T("Gi0/1"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(&transport2, 2, _T("Gi0/2"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(&transport2, 3, _T("Gi0/3"), IFTYPE_ETHERNET_CSMACD);
+   AddMockInterface(&transport2, 4, _T("Po1"), IFTYPE_PROP_VIRTUAL);
+   transport2.setIpAddress(_T(".1.3.6.1.2.1.4.20.1.1.10.0.0.1"), _T("10.0.0.1"));
+   transport2.setInteger(_T(".1.3.6.1.2.1.4.20.1.2.10.0.0.1"), 4);
+   transport2.setIpAddress(_T(".1.3.6.1.2.1.4.20.1.3.10.0.0.1"), _T("255.0.0.0"));
+   AddMockLagMibEntry(&transport2, 1, 4);     // IEEE8023-LAG-MIB does not depend on aggregator interface type
+   AddMockIfStackEntry(&transport2, 4, 2, 1); // ifStackTable accepted only for ieee8023adLag higher layer
+
+   SnmpDeviceContext context2(&transport2);
+   ifList = driver.getInterfaces(&context2, node.get(), nullptr, true);
+   AssertNotNull(ifList);
+   AssertEquals(ifList->size(), 4);
+   AssertEquals(ifList->findByIfIndex(1)->aggregateIndex, 4u);
+   AssertEquals(ifList->findByIfIndex(2)->aggregateIndex, 0u);
+   AssertEquals(ifList->findByIfIndex(3)->aggregateIndex, 0u);
+   AssertEquals(ifList->findByIfIndex(4)->aggregateIndex, 0u);
+   delete ifList;
+   EndTest();
+}
+
+/**
  * Test default NetworkDeviceDriver interface state retrieval
  */
 static void TestDriverInterfaceState()
@@ -2021,6 +2167,7 @@ int main(int argc, char *argv[])
    TestBuildComponentTree();
    TestHostMibDriverData();
    TestDriverInterfaces();
+   TestDriverLinkAggregation();
    TestDriverInterfaceState();
    TestDriverVlans();
    TestDriverArpCache();
