@@ -253,8 +253,10 @@ static json_t *DoShowCommand(NObject *wirelessDomain, const char *command, long 
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Login/password not provided"));
          return nullptr;
       }
+      char decryptedPassword[128];
+      DecryptPasswordA(login.c_str(), password.c_str(), decryptedPassword, 128);
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Aruba Instant: logging in"));
-      if (!Login(baseUrl, login, password, sid))
+      if (!Login(baseUrl, login, decryptedPassword, sid))
          return nullptr;
       wirelessDomain->setCustomAttribute(_T("$aruba.sid"), SharedString(sid.c_str(), "ASCII"), StateChange::CLEAR);
    }
