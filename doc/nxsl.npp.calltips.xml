@@ -158,6 +158,21 @@
 			</Overload>
 		</KeyWord>
 		
+		<KeyWord name="DetectAnomalies" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Replay recorded history of DCI through anomaly detection with current DCI settings. Optional labels is an array of time ranges ([start, end] UNIX timestamps) when anomalies are expected; if given, result includes evaluation of detection quality.
+			
+			Returns
+			  Hash map with replay results (samples, days, episodes, episodesByType, evaluation) or NULL on failure.">
+				<Param name="node" />
+				<Param name="dciId" />
+				<Param name="timeFrom" />
+				<Param name="timeTo" />
+				<Param name="labels" />
+			</Overload>
+		</KeyWord>
+		
 		<KeyWord name="d2x" func="yes">
 			<Overload retVal="" descr="
 			Description
@@ -191,6 +206,21 @@
 			</Overload>
 		</KeyWord>
 		
+		<KeyWord name="FindAllDCIs" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Find all DCIs with matching name, description, tag or related object (filters are optional; name, description and tag filters are case-insensetive patterns). If node is NULL, search on all accessible data collection targets.
+			
+			Returns
+			  Array of DCI objects.">
+				<Param name="node" />
+				<Param name="nameFilter" />
+				<Param name="descriptionFilter" />
+				<Param name="tagFilter" />
+				<Param name="relatedObject" />
+			</Overload>
+		</KeyWord>
+		
 		<KeyWord name="FindDCIByDescription" func="yes">
 			<Overload retVal="" descr="
 			Description
@@ -202,6 +232,18 @@
 			</Overload>
 		</KeyWord>
 		
+		<KeyWord name="FindDCIById" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Find DCI by ID on any data collection target. Optional context object is used for trusted object check.
+			
+			Returns
+			  DCI object on success or NULL if DCI with given ID was not found.">
+				<Param name="dciId" />
+				<Param name="contextObject" />
+			</Overload>
+		</KeyWord>
+		
 		<KeyWord name="FindDCIByName" func="yes">
 			<Overload retVal="" descr="
 			Description
@@ -210,6 +252,30 @@
 			Returns
 			  DCI ID on success or 0 if DCI with matching name was not found.">
 				<Param name="node, description" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="FindDCIByTag" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Find DCI by tag (search is case-insensetive).
+			
+			Returns
+			  DCI ID on success or 0 if DCI with matching tag was not found.">
+				<Param name="node" />
+				<Param name="tag" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="FindDCIByTagPattern" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Find DCI by tag pattern (matching is case-insensetive).
+			
+			Returns
+			  DCI ID on success or 0 if DCI with matching tag was not found.">
+				<Param name="node" />
+				<Param name="pattern" />
 			</Overload>
 		</KeyWord>
 		
@@ -367,6 +433,40 @@
 			Returns
 			  Last value for given DCI or NULL if DCI with given name does not exist or has no collected values.">
 				<Param name="node, name" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetDCIValues" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get DCI values for given period. Optional parameters: timeTo (default is current time), rawValue (default false), tier (&quot;auto&quot;, &quot;raw&quot;, &quot;hourly&quot;, &quot;daily&quot;; default &quot;auto&quot;), function (&quot;avg&quot;, &quot;min&quot;, &quot;max&quot;; default &quot;avg&quot;).
+			
+			Returns
+			  Array of DCI values (ordered from latest to earliest) or NULL if DCI was not found.">
+				<Param name="node" />
+				<Param name="dciId" />
+				<Param name="timeFrom" />
+				<Param name="timeTo" />
+				<Param name="rawValue" />
+				<Param name="tier" />
+				<Param name="function" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetDCIValuesEx" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get DCI values for given period as data points (timestamp and value). Optional parameters are the same as for GetDCIValues.
+			
+			Returns
+			  Array of DataPoint objects (ordered from latest to earliest) or NULL if DCI was not found.">
+				<Param name="node" />
+				<Param name="dciId" />
+				<Param name="timeFrom" />
+				<Param name="timeTo" />
+				<Param name="rawValue" />
+				<Param name="tier" />
+				<Param name="function" />
 			</Overload>
 		</KeyWord>
 		
