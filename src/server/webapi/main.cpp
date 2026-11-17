@@ -141,6 +141,7 @@ int H_DataCollectionTableValue(Context *context);
 int H_PerformanceViewDCIs(Context *context);
 int H_AvailableAgentMetrics(Context *context);
 int H_AvailableDeviceDriverMetrics(Context *context);
+int H_QueryMetric(Context *context);
 int H_DataCollectionConfigList(Context *context);
 int H_DataCollectionConfigGet(Context *context);
 int H_DataCollectionConfigCreate(Context *context);
@@ -1014,6 +1015,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/performance-view")
       .GET(H_PerformanceViewDCIs)
+      .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/query-metric")
+      .GET(H_QueryMetric)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/configuration")
       .GET(H_DataCollectionConfigList)

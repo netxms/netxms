@@ -689,6 +689,80 @@ int H_AvailableDeviceDriverMetrics(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/data-collection/query-metric
+ * Reads current value of a single metric directly from its source, bypassing data collection
+ */
+int H_QueryMetric(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   if (objectId == 0)
+      return 400;
+
+   const char *originName = context->getQueryParameter("origin");
+   const char *metricName = context->getQueryParameter("name");
+   if ((originName == nullptr) || (*originName == 0) || (metricName == nullptr) || (*metricName == 0))
+   {
+      context->setErrorResponse("Both origin and name query parameters are required");
+      return 400;
+   }
+
+   int origin = CodeFromText(String(originName, "utf8"), g_dciOriginNames, -1);
+   if (origin == -1)
+   {
+      context->setErrorResponse("Invalid origin");
+      return 400;
+   }
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   if (!object->isDataCollectionTarget())
+   {
+      context->setErrorResponse("Object is not data collection target");
+      return 400;
+   }
+
+   wchar_t name[MAX_PARAM_NAME];
+   utf8_to_wchar(metricName, -1, name, MAX_PARAM_NAME - 1);
+   name[MAX_PARAM_NAME - 1] = 0;
+
+   wchar_t value[MAX_RESULT_LENGTH];
+   uint32_t rcc = static_cast<DataCollectionTarget&>(*object).getMetricForClient(origin, context->getUserId(), name, value, MAX_RESULT_LENGTH);
+   switch(rcc)
+   {
+      case RCC_SUCCESS:
+         break;
+      case RCC_ACCESS_DENIED:
+         return 403;
+      case RCC_INCOMPATIBLE_OPERATION:
+         context->setErrorResponse("Origin is not supported for this object");
+         return 400;
+      case RCC_DCI_NOT_SUPPORTED:
+         context->setErrorResponse("Metric is not supported");
+         return 404;
+      case RCC_NO_SUCH_INSTANCE:
+         context->setErrorResponse("No such instance");
+         return 404;
+      case RCC_COMM_FAILURE:
+         context->setErrorResponse("Cannot communicate with data source");
+         return 503;
+      default:
+         context->setErrorResponse("Cannot read metric value from data source");
+         return 502;
+   }
+
+   json_t *response = json_object();
+   json_object_set_new(response, "value", json_string_w(value));
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
  * Element of data push request
  */
 struct PushDataElement
