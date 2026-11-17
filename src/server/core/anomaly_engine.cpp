@@ -944,6 +944,8 @@ void AnomalyDetectorState::resetDrift()
    bucketStart = 0;
    bucketSum = 0;
    bucketCount = 0;
+   prevBucketStart = 0;
+   prevBucketMean = 0;
 }
 
 /**
@@ -995,9 +997,12 @@ static void UpdateDriftSum(double *sum, time_t *onset, double z, const AnomalySe
 }
 
 /**
- * Add residual to drift detector. Drift sums are updated when hour changes.
+ * Add sample to drift detector: deviation from slot center in value mode, collected value in rate mode.
+ * Drift sums are updated when hour changes, with the same statistic that drift scale was trained on:
+ * hourly mean of deviation in value mode, deviation of rate of change between hourly means in rate
+ * mode (mean of rates between individual samples would be much noisier).
  */
-static void UpdateDriftDetector(const AnomalyModel& model, const AnomalySettings& settings, AnomalyDetectorState *state, time_t timestamp, double residual)
+static void UpdateDriftDetector(const AnomalyModel& model, const AnomalySettings& settings, AnomalyDetectorState *state, time_t timestamp, double x)
 {
    time_t bucketStart = GetAnomalyHourStart(timestamp);
    if (bucketStart < state->bucketStart)
@@ -1005,16 +1010,30 @@ static void UpdateDriftDetector(const AnomalyModel& model, const AnomalySettings
 
    if ((bucketStart > state->bucketStart) && (state->bucketCount > 0))
    {
-      double z = (state->bucketSum / state->bucketCount) / model.getDriftScale();
-      z = std::min(std::max(z, -DRIFT_Z_LIMIT), DRIFT_Z_LIMIT);
-      UpdateDriftSum(&state->driftUp, &state->driftUpOnset, z, settings, state->bucketStart);
-      UpdateDriftSum(&state->driftDown, &state->driftDownOnset, -z, settings, state->bucketStart);
+      double residual = state->bucketSum / state->bucketCount;
+      bool hasResidual = true;
+      if (model.getMode() == AnomalyDetectionMode::RATE)
+      {
+         double mean = residual;
+         if (state->prevBucketStart != 0)
+            residual = (mean - state->prevBucketMean) / static_cast<double>(state->bucketStart - state->prevBucketStart) - model.getExpectedValue(state->bucketStart).center;
+         else
+            hasResidual = false;
+         state->prevBucketStart = state->bucketStart;
+         state->prevBucketMean = mean;
+      }
+      if (hasResidual)
+      {
+         double z = std::min(std::max(residual / model.getDriftScale(), -DRIFT_Z_LIMIT), DRIFT_Z_LIMIT);
+         UpdateDriftSum(&state->driftUp, &state->driftUpOnset, z, settings, state->bucketStart);
+         UpdateDriftSum(&state->driftDown, &state->driftDownOnset, -z, settings, state->bucketStart);
+      }
       state->bucketSum = 0;
       state->bucketCount = 0;
    }
 
    state->bucketStart = bucketStart;
-   state->bucketSum += residual;
+   state->bucketSum += x;
    state->bucketCount++;
 }
 
@@ -1082,8 +1101,11 @@ AnomalyScore ScoreAnomalySample(const AnomalyModel& model, const AnomalySettings
       result.scored = true;
       if (IsDeviation(result.score, settings))
          result.type = AnomalyType::RANGE;
-      UpdateDriftDetector(model, settings, state, timestamp, x - ev.center);
+      if (model.getMode() == AnomalyDetectionMode::VALUE)
+         UpdateDriftDetector(model, settings, state, timestamp, x - ev.center);
    }
+   if (ev.valid && (model.getMode() == AnomalyDetectionMode::RATE))
+      UpdateDriftDetector(model, settings, state, timestamp, value);
 
    if (result.type != AnomalyType::NONE)
       return result;

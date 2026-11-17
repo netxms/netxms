@@ -553,6 +553,64 @@ static int CountAnomalies(const AnomalyModel& model, const AnomalySettings& sett
 }
 
 /**
+ * Parameters of generated counter
+ */
+static int s_counterIndexOffset = 0;
+static double s_counterStep = 10;
+
+/**
+ * Steadily growing counter with noise on the level (as opposed to noise on increments)
+ */
+static double NoisyCounter(int day, const struct tm& lt, int index)
+{
+   return (index + s_counterIndexOffset) * s_counterStep + Noise() * 50;
+}
+
+/**
+ * Drift detection in rate mode
+ */
+static void TestRateDrift()
+{
+   StartTest(_T("Anomaly detection - drift in rate mode"));
+
+   const int samplesPerDay = 86400 / SAMPLE_INTERVAL;
+   s_counterIndexOffset = 0;
+   s_counterStep = 10;
+   std::vector<AnomalySample> series;
+   Generate(TimeAt(2026, 1, 5, 0), 28, NoisyCounter, &series);
+
+   AnomalySettings settings;
+   shared_ptr<AnomalyModel> model = Train(series, settings);
+   AssertNotNull(model.get());
+   AssertTrue(model->getMode() == AnomalyDetectionMode::RATE);
+
+   // Same growth: noise on the level is much larger than increment, but hourly growth is steady
+   s_counterIndexOffset = 28 * samplesPerDay;
+   std::vector<AnomalySample> replay;
+   Generate(TimeAt(2026, 2, 2, 0), 14, NoisyCounter, &replay);
+   AssertEquals(CountAnomalies(*model, settings, replay, AnomalyType::DRIFT), 0);
+
+   // Growth becomes 20% faster: not visible in single sample, reported as drift within a day
+   AnomalyDetectorState state;
+   for(size_t i = 0; i < replay.size(); i++)
+      ScoreAnomalySample(*model, settings, &state, replay[i].timestamp, replay[i].value);
+   double level = (42 * samplesPerDay) * s_counterStep;
+   time_t start = TimeAt(2026, 2, 16, 0);
+   int first = -1;
+   for(int i = 0; i < samplesPerDay; i++)
+   {
+      level += s_counterStep * 1.2;
+      AnomalyScore score = ScoreAnomalySample(*model, settings, &state, start + static_cast<time_t>(i) * SAMPLE_INTERVAL, level + Noise() * 50);
+      AssertTrue(score.type != AnomalyType::RANGE);
+      if ((score.type == AnomalyType::DRIFT) && (first == -1))
+         first = i;
+   }
+   AssertTrue(first > 0);
+
+   EndTest();
+}
+
+/**
  * Regular change of level between slots is not a step
  */
 static void TestExpectedLevelChange()
@@ -851,6 +909,7 @@ void TestAnomalyDetection()
    TestStepDetection();
    TestExpectedLevelChange();
    TestDriftDetection();
+   TestRateDrift();
 #ifndef _WIN32
    TestDaylightSavingTime();
    TestFractionalTimeZone();

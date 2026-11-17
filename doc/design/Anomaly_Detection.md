@@ -127,7 +127,10 @@ All checks honour `direction` (both, up only, down only).
 
 ### Level shift (drift)
 
-Deviations from slot centre are averaged per hour. When the hour changes, the hourly mean is
+Deviations from slot centre are averaged per hour. In rate mode the hourly deviation is calculated
+from the rate of change between mean values of two consecutive hours, the same way hourly rates
+are calculated for training; mean of rates between individual values would be dominated by noise
+of the first and the last value of the hour. When the hour changes, the hourly deviation is
 standardized and fed into a two-sided cumulative sum (CUSUM):
 
 ```

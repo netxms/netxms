@@ -182,8 +182,10 @@ struct NXCORE_EXPORTABLE AnomalyDetectorState
    time_t driftUpOnset;       // start of the hour when upward sum last left zero (0 if sum is zero)
    time_t driftDownOnset;     // start of the hour when downward sum last left zero (0 if sum is zero)
    time_t bucketStart;        // start of the hour being accumulated (0 if none)
-   double bucketSum;          // sum of residuals within current hour
-   int32_t bucketCount;       // number of residuals within current hour
+   double bucketSum;          // sum of residuals (value mode) or values (rate mode) within current hour
+   int32_t bucketCount;       // number of samples within current hour
+   time_t prevBucketStart;    // start of previous accumulated hour (0 if none, used only in rate mode)
+   double prevBucketMean;     // mean value within previous accumulated hour
    time_t lastTimestamp;      // timestamp of previous sample (0 if none)
    double lastValue;          // value of previous sample
 
