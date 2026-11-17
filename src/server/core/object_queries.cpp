@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -529,6 +529,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("BUSINESSSERVICEPROTOTYPE", vm->createValue(OBJECT_BUSINESSSERVICEPROTO));
    vm->addConstant("BUSINESSSERVICEROOT", vm->createValue(OBJECT_BUSINESSSERVICEROOT));
    vm->addConstant("CHASSIS", vm->createValue(OBJECT_CHASSIS));
+   vm->addConstant("CIRCUIT", vm->createValue(OBJECT_CIRCUIT));
    vm->addConstant("CLOUDDOMAIN", vm->createValue(OBJECT_CLOUDDOMAIN));
    vm->addConstant("CLUSTER", vm->createValue(OBJECT_CLUSTER));
    vm->addConstant("COLLECTOR", vm->createValue(OBJECT_COLLECTOR));
