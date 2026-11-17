@@ -37,6 +37,7 @@ AbstractMessageReceiver::AbstractMessageReceiver(size_t initialSize, size_t maxS
    m_size = initialSize;
    m_maxSize = maxSize;
    m_dataSize = 0;
+   m_consumedSize = 0;
    m_bytesToSkip = 0;
    m_totalBytesReceived = 0;
    m_buffer = MemAllocArrayNoInit<BYTE>(initialSize);
@@ -99,10 +100,17 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError, 
             if (msg == nullptr)
                *protocolError = true;  // message deserialization error
          }
-         m_dataSize -= msgSize;
-         if (m_dataSize > 0)
+         if (msg != nullptr)
          {
-            memmove(m_buffer, &m_buffer[msgSize], m_dataSize);
+            m_consumedSize = msgSize;
+         }
+         else
+         {
+            m_dataSize -= msgSize;
+            if (m_dataSize > 0)
+            {
+               memmove(m_buffer, &m_buffer[msgSize], m_dataSize);
+            }
          }
       }
       else if (msgSize > m_size)
@@ -134,6 +142,17 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError, 
  */
 NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageReceiverResult *result, bool allowReadBytes)
 {
+   // Message returned by previous call is kept at buffer start until now so that raw message buffer stays valid for the caller
+   if (m_consumedSize > 0)
+   {
+      m_dataSize -= m_consumedSize;
+      if (m_dataSize > 0)
+      {
+         memmove(m_buffer, &m_buffer[m_consumedSize], m_dataSize);
+      }
+      m_consumedSize = 0;
+   }
+
    NXCPMessage *msg;
    bool protocolError = false, decryptionError = false;
    while(true)
@@ -196,11 +215,11 @@ NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageRecei
  */
 const TCHAR *AbstractMessageReceiver::resultToText(MessageReceiverResult result)
 {
-   static const TCHAR *text[] = { 
-      _T("MSGRECV_SUCCESS"), 
-      _T("MSGRECV_CLOSED"), 
-      _T("MSGRECV_TIMEOUT"), 
-      _T("MSGRECV_COMM_FAILURE"), 
+   static const TCHAR *text[] = {
+      _T("MSGRECV_SUCCESS"),
+      _T("MSGRECV_CLOSED"),
+      _T("MSGRECV_TIMEOUT"),
+      _T("MSGRECV_COMM_FAILURE"),
       _T("MSGRECV_DECRYPTION_FAILURE"),
       _T("MSGRECV_PROTOCOL_ERROR")
    };

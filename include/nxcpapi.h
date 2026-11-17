@@ -334,6 +334,7 @@ private:
    size_t m_size;
    size_t m_maxSize;
    size_t m_dataSize;
+   size_t m_consumedSize;
    ssize_t m_bytesToSkip;
    uint64_t m_totalBytesReceived;
 

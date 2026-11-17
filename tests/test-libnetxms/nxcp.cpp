@@ -3,6 +3,7 @@
 #include <nxcpapi.h>
 #include <testtools.h>
 #include <sstream>
+#include <vector>
 
 /**
  * NULL-safe _tcscmp()
@@ -597,4 +598,206 @@ void TestSendFileOverEncryptedChannel()
    EndTest();
 
    delete ectx;
+}
+
+/**
+ * Message receiver that reads from memory. Each readBytes() call returns data from one block only.
+ */
+class TestMessageReceiver : public AbstractMessageReceiver
+{
+private:
+   std::string m_data;
+   std::vector<size_t> m_blockEnds;
+   size_t m_position;
+   size_t m_block;
+
+protected:
+   virtual ssize_t readBytes(BYTE *buffer, size_t size, uint32_t timeout) override
+   {
+      if (m_block == m_blockEnds.size())
+         return 0;
+      size_t bytes = std::min(size, m_blockEnds[m_block] - m_position);
+      memcpy(buffer, m_data.data() + m_position, bytes);
+      m_position += bytes;
+      if (m_position == m_blockEnds[m_block])
+         m_block++;
+      return bytes;
+   }
+
+public:
+   TestMessageReceiver(size_t initialSize, size_t maxSize) : AbstractMessageReceiver(initialSize, maxSize)
+   {
+      m_position = 0;
+      m_block = 0;
+   }
+
+   virtual void cancel() override { }
+
+   void append(const void *data, size_t size) { m_data.append(static_cast<const char*>(data), size); }
+   void append(const NXCP_MESSAGE *msg) { append(msg, ntohl(msg->size)); }
+   void append(const NXCP_ENCRYPTED_MESSAGE *msg) { append(msg, ntohl(msg->size)); }
+   void endBlock() { m_blockEnds.push_back(m_data.size()); }
+
+   bool isRawMessage(const NXCP_MESSAGE *msg) { return memcmp(getRawMessageBuffer(), msg, ntohl(msg->size)) == 0; }
+};
+
+/**
+ * Create serialized test message of given size
+ */
+static NXCP_MESSAGE *CreateTestMessage(uint32_t id, size_t binaryFieldSize = 0)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, id);
+   if (binaryFieldSize > 0)
+   {
+      BYTE *data = MemAllocArrayNoInit<BYTE>(binaryFieldSize);
+      memset(data, 'A' + id, binaryFieldSize);
+      msg.setField(1, data, binaryFieldSize);
+      MemFree(data);
+   }
+   return msg.serialize();
+}
+
+/**
+ * Read next message and check its ID and content of raw message buffer
+ */
+static void AssertNextMessage(TestMessageReceiver *receiver, const NXCP_MESSAGE *expected, bool allowReadBytes = true)
+{
+   MessageReceiverResult result;
+   NXCPMessage *msg = receiver->readMessage(0, &result, allowReadBytes);
+   AssertNotNull(msg);
+   AssertEquals(static_cast<int>(result), static_cast<int>(MSGRECV_SUCCESS));
+   AssertEquals(msg->getId(), ntohl(expected->id));
+   AssertTrue(receiver->isRawMessage(expected));
+   delete msg;
+}
+
+/**
+ * Check that next read does not return message
+ */
+static void AssertNoMessage(TestMessageReceiver *receiver, MessageReceiverResult expected, bool allowReadBytes = true)
+{
+   MessageReceiverResult result;
+   NXCPMessage *msg = receiver->readMessage(0, &result, allowReadBytes);
+   AssertNull(msg);
+   AssertEquals(static_cast<int>(result), static_cast<int>(expected));
+}
+
+/**
+ * Test message receiver
+ */
+void TestMessageReceiverBuffer()
+{
+   NXCP_MESSAGE *m1 = CreateTestMessage(1);
+   NXCP_MESSAGE *m2 = CreateTestMessage(2, 200);
+   NXCP_MESSAGE *m3 = CreateTestMessage(3, 2000);
+   NXCP_MESSAGE *m4 = CreateTestMessage(4, 20);
+
+   StartTest(_T("Message receiver - two messages in one read"));
+   {
+      TestMessageReceiver receiver(4096, 4096);
+      receiver.append(m1);
+      receiver.append(m2);
+      receiver.endBlock();
+      AssertNextMessage(&receiver, m1);
+      AssertNextMessage(&receiver, m2, false);
+      AssertNoMessage(&receiver, MSGRECV_WANT_READ, false);
+      AssertNoMessage(&receiver, MSGRECV_CLOSED);
+   }
+   EndTest();
+
+   StartTest(_T("Message receiver - message followed by partial header"));
+   {
+      TestMessageReceiver receiver(4096, 4096);
+      receiver.append(m1);
+      receiver.append(m3, NXCP_HEADER_SIZE);
+      receiver.endBlock();
+      receiver.append(reinterpret_cast<BYTE*>(m3) + NXCP_HEADER_SIZE, ntohl(m3->size) - NXCP_HEADER_SIZE);
+      receiver.endBlock();
+      AssertNextMessage(&receiver, m1);
+      AssertNoMessage(&receiver, MSGRECV_WANT_READ, false);
+      AssertNextMessage(&receiver, m3);
+      AssertNoMessage(&receiver, MSGRECV_CLOSED);
+   }
+   EndTest();
+
+   StartTest(_T("Message receiver - buffer grow and oversized message skip"));
+   {
+      TestMessageReceiver receiver(64, 1024);
+      AssertTrue(ntohl(m2->size) > 64);
+      AssertTrue(ntohl(m3->size) > 1024);
+      receiver.append(m1);
+      receiver.append(m2, 40);
+      receiver.endBlock();
+      receiver.append(reinterpret_cast<BYTE*>(m2) + 40, ntohl(m2->size) - 40);
+      receiver.append(m3);
+      receiver.append(m4);
+      receiver.append(m1);
+      receiver.endBlock();
+      AssertNextMessage(&receiver, m1);
+      AssertNextMessage(&receiver, m2);
+      AssertNextMessage(&receiver, m4);
+      AssertNextMessage(&receiver, m1);
+      AssertNoMessage(&receiver, MSGRECV_CLOSED);
+   }
+   EndTest();
+
+   shared_ptr<NXCPEncryptionContext> ectx(NXCPEncryptionContext::create(NXCP_SUPPORT_AES_256));
+   AssertTrue(ectx != nullptr);
+   NXCP_ENCRYPTED_MESSAGE *e1 = ectx->encryptMessage(m1);
+   NXCP_ENCRYPTED_MESSAGE *e3 = ectx->encryptMessage(m3);
+   AssertEquals(static_cast<int>(ntohs(e1->code)), CMD_ENCRYPTED_MESSAGE);
+
+   StartTest(_T("Message receiver - encrypted message without encryption context"));
+   {
+      TestMessageReceiver receiver(4096, 4096);
+      receiver.append(e1);
+      receiver.append(m2);
+      receiver.endBlock();
+      receiver.append(m4);
+      receiver.endBlock();
+      AssertNextMessage(&receiver, m2);
+      AssertNextMessage(&receiver, m4);
+      AssertNoMessage(&receiver, MSGRECV_CLOSED);
+   }
+   EndTest();
+
+   StartTest(_T("Message receiver - encrypted message followed by another message"));
+   {
+      TestMessageReceiver receiver(4096, 4096);
+      receiver.setEncryptionContext(ectx);
+      receiver.append(e1);
+      receiver.append(m2);
+      receiver.append(e3);
+      receiver.append(m4);
+      receiver.endBlock();
+      AssertNextMessage(&receiver, m1);
+      AssertNextMessage(&receiver, m2);
+      AssertNextMessage(&receiver, m3);
+      AssertNextMessage(&receiver, m4);
+      AssertNoMessage(&receiver, MSGRECV_CLOSED);
+   }
+   EndTest();
+
+   StartTest(_T("Message receiver - read after decryption failure"));
+   {
+      TestMessageReceiver receiver(4096, 4096);
+      receiver.setEncryptionContext(ectx);
+      e3->data[100] ^= 0xFF;
+      receiver.append(e3);
+      receiver.append(m2);
+      receiver.append(e1);
+      receiver.endBlock();
+      AssertNoMessage(&receiver, MSGRECV_DECRYPTION_FAILURE);
+      AssertNextMessage(&receiver, m2);
+      AssertNextMessage(&receiver, m1);
+      AssertNoMessage(&receiver, MSGRECV_CLOSED);
+   }
+   EndTest();
+
+   MemFree(e1);
+   MemFree(e3);
+   MemFree(m1);
+   MemFree(m2);
+   MemFree(m3);
+   MemFree(m4);
 }
