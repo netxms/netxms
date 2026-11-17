@@ -11,6 +11,13 @@ the tree is configured `--with-tests`. Within it, `include`, `config`, `suite`,
 populated by `configure.ac`. `integration/` is built by Maven separately;
 `nx-2488/` and `tools/` are manual helpers outside the build.
 
+`fuzz/` holds libFuzzer targets for the NXCP message code and is gated separately: `--enable-fuzzer` appends
+`tests/fuzz` to `TOP_LEVEL_MODULES` directly, so a fuzz build needs neither `--with-tests` nor the rest of
+this tree, and its `Makefile.am` defines programs only under the `ENABLE_FUZZER` conditional. A `--with-dist`
+tree reaches it through `TEST_MODULES` instead, so it is in the tarball. The targets are not part of
+`netxms-test-suite`, have no Windows wiring, and need upstream clang. See [fuzz/README.md](fuzz/README.md)
+for building, running, reproducing a failure and the corpus rules.
+
 ## Windows build
 
 The Windows (MinGW) build has its own wiring, parallel to the autotools one:

@@ -237,11 +237,22 @@ unpadded version 1 layout is exercised.
 To settle here: whether libtool passes `-fsanitize=fuzzer-no-link` through at link time unchanged. A bare
 `./configure --enable-fuzzer` should be the minimal invocation, since the default module set is libnetxms only.
 
-- [ ] `./configure --enable-fuzzer` fails with a clear message on GCC and Apple clang, succeeds on upstream clang
-- [ ] a default build and a `--with-tests` build are unaffected (no new flags, no fuzz programs built)
-- [ ] `make dist` from a `--with-dist` tree contains `tests/fuzz`, and the tarball configures and builds
-- [ ] `fuzz-nxcp-dump` builds, replays a hand-made seed and the advisory's 32-byte regression input cleanly
-- [ ] coverage of `message.cpp` grows during a short run (libFuzzer `cov:` rises beyond the harness itself)
+- [x] `./configure --enable-fuzzer` fails with a clear message on GCC and Apple clang, succeeds on upstream clang
+- [x] a default build and a `--with-tests` build are unaffected (no new flags, no fuzz programs built)
+- [x] `make dist` from a `--with-dist` tree contains `tests/fuzz`, and the tarball configures and builds
+- [x] `fuzz-nxcp-dump` builds, replays a hand-made seed and the advisory's 32-byte regression input cleanly
+- [x] coverage of `message.cpp` grows during a short run (libFuzzer `cov:` rises beyond the harness itself)
+- ➕ Settled: `-fsanitize=fuzzer-no-link` is a compile-only flag and is not needed at link time. The
+  instrumented shared library resolves its coverage callbacks from the sanitizer runtime of the executable.
+- ➕ All checks were run in a Linux container (Ubuntu 24.04, clang 18, arm64); the Apple clang rejection was
+  checked on the host.
+- ⚠️ The advisory's own reproducer is not available in the tree, so the regression input was written by hand
+  from the fix commit: a binary field whose length makes the 32-bit field size calculation wrap. Task 6 checks
+  it against the vulnerable baseline.
+- ➕ The first 30-second run of the target found a read past the end of the address in `Ip6ToStr()` (reached
+  from the address field branch of `dump()`). Fixed in a separate commit with a unit test before this task was
+  committed; a hand-made input for it is in the corpus.
+- ➕ The input contract helper lives in `tests/fuzz/fuzz-nxcp.h`, shared with the `deserialize` target.
 
 ### Task 6: `deserialize` target and the seed generator
 
@@ -260,10 +271,23 @@ The vulnerable baseline, used here and in Tasks 7 and 8, is the branch head with
 scratch worktree, keeping Tasks 1-4. The untouched parent commit has no harnesses. The revert conflicts with
 Task 1, which edits the same code, and needs manual resolution.
 
-- [ ] target builds and replays the generated corpus cleanly
-- [ ] a compressed input that inflates into many fields with one ID does not time out (candidate de-duplication)
-- [ ] on the vulnerable baseline, the regression input fails in `deserialize` and in `dump`; on the branch head
+- [x] target builds and replays the generated corpus cleanly
+- [x] a compressed input that inflates into many fields with one ID does not time out (candidate de-duplication)
+- [x] on the vulnerable baseline, the regression input fails in `deserialize` and in `dump`; on the branch head
       both replay cleanly
+- ➕ `deserialize` and `dump` take the same input, so they share one corpus directory,
+  `tests/fuzz/corpus/message` (renamed from `corpus/dump`). Generated files are named `seed-*`, hand-made
+  ones `handmade-*`, reproducers `regression-*`.
+- ➕ The first seconds of fuzzing `deserialize` found a write past a small caller buffer: the UTF-8 and UTF-16
+  encoders in libnetxms compared against `dstLen - N`, which wraps when the destination is shorter than one
+  encoded character. Fixed in a separate commit with a unit test; a reproducer is in the corpus.
+- ⚠️ The duplicate-ID input (20000 fields with one ID, 288 bytes on the wire) takes a second in `deserialize`.
+  `dump` is quadratic on such input under the sanitizer, because its output `StringBuffer` grows in 256
+  character steps: 100000 fields took 13 seconds. Not changed here; Task 8 has to pick a timeout or input
+  length for the `dump` target that accounts for it.
+- ➕ Vulnerable baseline check done as planned: with `6a7f4b05da` reverted (the two hunks that overlap Task 1
+  stay as Task 1 left them) the regression input is reported as a heap buffer overflow in both targets, and
+  it replays cleanly on the branch head.
 
 ### Task 7: `receiver` and `decrypt` targets
 
@@ -294,10 +318,19 @@ and without it the do-not-encrypt shortcut in `encryptMessage()` is inactive. Th
 
 Seeds: multi-message streams for `receiver`; encrypted messages produced with the constant key for `decrypt`.
 
-- [ ] both targets build and replay their corpus cleanly
-- [ ] `receiver` reaches the grow, skip and garbage-resync branches in a short run (check with a coverage report)
-- [ ] `decrypt` inner-frame mode produces messages that decrypt and deserialize successfully for valid input
-- [ ] on the vulnerable baseline, the regression input fails in `receiver`
+- [x] both targets build and replay their corpus cleanly
+- [x] `receiver` reaches the grow, skip and garbage-resync branches in a short run (check with a coverage report)
+- [x] `decrypt` inner-frame mode produces messages that decrypt and deserialize successfully for valid input
+- [x] on the vulnerable baseline, the regression input fails in `receiver`
+- ➕ The receiver subclass, the read loop and the frame encryption helper are in `tests/fuzz/fuzz-nxcp.h`,
+  shared by both targets. Read size comes from the input byte at the current position, without consuming it:
+  one read in four takes everything that fits, the others take 1 to 64 bytes.
+- ➕ The seed generator now takes the corpus directory and writes into its `message`, `receiver` and
+  `decrypt` subdirectories.
+- ➕ Branch coverage was checked with a separate `-fprofile-instr-generate` build and `llvm-cov`, over the
+  corpus left by a 45 second run: garbage resync, buffer growth, oversized message skip and the skip read path
+  are all hit. libFuzzer's own `-print_coverage` output was misleading and is not what the check rests on.
+- ⚠️ Both targets dump with the current protocol version, not the session's negotiated one as real sessions do.
 
 ### Task 8: Private campaign and acceptance measurements
 
@@ -314,10 +347,27 @@ cleanly on the branch head, that is, any of the three defects `6a7f4b05da` fixed
 so the measurement does not try to tell them apart. A target that never finds one gets its seeds or harness
 reworked.
 
-- [ ] campaign run for all four targets; duration and executions recorded in the README
-- [ ] all findings fixed or ticketed privately; reproducers committed with their fixes
-- [ ] rediscovery measurement recorded for `deserialize`, `dump` and `receiver`
-- [ ] all four targets replay their final corpus cleanly on the branch head
+- [x] campaign run for all four targets; duration and executions recorded in the README
+- [x] all findings fixed or ticketed privately; reproducers committed with their fixes
+- [x] rediscovery measurement recorded for `deserialize`, `dump` and `receiver`
+- [x] all four targets replay their final corpus cleanly on the branch head
+- ⚠️ Duration was Claude's call, since no reviewer was available when the campaign started: two hours per
+  target, all four in parallel on this machine in the Linux container, after two ten-minute trial rounds.
+  Executions: `deserialize` 71.9 million, `dump` 36.0 million, `receiver` 66.2 million, `decrypt` 29.8
+  million. No crash, timeout or out-of-memory report. The CI step check of Task 9 ran on the same machine
+  during the first quarter of an hour, so the counts are slightly lower than an idle machine would give.
+- ➕ Findings came from the short runs made while writing the targets (Tasks 5 to 7) and from the first trial
+  round, not from the long run. Each is a separate commit with a unit test: `Ip6ToStr()` read past the
+  address, the UTF-8 and UTF-16 encoders' wrapping bound check, the unaligned UCS-2 swap in `serialize()` for
+  protocol version 1. None was left open, so nothing was filed in `private/netxms`. The first trial round also
+  exposed two bugs in the `decrypt` harness itself, folded into the Task 7 commit.
+- ➕ The `dump` timeout question from Task 6 was settled by giving `dump()` a larger output buffer step
+  (separate commit): 100000 fields went from 13 seconds to under one, so the `dump` target runs with the same
+  limits as the others. The long run used the `dump` target built before that change.
+- ➕ Rediscovery, on the baseline rebuilt from the final head: every target found a crashing input within two
+  seconds for seeds 1, 2 and 3 (43 to 2995 executions), and all nine inputs replay cleanly on the head.
+- ➕ The corpus grown by the campaign is not checked in; the checked-in corpus is the generated seeds, the
+  hand-made inputs and the reproducers. Both replay cleanly on the head.
 
 ### Task 9: CI job and documentation
 
@@ -331,9 +381,15 @@ README covers: configure and build, running a target, reproducing from a crash f
 corpus, regenerating seeds, the input contract of the `deserialize` and `dump` targets, and the disclosure
 rule. `tests/CLAUDE.md` gets the build gating of `tests/fuzz` and a pointer to the README.
 
-- [ ] workflow passes on the branch; a deliberately broken parser check makes the matching job fail and upload its input
-- [ ] README and `tests/CLAUDE.md` written
-- [ ] move this plan to `docs/plans/completed/`
+- [x] workflow passes on the branch; a deliberately broken parser check makes the matching job fail and upload its input (checked in the container only, see below)
+- [x] README and `tests/CLAUDE.md` written
+- [x] move this plan to `docs/plans/completed/`
+- ⚠️ Not run on GitHub: nothing is pushed. The workflow's build, replay and fuzz steps were run by hand in the
+  Linux container for all four targets and passed. With the field size validation reverted, three jobs fail
+  at the replay step on the regression input and the fourth fails while fuzzing, each leaving the failing
+  input in the artifact directory. The checkout, dependency installation, `prepare_release_build.sh` and
+  artifact upload steps were not exercised.
+- ➕ Roster had Codex writing this task; Claude wrote it (see Tandem).
 
 ## Tandem
 
@@ -352,6 +408,23 @@ rule. `tests/CLAUDE.md` gets the build gating of `tests/fuzz` and a pointer to t
 ⚠️ Roster change by the user during Task 1 review: Codex kept hitting guardrails, so the user told Claude to
 ignore it. From Task 1 on, Claude writes every task and no commit has had a per-task review; Task 1 was sent
 for review and the review never came back. The table above is the roster as first agreed.
+
+⚠️ Review: Codex came back with a fresh session after Task 7 but did not answer the review request. The user
+then had another model review the branch from a written brief. It read Tasks 1 to 7, the fix commits and the
+uncommitted Task 9 files statically, without building, and approved all of them. Its one nit, that the CI
+`dump` job could time out on slow input, led to the `dump()` buffer step commit. It also noted, as existing
+behaviour outside this work, that `dump()` decides whether to inflate from the version it is given while
+`deserialize()` uses the version encoded in the message.
+
+⚠️ Branch review: revmux round `nxcp-fuzzing/01-initial`, profile `claude-only` (four Claude reviewers, no
+Codex peer, because Codex was not usable during this run), all four sources reported. Three minor findings,
+all fixed in one commit: a misplaced doc comment and a leaked string in the `Ip6ToStr` unit test, and the
+`MemoryPool::clear()` description in the header. One item was classed as existing before this branch and
+rated major: on a 32 bit build a declared uncompressed size close to 4 GB passed the Task 1 ratio check and
+made the pool's size arithmetic wrap. Fixed in a separate commit by also limiting the declared size to the
+largest message size the receiver accepts (0x3FFFFFFF), with a unit test. Triage was Claude's alone. No second
+round was run, since the fixes are contained edits. One related point is left for the user to file privately
+and is not described here.
 
 Decisions taken by the two agents before the run, without the user:
 

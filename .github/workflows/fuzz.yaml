@@ -1,0 +1,65 @@
+name: Fuzz NXCP parser
+
+on:
+  push:
+    branches:
+      - master
+      - stable-*
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Fuzz:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: deserialize
+            corpus: message
+          - target: dump
+            corpus: message
+          - target: receiver
+            corpus: receiver
+          - target: decrypt
+            corpus: decrypt
+    env:
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+    steps:
+      - uses: actions/checkout@v7
+      - name: Update apt cache
+        run: sudo apt-get update
+      - name: Install dependencies
+        run: sudo apt-get install -y clang libssl-dev zlib1g-dev libexpat1-dev
+          libcurl4-openssl-dev libpcre2-dev libjansson-dev
+      - name: Prepare release build
+        run: ./build/prepare_release_build.sh
+      - name: autoconf
+        run: ./reconf
+      - name: configure
+        run: CC=clang CXX=clang++ ./configure --prefix=/tmp/build --enable-fuzzer
+      - name: make
+        run: make -j$(nproc)
+      - name: Replay corpus
+        run: |
+          mkdir -p fuzz-artifacts
+          tests/fuzz/fuzz-nxcp-${{ matrix.target }} -runs=0 -timeout=5 \
+            -rss_limit_mb=2048 -malloc_limit_mb=512 \
+            -artifact_prefix=fuzz-artifacts/ tests/fuzz/corpus/${{ matrix.corpus }}
+      - name: Fuzz
+        run: |
+          mkdir -p fuzz-corpus
+          cp tests/fuzz/corpus/${{ matrix.corpus }}/* fuzz-corpus/
+          tests/fuzz/fuzz-nxcp-${{ matrix.target }} -max_total_time=120 -max_len=4096 \
+            -timeout=5 -rss_limit_mb=2048 -malloc_limit_mb=512 \
+            -artifact_prefix=fuzz-artifacts/ fuzz-corpus
+      - name: Upload failing input
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fuzz-${{ matrix.target }}-failing-input
+          path: fuzz-artifacts/
+          if-no-files-found: ignore

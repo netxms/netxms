@@ -170,6 +170,7 @@ DISABLE_JQ="no"
 REQUIRE_JQ="no"
 ENABLE_DEBUG="no"
 ENABLE_SANITIZER="no"
+ENABLE_FUZZER="no"
 ENABLE_WERROR="no"
 ENABLE_RTTI="no"
 STATIC_BUILD="no"
@@ -1038,6 +1039,15 @@ AC_ARG_ENABLE(sanitizer,
 	fi
 ])
 
+AC_ARG_ENABLE(fuzzer,
+[AS_HELP_STRING([--enable-fuzzer],[build libFuzzer targets in tests/fuzz (requires clang with libFuzzer, implies --enable-sanitizer)])],
+[
+	if test "x$enableval" = "xyes"; then
+		ENABLE_FUZZER="yes"
+		ENABLE_SANITIZER="yes"
+	fi
+])
+
 AC_ARG_ENABLE(werror,
 [AS_HELP_STRING(--enable-werror,threat all warnings as errors)],
 [
@@ -1066,7 +1076,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxnetconf db client server agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="agent ha test-libethernetip test-libnxcore test-libnxsl test-libnxnetconf test-libnxsnmp test-libnxsrv test-kpidirect test-ncd-webhook test-nxshell test-server"
+	TEST_MODULES="agent fuzz ha test-libethernetip test-libnxcore test-libnxsl test-libnxnetconf test-libnxsnmp test-libnxsrv test-kpidirect test-ncd-webhook test-nxshell test-server"
 	AGENT_UNIT_TESTS="entsoe extcheck weather linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb netconf ssh vmgr xen asterisk redis lldpd"
@@ -1086,6 +1096,11 @@ AC_ARG_WITH(tests,
 [
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES tests"
 ])
+
+# Fuzz targets are built without the rest of the tests; distribution build enters tests/fuzz via TEST_MODULES
+if test "x$ENABLE_FUZZER" = "xyes" -a "x$DIST_BUILD" != "xyes"; then
+	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES tests/fuzz"
+fi
 
 AC_ARG_ENABLE(systemd,
 [AS_HELP_STRING(--disable-systemd,disable Systemd support)],
@@ -4185,6 +4200,52 @@ if test "x$ENABLE_SANITIZER" = "xyes"; then
 	AC_DEFINE(WITH_ADDRESS_SANITIZER,1,Define to 1 if address sanitizer is enabled)
 fi
 
+#--------------------------------------------------------------------
+# Fuzzer
+#--------------------------------------------------------------------
+
+if test "x$ENABLE_FUZZER" = "xyes"; then
+	AC_CPP_CHECK_OPTION(-fsanitize=fuzzer-no-link)
+	for flag in -fsanitize=address -fsanitize=undefined -fsanitize=fuzzer-no-link; do
+		case " $CPPFLAGS " in
+			*" $flag "*) ;;
+			*) AC_MSG_ERROR([--enable-fuzzer requires compiler support for $flag (use upstream clang)]) ;;
+		esac
+	done
+	for flag in -fsanitize=address -fsanitize=undefined; do
+		case " $LDFLAGS " in
+			*" $flag "*) ;;
+			*) AC_MSG_ERROR([--enable-fuzzer requires linker support for $flag (use upstream clang)]) ;;
+		esac
+	done
+
+	AC_LANG_PUSH([C++])
+	AC_MSG_CHECKING(whether C++ compiler can build instrumented programs)
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ],
+		[
+			AC_MSG_RESULT(no)
+			AC_MSG_ERROR([--enable-fuzzer requires C++ compiler support for address, undefined behavior and fuzzer instrumentation (use upstream clang)])
+		])
+
+	# Test program must not have main() because libFuzzer provides it
+	AC_MSG_CHECKING(for libFuzzer)
+	OLD_LDFLAGS="$LDFLAGS"
+	LDFLAGS="$LDFLAGS -fsanitize=fuzzer"
+	AC_LINK_IFELSE([AC_LANG_SOURCE([[
+#include <stddef.h>
+#include <stdint.h>
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
+		]])],
+		[ AC_MSG_RESULT(yes) ],
+		[
+			AC_MSG_RESULT(no)
+			AC_MSG_ERROR([--enable-fuzzer requires libFuzzer, which is part of upstream clang (GCC and Apple clang do not provide it)])
+		])
+	LDFLAGS="$OLD_LDFLAGS"
+	AC_LANG_POP([C++])
+fi
+
 
 #--------------------------------------------------------------------
 # protobuf
@@ -4404,6 +4465,7 @@ if test "x$CXX" = "xCC" ; then
 	LIBS="$LIBS -lCrunG3"
 fi
 
+AM_CONDITIONAL([ENABLE_FUZZER], [test "x$ENABLE_FUZZER" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([HAVE_SDBUS], [test "x$HAVE_SDBUS" = "xyes"])
 AM_CONDITIONAL([JAR_BUILD], [test "x$JAR_BUILD" = "xyes"])
@@ -4845,6 +4907,7 @@ AC_CONFIG_FILES([
 	tests/agent/unit/weather/Makefile
 	tests/agent/unit/linux-cpu-usage-collector/Makefile
 	tests/config/Makefile
+	tests/fuzz/Makefile
 	tests/include/Makefile
 	tests/suite/Makefile
 	tests/ha/Makefile
