@@ -208,13 +208,19 @@ The change affects every pool user in a sanitizer build (NXSL, SNMP, log parser,
 and code that silently relied on the 8-byte round-up will now be reported. The two `clear()` callers were
 checked and neither keeps pointers across it.
 
-- [ ] allocation and `clear()` switched under `WITH_ADDRESS_SANITIZER`; non-sanitizer behaviour unchanged
-- [ ] region-count assertions in `tests/test-libnetxms/mempool.cpp` hold in both build modes
-- [ ] unit test added for `clear()` followed by allocation (not covered today)
-- [ ] verified by hand once in a sanitizer build: a one-byte overrun of a pool allocation, and a read after
+- [x] allocation and `clear()` switched under `WITH_ADDRESS_SANITIZER`; non-sanitizer behaviour unchanged
+- [x] region-count assertions in `tests/test-libnetxms/mempool.cpp` hold in both build modes
+- [x] unit test added for `clear()` followed by allocation (not covered today)
+- [x] verified by hand once in a sanitizer build: a one-byte overrun of a pool allocation, and a read after
       `clear()`, are both reported by ASan
-- [ ] full `netxms-test-suite` passes once in an `--enable-sanitizer` build; anything it reports is fixed or
+- [x] full `netxms-test-suite` passes once in an `--enable-sanitizer` build; anything it reports is fixed or
       ticketed before continuing
+- ➕ Region-count assertions differ by build mode (every allocation is a region under the sanitizer), so the
+  test takes both expected values through a `REGION_COUNT` macro.
+- ⚠️ The full suite was run in an `--enable-sanitizer` build on macOS (Apple clang, ASan and UBSan, no
+  LeakSanitizer on that platform) and passed. It was not run on Linux with LeakSanitizer.
+- ➕ The run reported one UBSan finding unrelated to the pool, pointer arithmetic on a null pointer in the
+  configuration file parser (`src/libnetxms/config.cpp`); fixed in a separate commit.
 
 ### Task 5: `--enable-fuzzer` build and the `dump` target
 

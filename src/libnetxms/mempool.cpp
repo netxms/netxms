@@ -88,6 +88,14 @@ MemoryPool::~MemoryPool()
  */
 void *MemoryPool::allocate(size_t size)
 {
+#if WITH_ADDRESS_SANITIZER
+   // Each request gets its own region of exact size, so that address sanitizer can see the end of every allocation
+   void *region = MemAlloc(size + m_headerSize);
+   *((void **)region) = m_currentRegion;
+   m_currentRegion = region;
+   m_allocated = m_headerSize + size;
+   return (char*)region + m_headerSize;
+#else
    size_t allocationSize = ((size % 8) == 0) ? size : (size + 8 - size % 8);
    void *p;
    if ((m_currentRegion != nullptr) && (m_allocated + allocationSize <= m_regionSize))
@@ -104,6 +112,7 @@ void *MemoryPool::allocate(size_t size)
       m_allocated = m_headerSize + allocationSize;
    }
    return p;
+#endif
 }
 
 /**
@@ -120,22 +129,29 @@ TCHAR *MemoryPool::copyString(const TCHAR *s)
 }
 
 /**
- * Drop all allocated memory except one region
+ * Drop all allocated memory except one region (all regions if built with address sanitizer,
+ * so that use of pool memory after this call is detected)
  */
 void MemoryPool::clear()
 {
    if (m_currentRegion == nullptr)
       return;
 
+#if WITH_ADDRESS_SANITIZER
+   void *r = m_currentRegion;
+   m_currentRegion = nullptr;
+   m_allocated = 0;
+#else
    void *r = *((void **)m_currentRegion);
+   *((void **)m_currentRegion) = nullptr;
+   m_allocated = m_headerSize;
+#endif
    while(r != nullptr)
    {
       void *n = *((void **)r);
       MemFree(r);
       r = n;
    }
-   *((void **)m_currentRegion) = nullptr;
-   m_allocated = m_headerSize;
 }
 
 /**
