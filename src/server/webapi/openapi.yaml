@@ -99,6 +99,8 @@ tags:
     description: Status of long-running server-side tasks started by other endpoints
   - name: Agent Tunnels
     description: Agent tunnel management (listing connected tunnels, binding tunnels to nodes)
+  - name: OTLP
+    description: OpenTelemetry (OTLP) receiver data. Available only when the OTLP module is loaded.
 paths:
   /:
     get:
@@ -8627,8 +8629,10 @@ paths:
                   type: string
                   maxLength: 31
                   description: |
-                    Terminal type (TERM) requested for the PTY, e.g. `xterm-256color`.
-                    If omitted, the default from the node's device driver is used.
+                    Terminal type (TERM) requested for the PTY. If omitted or empty, the
+                    terminal type suggested by the node's device driver is used, which is
+                    `vt100` unless the driver overrides it. Clients that render ANSI colors
+                    (e.g. xterm.js) should send `xterm-256color` explicitly.
                 login:
                   type: string
                   description: |
@@ -9490,6 +9494,46 @@ paths:
           description: User does not have read access to given object
         '404':
           description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/otlp-metrics:
+    get:
+      operationId: getObjectOtlpMetrics
+      summary: Get OTLP metrics received for node
+      description: >-
+        List the OpenTelemetry metrics the OTLP receiver has received for the given node: one entry per metric
+        name with its type and the attribute keys seen on its data points. The catalog is built from received
+        data in memory, so it is empty after a server restart until the node sends metrics again; metrics and
+        attribute keys not seen within `OTLP.MetricCatalogRetention` seconds (default 86400) are dropped. Returns an empty
+        array when no metrics were received for the node. Provided by the OTLP module; when the module is not
+        loaded the route does not exist and every request returns 404.
+      tags:
+        - Objects
+        - OTLP
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      responses:
+        '200':
+          description: Metric catalog retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OtlpMetric'
+        '400':
+          description: Invalid object ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object does not exist, is not a node, or the OTLP module is not loaded
       security:
         - BearerAuth: []
   /v1/objects/{object-id}/switch-forwarding-database:
@@ -19107,7 +19151,116 @@ components:
           description: Name of the script providing the link color (used when color source is "script").
         config:
           type: string
-          description: Serialized JSON link configuration (e.g. referenced DCI list).
+          description: |
+            Link configuration as a JSON document serialized into a string (not a nested object).
+            After parsing it has the structure of `NetworkMapLinkConfig`. Everything needed to
+            render the link beyond endpoints, label and color (line style and width, routing,
+            bend points, label position, DCI values shown on the link, status source objects)
+            is in this document. An empty string means all defaults. Send it back the same way,
+            as a string.
+          example: '{"dciList":[],"objectStatusList":[],"routing":0,"useActiveThresholds":false,"useInterfaceUtilization":false,"labelPosition":50,"style":0,"width":0}'
+    NetworkMapLinkConfig:
+      type: object
+      description: |
+        Structure of the JSON document carried as a string in `NetworkMapLink.config`. All
+        fields are optional; a missing field takes the default value.
+      properties:
+        routing:
+          type: integer
+          enum: [0, 1, 2, 3]
+          default: 0
+          description: Link routing (0 = map default, 1 = direct, 2 = Manhattan, 3 = bend points).
+        bendPoints:
+          type: array
+          nullable: true
+          items:
+            type: integer
+          description: |
+            Bend points used with routing 3, as a flat list of map coordinate pairs
+            `[x1, y1, x2, y2, ...]`. A pair with X equal to 2147483647 (0x7FFFFFFF) terminates
+            the list.
+        geoBendPoints:
+          type: array
+          nullable: true
+          items:
+            type: array
+            minItems: 2
+            maxItems: 2
+            items:
+              type: number
+          description: Bend points on geographic maps as `[latitude, longitude]` pairs.
+        style:
+          type: integer
+          minimum: 0
+          default: 0
+          description: |
+            Line style: 0 = map default, 1 = solid, 2 = dash, 3 = dot, 4 = dash-dot,
+            5 = dash-dot-dot. Values above 5 are treated as map default. The server sets 3 on
+            VPN links and 2 on wireless client links.
+        width:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Line width in pixels; 0 = map default.
+        labelPosition:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 50
+          description: Position of the link name label along the link, in percent from the first element.
+        objectStatusList:
+          type: array
+          items:
+            type: integer
+          description: IDs of objects whose status determines the link color when `colorSource` is 1 (object status).
+        useActiveThresholds:
+          type: boolean
+          default: false
+          description: With object status coloring, also take the most critical active threshold of the DCIs in `dciList` into account.
+        useInterfaceUtilization:
+          type: boolean
+          default: false
+          description: With object status coloring, color the link by the highest outbound utilization of interfaces listed in `objectStatusList` (unless the status is critical).
+        dciList:
+          type: array
+          nullable: true
+          description: DCI values displayed on the link.
+          items:
+            type: object
+            properties:
+              nodeId:
+                type: integer
+                description: ID of the DCI owner object.
+              dciId:
+                type: integer
+                description: DCI ID.
+              type:
+                type: integer
+                enum: [1, 2]
+                description: DCI type (1 = item, 2 = table).
+              instance:
+                type: string
+                nullable: true
+                description: Table row instance (table DCIs only).
+              column:
+                type: string
+                nullable: true
+                description: Table column name (table DCIs only).
+              formatString:
+                type: string
+                nullable: true
+                description: DCI value format string (same syntax as DCI value formatting in the console); null or empty for default formatting.
+              system:
+                type: boolean
+                description: DCI was added by the server (e.g. interface traffic on an automatically created link).
+              location:
+                type: string
+                enum: [CENTER, OBJECT1, OBJECT2]
+                description: Where on the link the value is shown.
+              direction:
+                type: string
+                enum: [NONE, FORWARD, REVERSE]
+                description: Traffic direction arrow shown next to the value.
     NetworkMapContent:
       type: object
       description: Content of a network map object - layout settings, link defaults, background, and element/link layout.
@@ -19524,7 +19677,13 @@ components:
         backgroundScale:
           type: integer
           minimum: 0
-          description: Backdrop calibration in micrometres per image pixel.
+          description: |
+            Backdrop calibration in micrometres per image pixel. 0 means the backdrop is not
+            calibrated; clients then scale the image so that its width equals the width of the
+            outline's bounding box, placed with its top left corner at `backgroundX` /
+            `backgroundY`. When the room has no outline either, an uncalibrated backdrop is drawn
+            at 10 mm per pixel. A client that draws nothing for 0 shows an empty floor plan for
+            every backdrop that has not been calibrated.
         backgroundX:
           type: integer
           description: X offset of the backdrop in room coordinates.
@@ -20304,93 +20463,192 @@ components:
           description: (Asset) Optional serial number of a component of the linked object (stack member, transceiver, disk, etc.). When set, the new asset is linked to that component instead of the object itself, linked object must be a node, and the serial number must be present in node's ENTITY-MIB component tree or agent hardware inventory. Node's own asset link is not affected. Serial number is written into asset's serial number attribute.
     ObjectDetails:
       type: object
+      description: |
+        Full object document. Fields common to all object classes are always present; fields
+        marked with an object class in parentheses are present only on objects of that class
+        (and its subclasses). This schema covers common fields, node, data collection target and
+        interface fields and the property groups of infrastructure classes; other object classes
+        add class-specific fields not listed here.
       properties:
+        # --- Common (all object classes) ---
+        id:
+          type: integer
+          description: Object ID
+        guid:
+          type: string
+          format: uuid
+          description: Object GUID
+        class:
+          $ref: '#/components/schemas/ObjectClass'
+        timestamp:
+          type: string
+          format: date-time
+          description: Object last change timestamp
+        name:
+          type: string
+          description: Object name
         alias:
           type: string
           description: Object alias
-        category:
+        commentsSource:
+          type: string
+          description: Comments as entered, with macros not expanded.
+        comments:
+          type: string
+          description: Comments with macros expanded.
+        status:
+          $ref: '#/components/schemas/Status'
+        statusText:
+          type: string
+          description: Status name (e.g. "Normal", "Critical").
+        statusCalcAlg:
           type: integer
-          description: Object category ID
-        chassisPlacementConfig:
-          allOf:
-            - $ref: '#/components/schemas/ChassisPlacement'
-          description: Placement geometry within the parent chassis. Present only for nodes placed in a chassis.
-        class:
-          $ref: '#/components/schemas/ObjectClass'
+          enum: [0, 1, 2, 3]
+          description: Status calculation algorithm (0 = server default, 1 = most critical, 2 = single threshold, 3 = multiple thresholds).
+        statusPropAlg:
+          type: integer
+          enum: [0, 1, 2, 3, 4]
+          description: Status propagation algorithm (0 = server default, 1 = unchanged, 2 = fixed, 3 = relative, 4 = translated).
+        fixedStatus:
+          type: integer
+          description: Status propagated to parents when `statusPropAlg` is 2 (fixed).
+        statusShift:
+          type: integer
+          description: Status shift applied when `statusPropAlg` is 3 (relative).
+        statusTranslation:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items:
+            type: integer
+          description: Propagated status for own status Warning, Minor, Major and Critical, used when `statusPropAlg` is 4 (translated).
+        statusSingleThreshold:
+          type: integer
+          description: Threshold in percent used when `statusCalcAlg` is 2 (single threshold).
+        statusThresholds:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items:
+            type: integer
+          description: Thresholds in percent for Warning, Minor, Major and Critical, used when `statusCalcAlg` is 3 (multiple thresholds).
+        maintenanceEventId:
+          type: integer
+          format: int64
+          description: ID of the event that started the current maintenance period, 0 when not in maintenance.
+        maintenanceInitiator:
+          type: integer
+          description: ID of the user who put the object into maintenance mode, 0 when not in maintenance.
+        isMaintenanceScheduled:
+          type: boolean
+          description: True if the object has pending scheduled maintenance.
+        mapImage:
+          type: string
+          format: uuid
+          description: Image library GUID of the custom map icon; nil UUID when not set.
+        geoLocation:
+          type: object
+          description: Geographical location.
+          properties:
+            type:
+              type: integer
+              enum: [0, 1, 2]
+              description: Location source (0 = not set, 1 = set manually, 2 = obtained from GPS).
+            latitude:
+              type: number
+            longitude:
+              type: number
+            accuracy:
+              type: integer
+              description: Location accuracy in metres (GPS only).
+            timestamp:
+              type: integer
+              description: UNIX time of the location fix (GPS only), 0 when not known.
+        postalAddress:
+          type: object
+          description: Postal address.
+          properties:
+            country:
+              type: string
+            region:
+              type: string
+            city:
+              type: string
+            district:
+              type: string
+            streetAddress:
+              type: string
+            postcode:
+              type: string
+        drilldownObjectId:
+          type: integer
+          description: ID of the network map or dashboard opened on drill-down from a map or dashboard, 0 for none.
+        dashboards:
+          type: array
+          items:
+            type: integer
+          description: IDs of dashboards and network maps associated with the object.
+        urls:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObjectUrl'
+        accessList:
+          type: array
+          description: Object's own access control list (inherited entries are not included).
+          items:
+            type: object
+            properties:
+              userId:
+                type: integer
+                description: User or group ID
+              access:
+                type: integer
+                description: Access rights bit mask (OBJECT_ACCESS_* flags).
+        inheritAccessRights:
+          type: boolean
+          description: Whether access rights are inherited from parent objects.
+        trustedObjects:
+          type: array
+          items:
+            type: integer
+          description: IDs of objects trusted by this object (allowed to read its data from scripts).
+        creationTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Object creation time; null for objects created before this was recorded.
+        categoryId:
+          type: integer
+          description: Object category ID, 0 for none.
+        aiHint:
+          type: string
+          description: Free-form hint about the object for the AI assistant.
+        timeZone:
+          type: string
+          nullable: true
+          description: Effective IANA time zone name (own or inherited from a parent object), `null` if not set.
+        timeZoneRule:
+          type: string
+          nullable: true
+          description: POSIX TZ rule of the effective time zone, `null` if not set.
+        timeZoneSource:
+          type: integer
+          description: ID of the parent object the time zone is inherited from, or 0 when the time zone is defined on this object or not set.
         customAttributes:
           type: array
           description: Custom attributes defined on the object (including those inherited from parent objects).
           items:
             $ref: '#/components/schemas/CustomAttribute'
-        effectiveRights:
-          $ref: '#/components/schemas/EffectiveRights'
-        guid:
-          type: string
-          format: uuid
-          description: Object GUID
-        id:
-          type: integer
-          description: Object ID
-        name:
-          type: string
-          description: Object name
-        physicalPlacement:
-          allOf:
-            - $ref: '#/components/schemas/PhysicalPlacement'
-          description: >-
-            Placement in a rack or chassis. Present on nodes and chassis; `containerId` is 0
-            when the object is not placed anywhere.
-        polling:
-          allOf:
-            - $ref: '#/components/schemas/PollingConfig'
-          description: Polling settings. Present on nodes.
-        snmp:
-          allOf:
-            - $ref: '#/components/schemas/SnmpConfig'
-          description: SNMP communication settings. Present on nodes.
-        agent:
-          allOf:
-            - $ref: '#/components/schemas/AgentConfig'
-          description: NetXMS agent communication settings. Present on nodes.
-        ssh:
-          allOf:
-            - $ref: '#/components/schemas/SshConfig'
-          description: SSH communication settings. Present on nodes.
-        vnc:
-          allOf:
-            - $ref: '#/components/schemas/VncConfig'
-          description: VNC communication settings. Present on nodes.
-        modbus:
-          allOf:
-            - $ref: '#/components/schemas/ModbusConfig'
-          description: Modbus communication settings. Present on nodes and sensors.
-        etherNetIp:
-          allOf:
-            - $ref: '#/components/schemas/EtherNetIpConfig'
-          description: EtherNet/IP communication settings. Present on nodes.
-        netconf:
-          allOf:
-            - $ref: '#/components/schemas/NetconfConfig'
-          description: NETCONF communication settings. Present on nodes.
-        icmp:
-          allOf:
-            - $ref: '#/components/schemas/IcmpConfig'
-          description: ICMP polling settings. Present on nodes.
-        mqttProxy:
-          type: integer
-          description: ID of the node used as MQTT proxy, or 0 for default. Present on nodes.
-        syslogCodepage:
-          type: string
-          description: Codepage of syslog messages received from the node; empty for server default. Present on nodes.
-        externalGateway:
-          type: boolean
-          description: Whether the node's primary address is an external gateway. Present on nodes.
-        webServiceProxy:
-          type: integer
-          description: ID of the node used as web service proxy, or 0 for default. Present on data collection targets.
-        bindUnderController:
-          type: boolean
-          description: Whether the chassis is bound under its controller node in the object tree. Present on chassis.
+        children:
+          type: array
+          items:
+            type: integer
+          description: IDs of child objects.
+        parents:
+          type: array
+          items:
+            type: integer
+          description: IDs of parent objects.
         responsibleUsers:
           type: array
           description: Users or groups responsible for the object (the object's own list; entries inherited from parent objects are not included).
@@ -20403,35 +20661,615 @@ components:
               tag:
                 type: string
                 description: Responsible user tag
-        timestamp:
-          type: string
-          format: date-time
-          description: Object last change timestamp
-        timeZone:
-          type: string
-          nullable: true
-          description: Effective IANA time zone name (own or inherited from a parent object), `null` if not set.
-        timeZoneRule:
-          type: string
-          nullable: true
-          description: POSIX TZ rule of the effective time zone, `null` if not set.
-        timeZoneSource:
-          type: integer
-          description: ID of the parent object the time zone is inherited from, or 0 when the time zone is defined on this object or not set.
-        status:
-          $ref: '#/components/schemas/Status'
+        moduleData:
+          type: object
+          additionalProperties: true
+          description: Data attached to the object by server modules, keyed by module name. Present only when at least one module has attached data.
+        effectiveRights:
+          $ref: '#/components/schemas/EffectiveRights'
         pollStates:
           type: array
           description: Per-poll-type state. Present only for pollable objects (e.g. nodes, sensors, interfaces); one entry per poll type the object accepts.
           items:
             $ref: '#/components/schemas/PollState'
+        # --- Classes sharing a key with different meaning ---
+        type:
+          description: |
+            (Node) Node type as string: `Unknown`, `Physical`, `Virtual`, `Controller` or `Container`.
+            (Interface) Interface type as integer IANA ifType.
+          oneOf:
+            - type: string
+              enum: [Unknown, Physical, Virtual, Controller, Container]
+            - type: integer
+        vlans:
+          description: |
+            (Node) VLANs configured on the node, or null when the VLAN list has not been read
+            (no VLAN support or not polled yet).
+            (Interface) IDs of VLANs the interface belongs to.
+          oneOf:
+            - type: array
+              nullable: true
+              items:
+                $ref: '#/components/schemas/NodeVlan'
+            - type: array
+              items:
+                type: integer
+        zoneUIN:
+          type: integer
+          description: (Node, Interface) Zone UIN.
+        # --- Data collection targets ---
+        webServiceProxy:
+          type: integer
+          description: (Data collection targets) ID of the node used as web service proxy, or 0 for default.
+        # --- Node ---
+        ipAddress:
+          allOf:
+            - $ref: '#/components/schemas/InetAddress'
+          description: (Node) Primary IP address.
+        primaryName:
+          type: string
+          description: (Node) Primary host name (DNS name or IP address as entered).
+        tunnelId:
+          type: string
+          format: uuid
+          description: (Node) ID of the bound agent tunnel; nil UUID when not bound.
+        capabilities:
+          allOf:
+            - $ref: '#/components/schemas/NodeCapabilities'
+          description: (Node) Node capabilities.
+        capabilityFlags:
+          type: integer
+          format: int64
+          description: (Node) Node capabilities as raw bit mask (NC_* flags); same information as `capabilities`.
+        state:
+          allOf:
+            - $ref: '#/components/schemas/NodeState'
+          description: (Node) Node state.
+        stateFlags:
+          type: integer
+          format: int64
+          description: (Node) Node state as raw bit mask (DCSF_* / NSF_* flags); same information as `state` except `decommissioned`.
+        subType:
+          type: string
+          description: (Node) Node sub-type; reserved, normally empty.
+        pendingState:
+          type: integer
+          description: (Node) Internal state used for status poll confirmation; -1 when no state change is pending.
+        pollCountSNMP:
+          type: integer
+          description: (Node) Number of consecutive failed SNMP polls.
+        pollCountAgent:
+          type: integer
+          description: (Node) Number of consecutive failed agent polls.
+        agentVersion:
+          type: string
+          description: (Node) NetXMS agent version, empty when there is no agent.
+        platformName:
+          type: string
+          description: (Node) Platform name reported by the agent (e.g. `Linux-x86_64`).
+        agentPlatformName:
+          type: string
+          description: (Node) Platform the agent was built for.
+        snmpObjectId:
+          type: string
+          description: (Node) SNMP sysObjectID in dotted notation, empty when SNMP is not supported.
+        sysDescription:
+          type: string
+          description: (Node) System description (SNMP sysDescr or agent System.Uname).
+        sysName:
+          type: string
+          description: (Node) SNMP sysName.
+        sysLocation:
+          type: string
+          description: (Node) SNMP sysLocation.
+        sysContact:
+          type: string
+          description: (Node) SNMP sysContact.
+        lldpNodeId:
+          type: string
+          description: (Node) LLDP chassis ID.
+        driverName:
+          type: string
+          description: (Node) Name of the network device driver selected for the node.
+        downSince:
+          type: string
+          format: date-time
+          nullable: true
+          description: (Node) Time the node became unreachable; null when reachable.
+        bootTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: (Node) System boot time; null when not known.
+        lastEvents:
+          type: array
+          minItems: 8
+          maxItems: 8
+          items:
+            type: integer
+            format: int64
+          description: |
+            (Node) IDs of the most recent events of specific kinds, by index: 0 = node down,
+            1 = agent down, 2 = network connection lost (the event the current outage is attributed to);
+            remaining slots are reserved. 0 means no such event.
+        baseBridgeAddress:
+          type: string
+          description: (Node) Bridge base address (MAC address in colon-separated notation).
+        syslogMessageCount:
+          type: integer
+          format: int64
+          description: (Node) Number of syslog messages received from the node since server start.
+        snmpTrapCount:
+          type: integer
+          format: int64
+          description: (Node) Number of SNMP traps received from the node since server start.
+        physicalPlacement:
+          allOf:
+            - $ref: '#/components/schemas/PhysicalPlacement'
+          description: >-
+            Placement in a rack or chassis. Present on nodes and chassis; `containerId` is 0
+            when the object is not placed anywhere.
+        physicalContainerId:
+          type: integer
+          description: (Node) Legacy duplicate of `physicalPlacement.containerId`.
+        rackHeight:
+          type: integer
+          description: (Node) Legacy duplicate of the rack height in `physicalPlacement`.
+        rackPosition:
+          type: integer
+          description: (Node) Legacy duplicate of the rack position in `physicalPlacement`.
+        rackOrientation:
+          type: integer
+          enum: [0, 1, 2]
+          description: (Node) Legacy duplicate of the rack orientation in `physicalPlacement` (0 = fill, 1 = front, 2 = rear).
+        rackImageFront:
+          type: string
+          format: uuid
+          description: (Node) Legacy duplicate of the front rack image in `physicalPlacement`.
+        rackImageRear:
+          type: string
+          format: uuid
+          description: (Node) Legacy duplicate of the rear rack image in `physicalPlacement`.
+        chassisPlacementConfig:
+          allOf:
+            - $ref: '#/components/schemas/ChassisPlacement'
+          description: (Node) Placement geometry within the parent chassis. Present only for nodes placed in a chassis.
+        polling:
+          allOf:
+            - $ref: '#/components/schemas/PollingConfig'
+          description: (Node) Polling settings.
+        snmp:
+          allOf:
+            - $ref: '#/components/schemas/SnmpConfig'
+          description: (Node) SNMP communication settings.
+        agent:
+          allOf:
+            - $ref: '#/components/schemas/AgentConfig'
+          description: (Node) NetXMS agent communication settings.
+        ssh:
+          allOf:
+            - $ref: '#/components/schemas/SshConfig'
+          description: (Node) SSH communication settings.
+        vnc:
+          allOf:
+            - $ref: '#/components/schemas/VncConfig'
+          description: (Node) VNC communication settings.
+        modbus:
+          allOf:
+            - $ref: '#/components/schemas/ModbusConfig'
+          description: (Node, Sensor) Modbus communication settings.
+        etherNetIp:
+          allOf:
+            - $ref: '#/components/schemas/EtherNetIpConfig'
+          description: (Node) EtherNet/IP communication settings.
+        netconf:
+          allOf:
+            - $ref: '#/components/schemas/NetconfConfig'
+          description: (Node) NETCONF communication settings.
+        icmp:
+          allOf:
+            - $ref: '#/components/schemas/IcmpConfig'
+          description: (Node) ICMP polling settings.
+        mqttProxy:
+          type: integer
+          description: (Node) ID of the node used as MQTT proxy, or 0 for default.
+        syslogCodepage:
+          type: string
+          description: (Node) Codepage of syslog messages received from the node; empty for server default.
+        externalGateway:
+          type: boolean
+          description: (Node) Whether the node's primary address is an external gateway.
+        portNumberingScheme:
+          type: integer
+          enum: [0, 1, 2, 3, 4, 5]
+          description: |
+            (Node) Front panel port layout reported by the device driver: 0 = unknown, 1 = custom
+            (driver defines location of each port), 2 = left-to-right then up-down, 3 = left-to-right
+            then down-up, 4 = up-down then left-to-right, 5 = down-up then left-to-right.
+        portRowCount:
+          type: integer
+          description: (Node) Number of port rows on the front panel, 0 when not known.
+        cipDeviceType:
+          type: integer
+          description: (Node) EtherNet/IP (CIP) device type code.
+        cipVendorCode:
+          type: integer
+          description: (Node) EtherNet/IP (CIP) vendor code.
+        cipStatus:
+          type: integer
+          description: (Node) EtherNet/IP (CIP) identity object status word.
+        cipState:
+          type: integer
+          description: (Node) EtherNet/IP (CIP) identity object state.
+        radioInterfaces:
+          type: array
+          description: (Node) Radio interfaces of a wireless access point or controller node. `ownerId` and `ownerName` are not included here.
+          items:
+            $ref: '#/components/schemas/WirelessRadioInterface'
+        # --- Interface ---
+        index:
+          type: integer
+          description: (Interface) Interface index (ifIndex).
+        macAddress:
+          type: string
+          description: (Interface) MAC address in colon-separated notation.
+        ipAddressList:
+          type: array
+          description: (Interface) IP addresses assigned to the interface.
+          items:
+            $ref: '#/components/schemas/InetAddress'
+        flags:
+          type: integer
+          description: (Interface) Raw interface flags (IF_* bit mask), including expected state bits.
+        userFlags:
+          type: object
+          description: (Interface) Interface flags that can be changed by the user (also accepted by PATCH).
+          properties:
+            excludeFromTopology:
+              type: boolean
+            includeInIcmpPoll:
+              type: boolean
+            disableSnmpStatusPoll:
+              type: boolean
+            disableIcmpStatusPoll:
+              type: boolean
+            disableAgentStatusPoll:
+              type: boolean
+        expectedState:
+          type: integer
+          enum: [0, 1, 2, 3]
+          description: (Interface) Expected interface state (0 = up, 1 = down, 2 = ignore, 3 = auto).
+        expectedStateText:
+          type: string
+          enum: [UP, DOWN, IGNORE, AUTO]
+          description: (Interface) Expected interface state as text.
+        description:
+          type: string
+          description: (Interface) Interface description (ifDescr).
+        ifAlias:
+          type: string
+          description: (Interface) Interface alias (ifAlias).
+        mtu:
+          type: integer
+          description: (Interface) MTU.
+        speed:
+          type: integer
+          format: int64
+          description: (Interface) Current speed in bits per second, 0 when not known.
+        maxSpeed:
+          type: integer
+          format: int64
+          description: (Interface) Maximum supported speed in bits per second, 0 when not known.
+        lastKnownSpeed:
+          type: integer
+          format: int64
+          description: (Interface) Last non-zero speed in bits per second.
+        inboundUtilization:
+          type: integer
+          minimum: -1
+          maximum: 1000
+          description: |
+            (Interface) Inbound utilization in tenths of a percent (0..1000), calculated from the
+            interface's inbound traffic DCI. -1 when not measured (no traffic DCI value yet, or the
+            value was cleared). 0 when the interface speed is not known.
+        outboundUtilization:
+          type: integer
+          minimum: -1
+          maximum: 1000
+          description: |
+            (Interface) Outbound utilization in tenths of a percent (0..1000), calculated from the
+            interface's outbound traffic DCI. -1 when not measured (no traffic DCI value yet, or the
+            value was cleared). 0 when the interface speed is not known.
+        bridgePortNumber:
+          type: integer
+          description: (Interface) Bridge port number, 0 when not a bridge port.
+        peerNodeId:
+          type: integer
+          description: (Interface) ID of the peer node, 0 when not known.
+        peerInterfaceId:
+          type: integer
+          description: (Interface) ID of the peer interface, 0 when not known.
+        peerLastUpdated:
+          type: string
+          format: date-time
+          nullable: true
+          description: (Interface) Time peer information was last confirmed; null when never.
+        peerDiscoveryProtocol:
+          type: integer
+          description: (Interface) Protocol the peer was discovered with.
+        peerDiscoveryProtocolText:
+          type: string
+          description: (Interface) Peer discovery protocol name (e.g. `LLDP`, `CDP`, `FDB`).
+        aggregateInterfaceId:
+          type: integer
+          description: (Interface) ID of the aggregate interface this interface is a member of, 0 for none.
+        parentInterfaceId:
+          type: integer
+          description: (Interface) ID of the parent interface (e.g. physical port of a sub-interface), 0 for none.
+        adminState:
+          type: integer
+          description: (Interface) Administrative state code.
+        adminStateText:
+          type: string
+          description: (Interface) Administrative state as text.
+        operState:
+          type: integer
+          description: (Interface) Operational state code.
+        operStateText:
+          type: string
+          description: (Interface) Operational state as text.
+        lastKnownOperState:
+          type: integer
+          description: (Interface) Last known operational state code.
+        lastKnownAdminState:
+          type: integer
+          description: (Interface) Last known administrative state code.
+        pendingOperState:
+          type: integer
+          description: (Interface) Operational state awaiting confirmation by consecutive polls.
+        confirmedOperState:
+          type: integer
+          description: (Interface) Last confirmed operational state.
+        stpPortState:
+          type: integer
+          description: (Interface) Spanning tree port state code.
+        stpPortStateText:
+          type: string
+          description: (Interface) Spanning tree port state as text.
+        dot1xPaeAuthState:
+          type: integer
+          description: (Interface) 802.1x PAE authenticator state.
+        dot1xBackendAuthState:
+          type: integer
+          description: (Interface) 802.1x backend authentication state.
+        lastDownEventId:
+          type: integer
+          format: int64
+          description: (Interface) ID of the last interface down event.
+        pendingStatus:
+          type: integer
+          description: (Interface) Status awaiting confirmation by consecutive polls, -1 when none.
+        statusPollCount:
+          type: integer
+          description: (Interface) Consecutive polls with the pending status.
+        operStatePollCount:
+          type: integer
+          description: (Interface) Consecutive polls with the pending operational state.
+        requiredPollCount:
+          type: integer
+          description: (Interface) Number of consecutive polls required to confirm a state change; 0 for server default.
+        ifTableSuffixLen:
+          type: integer
+          description: (Interface) Length of the ifTable index suffix.
+        ifTableSuffix:
+          type: array
+          items:
+            type: integer
+          description: (Interface) ifTable index suffix.
+        physicalLocation:
+          type: object
+          description: (Interface) Physical location of the port. Present only when known.
+          properties:
+            chassis:
+              type: integer
+            module:
+              type: integer
+            pic:
+              type: integer
+            port:
+              type: integer
+            lane:
+              type: integer
+              description: Lane on a split (breakout) port; absent when the port is not split.
+        ospfArea:
+          type: string
+          description: (Interface) OSPF area ID in dotted notation. Present only on OSPF interfaces.
+        ospfType:
+          type: integer
+          description: (Interface) OSPF interface type. Present only on OSPF interfaces.
+        ospfState:
+          type: integer
+          description: (Interface) OSPF interface state. Present only on OSPF interfaces.
+        vendor:
+          type: string
+          nullable: true
+          description: (Interface) Vendor resolved from the MAC address OUI; null when unknown.
+        peerVendor:
+          type: string
+          nullable: true
+          description: (Interface) Vendor resolved from the peer interface MAC address OUI; null when unknown or no peer.
+        # --- Other classes ---
+        bindUnderController:
+          type: boolean
+          description: (Chassis) Whether the chassis is bound under its controller node in the object tree.
+        facility:
+          allOf:
+            - $ref: '#/components/schemas/FacilityConfig'
+          description: (Facility) Facility property group.
+        powerDomain:
+          allOf:
+            - $ref: '#/components/schemas/PowerDomainConfig'
+          description: (PowerDomain) Power domain property group.
+        coolingZone:
+          allOf:
+            - $ref: '#/components/schemas/CoolingZoneConfig'
+          description: (CoolingZone) Cooling zone property group.
+        room:
+          allOf:
+            - $ref: '#/components/schemas/RoomConfig'
+          description: (Room) Room property group.
+        roomPlacement:
+          allOf:
+            - $ref: '#/components/schemas/RackRoomPlacement'
+          description: (Rack) Placement of the rack on the floor plan of its room.
+    NodeCapabilities:
+      type: object
+      description: Node capabilities. Every key is always present.
+      properties:
+        isSnmp: { type: boolean }
+        isNativeAgent: { type: boolean }
+        isBridge: { type: boolean }
+        isRouter: { type: boolean }
+        isLocalMgmt:
+          type: boolean
+          description: Node is the management server itself.
+        isPrinter: { type: boolean }
+        isOspf: { type: boolean }
+        isSsh: { type: boolean }
+        isNetconf: { type: boolean }
+        isCdp: { type: boolean }
+        isNdp: { type: boolean }
+        isLldp: { type: boolean }
+        isVrrp: { type: boolean }
+        hasVlans: { type: boolean }
+        is8021x: { type: boolean }
+        isStp: { type: boolean }
+        hasEntityMib: { type: boolean }
+        hasIfxTable: { type: boolean }
+        hasAgentIfxCounters: { type: boolean }
+        hasWinPdh: { type: boolean }
+        isWifiController: { type: boolean }
+        isSmclp: { type: boolean }
+        isNewPolicyTypes: { type: boolean }
+        hasUserAgent: { type: boolean }
+        isEthernetIp: { type: boolean }
+        isModbusTcp: { type: boolean }
+        isProfinet: { type: boolean }
+        hasFileManager: { type: boolean }
+        lldpV2Mib: { type: boolean }
+        emulatedEntityMib: { type: boolean }
+        deviceView: { type: boolean }
+        isWifiAp: { type: boolean }
+        isVnc: { type: boolean }
+        isLocalVnc: { type: boolean }
+        registeredForBackup: { type: boolean }
+        hasServiceManager: { type: boolean }
+        sshInteractiveChannel: { type: boolean }
+        sshCommandChannel: { type: boolean }
+        hasAgentLldp: { type: boolean }
+        isDhcpServer: { type: boolean }
+        snmpGetBulk: { type: boolean }
+    NodeState:
+      type: object
+      description: |
+        Node state. Every key is always present. All keys except `decommissioned` and
+        `agentRestartPending` are faults: the node, or one of the protocols used to reach it,
+        is not responding. `decommissioned` and `agentRestartPending` are lifecycle states and
+        should not be presented as faults.
+      properties:
+        unreachable:
+          type: boolean
+          description: Node is unreachable by any configured method.
+        networkPathProblem:
+          type: boolean
+          description: Node is unreachable because of a problem on the network path to it.
+        agentUnreachable: { type: boolean }
+        snmpUnreachable: { type: boolean }
+        ethernetIpUnreachable: { type: boolean }
+        cacheModeNotSupported:
+          type: boolean
+          description: Agent does not support data collection cache mode.
+        snmpTrapFlood:
+          type: boolean
+          description: Node is sending SNMP traps above the flood detection threshold; its traps are being dropped.
+        icmpUnreachable: { type: boolean }
+        sshUnreachable: { type: boolean }
+        netconfUnreachable: { type: boolean }
+        modbusUnreachable: { type: boolean }
+        agentRestartPending:
+          type: boolean
+          description: Agent restart was requested and the server is waiting for the agent to come back; not a fault.
+        decommissioned:
+          type: boolean
+          description: Node is decommissioned and scheduled for deletion; not a fault.
+    NodeVlan:
+      type: object
+      description: VLAN configured on a node.
+      properties:
+        id:
+          type: integer
+          description: VLAN ID
+        name:
+          type: string
+          description: VLAN name
+        ports:
+          type: array
+          items:
+            type: object
+            properties:
+              ifIndex:
+                type: integer
+              objectId:
+                type: integer
+                description: ID of the interface object, 0 when not resolved.
+              physicalLocation:
+                type: object
+                description: Physical location of the port. Present only when known.
+                properties:
+                  chassis:
+                    type: integer
+                  module:
+                    type: integer
+                  pic:
+                    type: integer
+                  port:
+                    type: integer
+                  lane:
+                    type: integer
+                    description: Lane on a split (breakout) port; absent when the port is not split.
+    OtlpMetric:
+      type: object
+      description: OpenTelemetry metric received for a node by the OTLP receiver.
+      properties:
+        name:
+          type: string
+          description: Metric name.
+        type:
+          type: string
+          enum: [gauge, sum, histogram]
+          description: Metric type.
+        attributeKeys:
+          type: array
+          items:
+            type: string
+          description: Data point attribute keys seen on this metric.
     PollState:
       type: object
       description: State of a single poll type on a pollable object.
       properties:
         name:
           type: string
-          description: Poll type name (e.g. "status", "configuration", "instance", "discovery", "topology", "routing-table", "icmp", "autobind", "map-update").
+          enum:
+            - status
+            - configuration
+            - instance
+            - discovery
+            - topology
+            - routing
+            - icmp
+            - autobind
+            - map
+          description: Poll type name.
         pending:
           type: boolean
           description: True if a poll of this type is currently queued or in flight.
