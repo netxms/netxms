@@ -39,6 +39,7 @@ void TestThreadPoolStalledExpansion();
 void TestProcessExecutor(const char *procname);
 void TestProcessExecutorWorker();
 void TestStringConversion();
+void TestStringConversionSmallBuffers();
 void TestSubProcess(const char *procname, bool debug);
 void TestGeoLocation();
 void TestRSA();
@@ -3988,6 +3989,7 @@ int main(int argc, char *argv[])
    TestObjectMemoryPool();
    TestString();
    TestStringConversion();
+   TestStringConversionSmallBuffers();
    TestStringList();
    TestIsSameDirectory();
    TestStringMap();
