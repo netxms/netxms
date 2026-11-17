@@ -1075,6 +1075,261 @@ static void TestGetResponseHandling()
 }
 
 /**
+ * Behavior of simulated SNMPv3 agent
+ */
+enum class V3AgentBehavior
+{
+   COMPLIANT,     // Answer request outside of time window with notInTimeWindows report
+   SILENT_DROP,   // Silently drop request outside of time window
+   DOWN           // Never answer
+};
+
+static const BYTE s_v3AgentEngineId[] = { 0x80, 0x00, 0x1F, 0x88, 0x80, 0x12, 0x34, 0x56, 0x78 };
+static const BYTE s_v3OtherEngineId[] = { 0x80, 0x00, 0x1F, 0x88, 0x80, 0x9A, 0xBC, 0xDE, 0xF0 };
+#define V3_TEST_USER       "testuser"
+#define V3_TEST_PASSWORD   "authPassword123"
+
+/**
+ * Simulated SNMPv3 agent with authNoPriv user. Messages travel in encoded form in both directions. Requests are
+ * checked as in RFC 3414 section 3.2: request with unknown engine ID is answered with usmStatsUnknownEngineIDs report
+ * carrying current boots and time, authenticated request outside of time window is answered with
+ * usmStatsNotInTimeWindows report or silently dropped.
+ */
+class V3AgentSimulatorTransport : public SNMP_Transport
+{
+private:
+   SNMP_Engine m_engine;
+   V3AgentBehavior m_behavior;
+   SNMP_PDUBuffer m_reply;
+   size_t m_replySize;
+
+   void sendReply(SNMP_PDU *reply, SNMP_SecurityContext *context)
+   {
+      m_replySize = reply->encode(&m_reply, context);
+   }
+
+   void sendReport(SNMP_PDU *request, const SNMP_ObjectId& oid, SNMP_SecurityContext *context)
+   {
+      SNMP_PDU report(SNMP_REPORT, request->getRequestId(), SNMP_VERSION_3);
+      report.setReportable(false);
+      report.setMessageId(request->getMessageId());
+      report.setContextEngineId(m_engine.getId(), m_engine.getIdLen());
+      SNMP_Variable *v = new SNMP_Variable(oid);
+      v->setValueFromUInt32(ASN_COUNTER32, 1);
+      report.bindVariable(v);
+      sendReply(&report, context);
+   }
+
+public:
+   int m_discoveryRequests;      // Requests with unknown engine ID
+   int m_outOfWindowRequests;    // Authenticated requests outside of time window
+   int m_validRequests;          // Authenticated requests within time window
+   int m_unauthenticatedRequests;
+   SNMP_Engine m_lastContextEngine;
+
+   V3AgentSimulatorTransport(V3AgentBehavior behavior, bool reliable) : m_engine(s_v3AgentEngineId, sizeof(s_v3AgentEngineId), 7, 100000)
+   {
+      m_behavior = behavior;
+      m_replySize = 0;
+      m_reliable = reliable;
+      m_snmpVersion = SNMP_VERSION_3;
+      m_discoveryRequests = 0;
+      m_outOfWindowRequests = 0;
+      m_validRequests = 0;
+      m_unauthenticatedRequests = 0;
+   }
+
+   /**
+    * Set security context as restored from database: engine ID and context engine ID known, boots and time are not
+    */
+   void setRestoredSecurityContext(const BYTE *engineId, size_t engineIdLen, const BYTE *contextEngineId, size_t contextEngineIdLen)
+   {
+      SNMP_SecurityContext context(V3_TEST_USER, V3_TEST_PASSWORD, SNMP_AUTH_SHA1);
+      context.setAuthoritativeEngine(SNMP_Engine(engineId, engineIdLen));
+      context.setContextEngine(SNMP_Engine(contextEngineId, contextEngineIdLen));
+      setSecurityContext(context);
+   }
+
+   int totalRequests() const { return m_discoveryRequests + m_outOfWindowRequests + m_validRequests + m_unauthenticatedRequests; }
+
+   virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override
+   {
+      m_replySize = 0;
+
+      SNMP_PDUBuffer buffer;
+      size_t size = pdu->encode(&buffer, &m_securityContext);
+      if (size == 0)
+         return -1;
+
+      SNMP_SecurityContext user(V3_TEST_USER, V3_TEST_PASSWORD, SNMP_AUTH_SHA1);
+      user.setAuthoritativeEngine(m_engine);
+      SNMP_PDU request;
+      bool parsed = request.parse(buffer, size, &user, false);
+
+      if (!request.getAuthoritativeEngine().equals(m_engine))
+      {
+         m_discoveryRequests++;
+         if (m_behavior != V3AgentBehavior::DOWN)
+         {
+            SNMP_SecurityContext context;
+            context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+            context.setAuthoritativeEngine(m_engine);
+            sendReport(&request, SNMP_ObjectId { 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 }, &context);   // usmStatsUnknownEngineIDs
+         }
+         return static_cast<int>(size);
+      }
+
+      if (!parsed || !(request.getFlags() & SNMP_AUTH_FLAG))
+      {
+         m_unauthenticatedRequests++;
+         return static_cast<int>(size);
+      }
+
+      uint32_t localTime = m_engine.getAdjustedTime();
+      uint32_t requestTime = request.getAuthoritativeEngine().getTime();
+      uint32_t timeDiff = (requestTime > localTime) ? requestTime - localTime : localTime - requestTime;
+      if ((request.getAuthoritativeEngine().getBoots() != m_engine.getBoots()) || (timeDiff > 150))
+      {
+         m_outOfWindowRequests++;
+         if (m_behavior == V3AgentBehavior::COMPLIANT)
+            sendReport(&request, SNMP_ObjectId { 1, 3, 6, 1, 6, 3, 15, 1, 1, 2, 0 }, &user);   // usmStatsNotInTimeWindows
+         return static_cast<int>(size);
+      }
+
+      m_validRequests++;
+      m_lastContextEngine = SNMP_Engine(request.getContextEngineId(), request.getContextEngineIdLength());
+      if (m_behavior != V3AgentBehavior::DOWN)
+      {
+         SNMP_PDU response(SNMP_RESPONSE, request.getRequestId(), SNMP_VERSION_3);
+         response.setReportable(false);
+         response.setMessageId(request.getMessageId());
+         response.setContextEngineId(request.getContextEngineId(), request.getContextEngineIdLength());
+         SNMP_Variable *v = new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, 3, 0 });
+         v->setValueFromUInt32(ASN_TIMETICKS, 12345);
+         response.bindVariable(v);
+         sendReply(&response, &user);
+      }
+      return static_cast<int>(size);
+   }
+
+   virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender, socklen_t *addrSize, SNMP_SecurityContext (*contextFinder)(struct sockaddr *, socklen_t)) override
+   {
+      if (m_replySize == 0)
+         return 0;   // Timeout
+      size_t size = m_replySize;
+      m_replySize = 0;
+      *pdu = new SNMP_PDU();
+      if (!(*pdu)->parse(m_reply, size, &m_securityContext, false))
+         delete_and_null(*pdu);
+      return static_cast<int>(size);
+   }
+
+   virtual InetAddress getPeerIpAddress() override { return InetAddress::LOOPBACK; }
+   virtual uint16_t getPort() override { return 161; }
+   virtual bool isProxyTransport() override { return false; }
+};
+
+/**
+ * Send GET request for sysUpTime.0 via given transport
+ */
+static uint32_t V3Get(SNMP_Transport *transport, int numRetries)
+{
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), SNMP_VERSION_3);
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, 3, 0 }));
+   SNMP_PDU *response = nullptr;
+   uint32_t rc = transport->doRequest(&request, &response, 10, numRetries);
+   if (rc == SNMP_ERR_SUCCESS)
+   {
+      AssertEquals(response->getNumVariables(), 1);
+      AssertEquals(response->getVariable(0)->getValueAsUInt(), 12345u);
+   }
+   delete response;
+   return rc;
+}
+
+/**
+ * Test synchronization of SNMPv3 engine boots and time when engine ID is known but boots and time are not
+ */
+static void TestEngineTimeSynchronization()
+{
+   StartTest(_T("SNMPv3 engine time synchronization - silent drop agent"));
+   V3AgentSimulatorTransport silentDrop(V3AgentBehavior::SILENT_DROP, false);
+   silentDrop.setRestoredSecurityContext(s_v3AgentEngineId, sizeof(s_v3AgentEngineId), s_v3AgentEngineId, sizeof(s_v3AgentEngineId));
+   AssertEquals(V3Get(&silentDrop, 3), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(silentDrop.m_discoveryRequests, 1);
+   AssertEquals(silentDrop.m_outOfWindowRequests, 0);
+   AssertEquals(silentDrop.m_validRequests, 1);
+   AssertNotNull(silentDrop.getAuthoritativeEngine());
+   AssertEquals(silentDrop.getAuthoritativeEngine()->getBoots(), 7u);
+   AssertTrue(silentDrop.getAuthoritativeEngine()->getTime() >= 100000);
+   AssertEquals(silentDrop.getSecurityContext().getAuthoritativeEngine().getBoots(), 7u);
+   AssertTrue(silentDrop.getSecurityContext().getAuthoritativeEngine().getTime() >= 100000);
+   // Next request on synchronized transport goes without discovery
+   AssertEquals(V3Get(&silentDrop, 3), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(silentDrop.m_discoveryRequests, 1);
+   AssertEquals(silentDrop.m_validRequests, 2);
+   EndTest();
+
+   StartTest(_T("SNMPv3 engine time synchronization - compliant agent"));
+   V3AgentSimulatorTransport compliant(V3AgentBehavior::COMPLIANT, false);
+   compliant.setRestoredSecurityContext(s_v3AgentEngineId, sizeof(s_v3AgentEngineId), s_v3AgentEngineId, sizeof(s_v3AgentEngineId));
+   AssertEquals(V3Get(&compliant, 3), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(compliant.m_discoveryRequests, 1);
+   AssertEquals(compliant.m_outOfWindowRequests, 0);
+   AssertEquals(compliant.m_validRequests, 1);
+   EndTest();
+
+   StartTest(_T("SNMPv3 engine time synchronization - reliable (proxy) transport"));
+   V3AgentSimulatorTransport proxy(V3AgentBehavior::SILENT_DROP, true);
+   proxy.setRestoredSecurityContext(s_v3AgentEngineId, sizeof(s_v3AgentEngineId), s_v3AgentEngineId, sizeof(s_v3AgentEngineId));
+   AssertEquals(V3Get(&proxy, 3), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(proxy.m_discoveryRequests, 1);
+   AssertEquals(proxy.m_validRequests, 1);
+   EndTest();
+
+   StartTest(_T("SNMPv3 engine time synchronization - context engine preserved"));
+   V3AgentSimulatorTransport multiContext(V3AgentBehavior::SILENT_DROP, false);
+   multiContext.setRestoredSecurityContext(s_v3AgentEngineId, sizeof(s_v3AgentEngineId), s_v3OtherEngineId, sizeof(s_v3OtherEngineId));
+   AssertEquals(V3Get(&multiContext, 3), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(multiContext.m_discoveryRequests, 1);
+   AssertTrue(multiContext.m_lastContextEngine.equals(SNMP_Engine(s_v3OtherEngineId, sizeof(s_v3OtherEngineId))));
+   AssertNotNull(multiContext.getContextEngine());
+   AssertTrue(multiContext.getContextEngine()->equals(SNMP_Engine(s_v3OtherEngineId, sizeof(s_v3OtherEngineId))));
+   AssertTrue(multiContext.getSecurityContext().getContextEngine().equals(SNMP_Engine(s_v3OtherEngineId, sizeof(s_v3OtherEngineId))));
+   EndTest();
+
+   StartTest(_T("SNMPv3 engine time synchronization - engine ID changed"));
+   V3AgentSimulatorTransport replaced(V3AgentBehavior::SILENT_DROP, false);
+   replaced.setRestoredSecurityContext(s_v3OtherEngineId, sizeof(s_v3OtherEngineId), s_v3OtherEngineId, sizeof(s_v3OtherEngineId));
+   AssertEquals(V3Get(&replaced, 3), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(replaced.m_discoveryRequests, 1);
+   AssertEquals(replaced.m_validRequests, 1);
+   AssertTrue(replaced.getAuthoritativeEngine()->equals(SNMP_Engine(s_v3AgentEngineId, sizeof(s_v3AgentEngineId))));
+   EndTest();
+
+   StartTest(_T("SNMPv3 engine time synchronization - agent down"));
+   V3AgentSimulatorTransport down(V3AgentBehavior::DOWN, false);
+   down.setRestoredSecurityContext(s_v3AgentEngineId, sizeof(s_v3AgentEngineId), s_v3OtherEngineId, sizeof(s_v3OtherEngineId));
+   AssertEquals(V3Get(&down, 3), static_cast<uint32_t>(SNMP_ERR_TIMEOUT));
+   AssertEquals(down.m_discoveryRequests, 3);   // Discovery retries replace request retries
+   AssertEquals(down.totalRequests(), 3);
+   AssertNotNull(down.getAuthoritativeEngine());
+   AssertTrue(down.getAuthoritativeEngine()->equals(SNMP_Engine(s_v3AgentEngineId, sizeof(s_v3AgentEngineId))));
+   AssertEquals(down.getAuthoritativeEngine()->getTime(), 0u);
+   AssertTrue(down.getSecurityContext().getAuthoritativeEngine().equals(SNMP_Engine(s_v3AgentEngineId, sizeof(s_v3AgentEngineId))));
+   AssertNotNull(down.getContextEngine());
+   AssertTrue(down.getContextEngine()->equals(SNMP_Engine(s_v3OtherEngineId, sizeof(s_v3OtherEngineId))));
+   EndTest();
+
+   StartTest(_T("SNMPv3 engine time synchronization - agent down, reliable transport"));
+   V3AgentSimulatorTransport downProxy(V3AgentBehavior::DOWN, true);
+   downProxy.setRestoredSecurityContext(s_v3AgentEngineId, sizeof(s_v3AgentEngineId), s_v3AgentEngineId, sizeof(s_v3AgentEngineId));
+   AssertEquals(V3Get(&downProxy, 3), static_cast<uint32_t>(SNMP_ERR_TIMEOUT));
+   AssertEquals(downProxy.totalRequests(), 1);
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -1089,6 +1344,7 @@ int main(int argc, char *argv[])
    TestPDUEncoding();
    TestV1TrapEncoding();
    TestGetResponseHandling();
+   TestEngineTimeSynchronization();
    TestPDUPrivacy(SNMP_ENCRYPT_DES, _T("SNMPv3 privacy (DES)"));
    TestPDUPrivacy(SNMP_ENCRYPT_AES_128, _T("SNMPv3 privacy (AES-128)"));
    return 0;

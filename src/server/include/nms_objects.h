@@ -4580,6 +4580,7 @@ protected:
    bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, TCHAR **value);
    void checkBridgeMib(SNMP_Transport *snmp);
    void checkIfXTable(SNMP_Transport *snmp);
+   bool resetSnmpEngineTime();
    SNMP_Transport *createSnmpTransportInternal(const InetAddress& targetAddr, uint16_t port, bool pollerMessageOnFailure, uint32_t *proxyNodeId, bool *proxyConnectionFailed);
    NetworkPathCheckResult checkNetworkPath(uint32_t requestId, const StatusPollProxyEvidence& proxyEvidence);
    NetworkPathCheckResult checkNetworkPathLayer2(uint32_t requestId, bool secondPass, const StatusPollProxyEvidence& proxyEvidence);
