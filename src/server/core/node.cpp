@@ -3014,6 +3014,21 @@ bool Node::lockForIcmpPoll()
 }
 
 /**
+ * Reset cached SNMPv3 authoritative engine boots and time (engine ID and localized keys are kept), so that next
+ * SNMP transport synchronizes them with the agent before sending authenticated request. Returns false if there
+ * was nothing to reset.
+ */
+bool Node::resetSnmpEngineTime()
+{
+   LockGuard lockGuard(m_mutexProperties);
+   const SNMP_Engine& engine = m_snmpSecurity.getAuthoritativeEngine();
+   if (!m_snmpSecurity.needAuthentication() || (engine.getTime() == 0))
+      return false;
+   m_snmpSecurity.setAuthoritativeEngine(SNMP_Engine(engine.getId(), engine.getIdLen()));
+   return true;
+}
+
+/**
  * Perform status poll on node
  */
 void Node::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rqId)
@@ -3155,6 +3170,15 @@ restart_status_poll:
             m_snmpSecurity.setAuthoritativeEngine(SNMP_Engine());
             m_snmpSecurity.setContextEngine(SNMP_Engine());
             unlockProperties();
+            delete pTransport;
+            retryCount--;
+            goto restart_status_poll;
+         }
+         else if ((snmpErr == SNMP_ERR_TIMEOUT) && (m_snmpVersion == SNMP_VERSION_3) && (retryCount > 0) && resetSnmpEngineTime())
+         {
+            // Some agents silently drop requests with outdated boots or time (for example, after device reboot) instead of
+            // sending notInTimeWindows report; new transport will synchronize engine time before sending request
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"StatusPoll(%s): SNMPv3 request timeout, cached engine boots and time reset", m_name);
             delete pTransport;
             retryCount--;
             goto restart_status_poll;

@@ -1113,6 +1113,7 @@ protected:
 	SNMP_Codepage m_codepage;
 
 	uint32_t doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries);
+	uint32_t synchronizeEngineTime(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries);
 
 public:
 	SNMP_Transport()

@@ -96,20 +96,60 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext ctx)
  */
 uint32_t SNMP_Transport::doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries)
 {
-   SNMP_PDU discoveryRequest(SNMP_GET_REQUEST, originalRequest->getRequestId(), SNMP_VERSION_3);
+   // Discovery request uses its own request ID so that late reply to it cannot be taken for reply to original request
+   SNMP_PDU discoveryRequest(SNMP_GET_REQUEST, SnmpNewRequestId(), SNMP_VERSION_3);
    discoveryRequest.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 10, 2, 1, 1, 0 }));    // snmpEngineID
    SNMP_PDU *response = nullptr;
    uint32_t rc = doRequest(&discoveryRequest, &response, timeout, numRetries, true);
    if (rc != SNMP_ERR_SUCCESS)
       return rc;
 
-   if (response->getContextEngineIdLength() > 0)
-      originalRequest->setContextEngineId(response->getContextEngineId(), response->getContextEngineIdLength());
-   else if (response->getAuthoritativeEngine().getIdLen() != 0)
-      originalRequest->setContextEngineId(response->getAuthoritativeEngine().getId(), response->getAuthoritativeEngine().getIdLen());
+   // Context engine ID already set in original request (by caller or from configured context engine) is kept
+   if (originalRequest->getContextEngineIdLength() == 0)
+   {
+      if (response->getContextEngineIdLength() > 0)
+         originalRequest->setContextEngineId(response->getContextEngineId(), response->getContextEngineIdLength());
+      else if (response->getAuthoritativeEngine().getIdLen() != 0)
+         originalRequest->setContextEngineId(response->getAuthoritativeEngine().getId(), response->getAuthoritativeEngine().getIdLen());
+   }
 
    delete response;
    return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Synchronize authoritative engine boots and time with the agent when engine ID is known but boots and time are not
+ * (for example, when security context was restored from database). Authenticated request with unsynchronized time
+ * is outside of the time window on every agent; compliant agents answer it with notInTimeWindows report, but some
+ * agents silently drop it. Engine ID discovery (unauthenticated request with empty engine ID) is answered with
+ * report containing current boots and time. Configured context engine is kept, and localized keys are kept if
+ * discovered engine ID matches cached one. Security context is left unchanged if discovery fails.
+ */
+uint32_t SNMP_Transport::synchronizeEngineTime(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries)
+{
+   SNMP_SecurityContext savedContext(m_securityContext);
+   m_securityContext.setAuthoritativeEngine(SNMP_Engine());
+   delete_and_null(m_authoritativeEngine);
+
+   uint32_t rc = doEngineIdDiscovery(originalRequest, timeout, numRetries);
+   if ((rc == SNMP_ERR_SUCCESS) && (m_authoritativeEngine == nullptr))
+      rc = SNMP_ERR_ENGINE_ID;   // Agent response does not contain authoritative engine ID
+
+   if (rc == SNMP_ERR_SUCCESS)
+   {
+      const SNMP_Engine& cachedEngine = savedContext.getAuthoritativeEngine();
+      nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 6, _T("SNMP_Transport::synchronizeEngineTime(%s): engine %s boots=%u time=%u%s"),
+         getPeerIpAddress().toString().cstr(), m_authoritativeEngine->toString().cstr(), m_authoritativeEngine->getBoots(),
+         m_authoritativeEngine->getTime(), m_authoritativeEngine->equals(cachedEngine) ? _T("") : _T(" (engine ID changed)"));
+      savedContext.setAuthoritativeEngine(*m_authoritativeEngine);
+   }
+   else
+   {
+      nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 6, _T("SNMP_Transport::synchronizeEngineTime(%s): engine ID discovery failed (%s)"),
+         getPeerIpAddress().toString().cstr(), SnmpGetErrorText(rc));
+   }
+   setSecurityContext(std::move(savedContext));
+   return rc;
 }
 
 /**
@@ -139,10 +179,19 @@ uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, uint3
 	      if ((rc != SNMP_ERR_SUCCESS) || engineIdDiscoveryOnly)
 	         return rc;
 	   }
-	   else if ((request->getContextEngineIdLength() == 0) && (m_contextEngine != nullptr))
-		{
-			request->setContextEngineId(m_contextEngine->getId(), m_contextEngine->getIdLen());
-		}
+	   else
+	   {
+	      if ((request->getContextEngineIdLength() == 0) && (m_contextEngine != nullptr))
+	         request->setContextEngineId(m_contextEngine->getId(), m_contextEngine->getIdLen());
+
+	      // Engine ID is known but boots and time are not - synchronize them before sending authenticated request
+	      if ((m_authoritativeEngine != nullptr) && (m_authoritativeEngine->getTime() == 0) && m_securityContext.needAuthentication())
+	      {
+	         uint32_t rc = synchronizeEngineTime(request, timeout, numRetries);
+	         if (rc != SNMP_ERR_SUCCESS)
+	            return rc;
+	      }
+	   }
 	}
 
    uint32_t rc;
@@ -178,8 +227,10 @@ retry_wait:
                if ((*response)->getMessageId() == request->getMessageId())
                {
                   // Cache authoritative engine ID
+                  bool authoritativeEngineDiscovered = false;   // Request was sent with empty authoritative engine ID
                   if ((m_authoritativeEngine == nullptr) && ((*response)->getAuthoritativeEngine().getIdLen() != 0))
                   {
+                     authoritativeEngineDiscovered = true;
                      m_authoritativeEngine = new SNMP_Engine((*response)->getAuthoritativeEngine());
                      m_securityContext.setAuthoritativeEngine(*m_authoritativeEngine);
                   }
@@ -233,7 +284,11 @@ retry_wait:
                            }
                            canRetry = true;
                         }
-                        if (m_securityContext.getAuthoritativeEngine().getIdLen() == 0)
+                        if (authoritativeEngineDiscovered)
+                        {
+                           canRetry = true;
+                        }
+                        else if (m_securityContext.getAuthoritativeEngine().getIdLen() == 0)
                         {
                            m_securityContext.setAuthoritativeEngine((*response)->getAuthoritativeEngine());
                            canRetry = true;

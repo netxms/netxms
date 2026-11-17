@@ -4620,6 +4620,7 @@ protected:
    void checkBridgeMib(SNMP_Transport *snmp, NodeDeviceContext *deviceContext);
    void checkIfXTable(SNMP_Transport *snmp);
    void checkSnmpGetBulk(SNMP_Transport *snmp);
+   bool resetSnmpEngineTime();
    shared_ptr<ForwardingDatabase> readSwitchForwardingDatabase(NetworkDeviceDriver *driver, DeviceContext *context, DriverData *driverData);
    SNMP_Transport *createSnmpTransportInternal(const InetAddress& targetAddr, uint16_t port, bool pollerMessageOnFailure, uint32_t *proxyNodeId, bool *proxyConnectionFailed);
    NetworkPathCheckResult checkNetworkPath(uint32_t requestId, const StatusPollProxyEvidence& proxyEvidence);
