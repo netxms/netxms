@@ -24,6 +24,7 @@ assert(result.errorMessage.isEmpty); // "Malformed response"
 assert(result.agentErrorCode == 0); // "0"
 assert(result.httpResponseCode >= 300 && result.httpResponseCode <= 399); // "0"
 assert(result.redirectUrl == expectedRedirectUrl); // null
+assert(result.getHeader("Location") == expectedRedirectUrl);
 
 // Redirect is followed: final document is returned
 webSvc = managementNode.getWebService(webServiceNameFollow);
@@ -35,3 +36,4 @@ assert(result.agentErrorCode == 0); // "0"
 assert(result.httpResponseCode == 200); // "302"
 assert(result.redirectUrl == null);
 assert(result.document == expectedDocument); // ""
+assert(result.getHeader("Location") == null); // only headers of final response are returned

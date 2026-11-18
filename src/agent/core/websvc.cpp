@@ -46,6 +46,7 @@ class WebServiceRequest : public StructuredDataExtractor
 private:
    uint32_t m_responseCode;
    char *m_redirectUrl;
+   std::vector<std::pair<std::string, std::string>> m_responseHeaders;  // Headers of final response, in order received
    Mutex m_mutex;
 
 public:
@@ -54,6 +55,7 @@ public:
 
    uint32_t getResponseCode() const { return m_responseCode; }
    const char *getRedirectUrl() const { return m_redirectUrl; }
+   const std::vector<std::pair<std::string, std::string>>& getResponseHeaders() const { return m_responseHeaders; }
    uint32_t query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
          WebServiceAuthType authType, struct curl_slist *headers, bool verifyPeer, bool verifyHost, bool followLocation, bool forcePlainTextParser, uint32_t requestTimeout);
 
@@ -160,6 +162,54 @@ uint32_t WebServiceRequest::getList(const TCHAR *path, NXCPMessage *response)
 }
 
 /**
+ * Collect response headers (libcurl header callback). Collected list is reset on each status line, so only headers of the
+ * final response are kept when one transfer goes through several responses (authentication negotiation, 100 Continue).
+ */
+static size_t CurlHeaderCallback(char *buffer, size_t size, size_t nitems, void *userData)
+{
+   auto headers = static_cast<std::vector<std::pair<std::string, std::string>>*>(userData);
+   size_t bytes = size * nitems;
+
+   size_t len = bytes;
+   while((len > 0) && isspace(static_cast<unsigned char>(buffer[len - 1])))
+      len--;
+   if (len == 0)
+      return bytes;  // Empty line at the end of header block
+
+   if ((len > 5) && !memcmp(buffer, "HTTP/", 5))
+   {
+      headers->clear();
+      return bytes;
+   }
+
+   const char *end = buffer + len;
+   if ((*buffer == ' ') || (*buffer == '\t'))
+   {
+      // Obsolete line folding - continuation of previous header value
+      if (!headers->empty())
+      {
+         const char *p = buffer;
+         while((p < end) && ((*p == ' ') || (*p == '\t')))
+            p++;
+         std::string& value = headers->back().second;
+         value.append(" ");
+         value.append(p, end - p);
+      }
+      return bytes;
+   }
+
+   const char *separator = static_cast<const char*>(memchr(buffer, ':', len));
+   if (separator == nullptr)
+      return bytes;
+
+   const char *value = separator + 1;
+   while((value < end) && ((*value == ' ') || (*value == '\t')))
+      value++;
+   headers->emplace_back(std::string(buffer, separator - buffer), std::string(value, end - value));
+   return bytes;
+}
+
+/**
  * Query web service
  */
 uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
@@ -242,6 +292,10 @@ uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, cons
    ByteStream data(32768);
    data.setAllocationStep(32768);
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+
+   m_responseHeaders.clear();
+   curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, CurlHeaderCallback);
+   curl_easy_setopt(curl, CURLOPT_HEADERDATA, &m_responseHeaders);
 
 #ifdef UNICODE
    char *urlUtf8 = UTF8StringFromWideString(url);
@@ -330,6 +384,7 @@ retry:
       {
          nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): call to curl_easy_perform failed (%d: %hs)"), url, rc, errbuf);
          m_responseCode = 0;
+         m_responseHeaders.clear();
          rcc = ERR_MALFORMED_RESPONSE;
       }
    }
@@ -493,12 +548,22 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
    shared_ptr<WebServiceRequest> serviceRequest;
    if (requestMethodCode == (uint16_t)HttpRequestMethod::_GET)
    {
-      serviceRequest = s_serviceRequestCache.getShared(cacheKey);
-      if (serviceRequest == nullptr)
+      if (request->getFieldAsBoolean(VID_NO_CACHE))
       {
+         // Private request object: response (possibly session-specific) is not stored in cache and
+         // existing cache entry for this URL is left intact
          serviceRequest = make_shared<WebServiceRequest>();
-         s_serviceRequestCache.set(cacheKey, serviceRequest);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Create new cache entry for URL %s"), cacheKey.cstr());
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Cache bypassed for URL %s"), cacheKey.cstr());
+      }
+      else
+      {
+         serviceRequest = s_serviceRequestCache.getShared(cacheKey);
+         if (serviceRequest == nullptr)
+         {
+            serviceRequest = make_shared<WebServiceRequest>();
+            s_serviceRequestCache.set(cacheKey, serviceRequest);
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("WebServiceCustomRequest(): Create new cache entry for URL %s"), cacheKey.cstr());
+         }
       }
    }
    else
@@ -563,6 +628,14 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
    response.setField(VID_WEBSVC_RESPONSE_CODE, serviceRequest->getResponseCode());
    if (serviceRequest->getRedirectUrl() != nullptr)
       response.setFieldFromUtf8String(VID_REDIRECT_URL, serviceRequest->getRedirectUrl());
+   const std::vector<std::pair<std::string, std::string>>& responseHeaders = serviceRequest->getResponseHeaders();
+   response.setField(VID_NUM_HEADERS, static_cast<uint32_t>(responseHeaders.size()));
+   uint32_t fieldId = VID_HEADERS_BASE;
+   for(const auto& h : responseHeaders)
+   {
+      response.setFieldFromUtf8String(fieldId++, h.first.c_str());
+      response.setFieldFromUtf8String(fieldId++, h.second.c_str());
+   }
    serviceRequest->unlock();
 
    response.setField(VID_RCC, result);

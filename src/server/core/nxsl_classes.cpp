@@ -10616,11 +10616,53 @@ void NXSL_WebServiceClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * Convert web service response headers to map in same form as in HttpResponse class: header names are converted
+ * to lower case, values of repeated headers are joined with comma.
+ */
+static void WebServiceResponseHeadersToMap(const WebServiceCallResult& result, StringMap *map)
+{
+   for(const auto& h : result.headers)
+   {
+      StringBuffer name;
+      name.appendUtf8String(h.first.c_str());
+      name.toLowercase();
+
+      StringBuffer value;
+      const wchar_t *existing = map->get(name);
+      if (existing != nullptr)
+      {
+         value.append(existing);
+         value.append(L", ");
+      }
+      value.appendUtf8String(h.second.c_str());
+      map->set(name, value);
+   }
+}
+
+/**
+ * WebServiceResponse::getHeader(name) method - case-insensitive header lookup
+ */
+NXSL_METHOD_DEFINITION(WebServiceResponse, getHeader)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   StringMap headers;
+   WebServiceResponseHeadersToMap(*static_cast<WebServiceCallResult*>(object->getData()), &headers);
+   StringBuffer name(argv[0]->getValueAsCString());
+   name.toLowercase();
+   const wchar_t *value = headers.get(name);
+   *result = (value != nullptr) ? vm->createValue(value) : vm->createValue();
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * NXSL class "WebServiceResponse"
  */
 NXSL_WebServiceResponseClass::NXSL_WebServiceResponseClass()
 {
    setName(_T("WebServiceResponse"));
+   NXSL_REGISTER_METHOD(WebServiceResponse, getHeader, 1);
 }
 
 /**
@@ -10650,6 +10692,19 @@ NXSL_Value *NXSL_WebServiceResponseClass::getAttr(NXSL_Object *object, const NXS
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("errorMessage"))
    {
       value = vm->createValue(result->errorMessage);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("headers"))
+   {
+      if (result->headersAvailable)
+      {
+         StringMap headers;
+         WebServiceResponseHeadersToMap(*result, &headers);
+         value = vm->createValue(new NXSL_HashMap(vm, &headers));
+      }
+      else
+      {
+         value = vm->createValue();   // Agent does not report response headers
+      }
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("httpResponseCode"))
    {

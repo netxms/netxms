@@ -19,6 +19,9 @@ assert(result.agentErrorCode == 0); // "0"
 assert(result.httpResponseCode == 200); // "0"
 assert(result.redirectUrl == null);
 assert(result.document == expectedDocumentWithArgument); // ""
+assert(result.getHeader("CONTENT-TYPE") == "application/json");
+assert(result.headers["content-type"] == "application/json");
+assert(result.getHeader("X-Missing-Header") == null);
 
 webSvc = managementNode.getWebService(webServiceName);
 result = webSvc.get();

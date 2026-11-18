@@ -10860,7 +10860,7 @@ static void WebServiceQueryThread(WebServiceQueryArgs *args)
       {
          response.setField(VID_RCC, RCC_SUCCESS);
          response.setField(VID_WEBSVC_RESPONSE_CODE, result.httpResponseCode);
-         response.setField(VID_WEBSVC_RESPONSE, CHECK_NULL_EX(result.document));
+         response.setFieldFromUtf8String(VID_WEBSVC_RESPONSE, CHECK_NULL_EX_A(result.document));
       }
       else
       {

@@ -25,7 +25,7 @@
 #include <nms_users.h>
 
 /**
- * Maximum size of response document (in characters) included into tool output
+ * Maximum size of response document (in bytes) included into tool output
  */
 #define MAX_DOCUMENT_SIZE  65536
 
@@ -253,7 +253,7 @@ static void ReadMacroArguments(json_t *arguments, StringList *args)
 /**
  * Add response document to output, truncating it if needed
  */
-static void AddDocumentToJson(json_t *output, const wchar_t *document)
+static void AddDocumentToJson(json_t *output, const char *document)
 {
    if (document == nullptr)
    {
@@ -262,22 +262,28 @@ static void AddDocumentToJson(json_t *output, const wchar_t *document)
       return;
    }
 
-   size_t size = wcslen(document);
+   size_t size = strlen(document);
    json_object_set_new(output, "documentSize", json_integer(static_cast<json_int_t>(size)));
-   if (size > MAX_DOCUMENT_SIZE)
+   bool truncated = (size > MAX_DOCUMENT_SIZE);
+   if (truncated)
    {
-      wchar_t *truncated = MemAllocStringW(MAX_DOCUMENT_SIZE + 1);
-      memcpy(truncated, document, MAX_DOCUMENT_SIZE * sizeof(wchar_t));
-      truncated[MAX_DOCUMENT_SIZE] = 0;
-      json_object_set_new(output, "document", json_string_w(truncated));
-      MemFree(truncated);
-      json_object_set_new(output, "truncated", json_boolean(true));
+      // Do not cut in the middle of UTF-8 sequence
+      size = MAX_DOCUMENT_SIZE;
+      while((size > 0) && ((static_cast<unsigned char>(document[size]) & 0xC0) == 0x80))
+         size--;
    }
-   else
+
+   json_t *value = json_stringn(document, size);
+   if (value == nullptr)
    {
-      json_object_set_new(output, "document", json_string_w(document));
-      json_object_set_new(output, "truncated", json_boolean(false));
+      // Not a valid UTF-8 - convert through wide string to get invalid sequences replaced
+      Buffer<wchar_t, 16384> wdoc(size + 1);
+      size_t len = utf8_to_wchar(document, size, wdoc, size);
+      wdoc[len] = 0;
+      value = json_string_w(wdoc);
    }
+   json_object_set_new(output, "document", value);
+   json_object_set_new(output, "truncated", json_boolean(truncated));
 }
 
 /**

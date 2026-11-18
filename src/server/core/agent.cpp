@@ -755,6 +755,8 @@ WebServiceCallResult AgentConnectionEx::webServiceCustomRequest(HttpRequestMetho
    msg.setField(VID_VERIFY_HOST, verifyHost);
    msg.setField(VID_FOLLOW_LOCATION, followLocation);
    msg.setField(VID_RETENTION_TIME, cacheRetentionTime);
+   if (cacheRetentionTime == 0)
+      msg.setField(VID_NO_CACHE, true);   // Caller wants live response, do not leave it in agent's cache for other callers
    msg.setField(VID_FORCE_PLAIN_TEXT_PARSER, true); // force plain text parser for NXSL web service as we use only text
    headers.fillMessage(&msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    msg.setField(VID_REQUEST_DATA, data);
@@ -770,8 +772,22 @@ WebServiceCallResult AgentConnectionEx::webServiceCustomRequest(HttpRequestMetho
          if (rcc == ERR_SUCCESS)
          {
             result.httpResponseCode = response->getFieldAsUInt32(VID_WEBSVC_RESPONSE_CODE);
-            result.document = response->getFieldAsString(VID_WEBSVC_RESPONSE);
+            result.document = response->getFieldAsUtf8String(VID_WEBSVC_RESPONSE);
             result.redirectUrl = response->getFieldAsString(VID_REDIRECT_URL);
+            if (response->isFieldExist(VID_NUM_HEADERS))   // Older agents do not report response headers
+            {
+               result.headersAvailable = true;
+               uint32_t count = response->getFieldAsUInt32(VID_NUM_HEADERS);
+               uint32_t fieldId = VID_HEADERS_BASE;
+               for(uint32_t i = 0; (i < count) && response->isFieldExist(fieldId); i++, fieldId += 2)
+               {
+                  char *name = response->getFieldAsUtf8String(fieldId);
+                  char *value = response->getFieldAsUtf8String(fieldId + 1);
+                  result.headers.emplace_back(std::string(CHECK_NULL_EX_A(name)), std::string(CHECK_NULL_EX_A(value)));
+                  MemFree(name);
+                  MemFree(value);
+               }
+            }
             response->getFieldAsString(VID_WEBSVC_ERROR_TEXT, result.errorMessage, WEBSVC_ERROR_TEXT_MAX_SIZE);
             result.success = true;
          }

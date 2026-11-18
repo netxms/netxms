@@ -153,15 +153,18 @@ public:
 struct WebServiceCallResult
 {
    bool success;
+   bool headersAvailable;  // false if agent does not report response headers
    uint32_t agentErrorCode;
    uint32_t httpResponseCode;
    wchar_t errorMessage[WEBSVC_ERROR_TEXT_MAX_SIZE];
-   wchar_t *document;
+   char *document;         // Response body (UTF-8)
    wchar_t *redirectUrl;   // Target of unfollowed HTTP redirect, nullptr if response was not a redirect
+   std::vector<std::pair<std::string, std::string>> headers;   // Response headers (UTF-8) in order received; same name can appear more than once
 
    WebServiceCallResult()
    {
       success = false;
+      headersAvailable = false;
       agentErrorCode = ERR_SUCCESS;
       httpResponseCode = 0;
       errorMessage[0] = 0;
@@ -169,19 +172,21 @@ struct WebServiceCallResult
       redirectUrl = nullptr;
    }
 
-   WebServiceCallResult(const WebServiceCallResult& src)
+   WebServiceCallResult(const WebServiceCallResult& src) : headers(src.headers)
    {
       success = src.success;
+      headersAvailable = src.headersAvailable;
       agentErrorCode = src.agentErrorCode;
       httpResponseCode = src.httpResponseCode;
       memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
-      document = MemCopyStringW(src.document);
+      document = MemCopyStringA(src.document);
       redirectUrl = MemCopyStringW(src.redirectUrl);
    }
 
-   WebServiceCallResult(WebServiceCallResult&& src)
+   WebServiceCallResult(WebServiceCallResult&& src) : headers(std::move(src.headers))
    {
       success = src.success;
+      headersAvailable = src.headersAvailable;
       agentErrorCode = src.agentErrorCode;
       httpResponseCode = src.httpResponseCode;
       memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
@@ -200,19 +205,22 @@ struct WebServiceCallResult
    WebServiceCallResult& operator=(const WebServiceCallResult& src)
    {
       success = src.success;
+      headersAvailable = src.headersAvailable;
       agentErrorCode = src.agentErrorCode;
       httpResponseCode = src.httpResponseCode;
       memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
       MemFree(document);
-      document = MemCopyStringW(src.document);
+      document = MemCopyStringA(src.document);
       MemFree(redirectUrl);
       redirectUrl = MemCopyStringW(src.redirectUrl);
+      headers = src.headers;
       return *this;
    }
 
    WebServiceCallResult& operator=(WebServiceCallResult&& src)
    {
       success = src.success;
+      headersAvailable = src.headersAvailable;
       agentErrorCode = src.agentErrorCode;
       httpResponseCode = src.httpResponseCode;
       memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
@@ -222,7 +230,19 @@ struct WebServiceCallResult
       MemFree(redirectUrl);
       redirectUrl = src.redirectUrl;
       src.redirectUrl = nullptr;
+      headers = std::move(src.headers);
       return *this;
+   }
+
+   /**
+    * Get value of first response header with given name (case-insensitive). Returns nullptr if there is no such header.
+    */
+   const char *getHeader(const char *name) const
+   {
+      for(const auto& h : headers)
+         if (!stricmp(h.first.c_str(), name))
+            return h.second.c_str();
+      return nullptr;
    }
 };
 
