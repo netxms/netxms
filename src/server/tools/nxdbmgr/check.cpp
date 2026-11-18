@@ -34,7 +34,8 @@ static uint64_t s_failedQueriesAtStart = 0;
 
 /**
  * Set by failures the libnxdb failed query counter does not see (table existence checks, table
- * list, module checks)
+ * list, module checks). IsDataTableExist() and GetDataCollectionTargets() are shared with other
+ * nxdbmgr commands and set it there too; only the check reads it.
  */
 static bool s_uncountedFailure = false;
 
@@ -143,7 +144,7 @@ IntegerArray<uint32_t> GetDataCollectionTargets()
    CollectObjectIdentifiers(L"power_domains", &list);
    CollectObjectIdentifiers(L"cooling_zones", &list);
    CollectObjectIdentifiers(L"rooms", &list);
-   CollectObjectIdentifiers(L"object_containers WHERE object_class=29 OR object_class=30", &list, true);   // objects of class "collector" or "circuit"
+   CollectObjectIdentifiers(L"object_containers WHERE object_class=" AS_STRING(OBJECT_COLLECTOR) L" OR object_class=" AS_STRING(OBJECT_CIRCUIT), &list, true);
    return list;
 }
 
@@ -502,15 +503,15 @@ static const struct
    const wchar_t *table;
 } s_containerExtensionTables[] =
 {
-   { 15, L"business_service_prototypes" },
-   { 23, L"dashboards" },
-   { 24, L"dashboard_templates" },
-   { 28, L"business_services" },
-   { 32, L"racks" },
-   { 42, L"facilities" },
-   { 43, L"power_domains" },
-   { 44, L"cooling_zones" },
-   { 45, L"rooms" }
+   { OBJECT_BUSINESSSERVICEPROTO, L"business_service_prototypes" },
+   { OBJECT_DASHBOARD, L"dashboards" },
+   { OBJECT_DASHBOARDTEMPLATE, L"dashboard_templates" },
+   { OBJECT_BUSINESSSERVICE, L"business_services" },
+   { OBJECT_RACK, L"racks" },
+   { OBJECT_FACILITY, L"facilities" },
+   { OBJECT_POWERDOMAIN, L"power_domains" },
+   { OBJECT_COOLINGZONE, L"cooling_zones" },
+   { OBJECT_ROOM, L"rooms" }
 };
 
 /**
@@ -581,7 +582,7 @@ struct ObjectClassTable
 
 /**
  * Class tables in loader order. Business services and prototypes are loaded from object_containers
- * (classes 28 and 15), their own tables are extensions covered by s_containerExtensionTables.
+ * (OBJECT_BUSINESSSERVICE and OBJECT_BUSINESSSERVICEPROTO), their own tables are extensions covered by s_containerExtensionTables.
  */
 static const ObjectClassTable s_objectClassTables[] =
 {
@@ -1516,21 +1517,27 @@ static void CheckCollectedData(bool isTable)
 	int64_t now = GetCurrentTimeMs();
 	IntegerArray<uint32_t> targets = GetDataCollectionTargets();
    // A missing data table was reported by the data tables stage; the operator may have declined to create it
-   for(int i = 0; i < targets.size(); )
+   for(int i = 0; (i < targets.size()) && !IsCheckAborted(); )
    {
       if (IsDataTableExist(isTable ? L"tdata_%u" : L"idata_%u", targets.get(i)))
          i++;
       else
          targets.remove(i);
    }
+   // An incomplete target list or a failed table lookup leaves nothing reliable to check
+   if (IsCheckAborted())
+   {
+      EndStage();
+      return;
+   }
 	SetStageWorkTotal(targets.size());
-	for(int i = 0; i < targets.size(); i++)
+	for(int i = 0; (i < targets.size()) && !IsCheckAborted(); i++)
    {
       uint32_t objectId = targets.get(i);
       TCHAR query[1024];
       _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_%d WHERE %s_timestamp>") INT64_FMT,
                isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), now);
-      DB_RESULT hResult = SQLSelect(query);
+      DB_RESULT hResult = CheckSelect(query);
       if (hResult != nullptr)
       {
          if (DBGetFieldLong(hResult, 0, 0) > 0)
@@ -1540,7 +1547,7 @@ static void CheckCollectedData(bool isTable)
             {
                _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE %s_timestamp>") INT64_FMT,
                         isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), now);
-               if (SQLQuery(query))
+               if (CheckQuery(query))
                   g_dbCheckFixes++;
             }
          }
@@ -1550,25 +1557,26 @@ static void CheckCollectedData(bool isTable)
 
 	ResetBulkYesNo();
 
-   for(int i = 0; i < targets.size(); i++)
+   for(int i = 0; (i < targets.size()) && !IsCheckAborted(); i++)
    {
       uint32_t objectId = targets.get(i);
       wchar_t query[1024];
       _sntprintf(query, 1024, _T("SELECT distinct(item_id) FROM %s_%d"), isTable ? _T("tdata") : _T("idata"), objectId);
-      DB_RESULT hResult = SQLSelect(query);
+      DB_RESULT hResult = CheckSelect(query);
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
-         for(int i = 0; i < count; i++)
+         for(int i = 0; (i < count) && !IsCheckAborted(); i++)
          {
             uint32_t id = DBGetFieldLong(hResult, i, 0);
-            if (!IsDciExists(id, objectId, isTable) && !isDciInDeleteList(objectId, id))
+            // A failed DCI lookup reports the DCI as non-existing
+            if (!IsDciExists(id, objectId, isTable) && !isDciInDeleteList(objectId, id) && !IsCheckAborted())
             {
                g_dbCheckErrors++;
                if (GetYesNoEx(_T("Found collected data for non-existing DCI [%u] on node [%u]. Delete invalid records?"), id, objectId))
                {
                   _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE item_id=%u"), isTable ? _T("tdata") : _T("idata"), objectId, id);
-                  if (SQLQuery(query))
+                  if (CheckQuery(query))
                      g_dbCheckFixes++;
                }
             }
@@ -1618,16 +1626,17 @@ static void CheckCollectedDataSingleTable(bool isTable)
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
+      for(int i = 0; (i < count) && !IsCheckAborted(); i++)
       {
          uint32_t id = DBGetFieldLong(hResult, i, 0);
-         if (!IsDciExists(id, 0, isTable))
+         // A failed DCI lookup reports the DCI as non-existing
+         if (!IsDciExists(id, 0, isTable) && !IsCheckAborted())
          {
             g_dbCheckErrors++;
             if (GetYesNoEx(_T("Found collected data for non-existing DCI [%u]. Delete invalid records?"), id))
             {
                _sntprintf(query, 1024, _T("DELETE FROM %s WHERE item_id=%d"), isTable ? _T("tdata") : _T("idata"), id);
-               if (SQLQuery(query))
+               if (CheckQuery(query))
                   g_dbCheckFixes++;
             }
          }
@@ -2049,7 +2058,7 @@ static void CheckDataTables()
 	   uint32_t objectId = targets.get(i);
 
       // IDATA
-      if (!IsDataTableExist(_T("idata_%u"), objectId) && !IsCheckAborted())
+      if (!IsDataTableExist(_T("idata_%u"), objectId))
       {
 			g_dbCheckErrors++;
 
@@ -2063,7 +2072,9 @@ static void CheckDataTables()
       }
 
       // TDATA
-      if (!IsDataTableExist(_T("tdata_%u"), objectId) && !IsCheckAborted())
+      if (IsCheckAborted())
+         break;   // Object name lookup or IDATA table creation failed
+      if (!IsDataTableExist(_T("tdata_%u"), objectId))
       {
 			g_dbCheckErrors++;
 
