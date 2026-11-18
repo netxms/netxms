@@ -763,11 +763,12 @@ void TestMessageReceiverBuffer()
       TestMessageReceiver receiver(4096, 4096);
       receiver.append(e1);
       receiver.append(m2);
-      receiver.endBlock();
+      receiver.append(e1);
       receiver.append(m4);
       receiver.endBlock();
       AssertNextMessage(&receiver, m2);
-      AssertNextMessage(&receiver, m4);
+      AssertNextMessage(&receiver, m4, false);
+      AssertNoMessage(&receiver, MSGRECV_WANT_READ, false);
       AssertNoMessage(&receiver, MSGRECV_CLOSED);
    }
    EndTest();
