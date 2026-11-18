@@ -514,6 +514,8 @@ class NXCORE_EXPORTABLE Group : public UserDatabaseObject
 protected:
    IntegerArray<uint32_t> m_members;
 
+   void setMembers(IntegerArray<uint32_t> *members);
+
 public:
    Group();
    Group(const Group *src);
