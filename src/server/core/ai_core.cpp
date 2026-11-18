@@ -2892,7 +2892,7 @@ void ShowAIProviders(ServerConsole *console)
  */
 void ShowAISlots(ServerConsole *console)
 {
-   static const char *knownSlots[] = { "analytical", "background", "default", "fast", "guard", "interactive", nullptr };
+   static const char *knownSlots[] = { "analytical", "background", "default", "fast", "guard", "interactive", "worker", nullptr };
 
    ConsoleWrite(console, L"\x1b[1m Slot            | Provider\x1b[0m\n"
                           L"-----------------+----------------------\n");
