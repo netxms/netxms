@@ -20,6 +20,10 @@ The JSON interface is becoming the primary interface to the system; a JSON→NXC
 - **Point-in-time values:** parse string values with `ParseTimestamp()` from libnetxms (`nms_util.h`) at the use site — it accepts ISO 8601, UNIX timestamps as strings, relative offsets (`[+|-]<number>[s|m|h|d]`), and `now`. Detect a parse failure by passing an out-of-band `defaultValue` (`-1`) and testing for it; do not treat a returned 0 as failure, epoch is valid input. Range-check the result where it matters — timestamps are stored in the database as 32 bit values, so a millisecond timestamp or a max-date sentinel from a generated client wraps silently. JSON integers are UNIX timestamps directly. For query parameters use `Context::getQueryParameterAsTime()`, which already delegates to `ParseTimestamp()`. Do not add new shared time-parse helpers to webapi headers.
 - **Content types:** `RouteBuilder` accepts `application/json` on every POST/PUT/PATCH route by default; `.acceptProtobuf()` / `.acceptImage()` only widen the accepted set. A binary-only route (protobuf, raw image body) must call `.acceptJson(false)`, otherwise it silently accepts a JSON-labeled body and the handler parses it blindly. Anything not accepted gets 415.
 
+## Response Content Conventions
+
+- **Point-in-time values:** emit them with `json_time_string(t)` (`include/nxjson.h`; ISO 8601 `%Y-%m-%dT%H:%M:%SZ`, `null` for 0) and declare them in `openapi.yaml` as `type: string, format: date-time` (add `nullable: true` when 0 is possible). Do not emit `json_integer(time_t)`; this applies to `toJson()` methods serving the API as well. Durations (retention, response time, intervals) stay integers. In-tree C++ consumers read these fields with `json_object_get_time()`, which accepts both ISO strings and integers.
+
 ## HTTP Response Conventions
 
 | Code | Usage |

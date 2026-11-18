@@ -107,6 +107,7 @@ Longer reference: [doc/CPP_DEVELOPER_GUIDE.md](doc/CPP_DEVELOPER_GUIDE.md).
   - Reassigned wholesale but never appended/inserted → `MutableString` (assignable from `String` / `MutableString` / `const TCHAR*`).
   - Built up incrementally (append/insert/format) → `StringBuffer`.
 - Other key classes: `StringList`, `StringMap`.
+- `String` and `SharedString` convert implicitly to `const TCHAR*`: pass them directly to functions taking `const wchar_t*` (`DBBind`, `NXCPMessage::setField`, `EventBuilder::param`, `json_string_t`). Write `.cstr()` only for variadic arguments (`nxlog_debug_tag`, `_sntprintf` and other printf-style calls).
 - `wchar_to_utf8` / `ucs2_to_utf8` / `ucs4_to_utf8` / `mb_to_utf8` / `tchar_to_utf8` do not null-terminate when the destination is too small for the next multi-byte sequence. Convert into `bufferSize - 1` and terminate via the return value:
 
   ```cpp
@@ -124,6 +125,7 @@ Longer reference: [doc/CPP_DEVELOPER_GUIDE.md](doc/CPP_DEVELOPER_GUIDE.md).
 ### Threading
 
 - Thread pools (`ThreadPoolExecute()`, `ThreadPoolScheduleRelative()`) and `ThreadCreateEx()` for threads; `Mutex`, `Condition`, `RWLock` with `LockGuard` for RAII locking.
+- Do not use `std::atomic<bool>` — it is a known problem on AIX. Use a plain `bool` for advisory flags where a stale read is harmless; when atomicity is really needed, use an int-based atomic (`std::atomic<int32_t>`).
 - For trivial accessors to mutex-guarded members, use the `GetAttributeWithLock(attr, mutex)` / `SetAttributeWithLock` templates (`nms_util.h`) as header one-liners instead of hand-written LockGuard getter bodies in the .cpp (pattern: `DCObject` getters in `nms_dcoll.h`). Give the explicit template argument to convert derived types (`MutableString`/`StringBuffer` → `String`). Raw array members (`wchar_t[]`, `char[]`) can't go through the template — argument binding would copy outside the lock; use `{ LockGuard g(m_mutex); return String(m_arr); }` for those.
 
 ### Container Classes
