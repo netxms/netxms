@@ -88,33 +88,37 @@ bool NETCONFSession::authenticate(const TCHAR *user, const TCHAR *password, cons
 
    if (keys != nullptr)
    {
-      ssh_key pkey;
-      if (ssh_pki_import_pubkey_base64(keys->publicKey, keys->type, &pkey) == SSH_OK)
+      ssh_key pubkey;
+      if (ssh_pki_import_pubkey_base64(keys->publicKey, keys->type, &pubkey) == SSH_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("NETCONFSession::authenticate: try to login with public key"));
-         if (ssh_userauth_try_publickey(m_ssh, nullptr, pkey) == SSH_AUTH_SUCCESS)
-            success = true;
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("NETCONFSession::authenticate: check if server accepts public key"));
+         int rc = ssh_userauth_try_publickey(m_ssh, nullptr, pubkey);
+         ssh_key_free(pubkey);
+         if (rc == SSH_AUTH_SUCCESS)
+         {
+            ssh_key privkey;
+            if (ssh_pki_import_privkey_base64(keys->privateKey, nullptr, nullptr, nullptr, &privkey) == SSH_OK)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("NETCONFSession::authenticate: try to login with private key"));
+               if (ssh_userauth_publickey(m_ssh, nullptr, privkey) == SSH_AUTH_SUCCESS)
+                  success = true;
+               else
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::authenticate: login with key as %s on %s:%d failed (%hs)"), user, m_addr.toString().cstr(), m_port, ssh_get_error(m_ssh));
+               ssh_key_free(privkey);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::authenticate: SSH private key load for %s:%d failed (%hs)"), m_addr.toString().cstr(), m_port, ssh_get_error(m_ssh));
+            }
+         }
          else
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::authenticate: login with key as %s on %s:%d failed (%hs)"), user, m_addr.toString().cstr(), m_port, ssh_get_error(m_ssh));
-         ssh_key_free(pkey);
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::authenticate: public key for %s rejected by %s:%d (%hs)"), user, m_addr.toString().cstr(), m_port, ssh_get_error(m_ssh));
+         }
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::authenticate: SSH public key load for %s:%d failed (%hs)"), m_addr.toString().cstr(), m_port, ssh_get_error(m_ssh));
-      }
-
-      if (ssh_pki_import_privkey_base64(keys->privateKey, nullptr, nullptr, nullptr, &pkey) == SSH_OK)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("NETCONFSession::authenticate: try to login with private key"));
-         if (ssh_userauth_publickey(m_ssh, nullptr, pkey) == SSH_AUTH_SUCCESS)
-            success = true;
-         else
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::authenticate: login with key as %s on %s:%d failed (%hs)"), user, m_addr.toString().cstr(), m_port, ssh_get_error(m_ssh));
-         ssh_key_free(pkey);
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::authenticate: SSH private key load for %s:%d failed (%hs)"), m_addr.toString().cstr(), m_port, ssh_get_error(m_ssh));
       }
    }
 
