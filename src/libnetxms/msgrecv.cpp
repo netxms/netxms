@@ -155,6 +155,7 @@ NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageRecei
    bool protocolError = false, decryptionError = false;
    while(true)
    {
+      size_t dataSize = m_dataSize;
       msg = getMessageFromBuffer(&protocolError, &decryptionError);
       if (msg != nullptr)
       {
@@ -166,6 +167,8 @@ NXCPMessage *AbstractMessageReceiver::readMessage(uint32_t timeout, MessageRecei
          *result = decryptionError ? MSGRECV_DECRYPTION_FAILURE : MSGRECV_PROTOCOL_ERROR;
          break;
       }
+      if (m_dataSize < dataSize)
+         continue;   // message dropped without result (encrypted message without encryption context), parse remaining data
       if (!allowReadBytes)
       {
          *result = MSGRECV_WANT_READ;
