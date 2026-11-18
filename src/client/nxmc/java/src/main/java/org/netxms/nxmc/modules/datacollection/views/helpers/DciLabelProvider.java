@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.datacollection.views.helpers;
 
-import java.util.HashMap;
 import java.util.List;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -29,7 +28,6 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataCollectionObjectStatus;
-import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
@@ -54,8 +52,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 
 	private NXCSession session;
 	private Image statusImages[];
-   private HashMap<DataOrigin, String> originTexts = new HashMap<>();
-   private HashMap<DataCollectionObjectStatus, String> statusTexts = new HashMap<>();
+   private Image groupImage;
 
 	/**
 	 * Default constructor
@@ -68,27 +65,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
       statusImages[DataCollectionObjectStatus.ACTIVE.getValue()] = ResourceManager.getImageDescriptor("icons/dci/active.gif").createImage(); //$NON-NLS-1$
       statusImages[DataCollectionObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/dci/disabled.gif").createImage(); //$NON-NLS-1$
       statusImages[DataCollectionObjectStatus.UNSUPPORTED.getValue()] = ResourceManager.getImageDescriptor("icons/dci/unsupported.gif").createImage(); //$NON-NLS-1$
-
-      originTexts.put(DataOrigin.AGENT, i18n.tr("NetXMS Agent"));
-      originTexts.put(DataOrigin.COMPUTED, i18n.tr("Computed"));
-      originTexts.put(DataOrigin.DEVICE_DRIVER, i18n.tr("Network Device Driver"));
-      originTexts.put(DataOrigin.INTERNAL, i18n.tr("Internal"));
-      originTexts.put(DataOrigin.MODBUS, i18n.tr("Modbus"));
-      originTexts.put(DataOrigin.MQTT, i18n.tr("MQTT"));
-      originTexts.put(DataOrigin.NETCONF, i18n.tr("NETCONF"));
-      originTexts.put(DataOrigin.OTLP, i18n.tr("OTLP"));
-      originTexts.put(DataOrigin.PUSH, i18n.tr("Push"));
-      originTexts.put(DataOrigin.SCRIPT, i18n.tr("Script"));
-      originTexts.put(DataOrigin.SMCLP, i18n.tr("SM-CLP"));
-      originTexts.put(DataOrigin.SNMP, i18n.tr("SNMP"));
-      originTexts.put(DataOrigin.SSH, i18n.tr("SSH"));
-      originTexts.put(DataOrigin.TRAFFIC_OBSERVER, i18n.tr("Traffic Observer"));
-      originTexts.put(DataOrigin.WEB_SERVICE, i18n.tr("Web Service"));
-      originTexts.put(DataOrigin.WINPERF, i18n.tr("Windows Performance Counters"));
-
-      statusTexts.put(DataCollectionObjectStatus.ACTIVE, i18n.tr("Active"));
-      statusTexts.put(DataCollectionObjectStatus.DISABLED, i18n.tr("Disabled"));
-      statusTexts.put(DataCollectionObjectStatus.UNSUPPORTED, i18n.tr("Not supported"));
+      groupImage = ResourceManager.getImageDescriptor("icons/folder.png").createImage();
 	}
 
    /**
@@ -97,7 +74,9 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		if (columnIndex != 0)
+      if (element instanceof DciGroup)
+         return (columnIndex == DataCollectionView.DC_COLUMN_DESCRIPTION) ? groupImage : null;
+      if (columnIndex != DataCollectionView.DC_COLUMN_DESCRIPTION)
 			return null;
       DataCollectionObjectStatus status = ((DataCollectionObject)element).getStatus();
       return statusImages[status.getValue()];
@@ -109,13 +88,23 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
+      if (element instanceof DciGroup)
+      {
+         DciGroup group = (DciGroup)element;
+         if (columnIndex == DataCollectionView.DC_COLUMN_DESCRIPTION)
+            return group.getName();
+         if ((columnIndex == DataCollectionView.DC_COLUMN_ID) && (group.getObjectId() != 0))
+            return Long.toString(group.getObjectId());
+         return null;
+      }
+
 		DataCollectionObject dci = (DataCollectionObject)element;
 		switch(columnIndex)
 		{
 			case DataCollectionView.DC_COLUMN_ID:
 				return Long.toString(dci.getId());
 			case DataCollectionView.DC_COLUMN_ORIGIN:
-				return originTexts.get(dci.getOrigin());
+				return DataCollectionDisplayInfo.getOriginName(dci.getOrigin());
 			case DataCollectionView.DC_COLUMN_DESCRIPTION:
 				return dci.getDescription();
 			case DataCollectionView.DC_COLUMN_PARAMETER:
@@ -152,7 +141,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 			      return dci.getRetentionTime();
 			   }
 			case DataCollectionView.DC_COLUMN_STATUS:
-				return statusTexts.get(dci.getStatus());
+				return DataCollectionDisplayInfo.getStatusName(dci.getStatus());
          case DataCollectionView.DC_COLUMN_TAG:
             return dci.getUserTag();
 			case DataCollectionView.DC_COLUMN_THRESHOLD:
@@ -212,6 +201,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
 	{
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i].dispose();
+      groupImage.dispose();
       super.dispose();
 	}
 
@@ -221,7 +211,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
    @Override
    public Color getForeground(Object element)
    {
-      if (((DataCollectionObject)element).getTemplateId() != 0)
+      if ((element instanceof DataCollectionObject) && (((DataCollectionObject)element).getTemplateId() != 0))
       {
          return COLOR_TEMPLATE_ITEM;
       }

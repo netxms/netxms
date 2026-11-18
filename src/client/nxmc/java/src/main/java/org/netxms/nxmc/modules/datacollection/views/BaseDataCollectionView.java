@@ -29,7 +29,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
-import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -61,6 +60,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.SortableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.MappingTableCache;
@@ -81,6 +81,9 @@ import org.netxms.nxmc.modules.datacollection.propertypages.TableThresholds;
 import org.netxms.nxmc.modules.datacollection.propertypages.Thresholds;
 import org.netxms.nxmc.modules.datacollection.propertypages.Transformation;
 import org.netxms.nxmc.modules.datacollection.propertypages.WinPerf;
+import org.netxms.nxmc.modules.datacollection.views.helpers.DciGroupingContentProvider;
+import org.netxms.nxmc.modules.datacollection.views.helpers.DciGroupingMode;
+import org.netxms.nxmc.modules.datacollection.views.helpers.DciTreeViewer;
 import org.netxms.nxmc.modules.datacollection.views.helpers.LastValuesComparator;
 import org.netxms.nxmc.modules.datacollection.views.helpers.LastValuesFilter;
 import org.netxms.nxmc.modules.datacollection.views.helpers.LastValuesLabelProvider;
@@ -102,8 +105,8 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
 
    // Columns for "last values" mode
    public static final int LV_COLUMN_OWNER = 0;
-   public static final int LV_COLUMN_ID = 1;
-   public static final int LV_COLUMN_DESCRIPTION = 2;
+   public static final int LV_COLUMN_DESCRIPTION = 1;
+   public static final int LV_COLUMN_ID = 2;
    public static final int LV_COLUMN_VALUE = 3;
    public static final int LV_COLUMN_TIMESTAMP = 4;
    public static final int LV_COLUMN_TAG = 5;
@@ -113,7 +116,8 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    public static final int LV_COLUMN_COMMENTS = 9;
    public static final int LV_COLUMN_ANOMALY = 10;
 
-   protected SortableTableViewer viewer;
+   protected ColumnViewer viewer;
+   protected DciGroupingContentProvider contentProvider;
 
    private LastValuesLabelProvider labelProvider;
    private LastValuesComparator comparator;
@@ -136,6 +140,11 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    protected Action actionRecalculateData;
    protected Action actionClearData;
    protected Action actionRegenerateAnomalyProfile;
+   protected Action[] actionGroupBy;
+
+   private String groupingModeConfigKey;
+   private Composite viewerParent;
+   private VisibilityValidator viewerValidator;
 
    /**
     * @param name
@@ -162,29 +171,94 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
     */
    protected void createLastValuesViewer(Composite parent, VisibilityValidator validator)
    {
+      viewerParent = parent;
+      viewerValidator = validator;
       parent.setLayout(new FillLayout());
 
-      // Setup table columns
-      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Display name"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Tag"), i18n.tr("Threshold"), i18n.tr("Event"), i18n.tr("Message"), i18n.tr("Comments"), i18n.tr("Anomaly detection") };
-      final int[] widths = { 250, 70, 250, 150, 120, 120, 150, 250, 250, 250, 250 };
-      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+      final String configPrefix = "LastValues";
+      contentProvider = new DciGroupingContentProvider(this::findDataCollectionObject);
+      initGroupingMode(configPrefix);
 
-      labelProvider = new LastValuesLabelProvider(viewer);
+      // Setup table columns
+      final String[] names = { i18n.tr("Owner"), i18n.tr("Display name"), i18n.tr("ID"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Tag"), i18n.tr("Threshold"), i18n.tr("Event"), i18n.tr("Message"), i18n.tr("Comments"), i18n.tr("Anomaly detection") };
+      final int[] widths = { 250, 250, 70, 150, 120, 120, 150, 250, 250, 250, 250 };
+      viewer = createSortableViewer(parent, names, widths, 0, SWT.DOWN, null);
+
+      labelProvider = new LastValuesLabelProvider((SortableViewer)viewer);
       comparator = new LastValuesComparator();
       lvFilter = new LastValuesFilter();
       viewer.setLabelProvider(labelProvider);
-      viewer.setContentProvider(new ArrayContentProvider());
+      viewer.setContentProvider(contentProvider);
       viewer.setComparator(comparator);
       viewer.addFilter(lvFilter);
       setFilterClient(viewer, lvFilter);
       if (isHideOwner())
-         viewer.removeColumnById(LV_COLUMN_OWNER);
+         ((SortableViewer)viewer).removeColumnById(LV_COLUMN_OWNER);
 
       // Update viewer in export to CSV actions
       actionExportToCsv.setViewer(viewer);
       actionExportAllToCsv.setViewer(viewer);
 
-      postLastValueViewCreation("LastValues", validator);
+      postLastValueViewCreation(configPrefix, validator);
+   }
+
+   /**
+    * Create viewer for current grouping mode: table when grouping is off (tree would reserve space for expansion controls on
+    * every row), and tree otherwise. Grouping mode must be set in content provider before this call.
+    *
+    * @param parent parent composite
+    * @param names column names
+    * @param widths default column widths
+    * @param defaultSortingColumn index of default sorting column
+    * @param defaultSortDir default sorting direction
+    * @param configPrefix preference store prefix for persisting column settings (may be null)
+    * @return new viewer
+    */
+   protected ColumnViewer createSortableViewer(Composite parent, String[] names, int[] widths, int defaultSortingColumn, int defaultSortDir, String configPrefix)
+   {
+      if (contentProvider.getMode() == DciGroupingMode.NONE)
+         return new SortableTableViewer(parent, names, widths, defaultSortingColumn, defaultSortDir, SortableTableViewer.DEFAULT_STYLE, configPrefix);
+      return new DciTreeViewer(parent, names, widths, defaultSortingColumn, defaultSortDir, DciTreeViewer.DEFAULT_STYLE, configPrefix);
+   }
+
+   /**
+    * Create viewer for current view mode. Default implementation creates last values viewer in the same parent as before.
+    */
+   protected void createViewer()
+   {
+      createLastValuesViewer(viewerParent, viewerValidator);
+   }
+
+   /**
+    * Dispose current viewer. Viewer settings are saved by dispose listeners of viewer's control. Subclasses that register
+    * additional listeners with viewer should override this method to remove them.
+    */
+   protected void disposeViewer()
+   {
+      viewer.getControl().dispose();
+   }
+
+   /**
+    * Re-create viewer for current view and grouping mode, preserving input and selection. Column settings, including sorting,
+    * are saved on dispose and restored by new viewer.
+    */
+   protected void recreateViewer()
+   {
+      Object input = viewer.getInput();
+      Object[] selection = viewer.getStructuredSelection().toArray();
+      Composite parent = viewer.getControl().getParent();
+
+      disposeViewer();
+      createViewer();
+
+      if (input != null)
+      {
+         viewer.setInput(input);
+         viewer.setSelection(new StructuredSelection(selection), true);
+      }
+      parent.layout(true, true);
+      updateToolBar();
+      updateMenu();
    }
 
    /**
@@ -240,7 +314,22 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       viewOptions.add(actionShowDisabled);
       viewOptions.add(actionShowUnsupported);
       viewOptions.add(actionShowHidden);
+      viewOptions.add(new Separator());
+      viewOptions.add(createGroupByMenu());
       manager.add(viewOptions);
+   }
+
+   /**
+    * Create "Group by" submenu.
+    *
+    * @return "Group by" submenu
+    */
+   protected MenuManager createGroupByMenu()
+   {
+      MenuManager groupBy = new MenuManager(i18n.tr("&Group by"));
+      for(Action a : actionGroupBy)
+         groupBy.add(a);
+      return groupBy;
    }
 
    /**
@@ -258,13 +347,14 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      Action resetAction = viewer.getResetColumnOrderAction();
+      SortableViewer sortableViewer = (SortableViewer)viewer;
+      Action resetAction = sortableViewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
-      Action showAllAction = viewer.getShowAllColumnsAction();
+      Action showAllAction = sortableViewer.getShowAllColumnsAction();
       if (showAllAction != null)
          manager.add(showAllAction);
-      Action autoSizeAction = viewer.getAutoSizeColumnsAction();
+      Action autoSizeAction = sortableViewer.getAutoSizeColumnsAction();
       if (autoSizeAction != null)
       {
          manager.add(autoSizeAction);
@@ -277,6 +367,8 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       manager.add(actionShowDisabled);
       manager.add(actionShowUnsupported);
       manager.add(actionShowHidden);
+      manager.add(new Separator());
+      manager.add(createGroupByMenu());
    }
 
    /**
@@ -383,6 +475,67 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
             regenerateAnomalyProfile();
          }
       };
+
+      DciGroupingMode[] modes = DciGroupingMode.values();
+      actionGroupBy = new Action[modes.length];
+      for(int i = 0; i < modes.length; i++)
+      {
+         final DciGroupingMode mode = modes[i];
+         actionGroupBy[i] = new Action(mode.getDisplayName(), Action.AS_RADIO_BUTTON) {
+            @Override
+            public void run()
+            {
+               if (isChecked())
+                  setGroupingMode(mode);
+            }
+         };
+      }
+   }
+
+   /**
+    * Load grouping mode for current viewer from preferences and apply it to content provider. Must be called after content
+    * provider is created and before viewer is created, because viewer type depends on grouping mode.
+    *
+    * @param configPrefix preference store prefix for current viewer
+    */
+   protected void initGroupingMode(String configPrefix)
+   {
+      groupingModeConfigKey = configPrefix + ".groupingMode";
+      DciGroupingMode mode = DciGroupingMode.getByName(PreferenceStore.getInstance().getAsString(groupingModeConfigKey));
+      contentProvider.setMode(mode);
+      for(int i = 0; i < actionGroupBy.length; i++)
+         actionGroupBy[i].setChecked(i == mode.ordinal());
+   }
+
+   /**
+    * Set grouping mode for current viewer.
+    *
+    * @param mode new grouping mode
+    */
+   private void setGroupingMode(DciGroupingMode mode)
+   {
+      DciGroupingMode currentMode = contentProvider.getMode();
+      if (currentMode == mode)
+         return;
+      contentProvider.setMode(mode);
+      PreferenceStore.getInstance().set(groupingModeConfigKey, mode.name());
+      if ((currentMode == DciGroupingMode.NONE) || (mode == DciGroupingMode.NONE))
+         recreateViewer(); // switch between table and tree
+      else
+         viewer.refresh();
+   }
+
+   /**
+    * Find data collection object by owner and DCI ID. Used to resolve instance discovery prototypes for grouping. Default
+    * implementation returns null; subclasses with access to data collection configuration should override it.
+    *
+    * @param ownerId DCI owner ID
+    * @param dciId DCI ID
+    * @return data collection object or null if not available
+    */
+   protected DataCollectionObject findDataCollectionObject(long ownerId, long dciId)
+   {
+      return null;
    }
 
    /**
@@ -489,7 +642,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
     */
    protected void postLastValueViewCreation(String configPrefix, VisibilityValidator validator)
    {
-      viewer.enablePersistence(configPrefix);
+      ((SortableViewer)viewer).enablePersistence(configPrefix + ".Columns");
 
       final PreferenceStore ds = PreferenceStore.getInstance();
 
@@ -497,13 +650,13 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          @Override
          public void run()
          {
-            if (viewer.getTable().isDisposed())
+            if (viewer.getControl().isDisposed())
                return;
 
             getDataFromServer(null);
          }
       }, validator);
-      viewer.getTable().addDisposeListener(new DisposeListener() {
+      viewer.getControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
@@ -514,15 +667,15 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
       final MappingTableCache mappingTableCache = MappingTableCache.getInstance();
       if (mappingTableCache != null)
       {
-         final Display display = viewer.getTable().getDisplay();
+         final Display display = viewer.getControl().getDisplay();
          final Runnable mappingTableHook = () -> {
             display.asyncExec(() -> {
-               if (!viewer.getTable().isDisposed())
+               if (!viewer.getControl().isDisposed())
                   viewer.refresh(true);
             });
          };
          mappingTableCache.addLoadListener(mappingTableHook);
-         viewer.getTable().addDisposeListener(new DisposeListener() {
+         viewer.getControl().addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e)
             {
@@ -539,7 +692,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          }
       });
 
-      viewer.getTable().addDisposeListener(new DisposeListener() {
+      viewer.getControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
@@ -590,7 +743,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
          {
             final DciValue[] data = session.getLastValues(jobTarget.getObjectId());
             runInUIThread(() -> {
-               if (!viewer.getTable().isDisposed() && (getObject() != null) && (getObject().getObjectId() == jobTarget.getObjectId()))
+               if (!viewer.getControl().isDisposed() && (getObject() != null) && (getObject().getObjectId() == jobTarget.getObjectId()))
                {
                   final IStructuredSelection selection = viewer.getStructuredSelection();
                   viewer.setInput(data);

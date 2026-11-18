@@ -46,6 +46,9 @@ public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilt
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
+      if (element instanceof DciGroup)
+         return ((DciGroup)element).hasVisibleElements(this, viewer);
+
 		final DciValue value = (DciValue)element;
 
       if (!showUnsupported && (value.getStatus() == DataCollectionObjectStatus.UNSUPPORTED))

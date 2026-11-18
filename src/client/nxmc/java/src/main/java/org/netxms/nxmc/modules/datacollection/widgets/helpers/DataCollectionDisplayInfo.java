@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
 import org.netxms.client.constants.DataCollectionError;
+import org.netxms.client.constants.DataCollectionObjectStatus;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.nxmc.localization.LocalizationHelper;
 
@@ -67,6 +69,78 @@ public class DataCollectionDisplayInfo
             return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<< NOT SUPPORTED >>");
          default:
             return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<< ERROR >>");
+      }
+   }
+
+   /**
+    * Get display name for given data origin.
+    *
+    * @param origin data origin
+    * @return display name for data origin
+    */
+   public static String getOriginName(DataOrigin origin)
+   {
+      switch(origin)
+      {
+         case AGENT:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("NetXMS Agent");
+         case CLOUD_CONNECTOR:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Cloud Connector");
+         case COMPUTED:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Computed");
+         case DEVICE_DRIVER:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Network Device Driver");
+         case ETHERNET_IP:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("EtherNet/IP");
+         case INTERNAL:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Internal");
+         case MODBUS:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Modbus");
+         case MQTT:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("MQTT");
+         case NETCONF:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("NETCONF");
+         case OTLP:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("OTLP");
+         case PUSH:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Push");
+         case SCRIPT:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Script");
+         case SMCLP:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("SM-CLP");
+         case SNMP:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("SNMP");
+         case SSH:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("SSH");
+         case TRAFFIC_OBSERVER:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Traffic Observer");
+         case WEB_SERVICE:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Web Service");
+         case WINPERF:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Windows Performance Counters");
+         default:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<unknown>");
+      }
+   }
+
+   /**
+    * Get display name for given data collection object status.
+    *
+    * @param status data collection object status
+    * @return display name for status
+    */
+   public static String getStatusName(DataCollectionObjectStatus status)
+   {
+      switch(status)
+      {
+         case ACTIVE:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Active");
+         case DISABLED:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Disabled");
+         case UNSUPPORTED:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Not supported");
+         default:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<unknown>");
       }
    }
 

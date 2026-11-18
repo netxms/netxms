@@ -945,7 +945,9 @@ json_t *DCTable::lastValueToJSON()
    json_object_set_new(data, "type", json_string("table"));
    json_object_set_new(data, "errorCount", json_integer(m_errorCount));
    json_object_set_new(data, "lastCollectionError", json_string(DataCollectionErrorName(static_cast<DataCollectionError>(m_lastCollectionError))));
+   json_object_set_new(data, "templateId", json_integer(m_templateId));
    json_object_set_new(data, "templateItemId", json_integer(m_templateItemId));
+   json_object_set_new(data, "relatedObject", json_integer(m_relatedObject));
    json_object_set_new(data, "unitName", json_string(""));
    json_object_set_new(data, "multiplier", json_integer(0));
    json_object_set_new(data, "noValue", json_boolean(!hasValue()));
@@ -999,6 +1001,7 @@ json_t *DCTable::lastValueToJSON()
 void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, const TCHAR *column, const TCHAR *instance)
 {
    lock();
+   uint32_t recordBaseId = fieldId;
    msg->setField(fieldId++, m_ownerId);
    msg->setField(fieldId++, m_id);
    msg->setField(fieldId++, m_name);
@@ -1082,6 +1085,10 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    {
       msg->setField(fieldId++, static_cast<uint16_t>(0));   // number of thresholds
    }
+
+   // Fields at fixed offsets after anomaly detection state (offsets 39-44, not used by tables)
+   msg->setField(recordBaseId + 45, m_templateId);
+   msg->setField(recordBaseId + 46, m_relatedObject);
 
    unlock();
 }

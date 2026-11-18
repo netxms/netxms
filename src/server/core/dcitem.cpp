@@ -2600,6 +2600,10 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
       msg->setField(recordBaseId + 44, (m_anomalyModel != nullptr) && (m_anomalyModel->getMode() == AnomalyDetectionMode::RATE));
    }
 
+   // Fields at fixed offsets after anomaly detection state
+   msg->setField(recordBaseId + 45, m_templateId);
+   msg->setField(recordBaseId + 46, m_relatedObject);
+
 	unlock();
 }
 
@@ -2636,7 +2640,9 @@ json_t *DCItem::lastValueToJSON()
    json_object_set_new(data, "type", json_string("item"));
    json_object_set_new(data, "errorCount", json_integer(m_errorCount));
    json_object_set_new(data, "lastCollectionError", json_string(DataCollectionErrorName(static_cast<DataCollectionError>(m_lastCollectionError))));
+   json_object_set_new(data, "templateId", json_integer(m_templateId));
    json_object_set_new(data, "templateItemId", json_integer(m_templateItemId));
+   json_object_set_new(data, "relatedObject", json_integer(m_relatedObject));
    json_object_set_new(data, "unitName", json_string_t(m_unitName));
    json_object_set_new(data, "multiplier", json_integer(m_multiplier));
    json_object_set_new(data, "noValue", json_boolean(!hasValue()));

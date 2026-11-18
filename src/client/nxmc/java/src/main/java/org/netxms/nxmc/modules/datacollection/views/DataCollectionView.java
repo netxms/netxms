@@ -30,7 +30,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -42,7 +41,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.base.NXCPCodes;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -68,7 +66,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.MessageArea;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.SortableViewer;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
@@ -79,6 +77,8 @@ import org.netxms.nxmc.modules.datacollection.dialogs.helpers.BulkDciThresholdUp
 import org.netxms.nxmc.modules.datacollection.dialogs.helpers.BulkDciUpdateElementUI;
 import org.netxms.nxmc.modules.datacollection.views.helpers.DciComparator;
 import org.netxms.nxmc.modules.datacollection.views.helpers.DciFilter;
+import org.netxms.nxmc.modules.datacollection.views.helpers.DciGroupingContentProvider;
+import org.netxms.nxmc.modules.datacollection.views.helpers.DciGroupingMode;
 import org.netxms.nxmc.modules.datacollection.views.helpers.DciLabelProvider;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -103,8 +103,8 @@ public class DataCollectionView extends BaseDataCollectionView
    public static final String VIEW_ID = "objects.data-collection";
 
    // Columns for "data collection configuration" mode
-   public static final int DC_COLUMN_ID = 0;
-   public static final int DC_COLUMN_DESCRIPTION = 1;
+   public static final int DC_COLUMN_DESCRIPTION = 0;
+   public static final int DC_COLUMN_ID = 1;
    public static final int DC_COLUMN_ORIGIN = 2;
    public static final int DC_COLUMN_PARAMETER = 3;
    public static final int DC_COLUMN_DATAUNIT = 4;
@@ -121,7 +121,6 @@ public class DataCollectionView extends BaseDataCollectionView
    private boolean editMode = false;
    private boolean previousEditMode = false;
    private Composite parent;
-   private SessionListener clientListener = null;
    private DataCollectionConfiguration dciConfig = null;
    private int messageId = 0;
 
@@ -177,7 +176,7 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          if (dciConfig != null)
          {
-            dciConfig.setUserData(viewer);
+            dciConfig.setUserData(this);
             dciConfig.setRemoteChangeListener(changeListener);
          }
       }
@@ -191,22 +190,11 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       this.parent = parent;
 
-      VisibilityValidator validator = new VisibilityValidator() {
-         @Override
-         public boolean isVisible()
-         {
-            return DataCollectionView.this.isActive();
-         }
-      };
-
       createActions();
 
       hideModificationWarnings = PreferenceStore.getInstance().getAsBoolean("DataCollectionConfiguration.hideModificationWarnings", false);
 
-      if (editMode)
-         createDataCollectionViewer(parent);
-      else
-         createLastValuesViewer(parent, validator);
+      createViewer();
 
       updateActionStates();
    }
@@ -221,12 +209,14 @@ public class DataCollectionView extends BaseDataCollectionView
       final PreferenceStore ds = PreferenceStore.getInstance();
 
       parent.setLayout(new FillLayout());
-      final String[] names = { i18n.tr("ID"), i18n.tr("Display name"), i18n.tr("Origin"), i18n.tr("Metric"), i18n.tr("Units"),
+      final String[] names = { i18n.tr("Display name"), i18n.tr("ID"), i18n.tr("Origin"), i18n.tr("Metric"), i18n.tr("Units"),
             i18n.tr("Data Type"), i18n.tr("Polling Interval"), i18n.tr("Retention Time"), i18n.tr("Tag"), i18n.tr("Status"),
             i18n.tr("Thresholds"), i18n.tr("Template"), i18n.tr("Related Object"), i18n.tr("Is status calculation") };
-      final int[] widths = { 60, 250, 150, 200, 90, 90, 90, 90, 120, 100, 200, 150, 150, 90 };
-      viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE, configPrefix);
-      viewer.setContentProvider(new ArrayContentProvider());
+      final int[] widths = { 250, 60, 150, 200, 90, 90, 90, 90, 120, 100, 200, 150, 150, 90 };
+      contentProvider = new DciGroupingContentProvider(this::findDataCollectionObject);
+      initGroupingMode(configPrefix);
+      viewer = createSortableViewer(parent, names, widths, DC_COLUMN_ID, SWT.UP, configPrefix + ".Columns");
+      viewer.setContentProvider(contentProvider);
       viewer.setLabelProvider(new DciLabelProvider());
       viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
       dcFilter = new DciFilter();
@@ -236,7 +226,7 @@ public class DataCollectionView extends BaseDataCollectionView
 
       viewer.addSelectionChangedListener(new DciSelectionChange());
       viewer.addDoubleClickListener((e) -> editSelectedObject());
-      viewer.getTable().addDisposeListener(new DisposeListener() {
+      viewer.getControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
@@ -312,7 +302,7 @@ public class DataCollectionView extends BaseDataCollectionView
       // Coalesce per-DCI change notifications (template apply, instance discovery, etc. produce one
       // notification per affected DCI) so a burst results in few refreshes instead of one per DCI
       final RefreshTimer refreshTimer = new RefreshTimer(500, viewer.getControl(), () -> refresh());
-      clientListener = new SessionListener() {
+      final SessionListener clientListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -330,6 +320,42 @@ public class DataCollectionView extends BaseDataCollectionView
       };
 
       session.addListener(clientListener);
+      viewer.getControl().addDisposeListener((e) -> session.removeListener(clientListener));
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#createViewer()
+    */
+   @Override
+   protected void createViewer()
+   {
+      if (editMode)
+      {
+         createDataCollectionViewer(parent);
+         if (dciConfig != null)
+         {
+            dciConfig.setUserData(this);
+            dciConfig.setRemoteChangeListener(changeListener);
+         }
+      }
+      else
+      {
+         createLastValuesViewer(parent, () -> isActive());
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#disposeViewer()
+    */
+   @Override
+   protected void disposeViewer()
+   {
+      super.disposeViewer();
+      if (dciConfig != null)
+      {
+         dciConfig.setRemoteChangeListener(null);
+         dciConfig.setUserData(null);
+      }
    }
 
    /**
@@ -389,7 +415,10 @@ public class DataCollectionView extends BaseDataCollectionView
       if (editMode)
       {
          if (!isTemplate)
+         {
             viewOptions.add(actionHideTemplateItems);
+            viewOptions.add(new Separator());
+         }
       }
       else
       {
@@ -398,7 +427,9 @@ public class DataCollectionView extends BaseDataCollectionView
          viewOptions.add(actionShowDisabled);
          viewOptions.add(actionShowUnsupported);
          viewOptions.add(actionShowHidden);
+         viewOptions.add(new Separator());
       }
+      viewOptions.add(createGroupByMenu());
       manager.add(viewOptions);
 
       if (!isTemplate)
@@ -685,6 +716,15 @@ public class DataCollectionView extends BaseDataCollectionView
    protected String getDciName(Object dci)
    {
       return editMode ? ((DataCollectionObject)dci).getName() : ((DciValue)dci).getName();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#findDataCollectionObject(long, long)
+    */
+   @Override
+   protected DataCollectionObject findDataCollectionObject(long ownerId, long dciId)
+   {
+      return ((dciConfig != null) && (dciConfig.getOwnerId() == ownerId)) ? dciConfig.findItem(dciId) : null;
    }
 
    /**
@@ -1244,7 +1284,7 @@ public class DataCollectionView extends BaseDataCollectionView
    public void showInformationMessage()
    {
       actionApplyChanges.setEnabled(true);
-      if (!viewer.getTable().isDisposed() && messageId < 1)
+      if (!viewer.getControl().isDisposed() && messageId < 1)
       {
          messageId = addMessage(MessageArea.INFORMATION,
                i18n.tr("Changes in data collection configuration will be deployed to nodes the moment when the tab is closed"),
@@ -1268,58 +1308,26 @@ public class DataCollectionView extends BaseDataCollectionView
 
       if (viewer != null)
       {
-         TableColumn sortColumn = viewer.getTable().getSortColumn();
-         savedSortColumn = (sortColumn != null) ? (Integer)sortColumn.getData("ID") : -1;
+         SortableViewer sortableViewer = (SortableViewer)viewer;
+         savedSortColumn = sortableViewer.getSortColumnId();
          if (savedSortColumn >= 0)
          {
             if (editMode) // Switching from "last values" mode, column with ID 0 is "owner"
                savedSortColumn--;
-            else // Switching from "edit" mode, column with ID 0 is "ID", adjust for column 0 being "owner" in "last values" mode
+            else // Switching from "edit" mode, adjust for column 0 being "owner" in "last values" mode
                savedSortColumn++;
          }
-         savedSortDirection = viewer.getTable().getSortDirection();
-
-         viewer.getControl().dispose();
-         session.removeListener(clientListener);
-         if (dciConfig != null)
-         {
-            dciConfig.setRemoteChangeListener(null);
-            dciConfig.setUserData(null);
-         }
+         savedSortDirection = sortableViewer.getSortDirection();
+         disposeViewer();
       }
 
-      VisibilityValidator validator = new VisibilityValidator() {
-         @Override
-         public boolean isVisible()
-         {
-            return DataCollectionView.this.isActive();
-         }
-      };
+      createViewer();
 
-      if (editMode)
-      {
-         createDataCollectionViewer(parent);
-         if (dciConfig != null)
-         {
-            dciConfig.setUserData(viewer);
-            dciConfig.setRemoteChangeListener(changeListener);
-         }
-      }
-      else
-      {
-         createLastValuesViewer(parent, validator);
-      }
-
+      // Only "display name" and "ID" columns exist in both modes
       if ((savedSortColumn != -1) && (savedSortColumn < (editMode ? 2 : 3)) && (savedSortDirection != SWT.NONE))
-      {
-         viewer.getTable().setSortColumn(viewer.getColumnById(savedSortColumn));
-         viewer.getTable().setSortDirection(savedSortDirection);
-      }
+         ((SortableViewer)viewer).setSortColumn(savedSortColumn, savedSortDirection);
       else
-      {
-         viewer.getTable().setSortColumn(viewer.getColumnById(1));
-         viewer.getTable().setSortDirection(SWT.DOWN);
-      }
+         ((SortableViewer)viewer).setSortColumn(editMode ? DC_COLUMN_DESCRIPTION : LV_COLUMN_ID, SWT.DOWN);
 
       parent.layout(true, true);
 
@@ -1355,7 +1363,7 @@ public class DataCollectionView extends BaseDataCollectionView
          switchMode();
       }
 
-      viewer.resetAutoResizeBaseline();
+      ((SortableViewer)viewer).resetAutoResizeBaseline();
 
       // Request server to open data collection configuration
       new Job(i18n.tr("Opening data collection configuration for {0}", object.getObjectName()), this) {
@@ -1558,7 +1566,11 @@ public class DataCollectionView extends BaseDataCollectionView
     */
    public void update(DataCollectionObject object)
    {
-      viewer.update(object, null);
+      // Modified attribute may affect grouping
+      if (contentProvider.getMode() == DciGroupingMode.NONE)
+         viewer.update(object, null);
+      else
+         viewer.refresh();
    }
 
    /**

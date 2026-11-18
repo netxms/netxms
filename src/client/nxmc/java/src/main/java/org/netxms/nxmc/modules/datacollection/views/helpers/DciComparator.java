@@ -22,7 +22,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.SortableViewer;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 
 /**
@@ -46,12 +46,16 @@ public class DciComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
+      // Grouping is either applied to all elements or not used at all, so group and element are never compared
+      if (e1 instanceof DciGroup)
+         return DciGroup.compare((DciGroup)e1, (DciGroup)e2);
+
 		int result;
 
 		DataCollectionObject dci1 = (DataCollectionObject)e1;
 		DataCollectionObject dci2 = (DataCollectionObject)e2;
 
-      int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
+      int column = ((SortableViewer)viewer).getSortColumnId();
 		switch(column)
 		{
 			case DataCollectionView.DC_COLUMN_ID:
@@ -107,6 +111,6 @@ public class DciComparator extends ViewerComparator
 				result = 0;
 				break;
 		}
-		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+		return (((SortableViewer)viewer).getSortDirection() == SWT.UP) ? result : -result;
 	}
 }

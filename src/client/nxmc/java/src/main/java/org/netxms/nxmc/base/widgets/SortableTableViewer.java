@@ -46,7 +46,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Implementation of TableViewer with column sorting support
  */
-public class SortableTableViewer extends TableViewer
+public class SortableTableViewer extends TableViewer implements SortableViewer
 {
 	public static final int DEFAULT_STYLE = -1;
 
@@ -224,6 +224,44 @@ public class SortableTableViewer extends TableViewer
       getTable().removeAll();
       for(TableColumn c : getTable().getColumns())
          c.dispose();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.SortableViewer#getColumnId(int)
+    */
+   @Override
+   public int getColumnId(int index)
+   {
+      return (Integer)getTable().getColumn(index).getData("ID");
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.SortableViewer#getSortColumnId()
+    */
+   @Override
+   public int getSortColumnId()
+   {
+      TableColumn c = getTable().getSortColumn();
+      return (c != null) ? (Integer)c.getData("ID") : -1;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.SortableViewer#getSortDirection()
+    */
+   @Override
+   public int getSortDirection()
+   {
+      return getTable().getSortDirection();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.SortableViewer#setSortColumn(int, int)
+    */
+   @Override
+   public void setSortColumn(int columnId, int direction)
+   {
+      getTable().setSortColumn(getColumnById(columnId));
+      getTable().setSortDirection(direction);
    }
 
 	/**

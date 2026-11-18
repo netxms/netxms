@@ -19,7 +19,10 @@
 package org.netxms.nxmc.base.actions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ColumnViewer;
@@ -28,8 +31,10 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.nebula.jface.gridviewer.GridTableViewer;
 import org.eclipse.nebula.widgets.grid.GridColumn;
 import org.eclipse.nebula.widgets.grid.GridItem;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
@@ -174,13 +179,15 @@ public abstract class TableRowAction extends Action
       }
       else if (viewer instanceof TreeViewer)
       {
-         int numColumns = ((TreeViewer)viewer).getTree().getColumnCount();
+         TreeViewer treeViewer = (TreeViewer)viewer;
+         Tree tree = treeViewer.getTree();
+         int numColumns = tree.getColumnCount();
          if (numColumns == 0)
             numColumns = 1;
 
          if (withHeader)
          {
-            TreeColumn[] columns = ((TreeViewer)viewer).getTree().getColumns();
+            TreeColumn[] columns = tree.getColumns();
             String[] headerRow = new String[numColumns];
             for(int i = 0; i < numColumns; i++)
             {
@@ -189,16 +196,41 @@ public abstract class TableRowAction extends Action
             data.add(headerRow);
          }
 
-         TreeItem[] selection = selectionOnly ? ((TreeViewer)viewer).getTree().getSelection() : ((TreeViewer)viewer).getTree().getItems();
-         for(TreeItem item : selection)
+         // Children of collapsed nodes are not materialized as tree items, so expand everything while collecting all rows
+         Set<Object> expandedElements = null;
+         if (!selectionOnly && ((tree.getStyle() & SWT.VIRTUAL) == 0))
          {
-            String[] row = new String[numColumns];
-            for(int i = 0; i < numColumns; i++)
-               row[i] = getTreeCellText(item, i);
-            data.add(row);
-            if (!selectionOnly)
+            expandedElements = new HashSet<Object>(Arrays.asList(treeViewer.getExpandedElements()));
+            tree.setRedraw(false);
+            treeViewer.expandAll();
+         }
+         try
+         {
+            TreeItem[] selection = selectionOnly ? tree.getSelection() : tree.getItems();
+            for(TreeItem item : selection)
             {
-               addSubItems(item, data, numColumns);
+               String[] row = new String[numColumns];
+               for(int i = 0; i < numColumns; i++)
+                  row[i] = getTreeCellText(item, i);
+               data.add(row);
+               if (!selectionOnly)
+               {
+                  addSubItems(item, data, numColumns);
+               }
+            }
+         }
+         finally
+         {
+            if (expandedElements != null)
+            {
+               // Collapse only nodes expanded above, deepest first (collapsing a node with selected child would move selection)
+               Object[] elements = treeViewer.getExpandedElements();
+               for(int i = elements.length - 1; i >= 0; i--)
+               {
+                  if (!expandedElements.contains(elements[i]))
+                     treeViewer.setExpandedState(elements[i], false);
+               }
+               tree.setRedraw(true);
             }
          }
       }
@@ -216,6 +248,8 @@ public abstract class TableRowAction extends Action
    {
       for(TreeItem item : root.getItems())
       {
+         if (item.getData() == null)
+            continue; // placeholder item of not yet expanded node
          String[] row = new String[numColumns];
          for(int i = 0; i < numColumns; i++)
             row[i] = getTreeCellText(item, i);

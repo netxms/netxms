@@ -39,6 +39,8 @@ public abstract class DciValue
 	protected long id;					// DCI id
 	protected long nodeId;				// related node object id
    protected long templateDciId; // related template DCI ID
+   protected long templateId; // related template ID (owner ID for instance discovery DCIs)
+   protected long relatedObject; // related object ID
 	protected String name;				// name
 	protected String description;	// description
 	protected String value;			// value
@@ -141,6 +143,9 @@ public abstract class DciValue
       }
       anomalyModelLearning = msg.getFieldAsBoolean(base + 43);
       anomalyRateMode = msg.getFieldAsBoolean(base + 44);
+
+      templateId = msg.getFieldAsInt64(base + 45);
+      relatedObject = msg.getFieldAsInt64(base + 46);
 	}
 
    /**
@@ -308,6 +313,26 @@ public abstract class DciValue
 	{
 		return templateDciId;
 	}
+
+   /**
+    * Get ID of the template this DCI was created from. For DCIs created by instance discovery this is the ID of DCI owner.
+    *
+    * @return template ID or 0 if DCI was not created from template or by instance discovery
+    */
+   public final long getTemplateId()
+   {
+      return templateId;
+   }
+
+   /**
+    * Get ID of related object.
+    *
+    * @return ID of related object or 0
+    */
+   public final long getRelatedObject()
+   {
+      return relatedObject;
+   }
 
    /**
     * Check if DCI is in error state (disabled, unsupported, or has polling errors).

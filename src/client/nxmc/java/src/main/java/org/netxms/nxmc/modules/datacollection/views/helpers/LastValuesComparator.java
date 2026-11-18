@@ -21,7 +21,6 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AnomalyType;
 import org.netxms.client.constants.DataType;
@@ -31,7 +30,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.SortableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
@@ -53,15 +52,19 @@ public class LastValuesComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-	   TableColumn sortColumn = ((SortableTableViewer)viewer).getTable().getSortColumn();
-      if (sortColumn == null)
+      // Grouping is either applied to all elements or not used at all, so group and element are never compared
+      if (e1 instanceof DciGroup)
+         return DciGroup.compare((DciGroup)e1, (DciGroup)e2);
+
+      int sortColumn = ((SortableViewer)viewer).getSortColumnId();
+      if (sortColumn == -1)
          return 0;
 
       DciValue v1 = (DciValue)e1;
       DciValue v2 = (DciValue)e2;
 
       int result = 0;
-      switch((Integer)sortColumn.getData("ID"))
+      switch(sortColumn)
       {
          case BaseDataCollectionView.LV_COLUMN_ANOMALY:
             result = Integer.compare(getAnomalyRank(v1), getAnomalyRank(v2));
@@ -101,7 +104,7 @@ public class LastValuesComparator extends ViewerComparator
             result = 0;
             break;
       }
-		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+		return (((SortableViewer)viewer).getSortDirection() == SWT.UP) ? result : -result;
 	}
 
    /**

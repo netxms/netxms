@@ -22420,9 +22420,19 @@ components:
             - ACCESS_DENIED
             - INVALID_DATA
             - UNKNOWN
+        templateId:
+          type: integer
+          description: >-
+            ID of the template this DCI was created from, or 0 if none. For DCIs created by
+            instance discovery this is the ID of the DCI owner itself.
         templateItemId:
           type: integer
-          description: Template item ID if DCI is created from template
+          description: >-
+            ID of the source DCI: template DCI for DCIs created from template, prototype DCI for
+            DCIs created by instance discovery, 0 otherwise
+        relatedObject:
+          type: integer
+          description: ID of the object this DCI is related to (for example the interface for interface traffic metrics), or 0 if none
         unitName:
           type: string
           description: Unit name for the value

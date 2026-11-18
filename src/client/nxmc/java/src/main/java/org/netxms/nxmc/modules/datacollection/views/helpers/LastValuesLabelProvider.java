@@ -35,7 +35,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.SortableViewer;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DciValueFormatter;
@@ -56,17 +56,18 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
    private final I18n i18n = LocalizationHelper.getI18n(LastValuesLabelProvider.class);
 
 	private Image[] stateImages = new Image[3];
+   private Image groupImage;
 	private boolean useMultipliers = true;
 	private boolean showErrors = true;
 	private ThresholdLabelProvider thresholdLabelProvider;
    private BaseObjectLabelProvider objectLabelProvider;
    private NXCSession session;
-   private SortableTableViewer viewer;
+   private SortableViewer viewer;
 
 	/**
 	 * Default constructor 
 	 */
-	public LastValuesLabelProvider(SortableTableViewer viewer)
+	public LastValuesLabelProvider(SortableViewer viewer)
 	{
 		super();
 
@@ -75,6 +76,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
       stateImages[0] = ResourceManager.getImageDescriptor("icons/dci/active.gif").createImage();
       stateImages[1] = ResourceManager.getImageDescriptor("icons/dci/disabled.gif").createImage();
       stateImages[2] = ResourceManager.getImageDescriptor("icons/dci/unsupported.gif").createImage();
+      groupImage = ResourceManager.getImageDescriptor("icons/folder.png").createImage();
 
 		thresholdLabelProvider = new ThresholdLabelProvider();
       objectLabelProvider = new BaseObjectLabelProvider();
@@ -87,12 +89,16 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
+      // Group is shown in first column, which also holds tree expander
+      if (element instanceof DciGroup)
+         return (columnIndex == 0) ? groupImage : null;
+
+		switch(viewer.getColumnId(columnIndex))
 		{
          case BaseDataCollectionView.LV_COLUMN_OWNER:
             AbstractObject object = session.findObjectById(((DciValue)element).getNodeId());
             return (object != null) ? objectLabelProvider.getImage(object) : null;
-			case BaseDataCollectionView.LV_COLUMN_ID:
+         case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
             return stateImages[((DciValue)element).getStatus().getValue()];
 			case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
             if (((DciValue)element).getThresholdDisableEndTime() != 0)
@@ -109,8 +115,11 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
+      if (element instanceof DciGroup)
+         return getGroupColumnText((DciGroup)element, columnIndex);
+
 	   DciValue dciValue = ((DciValue)element);
-		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
+		switch(viewer.getColumnId(columnIndex))
 		{
          case BaseDataCollectionView.LV_COLUMN_ANOMALY:
             return formatAnomalyState(dciValue);
@@ -143,6 +152,22 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 		}
 		return null;
 	}
+
+   /**
+    * Get column text for group. Group name is shown in first column, which also holds tree expander.
+    *
+    * @param group group
+    * @param columnIndex column index
+    * @return column text
+    */
+   private String getGroupColumnText(DciGroup group, int columnIndex)
+   {
+      if (columnIndex == 0)
+         return group.getName();
+      if ((viewer.getColumnId(columnIndex) == BaseDataCollectionView.LV_COLUMN_ID) && (group.getObjectId() != 0))
+         return Long.toString(group.getObjectId());
+      return null;
+   }
 
    /**
     * Format state of anomaly detection
@@ -238,6 +263,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	{
 		for(int i = 0; i < stateImages.length; i++)
 			stateImages[i].dispose();
+      groupImage.dispose();
 		thresholdLabelProvider.dispose();
       objectLabelProvider.dispose();
 		super.dispose();
@@ -265,6 +291,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	@Override
 	public Color getForeground(Object element, int columnIndex)
 	{
+      if (element instanceof DciGroup)
+         return null;
       if (((DciValue)element).getStatus() == DataCollectionObjectStatus.DISABLED)
 			return StatusDisplayInfo.getStatusTextColor(ObjectStatus.UNMANAGED);
       if (showErrors && (((DciValue)element).getErrorCount() > 0))

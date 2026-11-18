@@ -38,6 +38,9 @@ public class DciFilter extends ViewerFilter implements AbstractViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
+      if (element instanceof DciGroup)
+         return ((DciGroup)element).hasVisibleElements(this, viewer);
+
       final DataCollectionObject dci = (DataCollectionObject)element;
       if (hideTemplateItems && dci.getTemplateId() != 0)
          return false;

@@ -227,7 +227,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
                @Override
                public void run()
                {
-                  if (!viewer.getTable().isDisposed() && (getObject() != null) && (getObject().getObjectId() == obj.getObjectId()))
+                  if (!viewer.getControl().isDisposed() && (getObject() != null) && (getObject().getObjectId() == obj.getObjectId()))
                   {
                      viewer.setInput(data);
                      clearMessages();

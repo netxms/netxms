@@ -43,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Implementation of TreeViewer with column sorting support
  */
-public class SortableTreeViewer extends TreeViewer
+public class SortableTreeViewer extends TreeViewer implements SortableViewer
 {
 	public static final int DEFAULT_STYLE = -1;
 
@@ -208,6 +208,7 @@ public class SortableTreeViewer extends TreeViewer
       // ignores in-place cell text changes; the pack itself triggers recomputation, so only a second
       // pass reads widths measured from actual content. Without it columns can never shrink on GTK.
       int passes = SWT.getPlatform().equals("gtk") ? 2 : 1;
+      int nestedIndent = getNestedItemIndent();
       for(int pass = 0; pass < passes; pass++)
       {
          for(int i = 0; i < count; i++)
@@ -220,12 +221,49 @@ public class SortableTreeViewer extends TreeViewer
                c.setWidth(0);
                c.pack();
                // Add some padding for better readability
-               // Column 0 has extra padding because pack() may not count space needed for expand indicator
-               c.setWidth(c.getWidth() + ((i == 0) ? 20 : 4));
+               // Column 0 has extra padding because pack() may not count space needed for expand indicator and indentation of nested items
+               c.setWidth(c.getWidth() + ((i == 0) ? 20 + nestedIndent : 4));
             }
          }
       }
       tree.setRedraw(true);
+   }
+
+   /**
+    * Get indentation of the deepest visible nested item relative to top level items (pack() on some platforms does not include it).
+    *
+    * @return indentation of the deepest visible nested item in pixels
+    */
+   private int getNestedItemIndent()
+   {
+      TreeItem[] items = getTree().getItems();
+      if (items.length == 0)
+         return 0;
+      int base = items[0].getBounds(0).x;
+      int max = base;
+      for(TreeItem item : items)
+         max = Math.max(max, getMaxNestedItemOffset(item));
+      return max - base;
+   }
+
+   /**
+    * Get maximum horizontal offset of first cell among given item and its visible descendants.
+    *
+    * @param item tree item
+    * @return maximum horizontal offset
+    */
+   private int getMaxNestedItemOffset(TreeItem item)
+   {
+      int x = item.getBounds(0).x;
+      if (item.getExpanded())
+      {
+         for(TreeItem child : item.getItems())
+         {
+            if (child.getData() != null) // skip placeholder item of not yet expanded node
+               x = Math.max(x, getMaxNestedItemOffset(child));
+         }
+      }
+      return x;
    }
 
    /**
@@ -361,6 +399,44 @@ public class SortableTreeViewer extends TreeViewer
       getTree().removeAll();
       for(TreeColumn c : getTree().getColumns())
          c.dispose();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.SortableViewer#getColumnId(int)
+    */
+   @Override
+   public int getColumnId(int index)
+   {
+      return (Integer)getTree().getColumn(index).getData("ID");
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.SortableViewer#getSortColumnId()
+    */
+   @Override
+   public int getSortColumnId()
+   {
+      TreeColumn c = getTree().getSortColumn();
+      return (c != null) ? (Integer)c.getData("ID") : -1;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.SortableViewer#getSortDirection()
+    */
+   @Override
+   public int getSortDirection()
+   {
+      return getTree().getSortDirection();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.SortableViewer#setSortColumn(int, int)
+    */
+   @Override
+   public void setSortColumn(int columnId, int direction)
+   {
+      getTree().setSortColumn(getColumnById(columnId));
+      getTree().setSortDirection(direction);
    }
 
    /**
