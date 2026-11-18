@@ -111,43 +111,41 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password, const shared_
    {
       if (keys != nullptr)
       {
-         ssh_key pkey;
-         if (ssh_pki_import_pubkey_base64(keys->publicKey, keys->type, &pkey) == SSH_OK)
+         ssh_key pubkey;
+         if (ssh_pki_import_pubkey_base64(keys->publicKey, keys->type, &pubkey) == SSH_OK)
          {
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::connect: try to login with public key"));
-
-            if (ssh_userauth_try_publickey(m_session, NULL, pkey) == SSH_AUTH_SUCCESS)
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::connect: check if server accepts public key"));
+            int rc = ssh_userauth_try_publickey(m_session, nullptr, pubkey);
+            ssh_key_free(pubkey);
+            if (rc == SSH_AUTH_SUCCESS)
             {
-               success = true;
+               ssh_key privkey;
+               if (ssh_pki_import_privkey_base64(keys->privateKey, nullptr, nullptr, nullptr, &privkey) == SSH_OK)
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::connect: try to login with private key"));
+                  if (ssh_userauth_publickey(m_session, nullptr, privkey) == SSH_AUTH_SUCCESS)
+                  {
+                     success = true;
+                  }
+                  else
+                  {
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: login with key as %s on %s:%d failed (%hs)"), user, m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
+                  }
+                  ssh_key_free(privkey);
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: SSH private key load for %s:%d failed (%hs)"), m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
+               }
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: login with key as %s on %s:%d failed (%hs)"), user, (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: public key for %s rejected by %s:%d (%hs)"), user, m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
             }
-            ssh_key_free(pkey);
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: SSH key load for %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
-         }
-
-         if (ssh_pki_import_privkey_base64(keys->privateKey, nullptr, nullptr, nullptr, &pkey) == SSH_OK)
-         {
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("SSHSession::connect: try to login with private key"));
-
-            if (ssh_userauth_publickey(m_session, NULL, pkey) == SSH_AUTH_SUCCESS)
-            {
-               success = true;
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: login with key as %s on %s:%d failed (%hs)"), user, (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
-            }
-            ssh_key_free(pkey);
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: SSH key load for %s:%d failed (%hs)"), (const TCHAR *)m_addr.toString(), m_port, ssh_get_error(m_session));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::connect: SSH public key load for %s:%d failed (%hs)"), m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
          }
       }
 
