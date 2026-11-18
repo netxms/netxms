@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -414,7 +414,7 @@ void Array::sort(int (*cb)(void *, const void *, const void *), void *context)
  */
 void *Array::bsearch(const void *key, int (*cb)(const void *, const void *)) const
 {
-   return ::bsearch(key, m_data, m_size, m_elementSize, cb);
+   return (m_size > 0) ? ::bsearch(key, m_data, m_size, m_elementSize, cb) : nullptr;
 }
 
 /**
