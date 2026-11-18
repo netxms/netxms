@@ -40,10 +40,11 @@ static uint64_t s_failedQueriesAtStart = 0;
 static bool s_uncountedFailure = false;
 
 /**
- * Any failed query or table lookup since the check transaction started aborts the check: no further
- * stage starts and the whole check is rolled back. On PostgreSQL a failed statement poisons the
- * transaction, and elsewhere a stage that lost a query works on incomplete data, so a "no errors"
- * result would be false.
+ * Any failed query or table lookup since the check started aborts the check: no further stage starts
+ * and the check transaction is rolled back. On PostgreSQL a failed statement poisons the transaction,
+ * and elsewhere a stage that lost a query works on incomplete data, so a "no errors" result would be
+ * false. The data tables stage runs outside the transaction (see CheckDatabase), so changes it has
+ * already made stay.
  */
 static bool IsCheckAborted()
 {
@@ -3042,7 +3043,6 @@ static void (*s_checkStages[])() =
    CheckEppRelations,
    CheckEPP,
    CheckMapLinks,
-   CheckDataTables,
    CheckDataCollectionItems,
    CheckDCISourceNodes,
    CheckTemplateBindings,
@@ -3064,6 +3064,87 @@ static void (*s_checkStages[])() =
    []() { CheckOrphanRelations(OrphanStage::DataCollection, L"Data collection references"); },
    []() { CheckOrphanRelations(OrphanStage::ReportOnly, L"References reported only"); }
 };
+
+/**
+ * Run all checks except data tables in one transaction and commit or roll it back. Returns true if the
+ * check can continue.
+ */
+static bool RunTransactionalChecks()
+{
+   // A reconnect would continue outside the check transaction without counting a failure
+   DBEnableReconnect(g_dbHandle, false);
+   if (!DBBegin(g_dbHandle))
+   {
+      WriteToTerminal(L"Cannot start transaction\n");
+      DBEnableReconnect(g_dbHandle, true);
+      return false;
+   }
+
+   for(size_t i = 0; (i < sizeof(s_checkStages) / sizeof(s_checkStages[0])) && !IsCheckAborted(); i++)
+      s_checkStages[i]();
+   if (g_checkData && !IsCheckAborted())
+   {
+      void (*collectedDataCheck)(bool);
+      if (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0))
+         collectedDataCheck = (g_dbSyntax == DB_SYNTAX_TSDB) ? CheckCollectedDataSingleTable_TSDB : CheckCollectedDataSingleTable;
+      else
+         collectedDataCheck = CheckCollectedData;
+      if (!IsCheckAborted())
+         collectedDataCheck(false);
+      if (!IsCheckAborted())
+         collectedDataCheck(true);
+      if (!IsCheckAborted())
+         CheckSampleAttributes();
+   }
+   if (!IsCheckAborted() && !CheckModuleSchemas())
+      s_uncountedFailure = true;
+
+   bool success = true;
+   if (IsCheckAborted())
+   {
+      WriteToTerminal(L"Error during check, rolling back changes...\n");
+      DBRollback(g_dbHandle);
+      success = false;
+   }
+   else if (g_dbCheckErrors == 0)
+   {
+      if (!DBCommit(g_dbHandle))
+      {
+         WriteToTerminal(L"Cannot commit transaction\n");
+         success = false;
+      }
+   }
+   else if (g_dbCheckFixes > 0)
+   {
+      if (GetYesNo(_T("%d errors was found, %d errors was corrected. Commit changes?"), g_dbCheckErrors, g_dbCheckFixes))
+      {
+         _tprintf(_T("Committing changes...\n"));
+         if (DBCommit(g_dbHandle))
+         {
+            _tprintf(_T("Changes was successfully committed to database\n"));
+         }
+         else
+         {
+            WriteToTerminal(L"Cannot commit transaction\n");
+            success = false;
+         }
+      }
+      else
+      {
+         _tprintf(_T("Rolling back changes...\n"));
+         if (DBRollback(g_dbHandle))
+            _tprintf(_T("All changes made to database was cancelled\n"));
+         g_dbCheckFixes = 0;
+      }
+   }
+   else
+   {
+      DBRollback(g_dbHandle);
+   }
+
+   DBEnableReconnect(g_dbHandle, true);
+   return success;
+}
 
 /**
  * Check database for errors
@@ -3117,101 +3198,36 @@ void CheckDatabase()
    // Check if database is locked
    if (LockDatabase())
    {
-      // A reconnect would continue outside the check transaction without counting a failure
-      DBEnableReconnect(g_dbHandle, false);
-      if (!DBBegin(g_dbHandle))
-      {
-         WriteToTerminal(L"Cannot start transaction\n");
-         DBEnableReconnect(g_dbHandle, true);
-         RemoveDatabaseLock();
-         WriteToTerminal(L"Database check aborted\n");
-         return;
-      }
-
       LIBNXDB_PERF_COUNTERS counters;
       DBGetPerfCounters(&counters);
       s_failedQueriesAtStart = counters.failedQueries;
 
-      if (g_checkDataTablesOnly)
+      // Data tables are created and dropped with DDL statements, which commit an open transaction implicitly
+      // on MySQL and Oracle (MySQL also returns to autocommit mode), so this stage runs after the check
+      // transaction is closed. The operator confirms each statement and it takes effect immediately.
+      if (g_checkDataTablesOnly || RunTransactionalChecks())
       {
          CheckDataTables();
-      }
-      else
-      {
-         for(size_t i = 0; (i < sizeof(s_checkStages) / sizeof(s_checkStages[0])) && !IsCheckAborted(); i++)
-            s_checkStages[i]();
-         if (g_checkData && !IsCheckAborted())
+         if (IsCheckAborted())
          {
-            void (*collectedDataCheck)(bool);
-            if (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0))
-               collectedDataCheck = (g_dbSyntax == DB_SYNTAX_TSDB) ? CheckCollectedDataSingleTable_TSDB : CheckCollectedDataSingleTable;
-            else
-               collectedDataCheck = CheckCollectedData;
-            if (!IsCheckAborted())
-               collectedDataCheck(false);
-            if (!IsCheckAborted())
-               collectedDataCheck(true);
-            if (!IsCheckAborted())
-               CheckSampleAttributes();
+            WriteToTerminal(L"Error during data tables check\n");
          }
-         if (!IsCheckAborted() && !CheckModuleSchemas())
-            s_uncountedFailure = true;
-      }
-
-      if (IsCheckAborted())
-      {
-         WriteToTerminal(L"Error during check, rolling back changes...\n");
-         DBRollback(g_dbHandle);
-      }
-      else if (g_dbCheckErrors == 0)
-      {
-         if (DBCommit(g_dbHandle))
+         else if (g_dbCheckErrors == 0)
          {
             _tprintf(_T("Database doesn't contain any errors\n"));
             completed = true;
          }
          else
          {
-            WriteToTerminal(L"Cannot commit transaction\n");
-         }
-      }
-      else
-      {
-         _tprintf(_T("%d errors was found, %d errors was corrected\n"), g_dbCheckErrors, g_dbCheckFixes);
-         if (g_dbCheckFixes == g_dbCheckErrors)
-            _tprintf(_T("All errors in database was fixed\n"));
-         else
-            _tprintf(_T("Database still contain errors\n"));
-         completed = true;
-         if (g_dbCheckFixes > 0)
-         {
-            if (GetYesNo(_T("Commit changes?")))
-            {
-               _tprintf(_T("Committing changes...\n"));
-               if (DBCommit(g_dbHandle))
-               {
-                  _tprintf(_T("Changes was successfully committed to database\n"));
-               }
-               else
-               {
-                  WriteToTerminal(L"Cannot commit transaction\n");
-                  completed = false;
-               }
-            }
+            _tprintf(_T("%d errors was found, %d errors was corrected\n"), g_dbCheckErrors, g_dbCheckFixes);
+            if (g_dbCheckFixes == g_dbCheckErrors)
+               _tprintf(_T("All errors in database was fixed\n"));
             else
-            {
-               _tprintf(_T("Rolling back changes...\n"));
-               if (DBRollback(g_dbHandle))
-                  _tprintf(_T("All changes made to database was cancelled\n"));
-            }
-         }
-         else
-         {
-            DBRollback(g_dbHandle);
+               _tprintf(_T("Database still contain errors\n"));
+            completed = true;
          }
       }
 
-      DBEnableReconnect(g_dbHandle, true);
       RemoveDatabaseLock();
 
       MemFree(s_dciCache);
