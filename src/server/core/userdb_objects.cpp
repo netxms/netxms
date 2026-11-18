@@ -1677,40 +1677,63 @@ uint32_t Group::modifyFromMessage(const NXCPMessage& msg)
 	uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
 	if (fields & USER_MODIFY_MEMBERS)
 	{
-      IntegerArray<uint32_t> members = std::move(m_members);
+      IntegerArray<uint32_t> members;
 		int count = msg.getFieldAsInt32(VID_NUM_MEMBERS);
-		if (count > 0)
-		{
-			uint32_t fieldId = VID_GROUP_MEMBER_BASE;
-			for(int i = 0; i < count; i++, fieldId++)
-         {
-				uint32_t userId = msg.getFieldAsUInt32(fieldId);
-				m_members.add(userId);
-
-            // check if new member
-			   uint32_t *e = FindMember(members, userId);
-			   if (e != nullptr)
-			   {
-			      *e = 0xFFFFFFFF;    // mark as found
-			   }
-			   else
-			   {
-               SendUserDBUpdate(USER_DB_MODIFY, userId);  // new member added
-			   }
-         }
-			for(int i = 0; i < members.size(); i++)
-            if (members.get(i) != 0xFFFFFFFF)  // not present in new list
-               SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
-		   m_members.sort(CompareUserId);
-		}
-		else
-		{
-         // notify change for all old members
-			for(int i = 0; i < members.size(); i++)
-            SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
-		}
+      uint32_t fieldId = VID_GROUP_MEMBER_BASE;
+      for(int i = 0; i < count; i++, fieldId++)
+         members.add(msg.getFieldAsUInt32(fieldId));
+      setMembers(&members);
 	}
 	return RCC_SUCCESS;
+}
+
+/**
+ * Replace member list with given one and send user database update notification to every user added to
+ * or removed from the group. Given list is sorted, has duplicates removed and receives the old member list.
+ * Notifications are sent only after the new list is in place and sorted, because they carry group membership
+ * of the user, which is resolved through isMember().
+ */
+void Group::setMembers(IntegerArray<uint32_t> *members)
+{
+   members->sort(CompareUserId);
+   uint32_t *ids = members->getBuffer();
+   int count = 0;
+   for(int i = 0; i < members->size(); i++)
+   {
+      if ((count == 0) || (ids[i] != ids[count - 1]))
+         ids[count++] = ids[i];
+   }
+   members->shrinkTo(count);
+
+   m_members.swap(*members);
+
+   // Both lists are sorted, so a single merge pass finds users present in only one of them
+   const IntegerArray<uint32_t>& oldMembers = *members;
+   int i = 0, j = 0;
+   while((i < oldMembers.size()) && (j < m_members.size()))
+   {
+      uint32_t oldId = oldMembers.get(i);
+      uint32_t newId = m_members.get(j);
+      if (oldId == newId)
+      {
+         i++;
+         j++;
+      }
+      else if (oldId < newId)
+      {
+         SendUserDBUpdate(USER_DB_MODIFY, oldId);  // removed
+         i++;
+      }
+      else
+      {
+         SendUserDBUpdate(USER_DB_MODIFY, newId);  // added
+         j++;
+      }
+   }
+   for(; i < oldMembers.size(); i++)
+      SendUserDBUpdate(USER_DB_MODIFY, oldMembers.get(i));
+   for(; j < m_members.size(); j++)
+      SendUserDBUpdate(USER_DB_MODIFY, m_members.get(j));
 }
 
 /**
@@ -1725,37 +1748,11 @@ uint32_t Group::modifyFromJson(const json_t *json)
    json_t *membersJson = json_object_get(const_cast<json_t*>(json), "members");
    if ((membersJson != nullptr) && json_is_array(membersJson))
    {
-      IntegerArray<uint32_t> members = std::move(m_members);
+      IntegerArray<uint32_t> members;
       size_t count = json_array_size(membersJson);
-      if (count > 0)
-      {
-         for(size_t i = 0; i < count; i++)
-         {
-            uint32_t userId = static_cast<uint32_t>(json_integer_value(json_array_get(membersJson, i)));
-            m_members.add(userId);
-
-            // check if new member
-            uint32_t *e = FindMember(members, userId);
-            if (e != nullptr)
-            {
-               *e = 0xFFFFFFFF;    // mark as found
-            }
-            else
-            {
-               SendUserDBUpdate(USER_DB_MODIFY, userId);  // new member added
-            }
-         }
-         for(int i = 0; i < members.size(); i++)
-            if (members.get(i) != 0xFFFFFFFF)  // not present in new list
-               SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
-         m_members.sort(CompareUserId);
-      }
-      else
-      {
-         // notify change for all old members
-         for(int i = 0; i < members.size(); i++)
-            SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
-      }
+      for(size_t i = 0; i < count; i++)
+         members.add(static_cast<uint32_t>(json_integer_value(json_array_get(membersJson, i))));
+      setMembers(&members);
    }
    return RCC_SUCCESS;
 }
