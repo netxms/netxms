@@ -193,10 +193,14 @@
 #
 # Communication session's idle timeout in seconds. If agent will not receive
 # any command from peer within specified timeout, session will be closed.
-# Default value is 60 seconds.
+# Default value is 120 seconds; on BSD and macOS default value is derived from
+# net.inet.tcp.keepinit (keepinit / 1000 + 15, which is 90 seconds with stock
+# value of 75000). Value must be well above server's Client.KeepAliveInterval
+# (60 seconds by default), otherwise idle TCP proxy and SSH terminal sessions
+# opened from management console can be disconnected.
 #
 # Example:
-# SessionIdleTimeout = 60
+# SessionIdleTimeout = 180
 
 #
 # FileStore
