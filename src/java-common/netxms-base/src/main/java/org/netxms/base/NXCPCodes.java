@@ -1115,7 +1115,6 @@ public class NXCPCodes
    public static final long VID_ERROR_LINE = 511;
    public static final long VID_SPEED = 512;
    public static final long VID_IFTABLE_SUFFIX = 513;
-   public static final long VID_SERVER_COMMAND_TIMEOUT = 514;
    public static final long VID_SYS_CONTACT = 515;
    public static final long VID_SYS_LOCATION = 516;
    public static final long VID_PHYSICAL_CONTAINER_ID = 517;

@@ -3092,7 +3092,6 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       response->setField(VID_VIEW_REFRESH_INTERVAL, (uint16_t)ConfigReadInt(L"Client.MinViewRefreshInterval", 300));
       response->setField(VID_HELPDESK_LINK_ACTIVE, (g_flags & AF_HELPDESK_LINK_ACTIVE) != 0);
       response->setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("Client.AlarmList.DisplayLimit"), 4096));
-      response->setField(VID_SERVER_COMMAND_TIMEOUT, ConfigReadULong(_T("Server.CommandOutputTimeout"), 60));
       response->setField(VID_GRACE_LOGINS, m_loginInfo->graceLogins);
       response->setField(VID_TCP_PROXY_CLIENT_CID, true);   // Client can assign channel ID
       response->setField(VID_UI_ACCESS_RULES, GetEffectiveUIAccessRules(m_userId));

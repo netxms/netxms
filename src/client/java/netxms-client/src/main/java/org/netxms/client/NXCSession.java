@@ -407,7 +407,7 @@ public class NXCSession
    private int maxRecvBufferSize = 33554432;    // Max is 32MB
    private int connectTimeout = 10000; // Default is 10 seconds
    private int commandTimeout = 30000; // Default is 30 seconds
-   private int serverCommandOutputTimeout = 60000;
+   private int objectToolOutputTimeout = 60000; // Idle timeout for server, agent and SSH command output (from Client.ObjectTools.OutputTimeout)
    private static final int AI_CHAT_RESPONSE_TIMEOUT = 900000; // 15 minutes: LLM processing plus up to 5 minutes while a question to the user is pending
 
    // Notification listeners and queue
@@ -2901,7 +2901,6 @@ public class NXCSession
       timedAlarmAckEnabled = response.getFieldAsBoolean(NXCPCodes.VID_TIMED_ALARM_ACK_ENABLED);
       dciAggregationEnabled = response.getFieldAsBoolean(NXCPCodes.VID_DCI_AGGREGATION_ENABLED);
 
-      serverCommandOutputTimeout = response.getFieldAsInt32(NXCPCodes.VID_SERVER_COMMAND_TIMEOUT) * 1000;
       serverColor = response.getFieldAsString(NXCPCodes.VID_SERVER_COLOR);
       serverName = response.getFieldAsString(NXCPCodes.VID_SERVER_NAME);
       if ((serverName == null) || serverName.isEmpty())
@@ -2927,6 +2926,9 @@ public class NXCSession
          }
       }
       clientConfigurationHints.forEach((key, value) -> logger.info("Configuration hint: {} = {}", key, value));
+
+      int outputTimeout = getClientConfigurationHintAsInt("ObjectTools.OutputTimeout", 60);
+      objectToolOutputTimeout = (outputTimeout > 0) ? outputTimeout * 1000 : 60000;
 
       messageOfTheDay = response.getFieldAsString(NXCPCodes.VID_MESSAGE_OF_THE_DAY);
 
@@ -9261,11 +9263,13 @@ public class NXCSession
       /**
        * @param listener listener for command output or null
        * @param writer writer for command output or null
+       * @param timeout maximum wait time for next output message in milliseconds
        */
-      CommandOutputHandler(TextOutputListener listener, Writer writer)
+      CommandOutputHandler(TextOutputListener listener, Writer writer, int timeout)
       {
          this.listener = listener;
          this.writer = writer;
+         setMessageWaitTimeout(timeout);
       }
 
       /**
@@ -9391,7 +9395,7 @@ public class NXCSession
          msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_LIST_BASE, NXCPCodes.VID_NUM_MASKED_FIELDS);
       }
 
-      CommandOutputHandler handler = receiveOutput ? new CommandOutputHandler(listener, writer) : null;
+      CommandOutputHandler handler = receiveOutput ? new CommandOutputHandler(listener, writer, objectToolOutputTimeout) : null;
       if (receiveOutput)
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
 
@@ -9448,7 +9452,7 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, 0);
       }
 
-      CommandOutputHandler handler = receiveOutput ? new CommandOutputHandler(listener, writer) : null;
+      CommandOutputHandler handler = receiveOutput ? new CommandOutputHandler(listener, writer, objectToolOutputTimeout) : null;
       if (receiveOutput)
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
 
@@ -9496,7 +9500,7 @@ public class NXCSession
          msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_LIST_BASE, NXCPCodes.VID_NUM_MASKED_FIELDS);
       }
 
-      CommandOutputHandler handler = receiveOutput ? new CommandOutputHandler(listener, writer) : null;
+      CommandOutputHandler handler = receiveOutput ? new CommandOutputHandler(listener, writer, objectToolOutputTimeout) : null;
       if (receiveOutput)
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
 
@@ -12289,7 +12293,7 @@ public class NXCSession
       } : null;
       if (receiveOutput)
       {
-         handler.setMessageWaitTimeout(serverCommandOutputTimeout);
+         handler.setMessageWaitTimeout(objectToolOutputTimeout);
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
       }
 

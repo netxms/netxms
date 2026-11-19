@@ -1305,7 +1305,6 @@ __PACK_END__
 #define VID_ERROR_LINE              ((uint32_t)511)
 #define VID_SPEED                   ((uint32_t)512)
 #define VID_IFTABLE_SUFFIX          ((uint32_t)513)
-#define VID_SERVER_COMMAND_TIMEOUT  ((uint32_t)514)
 #define VID_SYS_CONTACT             ((uint32_t)515)
 #define VID_SYS_LOCATION            ((uint32_t)516)
 #define VID_PHYSICAL_CONTAINER_ID   ((uint32_t)517)

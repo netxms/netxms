@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.15 to 71.16
+ */
+static bool H_UpgradeFromV15()
+{
+   CHK_EXEC(SQLQuery(L"UPDATE config SET var_name='Client.ObjectTools.OutputTimeout',description='Time (in seconds) the client waits for the next output message of a server command, agent command or SSH command object tool before reporting a timeout. The wait restarts with each received message. The command itself is not stopped when the wait expires. A new value takes effect at the next client login.' WHERE var_name='Server.CommandOutputTimeout'"));
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 71.14 to 71.15
  */
 static bool H_UpgradeFromV14()
@@ -335,6 +345,7 @@ static struct
    bool (*upgradeProc)();
    bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 15, 71, 16, H_UpgradeFromV15 },
    { 14, 71, 15, H_UpgradeFromV14 },
    { 13, 71, 14, H_UpgradeFromV13, true },
    { 12, 71, 13, H_UpgradeFromV12 },
