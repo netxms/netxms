@@ -21,6 +21,7 @@
 **/
 
 #include "object_helpers.h"
+#include <entity_mib.h>
 
 /**
  * Set response for inventory list (null entries when inventory is not available for the node)
@@ -59,6 +60,73 @@ int H_HardwareInventory(Context *context)
       return httpCode;
 
    return SetInventoryResponse(context, node->getHardwareComponentsAsJSON());
+}
+
+/**
+ * ENTITY-MIB physical component class names (entPhysicalClass)
+ */
+static CodeLookupElement s_componentClassNames[] =
+{
+   { COMPONENT_CLASS_OTHER, L"Other" },
+   { COMPONENT_CLASS_UNKNOWN, L"Unknown" },
+   { COMPONENT_CLASS_CHASSIS, L"Chassis" },
+   { COMPONENT_CLASS_BACKPLANE, L"Backplane" },
+   { COMPONENT_CLASS_CONTAINER, L"Container" },
+   { COMPONENT_CLASS_POWER_SUPPLY, L"PowerSupply" },
+   { COMPONENT_CLASS_FAN, L"Fan" },
+   { COMPONENT_CLASS_SENSOR, L"Sensor" },
+   { COMPONENT_CLASS_MODULE, L"Module" },
+   { COMPONENT_CLASS_PORT, L"Port" },
+   { COMPONENT_CLASS_STACK, L"Stack" },
+   { COMPONENT_CLASS_CPU, L"CPU" },
+   { 0, nullptr }
+};
+
+/**
+ * Serialize physical component and its children to JSON
+ */
+static json_t *PhysicalComponentToJson(const Component& c, const Node& node)
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "index", json_integer(c.getIndex()));
+   json_object_set_new(json, "class", json_string_t(CodeToText(c.getClass(), s_componentClassNames, L"Unknown")));
+   json_object_set_new(json, "position", json_integer(c.getPosition()));
+   json_object_set_new(json, "name", json_string_t(c.getName()));
+   json_object_set_new(json, "description", json_string_t(c.getDescription()));
+   json_object_set_new(json, "model", json_string_t(c.getModel()));
+   json_object_set_new(json, "serialNumber", json_string_t(c.getSerial()));
+   json_object_set_new(json, "vendor", json_string_t(c.getVendor()));
+   json_object_set_new(json, "firmware", json_string_t(c.getFirmware()));
+   json_object_set_new(json, "interfaceIndex", json_integer(c.getIfIndex()));
+   json_object_set_new(json, "interfaceName", (c.getIfIndex() != 0) ? InterfaceNameToJson(node, c.getIfIndex(), false) : json_null());
+
+   json_t *children = json_array();
+   const ObjectArray<Component>& childList = c.getChildren();
+   for(int i = 0; i < childList.size(); i++)
+      json_array_append_new(children, PhysicalComponentToJson(*childList.get(i), node));
+   json_object_set_new(json, "children", children);
+   return json;
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/physical-components
+ */
+int H_PhysicalComponents(Context *context)
+{
+   int httpCode;
+   shared_ptr<Node> node = LoadNodeForTableRequest(context, &httpCode);
+   if (node == nullptr)
+      return httpCode;
+
+   shared_ptr<ComponentTree> components = node->getComponents();
+   const Component *root = (components != nullptr) ? components->getRoot() : nullptr;
+
+   json_t *output = json_object();
+   json_object_set_new(output, "timestamp", (root != nullptr) ? json_time_string(components->getTimestamp()) : json_null());
+   json_object_set_new(output, "root", (root != nullptr) ? PhysicalComponentToJson(*root, *node) : json_null());
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
 }
 
 /**

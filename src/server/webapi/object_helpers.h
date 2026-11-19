@@ -68,4 +68,11 @@ int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const
  */
 shared_ptr<Node> LoadNodeForTableRequest(Context *context, int *httpCode);
 
+/**
+ * Resolve interface name by index. Returns JSON null if there is no matching interface object.
+ * When preferParent is set, an interface that is a member of an Ethernet or LAG parent interface
+ * is reported under the parent's name.
+ */
+json_t *InterfaceNameToJson(const Node& node, uint32_t ifIndex, bool preferParent);
+
 #endif

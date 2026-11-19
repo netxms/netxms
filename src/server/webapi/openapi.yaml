@@ -9753,6 +9753,52 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/physical-components:
+    get:
+      operationId: getPhysicalComponents
+      summary: Get node physical component tree
+      description: >-
+        Read the physical component tree of the given node (chassis, modules, power supplies, fans, sensors, ports,
+        etc.) as collected from ENTITY-MIB and stored by the server. The tree is refreshed by configuration poll; use
+        `POST /v1/objects/{object-id}/poll/configuration` to update it. Both `timestamp` and `root` are null when
+        the node does not provide ENTITY-MIB data.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      responses:
+        '200':
+          description: Physical component tree retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    nullable: true
+                    description: When the component tree was collected
+                  root:
+                    allOf:
+                      - $ref: '#/components/schemas/PhysicalComponent'
+                    nullable: true
+                    description: Root component of the tree
+        '400':
+          description: Invalid object ID or object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
   /v1/objects/{object-id}/software-inventory:
     get:
       operationId: getSoftwareInventory
@@ -21765,6 +21811,50 @@ components:
           type: string
         description:
           type: string
+    PhysicalComponent:
+      type: object
+      description: Physical component of a node (ENTITY-MIB entPhysicalTable entry) with its contained components
+      properties:
+        index:
+          type: integer
+          description: Component index (entPhysicalIndex)
+        class:
+          type: string
+          enum: [Other, Unknown, Chassis, Backplane, Container, PowerSupply, Fan, Sensor, Module, Port, Stack, CPU]
+          description: Component class (entPhysicalClass)
+        position:
+          type: integer
+          description: Relative position within parent component (entPhysicalParentRelPos)
+        name:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        model:
+          type: string
+          nullable: true
+        serialNumber:
+          type: string
+          nullable: true
+        vendor:
+          type: string
+          nullable: true
+        firmware:
+          type: string
+          nullable: true
+          description: Firmware revision
+        interfaceIndex:
+          type: integer
+          description: Index of the interface this component represents (0 if none)
+        interfaceName:
+          type: string
+          nullable: true
+          description: Name of the matching interface object. Null when the component is not an interface or no interface object matches the index.
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhysicalComponent'
     SoftwarePackage:
       type: object
       description: Software package installed on a node

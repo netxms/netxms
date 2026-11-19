@@ -165,3 +165,25 @@ shared_ptr<Node> LoadNodeForTableRequest(Context *context, int *httpCode)
 
    return static_pointer_cast<Node>(object);
 }
+
+/**
+ * Resolve interface name by index. Returns JSON null if there is no matching interface object.
+ * When preferParent is set, an interface that is a member of an Ethernet or LAG parent interface
+ * is reported under the parent's name (same rule as ForwardingDatabase::interfaceIndexToName).
+ */
+json_t *InterfaceNameToJson(const Node& node, uint32_t ifIndex, bool preferParent)
+{
+   shared_ptr<Interface> iface = node.findInterfaceByIndex(ifIndex);
+   if (iface == nullptr)
+      return json_null();
+
+   if (preferParent && (iface->getParentInterfaceId() != 0))
+   {
+      shared_ptr<Interface> parent = static_pointer_cast<Interface>(FindObjectById(iface->getParentInterfaceId(), OBJECT_INTERFACE));
+      if ((parent != nullptr) &&
+          ((parent->getIfType() == IFTYPE_ETHERNET_CSMACD) || (parent->getIfType() == IFTYPE_IEEE8023ADLAG)))
+         return json_string_t(parent->getName());
+   }
+
+   return json_string_t(iface->getName());
+}

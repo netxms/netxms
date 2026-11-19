@@ -382,6 +382,7 @@ int H_DhcpLeases(Context *context);
 int H_DhcpScopes(Context *context);
 int H_ArpCache(Context *context);
 int H_HardwareInventory(Context *context);
+int H_PhysicalComponents(Context *context);
 int H_SoftwareInventory(Context *context);
 int H_UserSessions(Context *context);
 int H_RoutingTable(Context *context);
@@ -1138,6 +1139,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/hardware-inventory")
       .GET(H_HardwareInventory)
+      .build();
+   RouteBuilder("v1/objects/:object-id/physical-components")
+      .GET(H_PhysicalComponents)
       .build();
    RouteBuilder("v1/objects/:object-id/software-inventory")
       .GET(H_SoftwareInventory)
