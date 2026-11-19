@@ -70,6 +70,7 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
       addJsLibrary("/js/download.js");
       addJsLibrary("/js/dragrelease.js");
       addJsLibrary("/js/longpress.js");
+      addJsLibrary("/js/mapinput.js");
       addJsLibrary("/js/msgproxy.js");
       addJsLibrary("/js/rwt-util.js");
       addJsLibrary("/js/svgcanvas.js");

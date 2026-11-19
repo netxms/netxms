@@ -169,6 +169,12 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected boolean saveSchedulted = false;
    private int parallelLinkMergeThreshold = ParallelLinkGroup.DEFAULT_MERGE_THRESHOLD;
    private long parallelLinkMergeThresholdMapId = 0;
+   private boolean initialCenteringDone = false; // Viewport has been centered on content once, when the map first had any
+
+   // Retry budget for the initial centering: 20 x 100ms = 2s, comfortably longer than a layout
+   // pass plus a slow object sync, and short enough that a genuinely empty map stops trying.
+   private static final int INITIAL_CENTERING_MAX_ATTEMPTS = 20;
+   private static final int INITIAL_CENTERING_RETRY_DELAY = 100;
 
 	protected Action actionShowStatusIcon;
 	protected Action actionShowStatusBackground;
@@ -1026,7 +1032,59 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		   }
 		}
       viewer.setSelection(new StructuredSelection(newSelection));
+      scheduleInitialCentering();
 	}
+
+   /**
+    * Center the viewport on the map's content the first time there is any content to center on.
+    *
+    * A map canvas is usually far larger than the area its elements occupy and the viewport opens at
+    * the canvas origin, so without this the first screen a user sees is frequently empty.
+    *
+    * This cannot simply be done when the view is created. Map content arrives asynchronously - when
+    * the map object is not yet available, buildMapPage() produces an empty page and the real content
+    * only appears on a later refresh, driven by the object synchronization job. So this is called
+    * from every refresh but acts at most once, on the first one that actually yields elements.
+    *
+    * Acting only once is the point: centering on every refresh would pull the viewport away from
+    * wherever the user had scrolled to.
+    */
+   protected void scheduleInitialCentering()
+   {
+      if (initialCenteringDone)
+         return;
+
+      // Deferred, because the layout pass for freshly set input has not run yet at this point.
+      viewer.getControl().getDisplay().asyncExec(() -> attemptInitialCentering(0));
+   }
+
+   /**
+    * Try to center, and keep trying until the viewport is actually laid out.
+    *
+    * centerOnContent() reports false while the viewport still has no size, which is a normal
+    * transient state rather than an error. A single deferred attempt is not enough: a map opened
+    * in its own window may get only one refresh after the object sync, and if that attempt runs
+    * before layout the map would never be centered. So this retries on a short timer instead of
+    * waiting for another refresh. Retries are bounded, because a map legitimately without content
+    * must not leave a timer running forever.
+    *
+    * @param attempt zero-based attempt counter
+    */
+   private void attemptInitialCentering(int attempt)
+   {
+      if (initialCenteringDone || viewer.getControl().isDisposed())
+         return;
+
+      if (viewer.centerOnContent())
+      {
+         initialCenteringDone = true;
+         return;
+      }
+
+      if (attempt < INITIAL_CENTERING_MAX_ATTEMPTS)
+         viewer.getControl().getDisplay().timerExec(INITIAL_CENTERING_RETRY_DELAY,
+               () -> attemptInitialCentering(attempt + 1));
+   }
 
 	/**
 	 * Replace current map page with new one

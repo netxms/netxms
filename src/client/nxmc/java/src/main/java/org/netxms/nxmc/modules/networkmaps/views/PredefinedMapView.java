@@ -134,6 +134,8 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private Map<Long, Boolean> readOnlyFlagsCache = new HashMap<>();
    private Set<NetworkMapElement> movedElementList = new HashSet<>();
    private Set<NetworkMapLink> changedLinkList = new HashSet<>();
+   private long changesMapId = 0; // map that movedElementList and changedLinkList belong to
+   private Map<Long, Point> unconfirmedLocations = new HashMap<>(); // element ID -> location saved but not yet seen in the server's copy
    private MapObjectSyncer mapObjectSyncer = null;
    private int mapWidth;
    private int mapHeight;
@@ -185,6 +187,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          bendpointEditor.stop();
       viewer.resetRefreshBlock();
       saveObjectPositions();
+      unconfirmedLocations.clear(); // element IDs are per map
 
       if (oldContext != null)
       {
@@ -252,6 +255,8 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    @Override
    protected void onObjectUpdate(AbstractObject object)
    {
+      confirmLocations((NetworkMap)object);
+
       // Handle canvas-type changes (contextChanged doesn't fire — same object).
       ensureCorrectCanvas();
 
@@ -499,6 +504,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	   {
 	      disableLinkTextAutoUpdate = mapObject.isDontUpdateLinkText();
 	      mapPage = mapObject.createMapPage();
+	      applyUnconfirmedLocations();
 	   }
 	   else
 	   {
@@ -507,6 +513,40 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 
       refreshDciRequestList(oldMapPage, true);
 	}
+
+   /**
+    * Keep elements moved in this view where the user put them until the server's copy of the map shows their new location. The
+    * map page is rebuilt from the server's copy on every map update (status changes included), and an update that arrives before
+    * the server has applied the save would otherwise put the elements back where they were. Entries are removed only by
+    * confirmLocations().
+    */
+   private void applyUnconfirmedLocations()
+   {
+      for(Map.Entry<Long, Point> e : unconfirmedLocations.entrySet())
+      {
+         NetworkMapElement element = mapPage.getElement(e.getKey(), NetworkMapElement.class);
+         if (element != null)
+            element.setLocation(e.getValue().x, e.getValue().y);
+      }
+   }
+
+   /**
+    * Forget the unconfirmed locations that the server's copy of the map now shows, or whose elements are gone. Called with each map
+    * object as it arrives, before a page is built from it: a page shares the map object's elements, and applyUnconfirmedLocations()
+    * and updateObjectPositions() write local locations into them, so only a map object fresh from the server tells what it has.
+    *
+    * @param map map object received from the server
+    */
+   private void confirmLocations(NetworkMap map)
+   {
+      if (unconfirmedLocations.isEmpty())
+         return;
+      NetworkMapPage serverPage = map.createMapPage();
+      unconfirmedLocations.entrySet().removeIf(e -> {
+         NetworkMapElement element = serverPage.getElement(e.getKey(), NetworkMapElement.class);
+         return (element == null) || ((element.getX() == e.getValue().x) && (element.getY() == e.getValue().y));
+      });
+   }
 
 	/**
 	 * Synchronize objects, required when interface objects are placed on the map
@@ -1872,6 +1912,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       synchronized(movedElementList)
       {
          movedElementList.add(element);
+         changesMapId = getMapObject().getObjectId();
          if (!saveSchedulted)
          {
             saveSchedulted = true;
@@ -1896,6 +1937,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       synchronized(movedElementList)
       {
          changedLinkList.add(link);
+         changesMapId = getMapObject().getObjectId();
          if (!saveSchedulted)
          {
             saveSchedulted = true;
@@ -1934,11 +1976,14 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if (!saveSchedulted)
          return;
 
+      // Not getMapObject(): when contextChanged() flushes the previous map's changes, the view already shows the new map
+      final long mapId;
       final Set<NetworkMapElement> elementListLocalCopy;
       final Set<NetworkMapLink> linkListLocalCopy;
       synchronized(movedElementList)
       {
          saveSchedulted = false;
+         mapId = changesMapId;
          elementListLocalCopy = movedElementList;
          movedElementList = new HashSet<NetworkMapElement>();
          linkListLocalCopy = changedLinkList;
@@ -1948,11 +1993,29 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if (elementListLocalCopy.size() > 0)
          updateObjectPositions();
 
+      final Map<Long, Point> savedLocations = new HashMap<>();
+      for(NetworkMapElement e : elementListLocalCopy)
+         savedLocations.put(e.getId(), new Point(e.getX(), e.getY()));
+      unconfirmedLocations.putAll(savedLocations);
+
       new Job(i18n.tr("Save object's new positions"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.updateNetworkMapElementPosition(getMapObject().getObjectId(), elementListLocalCopy, linkListLocalCopy);
+            try
+            {
+               session.updateNetworkMapElementPosition(mapId, elementListLocalCopy, linkListLocalCopy);
+            }
+            catch(Exception e)
+            {
+               // Not saved: let the next map update show the server's locations again (if the view still shows that map)
+               runInUIThread(() -> {
+                  NetworkMap map = getMapObject();
+                  if ((map != null) && (map.getObjectId() == mapId))
+                     savedLocations.forEach((id, location) -> unconfirmedLocations.remove(id, location));
+               });
+               throw e;
+            }
          }
 
          @Override
