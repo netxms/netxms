@@ -38,7 +38,7 @@ tags:
   - name: AI Chat
     description: AI assistant chat sessions
   - name: AI Management
-    description: AI skills and functions management
+    description: AI skills and tools management
   - name: AI Messages
     description: Messages and approval requests sent to users by AI tasks
   - name: AI Saved Prompts

@@ -21514,7 +21514,7 @@ void ClientSession::requestAiAssistantComment(const NXCPMessage& request)
 }
 
 /**
- * Get list of AI skills and functions (with disabled status)
+ * Get list of AI skills and tools (with disabled status)
  */
 void ClientSession::getAiSkillsAndTools(const NXCPMessage& request)
 {

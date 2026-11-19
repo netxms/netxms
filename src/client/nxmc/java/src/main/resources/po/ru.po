@@ -2607,7 +2607,7 @@ msgid "Manage AI memory"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:94
-msgid "Manage AI skills and functions"
+msgid "Manage AI skills and tools"
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/users/propertypages/SystemRights.java:95
