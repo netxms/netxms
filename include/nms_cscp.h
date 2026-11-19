@@ -376,7 +376,7 @@ __PACK_END__
 #define CMD_UNLINK_ASSET                  0x00AA
 #define CMD_GET_USER_SESSIONS             0x00AB
 #define CMD_GET_ARP_CACHE                 0x00AC
-// unused 0x00AD
+#define CMD_REGENERATE_ANOMALY_PROFILE    0x00AD
 #define CMD_RESOLVE_DCI_NAMES             0x00AE
 #define CMD_GET_MY_CONFIG                 0x00AF
 #define CMD_GET_AGENT_CONFIGURATION_LIST  0x00B0
@@ -777,7 +777,6 @@ __PACK_END__
 #define CMD_GET_DHCP_SCOPES               0x023B
 #define CMD_GET_DHCP_LEASES               0x023C
 #define CMD_GET_AGENT_LOG_FILE            0x023D
-#define CMD_REGENERATE_ANOMALY_PROFILE    0x023E
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
