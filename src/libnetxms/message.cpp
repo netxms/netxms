@@ -260,6 +260,18 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
    int v = getEncodedProtocolVersion();
    m_version = (v != 0) ? v : version; // Use encoded version if present
 
+   if (m_version < NXCP_MIN_VERSION)
+   {
+      TCHAR buffer[256];
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NXCPMessage: unsupported protocol version %d in message %s with ID %u"),
+         m_version, NXCPMessageCodeName(m_code, buffer), m_id);
+      m_data = nullptr;
+      m_dataSize = 0;
+      m_controlData = 0;
+      m_version = -1;   // error indicator
+      return;
+   }
+
    if (ntohl(msg->size) < NXCP_HEADER_SIZE)
    {
       TCHAR buffer[256];
@@ -475,11 +487,7 @@ SUPPRESS_WARNING_PACKED_POP
 
          ADD_FIELD_TO_HASH(m_fields, entry);
 
-         // Starting from version 2, all variables should be 8-byte aligned
-         if (m_version >= 2)
-            pos += fieldSize + ((8 - (fieldSize % 8)) & 7);
-         else
-            pos += fieldSize;
+         pos += fieldSize + ((8 - (fieldSize % 8)) & 7);
       }
    }
 }
@@ -1377,18 +1385,9 @@ NXCP_MESSAGE *NXCPMessage::serialize(bool allowCompression) const
       HASH_ITER(hh, m_fields, entry, tmp)
       {
          size_t fieldSize = CalculateFieldSize(&entry->data, false);
-         if (m_version >= 2)
-            size += fieldSize + ((8 - (fieldSize % 8)) & 7);
-         else
-            size += fieldSize;
+         size += fieldSize + ((8 - (fieldSize % 8)) & 7);
          fieldCount++;
       }
-
-      // Message should be aligned to 8 bytes boundary
-      // This is always the case starting from version 2 because
-      // all fields are padded to 8 bytes boundary
-      if (m_version < 2)
-         size += (8 - (size % 8)) & 7;
    }
 
    // Create message
@@ -1452,10 +1451,7 @@ SUPPRESS_WARNING_PACKED_POP
                break;
          }
 
-         if (m_version >= 2)
-            field = (NXCP_MESSAGE_FIELD *)((char *)field + fieldSize + ((8 - (fieldSize % 8)) & 7));
-         else
-            field = (NXCP_MESSAGE_FIELD *)((char *)field + fieldSize);
+         field = (NXCP_MESSAGE_FIELD *)((char *)field + fieldSize + ((8 - (fieldSize % 8)) & 7));
       }
    }
 
@@ -1902,11 +1898,7 @@ SUPPRESS_WARNING_PACKED_POP
       }
       MemFree(convertedField);
 
-      // Starting from version 2, all fields should be 8-byte aligned
-      if (version >= 2)
-         pos += fieldSize + ((8 - (fieldSize % 8)) & 7);
-      else
-         pos += fieldSize;
+      pos += fieldSize + ((8 - (fieldSize % 8)) & 7);
    }
 
    MemFree(allocatedMsgData);

@@ -27,6 +27,7 @@
  * Constants
  */
 #define NXCP_VERSION                   5
+#define NXCP_MIN_VERSION               2
 
 /**
  * Peer capability flags transmitted in lower 24 bits of CMD_NXCP_CAPS control data

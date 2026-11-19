@@ -30,6 +30,7 @@ void TestMessageClass();
 void TestNXCPMessageCodeName();
 void TestSendFileOverEncryptedChannel();
 void TestMessageReceiverBuffer();
+void TestNXCPPeerProtocolVersion();
 void TestMutex();
 void TestUniqueLock();
 void TestCondition();
@@ -4008,6 +4009,7 @@ int main(int argc, char *argv[])
    TestNXCPMessageCodeName();
    TestSendFileOverEncryptedChannel();
    TestMessageReceiverBuffer();
+   TestNXCPPeerProtocolVersion();
    TestMsgWaitQueue();
    TestGenericId();
    TestMacAddress();

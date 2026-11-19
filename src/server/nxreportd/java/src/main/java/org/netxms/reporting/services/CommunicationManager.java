@@ -291,7 +291,7 @@ public class CommunicationManager
 
    /**
     * Process incoming message
-    * 
+    *
     * @param request input message
     * @return message processing result
     */
@@ -308,7 +308,7 @@ public class CommunicationManager
          case NXCPCodes.CMD_GET_NXCP_CAPS:
             reply.setMessageCode(NXCPCodes.CMD_NXCP_CAPS);
             reply.setControl(true);
-            reply.setControlData(5); // NXCP version 5
+            reply.setControlData(5 << 24); // NXCP version 5 in upper 8 bits, no capability flags
             break;
          case NXCPCodes.CMD_CONFIGURE_REPORTING_SERVER:
             configureServer(request);
@@ -446,7 +446,7 @@ public class CommunicationManager
 
    /**
     * Execute report
-    * 
+    *
     * @param request request message
     * @param response response message
     */
@@ -482,7 +482,7 @@ public class CommunicationManager
 
    /**
     * Get job ID from message or create random one if not provided
-    * 
+    *
     * @param request request message
     * @return job ID
     */

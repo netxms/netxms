@@ -76,7 +76,7 @@ bool DownloadConfig(const TCHAR *server)
       if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
       {
          // Prepare request
-         NXCPMessage msg(CMD_GET_MY_CONFIG, 1, 2);  // Server version is not known, use protocol version 2
+         NXCPMessage msg(CMD_GET_MY_CONFIG, 1, NXCP_MIN_VERSION);  // Server version is not known, use lowest supported protocol version
 
          TCHAR buffer[MAX_RESULT_LENGTH];
          if (H_PlatformName(nullptr, nullptr, buffer, nullptr) != SYSINFO_RC_SUCCESS)

@@ -525,6 +525,80 @@ public:
 };
 
 /**
+ * Communication channel that answers with given data once and then reports timeout
+ */
+class ReplyCommChannel : public AbstractCommChannel
+{
+private:
+   std::string m_reply;
+
+public:
+   ReplyCommChannel(const void *reply, size_t size) : AbstractCommChannel(), m_reply(static_cast<const char*>(reply), size) { }
+
+   virtual ssize_t send(const void *data, size_t size, Mutex *mutex) override { return static_cast<ssize_t>(size); }
+   virtual ssize_t recv(void *buffer, size_t size, uint32_t timeout) override
+   {
+      if (m_reply.empty())
+         return -2;
+      size_t bytes = std::min(size, m_reply.size());
+      memcpy(buffer, m_reply.data(), bytes);
+      m_reply.erase(0, bytes);
+      return static_cast<ssize_t>(bytes);
+   }
+   virtual int poll(uint32_t timeout, bool write) override { return 1; }
+   virtual void backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context) override { }
+   virtual int shutdown() override { return 0; }
+   virtual void close() override { }
+};
+
+/**
+ * Negotiate protocol version with peer that answers CMD_GET_NXCP_CAPS with given control data
+ */
+static bool NegotiateWithPeer(uint32_t controlData, int *version, uint32_t *capabilities, int headerVersion = 0)
+{
+   NXCP_MESSAGE response;
+   memset(&response, 0, sizeof(response));
+   response.code = htons(CMD_NXCP_CAPS);
+   response.flags = htons(MF_CONTROL | MF_NXCP_VERSION(headerVersion));
+   response.size = htonl(NXCP_HEADER_SIZE);
+   response.numFields = htonl(controlData);
+   shared_ptr<AbstractCommChannel> channel = make_shared<ReplyCommChannel>(&response, NXCP_HEADER_SIZE);
+   return NXCPGetPeerProtocolVersion(channel, version, capabilities, nullptr);
+}
+
+/**
+ * Test NXCP protocol version negotiation
+ */
+void TestNXCPPeerProtocolVersion()
+{
+   StartTest(_T("NXCP protocol version negotiation"));
+
+   int version = 0;
+   uint32_t capabilities = 0;
+   AssertTrue(NegotiateWithPeer((5 << 24) | NXCP_CAP_TLS_TUNNEL, &version, &capabilities));
+   AssertEquals(version, 5);
+   AssertEquals(capabilities, static_cast<uint32_t>(NXCP_CAP_TLS_TUNNEL));
+
+   AssertTrue(NegotiateWithPeer(4 << 24, &version, &capabilities));
+   AssertEquals(version, 4);
+
+   AssertTrue(NegotiateWithPeer(NXCP_MIN_VERSION << 24, &version, &capabilities));
+   AssertEquals(version, NXCP_MIN_VERSION);
+
+   AssertFalse(NegotiateWithPeer(1 << 24, &version, &capabilities));
+   AssertFalse(NegotiateWithPeer(5, &version, &capabilities));
+
+   // Answer rejected by parser (protocol error)
+   AssertFalse(NegotiateWithPeer(5 << 24, &version, &capabilities, 1));
+
+   // No answer (timeout)
+   shared_ptr<AbstractCommChannel> silentChannel = make_shared<ReplyCommChannel>("", 0);
+   AssertFalse(NXCPGetPeerProtocolVersion(silentChannel, &version, &capabilities, nullptr));
+
+   EndTest();
+}
+
+/**
  * Test file sending over encrypted NXCP channel
  */
 void TestSendFileOverEncryptedChannel()
@@ -846,6 +920,58 @@ void TestMessageReceiverBuffer()
          AssertNoMessage(&receiver, MSGRECV_CLOSED);
          MemFree(e);
       }
+   }
+   EndTest();
+
+   StartTest(_T("Message receiver - unsupported protocol version"));
+   {
+      NXCP_MESSAGE *msg = CreateTestMessage(5, 20);
+      for(int version = 0; version <= NXCP_VERSION; version++)
+      {
+         msg->flags = htons((ntohs(msg->flags) & 0x0FFF) | MF_NXCP_VERSION(version));
+         bool supported = (version == 0) || (version >= NXCP_MIN_VERSION);
+
+         NXCPMessage *parsed = NXCPMessage::deserialize(msg);
+         AssertTrue((parsed != nullptr) == supported);
+         delete parsed;
+
+         NXCP_ENCRYPTED_MESSAGE *e = ectx->encryptMessage(msg);
+         TestMessageReceiver receiver(4096, 4096);
+         receiver.setEncryptionContext(ectx);
+         receiver.append(msg);
+         receiver.append(e);
+         receiver.append(m1);
+         receiver.endBlock();
+         if (supported)
+         {
+            AssertNextMessage(&receiver, msg);
+            AssertNextMessage(&receiver, msg);
+         }
+         else
+         {
+            AssertNoMessage(&receiver, MSGRECV_PROTOCOL_ERROR);
+            AssertNoMessage(&receiver, MSGRECV_PROTOCOL_ERROR);
+         }
+         AssertNextMessage(&receiver, m1);
+         AssertNoMessage(&receiver, MSGRECV_CLOSED);
+         MemFree(e);
+      }
+
+      // Version 0 in header is resolved through version given to deserialize()
+      msg->flags = htons(ntohs(msg->flags) & 0x0FFF);
+      AssertNull(NXCPMessage::deserialize(msg, 1));
+      NXCPMessage *parsed = NXCPMessage::deserialize(msg, 2);
+      AssertNotNull(parsed);
+      AssertEquals(parsed->getProtocolVersion(), 2);
+      delete parsed;
+
+      msg->flags = htons(ntohs(msg->flags) | MF_NXCP_VERSION(2));
+      parsed = NXCPMessage::deserialize(msg, 1);
+      AssertNotNull(parsed);
+      AssertEquals(parsed->getProtocolVersion(), 2);
+      delete parsed;
+
+      MemFree(msg);
    }
    EndTest();
 

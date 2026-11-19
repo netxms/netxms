@@ -112,11 +112,6 @@ and not larger than the data it has. These two targets reproduce that guarantee 
 - the data is copied into a heap block of exactly that length;
 - the size field of the header is overwritten with that length.
 
-The `deserialize` target also drops input with protocol version 1 to 3 in the header. Versions below 4 are
-going to be rejected by the product, and `serialize()` of such a message accesses an unaligned UCS-2 string.
-Version 0 is kept: the parser treats it as the current version. The `dump`, `receiver` and `decrypt` targets
-still take every version.
-
 So the size field of an input for these targets is ignored. A report from them means the parser read or wrote
 outside a message whose length it was told correctly. The `receiver` and `decrypt` targets pass their input
 through untouched, because they test the code that enforces the guarantee.
@@ -142,11 +137,10 @@ Conditions: Linux container (Ubuntu 24.04, clang 18, arm64), all four targets in
 `dump` target was built before `dump()` got its larger output buffer step.
 
 The sanitizer build of the test suite and shorter runs while the targets were being written found five
-defects. Four are fixed, with a unit test or a `regression-*` corpus file where one applies: a read past the
-address in `Ip6ToStr()`, a write past a short destination in the UTF-8 and UTF-16 encoders, pointer arithmetic
-on a null pointer in the configuration parser, and slow `dump()` output. The fifth, an unaligned UCS-2 access in
-`serialize()` for protocol version 1, is not fixed: versions below 4 are going to be rejected instead, and until
-then the `deserialize` target drops such input.
+defects, all fixed, with a unit test or a `regression-*` corpus file where one applies: a read past the address
+in `Ip6ToStr()`, a write past a short destination in the UTF-8 and UTF-16 encoders, an unaligned UCS-2 access in
+`serialize()` for protocol version 1 (fixed by rejecting protocol version 1), pointer arithmetic on a null
+pointer in the configuration parser, and slow `dump()` output.
 
 Rediscovery check: with the field size validation of commit `6a7f4b05da` reverted and its regression input
 removed from the corpus, each of `deserialize`, `dump` and `receiver` found a crashing input in under two

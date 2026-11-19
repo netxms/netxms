@@ -818,26 +818,16 @@ setup_encryption:
 	   {
 	      onBytesSent(NXCP_HEADER_SIZE);
 	      NXCPMessage *rsp = m_messageWaitQueue.waitForMessage(CMD_NXCP_CAPS, 0, m_commandTimeout);
-	      if (rsp != nullptr)
+	      if ((rsp == nullptr) || !rsp->isControl() || (static_cast<int>(rsp->getControlData() >> 24) < NXCP_MIN_VERSION))
 	      {
-	         if (rsp->isControl())
-	         {
-	            m_nProtocolVersion = rsp->getControlData() >> 24;
-	            m_peerCapabilities = rsp->getControlData() & 0x00FFFFFF;
-	         }
-	         else
-	         {
-	            m_nProtocolVersion = 1; // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
-	            m_peerCapabilities = 0;
-	         }
 	         delete rsp;
+	         debugPrintf(6, L"Protocol version re-negotiation failed - no valid response to CMD_GET_NXCP_CAPS message");
+	         dwError = ERR_INTERNAL_ERROR;
+	         goto connect_cleanup;
 	      }
-	      else
-	      {
-	         // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
-	         // and set version number to 1
-	         m_nProtocolVersion = 1;
-	      }
+	      m_nProtocolVersion = rsp->getControlData() >> 24;
+	      m_peerCapabilities = rsp->getControlData() & 0x00FFFFFF;
+	      delete rsp;
          debugPrintf(6, _T("Using NXCP version %d after re-negotioation"), m_nProtocolVersion);
 	   }
 	   else

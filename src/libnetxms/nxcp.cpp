@@ -947,20 +947,14 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCo
       NXCPMessage *response = receiver.readMessage(10000, &result);
       if ((response != nullptr) && (response->getCode() == CMD_NXCP_CAPS) && response->isControl())
       {
-         success = true;
-         *version = response->getControlData() >> 24;
-         if (capabilities != nullptr)
-            *capabilities = response->getControlData() & 0x00FFFFFF;
-      }
-      else if ((result == MSGRECV_TIMEOUT) || (result == MSGRECV_PROTOCOL_ERROR))
-      {
-         // We don't receive any answer or receive invalid answer -
-         // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
-         // and set version number to 1
-         success = true;
-         *version = 1;
-         if (capabilities != nullptr)
-            *capabilities = 0;
+         int peerVersion = static_cast<int>(response->getControlData() >> 24);
+         if (peerVersion >= NXCP_MIN_VERSION)
+         {
+            success = true;
+            *version = peerVersion;
+            if (capabilities != nullptr)
+               *capabilities = response->getControlData() & 0x00FFFFFF;
+         }
       }
       delete response;
    }
