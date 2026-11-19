@@ -27576,12 +27576,12 @@ msgstr "Ошибка экспорта данных линейной диагра
 
 #: src/rwt/java/org/netxms/nxmc/localization/DateFormatFactory.java:277
 #: src/swt/java/org/netxms/nxmc/localization/DateFormatFactory.java:244
-#, fuzzy, java-format
+#, java-format
 msgid "{0} day"
 msgid_plural "{0} days"
-msgstr[0] " день"
-msgstr[1] " день"
-msgstr[2] " день"
+msgstr[0] "{0} день"
+msgstr[1] "{0} дня"
+msgstr[2] "{0} дней"
 
 #: src/rwt/java/org/netxms/nxmc/tools/WidgetHelper.java:1216
 #: src/swt/java/org/netxms/nxmc/tools/WidgetHelper.java:1239
@@ -28629,4 +28629,3 @@ msgstr ""
 #, java-printf-format
 #~ msgid "Updating rack placement for node %s"
 #~ msgstr "Обновление размещения узла %s в стойке"
-

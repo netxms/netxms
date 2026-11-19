@@ -26,6 +26,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Factory class to provide locale-correct date and time formatters
@@ -94,7 +95,7 @@ public class DateFormatFactory
 
    /**
     * Get formatter for date and time
-    * 
+    *
     * @return
     */
    public static DateFormat getDateTimeFormat()
@@ -128,7 +129,7 @@ public class DateFormatFactory
 
    /**
     * Get formatter for date only
-    * 
+    *
     * @return
     */
    public static DateFormat getDateFormat()
@@ -162,7 +163,7 @@ public class DateFormatFactory
 
    /**
     * Get formatter for time only
-    * 
+    *
     * @return
     */
    public static DateFormat getTimeFormat()
@@ -196,7 +197,7 @@ public class DateFormatFactory
 
    /**
     * Get formatter for time only (short form)
-    * 
+    *
     * @return
     */
    public static DateFormat getShortTimeFormat()
@@ -230,54 +231,20 @@ public class DateFormatFactory
 
    /**
     * Format provided time difference as [n days, ]hh:mm[:ss]
-    * 
+    *
     * @param seconds number of seconds
     * @param showSeconds true to show seconds
     * @return formatted time
     */
    public static String formatTimeDifference(long seconds, boolean showSeconds)
    {
-      StringBuilder sb = new StringBuilder();
-      if (seconds < 0)
-      {
-         sb.append('-');
-         seconds = -seconds;
-      }
-      long days = seconds / 86400;
-      if (days > 0)
-      {
-         sb.append(LocalizationHelper.getI18n(DateFormatFactory.class).trn("{0} day", "{0} days", days, days));
-         sb.append(", ");
-         seconds -= days * 86400;
-      }
-
-      long hours = seconds / 3600;
-      if (hours < 10)
-         sb.append('0');
-      sb.append(hours);
-      seconds -= hours * 3600;
-
-      sb.append(':');
-      long minutes = seconds / 60;
-      if (minutes < 10)
-         sb.append('0');
-      sb.append(minutes);
-
-      if (showSeconds)
-      {
-         sb.append(':');
-         seconds = seconds % 60;
-         if (seconds < 10)
-            sb.append('0');
-         sb.append(seconds);
-      }
-
-      return sb.toString();
+      I18n i18n = LocalizationHelper.getI18n(DateFormatFactory.class);
+      return TimeFormatter.formatTimeSpan(seconds, showSeconds, (days) -> i18n.trn("{0} day", "{0} days", days, days));
    }
 
    /**
     * Format time difference between current and give time as [n days, ]hh:mm[:ss]
-    * 
+    *
     * @param start period start time
     * @param showSeconds true to show seconds
     * @return formatted time difference
