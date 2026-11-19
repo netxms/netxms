@@ -57,6 +57,7 @@ public class TcpPortForwarder
    private int messageId = 0;
    private Map<Integer, Session> sessions = new HashMap<>();
    private TextOutputListener outputListener = null;
+   private volatile boolean closed = false;
 
    /**
     * Create new port forwarder instance.
@@ -136,13 +137,25 @@ public class TcpPortForwarder
                   try
                   {
                      final TcpProxy proxy = useLocalAgent ? session.setupTcpProxy(nodeId, remoteAddress, remotePort) : session.setupTcpProxy(nodeId, remotePort);
-                     Session session = new Session(++sessionId, socket, proxy);
+                     boolean started = false;
                      synchronized(sessions)
                      {
-                        sessions.put(session.getId(), session);
-                        session.start();
+                        // Proxy setup may complete after close(), which would not see this session
+                        if (!closed)
+                        {
+                           Session session = new Session(++sessionId, socket, proxy);
+                           sessions.put(session.getId(), session);
+                           session.start();
+                           started = true;
+                        }
                      }
-                     if (messageId != 0)
+                     if (!started)
+                     {
+                        logger.debug("TCP proxy setup for node " + nodeId + " remote port " + remotePort + " completed after port forwarder was closed");
+                        proxy.close();
+                        socket.close();
+                     }
+                     else if (messageId != 0)
                      {
                         display.asyncExec(() -> {
                            messageArea.deleteMessage(messageId);
@@ -153,23 +166,31 @@ public class TcpPortForwarder
                   catch(Exception e)
                   {
                      String nodeName = session.getObjectName(nodeId);
-                     logger.error("TCP port forwarder for node " + nodeName + " remote port " + remotePort + " session setup error", e);
-
-                     String emsg = e.getLocalizedMessage();
-                     String msg = String.format("TCP port forwarder for node %s remote port %d session setup error (%s)",
-                           nodeName, remotePort, (emsg != null) && !emsg.isEmpty() ? emsg : e.getClass().getCanonicalName());
-
-                     if (outputListener != null)
+                     if (closed)
                      {
-                        outputListener.messageReceived("\n*** " + msg + " ***\n");
+                        // Message area or output may already belong to a newer session
+                        logger.debug("TCP port forwarder for node " + nodeName + " remote port " + remotePort + " session setup error after port forwarder was closed", e);
                      }
-                     else if ((display != null) && (messageArea != null))
+                     else
                      {
-                        display.asyncExec(() -> {
-                           if (messageId != 0)
-                              messageArea.deleteMessage(messageId);
-                           messageId = messageArea.addMessage(MessageArea.ERROR, msg);
-                        });
+                        logger.error("TCP port forwarder for node " + nodeName + " remote port " + remotePort + " session setup error", e);
+
+                        String emsg = e.getLocalizedMessage();
+                        String msg = String.format("TCP port forwarder for node %s remote port %d session setup error (%s)",
+                              nodeName, remotePort, (emsg != null) && !emsg.isEmpty() ? emsg : e.getClass().getCanonicalName());
+
+                        if (outputListener != null)
+                        {
+                           outputListener.messageReceived("\n*** " + msg + " ***\n");
+                        }
+                        else if ((display != null) && (messageArea != null))
+                        {
+                           display.asyncExec(() -> {
+                              if (messageId != 0)
+                                 messageArea.deleteMessage(messageId);
+                              messageId = messageArea.addMessage(MessageArea.ERROR, msg);
+                           });
+                        }
                      }
 
                      socket.close();
@@ -178,7 +199,10 @@ public class TcpPortForwarder
             }
             catch(Exception e)
             {
-               logger.error("TCP port forwarder listener loop error", e);
+               if (closed)
+                  logger.debug("TCP port forwarder listener loop stopped (port forwarder closed)");
+               else
+                  logger.error("TCP port forwarder listener loop error", e);
             }
             finally
             {
@@ -207,6 +231,7 @@ public class TcpPortForwarder
    public void close()
    {
       logger.debug("Closing TCP forwarder instance on port " + listener.getLocalPort());
+      closed = true;
       try
       {
          listener.close();
