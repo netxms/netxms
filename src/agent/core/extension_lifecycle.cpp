@@ -35,6 +35,7 @@
 #define CONNECT_TIMEOUT_MS         2000
 #define POSTSPAWN_CONNECT_TRIES    50
 #define POSTSPAWN_CONNECT_INTERVAL 100   // ms between attempts (50 * 100ms = 5s window)
+#define SIGTERM_GRACE_PERIOD_MS    2000  // SIGTERM to SIGKILL after ShutdownTimeout expired following the shutdown notification
 
 /**
  * Reserve a free ephemeral port on loopback by binding+closing.
@@ -161,6 +162,7 @@ public:
 
    /**
     * Send SIGTERM to the process group, wait, then escalate to SIGKILL via stop().
+    * On Windows there is no SIGTERM equivalent and the process is terminated right away.
     */
    void terminateGracefully(uint32_t timeoutMs)
    {
@@ -321,28 +323,43 @@ bool AgentExtension::connectOnly()
 
 /**
  * Close socket, terminate child, clear capabilities.
+ *
+ * When stopping with the spawned child still running and connected, the child gets the
+ * "shutdown" notification and ShutdownTimeout to exit on its own; only then is it sent
+ * SIGTERM, followed by SIGKILL after a short grace period. A child that is still running
+ * after its connection was lost gets SIGTERM right away and ShutdownTimeout before SIGKILL.
  */
 void AgentExtension::tearDownConnection()
 {
    clearCapabilities();
 
-   // Best-effort graceful shutdown signal while the socket is still up
-   // (only relevant when stop() is called on a live connection).
-   if (m_socket != INVALID_SOCKET && m_process != nullptr)
-      notify("shutdown", nullptr);
+   if (m_process != nullptr)
+   {
+      if (m_stopRequested && (m_socket != INVALID_SOCKET) && m_process->isRunning())
+      {
+         notify("shutdown", nullptr);
+         shutdown(m_socket, SHUT_WR);  // EOF after the notification, for extensions that exit on disconnect
+         nxlog_debug_tag(getDebugTag(), 5, _T("Extension(%s): shutdown notification sent, waiting up to %u ms for process exit"),
+                  m_config.name, m_config.shutdownTimeoutMs);
+         if (!m_process->waitForCompletion(m_config.shutdownTimeoutMs))
+         {
+            nxlog_debug_tag(getDebugTag(), 3, _T("Extension(%s): process did not exit within %u ms after shutdown notification"),
+                     m_config.name, m_config.shutdownTimeoutMs);
+            m_process->terminateGracefully(SIGTERM_GRACE_PERIOD_MS);
+         }
+      }
+      else if (m_process->isRunning())
+      {
+         m_process->terminateGracefully(m_config.shutdownTimeoutMs);
+      }
+      delete m_process;
+      m_process = nullptr;
+   }
 
    if (m_socket != INVALID_SOCKET)
    {
       closesocket(m_socket);
       m_socket = INVALID_SOCKET;
-   }
-
-   if (m_process != nullptr)
-   {
-      if (m_process->isRunning())
-         m_process->terminateGracefully(m_config.shutdownTimeoutMs);
-      delete m_process;
-      m_process = nullptr;
    }
 }
 

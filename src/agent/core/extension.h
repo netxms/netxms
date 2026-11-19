@@ -214,6 +214,7 @@ public:
    ~AgentExtension();
 
    void start();
+   void requestStop();
    void stop(bool restart);
 
    bool isConnected() const { return m_state == ExtensionState::READY; }

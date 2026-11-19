@@ -322,11 +322,14 @@ void StartExtensions()
 }
 
 /**
- * Stop all registered extensions.
+ * Stop all registered extensions. Stop is requested on all of them first so their
+ * shutdown grace periods run concurrently rather than one after another.
  */
 void StopExtensions(bool restart)
 {
    LockGuard guard(s_registryLock);
+   for (int i = 0; i < s_extensions.size(); i++)
+      s_extensions.get(i)->requestStop();
    for (int i = 0; i < s_extensions.size(); i++)
       s_extensions.get(i)->stop(restart);
 }
