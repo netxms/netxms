@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
@@ -95,7 +96,11 @@ public class BaseObjectLabelProvider extends LabelProvider
             return icon;
       }
 
-      return icons.getImage(((AbstractObject)element).getObjectClass());
+      AbstractObject object = (AbstractObject)element;
+      if (object instanceof Node)
+         return icons.getImage((Node)object);
+
+      return icons.getImage(object.getObjectClass());
    }
 
    /**
