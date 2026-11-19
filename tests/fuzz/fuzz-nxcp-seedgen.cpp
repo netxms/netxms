@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
    }
    s_corpusDirectory = argv[1];
 
-   WriteFieldSeeds(1);
+   WriteFieldSeeds(4);
    WriteFieldSeeds(NXCP_VERSION);
 
    NXCPMessage empty(CMD_KEEPALIVE, 1);

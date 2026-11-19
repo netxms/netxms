@@ -80,6 +80,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
    if (input == nullptr)
       return 0;
 
+   // Protocol versions 1 to 3 are not supported, and serialize() of such message is known to access unaligned string
+   int version = ntohs(input->flags) >> 12;
+   if ((version != 0) && (version < 4))
+   {
+      MemFree(input);
+      return 0;
+   }
+
    NXCPMessage *msg = NXCPMessage::deserialize(input);
    MemFree(input);
    if (msg == nullptr)
