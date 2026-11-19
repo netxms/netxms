@@ -181,7 +181,6 @@ public class AiMessageContentPanel extends Composite
 
       // Show approve/reject buttons only for pending approval requests
       boolean showButtons = message.isApprovalRequest() && (message.getStatus() == AiMessageStatus.PENDING || message.getStatus() == AiMessageStatus.READ);
-      System.out.println(message);
       setButtonsVisible(showButtons);
 
       // Start auto-read timer for pending messages
