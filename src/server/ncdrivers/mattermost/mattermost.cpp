@@ -553,8 +553,8 @@ void MattermostChatBot::readerThread(MattermostChatBot *bot)
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Next connection attempt in %u seconds"), reconnectDelay / 1000);
       if (bot->m_shutdownCondition.wait(reconnectDelay))
          break;
-      if (!connected && (reconnectDelay < MAX_RECONNECT_DELAY))
-         reconnectDelay *= 2;
+      if (!connected)
+         reconnectDelay = std::min(reconnectDelay * 2, static_cast<uint32_t>(MAX_RECONNECT_DELAY));
    }
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Mattermost chat bot reader thread stopped"));
