@@ -723,6 +723,18 @@ static int ProcessEntry(void *argsp)
    pthread_sigmask(SIG_SETMASK, &args->oldmask, nullptr);
 #endif
 
+   // Signal mask survives exec. Agent and server threads block termination signals (they are
+   // handled by a dedicated signal thread), so unblock them to keep the child terminable with
+   // SIGTERM. SIGPIPE stays as inherited, so a child writing into a pipe nobody reads gets EPIPE
+   // instead of being killed.
+   sigset_t terminationSignals;
+   sigemptyset(&terminationSignals);
+   sigaddset(&terminationSignals, SIGTERM);
+   sigaddset(&terminationSignals, SIGINT);
+   sigaddset(&terminationSignals, SIGHUP);
+   sigaddset(&terminationSignals, SIGQUIT);
+   pthread_sigmask(SIG_UNBLOCK, &terminationSignals, nullptr);
+
    if (args->shellExec)
    {
       if (args->envp != nullptr)

@@ -42,8 +42,13 @@ captured and routed into the agent's log under the extension's debug tag
 (it goes to the log, not the protocol).
 
 On crash, the agent restarts the extension with exponential backoff. On agent
-shutdown, the agent sends a `shutdown` notification, waits `ShutdownTimeout`
-seconds, then `SIGTERM`s the process group, then `SIGKILL`s.
+shutdown, the agent sends a `shutdown` notification, closes its sending side of
+the connection, and waits up to `ShutdownTimeout` seconds for the process to
+exit. If it is still running, the agent `SIGTERM`s the process group and
+`SIGKILL`s it 2 seconds later (on Windows the process is terminated instead of
+`SIGTERM`). If the connection was already lost when the process has to be
+stopped, there is no notification: the agent sends `SIGTERM` right away and
+`SIGKILL`s after `ShutdownTimeout`.
 
 ### connect mode
 
@@ -178,7 +183,7 @@ extension may also send `ping` to the agent; the agent replies with `{}`.
 
 | Method | Params | Meaning |
 |---|---|---|
-| `shutdown` | — | Agent is stopping; exit cleanly |
+| `shutdown` | — | Agent is stopping; exit cleanly within `ShutdownTimeout` (spawn mode only; connect-mode extensions are not told to exit) |
 
 ## 6. Notifications (extension → agent)
 
@@ -244,7 +249,7 @@ AllowRemote = no
 | `EnvironmentFile` | spawn | — | File with `KEY=VALUE` lines (`#` comments allowed), re-read at every launch; overrides `Environment` on key collision. Keeps secrets out of the config file and its log/remote dumps |
 | `RunAs` | spawn | agent's uid | Drop privileges before exec (Unix; not yet implemented — currently logged and ignored) |
 | `RestartDelay` / `RestartDelayMax` | spawn | 5 / 300 (sec) | Exponential backoff on crash |
-| `ShutdownTimeout` | spawn | 10 (sec) | Grace period before SIGTERM → SIGKILL |
+| `ShutdownTimeout` | spawn | 10 (sec) | Time the process gets to exit after the `shutdown` notification before SIGTERM (see §2) |
 | `Endpoint` | connect | — | `tcp://host:port` (required) |
 | `Token` | connect (required), spawn (auto) | — | `file:<path>` or an inline string |
 | `ReconnectDelay` / `ReconnectDelayMax` | connect | 5 / 300 (sec) | Exponential backoff on disconnect |
@@ -258,6 +263,7 @@ AllowRemote = no
 The agent exposes:
 
 - `Agent.Extension.IsConnected(name)` → `1` / `0`
+- `Agent.Extension.RestartCount(name)` → number of restart (spawn) or reconnect (connect) attempts since the extension was started
 - `Agent.Extension.Uptime(name)` → seconds since the last successful handshake
 - `Agent.Extensions` table → `NAME`, `MODE`, `STATE`, `PID`, `PORT`,
   `RESTART_COUNT`, `CONNECTED_SINCE`, `LAST_ERROR`

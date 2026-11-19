@@ -193,16 +193,24 @@ void AgentExtension::start()
 }
 
 /**
+ * Ask the supervisor to stop without waiting for it. The socket is left open: the I/O loop
+ * notices the request within one read slice, and the supervisor still needs the connection
+ * to deliver the "shutdown" notification.
+ */
+void AgentExtension::requestStop()
+{
+   m_stopRequested = true;
+   m_stopCondition.set();    // wake any backoff sleep
+}
+
+/**
  * Stop the extension and wait for the supervisor to exit.
  */
 void AgentExtension::stop(bool restart)
 {
    nxlog_debug_tag(getDebugTag(), 2, _T("Extension(%s): stop requested (restart=%s)"),
             m_config.name, restart ? _T("yes") : _T("no"));
-   m_stopRequested = true;
-   m_stopCondition.set();    // wake any backoff sleep
-   if (m_socket != INVALID_SOCKET)
-      shutdown(m_socket, SHUT_RDWR);
+   requestStop();
    if (m_supervisorThread != INVALID_THREAD_HANDLE)
    {
       ThreadJoin(m_supervisorThread);
@@ -781,9 +789,10 @@ void AgentExtension::clearCapabilities()
 }
 
 /**
- * Connection lost — clean up.  The supervisor loop (see extension_lifecycle.cpp)
- * drives reconnection: once ioLoop() returns it tears down and re-enters
- * setupConnection() after applyBackoff().
+ * Connection lost or stop requested — clean up.  The socket stays open: the supervisor
+ * loop (see extension_lifecycle.cpp) closes it in tearDownConnection() once ioLoop()
+ * returns, after delivering the "shutdown" notification when stopping, and drives
+ * reconnection by re-entering setupConnection() after applyBackoff().
  */
 void AgentExtension::onDisconnect(const TCHAR *reason)
 {
@@ -803,11 +812,6 @@ void AgentExtension::onDisconnect(const TCHAR *reason)
    }
    m_pendingLock.unlock();
 
-   if (m_socket != INVALID_SOCKET)
-   {
-      closesocket(m_socket);
-      m_socket = INVALID_SOCKET;
-   }
    setState(ExtensionState::RECONNECT_BACKOFF);
 
    m_handshakeTime = 0;
