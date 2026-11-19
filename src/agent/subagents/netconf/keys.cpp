@@ -21,7 +21,31 @@
 
 #include "netconf_subagent.h"
 
-static SharedStringObjectMap<KeyPair> s_keyList;
+/**
+ * Time in seconds after which cached key is re-validated with server
+ */
+#define KEY_CACHE_TTL               300
+
+/**
+ * Time in seconds before next attempt to re-validate cached key after failed or in-progress attempt
+ */
+#define KEY_REFRESH_RETRY_INTERVAL  60
+
+/**
+ * Key cache entry
+ */
+struct KeyCacheEntry
+{
+   shared_ptr<KeyPair> keys;
+   time_t refreshTime;
+
+   KeyCacheEntry(const shared_ptr<KeyPair>& _keys, time_t _refreshTime) : keys(_keys), refreshTime(_refreshTime) { }
+};
+
+/**
+ * Key cache, indexed by server ID and key ID
+ */
+static StringObjectMap<KeyCacheEntry> s_keyCache(Ownership::True);
 static Mutex s_mutex;
 
 /**
@@ -64,51 +88,94 @@ KeyPair::~KeyPair()
 }
 
 /**
- * Gets from cache or loads from server SSH keys
+ * Request SSH key from server over given session. Returns false if request cannot be sent over this session.
+ * On successful send response is set to server's response or nullptr on timeout.
+ */
+static bool SendKeyRequest(AbstractCommSession *session, uint32_t id, NXCPMessage **response)
+{
+   NXCPMessage request(CMD_GET_SSH_KEYS, session->generateRequestId(), session->getProtocolVersion());
+   request.setField(VID_SSH_KEY_ID, id);
+   if (!session->sendMessage(&request))
+      return false;
+   *response = session->waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 5000);
+   return true;
+}
+
+/**
+ * Request SSH key from server. Session used for locally cached data collection cannot carry requests,
+ * so request is sent over any live session with same server in that case. Returns nullptr if server is not reachable.
+ */
+static NXCPMessage *RequestKeyFromServer(AbstractCommSession *session, uint32_t id)
+{
+   NXCPMessage *response = nullptr;
+   if (!SendKeyRequest(session, id, &response) && (session->getServerId() != 0))
+   {
+      shared_ptr<AbstractCommSession> serverSession = AgentFindServerSession(session->getServerId());
+      if ((serverSession != nullptr) && (serverSession.get() != session))
+         SendKeyRequest(serverSession.get(), id, &response);
+   }
+   return response;
+}
+
+/**
+ * Get SSH key from cache or load it from server. Cached key is re-validated with server after KEY_CACHE_TTL seconds;
+ * key deleted on server is removed from cache, and cached copy is kept while server cannot be reached.
  */
 shared_ptr<KeyPair> GetSshKey(AbstractCommSession *session, uint32_t id)
 {
    if (id == 0)
       return shared_ptr<KeyPair>();
 
-   TCHAR dataKey[64];
-   _sntprintf(dataKey, 64, UINT64X_FMT(_T("016")) _T("_%d"), session->getServerId(), id);
-   nxlog_debug_tag(DEBUG_TAG, 9, _T("GetSshKey(%d): find key"), id);
+   TCHAR cacheKey[64];
+   _sntprintf(cacheKey, 64, UINT64X_FMT(_T("016")) _T("_%u"), session->getServerId(), id);
 
+   shared_ptr<KeyPair> keys;
    s_mutex.lock();
-   shared_ptr<KeyPair> keys = s_keyList.getShared(dataKey);
-   s_mutex.unlock();
-   if (keys == nullptr)
+   KeyCacheEntry *entry = s_keyCache.get(cacheKey);
+   if (entry != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 9, _T("GetSshKey(%d): request key"), id);
-      NXCPMessage request(session->getProtocolVersion());
-      request.setId(session->generateRequestId());
-      request.setCode(CMD_GET_SSH_KEYS);
-      request.setField(VID_SSH_KEY_ID, id);
-      session->sendMessage(&request);
-      NXCPMessage *response = session->waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), 5000);
-      if (response != nullptr)
+      keys = entry->keys;
+      time_t now = time(nullptr);
+      if (entry->refreshTime > now)
       {
-         uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
-         if (rcc == ERR_SUCCESS)
-         {
-            keys = make_shared<KeyPair>(response->getFieldAsMBString(VID_PRIVATE_KEY, nullptr, 0),
-                  response->getFieldAsMBString(VID_PUBLIC_KEY, nullptr, 0));
-            s_mutex.lock();
-            s_keyList.set(dataKey, keys);
-            s_mutex.unlock();
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey: failed to load keys with ID %u (RCC = %u)"), id, rcc);
-         }
-         delete response;
+         s_mutex.unlock();
+         return keys;
       }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey: failed to load keys with ID %u"), id);
-      }
+      // Postpone next attempt so that concurrent callers use cached copy while this one refreshes it,
+      // and failed refresh is not retried on every call
+      entry->refreshTime = now + KEY_REFRESH_RETRY_INTERVAL;
+   }
+   s_mutex.unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, 9, _T("GetSshKey(%u): request key from server"), id);
+   NXCPMessage *response = RequestKeyFromServer(session, id);
+   if (response == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey(%u): server is not reachable (%s)"), id, (keys != nullptr) ? _T("using cached key") : _T("key not available"));
+      return keys;
    }
 
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
+   {
+      keys = make_shared<KeyPair>(response->getFieldAsMBString(VID_PRIVATE_KEY, nullptr, 0),
+            response->getFieldAsMBString(VID_PUBLIC_KEY, nullptr, 0));
+      s_mutex.lock();
+      s_keyCache.set(cacheKey, new KeyCacheEntry(keys, time(nullptr) + KEY_CACHE_TTL));
+      s_mutex.unlock();
+   }
+   else if (rcc == ERR_INVALID_SSH_KEY_ID)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey(%u): key does not exist on server"), id);
+      keys.reset();
+      s_mutex.lock();
+      s_keyCache.remove(cacheKey);
+      s_mutex.unlock();
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey(%u): failed to load key (RCC = %u, %s)"), id, rcc, (keys != nullptr) ? _T("using cached key") : _T("key not available"));
+   }
+   delete response;
    return keys;
 }
