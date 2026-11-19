@@ -34,6 +34,7 @@ import org.eclipse.rap.rwt.internal.application.ApplicationImpl;
 import org.eclipse.rap.rwt.internal.resources.ContentBuffer;
 import org.eclipse.rap.rwt.service.ResourceLoader;
 import org.eclipse.swt.SWT;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.services.ServiceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,14 +74,16 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
       addJsLibrary("/js/msgproxy.js");
       addJsLibrary("/js/rwt-util.js");
       addJsLibrary("/js/svgcanvas.js");
-      app.addResource(SWT.getVersion() + "/nxmc-library.js", new ResourceLoader() {
+      // Library path includes build tag, so that browser will not use cached copy of the library from different build
+      String libraryPath = SWT.getVersion() + "-" + VersionInfo.buildTag() + "/nxmc-library.js";
+      app.addResource(libraryPath, new ResourceLoader() {
          @Override
          public InputStream getResourceAsStream(String resourceName)
          {
             return concatenatedScript.getContentAsStream();
          }
       });
-      ((ApplicationImpl)app).getApplicationContext().getStartupPage().addJsLibrary("rwt-resources/" + SWT.getVersion() + "/nxmc-library.js");
+      ((ApplicationImpl)app).getApplicationContext().getStartupPage().addJsLibrary("rwt-resources/" + libraryPath);
 
       registerAllResources(app, "vncviewer");
       registerAllResources(app, "terminal");
