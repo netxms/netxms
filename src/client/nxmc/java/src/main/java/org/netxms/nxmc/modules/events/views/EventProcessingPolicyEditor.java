@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,6 +72,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.actions.views.helpers.DecoratingActionLabelProvider;
 import org.netxms.nxmc.modules.events.dialogs.EPPConflictDialog;
 import org.netxms.nxmc.modules.events.dialogs.EppChainPropertiesDialog;
+import org.netxms.nxmc.modules.events.dialogs.MoveRulesToChainDialog;
 import org.netxms.nxmc.modules.events.views.helpers.RuleClipboard;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
@@ -134,6 +136,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private Action actionCut;
    private Action actionCopy;
    private Action actionPaste;
+   private Action actionMoveToChain;
    private Action actionDelete;
    private Action actionEnableRule;
    private Action actionDisableRule;
@@ -153,9 +156,10 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       ScrolledComposite scroller;
       Composite dataArea;
       List<RuleEditor> ruleEditors = new ArrayList<RuleEditor>();
-      Set<RuleEditor> selection;
+      TreeSet<RuleEditor> selection;
       int lastSelectedRule = -1;
       boolean loading = false;
+      List<Runnable> loadCallbacks = new ArrayList<Runnable>(0);
 
       ChainTab(EventProcessingPolicyChain chain)
       {
@@ -252,7 +256,27 @@ public class EventProcessingPolicyEditor extends ConfigurationView
        */
       void load()
       {
-         if (chain.isLoaded() || loading)
+         load(null);
+      }
+
+      /**
+       * Load rules of this chain from server unless already loaded or being loaded. Callback is run in UI thread once rules
+       * are loaded (immediately if they already are); it is not run if loading fails.
+       *
+       * @param onLoaded callback to run after rules are loaded or null
+       */
+      void load(Runnable onLoaded)
+      {
+         if (chain.isLoaded())
+         {
+            if (onLoaded != null)
+               onLoaded.run();
+            return;
+         }
+
+         if (onLoaded != null)
+            loadCallbacks.add(onLoaded);
+         if (loading)
             return;
 
          loading = true;
@@ -267,13 +291,18 @@ public class EventProcessingPolicyEditor extends ConfigurationView
                   replaceChain(loadedChain);
                   showRules();
                   onSelectionChange();
+                  for(Runnable r : loadCallbacks)
+                     r.run();
                });
             }
 
             @Override
             protected void jobFinalize()
             {
-               runInUIThread(() -> loading = false);
+               runInUIThread(() -> {
+                  loading = false;
+                  loadCallbacks.clear();
+               });
             }
 
             @Override
@@ -324,7 +353,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       }
 
       /**
-       * Rebuild editors according to current filter
+       * Rebuild editors according to current filter. Every rule of the chain gets an editor slot so that editor positions
+       * match rule positions; editors of rules hidden by the filter are disposed.
        */
       void rebuildFilteredEditors()
       {
@@ -336,8 +366,9 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          {
             for(EventProcessingPolicyRule rule : chain.getRules())
             {
-               if (isRuleVisible(rule))
-                  addRuleEditor(rule, ruleEditors.size());
+               RuleEditor e = addRuleEditor(rule, ruleEditors.size());
+               if (!isRuleVisible(rule))
+                  e.dispose();
             }
          }
       }
@@ -552,8 +583,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          public void run()
          {
             ChainTab tab = activeTab();
-            if (tab != null)
-               insertRule(tab, tab.lastSelectedRule - 1);
+            if ((tab != null) && !tab.selection.isEmpty())
+               insertRule(tab, tab.selection.first().getRuleNumber() - 1);
          }
       };
 
@@ -562,8 +593,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          public void run()
          {
             ChainTab tab = activeTab();
-            if (tab != null)
-               insertRule(tab, tab.lastSelectedRule);
+            if ((tab != null) && !tab.selection.isEmpty())
+               insertRule(tab, tab.selection.first().getRuleNumber());
          }
       };
 
@@ -593,6 +624,15 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          }
       };
       actionPaste.setEnabled(false);
+
+      actionMoveToChain = new Action(i18n.tr("&Move to chain..."), SharedIcons.NAV_FORWARD) {
+         @Override
+         public void run()
+         {
+            moveRulesToChain();
+         }
+      };
+      actionMoveToChain.setEnabled(false);
 
       actionEnableRule = new Action(i18n.tr("E&nable")) {
          @Override
@@ -693,6 +733,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       manager.add(actionCut);
       manager.add(actionCopy);
       manager.add(actionPaste);
+      manager.add(actionMoveToChain);
       manager.add(actionDelete);
    }
 
@@ -927,14 +968,24 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    }
 
    /**
-    * Save all chains with unsaved changes, one at a time
+    * Save all chains with unsaved changes, one at a time. Chains with rules not yet saved on the server (new rules, rules moved
+    * in from another chain) are saved first, so that a conflict on such a chain cannot lose rules already removed from their
+    * source chain on the server.
     */
    private void saveAllChains()
    {
       final List<ChainTab> tabs = new ArrayList<>();
+      final List<ChainTab> otherTabs = new ArrayList<>();
       for(ChainTab tab : chainTabs)
-         if (dirtyChains.contains(tab.getChainId()))
+      {
+         if (!dirtyChains.contains(tab.getChainId()))
+            continue;
+         if (tab.chain.getRules().stream().anyMatch(r -> r.getVersion() == 0))
             tabs.add(tab);
+         else
+            otherTabs.add(tab);
+      }
+      tabs.addAll(otherTabs);
       saveChains(tabs);
    }
 
@@ -1514,6 +1565,8 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          for(int i = tab.lastSelectedRule + direction; i != e.getRuleNumber(); i += direction)
          {
             RuleEditor r = tab.ruleEditors.get(i - 1);
+            if (r.isDisposed())
+               continue;
             tab.selection.add(r);
             r.setSelected(true);
          }
@@ -1572,7 +1625,15 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       actionInsertBelow.setEnabled(editable && (selectionSize == 1));
       actionCut.setEnabled(editable && (selectionSize > 0));
       actionCopy.setEnabled(selectionSize > 0);
-      actionPaste.setEnabled(editable && (selectionSize == 1) && !clipboard.isEmpty());
+      actionPaste.setEnabled(editable && !clipboard.isEmpty());
+      boolean moveTargetExists = false;
+      for(ChainTab t : chainTabs)
+         if ((t != tab) && t.isEditable())
+         {
+            moveTargetExists = true;
+            break;
+         }
+      actionMoveToChain.setEnabled(editable && (selectionSize > 0) && moveTargetExists);
       actionExplain.setEnabled(selectionSize == 1);
       updateSaveActions();
    }
@@ -1686,7 +1747,77 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    }
 
    /**
-    * Paste rules from clipboard after the selected rule
+    * Move selected rules of the active chain to the end of another chain selected by the user
+    */
+   private void moveRulesToChain()
+   {
+      final ChainTab sourceTab = activeTab();
+      if ((sourceTab == null) || sourceTab.selection.isEmpty())
+         return;
+
+      final List<EventProcessingPolicyRule> rules = new ArrayList<>(sourceTab.selection.size());
+      for(RuleEditor e : sourceTab.selection)
+         rules.add(e.getRule());
+
+      List<EventProcessingPolicyChain> targetChains = new ArrayList<>();
+      for(ChainTab t : chainTabs)
+         if ((t != sourceTab) && t.isEditable())
+            targetChains.add(t.chain);
+
+      MoveRulesToChainDialog dlg = new MoveRulesToChainDialog(getWindow().getShell(), rules, sourceTab.getName(), targetChains);
+      if (dlg.open() != Window.OK)
+         return;
+
+      final ChainTab targetTab = tabForChain(dlg.getTargetChain().getId());
+      if (targetTab != null)
+         targetTab.load(() -> applyRuleMove(sourceTab, targetTab, rules));
+   }
+
+   /**
+    * Move rules between chains once the target chain is loaded. Nothing is moved if either chain was closed or the rules are no
+    * longer in the source chain (chain reloaded or rules removed while the target chain was loading).
+    *
+    * @param sourceTab tab of the chain rules are moved out of
+    * @param targetTab tab of the chain rules are moved to
+    * @param rules rules to move, in chain order
+    */
+   private void applyRuleMove(ChainTab sourceTab, ChainTab targetTab, List<EventProcessingPolicyRule> rules)
+   {
+      if (sourceTab.tabItem.isDisposed() || targetTab.tabItem.isDisposed() || !sourceTab.chain.getRules().containsAll(rules))
+      {
+         addMessage(MessageArea.WARNING, i18n.tr("Rules were not moved because the source chain has changed in the meantime."));
+         return;
+      }
+
+      sourceTab.clearSelection();
+      Iterator<RuleEditor> it = sourceTab.ruleEditors.iterator();
+      while(it.hasNext())
+      {
+         RuleEditor e = it.next();
+         if (rules.contains(e.getRule()))
+         {
+            it.remove();
+            e.dispose();
+         }
+      }
+      for(EventProcessingPolicyRule rule : rules)
+      {
+         sourceTab.chain.moveRule(rule, targetTab.chain);
+         RuleEditor e = targetTab.addRuleEditor(rule, targetTab.ruleEditors.size());
+         if (!isRuleVisible(rule))
+            e.dispose();
+      }
+      sourceTab.renumberRules();
+      targetTab.renumberRules();
+      sourceTab.updateLayout();
+      targetTab.updateLayout();
+      markDirty(sourceTab);
+      markDirty(targetTab);
+      onSelectionChange();
+   }
+
+   /**
+    * Paste rules from clipboard after the last selected rule, or at the end of the chain if no rule is selected
     */
    private void pasteRules()
    {
@@ -1694,17 +1825,14 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       if (tab == null)
          return;
 
-      int position = tab.lastSelectedRule;
+      int position = tab.selection.isEmpty() ? tab.ruleEditors.size() : tab.selection.last().getRuleNumber();
       RuleEditor anchor = null;
-      if (position < tab.ruleEditors.size() - 1)
-      {
-         for(int i = position; i < tab.ruleEditors.size(); i++)
-            if (!tab.ruleEditors.get(i).isDisposed())
-            {
-               anchor = tab.ruleEditors.get(i);
-               break;
-            }
-      }
+      for(int i = position; i < tab.ruleEditors.size(); i++)
+         if (!tab.ruleEditors.get(i).isDisposed())
+         {
+            anchor = tab.ruleEditors.get(i);
+            break;
+         }
 
       for(EventProcessingPolicyRule rule : clipboard.paste())
       {
@@ -1794,6 +1922,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       manager.add(actionCut);
       manager.add(actionCopy);
       manager.add(actionPaste);
+      manager.add(actionMoveToChain);
       manager.add(new Separator());
       manager.add(actionDelete);
    }

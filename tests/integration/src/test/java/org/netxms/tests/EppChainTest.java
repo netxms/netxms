@@ -466,6 +466,113 @@ public class EppChainTest extends AbstractSessionTest
    }
 
    /**
+    * Create chain with rules having given comments and save it
+    */
+   private static EventProcessingPolicyChain createSavedChain(NXCSession session, String chainName, String... ruleComments) throws Exception
+   {
+      EventProcessingPolicyChain chain = session.createEppChain(chainName, "EppChainTest chain", null);
+      for(String comment : ruleComments)
+      {
+         EventProcessingPolicyRule rule = new EventProcessingPolicyRule();
+         rule.setChainId(chain.getId());
+         rule.setComments("EppChainTest " + comment);
+         chain.addRule(rule);
+      }
+      saveChains(session, chain);
+      return chain;
+   }
+
+   /**
+    * Get GUIDs of chain rules in chain order
+    */
+   private static List<UUID> ruleGuids(NXCSession session, int chainId) throws Exception
+   {
+      List<UUID> guids = new ArrayList<>();
+      for(EventProcessingPolicyRule rule : session.getEventProcessingPolicyChain(chainId).getRules())
+         guids.add(rule.getGuid());
+      return guids;
+   }
+
+   @Test
+   public void testMoveRuleToChain() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+
+      int idA = createSavedChain(session, "EppChainTest-MoveA", "move r1", "move r2").getId();
+      int idB = createSavedChain(session, "EppChainTest-MoveB").getId();
+
+      EventProcessingPolicyChain a = session.getEventProcessingPolicyChain(idA);
+      EventProcessingPolicyChain b = session.getEventProcessingPolicyChain(idB);
+      EventProcessingPolicyRule rule = a.getRules().get(0);
+      UUID guid = rule.getGuid();
+      UUID remainingGuid = a.getRules().get(1).getGuid();
+
+      a.moveRule(rule, b);
+      saveChains(session, b, a);
+
+      assertEquals(Arrays.asList(remainingGuid), ruleGuids(session, idA));
+      assertEquals(Arrays.asList(guid), ruleGuids(session, idB));
+   }
+
+   @Test
+   public void testMoveRuleToConcurrentlyModifiedChain() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+
+      int idA = createSavedChain(session, "EppChainTest-MoveMergeA", "merge r1").getId();
+      int idB = createSavedChain(session, "EppChainTest-MoveMergeB", "merge existing").getId();
+
+      EventProcessingPolicyChain a = session.getEventProcessingPolicyChain(idA);
+      EventProcessingPolicyChain b = session.getEventProcessingPolicyChain(idB);
+      UUID existingGuid = b.getRules().get(0).getGuid();
+
+      // Another session changes chain B, so saving the move goes through server-side merge
+      EventProcessingPolicyChain concurrentB = session.getEventProcessingPolicyChain(idB);
+      EventProcessingPolicyRule concurrentRule = new EventProcessingPolicyRule();
+      concurrentRule.setChainId(idB);
+      concurrentRule.setComments("EppChainTest merge concurrent");
+      concurrentB.addRule(concurrentRule);
+      saveChains(session, concurrentB);
+
+      EventProcessingPolicyRule rule = a.getRules().get(0);
+      UUID guid = rule.getGuid();
+      a.moveRule(rule, b);
+      saveChains(session, b, a);
+
+      assertTrue(ruleGuids(session, idA).isEmpty());
+      assertEquals(Arrays.asList(existingGuid, guid, concurrentRule.getGuid()), ruleGuids(session, idB));
+   }
+
+   @Test
+   public void testMoveRuleBackBeforeSave() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+
+      int idA = createSavedChain(session, "EppChainTest-MoveBackA", "back r1").getId();
+      int idB = createSavedChain(session, "EppChainTest-MoveBackB").getId();
+
+      EventProcessingPolicyChain a = session.getEventProcessingPolicyChain(idA);
+      EventProcessingPolicyChain b = session.getEventProcessingPolicyChain(idB);
+      EventProcessingPolicyRule rule = a.getRules().get(0);
+      UUID guid = rule.getGuid();
+      a.moveRule(rule, b);
+      b.moveRule(rule, a);
+
+      // Another session changes chain A, so saving goes through server-side merge
+      EventProcessingPolicyChain concurrentA = session.getEventProcessingPolicyChain(idA);
+      EventProcessingPolicyRule concurrentRule = new EventProcessingPolicyRule();
+      concurrentRule.setChainId(idA);
+      concurrentRule.setComments("EppChainTest back concurrent");
+      concurrentA.addRule(concurrentRule);
+      saveChains(session, concurrentA);
+
+      saveChains(session, b, a);
+
+      assertEquals(Arrays.asList(guid, concurrentRule.getGuid()), ruleGuids(session, idA));
+      assertTrue(ruleGuids(session, idB).isEmpty());
+   }
+
+   /**
     * Remove everything the test creates on the server, whether it passed or failed
     */
    @AfterEach

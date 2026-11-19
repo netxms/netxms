@@ -300,6 +300,35 @@ public class EventProcessingPolicyChain
    }
 
    /**
+    * Move rule from this chain to the end of the target chain, keeping its GUID. The rule arrives in the target chain as a new
+    * rule (version 0), so that merge on save inserts it even if the target chain was changed by another session. A rule moved
+    * back to a chain it was deleted from since the last save gets its recorded version back instead.
+    *
+    * @param rule rule to move
+    * @param target target chain
+    */
+   public void moveRule(EventProcessingPolicyRule rule, EventProcessingPolicyChain target)
+   {
+      deleteRule(rule);
+
+      int version = 0;
+      for(int i = 0; i < target.deletedRules.size(); i++)
+      {
+         DeletedRuleInfo d = target.deletedRules.get(i);
+         if (d.getGuid().equals(rule.getGuid()))
+         {
+            version = d.getVersion();
+            target.deletedRules.remove(i);
+            break;
+         }
+      }
+      rule.setVersion(version);
+      rule.setModified(true);
+      rule.setChainId(target.getId());
+      target.rules.add(rule);
+   }
+
+   /**
     * @return rules deleted since last save
     */
    public List<DeletedRuleInfo> getDeletedRules()
