@@ -67,6 +67,163 @@ PollerInfo *RegisterPoller(PollerType type, const shared_ptr<NetObj>& object)
 }
 
 /**
+ * Forced poll type names (as used by WebAPI and AI tools)
+ */
+static const struct
+{
+   int type;
+   const char *name;
+} s_pollTypeNames[] =
+{
+   { POLL_STATUS, "status" },
+   { POLL_CONFIGURATION, "configuration" },
+   { POLL_CONFIGURATION_WITH_RESET, "configuration-full" },
+   { POLL_INSTANCE_DISCOVERY, "instance-discovery" },
+   { POLL_INTERFACE_NAMES, "interface-names" },
+   { POLL_TOPOLOGY, "topology" },
+   { POLL_ROUTING_TABLE, "routing-table" },
+   { POLL_DISCOVERY, "discovery" },
+   { POLL_AUTOBIND, "autobind" },
+   { POLL_MAP_UPDATE, "map-update" }
+};
+
+/**
+ * Get poll type code (one of POLL_* constants) from name. Returns -1 if name is unknown.
+ */
+int NXCORE_EXPORTABLE PollTypeFromName(const char *name)
+{
+   if (name == nullptr)
+      return -1;
+   for(size_t i = 0; i < sizeof(s_pollTypeNames) / sizeof(s_pollTypeNames[0]); i++)
+      if (!strcmp(s_pollTypeNames[i].name, name))
+         return s_pollTypeNames[i].type;
+   return -1;
+}
+
+/**
+ * Get poll type name from code (one of POLL_* constants). Returns nullptr if code is unknown.
+ */
+const char NXCORE_EXPORTABLE *PollTypeToName(int pollType)
+{
+   for(size_t i = 0; i < sizeof(s_pollTypeNames) / sizeof(s_pollTypeNames[0]); i++)
+      if (s_pollTypeNames[i].type == pollType)
+         return s_pollTypeNames[i].name;
+   return nullptr;
+}
+
+/**
+ * Get all poll type names as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetPollTypeNames()
+{
+   json_t *names = json_array();
+   for(size_t i = 0; i < sizeof(s_pollTypeNames) / sizeof(s_pollTypeNames[0]); i++)
+      json_array_append_new(names, json_string(s_pollTypeNames[i].name));
+   return names;
+}
+
+/**
+ * Check if forced poll of given type can be executed on given object by given user.
+ * Returns RCC_SUCCESS, RCC_INCOMPATIBLE_OPERATION, or RCC_ACCESS_DENIED.
+ */
+uint32_t NXCORE_EXPORTABLE ValidateForcedPoll(const NetObj& object, int pollType, uint32_t userId)
+{
+   const Pollable *pollable = object.getAsPollable();
+   if (pollable == nullptr)
+      return RCC_INCOMPATIBLE_OPERATION;
+
+   bool available;
+   switch(pollType)
+   {
+      case POLL_AUTOBIND:
+         available = pollable->isAutobindPollAvailable();
+         break;
+      case POLL_CONFIGURATION_WITH_RESET:
+         available = pollable->isConfigurationPollAvailable() && (object.getObjectClass() == OBJECT_NODE);
+         break;
+      case POLL_CONFIGURATION:
+         available = pollable->isConfigurationPollAvailable();
+         break;
+      case POLL_DISCOVERY:
+         available = pollable->isDiscoveryPollAvailable();
+         break;
+      case POLL_INSTANCE_DISCOVERY:
+         available = pollable->isInstanceDiscoveryPollAvailable();
+         break;
+      case POLL_INTERFACE_NAMES:
+         available = (object.getObjectClass() == OBJECT_NODE);
+         break;
+      case POLL_MAP_UPDATE:
+         available = pollable->isMapUpdatePollAvailable();
+         break;
+      case POLL_ROUTING_TABLE:
+         available = pollable->isRoutingTablePollAvailable();
+         break;
+      case POLL_STATUS:
+         available = pollable->isStatusPollAvailable();
+         break;
+      case POLL_TOPOLOGY:
+         available = pollable->isTopologyPollAvailable();
+         break;
+      default:
+         available = false;
+         break;
+   }
+   if (!available)
+      return RCC_INCOMPATIBLE_OPERATION;
+
+   return object.checkAccessRights(userId, (pollType == POLL_CONFIGURATION_WITH_RESET) ? OBJECT_ACCESS_MODIFY : OBJECT_ACCESS_READ) ? RCC_SUCCESS : RCC_ACCESS_DENIED;
+}
+
+/**
+ * Execute forced poll of given type on given object in the calling thread. Poll type should be validated
+ * by caller with ValidateForcedPoll(). Output writer can be nullptr.
+ */
+void NXCORE_EXPORTABLE ExecuteForcedPoll(const shared_ptr<NetObj>& object, int pollType, PollOutputWriter *output)
+{
+   Pollable *pollable = object->getAsPollable();
+   if (pollable == nullptr)
+      return;
+
+   switch(pollType)
+   {
+      case POLL_STATUS:
+         pollable->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, object), output);
+         break;
+      case POLL_CONFIGURATION_WITH_RESET:
+         if (object->getObjectClass() == OBJECT_NODE)
+            static_cast<Node&>(*object).setRecheckCapsFlag();
+         pollable->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), output);
+         break;
+      case POLL_CONFIGURATION:
+         pollable->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), output);
+         break;
+      case POLL_INSTANCE_DISCOVERY:
+         pollable->doForcedInstanceDiscoveryPoll(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), output);
+         break;
+      case POLL_TOPOLOGY:
+         pollable->doForcedTopologyPoll(RegisterPoller(PollerType::TOPOLOGY, object), output);
+         break;
+      case POLL_ROUTING_TABLE:
+         pollable->doForcedRoutingTablePoll(RegisterPoller(PollerType::ROUTING_TABLE, object), output);
+         break;
+      case POLL_DISCOVERY:
+         pollable->doForcedDiscoveryPoll(RegisterPoller(PollerType::DISCOVERY, object), output);
+         break;
+      case POLL_AUTOBIND:
+         pollable->doForcedAutobindPoll(RegisterPoller(PollerType::AUTOBIND, object), output);
+         break;
+      case POLL_MAP_UPDATE:
+         pollable->doForcedMapUpdatePoll(RegisterPoller(PollerType::MAP_UPDATE, object), output);
+         break;
+      case POLL_INTERFACE_NAMES:
+         if (object->getObjectClass() == OBJECT_NODE)
+            static_cast<Node&>(*object).updateInterfaceNames(output);
+         break;
+   }
+}
+
+/**
  * Show pollers on console
  */
 void ShowPollers(ServerConsole *console)

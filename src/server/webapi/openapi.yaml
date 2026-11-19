@@ -5405,6 +5405,99 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/poll/{poll-type}:
+    post:
+      operationId: pollObject
+      summary: Start forced poll of an object
+      description: |
+        Start an immediate poll of the given type on the object instead of waiting for the next
+        scheduled poll. By default the poll output is streamed: the response carries a single-use
+        WebSocket token, the poll starts when the client connects to GET /v1/polls/output/{token},
+        and each line of poll output is delivered as a separate message. With `stream: false` the poll is
+        queued without output and the response carries no token.
+
+        Poll types and their applicability:
+        - `status`, `configuration` - most monitored objects
+        - `configuration-full` - nodes; configuration poll with full capability re-check, requires
+          modify access to the object
+        - `interface-names`, `topology`, `routing-table`, `discovery` - nodes
+        - `instance-discovery` - data collection owners
+        - `autobind` - containers, templates, dashboards, network maps and other auto-bind targets
+        - `map-update` - network maps
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Object ID
+        - name: poll-type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [status, configuration, configuration-full, instance-discovery, interface-names, topology, routing-table, discovery, autobind, map-update]
+          description: Poll type
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stream:
+                  type: boolean
+                  default: true
+                  description: Stream poll output over WebSocket. If false, poll is queued without output.
+      responses:
+        '202':
+          description: Poll accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - pollType
+                properties:
+                  pollType:
+                    type: string
+                    description: Poll type
+                  token:
+                    type: string
+                    format: uuid
+                    description: Single-use token for WebSocket connection (streaming mode only)
+                  expiresIn:
+                    type: integer
+                    description: Token validity period in seconds (streaming mode only)
+                  wsUrl:
+                    type: string
+                    description: WebSocket URL path to connect for poll output (streaming mode only)
+                    example: /v1/polls/output/0f0e7a1c-8d2b-4a52-9d0e-3b1f6c9b7a10
+        '400':
+          description: |
+            Invalid request. Possible reasons:
+            - Invalid object ID
+            - Unknown poll type (response body lists valid types in `validTypes`)
+            - Poll type is not applicable to this object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                  validTypes:
+                    type: array
+                    items:
+                      type: string
+        '403':
+          description: User does not have read access to the object (modify access for `configuration-full`)
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
   /v1/objects/{object-id}/polling:
     get:
       operationId: getObjectPolling
@@ -8422,6 +8515,43 @@ paths:
         - BearerAuth: []
       tags:
         - Data Collection
+  /v1/polls/output/{token}:
+    get:
+      operationId: connectPollOutput
+      summary: Connect to poll output stream (WebSocket)
+      description: |
+        WebSocket endpoint for receiving output of a forced poll started with
+        POST /v1/objects/{object-id}/poll/{poll-type}. Token is single-use and expires after 30 seconds.
+        The poll starts when the connection is established; if client does not connect within token
+        validity period, the poll is cancelled. If client disconnects while the poll is running,
+        the poll continues to completion and its remaining output is discarded.
+
+        Server sends JSON text frames:
+        - `{"type":"output","data":"..."}` - one line of poll output (without line terminator)
+        - `{"type":"output","level":"info|warning|error","data":"..."}` - line of poll output
+          with highlighted level (`level` is omitted for normal lines)
+        - `{"type":"completed"}` - poll finished
+
+        Server closes the connection after `completed` message.
+      tags:
+        - Objects
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Single-use token from the poll response
+      responses:
+        '101':
+          description: |
+            Switching protocols to WebSocket. If the token is invalid, expired or already used,
+            the connection is closed right after the upgrade with WebSocket close code 1008
+            (Policy Violation) - no HTTP error status is returned in that case.
+        '426':
+          description: Upgrade required - request did not ask for a protocol upgrade to WebSocket.
+      security: []
   /v1/push-data:
     post:
       operationId: pushData
@@ -18760,6 +18890,9 @@ components:
           type: string
           format: uuid
           description: Single-use token for WebSocket connection (expires in 30 seconds)
+        expiresIn:
+          type: integer
+          description: Token validity period in seconds
         wsUrl:
           type: string
           description: WebSocket URL path to connect for streaming output

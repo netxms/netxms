@@ -25,11 +25,6 @@
 #define DEBUG_TAG L"webapi.script"
 
 /**
- * Token validity period in seconds for script output WebSocket connection
- */
-static const int SCRIPT_OUTPUT_TOKEN_VALIDITY = 30;
-
-/**
  * Convert script result to JSON. If resultAsMap is true, result is always presented as JSON object.
  */
 static json_t *ScriptResultToJson(NXSL_Value *result, bool resultAsMap)
@@ -66,53 +61,38 @@ static json_t *ScriptResultToJson(NXSL_Value *result, bool resultAsMap)
 /**
  * Ad-hoc script execution with output streamed to WebSocket client
  */
-class ScriptExecution : public enable_shared_from_this<ScriptExecution>
+class ScriptExecution : public WebSocketOutputSession, public enable_shared_from_this<ScriptExecution>
 {
 private:
    uint32_t m_id;
-   uuid m_token;
    uint32_t m_userId;
    bool m_resultAsMap;
    NXSL_VM *m_vm;
    ObjectRefArray<NXSL_Value> m_args;
    bool m_stopRequested;
    Mutex m_vmLock;
-   Condition m_connected;
-   MHD_UpgradeResponseHandle *m_responseHandle;
-   SOCKET m_socket;
-   bool m_closeFrameSent;
-   bool m_disconnected;
-   Mutex m_socketLock;
 
    void run();
-   void sendMessage(json_t *msg);
-   void sendCloseFrame();
+
+protected:
+   virtual void onTextFrame(json_t *msg) override;
+   virtual void onDisconnect() override;
 
 public:
    ScriptExecution(uint32_t userId, bool resultAsMap);
-   ~ScriptExecution();
+   virtual ~ScriptExecution();
 
    uint32_t getId() const { return m_id; }
    uint32_t getUserId() const { return m_userId; }
 
    uuid start(NXSL_VM *vm, const ObjectRefArray<NXSL_Value>& args);
    void stop();
-   void sendOutput(const wchar_t *text);
-
-   void connect(MHD_UpgradeResponseHandle *responseHandle, SOCKET s);
-   void readFrames();
 };
 
 /**
  * Running script executions
  */
 static SynchronizedSharedHashMap<uint32_t, ScriptExecution> s_executions;
-
-/**
- * Script executions waiting for WebSocket connection, indexed by connection token
- */
-static SharedHashMap<uuid, ScriptExecution> s_pendingConnections;
-static Mutex s_pendingConnectionsLock(MutexType::FAST);
 
 /**
  * Last used execution ID
@@ -147,17 +127,13 @@ public:
 /**
  * Script execution constructor
  */
-ScriptExecution::ScriptExecution(uint32_t userId, bool resultAsMap) : m_vmLock(MutexType::FAST), m_connected(true), m_socketLock(MutexType::FAST)
+ScriptExecution::ScriptExecution(uint32_t userId, bool resultAsMap) : m_vmLock(MutexType::FAST)
 {
    m_id = InterlockedIncrement(&s_executionId);
    m_userId = userId;
    m_resultAsMap = resultAsMap;
    m_vm = nullptr;
    m_stopRequested = false;
-   m_responseHandle = nullptr;
-   m_socket = INVALID_SOCKET;
-   m_closeFrameSent = false;
-   m_disconnected = false;
 }
 
 /**
@@ -177,16 +153,13 @@ uuid ScriptExecution::start(NXSL_VM *vm, const ObjectRefArray<NXSL_Value>& args)
    m_vm = vm;
    for(int i = 0; i < args.size(); i++)
       m_args.add(args.get(i));
-   m_token = uuid::generate();
 
    shared_ptr<ScriptExecution> self = shared_from_this();
    s_executions.set(m_id, self);
-   s_pendingConnectionsLock.lock();
-   s_pendingConnections.set(m_token, self);
-   s_pendingConnectionsLock.unlock();
+   uuid token = RegisterWebSocketOutputSession(self);
 
    ThreadCreate([self] () -> void { self->run(); });
-   return m_token;
+   return token;
 }
 
 /**
@@ -194,22 +167,11 @@ uuid ScriptExecution::start(NXSL_VM *vm, const ObjectRefArray<NXSL_Value>& args)
  */
 void ScriptExecution::run()
 {
-   if (!m_connected.wait(SCRIPT_OUTPUT_TOKEN_VALIDITY * 1000))
+   if (!waitForConnection())
    {
-      // Token may be consumed by connection handler right at timeout, in that case connection will be established shortly
-      s_pendingConnectionsLock.lock();
-      bool expired = s_pendingConnections.contains(m_token);
-      if (expired)
-         s_pendingConnections.remove(m_token);
-      s_pendingConnectionsLock.unlock();
-
-      if (expired)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, L"Script execution %u cancelled: client did not connect within %d seconds", m_id, SCRIPT_OUTPUT_TOKEN_VALIDITY);
-         s_executions.remove(m_id);
-         return;
-      }
-      m_connected.wait(INFINITE);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Script execution %u cancelled: client did not connect within %d seconds", m_id, WS_OUTPUT_TOKEN_VALIDITY);
+      s_executions.remove(m_id);
+      return;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 5, L"Script execution %u started", m_id);
@@ -249,8 +211,6 @@ void ScriptExecution::run()
          json_object_set_new(msg, "diagnostic", m_vm->getErrorJson());
       }
    }
-   sendMessage(msg);
-   json_decref(msg);
 
    nxlog_debug_tag(DEBUG_TAG, 5, L"Script execution %u %s", m_id, success ? L"completed" : (stopRequested ? L"stopped" : L"failed"));
 
@@ -258,7 +218,8 @@ void ScriptExecution::run()
    delete_and_null(m_vm);
    m_vmLock.unlock();
 
-   sendCloseFrame();
+   finish(msg);
+   json_decref(msg);
    s_executions.remove(m_id);
 }
 
@@ -274,120 +235,33 @@ void ScriptExecution::stop()
 }
 
 /**
- * Send JSON message to WebSocket client
+ * Handle message from WebSocket client
  */
-void ScriptExecution::sendMessage(json_t *msg)
+void ScriptExecution::onTextFrame(json_t *msg)
 {
-   char *encoded = json_dumps(msg, 0);
-   m_socketLock.lock();
-   if ((m_socket != INVALID_SOCKET) && !m_closeFrameSent && !m_disconnected)
-      SendWebsocketFrame(m_socket, encoded, strlen(encoded));
-   m_socketLock.unlock();
-   MemFree(encoded);
-}
-
-/**
- * Send script output to WebSocket client
- */
-void ScriptExecution::sendOutput(const wchar_t *text)
-{
-   json_t *msg = json_object();
-   json_object_set_new(msg, "type", json_string("output"));
-   json_object_set_new(msg, "data", json_string_w(text));
-   sendMessage(msg);
-   json_decref(msg);
-}
-
-/**
- * Send close frame after execution completion and shut down socket so that reader thread will finish
- */
-void ScriptExecution::sendCloseFrame()
-{
-   m_socketLock.lock();
-   if (!m_closeFrameSent && !m_disconnected)
+   const char *type = json_object_get_string_utf8(msg, "type", "");
+   if (!strcmp(type, "stop"))
    {
-      SendWebsocketCloseFrame(m_socket, WS_CLOSE_NORMAL);
-      shutdown(m_socket, SHUT_RDWR);
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Script execution %u: stop requested by client", m_id);
+      stop();
    }
-   m_closeFrameSent = true;
-   m_socketLock.unlock();
-}
-
-/**
- * Attach WebSocket connection to execution
- */
-void ScriptExecution::connect(MHD_UpgradeResponseHandle *responseHandle, SOCKET s)
-{
-   m_socketLock.lock();
-   m_responseHandle = responseHandle;
-   m_socket = s;
-   m_socketLock.unlock();
-   m_connected.set();
-}
-
-/**
- * Read frames from WebSocket client until connection is closed. Closing connection by client stops script.
- */
-void ScriptExecution::readFrames()
-{
-   while(true)
+   else
    {
-      ByteStream buffer;
-      BYTE frameType;
-      if (!ReadWebsocketFrame(m_socket, &buffer, &frameType))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, L"Script execution %u: WebSocket read error or connection closed", m_id);
-         break;
-      }
-
-      if (frameType == 0x08)  // Close frame
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, L"Script execution %u: received close frame", m_id);
-         break;
-      }
-      else if (frameType == 0x09)  // Ping frame
-      {
-         m_socketLock.lock();
-         if (!m_closeFrameSent)
-         {
-            BYTE pong[2] = { 0x8A, 0x00 };  // FIN + pong opcode, no payload
-            SendEx(m_socket, pong, 2, 0, nullptr);
-         }
-         m_socketLock.unlock();
-      }
-      else if (frameType == 0x01)  // Text frame
-      {
-         json_error_t error;
-         json_t *msg = json_loadb(reinterpret_cast<const char*>(buffer.buffer()), buffer.size(), 0, &error);
-         const char *type = json_object_get_string_utf8(msg, "type", "");
-         if (!strcmp(type, "stop"))
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, L"Script execution %u: stop requested by client", m_id);
-            stop();
-         }
-         else
-         {
-            json_t *response = json_object();
-            json_object_set_new(response, "type", json_string("error"));
-            json_object_set_new(response, "message", json_string("Invalid message"));
-            sendMessage(response);
-            json_decref(response);
-         }
-         json_decref(msg);
-      }
-      // Ignore other frame types
+      json_t *response = json_object();
+      json_object_set_new(response, "type", json_string("error"));
+      json_object_set_new(response, "message", json_string("Invalid message"));
+      sendMessage(response);
+      json_decref(response);
    }
+}
 
-   stop();  // Nobody will receive output after client disconnect
-
-   m_socketLock.lock();
-   if (!m_closeFrameSent)
-      SendWebsocketCloseFrame(m_socket, WS_CLOSE_NORMAL);
-   m_disconnected = true;
-   m_socketLock.unlock();
-
-   MHD_upgrade_action(m_responseHandle, MHD_UPGRADE_ACTION_CLOSE);
+/**
+ * Handle client disconnect. Closing connection by client stops script, because nobody will receive output.
+ */
+void ScriptExecution::onDisconnect()
+{
    nxlog_debug_tag(DEBUG_TAG, 5, L"Script execution %u: WebSocket connection closed", m_id);
+   stop();
 }
 
 /**
@@ -446,15 +320,8 @@ static int ExecuteScript(Context *context, json_t *request, const wchar_t *scrip
       nxlog_debug_tag(DEBUG_TAG, 4, L"Script execution %u for object %s [%u] created by user %s [%u] (WebSocket pending)",
             execution->getId(), (object != nullptr) ? object->getName() : L"(none)", (object != nullptr) ? object->getId() : 0, context->getLoginName(), context->getUserId());
 
-      json_t *response = json_object();
+      json_t *response = CreateWebSocketOutputResponse(token, "/v1/script-executions/output");
       json_object_set_new(response, "executionId", json_integer(execution->getId()));
-      char tokenStr[64];
-      token.toStringA(tokenStr);
-      json_object_set_new(response, "token", json_string(tokenStr));
-      json_object_set_new(response, "expiresIn", json_integer(SCRIPT_OUTPUT_TOKEN_VALIDITY));
-      char wsUrl[128];
-      snprintf(wsUrl, sizeof(wsUrl), "/v1/script-executions/output/%s", tokenStr);
-      json_object_set_new(response, "wsUrl", json_string(wsUrl));
       context->setResponseData(response);
       json_decref(response);
       return 202;
@@ -577,40 +444,5 @@ void WS_ScriptOutputConnect(void *cls, MHD_Connection *connection, void *con_cls
                             const char *extra_in, size_t extra_in_size, MHD_socket sock,
                             MHD_UpgradeResponseHandle *responseHandle)
 {
-   Context *context = static_cast<Context*>(cls);
-
-   const wchar_t *tokenStr = context->getPlaceholderValue(L"token");
-   if (tokenStr == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Script output WebSocket connection rejected: no token provided");
-      RejectWebsocketConnection(sock, responseHandle);
-      return;
-   }
-
-   uuid token = uuid::parse(tokenStr);
-   if (token.isNull())
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Script output WebSocket connection rejected: invalid token format");
-      RejectWebsocketConnection(sock, responseHandle);
-      return;
-   }
-
-   // Token is single-use; it is removed by execution thread when not used within validity period
-   s_pendingConnectionsLock.lock();
-   shared_ptr<ScriptExecution> execution = s_pendingConnections.getShared(token);
-   if (execution != nullptr)
-      s_pendingConnections.remove(token);
-   s_pendingConnectionsLock.unlock();
-
-   if (execution == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Script output WebSocket connection rejected: token not found");
-      RejectWebsocketConnection(sock, responseHandle);
-      return;
-   }
-
-   execution->connect(responseHandle, static_cast<SOCKET>(sock));
-   nxlog_debug_tag(DEBUG_TAG, 4, L"Script output WebSocket connection established for execution %u", execution->getId());
-
-   ThreadCreate([execution] () -> void { execution->readFrames(); });
+   ConnectWebSocketOutputSession(static_cast<Context*>(cls), sock, responseHandle);
 }

@@ -830,13 +830,10 @@ void Interface::generateEventsAfterMaintenace(uint32_t parentId)
 /**
  * Perform status poll on interface
  */
-void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, bool agentReachable)
+void Interface::statusPoll(PollOutputWriter *output, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, bool agentReachable)
 {
    if (IsShutdownInProgress())
       return;
-
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
 
    shared_ptr<Node> node = getParentNode();
    if (node == nullptr)
@@ -845,8 +842,10 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
       return;     // Cannot find parent node, which is VERY strange
    }
 
-   sendPollerMsg(_T("   Starting status poll on interface %s\r\n"), m_name);
-   sendPollerMsg(_T("      Current interface status is %s\r\n"), GetStatusAsText(m_status, true));
+   // Interface is polled within parent node status poll, so writer is set and cleared under node's poller lock
+   m_pollOutputWriter = output;
+   sendPollerMsg(_T("   Starting status poll on interface %s"), m_name);
+   sendPollerMsg(_T("      Current interface status is %s"), GetStatusAsText(m_status, true));
 
 	InterfaceAdminState adminState = IF_ADMIN_STATE_UNKNOWN;
 	InterfaceOperState operState = IF_OPER_STATE_UNKNOWN;
@@ -857,17 +856,17 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
    if (!(m_flags & IF_DISABLE_AGENT_STATUS_POLL) && node->isNativeAgent() &&
        (!(node->getFlags() & NF_DISABLE_NXCP)) && (!(node->getState() & NSF_AGENT_UNREACHABLE)) && agentReachable)
    {
-      sendPollerMsg(_T("      Retrieving interface status from NetXMS agent\r\n"));
+      sendPollerMsg(_T("      Retrieving interface status from NetXMS agent"));
       node->getInterfaceStateFromAgent(m_index, &adminState, &operState, &speed);
 		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adminState=%d operState=%d speed=") UINT64_FMT, m_id, m_name, adminState, operState, speed);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
-			sendPollerMsg(POLLER_INFO _T("      Interface status retrieved from NetXMS agent\r\n"));
+			sendPollerMsg(PollOutputLevel::INFO, _T("      Interface status retrieved from NetXMS agent"));
          needPoll = false;
 		}
 		else
 		{
-			sendPollerMsg(POLLER_WARNING _T("      Unable to retrieve interface status from NetXMS agent\r\n"));
+			sendPollerMsg(PollOutputLevel::WARNING, _T("      Unable to retrieve interface status from NetXMS agent"));
 		}
    }
 
@@ -875,17 +874,17 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
        (!(node->getFlags() & NF_DISABLE_SNMP)) && (!(node->getState() & NSF_SNMP_UNREACHABLE)) &&
 		 (snmpTransport != nullptr))
    {
-      sendPollerMsg(_T("      Retrieving interface status from SNMP agent\r\n"));
+      sendPollerMsg(_T("      Retrieving interface status from SNMP agent"));
       node->getInterfaceStateFromSNMP(snmpTransport, *this, &adminState, &operState, &speed);
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d speed=") UINT64_FMT, m_id, m_name, adminState, operState, speed);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
-			sendPollerMsg(POLLER_INFO _T("      Interface status retrieved from SNMP agent\r\n"));
+			sendPollerMsg(PollOutputLevel::INFO, _T("      Interface status retrieved from SNMP agent"));
          needPoll = false;
 		}
 		else
 		{
-			sendPollerMsg(POLLER_WARNING _T("      Unable to retrieve interface status from SNMP agent\r\n"));
+			sendPollerMsg(PollOutputLevel::WARNING, _T("      Unable to retrieve interface status from SNMP agent"));
 		}
    }
 
@@ -894,12 +893,12 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Interface::StatusPoll(%d,%s): new state from network device driver: adminState=%d operState=%d speed=" UINT64_FMT, m_id, m_name, adminState, operState, speed);
       if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
       {
-         sendPollerMsg(POLLER_INFO L"      Interface status retrieved from network device driver\r\n");
+         sendPollerMsg(PollOutputLevel::INFO, L"      Interface status retrieved from network device driver");
          needPoll = false;
       }
       else
       {
-         sendPollerMsg(POLLER_WARNING L"      Unable to retrieve interface status from network device driver\r\n");
+         sendPollerMsg(PollOutputLevel::WARNING, L"      Unable to retrieve interface status from network device driver");
       }
    }
 
@@ -915,7 +914,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
       }
       else
       {
-         sendPollerMsg(POLLER_WARNING L"      Interface status cannot be determined\r\n");
+         sendPollerMsg(PollOutputLevel::WARNING, L"      Interface status cannot be determined");
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, L"Interface::StatusPoll(%d,%s): ICMP cannot be used for status check", m_id, m_name);
       }
    }
@@ -981,14 +980,14 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 	if (node->isBridge() && isPhysicalPort() && (snmpTransport != nullptr))
 	{
 		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%u]): Checking Spanning Tree state for interface %s"), node->getName(), node->getId(), m_name);
-		stpStatusPoll(rqId, snmpTransport, *node);
+		stpStatusPoll(snmpTransport, *node);
 	}
 
    // Check 802.1x state
    if ((node->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr) && node->is8021xPollingEnabled())
    {
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%u]): Checking 802.1x state for interface %s"), node->getName(), node->getId(), m_name);
-      paeStatusPoll(rqId, snmpTransport, node.get());
+      paeStatusPoll(snmpTransport, node.get());
       if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
          newStatus = STATUS_MAJOR;
    }
@@ -1036,7 +1035,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 
 	int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount :
 	                    ((node->getRequiredPollCount() > 0) ? node->getRequiredPollCount() : g_requiredPolls);
-	sendPollerMsg(_T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
+	sendPollerMsg(_T("      Interface is %s for %d poll%s (%d poll%s required for status change)"),
 	      GetStatusAsText(newStatus, true), m_statusPollCount, (m_statusPollCount == 1) ? _T("") : _T("s"),
 	      requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
 	nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d requiredPolls=%d"),
@@ -1055,7 +1054,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 		m_status = newStatus;
 		m_pendingStatus = -1;	// Invalidate pending status
 
-		sendPollerMsg(_T("      Interface status changed to %s\r\n"), GetStatusAsText(m_status, true));
+		sendPollerMsg(_T("      Interface status changed to %s"), GetStatusAsText(m_status, true));
 
       // Post system event if it was not already sent before unknown state
       if ((m_lastKnownOperState == IF_OPER_STATE_UNKNOWN || m_lastKnownOperState != static_cast<int16_t>(operState)) ||
@@ -1154,8 +1153,9 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
       unlockParentList();
    }
 
-	sendPollerMsg(_T("      Interface status after poll is %s\r\n"), GetStatusAsText(m_status, true));
-	sendPollerMsg(_T("   Finished status poll on interface %s\r\n"), m_name);
+	sendPollerMsg(_T("      Interface status after poll is %s"), GetStatusAsText(m_status, true));
+	sendPollerMsg(_T("   Finished status poll on interface %s"), m_name);
+   m_pollOutputWriter = nullptr;
 }
 
 /**
@@ -1164,7 +1164,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
  */
 void Interface::icmpStatusPoll(Node *node, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
-   sendPollerMsg(L"      Starting ICMP ping\r\n");
+   sendPollerMsg(L"      Starting ICMP ping");
    uint32_t status = ICMP_SEND_FAILED;
    bool noResponse = false;
    const ObjectArray<InetAddress>& list = m_ipAddressList.getList();
@@ -1202,9 +1202,9 @@ void Interface::icmpStatusPoll(Node *node, Cluster *cluster, InterfaceAdminState
 /**
  * Spanning tree status poll
  */
-void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node)
+void Interface::stpStatusPoll(SNMP_Transport *transport, const Node& node)
 {
-   sendPollerMsg(_T("      Checking port STP state...\r\n"));
+   sendPollerMsg(_T("      Checking port STP state..."));
 
    int32_t v = static_cast<int32_t>(SpanningTreePortState::UNKNOWN);
    uint32_t oid[12] = { 1, 3, 6, 1, 2, 1, 17, 2, 15, 1, 3, m_bridgePortNumber };
@@ -1213,7 +1213,7 @@ void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 
    if (m_stpPortState != stpState)
    {
-      sendPollerMsg(_T("      Port Spanning Tree state changed to %s\r\n"), STPPortStateToText(stpState));
+      sendPollerMsg(_T("      Port Spanning Tree state changed to %s"), STPPortStateToText(stpState));
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::stpStatusPoll(%s [%u]): Port STP state changed to %s"), m_name, m_id, STPPortStateToText(stpState));
 
       lockProperties();
@@ -1241,9 +1241,9 @@ void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
 /**
  * PAE (802.1x) status poll
  */
-void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node)
+void Interface::paeStatusPoll(SNMP_Transport *transport, Node *node)
 {
-   sendPollerMsg(_T("      Checking port 802.1x status...\r\n"));
+   sendPollerMsg(_T("      Checking port 802.1x status..."));
 
 	int32_t paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
 	bool modified = false;
@@ -1252,14 +1252,14 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 	auto driver = node->getUsableDriverWithData(&context);
 	if (driver.first == nullptr)
 	{
-	   sendPollerMsg(_T("      Device driver cannot be used with available transports, 802.1x status check skipped\r\n"));
+	   sendPollerMsg(_T("      Device driver cannot be used with available transports, 802.1x status check skipped"));
 	   return;
 	}
 	driver.first->get8021xPortState(&context, node, driver.second.get(), m_index, &paeState, &backendState);
 
 	if (m_dot1xPaeAuthState != static_cast<int16_t>(paeState))
 	{
-	   sendPollerMsg(_T("      Port PAE state changed to %s\r\n"), PAE_STATE_TEXT(paeState));
+	   sendPollerMsg(_T("      Port PAE state changed to %s"), PAE_STATE_TEXT(paeState));
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::paeStatusPoll(%s [%u]): Port PAE state changed to %s"), m_name, m_id, PAE_STATE_TEXT(paeState));
 		modified = true;
 
@@ -1288,7 +1288,7 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 
 	if (m_dot1xBackendAuthState != static_cast<int16_t>(backendState))
 	{
-	   sendPollerMsg(_T("      Port backend state changed to %s\r\n"), BACKEND_STATE_TEXT(backendState));
+	   sendPollerMsg(_T("      Port backend state changed to %s"), BACKEND_STATE_TEXT(backendState));
 	   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::paeStatusPoll(%s [%u]): Port backend state changed to %s"),
 	         m_name, m_id, BACKEND_STATE_TEXT(backendState));
 		modified = true;

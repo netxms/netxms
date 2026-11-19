@@ -101,7 +101,7 @@ bool WirelessDomain::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Status poll
  */
-void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId)
+void WirelessDomain::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -113,16 +113,13 @@ void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock(status);
+   pollerLock(status, output);
 
    if (IsShutdownInProgress())
    {
       pollerUnlock();
       return;
    }
-
-   m_pollRequestor = session;
-   m_pollRequestId = requestId;
 
    // Create polling list
    SharedObjectArray<AccessPoint> pollList(getChildList().size(), 16);
@@ -144,7 +141,7 @@ void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint
    SharedString bridgeName = getCustomAttribute(_T("wlcbridge"));
    if (bridgeName.isNull() || bridgeName.isEmpty())
    {
-      sendPollerMsg(_T("Reading access points status from controllers\r\n"));
+      sendPollerMsg(_T("Reading access points status from controllers"));
       HashMap<uint32_t, SNMP_Transport> snmpTransportCache(Ownership::True);
       for(i = 0; i < pollList.size(); i++)
       {
@@ -163,18 +160,18 @@ void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint
             }
             if (snmpTransport != nullptr)
             {
-               ap->statusPollFromController(session, requestId, controller.get(), snmpTransport, nullptr);
+               ap->statusPollFromController(output, controller.get(), snmpTransport, nullptr);
             }
             else
             {
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): cannot create SNMP transport for controller node \"%s\" [%u]"), m_name, m_id, controller->getName(), controller->getId());
-               sendPollerMsg(POLLER_ERROR _T("   Controller for access point %s is not accessible\r\n"), ap->getName());
+               sendPollerMsg(PollOutputLevel::FAILURE, _T("   Controller for access point %s is not accessible"), ap->getName());
             }
          }
          else
          {
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): cannot find controller node for access point \"%s\" [%u]"), m_name, m_id, ap->getName(), ap->getId());
-            sendPollerMsg(POLLER_ERROR _T("   Cannot find controller for access point %s\r\n"), ap->getName());
+            sendPollerMsg(PollOutputLevel::FAILURE, _T("   Cannot find controller for access point %s"), ap->getName());
          }
 
          POLL_CANCELLATION_CHECKPOINT();
@@ -182,7 +179,7 @@ void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint
    }
    else
    {
-      sendPollerMsg(_T("Reading access points status from bridge interface\r\n"));
+      sendPollerMsg(_T("Reading access points status from bridge interface"));
       WirelessControllerBridge *bridge = GetBridgeInterface(bridgeName);
       if (bridge != nullptr)
       {
@@ -192,7 +189,7 @@ void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint
             AccessPoint *ap = pollList.get(i);
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): requesting access point \"%s\" [%u] status from bridge \"%s\""),
                m_name, m_id, ap->getName(), ap->getId(), bridgeName.cstr());
-            ap->statusPollFromController(session, requestId, nullptr, nullptr, bridge);
+            ap->statusPollFromController(output, nullptr, nullptr, bridge);
 
             POLL_CANCELLATION_CHECKPOINT();
          }
@@ -200,11 +197,11 @@ void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint
       else
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("WirelessDomain::statusPoll(%s [%u]): cannot find bridge \"%s\""), m_name, m_id, bridgeName.cstr());
-         sendPollerMsg(POLLER_ERROR _T("   Cannot find wireless controller bridge interface \"%s\"\r\n"), bridgeName.cstr());
+         sendPollerMsg(PollOutputLevel::FAILURE, _T("   Cannot find wireless controller bridge interface \"%s\""), bridgeName.cstr());
       }
    }
 
-   sendPollerMsg(_T("Status poll finished\r\n"));
+   sendPollerMsg(_T("Status poll finished"));
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("WirelessDomain::statusPoll(%s [%u]): poll finished"), m_name, m_id);
 
    pollerUnlock();
@@ -213,7 +210,7 @@ void WirelessDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint
 /**
  * Configuration poll
  */
-void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId)
+void WirelessDomain::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -225,16 +222,13 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock(configuration);
+   pollerLock(configuration, output);
 
    if (IsShutdownInProgress())
    {
       pollerUnlock();
       return;
    }
-
-   m_pollRequestor = session;
-   m_pollRequestId = requestId;
 
    poller->setStatus(_T("access points"));
    ObjectArray<AccessPointInfo> accessPoints(0, 128, Ownership::True);
@@ -245,22 +239,22 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
       unique_ptr<SharedObjectArray<Node>> controllers = getControllers();
 
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): poll started (%d controllers)"), m_name, m_id, controllers->size());
-      sendPollerMsg(POLLER_INFO _T("   %d wireless controllers in domain\r\n"), controllers->size());
+      sendPollerMsg(PollOutputLevel::INFO, _T("   %d wireless controllers in domain"), controllers->size());
       for(int i = 0; i < controllers->size(); i++)
       {
          Node *controller = controllers->get(i);
-         sendPollerMsg(_T("   Reading access point list from wireless controller %s\r\n"), controller->getName());
+         sendPollerMsg(_T("   Reading access point list from wireless controller %s"), controller->getName());
          ObjectArray<AccessPointInfo> *controllerAccessPoints = controller->getAccessPoints();
          if (controllerAccessPoints != nullptr)
          {
-            sendPollerMsg(_T("      %d access points reported\r\n"), controllerAccessPoints->size());
+            sendPollerMsg(_T("      %d access points reported"), controllerAccessPoints->size());
             accessPoints.addAll(*controllerAccessPoints);
             controllerAccessPoints->setOwner(Ownership::False);
             delete controllerAccessPoints;
          }
          else
          {
-            sendPollerMsg(POLLER_ERROR _T("      Cannot retrieve access point list\r\n"));
+            sendPollerMsg(PollOutputLevel::FAILURE, _T("      Cannot retrieve access point list"));
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): cannot read access point list from controller \"%s\" [%u]"),
                m_name, m_id, controller->getName(), controller->getId());
          }
@@ -272,19 +266,19 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
       WirelessControllerBridge *bridge = GetBridgeInterface(bridgeName);
       if (bridge != nullptr)
       {
-         sendPollerMsg(_T("   Reading access point list via bridge interface %s\r\n"), bridgeName.cstr());
+         sendPollerMsg(_T("   Reading access point list via bridge interface %s"), bridgeName.cstr());
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): poll started via bridge \"%s\""), m_name, m_id, bridgeName.cstr());
          ObjectArray<AccessPointInfo> *bridgeAccessPoints = bridge->getAccessPoints(this);
          if (bridgeAccessPoints != nullptr)
          {
-            sendPollerMsg(_T("      %d access points reported\r\n"), bridgeAccessPoints->size());
+            sendPollerMsg(_T("      %d access points reported"), bridgeAccessPoints->size());
             accessPoints.addAll(*bridgeAccessPoints);
             bridgeAccessPoints->setOwner(Ownership::False);
             delete bridgeAccessPoints;
          }
          else
          {
-            sendPollerMsg(POLLER_ERROR _T("      Cannot retrieve access point list\r\n"));
+            sendPollerMsg(PollOutputLevel::FAILURE, _T("      Cannot retrieve access point list"));
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): cannot read access point list from bridge \"%s\""),
                m_name, m_id, bridgeName.cstr());
          }
@@ -292,12 +286,12 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
       else
       {
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): cannot find bridge \"%s\""), m_name, m_id, bridgeName.cstr());
-         sendPollerMsg(POLLER_ERROR _T("   Cannot find wireless controller bridge interface \"%s\"\r\n"), bridgeName.cstr());
+         sendPollerMsg(PollOutputLevel::FAILURE, _T("   Cannot find wireless controller bridge interface \"%s\""), bridgeName.cstr());
       }
    }
 
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): %d access points"), m_name, m_id, accessPoints.size());
-   sendPollerMsg(_T("   %d wireless access points found on all controllers\r\n"), accessPoints.size());
+   sendPollerMsg(_T("   %d wireless access points found on all controllers"), accessPoints.size());
 
    int apCount[3] = { 0, 0, 0 };
    for(int i = 0; i < accessPoints.size(); i++)
@@ -336,7 +330,7 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
          ap = make_shared<AccessPoint>(name.cstr(), info->getIndex(), info->getMacAddr());
          NetObjInsert(ap, true, false);
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::configurationPoll(%s [%u]): created new access point object %s [%u]"), m_name, m_id, ap->getName(), ap->getId());
-         sendPollerMsg(POLLER_INFO _T("      Created new access point %s\r\n"), ap->getName());
+         sendPollerMsg(PollOutputLevel::INFO, _T("      Created new access point %s"), ap->getName());
          newAp = true;
       }
       else
@@ -384,13 +378,13 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
          if ((retentionTime == 0) || ((ap->getGracePeriodStartTime() != 0) && (ap->getGracePeriodStartTime() + retentionTime < time(nullptr))))
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::configurationPoll(%s [%u]): deleting non-existent access point %s [%u]"), m_name, m_id, ap->getName(), ap->getId());
-            sendPollerMsg(POLLER_WARNING _T("      Access point %s deleted\r\n"), ap->getName());
+            sendPollerMsg(PollOutputLevel::WARNING, _T("      Access point %s deleted"), ap->getName());
             ap->deleteObject();
          }
          else if (ap->getGracePeriodStartTime() == 0)
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("WirelessDomain::configurationPoll(%s [%u]): access point %s [%u] disappeared, starting grace period"), m_name, m_id, ap->getName(), ap->getId());
-            sendPollerMsg(POLLER_WARNING _T("      Access point %s is no longer reported by controller\r\n"), ap->getName());
+            sendPollerMsg(PollOutputLevel::WARNING, _T("      Access point %s is no longer reported by controller"), ap->getName());
             ap->markAsDisappeared();
          }
       }
@@ -403,7 +397,7 @@ void WirelessDomain::configurationPoll(PollerInfo *poller, ClientSession *sessio
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"));
 
-   sendPollerMsg(_T("Configuration poll finished\r\n"));
+   sendPollerMsg(_T("Configuration poll finished"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("WirelessDomain::configurationPoll(%s [%u]): poll finished"), m_name, m_id);
 
    lockProperties();

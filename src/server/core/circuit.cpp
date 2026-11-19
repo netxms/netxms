@@ -137,10 +137,10 @@ void Circuit::postLoad()
 /**
  * Perform automatic object binding
  */
-void Circuit::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Circuit::autobindPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(autobind);
+   pollerLock(autobind, output);
 
    if (IsShutdownInProgress())
    {
@@ -148,14 +148,12 @@ void Circuit::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of circuit %s [%u]"), m_name, m_id);
    poller->setStatus(_T("checking objects"));
 
    if (!isAutoBindEnabled())
    {
-      sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      sendPollerMsg(_T("Automatic object binding is disabled"));
       nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of circuit %s [%u])"), m_name, m_id);
       pollerUnlock();
       return;
@@ -175,7 +173,7 @@ void Circuit::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
 
       if ((decision == AutoBindDecision_Bind) && !isDirectChild(iface->getId()))
       {
-         sendPollerMsg(_T("   Binding interface %s\r\n"), iface->getName());
+         sendPollerMsg(_T("   Binding interface %s"), iface->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Circuit::autobindPoll(): binding interface \"%s\" [%u] to circuit \"%s\" [%u]"), iface->getName(), iface->getId(), m_name, m_id);
          if (!linkObjects(self(), iface))
             continue;
@@ -191,7 +189,7 @@ void Circuit::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
       }
       else if ((decision == AutoBindDecision_Unbind) && isDirectChild(iface->getId()))
       {
-         sendPollerMsg(_T("   Removing interface %s\r\n"), iface->getName());
+         sendPollerMsg(_T("   Removing interface %s"), iface->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Circuit::autobindPoll(): removing interface \"%s\" [%u] from circuit \"%s\" [%u]"), iface->getName(), iface->getId(), m_name, m_id);
          unlinkObjects(this, iface.get());
          EventBuilder(EVENT_CIRCUIT_AUTOUNBIND, GetServerEventSourceId())

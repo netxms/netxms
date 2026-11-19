@@ -284,7 +284,7 @@ void Resource::calculateCompoundStatus(bool forcedRecalc)
 /**
  * Status poll
  */
-void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Resource::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -296,7 +296,7 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
    unlockProperties();
 
    poller->setStatus(L"wait for lock");
-   pollerLock(status);
+   pollerLock(status, output);
 
    if (IsShutdownInProgress())
    {
@@ -304,9 +304,7 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
-   sendPollerMsg(L"Starting status poll of resource %s\r\n", m_name);
+   sendPollerMsg(L"Starting status poll of resource %s", m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Starting status poll of resource \"%s\" [%u]", m_name, m_id);
 
    poller->setStatus(L"query state");
@@ -327,16 +325,16 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
             if (m_resourceState != newState || strcmp(m_providerState.c_str(), providerStateBuf))
             {
                updateState(newState, providerStateBuf);
-               sendPollerMsg(L"   Resource state changed to %d (%s)\r\n", newState, providerStateBuf);
+               sendPollerMsg(L"   Resource state changed to %d (%s)", newState, providerStateBuf);
             }
             else
             {
-               sendPollerMsg(L"   Resource state is unchanged (%d, %s)\r\n", newState, providerStateBuf);
+               sendPollerMsg(L"   Resource state is unchanged (%d, %s)", newState, providerStateBuf);
             }
          }
          else
          {
-            sendPollerMsg(POLLER_WARNING L"   Failed to query resource state\r\n");
+            sendPollerMsg(PollOutputLevel::WARNING, L"   Failed to query resource state");
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Failed to query state for resource \"%s\" [%u]", m_name, m_id);
          }
 
@@ -344,12 +342,12 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
       }
       else
       {
-         sendPollerMsg(POLLER_WARNING L"   Cloud connector \"%s\" not found\r\n", connectorName.cstr());
+         sendPollerMsg(PollOutputLevel::WARNING, L"   Cloud connector \"%s\" not found", connectorName.cstr());
       }
    }
    else
    {
-      sendPollerMsg(POLLER_WARNING L"   Owner cloud domain not available\r\n");
+      sendPollerMsg(PollOutputLevel::WARNING, L"   Owner cloud domain not available");
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Owner cloud domain not available for resource \"%s\" [%u]", m_name, m_id);
    }
 
@@ -358,8 +356,8 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
    poller->setStatus(L"hook");
    executeHookScript(L"StatusPoll");
 
-   sendPollerMsg(L"Finished status poll of resource %s\r\n", m_name);
-   sendPollerMsg(L"Resource status after poll is %s\r\n", GetStatusAsText(m_status, true));
+   sendPollerMsg(L"Finished status poll of resource %s", m_name);
+   sendPollerMsg(L"Resource status after poll is %s", GetStatusAsText(m_status, true));
 
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Finished status poll of resource \"%s\" [%u]", m_name, m_id);

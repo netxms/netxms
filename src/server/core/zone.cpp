@@ -748,7 +748,7 @@ bool Zone::lockForStatusPoll()
 /**
  * Do zone health check
  */
-void Zone::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Zone::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    nxlog_debug_tag(DEBUG_TAG_ZONE_PROXY, 6, _T("ZoneHealthCheck(%s [%u]): started"), m_name, m_uin);
 

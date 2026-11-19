@@ -453,18 +453,18 @@ DataCollectionError Sensor::getMetricFromModbus(const TCHAR *metric, TCHAR *buff
 /**
  * Configuration poll: check for MODBUS
  */
-bool Sensor::confPollModbus(uint32_t requestId)
+bool Sensor::confPollModbus()
 {
    shared_ptr<Node> gatewayNode = static_pointer_cast<Node>(FindObjectById(m_gatewayNodeId, OBJECT_NODE));
    if ((gatewayNode == nullptr) || !gatewayNode->isModbusTCPSupported())
    {
-      sendPollerMsg(_T("   Modbus polling is not possible\r\n"));
+      sendPollerMsg(_T("   Modbus polling is not possible"));
       return false;
    }
 
    bool hasChanges = false;
 
-   sendPollerMsg(_T("   Checking Modbus...\r\n"));
+   sendPollerMsg(_T("   Checking Modbus..."));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking Modbus"), m_name);
 
    ModbusTransport *transport = gatewayNode->createModbusTransport(m_modbusUnitId);
@@ -473,7 +473,7 @@ bool Sensor::confPollModbus(uint32_t requestId)
       ModbusOperationStatus status = transport->checkConnection();
       if (status == MODBUS_STATUS_SUCCESS)
       {
-         sendPollerMsg(_T("   Device is Modbus capable\r\n"));
+         sendPollerMsg(_T("   Device is Modbus capable"));
 
          lockProperties();
          m_capabilities |= SC_IS_MODBUS;
@@ -481,7 +481,7 @@ bool Sensor::confPollModbus(uint32_t requestId)
          {
             m_state &= ~SSF_MODBUS_UNREACHABLE;
             PostSystemEvent(EVENT_MODBUS_OK, m_id);
-            sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
+            sendPollerMsg(PollOutputLevel::INFO, _T("   Modbus connectivity restored"));
          }
          unlockProperties();
 
@@ -491,11 +491,11 @@ bool Sensor::confPollModbus(uint32_t requestId)
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): Modbus device identification successfully completed (vendor=\"%s\", product-code=\"%s\", product-name=\"%s\""),
                m_name, deviceIdentification.vendorName, deviceIdentification.productCode, deviceIdentification.productName);
-            sendPollerMsg(_T("   Modbus device identification successfully completed\r\n"));
-            sendPollerMsg(_T("      Vendor: %s\r\n"), deviceIdentification.vendorName);
-            sendPollerMsg(_T("      Product code: %s\r\n"), deviceIdentification.productCode);
-            sendPollerMsg(_T("      Product name: %s\r\n"), deviceIdentification.productName);
-            sendPollerMsg(_T("      Revision: %s\r\n"), deviceIdentification.revision);
+            sendPollerMsg(_T("   Modbus device identification successfully completed"));
+            sendPollerMsg(_T("      Vendor: %s"), deviceIdentification.vendorName);
+            sendPollerMsg(_T("      Product code: %s"), deviceIdentification.productCode);
+            sendPollerMsg(_T("      Product name: %s"), deviceIdentification.productName);
+            sendPollerMsg(_T("      Revision: %s"), deviceIdentification.revision);
 
             lockProperties();
 
@@ -516,20 +516,20 @@ bool Sensor::confPollModbus(uint32_t requestId)
          else
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): cannot get device identification data via Modbus (%s)"), m_name, GetModbusStatusText(status));
-            sendPollerMsg(_T("   Cannot get device identification data via Modbus (%s)\r\n"), GetModbusStatusText(status));
+            sendPollerMsg(_T("   Cannot get device identification data via Modbus (%s)"), GetModbusStatusText(status));
          }
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): device does not respond to Modbus TCP request (%s)"), m_name, GetModbusStatusText(status));
-         sendPollerMsg(_T("   Device does not respond to Modbus TCP request (%s)\r\n"), GetModbusStatusText(status));
+         sendPollerMsg(_T("   Device does not respond to Modbus TCP request (%s)"), GetModbusStatusText(status));
       }
       delete transport;
    }
    else
    {
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): cannot create transport for Modbus"), m_name);
-      sendPollerMsg(_T("   Modbus connection is not possible\r\n"));
+      sendPollerMsg(_T("   Modbus connection is not possible"));
    }
 
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): check for Modbus completed"), m_name);
@@ -539,7 +539,7 @@ bool Sensor::confPollModbus(uint32_t requestId)
 /**
  * Perform configuration poll on node
  */
-void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Sensor::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -551,7 +551,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint3
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock(configuration);
+   pollerLock(configuration, output);
 
    if (IsShutdownInProgress())
    {
@@ -559,13 +559,11 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint3
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Starting configuration poll of sensor \"%s\" [%u] (flags = %08x)"), m_name, m_id, m_flags);
 
    bool hasChanges = false;
 
-   if (confPollModbus(hasChanges))
+   if (confPollModbus())
       hasChanges = true;
 
    // Execute hook script
@@ -578,8 +576,8 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint3
    if (ConfigReadBoolean(_T("Objects.Sensors.ContainerAutoBind"), false))
       updateContainerMembership();
 
-   sendPollerMsg(_T("Finished configuration poll of sensor %s\r\n"), m_name);
-   sendPollerMsg(_T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
+   sendPollerMsg(_T("Finished configuration poll of sensor %s"), m_name);
+   sendPollerMsg(_T("Sensor configuration was%schanged after poll"), hasChanges ? _T(" ") : _T(" not "));
 
    UpdateAssetLinkage(this);
    autoFillAssetProperties();
@@ -603,7 +601,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint3
 /**
  * Perform status poll on sensor
  */
-void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Sensor::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -615,7 +613,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock(status);
+   pollerLock(status, output);
 
    if (IsShutdownInProgress())
    {
@@ -623,9 +621,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
-   sendPollerMsg(_T("Starting status poll of sensor %s\r\n"), m_name);
+   sendPollerMsg(_T("Starting status poll of sensor %s"), m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Starting status poll of sensor \"%s\" [%u]"), m_name, m_id);
 
    uint32_t prevState = m_state;
@@ -635,7 +631,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
    {
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): checking Modbus"), m_name);
       poller->setStatus(_T("check Modbus"));
-      sendPollerMsg(_T("Checking Modbus connectivity\r\n"));
+      sendPollerMsg(_T("Checking Modbus connectivity"));
 
       ModbusOperationStatus status = MODBUS_STATUS_COMM_FAILURE;
       shared_ptr<Node> gatewayNode = static_pointer_cast<Node>(FindObjectById(m_gatewayNodeId, OBJECT_NODE));
@@ -647,13 +643,13 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
          {
             m_state &= ~SSF_MODBUS_UNREACHABLE;
             PostSystemEvent(EVENT_MODBUS_OK, m_id);
-            sendPollerMsg(POLLER_INFO _T("Modbus connectivity restored\r\n"));
+            sendPollerMsg(PollOutputLevel::INFO, _T("Modbus connectivity restored"));
          }
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Modbus is unreachable (%s)"), m_name, GetModbusStatusText(status));
-         sendPollerMsg(POLLER_ERROR _T("Cannot connect to device via Modbus (%s)\r\n"), GetModbusStatusText(status));
+         sendPollerMsg(PollOutputLevel::FAILURE, _T("Cannot connect to device via Modbus (%s)"), GetModbusStatusText(status));
          if (!(m_state & SSF_MODBUS_UNREACHABLE))
          {
             m_state |= SSF_MODBUS_UNREACHABLE;
@@ -675,8 +671,8 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
       setModified(MODIFY_SENSOR_PROPERTIES);
    unlockProperties();
 
-   sendPollerMsg(L"Finished status poll of sensor %s\r\n", m_name);
-   sendPollerMsg(L"Sensor status after poll is %s\r\n", GetStatusAsText(m_status, true));
+   sendPollerMsg(L"Finished status poll of sensor %s", m_name);
+   sendPollerMsg(L"Sensor status after poll is %s", GetStatusAsText(m_status, true));
 
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Finished status poll of sensor \"%s\" [%u]", m_name, m_id);

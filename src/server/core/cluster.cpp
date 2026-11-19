@@ -515,7 +515,7 @@ bool Cluster::isVirtualAddr(const InetAddress& addr)
 /**
  * Configuration poll
  */
-void Cluster::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId)
+void Cluster::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -527,16 +527,13 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *session, uint
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock(configuration);
+   pollerLock(configuration, output);
 
    if (IsShutdownInProgress())
    {
       pollerUnlock();
       return;
    }
-
-   m_pollRequestor = session;
-   m_pollRequestId = requestId;
 
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"));
@@ -549,7 +546,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *session, uint
    if (ConfigReadBoolean(_T("Objects.Clusters.ContainerAutoBind"), false))
       updateContainerMembership();
 
-   sendPollerMsg(_T("Bind cluster to subnets\r\n"));
+   sendPollerMsg(_T("Bind cluster to subnets"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ClusterConfPoll(%s): Bind cluster to subnets"), m_name);
    readLockChildList();
    HashSet<uint32_t> parentIds;
@@ -572,7 +569,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *session, uint
    {
       linkObjects(parent, self());
       parent->calculateCompoundStatus();
-      sendPollerMsg(_T("   Bind to subnet %s\r\n"), parent->getName());
+      sendPollerMsg(_T("   Bind to subnet %s"), parent->getName());
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ClusterConfPoll(%s): bind cluster %d \"%s\" to subnet %d \"%s\""),
             m_name, m_id, m_name, parent->getId(), parent->getName());
    }
@@ -585,13 +582,13 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *session, uint
       {
          unlinkObjects(parent.get(), this);
          parent->calculateCompoundStatus();
-         sendPollerMsg(_T("   Unbind from subnet %s\r\n"), parent->getName());
+         sendPollerMsg(_T("   Unbind from subnet %s"), parent->getName());
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ClusterConfPoll(%s): unbind cluster %d \"%s\" from subnet %d \"%s\""),
                m_name, m_id, m_name, parent->getId(), parent->getName());
       }
    }
 
-   sendPollerMsg(_T("Configuration poll finished\r\n"));
+   sendPollerMsg(_T("Configuration poll finished"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ClusterConfPoll(%s): finished"), m_name);
 
    lockProperties();
@@ -605,7 +602,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *session, uint
 /**
  * Status poll
  */
-void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t requestId)
+void Cluster::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -617,7 +614,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock(status);
+   pollerLock(status, output);
 
    if (IsShutdownInProgress())
    {
@@ -643,17 +640,15 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
    unlockChildList();
 
 	// Perform status poll on all member nodes
-   m_pollRequestor = session;
-   m_pollRequestId = requestId;
 
-   sendPollerMsg(_T("Polling member nodes\r\n"));
+   sendPollerMsg(_T("Polling member nodes"));
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): Polling member nodes"), m_name);
 	bool allDown = true;
 	for(i = 0; i < pollList.size(); i++)
 	{
 		NetObj *object = pollList.get(i);
 		poller->setStatus(_T("child poll"));
-		object->getAsPollable()->doStatusPoll(poller, session, requestId);
+		object->getAsPollable()->doStatusPoll(poller, output);
 		if ((object->getObjectClass() == OBJECT_NODE) && !static_cast<Node*>(object)->isDown())
 			allDown = false;
 	}
@@ -688,7 +683,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
       memset(ambiguousResource, 0, m_dwNumResources * sizeof(bool));
 
       poller->setStatus(_T("resource poll"));
-      sendPollerMsg(_T("Polling resources\r\n"));
+      sendPollerMsg(_T("Polling resources"));
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): polling resources"), m_name);
       for(i = 0; i < pollList.size(); i++)
       {
@@ -753,7 +748,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
             }
             else
             {
-               sendPollerMsg(_T("Cannot get interface list from %s\r\n"), node->getName());
+               sendPollerMsg(_T("Cannot get interface list from %s"), node->getName());
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): Cannot get interface list from %s"),
                         m_name, node->getName());
             }
@@ -769,14 +764,14 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
             // Resource IP found on multiple nodes - transient failover state, keep current owner
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): Resource \"%s\" found on multiple nodes, keeping current owner"),
                      m_name, m_pResourceList[k].szName);
-            sendPollerMsg(_T("Resource %s found on multiple nodes (possible failover in progress)\r\n"), m_pResourceList[k].szName);
+            sendPollerMsg(_T("Resource %s found on multiple nodes (possible failover in progress)"), m_pResourceList[k].szName);
          }
          else if (detectedOwner[k] != 0)
          {
             // Resource found on exactly one node
             if (m_pResourceList[k].dwCurrOwner != detectedOwner[k])
             {
-               sendPollerMsg(_T("Resource %s owner changed\r\n"), m_pResourceList[k].szName);
+               sendPollerMsg(_T("Resource %s owner changed"), m_pResourceList[k].szName);
                nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): Resource \"%s\" owner changed"), m_name, m_pResourceList[k].szName);
 
                if (m_pResourceList[k].dwCurrOwner == 0)
@@ -842,7 +837,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t re
 		setModified(modified);
 	unlockProperties();
 
-   sendPollerMsg(_T("Status poll finished\r\n"));
+   sendPollerMsg(_T("Status poll finished"));
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("ClusterStatusPoll(%s): finished"), m_name);
 
    pollerUnlock();
@@ -1100,10 +1095,10 @@ void Cluster::removeNode(const shared_ptr<Node>& node)
 /**
  * Perform automatic object binding
  */
-void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Cluster::autobindPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(autobind);
+   pollerLock(autobind, output);
 
    if (IsShutdownInProgress())
    {
@@ -1111,14 +1106,12 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of cluster %s [%u]"), m_name, m_id);
    poller->setStatus(_T("checking objects"));
 
    if (!isAutoBindEnabled())
    {
-      sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      sendPollerMsg(_T("Automatic object binding is disabled"));
       nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of cluster %s [%u])"), m_name, m_id);
       pollerUnlock();
       return;
@@ -1138,7 +1131,7 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
 
       if ((decision == AutoBindDecision_Bind) && !isDirectChild(node->getId()))
       {
-         sendPollerMsg(_T("   Adding node %s\r\n"), node->getName());
+         sendPollerMsg(_T("   Adding node %s"), node->getName());
          if (addNode(static_pointer_cast<Node>(node)))
          {
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): binding node \"%s\" [%u] to cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
@@ -1153,13 +1146,13 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          }
          else
          {
-            sendPollerMsg(_T("   Node %s not added - zone mismatch or node is being deleted\r\n"), node->getName());
+            sendPollerMsg(_T("   Node %s not added - zone mismatch or node is being deleted"), node->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): node \"%s\" [%u] not added to cluster \"%s\" [%u] (zone mismatch or node is being deleted)"), node->getName(), node->getId(), m_name, m_id);
          }
       }
       else if ((decision == AutoBindDecision_Unbind) && isDirectChild(node->getId()))
       {
-         sendPollerMsg(_T("   Removing node %s\r\n"), node->getName());
+         sendPollerMsg(_T("   Removing node %s"), node->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): removing node \"%s\" [%u] from cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
 
          removeNode(static_pointer_cast<Node>(node));

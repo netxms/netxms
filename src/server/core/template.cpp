@@ -1022,7 +1022,7 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
          }
       }
 
-      node->sendPollerMsg(_T("      Scheduling deployment policy %s from template %s\r\n"), policy->getName(), m_name);
+      node->sendPollerMsg(_T("      Scheduling deployment policy %s from template %s"), policy->getName(), m_name);
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), m_name, policy->getName());
       ThreadPoolExecuteSerialized(g_mainThreadPool, key, policy, &GenericAgentPolicy::deploy, data);
    }
@@ -1073,10 +1073,10 @@ shared_ptr<Template> Template::findExclusionGroupConflict(const NetObj& target) 
 /**
  * Perform automatic object binding
  */
-void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Template::autobindPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(autobind);
+   pollerLock(autobind, output);
 
    if (IsShutdownInProgress())
    {
@@ -1084,14 +1084,12 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of template %s [%u]"), m_name, m_id);
    poller->setStatus(_T("checking objects"));
 
    if (!isAutoBindEnabled())
    {
-      sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      sendPollerMsg(_T("Automatic object binding is disabled"));
       nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of template %s [%u])"), m_name, m_id);
       pollerUnlock();
       return;
@@ -1115,7 +1113,7 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
          _sntprintf(key, 64, _T("Delete.Template.%u.NetObj.%u"), m_id, object->getId());
          if (DeleteScheduledTasksByKey(key) > 0)
          {
-            sendPollerMsg(_T("   Pending removal from \"%s\" cancelled\r\n"), object->getName());
+            sendPollerMsg(_T("   Pending removal from \"%s\" cancelled"), object->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): pending removal of template \"%s\" [%u] from object \"%s\" [%u] cancelled"),
                   m_name, m_id, object->getName(), object->getId());
          }
@@ -1127,13 +1125,13 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
             if (conflictingTemplate != nullptr)
             {
                SharedString exclusionGroup = getExclusionGroup();
-               sendPollerMsg(_T("   Skipping \"%s\" - template \"%s\" from the same exclusion group \"%s\" already applied\r\n"), object->getName(), conflictingTemplate->getName(), exclusionGroup.cstr());
+               sendPollerMsg(_T("   Skipping \"%s\" - template \"%s\" from the same exclusion group \"%s\" already applied"), object->getName(), conflictingTemplate->getName(), exclusionGroup.cstr());
                nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): skipping binding of template \"%s\" [%u] to object \"%s\" [%u] - template \"%s\" [%u] from exclusion group \"%s\" already applied"),
                      m_name, m_id, object->getName(), object->getId(), conflictingTemplate->getName(), conflictingTemplate->getId(), exclusionGroup.cstr());
                continue;
             }
 
-            sendPollerMsg(_T("   Applying to \"%s\"\r\n"), object->getName());
+            sendPollerMsg(_T("   Applying to \"%s\""), object->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): binding object \"%s\" [%u] to template \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
             if (!applyToTarget(static_pointer_cast<DataCollectionTarget>(object)))
                continue;

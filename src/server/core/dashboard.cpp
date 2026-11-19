@@ -758,10 +758,10 @@ json_t *Dashboard::toJson(uint32_t flags)
 /**
  * Perform automatic assignment to objects
  */
-void Dashboard::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Dashboard::autobindPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(autobind);
+   pollerLock(autobind, output);
 
    if (IsShutdownInProgress())
    {
@@ -769,14 +769,12 @@ void Dashboard::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of dashboard %s [%u]"), m_name, m_id);
    poller->setStatus(_T("checking objects"));
 
    if (!isAutoBindEnabled())
    {
-      sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      sendPollerMsg(_T("Automatic object binding is disabled"));
       nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of dashboard %s [%u])"), m_name, m_id);
       pollerUnlock();
       return;
@@ -806,7 +804,7 @@ void Dashboard::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
          {
             StringBuffer cn(object->getObjectClassName());
             cn.toLowercase();
-            sendPollerMsg(_T("   Adding to %s %s\r\n"), cn.cstr(), object->getName());
+            sendPollerMsg(_T("   Adding to %s %s"), cn.cstr(), object->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Dashboard::autobindPoll(): adding dashboard \"%s\" [%u] to %s \"%s\" [%u]"), m_name, m_id, cn.cstr(), object->getName(), object->getId());
          }
       }
@@ -817,7 +815,7 @@ void Dashboard::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
             StringBuffer cn(object->getObjectClassName());
             cn.toLowercase();
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Dashboard::autobindPoll(): removing dashboard \"%s\" [%u] from %s \"%s\" [%u]"), m_name, m_id, cn.cstr(), object->getName(), object->getId());
-            sendPollerMsg(_T("   Removing from %s %s\r\n"), cn.cstr(), object->getName());
+            sendPollerMsg(_T("   Removing from %s %s"), cn.cstr(), object->getName());
          }
       }
    }
@@ -1002,10 +1000,10 @@ json_t *DashboardTemplate::toJson(uint32_t flags)
 /**
  * Perform automatic assignment to objects
  */
-void DashboardTemplate::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void DashboardTemplate::autobindPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(autobind);
+   pollerLock(autobind, output);
 
    if (IsShutdownInProgress())
    {
@@ -1013,14 +1011,12 @@ void DashboardTemplate::autobindPoll(PollerInfo *poller, ClientSession *session,
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of dashboard template %s [%u]"), m_name, m_id);
    poller->setStatus(_T("checking objects"));
 
    if (!isAutoBindEnabled())
    {
-      sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      sendPollerMsg(_T("Automatic object binding is disabled"));
       nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of dashboard template %s [%u])"), m_name, m_id);
       pollerUnlock();
       return;
@@ -1064,7 +1060,7 @@ void DashboardTemplate::autobindPoll(PollerInfo *poller, ClientSession *session,
             }
             else if (!objectName.equals(dashboard->getName()))
             {
-               sendPollerMsg(_T("   Renaming dashboard instance %s to %s for object %s\r\n"), dashboard->getName(), objectName.cstr(), object->getName());
+               sendPollerMsg(_T("   Renaming dashboard instance %s to %s for object %s"), dashboard->getName(), objectName.cstr(), object->getName());
                nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DashboardTemplate::autobindPoll(): renaming dashboard instance \"%s\" [%u] to \"%s\" for object \"%s\" [%u]"), dashboard->getName(), dashboard->getId(), objectName.cstr(), object->getName(), object->getId());
                dashboard->setName(objectName);
             }
@@ -1086,7 +1082,7 @@ void DashboardTemplate::autobindPoll(PollerInfo *poller, ClientSession *session,
             m_instanceDashboards[object->getId()] = dashboard->getId();
             modified = true;
 
-            sendPollerMsg(_T("   Creating dashboard instance %s for object %s\r\n"), objectName.cstr(), object->getName());
+            sendPollerMsg(_T("   Creating dashboard instance %s for object %s"), objectName.cstr(), object->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DashboardTemplate::autobindPoll(): creating dashboard instance \"%s\" for object \"%s\" [%u]"), objectName.cstr(), object->getName(), object->getId());
          }
       }
@@ -1099,7 +1095,7 @@ void DashboardTemplate::autobindPoll(PollerInfo *poller, ClientSession *session,
             shared_ptr<Dashboard> dashboard = static_pointer_cast<Dashboard>(FindObjectById(dashboardId, OBJECT_DASHBOARD));
             if (dashboard != nullptr)
             {
-               sendPollerMsg(_T("   Deleting dashboard instance %s for object %s\r\n"), dashboard->getName(), object->getName());
+               sendPollerMsg(_T("   Deleting dashboard instance %s for object %s"), dashboard->getName(), object->getName());
                nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DashboardTemplate::autobindPoll(): deleting dashboard instance \"%s\" [%u] for object \"%s\" [%u]"), dashboard->getName(), dashboard->getId(), object->getName(), object->getId());
                ThreadPoolExecute(g_mainThreadPool, [dashboard] () { dashboard->deleteObject(); });
             }

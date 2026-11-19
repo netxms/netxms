@@ -145,10 +145,10 @@ void DataCollectionContainer::postLoad()
 /**
  * Perform automatic object binding
  */
-void DataCollectionContainer::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void DataCollectionContainer::autobindPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(autobind);
+   pollerLock(autobind, output);
 
    if (IsShutdownInProgress())
    {
@@ -156,8 +156,6 @@ void DataCollectionContainer::autobindPoll(PollerInfo *poller, ClientSession *se
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of %s %s [%u]"), getObjectClassName(), m_name, m_id);
    poller->setStatus(_T("checking objects"));
 

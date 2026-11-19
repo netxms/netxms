@@ -8775,142 +8775,81 @@ void ClientSession::sendAllActions(const NXCPMessage& request)
 }
 
 /**
+ * Poll output writer that sends poll output to client as CMD_POLLING_INFO messages
+ */
+class ClientSessionPollOutputWriter : public PollOutputWriter
+{
+private:
+   ClientSession *m_session;
+   uint32_t m_requestId;
+
+public:
+   ClientSessionPollOutputWriter(ClientSession *session, uint32_t requestId)
+   {
+      m_session = session;
+      m_requestId = requestId;
+   }
+
+   virtual void write(PollOutputLevel level, const wchar_t *text) override;
+};
+
+/**
+ * Send poll output message to client. Client expects message level as marker character 0x7F followed by
+ * level code at the beginning of the text, and line terminator at the end.
+ */
+void ClientSessionPollOutputWriter::write(PollOutputLevel level, const wchar_t *text)
+{
+   StringBuffer line;
+   switch(level)
+   {
+      case PollOutputLevel::INFO:
+         line.append(L'\x7F');
+         line.append(L'i');
+         break;
+      case PollOutputLevel::WARNING:
+         line.append(L'\x7F');
+         line.append(L'w');
+         break;
+      case PollOutputLevel::FAILURE:
+         line.append(L'\x7F');
+         line.append(L'e');
+         break;
+      default:
+         break;
+   }
+   line.append(text);
+   line.append(L"\r\n");
+
+   NXCPMessage msg(CMD_POLLING_INFO, m_requestId);
+   msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
+   msg.setField(VID_POLLER_MESSAGE, line);
+   m_session->sendMessage(msg);
+}
+
+/**
  * Perform a forced object poll
  */
 void ClientSession::forcedObjectPoll(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   ClientSessionPollOutputWriter output(this, request.getId());
 
-   bool isValidPoll = false;
    int pollType = request.getFieldAsUInt16(VID_POLL_TYPE);
-
-   // Find object to be polled
-   Pollable *pollableObject;
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if (object != nullptr)
-   {
-      pollableObject = object->getAsPollable();
-      if (pollableObject != nullptr)
-      {
-         switch(pollType)
-         {
-            case POLL_AUTOBIND:
-               isValidPoll = pollableObject->isAutobindPollAvailable();
-               break;
-            case POLL_CONFIGURATION_WITH_RESET:
-               isValidPoll = (pollableObject->isConfigurationPollAvailable() && object->getObjectClass() == OBJECT_NODE);
-               break;
-            case POLL_CONFIGURATION:
-               isValidPoll = pollableObject->isConfigurationPollAvailable();
-               break;
-            case POLL_DISCOVERY:
-               isValidPoll = pollableObject->isDiscoveryPollAvailable();
-               break;
-            case POLL_INSTANCE_DISCOVERY:
-               isValidPoll = pollableObject->isInstanceDiscoveryPollAvailable();
-               break;
-            case POLL_INTERFACE_NAMES:
-               isValidPoll = (object->getObjectClass() == OBJECT_NODE);
-               break;
-            case POLL_MAP_UPDATE:
-               isValidPoll = pollableObject->isMapUpdatePollAvailable();
-               break;
-            case POLL_ROUTING_TABLE:
-               isValidPoll = pollableObject->isRoutingTablePollAvailable();
-               break;
-            case POLL_STATUS:
-               isValidPoll = pollableObject->isStatusPollAvailable();
-               break;
-            case POLL_TOPOLOGY:
-               isValidPoll = pollableObject->isTopologyPollAvailable();
-               break;
-         }
-      }
-      if (isValidPoll)
-      {
-         // Check access rights
-         if (((pollType == POLL_CONFIGURATION_WITH_RESET) && object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)) ||
-               ((pollType != POLL_CONFIGURATION_WITH_RESET) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
-         {
-            sendPollerMsg(request.getId(), _T("Poll request accepted, waiting for outstanding polling requests to complete...\r\n"));
-            response.setField(VID_RCC, RCC_SUCCESS);
-         }
-         else
-         {
-            isValidPoll = false;
-            response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         }
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-      }
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
-
+   uint32_t rcc = (object != nullptr) ? ValidateForcedPoll(*object, pollType, m_userId) : RCC_INVALID_OBJECT_ID;
+   if (rcc == RCC_SUCCESS)
+      output.write(PollOutputLevel::NORMAL, L"Poll request accepted, waiting for outstanding polling requests to complete...");
+   response.setField(VID_RCC, rcc);
    sendMessage(response);
 
-   if (isValidPoll)
+   if (rcc == RCC_SUCCESS)
    {
-      switch(pollType)
-      {
-         case POLL_STATUS:
-            pollableObject->doForcedStatusPoll(RegisterPoller(PollerType::STATUS, object), this, request.getId());
-            break;
-         case POLL_CONFIGURATION_WITH_RESET:
-            if (object->getObjectClass() == OBJECT_NODE)
-               static_cast<Node&>(*object).setRecheckCapsFlag();
-            // intentionally no break here
-         case POLL_CONFIGURATION:
-            pollableObject->doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, object), this, request.getId());
-            break;
-         case POLL_INSTANCE_DISCOVERY:
-            pollableObject->doForcedInstanceDiscoveryPoll(RegisterPoller(PollerType::INSTANCE_DISCOVERY, object), this, request.getId());
-            break;
-         case POLL_TOPOLOGY:
-            pollableObject->doForcedTopologyPoll(RegisterPoller(PollerType::TOPOLOGY, object), this, request.getId());
-            break;
-         case POLL_ROUTING_TABLE:
-            pollableObject->doForcedRoutingTablePoll(RegisterPoller(PollerType::ROUTING_TABLE, object), this, request.getId());
-            break;
-         case POLL_DISCOVERY:
-            pollableObject->doForcedDiscoveryPoll(RegisterPoller(PollerType::DISCOVERY, object), this, request.getId());
-            break;
-         case POLL_AUTOBIND:
-            pollableObject->doForcedAutobindPoll(RegisterPoller(PollerType::AUTOBIND, object), this, request.getId());
-            break;
-         case POLL_MAP_UPDATE:
-            pollableObject->doForcedMapUpdatePoll(RegisterPoller(PollerType::MAP_UPDATE, object), this, request.getId());
-            break;
-         case POLL_INTERFACE_NAMES:
-            if (object->getObjectClass() == OBJECT_NODE)
-            {
-               static_cast<Node&>(*object).updateInterfaceNames(this, request.getId());
-            }
-            break;
-         default:
-            sendPollerMsg(request.getId(), _T("Invalid poll type requested\r\n"));
-            break;
-      }
+      ExecuteForcedPoll(object, pollType, &output);
 
       NXCPMessage msg(CMD_POLLING_INFO, request.getId());
       msg.setField(VID_RCC, RCC_SUCCESS);
       sendMessage(msg);
    }
-}
-
-/**
- * Send message from poller to client
- */
-void ClientSession::sendPollerMsg(uint32_t requestId, const wchar_t *text)
-{
-   NXCPMessage msg(CMD_POLLING_INFO, requestId);
-   msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
-   msg.setField(VID_POLLER_MESSAGE, text);
-   sendMessage(msg);
 }
 
 /**

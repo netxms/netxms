@@ -152,13 +152,6 @@ bool SaveFirstFreeDCIId(DB_HANDLE hdb);
 #define DEBUG_TAG_VNC               _T("vnc")
 
 /**
- * Prefixes for poller messages
- */
-#define POLLER_ERROR    _T("\x7F") _T("e")
-#define POLLER_WARNING  _T("\x7Fw")
-#define POLLER_INFO     _T("\x7Fi")
-
-/**
  * Exit codes for console commands
  */
 #define CMD_EXIT_CONTINUE        0
@@ -1119,7 +1112,6 @@ public:
       return sendMessage(*msg);
    }
    void sendRawMessage(NXCP_MESSAGE *msg);
-   void sendPollerMsg(uint32_t requestIf, const wchar_t *text);
 	bool sendFile(const TCHAR *file, uint32_t requestId, off64_t offset, bool allowCompression = true);
 	bool sendFile(std::istream &stream, uint32_t requestId, bool allowCompression = true);
 

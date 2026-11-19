@@ -392,7 +392,7 @@ void BusinessService::changeState(int newState)
    int prevState = m_serviceState;
    m_serviceState = newState;
 
-   sendPollerMsg(_T("State of business service changed from %s to %s\r\n"), GetStatusAsText(prevState, true), GetStatusAsText(m_serviceState, true));
+   sendPollerMsg(_T("State of business service changed from %s to %s"), GetStatusAsText(prevState, true), GetStatusAsText(m_serviceState, true));
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): state of business service changed from %s to %s"),
          m_name, m_id, GetStatusAsText(prevState, true), GetStatusAsText(m_serviceState, true));
    if (m_serviceState > prevState)
@@ -485,25 +485,19 @@ void BusinessService::onChildStateChange()
 /**
  * Status poll
  */
-void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void BusinessService::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
-
    if (IsShutdownInProgress())
-   {
-      sendPollerMsg(_T("Server shutdown in progress, poll canceled \r\n"));
       return;
-   }
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock(status);
+   pollerLock(status, output);
 
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll started"), m_name, m_id);
-   sendPollerMsg(_T("Starting status poll of business service %s\r\n"), m_name);
+   sendPollerMsg(_T("Starting status poll of business service %s"), m_name);
 
    poller->setStatus(_T("executing checks"));
-   sendPollerMsg(_T("Executing business service checks\r\n"));
+   sendPollerMsg(_T("Executing business service checks"));
 
    int mostCriticalStatus = STATUS_NORMAL;
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = getChecks();
@@ -513,7 +507,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
       SharedString checkDescription = check->getDescription();
 
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("BusinessService::statusPoll(%s [%u]): executing check %s [%u]"), m_name, m_id, checkDescription.cstr(), check->getId());
-      sendPollerMsg(_T("   Executing business service check \"%s\"\r\n"), checkDescription.cstr());
+      sendPollerMsg(_T("   Executing business service check \"%s\""), checkDescription.cstr());
       int oldCheckStatus = check->getStatus();
       int newCheckStatus = check->execute(data);
 
@@ -525,7 +519,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): status of check %s [%u] changed from %s to %s"),
                m_name, m_id, checkDescription.cstr(), check->getId(), GetStatusAsText(oldCheckStatus, true), GetStatusAsText(newCheckStatus, true));
-         sendPollerMsg(_T("   Status of business service check \"%s\" changed from %s to %s\r\n"), checkDescription.cstr(), GetStatusAsText(oldCheckStatus, true), GetStatusAsText(newCheckStatus, true));
+         sendPollerMsg(_T("   Status of business service check \"%s\" changed from %s to %s"), checkDescription.cstr(), GetStatusAsText(oldCheckStatus, true), GetStatusAsText(newCheckStatus, true));
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
       if (newCheckStatus > mostCriticalStatus)
@@ -533,7 +527,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
          mostCriticalStatus = newCheckStatus;
       }
    }
-   sendPollerMsg(_T("All business service checks executed\r\n"));
+   sendPollerMsg(_T("All business service checks executed"));
 
    // Include status of child services into calculation
    if (mostCriticalStatus != STATUS_CRITICAL)
@@ -547,7 +541,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
    calculateCompoundStatus();
 
    lockProperties();
-   sendPollerMsg(_T("Finished status poll of business service %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished status poll of business service %s"), m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll finished"), m_name, m_id);
    unlockProperties();
 
@@ -602,26 +596,21 @@ void BusinessService::addChildTicket(DB_STATEMENT hStmt, const shared_ptr<Busine
 /**
  * Configuration poll
  */
-void BusinessService::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void BusinessService::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
 {
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
-
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::configurationPoll(%s): started"), m_name);
-   sendPollerMsg(_T("Configuration poll started\r\n"));
 
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
    {
       m_configurationPollState.complete(0);
-      sendPollerMsg(_T("Server shutdown in progress, poll canceled \r\n"));
       unlockProperties();
       return;
    }
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock(configuration);
+   pollerLock(configuration, output);
 
    if (IsShutdownInProgress())
    {
@@ -629,10 +618,12 @@ void BusinessService::configurationPoll(PollerInfo *poller, ClientSession *sessi
       return;
    }
 
+   sendPollerMsg(_T("Configuration poll started"));
+
    validateAutomaticObjectChecks();
    validateAutomaticDCIChecks();
 
-   sendPollerMsg(_T("Configuration poll finished\r\n"));
+   sendPollerMsg(_T("Configuration poll finished"));
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::configurationPoll(%s): finished"), m_name);
 
    pollerUnlock();
@@ -645,12 +636,12 @@ void BusinessService::validateAutomaticObjectChecks()
 {
    if (!isAutoBindEnabled(0))
    {
-      sendPollerMsg(_T("Automatic creation of object based checks is disabled\r\n"));
+      sendPollerMsg(_T("Automatic creation of object based checks is disabled"));
       return;
    }
 
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): validating object based checks"), m_name);
-   sendPollerMsg(_T("Validating automatically created object based checks\r\n"));
+   sendPollerMsg(_T("Validating automatically created object based checks"));
 
    // Build class filter
    TCHAR buffer[1024];
@@ -697,7 +688,7 @@ void BusinessService::validateAutomaticObjectChecks()
       {
          nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): object check %s [%u] deleted"),
                   m_name, selectedCheck->getDescription().cstr(), selectedCheck->getId());
-         sendPollerMsg(_T("   Object based check \"%s\" deleted\r\n"), selectedCheck->getDescription().cstr());
+         sendPollerMsg(_T("   Object based check \"%s\" deleted"), selectedCheck->getDescription().cstr());
          deleteCheck(selectedCheck->getId());
       }
       else if ((selectedCheck == nullptr) && (decision == AutoBindDecision_Bind))
@@ -710,7 +701,7 @@ void BusinessService::validateAutomaticObjectChecks()
          checksUnlock();
          setModified(MODIFY_BIZSVC_CHECKS, false);
          nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): object check %s [%u] created"), m_name, checkName, check->getId());
-         sendPollerMsg(_T("   Object based check \"%s\" created\r\n"), checkName);
+         sendPollerMsg(_T("   Object based check \"%s\" created"), checkName);
          NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
       }
    }
@@ -724,12 +715,12 @@ void BusinessService::validateAutomaticDCIChecks()
 {
    if (!isAutoBindEnabled(1))
    {
-      sendPollerMsg(_T("Automatic creation of DCI based checks is disabled\r\n"));
+      sendPollerMsg(_T("Automatic creation of DCI based checks is disabled"));
       return;
    }
 
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): validating DCI based checks"), m_name);
-   sendPollerMsg(_T("Validating automatically created DCI based checks\r\n"));
+   sendPollerMsg(_T("Validating automatically created DCI based checks"));
    NXSL_VM *cachedFilterVM = nullptr;
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
    for (int i = 0; i < objects->size(); i++)
@@ -760,7 +751,7 @@ void BusinessService::validateAutomaticDCIChecks()
          {
             nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): DCI check %s [%u] deleted"),
                      m_name, selectedCheck->getDescription().cstr(), selectedCheck->getId());
-            sendPollerMsg(_T("   DCI based check \"%s\" deleted\r\n"), selectedCheck->getDescription().cstr());
+            sendPollerMsg(_T("   DCI based check \"%s\" deleted"), selectedCheck->getDescription().cstr());
             deleteCheck(selectedCheck->getId());
          }
          else if ((selectedCheck == nullptr) && (decision == AutoBindDecision_Bind))
@@ -773,7 +764,7 @@ void BusinessService::validateAutomaticDCIChecks()
             checksUnlock();
             setModified(MODIFY_BIZSVC_CHECKS, false);
             nxlog_debug_tag(DEBUG_TAG_BIZSVC, 6, _T("BusinessService::validateAutomaticObjectChecks(%s): DCI check %s [%u] created"), m_name, checkDescription, check->getId());
-            sendPollerMsg(_T("   DCI based check \"%s\" created\r\n"), checkDescription);
+            sendPollerMsg(_T("   DCI based check \"%s\" created"), checkDescription);
             NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
          }
       }

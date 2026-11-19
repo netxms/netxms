@@ -515,7 +515,7 @@ void AutoBindTarget::runContainerAutoBindPoll()
 {
    if (!isAutoBindEnabled())
    {
-      m_this->sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      m_this->sendPollerMsg(_T("Automatic object binding is disabled"));
       return;
    }
 
@@ -537,14 +537,14 @@ void AutoBindTarget::runContainerAutoBindPoll()
          uint32_t rcc = ValidateObjectBinding(*object, *m_this);
          if (rcc != RCC_SUCCESS)
          {
-            m_this->sendPollerMsg(_T("   Cannot bind object %s (%s)\r\n"), object->getName(),
+            m_this->sendPollerMsg(_T("   Cannot bind object %s (%s)"), object->getName(),
                   (rcc == RCC_OBJECT_HIERARCHY_VIOLATION) ? _T("object hierarchy violation") : _T("incompatible object class"));
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("AutoBindTarget::runContainerAutoBindPoll(): cannot bind object \"%s\" [%u] to %s \"%s\" [%u] (RCC=%u)"),
                   object->getName(), object->getId(), className, m_this->getName(), m_this->getId(), rcc);
             continue;
          }
 
-         m_this->sendPollerMsg(_T("   Binding object %s\r\n"), object->getName());
+         m_this->sendPollerMsg(_T("   Binding object %s"), object->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("AutoBindTarget::runContainerAutoBindPoll(): binding object \"%s\" [%u] to %s \"%s\" [%u]"),
                object->getName(), object->getId(), className, m_this->getName(), m_this->getId());
          if (!NetObj::linkObjects(m_this->self(), object))
@@ -559,7 +559,7 @@ void AutoBindTarget::runContainerAutoBindPoll()
       }
       else if ((decision == AutoBindDecision_Unbind) && m_this->isDirectChild(object->getId()))
       {
-         m_this->sendPollerMsg(_T("   Removing object %s\r\n"), object->getName());
+         m_this->sendPollerMsg(_T("   Removing object %s"), object->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("AutoBindTarget::runContainerAutoBindPoll(): removing object \"%s\" [%u] from %s \"%s\" [%u]"),
                object->getName(), object->getId(), className, m_this->getName(), m_this->getId());
          NetObj::unlinkObjects(m_this, object.get());

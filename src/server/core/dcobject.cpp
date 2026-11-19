@@ -1640,7 +1640,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const TCHAR *v
       ReportScriptError(SCRIPT_CONTEXT_DCI, dco->getOwner().get(), dco->getId(), instanceFilter->getErrorText(), _T("DCI::%s::%d::InstanceFilter"), dco->getOwnerName(), dco->getId());
       nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%u]): filtering script runtime error while processing instance \"%s\" (%s)"),
                dcObjectName.cstr(), dco->getId(), key, instanceFilter->getErrorText());
-      dco->getOwner()->sendPollerMsg(POLLER_ERROR _T("      Filtering script runtime error while processing instance \"%s\" (%s)\r\n"), key, instanceFilter->getErrorText());
+      dco->getOwner()->sendPollerMsg(PollOutputLevel::FAILURE, _T("      Filtering script runtime error while processing instance \"%s\" (%s)"), key, instanceFilter->getErrorText());
       return _STOP;
    }
 
@@ -1761,7 +1761,7 @@ StringObjectMap<InstanceDiscoveryData> *DCObject::filterInstanceList(StringMap *
       delete data.instanceFilter;
       delete filteredInstances;
       nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 5, _T("DCObject::filterInstanceList(%s [%u]): all instances removed because filtering script cannot be loaded"), m_name.cstr(), m_id);
-      getOwner()->sendPollerMsg(POLLER_ERROR _T("      Cannot load instance filtering script\r\n"));
+      getOwner()->sendPollerMsg(PollOutputLevel::FAILURE, _T("      Cannot load instance filtering script"));
       return nullptr;
    }
    unlock();

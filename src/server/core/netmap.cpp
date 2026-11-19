@@ -1249,12 +1249,10 @@ uint32_t NetworkMap::modifyFromJSONInternal(json_t *json, GenericClientSession *
 /**
  * Map update poll handler
  */
-void NetworkMap::mapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void NetworkMap::mapUpdatePoll(PollerInfo *poller, PollOutputWriter *output)
 {
-   pollerLock(mapUpdate);
+   pollerLock(mapUpdate, output);
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    poller->setStatus(_T("updating map"));
 
    updateContent();
@@ -1338,7 +1336,7 @@ void NetworkMap::updateContent()
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): map type %d"), m_name, m_id, m_mapType);
    if (m_mapType != MAP_TYPE_CUSTOM)
    {
-      sendPollerMsg(_T("Collecting objects...\r\n"));
+      sendPollerMsg(_T("Collecting objects..."));
       NetworkMapObjectList objects;
       bool success = buildTopologyGraph(&objects, m_mapType);
 
@@ -1363,7 +1361,7 @@ void NetworkMap::updateContent()
       {
          if (!IsShutdownInProgress())
          {
-            sendPollerMsg(_T("Updating objects...\r\n"));
+            sendPollerMsg(_T("Updating objects..."));
             m_updateFailed = false;
             updateObjects(objects);
          }
@@ -1377,10 +1375,10 @@ void NetworkMap::updateContent()
          }
       }
    }
-   sendPollerMsg(_T("Updating link texts and styling...\r\n"));
+   sendPollerMsg(_T("Updating link texts and styling..."));
    updateLinks();
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): completed"), m_name, m_id);
-   sendPollerMsg(_T("Map update completed\r\n"));
+   sendPollerMsg(_T("Map update completed"));
 }
 
 /**
@@ -1421,7 +1419,7 @@ bool NetworkMap::connectTopologySubgraphs(NetworkMapObjectList *objects, int map
  */
 bool NetworkMap::buildTopologyGraph(NetworkMapObjectList *graph, int mapType)
 {
-   sendPollerMsg(_T("Collecting objects...\r\n"));
+   sendPollerMsg(_T("Collecting objects..."));
    bool success = true;
    for(int i = 0; (i < m_seedObjects.size()) && success; i++)
    {
@@ -1440,7 +1438,7 @@ bool NetworkMap::buildTopologyGraph(NetworkMapObjectList *graph, int mapType)
                   (seed->getObjectClass() == OBJECT_RACK))
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::buildTopology(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seedObjectId);
-            sendPollerMsg(_T("   Seed object \"%s\" is a container, using child nodes as seeds\r\n"), seed->getName(), seedObjectId);
+            sendPollerMsg(_T("   Seed object \"%s\" is a container, using child nodes as seeds"), seed->getName(), seedObjectId);
             unique_ptr<SharedObjectArray<NetObj>> children = seed->getAllChildren(true);
             for(int j = 0; (j < children->size()) && success; j++)
             {
@@ -1455,7 +1453,7 @@ bool NetworkMap::buildTopologyGraph(NetworkMapObjectList *graph, int mapType)
       else
       {
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::buildTopology(%s [%u]): seed object [%u] cannot be found"), m_name, m_id, seedObjectId);
-         sendPollerMsg(POLLER_WARNING _T("   Cannot find seed object with ID %u\r\n"), seedObjectId);
+         sendPollerMsg(PollOutputLevel::WARNING, _T("   Cannot find seed object with ID %u"), seedObjectId);
       }
    }
    return success;
@@ -1573,7 +1571,7 @@ bool NetworkMap::mergeLinks(NetworkMapContent *content, const ObjectArray<ObjLin
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateLinks: link %u (%u) - %u (%u) %s"),
                      m_name, m_id, link->getElement1(), newLink->object1, link->getElement2(), newLink->object2, isNew ? _T("added") : _T("updated"));
-            sendPollerMsg(_T("   %s link between \"%s\" and \"%s\"\r\n"), isNew ? _T("Added") : _T("Updated"), GetObjectName(newLink->object1, _T("unknown")), GetObjectName(newLink->object2, _T("unknown")));
+            sendPollerMsg(_T("   %s link between \"%s\" and \"%s\""), isNew ? _T("Added") : _T("Updated"), GetObjectName(newLink->object1, _T("unknown")), GetObjectName(newLink->object2, _T("unknown")));
             modified = true;
          }
       }
@@ -1619,7 +1617,7 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
 
       if (!linkExists)
       {
-         sendPollerMsg(_T("   Link between \"%s\" and \"%s\" removed\r\n"), GetObjectName(objID1, _T("unknown")), GetObjectName(objID2, _T("unknown")));
+         sendPollerMsg(_T("   Link between \"%s\" and \"%s\" removed"), GetObjectName(objID1, _T("unknown")), GetObjectName(objID2, _T("unknown")));
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: link %u - %u removed"), m_name, m_id, link->getElement1(), link->getElement2());
 
          lockProperties();
@@ -1669,7 +1667,7 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
 
          if (duplicate)
          {
-            sendPollerMsg(_T("   Duplicate link between \"%s\" and \"%s\" removed\r\n"), GetObjectName(currObjId1, _T("unknown")), GetObjectName(currObjId2, _T("unknown")));
+            sendPollerMsg(_T("   Duplicate link between \"%s\" and \"%s\" removed"), GetObjectName(currObjId1, _T("unknown")), GetObjectName(currObjId2, _T("unknown")));
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: duplicate link %u - %u removed"), m_name, m_id, currLink->getElement1(), currLink->getElement2());
 
             lockProperties();
@@ -1697,7 +1695,7 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
       uint32_t objectId = netMapObject->getObjectId();
       if (!objects.isObjectExist(objectId))
       {
-         sendPollerMsg(_T("   Object \"%s\" removed\r\n"), GetObjectName(objectId, _T("unknown")));
+         sendPollerMsg(_T("   Object \"%s\" removed"), GetObjectName(objectId, _T("unknown")));
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: object element %u (object %u) removed"), m_name, m_id, e->getId(), objectId);
 
          NetworkMapObjectLocation loc;
@@ -1758,7 +1756,7 @@ void NetworkMap::updateObjects(const NetworkMapObjectList& objects)
          content.m_elements.add(e);
          modified = true;
          nxlog_debug_tag(DEBUG_TAG_NETMAP, 5, _T("NetworkMap(%s [%u])/updateObjects: new object %u (element ID %u) added"), m_name, m_id, objectId, e->getId());
-         sendPollerMsg(_T("   Object \"%s\" added\r\n"), GetObjectName(objectId, _T("unknown")));
+         sendPollerMsg(_T("   Object \"%s\" added"), GetObjectName(objectId, _T("unknown")));
       }
    }
 
@@ -1969,7 +1967,7 @@ void NetworkMap::updateLinks()
          }
          else
          {
-            sendPollerMsg(POLLER_WARNING _T("   Link color provider script \"%s\" execution failed (%s)\r\n"), link->getColorProvider(), vm->getErrorText());
+            sendPollerMsg(PollOutputLevel::WARNING, _T("   Link color provider script \"%s\" execution failed (%s)"), link->getColorProvider(), vm->getErrorText());
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 4, _T("NetworkMap::updateLinks(%s [%u]): color provider script \"%s\" execution failed (%s)"),
                       m_name, m_id, link->getColorProvider(), vm->getErrorText());
             ReportScriptError(SCRIPT_CONTEXT_NETMAP, this, 0, vm->getErrorText(), link->getColorProvider());
@@ -2217,10 +2215,10 @@ void NetworkMap::onObjectDelete(const NetObj& object)
 /**
  * Perform automatic assignment to objects
  */
-void NetworkMap::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void NetworkMap::autobindPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(autobind);
+   pollerLock(autobind, output);
 
    if (IsShutdownInProgress())
    {
@@ -2228,14 +2226,12 @@ void NetworkMap::autobindPoll(PollerInfo *poller, ClientSession *session, uint32
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of network map %s [%u]"), m_name, m_id);
    poller->setStatus(_T("checking objects"));
 
    if (!isAutoBindEnabled())
    {
-      sendPollerMsg(L"Automatic object binding is disabled\r\n");
+      sendPollerMsg(L"Automatic object binding is disabled");
       nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of network map %s [%u])"), m_name, m_id);
       pollerUnlock();
       return;
@@ -2265,7 +2261,7 @@ void NetworkMap::autobindPoll(PollerInfo *poller, ClientSession *session, uint32
          {
             StringBuffer cn(object->getObjectClassName());
             cn.toLowercase();
-            sendPollerMsg(_T("   Adding to %s %s\r\n"), cn.cstr(), object->getName());
+            sendPollerMsg(_T("   Adding to %s %s"), cn.cstr(), object->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("NetworkMap::autobindPoll(): adding network map \"%s\" [%u] to %s \"%s\" [%u]"), m_name, m_id, cn.cstr(), object->getName(), object->getId());
          }
       }
@@ -2276,7 +2272,7 @@ void NetworkMap::autobindPoll(PollerInfo *poller, ClientSession *session, uint32
             StringBuffer cn(object->getObjectClassName());
             cn.toLowercase();
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("NetworkMap::autobindPoll(): removing network map \"%s\" [%u] from %s \"%s\" [%u]"), m_name, m_id, cn.cstr(), object->getName(), object->getId());
-            sendPollerMsg(_T("   Removing from %s %s\r\n"), cn.cstr(), object->getName());
+            sendPollerMsg(_T("   Removing from %s %s"), cn.cstr(), object->getName());
          }
       }
    }

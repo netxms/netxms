@@ -1115,38 +1115,35 @@ static void CheckHostRoute(Node *node, const ROUTE *route)
 /**
  * Discovery poll
  */
-void Node::discoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Node::discoveryPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    poller->setStatus(_T("wait for lock"));
-   pollerLock(discovery);
-
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
+   pollerLock(discovery, output);
 
    if (isDeleteInitiated() || IsShutdownInProgress())
    {
-      sendPollerMsg(L"Node is being deleted or server shutdown is in progress, aborting discovery poll\r\n");
+      sendPollerMsg(L"Node is being deleted or server shutdown is in progress, aborting discovery poll");
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, L"Discovery poll of node %s (%s) in zone %d aborted", m_name, m_ipAddress.toString().cstr(), m_zoneUIN);
       pollerUnlock();
       return;
    }
 
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"Starting discovery poll of node %s (%s) in zone %d", m_name, m_ipAddress.toString().cstr(), m_zoneUIN);
-   sendPollerMsg(L"Starting discovery poll\r\n");
+   sendPollerMsg(L"Starting discovery poll");
 
    // Retrieve and analyze node's ARP cache
-   sendPollerMsg(L"Reading ARP cache...\r\n");
+   sendPollerMsg(L"Reading ARP cache...");
    shared_ptr<ArpCache> arpCache = getArpCache(true);
    if (arpCache != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, L"Discovery poll of node %s (%s) - read %d entries from ARP cache", m_name, m_ipAddress.toString().cstr(), arpCache->size());
-      sendPollerMsg(L"Read %d entries from ARP cache\r\n", arpCache->size());
+      sendPollerMsg(L"Read %d entries from ARP cache", arpCache->size());
       for(int i = 0; i < arpCache->size(); i++)
       {
          const ArpEntry *e = arpCache->get(i);
          if (!e->macAddr.isBroadcast() && !e->macAddr.isNull())
          {
-            sendPollerMsg(L"   Checking ARP cache entry: IP=%s MAC=%s ifIndex=%u\r\n", e->ipAddr.toString().cstr(), e->macAddr.toString().cstr(), e->ifIndex);
+            sendPollerMsg(L"   Checking ARP cache entry: IP=%s MAC=%s ifIndex=%u", e->ipAddr.toString().cstr(), e->macAddr.toString().cstr(), e->ifIndex);
             CheckPotentialNode(this, e->ipAddr, e->ifIndex, e->macAddr, DA_SRC_ARP_CACHE, m_id);
          }
       }
@@ -1154,7 +1151,7 @@ void Node::discoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rq
    else
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, L"Discovery poll of node %s (%s) - failed to read ARP cache", m_name, m_ipAddress.toString().cstr());
-      sendPollerMsg(L"Failed to read ARP cache\r\n");
+      sendPollerMsg(L"Failed to read ARP cache");
    }
 
    if (isDeleteInitiated() || IsShutdownInProgress())
@@ -1168,23 +1165,23 @@ void Node::discoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rq
    if (!(getFlags() & NF_DISABLE_ROUTE_POLL))
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - reading routing table"), m_name, m_ipAddress.toString().cstr());
-      sendPollerMsg(L"Reading routing table...\r\n");
+      sendPollerMsg(L"Reading routing table...");
       // Routing table is only a source of potential addresses here, so version collected by routing table poll is good enough regardless of its age
       shared_ptr<RoutingTable> rt = getCachedRoutingTable();
       if (rt != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - read %d entries from routing table"), m_name, m_ipAddress.toString().cstr(), rt->size());
-         sendPollerMsg(L"Read %d entries from routing table\r\n", rt->size());
+         sendPollerMsg(L"Read %d entries from routing table", rt->size());
          for(int i = 0; i < rt->size(); i++)
          {
             const ROUTE *route = rt->get(i);
             if (route->nextHop.isValidUnicast())
             {
-               sendPollerMsg(L"   Checking gateway address %s\r\n", route->nextHop.toString().cstr());
+               sendPollerMsg(L"   Checking gateway address %s", route->nextHop.toString().cstr());
                CheckPotentialNode(this, route->nextHop, route->ifIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, getId());
                if (route->destination.isValidUnicast() && (route->destination.getHostBits() == 0))
                {
-                  sendPollerMsg(L"   Checking host route %s\r\n", route->destination.toString().cstr());
+                  sendPollerMsg(L"   Checking host route %s", route->destination.toString().cstr());
                   CheckHostRoute(this, route);
                }
             }
@@ -1193,14 +1190,14 @@ void Node::discoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rq
       else
       {
          nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("Discovery poll of node %s (%s) - failed to read routing table"), m_name, m_ipAddress.toString().cstr());
-         sendPollerMsg(L"Failed to read routing table\r\n");
+         sendPollerMsg(L"Failed to read routing table");
       }
    }
 
    executeHookScript(L"DiscoveryPoll");
 
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, L"Finished discovery poll of node %s (%s)", m_name, m_ipAddress.toString().cstr());
-   sendPollerMsg(L"Finished discovery poll\r\n");
+   sendPollerMsg(L"Finished discovery poll");
    pollerUnlock();
 }
 

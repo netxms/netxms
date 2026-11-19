@@ -1483,7 +1483,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                   object->getName(), object->getId(), attrTypeName, objectValue, asset->getName(), asset->getId());
             UnlinkAsset(asset.get(), nullptr);
             nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: unlinked from asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
-            object->sendPollerMsg(POLLER_WARNING _T("   Unlinked from asset \"%s\"\r\n"), asset->getName());
+            object->sendPollerMsg(PollOutputLevel::WARNING, _T("   Unlinked from asset \"%s\""), asset->getName());
          }
       }
       else
@@ -1505,7 +1505,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
          {
             LinkAsset(asset.get(), object, nullptr, nullptr);
             nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
-            object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
+            object->sendPollerMsg(PollOutputLevel::INFO, _T("   Linked to asset \"%s\""), asset->getName());
          }
          else
          {
@@ -1518,14 +1518,14 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                {
                   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: asset %s [%u] already linked to component %s of this object"),
                         object->getName(), object->getId(), asset->getName(), asset->getId(), asset->getComponentSerial().cstr());
-                  object->sendPollerMsg(_T("   Asset \"%s\" is a match but already linked to component %s of this object\r\n"), asset->getName(), asset->getComponentSerial().cstr());
+                  object->sendPollerMsg(_T("   Asset \"%s\" is a match but already linked to component %s of this object"), asset->getName(), asset->getComponentSerial().cstr());
                }
                else
                {
                   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: asset %s [%u] linked to this object but object does not reference it, restoring link"),
                         object->getName(), object->getId(), asset->getName(), asset->getId());
                   object->setAssetId(asset->getId());
-                  object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
+                  object->sendPollerMsg(PollOutputLevel::INFO, _T("   Linked to asset \"%s\""), asset->getName());
                }
                return;
             }
@@ -1534,7 +1534,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
             shared_ptr<NetObj> otherObject = FindObjectById(asset->getLinkedObjectId());
             if (otherObject != nullptr)
             {
-               object->sendPollerMsg(POLLER_WARNING _T("   Asset \"%s\" is a match but already linked to another object \"%s\"\r\n"), asset->getName(), otherObject->getName());
+               object->sendPollerMsg(PollOutputLevel::WARNING, _T("   Asset \"%s\" is a match but already linked to another object \"%s\""), asset->getName(), otherObject->getName());
 
                // Attempt to update other object linkage. Component links are not affected by UpdateAssetLinkage - they are
                // re-evaluated by component inventory check during configuration poll of the other object.
@@ -1544,7 +1544,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                {
                   LinkAsset(asset.get(), object, nullptr, nullptr);
                   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
-                  object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
+                  object->sendPollerMsg(PollOutputLevel::INFO, _T("   Linked to asset \"%s\""), asset->getName());
                }
                else
                {
@@ -1554,7 +1554,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                         param(_T("assetName"), asset->getName()).
                         param(_T("currentNodeId"), otherObject->getId()).
                         param(_T("currentNodeName"), otherObject->getName()).post();
-                  object->sendPollerMsg(POLLER_WARNING _T("   Cannot be linked to asset \"%s\" because of conflict\r\n"), asset->getName());
+                  object->sendPollerMsg(PollOutputLevel::WARNING, _T("   Cannot be linked to asset \"%s\" because of conflict"), asset->getName());
                }
             }
             else
@@ -1563,7 +1563,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                asset->setLinkedObject(0, nullptr);
                LinkAsset(asset.get(), object, nullptr, nullptr);
                nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
-               object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
+               object->sendPollerMsg(PollOutputLevel::INFO, _T("   Linked to asset \"%s\""), asset->getName());
             }
          }
       }
@@ -1599,7 +1599,7 @@ void NXCORE_EXPORTABLE UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed
       return;
    }
 
-   object->sendPollerMsg(_T("Checking asset linkage\r\n"));
+   object->sendPollerMsg(_T("Checking asset linkage"));
 
    if (serialAttributeName[0] != 0)
       nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): using serial number attribute \"%s\""), object->getName(), object->getId(), serialAttributeName);
@@ -1625,7 +1625,7 @@ void NXCORE_EXPORTABLE UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed
                nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): unlink asset matched by MAC to this object, but by serial to other object"), object->getName(), object->getId());
                UnlinkAsset(asset.get(), nullptr);
                nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): unlinked from asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
-               object->sendPollerMsg(POLLER_WARNING _T("   Unlinked from asset \"%s\"\r\n"), asset->getName());
+               object->sendPollerMsg(PollOutputLevel::WARNING, _T("   Unlinked from asset \"%s\""), asset->getName());
             }
          }
          else
@@ -1659,7 +1659,7 @@ void NXCORE_EXPORTABLE UpdateComponentAssetLinkage(Node *node)
       return;
    }
 
-   node->sendPollerMsg(_T("Checking component asset linkage\r\n"));
+   node->sendPollerMsg(_T("Checking component asset linkage"));
 
    // Unlink assets whose components are no longer present
    unique_ptr<SharedObjectArray<NetObj>> linkedAssets = GetComponentAssets(node->getId());
@@ -1672,7 +1672,7 @@ void NXCORE_EXPORTABLE UpdateComponentAssetLinkage(Node *node)
          nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): component %s linked to asset %s [%u] not found in inventory"),
                node->getName(), node->getId(), serial.cstr(), asset->getName(), asset->getId());
          UnlinkAsset(asset, nullptr);
-         node->sendPollerMsg(POLLER_WARNING _T("   Component %s not found, unlinked from asset \"%s\"\r\n"), serial.cstr(), asset->getName());
+         node->sendPollerMsg(PollOutputLevel::WARNING, _T("   Component %s not found, unlinked from asset \"%s\""), serial.cstr(), asset->getName());
       }
    }
 
@@ -1720,7 +1720,7 @@ void NXCORE_EXPORTABLE UpdateComponentAssetLinkage(Node *node)
                {
                   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): asset %s [%u] matches component %s but is linked to node %s [%u] without component inventory"),
                         node->getName(), node->getId(), asset->getName(), asset->getId(), serial, otherObject->getName(), otherObject->getId());
-                  node->sendPollerMsg(POLLER_WARNING _T("   Asset \"%s\" matches component %s but is linked to node \"%s\"\r\n"), asset->getName(), serial, otherObject->getName());
+                  node->sendPollerMsg(PollOutputLevel::WARNING, _T("   Asset \"%s\" matches component %s but is linked to node \"%s\""), asset->getName(), serial, otherObject->getName());
                   continue;
                }
                if (!otherSerials->contains(serial))
@@ -1728,7 +1728,7 @@ void NXCORE_EXPORTABLE UpdateComponentAssetLinkage(Node *node)
                   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): component %s moved from node %s [%u]"),
                         node->getName(), node->getId(), serial, otherObject->getName(), otherObject->getId());
                   LinkAsset(asset.get(), node, serial, nullptr);
-                  node->sendPollerMsg(POLLER_INFO _T("   Component %s linked to asset \"%s\" (moved from node \"%s\")\r\n"), serial, asset->getName(), otherObject->getName());
+                  node->sendPollerMsg(PollOutputLevel::INFO, _T("   Component %s linked to asset \"%s\" (moved from node \"%s\")"), serial, asset->getName(), otherObject->getName());
                   continue;
                }
             }
@@ -1740,7 +1740,7 @@ void NXCORE_EXPORTABLE UpdateComponentAssetLinkage(Node *node)
                   param(_T("assetName"), asset->getName()).
                   param(_T("currentNodeId"), otherObject->getId()).
                   param(_T("currentNodeName"), otherObject->getName()).post();
-            node->sendPollerMsg(POLLER_WARNING _T("   Component %s cannot be linked to asset \"%s\" because of conflict with object \"%s\"\r\n"), serial, asset->getName(), otherObject->getName());
+            node->sendPollerMsg(PollOutputLevel::WARNING, _T("   Component %s cannot be linked to asset \"%s\" because of conflict with object \"%s\""), serial, asset->getName(), otherObject->getName());
             continue;
          }
 
@@ -1750,7 +1750,7 @@ void NXCORE_EXPORTABLE UpdateComponentAssetLinkage(Node *node)
 
       LinkAsset(asset.get(), node, serial, nullptr);
       nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): component %s linked to asset %s [%u]"), node->getName(), node->getId(), serial, asset->getName(), asset->getId());
-      node->sendPollerMsg(POLLER_INFO _T("   Component %s linked to asset \"%s\"\r\n"), serial, asset->getName());
+      node->sendPollerMsg(PollOutputLevel::INFO, _T("   Component %s linked to asset \"%s\""), serial, asset->getName());
    }
 }
 

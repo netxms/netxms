@@ -455,7 +455,7 @@ unique_ptr<SharedObjectArray<BusinessService>> BusinessServicePrototype::getServ
 /**
  * Instance discovery poll. Used for automatic creation and deletion of business services
  */
-void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -467,7 +467,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
    unlockProperties();
 
    poller->setStatus(_T("wait for lock"));
-   pollerLock(instance);
+   pollerLock(instance, output);
 
    if (IsShutdownInProgress())
    {
@@ -475,10 +475,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
-
-   sendPollerMsg(_T("Started instance discovery poll of business service prototype %s\r\n"), m_name);
+   sendPollerMsg(_T("Started instance discovery poll of business service prototype %s"), m_name);
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Started instance discovery poll of business service prototype %s [%u]"), m_name, m_id);
    unique_ptr<StringMap> instances = getInstances();
    if (instances != nullptr)
@@ -501,7 +498,7 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
       for (const shared_ptr<BusinessService>& service : *services)
       {
          nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Business service \"%s\" [%u] removed by instance discovery from prototype \"%s\" [%u]"), service->getName(), service->getId(), m_name, m_id);
-         sendPollerMsg(_T("   Business service \"%s\" removed\r\n"), service->getName());
+         sendPollerMsg(_T("   Business service \"%s\" removed"), service->getName());
          service->deleteObject();
       }
 
@@ -515,16 +512,16 @@ void BusinessServicePrototype::instanceDiscoveryPoll(PollerInfo *poller, ClientS
          parent->calculateCompoundStatus();
          service->publish();
          nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("Business service \"%s\" [%u] created by instance discovery from prototype \"%s\" [%u]"), service->getName(), service->getId(), m_name, m_id);
-         sendPollerMsg(_T("   Business service \"%s\" created\r\n"), service->getName());
+         sendPollerMsg(_T("   Business service \"%s\" created"), service->getName());
       }
    }
    else
    {
       nxlog_debug_tag(DEBUG_TAG_BIZSVC, 4, _T("BusinessServicePrototype::instanceDiscoveryPoll(%s [%u]): cannot read instances"), m_name, m_id);
-      sendPollerMsg(POLLER_WARNING _T("   Cannot read list of instances\r\n"));
+      sendPollerMsg(PollOutputLevel::WARNING, _T("   Cannot read list of instances"));
    }
 
-   sendPollerMsg(_T("Finished instance discovery poll of business service prototype %s\r\n"), m_name);
+   sendPollerMsg(_T("Finished instance discovery poll of business service prototype %s"), m_name);
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Finished instance discovery poll of business service prototype %s [%u]"), m_name, m_id);
    pollerUnlock();
 }

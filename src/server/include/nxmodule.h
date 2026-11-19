@@ -126,9 +126,9 @@ typedef struct
    bool (*pfTrapHandler)(SNMP_PDU *pdu, const shared_ptr<Node>& node);
    void (*pfEventHandler)(Event *event);
    void (*pfAlarmChangeHook)(uint32_t changeCode, const Alarm *alarm);
-	void (*pfStatusPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
-	bool (*pfConfPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
-	void (*pfTopologyPollHook)(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller);
+	void (*pfStatusPollHook)(Node *node, PollerInfo *poller);
+	bool (*pfConfPollHook)(Node *node, PollerInfo *poller);
+	void (*pfTopologyPollHook)(Node *node, PollerInfo *poller);
 	int (*pfCalculateObjectStatus)(NetObj *object);
    DataCollectionError (*pfGetInternalMetric)(DataCollectionTarget *object, const TCHAR *metric, TCHAR *value, size_t size);
    DataCollectionError (*pfGetInternalList)(DataCollectionTarget *object, const TCHAR *metric, StringList **value);

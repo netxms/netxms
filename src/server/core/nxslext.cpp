@@ -2476,9 +2476,23 @@ static int F_PollerTrace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    auto context = static_cast<NetObj*>(vm->getUserData());
    if (context != nullptr)
    {
-      const TCHAR *text = argv[0]->getValueAsCString();
-      context->sendPollerMsg(_T("%s\r\n"), text);
-      nxlog_debug_tag(_T("nxsl.pollertrace"), 4, _T("%s"), text);
+      const wchar_t *text = argv[0]->getValueAsCString();
+
+      // Poll output messages are single lines, so multi-line text is sent as separate messages
+      const wchar_t *line = text;
+      while(true)
+      {
+         const wchar_t *eol = wcschr(line, L'\n');
+         size_t len = (eol != nullptr) ? eol - line : wcslen(line);
+         if ((len > 0) && (line[len - 1] == L'\r'))
+            len--;
+         context->sendPollerMsg(L"%s", String(line, static_cast<ssize_t>(len)).cstr());
+         if ((eol == nullptr) || (eol[1] == 0))
+            break;
+         line = eol + 1;
+      }
+
+      nxlog_debug_tag(L"nxsl.pollertrace", 4, L"%s", text);
    }
    *result = vm->createValue();
    return 0;

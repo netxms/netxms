@@ -652,7 +652,7 @@ void TrafficObserver::updateConnectionState(int16_t newState, const wchar_t *det
 /**
  * Status poll - cheap connectivity/health check against the analyzer API
  */
-void TrafficObserver::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void TrafficObserver::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -664,7 +664,7 @@ void TrafficObserver::statusPoll(PollerInfo *poller, ClientSession *session, uin
    unlockProperties();
 
    poller->setStatus(L"wait for lock");
-   pollerLock(status);
+   pollerLock(status, output);
 
    if (IsShutdownInProgress())
    {
@@ -672,9 +672,7 @@ void TrafficObserver::statusPoll(PollerInfo *poller, ClientSession *session, uin
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
-   sendPollerMsg(L"Starting status poll of traffic observer %s\r\n", m_name);
+   sendPollerMsg(L"Starting status poll of traffic observer %s", m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Starting status poll of traffic observer \"%s\" [%u]", m_name, m_id);
 
    poller->setStatus(L"test connection");
@@ -691,13 +689,13 @@ void TrafficObserver::statusPoll(PollerInfo *poller, ClientSession *session, uin
       {
          updateBackendInfo(info);
          updateConnectionState(TRAFFIC_OBSERVER_STATE_CONNECTED, nullptr);
-         sendPollerMsg(L"   Analyzer API is reachable (%hs %hs %hs)\r\n", info.product, info.version, info.edition);
+         sendPollerMsg(L"   Analyzer API is reachable (%hs %hs %hs)", info.product, info.version, info.edition);
       }
       else
       {
          const wchar_t *errorMessage = GetTrafficConnectorErrorMessage(status);
          updateConnectionState((status == TrafficConnectorStatus::AUTH_ERROR) ? TRAFFIC_OBSERVER_STATE_AUTH_FAILURE : TRAFFIC_OBSERVER_STATE_UNREACHABLE, errorMessage);
-         sendPollerMsg(POLLER_ERROR L"   Analyzer API is not reachable (%s)\r\n", errorMessage);
+         sendPollerMsg(PollOutputLevel::FAILURE, L"   Analyzer API is not reachable (%s)", errorMessage);
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"TrafficObserver::statusPoll(%s [%u]): connection test failed (%s)", m_name, m_id, errorMessage);
       }
    }
@@ -705,7 +703,7 @@ void TrafficObserver::statusPoll(PollerInfo *poller, ClientSession *session, uin
    {
       if (!connectorName.isEmpty())
       {
-         sendPollerMsg(POLLER_WARNING L"   Traffic connector \"%s\" not found\r\n", static_cast<const wchar_t*>(connectorName));
+         sendPollerMsg(PollOutputLevel::WARNING, L"   Traffic connector \"%s\" not found", static_cast<const wchar_t*>(connectorName));
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Traffic connector \"%s\" not found for traffic observer \"%s\" [%u]", static_cast<const wchar_t*>(connectorName), m_name, m_id);
       }
    }
@@ -715,8 +713,8 @@ void TrafficObserver::statusPoll(PollerInfo *poller, ClientSession *session, uin
    poller->setStatus(L"hook");
    executeHookScript(L"StatusPoll");
 
-   sendPollerMsg(L"Finished status poll of traffic observer %s\r\n", m_name);
-   sendPollerMsg(L"Traffic observer status after poll is %s\r\n", GetStatusAsText(m_status, true));
+   sendPollerMsg(L"Finished status poll of traffic observer %s", m_name);
+   sendPollerMsg(L"Traffic observer status after poll is %s", GetStatusAsText(m_status, true));
 
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Finished status poll of traffic observer \"%s\" [%u]", m_name, m_id);
@@ -725,7 +723,7 @@ void TrafficObserver::statusPoll(PollerInfo *poller, ClientSession *session, uin
 /**
  * Configuration poll - refresh backend info and reconcile observation points
  */
-void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void TrafficObserver::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -737,7 +735,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
    unlockProperties();
 
    poller->setStatus(L"wait for lock");
-   pollerLock(configuration);
+   pollerLock(configuration, output);
 
    if (IsShutdownInProgress())
    {
@@ -745,17 +743,15 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Starting configuration poll of traffic observer \"%s\" [%u]", m_name, m_id);
-   sendPollerMsg(L"Starting configuration poll of traffic observer %s\r\n", m_name);
+   sendPollerMsg(L"Starting configuration poll of traffic observer %s", m_name);
 
    poller->setStatus(L"discover");
    SharedString connectorName = getConnectorName();
    TrafficConnectorInterface *connector = FindTrafficConnector(connectorName);
    if (connector != nullptr)
    {
-      sendPollerMsg(L"   Using traffic connector \"%s\"\r\n", static_cast<const wchar_t*>(connectorName));
+      sendPollerMsg(L"   Using traffic connector \"%s\"", static_cast<const wchar_t*>(connectorName));
 
       // Refresh backend information and capability set
       json_t *credentials = getCredentials();
@@ -766,7 +762,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
       {
          updateBackendInfo(info);
          updateConnectionState(TRAFFIC_OBSERVER_STATE_CONNECTED, nullptr);
-         sendPollerMsg(L"   Backend: %hs %hs (%hs), capabilities 0x%08X\r\n", info.product, info.version, info.edition, static_cast<uint32_t>(info.capabilities));
+         sendPollerMsg(L"   Backend: %hs %hs (%hs), capabilities 0x%08X", info.product, info.version, info.edition, static_cast<uint32_t>(info.capabilities));
       }
       else if (status != TrafficConnectorStatus::NOT_IMPLEMENTED)
       {
@@ -782,7 +778,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
       unique_ptr<ObservationPointDescriptor> pointsHolder(points);   // owns the list even on early poll cancellation returns
       if (points != nullptr)
       {
-         sendPollerMsg(L"   Discovery successful, reconciling observation points\r\n");
+         sendPollerMsg(L"   Discovery successful, reconciling observation points");
          nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Point discovery returned results for traffic observer \"%s\" [%u]", m_name, m_id);
 
          StringSet discoveredIds;
@@ -821,7 +817,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
                linkObjects(self(), point);
                point->publish();
 
-               sendPollerMsg(L"   Created new observation point \"%hs\" (external ID: %hs)\r\n", d->name, d->externalId);
+               sendPollerMsg(L"   Created new observation point \"%hs\" (external ID: %hs)", d->name, d->externalId);
                nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Created new observation point \"%hs\" [%u] (external ID: %hs)", d->name, point->getId(), d->externalId);
             }
 
@@ -890,7 +886,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
             shared_ptr<ObservationPoint> point = static_pointer_cast<ObservationPoint>(children->getShared(i));
             if (point->isInScope() && (point->getPointState() == OBSERVATION_POINT_STATE_ACTIVE))
             {
-               sendPollerMsg(L"   Running host matching for observation point %s\r\n", point->getName());
+               sendPollerMsg(L"   Running host matching for observation point %s", point->getName());
                RunObservationPointHostMatching(point.get());
             }
          }
@@ -906,7 +902,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
       else
       {
          const wchar_t *reason = connected ? L"Observation point discovery returned no results" : GetTrafficConnectorErrorMessage(status);
-         sendPollerMsg(POLLER_ERROR L"   Observation point discovery failed (%s)\r\n", reason);
+         sendPollerMsg(PollOutputLevel::FAILURE, L"   Observation point discovery failed (%s)", reason);
          nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Point discovery failed for traffic observer \"%s\" [%u] (%s)", m_name, m_id, reason);
 
          char reasonUtf8[256];
@@ -921,7 +917,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
    }
    else
    {
-      sendPollerMsg(POLLER_ERROR L"   Traffic connector \"%s\" not found\r\n", static_cast<const wchar_t*>(connectorName));
+      sendPollerMsg(PollOutputLevel::FAILURE, L"   Traffic connector \"%s\" not found", static_cast<const wchar_t*>(connectorName));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Traffic connector \"%s\" not found for traffic observer \"%s\" [%u]", static_cast<const wchar_t*>(connectorName), m_name, m_id);
 
       lockProperties();
@@ -936,7 +932,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
    poller->setStatus(L"hook");
    executeHookScript(L"ConfigurationPoll");
 
-   sendPollerMsg(L"Finished configuration poll of traffic observer %s\r\n", m_name);
+   sendPollerMsg(L"Finished configuration poll of traffic observer %s", m_name);
 
    lockProperties();
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;

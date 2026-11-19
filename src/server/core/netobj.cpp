@@ -84,9 +84,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_maintenanceScheduled = false;
    m_inheritAccessRights = true;
    m_trustedObjects = nullptr;
-   m_pollRequestor = nullptr;
-   m_pollRequestId = 0;
-   m_pollerOutputBuffer = nullptr;
+   m_pollOutputWriter = nullptr;
    m_statusCalcAlg = SA_CALCULATE_DEFAULT;
    m_statusPropAlg = SA_PROPAGATE_DEFAULT;
    m_fixedStatus = STATUS_WARNING;
@@ -2717,23 +2715,54 @@ bool NetObj::isManagementStatusChangeAllowed(bool isManaged)
 }
 
 /**
- * Send message to client, who requests poll, if any
- * This method is used by Node and Interface class objects
+ * Append poll output message to buffer
+ */
+void PollOutputBuffer::write(PollOutputLevel level, const wchar_t *text)
+{
+   // Level prefix goes after indentation to keep nesting of poll output visible
+   size_t indent = wcsspn(text, L" ");
+   LockGuard g(m_lock);
+   m_data.append(text, indent);
+   if (level == PollOutputLevel::WARNING)
+      m_data.append(L"WARNING: ");
+   else if (level == PollOutputLevel::FAILURE)
+      m_data.append(L"ERROR: ");
+   m_data.append(&text[indent]);
+   m_data.append(L'\n');
+}
+
+/**
+ * Send poll output message to current poll output writer (if any)
  */
 void NetObj::sendPollerMsg(const wchar_t *format, ...)
 {
-   if ((m_pollRequestor == nullptr) && (m_pollerOutputBuffer == nullptr))
+   PollOutputWriter *writer = m_pollOutputWriter;
+   if (writer == nullptr)
       return;
 
    va_list args;
    va_start(args, format);
    wchar_t buffer[1024];
-   _vsntprintf(buffer, 1024, format, args);
+   nx_vswprintf(buffer, 1024, format, args);
    va_end(args);
-   if (m_pollRequestor != nullptr)
-      m_pollRequestor->sendPollerMsg(m_pollRequestId, buffer);
-   if (m_pollerOutputBuffer != nullptr)
-      m_pollerOutputBuffer->append(buffer);
+   writer->write(PollOutputLevel::NORMAL, buffer);
+}
+
+/**
+ * Send poll output message with given level to current poll output writer (if any)
+ */
+void NetObj::sendPollerMsg(PollOutputLevel level, const wchar_t *format, ...)
+{
+   PollOutputWriter *writer = m_pollOutputWriter;
+   if (writer == nullptr)
+      return;
+
+   va_list args;
+   va_start(args, format);
+   wchar_t buffer[1024];
+   nx_vswprintf(buffer, 1024, format, args);
+   va_end(args);
+   writer->write(level, buffer);
 }
 
 /**
@@ -3860,7 +3889,7 @@ void NetObj::executeHookScript(const TCHAR *hookName)
       nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("NetObj::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
                 m_name, m_id, scriptName, vm->getErrorText());
       ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), scriptName);
-      sendPollerMsg(POLLER_ERROR _T("Runtime error in hook script %s (%s)\r\n"), scriptName, vm->getErrorText());
+      sendPollerMsg(PollOutputLevel::FAILURE, _T("Runtime error in hook script %s (%s)"), scriptName, vm->getErrorText());
    }
    vm.destroy();
 }

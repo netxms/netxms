@@ -303,7 +303,7 @@ void CloudDomain::calculateCompoundStatus(bool forcedRecalc)
 /**
  * Status poll
  */
-void CloudDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void CloudDomain::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -315,7 +315,7 @@ void CloudDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_
    unlockProperties();
 
    poller->setStatus(L"wait for lock");
-   pollerLock(status);
+   pollerLock(status, output);
 
    if (IsShutdownInProgress())
    {
@@ -323,9 +323,7 @@ void CloudDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
-   sendPollerMsg(L"Starting status poll of cloud domain %s\r\n", m_name);
+   sendPollerMsg(L"Starting status poll of cloud domain %s", m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Starting status poll of cloud domain \"%s\" [%u]", m_name, m_id);
 
    // Query state for child resources
@@ -353,12 +351,12 @@ void CloudDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_
             if (resource->getResourceState() != newState || strcmp(resource->getProviderState().c_str(), providerStateBuf))
             {
                resource->updateState(newState, providerStateBuf);
-               sendPollerMsg(L"   Resource \"%s\" state changed to %d (%s)\r\n", resource->getName(), newState, providerStateBuf);
+               sendPollerMsg(L"   Resource \"%s\" state changed to %d (%s)", resource->getName(), newState, providerStateBuf);
             }
          }
          else
          {
-            sendPollerMsg(POLLER_WARNING L"   Failed to query state for resource \"%s\"\r\n", resource->getName());
+            sendPollerMsg(PollOutputLevel::WARNING, L"   Failed to query state for resource \"%s\"", resource->getName());
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Failed to query state for resource \"%s\" [%u]", resource->getName(), resource->getId());
          }
       }
@@ -369,7 +367,7 @@ void CloudDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_
    {
       if (!connectorName.isEmpty())
       {
-         sendPollerMsg(POLLER_WARNING L"   Cloud connector \"%s\" not found\r\n", static_cast<const TCHAR*>(connectorName));
+         sendPollerMsg(PollOutputLevel::WARNING, L"   Cloud connector \"%s\" not found", static_cast<const TCHAR*>(connectorName));
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Cloud connector \"%s\" not found for cloud domain \"%s\" [%u]", static_cast<const TCHAR*>(connectorName), m_name, m_id);
       }
    }
@@ -379,8 +377,8 @@ void CloudDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_
    poller->setStatus(L"hook");
    executeHookScript(L"StatusPoll");
 
-   sendPollerMsg(L"Finished status poll of cloud domain %s\r\n", m_name);
-   sendPollerMsg(L"Cloud domain status after poll is %s\r\n", GetStatusAsText(m_status, true));
+   sendPollerMsg(L"Finished status poll of cloud domain %s", m_name);
+   sendPollerMsg(L"Cloud domain status after poll is %s", GetStatusAsText(m_status, true));
 
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Finished status poll of cloud domain \"%s\" [%u]", m_name, m_id);
@@ -389,7 +387,7 @@ void CloudDomain::statusPoll(PollerInfo *poller, ClientSession *session, uint32_
 /**
  * Configuration poll
  */
-void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void CloudDomain::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -401,7 +399,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
    unlockProperties();
 
    poller->setStatus(L"wait for lock");
-   pollerLock(configuration);
+   pollerLock(configuration, output);
 
    if (IsShutdownInProgress())
    {
@@ -409,10 +407,8 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Starting configuration poll of cloud domain \"%s\" [%u]", m_name, m_id);
-   sendPollerMsg(L"Starting configuration poll of cloud domain %s\r\n", m_name);
+   sendPollerMsg(L"Starting configuration poll of cloud domain %s", m_name);
 
    // Find cloud connector
    poller->setStatus(L"discover");
@@ -420,7 +416,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
    CloudConnectorInterface *connector = FindCloudConnector(connectorName);
    if (connector != nullptr)
    {
-      sendPollerMsg(L"   Using cloud connector \"%s\"\r\n", static_cast<const TCHAR*>(connectorName));
+      sendPollerMsg(L"   Using cloud connector \"%s\"", static_cast<const TCHAR*>(connectorName));
 
       // Call connector discover
       json_t *credentials = getCredentials();
@@ -429,7 +425,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
       json_decref(credentials);
       if (discoveredTree != nullptr)
       {
-         sendPollerMsg(L"   Discovery successful, reconciling resources\r\n");
+         sendPollerMsg(L"   Discovery successful, reconciling resources");
          nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Discovery returned results for cloud domain \"%s\" [%u]", m_name, m_id);
 
          // Collect all discovered cloud resource IDs into a set for tracking
@@ -483,7 +479,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
                   linkObjects(parentObj, resource);
                   resource->publish();
 
-                  sendPollerMsg(L"   Created new resource \"%hs\" (cloud ID: %hs)\r\n", d->name, d->resourceId);
+                  sendPollerMsg(L"   Created new resource \"%hs\" (cloud ID: %hs)", d->name, d->resourceId);
                   nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Created new resource \"%hs\" [%u] (cloud ID: %hs) under parent [%u]",
                      d->name, resource->getId(), d->resourceId, parentObjId);
                }
@@ -594,7 +590,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
       }
       else
       {
-         sendPollerMsg(POLLER_ERROR L"   Discovery returned no results\r\n");
+         sendPollerMsg(PollOutputLevel::FAILURE, L"   Discovery returned no results");
          nxlog_debug_tag(DEBUG_TAG_CLOUD_DISCOVERY, 5, L"Discovery returned no results for cloud domain \"%s\" [%u]", m_name, m_id);
 
          lockProperties();
@@ -607,7 +603,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
    }
    else
    {
-      sendPollerMsg(POLLER_ERROR L"   Cloud connector \"%s\" not found\r\n", static_cast<const TCHAR*>(connectorName));
+      sendPollerMsg(PollOutputLevel::FAILURE, L"   Cloud connector \"%s\" not found", static_cast<const TCHAR*>(connectorName));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Cloud connector \"%s\" not found for cloud domain \"%s\" [%u]", static_cast<const TCHAR*>(connectorName), m_name, m_id);
 
       lockProperties();
@@ -622,7 +618,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
    poller->setStatus(L"hook");
    executeHookScript(L"ConfigurationPoll");
 
-   sendPollerMsg(L"Finished configuration poll of cloud domain %s\r\n", m_name);
+   sendPollerMsg(L"Finished configuration poll of cloud domain %s", m_name);
 
    lockProperties();
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;

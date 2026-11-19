@@ -177,14 +177,15 @@ static void CreateAIToolList()
       "Trigger an immediate poll on a monitored object instead of waiting for the next scheduled poll. "
       "Use when fresh state is needed right now — e.g. after a device was fixed or reconfigured, to "
       "refresh status, capabilities, interfaces, or topology. Polls run asynchronously by default; set "
-      "wait=true to block until the poll completes (or timeoutSeconds elapses) and receive the poller's "
+      "wait=true to block until the poll completes (or timeoutSeconds elapses) and receive the poll's "
       "diagnostic output. The poll type must match the object class: 'status'/'configuration' work for "
-      "most monitored objects, 'topology'/'routing-table'/'discovery' for nodes, 'autobind' for "
-      "containers/templates/maps/network maps, 'instance-discovery' for data collection owners, "
-      "'map-update' for network maps.",
+      "most monitored objects, 'configuration-full' (configuration poll with full capability re-check, "
+      "requires modify access), 'interface-names', 'topology', 'routing-table' and 'discovery' for nodes, "
+      "'autobind' for containers/templates/maps/network maps, 'instance-discovery' for data collection "
+      "owners, 'map-update' for network maps.",
       {
          { "object", "name or ID of the object to poll (mandatory)" },
-         { "pollType", "one of: status, configuration, instance-discovery, topology, routing-table, discovery, autobind, map-update (mandatory)" },
+         { "pollType", "one of: status, configuration, configuration-full, instance-discovery, interface-names, topology, routing-table, discovery, autobind, map-update (mandatory)" },
          { "wait", "if true, block until the poll completes or timeoutSeconds elapses, returning captured poller output (default: false)", "boolean" },
          { "timeoutSeconds", "max seconds to wait when wait=true; clamped to [1, 300] (default: 30)", "integer" }
       },

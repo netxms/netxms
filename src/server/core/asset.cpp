@@ -462,13 +462,13 @@ static inline void UpdateProperty(const AssetPropertyAutofillContext *context, A
    if (result.first == RCC_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 5, _T("Asset::autoFillProperties(%s [%u]): asset property \"%s\" set to \"%s\""), asset->getName(), asset->getId(), context->name, newValue);
-      object->sendPollerMsg(_T("   Asset property \"%s\" set to \"%s\"\r\n"), context->name, newValue);
+      object->sendPollerMsg(_T("   Asset property \"%s\" set to \"%s\""), context->name, newValue);
    }
    else if (result.first != RCC_UNKNOWN_ATTRIBUTE)
    {
       nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 5, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset property \"%s\" with value \"%s\" failed (%s)"),
             asset->getName(), asset->getId(), context->name, newValue, static_cast<const TCHAR*>(result.second));
-      object->sendPollerMsg(POLLER_WARNING _T("   Automatic update of asset property \"%s\" with value \"%s\" failed (%s)\r\n"), context->name, newValue, static_cast<const TCHAR*>(result.second));
+      object->sendPollerMsg(PollOutputLevel::WARNING, _T("   Automatic update of asset property \"%s\" with value \"%s\" failed (%s)"), context->name, newValue, static_cast<const TCHAR*>(result.second));
       EventBuilder(EVENT_ASSET_AUTO_UPDATE_FAILED, *object)
          .param(_T("name"), context->name)
          .param(_T("displayName"), GetAssetAttributeDisplayName(context->name))

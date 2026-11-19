@@ -421,7 +421,7 @@ bool Node::confPollDhcpServer(NodeDeviceContext *deviceContext)
          hasChanges = true;
       m_capabilities |= NC_IS_DHCP_SERVER;
       unlockProperties();
-      sendPollerMsg(L"   DHCP server information is available from %s\r\n", source);
+      sendPollerMsg(L"   DHCP server information is available from %s", source);
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s): DHCP server information is available from %s", m_name, source);
    }
    else if (definitelyNot && !unknown)

@@ -37,7 +37,7 @@ static Mutex s_mutex(MutexType::FAST);
 /**
  * Topology poll hook
  */
-static void OnTopologyPoll(Node *node, ClientSession *session, uint32_t rqId, PollerInfo *poller)
+static void OnTopologyPoll(Node *node, PollerInfo *poller)
 {
    if (!node->isWirelessAccessPoint() && !node->isWirelessController())
       return;

@@ -330,7 +330,7 @@ bool ConditionObject::lockForStatusPoll()
 /**
  * Poller entry point
  */
-void ConditionObject::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void ConditionObject::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    check();
    lockProperties();

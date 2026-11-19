@@ -21,35 +21,6 @@
 **/
 
 #include "aitools.h"
-#include <unordered_map>
-
-/**
- * Description of one supported poll kind
- */
-struct PollKind
-{
-   PollerType type;
-   bool (Pollable::*isAvailable)() const;
-   void (Pollable::*doForcedPoll)(PollerInfo*);
-};
-
-/**
- * Map of poll type name (as accepted from AI) to its kind descriptor
- */
-static const std::unordered_map<std::string, PollKind>& GetPollKinds()
-{
-   static const std::unordered_map<std::string, PollKind> kinds = {
-      { "status",             { PollerType::STATUS,             &Pollable::isStatusPollAvailable,            &Pollable::doForcedStatusPoll } },
-      { "configuration",      { PollerType::CONFIGURATION,      &Pollable::isConfigurationPollAvailable,     &Pollable::doForcedConfigurationPoll } },
-      { "instance-discovery", { PollerType::INSTANCE_DISCOVERY, &Pollable::isInstanceDiscoveryPollAvailable, &Pollable::doForcedInstanceDiscoveryPoll } },
-      { "topology",           { PollerType::TOPOLOGY,           &Pollable::isTopologyPollAvailable,          &Pollable::doForcedTopologyPoll } },
-      { "routing-table",      { PollerType::ROUTING_TABLE,      &Pollable::isRoutingTablePollAvailable,      &Pollable::doForcedRoutingTablePoll } },
-      { "discovery",          { PollerType::DISCOVERY,          &Pollable::isDiscoveryPollAvailable,         &Pollable::doForcedDiscoveryPoll } },
-      { "autobind",           { PollerType::AUTOBIND,           &Pollable::isAutobindPollAvailable,          &Pollable::doForcedAutobindPoll } },
-      { "map-update",         { PollerType::MAP_UPDATE,         &Pollable::isMapUpdatePollAvailable,         &Pollable::doForcedMapUpdatePoll } }
-   };
-   return kinds;
-}
 
 /**
  * Shared state between AI handler thread and worker (sync wait path).
@@ -57,7 +28,7 @@ static const std::unordered_map<std::string, PollKind>& GetPollKinds()
  */
 struct PollWaitState
 {
-   PollerOutputBuffer buffer;
+   PollOutputBuffer output;
    Condition done;
    int64_t startTimeMs;
 
@@ -70,8 +41,7 @@ struct PollWaitState
 struct ForcePollContext
 {
    shared_ptr<NetObj> object;
-   PollerInfo *poller;
-   void (Pollable::*pollMethod)(PollerInfo*);
+   int pollType;
    shared_ptr<PollWaitState> waitState; // nullptr in async mode
 };
 
@@ -80,16 +50,9 @@ struct ForcePollContext
  */
 static void ForcePollWorker(const shared_ptr<ForcePollContext>& ctx)
 {
-   Pollable *pollable = ctx->object->getAsPollable();
-   if (pollable != nullptr)
-      (pollable->*ctx->pollMethod)(ctx->poller);
-
+   ExecuteForcedPoll(ctx->object, ctx->pollType, (ctx->waitState != nullptr) ? &ctx->waitState->output : nullptr);
    if (ctx->waitState != nullptr)
-   {
-      // Detach capture buffer from object before signaling completion
-      ctx->object->setPollerOutputBuffer(nullptr);
       ctx->waitState->done.set();
-   }
 }
 
 /**
@@ -105,17 +68,6 @@ static json_t *BuildObjectSummary(const NetObj& object)
 }
 
 /**
- * Build JSON array of valid poll type names for error responses
- */
-static json_t *BuildValidPollTypesArray()
-{
-   json_t *array = json_array();
-   for (const auto& it : GetPollKinds())
-      json_array_append_new(array, json_string(it.first.c_str()));
-   return array;
-}
-
-/**
  * Force immediate poll on a monitored object.
  */
 std::string F_ForcePoll(json_t *arguments, uint32_t userId)
@@ -125,34 +77,33 @@ std::string F_ForcePoll(json_t *arguments, uint32_t userId)
    {
       json_t *response = json_object();
       json_object_set_new(response, "error", json_string("pollType is required"));
-      json_object_set_new(response, "validTypes", BuildValidPollTypesArray());
+      json_object_set_new(response, "validTypes", GetPollTypeNames());
       return JsonToString(response);
    }
 
-   const auto& kinds = GetPollKinds();
-   auto kindIt = kinds.find(pollTypeStr);
-   if (kindIt == kinds.end())
+   int pollType = PollTypeFromName(pollTypeStr);
+   if (pollType == -1)
    {
       json_t *response = json_object();
       char errorMsg[256];
       snprintf(errorMsg, sizeof(errorMsg), "Unknown poll type '%s'", pollTypeStr);
       json_object_set_new(response, "error", json_string(errorMsg));
-      json_object_set_new(response, "validTypes", BuildValidPollTypesArray());
+      json_object_set_new(response, "validTypes", GetPollTypeNames());
       return JsonToString(response);
    }
-   const PollKind& kind = kindIt->second;
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
       return std::string("Object not found");
-   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
 
-   Pollable *pollable = object->getAsPollable();
-   if ((pollable == nullptr) || !(pollable->*kind.isAvailable)())
+   uint32_t rcc = ValidateForcedPoll(*object, pollType, userId);
+   if (rcc == RCC_ACCESS_DENIED)
+      return std::string("Access denied");
+   if (rcc != RCC_SUCCESS)
    {
       char nameUtf8[256];
-      wchar_to_utf8(object->getName(), -1, nameUtf8, sizeof(nameUtf8));
+      wchar_to_utf8(object->getName(), -1, nameUtf8, sizeof(nameUtf8) - 1);
+      nameUtf8[sizeof(nameUtf8) - 1] = 0;
       char errorMsg[512];
       snprintf(errorMsg, sizeof(errorMsg), "Poll type '%s' is not applicable to %s '%s'",
                pollTypeStr, object->getObjectClassNameA(), nameUtf8);
@@ -171,8 +122,7 @@ std::string F_ForcePoll(json_t *arguments, uint32_t userId)
 
    auto ctx = make_shared<ForcePollContext>();
    ctx->object = object;
-   ctx->poller = RegisterPoller(kind.type, object);
-   ctx->pollMethod = kind.doForcedPoll;
+   ctx->pollType = pollType;
 
    if (!wait)
    {
@@ -187,11 +137,10 @@ std::string F_ForcePoll(json_t *arguments, uint32_t userId)
       return JsonToString(response);
    }
 
-   // Sync wait: attach capture buffer to the object, run poll on pool, wait on condition.
+   // Sync wait: run poll on pool with capture buffer as output writer, wait on condition.
+   // Worker holds its own reference to wait state, so buffer stays valid until poll completes even if wait times out.
    auto waitState = make_shared<PollWaitState>();
    ctx->waitState = waitState;
-   object->setPollerOutputBuffer(&waitState->buffer);
-
    ThreadPoolExecute(g_pollerThreadPool, ForcePollWorker, ctx);
 
    bool completed = waitState->done.wait(static_cast<uint32_t>(timeoutSeconds) * 1000);
@@ -203,24 +152,20 @@ std::string F_ForcePoll(json_t *arguments, uint32_t userId)
    json_object_set_new(response, "object", BuildObjectSummary(*object));
    json_object_set_new(response, "pollType", json_string(pollTypeStr));
 
+   StringBuffer output = waitState->output.snapshot();
    if (completed)
    {
       json_object_set_new(response, "completed", json_true());
       json_object_set_new(response, "durationMs", json_integer(durationMs));
-      StringBuffer output = waitState->buffer.snapshot();
-      json_object_set_new(response, "pollerOutput", json_string_t(output.cstr()));
+      json_object_set_new(response, "pollOutput", json_string_w(output));
    }
    else
    {
-      // Worker is still running. Worker holds its own shared_ptr to waitState, so the
-      // buffer (which the object still references via m_pollerOutputBuffer) stays alive
-      // until the worker finishes and clears the pointer.
       json_object_set_new(response, "completed", json_false());
       json_object_set_new(response, "timedOut", json_true());
       json_object_set_new(response, "timeoutSeconds", json_integer(timeoutSeconds));
-      StringBuffer output = waitState->buffer.snapshot();
-      json_object_set_new(response, "partialPollerOutput", json_string_t(output.cstr()));
-      json_object_set_new(response, "message", json_string("Poll is still running; partial diagnostic output captured."));
+      json_object_set_new(response, "partialPollOutput", json_string_w(output));
+      json_object_set_new(response, "message", json_string("Poll is still running; partial poll output captured."));
    }
 
    return JsonToString(response);

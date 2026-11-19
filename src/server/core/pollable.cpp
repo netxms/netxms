@@ -96,20 +96,20 @@ Pollable::~Pollable()
 /**
  * Start forced status poll
  */
-void Pollable::doForcedStatusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Pollable::doForcedStatusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    startForcedStatusPoll();
    poller->startExecution();
-   statusPoll(poller, session, rqId);
+   statusPoll(poller, output);
    delete poller;
 }
 
 /**
  * Used in parent polls
  */
-void Pollable::doStatusPoll(PollerInfo *parentPoller, ClientSession *session, uint32_t rqId)
+void Pollable::doStatusPoll(PollerInfo *parentPoller, PollOutputWriter *output)
 {
-   statusPoll(parentPoller, session, rqId);
+   statusPoll(parentPoller, output);
 }
 
 /**
@@ -118,7 +118,7 @@ void Pollable::doStatusPoll(PollerInfo *parentPoller, ClientSession *session, ui
 void Pollable::doStatusPoll(PollerInfo *poller)
 {
    poller->startExecution();
-   statusPoll(poller, nullptr, 0);
+   statusPoll(poller, nullptr);
    delete poller;
 }
 
@@ -152,11 +152,11 @@ bool Pollable::lockForStatusPoll()
 /**
  * Start forced configuration poll
  */
-void Pollable::doForcedConfigurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Pollable::doForcedConfigurationPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    startForcedConfigurationPoll();
    poller->startExecution();
-   configurationPoll(poller, session, rqId);
+   configurationPoll(poller, output);
    delete poller;
 }
 
@@ -166,7 +166,7 @@ void Pollable::doForcedConfigurationPoll(PollerInfo *poller, ClientSession *sess
 void Pollable::doConfigurationPoll(PollerInfo *poller)
 {
    poller->startExecution();
-   configurationPoll(poller, nullptr, 0);
+   configurationPoll(poller, nullptr);
    delete poller;
 }
 
@@ -199,11 +199,11 @@ bool Pollable::lockForConfigurationPoll()
 /**
  * Start forced instance discovery poll
  */
-void Pollable::doForcedInstanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Pollable::doForcedInstanceDiscoveryPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    startForcedInstanceDiscoveryPoll();
    poller->startExecution();
-   instanceDiscoveryPoll(poller, session, rqId);
+   instanceDiscoveryPoll(poller, output);
    delete poller;
 }
 
@@ -213,18 +213,18 @@ void Pollable::doForcedInstanceDiscoveryPoll(PollerInfo *poller, ClientSession *
 void Pollable::doInstanceDiscoveryPoll(PollerInfo *poller)
 {
    poller->startExecution();
-   instanceDiscoveryPoll(poller, nullptr, 0);
+   instanceDiscoveryPoll(poller, nullptr);
    delete poller;
 }
 
 /**
  * Start forced topology poll
  */
-void Pollable::doForcedTopologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Pollable::doForcedTopologyPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    startForcedTopologyPoll();
    poller->startExecution();
-   topologyPoll(poller, session, rqId);
+   topologyPoll(poller, output);
    delete poller;
 }
 
@@ -234,18 +234,18 @@ void Pollable::doForcedTopologyPoll(PollerInfo *poller, ClientSession *session, 
 void Pollable::doTopologyPoll(PollerInfo *poller)
 {
    poller->startExecution();
-   topologyPoll(poller, nullptr, 0);
+   topologyPoll(poller, nullptr);
    delete poller;
 }
 
 /**
  * Start forced routing table poll
  */
-void Pollable::doForcedRoutingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Pollable::doForcedRoutingTablePoll(PollerInfo *poller, PollOutputWriter *output)
 {
    startForcedRoutingTablePoll();
    poller->startExecution();
-   routingTablePoll(poller, session, rqId);
+   routingTablePoll(poller, output);
    delete poller;
 }
 
@@ -255,18 +255,18 @@ void Pollable::doForcedRoutingTablePoll(PollerInfo *poller, ClientSession *sessi
 void Pollable::doRoutingTablePoll(PollerInfo *poller)
 {
    poller->startExecution();
-   routingTablePoll(poller, nullptr, 0);
+   routingTablePoll(poller, nullptr);
    delete poller;
 }
 
 /**
  * Start forced discovery poll
  */
-void Pollable::doForcedDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Pollable::doForcedDiscoveryPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    startForcedDiscoveryPoll();
    poller->startExecution();
-   discoveryPoll(poller, session, rqId);
+   discoveryPoll(poller, output);
    delete poller;
 }
 
@@ -276,7 +276,7 @@ void Pollable::doForcedDiscoveryPoll(PollerInfo *poller, ClientSession *session,
 void Pollable::doDiscoveryPoll(PollerInfo *poller)
 {
    poller->startExecution();
-   discoveryPoll(poller, nullptr, 0);
+   discoveryPoll(poller, nullptr);
    delete poller;
 }
 
@@ -293,11 +293,11 @@ void Pollable::doIcmpPoll(PollerInfo *poller)
 /**
  * Start forced configuration poll
  */
-void Pollable::doForcedAutobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Pollable::doForcedAutobindPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    startForcedAutobindPoll();
    poller->startExecution();
-   autobindPoll(poller, session, rqId);
+   autobindPoll(poller, output);
    delete poller;
 }
 
@@ -307,7 +307,7 @@ void Pollable::doForcedAutobindPoll(PollerInfo *poller, ClientSession *session, 
 void Pollable::doAutobindPoll(PollerInfo *poller)
 {
    poller->startExecution();
-   autobindPoll(poller, nullptr, 0);
+   autobindPoll(poller, nullptr);
    delete poller;
 }
 
@@ -331,11 +331,11 @@ bool Pollable::lockForAutobindPoll()
 /**
  * Start forced map update poll
  */
-void Pollable::doForcedMapUpdatePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void Pollable::doForcedMapUpdatePoll(PollerInfo *poller, PollOutputWriter *output)
 {
    startForcedMapUpdatePoll();
    poller->startExecution();
-   mapUpdatePoll(poller, session, rqId);
+   mapUpdatePoll(poller, output);
    delete poller;
 }
 
@@ -345,7 +345,7 @@ void Pollable::doForcedMapUpdatePoll(PollerInfo *poller, ClientSession *session,
 void Pollable::doMapUpdatePoll(PollerInfo *poller)
 {
    poller->startExecution();
-   mapUpdatePoll(poller, nullptr, 0);
+   mapUpdatePoll(poller, nullptr);
    delete poller;
 }
 
@@ -563,7 +563,7 @@ void Pollable::autoFillAssetProperties()
    shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(m_this->m_assetId, OBJECT_ASSET));
    if (asset != nullptr)
    {
-      m_this->sendPollerMsg(_T("Updating asset properties\r\n"));
+      m_this->sendPollerMsg(_T("Updating asset properties"));
       asset->autoFillProperties();
    }
 }

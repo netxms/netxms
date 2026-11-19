@@ -244,6 +244,7 @@ int H_ObjectFacilityGet(Context *context);
 int H_ObjectFacilityUpdate(Context *context);
 int H_ObjectLocationUpdate(Context *context);
 int H_ObjectPhysicalPlacementUpdate(Context *context);
+int H_ObjectPoll(Context *context);
 int H_ObjectPollingGet(Context *context);
 int H_ObjectPowerDomainGet(Context *context);
 int H_ObjectPowerDomainUpdate(Context *context);
@@ -421,6 +422,9 @@ void WS_ServerConsoleConnect(void *cls, MHD_Connection *connection, void *con_cl
 void WS_ScriptOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
                             const char *extra_in, size_t extra_in_size, MHD_socket sock,
                             MHD_UpgradeResponseHandle *urh);
+void WS_PollOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
+                          const char *extra_in, size_t extra_in_size, MHD_socket sock,
+                          MHD_UpgradeResponseHandle *urh);
 
 /**
  * Initialize module
@@ -957,6 +961,10 @@ static bool InitModule(Config *config)
       .PUT(H_ObjectNetworkMapUpdate)
       .build();
 
+   RouteBuilder("v1/objects/:object-id/poll/:poll-type")
+      .POST(H_ObjectPoll)
+      .build();
+
    RouteBuilder("v1/objects/:object-id/polling")
       .GET(H_ObjectPollingGet)
       .PATCH(H_ObjectPollingUpdate)
@@ -1129,6 +1137,11 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/search")
       .POST(H_ObjectSearch)
+      .build();
+   RouteBuilder("v1/polls/output/:token")
+      .GET([](Context *context) { context->setErrorResponse("WebSocket connection required"); return 426; })
+      .upgradeProtocol(WS_PollOutputConnect)
+      .noauth()  // Token-based auth
       .build();
    RouteBuilder("v1/push-data")
       .POST(H_PushData)

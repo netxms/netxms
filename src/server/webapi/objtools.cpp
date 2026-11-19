@@ -26,230 +26,6 @@
 #define DEBUG_TAG _T("webapi.objtools")
 
 /**
- * Token validity period in seconds for tool output WebSocket sessions
- */
-static const int TOOL_OUTPUT_TOKEN_VALIDITY = 30;
-
-/**
- * Tool output WebSocket session. Shared between tool execution thread and WebSocket reader thread.
- * Tool is executed only after client connects, so output is never buffered.
- */
-class ToolOutputWebSocketSession
-{
-private:
-   uuid m_token;
-   MHD_UpgradeResponseHandle *m_responseHandle;
-   SOCKET m_socket;
-   bool m_closeFrameSent;
-   bool m_disconnected;
-   Mutex m_socketMutex;
-   Condition m_connected;
-
-   void sendMessage(json_t *msg);
-   void finish(json_t *msg);
-
-public:
-   ToolOutputWebSocketSession(const uuid& token);
-
-   bool waitForConnection();
-   void connect(MHD_UpgradeResponseHandle *responseHandle, SOCKET s);
-   void readFrames();
-
-   void sendOutput(const wchar_t *text);
-   void sendOutputUtf8(const char *text, size_t length);
-   void sendResult(const wchar_t *result);
-   void sendCompleted();
-   void sendError(const char *message);
-};
-
-/**
- * Tool output sessions waiting for WebSocket connection, indexed by connection token
- */
-static SharedHashMap<uuid, ToolOutputWebSocketSession> s_pendingToolOutputSessions;
-static Mutex s_pendingToolOutputSessionsLock(MutexType::FAST);
-
-/**
- * Session constructor
- */
-ToolOutputWebSocketSession::ToolOutputWebSocketSession(const uuid& token) : m_token(token), m_socketMutex(MutexType::FAST), m_connected(true)
-{
-   m_responseHandle = nullptr;
-   m_socket = INVALID_SOCKET;
-   m_closeFrameSent = false;
-   m_disconnected = false;
-}
-
-/**
- * Wait for WebSocket client connection (called from execution thread). Returns false if client
- * did not connect within token validity period - in that case token is invalidated and tool should not be executed.
- */
-bool ToolOutputWebSocketSession::waitForConnection()
-{
-   if (m_connected.wait(TOOL_OUTPUT_TOKEN_VALIDITY * 1000))
-      return true;
-
-   // Token may be consumed by connection handler right at timeout, in that case connection will be established shortly
-   s_pendingToolOutputSessionsLock.lock();
-   bool expired = s_pendingToolOutputSessions.contains(m_token);
-   if (expired)
-      s_pendingToolOutputSessions.remove(m_token);
-   s_pendingToolOutputSessionsLock.unlock();
-
-   if (expired)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Tool execution cancelled: client did not connect within %d seconds", TOOL_OUTPUT_TOKEN_VALIDITY);
-      return false;
-   }
-
-   m_connected.wait(INFINITE);
-   return true;
-}
-
-/**
- * Attach WebSocket connection to session
- */
-void ToolOutputWebSocketSession::connect(MHD_UpgradeResponseHandle *responseHandle, SOCKET s)
-{
-   m_socketMutex.lock();
-   m_responseHandle = responseHandle;
-   m_socket = s;
-   m_socketMutex.unlock();
-   m_connected.set();
-   nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket session started");
-}
-
-/**
- * Send JSON message to WebSocket client
- */
-void ToolOutputWebSocketSession::sendMessage(json_t *msg)
-{
-   char *encoded = json_dumps(msg, 0);
-   m_socketMutex.lock();
-   if ((m_socket != INVALID_SOCKET) && !m_closeFrameSent && !m_disconnected)
-      SendWebsocketFrame(m_socket, encoded, strlen(encoded));
-   m_socketMutex.unlock();
-   MemFree(encoded);
-}
-
-/**
- * Send final message and close frame, then shut down socket so that reader thread will finish
- */
-void ToolOutputWebSocketSession::finish(json_t *msg)
-{
-   sendMessage(msg);
-   m_socketMutex.lock();
-   if ((m_socket != INVALID_SOCKET) && !m_closeFrameSent && !m_disconnected)
-   {
-      SendWebsocketCloseFrame(m_socket, WS_CLOSE_NORMAL);
-      shutdown(m_socket, SHUT_RDWR);
-   }
-   m_closeFrameSent = true;
-   m_socketMutex.unlock();
-}
-
-/**
- * Send output chunk to WebSocket client
- */
-void ToolOutputWebSocketSession::sendOutput(const wchar_t *text)
-{
-   json_t *msg = json_object();
-   json_object_set_new(msg, "type", json_string("output"));
-   json_object_set_new(msg, "data", json_string_w(text));
-   sendMessage(msg);
-   json_decref(msg);
-}
-
-/**
- * Send output chunk from UTF-8 source
- */
-void ToolOutputWebSocketSession::sendOutputUtf8(const char *text, size_t length)
-{
-   json_t *msg = json_object();
-   json_object_set_new(msg, "type", json_string("output"));
-   json_object_set_new(msg, "data", json_stringn(text, length));
-   sendMessage(msg);
-   json_decref(msg);
-}
-
-/**
- * Send script result
- */
-void ToolOutputWebSocketSession::sendResult(const wchar_t *result)
-{
-   json_t *msg = json_object();
-   json_object_set_new(msg, "type", json_string("result"));
-   json_object_set_new(msg, "data", json_string_w(result));
-   sendMessage(msg);
-   json_decref(msg);
-}
-
-/**
- * Send completion message and close connection
- */
-void ToolOutputWebSocketSession::sendCompleted()
-{
-   json_t *msg = json_object();
-   json_object_set_new(msg, "type", json_string("completed"));
-   finish(msg);
-   json_decref(msg);
-}
-
-/**
- * Send error message and close connection
- */
-void ToolOutputWebSocketSession::sendError(const char *message)
-{
-   json_t *msg = json_object();
-   json_object_set_new(msg, "type", json_string("error"));
-   json_object_set_new(msg, "message", json_string(message));
-   finish(msg);
-   json_decref(msg);
-}
-
-/**
- * Read frames from WebSocket client until connection is closed by either side
- */
-void ToolOutputWebSocketSession::readFrames()
-{
-   while(true)
-   {
-      ByteStream buffer;
-      BYTE frameType;
-      if (!ReadWebsocketFrame(m_socket, &buffer, &frameType))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket: read error or connection closed");
-         break;
-      }
-
-      if (frameType == 0x08)  // Close frame
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket: received close frame");
-         break;
-      }
-      else if (frameType == 0x09)  // Ping frame
-      {
-         m_socketMutex.lock();
-         if (!m_closeFrameSent)
-         {
-            BYTE pong[2] = { 0x8A, 0x00 };  // FIN + pong opcode, no payload
-            SendEx(m_socket, pong, 2, 0, nullptr);
-         }
-         m_socketMutex.unlock();
-      }
-      // Ignore other frame types
-   }
-
-   m_socketMutex.lock();
-   if (!m_closeFrameSent)
-      SendWebsocketCloseFrame(m_socket, WS_CLOSE_NORMAL);
-   m_disconnected = true;
-   m_socketMutex.unlock();
-
-   MHD_upgrade_action(m_responseHandle, MHD_UPGRADE_ACTION_CLOSE);
-   nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket session closed");
-}
-
-/**
  * Callback for agent action output capture (WebAPI) - synchronous mode
  */
 static void ActionOutputCallback(ActionCallbackEvent e, const void *text, void *arg)
@@ -270,7 +46,7 @@ static void ActionOutputCallback(ActionCallbackEvent e, const void *text, void *
  */
 static void StreamingActionOutputCallback(ActionCallbackEvent e, const void *text, void *arg)
 {
-   ToolOutputWebSocketSession *session = static_cast<ToolOutputWebSocketSession*>(arg);
+   WebSocketOutputSession *session = static_cast<WebSocketOutputSession*>(arg);
    if (e == ACE_DATA)
    {
       const char *utf8Text = static_cast<const char*>(text);
@@ -284,7 +60,7 @@ static void StreamingActionOutputCallback(ActionCallbackEvent e, const void *tex
 class WebAPIStreamingProcessExecutor : public ProcessExecutor
 {
 private:
-   shared_ptr<ToolOutputWebSocketSession> m_session;
+   shared_ptr<WebSocketOutputSession> m_session;
 
 protected:
    virtual void onOutput(const char *text, size_t length) override
@@ -298,7 +74,7 @@ protected:
    }
 
 public:
-   WebAPIStreamingProcessExecutor(const TCHAR *command, const shared_ptr<ToolOutputWebSocketSession>& session)
+   WebAPIStreamingProcessExecutor(const TCHAR *command, const shared_ptr<WebSocketOutputSession>& session)
       : ProcessExecutor(command, true), m_session(session)
    {
       m_sendOutput = true;
@@ -326,10 +102,10 @@ public:
 class NXSL_WebAPIStreamingEnv : public NXSL_ServerEnv
 {
 private:
-   shared_ptr<ToolOutputWebSocketSession> m_session;
+   shared_ptr<WebSocketOutputSession> m_session;
 
 public:
-   NXSL_WebAPIStreamingEnv(const shared_ptr<ToolOutputWebSocketSession>& session) : NXSL_ServerEnv(), m_session(session) {}
+   NXSL_WebAPIStreamingEnv(const shared_ptr<WebSocketOutputSession>& session) : NXSL_ServerEnv(), m_session(session) {}
    virtual void print(const TCHAR *text) override { m_session->sendOutput(text); }
 };
 
@@ -849,12 +625,12 @@ struct StreamingToolData
    TCHAR *toolData;
    Alarm *alarm;
    StringMap inputFields;
-   shared_ptr<ToolOutputWebSocketSession> session;
+   shared_ptr<WebSocketOutputSession> session;
    uint32_t userId;
    wchar_t loginName[MAX_USER_NAME];
 
    StreamingToolData(const shared_ptr<NetObj>& _object, TCHAR *_toolData, Alarm *_alarm, const StringMap& _inputFields,
-            const shared_ptr<ToolOutputWebSocketSession>& _session, const Context *context) : object(_object), inputFields(_inputFields), session(_session)
+            const shared_ptr<WebSocketOutputSession>& _session, const Context *context) : object(_object), inputFields(_inputFields), session(_session)
    {
       toolData = _toolData;
       alarm = _alarm;
@@ -990,7 +766,13 @@ static void StreamingServerScriptThread(StreamingToolData *data)
    {
       const TCHAR *result = vm->getResult()->getValueAsCString();
       if (result != nullptr)
-         data->session->sendResult(result);
+      {
+         json_t *msg = json_object();
+         json_object_set_new(msg, "type", json_string("result"));
+         json_object_set_new(msg, "data", json_string_w(result));
+         data->session->sendMessage(msg);
+         json_decref(msg);
+      }
       data->session->sendCompleted();
    }
 
@@ -1219,11 +1001,8 @@ int H_ObjectToolExecute(Context *context)
    if (streamRequested && IsStreamableToolType(toolType) && (toolFlags & TF_GENERATES_OUTPUT))
    {
       // Streaming mode - start async execution, return token for WebSocket connection
-      uuid token = uuid::generate();
-      auto session = make_shared<ToolOutputWebSocketSession>(token);
-      s_pendingToolOutputSessionsLock.lock();
-      s_pendingToolOutputSessions.set(token, session);
-      s_pendingToolOutputSessionsLock.unlock();
+      auto session = make_shared<WebSocketOutputSession>();
+      uuid token = RegisterWebSocketOutputSession(session);
 
       // Start tool execution on thread pool
       auto data = new StreamingToolData(object, toolData, alarm, inputFields, session, context);
@@ -1245,14 +1024,7 @@ int H_ObjectToolExecute(Context *context)
 
       // toolData and alarm ownership transferred to the thread pool callback
       // Return token to client
-      json_t *response = json_object();
-      char tokenStr[64];
-      token.toStringA(tokenStr);
-      json_object_set_new(response, "token", json_string(tokenStr));
-
-      char wsUrl[128];
-      snprintf(wsUrl, sizeof(wsUrl), "/v1/object-tools/output/%s", tokenStr);
-      json_object_set_new(response, "wsUrl", json_string(wsUrl));
+      json_t *response = CreateWebSocketOutputResponse(token, "/v1/object-tools/output");
 
       String inputFieldsLog = BuildAuditInputFieldsString(inputFields, &maskedFields);
       context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Started streaming tool execution on object %s [%u]%s",
@@ -1311,40 +1083,5 @@ void WS_ToolOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
                           const char *extra_in, size_t extra_in_size, MHD_socket sock,
                           MHD_UpgradeResponseHandle *responseHandle)
 {
-   Context *context = static_cast<Context*>(cls);
-
-   const TCHAR *tokenStr = context->getPlaceholderValue(_T("token"));
-   if (tokenStr == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Tool output WebSocket connection rejected: no token provided");
-      RejectWebsocketConnection(sock, responseHandle);
-      return;
-   }
-
-   uuid token = uuid::parse(tokenStr);
-   if (token.isNull())
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Tool output WebSocket connection rejected: invalid token format");
-      RejectWebsocketConnection(sock, responseHandle);
-      return;
-   }
-
-   // Token is single-use; it is removed by execution thread when not used within validity period
-   s_pendingToolOutputSessionsLock.lock();
-   shared_ptr<ToolOutputWebSocketSession> session = s_pendingToolOutputSessions.getShared(token);
-   if (session != nullptr)
-      s_pendingToolOutputSessions.remove(token);
-   s_pendingToolOutputSessionsLock.unlock();
-
-   if (session == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Tool output WebSocket connection rejected: token not found");
-      RejectWebsocketConnection(sock, responseHandle);
-      return;
-   }
-
-   session->connect(responseHandle, static_cast<SOCKET>(sock));
-   nxlog_debug_tag(DEBUG_TAG, 4, L"Tool output WebSocket connection established");
-
-   ThreadCreate([session]() -> void { session->readFrames(); });
+   ConnectWebSocketOutputSession(static_cast<Context*>(cls), sock, responseHandle);
 }

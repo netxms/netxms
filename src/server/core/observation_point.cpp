@@ -452,7 +452,7 @@ void ObservationPoint::postLoad()
 /**
  * Status poll
  */
-void ObservationPoint::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
+void ObservationPoint::statusPoll(PollerInfo *poller, PollOutputWriter *output)
 {
    lockProperties();
    if (m_isDeleteInitiated || IsShutdownInProgress())
@@ -464,7 +464,7 @@ void ObservationPoint::statusPoll(PollerInfo *poller, ClientSession *session, ui
    unlockProperties();
 
    poller->setStatus(L"wait for lock");
-   pollerLock(status);
+   pollerLock(status, output);
 
    if (IsShutdownInProgress())
    {
@@ -472,9 +472,7 @@ void ObservationPoint::statusPoll(PollerInfo *poller, ClientSession *session, ui
       return;
    }
 
-   m_pollRequestor = session;
-   m_pollRequestId = rqId;
-   sendPollerMsg(L"Starting status poll of observation point %s\r\n", m_name);
+   sendPollerMsg(L"Starting status poll of observation point %s", m_name);
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Starting status poll of observation point \"%s\" [%u]", m_name, m_id);
 
    calculateCompoundStatus(true);
@@ -482,8 +480,8 @@ void ObservationPoint::statusPoll(PollerInfo *poller, ClientSession *session, ui
    poller->setStatus(L"hook");
    executeHookScript(L"StatusPoll");
 
-   sendPollerMsg(L"Finished status poll of observation point %s\r\n", m_name);
-   sendPollerMsg(L"Observation point status after poll is %s\r\n", GetStatusAsText(m_status, true));
+   sendPollerMsg(L"Finished status poll of observation point %s", m_name);
+   sendPollerMsg(L"Observation point status after poll is %s", GetStatusAsText(m_status, true));
 
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"Finished status poll of observation point \"%s\" [%u]", m_name, m_id);
