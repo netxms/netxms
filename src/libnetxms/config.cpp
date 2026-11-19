@@ -1556,6 +1556,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
             }
             if (s == nullptr)
                break;
+            curr = s + 1;
             parent = currentSection;
          }
       }
