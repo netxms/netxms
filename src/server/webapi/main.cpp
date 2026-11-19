@@ -142,6 +142,7 @@ int H_PerformanceViewDCIs(Context *context);
 int H_AvailableAgentMetrics(Context *context);
 int H_AvailableDeviceDriverMetrics(Context *context);
 int H_QueryMetric(Context *context);
+int H_QueryTable(Context *context);
 int H_DataCollectionConfigList(Context *context);
 int H_DataCollectionConfigGet(Context *context);
 int H_DataCollectionConfigCreate(Context *context);
@@ -380,6 +381,9 @@ int H_WirelessStations(Context *context);
 int H_DhcpLeases(Context *context);
 int H_DhcpScopes(Context *context);
 int H_ArpCache(Context *context);
+int H_HardwareInventory(Context *context);
+int H_SoftwareInventory(Context *context);
+int H_UserSessions(Context *context);
 int H_RoutingTable(Context *context);
 int H_SwitchForwardingDatabase(Context *context);
 int H_Users(Context *context);
@@ -1027,6 +1031,9 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/data-collection/query-metric")
       .GET(H_QueryMetric)
       .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/query-table")
+      .GET(H_QueryTable)
+      .build();
    RouteBuilder("v1/objects/:object-id/data-collection/configuration")
       .GET(H_DataCollectionConfigList)
       .POST(H_DataCollectionConfigCreate)
@@ -1128,6 +1135,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/wireless/stations")
       .GET(H_WirelessStations)
+      .build();
+   RouteBuilder("v1/objects/:object-id/hardware-inventory")
+      .GET(H_HardwareInventory)
+      .build();
+   RouteBuilder("v1/objects/:object-id/software-inventory")
+      .GET(H_SoftwareInventory)
+      .build();
+   RouteBuilder("v1/objects/:object-id/user-sessions")
+      .GET(H_UserSessions)
       .build();
    RouteBuilder("v1/objects/details")
       .POST(H_ObjectDetailsBulk)

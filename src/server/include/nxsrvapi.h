@@ -1171,6 +1171,7 @@ struct LIBNXSRV_EXPORTABLE UserSession
    MutableString loginName;
    MutableString sessionName;
    MutableString terminal;
+   MutableString state;    // session state as reported by agent (empty if not provided)
    MutableString clientName;
    InetAddress clientAddress;
    bool connected;

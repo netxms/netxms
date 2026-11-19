@@ -129,3 +129,39 @@ int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const
    json_decref(output);
    return 200;
 }
+
+/**
+ * Load node addressed by URL placeholder "object-id" for a node-scoped table request and check read access.
+ * On any failure returns nullptr and writes the matching HTTP status code (400 / 403 / 404) to *httpCode.
+ */
+shared_ptr<Node> LoadNodeForTableRequest(Context *context, int *httpCode)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   if (objectId == 0)
+   {
+      *httpCode = 400;
+      return shared_ptr<Node>();
+   }
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+   {
+      *httpCode = 404;
+      return shared_ptr<Node>();
+   }
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+   {
+      *httpCode = 403;
+      return shared_ptr<Node>();
+   }
+
+   if (object->getObjectClass() != OBJECT_NODE)
+   {
+      context->setErrorResponse("Object is not a node");
+      *httpCode = 400;
+      return shared_ptr<Node>();
+   }
+
+   return static_pointer_cast<Node>(object);
+}

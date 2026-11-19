@@ -278,7 +278,7 @@ json_t *SoftwarePackage::toJson() const
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "version", json_string_t(m_version));
    json_object_set_new(root, "vendor", json_string_t(m_vendor));
-   json_object_set_new(root, "date", json_integer(static_cast<json_int_t>(m_date)));
+   json_object_set_new(root, "date", json_time_string(m_date));
    json_object_set_new(root, "url", json_string_t(m_url));
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "uninstallKey", json_string_t(m_uninstallKey));

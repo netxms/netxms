@@ -262,7 +262,7 @@ json_t *HardwareComponent::toJson() const
 {
    json_t *root = json_object();
 
-   json_object_set_new(root, "category", json_integer(static_cast<int>(m_category)));
+   json_object_set_new(root, "category", json_string_t(getCategoryName()));
    json_object_set_new(root, "index", json_integer(m_index));
    json_object_set_new(root, "type", json_string_t(CHECK_NULL_EX(m_type)));
    json_object_set_new(root, "vendor", json_string_t(CHECK_NULL_EX(m_vendor)));

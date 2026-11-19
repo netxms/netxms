@@ -20,7 +20,7 @@
 **
 **/
 
-#include "webapi.h"
+#include "object_helpers.h"
 #include <netxms_maps.h>
 #include <nms_topo.h>
 
@@ -210,41 +210,6 @@ int H_TopologyInternal(Context *context)
    context->setResponseData(output);
    json_decref(output);
    return 200;
-}
-
-/**
- * Load node object for a node-scoped table request. Sets *httpCode and returns nullptr on failure.
- */
-static shared_ptr<Node> LoadNodeForTableRequest(Context *context, int *httpCode)
-{
-   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
-   if (objectId == 0)
-   {
-      *httpCode = 400;
-      return shared_ptr<Node>();
-   }
-
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   if (object == nullptr)
-   {
-      *httpCode = 404;
-      return shared_ptr<Node>();
-   }
-
-   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
-   {
-      *httpCode = 403;
-      return shared_ptr<Node>();
-   }
-
-   if (object->getObjectClass() != OBJECT_NODE)
-   {
-      context->setErrorResponse("Object is not a node");
-      *httpCode = 400;
-      return shared_ptr<Node>();
-   }
-
-   return static_pointer_cast<Node>(object);
 }
 
 /**

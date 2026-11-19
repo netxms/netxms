@@ -8274,6 +8274,64 @@ paths:
         - BearerAuth: []
       tags:
         - Data Collection
+  /v1/objects/{object-id}/data-collection/query-table:
+    get:
+      operationId: queryTable
+      summary: Query current table metric value
+      description: |
+        Read the current value of a table metric directly from its source, without a configured DCI
+        (for example, agent tables `System.Processes`, `System.Services` or `FileSystem.Volumes`).
+        The table is returned as collected, before any DCI transformation.
+
+        Supported origins are `internal`, `script` and `trafficobserver` for any data collection target,
+        plus `agent` for nodes. In addition to read access to the object, the following object access rights
+        are required depending on origin: `agent` - read agent data; `script` - modify.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+        - name: origin
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [internal, agent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp, trafficobserver, netconf, computed]
+            description: Data origin
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+            description: Table name (agent table name, script name with optional parameters, etc.)
+      responses:
+        '200':
+          description: Table retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  table:
+                    $ref: '#/components/schemas/TableData'
+        '400':
+          description: Missing or invalid query parameter, object is not data collection target, or origin is not supported for this object
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have access rights required for given origin
+        '404':
+          description: Object with given ID does not exist, table is not supported, or requested instance does not exist
+        '502':
+          description: Data source returned an error
+        '503':
+          description: Cannot communicate with data source
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
   /v1/objects/{object-id}/data-collection/configuration:
     get:
       operationId: listDataCollectionItems
@@ -9652,6 +9710,136 @@ paths:
           description: User does not have read access to given object
         '404':
           description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/hardware-inventory:
+    get:
+      operationId: getHardwareInventory
+      summary: Get node hardware inventory
+      description: >-
+        Read the hardware components of the given node (processors, memory modules, storage devices, network
+        adapters, etc.) as stored by the server. The inventory is refreshed by configuration poll; use
+        `POST /v1/objects/{object-id}/poll/configuration` to update it. `entries` is null when hardware inventory
+        is not available for this node (never collected or not supported by the agent or device driver).
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      responses:
+        '200':
+          description: Hardware inventory retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    nullable: true
+                    items:
+                      $ref: '#/components/schemas/HardwareComponent'
+        '400':
+          description: Invalid object ID or object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/software-inventory:
+    get:
+      operationId: getSoftwareInventory
+      summary: Get node software inventory
+      description: >-
+        Read the software packages installed on the given node as stored by the server. The inventory is refreshed
+        by configuration poll; use `POST /v1/objects/{object-id}/poll/configuration` to update it. `entries` is
+        null when software inventory is not available for this node (never collected or not supported by the agent).
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+        - name: filter
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Case-insensitive substring; only packages with matching name or description are returned.
+      responses:
+        '200':
+          description: Software inventory retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    nullable: true
+                    items:
+                      $ref: '#/components/schemas/SoftwarePackage'
+        '400':
+          description: Invalid object ID or object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/user-sessions:
+    get:
+      operationId: getUserSessions
+      summary: Get user sessions on node
+      description: >-
+        Read the user sessions currently open on the given node. The list is requested live from the agent and
+        combined with information about session agents running in each session. Supported by agents on Windows
+        and Linux. Requires read access and read agent data access to the node.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      responses:
+        '200':
+          description: User sessions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserSession'
+        '400':
+          description: Invalid object ID or object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access or read agent data access to given object
+        '404':
+          description: Object with given ID does not exist, or agent does not provide user session information
+        '502':
+          description: Agent returned an error
+        '503':
+          description: No connection to agent or communication with agent failed
       security:
         - BearerAuth: []
   /v1/objects/{object-id}/routing-table:
@@ -21546,6 +21734,132 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ArpCacheEntry'
+    HardwareComponent:
+      type: object
+      description: Hardware component of a node
+      properties:
+        category:
+          type: string
+          enum: [Other, Baseboard, Processor, Memory, Storage, Battery, NetworkAdapter]
+          description: Component category
+        index:
+          type: integer
+          description: Component index within its category
+        type:
+          type: string
+          description: Component type
+        vendor:
+          type: string
+        model:
+          type: string
+        location:
+          type: string
+          description: Component location (slot, socket, bank, etc.)
+        capacity:
+          type: integer
+          format: int64
+          description: Component capacity, size or speed as reported by the agent or device driver; meaning depends on category
+        partNumber:
+          type: string
+        serialNumber:
+          type: string
+        description:
+          type: string
+    SoftwarePackage:
+      type: object
+      description: Software package installed on a node
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+          nullable: true
+        vendor:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Installation date. Null when not reported by the agent.
+        url:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        uninstallKey:
+          type: string
+          nullable: true
+          description: Windows uninstall registry key name
+        user:
+          type: string
+          nullable: true
+          description: User the package is installed for (empty for system-wide packages)
+    UserSession:
+      type: object
+      description: User session on a node as reported by the agent
+      properties:
+        id:
+          type: integer
+          description: Session ID (row number when the agent only provides the legacy list format)
+        loginName:
+          type: string
+        sessionName:
+          type: string
+          nullable: true
+          description: Session name as reported by the session agent. Null when no session agent runs in the session.
+        terminal:
+          type: string
+        state:
+          type: string
+          nullable: true
+          description: Session state as reported by the agent (for example `Active` or `Disconnected`). Null when the agent does not report state.
+        connected:
+          type: boolean
+          description: True when the session state is `Active`
+        clientName:
+          type: string
+          description: Name of the remote client host (empty for local sessions)
+        clientAddress:
+          allOf:
+            - $ref: '#/components/schemas/InetAddress'
+          nullable: true
+          description: Address of the remote client. Null for local sessions or when not known.
+        display:
+          type: object
+          nullable: true
+          description: Display parameters (screen of the session agent when available, otherwise client display). Null when not known.
+          properties:
+            width:
+              type: integer
+            height:
+              type: integer
+            colorDepth:
+              type: integer
+        connectTime:
+          type: string
+          format: date-time
+          nullable: true
+        loginTime:
+          type: string
+          format: date-time
+          nullable: true
+        idleTime:
+          type: integer
+          description: Time since last user input in seconds (0 when not known)
+        sessionAgent:
+          type: object
+          nullable: true
+          description: Session agent running in this session. Null when there is none; taking a screenshot requires one.
+          properties:
+            type:
+              type: string
+              enum: [session, user]
+            pid:
+              type: integer
+              format: int64
+              description: Process ID of the session agent
     BusinessServiceCheck:
       type: object
       properties:

@@ -689,53 +689,69 @@ int H_AvailableDeviceDriverMetrics(Context *context)
 }
 
 /**
- * Handler for /v1/objects/:object-id/data-collection/query-metric
- * Reads current value of a single metric directly from its source, bypassing data collection
+ * Validate common parameters of metric or table query request (object ID, origin and name). On success returns
+ * data collection target and fills origin and name. On failure returns nullptr and writes HTTP status code to *httpCode.
  */
-int H_QueryMetric(Context *context)
+static shared_ptr<DataCollectionTarget> PrepareMetricQuery(Context *context, int *origin, wchar_t *name, int *httpCode)
 {
    uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
    if (objectId == 0)
-      return 400;
+   {
+      *httpCode = 400;
+      return shared_ptr<DataCollectionTarget>();
+   }
 
    const char *originName = context->getQueryParameter("origin");
    const char *metricName = context->getQueryParameter("name");
    if ((originName == nullptr) || (*originName == 0) || (metricName == nullptr) || (*metricName == 0))
    {
       context->setErrorResponse("Both origin and name query parameters are required");
-      return 400;
+      *httpCode = 400;
+      return shared_ptr<DataCollectionTarget>();
    }
 
-   int origin = CodeFromText(String(originName, "utf8"), g_dciOriginNames, -1);
-   if (origin == -1)
+   *origin = CodeFromText(String(originName, "utf8"), g_dciOriginNames, -1);
+   if (*origin == -1)
    {
       context->setErrorResponse("Invalid origin");
-      return 400;
+      *httpCode = 400;
+      return shared_ptr<DataCollectionTarget>();
    }
 
    shared_ptr<NetObj> object = FindObjectById(objectId);
    if (object == nullptr)
-      return 404;
+   {
+      *httpCode = 404;
+      return shared_ptr<DataCollectionTarget>();
+   }
 
    if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
-      return 403;
+   {
+      *httpCode = 403;
+      return shared_ptr<DataCollectionTarget>();
+   }
 
    if (!object->isDataCollectionTarget())
    {
       context->setErrorResponse("Object is not data collection target");
-      return 400;
+      *httpCode = 400;
+      return shared_ptr<DataCollectionTarget>();
    }
 
-   wchar_t name[MAX_PARAM_NAME];
    utf8_to_wchar(metricName, -1, name, MAX_PARAM_NAME - 1);
    name[MAX_PARAM_NAME - 1] = 0;
+   return static_pointer_cast<DataCollectionTarget>(object);
+}
 
-   wchar_t value[MAX_RESULT_LENGTH];
-   uint32_t rcc = static_cast<DataCollectionTarget&>(*object).getMetricForClient(origin, context->getUserId(), name, value, MAX_RESULT_LENGTH);
+/**
+ * Convert RCC returned by metric or table query to HTTP status code (0 on success) and set error response
+ */
+static int MetricQueryResultToHttpCode(Context *context, uint32_t rcc)
+{
    switch(rcc)
    {
       case RCC_SUCCESS:
-         break;
+         return 0;
       case RCC_ACCESS_DENIED:
          return 403;
       case RCC_INCOMPATIBLE_OPERATION:
@@ -754,9 +770,51 @@ int H_QueryMetric(Context *context)
          context->setErrorResponse("Cannot read metric value from data source");
          return 502;
    }
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/data-collection/query-metric
+ * Reads current value of a single metric directly from its source, bypassing data collection
+ */
+int H_QueryMetric(Context *context)
+{
+   int origin, httpCode;
+   wchar_t name[MAX_PARAM_NAME];
+   shared_ptr<DataCollectionTarget> target = PrepareMetricQuery(context, &origin, name, &httpCode);
+   if (target == nullptr)
+      return httpCode;
+
+   wchar_t value[MAX_RESULT_LENGTH];
+   httpCode = MetricQueryResultToHttpCode(context, target->getMetricForClient(origin, context->getUserId(), name, value, MAX_RESULT_LENGTH));
+   if (httpCode != 0)
+      return httpCode;
 
    json_t *response = json_object();
    json_object_set_new(response, "value", json_string_w(value));
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/data-collection/query-table
+ * Reads current value of a table metric directly from its source, bypassing data collection
+ */
+int H_QueryTable(Context *context)
+{
+   int origin, httpCode;
+   wchar_t name[MAX_PARAM_NAME];
+   shared_ptr<DataCollectionTarget> target = PrepareMetricQuery(context, &origin, name, &httpCode);
+   if (target == nullptr)
+      return httpCode;
+
+   shared_ptr<Table> table;
+   httpCode = MetricQueryResultToHttpCode(context, target->getTableForClient(origin, context->getUserId(), name, &table));
+   if (httpCode != 0)
+      return httpCode;
+
+   json_t *response = json_object();
+   json_object_set_new(response, "table", (table != nullptr) ? TableToJson(*table) : json_null());
    context->setResponseData(response);
    json_decref(response);
    return 200;

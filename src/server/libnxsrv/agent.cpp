@@ -3908,6 +3908,7 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
       return ERR_NOT_CONNECTED;
 
    bool hasSessionAgentInfo = false;
+   bool hasRealSessionIds = false;  // false for list format, where session ID is just a row number
 
    Table *userSessionsTable;
    uint32_t rcc = getTable(_T("System.ActiveUserSessions"), &userSessionsTable);
@@ -3929,6 +3930,7 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
       int cAgentPid = userSessionsTable->getColumnIndex(_T("AGENT_PID"));
 
       hasSessionAgentInfo = (cAgentType != -1);
+      hasRealSessionIds = true;
 
       for(int i = 0; i < userSessionsTable->getNumRows(); i++)
       {
@@ -3936,7 +3938,8 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
          session->id = userSessionsTable->getAsUInt(i, cId);
          session->loginName = userSessionsTable->getAsString(i, cUserName, _T(""));
          session->terminal = userSessionsTable->getAsString(i, cTerminal, _T(""));
-         session->connected = _tcsicmp(userSessionsTable->getAsString(i, cState, _T("")), _T("Active")) == 0;
+         session->state = userSessionsTable->getAsString(i, cState, _T(""));
+         session->connected = _tcsicmp(session->state, _T("Active")) == 0;
          session->clientName = userSessionsTable->getAsString(i, cClientName, _T(""));
          session->connectTime = static_cast<time_t>(userSessionsTable->getAsInt64(i, cConnectTime));
          session->loginTime = static_cast<time_t>(userSessionsTable->getAsInt64(i, cLogonTime));
@@ -4023,7 +4026,7 @@ uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
    }
 
    Table *sessionAgentsTable;
-   if ((rcc == ERR_SUCCESS) && !hasSessionAgentInfo && (getTable(_T("Agent.SessionAgents"), &sessionAgentsTable) == ERR_SUCCESS))
+   if ((rcc == ERR_SUCCESS) && hasRealSessionIds && !hasSessionAgentInfo && (getTable(_T("Agent.SessionAgents"), &sessionAgentsTable) == ERR_SUCCESS))
    {
       int cId = sessionAgentsTable->getColumnIndex(_T("SESSION_ID"));
       int cName = sessionAgentsTable->getColumnIndex(_T("SESSION_NAME"));

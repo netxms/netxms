@@ -18,9 +18,10 @@
 **
 ** File: object_helpers.h
 **
-** Local helpers shared by object property handlers (object_properties.cpp,
-** object_collections.cpp, object_node_config.cpp, object_dci.cpp). Not
-** exposed via webapi.h to keep these out of unrelated handlers.
+** Local helpers shared by object handlers (object_properties.cpp,
+** object_collections.cpp, object_node_config.cpp, object_dci.cpp,
+** topology.cpp, inventory.cpp). Not exposed via webapi.h to keep these
+** out of unrelated handlers.
 **
 **/
 
@@ -58,5 +59,13 @@ static inline shared_ptr<NetObj> LoadObjectForModify(Context *context, uint64_t 
  * PATCH. Returns the HTTP status code to be sent to the client.
  */
 int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const wchar_t *auditLabel);
+
+/**
+ * Load node addressed by URL placeholder "object-id" for a node-scoped table
+ * request (ARP cache, inventory, etc.) and check read access. On failure returns
+ * nullptr and writes the corresponding HTTP status code to *httpCode (400 / 403 / 404);
+ * a non-node object is reported as 400 with an error message set on the context.
+ */
+shared_ptr<Node> LoadNodeForTableRequest(Context *context, int *httpCode);
 
 #endif
