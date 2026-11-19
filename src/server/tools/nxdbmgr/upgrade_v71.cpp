@@ -83,7 +83,7 @@ static bool H_UpgradeFromV13()
  */
 static bool H_UpgradeFromV12()
 {
-   CHK_EXEC(SQLQuery(L"UPDATE items SET units_name='TimeSpan' WHERE units_name='Uptime'"));
+   CHK_EXEC(SQLQuery(L"UPDATE items SET units_name='TimeSpan' WHERE lower(units_name)='uptime'"));
    CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }

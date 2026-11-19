@@ -56,11 +56,11 @@ public class DataFormatter
       multiplierPower = 0;
       useMultipliers = DciValue.MULTIPLIERS_DEFAULT;
    }
-   
-   
+
+
    /**
-    * Create new data formatter 
-    * 
+    * Create new data formatter
+    *
     * @param series data series
     */
    public DataFormatter(DataSeries series)
@@ -87,7 +87,7 @@ public class DataFormatter
 
    /**
     * Set format string
-    * 
+    *
     * @param formatString the formatString to set
     * @return this
     */
@@ -96,10 +96,10 @@ public class DataFormatter
       this.formatString = formatString;
       return this;
    }
-   
+
    /**
     * Set data type
-    * 
+    *
     * @param dataType the dataType to set
     * @return this
     */
@@ -108,10 +108,10 @@ public class DataFormatter
       this.dataType = dataType;
       return this;
    }
-   
+
    /**
     * Set measurement unit
-    * 
+    *
     * @param unit the unit to set
     * @return this
     */
@@ -120,10 +120,10 @@ public class DataFormatter
       this.unit = unit;
       return this;
    }
-   
+
    /**
     * Set multiplier power
-    * 
+    *
     * @param multiplierPower the multiplierPower to set
     * @return this
     */
@@ -132,7 +132,7 @@ public class DataFormatter
       this.multiplierPower = multiplierPower;
       return this;
    }
-   
+
    /**
     * Set multiplier usage flag. Value <code>DciValue.MULTIPLIERS_NO</code> suppresses multipliers even if they are requested by
     * format string.
@@ -148,7 +148,7 @@ public class DataFormatter
 
    /**
     * Set default for multipliers
-    * 
+    *
     * @param useMultipliersByDefault the useMultipliersByDefault to set
     * @return this
     */
@@ -160,7 +160,7 @@ public class DataFormatter
 
    /**
     * Set default format strings
-    * 
+    *
     * @param withoutMultipliers default format string without multipliers
     * @param withMultipliers default format string with multipliers
     * @return this
@@ -242,7 +242,7 @@ public class DataFormatter
             }
             else
             {
-               boolean useMultipliers = false; 
+               boolean useMultipliers = false;
                boolean useUnits = false;
 
                if (format[i] == '*')
@@ -251,7 +251,7 @@ public class DataFormatter
                   useMultipliers = true;
                }
                else if (format[i] == '{' && (i + 1 != format.length))
-               {    
+               {
                   int end = i;
                   for(; (end < format.length) && (format[end] != '}'); end++) //find ending part
                      ;
@@ -289,8 +289,8 @@ public class DataFormatter
                final String f = "%" + new String(Arrays.copyOfRange(format, i, j + 1));
                i = j;
 
-               if (useUnits && unit.getName().equals("TimeSpan"))
-               {      
+               if (useUnits && unit.getName().equalsIgnoreCase("TimeSpan"))
+               {
                   sb.append(timeFormatter.formatTimeSpan((long)Double.parseDouble(value)));
                }
                else if (useUnits && unit.getName().equals("Epoch time"))
@@ -353,7 +353,7 @@ public class DataFormatter
       }
 
       boolean useBinaryMultipliers = (unit != null) && unit.isBinary();
-      int multiplierPower = (unit != null) ? this.multiplierPower : 0; 
+      int multiplierPower = (unit != null) ? this.multiplierPower : 0;
       boolean isSmallNumber = ((d > -0.01) && (d < 0.01) && (d != 0) && (multiplierPower <= 0) && (unit != null) && unit.useMultiplierForUnit()) || (multiplierPower < 0);
       double[] multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
 
@@ -376,7 +376,7 @@ public class DataFormatter
       {
          multipliers = DECIMAL_MULTIPLIERS;
       }
-      
+
       Value v = new Value();
       if (i >= 0)
       {
@@ -690,7 +690,7 @@ public class DataFormatter
       Value()
       {
       }
-      
+
       Value(Object value)
       {
          this.value = value;

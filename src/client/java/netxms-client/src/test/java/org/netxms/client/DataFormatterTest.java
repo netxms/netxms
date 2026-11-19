@@ -241,5 +241,6 @@ public class DataFormatterTest
    {
       assertEquals("90061", format("90061", DataType.INT64, "TimeSpan", DciValue.MULTIPLIERS_DEFAULT));
       assertEquals("-43", format("-43", DataType.INT64, "TimeSpan", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("90061", format("90061", DataType.INT64, "timespan", DciValue.MULTIPLIERS_DEFAULT));
    }
 }
