@@ -1470,6 +1470,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          }
       };
       actionMergeParallelLinks.setChecked(parallelLinkMergeThreshold > 0);
+      actionMergeParallelLinks.setImageDescriptor(ResourceManager.getImageDescriptor("icons/netmap/merge_links.png"));
 
       actionSelectAllObjects = new Action(i18n.tr("Select &all objects")) {
          @Override
