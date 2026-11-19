@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
@@ -113,7 +113,7 @@ void LoadNetworkDeviceDrivers()
 	wcscat(path, LDIR_NDD);
 
 	wchar_t buffer[MAX_CONFIG_VALUE_LENGTH];
-	ConfigReadStr(L"NetworkDeviceDrivers.Blacklist", buffer, MAX_CONFIG_VALUE_LENGTH, _T(""));
+	ConfigReadStr(L"NetworkDeviceDrivers.BlackList", buffer, MAX_CONFIG_VALUE_LENGTH, _T(""));
    StringList blacklist;
 	blacklist.splitAndAdd(buffer, L",");
 
