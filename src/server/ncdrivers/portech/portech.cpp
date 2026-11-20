@@ -248,7 +248,7 @@ static bool SendPDU(SocketConnection *conn, const char *recipient, const char *b
 	nxlog_debug_tag(DEBUG_TAG, 4, _T("AT+CMGF=0 sent"));
 
 	char pduBuffer[bufferSize];
-	SMSCreatePDUString(phoneNumber, text, pduBuffer, bufferSize);
+	__chk(SMSCreatePDUString(phoneNumber, text, pduBuffer, bufferSize));
 
    ThreadSleep(1);
    snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);

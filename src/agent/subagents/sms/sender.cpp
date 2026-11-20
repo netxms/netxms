@@ -269,7 +269,8 @@ bool SendSMS(const char *pszPhoneNumber, const char *pszText)
 	   nxlog_debug_tag(DEBUG_TAG, 5, _T("SMS: AT+CMGF=0 sent, got OK"));
 
 		char pduBuffer[PDU_BUFFER_SIZE];
-		SMSCreatePDUString(pszPhoneNumber, pszText, pduBuffer);
+		if (!SMSCreatePDUString(pszPhoneNumber, pszText, pduBuffer))
+         goto cleanup;
 
       char buffer[256];
 		snprintf(buffer, sizeof(buffer), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);

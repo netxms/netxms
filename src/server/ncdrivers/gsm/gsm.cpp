@@ -309,7 +309,8 @@ int GSMDriver::send(const NotificationContext& context)
 		char pduBuffer[PDU_BUFFER_SIZE];
 	   char text[161];
 	   CopyMessageText(body, text, sizeof(text));
-		SMSCreatePDUString(recipient, text, pduBuffer);
+		if (!SMSCreatePDUString(recipient, text, pduBuffer))
+         goto cleanup;
 
       char buffer[256];
 		snprintf(buffer, sizeof(buffer), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
