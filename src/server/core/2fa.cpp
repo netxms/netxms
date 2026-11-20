@@ -507,7 +507,7 @@ bool NXCORE_EXPORTABLE Validate2FAResponse(TwoFactorAuthenticationToken *token, 
    }
    s_authMethodListLock.unlock();
 
-   if (success && (trustedDeviceToken != nullptr))
+   if (success && (trustedDeviceToken != nullptr) && (ConfigReadInt(L"Server.Security.2FA.TrustedDeviceTTL", 0) > 0))
    {
       BYTE rawToken[TRUSTED_DEVICE_TOKEN_SIZE];
       GenerateRandomBytes(rawToken, TRUSTED_DEVICE_TOKEN_SIZE);
@@ -548,6 +548,11 @@ bool NXCORE_EXPORTABLE Validate2FATrustedDeviceToken(const BYTE *token, size_t s
    if ((token == nullptr) || (size != TRUSTED_DEVICE_TOKEN_SIZE))
       return false;
 
+   // Trusted devices are disabled when TTL is 0 (or negative)
+   int32_t trustedDeviceTTL = ConfigReadInt(L"Server.Security.2FA.TrustedDeviceTTL", 0);
+   if (trustedDeviceTTL <= 0)
+      return false;
+
    BYTE tokenHash[SHA256_DIGEST_SIZE];
    CalculateSHA256Hash(token, TRUSTED_DEVICE_TOKEN_SIZE, tokenHash);
 
@@ -568,8 +573,7 @@ bool NXCORE_EXPORTABLE Validate2FATrustedDeviceToken(const BYTE *token, size_t s
          {
             uint32_t recordId = DBGetFieldULong(hResult, 0, 0);
             uint32_t creationTime = DBGetFieldULong(hResult, 0, 1);
-            uint32_t trustedDeviceTTL = ConfigReadULong(_T("Server.Security.2FA.TrustedDeviceTTL"), 0);
-            if ((trustedDeviceTTL == 0) || (static_cast<time_t>(creationTime + trustedDeviceTTL) >= time(nullptr)))
+            if (static_cast<int64_t>(creationTime) + trustedDeviceTTL >= static_cast<int64_t>(time(nullptr)))
             {
                valid = true;
                nxlog_debug_tag(DEBUG_TAG, 5, _T("Trusted device token validated for user %u (id=%u)"), userId, recordId);
@@ -616,14 +620,24 @@ void NXCORE_EXPORTABLE RevokeTrustedDevices(uint32_t userId)
  */
 void CleanupExpiredTrustedDevices(DB_HANDLE hdb)
 {
-   uint32_t trustedDeviceTTL = ConfigReadULong(L"Server.Security.2FA.TrustedDeviceTTL", 0);
-   if (trustedDeviceTTL == 0)
+   int32_t trustedDeviceTTL = ConfigReadInt(L"Server.Security.2FA.TrustedDeviceTTL", 0);
+   if (trustedDeviceTTL <= 0)
+   {
+      // Trusted devices are disabled, none of the stored tokens can be used. A parsed TTL of 0 purges them;
+      // a negative value does not, so that a mistyped setting does not revoke every user's trusted devices.
+      if (trustedDeviceTTL == 0)
+         DBQuery(hdb, L"DELETE FROM trusted_devices");
+      return;
+   }
+
+   int64_t cutoff = static_cast<int64_t>(time(nullptr)) - trustedDeviceTTL;
+   if (cutoff <= 0)
       return;
 
    DB_STATEMENT hStmt = DBPrepare(hdb, L"DELETE FROM trusted_devices WHERE creation_time<?");
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr) - trustedDeviceTTL));
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(cutoff));
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }

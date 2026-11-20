@@ -2830,7 +2830,7 @@ void ClientSession::login(const NXCPMessage& request)
                debugPrintf(4, _T("Two-factor authentication is required (%d methods available)"), methods->size());
                rcc = RCC_NEED_2FA;
                methods->fillMessage(&response, VID_2FA_METHOD_LIST_BASE, VID_2FA_METHOD_COUNT);
-               response.setField(VID_TRUSTED_DEVICES_ALLOWED, ConfigReadULong(_T("Server.Security.2FA.TrustedDeviceTTL"), 0) > 0);
+               response.setField(VID_TRUSTED_DEVICES_ALLOWED, ConfigReadInt(L"Server.Security.2FA.TrustedDeviceTTL", 0) > 0);
             }
          }
          else if (Is2FAEnforcedForUser(m_userId))
