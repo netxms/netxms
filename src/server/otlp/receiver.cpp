@@ -112,16 +112,25 @@ static double GetDataPointValue(const opentelemetry::proto::metrics::v1::NumberD
 
 /**
  * Find a matching DCI for an OTLP data point.
- * First tries exact name match with DS_OTLP source, then falls back to instance discovery.
+ * First tries exact name match against active DS_OTLP items that are neither instance discovery
+ * prototypes nor discovered instances, then falls back to instance discovery.
  */
 static shared_ptr<DCObject> FindOTLPDci(const shared_ptr<Node>& node, const char *metricName, const std::map<std::string, std::string>& attributes)
 {
    wchar_t wname[256];
    utf8_to_wchar(metricName, -1, wname, 256);
 
-   // Try exact name match first (non-instance DCIs with DS_OTLP)
-   shared_ptr<DCObject> dco = node->getDCObjectByName(wname, 0);
-   if (dco != nullptr && dco->getType() == DCO_TYPE_ITEM && dco->getDataSource() == DS_OTLP && dco->getStatus() == ITEM_STATUS_ACTIVE)
+   // Try exact name match first among active OTLP items that are neither instance discovery
+   // prototypes nor instances discovered on this node (instances may inherit prototype name)
+   uint32_t nodeId = node->getId();
+   shared_ptr<DCObject> dco = node->getDCObjectByFilter(
+      [&wname, nodeId](DCObject *candidate) -> bool
+      {
+         return (candidate->getType() == DCO_TYPE_ITEM) && (candidate->getDataSource() == DS_OTLP) &&
+                (candidate->getStatus() == ITEM_STATUS_ACTIVE) && (candidate->getInstanceDiscoveryMethod() == IDM_NONE) &&
+                (candidate->getTemplateId() != nodeId) && !wcsicmp(candidate->getName(), wname);
+      });
+   if (dco != nullptr)
       return dco;
 
    // Try instance discovery
