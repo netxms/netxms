@@ -708,7 +708,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       if ((object instanceof Node) && ((Node)object).hasAgent())
       {
          addObjectToolBarItem(i18n.tr("Edit agent configuration"), imageEditConfig, () -> addMainView(new AgentConfigurationEditor((Node)object, object.getObjectId()), true, false));
-         if (((Node)object).getPlatformName().startsWith("windows-"))
+         if (((Node)object).getPlatformName().startsWith("windows-") || ((Node)object).getPlatformName().startsWith("linux-"))
          {
             addObjectToolBarItem(i18n.tr("Take screenshot"), imageTakeScreenshot, () -> addMainView(new ScreenshotView((Node)object, null, null, 0), true, false));
          }
