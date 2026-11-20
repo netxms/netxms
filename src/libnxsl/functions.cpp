@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
 ** Copyright (C) 2003-2026 Victor Kirhenshtein
@@ -55,7 +55,7 @@ int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
-		
+
    *ppResult = vm->createValue(argv[0]->getValueAsObject()->getClass()->getName());
    return 0;
 }
@@ -457,7 +457,7 @@ int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 
 	uint32_t len;
 	const TCHAR *string = argv[0]->getValueAsString(&len);
-	
+
 	int i;
 	for(i = (int)len - 1; (i >= 0) && (string[i] == _T(' ') || string[i] == _T('\t')); i--);
 
@@ -475,7 +475,7 @@ int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 
 	uint32_t len;
 	const TCHAR *string = argv[0]->getValueAsString(&len);
-	
+
 	int i;
 	for(i = 0; (i < (int)len) && (string[i] == _T(' ') || string[i] == _T('\t')); i++);
 
@@ -757,7 +757,7 @@ int F_FormatNumber(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *
 
 /**
  * NXSL function: inList
- * 
+ *
  * inList(string, separator, value)
  *
  * Check if given value is one of the values in given list using separator.
@@ -920,7 +920,7 @@ int F_NetResolveHostname(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    {
       if (!argv[1]->isInteger())
    		return NXSL_ERR_NOT_INTEGER;
-      
+
       af = (argv[1]->getValueAsInt32() == 6) ? AF_INET6 : AF_INET;
    }
 
@@ -1077,7 +1077,7 @@ int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
 }
 
 /**
- * Encode string as base64. Accepts string to encode and optional character encoding. 
+ * Encode string as base64. Accepts string to encode and optional character encoding.
  * Valid character encodings are "UTF-8", "UCS-2", "UCS-4", "SYSTEM". Default is UTF-8.
  */
 int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)

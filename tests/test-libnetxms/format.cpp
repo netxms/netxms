@@ -24,9 +24,6 @@
 #include <nms_util.h>
 #include <testtools.h>
 
-/**
- * Test FormatNumber()
- */
 void TestFormatNumber()
 {
    StartTest(_T("FormatNumber - decimal prefixes"));
@@ -105,9 +102,6 @@ void TestFormatTimeSpan()
    EndTest();
 }
 
-/**
- * Test FormatDCIValue()
- */
 void TestFormatDCIValue()
 {
    StartTest(_T("FormatDCIValue - multipliers and units"));
