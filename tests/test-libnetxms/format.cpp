@@ -92,43 +92,58 @@ void TestFormatNumber()
 void TestFormatDCIValue()
 {
    StartTest(_T("FormatDCIValue - multipliers and units"));
-   AssertEquals(FormatDCIValue(_T("bps"), _T("1536")).cstr(), _T("1.54 kbps"));
-   AssertEquals(FormatDCIValue(_T("bps"), _T("512")).cstr(), _T("512.00 bps"));
-   AssertEquals(FormatDCIValue(_T("W"), _T("0")).cstr(), _T("0.00 W"));
-   AssertEquals(FormatDCIValue(_T("s"), _T("0.005")).cstr(), _T("5.00 ms"));
-   AssertEquals(FormatDCIValue(_T(""), _T("1536")).cstr(), _T("1.54 k"));
-   AssertEquals(FormatDCIValue(_T("B (Metric)"), _T("1536")).cstr(), _T("1.54 kB"));
-   AssertEquals(FormatDCIValue(_T("B (IEC)"), _T("1536")).cstr(), _T("1.50 KiB"));
-   AssertEquals(FormatDCIValue(_T("B (IEC)"), _T("512")).cstr(), _T("512.00 B"));
+   AssertEquals(FormatDCIValue(_T("bps"), _T("1536"), true, true, 0).cstr(), _T("1.54 kbps"));
+   AssertEquals(FormatDCIValue(_T("bps"), _T("512"), true, true, 0).cstr(), _T("512.00 bps"));
+   AssertEquals(FormatDCIValue(_T("W"), _T("0"), true, true, 0).cstr(), _T("0.00 W"));
+   AssertEquals(FormatDCIValue(_T("s"), _T("0.005"), true, true, 0).cstr(), _T("5.00 ms"));
+   AssertEquals(FormatDCIValue(_T(""), _T("1536"), true, true, 0).cstr(), _T("1.54 k"));
+   AssertEquals(FormatDCIValue(_T("B (Metric)"), _T("1536"), true, true, 0).cstr(), _T("1.54 kB"));
+   AssertEquals(FormatDCIValue(_T("B (IEC)"), _T("1536"), true, true, 0).cstr(), _T("1.50 KiB"));
+   AssertEquals(FormatDCIValue(_T("B (IEC)"), _T("512"), true, true, 0).cstr(), _T("512.00 B"));
    EndTest();
 
    StartTest(_T("FormatDCIValue - units exempt from multipliers"));
-   AssertEquals(FormatDCIValue(_T("%"), _T("95.5")).cstr(), _T("95.5 %"));
-   AssertEquals(FormatDCIValue(_T("\u00b0C"), _T("21.5")).cstr(), _T("21.5 \u00b0C"));
-   AssertEquals(FormatDCIValue(_T("dBm"), _T("-65")).cstr(), _T("-65 dBm"));
-   AssertEquals(FormatDCIValue(_T("rpm"), _T("12000")).cstr(), _T("12000 rpm"));
+   AssertEquals(FormatDCIValue(_T("%"), _T("95.5"), true, true, 0).cstr(), _T("95.5 %"));
+   AssertEquals(FormatDCIValue(_T("\u00b0C"), _T("21.5"), true, true, 0).cstr(), _T("21.5 \u00b0C"));
+   AssertEquals(FormatDCIValue(_T("dBm"), _T("-65"), true, true, 0).cstr(), _T("-65 dBm"));
+   AssertEquals(FormatDCIValue(_T("rpm"), _T("12000"), true, true, 0).cstr(), _T("12000 rpm"));
    EndTest();
 
    StartTest(_T("FormatDCIValue - special units"));
-   AssertEquals(FormatDCIValue(_T("Uptime"), _T("90061")).cstr(), _T("1 days,  1:01:01"));
-   AssertEquals(FormatDCIValue(_T("Uptime"), _T("abc")).cstr(), _T("abc"));
-   AssertEquals(FormatDCIValue(_T("Epoch time"), _T("abc")).cstr(), _T("abc"));
+   AssertEquals(FormatDCIValue(_T("Uptime"), _T("90061"), true, true, 0).cstr(), _T("1 days,  1:01:01"));
+   AssertEquals(FormatDCIValue(_T("Uptime"), _T("abc"), true, true, 0).cstr(), _T("abc"));
+   AssertEquals(FormatDCIValue(_T("Epoch time"), _T("abc"), true, true, 0).cstr(), _T("abc"));
    EndTest();
 
    StartTest(_T("FormatDCIValue - non-numeric and empty values"));
-   AssertEquals(FormatDCIValue(_T("bps"), _T("abc")).cstr(), _T("abc"));
-   AssertEquals(FormatDCIValue(_T("bps"), _T("12abc")).cstr(), _T("12abc"));
-   AssertEquals(FormatDCIValue(_T("bps"), _T("")).cstr(), _T(""));
-   AssertEquals(FormatDCIValue(_T("bps"), nullptr).cstr(), _T(""));
+   AssertEquals(FormatDCIValue(_T("bps"), _T("abc"), true, true, 0).cstr(), _T("abc"));
+   AssertEquals(FormatDCIValue(_T("bps"), _T("12abc"), true, true, 0).cstr(), _T("12abc"));
+   AssertEquals(FormatDCIValue(_T("bps"), _T(""), true, true, 0).cstr(), _T(""));
+   AssertEquals(FormatDCIValue(_T("bps"), nullptr, true, true, 0).cstr(), _T(""));
    EndTest();
 
-   StartTest(_T("FormatDCIValue - explicit multiplier mode"));
-   AssertEquals(FormatDCIValue(_T("bps"), _T("1536"), 0).cstr(), _T("1.54 kbps"));
-   AssertEquals(FormatDCIValue(_T("bps"), _T("1536"), 1).cstr(), _T("1.54 kbps"));
-   AssertEquals(FormatDCIValue(_T("bps"), _T("1536"), 2).cstr(), _T("1536 bps"));
-   AssertEquals(FormatDCIValue(_T("B (IEC)"), _T("1536"), 2).cstr(), _T("1536 B"));
-   AssertEquals(FormatDCIValue(_T(""), _T("1536"), 2).cstr(), _T("1536"));
-   AssertEquals(FormatDCIValue(nullptr, _T("1536"), 2).cstr(), _T("1536"));
-   AssertEquals(FormatDCIValue(_T("bps"), nullptr, 2).cstr(), _T(""));
+   StartTest(_T("FormatDCIValue - units and multiplier control"));
+   AssertEquals(FormatDCIValue(_T("bps"), _T("1536"), true, false, 0).cstr(), _T("1536 bps"));
+   AssertEquals(FormatDCIValue(_T("B (IEC)"), _T("1536"), true, false, 0).cstr(), _T("1536 B"));
+   AssertEquals(FormatDCIValue(_T(""), _T("1536"), true, false, 0).cstr(), _T("1536"));
+   AssertEquals(FormatDCIValue(nullptr, _T("1536"), true, false, 0).cstr(), _T("1536"));
+   AssertEquals(FormatDCIValue(nullptr, _T("1536"), true, true, 0).cstr(), _T("1.54 k"));
+   AssertEquals(FormatDCIValue(_T("bps"), nullptr, true, false, 0).cstr(), _T(""));
+   AssertEquals(FormatDCIValue(_T("bps"), _T("1536"), false, true, 0).cstr(), _T("1.54 k"));
+   AssertEquals(FormatDCIValue(_T("bps"), _T("1536"), false, false, 0).cstr(), _T("1536"));
+   AssertEquals(FormatDCIValue(_T("bps"), _T("abc"), false, false, 0).cstr(), _T("abc"));
+   AssertEquals(FormatDCIValue(_T("dBm"), _T("-65000"), true, true, 0).cstr(), _T("-65000 dBm"));
+   AssertEquals(FormatDCIValue(_T("rpm"), _T("12000"), false, true, 0).cstr(), _T("12000"));
+   AssertEquals(FormatDCIValue(_T("RPM"), _T("12000"), true, true, 0).cstr(), _T("12000 RPM"));
+   AssertEquals(FormatDCIValue(_T("Uptime"), _T("90061"), true, false, 0).cstr(), _T("1 days,  1:01:01"));
+   AssertEquals(FormatDCIValue(_T("Uptime"), _T("90061"), false, false, 0).cstr(), _T("90061"));
+   AssertEquals(FormatDCIValue(_T("Epoch time"), _T("abc"), false, true, 0).cstr(), _T("abc"));
+   EndTest();
+
+   StartTest(_T("FormatDCIValue - fixed multiplier power"));
+   AssertEquals(FormatDCIValue(_T("bps"), _T("1536000"), true, true, 1).cstr(), _T("1536.00 kbps"));
+   AssertEquals(FormatDCIValue(_T("B (IEC)"), _T("1048576"), true, true, 1).cstr(), _T("1024.00 KiB"));
+   AssertEquals(FormatDCIValue(_T("s"), _T("0.5"), true, true, -1).cstr(), _T("500.00 ms"));
+   AssertEquals(FormatDCIValue(_T("%"), _T("95.5"), true, true, 1).cstr(), _T("95.5 %"));
    EndTest();
 }

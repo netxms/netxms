@@ -5798,16 +5798,21 @@ String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, in
 static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("\u00b0C"), _T("\u00b0F"), _T("dBm"), _T("rpm"), _T("RPM") };
 
 /**
- * Format DCI value based on Unit and value.
+ * Format DCI value for display.
+ * Special units "Uptime" and "Epoch time" are rendered as uptime and timestamp when units are enabled.
+ * Units listed in s_unitsWithoutMultipliers never get multiplier prefixes.
+ * @param unitName unit name (can be nullptr)
+ * @param value raw value string
+ * @param useUnits append unit name and apply special unit formatting
+ * @param useMultiplier apply decimal or binary (for " (IEC)" units) multiplier prefixes
+ * @param multiplierPower fixed multiplier power to use (0 to select automatically)
  */
-String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value)
+String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value, bool useUnits, bool useMultiplier, int multiplierPower)
 {
    if (value == nullptr || *value == 0)
       return String();
 
-   bool useUnits = true;
-   bool useMultiplier = true;
-   StringBuffer units = unitName;
+   StringBuffer units(unitName);
    bool useBinaryPrefixes = units.containsIgnoreCase(_T(" (IEC)"));
    units.replace(_T(" (IEC)"), _T(""));
    units.replace(_T(" (Metric)"), _T(""));
@@ -5821,14 +5826,14 @@ String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *v
       }
    }
 
-   if (useUnits && !_tcsicmp(unitName, _T("Uptime")))
+   if (useUnits && units.equalsIgnoreCase(_T("Uptime")))
    {
       TCHAR *eptr;
       uint64_t time = _tcstoull(value, &eptr, 10);
       return (*eptr != 0) ? String(value) : SecondsToUptime(time, true);
    }
 
-   if (useUnits && !_tcsicmp(unitName, _T("Epoch time")))
+   if (useUnits && units.equalsIgnoreCase(_T("Epoch time")))
    {
       TCHAR *eptr;
       time_t time = static_cast<time_t>(_tcstoll(value, &eptr, 10));
@@ -5842,7 +5847,7 @@ String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *v
 
    bool appendUnits = useUnits && !units.isEmpty();
    if (useMultiplier)
-      return FormatNumber(inVal, useBinaryPrefixes, 0, 2, appendUnits ? units.cstr() : nullptr);
+      return FormatNumber(inVal, useBinaryPrefixes, multiplierPower, 2, appendUnits ? units.cstr() : nullptr);
 
    StringBuffer result(value);
    if (appendUnits)
@@ -5851,40 +5856,6 @@ String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *v
       result.append(units);
    }
    return result;
-}
-
-/**
- * Format DCI value for display with control over multiplier usage
- * @param unitName unit name (can be nullptr)
- * @param value raw value string
- * @param useMultiplier 0=default (apply multipliers), 1=always apply, 2=never apply (return raw value with unit)
- */
-String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value, int useMultiplier)
-{
-   if (value == nullptr || *value == 0)
-      return String();
-
-   // When multipliers explicitly disabled (useMultiplier == 2), return raw value with unit
-   if (useMultiplier == 2)
-   {
-      StringBuffer result;
-      result.append(value);
-      if (unitName != nullptr && *unitName != 0)
-      {
-         StringBuffer units = unitName;
-         units.replace(_T(" (IEC)"), _T(""));
-         units.replace(_T(" (Metric)"), _T(""));
-         if (!units.isEmpty())
-         {
-            result.append(_T(" "));
-            result.append(units);
-         }
-      }
-      return result;
-   }
-
-   // For default (0) and yes (1), delegate to existing function
-   return FormatDCIValue(unitName, value);
 }
 
 /**
