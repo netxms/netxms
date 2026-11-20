@@ -215,7 +215,10 @@ struct TrafficConnectorInterface
    uint64_t (*GetCapabilities)(json_t *credentials);
 
    // Discovery
-   ObservationPointDescriptor *(*DiscoverPoints)(json_t *credentials);   // linked list, caller owns; nullptr is treated as discovery failure (existing points are kept)
+   // Points are returned as linked list (caller owns). Status other than SUCCESS is a discovery failure and
+   // existing points are kept; SUCCESS with empty list means the backend has no points, and missing points
+   // are reconciled by the removal policy.
+   TrafficConnectorStatus (*DiscoverPoints)(json_t *credentials, ObservationPointDescriptor **points);
 
    // Observer / point level data
    DataCollectionError (*GetObserverMetric)(const wchar_t *metric, wchar_t *value, size_t size, json_t *credentials);

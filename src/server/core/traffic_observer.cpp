@@ -777,13 +777,21 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
       // Discovery is pointless against an unreachable analyzer; the connection test result becomes the discovery status.
       // A connector without a connection test says nothing about reachability, so the state is left as is and discovery proceeds.
       bool connected = (status == TrafficConnectorStatus::SUCCESS) || (status == TrafficConnectorStatus::NOT_IMPLEMENTED);
-      ObservationPointDescriptor *points = (connected && (connector->DiscoverPoints != nullptr)) ? connector->DiscoverPoints(credentials) : nullptr;
+      ObservationPointDescriptor *points = nullptr;
+      TrafficConnectorStatus discoveryStatus;
+      if (!connected)
+         discoveryStatus = status;
+      else if (connector->DiscoverPoints != nullptr)
+         discoveryStatus = connector->DiscoverPoints(credentials, &points);
+      else
+         discoveryStatus = TrafficConnectorStatus::NOT_IMPLEMENTED;
       json_decref(credentials);
       unique_ptr<ObservationPointDescriptor> pointsHolder(points);   // owns the list even on early poll cancellation returns
-      if (points != nullptr)
+      if (discoveryStatus == TrafficConnectorStatus::SUCCESS)
       {
+         // An empty list is a valid inventory - the removal policy then applies to every existing point
          sendPollerMsg(L"   Discovery successful, reconciling observation points\r\n");
-         nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Point discovery returned results for traffic observer \"%s\" [%u]", m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Point discovery completed for traffic observer \"%s\" [%u]%s", m_name, m_id, (points == nullptr) ? L" (no points reported)" : L"");
 
          StringSet discoveredIds;
          unique_ptr<SharedObjectArray<NetObj>> children = getChildren(OBJECT_OBSERVATIONPOINT);
@@ -905,7 +913,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
       }
       else
       {
-         const wchar_t *reason = connected ? L"Observation point discovery returned no results" : GetTrafficConnectorErrorMessage(status);
+         const wchar_t *reason = GetTrafficConnectorErrorMessage(discoveryStatus);
          sendPollerMsg(POLLER_ERROR L"   Observation point discovery failed (%s)\r\n", reason);
          nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Point discovery failed for traffic observer \"%s\" [%u] (%s)", m_name, m_id, reason);
 
