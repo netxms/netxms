@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxcsum - command line tool for checksum calculation
 ** Copyright (C) 2018-2022 Raden Solutions
 **
@@ -42,7 +42,7 @@ union HashState
 };
 
 static bool PrintHash(const char *fileName, size_t digestSize, void (*init)(HashState*), void (*update)(HashState*, BYTE*, size_t), void (*finish)(HashState*, BYTE*))
-{  
+{
    bool useStdin = (strcmp(fileName, "-") == 0);
 
 #ifdef _WIN32
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
 
-   if((argc < 2))
+   if (argc < 3)
    {
       printf("Invalid count of arguments\n"
              "Usage: nxcsum <method> <file>\n"
