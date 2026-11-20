@@ -14748,9 +14748,13 @@ void ClientSession::listServerFileStore(const NXCPMessage& request)
    for(int i = 0; i < length; i++)
    {
       TCHAR ext[256];
-      request.getFieldAsString(varId++, ext, 256);
+      if (request.getFieldAsString(varId++, ext, 256) == nullptr)
+      {
+         soundFiles = false;
+         break;
+      }
       if (!m_soundFileTypes.contains(ext))
-         soundFiles = false;;
+         soundFiles = false;
       extensionList.add(ext);
    }
 
