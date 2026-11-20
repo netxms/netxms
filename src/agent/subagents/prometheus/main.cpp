@@ -24,11 +24,39 @@
 static ObjectArray<MetricMapping> s_metricMappings(16, 16, Ownership::True);
 
 /**
- * Parse metric mapping from configuration string
+ * Parse metric mapping from configuration string. Prometheus name can be enclosed in square brackets
+ * to allow colons in it (recording rule names like job:http_requests:rate5m).
  */
 static bool ParseMetricMapping(const TCHAR *config, MetricMapping **result)
 {
-   StringList parts = String(config).split(_T(":"));
+   StringList parts;
+   const TCHAR *p = config;
+   while(_istspace(*p))
+      p++;
+   if (*p == _T('['))
+   {
+      const TCHAR *end = _tcschr(p + 1, _T(']'));
+      const TCHAR *separator = (end != nullptr) ? end + 1 : nullptr;
+      if (separator != nullptr)
+      {
+         while(_istspace(*separator))
+            separator++;
+      }
+      if ((separator == nullptr) || (*separator != _T(':')))
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Invalid metric mapping format (expected [name]:...): %s"), config);
+         return false;
+      }
+      StringBuffer name(p + 1, end - p - 1);
+      name.trim();
+      parts.add(name);
+      parts.addAll(String(separator + 1).split(_T(":"), true));
+   }
+   else
+   {
+      parts = String(p).split(_T(":"), true);
+   }
+
    if (parts.size() < 3 || parts.size() > 4)
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Invalid metric mapping format (expected 3 or 4 parts): %s"), config);
@@ -42,7 +70,7 @@ static bool ParseMetricMapping(const TCHAR *config, MetricMapping **result)
 #endif
    _tcslcpy(mapping->netxmsName, parts.get(1), 256);
 
-   StringList nameArgs = String(parts.get(2)).split(_T(","));
+   StringList nameArgs = String(parts.get(2)).split(_T(","), true);
    for(int i = 0; i < nameArgs.size(); i++)
    {
       mapping->nameArguments.add(nameArgs.get(i));
@@ -51,7 +79,7 @@ static bool ParseMetricMapping(const TCHAR *config, MetricMapping **result)
    if (parts.size() == 4)
    {
       mapping->useMetricValue = false;
-      StringList valueArgs = String(parts.get(3)).split(_T(","));
+      StringList valueArgs = String(parts.get(3)).split(_T(","), true);
       for(int i = 0; i < valueArgs.size(); i++)
       {
          mapping->valueArguments.add(valueArgs.get(i));
@@ -152,7 +180,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
    { _T("Prometheus.LabelValue(*)"), H_TargetLabel, nullptr, DCI_DT_STRING, _T("Prometheus: value of label of metric {instance}") },
    { _T("Prometheus.Target.LastScrapeTime(*)"), H_TargetInfo, _T("T"), DCI_DT_UINT64, _T("Prometheus: timestamp of last scrape of target {instance}") },
-   { _T("Prometheus.Target.SampleCount(*)"), H_TargetInfo, _T("C"), DCI_DT_UINT, _T("Prometheus: number of samples in last scrape of target {instance}") },
+   { _T("Prometheus.Target.SampleCount(*)"), H_TargetInfo, _T("C"), DCI_DT_UINT, _T("Prometheus: number of samples in last successful scrape of target {instance}") },
    { _T("Prometheus.Target.Status(*)"), H_TargetInfo, _T("S"), DCI_DT_INT, _T("Prometheus: status of last scrape of target {instance}") },
    { _T("Prometheus.Value(*)"), H_TargetValue, nullptr, DCI_DT_FLOAT, _T("Prometheus: value of metric {instance}") }
 };
