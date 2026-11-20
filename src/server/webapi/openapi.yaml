@@ -8874,10 +8874,12 @@ paths:
             image/png:
               schema:
                 type: string
+        '400':
+          description: Invalid object ID or object is not a node
         '401':
           description: Unauthorized
         '403':
-          description: User does not have read access to given object
+          description: User does not have take screenshot access to given object
         '404':
           description: Object with given ID does not exist
         '500':
