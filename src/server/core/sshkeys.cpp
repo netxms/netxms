@@ -830,11 +830,11 @@ static uint32_t StoreSshKey(uint32_t id, const wchar_t *name, const char *privat
 /**
  * Create or edit SSH key from NXCP message. Public key sent by client is ignored.
  */
-uint32_t NXCORE_EXPORTABLE CreateOrEditSshKey(const NXCPMessage& request)
+uint32_t NXCORE_EXPORTABLE CreateOrEditSshKey(const NXCPMessage& request, uint32_t *keyId)
 {
    String name = request.getFieldAsSharedString(VID_NAME);
    char *privateKeyText = request.getFieldAsUtf8String(VID_PRIVATE_KEY);
-   uint32_t rcc = StoreSshKey(request.getFieldAsUInt32(VID_SSH_KEY_ID), name, privateKeyText, nullptr);
+   uint32_t rcc = StoreSshKey(request.getFieldAsUInt32(VID_SSH_KEY_ID), name, privateKeyText, keyId);
    MemFree(privateKeyText);
    return rcc;
 }

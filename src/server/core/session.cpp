@@ -19565,7 +19565,13 @@ void ClientSession::updateSshKey(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
    {
-      response.setField(VID_RCC, CreateOrEditSshKey(request));
+      uint32_t keyId = 0;
+      uint32_t rcc = CreateOrEditSshKey(request, &keyId);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         writeAuditLog(AUDIT_SYSCFG, true, 0, (request.getFieldAsUInt32(VID_SSH_KEY_ID) == 0) ? L"SSH key [%u] created" : L"SSH key [%u] updated", keyId);
+      }
    }
    else
    {
@@ -19584,7 +19590,13 @@ void ClientSession::generateSshKey(const NXCPMessage& request)
    if (m_systemAccessRights & SYSTEM_ACCESS_SSH_KEY_CONFIGURATION)
    {
       String name = request.getFieldAsSharedString(VID_NAME);
-      response.setField(VID_RCC, GenerateSshKey(name));
+      uint32_t keyId = 0;
+      uint32_t rcc = GenerateSshKey(name, &keyId);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"SSH key [%u] created", keyId);
+      }
    }
    else
    {
