@@ -5712,13 +5712,22 @@ void Node::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
       sendPollerMsg(_T("Synchronizing node name with DNS"));
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
       poller->setStatus(_T("resolving name"));
-      const TCHAR *facility;
-      resolved = resolveName(true, &facility);
+      wchar_t name[MAX_OBJECT_NAME];
+      const wchar_t *facility;
+      resolved = resolveName(true, name, &facility);
       if (resolved)
       {
-         sendPollerMsg(PollOutputLevel::INFO, _T("Node name resolved to %s"), m_name);
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
-         modified |= MODIFY_COMMON_PROPERTIES;
+         lockProperties();
+         bool changed = (wcscmp(name, m_name) != 0);
+         if (changed)
+            wcscpy(m_name, name);
+         unlockProperties();
+         if (changed)
+         {
+            modified |= MODIFY_COMMON_PROPERTIES;
+            sendPollerMsg(PollOutputLevel::INFO, L"Node name changed to %s", name);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"ConfPoll(%s [%u]): node name synchronized with DNS", name, m_id);
+         }
       }
       else
       {
@@ -5772,12 +5781,21 @@ void Node::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name is an IP address and need to be resolved"), m_name, m_id);
          sendPollerMsg(_T("Node name is an IP address and need to be resolved"));
          poller->setStatus(_T("resolving name"));
-         const TCHAR *facility;
-         if (resolveName(false, &facility))
+         wchar_t name[MAX_OBJECT_NAME];
+         const wchar_t *facility;
+         if (resolveName(false, name, &facility))
          {
-            sendPollerMsg(PollOutputLevel::INFO, _T("Node name resolved to %s using %s"), m_name, facility);
-            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved using %s"), m_name, m_id, facility);
-            modified |= MODIFY_COMMON_PROPERTIES;
+            lockProperties();
+            bool changed = (wcscmp(name, m_name) != 0);
+            if (changed)
+               wcscpy(m_name, name);
+            unlockProperties();
+            if (changed)
+            {
+               modified |= MODIFY_COMMON_PROPERTIES;
+               sendPollerMsg(PollOutputLevel::INFO, L"Node name resolved to %s using %s", name, facility);
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"ConfPoll(%s [%u]): node name resolved using %s", name, m_id, facility);
+            }
          }
          else
          {
@@ -14567,16 +14585,15 @@ shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t 
 }
 
 /**
- * Resolve node's name
+ * Resolve node's name. Resolved name is stored into provided buffer (must be at least MAX_OBJECT_NAME characters),
+ * node's name is not changed. Domain part is removed unless server is configured to use FQDN for node names.
  */
-bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
+bool Node::resolveName(bool useOnlyDNS, wchar_t *name, const wchar_t **facility)
 {
    bool resolved = false;
-   bool truncated = false;
 
-   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Resolving name for node %s [%u]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Resolving name for node %s [%u]", m_name, m_id);
 
-   TCHAR name[MAX_OBJECT_NAME];
    if (isMyIP(m_ipAddress))
    {
       if (m_zoneUIN != 0)
@@ -14586,48 +14603,34 @@ bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
          if (conn != nullptr)
          {
             resolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr);
-            *facility = _T("proxy agent");
+            *facility = L"proxy agent";
          }
       }
       else
       {
          resolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr);
-         *facility = _T("system resolver");
+         *facility = L"system resolver";
       }
 
       // Check for systemd synthetic record
       if (resolved && (name[0] == '_'))
       {
-         TCHAR buffer[64];
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("IP address %s on node %s [%u] was resolved to \"%s\" which looks like systemd synthetic record and therefore ignored"), m_ipAddress.toString(buffer), m_name, m_id, name);
+         wchar_t buffer[64];
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"IP address %s on node %s [%u] was resolved to \"%s\" which looks like systemd synthetic record and therefore ignored", m_ipAddress.toString(buffer), m_name, m_id, name);
          resolved = false;
       }
    }
    else
    {
-      TCHAR buffer[64];
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Primary IP address %s of node %s [%u] cannot be found on any of node's interfaces and therefore ignored"), m_ipAddress.toString(buffer), m_name, m_id);
+      wchar_t buffer[64];
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Primary IP address %s of node %s [%u] cannot be found on any of node's interfaces and therefore ignored", m_ipAddress.toString(buffer), m_name, m_id);
    }
 
-   // Use primary IP if resolved successfully
-   if (resolved)
-   {
-      _tcslcpy(m_name, name, MAX_OBJECT_NAME);
-      if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
-      {
-         TCHAR *pPoint = _tcschr(m_name, _T('.'));
-         if (pPoint != nullptr)
-         {
-            *pPoint = _T('\0');
-            truncated = true;
-         }
-      }
-   }
-   else
+   if (!resolved)
    {
       // Try to resolve each interface's IP address
       readLockChildList();
-      for(int i = 0; i < getChildList().size(); i++)
+      for(int i = 0; (i < getChildList().size()) && !resolved; i++)
       {
          NetObj *curr = getChildList().get(i);
          if ((curr->getObjectClass() == OBJECT_INTERFACE) && !static_cast<Interface*>(curr)->isLoopback())
@@ -14638,9 +14641,8 @@ bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
                InetAddress a = addrList.get(n);
                if (a.isValidUnicast() && (a.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr))
                {
-                  _tcslcpy(m_name, name, MAX_OBJECT_NAME);
                   resolved = true;
-                  *facility = _T("system resolver");
+                  *facility = L"system resolver";
                   break;
                }
             }
@@ -14651,16 +14653,16 @@ bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
       // Try to get hostname from agent if address resolution fails
       if (!(resolved || useOnlyDNS))
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Resolving name for node %s [%u] via agent"), m_name, m_id);
-         TCHAR buffer[256];
-         if (getMetricFromAgent(_T("System.Hostname"), buffer, 256) == DCE_SUCCESS)
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Resolving name for node %s [%u] via agent", m_name, m_id);
+         wchar_t buffer[256];
+         if (getMetricFromAgent(L"System.Hostname", buffer, 256) == DCE_SUCCESS)
          {
             Trim(buffer);
             if (buffer[0] != 0)
             {
-               _tcslcpy(m_name, buffer, MAX_OBJECT_NAME);
+               wcslcpy(name, buffer, MAX_OBJECT_NAME);
                resolved = true;
-               *facility = _T("agent");
+               *facility = L"agent";
             }
          }
       }
@@ -14668,25 +14670,41 @@ bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
       // Try to get hostname from SNMP if other methods fails
       if (!(resolved || useOnlyDNS))
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Resolving name for node %s [%u] via SNMP"), m_name, m_id);
-         TCHAR buffer[MAX_RESULT_LENGTH];
-         if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Resolving name for node %s [%u] via SNMP", m_name, m_id);
+         wchar_t buffer[MAX_RESULT_LENGTH];
+         if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, L".1.3.6.1.2.1.1.5.0", buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
          {
             Trim(buffer);
             if (buffer[0] != 0)
             {
-               _tcslcpy(m_name, buffer, MAX_OBJECT_NAME);
+               wcslcpy(name, buffer, MAX_OBJECT_NAME);
                resolved = true;
-               *facility = _T("SNMP");
+               *facility = L"SNMP";
             }
          }
       }
    }
 
+   bool truncated = false;
+   if (resolved && !(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
+   {
+      wchar_t *p = wcschr(name, L'.');
+      if (p != nullptr)
+      {
+         *p = 0;
+         truncated = true;
+      }
+      if (name[0] == 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Name for node [%u] is empty after removing domain part", m_id);
+         resolved = false;
+      }
+   }
+
    if (resolved)
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Name for node [%u] was resolved to %s%s using %s"), m_id, m_name, truncated ? _T(" (truncated to host part)") : _T(""), *facility);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Name for node [%u] was resolved to %s%s using %s", m_id, name, truncated ? L" (truncated to host part)" : L"", *facility);
    else
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Name for node [%u] was not resolved"), m_id);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Name for node [%u] was not resolved", m_id);
    return resolved;
 }
 
