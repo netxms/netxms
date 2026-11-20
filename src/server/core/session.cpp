@@ -10249,7 +10249,16 @@ void ClientSession::execTableTool(const NXCPMessage& request)
          shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
          if (object != nullptr)
          {
-            if (object->getObjectClass() == OBJECT_NODE)
+            if (object->getObjectClass() != OBJECT_NODE)
+            {
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
+            else if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_CONTROL))
+            {
+               writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on executing table tool [%u]", dwToolId);
+               response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            }
+            else
             {
                StringMap inputFields(request, VID_FIELD_LIST_BASE, VID_NUM_FIELDS);
                StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
@@ -10262,10 +10271,6 @@ void ClientSession::execTableTool(const NXCPMessage& request)
                         dwToolId, object->getName(), inputFieldsLog.cstr());
                }
                response.setField(VID_RCC, rcc);
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
             }
          }
          else
