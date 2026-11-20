@@ -1016,31 +1016,6 @@ int NXCORE_EXPORTABLE ProcessConsoleCommand(const wchar_t *command, ServerConsol
       bool success = nxlog_rotate();
       console->printf(L"Log rotation %s\n", success ? L"completed successfully" : L"failed");
    }
-   else if (IsCommand(_T("RAISE"), szBuffer, 5))
-   {
-      // Get argument
-      ExtractWord(pArg, szBuffer);
-
-      if (IsCommand(_T("ACCESS"), szBuffer, 6))
-      {
-         ConsoleWrite(console, _T("Raising exception...\n"));
-         char *p = nullptr;
-         *p = 0;
-      }
-      else if (IsCommand(_T("BREAKPOINT"), szBuffer, 5))
-      {
-#ifdef _WIN32
-         ConsoleWrite(console, _T("Raising exception...\n"));
-         RaiseException(EXCEPTION_BREAKPOINT, 0, 0, nullptr);
-#else
-         ConsoleWrite(console, _T("ERROR: Not supported on current platform\n"));
-#endif
-      }
-      else
-      {
-         ConsoleWrite(console, _T("Invalid exception name; possible names are:\nACCESS BREAKPOINT\n"));
-      }
-   }
    else if (IsCommand(_T("EXIT"), szBuffer, 4))
    {
       if (console->isRemote())
@@ -2354,7 +2329,6 @@ int NXCORE_EXPORTABLE ProcessConsoleCommand(const wchar_t *command, ServerConsol
             _T("   notify <session> <code> [<data>]  - Send notification message to client session\n")
             _T("   ping <address>                    - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>                - Initiate node poll\n")
-            _T("   raise <exception>                 - Raise exception\n")
             _T("   recommission <node>               - Clear decommissioned state of node (node stays unmanaged)\n")
             _T("   reload mib                        - Reload MIB tree from compiled file\n")
             _T("   scan <range start> <range end> [proxy <id>|zone <uin>] [discovery] \n")
