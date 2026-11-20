@@ -252,10 +252,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 #ifdef NDRX_VERSION
    { _T("EnduroX.Client.ActiveConversations(*)"), H_ClientInfo, _T("a"), DCI_DT_INT, _T("Enduro/X client {instance}: active conversations") },
-   { _T("EnduroX.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Enduro/X client {instance} machine") },
-   { _T("EnduroX.Client.Machine(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X client {instance} name") },
-   { _T("EnduroX.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X client {instance} name") },
-   { _T("EnduroX.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X client {instance} state") },
+   { _T("EnduroX.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Enduro/X client {instance}: active requests") },
+   { _T("EnduroX.Client.Machine(*)"), H_ClientInfo, _T("M"), DCI_DT_STRING, _T("Enduro/X client {instance}: machine ID") },
+   { _T("EnduroX.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Enduro/X client {instance}: name") },
+   { _T("EnduroX.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X client {instance}: state") },
    { _T("EnduroX.Domain.ID"), H_DomainInfo, _T("I"), DCI_DT_STRING, _T("Enduro/X domain ID") },
    { _T("EnduroX.Domain.Queues"), H_DomainInfo, _T("Q"), DCI_DT_INT,  _T("Enduro/X: number of queues") },
    { _T("EnduroX.Domain.Servers"), H_DomainInfo, _T("S"), DCI_DT_INT, _T("Enduro/X: number of servers") },
@@ -284,10 +284,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("EnduroX.ServiceGroup.SuccessfulRequests(*)"), H_ServiceGroupInfo, _T("s"), DCI_DT_INT, _T("Enduro/X service group {instance}: successful requests") }
 #else
    { _T("Tuxedo.Client.ActiveConversations(*)"), H_ClientInfo, _T("a"), DCI_DT_INT, _T("Tuxedo client {instance}: active conversations") },
-   { _T("Tuxedo.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Tuxedo client {instance} machine") },
-   { _T("Tuxedo.Client.Machine(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance} name") },
-   { _T("Tuxedo.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance} name") },
-   { _T("Tuxedo.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo client {instance} state") },
+   { _T("Tuxedo.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Tuxedo client {instance}: active requests") },
+   { _T("Tuxedo.Client.Machine(*)"), H_ClientInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo client {instance}: machine ID") },
+   { _T("Tuxedo.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance}: name") },
+   { _T("Tuxedo.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo client {instance}: state") },
    { _T("Tuxedo.IsMasterMachine"), H_IsMasterMachine, NULL, DCI_DT_INT, _T("Tuxedo master machine flag") },
    { _T("Tuxedo.Domain.ID"), H_DomainInfo, _T("I"), DCI_DT_STRING, _T("Tuxedo domain ID") },
    { _T("Tuxedo.Domain.Master"), H_DomainInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo domain master/backup machines") },
