@@ -572,7 +572,7 @@ __PACK_END__
 #define CMD_CLOSE_TCP_PROXY               0x016E
 #define CMD_GET_DEPENDENT_NODES           0x016F
 #define CMD_DELETE_DCI_ENTRY              0x0170
-#define CMD_GET_ACTIVE_THRESHOLDS         0x0171
+//#define CMD_GET_ACTIVE_THRESHOLDS         0x0171
 #define CMD_QUERY_INTERNAL_TOPOLOGY       0x0172
 #define CMD_GET_ACTION_LIST               0x0173
 #define CMD_PROXY_MESSAGE                 0x0174

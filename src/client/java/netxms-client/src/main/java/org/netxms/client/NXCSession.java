@@ -6550,39 +6550,6 @@ public class NXCSession
    }
 
    /**
-    * Get active thresholds
-    *
-    * @param dciConfig Dci config
-    * @return list of active thresholds
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public List<Threshold> getActiveThresholds(List<MapDataSource> dciConfig) throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ACTIVE_THRESHOLDS);
-      long base = NXCPCodes.VID_DCI_VALUES_BASE;
-      msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, dciConfig.size());
-      for(MapDataSource c : dciConfig)
-      {
-         c.fillMessage(msg, base);
-         base += 10;
-      }
-
-      sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-
-      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
-      List<Threshold> list = new ArrayList<Threshold>(count);
-      base = NXCPCodes.VID_DCI_THRESHOLD_BASE;
-      for(int i = 0; i < count; i++, base += 20)
-      {
-         list.add(new Threshold(response, base));
-      }
-
-      return list;
-   }
-
-   /**
     * Get last value for given table DCI on given node
     *
     * @param nodeId ID of the node to get DCI values for

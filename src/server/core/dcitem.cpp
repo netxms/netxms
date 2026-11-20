@@ -3303,20 +3303,16 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const shared_ptr<D
 /**
  * Fill NXCP message with thresholds
  */
-void DCItem::fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly)
+void DCItem::fillMessageWithThresholds(NXCPMessage *msg)
 {
-	lock();
+   lock();
 
-	msg->setField(VID_NUM_THRESHOLDS, (UINT32)getThresholdCount());
-	uint32_t fieldId = VID_DCI_THRESHOLD_BASE;
-	for(int i = 0; i < getThresholdCount(); i++, fieldId += 20)
-	{
-	   Threshold *threshold = m_thresholds->get(i);
-	   if (!activeOnly || threshold->isReached())
-         threshold->fillMessage(msg, fieldId, this);
-	}
+   msg->setField(VID_NUM_THRESHOLDS, static_cast<uint32_t>(getThresholdCount()));
+   uint32_t fieldId = VID_DCI_THRESHOLD_BASE;
+   for(int i = 0; i < getThresholdCount(); i++, fieldId += 20)
+      m_thresholds->get(i)->fillMessage(msg, fieldId, this);
 
-	unlock();
+   unlock();
 }
 
 /**
