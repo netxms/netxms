@@ -30,10 +30,9 @@
 	var MOVE_THRESHOLD = 10;
 
 	/**
-	 * Long press delay in ms. Deliberately has NO upper cutoff - the menu opens on this timer while
-	 * the finger is still down, so holding longer never defeats it. The vendored longpress.js used
-	 * 500 ms and fired on release; 500 ms proved too eager once the menu opened on press instead,
-	 * and 1000 ms still read slightly quick on hardware.
+	 * Long press delay in ms: how long a touch must be held still before the context menu opens. The
+	 * menu opens on this timer while the finger is still down, so there is no upper limit - holding
+	 * longer never cancels it.
 	 *
 	 * Any value above LONGPRESS_JS_THRESHOLD leaves a window in which longpress.js would otherwise
 	 * open the menu first, so this constant cannot be raised without the touchEndCapture()
@@ -111,7 +110,7 @@
 
 		destructor : "destroy",
 
-		properties : [ "view" ],
+		properties : [ "view", "plainWheelZoom", "embedded" ],
 
 		events : [ "zoom", "pan", "dragpan" ]
 	});
@@ -129,6 +128,9 @@
 	 */
 	var instances = {};
 	var listenersInstalled = false;
+
+	/** The instance a mouse pan started in, until its button is released. */
+	var mouseOwner = null;
 
 	/**
 	 * Find the MapInput instance owning an event target, if any, and remember the widget node so
@@ -191,10 +193,20 @@
 		document.addEventListener("touchend", dispatch("touchEndCapture"), { capture : true, passive : false });
 		document.addEventListener("touchcancel", dispatch("touchEndCapture"), { capture : true, passive : false });
 		document.addEventListener("wheel", dispatch("wheel"), { capture : true, passive : false });
+		// A mouse pan stays with the map it started in until the button is released, wherever the pointer
+		// is meanwhile: a release over another part of the page must still end it.
+		var dispatchMouse = function(method) {
+			return function(e) {
+				var owner = (mouseOwner !== null) ? mouseOwner : findOwner(e.target);
+				if (owner != null) {
+					owner[method](e);
+				}
+			};
+		};
 		document.addEventListener("pointerdown", dispatch("pointerDown"), true);
-		document.addEventListener("pointermove", dispatch("pointerMove"), true);
-		document.addEventListener("pointerup", dispatch("pointerUp"), true);
-		document.addEventListener("pointercancel", dispatch("pointerUp"), true);
+		document.addEventListener("pointermove", dispatchMouse("pointerMove"), true);
+		document.addEventListener("pointerup", dispatchMouse("pointerUp"), true);
+		document.addEventListener("pointercancel", dispatchMouse("pointerUp"), true);
 		document.addEventListener("click", dispatch("clickCapture"), true);
 
 		// Safari raises these alongside the touch stream for a pinch, and they are what actually
@@ -226,10 +238,10 @@
 		instances[this.parentId] = this;
 		installListeners();
 
-		// Coalescing state - everything is accumulated here and flushed once per
-		// animation frame. The coalescing MUST happen in the browser: each notify
-		// is a full client/server round trip, and every zoom change triggers a
-		// full viewer refresh on the server side.
+		// Coalescing state. Input is accumulated here and sent at most once per animation frame (mouse
+		// wheel, mouse drag), or for touch shown as a preview and sent only when the gesture settles or the
+		// previous redraw has been drawn (see startPreview()). It must be coalesced in the browser: each
+		// notify is a full client/server round trip followed by a redraw of the map.
 		//
 		// What is accumulated is one transform of the viewport offset V (canvas pixels):
 		// V' = scale * V + (transX, transY). Zoom and pan samples do not commute, so they cannot be
@@ -253,6 +265,9 @@
 		this.view = null; // the server's view state for the rendered frame, see setView()
 		this.previewSettleTimer = null;
 		this.previewTimeoutTimer = null;
+
+		this.plainWheelZoom = false; // see setPlainWheelZoom()
+		this.embedded = false; // see setEmbedded()
 
 		this.resetGesture();
 	};
@@ -379,6 +394,11 @@
 				if (Math.abs(t.clientX - this.startX) < MOVE_THRESHOLD && Math.abs(t.clientY - this.startY) < MOVE_THRESHOLD) {
 					return;
 				}
+				if (this.embedded) {
+					// One finger scrolls the page the map is embedded in; two fingers pan and zoom the map
+					this.resetGesture();
+					return;
+				}
 				this.moved = true;
 				this.consumed = true;
 				this.cancelLongPress();
@@ -469,12 +489,24 @@
 			}, 50);
 		},
 
+		/**
+		 * Ctrl/Cmd + wheel zooms about the pointer, and so does a trackpad pinch, which browsers report as a
+		 * wheel event with ctrlKey set. A plain wheel zooms too if the user has chosen that; otherwise it
+		 * scrolls the map, or on a map embedded in a page is left to the page.
+		 */
 		wheel : function(e) {
 			if (!this.onCanvas(e.target)) {
 				return;
 			}
-			// queueZoom() takes client coordinates and makes them canvas-relative itself
-			this.queueZoom(Math.exp(-e.deltaY * WHEEL_FACTOR), e.clientX, e.clientY);
+			if (e.ctrlKey || e.metaKey || this.plainWheelZoom) {
+				// queueZoom() takes client coordinates and makes them canvas-relative itself
+				this.queueZoom(Math.exp(-e.deltaY * WHEEL_FACTOR), e.clientX, e.clientY);
+			} else if (!this.embedded) {
+				// Scrolling down shows what is below, so the content moves up
+				this.queuePan(-e.deltaX, -e.deltaY);
+			} else {
+				return;
+			}
 			e.preventDefault();
 		},
 
@@ -495,6 +527,7 @@
 				return;
 			}
 			this.mousePanning = true;
+			mouseOwner = this;
 			this.mouseMoved = false;
 			this.lastMouseX = e.clientX;
 			this.lastMouseY = e.clientY;
@@ -506,7 +539,14 @@
 		},
 
 		pointerMove : function(e) {
-			if (!this.mousePanning || e.buttons !== 1) {
+			if (!this.mousePanning) {
+				return;
+			}
+			if ((e.buttons & 1) === 0) {
+				this.pointerUp(e); // released where no pointerup reached the page, such as outside the browser window
+				return;
+			}
+			if (e.buttons !== 1) {
 				return;
 			}
 			var dx = e.clientX - this.lastMouseX;
@@ -524,6 +564,9 @@
 			if (this.mousePanning) {
 				this.flush(); // still a drag pan
 				this.mousePanning = false;
+			}
+			if (mouseOwner === this) {
+				mouseOwner = null;
 			}
 		},
 
@@ -694,6 +737,21 @@
 		},
 
 		/**
+		 * The plain mouse wheel zooms, as Ctrl/Cmd + wheel does, instead of scrolling the map (user preference).
+		 */
+		setPlainWheelZoom : function(value) {
+			this.plainWheelZoom = value;
+		},
+
+		/**
+		 * The map is part of a larger scrollable page, such as a dashboard: the plain mouse wheel and a
+		 * one-finger touch drag scroll the page instead of the map.
+		 */
+		setEmbedded : function(value) {
+			this.embedded = value;
+		},
+
+		/**
 		 * Send the previewed transform. The preview stays on screen until the redraw for it has been applied.
 		 */
 		commitPreview : function() {
@@ -848,6 +906,9 @@
 			if (instances[this.parentId] === this) {
 				delete instances[this.parentId];
 				instanceCount--;
+			}
+			if (mouseOwner === this) {
+				mouseOwner = null;
 			}
 			this.node = null;
 		}

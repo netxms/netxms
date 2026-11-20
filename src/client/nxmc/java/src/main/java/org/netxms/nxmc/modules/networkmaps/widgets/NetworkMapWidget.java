@@ -104,6 +104,7 @@ public class NetworkMapWidget extends Composite
 		setLayout(new FillLayout());
 
       viewer = new ExtendedGraphViewer(this, SWT.NONE, view, null);
+      viewer.setEmbedded(true);
       labelProvider = new MapLabelProvider(viewer);
 		viewer.setContentProvider(new MapContentProvider(viewer, labelProvider));
 		viewer.setLabelProvider(labelProvider);

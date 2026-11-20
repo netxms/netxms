@@ -131,6 +131,19 @@ public class MapInputWidget
    }
 
    /**
+    * Set how the browser treats the mouse wheel and one-finger touch on this map.
+    *
+    * @param plainWheelZoom true if the mouse wheel zooms without Ctrl/Cmd held; otherwise it scrolls
+    * @param embedded true if the map is part of a larger scrollable page: the plain mouse wheel and one-finger touch drag then
+    *           scroll the page instead of the map
+    */
+   public void setOptions(boolean plainWheelZoom, boolean embedded)
+   {
+      remoteObject.set("plainWheelZoom", plainWheelZoom);
+      remoteObject.set("embedded", embedded);
+   }
+
+   /**
     * Handle client side event.
     *
     * @param event event name

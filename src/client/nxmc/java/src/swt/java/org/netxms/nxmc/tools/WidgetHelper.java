@@ -1514,6 +1514,19 @@ public class WidgetHelper
    }
 
    /**
+    * Set how the map input handler attached to a control treats the mouse wheel and one-finger touch. Web client only; on the
+    * desktop client the map handles the mouse wheel itself.
+    *
+    * @param control control the map input listener is attached to
+    * @param plainWheelZoom true if the mouse wheel zooms without Ctrl/Cmd held; otherwise it scrolls
+    * @param embedded true if the map is part of a larger scrollable page: the plain mouse wheel and one-finger touch drag then
+    *           scroll the page instead of the map
+    */
+   public static void setMapInputOptions(Control control, boolean plainWheelZoom, boolean embedded)
+   {
+   }
+
+   /**
     * Tell the map input handler attached to a control where the view is and how far it may go. Web client only; the desktop
     * client has no gesture preview.
     *

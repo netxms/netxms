@@ -51,6 +51,7 @@ import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomListener;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -76,6 +77,7 @@ import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapTextBox;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -98,6 +100,9 @@ import org.xnap.commons.i18n.I18n;
 public class ExtendedGraphViewer extends GraphViewer
 {
    public static final double[] zoomLevels = { 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00 };
+
+   /** Preference: plain mouse wheel (without Ctrl/Cmd) zooms the map instead of scrolling it */
+   public static final String PREF_PLAIN_WHEEL_ZOOM = "NetMap.PlainWheelZoom";
 
    private I18n i18n = LocalizationHelper.getI18n(ExtendedGraphViewer.class);
    private View view;
@@ -141,7 +146,10 @@ public class ExtendedGraphViewer extends GraphViewer
    private org.eclipse.draw2d.geometry.Point objectDragStart = null; // press location of an object drag, object layer coordinates
    private Map<CGraphNode, org.eclipse.draw2d.geometry.Point> objectDragOrigins = new HashMap<>(); // dragged nodes, locations before the drag
    private int dragPanGesture = 0; // mouse drag the ownership below was decided for
-   private boolean dragPanOnObject = false; // that drag started on a map object while object movement was enabled
+   private boolean dragPanOnObject = false; // that drag started on something that handles the drag itself (see isPanStart())
+   private Point lastPress = null; // location of the last left button press, until a mouse drag pan decides from it
+   private boolean lastPressPans = false; // a drag starting at lastPress pans the view
+   private boolean embedded = false; // part of a larger scrollable page, such as a dashboard
    private int figureZoomIndex = -1; // zoom level bucket the figures were last rebuilt for on a zoom change
    private boolean viewStateUpdateScheduled = false;
    private boolean boxSelectionActive = false;
@@ -317,15 +325,16 @@ public class ExtendedGraphViewer extends GraphViewer
          }
       });
 
-      // Ctrl/Cmd + mouse wheel zooms to the cursor; plain wheel keeps the canvas's default scroll.
+      // Ctrl/Cmd + mouse wheel zooms to the cursor, and so does the plain wheel if the user has chosen that (see
+      // isPlainWheelZoom()); otherwise the plain wheel keeps the canvas's default scroll.
       // Registered via untyped addListener so it compiles under RWT (which has no MouseWheelListener);
       // RWT does not generate wheel events, so this handler is inert on the web client.
       graph.addListener(SWT.MouseWheel, new Listener() {
          @Override
          public void handleEvent(Event event)
          {
-            if ((event.stateMask & SWT.MOD1) == 0)
-               return; // plain wheel scrolls the map; zoom only with Ctrl/Cmd held
+            if (((event.stateMask & SWT.MOD1) == 0) && !isPlainWheelZoom())
+               return; // plain wheel scrolls the map
             event.doit = false; // suppress default scroll while zooming
             if (event.count != 0)
                zoomToCursor(event.count > 0, event.x, event.y);
@@ -338,7 +347,8 @@ public class ExtendedGraphViewer extends GraphViewer
 
       // Continuous pointer input (pinch, touch drag, mouse wheel, mouse drag). On the desktop client this is a no-op, because SWT
       // delivers mouse move and mouse wheel to the canvas directly. In the web client RAP delivers neither, so gestures are
-      // classified and coalesced in the browser and arrive here already throttled to animation frame cadence.
+      // classified and coalesced in the browser, which shows a touch gesture by transforming the last frame it was sent and sends
+      // it here only as often as the server's redraws can keep up (see mapinput.js).
       WidgetHelper.attachMapInputListener(graph, new MapInputListener() {
          @Override
          public void onZoom(double factor, int x, int y, int dx, int dy)
@@ -370,17 +380,40 @@ public class ExtendedGraphViewer extends GraphViewer
          @Override
          public void onDragPan(int dx, int dy, int gesture, int startX, int startY)
          {
-            // Decided once per drag, from the point where it started - not from the press event, which RAP drops when it arrives
-            // while a response is being applied, and which can reach the server after the drag's first pan
+            // Decided once per drag, from the point where it started: as seen when the press arrived, because by the first pan the
+            // drag may have moved what was there (a resize handle moves with it). If the press has not arrived - RAP drops a press
+            // that comes while a response is being applied, and a press can also reach the server after the drag's first pan -
+            // nothing has moved yet, and the point is checked now.
             if (gesture != dragPanGesture)
             {
                dragPanGesture = gesture;
-               dragPanOnObject = draggingEnabled && isObjectAt(startX, startY);
+               boolean pans = ((lastPress != null) && (Math.abs(lastPress.x - startX) <= 2) && (Math.abs(lastPress.y - startY) <= 2)) ?
+                     lastPressPans : isPanStart(startX, startY);
+               lastPress = null;
+               dragPanOnObject = !pans;
             }
             if (!dragPanOnObject)
                onPan(dx, dy);
          }
       });
+
+      // Draw2D has handled the press by the time this runs, but nothing has moved yet
+      graph.addListener(SWT.MouseDown, (e) -> {
+         if (e.button == 1)
+         {
+            lastPress = new Point(e.x, e.y);
+            lastPressPans = isPanStart(e.x, e.y);
+         }
+      });
+
+      updateMapInputOptions();
+      final PreferenceStore preferenceStore = PreferenceStore.getInstance();
+      final IPropertyChangeListener preferenceListener = (e) -> {
+         if (e.getProperty().equals(PREF_PLAIN_WHEEL_ZOOM) && !graph.isDisposed())
+            updateMapInputOptions();
+      };
+      preferenceStore.addPropertyChangeListener(preferenceListener);
+      graph.addDisposeListener((e) -> preferenceStore.removePropertyChangeListener(preferenceListener));
 
       graph.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -917,6 +950,60 @@ public class ExtendedGraphViewer extends GraphViewer
    }
 
    /**
+    * Check if a mouse drag starting at the given point of the control pans the view, as a drag on the map background does. A drag
+    * on a map object or a decoration moves it instead while object movement is enabled (and pans while it is locked), and a drag
+    * on a resize handle or on an overlay control such as the back button never pans.
+    *
+    * @param x X in control coordinates
+    * @param y Y in control coordinates
+    * @return true if a drag starting at that point pans the view
+    */
+   private boolean isPanStart(int x, int y)
+   {
+      IFigure objectLayer = graph.getZestRootLayer();
+      for(IFigure f = graph.getLightweightSystem().getRootFigure().findFigureAt(x, y); f != null; f = f.getParent())
+      {
+         if ((f instanceof ResizeHandle) || (f.getParent() == controlLayer))
+            return false;
+         if ((f.getParent() == objectLayer) || (f.getParent() == decorationLayer))
+            return !draggingEnabled;
+      }
+      return true;
+   }
+
+   /**
+    * Mark this map as part of a larger scrollable page, such as a dashboard, instead of filling a view of its own. Such a map never
+    * zooms with the plain mouse wheel, whatever the user preference says, and in the web client leaves the plain wheel and
+    * one-finger touch drag to the page; Ctrl/Cmd + mouse wheel, mouse drag and two-finger touch gestures still pan and zoom it.
+    *
+    * @param embedded true if the map is embedded in a scrollable page
+    */
+   public void setEmbedded(boolean embedded)
+   {
+      this.embedded = embedded;
+      updateMapInputOptions();
+   }
+
+   /**
+    * Check if the plain mouse wheel (without Ctrl/Cmd) zooms this map. It does if the user has chosen that in the network map
+    * preferences, except on a map embedded in a scrollable page.
+    *
+    * @return true if the plain mouse wheel zooms
+    */
+   private boolean isPlainWheelZoom()
+   {
+      return !embedded && PreferenceStore.getInstance().getAsBoolean(PREF_PLAIN_WHEEL_ZOOM, false);
+   }
+
+   /**
+    * Send the mouse wheel and touch options to the web client's map input handler.
+    */
+   private void updateMapInputOptions()
+   {
+      WidgetHelper.setMapInputOptions(graph, isPlainWheelZoom(), embedded);
+   }
+
+   /**
     * Send the current view state to the web client's map input handler, at most once per pass of the event loop however many
     * changes the pass makes.
     */
@@ -1071,21 +1158,7 @@ public class ExtendedGraphViewer extends GraphViewer
       // New scroll offset so the same map point stays under the cursor
       int nx = (int)Math.round(mapX * newZoom - cursorX);
       int ny = (int)Math.round(mapY * newZoom - cursorY);
-
-      // Clamp to the valid scroll range (mirrors the drag-pan clamp in the background motion listener)
-      Dimension scaledSize = backgroundLayer.getSize();
-      scaledSize.performScale(newZoom);
-      org.eclipse.draw2d.geometry.Rectangle viewportArea = graph.getViewport().getClientArea();
-      if (nx > scaledSize.width - viewportArea.width)
-         nx = scaledSize.width - viewportArea.width;
-      if (ny > scaledSize.height - viewportArea.height)
-         ny = scaledSize.height - viewportArea.height;
-      if (nx < 0)
-         nx = 0;
-      if (ny < 0)
-         ny = 0;
-
-      graph.getViewport().setViewLocation(new org.eclipse.draw2d.geometry.Point(nx, ny));
+      setViewLocationClamped(new org.eclipse.draw2d.geometry.Point(nx, ny));
    }
 
    /**

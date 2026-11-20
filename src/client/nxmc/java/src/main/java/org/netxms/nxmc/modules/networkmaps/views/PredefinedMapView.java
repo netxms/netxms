@@ -104,6 +104,9 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PredefinedMapView extends AbstractNetworkMapView implements ImageUpdateListener
 {
+   /** How long (ms) a location saved in this view is shown instead of the server's copy, if the server's copy never shows it */
+   private static final long UNCONFIRMED_LOCATION_TIMEOUT = 10000;
+
    private final I18n i18n = LocalizationHelper.getI18n(PredefinedMapView.class);
 
 	private Action actionAddObject;
@@ -135,7 +138,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    private Set<NetworkMapElement> movedElementList = new HashSet<>();
    private Set<NetworkMapLink> changedLinkList = new HashSet<>();
    private long changesMapId = 0; // map that movedElementList and changedLinkList belong to
-   private Map<Long, Point> unconfirmedLocations = new HashMap<>(); // element ID -> location saved but not yet seen in the server's copy
+   private Map<Long, SavedLocation> unconfirmedLocations = new HashMap<>(); // element ID -> location saved but not yet seen in the server's copy
    private MapObjectSyncer mapObjectSyncer = null;
    private int mapWidth;
    private int mapHeight;
@@ -517,12 +520,12 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    /**
     * Keep elements moved in this view where the user put them until the server's copy of the map shows their new location. The
     * map page is rebuilt from the server's copy on every map update (status changes included), and an update that arrives before
-    * the server has applied the save would otherwise put the elements back where they were. Entries are removed only by
-    * confirmLocations().
+    * the server has applied the save would otherwise put the elements back where they were. Entries are removed by
+    * confirmLocations(), when the view switches to another map (contextChanged()), and when the save fails.
     */
    private void applyUnconfirmedLocations()
    {
-      for(Map.Entry<Long, Point> e : unconfirmedLocations.entrySet())
+      for(Map.Entry<Long, SavedLocation> e : unconfirmedLocations.entrySet())
       {
          NetworkMapElement element = mapPage.getElement(e.getKey(), NetworkMapElement.class);
          if (element != null)
@@ -531,9 +534,12 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    }
 
    /**
-    * Forget the unconfirmed locations that the server's copy of the map now shows, or whose elements are gone. Called with each map
-    * object as it arrives, before a page is built from it: a page shares the map object's elements, and applyUnconfirmedLocations()
-    * and updateObjectPositions() write local locations into them, so only a map object fresh from the server tells what it has.
+    * Forget the unconfirmed locations that the server's copy of the map now shows, whose elements are gone, or that were saved more
+    * than UNCONFIRMED_LOCATION_TIMEOUT ago. The timeout bounds the case where the server's copy never shows the saved location,
+    * because another user moved the same element again before this view received an update: the view then shows the server's
+    * location instead of keeping its own. Called with each map object as it arrives, before a page is built from it: a page shares
+    * the map object's elements, and applyUnconfirmedLocations() and updateObjectPositions() write local locations into them, so only
+    * a map object fresh from the server tells what it has.
     *
     * @param map map object received from the server
     */
@@ -542,9 +548,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if (unconfirmedLocations.isEmpty())
          return;
       NetworkMapPage serverPage = map.createMapPage();
+      long expired = System.currentTimeMillis() - UNCONFIRMED_LOCATION_TIMEOUT;
       unconfirmedLocations.entrySet().removeIf(e -> {
          NetworkMapElement element = serverPage.getElement(e.getKey(), NetworkMapElement.class);
-         return (element == null) || ((element.getX() == e.getValue().x) && (element.getY() == e.getValue().y));
+         return (element == null) || ((element.getX() == e.getValue().x) && (element.getY() == e.getValue().y)) ||
+               (e.getValue().time < expired);
       });
    }
 
@@ -1993,9 +2001,10 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if (elementListLocalCopy.size() > 0)
          updateObjectPositions();
 
-      final Map<Long, Point> savedLocations = new HashMap<>();
+      final Map<Long, SavedLocation> savedLocations = new HashMap<>();
+      long now = System.currentTimeMillis();
       for(NetworkMapElement e : elementListLocalCopy)
-         savedLocations.put(e.getId(), new Point(e.getX(), e.getY()));
+         savedLocations.put(e.getId(), new SavedLocation(e.getX(), e.getY(), now));
       unconfirmedLocations.putAll(savedLocations);
 
       new Job(i18n.tr("Save object's new positions"), this) {
@@ -2048,5 +2057,23 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          return;
       final PreferenceStore settings = PreferenceStore.getInstance();
       viewer.zoomTo(settings.getAsDouble(getBaseId() + "@" + object.getObjectId() + ".zoom", 1.0));
+   }
+
+   /**
+    * Location of a map element as saved in this view, and when it was saved. Compared by identity, so that a failed save removes
+    * only its own entries from the unconfirmed locations.
+    */
+   private static class SavedLocation
+   {
+      final int x;
+      final int y;
+      final long time;
+
+      SavedLocation(int x, int y, long time)
+      {
+         this.x = x;
+         this.y = y;
+         this.time = time;
+      }
    }
 }
