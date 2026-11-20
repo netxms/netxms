@@ -1659,14 +1659,14 @@ static void RenameNotificationChannelInDB(std::pair<wchar_t*, wchar_t*> *names)
 }
 
 /**
- * Rename notification channel. Renames channels provided by chat bots only when allowChatBotChannel
- * is set (used by chat bot rename to keep the auto-registered channel in sync).
+ * Rename notification channel. Channel is renamed only if it is provided by chat bot when chatBotChannel
+ * is set (chat bot rename), or if it is a standalone channel otherwise.
  */
-static void RenameNotificationChannelInternal(wchar_t *name, wchar_t *newName, bool allowChatBotChannel)
+static void RenameNotificationChannelInternal(wchar_t *name, wchar_t *newName, bool chatBotChannel)
 {
    s_channelListLock.lock();
    NotificationChannel *curr = s_channelList.get(name);
-   if ((curr != nullptr) && (allowChatBotChannel || !curr->isProvidedByChatBot()))
+   if ((curr != nullptr) && (curr->isProvidedByChatBot() == chatBotChannel))
    {
       shared_ptr<NotificationChannel> nc = s_channelList.unlink(name);
       nc->updateName(newName);
@@ -1678,7 +1678,9 @@ static void RenameNotificationChannelInternal(wchar_t *name, wchar_t *newName, b
    else
    {
       if (curr != nullptr)
-         nxlog_debug_tag(DEBUG_TAG, 4, L"Attempt to rename notification channel \"%s\" provided by chat bot denied", name);
+         nxlog_debug_tag(DEBUG_TAG, 4, chatBotChannel ?
+            L"Standalone notification channel \"%s\" not renamed by chat bot rename" :
+            L"Attempt to rename notification channel \"%s\" provided by chat bot denied", name);
       MemFree(name);
       MemFree(newName);
    }

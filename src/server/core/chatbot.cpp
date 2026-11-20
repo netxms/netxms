@@ -1057,7 +1057,7 @@ uint32_t NXCORE_EXPORTABLE CreateChatBot(const wchar_t *name, const wchar_t *des
       uint32_t idleTimeout, const char *providerSlot, const StructArray<ChatBotUserMapping>& userMappings)
 {
    s_botsLock.lock();
-   if (s_bots.contains(name))
+   if (s_bots.contains(name) || IsNotificationChannelExists(name))
    {
       s_botsLock.unlock();
       MemFree(configuration);
@@ -1098,7 +1098,7 @@ uint32_t NXCORE_EXPORTABLE UpdateChatBot(const wchar_t *name, const wchar_t *des
 uint32_t NXCORE_EXPORTABLE RenameChatBot(const wchar_t *name, const wchar_t *newName)
 {
    s_botsLock.lock();
-   if (s_bots.contains(newName))
+   if (s_bots.contains(newName) || IsNotificationChannelExists(newName))
    {
       s_botsLock.unlock();
       return RCC_CHANNEL_ALREADY_EXIST;
