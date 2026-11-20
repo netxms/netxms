@@ -205,9 +205,7 @@ int H_DataCollectionHistory(Context *context)
    }
    else if (useAggregation)
    {
-      bucketSizeMs = (timeTo.asMilliseconds() - timeFrom.asMilliseconds()) / maxDataPoints;
-      if (bucketSizeMs < 1)
-         bucketSizeMs = 1;
+      bucketSizeMs = CalculateAggregationBucketSize(timeFrom.asMilliseconds(), timeTo.asMilliseconds(), maxDataPoints);
       hStmt = PrepareAggregatedDataSelect(hdb, objectId, dci->getStorageClass(), bucketSizeMs, condition);
    }
    else

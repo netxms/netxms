@@ -236,6 +236,20 @@ static inline const TCHAR *GetIdataValueNumericFilter()
 }
 
 /**
+ * Calculate bucket size for on-the-fly aggregation of the time range [timeFrom, timeTo].
+ * Requires maxDataPoints > 0 and timeTo > timeFrom. Number of data points is capped at MAX_DCI_DATA_RECORDS
+ * and bucket size is rounded up, so aggregation over any range produces at most MAX_DCI_DATA_RECORDS + 1
+ * buckets (range boundaries need not be aligned to bucket size).
+ */
+int64_t NXCORE_EXPORTABLE CalculateAggregationBucketSize(int64_t timeFrom, int64_t timeTo, uint32_t maxDataPoints)
+{
+   uint64_t span = static_cast<uint64_t>(timeTo) - static_cast<uint64_t>(timeFrom);
+   uint64_t points = std::min(maxDataPoints, static_cast<uint32_t>(MAX_DCI_DATA_RECORDS));
+   uint64_t bucketSize = span / points + ((span % points != 0) ? 1 : 0);
+   return (bucketSize > static_cast<uint64_t>(INT64_MAX)) ? INT64_MAX : static_cast<int64_t>(bucketSize);
+}
+
+/**
  * Prepare statement for reading aggregated data from idata table (numeric DCIs only).
  * Returns time-bucketed AVG/MIN/MAX values. Bucket size is formatted directly into the
  * query string (server-computed value, no injection risk).
@@ -272,9 +286,9 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32
             break;
          case DB_SYNTAX_MSSQL:
             _sntprintf(query, 1024,
-               _T("SELECT (idata_timestamp/") INT64_FMT _T(")*") INT64_FMT _T(",")
+               _T("SELECT (idata_timestamp/CAST(") INT64_FMT _T(" AS bigint))*CAST(") INT64_FMT _T(" AS bigint),")
                _T("AVG(CAST(idata_value AS float)),MIN(CAST(idata_value AS float)),MAX(CAST(idata_value AS float)) ")
-               _T("FROM idata WHERE item_id=?%s%s GROUP BY (idata_timestamp/") INT64_FMT _T(")*") INT64_FMT _T(" ORDER BY 1 DESC"),
+               _T("FROM idata WHERE item_id=?%s%s GROUP BY (idata_timestamp/CAST(") INT64_FMT _T(" AS bigint))*CAST(") INT64_FMT _T(" AS bigint) ORDER BY 1 DESC"),
                bucketSizeMs, bucketSizeMs, condition, numericFilter, bucketSizeMs, bucketSizeMs);
             break;
          case DB_SYNTAX_ORACLE:
@@ -318,9 +332,9 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32
             break;
          case DB_SYNTAX_MSSQL:
             _sntprintf(query, 1024,
-               _T("SELECT (idata_timestamp/") INT64_FMT _T(")*") INT64_FMT _T(",")
+               _T("SELECT (idata_timestamp/CAST(") INT64_FMT _T(" AS bigint))*CAST(") INT64_FMT _T(" AS bigint),")
                _T("AVG(CAST(idata_value AS float)),MIN(CAST(idata_value AS float)),MAX(CAST(idata_value AS float)) ")
-               _T("FROM idata_%u WHERE item_id=?%s%s GROUP BY (idata_timestamp/") INT64_FMT _T(")*") INT64_FMT _T(" ORDER BY 1 DESC"),
+               _T("FROM idata_%u WHERE item_id=?%s%s GROUP BY (idata_timestamp/CAST(") INT64_FMT _T(" AS bigint))*CAST(") INT64_FMT _T(" AS bigint) ORDER BY 1 DESC"),
                bucketSizeMs, bucketSizeMs, nodeId, condition, numericFilter, bucketSizeMs, bucketSizeMs);
             break;
          case DB_SYNTAX_ORACLE:

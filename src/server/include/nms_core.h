@@ -1446,6 +1446,7 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId,
          uint32_t maxRows, HistoricalDataType historicalDataType, const TCHAR *condition);
 DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32_t nodeId, DCObjectStorageClass storageClass,
          int64_t bucketSizeMs, const TCHAR *condition);
+int64_t NXCORE_EXPORTABLE CalculateAggregationBucketSize(int64_t timeFrom, int64_t timeTo, uint32_t maxDataPoints);
 #define SAMPLE_ATTR_FLAG_BOUNDED    0x0001   // dci_sample_attributes.flags: lower_bound and upper_bound are valid
 
 uint32_t NXCORE_EXPORTABLE RegisterComputationMethod(const MethodDescriptor& method);

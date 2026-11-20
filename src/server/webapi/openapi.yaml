@@ -7663,8 +7663,9 @@ paths:
             type: integer
             description: |
               When the request resolves to the raw tier, perform on-the-fly bucketing into
-              this many points and return avg/min/max per bucket. Ignored on hourly/daily
-              tier reads (those already serve pre-computed buckets).
+              this many points and return avg/min/max per bucket. Values above 200000 are
+              treated as 200000. The response can contain one bucket more than requested.
+              Ignored on hourly/daily tier reads (those already serve pre-computed buckets).
         - name: historicalDataType
           in: query
           schema:
