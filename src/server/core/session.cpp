@@ -464,7 +464,10 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
       return result;
    }
 
-   if (nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 8)
+   // Skip raw dumps of authentication and password-change requests
+   uint16_t code = msg->getCode();
+   if ((nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 8) && (code != CMD_LOGIN) && (code != CMD_SET_PASSWORD) &&
+       (code != CMD_VALIDATE_PASSWORD) && (code != CMD_2FA_VALIDATE_RESPONSE))
    {
       String msgDump = NXCPMessage::dump(m_messageReceiver->getRawMessageBuffer(), NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -2651,15 +2654,17 @@ uint32_t ClientSession::authenticateUserBySSOTicket(const NXCPMessage& request, 
    char ticket[1024];
    request.getFieldAsMBString(VID_PASSWORD, ticket, 1024);
    request.getFieldAsString(VID_LOGIN_NAME, loginInfo->loginName, MAX_USER_NAME);
-   if (CASAuthenticate(ticket, loginInfo->loginName))
+   bool valid = CASAuthenticate(ticket, loginInfo->loginName);
+   SecureZeroMemory(ticket, sizeof(ticket));
+   if (valid)
    {
-      debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, loginInfo->loginName);
+      debugPrintf(5, _T("SSO ticket is valid, login name %s"), loginInfo->loginName);
       rcc = AuthenticateUser(loginInfo->loginName, nullptr, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights,
             &loginInfo->changePassword, &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, true, &loginInfo->graceLogins);
    }
    else
    {
-      debugPrintf(5, _T("SSO ticket %hs is invalid"), ticket);
+      debugPrintf(5, _T("SSO ticket is invalid"));
       rcc = RCC_ACCESS_DENIED;
    }
    return rcc;
