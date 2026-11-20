@@ -964,7 +964,7 @@ public class ObjectContextMenuManager extends MenuManager
          {
             menu.add(actionOpenSshTerminal);
          }
-         if (node.hasAgent() && node.getPlatformName().startsWith("windows-"))
+         if (node.hasAgent() && (node.getPlatformName().startsWith("windows-") || node.getPlatformName().startsWith("linux-")))
          {
             menu.add(actionTakeScreenshot);
          }
