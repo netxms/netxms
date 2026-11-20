@@ -243,7 +243,7 @@ public:
    int sendMessageToChat(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location);
    bool sendQuestionToChat(const char *peerId, const char *text, const StringList& options, uint64_t questionId);
 
-   static TelegramDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
+   static TelegramDriver *createInstance(Config *config, NCDriverStorageManager *storageManager, bool chatBot);
 };
 
 /**
@@ -599,9 +599,10 @@ static bool ParseProxyEntry(ConfigEntry *entry, ProxyInfo *proxy)
 }
 
 /**
- * Create driver instance
+ * Create driver instance. Chat bot instance ignores ParseMode, because chat bot messages carry their
+ * own format (markdown is rendered as HTML, literal text must be displayed as written).
  */
-TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageManager *storageManager)
+TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageManager *storageManager, bool chatBot)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
 
@@ -641,6 +642,12 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Authentication token not provided"));
       return nullptr;
+   }
+
+   if (chatBot && (parseMode[0] != 0))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("ParseMode setting \"%hs\" is ignored for chat bot"), parseMode);
+      parseMode[0] = 0;
    }
 
    if ((options & (DISABLE_IP_V4 | DISABLE_IP_V6)) == (DISABLE_IP_V4 | DISABLE_IP_V6))
@@ -1391,7 +1398,7 @@ DECLARE_NCD_ENTRY_POINT(Telegram, &s_config)
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
       return nullptr;
    }
-   return TelegramDriver::createInstance(config, storageManager);
+   return TelegramDriver::createInstance(config, storageManager, false);
 }
 
 /**
@@ -1451,7 +1458,7 @@ DECLARE_CHATBOT_ENTRY_POINT
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
       return nullptr;
    }
-   TelegramDriver *driver = TelegramDriver::createInstance(config, storageManager);
+   TelegramDriver *driver = TelegramDriver::createInstance(config, storageManager, true);
    return (driver != nullptr) ? new TelegramChatBot(driver) : nullptr;
 }
 
