@@ -823,7 +823,7 @@ static ObjectArray<WirelessStationInfo> *GetWirelessStations(NObject *wirelessDo
          json_t *apResponse = DoRequest(wirelessDomain, endpoint);
          if (apResponse != nullptr)
          {
-            json_t *stationList = json_object_get(response, "results");
+            json_t *stationList = json_object_get(apResponse, "results");
             if (json_is_array(stationList))
             {
                size_t j;
