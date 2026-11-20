@@ -283,7 +283,7 @@ static int CASValidate(const char *ticket, char *loginName)
    }
 
    total = 0;
-   do 
+   do
    {
       b = SSL_read(ssl, buf + total, static_cast<int>(sizeof(buf) - 1 - total));
       total += b;
@@ -342,7 +342,11 @@ static int CASValidate(const char *ticket, char *loginName)
    /* cleanup and return */
 
 end:
-   MemFree(full_request);
+   if (full_request != nullptr)
+   {
+      SecureZeroMemory(full_request, 4096);  // contains ticket
+      MemFree(full_request);
+   }
    if (ssl != nullptr)
    {
       SSL_shutdown(ssl);
@@ -360,6 +364,13 @@ end:
  */
 bool CASAuthenticate(const char *ticket, wchar_t *loginName)
 {
+   // Ticket is inserted into validation request URL as is, so only URL-safe characters are accepted
+   if ((*ticket == 0) || (strspn(ticket, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._~-") != strlen(ticket)))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: ticket is empty or contains invalid characters"));
+      return false;
+   }
+
    bool success = false;
    s_lock.lock();
    char mbLogin[MAX_USER_NAME];
@@ -371,7 +382,7 @@ bool CASAuthenticate(const char *ticket, wchar_t *loginName)
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: ticket %hs validation failed, error %d"), ticket, rc);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: ticket validation failed, error %d"), rc);
    }
    s_lock.unlock();
    return success;
