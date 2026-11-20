@@ -28,32 +28,47 @@
 #include <vector>
 
 /**
- * Set when a statement issued by a set-based check stage fails. No further stage starts after that
- * and the whole check is rolled back: on PostgreSQL a failed statement poisons the transaction, so
- * every later query would fail too and a "no errors" result would be false.
+ * libnxdb failed query count when the check transaction started
  */
-static bool s_checkAborted = false;
+static uint64_t s_failedQueriesAtStart = 0;
 
 /**
- * SQLSelect for set-based check stages: a failure aborts the check
+ * Set by failures the libnxdb failed query counter does not see (table existence checks, table
+ * list, module checks). IsDataTableExist() and GetDataCollectionTargets() are shared with other
+ * nxdbmgr commands and set it there too; only the check reads it.
  */
-static DB_RESULT CheckSelect(const wchar_t *query)
+static bool s_uncountedFailure = false;
+
+/**
+ * Any failed query or table lookup since the check started aborts the check: no further stage starts
+ * and the check transaction is rolled back. On PostgreSQL a failed statement poisons the transaction,
+ * and elsewhere a stage that lost a query works on incomplete data, so a "no errors" result would be
+ * false. The data tables stage runs outside the transaction (see CheckDatabase), so changes it has
+ * already made stay.
+ */
+static bool IsCheckAborted()
 {
-   DB_RESULT hResult = SQLSelect(query);
-   if (hResult == nullptr)
-      s_checkAborted = true;
-   return hResult;
+   if (s_uncountedFailure)
+      return true;
+   LIBNXDB_PERF_COUNTERS counters;
+   DBGetPerfCounters(&counters);
+   return counters.failedQueries != s_failedQueriesAtStart;
 }
 
 /**
- * SQLQuery for set-based check stages: a failure aborts the check
+ * SQLSelect that issues nothing once the check is aborted
+ */
+static DB_RESULT CheckSelect(const wchar_t *query)
+{
+   return IsCheckAborted() ? nullptr : SQLSelect(query);
+}
+
+/**
+ * SQLQuery that issues nothing once the check is aborted
  */
 static bool CheckQuery(const wchar_t *query)
 {
-   if (SQLQuery(query))
-      return true;
-   s_checkAborted = true;
-   return false;
+   return !IsCheckAborted() && SQLQuery(query);
 }
 
 /**
@@ -64,8 +79,14 @@ static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32
    // This function is used by upgrade procedures for different versions,
    // and not all data collection target classes exists in older versions
    // Silently skip missing tables here
-   if (!skipTableCheck && DBIsTableExist(g_dbHandle, className) != DBIsTableExist_Found)
-      return;
+   if (!skipTableCheck)
+   {
+      int rc = DBIsTableExist(g_dbHandle, className);
+      if (rc == DBIsTableExist_Failure)
+         s_uncountedFailure = true;
+      if (rc != DBIsTableExist_Found)
+         return;
+   }
 
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT id FROM %s"), className);
@@ -124,7 +145,7 @@ IntegerArray<uint32_t> GetDataCollectionTargets()
    CollectObjectIdentifiers(L"power_domains", &list);
    CollectObjectIdentifiers(L"cooling_zones", &list);
    CollectObjectIdentifiers(L"rooms", &list);
-   CollectObjectIdentifiers(L"object_containers WHERE object_class=29 OR object_class=30", &list, true);   // objects of class "collector" or "circuit"
+   CollectObjectIdentifiers(L"object_containers WHERE object_class=" AS_STRING(OBJECT_COLLECTOR) L" OR object_class=" AS_STRING(OBJECT_CIRCUIT), &list, true);
    return list;
 }
 
@@ -475,18 +496,49 @@ static bool FindSubnetForNode(uint32_t id, const TCHAR *name)
 }
 
 /**
+ * Object classes stored in object_containers that also have a row in their own table
+ */
+static const struct
+{
+   int objectClass;
+   const wchar_t *table;
+} s_containerExtensionTables[] =
+{
+   { OBJECT_BUSINESSSERVICEPROTO, L"business_service_prototypes" },
+   { OBJECT_DASHBOARD, L"dashboards" },
+   { OBJECT_DASHBOARDTEMPLATE, L"dashboard_templates" },
+   { OBJECT_BUSINESSSERVICE, L"business_services" },
+   { OBJECT_RACK, L"racks" },
+   { OBJECT_FACILITY, L"facilities" },
+   { OBJECT_POWERDOMAIN, L"power_domains" },
+   { OBJECT_COOLINGZONE, L"cooling_zones" },
+   { OBJECT_ROOM, L"rooms" }
+};
+
+/**
  * Check missing object properties
  */
 static void CheckMissingObjectProperties(const wchar_t *table, const wchar_t *className, uint32_t builtinObjectId)
 {
-   wchar_t query[1024];
-   nx_swprintf(query, 1024, L"SELECT o.id FROM %s o LEFT OUTER JOIN object_properties p ON p.object_id = o.id WHERE p.name IS NULL", table);
-   DB_RESULT hResult = CheckSelect(query);
+   StringBuffer select(L"SELECT o.id FROM ");
+   select.append(table).append(L" o LEFT OUTER JOIN object_properties p ON p.object_id = o.id WHERE p.name IS NULL");
+   if (!wcscmp(table, L"object_containers"))
+   {
+      // An object with its own extension table row is covered under that table's class name
+      for(size_t i = 0; i < sizeof(s_containerExtensionTables) / sizeof(s_containerExtensionTables[0]); i++)
+      {
+         select.append(L" AND NOT (o.object_class=").append(s_containerExtensionTables[i].objectClass)
+               .append(L" AND EXISTS (SELECT 1 FROM ").append(s_containerExtensionTables[i].table).append(L" e WHERE e.id=o.id))");
+      }
+   }
+   DB_RESULT hResult = CheckSelect(select);
    if (hResult == nullptr)
       return;
 
+   wchar_t query[1024];
+
    int count = DBGetNumRows(hResult);
-   for(int i = 0; (i < count) && !s_checkAborted; i++)
+   for(int i = 0; (i < count) && !IsCheckAborted(); i++)
    {
       uint32_t id = DBGetFieldULong(hResult, i, 0);
       if (id == builtinObjectId)
@@ -531,7 +583,7 @@ struct ObjectClassTable
 
 /**
  * Class tables in loader order. Business services and prototypes are loaded from object_containers
- * (classes 28 and 15), their own tables are extensions covered by s_containerExtensionTables.
+ * (OBJECT_BUSINESSSERVICE and OBJECT_BUSINESSSERVICEPROTO), their own tables are extensions covered by s_containerExtensionTables.
  */
 static const ObjectClassTable s_objectClassTables[] =
 {
@@ -564,26 +616,6 @@ static const ObjectClassTable s_objectClassTables[] =
    { L"business_services", L"business service", 0 },
    { L"business_service_prototypes", L"business service prototype", 0 },
    { L"object_containers", L"container", 0 }
-};
-
-/**
- * Object classes stored in object_containers that also have a row in their own table
- */
-static const struct
-{
-   int objectClass;
-   const wchar_t *table;
-} s_containerExtensionTables[] =
-{
-   { 15, L"business_service_prototypes" },
-   { 23, L"dashboards" },
-   { 24, L"dashboard_templates" },
-   { 28, L"business_services" },
-   { 32, L"racks" },
-   { 42, L"facilities" },
-   { 43, L"power_domains" },
-   { 44, L"cooling_zones" },
-   { 45, L"rooms" }
 };
 
 /**
@@ -637,9 +669,10 @@ static StringBuffer BuildClassTableUnion(bool withTableName)
 static void CheckObjectClassCoverage()
 {
    StartStage(L"Object class coverage", sizeof(s_objectClassTables) / sizeof(ObjectClassTable));
-   for(size_t i = 0; (i < sizeof(s_objectClassTables) / sizeof(ObjectClassTable)) && !s_checkAborted; i++)
+   for(size_t i = 0; (i < sizeof(s_objectClassTables) / sizeof(ObjectClassTable)) && !IsCheckAborted(); i++)
    {
       const ObjectClassTable& c = s_objectClassTables[i];
+      ResetBulkYesNo();
       CheckMissingObjectProperties(c.table, c.className, c.builtinId);
       UpdateStageProgress(1);
    }
@@ -687,7 +720,7 @@ static void CheckDuplicateObjectIds()
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      for(int i = 0; (i < count) && !s_checkAborted; )
+      for(int i = 0; (i < count) && !IsCheckAborted(); )
       {
          uint32_t id = DBGetFieldULong(hResult, i, 0);
          StringList tables;
@@ -758,7 +791,7 @@ static void CheckDuplicateObjectGuids()
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      for(int i = 0; (i < count) && !s_checkAborted; i++)
+      for(int i = 0; (i < count) && !IsCheckAborted(); i++)
       {
          wchar_t guid[64];
          DBGetField(hResult, i, 0, guid, 64);
@@ -919,7 +952,7 @@ static void CheckDuplicateSubnets()
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      for(int i = 0; (i < count) && !s_checkAborted; i++)
+      for(int i = 0; (i < count) && !IsCheckAborted(); i++)
       {
          wchar_t addr[64];
          DBGetField(hResult, i, 0, addr, 64);
@@ -1172,7 +1205,7 @@ static void CheckObservationPointOwners()
    {
       wchar_t name[MAX_OBJECT_NAME], query[256];
       int count = DBGetNumRows(hResult);
-      for(int i = 0; (i < count) && !s_checkAborted; i++)
+      for(int i = 0; (i < count) && !IsCheckAborted(); i++)
       {
          uint32_t pointId = DBGetFieldULong(hResult, i, 0);
          uint32_t observerId = DBGetFieldULong(hResult, i, 1);
@@ -1226,7 +1259,7 @@ static void CheckEPP()
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      for(int i = 0; (i < count) && !s_checkAborted; i++)
+      for(int i = 0; (i < count) && !IsCheckAborted(); i++)
       {
          uint32_t chainId = DBGetFieldULong(hResult, i, 0);
          uint32_t ruleId = DBGetFieldULong(hResult, i, 1);
@@ -1269,7 +1302,7 @@ static void CheckEPP()
       }
       DBFreeResult(hResult);
    }
-   if (s_checkAborted)
+   if (IsCheckAborted())
    {
       EndStage();
       return;
@@ -1281,7 +1314,7 @@ static void CheckEPP()
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      for(int i = 0; (i < count) && !s_checkAborted; i++)
+      for(int i = 0; (i < count) && !IsCheckAborted(); i++)
       {
          uint32_t chainId = DBGetFieldULong(hResult, i, 0);
          uint32_t ruleId = DBGetFieldULong(hResult, i, 1);
@@ -1308,7 +1341,7 @@ static void CheckEPP()
       }
       DBFreeResult(hResult);
    }
-   if (s_checkAborted)
+   if (IsCheckAborted())
    {
       EndStage();
       return;
@@ -1484,14 +1517,28 @@ static void CheckCollectedData(bool isTable)
 
 	int64_t now = GetCurrentTimeMs();
 	IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+   // A missing data table was reported by the data tables stage; the operator may have declined to create it
+   for(int i = 0; (i < targets.size()) && !IsCheckAborted(); )
+   {
+      if (IsDataTableExist(isTable ? L"tdata_%u" : L"idata_%u", targets.get(i)))
+         i++;
+      else
+         targets.remove(i);
+   }
+   // An incomplete target list or a failed table lookup leaves nothing reliable to check
+   if (IsCheckAborted())
+   {
+      EndStage();
+      return;
+   }
 	SetStageWorkTotal(targets.size());
-	for(int i = 0; i < targets.size(); i++)
+	for(int i = 0; (i < targets.size()) && !IsCheckAborted(); i++)
    {
       uint32_t objectId = targets.get(i);
       TCHAR query[1024];
       _sntprintf(query, 1024, _T("SELECT count(*) FROM %s_%d WHERE %s_timestamp>") INT64_FMT,
                isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), now);
-      DB_RESULT hResult = SQLSelect(query);
+      DB_RESULT hResult = CheckSelect(query);
       if (hResult != nullptr)
       {
          if (DBGetFieldLong(hResult, 0, 0) > 0)
@@ -1501,7 +1548,7 @@ static void CheckCollectedData(bool isTable)
             {
                _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE %s_timestamp>") INT64_FMT,
                         isTable ? _T("tdata") : _T("idata"), objectId, isTable ? _T("tdata") : _T("idata"), now);
-               if (SQLQuery(query))
+               if (CheckQuery(query))
                   g_dbCheckFixes++;
             }
          }
@@ -1511,25 +1558,26 @@ static void CheckCollectedData(bool isTable)
 
 	ResetBulkYesNo();
 
-   for(int i = 0; i < targets.size(); i++)
+   for(int i = 0; (i < targets.size()) && !IsCheckAborted(); i++)
    {
       uint32_t objectId = targets.get(i);
       wchar_t query[1024];
       _sntprintf(query, 1024, _T("SELECT distinct(item_id) FROM %s_%d"), isTable ? _T("tdata") : _T("idata"), objectId);
-      DB_RESULT hResult = SQLSelect(query);
+      DB_RESULT hResult = CheckSelect(query);
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
-         for(int i = 0; i < count; i++)
+         for(int i = 0; (i < count) && !IsCheckAborted(); i++)
          {
             uint32_t id = DBGetFieldLong(hResult, i, 0);
-            if (!IsDciExists(id, objectId, isTable) && !isDciInDeleteList(objectId, id))
+            // A failed DCI lookup reports the DCI as non-existing
+            if (!IsDciExists(id, objectId, isTable) && !isDciInDeleteList(objectId, id) && !IsCheckAborted())
             {
                g_dbCheckErrors++;
                if (GetYesNoEx(_T("Found collected data for non-existing DCI [%u] on node [%u]. Delete invalid records?"), id, objectId))
                {
                   _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE item_id=%u"), isTable ? _T("tdata") : _T("idata"), objectId, id);
-                  if (SQLQuery(query))
+                  if (CheckQuery(query))
                      g_dbCheckFixes++;
                }
             }
@@ -1579,16 +1627,17 @@ static void CheckCollectedDataSingleTable(bool isTable)
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
+      for(int i = 0; (i < count) && !IsCheckAborted(); i++)
       {
          uint32_t id = DBGetFieldLong(hResult, i, 0);
-         if (!IsDciExists(id, 0, isTable))
+         // A failed DCI lookup reports the DCI as non-existing
+         if (!IsDciExists(id, 0, isTable) && !IsCheckAborted())
          {
             g_dbCheckErrors++;
             if (GetYesNoEx(_T("Found collected data for non-existing DCI [%u]. Delete invalid records?"), id))
             {
                _sntprintf(query, 1024, _T("DELETE FROM %s WHERE item_id=%d"), isTable ? _T("tdata") : _T("idata"), id);
-               if (SQLQuery(query))
+               if (CheckQuery(query))
                   g_dbCheckFixes++;
             }
          }
@@ -1983,6 +2032,7 @@ bool IsDataTableExist(const wchar_t *format, uint32_t id)
    if (rc == DBIsTableExist_Failure)
    {
       WriteToTerminalEx(L"WARNING: call to DBIsTableExist(\"%s\") failed\n", table);
+      s_uncountedFailure = true;
    }
    return rc != DBIsTableExist_NotFound;
 }
@@ -1992,13 +2042,19 @@ bool IsDataTableExist(const wchar_t *format, uint32_t id)
  */
 static void CheckDataTables()
 {
-   if (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0))
-      return;  // Single table mode
+   if (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0) || IsCheckAborted())
+      return;  // Single table mode, or the mode is unknown
 
    StartStage(_T("Data tables"));
 	IntegerArray<uint32_t> targets = GetDataCollectionTargets();
+   // An incomplete target list would make data tables of existing objects look orphaned
+   if (IsCheckAborted())
+   {
+      EndStage();
+      return;
+   }
 	SetStageWorkTotal(targets.size());
-	for(int i = 0; i < targets.size(); i++)
+	for(int i = 0; (i < targets.size()) && !IsCheckAborted(); i++)
    {
 	   uint32_t objectId = targets.get(i);
 
@@ -2009,7 +2065,7 @@ static void CheckDataTables()
 
          TCHAR objectName[MAX_OBJECT_NAME];
          DBMgrGetObjectName(objectId, objectName);
-			if (GetYesNoEx(_T("Data collection table (IDATA) for object %s [%d] not found. Create? (Y/N) "), objectName, objectId))
+			if (!IsCheckAborted() && GetYesNoEx(_T("Data collection table (IDATA) for object %s [%d] not found. Create? (Y/N) "), objectName, objectId))
 			{
 				if (CreateIDataTable(objectId))
 					g_dbCheckFixes++;
@@ -2017,13 +2073,15 @@ static void CheckDataTables()
       }
 
       // TDATA
+      if (IsCheckAborted())
+         break;   // Object name lookup or IDATA table creation failed
       if (!IsDataTableExist(_T("tdata_%u"), objectId))
       {
 			g_dbCheckErrors++;
 
          TCHAR objectName[MAX_OBJECT_NAME];
          DBMgrGetObjectName(objectId, objectName);
-			if (GetYesNoEx(_T("Data collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), objectName, objectId))
+			if (!IsCheckAborted() && GetYesNoEx(_T("Data collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), objectName, objectId))
 			{
 				if (CreateTDataTable(objectId))
 					g_dbCheckFixes++;
@@ -2033,14 +2091,15 @@ static void CheckDataTables()
       UpdateStageProgress(1);
    }
 	EndStage();
-
+   if (IsCheckAborted())
+      return;
 
    StartStage(_T("Orphaned data tables"));
    StringList *tables = DBGetTableList(g_dbHandle);
    if (tables != nullptr)
    {
       SetStageWorkTotal(tables->size());
-      for(int i = 0; i < tables->size(); i++)
+      for(int i = 0; (i < tables->size()) && !IsCheckAborted(); i++)
       {
          const wchar_t *table = tables->get(i);
          if (!wcsncmp(table, L"idata_", 6) || !wcsncmp(table, L"tdata_", 6))
@@ -2064,16 +2123,16 @@ static void CheckDataTables()
                      if (IsDataTableExist(_T("tdata_rows_%u"), objectId))
                      {
                         _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%u"), objectId);
-                        SQLQuery(query);
+                        CheckQuery(query);
                      }
                      if (IsDataTableExist(_T("tdata_records_%u"), objectId))
                      {
                         _sntprintf(query, 256, _T("DROP TABLE tdata_records_%u"), objectId);
-                        SQLQuery(query);
+                        CheckQuery(query);
                      }
                   }
                   _sntprintf(query, 256, _T("DROP TABLE %s"), table);
-                  if (SQLQuery(query))
+                  if (CheckQuery(query))
                      g_dbCheckFixes++;
                }
             }
@@ -2081,6 +2140,10 @@ static void CheckDataTables()
          UpdateStageProgress(1);
       }
       delete tables;
+   }
+   else
+   {
+      s_uncountedFailure = true;
    }
    EndStage();
 }
@@ -2403,7 +2466,7 @@ static void CheckTemplateBindingsOfTable(const wchar_t *table, const wchar_t *ki
 
    int count = DBGetNumRows(hResult);
    SetStageWorkTotal(count);
-   for(int i = 0; (i < count) && !s_checkAborted; i++)
+   for(int i = 0; (i < count) && !IsCheckAborted(); i++)
    {
       uint32_t dciId = DBGetFieldULong(hResult, i, 0);
       uint32_t ownerId = DBGetFieldULong(hResult, i, 1);
@@ -2469,7 +2532,7 @@ static void CheckTemplateBindings()
    StartStage(L"DCI template bindings");
    CheckTemplateBindingsOfTable(L"items", L"DCI");
    EndStage();
-   if (s_checkAborted)
+   if (IsCheckAborted())
       return;
 
    StartStage(L"Table DCI template bindings");
@@ -2496,7 +2559,7 @@ static void CheckCoupledReferences(const wchar_t *stage, const wchar_t *table, c
    {
       int count = DBGetNumRows(hResult);
       SetStageWorkTotal(count);
-      for(int i = 0; (i < count) && !s_checkAborted; i++)
+      for(int i = 0; (i < count) && !IsCheckAborted(); i++)
       {
          uint32_t id = DBGetFieldULong(hResult, i, 0);
          uint32_t objectId = DBGetFieldULong(hResult, i, 1);
@@ -2578,9 +2641,10 @@ static const EventCodeReference s_eventCodeReferences[] =
 static void CheckEventCodeReferences()
 {
    StartStage(L"Event code references", sizeof(s_eventCodeReferences) / sizeof(EventCodeReference));
-   for(size_t i = 0; (i < sizeof(s_eventCodeReferences) / sizeof(EventCodeReference)) && !s_checkAborted; i++)
+   for(size_t i = 0; (i < sizeof(s_eventCodeReferences) / sizeof(EventCodeReference)) && !IsCheckAborted(); i++)
    {
       const EventCodeReference& r = s_eventCodeReferences[i];
+      ResetBulkYesNo();
 
       StringBuffer query(L"SELECT t.");
       query.append(r.column).append(L",count(*) FROM ").append(r.table).append(L" t LEFT OUTER JOIN event_cfg e ON e.event_code=t.").append(r.column).append(L" WHERE ");
@@ -2604,7 +2668,7 @@ static void CheckEventCodeReferences()
                DBFreeResult(hDefault);
             }
          }
-         for(int j = 0; (j < count) && !s_checkAborted; j++)
+         for(int j = 0; (j < count) && !IsCheckAborted(); j++)
          {
             uint32_t code = DBGetFieldULong(hResult, j, 0);
             int rows = DBGetFieldLong(hResult, j, 1);
@@ -2669,6 +2733,7 @@ enum class OrphanFix
  */
 enum class OrphanStage
 {
+   Membership,       // parents of container, subnet and cluster memberships, checked before node linkage
    Object,           // references to objects
    DataCollection,   // references to DCIs and thresholds
    EventPolicy,      // event processing policy chains and categories
@@ -2701,6 +2766,11 @@ struct OrphanRelation
  */
 static const OrphanRelation s_orphanRelations[] =
 {
+   // A node counts as linked when it has a membership row, so these parents are checked before CheckNodes
+   { OrphanStage::Membership, L"container memberships", L"container_members", L"container_id", L"object_properties", L"object_id", L"container", OrphanFix::DeleteRow, false, nullptr },
+   { OrphanStage::Membership, L"node to subnet links", L"nsmap", L"subnet_id", L"object_properties", L"object_id", L"subnet", OrphanFix::DeleteRow, false, nullptr },
+   { OrphanStage::Membership, L"cluster memberships", L"cluster_members", L"cluster_id", L"object_properties", L"object_id", L"cluster", OrphanFix::DeleteRow, false, nullptr },
+
    { OrphanStage::Object, L"access control entries", L"acl", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"custom attributes", L"object_custom_attributes", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"object URLs", L"object_urls", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
@@ -2715,8 +2785,6 @@ static const OrphanRelation s_orphanRelations[] =
    { OrphanStage::Object, L"maintenance journal entries", L"maintenance_journal", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"active downtime records", L"active_downtimes", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"downtime log entries", L"downtime_log", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { OrphanStage::Object, L"container memberships", L"container_members", L"container_id", L"object_properties", L"object_id", L"container", OrphanFix::DeleteRow, true, nullptr },
-   { OrphanStage::Object, L"node to subnet links", L"nsmap", L"subnet_id", L"object_properties", L"object_id", L"subnet", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"subnet to node links", L"nsmap", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"zone proxy assignments", L"zone_proxies", L"object_id", L"object_properties", L"object_id", L"zone", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"zone proxy node references", L"zone_proxies", L"proxy_node", L"object_properties", L"object_id", L"proxy node", OrphanFix::DeleteRow, true, nullptr },
@@ -2730,7 +2798,6 @@ static const OrphanRelation s_orphanRelations[] =
    { OrphanStage::Object, L"SNMP agent records", L"node_snmp_agents", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"interface IP addresses", L"interface_address_list", L"iface_id", L"object_properties", L"object_id", L"interface", OrphanFix::DeleteRow, false, nullptr },
    { OrphanStage::Object, L"interface VLAN assignments", L"interface_vlan_list", L"iface_id", L"object_properties", L"object_id", L"interface", OrphanFix::DeleteRow, false, nullptr },
-   { OrphanStage::Object, L"cluster memberships", L"cluster_members", L"cluster_id", L"object_properties", L"object_id", L"cluster", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"cluster sync subnets", L"cluster_sync_subnets", L"cluster_id", L"object_properties", L"object_id", L"cluster", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"rack passive elements", L"rack_passive_elements", L"rack_id", L"object_properties", L"object_id", L"rack", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"room passive elements", L"room_passive_elements", L"room_id", L"object_properties", L"object_id", L"room", OrphanFix::DeleteRow, true, nullptr },
@@ -2834,9 +2901,10 @@ static const struct
 static void CheckEppRelations()
 {
    StartStage(L"Event processing policy rule references", sizeof(s_eppRuleTables) / sizeof(s_eppRuleTables[0]));
-   for(size_t i = 0; (i < sizeof(s_eppRuleTables) / sizeof(s_eppRuleTables[0])) && !s_checkAborted; i++)
+   for(size_t i = 0; (i < sizeof(s_eppRuleTables) / sizeof(s_eppRuleTables[0])) && !IsCheckAborted(); i++)
    {
       const wchar_t *table = s_eppRuleTables[i].table;
+      ResetBulkYesNo();
 
       StringBuffer query(L"SELECT c.chain_id,c.rule_id,count(*) FROM ");
       query.append(table).append(L" c LEFT OUTER JOIN event_policy p ON p.chain_id=c.chain_id AND p.rule_id=c.rule_id WHERE p.rule_id IS NULL GROUP BY c.chain_id,c.rule_id");
@@ -2844,7 +2912,7 @@ static void CheckEppRelations()
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
-         for(int j = 0; (j < count) && !s_checkAborted; j++)
+         for(int j = 0; (j < count) && !IsCheckAborted(); j++)
          {
             uint32_t chainId = DBGetFieldULong(hResult, j, 0);
             uint32_t ruleId = DBGetFieldULong(hResult, j, 1);
@@ -2883,7 +2951,7 @@ static void CheckOrphanRelation(const OrphanRelation& r)
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      for(int i = 0; (i < count) && !s_checkAborted; i++)
+      for(int i = 0; (i < count) && !IsCheckAborted(); i++)
       {
          uint32_t id = DBGetFieldULong(hResult, i, 0);
          int rows = DBGetFieldLong(hResult, i, 1);
@@ -2940,10 +3008,11 @@ static void CheckOrphanRelations(OrphanStage stage, const wchar_t *name)
       if (s_orphanRelations[i].stage == stage)
          total++;
    StartStage(name, total);
-   for(size_t i = 0; (i < sizeof(s_orphanRelations) / sizeof(OrphanRelation)) && !s_checkAborted; i++)
+   for(size_t i = 0; (i < sizeof(s_orphanRelations) / sizeof(OrphanRelation)) && !IsCheckAborted(); i++)
    {
       if (s_orphanRelations[i].stage != stage)
          continue;
+      ResetBulkYesNo();
       CheckOrphanRelation(s_orphanRelations[i]);
       UpdateStageProgress(1);
    }
@@ -2951,7 +3020,7 @@ static void CheckOrphanRelations(OrphanStage stage, const wchar_t *name)
 }
 
 /**
- * Check stages in execution order. Stops at the first stage that sets s_checkAborted.
+ * Check stages in execution order. No stage starts after the check is aborted.
  */
 static void (*s_checkStages[])() =
 {
@@ -2959,6 +3028,7 @@ static void (*s_checkStages[])() =
    CheckGhostObjectProperties,
    CheckDuplicateObjectIds,
    CheckDuplicateObjectGuids,
+   []() { CheckOrphanRelations(OrphanStage::Membership, L"Membership references"); },
    CheckNodes,
    []() { CheckComponents(L"Interface", L"interfaces"); },
    []() { CheckComponents(L"Network service", L"network_services"); },
@@ -2973,7 +3043,6 @@ static void (*s_checkStages[])() =
    CheckEppRelations,
    CheckEPP,
    CheckMapLinks,
-   CheckDataTables,
    CheckDataCollectionItems,
    CheckDCISourceNodes,
    CheckTemplateBindings,
@@ -2995,6 +3064,87 @@ static void (*s_checkStages[])() =
    []() { CheckOrphanRelations(OrphanStage::DataCollection, L"Data collection references"); },
    []() { CheckOrphanRelations(OrphanStage::ReportOnly, L"References reported only"); }
 };
+
+/**
+ * Run all checks except data tables in one transaction and commit or roll it back. Returns true if the
+ * check can continue.
+ */
+static bool RunTransactionalChecks()
+{
+   // A reconnect would continue outside the check transaction without counting a failure
+   DBEnableReconnect(g_dbHandle, false);
+   if (!DBBegin(g_dbHandle))
+   {
+      WriteToTerminal(L"Cannot start transaction\n");
+      DBEnableReconnect(g_dbHandle, true);
+      return false;
+   }
+
+   for(size_t i = 0; (i < sizeof(s_checkStages) / sizeof(s_checkStages[0])) && !IsCheckAborted(); i++)
+      s_checkStages[i]();
+   if (g_checkData && !IsCheckAborted())
+   {
+      void (*collectedDataCheck)(bool);
+      if (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0))
+         collectedDataCheck = (g_dbSyntax == DB_SYNTAX_TSDB) ? CheckCollectedDataSingleTable_TSDB : CheckCollectedDataSingleTable;
+      else
+         collectedDataCheck = CheckCollectedData;
+      if (!IsCheckAborted())
+         collectedDataCheck(false);
+      if (!IsCheckAborted())
+         collectedDataCheck(true);
+      if (!IsCheckAborted())
+         CheckSampleAttributes();
+   }
+   if (!IsCheckAborted() && !CheckModuleSchemas())
+      s_uncountedFailure = true;
+
+   bool success = true;
+   if (IsCheckAborted())
+   {
+      WriteToTerminal(L"Error during check, rolling back changes...\n");
+      DBRollback(g_dbHandle);
+      success = false;
+   }
+   else if (g_dbCheckErrors == 0)
+   {
+      if (!DBCommit(g_dbHandle))
+      {
+         WriteToTerminal(L"Cannot commit transaction\n");
+         success = false;
+      }
+   }
+   else if (g_dbCheckFixes > 0)
+   {
+      if (GetYesNo(_T("%d errors was found, %d errors was corrected. Commit changes?"), g_dbCheckErrors, g_dbCheckFixes))
+      {
+         _tprintf(_T("Committing changes...\n"));
+         if (DBCommit(g_dbHandle))
+         {
+            _tprintf(_T("Changes was successfully committed to database\n"));
+         }
+         else
+         {
+            WriteToTerminal(L"Cannot commit transaction\n");
+            success = false;
+         }
+      }
+      else
+      {
+         _tprintf(_T("Rolling back changes...\n"));
+         if (DBRollback(g_dbHandle))
+            _tprintf(_T("All changes made to database was cancelled\n"));
+         g_dbCheckFixes = 0;
+      }
+   }
+   else
+   {
+      DBRollback(g_dbHandle);
+   }
+
+   DBEnableReconnect(g_dbHandle, true);
+   return success;
+}
 
 /**
  * Check database for errors
@@ -3048,98 +3198,33 @@ void CheckDatabase()
    // Check if database is locked
    if (LockDatabase())
    {
-      if (!DBBegin(g_dbHandle))
-      {
-         WriteToTerminal(L"Cannot start transaction\n");
-         RemoveDatabaseLock();
-         WriteToTerminal(L"Database check aborted\n");
-         return;
-      }
+      LIBNXDB_PERF_COUNTERS counters;
+      DBGetPerfCounters(&counters);
+      s_failedQueriesAtStart = counters.failedQueries;
 
-      if (g_checkDataTablesOnly)
+      // Data tables are created and dropped with DDL statements, which commit an open transaction implicitly
+      // on MySQL and Oracle (MySQL also returns to autocommit mode), so this stage runs after the check
+      // transaction is closed. The operator confirms each statement and it takes effect immediately.
+      if (g_checkDataTablesOnly || RunTransactionalChecks())
       {
          CheckDataTables();
-      }
-      else
-      {
-         for(size_t i = 0; (i < sizeof(s_checkStages) / sizeof(s_checkStages[0])) && !s_checkAborted; i++)
-            s_checkStages[i]();
-         if (g_checkData && !s_checkAborted)
+         if (IsCheckAborted())
          {
-            if (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0))
-            {
-               if (g_dbSyntax == DB_SYNTAX_TSDB)
-               {
-                  CheckCollectedDataSingleTable_TSDB(false);
-                  CheckCollectedDataSingleTable_TSDB(true);
-               }
-               else
-               {
-                  CheckCollectedDataSingleTable(false);
-                  CheckCollectedDataSingleTable(true);
-               }
-            }
-            else
-            {
-               CheckCollectedData(false);
-               CheckCollectedData(true);
-            }
-            CheckSampleAttributes();
+            WriteToTerminal(L"Error during data tables check\n");
          }
-         if (!s_checkAborted)
-            CheckModuleSchemas();
-      }
-
-      if (s_checkAborted)
-      {
-         WriteToTerminal(L"SQL error during check, rolling back changes...\n");
-         DBRollback(g_dbHandle);
-      }
-      else if (g_dbCheckErrors == 0)
-      {
-         if (DBCommit(g_dbHandle))
+         else if (g_dbCheckErrors == 0)
          {
             _tprintf(_T("Database doesn't contain any errors\n"));
             completed = true;
          }
          else
          {
-            WriteToTerminal(L"Cannot commit transaction\n");
-         }
-      }
-      else
-      {
-         _tprintf(_T("%d errors was found, %d errors was corrected\n"), g_dbCheckErrors, g_dbCheckFixes);
-         if (g_dbCheckFixes == g_dbCheckErrors)
-            _tprintf(_T("All errors in database was fixed\n"));
-         else
-            _tprintf(_T("Database still contain errors\n"));
-         completed = true;
-         if (g_dbCheckFixes > 0)
-         {
-            if (GetYesNo(_T("Commit changes?")))
-            {
-               _tprintf(_T("Committing changes...\n"));
-               if (DBCommit(g_dbHandle))
-               {
-                  _tprintf(_T("Changes was successfully committed to database\n"));
-               }
-               else
-               {
-                  WriteToTerminal(L"Cannot commit transaction\n");
-                  completed = false;
-               }
-            }
+            _tprintf(_T("%d errors was found, %d errors was corrected\n"), g_dbCheckErrors, g_dbCheckFixes);
+            if (g_dbCheckFixes == g_dbCheckErrors)
+               _tprintf(_T("All errors in database was fixed\n"));
             else
-            {
-               _tprintf(_T("Rolling back changes...\n"));
-               if (DBRollback(g_dbHandle))
-                  _tprintf(_T("All changes made to database was cancelled\n"));
-            }
-         }
-         else
-         {
-            DBRollback(g_dbHandle);
+               _tprintf(_T("Database still contain errors\n"));
+            completed = true;
          }
       }
 
