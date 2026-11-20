@@ -720,7 +720,6 @@ private:
    void getTooltipLastValues(const NXCPMessage& request);
    void getTableLastValue(const NXCPMessage& request);
    void getLastValue(const NXCPMessage& request);
-   void getActiveThresholds(const NXCPMessage& request);
 	void getThresholdSummary(const NXCPMessage& request);
    void getMIBTimestamp(const NXCPMessage& request);
    void getMIBFile(const NXCPMessage& request);

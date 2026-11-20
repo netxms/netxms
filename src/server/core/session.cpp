@@ -1448,9 +1448,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_DCI_LAST_VALUE:
          getLastValue(*request);
          break;
-      case CMD_GET_ACTIVE_THRESHOLDS:
-         getActiveThresholds(*request);
-         break;
       case CMD_GET_THRESHOLD_SUMMARY:
          getThresholdSummary(*request);
          break;
@@ -5671,7 +5668,7 @@ void ClientSession::sendDCIThresholds(const NXCPMessage& request)
 				{
 				   if (dci->hasAccess(m_userId))
 				   {
-                  static_cast<DCItem&>(*dci).fillMessageWithThresholds(&response, false);
+                  static_cast<DCItem&>(*dci).fillMessageWithThresholds(&response);
                   response.setField(VID_RCC, RCC_SUCCESS);
 				   }
 				   else
@@ -6038,7 +6035,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       if (dciType == DCO_TYPE_ITEM)
       {
          DCItem* dciItem = static_cast<DCItem*>(dci.get());
-         dciItem->fillMessageWithThresholds(response, false);
+         dciItem->fillMessageWithThresholds(response);
          response->setField(VID_CURRENT_SEVERITY, dciItem->getThresholdSeverity());
          response->setField(VID_UNITS_NAME, dciItem->getUnitName());
          response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
@@ -6189,7 +6186,7 @@ read_from_db:
 	      if (dciType == DCO_TYPE_ITEM)
 	      {
 	         DCItem* dciItem = static_cast<DCItem*>(dci.get());
-	         dciItem->fillMessageWithThresholds(response, false);
+	         dciItem->fillMessageWithThresholds(response);
 	         response->setField(VID_CURRENT_SEVERITY, dciItem->getThresholdSeverity());
 	         response->setField(VID_UNITS_NAME, dciItem->getUnitName());
 	         response->setField(VID_MULTIPLIER, dciItem->getMultiplier());
@@ -6532,40 +6529,6 @@ void ClientSession::getLastValue(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(response);
-}
-
-/**
- * Send only active DCI thresholds for given DCI config
- */
-void ClientSession::getActiveThresholds(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   int numItems = request.getFieldAsInt32(VID_NUM_ITEMS);
-   if ((numItems < 0) || (numItems > MAX_DCI_LIST_REQUEST_SIZE))
-   {
-      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-      sendMessage(response);
-      return;
-   }
-
-   uint32_t fieldId = VID_DCI_VALUES_BASE;
-   for(int i = 0; i < numItems; i++, fieldId += 2)
-   {
-      shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(fieldId));
-      if (object != nullptr && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-      {
-         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
-         {
-            shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(request.getFieldAsUInt32(fieldId + 1), m_userId);
-            if ((dcObject != nullptr) && (dcObject->getType() == DCO_TYPE_ITEM))
-               static_cast<DCItem&>(*dcObject).fillMessageWithThresholds(&response, true);
-         }
-      }
-   }
-
-   response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }
 

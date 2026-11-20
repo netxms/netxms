@@ -791,7 +791,7 @@ public:
 
    virtual void createMessage(NXCPMessage *msg) override;
    void updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId);
-   void fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly);
+   void fillMessageWithThresholds(NXCPMessage *msg);
    void reloadThresholdState(DB_RESULT hResult, const std::map<uint32_t, int>& rows);
 
    virtual void changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion) override;
