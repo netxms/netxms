@@ -339,9 +339,7 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
    int64_t bucketSizeMs = 0;
    if (useAggregation)
    {
-      bucketSizeMs = (timeTo.asMilliseconds() - timeFrom.asMilliseconds()) / maxDataPoints;
-      if (bucketSizeMs < 1)
-         bucketSizeMs = 1;
+      bucketSizeMs = CalculateAggregationBucketSize(timeFrom.asMilliseconds(), timeTo.asMilliseconds(), static_cast<uint32_t>(maxDataPoints));
       hStmt = PrepareAggregatedDataSelect(hdb, object->getId(), dci->getStorageClass(), bucketSizeMs, condition);
    }
    else

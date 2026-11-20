@@ -6156,10 +6156,8 @@ read_from_db:
 	}
 	else if (useAggregation)
 	{
-	   int64_t bucketSizeMs = (timeTo - timeFrom) / maxDataPoints;
-	   if (bucketSizeMs < 1)
-	      bucketSizeMs = 1;
-	   hStmt = PrepareAggregatedDataSelect(hdb, dcTarget.getId(), dci->getStorageClass(), bucketSizeMs, condition);
+	   hStmt = PrepareAggregatedDataSelect(hdb, dcTarget.getId(), dci->getStorageClass(),
+	            CalculateAggregationBucketSize(timeFrom, timeTo, maxDataPoints), condition);
 	}
 	else
 	{
