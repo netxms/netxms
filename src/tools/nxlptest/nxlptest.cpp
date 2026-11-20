@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 			parser->setCallback(
 			   [] (const LogParserCallbackData& data) -> void
 			   {
-               nxlog_debug_tag(_T("parser"), 3, _T("Parser match (eventCode=%u eventName=%s eventTag=%s) \"%s\""), data.eventCode, data.eventName, data.eventTag);
+               nxlog_debug_tag(_T("parser"), 3, _T("Parser match (eventCode=%u eventName=%s eventTag=%s) \"%s\""), data.eventCode, CHECK_NULL_EX(data.eventName), CHECK_NULL_EX(data.eventTag), CHECK_NULL_EX(data.originalText));
 			   });
 
 			if (inputFile != nullptr)
