@@ -6158,8 +6158,7 @@ uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, 
 
 String LIBNETXMS_EXPORTABLE FormatTimeSpan(int64_t seconds, bool withSeconds);
 String LIBNETXMS_EXPORTABLE FormatNumber(double n, bool useBinaryMultipliers, int multiplierPower, int precision, const TCHAR *unit = nullptr);
-String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value);
-String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value, int useMultiplier);
+String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *value, bool useUnits, bool useMultiplier, int multiplierPower);
 
 #ifdef UNICODE
 #define ExtractNamedOptionValue ExtractNamedOptionValueW

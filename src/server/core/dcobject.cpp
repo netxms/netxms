@@ -2475,11 +2475,6 @@ DCObjectInfo::~DCObjectInfo()
 }
 
 /**
- * List of units that should be exempt from multiplication
- */
-static const TCHAR *s_unitsWithoutMultipliers[] = { _T("%"), _T("\u00b0C"), _T("\u00b0F"), _T("dbm") };
-
-/**
  * Format DCI value
  */
 String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameters) const
@@ -2487,41 +2482,9 @@ String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameter
    if (parameters == nullptr || parameters->isEmpty())
       return String(value);
 
-   bool useUnits = parameters->containsIgnoreCase(_T("u")) || parameters->containsIgnoreCase(_T("units"));
-   bool useMultiplier = parameters->containsIgnoreCase(_T("m")) || parameters->containsIgnoreCase(_T("multipliers"));
-   StringBuffer units = m_unitName;
-   bool useBinaryPrefixes = units.containsIgnoreCase(_T(" (IEC)"));
-   units.replace(_T(" (IEC)"), _T(""));
-   units.replace(_T(" (Metric)"), _T(""));
-
-   for (size_t i = 0; useMultiplier && !units.isEmpty() && i < sizeof(s_unitsWithoutMultipliers) / sizeof(TCHAR*); i++)
-   {
-      if (!_tcscmp(s_unitsWithoutMultipliers[i], units))
-      {
-         useMultiplier = false;
-         break;
-      }
-   }
-
-   if (useUnits && (!wcsicmp(m_unitName, L"TimeSpan") || !wcsicmp(m_unitName, L"Epoch time")))
-      return FormatDCIValue(m_unitName, value);
-
-   TCHAR *eptr;
-   double inVal = _tcstod(value, &eptr);
-   if (*eptr != 0)
-      return String(value);
-
-   bool appendUnits = useUnits && !units.isEmpty();
-   if (useMultiplier)
-      return FormatNumber(inVal, useBinaryPrefixes, m_multiplier, 2, appendUnits ? units.cstr() : nullptr);
-
-   StringBuffer result(value);
-   if (appendUnits)
-   {
-      result.append(_T(" "));
-      result.append(units);
-   }
-   return result;
+   bool useUnits = parameters->containsIgnoreCase(L"u") || parameters->containsIgnoreCase(L"units");
+   bool useMultiplier = parameters->containsIgnoreCase(L"m") || parameters->containsIgnoreCase(L"multipliers");
+   return FormatDCIValue(m_unitName, value, useUnits, useMultiplier, m_multiplier);
 }
 
 /**
