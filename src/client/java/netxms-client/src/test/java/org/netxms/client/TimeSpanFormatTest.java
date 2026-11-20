@@ -49,6 +49,31 @@ public class TimeSpanFormatTest
    }
 
    @Test
+   public void testMinuteRounding()
+   {
+      assertEquals("00:00", format(0, false));
+      assertEquals("00:00", format(29, false));
+      assertEquals("00:01", format(30, false));
+      assertEquals("00:01", format(31, false));
+      assertEquals("-00:00", format(-29, false));
+      assertEquals("-00:01", format(-30, false));
+      assertEquals("-00:01", format(-31, false));
+      assertEquals("00:00:30", format(30, true));
+      assertEquals("-00:00:30", format(-30, true));
+   }
+
+   @Test
+   public void testRoundingCarry()
+   {
+      assertEquals("01:00", format(3570, false));
+      assertEquals("23:59", format(86369, false));
+      assertEquals("1 day, 00:00", format(86370, false));
+      assertEquals("-1 day, 00:00", format(-86370, false));
+      assertEquals("23:59:30", format(86370, true));
+      assertEquals("-23:59:30", format(-86370, true));
+   }
+
+   @Test
    public void testNegative()
    {
       assertEquals("-00:00:43", format(-43, true));

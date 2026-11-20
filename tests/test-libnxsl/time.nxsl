@@ -115,12 +115,18 @@ for(i = 0; i < 80; i++)
 	f ..= "%Y-%m-%d ";
 assert(d.format(f) == '');
 
-assert(FormatTimeSpan(90061) == "1 days,  1:01");
-assert(FormatTimeSpan(-90061) == "-1 days,  1:01");
-assert(FormatTimeSpan(-43) == "-0 days,  0:01");
-assert(FormatTimeSpan(0) == "0 days,  0:00");
-assert(FormatTimeSpan(90061, true) == "1 days,  1:01:01");
-assert(FormatTimeSpan(-43, true) == "-0 days,  0:00:43");
+assert(FormatTimeSpan(90061) == "1 day, 01:01");
+assert(FormatTimeSpan(-90061) == "-1 day, 01:01");
+assert(FormatTimeSpan(-43) == "-00:01");
+assert(FormatTimeSpan(0) == "00:00");
+assert(FormatTimeSpan(86370) == "1 day, 00:00");
+assert(FormatTimeSpan(172800) == "2 days, 00:00");
+assert(FormatTimeSpan(90061, true) == "1 day, 01:01:01");
+assert(FormatTimeSpan(-43, true) == "-00:00:43");
+assert(SecondsToUptime(0) == "0 days,  0:00");
+assert(SecondsToUptime(3661) == "0 days,  1:01");
+assert(SecondsToUptime(90061) == "1 days,  1:01");
+assert(SecondsToUptime(86370) == "1 days,  0:00");
 assert(SecondsToUptime(-90061) == "-1 days,  1:01");
 
 return 0;

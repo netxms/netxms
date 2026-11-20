@@ -86,6 +86,25 @@ void TestFormatNumber()
    EndTest();
 }
 
+void TestFormatTimeSpan()
+{
+   StartTest(_T("FormatTimeSpan"));
+   AssertEquals(FormatTimeSpan(0, true).cstr(), _T("00:00:00"));
+   AssertEquals(FormatTimeSpan(86370, true).cstr(), _T("23:59:30"));
+   AssertEquals(FormatTimeSpan(86400, true).cstr(), _T("1 day, 00:00:00"));
+   AssertEquals(FormatTimeSpan(0, false).cstr(), _T("00:00"));
+   AssertEquals(FormatTimeSpan(29, false).cstr(), _T("00:00"));
+   AssertEquals(FormatTimeSpan(30, false).cstr(), _T("00:01"));
+   AssertEquals(FormatTimeSpan(31, false).cstr(), _T("00:01"));
+   AssertEquals(FormatTimeSpan(-29, false).cstr(), _T("-00:00"));
+   AssertEquals(FormatTimeSpan(-30, false).cstr(), _T("-00:01"));
+   AssertEquals(FormatTimeSpan(-31, false).cstr(), _T("-00:01"));
+   AssertEquals(FormatTimeSpan(86370, false).cstr(), _T("1 day, 00:00"));
+   AssertEquals(FormatTimeSpan(172800, false).cstr(), _T("2 days, 00:00"));
+   AssertEquals(FormatTimeSpan(INT64_C(4320003661), true).cstr(), _T("50000 days, 01:01:01"));
+   EndTest();
+}
+
 /**
  * Test FormatDCIValue()
  */
@@ -110,10 +129,19 @@ void TestFormatDCIValue()
    EndTest();
 
    StartTest(_T("FormatDCIValue - special units"));
-   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("90061")).cstr(), _T("1 days,  1:01:01"));
-   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("-90061")).cstr(), _T("-1 days,  1:01:01"));
-   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("-43")).cstr(), _T("-0 days,  0:00:43"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("90061")).cstr(), _T("1 day, 01:01:01"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("-90061")).cstr(), _T("-1 day, 01:01:01"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("-43")).cstr(), _T("-00:00:43"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("172800")).cstr(), _T("2 days, 00:00:00"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("90061.5")).cstr(), _T("1 day, 01:01:01"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("-90061.9")).cstr(), _T("-1 day, 01:01:01"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("-0.9")).cstr(), _T("00:00:00"));
    AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("abc")).cstr(), _T("abc"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("nan")).cstr(), _T("nan"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("inf")).cstr(), _T("inf"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("1e309")).cstr(), _T("1e309"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("1e20")).cstr(), _T("1e20"));
+   AssertEquals(FormatDCIValue(_T("TimeSpan"), _T("9223372036854775807")).cstr(), _T("9223372036854775807"));
    AssertEquals(FormatDCIValue(_T("Epoch time"), _T("abc")).cstr(), _T("abc"));
    EndTest();
 

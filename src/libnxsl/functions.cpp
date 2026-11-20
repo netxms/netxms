@@ -217,6 +217,28 @@ int F_FormatTimeSpan(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 }
 
 /**
+ * Convert seconds to uptime string in legacy format "[-]n days, hh:mm" (rounded to the nearest minute)
+ * SecondsToUptime(seconds)
+ */
+int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   if (!argv[0]->isNumeric())
+      return NXSL_ERR_NOT_NUMBER;
+
+   int64_t seconds = argv[0]->getValueAsInt64();
+   uint64_t arg = (seconds < 0) ? 0 - static_cast<uint64_t>(seconds) : static_cast<uint64_t>(seconds);
+   arg = (arg + 30) / 60 * 60;
+
+   StringBuffer sb;
+   if (seconds < 0)
+      sb.append(_T('-'));
+   sb.append(arg / 86400);
+   sb.appendFormattedString(_T(" days, %2u:%02u"), static_cast<uint32_t>(arg % 86400 / 3600), static_cast<uint32_t>(arg % 3600 / 60));
+   *ppResult = vm->createValue(sb);
+   return 0;
+}
+
+/**
  * Get substring of a string
  * Possible usage:
  *    substr(string, start) - all characters from position 'start'

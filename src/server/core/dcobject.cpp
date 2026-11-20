@@ -2503,19 +2503,8 @@ String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameter
       }
    }
 
-   if (useUnits && !_tcsicmp(m_unitName, _T("TimeSpan")))
-   {
-      TCHAR *eptr;
-      int64_t time = _tcstoll(value, &eptr, 10);
-      return (*eptr != 0) ? String(value) : FormatTimeSpan(time, true);
-   }
-
-   if (useUnits && !_tcsicmp(m_unitName, _T("Epoch time")))
-   {
-      TCHAR *eptr;
-      time_t time = static_cast<time_t>(_tcstoll(value, &eptr, 10));
-      return (*eptr != 0) ? String(value) : FormatTimestamp(time);
-   }
+   if (useUnits && (!wcsicmp(m_unitName, L"TimeSpan") || !wcsicmp(m_unitName, L"Epoch time")))
+      return FormatDCIValue(m_unitName, value);
 
    TCHAR *eptr;
    double inVal = _tcstod(value, &eptr);

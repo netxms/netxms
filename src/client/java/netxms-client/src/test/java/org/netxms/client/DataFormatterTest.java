@@ -241,6 +241,25 @@ public class DataFormatterTest
    {
       assertEquals("90061", format("90061", DataType.INT64, "TimeSpan", DciValue.MULTIPLIERS_DEFAULT));
       assertEquals("-43", format("-43", DataType.INT64, "TimeSpan", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("-90061", format("-90061.9", DataType.FLOAT, "TimeSpan", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("0", format("-0.9", DataType.FLOAT, "TimeSpan", DciValue.MULTIPLIERS_DEFAULT));
       assertEquals("90061", format("90061", DataType.INT64, "timespan", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("n/a", format("n/a", DataType.INT64, "TimeSpan", DciValue.MULTIPLIERS_DEFAULT));
+   }
+
+   @Test
+   public void testFormatEpochTime()
+   {
+      assertEquals("1700000000", format("1700000000", DataType.INT64, "Epoch time", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("n/a", format("n/a", DataType.INT64, "Epoch time", DciValue.MULTIPLIERS_DEFAULT));
+   }
+
+   @Test
+   public void testNonNumericSpecialUnitKeepsFormatText()
+   {
+      DataFormatter formatter = new DataFormatter().setDataType(DataType.INT64).setFormatString("up %{u}s total")
+            .setMeasurementUnit(new MeasurementUnit("TimeSpan"));
+      assertEquals("up 90061 total", formatter.format("90061", TIME_FORMATTER));
+      assertEquals("up n/a total", formatter.format("n/a", TIME_FORMATTER));
    }
 }

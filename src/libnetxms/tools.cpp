@@ -5688,40 +5688,31 @@ void LIBNETXMS_EXPORTABLE URLEncode(const wchar_t *src, StringBuffer *output)
 }
 
 /**
- * Format time span in seconds as "[-]n days, hh:mm[:ss]"
+ * Format time span in seconds as "[-][n day(s), ]hh:mm[:ss]". Without seconds, the value is rounded to the nearest minute.
  */
 String LIBNETXMS_EXPORTABLE FormatTimeSpan(int64_t seconds, bool withSeconds)
 {
    uint64_t arg = (seconds < 0) ? 0 - static_cast<uint64_t>(seconds) : static_cast<uint64_t>(seconds);
-   uint32_t d, h, n;
-   d = (UINT32)(arg / 86400);
-   arg -= d * 86400;
-   h = (UINT32)(arg / 3600);
-   arg -= h * 3600;
-   n = (UINT32)(arg / 60);
-   arg -= n * 60;
-   if (arg >= 30 && !withSeconds)
-   {
-       n++;
-       if (n == 60)
-       {
-          n = 0;
-          h++;
-          if (h == 24)
-          {
-             h = 0;
-             d++;
-          }
-       }
-   }
+   if (!withSeconds)
+      arg = (arg + 30) / 60 * 60;
+
+   uint64_t d = arg / 86400;
+   uint32_t h = static_cast<uint32_t>(arg % 86400 / 3600);
+   uint32_t n = static_cast<uint32_t>(arg % 3600 / 60);
+   uint32_t s = static_cast<uint32_t>(arg % 60);
 
    StringBuffer sb;
    if (seconds < 0)
       sb.append(_T('-'));
+   if (d > 0)
+   {
+      sb.append(d);
+      sb.append((d == 1) ? _T(" day, ") : _T(" days, "));
+   }
    if (withSeconds)
-      sb.appendFormattedString(_T("%u days, %2u:%02u:%02u"), d, h, n, static_cast<uint32_t>(arg));
+      sb.appendFormattedString(_T("%02u:%02u:%02u"), h, n, s);
    else
-      sb.appendFormattedString(_T("%u days, %2u:%02u"), d, h, n);
+      sb.appendFormattedString(_T("%02u:%02u"), h, n);
    return sb;
 }
 
@@ -5827,8 +5818,10 @@ String LIBNETXMS_EXPORTABLE FormatDCIValue(const TCHAR *unitName, const TCHAR *v
    if (useUnits && !_tcsicmp(unitName, _T("TimeSpan")))
    {
       TCHAR *eptr;
-      int64_t time = _tcstoll(value, &eptr, 10);
-      return (*eptr != 0) ? String(value) : FormatTimeSpan(time, true);
+      double time = _tcstod(value, &eptr);
+      // Range check also rejects NaN
+      bool representable = (time >= -9223372036854775808.0) && (time < 9223372036854775808.0);
+      return ((*eptr != 0) || !representable) ? String(value) : FormatTimeSpan(static_cast<int64_t>(time), true);
    }
 
    if (useUnits && !_tcsicmp(unitName, _T("Epoch time")))

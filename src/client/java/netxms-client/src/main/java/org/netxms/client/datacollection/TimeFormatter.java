@@ -42,7 +42,8 @@ public interface TimeFormatter
    public String formatDateAndTime(long timestamp);
 
    /**
-    * Format time span as [-][n days, ]hh:mm[:ss]
+    * Format time span as [-][n days, ]hh:mm[:ss]. When seconds are hidden, round to the nearest minute,
+    * with exact halves rounded away from zero.
     *
     * @param seconds time span in seconds
     * @param showSeconds true to show seconds
@@ -57,6 +58,9 @@ public interface TimeFormatter
          sb.append('-');
          seconds = -seconds;
       }
+      if (!showSeconds)
+         seconds = (seconds + 30) / 60 * 60;
+
       long days = seconds / 86400;
       if (days > 0)
       {

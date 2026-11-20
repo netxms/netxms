@@ -291,11 +291,25 @@ public class DataFormatter
 
                if (useUnits && unit.getName().equalsIgnoreCase("TimeSpan"))
                {
-                  sb.append(timeFormatter.formatTimeSpan((long)Double.parseDouble(value)));
+                  try
+                  {
+                     sb.append(timeFormatter.formatTimeSpan((long)Double.parseDouble(value)));
+                  }
+                  catch(NumberFormatException e)
+                  {
+                     sb.append(value);
+                  }
                }
                else if (useUnits && unit.getName().equals("Epoch time"))
                {
-                  sb.append(timeFormatter.formatDateAndTime((long)Double.parseDouble(value)));
+                  try
+                  {
+                     sb.append(timeFormatter.formatDateAndTime((long)Double.parseDouble(value)));
+                  }
+                  catch(NumberFormatException e)
+                  {
+                     sb.append(value);
+                  }
                }
                else
                {

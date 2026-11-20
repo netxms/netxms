@@ -304,7 +304,7 @@
 		<KeyWord name="FormatTimeSpan" func="yes">
 			<Overload retVal="" descr="
 			Description
-			  Format time span in seconds as string in format &quot;[-]n days, hh:mm&quot; or &quot;[-]n days, hh:mm:ss&quot; if withSeconds is true.
+			  Format time span in seconds as string in format &quot;[-][n days, ]hh:mm&quot; (rounded to the nearest minute) or &quot;[-][n days, ]hh:mm:ss&quot; if withSeconds is true. Day part is omitted when zero.
 			
 			Returns
 			  Formatted time span.">
