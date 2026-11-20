@@ -42,16 +42,63 @@ TrafficConnectorStatus NtopngTestConnection(json_t *credentials, TrafficBackendI
 }
 
 /**
- * Get capability set of ntopng instance. ntopng maintains an authoritative live
- * active-host table (idle age-out, not a top-N approximation), hence
- * HOST_SET_AUTHORITATIVE.
+ * ntopng REST return code for refused access
+ */
+#define NTOPNG_RC_NOT_GRANTED (-3)
+
+/**
+ * Check if endpoint exists and accepts the token. An error answer (for example to a
+ * request without arguments) proves that as long as it is not an access refusal.
+ */
+static bool ProbeEndpoint(json_t *credentials, const char *path, json_t *body)
+{
+   int32_t rc;
+   return NtopngApiProbe(credentials, path, body, &rc) && (rc != NTOPNG_RC_NOT_GRANTED);
+}
+
+/**
+ * Point level capabilities and endpoints serving them. Availability depends on the
+ * ntopng version, not the edition (interface/top/hosts.lua appeared in 6.0,
+ * interface/l7/data.lua in 6.4). Without "ifid" these endpoints answer with an
+ * "invalid interface" error and do no work, so probing them is cheap.
+ */
+static const struct
+{
+   uint64_t capability;
+   const char *path;
+} s_pointCapabilityProbes[] =
+{
+   { TRAFFIC_CAPABILITY_POINT_L7, "/lua/rest/v2/get/interface/l7/data.lua" },
+   { TRAFFIC_CAPABILITY_POINT_TOP_TALKERS, "/lua/rest/v2/get/interface/top/hosts.lua" },
+   { TRAFFIC_CAPABILITY_POINT_DSCP, "/lua/rest/v2/get/interface/dscp/stats.lua" }
+};
+
+/**
+ * Get capability set of ntopng instance
  */
 uint64_t NtopngGetCapabilities(json_t *credentials)
 {
-   return TRAFFIC_CAPABILITY_HOST_L7 | TRAFFIC_CAPABILITY_HOST_PEERS |
-      TRAFFIC_CAPABILITY_POINT_L7 | TRAFFIC_CAPABILITY_POINT_TOP_TALKERS |
-      TRAFFIC_CAPABILITY_POINT_DSCP | TRAFFIC_CAPABILITY_SYNC_HOST_ALIASES |
-      TRAFFIC_CAPABILITY_HOST_SET_AUTHORITATIVE;
+   // Host level data comes from host/data.lua and the built-in "client"/"server" criteria of
+   // flow/aggregated_live_flows.lua, available in every edition of all supported releases.
+   // ntopng maintains an authoritative live active-host table (idle age-out, not a top-N
+   // approximation), hence HOST_SET_AUTHORITATIVE.
+   uint64_t capabilities = TRAFFIC_CAPABILITY_HOST_L7 | TRAFFIC_CAPABILITY_HOST_PEERS | TRAFFIC_CAPABILITY_HOST_SET_AUTHORITATIVE;
+
+   for (size_t i = 0; i < sizeof(s_pointCapabilityProbes) / sizeof(s_pointCapabilityProbes[0]); i++)
+   {
+      if (ProbeEndpoint(credentials, s_pointCapabilityProbes[i].path, nullptr))
+         capabilities |= s_pointCapabilityProbes[i].capability;
+   }
+
+   // set/host/alias.lua checks administrator rights before the arguments, so an empty request
+   // changes nothing: an admin token gets "invalid arguments", any other token an access refusal
+   json_t *body = json_object();
+   if (ProbeEndpoint(credentials, "/lua/rest/v2/set/host/alias.lua", body))
+      capabilities |= TRAFFIC_CAPABILITY_SYNC_HOST_ALIASES;
+   json_decref(body);
+
+   nxlog_debug_tag(DEBUG_TAG, 6, L"NtopngGetCapabilities: capability set 0x%08X", static_cast<uint32_t>(capabilities));
+   return capabilities;
 }
 
 /**
@@ -86,63 +133,80 @@ static StringList *GetLocalNetworks(json_t *credentials, int32_t ifid)
 /**
  * Discover observation points (ntopng interfaces)
  */
-ObservationPointDescriptor *NtopngDiscoverPoints(json_t *credentials)
+TrafficConnectorStatus NtopngDiscoverPoints(json_t *credentials, ObservationPointDescriptor **points)
 {
+   *points = nullptr;
+
    TrafficConnectorStatus status;
    json_t *response = NtopngApiGet(credentials, "/lua/rest/v2/get/ntopng/interfaces.lua", &status);
    if (response == nullptr)
-      return nullptr;
+      return status;
 
-   ObservationPointDescriptor *head = nullptr, *tail = nullptr;
    json_t *interfaces = json_object_get(response, "rsp");
-   if (json_is_array(interfaces))
+   if (!json_is_array(interfaces))
    {
-      size_t i;
-      json_t *iface;
-      json_array_foreach(interfaces, i, iface)
-      {
-         // Interface ID is numeric on 6.7 but some ntopng endpoints emit numeric IDs as strings
-         json_t *ifid = json_object_get(iface, "ifid");
-         if (!json_is_integer(ifid) && !json_is_string(ifid))
-            continue;
-
-         auto d = new ObservationPointDescriptor();
-         snprintf(d->externalId, sizeof(d->externalId), "%d", static_cast<int>(json_integer_value_ex(ifid, 0)));
-
-         const char *name = json_object_get_string_utf8(iface, "name", nullptr);
-         if (name == nullptr)
-            name = json_object_get_string_utf8(iface, "ifname", d->externalId);
-         strlcpy(d->name, name, sizeof(d->name));
-
-         if (json_object_get_boolean(iface, "is_pcap_interface", false))
-            strcpy(d->type, "pcap");
-         else if (json_object_get_boolean(iface, "is_zmq_interface", false))
-            strcpy(d->type, "zmq");
-         else if (json_object_get_boolean(iface, "is_packet_interface", false))
-            strcpy(d->type, "packet");
-         else
-            strcpy(d->type, "other");
-
-         // Packet capture sees every frame; for flow-fed interfaces (ZMQ/other) the
-         // effective sampling rate depends on the exporter and is not reported by ntopng
-         d->samplingRate = (!strcmp(d->type, "packet") || !strcmp(d->type, "pcap")) ? 1 : 0;
-
-         // ntopng reports only currently existing interfaces - all discovered points are active
-         d->state = OBSERVATION_POINT_STATE_ACTIVE;
-         strcpy(d->providerState, "active");
-
-         d->localNetworks = GetLocalNetworks(credentials, static_cast<int32_t>(json_integer_value(ifid)));
-
-         if (tail != nullptr)
-            tail->next = d;
-         else
-            head = d;
-         tail = d;
-
-         nxlog_debug_tag(DEBUG_TAG, 6, L"NtopngDiscoverPoints: discovered interface %hs (%hs, type %hs)", d->externalId, d->name, d->type);
-      }
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngDiscoverPoints: response does not contain interface list");
+      json_decref(response);
+      return TrafficConnectorStatus::API_ERROR;
    }
 
+   ObservationPointDescriptor *head = nullptr, *tail = nullptr;
+   size_t i;
+   json_t *iface;
+   json_array_foreach(interfaces, i, iface)
+   {
+      // Interface ID is numeric on 6.7 but some ntopng endpoints emit numeric IDs as strings
+      json_t *ifid = json_object_get(iface, "ifid");
+      if (!json_is_integer(ifid) && !json_is_string(ifid))
+         continue;
+      int32_t id = static_cast<int32_t>(json_integer_value_ex(ifid, 0));
+
+      auto d = new ObservationPointDescriptor();
+      snprintf(d->externalId, sizeof(d->externalId), "%d", id);
+
+      const char *name = json_object_get_string_utf8(iface, "name", nullptr);
+      if (name == nullptr)
+         name = json_object_get_string_utf8(iface, "ifname", d->externalId);
+      strlcpy(d->name, name, sizeof(d->name));
+
+      if (json_object_get_boolean(iface, "is_pcap_interface", false))
+         strcpy(d->type, "pcap");
+      else if (json_object_get_boolean(iface, "is_zmq_interface", false))
+         strcpy(d->type, "zmq");
+      else if (json_object_get_boolean(iface, "is_packet_interface", false))
+         strcpy(d->type, "packet");
+      else
+         strcpy(d->type, "other");
+
+      // Packet capture sees every frame; for flow-fed interfaces (ZMQ/other) the
+      // effective sampling rate depends on the exporter and is not reported by ntopng
+      d->samplingRate = (!strcmp(d->type, "packet") || !strcmp(d->type, "pcap")) ? 1 : 0;
+
+      // ntopng reports only currently existing interfaces - all discovered points are active
+      d->state = OBSERVATION_POINT_STATE_ACTIVE;
+      strcpy(d->providerState, "active");
+
+      d->localNetworks = GetLocalNetworks(credentials, id);
+
+      if (tail != nullptr)
+         tail->next = d;
+      else
+         head = d;
+      tail = d;
+
+      nxlog_debug_tag(DEBUG_TAG, 6, L"NtopngDiscoverPoints: discovered interface %hs (%hs, type %hs)", d->externalId, d->name, d->type);
+   }
+
+   // Entries present but none usable means a changed response format, not an empty inventory -
+   // reporting it as success would let the removal policy drop every existing point
+   bool unusable = (head == nullptr) && (json_array_size(interfaces) > 0);
    json_decref(response);
-   return head;
+   if (unusable)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngDiscoverPoints: interface list contains no usable entries");
+      return TrafficConnectorStatus::API_ERROR;
+   }
+
+   *points = head;
+   return TrafficConnectorStatus::SUCCESS;
 }

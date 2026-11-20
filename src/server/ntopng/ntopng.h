@@ -50,11 +50,18 @@ json_t *NtopngApiGet(json_t *credentials, const char *path, TrafficConnectorStat
 json_t *NtopngApiPost(json_t *credentials, const char *path, json_t *body, TrafficConnectorStatus *status = nullptr);
 
 /**
+ * Probe REST API v2 endpoint (GET when body is null, otherwise POST). Returns true
+ * when the endpoint answered with the REST envelope, whatever the HTTP status, and
+ * stores the envelope return code in rc.
+ */
+bool NtopngApiProbe(json_t *credentials, const char *path, json_t *body, int32_t *rc);
+
+/**
  * Traffic connector interface functions
  */
 TrafficConnectorStatus NtopngTestConnection(json_t *credentials, TrafficBackendInfo *info);
 uint64_t NtopngGetCapabilities(json_t *credentials);
-ObservationPointDescriptor *NtopngDiscoverPoints(json_t *credentials);
+TrafficConnectorStatus NtopngDiscoverPoints(json_t *credentials, ObservationPointDescriptor **points);
 DataCollectionError NtopngGetObserverMetric(const wchar_t *metric, wchar_t *value, size_t size, json_t *credentials);
 DataCollectionError NtopngGetPointMetric(const char *pointId, const wchar_t *metric, wchar_t *value, size_t size, json_t *credentials);
 DataCollectionError NtopngGetPointTable(const char *pointId, const wchar_t *metric, shared_ptr<Table> *value, json_t *credentials);

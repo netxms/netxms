@@ -52,24 +52,26 @@ static size_t WriteCallback(char *ptr, size_t size, size_t nmemb, void *context)
 }
 
 /**
- * Execute request against ntopng REST API v2. GET when postFields is null,
- * otherwise POST with given JSON body.
+ * Execute HTTP request against ntopng instance. GET when postFields is null,
+ * otherwise POST with given JSON body. Returns false (with status set) when no
+ * HTTP response was received; otherwise HTTP status code and response body are
+ * returned whatever the status code is.
  */
-static json_t *NtopngApiRequest(json_t *credentials, const char *path, const char *postFields, TrafficConnectorStatus *status)
+static bool NtopngHttpRequest(json_t *credentials, const char *path, const char *postFields, ByteStream *responseData, long *httpCode, TrafficConnectorStatus *status)
 {
    if (IsShutdownInProgress())
    {
       SetStatus(status, TrafficConnectorStatus::CONNECTOR_UNAVAILABLE);
-      return nullptr;
+      return false;
    }
 
    const char *baseUrl = json_object_get_string_utf8(credentials, "url", nullptr);
    const char *token = json_object_get_string_utf8(credentials, "token", nullptr);
    if ((baseUrl == nullptr) || (*baseUrl == 0) || (token == nullptr) || (*token == 0))
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest: missing \"url\" or \"token\" in credentials");
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngHttpRequest: missing \"url\" or \"token\" in credentials");
       SetStatus(status, TrafficConnectorStatus::API_ERROR);   // configuration problem, not a rejected token
-      return nullptr;
+      return false;
    }
 
    char url[1024];
@@ -81,9 +83,9 @@ static json_t *NtopngApiRequest(json_t *credentials, const char *path, const cha
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"NtopngApiRequest: curl_easy_init() failed");
+      nxlog_debug_tag(DEBUG_TAG, 4, L"NtopngHttpRequest: curl_easy_init() failed");
       SetStatus(status, TrafficConnectorStatus::CONNECTOR_UNAVAILABLE);
-      return nullptr;
+      return false;
    }
 
 #if HAVE_DECL_CURLOPT_NOSIGNAL
@@ -112,10 +114,8 @@ static json_t *NtopngApiRequest(json_t *credentials, const char *path, const cha
    }
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-   ByteStream responseData(32768);
-   responseData.setAllocationStep(32768);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
+   curl_easy_setopt(curl, CURLOPT_WRITEDATA, responseData);
 
    char errorBuffer[CURL_ERROR_SIZE];
    errorBuffer[0] = 0;
@@ -125,43 +125,57 @@ static json_t *NtopngApiRequest(json_t *credentials, const char *path, const cha
    CURLcode rc = curl_easy_perform(curl);
    if (rc != CURLE_OK)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): call failed (%hs)", url, errorBuffer);
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngHttpRequest(%hs): call failed (%hs)", url, errorBuffer);
       curl_slist_free_all(headers);
       curl_easy_cleanup(curl);
       SetStatus(status, TrafficConnectorStatus::API_ERROR);
-      return nullptr;
+      return false;
    }
 
-   long httpCode = 0;
-   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+   *httpCode = 0;
+   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, httpCode);
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
+   return true;
+}
+
+/**
+ * Execute request against ntopng REST API v2. GET when postFields is null,
+ * otherwise POST with given JSON body.
+ */
+static json_t *NtopngApiRequest(json_t *credentials, const char *path, const char *postFields, TrafficConnectorStatus *status)
+{
+   ByteStream responseData(32768);
+   responseData.setAllocationStep(32768);
+   long httpCode;
+   if (!NtopngHttpRequest(credentials, path, postFields, &responseData, &httpCode, status))
+      return nullptr;
 
    // ntopng answers a bad token (and unknown endpoints) with a 302 redirect to the login page
    if ((httpCode == 302) || (httpCode == 401) || (httpCode == 403))
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): authentication failure (HTTP %d)", url, static_cast<int>(httpCode));
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): authentication failure (HTTP %d)", path, static_cast<int>(httpCode));
       SetStatus(status, TrafficConnectorStatus::AUTH_ERROR);
       return nullptr;
    }
 
    if ((httpCode == 301) || (httpCode == 307) || (httpCode == 308))
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): unexpected redirect (HTTP %d) - check \"url\" (scheme/port) in credentials", url, static_cast<int>(httpCode));
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): unexpected redirect (HTTP %d) - check \"url\" (scheme/port) in credentials", path, static_cast<int>(httpCode));
       SetStatus(status, TrafficConnectorStatus::API_ERROR);
       return nullptr;
    }
 
    if ((httpCode < 200) || (httpCode > 299))
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): HTTP error %d", url, static_cast<int>(httpCode));
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): HTTP error %d", path, static_cast<int>(httpCode));
       SetStatus(status, TrafficConnectorStatus::API_ERROR);
       return nullptr;
    }
 
    if (responseData.size() == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): empty response", url);
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): empty response", path);
       SetStatus(status, TrafficConnectorStatus::API_ERROR);
       return nullptr;
    }
@@ -173,14 +187,14 @@ static json_t *NtopngApiRequest(json_t *credentials, const char *path, const cha
    if (response == nullptr)
    {
       // ntopng can return plain text Lua error messages instead of the JSON envelope
-      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): failed to parse JSON on line %d (%hs)", url, error.line, error.text);
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): failed to parse JSON on line %d (%hs)", path, error.line, error.text);
       SetStatus(status, TrafficConnectorStatus::API_ERROR);
       return nullptr;
    }
 
    if (json_object_get_int32(response, "rc", -1) != 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): API error (rc=%d, %hs)", url,
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): API error (rc=%d, %hs)", path,
          json_object_get_int32(response, "rc", -1), json_object_get_string_utf8(response, "rc_str", "UNKNOWN"));
       json_decref(response);
       SetStatus(status, TrafficConnectorStatus::API_ERROR);
@@ -208,4 +222,33 @@ json_t *NtopngApiPost(json_t *credentials, const char *path, json_t *body, Traff
    json_t *response = NtopngApiRequest(credentials, path, postFields, status);
    free(postFields);
    return response;
+}
+
+/**
+ * Probe ntopng REST API v2 endpoint. GET when body is null, otherwise POST with
+ * given JSON body. Returns true when the endpoint answered with the REST envelope,
+ * whatever the HTTP status - an error answer to a request without arguments still
+ * shows that the endpoint exists and passed its access check. Envelope return code
+ * is stored in rc. Unknown endpoints and access refusals of endpoints that render
+ * an HTML error page give no envelope.
+ */
+bool NtopngApiProbe(json_t *credentials, const char *path, json_t *body, int32_t *rc)
+{
+   char *postFields = (body != nullptr) ? json_dumps(body, JSON_COMPACT) : nullptr;
+   ByteStream responseData(1024);
+   long httpCode;
+   bool success = NtopngHttpRequest(credentials, path, postFields, &responseData, &httpCode, nullptr);
+   free(postFields);
+   if (!success)
+      return false;
+
+   responseData.write('\0');
+   json_t *response = json_loads(reinterpret_cast<const char*>(responseData.buffer()), 0, nullptr);
+   json_t *rcValue = json_object_get(response, "rc");
+   success = json_is_integer(rcValue);
+   if (success)
+      *rc = static_cast<int32_t>(json_integer_value(rcValue));
+   nxlog_debug_tag(DEBUG_TAG, 6, L"NtopngApiProbe(%hs): HTTP %d, %hs", path, static_cast<int>(httpCode), success ? "REST envelope" : "no REST envelope");
+   json_decref(response);
+   return success;
 }
