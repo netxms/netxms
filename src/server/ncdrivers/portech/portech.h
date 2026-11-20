@@ -35,6 +35,6 @@
 // Functions
 //
 
-bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer, const int pduBufferSize);
+bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduBuffer, int pduBufferSize);
 
 #endif
