@@ -135,7 +135,7 @@ void TuxedoQueryServiceGroups()
       CFchg32(fb, TA_LMID, 0, lmid, 0, FLD_STRING);
    }
 
-   long flags = ((g_tuxedoQueryLocalData & LOCAL_DATA_SERVERS) ? MIB_LOCAL : 0);
+   long flags = ((g_tuxedoQueryLocalData & LOCAL_DATA_SERVICE_GROUPS) ? MIB_LOCAL : 0);
    CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
 
    bool readMore = true;
