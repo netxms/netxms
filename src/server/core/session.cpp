@@ -6378,15 +6378,26 @@ void ClientSession::getDataCollectionSummary(const NXCPMessage& request)
 }
 
 /**
+ * Maximum number of DCIs in a single last values or active thresholds request
+ */
+#define MAX_DCI_LIST_REQUEST_SIZE   65536
+
+/**
  * Send latest collected values for all DCIs from given list.
- * Error message will never be returned. Will be returned only
- * possible DCI values.
+ * Inaccessible or missing DCIs are skipped; error is returned only for invalid list size.
  */
 void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    int size = request.getFieldAsInt32(VID_NUM_ITEMS);
+   if ((size < 0) || (size > MAX_DCI_LIST_REQUEST_SIZE))
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      sendMessage(response);
+      return;
+   }
+
    uint32_t incomingIndex = VID_DCI_VALUES_BASE;
    uint32_t outgoingIndex = VID_DCI_VALUES_BASE;
    for(int i = 0; i < size; i++, incomingIndex += 10)
@@ -6533,9 +6544,15 @@ void ClientSession::getActiveThresholds(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   uint32_t fieldId = VID_DCI_VALUES_BASE;
    int numItems = request.getFieldAsInt32(VID_NUM_ITEMS);
+   if ((numItems < 0) || (numItems > MAX_DCI_LIST_REQUEST_SIZE))
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      sendMessage(response);
+      return;
+   }
 
+   uint32_t fieldId = VID_DCI_VALUES_BASE;
    for(int i = 0; i < numItems; i++, fieldId += 2)
    {
       shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(fieldId));
@@ -6543,8 +6560,8 @@ void ClientSession::getActiveThresholds(const NXCPMessage& request)
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*object).getDCObjectById(request.getFieldAsUInt32(fieldId + 1), m_userId);
-            if (dcObject != nullptr)
+            shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(request.getFieldAsUInt32(fieldId + 1), m_userId);
+            if ((dcObject != nullptr) && (dcObject->getType() == DCO_TYPE_ITEM))
                static_cast<DCItem&>(*dcObject).fillMessageWithThresholds(&response, true);
          }
       }
