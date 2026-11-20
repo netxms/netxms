@@ -6529,64 +6529,77 @@ void ClientSession::getEventProcessingPolicy(const NXCPMessage& request)
 }
 
 /**
+ * Maximum number of uploaded or deleted rules in a single event processing policy save request
+ */
+#define MAX_EPP_SAVE_RULE_COUNT  65536
+
+/**
  * Save event processing policy (optimistic concurrency)
  */
 void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Each save request covers exactly one existing chain; a request without VID_CHAIN_ID is malformed
-   // rather than a main chain save, so a stale client cannot overwrite the main chain by accident
-   m_eppChainId = request.getFieldAsUInt32(VID_CHAIN_ID);
-   m_eppBaseVersion = request.getFieldAsUInt32(VID_BASE_VERSION);
-   uint32_t rcc = request.isFieldExist(VID_CHAIN_ID) ? GetEventProcessingPolicy()->checkChainEditAccess(m_eppChainId, m_userId) : RCC_INVALID_ARGUMENT;
-   if (rcc == RCC_INVALID_ARGUMENT)
+   // Request is validated before any upload state is touched, so a rejected request leaves an upload
+   // in progress intact. Each save request covers exactly one existing chain; a request without
+   // VID_CHAIN_ID is malformed rather than a main chain save, so a stale client cannot overwrite
+   // the main chain by accident.
+   uint32_t chainId = request.getFieldAsUInt32(VID_CHAIN_ID);
+   uint32_t rcc = request.isFieldExist(VID_CHAIN_ID) ? GetEventProcessingPolicy()->checkChainEditAccess(chainId, m_userId) : RCC_INVALID_ARGUMENT;
+   if (rcc != RCC_SUCCESS)
    {
-      debugPrintf(4, L"saveEventProcessingPolicy: chain ID %s", request.isFieldExist(VID_CHAIN_ID) ? L"refers to unknown chain" : L"missing");
+      if (rcc == RCC_INVALID_ARGUMENT)
+         debugPrintf(4, L"saveEventProcessingPolicy: chain ID %s", request.isFieldExist(VID_CHAIN_ID) ? L"refers to unknown chain" : L"missing");
+      else if (rcc == RCC_ACCESS_DENIED)
+         writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on event processing policy change");
+      response.setField(VID_RCC, rcc);
+      sendMessage(response);
+      return;
+   }
+
+   uint32_t expectedRuleCount = request.getFieldAsUInt32(VID_NUM_RULES);
+   uint32_t deletedRuleCount = request.getFieldAsUInt32(VID_DELETED_RULE_COUNT);
+   if ((expectedRuleCount > MAX_EPP_SAVE_RULE_COUNT) || (deletedRuleCount > MAX_EPP_SAVE_RULE_COUNT))
+   {
+      debugPrintf(4, L"saveEventProcessingPolicy: rule count %u or deleted rule count %u exceeds limit", expectedRuleCount, deletedRuleCount);
       response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
       sendMessage(response);
       return;
    }
 
-   if (rcc == RCC_SUCCESS)
+   // Accepted request replaces any upload in progress
+   InterlockedAnd(&m_flags, ~CSF_EPP_UPLOAD);
+   m_eppChainId = chainId;
+   m_eppBaseVersion = request.getFieldAsUInt32(VID_BASE_VERSION);
+   m_eppExpectedRuleCount = expectedRuleCount;
+   m_eppRuleList.clear();
+
+   MemFree(m_eppDeletedRules);
+   m_eppDeletedRuleCount = deletedRuleCount;
+   if (m_eppDeletedRuleCount > 0)
    {
-      m_eppExpectedRuleCount = request.getFieldAsUInt32(VID_NUM_RULES);
-      m_eppRuleList.clear();
-
-      // Read deleted rules list
-      m_eppDeletedRuleCount = request.getFieldAsUInt32(VID_DELETED_RULE_COUNT);
-      if (m_eppDeletedRuleCount > 0)
+      m_eppDeletedRules = MemAllocArray<DeletedRuleInfo>(m_eppDeletedRuleCount);
+      for (uint32_t i = 0; i < m_eppDeletedRuleCount; i++)
       {
-         m_eppDeletedRules = MemAllocArray<DeletedRuleInfo>(m_eppDeletedRuleCount);
-         for (uint32_t i = 0; i < m_eppDeletedRuleCount; i++)
-         {
-            m_eppDeletedRules[i].guid = request.getFieldAsGUID(VID_DELETED_RULE_LIST_BASE + i * 2);
-            m_eppDeletedRules[i].version = request.getFieldAsUInt32(VID_DELETED_RULE_LIST_BASE + i * 2 + 1);
-         }
-      }
-      else
-      {
-         m_eppDeletedRules = nullptr;
-      }
-
-      if (m_eppExpectedRuleCount == 0)
-      {
-         // Special case: clearing policy or just deleting rules
-         finishEPPSave(request.getId());
-      }
-      else
-      {
-         InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
-         response.setField(VID_RCC, RCC_SUCCESS);
-         debugPrintf(5, _T("Accepted EPP upload request for %u rules in chain %u (base version %u)"), m_eppExpectedRuleCount, m_eppChainId, m_eppBaseVersion);
-         sendMessage(response);
+         m_eppDeletedRules[i].guid = request.getFieldAsGUID(VID_DELETED_RULE_LIST_BASE + i * 2);
+         m_eppDeletedRules[i].version = request.getFieldAsUInt32(VID_DELETED_RULE_LIST_BASE + i * 2 + 1);
       }
    }
    else
    {
-      // Current user has no rights for event policy management
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event processing policy change"));
+      m_eppDeletedRules = nullptr;
+   }
+
+   if (m_eppExpectedRuleCount == 0)
+   {
+      // Special case: clearing policy or just deleting rules
+      finishEPPSave(request.getId());
+   }
+   else
+   {
+      InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
+      response.setField(VID_RCC, RCC_SUCCESS);
+      debugPrintf(5, _T("Accepted EPP upload request for %u rules in chain %u (base version %u)"), m_eppExpectedRuleCount, m_eppChainId, m_eppBaseVersion);
       sendMessage(response);
    }
 }
