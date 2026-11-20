@@ -5,6 +5,7 @@
 
 static const char s_firstConfig[] = "[CORE]\nFileStore = /first\nSubAgent = a.nsm\nSubAgent = b.nsm\n";
 static const char s_secondConfig[] = "[CORE]\nFileStore = /second\nSubAgent = c.nsm\n";
+static const char s_nestedConfig[] = "[extensions/a]\nMode = spawn\n*extensions/b\nMode = connect\n";
 
 /**
  * Test value precedence when the same key is set in several configuration sources
@@ -73,6 +74,18 @@ void TestConfig()
    AssertEquals(dirConfig.getValue(_T("/CORE/FileStore")), _T("/second"));
    AssertEquals(dirConfig.getValue(_T("/CORE/FileStore"), nullptr, 1), _T("/first"));
    AssertTrue(DeleteDirectoryTree(dir));
+   EndTest();
+
+   StartTest(_T("Config - nested section names"));
+   Config nestedConfig;
+   nestedConfig.setLogErrors(false);
+   AssertTrue(nestedConfig.loadIniConfigFromMemory(s_nestedConfig, strlen(s_nestedConfig), _T("nested.conf"), _T("CORE")));
+   AssertNull(nestedConfig.getEntry(_T("/extensions/extensions")));
+   AssertEquals(nestedConfig.getValue(_T("/extensions/a/Mode")), _T("spawn"));
+   AssertEquals(nestedConfig.getValue(_T("/extensions/b/Mode")), _T("connect"));
+   ConfigEntry *extensions = nestedConfig.getEntry(_T("/extensions"));
+   AssertNotNull(extensions);
+   AssertEquals(extensions->getSubEntries()->size(), 2);
    EndTest();
 }
 
