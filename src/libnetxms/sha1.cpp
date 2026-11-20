@@ -383,7 +383,7 @@ static bool IsSHANISupported()
    unsigned int eax, ebx, ecx, edx;
    if (__get_cpuid_max(0, nullptr) < 7)
       return false;
-   __cpuid(1, eax, ebx, ecx, edx);
+   __cpuid_count(1, 0, eax, ebx, ecx, edx);  // not __cpuid: MinGW intrin.h replaces that macro with two-argument function
    uint32_t ecx1 = ecx;
    __cpuid_count(7, 0, eax, ebx, ecx, edx);
    uint32_t ebx7 = ebx;
