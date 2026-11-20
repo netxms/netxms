@@ -242,11 +242,14 @@ bool TuxedoGetMachinePhysicalID(const TCHAR *lmid, char *pmid)
 {
    bool success = false;
    s_lock.lock();
-   TuxedoMachine *m = s_machines->get(lmid);
-   if (m != NULL)
+   if (s_machines != nullptr)
    {
-      strcpy(pmid, m->m_pmid);
-      success = true;
+      TuxedoMachine *m = s_machines->get(lmid);
+      if (m != nullptr)
+      {
+         strcpy(pmid, m->m_pmid);
+         success = true;
+      }
    }
    s_lock.unlock();
    return success;
