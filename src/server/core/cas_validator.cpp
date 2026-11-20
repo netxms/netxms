@@ -283,7 +283,7 @@ static int CASValidate(const char *ticket, char *loginName)
    }
 
    total = 0;
-   do 
+   do
    {
       b = SSL_read(ssl, buf + total, static_cast<int>(sizeof(buf) - 1 - total));
       total += b;
