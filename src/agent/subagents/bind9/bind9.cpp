@@ -96,7 +96,24 @@ static void FetchStats()
 
    if (curl_easy_setopt(curl, CURLOPT_URL, s_queryUrl) == CURLE_OK)
    {
-      if (curl_easy_perform(curl) == CURLE_OK)
+      long httpStatus = 0;
+      if (curl_easy_perform(curl) != CURLE_OK)
+      {
+         if (!s_inErrorState)
+         {
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Call to curl_easy_perform() failed"));
+            s_inErrorState = true;
+         }
+      }
+      else if ((curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpStatus) != CURLE_OK) || (httpStatus != 200))
+      {
+         if (!s_inErrorState)
+         {
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("API request failed (HTTP status %ld)"), httpStatus);
+            s_inErrorState = true;
+         }
+      }
+      else
       {
          responseData.write('\0');
          json_error_t error;
@@ -121,15 +138,10 @@ static void FetchStats()
             s_response = nullptr;
          }
       }
-      else if (!s_inErrorState)
-      {
-         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Call to curl_easy_perform() failed"));
-         s_inErrorState = true;
-      }
    }
    else if (!s_inErrorState)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Parameter parsing failed. Check \"QueryURL\""));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot set request URL. Check \"Address\" and \"Port\" parameters"));
       s_inErrorState = true;
    }
 
@@ -255,7 +267,7 @@ static bool SubAgentInit(Config *config)
    const TCHAR *ip = config->getValue(_T("/Bind9/Address"), _T("127.0.0.1"));
    int port = config->getValueAsInt(_T("/Bind9/Port"), 80);
 
-   if ((port <= 0) || (port >= 65535))
+   if ((port <= 0) || (port > 65535))
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Invalid Address/port configuration. Check \"Address\" and \"Port\" parameters"));
       return false;
@@ -295,7 +307,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Bind9.Answers.Referral"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryReferral"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in referral answer") },
    { _T("Bind9.Answers.SERVFAIL"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QrySERVFAIL"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in a SERVFAIL answer") },
    { _T("Bind9.BootTime"), H_Bind9Info, reinterpret_cast<const TCHAR*>("boot-time"), DCI_DT_STRING, _T("Bind9: boot time") },
-   { _T("Bind9.ConfigTime"), H_Bind9Info, reinterpret_cast<const TCHAR*>("config-time"), DCI_DT_STRING, _T("Bind9: boot time") },
+   { _T("Bind9.ConfigTime"), H_Bind9Info, reinterpret_cast<const TCHAR*>("config-time"), DCI_DT_STRING, _T("Bind9: configuration load time") },
    { _T("Bind9.Notifies.Received.IPv4"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv4"), DCI_DT_COUNTER64, _T("Bind9: received IPv4 notifies") },
    { _T("Bind9.Notifies.Received.IPv6"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv6"), DCI_DT_COUNTER64, _T("Bind9: received IPv6 notifies") },
    { _T("Bind9.Notifies.Sent.IPv4"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv4"), DCI_DT_COUNTER64, _T("Bind9: sent IPv4 notifies") },
