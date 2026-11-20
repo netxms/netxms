@@ -177,7 +177,7 @@ GeoLocation WesterstrandDriver::getGeoLocation(DeviceContext *context, NObject *
 
    delete response;
 
-   return (vlat && vlon) ? GeoLocation(GL_MANUAL, lat, lon) : GeoLocation();
+   return (vlat && vlon) ? GeoLocation(GL_GPS, lat, lon) : GeoLocation();
 }
 
 /**
