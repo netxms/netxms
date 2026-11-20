@@ -56,6 +56,12 @@ VerifyHost = yes
 
 Define which Prometheus metrics should be forwarded to NetXMS as push DCIs and how they should be named. Mappings apply to metrics received via remote write and to scraped samples alike.
 
+Fields are separated by colons; whitespace around fields and around comma-separated label names is ignored. If the Prometheus metric name itself contains colons (for example, recording rule names), enclose it in square brackets:
+
+```ini
+Metric=[job:http_requests:rate5m]:Http.Requests.Rate:job
+```
+
 #### Format 1: Based on Prometheus metric value
 
 ```ini

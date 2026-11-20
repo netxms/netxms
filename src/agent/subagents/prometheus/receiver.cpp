@@ -140,9 +140,9 @@ static void Logger(void *context, const char *format, va_list args)
 {
    char buffer[8192];
    vsnprintf(buffer, 8192, format, args);
-   size_t last = strlen(buffer) - 1;
-   if (buffer[last] == '\n')
-      buffer[last] = 0;
+   size_t len = strlen(buffer);
+   if ((len > 0) && (buffer[len - 1] == '\n'))
+      buffer[len - 1] = 0;
    nxlog_debug_tag(DEBUG_TAG, 6, _T("MicroHTTPD: %hs"), buffer);
 }
 

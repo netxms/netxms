@@ -563,13 +563,22 @@ LONG H_TargetInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 static bool ParseLabelFilters(const TCHAR *param, int startIndex, ObjectArray<SampleLabel>& filters)
 {
-   for(int i = startIndex; ; i++)
+   // Arguments past the end of the list read as empty, so an empty argument alone does not mark the end.
+   // Number of commas + 1 bounds the argument count (commas inside quoted arguments only raise the bound).
+   int maxIndex = NumChars(param, _T(',')) + 1;
+   bool emptySeen = false;
+   for(int i = startIndex; i <= maxIndex; i++)
    {
       char buffer[1024];
       if (!AgentGetParameterArgA(param, i, buffer, 1024))
          return false;
       if (buffer[0] == 0)
-         break;
+      {
+         emptySeen = true;
+         continue;
+      }
+      if (emptySeen)
+         return false;  // empty argument between filters
       char *separator = strchr(buffer, '=');
       if (separator == nullptr)
          return false;
