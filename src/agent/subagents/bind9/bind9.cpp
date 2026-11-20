@@ -101,10 +101,24 @@ static void FetchStats()
          responseData.write('\0');
          json_error_t error;
          s_response = json_loads(reinterpret_cast<const char*>(responseData.buffer()), 0, &error);
-         if ((s_response == nullptr) && (!s_inErrorState))
+         if (s_response == nullptr)
          {
-            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot parse API response (%hs)"), error.text);
-            s_inErrorState = true;
+            if (!s_inErrorState)
+            {
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot parse API response (%hs)"), error.text);
+               s_inErrorState = true;
+            }
+         }
+         else if (!json_is_string(json_object_get(s_response, "json-stats-version")))
+         {
+            // BIND always includes json-stats-version, so anything without it is not a BIND statistics document
+            if (!s_inErrorState)
+            {
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("API response is not a valid BIND statistics document (missing \"json-stats-version\")"));
+               s_inErrorState = true;
+            }
+            json_decref(s_response);
+            s_response = nullptr;
          }
       }
       else if (!s_inErrorState)
@@ -171,6 +185,56 @@ static LONG H_Bind9Info(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
 }
 
 /**
+ * Handler for BIND counters. Argument is "section/counter". BIND omits zero-valued counters
+ * from nsstats and zonestats, and omits the whole section when all its counters are zero,
+ * so a missing counter or section in a valid statistics document means zero.
+ */
+static LONG H_Bind9Counter(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   const char *path = reinterpret_cast<const char*>(arg);
+   const char *separator = strchr(path, '/');
+   char sectionName[64];
+   strlcpy(sectionName, path, std::min(static_cast<size_t>(separator - path + 1), sizeof(sectionName)));
+   const char *counterName = separator + 1;
+
+   LockGuard lockGuard(s_paramsLock);
+   FetchStats();
+   if (s_response == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   s_inErrorState = false;
+
+   json_t *section = json_object_get(s_response, sectionName);
+   if (section == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Section \"%hs\" is not present in API response, counter \"%hs\" is zero"), sectionName, counterName);
+      ret_uint64(value, 0);
+      return SYSINFO_RC_SUCCESS;
+   }
+   if (!json_is_object(section))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Section \"%hs\" in API response is not an object"), sectionName);
+      return SYSINFO_RC_ERROR;
+   }
+
+   json_t *counter = json_object_get(section, counterName);
+   if (counter == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Counter \"%hs\" is not present in API response, assuming zero"), path);
+      ret_uint64(value, 0);
+      return SYSINFO_RC_SUCCESS;
+   }
+   if (!json_is_integer(counter))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Counter \"%hs\" in API response is not an integer"), path);
+      return SYSINFO_RC_ERROR;
+   }
+
+   ret_uint64(value, static_cast<uint64_t>(json_integer_value(counter)));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Get metric from user-supplied path
  */
 static LONG H_Bind9CustomInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
@@ -222,32 +286,32 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("Bind9.Answers.Auth"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryAuthAns"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in an authoritative answer") },
-   { _T("Bind9.Answers.FORMERR"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryFORMERR"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in a FORMERR answer") },
-   { _T("Bind9.Answers.NoData"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNxrrset"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in NOERROR responses with no data") },
-   { _T("Bind9.Answers.NonAuth"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNoauthAns"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in a non-authoritative answer") },
-   { _T("Bind9.Answers.NXDOMAIN"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryNXDOMAIN"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in a NXDOMAIN answer") },
-   { _T("Bind9.Answers.Recursive"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryRecursion"), DCI_DT_COUNTER64, _T("Bind9: queries that caused recursion") },
-   { _T("Bind9.Answers.Referral"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryReferral"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in referral answer") },
-   { _T("Bind9.Answers.SERVFAIL"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QrySERVFAIL"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in a SERVFAIL answer") },
+   { _T("Bind9.Answers.Auth"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryAuthAns"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in an authoritative answer") },
+   { _T("Bind9.Answers.FORMERR"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryFORMERR"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in a FORMERR answer") },
+   { _T("Bind9.Answers.NoData"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryNxrrset"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in NOERROR responses with no data") },
+   { _T("Bind9.Answers.NonAuth"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryNoauthAns"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in a non-authoritative answer") },
+   { _T("Bind9.Answers.NXDOMAIN"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryNXDOMAIN"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in a NXDOMAIN answer") },
+   { _T("Bind9.Answers.Recursive"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryRecursion"), DCI_DT_COUNTER64, _T("Bind9: queries that caused recursion") },
+   { _T("Bind9.Answers.Referral"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryReferral"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in referral answer") },
+   { _T("Bind9.Answers.SERVFAIL"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QrySERVFAIL"), DCI_DT_COUNTER64, _T("Bind9: queries resulted in a SERVFAIL answer") },
    { _T("Bind9.BootTime"), H_Bind9Info, reinterpret_cast<const TCHAR*>("boot-time"), DCI_DT_STRING, _T("Bind9: boot time") },
    { _T("Bind9.ConfigTime"), H_Bind9Info, reinterpret_cast<const TCHAR*>("config-time"), DCI_DT_STRING, _T("Bind9: boot time") },
-   { _T("Bind9.Notifies.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv4"), DCI_DT_COUNTER64, _T("Bind9: received IPv4 notifies") },
-   { _T("Bind9.Notifies.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv6"), DCI_DT_COUNTER64, _T("Bind9: received IPv6 notifies") },
-   { _T("Bind9.Notifies.Sent.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv4"), DCI_DT_COUNTER64, _T("Bind9: sent IPv4 notifies") },
-   { _T("Bind9.Notifies.Sent.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv6"), DCI_DT_COUNTER64, _T("Bind9: sent IPv6 notifies") },
+   { _T("Bind9.Notifies.Received.IPv4"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv4"), DCI_DT_COUNTER64, _T("Bind9: received IPv4 notifies") },
+   { _T("Bind9.Notifies.Received.IPv6"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("zonestats/NotifyInv6"), DCI_DT_COUNTER64, _T("Bind9: received IPv6 notifies") },
+   { _T("Bind9.Notifies.Sent.IPv4"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv4"), DCI_DT_COUNTER64, _T("Bind9: sent IPv4 notifies") },
+   { _T("Bind9.Notifies.Sent.IPv6"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("zonestats/NotifyOutv6"), DCI_DT_COUNTER64, _T("Bind9: sent IPv6 notifies") },
    { _T("Bind9.Other(*)"), H_Bind9CustomInfo, nullptr, DCI_DT_STRING, _T("Bind9: value of metric {instance}") },
-   { _T("Bind9.Requests.Completed.Updates"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/UpdateDone"), DCI_DT_COUNTER64, _T("Bind9: completed updates") },
-   { _T("Bind9.Requests.Completed.ZoneTransfers"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/XfrReqDone"), DCI_DT_COUNTER64, _T("Bind9: completed zone transfers") },
-   { _T("Bind9.Requests.Failed.Dropped"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryDropped"), DCI_DT_COUNTER64, _T("Bind9: dropped queries") },
-   { _T("Bind9.Requests.Failed.Other"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/QryFailure"), DCI_DT_COUNTER64, _T("Bind9: other query failures") },
-   { _T("Bind9.Requests.Received.IPv4"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/Requestv4"), DCI_DT_COUNTER64, _T("Bind9: received IPv4 requests") },
-   { _T("Bind9.Requests.Received.IPv6"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/Requestv6"), DCI_DT_COUNTER64, _T("Bind9: received IPv6 requests") },
-   { _T("Bind9.Requests.Received.TCP"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/ReqTCP"), DCI_DT_COUNTER64, _T("Bind9: received TCP requests") },
-   { _T("Bind9.Requests.Rejected.Authoritative"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/AuthQryRej"), DCI_DT_COUNTER64, _T("Bind9: rejected authoritative queries") },
-   { _T("Bind9.Requests.Rejected.Recursive"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/RecQryRej"), DCI_DT_COUNTER64, _T("Bind9: rejected recursive queries") },
-   { _T("Bind9.Requests.Rejected.Updates"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/UpdateRej"), DCI_DT_COUNTER64, _T("Bind9: rejected updates") },
-   { _T("Bind9.Requests.Rejected.ZoneTransfers"), H_Bind9Info, reinterpret_cast<const TCHAR*>("nsstats/XfrRej"), DCI_DT_COUNTER64, _T("Bind9: rejected zone transfers") },
+   { _T("Bind9.Requests.Completed.Updates"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/UpdateDone"), DCI_DT_COUNTER64, _T("Bind9: completed updates") },
+   { _T("Bind9.Requests.Completed.ZoneTransfers"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/XfrReqDone"), DCI_DT_COUNTER64, _T("Bind9: completed zone transfers") },
+   { _T("Bind9.Requests.Failed.Dropped"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryDropped"), DCI_DT_COUNTER64, _T("Bind9: dropped queries") },
+   { _T("Bind9.Requests.Failed.Other"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/QryFailure"), DCI_DT_COUNTER64, _T("Bind9: other query failures") },
+   { _T("Bind9.Requests.Received.IPv4"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/Requestv4"), DCI_DT_COUNTER64, _T("Bind9: received IPv4 requests") },
+   { _T("Bind9.Requests.Received.IPv6"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/Requestv6"), DCI_DT_COUNTER64, _T("Bind9: received IPv6 requests") },
+   { _T("Bind9.Requests.Received.TCP"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/ReqTCP"), DCI_DT_COUNTER64, _T("Bind9: received TCP requests") },
+   { _T("Bind9.Requests.Rejected.Authoritative"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/AuthQryRej"), DCI_DT_COUNTER64, _T("Bind9: rejected authoritative queries") },
+   { _T("Bind9.Requests.Rejected.Recursive"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/RecQryRej"), DCI_DT_COUNTER64, _T("Bind9: rejected recursive queries") },
+   { _T("Bind9.Requests.Rejected.Updates"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/UpdateRej"), DCI_DT_COUNTER64, _T("Bind9: rejected updates") },
+   { _T("Bind9.Requests.Rejected.ZoneTransfers"), H_Bind9Counter, reinterpret_cast<const TCHAR*>("nsstats/XfrRej"), DCI_DT_COUNTER64, _T("Bind9: rejected zone transfers") },
    { _T("Bind9.Version"), H_Bind9Info, reinterpret_cast<const TCHAR*>("version"), DCI_DT_STRING, _T("Bind9: version") },
 };
 
