@@ -9789,6 +9789,7 @@ paths:
                   root:
                     allOf:
                       - $ref: '#/components/schemas/PhysicalComponent'
+                    type: object
                     nullable: true
                     description: Root component of the tree
         '400':
@@ -21916,6 +21917,7 @@ components:
         clientAddress:
           allOf:
             - $ref: '#/components/schemas/InetAddress'
+          type: object
           nullable: true
           description: Address of the remote client. Null for local sessions or when not known.
         display:
