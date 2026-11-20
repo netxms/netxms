@@ -4059,8 +4059,12 @@ restart_status_poll:
       m_agentUpTime = 0;
    }
 
-   // Get geolocation
-   if (!(m_state & DCSF_UNREACHABLE))
+   // Get geolocation (location set manually by user is never overwritten)
+   if (getGeoLocation().isManual())
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"StatusPoll(%s [%d]): location is set manually, automatic update skipped", m_name, m_id);
+   }
+   else if (!(m_state & DCSF_UNREACHABLE))
    {
       bool geoLocationRetrieved = false;
       if (isNativeAgent())
