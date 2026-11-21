@@ -14589,13 +14589,39 @@ shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t 
 /**
  * Resolve node's name. Resolved name is stored into provided buffer (must be at least MAX_OBJECT_NAME characters),
  * node's name is not changed. Domain part is removed unless server is configured to use FQDN for node names.
+ * Names that look like systemd synthetic records or cannot be used as object name are skipped and next source is tried.
  */
 bool Node::resolveName(bool useOnlyDNS, wchar_t *name, const wchar_t **facility)
 {
-   bool resolved = false;
-
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Resolving name for node %s [%u]", m_name, m_id);
 
+   // Validate name obtained from given source and convert it to final form
+   auto acceptName = [this, name, facility] (const wchar_t *source) -> bool
+   {
+      if (name[0] == L'_')
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Name \"%s\" for node %s [%u] provided by %s looks like systemd synthetic record and therefore ignored", name, m_name, m_id, source);
+         return false;
+      }
+      if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
+      {
+         wchar_t *p = wcschr(name, L'.');
+         if (p != nullptr)
+         {
+            *p = 0;
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, L"Name for node %s [%u] provided by %s truncated to host part \"%s\"", m_name, m_id, source, name);
+         }
+      }
+      if (!IsValidObjectName(name, TRUE))
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Name \"%s\" for node %s [%u] provided by %s cannot be used as object name and therefore ignored", name, m_name, m_id, source);
+         return false;
+      }
+      *facility = source;
+      return true;
+   };
+
+   bool resolved = false;
    if (isMyIP(m_ipAddress))
    {
       if (m_zoneUIN != 0)
@@ -14603,23 +14629,11 @@ bool Node::resolveName(bool useOnlyDNS, wchar_t *name, const wchar_t **facility)
          shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
          shared_ptr<AgentConnectionEx> conn = (zone != nullptr) ? zone->acquireConnectionToProxy() : shared_ptr<AgentConnectionEx>();
          if (conn != nullptr)
-         {
-            resolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr);
-            *facility = L"proxy agent";
-         }
+            resolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr) && acceptName(L"proxy agent");
       }
       else
       {
-         resolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr);
-         *facility = L"system resolver";
-      }
-
-      // Check for systemd synthetic record
-      if (resolved && (name[0] == '_'))
-      {
-         wchar_t buffer[64];
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"IP address %s on node %s [%u] was resolved to \"%s\" which looks like systemd synthetic record and therefore ignored", m_ipAddress.toString(buffer), m_name, m_id, name);
-         resolved = false;
+         resolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr) && acceptName(L"system resolver");
       }
    }
    else
@@ -14641,10 +14655,9 @@ bool Node::resolveName(bool useOnlyDNS, wchar_t *name, const wchar_t **facility)
             for(int n = 0; n < addrList.size(); n++)
             {
                InetAddress a = addrList.get(n);
-               if (a.isValidUnicast() && (a.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr))
+               if (a.isValidUnicast() && (a.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr) && acceptName(L"system resolver"))
                {
                   resolved = true;
-                  *facility = L"system resolver";
                   break;
                }
             }
@@ -14660,12 +14673,8 @@ bool Node::resolveName(bool useOnlyDNS, wchar_t *name, const wchar_t **facility)
          if (getMetricFromAgent(L"System.Hostname", buffer, 256) == DCE_SUCCESS)
          {
             Trim(buffer);
-            if (buffer[0] != 0)
-            {
-               wcslcpy(name, buffer, MAX_OBJECT_NAME);
-               resolved = true;
-               *facility = L"agent";
-            }
+            wcslcpy(name, buffer, MAX_OBJECT_NAME);
+            resolved = acceptName(L"agent");
          }
       }
 
@@ -14677,34 +14686,14 @@ bool Node::resolveName(bool useOnlyDNS, wchar_t *name, const wchar_t **facility)
          if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, L".1.3.6.1.2.1.1.5.0", buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
          {
             Trim(buffer);
-            if (buffer[0] != 0)
-            {
-               wcslcpy(name, buffer, MAX_OBJECT_NAME);
-               resolved = true;
-               *facility = L"SNMP";
-            }
+            wcslcpy(name, buffer, MAX_OBJECT_NAME);
+            resolved = acceptName(L"SNMP");
          }
       }
    }
 
-   bool truncated = false;
-   if (resolved && !(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
-   {
-      wchar_t *p = wcschr(name, L'.');
-      if (p != nullptr)
-      {
-         *p = 0;
-         truncated = true;
-      }
-      if (name[0] == 0)
-      {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Name for node [%u] is empty after removing domain part", m_id);
-         resolved = false;
-      }
-   }
-
    if (resolved)
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Name for node [%u] was resolved to %s%s using %s", m_id, name, truncated ? L" (truncated to host part)" : L"", *facility);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Name for node [%u] was resolved to %s using %s", m_id, name, *facility);
    else
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Name for node [%u] was not resolved", m_id);
    return resolved;
