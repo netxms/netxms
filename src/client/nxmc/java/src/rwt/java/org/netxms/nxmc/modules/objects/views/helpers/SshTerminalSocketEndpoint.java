@@ -41,6 +41,7 @@ import jakarta.websocket.HandshakeResponse;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
+import jakarta.websocket.PongMessage;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.HandshakeRequest;
 import jakarta.websocket.server.PathParam;
@@ -52,7 +53,8 @@ import jakarta.websocket.server.ServerEndpointConfig;
  * application. Protocol: binary frames carry raw terminal data in both directions; text frames carry JSON control messages
  * ({"type":"init","cols":N,"rows":N} and {"type":"resize","cols":N,"rows":N} from browser, {"type":"error","message":S}
  * and {"type":"closed"} from server). A transport is registered by the view with the ID of the HTTP session that created
- * it; only a websocket from the same HTTP session may attach to it.
+ * it; only a websocket from the same HTTP session may attach to it. Server sends websocket pings to keep idle sessions
+ * open.
  */
 @ServerEndpoint(value = "/sshterminal/{tid}", configurator = SshTerminalSocketEndpoint.HttpSessionConfigurator.class)
 public class SshTerminalSocketEndpoint
@@ -213,6 +215,20 @@ public class SshTerminalSocketEndpoint
    }
 
    /**
+    * Handler for pong messages (responses to keepalive pings).
+    *
+    * @param session websocket session
+    * @param message pong message
+    */
+   @OnMessage
+   public void onPong(Session session, PongMessage message)
+   {
+      TerminalSession ts = sessions.get(session.getId());
+      if (ts != null)
+         ts.pongReceived();
+   }
+
+   /**
     * Handler for terminal input.
     *
     * @param session websocket session
@@ -267,6 +283,7 @@ public class SshTerminalSocketEndpoint
       volatile boolean attached = false;
       volatile boolean connected = false;
       private Session wsSession = null;
+      private volatile WebSocketKeepalive keepalive = null;
       private Thread readerThread = null;
 
       TerminalSession(TerminalTransport transport, String httpSessionId)
@@ -287,6 +304,7 @@ public class SshTerminalSocketEndpoint
             return false;
          attached = true;
          wsSession = session;
+         keepalive = new WebSocketKeepalive(session);
          return true;
       }
 
@@ -402,10 +420,23 @@ public class SshTerminalSocketEndpoint
       }
 
       /**
+       * Register pong received from browser
+       */
+      void pongReceived()
+      {
+         WebSocketKeepalive k = keepalive;
+         if (k != null)
+            k.pongReceived();
+      }
+
+      /**
        * Close transport (and reader thread will finish)
        */
       void close()
       {
+         WebSocketKeepalive k = keepalive;
+         if (k != null)
+            k.stop();
          transport.close();
       }
    }

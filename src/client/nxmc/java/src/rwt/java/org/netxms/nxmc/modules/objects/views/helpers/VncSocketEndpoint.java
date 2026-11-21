@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,12 +37,13 @@ import jakarta.websocket.EndpointConfig;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
+import jakarta.websocket.PongMessage;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 
 /**
- * Endpoint for VNC proxy websockets
+ * Endpoint for VNC proxy websockets. Server sends websocket pings to keep idle sessions open.
  */
 @ServerEndpoint("/vncviewer/{fwid}")
 public class VncSocketEndpoint
@@ -139,6 +140,20 @@ public class VncSocketEndpoint
    }
 
    /**
+    * Handler for pong messages (responses to keepalive pings).
+    *
+    * @param session websocket session
+    * @param message pong message
+    */
+   @OnMessage
+   public void onPong(Session session, PongMessage message)
+   {
+      VncSession vncSession = sessions.get(session.getId());
+      if (vncSession != null)
+         vncSession.keepalive.pongReceived();
+   }
+
+   /**
     * Safely close websocket session.
     *
     * @param session websocket session to close
@@ -167,6 +182,7 @@ public class VncSocketEndpoint
       private TcpPortForwarder forwarder;
       private Socket socket;
       private Thread socketReaderThread;
+      private WebSocketKeepalive keepalive;
 
       /**
        * Create new VNC proxy session.
@@ -182,6 +198,7 @@ public class VncSocketEndpoint
          this.wsSession = wsSession;
          this.forwarder = forwarder;
          socket = new Socket("127.0.0.1", forwarder.getLocalPort());
+         keepalive = new WebSocketKeepalive(wsSession);
          socketReaderThread = new Thread(() -> {
             logger.debug("Socket reader started");
             socketReader();
@@ -206,6 +223,7 @@ public class VncSocketEndpoint
        */
       public void close()
       {
+         keepalive.stop();
          try
          {
             socket.close();
