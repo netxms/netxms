@@ -210,12 +210,13 @@ void ShutdownMatchingEngine();
  */
 void ReloadMatchingRules();
 
+namespace opentelemetry { namespace proto { namespace resource { namespace v1 { class Resource; } } } }
+
 /**
- * Match OTel resource attributes to a NetXMS node.
- * Takes a StringMap of resource attributes (key -> string value).
- * Returns matched node or empty shared_ptr if no match.
+ * Match OTel resource to a NetXMS node using resource attributes. For array-valued attributes
+ * each element is tried in turn. Returns matched node or empty shared_ptr if no match.
  */
-shared_ptr<Node> MatchResourceToNode(const std::map<std::string, std::string>& attributes);
+shared_ptr<Node> MatchResourceToNode(const opentelemetry::proto::resource::v1::Resource& resource);
 
 /**
  * Parsed OTLP instance discovery configuration

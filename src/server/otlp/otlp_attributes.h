@@ -29,7 +29,67 @@
 #include "generated/resource.pb.h"
 
 /**
- * Convert a single OTLP AnyValue to its string representation.
+ * Convert raw bytes to lowercase hex string
+ */
+static inline std::string OtlpBytesToHex(const std::string& bytes)
+{
+   static const char hexChars[] = "0123456789abcdef";
+   std::string out;
+   out.reserve(bytes.size() * 2);
+   for (char c : bytes)
+   {
+      uint8_t b = static_cast<uint8_t>(c);
+      out.push_back(hexChars[b >> 4]);
+      out.push_back(hexChars[b & 0x0F]);
+   }
+   return out;
+}
+
+/**
+ * Convert OTLP AnyValue to JSON. Bytes are encoded as lowercase hex string, empty value as null.
+ */
+static inline json_t *AnyValueToJson(const opentelemetry::proto::common::v1::AnyValue& av)
+{
+   switch (av.value_case())
+   {
+      case opentelemetry::proto::common::v1::AnyValue::kStringValue:
+         return json_stringn_nocheck(av.string_value().data(), av.string_value().size());
+      case opentelemetry::proto::common::v1::AnyValue::kIntValue:
+         return json_integer(av.int_value());
+      case opentelemetry::proto::common::v1::AnyValue::kDoubleValue:
+      {
+         json_t *value = json_real(av.double_value());   // returns nullptr for NaN and infinity
+         return (value != nullptr) ? value : json_null();
+      }
+      case opentelemetry::proto::common::v1::AnyValue::kBoolValue:
+         return json_boolean(av.bool_value());
+      case opentelemetry::proto::common::v1::AnyValue::kBytesValue:
+      {
+         std::string hex = OtlpBytesToHex(av.bytes_value());
+         return json_stringn_nocheck(hex.data(), hex.size());
+      }
+      case opentelemetry::proto::common::v1::AnyValue::kArrayValue:
+      {
+         json_t *array = json_array();
+         for (const auto& element : av.array_value().values())
+            json_array_append_new(array, AnyValueToJson(element));
+         return array;
+      }
+      case opentelemetry::proto::common::v1::AnyValue::kKvlistValue:
+      {
+         json_t *object = json_object();
+         for (const auto& kv : av.kvlist_value().values())
+            json_object_set_new_nocheck(object, kv.key().c_str(), AnyValueToJson(kv.value()));
+         return object;
+      }
+      default:
+         return json_null();
+   }
+}
+
+/**
+ * Convert a single OTLP AnyValue to its string representation. Arrays and key-value lists
+ * are rendered as compact JSON, bytes as lowercase hex string, empty value as empty string.
  */
 static inline void AnyValueToString(const opentelemetry::proto::common::v1::AnyValue& av, std::string& out)
 {
@@ -50,6 +110,19 @@ static inline void AnyValueToString(const opentelemetry::proto::common::v1::AnyV
       case opentelemetry::proto::common::v1::AnyValue::kBoolValue:
          out = av.bool_value() ? "true" : "false";
          break;
+      case opentelemetry::proto::common::v1::AnyValue::kBytesValue:
+         out = OtlpBytesToHex(av.bytes_value());
+         break;
+      case opentelemetry::proto::common::v1::AnyValue::kArrayValue:
+      case opentelemetry::proto::common::v1::AnyValue::kKvlistValue:
+      {
+         json_t *json = AnyValueToJson(av);
+         char *text = json_dumps(json, JSON_COMPACT | JSON_PRESERVE_ORDER | JSON_REAL_PRECISION(15));
+         out = (text != nullptr) ? text : "";
+         MemFree(text);
+         json_decref(json);
+         break;
+      }
       default:
          out.clear();
          break;
