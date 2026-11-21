@@ -11,6 +11,7 @@ netxms.db.password
 
 nxreportd.bindAddress
 nxreportd.logfile
+nxreportd.maxThreads
 nxreportd.workspace
 
 smtp.server

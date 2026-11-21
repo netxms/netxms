@@ -77,39 +77,19 @@ public class CommunicationManager
    /**
     * Start communication session
     */
-   public void start(Socket socket)
+   public void start(final Socket socket)
    {
+      // Previous receiver must be gone before the new one starts, as both would use report package upload state
+      shutdown();
       synchronized(mutex)
       {
-         if (this.socket != null)
-         {
-            try
-            {
-               this.socket.close();
-            }
-            catch(IOException e)
-            {
-               logger.error("Error closing existing socket", e);
-            }
-         }
-         if (receiverThread != null)
-         {
-            try
-            {
-               receiverThread.join();
-            }
-            catch(InterruptedException e)
-            {
-               logger.error("Interrupted while waiting for receiver thread", e);
-            }
-         }
          this.socket = socket;
          receiverThread = new Thread(new Runnable() {
             @Override
             public void run()
             {
                logger.info("Communication manager started");
-               receiverThread();
+               receiverThread(socket);
                logger.info("Communication manager stopped");
             }
          }, "Network Receiver");
@@ -118,52 +98,82 @@ public class CommunicationManager
    }
 
    /**
-    * Shutdown communication session
+    * Shutdown communication session. Receiver thread is joined without holding the lock, because the receiver needs it to
+    * send replies.
     */
    public void shutdown()
    {
+      Socket oldSocket;
+      Thread oldThread;
       synchronized(mutex)
       {
-         if (socket != null)
-         {
-            try
-            {
-               socket.close();
-            }
-            catch(IOException e)
-            {
-               logger.error("Error closing existing socket", e);
-            }
-         }
-         if (receiverThread != null)
-         {
-            try
-            {
-               receiverThread.join();
-            }
-            catch(InterruptedException e)
-            {
-               logger.warn("Unexpected exception during comm session shutdown", e);
-            }
-            receiverThread = null;
-         }
+         oldSocket = socket;
+         oldThread = receiverThread;
          socket = null;
+         receiverThread = null;
+      }
+
+      if (oldSocket != null)
+      {
+         try
+         {
+            oldSocket.close();
+         }
+         catch(IOException e)
+         {
+            logger.error("Error closing existing socket", e);
+         }
+      }
+      if (oldThread != null)
+      {
+         try
+         {
+            oldThread.join();
+         }
+         catch(InterruptedException e)
+         {
+            logger.warn("Interrupted while waiting for receiver thread", e);
+            Thread.currentThread().interrupt();
+         }
       }
    }
 
    /**
-    * Send message to core server.
+    * Send message to core server over current connection.
     *
     * @param message message to send
     * @return true on success
     */
    public boolean sendMessage(NXCPMessage message)
    {
+      Socket s;
+      synchronized(mutex)
+      {
+         s = socket;
+      }
+      return sendMessage(s, message);
+   }
+
+   /**
+    * Send message to core server over given connection. Message is dropped if that connection is no longer the current one,
+    * so that reply to a request received over closed connection is not delivered to the new one.
+    *
+    * @param target connection to send message over
+    * @param message message to send
+    * @return true on success
+    */
+   private boolean sendMessage(Socket target, NXCPMessage message)
+   {
       try
       {
          synchronized(mutex)
          {
-            socket.getOutputStream().write(message.createNXCPMessage(false));
+            if ((target == null) || (target != socket))
+            {
+               logger.debug("Message with code 0x{} and ID {} dropped (connection closed)", Integer.toHexString(message.getMessageCode()), message.getMessageId());
+               return false;
+            }
+            target.getOutputStream().write(message.createNXCPMessage(false));
          }
          return true;
       }
@@ -177,63 +187,62 @@ public class CommunicationManager
    /**
     * Send file stream to core server.
     *
+    * @param target connection to send file over
     * @param requestId request ID
     * @param inputStream input stream for file
-    * @throws IOException
+    * @throws IOException on file read error
     */
-   public void sendFileStream(final long requestId, final InputStream inputStream) throws IOException
+   private void sendFileStream(Socket target, long requestId, InputStream inputStream) throws IOException
    {
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
       msg.setBinaryMessage(true);
 
-      boolean success = false;
       final byte[] buffer = new byte[FILE_BUFFER_SIZE];
-      while(true)
+      try
       {
-         final int bytesRead = inputStream.read(buffer);
-         if (bytesRead < FILE_BUFFER_SIZE)
+         while(true)
          {
-            msg.setEndOfFile(true);
-         }
+            final int bytesRead = inputStream.read(buffer);
+            if (bytesRead < FILE_BUFFER_SIZE)
+            {
+               msg.setEndOfFile(true);
+            }
 
-         msg.setBinaryData(bytesRead == -1 ? new byte[0] : Arrays.copyOf(buffer, bytesRead));
-         sendMessage(msg);
+            msg.setBinaryData(bytesRead == -1 ? new byte[0] : Arrays.copyOf(buffer, bytesRead));
+            if (!sendMessage(target, msg))
+               return;  // Connection lost, no point in sending the rest
 
-         if (bytesRead < FILE_BUFFER_SIZE)
-         {
-            success = true;
-            break;
+            if (bytesRead < FILE_BUFFER_SIZE)
+               break;
          }
       }
-
-      if (!success)
+      catch(IOException e)
       {
          NXCPMessage abortMessage = new NXCPMessage(NXCPCodes.CMD_ABORT_FILE_TRANSFER, requestId);
          abortMessage.setBinaryMessage(true);
-         sendMessage(abortMessage);
+         sendMessage(target, abortMessage);
+         throw e;
       }
    }
 
    /**
     * Receiver thread for communication session
+    *
+    * @param s connection to receive messages from
     */
-   private void receiverThread()
+   private void receiverThread(Socket s)
    {
       final NXCPMessageReceiver messageReceiver = new NXCPMessageReceiver(262144, 4194304);   // 256KB, 4MB
-      while(!Thread.currentThread().isInterrupted())
+      try
       {
-         try
+         while(!Thread.currentThread().isInterrupted())
          {
-            Socket s;
-            synchronized(mutex)
+            try
             {
-               if (socket == null)
-                  break;
-               s = socket;
-            }
-            final NXCPMessage message = messageReceiver.receiveMessage(s.getInputStream(), null);
-            if (message != null)
-            {
+               final NXCPMessage message = messageReceiver.receiveMessage(s.getInputStream(), null);
+               if (message == null)
+                  continue;
+
                if (message.getMessageCode() != NXCPCodes.CMD_KEEPALIVE)
                {
                   logger.debug("RECV: " + message.toString());
@@ -243,48 +252,39 @@ public class CommunicationManager
                if ((message.getMessageCode() == NXCPCodes.CMD_FILE_DATA || message.getMessageCode() == NXCPCodes.CMD_ABORT_FILE_TRANSFER) && pendingFileStream != null &&
                      pendingFileRequestId == message.getMessageId())
                {
-                  processIncomingFileData(message);
+                  processIncomingFileData(message, s);
                   continue;
                }
 
-               final MessageProcessingResult result = processMessage(message);
-               if (result.response != null)
+               final NXCPMessage response = processMessage(message, s);
+               if (response != null)
                {
                   if (message.getMessageCode() != NXCPCodes.CMD_KEEPALIVE)
                   {
-                     logger.debug("SEND: " + result.response.toString());
+                     logger.debug("SEND: " + response.toString());
                   }
-                  sendMessage(result.response);
-                  if (result.file != null)
-                  {
-                     logger.debug("File data found, sending");
-                     FileInputStream in = null;
-                     try
-                     {
-                        in = new FileInputStream(result.file);
-                        sendFileStream(message.getMessageId(), in);
-                     }
-                     catch(IOException e)
-                     {
-                        logger.error("Unexpected I/O exception while sending rendered file");
-                     }
-                     if (in != null)
-                        in.close();
-                     result.file.delete();
-                  }
+                  sendMessage(s, response);
                }
             }
-         }
-         catch(IOException e)
-         {
-            logger.info("Communication error", e);
-            break;
-         }
-         catch(NXCPException e)
-         {
-            logger.info("Protocol error", e);
-            if (e.getErrorCode() == NXCPException.SESSION_CLOSED)
+            catch(IOException e)
+            {
+               logger.info("Communication error", e);
                break;
+            }
+            catch(NXCPException e)
+            {
+               logger.info("Protocol error", e);
+               if (e.getErrorCode() == NXCPException.SESSION_CLOSED)
+                  break;
+            }
+         }
+      }
+      finally
+      {
+         if (pendingFileStream != null)
+         {
+            logger.warn("Upload of report package " + pendingFinalName + " interrupted by connection loss");
+            discardPendingUpload();
          }
       }
    }
@@ -293,12 +293,12 @@ public class CommunicationManager
     * Process incoming message
     *
     * @param request input message
-    * @return message processing result
+    * @param s connection request was received over
+    * @return response message or null if response will be sent asynchronously
     */
-   public MessageProcessingResult processMessage(NXCPMessage request)
+   private NXCPMessage processMessage(NXCPMessage request, Socket s)
    {
       NXCPMessage reply = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
-      File file = null;
       switch(request.getMessageCode())
       {
          case NXCPCodes.CMD_ISC_CONNECT_TO_SERVICE: // ignore and reply "Ok"
@@ -327,8 +327,8 @@ public class CommunicationManager
             getResults(request, reply);
             break;
          case NXCPCodes.CMD_RS_RENDER_RESULT:
-            file = renderResult(request, reply);
-            break;
+            renderResult(request, s);
+            return null;
          case NXCPCodes.CMD_RS_DELETE_RESULT:
             deleteResult(request, reply);
             break;
@@ -345,7 +345,7 @@ public class CommunicationManager
             reply.setFieldInt32(NXCPCodes.VID_RCC, RCC.NOT_IMPLEMENTED);
             break;
       }
-      return new MessageProcessingResult(reply, file);
+      return reply;
    }
 
    /**
@@ -493,22 +493,43 @@ public class CommunicationManager
    }
 
    /**
-    * Render report result
+    * Render report result in background and send response followed by rendered document over the connection request was
+    * received over. Rendering can take long time, and doing it on receiver thread would block all other requests.
     *
     * @param request request message
-    * @param response response message
-    * @return rendered document or null on failure
+    * @param s connection request was received over
     */
-   private File renderResult(NXCPMessage request, NXCPMessage response)
+   private void renderResult(NXCPMessage request, final Socket s)
    {
+      final long requestId = request.getMessageId();
       final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
       final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_TASK_ID);
-      final int formatCode = request.getFieldAsInt32(NXCPCodes.VID_RENDER_FORMAT);
-      final ReportRenderFormat format = ReportRenderFormat.valueOf(formatCode);
+      final ReportRenderFormat format = ReportRenderFormat.valueOf(request.getFieldAsInt32(NXCPCodes.VID_RENDER_FORMAT));
       final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
-      File file = server.getReportManager().renderResult(reportId, jobId, userId, format);
-      response.setFieldInt32(NXCPCodes.VID_RCC, (file != null) ? RCC.SUCCESS : RCC.IO_ERROR);
-      return file;
+      server.executeBackgroundTask(new Runnable() {
+         @Override
+         public void run()
+         {
+            File file = server.getReportManager().renderResult(reportId, jobId, userId, format);
+            NXCPMessage response = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, requestId);
+            response.setFieldInt32(NXCPCodes.VID_RCC, (file != null) ? RCC.SUCCESS : RCC.IO_ERROR);
+            logger.debug("SEND: " + response.toString());
+            if (sendMessage(s, response) && (file != null))
+            {
+               logger.debug("Sending rendered file {}", file.getName());
+               try (FileInputStream in = new FileInputStream(file))
+               {
+                  sendFileStream(s, requestId, in);
+               }
+               catch(IOException e)
+               {
+                  logger.error("Unexpected I/O exception while sending rendered file", e);
+               }
+            }
+            if (file != null)
+               file.delete();
+         }
+      });
    }
 
    /**
@@ -607,6 +628,12 @@ public class CommunicationManager
          return;
       }
 
+      if (pendingFileStream != null)
+      {
+         logger.warn("Upload of report package " + pendingFinalName + " superseded by new upload request");
+         discardPendingUpload();
+      }
+
       try
       {
          File defDir = server.getReportManager().getDefinitionsDirectory();
@@ -620,9 +647,7 @@ public class CommunicationManager
       catch(IOException e)
       {
          logger.error("Cannot create file for report package upload", e);
-         pendingFileStream = null;
-         pendingTempFile = null;
-         pendingFinalName = null;
+         discardPendingUpload();
          reply.setFieldInt32(NXCPCodes.VID_RCC, RCC.IO_ERROR);
       }
    }
@@ -631,23 +656,14 @@ public class CommunicationManager
     * Process incoming file data for report package upload.
     *
     * @param msg incoming file data message
+    * @param s connection message was received over
     */
-   private void processIncomingFileData(NXCPMessage msg)
+   private void processIncomingFileData(NXCPMessage msg, Socket s)
    {
       if (msg.getMessageCode() == NXCPCodes.CMD_ABORT_FILE_TRANSFER)
       {
          logger.warn("Report package upload aborted");
-         try
-         {
-            pendingFileStream.close();
-         }
-         catch(IOException e)
-         {
-         }
-         pendingTempFile.delete();
-         pendingFileStream = null;
-         pendingTempFile = null;
-         pendingFinalName = null;
+         discardPendingUpload();
          return;
       }
 
@@ -673,7 +689,7 @@ public class CommunicationManager
                logger.info("Report package " + pendingFinalName + " received and deployed");
                NXCPMessage response = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
                response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
-               sendMessage(response);
+               sendMessage(s, response);
                sendNotification(SessionNotification.RS_DEFINITIONS_MODIFIED, 0);
             }
             else
@@ -682,7 +698,7 @@ public class CommunicationManager
                pendingTempFile.delete();
                NXCPMessage response = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
                response.setFieldInt32(NXCPCodes.VID_RCC, RCC.IO_ERROR);
-               sendMessage(response);
+               sendMessage(s, response);
             }
             pendingTempFile = null;
             pendingFinalName = null;
@@ -691,22 +707,36 @@ public class CommunicationManager
       catch(IOException e)
       {
          logger.error("Error writing report package file data", e);
+         discardPendingUpload();
+
+         NXCPMessage response = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
+         response.setFieldInt32(NXCPCodes.VID_RCC, RCC.IO_ERROR);
+         sendMessage(s, response);
+      }
+   }
+
+   /**
+    * Discard incomplete report package upload, if any
+    */
+   private void discardPendingUpload()
+   {
+      if (pendingFileStream != null)
+      {
          try
          {
             pendingFileStream.close();
          }
-         catch(IOException e2)
+         catch(IOException e)
          {
          }
-         pendingTempFile.delete();
          pendingFileStream = null;
-         pendingTempFile = null;
-         pendingFinalName = null;
-
-         NXCPMessage response = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
-         response.setFieldInt32(NXCPCodes.VID_RCC, RCC.IO_ERROR);
-         sendMessage(response);
       }
+      if (pendingTempFile != null)
+      {
+         pendingTempFile.delete();
+         pendingTempFile = null;
+      }
+      pendingFinalName = null;
    }
 
    /**
@@ -733,24 +763,5 @@ public class CommunicationManager
       msg.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
       logger.debug("SEND: " + msg.toString());
       sendMessage(msg);
-   }
-
-   /**
-    * Message processing result
-    */
-   private static class MessageProcessingResult
-   {
-      public NXCPMessage response;
-      public File file;
-
-      /**
-       * @param response
-       * @param file
-       */
-      public MessageProcessingResult(NXCPMessage response, File file)
-      {
-         this.response = response;
-         this.file = file;
-      }
    }
 }
