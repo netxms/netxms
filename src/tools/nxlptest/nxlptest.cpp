@@ -43,7 +43,7 @@ static TCHAR m_helpText[] =
    _T("   -D level   : Set debug level\n")
    _T("   -f file    : Input file (overrides parser settings)\n")
    _T("   -h         : Show this help\n")
-	_T("   -i         : Use standard input instead of file defined in parser\n" )
+   _T("   -i         : Read records from standard input until end of file instead of monitoring file\n")
    _T("   -o offset  : Start offset in file\n")
 #ifdef _WIN32
    _T("   -s         : Use VSS snapshots (overrides parser settings)\n")
@@ -70,6 +70,60 @@ static void ParserThread(LogParser *parser, off_t startOffset)
 	parser->monitorFile(startOffset);
 }
 
+/**
+ * Convert record read from standard input and pass it to parser
+ */
+static void ProcessInputRecord(LogParser *parser, char *record, size_t len, bool utf8)
+{
+   if ((len > 0) && (record[len - 1] == '\n'))
+      record[--len] = 0;
+   if ((len > 0) && (record[len - 1] == '\r'))
+      record[--len] = 0;
+
+#ifdef UNICODE
+   WCHAR *text = utf8 ? WideStringFromUTF8String(record) : WideStringFromMBStringSysLocale(record);
+   parser->matchLine(text, _T("stdin"));
+   MemFree(text);
+#else
+   if (utf8)
+   {
+      char *text = MBStringFromUTF8String(record);
+      parser->matchLine(text, _T("stdin"));
+      MemFree(text);
+   }
+   else
+   {
+      parser->matchLine(record, _T("stdin"));
+   }
+#endif
+}
+
+/**
+ * Read records from standard input until end of file and pass them to parser
+ */
+static void ProcessStandardInput(LogParser *parser, bool utf8)
+{
+   size_t bufferSize = 4096;
+   char *buffer = MemAllocStringA(bufferSize);
+   size_t len = 0;
+   while(fgets(&buffer[len], static_cast<int>(bufferSize - len), stdin) != nullptr)
+   {
+      len += strlen(&buffer[len]);
+      if ((len == bufferSize - 1) && (buffer[len - 1] != '\n'))
+      {
+         // Record does not fit into buffer
+         bufferSize += 4096;
+         buffer = MemRealloc(buffer, bufferSize);
+         continue;
+      }
+      ProcessInputRecord(parser, buffer, len, utf8);
+      len = 0;
+   }
+   if (len > 0)
+      ProcessInputRecord(parser, buffer, len, utf8);  // last record without end of line marker
+   MemFree(buffer);
+}
+
 #ifndef _WIN32
 
 bool s_stop = false;
@@ -89,6 +143,7 @@ int main(int argc, char *argv[])
 	int rc = 0;
 	TCHAR *inputFile = nullptr;
    off_t startOffset = -1;
+   bool useStandardInput = false;
 #ifdef _WIN32
    bool vssSnapshots = false;
 #endif
@@ -119,6 +174,9 @@ int main(int argc, char *argv[])
 				inputFile = optarg;
 #endif
 				break;
+         case 'i':
+            useStandardInput = true;
+            break;
          case 'o':
             startOffset = strtol(optarg, nullptr, 0);
             break;
@@ -137,6 +195,15 @@ int main(int argc, char *argv[])
    if (argc - optind < 1)
    {
       _tprintf(_T("Required arguments missing\n"));
+#ifdef UNICODE
+      MemFree(inputFile);
+#endif
+      return 1;
+   }
+
+   if (useStandardInput && ((inputFile != nullptr) || (startOffset != -1)))
+   {
+      _tprintf(_T("Options -f and -o cannot be used together with -i\n"));
 #ifdef UNICODE
       MemFree(inputFile);
 #endif
@@ -166,37 +233,55 @@ int main(int argc, char *argv[])
                nxlog_debug_tag(_T("parser"), 3, _T("Parser match (eventCode=%u eventName=%s eventTag=%s) \"%s\""), data.eventCode, CHECK_NULL_EX(data.eventName), CHECK_NULL_EX(data.eventTag), CHECK_NULL_EX(data.originalText));
 			   });
 
-			if (inputFile != nullptr)
-				parser->setFileName(inputFile);
+         if (useStandardInput)
+         {
+            int encoding = parser->getFileEncoding();
+            if ((encoding == LP_FCP_ACP) || (encoding == LP_FCP_AUTO) || (encoding == LP_FCP_UTF8))
+            {
+               _tprintf(_T("Reading records from standard input\nDebug level: %d\n\n"), nxlog_get_debug_level());
+               ProcessStandardInput(parser, encoding == LP_FCP_UTF8);
+               _tprintf(_T("\nRecords processed: %d\nRecords matched: %d\n"), parser->getProcessedRecordsCount(), parser->getMatchedRecordsCount());
+            }
+            else
+            {
+               _tprintf(_T("ERROR: file encoding defined in parser is not supported for standard input (only ACP and UTF-8 are supported)\n"));
+               rc = 1;
+            }
+         }
+         else
+         {
+            if (inputFile != nullptr)
+               parser->setFileName(inputFile);
 #ifdef _WIN32
-         if (vssSnapshots)
-            parser->setSnapshotMode(true);
+            if (vssSnapshots)
+               parser->setSnapshotMode(true);
 #endif
 
-			THREAD thread = ThreadCreateEx(ParserThread, parser, startOffset);
+            THREAD thread = ThreadCreateEx(ParserThread, parser, startOffset);
 #ifdef _WIN32
-			_tprintf(_T("Parser started. Press ESC to stop.\nFile: %s\nDebug level: %d\n\n"), parser->getFileName(), nxlog_get_debug_level());
-			while(1)
-			{
-				ch = _getch();
-				if (ch == 27)
-					break;
-			}
+            _tprintf(_T("Parser started. Press ESC to stop.\nFile: %s\nDebug level: %d\n\n"), parser->getFileName(), nxlog_get_debug_level());
+            while(1)
+            {
+               ch = _getch();
+               if (ch == 27)
+                  break;
+            }
 #else
-			_tprintf(_T("Parser started. Press Ctrl+C to stop.\nFile: %s\nDebug level: %d\n\n"), parser->getFileName(), nxlog_get_debug_level());
+            _tprintf(_T("Parser started. Press Ctrl+C to stop.\nFile: %s\nDebug level: %d\n\n"), parser->getFileName(), nxlog_get_debug_level());
 
-         signal(SIGINT, OnBreak);
+            signal(SIGINT, OnBreak);
 
-         sigset_t signals;
-         sigemptyset(&signals);
-         sigaddset(&signals, SIGINT);
-         pthread_sigmask(SIG_UNBLOCK, &signals, NULL);
+            sigset_t signals;
+            sigemptyset(&signals);
+            sigaddset(&signals, SIGINT);
+            pthread_sigmask(SIG_UNBLOCK, &signals, nullptr);
 
-			while(!s_stop)
-            ThreadSleepMs(500);
+            while(!s_stop)
+               ThreadSleepMs(500);
 #endif
-         parser->stop();
-         ThreadJoin(thread);
+            parser->stop();
+            ThreadJoin(thread);
+         }
          delete parser;
 		}
 		else
