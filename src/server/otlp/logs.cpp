@@ -102,9 +102,11 @@ static void ProcessLogRecord(const shared_ptr<Node>& node, const std::map<std::s
          record->body = WideStringFromUTF8String(body.c_str());
    }
 
-   // Merge resource attributes and record attributes into the stored attribute set
-   std::map<std::string, std::string> attributes(resourceAttributes);
+   // Merge record attributes and resource attributes into the stored attribute set; record attributes
+   // are more specific and take precedence over resource attributes with the same key
+   std::map<std::string, std::string> attributes;
    ExtractDataPointAttributes(logRecord, attributes);
+   attributes.insert(resourceAttributes.begin(), resourceAttributes.end());
    for (const auto& kv : attributes)
    {
       wchar_t *key = WideStringFromUTF8String(kv.first.c_str());
