@@ -289,7 +289,7 @@ public class StatusIndicatorElement extends ElementWidget
                         dciList.add(new MapDataSource(e.getObjectId(), e.getDciId()));
                      }
                   }
-                  dciValues = !dciList.isEmpty() ? session.getLastValues(dciList) : null;
+                  dciValues = !dciList.isEmpty() ? session.getLastValues(dciList, getDashboardObjectId()) : null;
                }
                else
                {

@@ -103,14 +103,16 @@ public class MapDataSource implements NodeItemPair
 	 *
 	 * @param msg NXCP message
 	 * @param baseId base field ID
+	 * @param delegateObjectId ID of delegate object (network map or dashboard) through which DCI is accessed, or 0
 	 */
-	public void fillMessage(NXCPMessage msg, long baseId)
+	public void fillMessage(NXCPMessage msg, long baseId, long delegateObjectId)
 	{
 	   if ((type == DataCollectionItem.DCO_TYPE_TABLE) && (column.isEmpty() || instance.isEmpty()))
 	      return;
 
 	   msg.setFieldInt32(baseId++, (int)nodeId);
 	   msg.setFieldInt32(baseId++, (int)dciId);
+	   msg.setFieldInt32(baseId++, (int)delegateObjectId);
 	   if (type == DataCollectionItem.DCO_TYPE_TABLE)
 	   {
 	      msg.setField(baseId++, column);

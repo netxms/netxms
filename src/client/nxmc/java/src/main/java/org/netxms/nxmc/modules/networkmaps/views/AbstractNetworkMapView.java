@@ -2251,7 +2251,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            DciValue[] values = session.getLastValues(link.getDciAsList());
+            DciValue[] values = session.getLastValues(link.getDciAsList(), getObjectId());
 
             final List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(values.length);
             for(DciValue dci : values)

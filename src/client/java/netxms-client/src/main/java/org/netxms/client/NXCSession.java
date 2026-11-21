@@ -6509,21 +6509,23 @@ public class NXCSession
    }
 
    /**
-    * Get last DCI values for given Single Dci Config list
+    * Get last DCI values for given data source list. Delegate object (network map or dashboard) allows access to DCIs
+    * on objects the user can read only through that delegate.
     *
-    * @param dciConfig List with Single Dci Configs
+    * @param dciConfig list of data sources
+    * @param delegateObjectId ID of delegate object (network map or dashboard) through which DCIs are accessed, or 0
     * @return List of DCI values
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciValue[] getLastValues(List<? extends MapDataSource> dciConfig) throws IOException, NXCException
+   public DciValue[] getLastValues(List<? extends MapDataSource> dciConfig, long delegateObjectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_VALUES);
       long base = NXCPCodes.VID_DCI_VALUES_BASE;
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, dciConfig.size());
       for(MapDataSource c : dciConfig)
       {
-         c.fillMessage(msg, base);
+         c.fillMessage(msg, base, delegateObjectId);
          base += 10;
       }
       return doLastValuesRequest(msg);
