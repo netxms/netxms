@@ -13829,7 +13829,7 @@ paths:
           description: |
             Access denied. Possible reasons:
             - User does not have access to the tool (tool ACL)
-            - User does not have OBJECT_ACCESS_CONTROL on the target object (or on the owning node for SSH tools on interface/sensor/access point)
+            - User does not have OBJECT_ACCESS_CONTROL on the target object (or on the owning node for SSH tools on interface/sensor/access point); table tools (SNMP table, agent table, agent list) require OBJECT_ACCESS_READ only
             - User does not have access to the specified alarm
         '404':
           description: |

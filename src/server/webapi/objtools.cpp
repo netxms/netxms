@@ -962,7 +962,8 @@ int H_ObjectToolExecute(Context *context)
          return 403;
       }
    }
-   else if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_CONTROL))
+   else if (!object->checkAccessRights(context->getUserId(),
+         ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST)) ? OBJECT_ACCESS_READ : OBJECT_ACCESS_CONTROL))
    {
       MemFree(toolData);
       return 403;
