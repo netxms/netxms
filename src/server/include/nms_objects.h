@@ -4621,6 +4621,7 @@ protected:
 
    uint32_t getInterfaceCount(Interface **lastInterface);
    void deleteInterface(Interface *iface);
+   void deleteObsoleteInterface(Interface *iface);
 
    void checkInterfaceNames(InterfaceList *pIfList);
    shared_ptr<Interface> createInterfaceObject(const InterfaceInfo& info, bool manuallyCreated, bool fakeInterface, bool syntheticMask);
