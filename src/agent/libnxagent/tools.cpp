@@ -179,6 +179,28 @@ bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgW(const TCHAR *param, int index, WCH
 }
 
 /**
+ * Get arguments for metric like name(arg1,...) as UTF-8 string. Output is always null-terminated;
+ * conversion stops before a multi-byte character that does not fit into the buffer.
+ * Returns FALSE on processing error
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgUtf8(const TCHAR *param, int index, char *arg, size_t maxSize, bool inBrackets)
+{
+   Buffer<TCHAR, 1024 * sizeof(TCHAR)> temp;
+   temp.reserve(maxSize);
+   bool success = AgentGetMetricArgInternal(param, index, temp, maxSize, inBrackets);
+   if (success)
+   {
+      size_t bytes = tchar_to_utf8(temp, -1, arg, maxSize - 1);
+      arg[bytes] = 0;
+   }
+   else
+   {
+      arg[0] = 0;
+   }
+   return success;
+}
+
+/**
  * Get arguments for metric like name(arg1,...) as IP address object, with host name resolution if necessary
  * Returns invalid address on processing error
  */

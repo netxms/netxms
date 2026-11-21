@@ -65,9 +65,7 @@ static bool ParseMetricMapping(const TCHAR *config, MetricMapping **result)
 
    MetricMapping *mapping = new MetricMapping();
    _tcslcpy(mapping->prometheusName, parts.get(0), 256);
-#ifdef UNICODE
-   WideCharToMultiByteSysLocale(mapping->prometheusName, mapping->prometheusNameMB, 256);
-#endif
+   ConvertToUtf8(mapping->prometheusName, mapping->prometheusNameUTF8, 256);
    _tcslcpy(mapping->netxmsName, parts.get(1), 256);
 
    StringList nameArgs = String(parts.get(2)).split(_T(","), true);

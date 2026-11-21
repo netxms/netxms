@@ -1490,6 +1490,7 @@ public:
  */
 bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgA(const TCHAR *param, int index, char *arg, size_t maxSize, bool inBrackets = true);
 bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgW(const TCHAR *param, int index, WCHAR *arg, size_t maxSize, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgUtf8(const TCHAR *param, int index, char *arg, size_t maxSize, bool inBrackets = true);
 #ifdef UNICODE
 #define AgentGetMetricArg AgentGetMetricArgW
 #define AgentGetParameterArg AgentGetMetricArgW

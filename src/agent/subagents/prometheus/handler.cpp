@@ -73,23 +73,16 @@ static String BuildMetricName(const MetricMapping& mapping, const std::function<
       if (!first)
          result.append(_T(','));
 
-#ifdef UNICODE
       char nameBuffer[256];
-      WideCharToMultiByteSysLocale(mapping.nameArguments.get(i), nameBuffer, 256);
+      ConvertToUtf8(mapping.nameArguments.get(i), nameBuffer, 256);
       const char *value = getLabel(nameBuffer);
       if (value != nullptr)
       {
-         WCHAR valueBuffer[1024];
-         MultiByteToWideCharSysLocale(value, valueBuffer, 1024);
+         TCHAR valueBuffer[1024];
+         size_t chars = utf8_to_tchar(value, -1, valueBuffer, 1023);
+         valueBuffer[chars] = 0;
          AppendEscapedValue(result, valueBuffer);
       }
-#else
-      const char *value = getLabel(mapping.nameArguments.get(i));
-      if (value != nullptr)
-      {
-         AppendEscapedValue(result, value);
-      }
-#endif
       first = false;
    }
 
@@ -106,23 +99,16 @@ static String BuildValueFromLabels(const MetricMapping& mapping, const std::func
       if (!first)
          result.append(_T(' '));
 
-#ifdef UNICODE
       char nameBuffer[256];
-      WideCharToMultiByteSysLocale(mapping.valueArguments.get(i), nameBuffer, 256);
+      ConvertToUtf8(mapping.valueArguments.get(i), nameBuffer, 256);
       const char *value = getLabel(nameBuffer);
       if (value != nullptr)
       {
-         WCHAR valueBuffer[1024];
-         MultiByteToWideCharSysLocale(value, valueBuffer, 1024);
+         TCHAR valueBuffer[1024];
+         size_t chars = utf8_to_tchar(value, -1, valueBuffer, 1023);
+         valueBuffer[chars] = 0;
          result.append(valueBuffer);
       }
-#else
-      const char *value = getLabel(mapping.valueArguments.get(i));
-      if (value != nullptr)
-      {
-         result.append(value);
-      }
-#endif
       first = false;
    }
 
@@ -139,11 +125,7 @@ void ProcessSample(const char *metricName, double value, const std::function<con
    const MetricMapping *matchedMapping = nullptr;
    for(int j = 0; j < mappings.size(); j++)
    {
-#ifdef UNICODE
-      if (strcmp(metricName, mappings.get(j)->prometheusNameMB) == 0)
-#else
-      if (strcmp(metricName, mappings.get(j)->prometheusName) == 0)
-#endif
+      if (strcmp(metricName, mappings.get(j)->prometheusNameUTF8) == 0)
       {
          matchedMapping = mappings.get(j);
          break;

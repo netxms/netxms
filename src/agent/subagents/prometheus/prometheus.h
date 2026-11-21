@@ -27,14 +27,22 @@
 #include "generated/remote.pb.h"
 
 /**
+ * Convert TCHAR string to UTF-8 with guaranteed null termination (conversion may
+ * stop before the source terminator when a multi-byte character does not fit)
+ */
+static inline void ConvertToUtf8(const TCHAR *src, char *dst, size_t size)
+{
+   size_t bytes = tchar_to_utf8(src, -1, dst, size - 1);
+   dst[bytes] = 0;
+}
+
+/**
  * Metric mapping structure
  */
 struct MetricMapping
 {
    TCHAR prometheusName[256];
-#ifdef UNICODE
-   char prometheusNameMB[256];   // multibyte version for matching against incoming metric names
-#endif
+   char prometheusNameUTF8[256];   // UTF-8 version for matching against incoming metric names
    TCHAR netxmsName[256];
    StringList nameArguments;
    StringList valueArguments;
@@ -43,9 +51,7 @@ struct MetricMapping
    MetricMapping()
    {
       prometheusName[0] = 0;
-#ifdef UNICODE
-      prometheusNameMB[0] = 0;
-#endif
+      prometheusNameUTF8[0] = 0;
       netxmsName[0] = 0;
       useMetricValue = true;
    }

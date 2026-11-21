@@ -33,16 +33,6 @@
 static ObjectArray<ScrapeTarget> s_targets(8, 8, Ownership::True);
 
 /**
- * Convert TCHAR string to UTF-8 with guaranteed null termination (conversion may
- * stop before the source terminator when a multi-byte character does not fit)
- */
-static void ConvertToUtf8(const TCHAR *src, char *dst, size_t size)
-{
-   size_t bytes = tchar_to_utf8(src, -1, dst, size - 1);
-   dst[bytes] = 0;
-}
-
-/**
  * cURL write callback with response size limit (returning less than given size aborts the transfer)
  */
 static size_t CurlWriteFunction(char *ptr, size_t size, size_t nmemb, ByteStream *data)
@@ -570,7 +560,7 @@ static bool ParseLabelFilters(const TCHAR *param, int startIndex, ObjectArray<Sa
    for(int i = startIndex; i <= maxIndex; i++)
    {
       char buffer[1024];
-      if (!AgentGetParameterArgA(param, i, buffer, 1024))
+      if (!AgentGetMetricArgUtf8(param, i, buffer, 1024))
          return false;
       if (buffer[0] == 0)
       {
@@ -598,7 +588,7 @@ LONG H_TargetValue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
       return SYSINFO_RC_UNSUPPORTED;
 
    char metric[256];
-   if (!AgentGetParameterArgA(param, 2, metric, 256) || (metric[0] == 0))
+   if (!AgentGetMetricArgUtf8(param, 2, metric, 256) || (metric[0] == 0))
       return SYSINFO_RC_UNSUPPORTED;
 
    ScrapeTarget *target = FindTarget(targetName);
@@ -622,8 +612,8 @@ LONG H_TargetLabel(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
       return SYSINFO_RC_UNSUPPORTED;
 
    char metric[256], label[256];
-   if (!AgentGetParameterArgA(param, 2, metric, 256) || (metric[0] == 0) ||
-       !AgentGetParameterArgA(param, 3, label, 256) || (label[0] == 0))
+   if (!AgentGetMetricArgUtf8(param, 2, metric, 256) || (metric[0] == 0) ||
+       !AgentGetMetricArgUtf8(param, 3, label, 256) || (label[0] == 0))
       return SYSINFO_RC_UNSUPPORTED;
 
    ScrapeTarget *target = FindTarget(targetName);
@@ -657,8 +647,8 @@ LONG H_LabelValues(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
       return SYSINFO_RC_UNSUPPORTED;
 
    char metric[256], label[256];
-   if (!AgentGetParameterArgA(param, 2, metric, 256) || (metric[0] == 0) ||
-       !AgentGetParameterArgA(param, 3, label, 256) || (label[0] == 0))
+   if (!AgentGetMetricArgUtf8(param, 2, metric, 256) || (metric[0] == 0) ||
+       !AgentGetMetricArgUtf8(param, 3, label, 256) || (label[0] == 0))
       return SYSINFO_RC_UNSUPPORTED;
 
    ScrapeTarget *target = FindTarget(targetName);
@@ -704,7 +694,7 @@ LONG H_SeriesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
       return SYSINFO_RC_UNSUPPORTED;
 
    char metric[256];
-   if (!AgentGetParameterArgA(param, 2, metric, 256) || (metric[0] == 0))
+   if (!AgentGetMetricArgUtf8(param, 2, metric, 256) || (metric[0] == 0))
       return SYSINFO_RC_UNSUPPORTED;
 
    ScrapeTarget *target = FindTarget(targetName);
