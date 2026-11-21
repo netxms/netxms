@@ -10258,37 +10258,31 @@ void ClientSession::execTableTool(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Check if tool exist and has correct type
-   uint32_t dwToolId = request.getFieldAsUInt32(VID_TOOL_ID);
-   if (IsTableTool(dwToolId))
+   uint32_t toolId = request.getFieldAsUInt32(VID_TOOL_ID);
+   if (IsTableTool(toolId))
    {
-      // Check access
-      if (CheckObjectToolAccess(dwToolId, m_userId))
+      if (CheckObjectToolAccess(toolId, m_userId))
       {
-         shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+         shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
          if (object != nullptr)
          {
-            if (object->getObjectClass() != OBJECT_NODE)
-            {
-               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-            }
-            else if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_CONTROL))
-            {
-               writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on executing table tool [%u]", dwToolId);
-               response.setField(VID_RCC, RCC_ACCESS_DENIED);
-            }
-            else
+            if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
             {
                StringMap inputFields(request, VID_FIELD_LIST_BASE, VID_NUM_FIELDS);
                StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
 
-               uint32_t rcc = ExecuteTableTool(dwToolId, static_pointer_cast<Node>(object), request.getId(), this, &inputFields, &maskedFields);
+               uint32_t rcc = ExecuteTableTool(toolId, static_pointer_cast<Node>(object), request.getId(), this, &inputFields, &maskedFields);
                if (rcc == RCC_SUCCESS)
                {
                   String inputFieldsLog = BuildAuditInputFieldsString(inputFields, &maskedFields);
-                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed table tool [%u] on node %s%s",
-                        dwToolId, object->getName(), inputFieldsLog.cstr());
+                  writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Executed table tool [%u] on node %s%s", toolId, object->getName(), inputFieldsLog.cstr());
                }
                response.setField(VID_RCC, rcc);
+            }
+            else
+            {
+               writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on executing table tool [%u]", toolId);
+               response.setField(VID_RCC, RCC_ACCESS_DENIED);
             }
          }
          else
@@ -10298,7 +10292,7 @@ void ClientSession::execTableTool(const NXCPMessage& request)
       }
       else
       {
-         writeAuditLog(AUDIT_OBJECTS, false, request.getFieldAsUInt32(VID_OBJECT_ID), _T("Access denied on executing table tool [%u]"), dwToolId);
+         writeAuditLog(AUDIT_OBJECTS, false, request.getFieldAsUInt32(VID_OBJECT_ID), _T("Access denied on executing table tool [%u]"), toolId);
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
