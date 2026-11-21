@@ -181,11 +181,7 @@ int H_OtlpLogs(Context *context)
    {
       const auto& resourceLogs = request.resource_logs(r);
 
-      std::map<std::string, std::string> attributes;
-      if (resourceLogs.has_resource())
-         ExtractResourceAttributes(resourceLogs.resource(), attributes);
-
-      shared_ptr<Node> node = MatchResourceToNode(attributes);
+      shared_ptr<Node> node = MatchResourceToNode(resourceLogs.resource());
       if (node == nullptr)
       {
          for (int s = 0; s < resourceLogs.scope_logs_size(); s++)
@@ -193,6 +189,9 @@ int H_OtlpLogs(Context *context)
          continue;
       }
       matchedCount++;
+
+      std::map<std::string, std::string> attributes;
+      ExtractResourceAttributes(resourceLogs.resource(), attributes);
 
       auto it = attributes.find("service.name");
       const char *serviceName = (it != attributes.end()) ? it->second.c_str() : nullptr;

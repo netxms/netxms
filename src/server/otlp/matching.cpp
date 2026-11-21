@@ -21,6 +21,7 @@
 **/
 
 #include "otlp.h"
+#include "otlp_attributes.h"
 #include <uthash.h>
 #include <netxms-regex.h>
 
@@ -146,20 +147,13 @@ static void LoadMatchingRules()
 }
 
 /**
- * Compute cache key from resource attributes
+ * Compute cache key from resource. Hashing protobuf encoding keeps attribute keys, values and value types unambiguous.
  */
-static void ComputeCacheKey(const std::map<std::string, std::string>& attributes, BYTE *key)
+static void ComputeCacheKey(const opentelemetry::proto::resource::v1::Resource& resource, BYTE *key)
 {
-   SHA256_STATE state;
-   SHA256Init(&state);
-   for (auto it = attributes.begin(); it != attributes.end(); ++it)
-   {
-      SHA256Update(&state, it->first.c_str(), it->first.length());
-      SHA256Update(&state, "=", 1);
-      SHA256Update(&state, it->second.c_str(), it->second.length());
-      SHA256Update(&state, "\n", 1);
-   }
-   SHA256Final(&state, key);
+   std::string serialized;
+   resource.SerializeToString(&serialized);
+   CalculateSHA256Hash(serialized.data(), serialized.size(), key);
 }
 
 /**
@@ -189,12 +183,14 @@ static shared_ptr<Node> MatchByDnsName(const char *value)
 }
 
 /**
- * Try to match a node by IP address
+ * Try to match a node by IP address. Elements of multi-valued attributes (like host.ip, which lists all
+ * host addresses) are only matched if they are valid unicast addresses, so that loopback, link-local
+ * and similar addresses present on every host do not match an unrelated node.
  */
-static shared_ptr<Node> MatchByIpAddress(const char *value)
+static shared_ptr<Node> MatchByIpAddress(const char *value, bool arrayElement)
 {
    InetAddress addr = InetAddress::parse(value);
-   if (!addr.isValid())
+   if (!addr.isValid() || (arrayElement && !addr.isValidUnicast()))
       return shared_ptr<Node>();
    return FindNodeByIP(ALL_ZONES, addr);
 }
@@ -249,13 +245,106 @@ void ReloadMatchingRules()
 }
 
 /**
- * Match OTel resource attributes to a NetXMS node
+ * Match single attribute value to a node using given rule. Regex transform is applied first if provided.
  */
-shared_ptr<Node> MatchResourceToNode(const std::map<std::string, std::string>& attributes)
+static shared_ptr<Node> MatchValue(const OTLPMatchingRule *rule, pcre *regex, const std::string& value, bool arrayElement)
+{
+   std::string matchValue;
+   if (regex != nullptr)
+   {
+      int ovector[30];
+      int rc = pcre_exec(regex, nullptr, value.c_str(), static_cast<int>(value.length()), 0, 0, ovector, 30);
+      if (rc < 1)
+      {
+         nxlog_debug_tag(DEBUG_TAG_OTLP, 7, L"Regex transform did not match value \"%hs\" (rule %u, pattern \"%hs\")",
+            value.c_str(), rule->id, rule->regexTransform);
+         return shared_ptr<Node>();  // No match means this rule doesn't apply
+      }
+
+      // Use first capture group if available, otherwise use whole match
+      int idx = (rc >= 2) ? 1 : 0;
+      matchValue = value.substr(ovector[idx * 2], ovector[idx * 2 + 1] - ovector[idx * 2]);
+      nxlog_debug_tag(DEBUG_TAG_OTLP, 7, L"Regex transform applied: \"%hs\" -> \"%hs\" (rule %u)", value.c_str(), matchValue.c_str(), rule->id);
+   }
+   else
+   {
+      matchValue = value;
+   }
+
+   switch (rule->nodeProperty)
+   {
+      case OTLP_MATCH_NODE_NAME:
+         return MatchByNodeName(matchValue.c_str());
+      case OTLP_MATCH_DNS_NAME:
+         return MatchByDnsName(matchValue.c_str());
+      case OTLP_MATCH_IP_ADDRESS:
+         return MatchByIpAddress(matchValue.c_str(), arrayElement);
+      case OTLP_MATCH_CUSTOM_ATTRIBUTE:
+         return MatchByCustomAttribute(matchValue.c_str(), rule->customAttrName);
+      default:
+         return shared_ptr<Node>();
+   }
+}
+
+/**
+ * Match single attribute to a node using given rule. Each element of an array value is tried in turn.
+ */
+static shared_ptr<Node> MatchAttribute(const OTLPMatchingRule *rule, const opentelemetry::proto::common::v1::AnyValue& value)
+{
+   pcre *regex = nullptr;
+   if (rule->regexTransform[0] != 0)
+   {
+      const char *eptr;
+      int eoffset;
+      regex = pcre_compile(rule->regexTransform, PCRE_COMMON_FLAGS_A, &eptr, &eoffset, nullptr);
+      if (regex == nullptr)
+         nxlog_debug_tag(DEBUG_TAG_OTLP, 3, L"Failed to compile regex \"%hs\" in OTLP matching rule %u", rule->regexTransform, rule->id);
+   }
+
+   shared_ptr<Node> node;
+   std::string s;
+   if (value.value_case() == opentelemetry::proto::common::v1::AnyValue::kArrayValue)
+   {
+      for (const auto& element : value.array_value().values())
+      {
+         AnyValueToString(element, s);
+         node = MatchValue(rule, regex, s, true);
+         if (node != nullptr)
+            break;
+      }
+   }
+   else
+   {
+      AnyValueToString(value, s);
+      node = MatchValue(rule, regex, s, false);
+   }
+
+   if (regex != nullptr)
+      pcre_free(regex);
+   return node;
+}
+
+/**
+ * Find resource attribute by key
+ */
+static const opentelemetry::proto::common::v1::AnyValue *FindResourceAttribute(const opentelemetry::proto::resource::v1::Resource& resource, const char *key)
+{
+   for (const auto& kv : resource.attributes())
+   {
+      if (kv.key() == key)
+         return &kv.value();
+   }
+   return nullptr;
+}
+
+/**
+ * Match OTel resource to a NetXMS node
+ */
+shared_ptr<Node> MatchResourceToNode(const opentelemetry::proto::resource::v1::Resource& resource)
 {
    // Check match cache first
    BYTE cacheKey[SHA256_DIGEST_SIZE];
-   ComputeCacheKey(attributes, cacheKey);
+   ComputeCacheKey(resource, cacheKey);
    s_matchCacheLock.lock();
    MatchCacheEntry *cached = GetMatchCacheEntry(cacheKey);
    if (cached != nullptr)
@@ -279,61 +368,11 @@ shared_ptr<Node> MatchResourceToNode(const std::map<std::string, std::string>& a
    {
       OTLPMatchingRule *rule = s_matchingRules.get(i);
 
-      // Get attribute value from resource
-      auto it = attributes.find(rule->otelAttribute);
-      if (it == attributes.end())
+      const opentelemetry::proto::common::v1::AnyValue *value = FindResourceAttribute(resource, rule->otelAttribute);
+      if (value == nullptr)
          continue;
-      std::string matchValue = it->second;
 
-      // Apply regex transform if configured
-      if (rule->regexTransform[0] != 0)
-      {
-         const char *eptr;
-         int eoffset;
-         pcre *regex = pcre_compile(rule->regexTransform, PCRE_COMMON_FLAGS_A, &eptr, &eoffset, nullptr);
-         if (regex != nullptr)
-         {
-            int ovector[30];
-            int rc = pcre_exec(regex, nullptr, matchValue.c_str(), static_cast<int>(matchValue.length()), 0, 0, ovector, 30);
-            if (rc >= 1)
-            {
-               // Use first capture group if available, otherwise use whole match
-               int idx = (rc >= 2) ? 1 : 0;
-               matchValue = matchValue.substr(ovector[idx * 2], ovector[idx * 2 + 1] - ovector[idx * 2]);
-               nxlog_debug_tag(DEBUG_TAG_OTLP, 7, L"Regex transform applied: \"%hs\" -> \"%hs\" (rule %u)",
-                  it->second.c_str(), matchValue.c_str(), rule->id);
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG_OTLP, 7, L"Regex transform did not match value \"%hs\" (rule %u, pattern \"%hs\")",
-                  matchValue.c_str(), rule->id, rule->regexTransform);
-               pcre_free(regex);
-               continue;  // No match means this rule doesn't apply
-            }
-            pcre_free(regex);
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG_OTLP, 3, L"Failed to compile regex \"%hs\" in OTLP matching rule %u", rule->regexTransform, rule->id);
-         }
-      }
-
-      switch (rule->nodeProperty)
-      {
-         case OTLP_MATCH_NODE_NAME:
-            node = MatchByNodeName(matchValue.c_str());
-            break;
-         case OTLP_MATCH_DNS_NAME:
-            node = MatchByDnsName(matchValue.c_str());
-            break;
-         case OTLP_MATCH_IP_ADDRESS:
-            node = MatchByIpAddress(matchValue.c_str());
-            break;
-         case OTLP_MATCH_CUSTOM_ATTRIBUTE:
-            node = MatchByCustomAttribute(matchValue.c_str(), rule->customAttrName);
-            break;
-      }
-
+      node = MatchAttribute(rule, *value);
       if (node != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_OTLP, 6, L"Matched OTel resource to node %s [%u] via rule %u (attribute %hs -> %s)",
@@ -355,12 +394,13 @@ shared_ptr<Node> MatchResourceToNode(const std::map<std::string, std::string>& a
    }
    else if (ConfigReadBoolean(L"OTLP.LogUnmatchedResources", false) && (nxlog_get_debug_level_tag(DEBUG_TAG_OTLP) >= 3))
    {
-      std::string attrList;
-      for (const auto& kv : attributes)
+      std::string attrList, value;
+      for (const auto& kv : resource.attributes())
       {
          if (!attrList.empty())
             attrList += ", ";
-         attrList += kv.first + "=" + kv.second;
+         AnyValueToString(kv.value(), value);
+         attrList += kv.key() + "=" + value;
       }
       nxlog_debug_tag(DEBUG_TAG_OTLP, 3, L"No matching node found for OTel resource %hs", attrList.c_str());
    }

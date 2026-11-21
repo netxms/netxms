@@ -25,6 +25,7 @@
 #include "otlp_attributes.h"
 #include <google/protobuf/util/json_util.h>
 #include <uthash.h>
+#include <cmath>
 
 /**
  * Check if OTLP request uses JSON encoding (based on Content-Type header)
@@ -111,6 +112,36 @@ static double GetDataPointValue(const opentelemetry::proto::metrics::v1::NumberD
 }
 
 /**
+ * Format metric value for data collection. Integral values are formatted without fractional part, other
+ * values in fixed-point notation (DCI value parser reads integer types with wcstoll, which does not
+ * understand exponent) with 15 significant digits and trailing zeros removed.
+ */
+static void FormatMetricValue(double value, wchar_t *buffer, size_t size)
+{
+   if (!std::isfinite(value))
+   {
+      nx_swprintf(buffer, size, L"%f", value);
+   }
+   else if (value == std::trunc(value))
+   {
+      nx_swprintf(buffer, size, (std::fabs(value) < 1e21) ? L"%.0f" : L"%.15g", value);
+   }
+   else
+   {
+      int digits = 14 - static_cast<int>(std::floor(std::log10(std::fabs(value))));
+      nx_swprintf(buffer, size, L"%.*f", std::min(std::max(digits, 0), 40), value);
+      wchar_t *p = buffer + wcslen(buffer) - 1;
+      if (wcschr(buffer, L'.') != nullptr)
+      {
+         while (*p == L'0')
+            *p-- = 0;
+         if (*p == L'.')
+            *p = 0;
+      }
+   }
+}
+
+/**
  * Find a matching DCI for an OTLP data point.
  * First tries exact name match against active DS_OTLP items that are neither instance discovery
  * prototypes nor discovered instances, then falls back to instance discovery.
@@ -146,7 +177,7 @@ static void PushValueToNode(const shared_ptr<Node>& node, const char *metricName
    if (dco != nullptr)
    {
       wchar_t valueStr[64];
-      _sntprintf(valueStr, 64, _T("%f"), value);
+      FormatMetricValue(value, valueStr, 64);
 
       Timestamp timestamp = Timestamp::fromNanoseconds(timeNano);
       node->processNewDCValue(dco, timestamp, valueStr, shared_ptr<Table>(), true);
@@ -245,7 +276,7 @@ static void ProcessMonotonicValue(const shared_ptr<Node>& node, const char *metr
          double rate = valueDelta / timeDelta;
 
          wchar_t valueStr[64];
-         _sntprintf(valueStr, 64, _T("%f"), rate);
+         FormatMetricValue(rate, valueStr, 64);
 
          Timestamp timestamp = Timestamp::fromNanoseconds(currentTimeNano);
          node->processNewDCValue(dco, timestamp, valueStr, shared_ptr<Table>(), true);
@@ -425,15 +456,8 @@ int H_OtlpMetrics(Context *context)
    {
       const auto& resourceMetrics = request.resource_metrics(r);
 
-      // Extract resource attributes
-      std::map<std::string, std::string> attributes;
-      if (resourceMetrics.has_resource())
-      {
-         ExtractResourceAttributes(resourceMetrics.resource(), attributes);
-      }
-
       // Match to a node
-      shared_ptr<Node> node = MatchResourceToNode(attributes);
+      shared_ptr<Node> node = MatchResourceToNode(resourceMetrics.resource());
       if (node == nullptr)
       {
          unmatchedCount++;
