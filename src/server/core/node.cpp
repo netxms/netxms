@@ -2817,6 +2817,22 @@ void Node::deleteInterface(Interface *iface)
 }
 
 /**
+ * Delete interface that is no longer reported by the node and generate SYS_IF_DELETED event
+ */
+void Node::deleteObsoleteInterface(Interface *iface)
+{
+   sendPollerMsg(POLLER_WARNING L"   Interface \"%s\" no longer exists\r\n", iface->getName());
+   InetAddress addr = iface->getFirstIpAddress();
+   EventBuilder(EVENT_INTERFACE_DELETED, m_id)
+      .param(L"interfaceIndex", iface->getIfIndex())
+      .param(L"interfaceName", iface->getName())
+      .param(L"interfaceIpAddress", addr)
+      .param(L"interfaceMask", addr.getMaskBits())
+      .post();
+   deleteInterface(iface);
+}
+
+/**
  * Check if management status change is allowed
  */
 bool Node::isManagementStatusChangeAllowed(bool isManaged)
@@ -8205,19 +8221,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
       if (deleteList.size() > 0)
       {
          for(int j = 0; j < deleteList.size(); j++)
-         {
-            Interface *iface = deleteList.get(j);
-            sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" no longer exists\r\n"), iface->getName());
-            const InetAddress& addr = iface->getFirstIpAddress();
-            EventBuilder(EVENT_INTERFACE_DELETED, m_id)
-               .param(_T("interfaceIndex"), iface->getIfIndex())
-               .param(_T("interfaceName"), iface->getName())
-               .param(_T("interfaceIpAddress"), addr)
-               .param(_T("interfaceMask"), addr.getMaskBits())
-               .post();
-
-            deleteInterface(iface);
-         }
+            deleteObsoleteInterface(deleteList.get(j));
          hasChanges = true;
       }
 
@@ -8483,33 +8487,31 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
          }
          unlockChildList();
          for(int j = 0; j < deleteList.size(); j++)
-         {
-            auto iface = deleteList.get(j);
-            sendPollerMsg(POLLER_WARNING _T("   Interface \"%s\" no longer exists\r\n"), iface->getName());
-            InetAddress addr = iface->getFirstUnicastAddress();
-            EventBuilder(EVENT_INTERFACE_DELETED, m_id)
-               .param(_T("interfaceIndex"), iface->getIfIndex())
-               .param(_T("interfaceName"), iface->getName())
-               .param(_T("interfaceIpAddress"), addr)
-               .param(_T("interfaceMask"), addr.getMaskBits())
-               .post();
-            deleteInterface(iface);
-         }
+            deleteObsoleteInterface(deleteList.get(j));
+         if (!deleteList.isEmpty())
+            hasChanges = true;
       }
 
       // Check if we have pseudo-interface object
       MacAddress macAddr(MacAddress::ZERO);
-      Interface *iface;
+      Interface *iface = nullptr;
       uint32_t ifaceCount = getInterfaceCount(&iface);
       if ((ifList != nullptr) && ((ifaceCount > 1) || ((ifaceCount == 1) && !iface->isFake())))
       {
          // Node has interfaces from previous polls but do not report them anymore
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("Node::updateInterfaceConfiguration(%s [%u]): clearing interface list"), m_name, m_id);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, L"Node::updateInterfaceConfiguration(%s [%u]): clearing interface list", m_name, m_id);
          unique_ptr<SharedObjectArray<NetObj>> ifaces = getChildren(OBJECT_INTERFACE);
          for(int i = 0; i < ifaces->size(); i++)
-            deleteInterface(static_cast<Interface*>(ifaces->get(i)));
-         ifaceCount = 0;
+         {
+            auto curr = static_cast<Interface*>(ifaces->get(i));
+            if (!curr->isManuallyCreated())
+            {
+               deleteObsoleteInterface(curr);
+               hasChanges = true;
+            }
+         }
          iface = nullptr;
+         ifaceCount = getInterfaceCount(&iface);
       }
       if (ifaceCount == 1)
       {
@@ -8518,7 +8520,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
             // Check if primary IP is different from interface's IP
             if (!iface->hasIpAddress(m_ipAddress))
             {
-               deleteInterface(iface);
+               deleteObsoleteInterface(iface);
                if (m_ipAddress.isValidUnicast())
                {
                   shared_ptr<Subnet> pSubnet = FindSubnetForNode(m_zoneUIN, m_ipAddress);
