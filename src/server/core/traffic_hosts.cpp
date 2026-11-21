@@ -579,7 +579,7 @@ static bool VerifyHostRecord(uint32_t pointId, const char *hostKey, uint32_t nod
 static bool ParseHostMetricName(const wchar_t *name, char *instance, size_t instanceSize,
    uint32_t *pointId, char **hostKey, wchar_t *metric, size_t metricSize)
 {
-   if (!AgentGetParameterArgA(name, 1, instance, instanceSize) || (instance[0] == 0))
+   if (!AgentGetMetricArgUtf8(name, 1, instance, instanceSize) || (instance[0] == 0))
       return false;
 
    char *colon = strchr(instance, ':');

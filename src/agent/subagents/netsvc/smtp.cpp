@@ -235,7 +235,7 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
    char host[256], recipient[256], portAsChar[256];
 
    if (!AgentGetParameterArgA(param, 1, host, sizeof(host)) ||
-       !AgentGetParameterArgA(param, 2, recipient, sizeof(recipient)) ||
+       !AgentGetMetricArgUtf8(param, 2, recipient, sizeof(recipient)) ||
        !AgentGetParameterArgA(param, 4, portAsChar, sizeof(portAsChar)))
       return SYSINFO_RC_UNSUPPORTED;
 

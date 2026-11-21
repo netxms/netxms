@@ -1535,9 +1535,9 @@ LONG H_SIPTestRegistration(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
    GET_ASTERISK_SYSTEM(3);
 
    char login[128], password[128], domain[128];
-   GET_ARGUMENT_A(1, login, 128);
-   GET_ARGUMENT_A(2, password, 128);
-   GET_ARGUMENT_A(3, domain, 128);
+   GET_ARGUMENT_UTF8(1, login, 128);
+   GET_ARGUMENT_UTF8(2, password, 128);
+   GET_ARGUMENT_UTF8(3, domain, 128);
 
    int status;
    char proxy[256], ipStr[64];
