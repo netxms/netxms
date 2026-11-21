@@ -58,6 +58,26 @@ public class LabeledDateTimeSelector extends LabeledControl
    }
 
    /**
+    * Set current value.
+    *
+    * @param date new date value
+    */
+   public void setValue(Date date)
+   {
+      ((DateTimeSelector)control).setValue(date);
+   }
+
+   /**
+    * Get currently selected date and time.
+    * 
+    * @return currently selected date and time
+    */
+   public Date getValue()
+   {
+      return ((DateTimeSelector)control).getValue();
+   }
+
+   /**
     * Set text as unix timestamp in seconds.
     *
     * @see org.netxms.nxmc.base.widgets.LabeledControl#setText(java.lang.String)

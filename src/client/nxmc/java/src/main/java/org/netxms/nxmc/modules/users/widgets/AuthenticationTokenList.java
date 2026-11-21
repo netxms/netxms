@@ -122,9 +122,9 @@ public class AuthenticationTokenList extends Composite
       buttons.setLayoutData(gd);
 
       Button issueButton = new Button(buttons, SWT.PUSH);
-      issueButton.setText(i18n.tr("&Issue New..."));
+      issueButton.setText(i18n.tr("&Issue new..."));
       RowData rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      rd.width = WidgetHelper.WIDE_BUTTON_WIDTH_HINT;
       issueButton.setLayoutData(rd);
       issueButton.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -137,7 +137,7 @@ public class AuthenticationTokenList extends Composite
       revokeButton = new Button(buttons, SWT.PUSH);
       revokeButton.setText(i18n.tr("&Revoke"));
       rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      rd.width = WidgetHelper.WIDE_BUTTON_WIDTH_HINT;
       revokeButton.setLayoutData(rd);
       revokeButton.setEnabled(false);
       revokeButton.addSelectionListener(new SelectionAdapter() {
