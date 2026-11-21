@@ -107,7 +107,7 @@ public class DecorationFigure extends DecorationLayerAbstractFigure
 	 */
 	private void createResizeHandle(int pos)
 	{
-		final Figure handle = new Figure();
+		final Figure handle = new ResizeHandle();
 		add(handle);
 		Dimension size = getSize();
 		handle.setSize(8, 8);
