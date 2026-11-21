@@ -6611,18 +6611,13 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
    // the main chain by accident.
    uint32_t chainId = request.getFieldAsUInt32(VID_CHAIN_ID);
    uint32_t rcc = request.isFieldExist(VID_CHAIN_ID) ? GetEventProcessingPolicy()->checkChainEditAccess(chainId, m_userId) : RCC_INVALID_ARGUMENT;
-   if (rcc == RCC_INVALID_ARGUMENT)
-   {
-      debugPrintf(4, L"saveEventProcessingPolicy: chain ID %s", request.isFieldExist(VID_CHAIN_ID) ? L"refers to unknown chain" : L"missing");
-      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-      sendMessage(response);
-      return;
-   }
    if (rcc != RCC_SUCCESS)
    {
-      // Current user has no rights for event policy management
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event processing policy change"));
+      if (rcc == RCC_INVALID_ARGUMENT)
+         debugPrintf(4, L"saveEventProcessingPolicy: chain ID %s", request.isFieldExist(VID_CHAIN_ID) ? L"refers to unknown chain" : L"missing");
+      else if (rcc == RCC_ACCESS_DENIED)
+         writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on event processing policy change");
+      response.setField(VID_RCC, rcc);
       sendMessage(response);
       return;
    }
