@@ -22,11 +22,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.modules.imagelibrary.ImageProviderTools;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.slf4j.Logger;
@@ -133,26 +133,34 @@ public final class ObjectIcons
     *
     * @param display current display
     * @param path image resource path
-    * @return scaled icon image
+    * @return scaled icon image, or null if the image cannot be loaded or scaled
     */
    private static Image createNodeIcon(Display display, String path)
    {
+      Image source = null;
+      Image icon = null;
       try
       {
-         ImageData imageData = ResourceManager.getImageData(path);
-         if (imageData == null)
+         // createImage(false, ...) returns null instead of a placeholder image when the resource is missing,
+         // so a missing icon falls back to the generic node icon
+         source = ResourceManager.getImageDescriptor(path).createImage(false, display);
+         if (source == null)
          {
             logger.warn("Cannot load node icon image from {}", path);
             return null;
          }
-
-         return new Image(display, imageData.scaledTo(16, 16));
+         icon = ImageProviderTools.createResizedImage(source, 16);
       }
       catch(SWTException e)
       {
          logger.warn("Cannot load or create node icon image from {}", path, e);
-         return null;
       }
+      finally
+      {
+         if ((source != null) && (source != icon))
+            source.dispose();
+      }
+      return icon;
    }
 
    /**
