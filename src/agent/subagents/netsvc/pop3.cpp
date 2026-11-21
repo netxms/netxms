@@ -56,8 +56,8 @@ LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
    char portText[256];
 
    if (!AgentGetParameterArgA(param, 1, hostname, sizeof(hostname)) ||
-       !AgentGetParameterArgA(param, 2, username, sizeof(username)) ||
-       !AgentGetParameterArgA(param, 3, password, sizeof(password)) ||
+       !AgentGetMetricArgUtf8(param, 2, username, sizeof(username)) ||
+       !AgentGetMetricArgUtf8(param, 3, password, sizeof(password)) ||
        !AgentGetParameterArgA(param, 5, portText, sizeof(portText)))
       return SYSINFO_RC_UNSUPPORTED;
 

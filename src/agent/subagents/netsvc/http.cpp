@@ -181,9 +181,9 @@ LONG H_CheckHTTP(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCo
    char hostname[1024], portText[32], uri[1024], hostHeader[256], match[1024];
    if (!AgentGetParameterArgA(metric, 1, hostname, sizeof(hostname)) ||
        !AgentGetParameterArgA(metric, 2, portText, sizeof(portText)) ||
-       !AgentGetParameterArgA(metric, 3, uri, sizeof(uri)) ||
-       !AgentGetParameterArgA(metric, 4, hostHeader, sizeof(hostHeader)) ||
-       !AgentGetParameterArgA(metric, 5, match, sizeof(match)))
+       !AgentGetMetricArgUtf8(metric, 3, uri, sizeof(uri)) ||
+       !AgentGetMetricArgUtf8(metric, 4, hostHeader, sizeof(hostHeader)) ||
+       !AgentGetMetricArgUtf8(metric, 5, match, sizeof(match)))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (hostname[0] == 0 || uri[0] == 0)
@@ -249,7 +249,7 @@ static size_t HashUpdateCallback(char *ptr, size_t size, size_t nmemb, HashUpdat
 LONG H_HTTPChecksum(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char url[2048];
-   if (!AgentGetParameterArgA(metric, 1, url, 2048))
+   if (!AgentGetMetricArgUtf8(metric, 1, url, 2048))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Analyze URL

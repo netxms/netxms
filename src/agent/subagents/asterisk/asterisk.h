@@ -343,9 +343,9 @@ if (sys == NULL) \
 do { if (!AgentGetParameterArg(param, (sysName[0] == 0) ? n : n + 1, b, s)) return SYSINFO_RC_UNSUPPORTED; } while(0)
 
 /**
- * Get first argument after system ID as multibyte string (must be used after GET_ASTERISK_SYSTEM)
+ * Get first argument after system ID as UTF-8 string (must be used after GET_ASTERISK_SYSTEM)
  */
-#define GET_ARGUMENT_A(n, b, s) \
-do { if (!AgentGetParameterArgA(param, (sysName[0] == 0) ? n : n + 1, b, s)) return SYSINFO_RC_UNSUPPORTED; } while(0)
+#define GET_ARGUMENT_UTF8(n, b, s) \
+do { if (!AgentGetMetricArgUtf8(param, (sysName[0] == 0) ? n : n + 1, b, s)) return SYSINFO_RC_UNSUPPORTED; } while(0)
 
 #endif

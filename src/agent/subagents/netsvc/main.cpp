@@ -138,7 +138,7 @@ CURL *PrepareCurlHandle(const InetAddress& addr, uint16_t port, const char *sche
 static LONG H_NetworkServiceStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char url[2048];
-   if (!AgentGetParameterArgA(metric, 1, url, 2048))
+   if (!AgentGetMetricArgUtf8(metric, 1, url, 2048))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (url[0] == 0)

@@ -317,7 +317,7 @@ LONG H_SIPPeerStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 static LONG SIPPeerDetails_ChanSIP(AsteriskSystem *sys, const TCHAR *param, const TCHAR *arg, TCHAR *value, const TCHAR *sysName)
 {
    char peerId[128];
-   if (!AgentGetParameterArgA(param, (sysName[0] == 0) ? 1 : 2, peerId, 128))
+   if (!AgentGetMetricArgUtf8(param, (sysName[0] == 0) ? 1 : 2, peerId, 128))
       return SYSINFO_RC_UNSUPPORTED;
 
    auto request = make_shared<AmiMessage>("SIPshowpeer");
@@ -338,7 +338,7 @@ static LONG SIPPeerDetails_ChanSIP(AsteriskSystem *sys, const TCHAR *param, cons
    if (arg == nullptr)
    {
       char tagName[128];
-      if (!AgentGetParameterArgA(param, 3, tagName, 128))
+      if (!AgentGetMetricArgUtf8(param, 3, tagName, 128))
          return SYSINFO_RC_UNSUPPORTED;
 
       const char *tagValue = response->getTag(tagName);
@@ -388,7 +388,7 @@ static LONG SIPPeerDetails_ChanSIP(AsteriskSystem *sys, const TCHAR *param, cons
 static LONG SIPPeerDetails_PJSIP(AsteriskSystem *sys, const TCHAR *param, const TCHAR *arg, TCHAR *value, const TCHAR *sysName)
 {
    char peerId[128];
-   if (!AgentGetParameterArgA(param, (sysName[0] == 0) ? 1 : 2, peerId, 128))
+   if (!AgentGetMetricArgUtf8(param, (sysName[0] == 0) ? 1 : 2, peerId, 128))
       return SYSINFO_RC_UNSUPPORTED;
 
    auto request = make_shared<AmiMessage>("PJSIPShowEndpoint");
@@ -420,7 +420,7 @@ static LONG SIPPeerDetails_PJSIP(AsteriskSystem *sys, const TCHAR *param, const 
    {
       // Direct tag access - search all detail events
       char tagName[128];
-      if (!AgentGetParameterArgA(param, 3, tagName, 128))
+      if (!AgentGetMetricArgUtf8(param, 3, tagName, 128))
       {
          delete messages;
          return SYSINFO_RC_UNSUPPORTED;

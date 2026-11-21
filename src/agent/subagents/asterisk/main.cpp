@@ -116,7 +116,7 @@ static LONG H_CommandOutput(const TCHAR *param, const TCHAR *arg, StringList *va
    GET_ASTERISK_SYSTEM(1);
 
    char command[256];
-   GET_ARGUMENT_A(1, command, 256);
+   GET_ARGUMENT_UTF8(1, command, 256);
 
    StringList *output = sys->executeCommand(command);
    if (output == nullptr)

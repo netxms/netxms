@@ -96,7 +96,7 @@ static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Stru
 static LONG H_TopicValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char buffer[1024];
-   if (!AgentGetParameterArgA(cmd, 1, buffer, 1024))
+   if (!AgentGetMetricArgUtf8(cmd, 1, buffer, 1024))
       return SYSINFO_RC_UNSUPPORTED;
 
    char *brokerName;

@@ -95,7 +95,7 @@ LONG H_CertificateInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstr
       if (d2i_PKCS12_fp(file, &pkcs12) != nullptr)
       {
          char password[256];
-         AgentGetParameterArgA(param, 2, password, 256);
+         AgentGetMetricArgUtf8(param, 2, password, 256);
          EVP_PKEY *pkey;
          if (PKCS12_parse(pkcs12, password, &pkey, &cert, nullptr))
          {
