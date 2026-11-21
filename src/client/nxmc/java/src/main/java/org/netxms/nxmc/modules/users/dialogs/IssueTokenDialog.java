@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.users.AuthenticationToken;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.DateTimeSelector;
+import org.netxms.nxmc.base.widgets.LabeledDateTimeSelector;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -61,7 +61,7 @@ public class IssueTokenDialog extends Dialog
    private I18n i18n = LocalizationHelper.getI18n(IssueTokenDialog.class);
 
    private int userId;
-   private DateTimeSelector expirationTime;
+   private LabeledDateTimeSelector expirationTime;
    private LabeledText description;
    private LabeledText token;
 
@@ -102,9 +102,10 @@ public class IssueTokenDialog extends Dialog
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      expirationTime = new DateTimeSelector(dialogArea, SWT.NONE);
+      expirationTime = new LabeledDateTimeSelector(dialogArea, SWT.NONE);
       expirationTime.setValue(new Date(System.currentTimeMillis() + 86400000L * 365L));
       expirationTime.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      expirationTime.setLabel(i18n.tr("Expiration time"));
 
       description = new LabeledText(dialogArea, SWT.NONE);
       description.setLabel(i18n.tr("Description"));

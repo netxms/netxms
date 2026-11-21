@@ -71,8 +71,10 @@ public class DateTimeSelector extends Composite
 	}
 
 	/**
-	 * @param timestamp the timestamp to set
-	 */
+    * Set current value.
+    *
+    * @param date new date value
+    */
 	public void setValue(Date date)
 	{
 		if (date == null)
