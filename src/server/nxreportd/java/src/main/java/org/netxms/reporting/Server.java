@@ -28,7 +28,7 @@ import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.daemon.Daemon;
@@ -72,7 +72,16 @@ public final class Server implements Daemon
       configuration.putAll(System.getProperties());
       configuration.putAll(loadProperties("nxreportd.properties"));
 
-      threadPool = new ThreadPoolExecutor(8, 128, 600, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(256));
+      int maxThreads = getConfigurationPropertyAsInt("nxreportd.maxThreads", 32);
+      if (maxThreads < 1)
+      {
+         logger.warn("Invalid value " + maxThreads + " for nxreportd.maxThreads, using default (32)");
+         maxThreads = 32;
+      }
+      // ThreadPoolExecutor only grows beyond core size when the queue is full, so core size is set to maximum to start a new
+      // thread for each task until the limit is reached, and core threads are allowed to time out to shrink the pool when idle
+      threadPool = new ThreadPoolExecutor(maxThreads, maxThreads, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+      threadPool.allowCoreThreadTimeOut(true);
 
       String bindAddressName = getConfigurationProperty("nxreportd.bindAddress", "localhost");
       InetAddress bindAddress;
