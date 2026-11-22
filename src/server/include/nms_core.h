@@ -587,6 +587,7 @@ private:
    time_t m_loginTime;
    SynchronizedCountingHashSet<uint32_t> m_openDataCollectionConfigurations; // List of nodes with DCI lists open
    uint32_t m_eppExpectedRuleCount;  // Number of rules expected to be uploaded
+   uint32_t m_eppRequestId;          // Request ID of CMD_SAVE_EPP that started current EPP upload
    SharedObjectArray<EPRule> m_eppRuleList;   // List of loaded EPP rules
    uint32_t m_eppChainId;            // Chain being saved by current EPP upload
    uint32_t m_eppBaseVersion;        // Base version of that chain for EPP optimistic concurrency
