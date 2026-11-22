@@ -361,8 +361,8 @@ __PACK_END__
 #define CMD_UPDATE_SCRIPT                 0x009A
 #define CMD_DELETE_SCRIPT                 0x009B
 #define CMD_RENAME_SCRIPT                 0x009C
-#define CMD_GET_SESSION_LIST              0x009D
-#define CMD_KILL_SESSION                  0x009E
+//#define CMD_GET_SESSION_LIST              0x009D
+//#define CMD_KILL_SESSION                  0x009E
 #define CMD_SET_DB_PASSWORD               0x009F
 #define CMD_TRAP_LOG_RECORDS              0x00A0
 #define CMD_START_SNMP_WALK               0x00A1
