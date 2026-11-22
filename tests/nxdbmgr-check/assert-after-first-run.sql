@@ -84,8 +84,8 @@ INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM obj
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM object_properties WHERE object_id=999500 AND name='ghost')=1 AND (SELECT count(*) FROM nodes WHERE id IN (999501,999502))=2 AND (SELECT count(*) FROM object_containers WHERE id=999501 AND object_class=5)=1 AND (SELECT count(*) FROM object_containers WHERE id=999502 AND object_class=32)=1 THEN 161 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 
 /* Task 6 (162) */
-/* 162: report-only rows untouched: both cycle memberships, both GUID holders, both duplicate subnets */
-INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM container_members WHERE (container_id=999600 AND object_id=999601) OR (container_id=999601 AND object_id=999600))=2 AND (SELECT count(*) FROM object_properties WHERE guid='2d1c3ec1-6b8e-4c31-9c11-000000999610')=2 AND (SELECT count(*) FROM subnets WHERE ip_addr='10.99.6.0' AND ip_netmask=24 AND zone_guid=0)=2 THEN 162 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+/* 162: report-only rows untouched: both cycle memberships, both GUID holders */
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM container_members WHERE (container_id=999600 AND object_id=999601) OR (container_id=999601 AND object_id=999600))=2 AND (SELECT count(*) FROM object_properties WHERE guid='2d1c3ec1-6b8e-4c31-9c11-000000999610')=2 THEN 162 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 
 /* Task 7 (163-164) */
 /* 163: deleted-owner bindings reset on both tables, report-only bindings untouched */
@@ -145,3 +145,6 @@ INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM nsm
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM container_members WHERE container_id=0)=0 AND (SELECT count(*) FROM nsmap WHERE subnet_id=0)=0 AND (SELECT count(*) FROM cluster_members WHERE cluster_id=0)=0 AND (SELECT count(*) FROM container_members WHERE container_id=990001 AND object_id=990002)=1 AND (SELECT count(*) FROM cluster_members WHERE cluster_id=990040 AND node_id=990002)=1 THEN 183 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 /* 184: properties row created for the rack class container row without a racks row */
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM object_properties WHERE object_id=999982 AND name='lost_container_999982')=1 THEN 184 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+
+/* 185: duplicate subnets merged into manually created 999622: node 990008 linked to it once, 999620 and 999621 without links and marked as deleted, same address in another zone or with another mask untouched */
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM nsmap WHERE subnet_id=999622 AND node_id=990008)=1 AND (SELECT count(*) FROM nsmap WHERE subnet_id IN (999620,999621))=0 AND (SELECT count(*) FROM object_properties WHERE object_id IN (999620,999621) AND is_deleted=1)=2 AND (SELECT count(*) FROM object_properties WHERE object_id=999622 AND is_deleted=0)=1 AND (SELECT count(*) FROM object_properties WHERE object_id IN (990030,990031) AND is_deleted=0)=2 THEN 185 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;

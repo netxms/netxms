@@ -21,11 +21,10 @@ DROP TABLE tdata_999501;
 DROP TABLE idata_999502;
 DROP TABLE tdata_999502;
 
-/* Task 6: cycle, shared GUID and duplicate subnets are report only */
+/* Task 6: cycle and shared GUID are report only. Merged duplicate subnets stay, the clean run must not report subnets marked as deleted */
 DELETE FROM container_members WHERE container_id IN (999600,999601);
 DELETE FROM object_containers WHERE id IN (999600,999601,999610,999611);
-DELETE FROM subnets WHERE id IN (999620,999621);
-DELETE FROM object_properties WHERE object_id IN (999600,999601,999610,999611,999620,999621);
+DELETE FROM object_properties WHERE object_id IN (999600,999601,999610,999611);
 
 /* Task 7: report-only bindings */
 DELETE FROM items WHERE item_id IN (999701,999703,999704,999707);

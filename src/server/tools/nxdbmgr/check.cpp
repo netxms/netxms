@@ -950,13 +950,67 @@ static void CheckContainerCycles()
 }
 
 /**
- * Same subnet address and mask more than once in a zone. Report only. The same address with
- * another mask is a different subnet.
+ * Read IDs of nodes linked to given subnet
+ */
+static bool ReadSubnetNodes(uint32_t subnetId, IntegerArray<uint32_t> *nodes)
+{
+   DB_RESULT hResult = CheckSelect(StringBuffer(L"SELECT node_id FROM nsmap WHERE subnet_id=").append(subnetId));
+   if (hResult == nullptr)
+      return false;
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+      nodes->add(DBGetFieldULong(hResult, i, 0));
+   DBFreeResult(hResult);
+   return true;
+}
+
+/**
+ * Move node links of duplicate subnets to the kept subnet and mark duplicates as deleted. The server
+ * removes subnet objects marked as deleted together with all their data when it saves objects.
+ */
+static bool MergeDuplicateSubnets(uint32_t keptId, const IntegerArray<uint32_t>& subnets)
+{
+   IntegerArray<uint32_t> linkedNodes;
+   if (!ReadSubnetNodes(keptId, &linkedNodes))
+      return false;
+
+   for(int i = 0; i < subnets.size(); i++)
+   {
+      uint32_t subnetId = subnets.get(i);
+      if (subnetId == keptId)
+         continue;
+
+      IntegerArray<uint32_t> nodes;
+      if (!ReadSubnetNodes(subnetId, &nodes))
+         return false;
+      for(int j = 0; j < nodes.size(); j++)
+      {
+         uint32_t nodeId = nodes.get(j);
+         if (linkedNodes.contains(nodeId))
+            continue;
+         if (!CheckQuery(StringBuffer(L"INSERT INTO nsmap (subnet_id,node_id) VALUES (").append(keptId).append(L",").append(nodeId).append(L")")))
+            return false;
+         linkedNodes.add(nodeId);
+      }
+
+      if (!CheckQuery(StringBuffer(L"DELETE FROM nsmap WHERE subnet_id=").append(subnetId)) ||
+          !CheckQuery(StringBuffer(L"UPDATE object_properties SET is_deleted=1 WHERE object_id=").append(subnetId)))
+         return false;
+   }
+   return true;
+}
+
+/**
+ * Same subnet address and mask more than once in a zone. The same address with another mask is a
+ * different subnet, and subnets already marked as deleted are not counted. The server indexes subnets
+ * by address, so it uses only one of the duplicates and never deletes the others when they become
+ * empty. The fix keeps the manually created subnet (the one with lowest ID if there is no such subnet
+ * or more than one), moves node links of the other subnets to it and marks the other subnets as deleted.
  */
 static void CheckDuplicateSubnets()
 {
    StartStage(L"Duplicate subnets");
-   DB_RESULT hResult = CheckSelect(L"SELECT ip_addr,ip_netmask,zone_guid FROM subnets GROUP BY ip_addr,ip_netmask,zone_guid HAVING count(*) > 1 ORDER BY zone_guid,ip_addr,ip_netmask");
+   DB_RESULT hResult = CheckSelect(L"SELECT s.ip_addr,s.ip_netmask,s.zone_guid FROM subnets s INNER JOIN object_properties p ON p.object_id=s.id WHERE p.is_deleted=0 GROUP BY s.ip_addr,s.ip_netmask,s.zone_guid HAVING count(*) > 1 ORDER BY s.zone_guid,s.ip_addr,s.ip_netmask");
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
@@ -966,13 +1020,37 @@ static void CheckDuplicateSubnets()
          DBGetField(hResult, i, 0, addr, 64);
          int maskBits = DBGetFieldLong(hResult, i, 1);
          uint32_t zoneUIN = DBGetFieldULong(hResult, i, 2);
-         StringBuffer query(L"SELECT id FROM subnets WHERE ip_addr=");
-         query.append(DBPrepareString(g_dbHandle, addr)).append(L" AND ip_netmask=").append(maskBits).append(L" AND zone_guid=").append(zoneUIN).append(L" ORDER BY id");
-         StringBuffer ids;
-         if (!ListIds(query, &ids))
+
+         StringBuffer query(L"SELECT s.id,p.flags FROM subnets s INNER JOIN object_properties p ON p.object_id=s.id WHERE p.is_deleted=0 AND s.ip_addr=");
+         query.append(DBPrepareString(g_dbHandle, addr)).append(L" AND s.ip_netmask=").append(maskBits).append(L" AND s.zone_guid=").append(zoneUIN).append(L" ORDER BY s.id");
+         DB_RESULT hSubnets = CheckSelect(query);
+         if (hSubnets == nullptr)
             break;
+         IntegerArray<uint32_t> subnets;
+         StringBuffer ids;
+         uint32_t keptId = 0;
+         int numSubnets = DBGetNumRows(hSubnets);
+         for(int j = 0; j < numSubnets; j++)
+         {
+            uint32_t id = DBGetFieldULong(hSubnets, j, 0);
+            if ((keptId == 0) && (DBGetFieldULong(hSubnets, j, 1) & SF_MANUALLY_CREATED))
+               keptId = id;
+            subnets.add(id);
+            if (j > 0)
+               ids.append(L", ");
+            ids.append(id);
+         }
+         DBFreeResult(hSubnets);
+         if (keptId == 0)
+            keptId = subnets.get(0);
+
          g_dbCheckErrors++;
-         WriteToTerminalEx(L"\nSubnet %s/%d in zone %u is defined by objects %s\n", addr, maskBits, zoneUIN, ids.cstr());
+         if (GetYesNoEx(L"Subnet %s/%d in zone %u is defined by objects %s. Move node links to subnet [%u] and mark other subnet objects as deleted?",
+                  addr, maskBits, zoneUIN, ids.cstr(), keptId))
+         {
+            if (MergeDuplicateSubnets(keptId, subnets))
+               g_dbCheckFixes++;
+         }
       }
       DBFreeResult(hResult);
    }

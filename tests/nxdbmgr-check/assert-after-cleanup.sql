@@ -12,8 +12,8 @@ INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM eve
 /* 204: task 5 sensor kept its lost properties, duplicates and ghost gone */
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM sensors WHERE id=999503)=1 AND (SELECT count(*) FROM object_properties WHERE object_id=999503)=1 AND (SELECT count(*) FROM object_properties WHERE object_id IN (999500,999501,999502))=0 THEN 204 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 
-/* 205: task 6 negative subnets and zone intact, injected objects gone */
-INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM subnets WHERE id IN (990030,990031))=2 AND (SELECT count(*) FROM zones WHERE id=990032)=1 AND (SELECT count(*) FROM object_properties WHERE object_id IN (999600,999601,999610,999611,999620,999621))=0 THEN 205 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+/* 205: task 6 negative subnets and zone intact, injected objects gone, merged duplicate subnets left as the first run left them */
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM subnets WHERE id IN (990030,990031))=2 AND (SELECT count(*) FROM zones WHERE id=990032)=1 AND (SELECT count(*) FROM object_properties WHERE object_id IN (999600,999601,999610,999611))=0 AND (SELECT count(*) FROM object_properties WHERE object_id IN (999620,999621) AND is_deleted=1)=2 AND (SELECT count(*) FROM nsmap WHERE subnet_id=999622 AND node_id=990008)=1 THEN 205 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 
 /* 206: task 7 valid bindings survive the clean run */
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM items WHERE item_id IN (990043,990045,990046,990047,990048) AND template_id<>0)=5 AND (SELECT count(*) FROM items WHERE item_id IN (999701,999703,999704,999707))=0 THEN 206 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;

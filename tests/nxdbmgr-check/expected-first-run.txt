@@ -126,7 +126,7 @@ Object GUID 2d1c3ec1-6b8e-4c31-9c11-000000999610 is shared by objects 999610, 99
 Container membership cycle among objects 999600, 999601 (999600 -> 999601, 999601 -> 999600)
 Container membership cycle among objects 999630, 999631, 999632 (999630 -> 999631, 999630 -> 999632, 999631 -> 999632, 999632 -> 999630)
 Container membership cycle among objects 999640 (999640 -> 999640)
-Subnet 10.99.6.0/24 in zone 0 is defined by objects 999620, 999621
+Subnet 10.99.6.0/24 in zone 0 is defined by objects 999620, 999621, 999622. Move node links to subnet [999622] and mark other subnet objects as deleted?
 # Task 7: template, cluster and instance bindings
 DCI [999701] on object [990002] has instance discovery root [999702] which does not exist on that object
 DCI [999703] on object [990008] is bound to cluster [990040] but the object is not a member of that cluster
