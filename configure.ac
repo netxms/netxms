@@ -265,6 +265,7 @@ MARIADB_MYSQL_CONFLICT="no"
 LIBNXAGENT_LIBS=""
 LIBNXSRV_LIBS=""
 JAR_BUILD="yes"
+COMPILE_MIBS="yes"
 RELEASE_BUILD="no"
 SYSTEMD_LIBS=""
 REQUIRE_PROTOBUF="no"
@@ -1114,6 +1115,14 @@ AC_ARG_ENABLE(jar-build,
 	      [AS_HELP_STRING(--disable-jar-build,disable build and installation of jar files)],
 [
 	JAR_BUILD="no"
+])
+
+AC_ARG_ENABLE(mib-compilation,
+[AS_HELP_STRING(--disable-mib-compilation,do not compile MIB files during installation)],
+[
+	if test "x$enableval" = "xno"; then
+		COMPILE_MIBS="no"
+	fi
 ])
 
 AC_ARG_ENABLE(release-build,
@@ -4525,6 +4534,7 @@ AC_SUBST(AGENT_LIBS)
 AC_SUBST(AGENT_UNIT_TESTS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(CLIENT_COMPONENTS)
+AC_SUBST(COMPILE_MIBS)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CUSTOM_INCLUDE)
 AC_SUBST(DB_DRIVERS)

@@ -867,4 +867,4 @@ mibs_DATA = \
 EXTRA_DIST=$(mibs_DATA)
 
 install-data-hook:
-	if test "x@BUILD_SERVER@" = "xyes"; then $(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/netxms; LD_LIBRARY_PATH="$(DESTDIR)$(libdir):@INSTALL_LIBPATH@:${LD_LIBRARY_PATH}" $(DESTDIR)$(bindir)/nxmibc -z -d $(DESTDIR)$(localstatedir)/lib/netxms/mibs -d $(DESTDIR)$(pkgdatadir)/mibs -o $(DESTDIR)$(localstatedir)/lib/netxms/netxms.cmib; fi
+	if test "x@BUILD_SERVER@" = "xyes" -a "x@COMPILE_MIBS@" = "xyes"; then $(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/netxms; LD_LIBRARY_PATH="$(DESTDIR)$(libdir):@INSTALL_LIBPATH@:${LD_LIBRARY_PATH}" $(DESTDIR)$(bindir)/nxmibc -z -d $(DESTDIR)$(localstatedir)/lib/netxms/mibs -d $(DESTDIR)$(pkgdatadir)/mibs -o $(DESTDIR)$(localstatedir)/lib/netxms/netxms.cmib; fi
