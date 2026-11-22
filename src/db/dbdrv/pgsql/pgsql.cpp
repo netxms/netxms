@@ -1131,25 +1131,35 @@ static uint32_t Begin(DBDRV_CONNECTION connection)
 }
 
 /**
- * Commit transaction
+ * Commit transaction. COMMIT of transaction aborted by earlier error ends it with rollback, but server
+ * still reports success (with command tag ROLLBACK), so such commit is reported as failed.
  */
 static uint32_t Commit(DBDRV_CONNECTION connection)
 {
-   static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
-	bool bRet = UnsafeQuery(static_cast<PG_CONN*>(connection), "COMMIT", nullptr);
-	static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
-   return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+   auto c = static_cast<PG_CONN*>(connection);
+   c->mutexQueryLock.lock();
+   bool aborted = (PQtransactionStatus(c->handle) == PQTRANS_INERROR);
+   bool success = UnsafeQuery(c, "COMMIT", nullptr);
+   c->mutexQueryLock.unlock();
+   if (aborted)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("COMMIT of aborted transaction (transaction rolled back)"));
+      return DBERR_OTHER_ERROR;
+   }
+   return success ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
- * Rollback transaction
+ * Rollback transaction. Succeeds without action if no transaction is open (for example after COMMIT
+ * of aborted transaction, which has already rolled it back).
  */
 static uint32_t Rollback(DBDRV_CONNECTION connection)
 {
-	static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
-	bool bRet = UnsafeQuery(static_cast<PG_CONN*>(connection), "ROLLBACK", nullptr);
-	static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
-   return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+   auto c = static_cast<PG_CONN*>(connection);
+   c->mutexQueryLock.lock();
+   bool success = (PQtransactionStatus(c->handle) == PQTRANS_IDLE) || UnsafeQuery(c, "ROLLBACK", nullptr);
+   c->mutexQueryLock.unlock();
+   return success ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
