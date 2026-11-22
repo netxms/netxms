@@ -98,7 +98,7 @@ struct OtlpExportAttribute
 
    OtlpExportAttribute(std::string&& k, std::string&& v) : key(std::move(k)), type(OtlpAttributeType::STRING), stringValue(std::move(v)), intValue(0) { }
    OtlpExportAttribute(const char *k, const char *v) : key(k), type(OtlpAttributeType::STRING), stringValue(v), intValue(0) { }
-   OtlpExportAttribute(const char *k, const std::string& v) : key(k), type(OtlpAttributeType::STRING), stringValue(v), intValue(0) { }
+   OtlpExportAttribute(const char *k, std::string v) : key(k), type(OtlpAttributeType::STRING), stringValue(std::move(v)), intValue(0) { }
    OtlpExportAttribute(const char *k, const wchar_t *v) : key(k), type(OtlpAttributeType::STRING), stringValue(WideToUtf8(v)), intValue(0) { }
    OtlpExportAttribute(const char *k, const uuid& guid) : key(k), type(OtlpAttributeType::STRING), intValue(0)
    {
