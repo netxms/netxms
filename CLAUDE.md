@@ -185,7 +185,7 @@ Prefer NetXMS containers for object collections and ownership management. For ma
 ## CI / Static Analysis
 
 - **Semgrep SAST** runs on every PR (diff-aware, blocks on ERROR severity). Workflow: `.github/workflows/semgrep.yaml`. Custom rules go in `.semgrep.yml`, exclusions in `.semgrepignore`. Inline suppression: `// nosemgrep: <rule-id>` (C/C++, Java) or `# nosemgrep: <rule-id>` (Python), always with the rule-id.
-- **Function pointer cast check** blocks on every push and PR. The build runs with GCC's `-Wcast-function-type` and fails if any warning appears. Workflow: `.github/workflows/build_and_test.yaml`
+- **Function pointer cast check** blocks on every push and PR. `configure` enables `-Wcast-function-type` for every GCC/clang build (clang's stricter `-Wcast-function-type-strict` part is turned off); CI fails if any such warning appears. Workflow: `.github/workflows/build_and_test.yaml`
 - `.woodpecker/` mirrors the GitHub Actions workflows (except semgrep and the issue-milestone check) and the Drone javadoc pipeline on a Woodpecker test instance (ci.netxms.org, repo id 4). GitHub Actions and Drone remain the CI of record; a change to a mirrored check goes into both places. Woodpecker substitutes the braced form `${VAR}` in the raw YAML before parsing, so a braced shell variable or secret in `commands` compiles to an empty string unless written `$${VAR}`; unbraced `$VAR` and `$(...)` pass through unchanged. Lint with `woodpecker-cli lint .woodpecker/<file>.yaml`; run one locally in a scratch clone (the build steps configure and compile in-tree) with `woodpecker-cli exec --local --pipeline-event push --commit-branch master .woodpecker/build.yaml` — the default `manual` event matches none of the workflows
 
 ## NXCP Protocol Changes

@@ -16,7 +16,6 @@ steps:
         libmicrohttpd-dev libargon2-dev libjansson-dev
       - ./build/prepare_release_build.sh
       - ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql --with-tests
-        CXXFLAGS="-g -O2 -Wcast-function-type"
       - set -o pipefail
       - make -j$(nproc) 2>&1 | tee build.log
       - |
