@@ -1159,27 +1159,33 @@ static uint32_t Begin(DBDRV_CONNECTION connection)
 }
 
 /**
- * Commit transaction
+ * Commit transaction. Autocommit is restored only after successful commit, so failed
+ * transaction stays open for rollback (enabling autocommit would implicitly commit it).
  */
 static uint32_t Commit(DBDRV_CONNECTION connection)
 {
    static_cast<ODBCDRV_CONN*>(connection)->mutexQuery->lock();
-	SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, static_cast<ODBCDRV_CONN*>(connection)->sqlConn, SQL_COMMIT);
-   SQLSetConnectAttr(static_cast<ODBCDRV_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+   SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, static_cast<ODBCDRV_CONN*>(connection)->sqlConn, SQL_COMMIT);
+   bool success = (nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO);
+   if (success)
+      SQLSetConnectAttr(static_cast<ODBCDRV_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
    static_cast<ODBCDRV_CONN*>(connection)->mutexQuery->unlock();
-   return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+   return success ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
- * Rollback transaction
+ * Rollback transaction. Autocommit is restored only after successful rollback, because
+ * enabling autocommit with transaction still open would commit it.
  */
 static uint32_t Rollback(DBDRV_CONNECTION connection)
 {
    static_cast<ODBCDRV_CONN*>(connection)->mutexQuery->lock();
-	SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, static_cast<ODBCDRV_CONN*>(connection)->sqlConn, SQL_ROLLBACK);
-   SQLSetConnectAttr(static_cast<ODBCDRV_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+   SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, static_cast<ODBCDRV_CONN*>(connection)->sqlConn, SQL_ROLLBACK);
+   bool success = (nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO);
+   if (success)
+      SQLSetConnectAttr(static_cast<ODBCDRV_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
    static_cast<ODBCDRV_CONN*>(connection)->mutexQuery->unlock();
-   return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+   return success ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**

@@ -888,27 +888,31 @@ static uint32_t Begin(DBDRV_CONNECTION connection)
 }
 
 /**
- * Commit transaction
+ * Commit transaction. Autocommit is restored only after successful commit, so failed
+ * transaction stays open for rollback (enabling autocommit would implicitly commit it).
  */
 static uint32_t Commit(DBDRV_CONNECTION connection)
 {
    auto c = static_cast<DB2DRV_CONN*>(connection);
    c->mutexQuery->lock();
    SQLRETURN rc = SQLEndTran(SQL_HANDLE_DBC, c->sqlConn, SQL_COMMIT);
-   SQLSetConnectAttr(c->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+   if (IsSuccess(rc))
+      SQLSetConnectAttr(c->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
    c->mutexQuery->unlock();
    return IsSuccess(rc) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
- * Rollback transaction
+ * Rollback transaction. Autocommit is restored only after successful rollback, because
+ * enabling autocommit with transaction still open would commit it.
  */
 static uint32_t Rollback(DBDRV_CONNECTION connection)
 {
    auto c = static_cast<DB2DRV_CONN*>(connection);
    c->mutexQuery->lock();
    SQLRETURN rc = SQLEndTran(SQL_HANDLE_DBC, c->sqlConn, SQL_ROLLBACK);
-   SQLSetConnectAttr(c->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+   if (IsSuccess(rc))
+      SQLSetConnectAttr(c->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
    c->mutexQuery->unlock();
    return IsSuccess(rc) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
