@@ -28,7 +28,7 @@ jobs:
         run: ./reconf
       - name: configure
         run: ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql
-          --with-tests CXXFLAGS="-g -O2 -Wcast-function-type"
+          --with-tests
       - name: make
         run: |
           set -o pipefail
