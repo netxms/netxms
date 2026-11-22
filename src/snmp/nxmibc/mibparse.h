@@ -198,12 +198,14 @@ class MP_MODULE
 {
 public:
    char *pszName;
+   TCHAR *fileName;
    ObjectArray<MP_IMPORT_MODULE> *pImportList;
    ObjectArray<MP_OBJECT> *pObjectList;
 
    MP_MODULE()
    {
-      pszName = NULL;
+      pszName = nullptr;
+      fileName = nullptr;
       pImportList = new ObjectArray<MP_IMPORT_MODULE>(0, 8, Ownership::True);
       pObjectList = new ObjectArray<MP_OBJECT>(0, 16, Ownership::True);
    }
@@ -211,6 +213,7 @@ public:
    ~MP_MODULE()
    {
       MemFree(pszName);
+      MemFree(fileName);
       delete pImportList;
       delete pObjectList;
    }

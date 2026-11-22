@@ -99,7 +99,7 @@ static struct
    { MIBC_WARNING, _T("Cannot resolve data type \"%hs\" for object \"%hs\"") },
    { MIBC_WARNING, _T("Object identifier started with uppercase letter in line %d") },
    { MIBC_WARNING, _T("Dangling comma character in line %d") },
-   { MIBC_WARNING, _T("Module already defined in another file, second definition ignored") }
+   { MIBC_WARNING, _T("Module already defined in file %s, definition in file %s ignored") }
 };
 
 /**
@@ -112,8 +112,8 @@ void ReportError(int error, const char *module, ...)
 
    va_list args;
    va_start(args, module);
-   TCHAR message[256];
-   _vsntprintf(message, 256, s_errors[error].text, args);
+   TCHAR message[1024];
+   _vsntprintf(message, 1024, s_errors[error].text, args);
    va_end(args);
 
    if (g_machineParseableOutput)
@@ -147,7 +147,11 @@ static void Help()
             _T("   -u        : Do not compress output file\n")
 		      _T("   -z        : Compress output file\n")
 		      _T("Note: compression is ON by default, so option -z effectively does nothing\n")
-		      _T("      and left only for backward compatibility.\n")
+		      _T("      and left only for backward compatibility.\n\n")
+		      _T("Directories are processed in command line order (files within each directory\n")
+		      _T("in name order), followed by source files given on command line. If several\n")
+		      _T("files define a module with the same name, the first one is used, so modules\n")
+		      _T("from directories listed earlier take precedence.\n")
 		      _T("\n"));
    exit(0);
 }
@@ -170,7 +174,7 @@ static bool IsDirectory(DIRENTRY *d, const TCHAR *filePath)
 /**
  * Scan directory for MIB files
  */
-static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool recursive)
+static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool recursive, StringList *fileList)
 {
    DIRHANDLE *dir = OpenDir(path);
    if (dir == nullptr)
@@ -188,7 +192,7 @@ static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool r
          _sntprintf(filePath, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("%s"), path, file->d_name);
          if (recursive && IsDirectory(file, filePath))
          {
-            ScanDirectory(filePath, extensions, recursive);
+            ScanDirectory(filePath, extensions, recursive, fileList);
          }
          else
          {
@@ -197,7 +201,7 @@ static void ScanDirectory(const TCHAR *path, const StringSet *extensions, bool r
             {
                _tcslwr(extension);
                if (extensions->contains(extension + 1))
-                  s_fileList.add(filePath);
+                  fileList->add(filePath);
             }
          }
       }
@@ -290,26 +294,33 @@ int main(int argc, char *argv[])
          _T("Copyright (c) 2005-2026 Raden Solutions\n\n"));
    }
 
+   // Files are sorted within each directory to make compilation order (and duplicate module resolution) deterministic,
+   // while directory order from command line is preserved so that modules from earlier directories take precedence
    if (scanDir)
    {
       for(int i = 0; i < paths.size(); i++)
       {
-         ScanDirectory(paths.get(i), &extensions, recursive);
+         StringList directoryFiles;
+         ScanDirectory(paths.get(i), &extensions, recursive, &directoryFiles);
+         directoryFiles.sort();
+         s_fileList.addAll(directoryFiles);
       }
    }
 
+   StringList sourceFiles;
    for(int i = optind; i < argc; i++)
    {
 #ifdef UNICODE
-      s_fileList.addPreallocated(WideStringFromMBStringSysLocale(argv[i]));
+      sourceFiles.addPreallocated(WideStringFromMBStringSysLocale(argv[i]));
 #else
-      s_fileList.add(argv[i]);
+      sourceFiles.add(argv[i]);
 #endif
    }
+   sourceFiles.sort();
+   s_fileList.addAll(sourceFiles);
 
    if (s_fileList.size() > 0)
    {
-      s_fileList.sort();  // Sort file list to make compilation order (and duplicate module resolution) deterministic
       SNMP_MIBObject *rootObject;
       ParseMIBFiles(&s_fileList, &rootObject);
       if (rootObject != nullptr)

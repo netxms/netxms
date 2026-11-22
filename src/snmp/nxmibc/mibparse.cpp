@@ -548,13 +548,15 @@ int ParseMIBFiles(StringList *fileList, SNMP_MIBObject **rootObject)
       {
          return SNMP_MPE_PARSE_ERROR;
       }
-      if (FindModuleByName(moduleList, module->pszName) != nullptr)
+      MP_MODULE *existingModule = FindModuleByName(moduleList, module->pszName);
+      if (existingModule != nullptr)
       {
-         ReportError(ERR_DUPLICATE_MODULE, module->pszName);
+         ReportError(ERR_DUPLICATE_MODULE, module->pszName, existingModule->fileName, file);
          delete module;
       }
       else
       {
+         module->fileName = MemCopyString(file);
          moduleList.add(module);
       }
    }

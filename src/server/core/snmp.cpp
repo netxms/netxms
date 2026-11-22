@@ -640,8 +640,9 @@ uint32_t CompileMibFiles(ClientSession *session, uint32_t requestId)
    TCHAR binFolder[MAX_PATH];
    GetNetXMSDirectory(nxDirBin, binFolder);
 
+   // User MIB directory goes first so that uploaded modules override bundled modules with the same name
    TCHAR cmdLine[512];
-   _sntprintf(cmdLine, 512, _T("%s") FS_PATH_SEPARATOR _T("nxmibc") EXECUTABLE_FILE_SUFFIX _T(" -m -a -d \"%s\" -d \"%s") DDIR_MIBS _T("\" -o \"%s") FS_PATH_SEPARATOR _T("netxms.cmib\""), binFolder, serverMibFolder, dataDir, dataDir);
+   _sntprintf(cmdLine, 512, _T("%s") FS_PATH_SEPARATOR _T("nxmibc") EXECUTABLE_FILE_SUFFIX _T(" -m -a -d \"%s") DDIR_MIBS _T("\" -d \"%s\" -o \"%s") FS_PATH_SEPARATOR _T("netxms.cmib\""), binFolder, dataDir, serverMibFolder, dataDir);
    nxlog_debug_tag(_T("snmp.mib"), 6, _T("CompileMibFiles: running MIB compiler as: %s"), cmdLine);
 
    MibCompilerExecutor *executor = new MibCompilerExecutor(cmdLine, session, requestId);
