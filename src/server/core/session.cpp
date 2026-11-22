@@ -238,6 +238,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_userId = INVALID_INDEX;
    m_systemAccessRights = 0;
    m_eppExpectedRuleCount = 0;
+   m_eppRequestId = 0;
    m_eppDeletedRules = nullptr;
    m_eppDeletedRuleCount = 0;
    m_eppChainId = 0;
@@ -6597,6 +6598,7 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
    }
    else
    {
+      m_eppRequestId = request.getId();
       InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
       response.setField(VID_RCC, RCC_SUCCESS);
       debugPrintf(5, _T("Accepted EPP upload request for %u rules in chain %u (base version %u)"), m_eppExpectedRuleCount, m_eppChainId, m_eppBaseVersion);
@@ -6605,11 +6607,12 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 }
 
 /**
- * Process EPP rule received from client
+ * Process EPP rule received from client. Records carry the request ID of the CMD_SAVE_EPP message
+ * that started the upload; records belonging to any other save request are rejected.
  */
 void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& request)
 {
-   if (m_flags & CSF_EPP_UPLOAD)
+   if ((m_flags & CSF_EPP_UPLOAD) && (request.getId() == m_eppRequestId))
    {
       if (m_eppRuleList.size() < m_eppExpectedRuleCount)
       {
@@ -6623,6 +6626,8 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
    }
    else
    {
+      if (m_flags & CSF_EPP_UPLOAD)
+         debugPrintf(4, L"processEventProcessingPolicyRecord: record with request ID %u does not belong to current upload (request ID %u)", request.getId(), m_eppRequestId);
       NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
       response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
       sendMessage(response);
