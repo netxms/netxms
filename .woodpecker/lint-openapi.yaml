@@ -1,0 +1,10 @@
+when:
+  - event: push
+    branch: [master, stable-*]
+  - event: pull_request
+
+steps:
+  - name: lint
+    image: node:24-alpine
+    commands:
+      - npx --yes @redocly/cli lint

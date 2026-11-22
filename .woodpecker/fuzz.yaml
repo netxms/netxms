@@ -1,0 +1,36 @@
+when:
+  - event: push
+    branch: [master, stable-*]
+  - event: pull_request
+
+matrix:
+  include:
+    - TARGET: deserialize
+      CORPUS: message
+    - TARGET: dump
+      CORPUS: message
+    - TARGET: receiver
+      CORPUS: receiver
+    - TARGET: decrypt
+      CORPUS: decrypt
+
+steps:
+  - name: fuzz
+    image: ubuntu:26.04
+    environment:
+      DEBIAN_FRONTEND: noninteractive
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+    commands:
+      - apt-get update
+      - apt-get install -y --no-install-recommends clang libclang-rt-dev make autoconf automake libtool
+        pkg-config git perl ca-certificates libssl-dev zlib1g-dev libexpat1-dev
+        libcurl4-openssl-dev libpcre2-dev libjansson-dev
+      - ./build/prepare_release_build.sh
+      - CC=clang CXX=clang++ ./configure --prefix=/tmp/build --enable-fuzzer
+      - make -j$(nproc)
+      - mkdir -p fuzz-artifacts fuzz-corpus
+      - tests/fuzz/fuzz-nxcp-${TARGET} -runs=0 -timeout=5 -rss_limit_mb=2048 -malloc_limit_mb=512
+        -artifact_prefix=fuzz-artifacts/ tests/fuzz/corpus/${CORPUS}
+      - cp tests/fuzz/corpus/${CORPUS}/* fuzz-corpus/
+      - tests/fuzz/fuzz-nxcp-${TARGET} -max_total_time=120 -max_len=4096 -timeout=5
+        -rss_limit_mb=2048 -malloc_limit_mb=512 -artifact_prefix=fuzz-artifacts/ fuzz-corpus

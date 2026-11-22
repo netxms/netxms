@@ -1,0 +1,33 @@
+when:
+  - event: push
+    branch: [master, stable-*]
+  - event: pull_request
+
+steps:
+  - name: build-and-test
+    image: ubuntu:26.04
+    environment:
+      DEBIAN_FRONTEND: noninteractive
+    commands:
+      - apt-get update
+      - apt-get install -y --no-install-recommends build-essential autoconf automake libtool bison flex
+        pkg-config git perl ca-certificates libssl-dev zlib1g-dev libexpat1-dev
+        libpq-dev libcurl4-openssl-dev libssh-dev libmosquitto-dev libjq-dev libpcre2-dev
+        libmicrohttpd-dev libargon2-dev libjansson-dev
+      - ./build/prepare_release_build.sh
+      - ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql --with-tests
+        CXXFLAGS="-g -O2 -Wcast-function-type"
+      - set -o pipefail
+      - make -j$(nproc) 2>&1 | tee build.log
+      - |
+        if grep -q 'cast-function-type' build.log; then
+          echo "ERROR: Cast between incompatible function types. Calling through such a"
+          echo "ERROR: pointer is undefined behaviour - a mismatched return type works on"
+          echo "ERROR: x86 by accident and breaks on SPARC. See issue #3445."
+          grep -B2 'cast-function-type' build.log
+          exit 1
+        fi
+      - make install
+      - /tmp/build/bin/netxmsd -v || true
+      - /tmp/build/bin/nxagentd -v || true
+      - /tmp/build/bin/netxms-test-suite

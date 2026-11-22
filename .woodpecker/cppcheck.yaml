@@ -1,0 +1,20 @@
+when:
+  - event: cron
+    cron: cppcheck
+
+steps:
+  - name: cppcheck
+    image: ubuntu:26.04
+    environment:
+      DEBIAN_FRONTEND: noninteractive
+    commands:
+      - apt-get update
+      - apt-get install -y --no-install-recommends build-essential autoconf automake libtool
+        pkg-config git perl ca-certificates cppcheck libssl-dev zlib1g-dev libexpat1-dev
+        libpq-dev libcurl4-openssl-dev libssh-dev libmosquitto-dev libjq-dev libpcre2-dev
+        libmicrohttpd-dev libargon2-dev libjansson-dev
+      - ./build/prepare_release_build.sh
+      - ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql
+      - mkdir -p /tmp/cppcheck
+      - cppcheck -q --platform=unix64 --language=c++ --max-ctu-depth=3 -I . -I build -I include
+        -I src/server/include -I src/nxcproxy -j $(nproc) --std=c++17 --cppcheck-build-dir=/tmp/cppcheck src

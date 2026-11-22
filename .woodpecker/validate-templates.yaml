@@ -1,0 +1,11 @@
+when:
+  - event: push
+    branch: [master, stable-*]
+  - event: pull_request
+
+steps:
+  - name: xmllint
+    image: alpine:3.23
+    commands:
+      - apk add --no-cache libxml2-utils
+      - find contrib/templates -name '*.xml' -print0 | xargs -0 xmllint --noout
