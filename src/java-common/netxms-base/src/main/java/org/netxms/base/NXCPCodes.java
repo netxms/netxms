@@ -180,8 +180,8 @@ public class NXCPCodes
 	public static final int CMD_UPDATE_SCRIPT = 0x009A;
 	public static final int CMD_DELETE_SCRIPT = 0x009B;
 	public static final int CMD_RENAME_SCRIPT = 0x009C;
-	public static final int CMD_GET_SESSION_LIST = 0x009D;
-	public static final int CMD_KILL_SESSION = 0x009E;
+//	public static final int CMD_GET_SESSION_LIST = 0x009D;
+//	public static final int CMD_KILL_SESSION = 0x009E;
 	public static final int CMD_SET_DB_PASSWORD = 0x009F;
 	public static final int CMD_TRAP_LOG_RECORDS = 0x00A0;
 	public static final int CMD_START_SNMP_WALK = 0x00A1;

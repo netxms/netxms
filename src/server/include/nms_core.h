@@ -805,8 +805,6 @@ private:
    void updateScript(const NXCPMessage& request);
    void renameScript(const NXCPMessage& request);
    void deleteScript(const NXCPMessage& request);
-   void getSessionList(const NXCPMessage& request);
-   void killSession(const NXCPMessage& request);
    void startSnmpWalk(const NXCPMessage& request);
    void queryWebService(const NXCPMessage& request);
    void resolveDCINames(const NXCPMessage& request);

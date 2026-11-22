@@ -1527,12 +1527,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_SCRIPT:
          deleteScript(*request);
          break;
-      case CMD_GET_SESSION_LIST:
-         getSessionList(*request);
-         break;
-      case CMD_KILL_SESSION:
-         killSession(*request);
-         break;
       case CMD_START_SNMP_WALK:
          startSnmpWalk(*request);
          break;
@@ -10637,60 +10631,6 @@ void ClientSession::deleteScript(const NXCPMessage& request)
       if (!GetScriptName(scriptId, scriptName, MAX_DB_STRING))
          _tcscpy(scriptName, _T("<unknown>"));
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting library script %s [%u]"), scriptName, scriptId);
-   }
-   sendMessage(response);
-}
-
-/**
- * Copy session data to message
- */
-static void CopySessionData(ClientSession *pSession, NXCPMessage *msg)
-{
-   uint32_t index = msg->getFieldAsUInt32(VID_NUM_SESSIONS);
-   msg->setField(VID_NUM_SESSIONS, index + 1);
-
-   uint32_t fieldId = VID_SESSION_DATA_BASE + index * 100;
-   msg->setField(fieldId++, (UINT32)pSession->getId());
-   msg->setField(fieldId++, (WORD)pSession->getCipher());
-   msg->setField(fieldId++, (TCHAR *)pSession->getSessionName());
-   msg->setField(fieldId++, (TCHAR *)pSession->getClientInfo());
-   msg->setField(fieldId++, (TCHAR *)pSession->getLoginName());
-}
-
-/**
- * Send list of connected client sessions
- */
-void ClientSession::getSessionList(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
-   {
-      response.setField(VID_NUM_SESSIONS, (UINT32)0);
-      EnumerateClientSessions(CopySessionData, &response);
-      response.setField(VID_RCC, RCC_SUCCESS);
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   sendMessage(response);
-}
-
-/**
- * Forcibly terminate client's session
- */
-void ClientSession::killSession(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SESSIONS)
-   {
-      session_id_t id = request.getFieldAsInt32(VID_SESSION_ID);
-      bool success = KillClientSession(id);
-      response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_SESSION_HANDLE);
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
 }
