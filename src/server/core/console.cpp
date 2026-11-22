@@ -1229,7 +1229,12 @@ int NXCORE_EXPORTABLE ProcessConsoleCommand(const wchar_t *command, ServerConsol
       {
          TCHAR value[256];
          ExtractWord(pArg, value);
-         if (ConfigWriteStr(szBuffer, value, TRUE, TRUE, TRUE))
+         uint32_t rcc = ValidateConfigVariableValue(szBuffer, value);
+         if (rcc == RCC_INVALID_ARGUMENT)
+         {
+            ConsolePrintf(console, _T("ERROR: invalid value for configuration variable %s\n"), szBuffer);
+         }
+         else if ((rcc == RCC_SUCCESS) && ConfigWriteStr(szBuffer, value, TRUE, TRUE, TRUE))
          {
             ConsolePrintf(console, _T("Configuration variable %s updated\n"), szBuffer);
          }

@@ -24,6 +24,45 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.16 to 71.17
+ */
+static bool H_UpgradeFromV16()
+{
+   // Status shift for relative status propagation becomes a choice from -4 to +4
+   wchar_t value[64];
+   DBMgrConfigReadStr(L"Objects.StatusCalculation.Shift", value, 64, L"0");
+   wchar_t *end;
+   long shift = wcstol(value, &end, 10);
+   if ((end == value) || (*end != 0))
+      shift = 0;
+   else if (shift < -STATUS_CRITICAL)
+      shift = -STATUS_CRITICAL;
+   else if (shift > STATUS_CRITICAL)
+      shift = STATUS_CRITICAL;
+
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"UPDATE config SET var_value='%ld',data_type='C' WHERE var_name='Objects.StatusCalculation.Shift'", shift);
+   CHK_EXEC(SQLQuery(query));
+
+   static const wchar_t *batch =
+      L"DELETE FROM config_values WHERE var_name='Objects.StatusCalculation.Shift'\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.Shift','-4','Decrease by 4')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.Shift','-3','Decrease by 3')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.Shift','-2','Decrease by 2')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.Shift','-1','Decrease by 1')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.Shift','0','No shift')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.Shift','1','Increase by 1')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.Shift','2','Increase by 2')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.Shift','3','Increase by 3')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.Shift','4','Increase by 4')\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 71.15 to 71.16
  */
 static bool H_UpgradeFromV15()
@@ -345,6 +384,7 @@ static struct
    bool (*upgradeProc)();
    bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 16, 71, 17, H_UpgradeFromV16 },
    { 15, 71, 16, H_UpgradeFromV15 },
    { 14, 71, 15, H_UpgradeFromV14 },
    { 13, 71, 14, H_UpgradeFromV13, true },

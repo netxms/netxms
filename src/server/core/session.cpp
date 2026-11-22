@@ -3923,17 +3923,21 @@ void ClientSession::setConfigurationVariable(const NXCPMessage& request)
    {
       wchar_t oldValue[MAX_CONFIG_VALUE_LENGTH], newValue[MAX_CONFIG_VALUE_LENGTH];
       request.getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE_LENGTH);
-      ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE_LENGTH, L"");
-      if (ConfigWriteStr(name, newValue, true))
+      uint32_t rcc = ValidateConfigVariableValue(name, newValue);
+      if (rcc == RCC_SUCCESS)
       {
-         response.setField(VID_RCC, RCC_SUCCESS);
-         writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, 'T',
-            L"Server configuration variable \"%s\" changed from \"%s\" to \"%s\"", name, oldValue, newValue);
+         ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE_LENGTH, L"");
+         if (ConfigWriteStr(name, newValue, true))
+         {
+            writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, 'T',
+               L"Server configuration variable \"%s\" changed from \"%s\" to \"%s\"", name, oldValue, newValue);
+         }
+         else
+         {
+            rcc = RCC_DB_FAILURE;
+         }
       }
-      else
-      {
-         response.setField(VID_RCC, RCC_DB_FAILURE);
-      }
+      response.setField(VID_RCC, rcc);
    }
    else
    {

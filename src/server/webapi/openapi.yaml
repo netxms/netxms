@@ -278,8 +278,12 @@ paths:
       description: >-
         Set value of server configuration variable, creating it if it does not exist. Requires
         SERVER_CONFIG access right. New variables are created as visible string variables
-        without description, units, or default value. Hidden variables cannot be set. Change
-        takes effect immediately unless the variable is marked as requiring server restart.
+        without description, units, or default value. Hidden variables cannot be set. Value is
+        validated against variable's data type: INTEGER variables accept decimal or hexadecimal
+        (0x prefix) numbers from 0 to 2147483647, or to the upper limit given in possibleValues;
+        BOOLEAN variables accept true, false, or an integer number; CHOICE variables accept only
+        values listed in possibleValues. Change takes effect immediately unless the variable is
+        marked as requiring server restart.
       requestBody:
         required: true
         content:
@@ -294,7 +298,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServerConfigVariable'
         '400':
-          description: Invalid variable name, missing or invalid value, or value too long
+          description: Invalid variable name, missing or invalid value, value too long, or value not valid for variable's data type
         '401':
           description: Unauthorized
         '403':

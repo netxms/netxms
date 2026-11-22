@@ -1241,6 +1241,76 @@ char NXCORE_EXPORTABLE *ConfigReadStrUTF8(const wchar_t *variable, const char *d
 }
 
 /**
+ * Get numeric base for configuration value: 16 for numbers with 0x prefix, 10 otherwise
+ */
+static inline int GetConfigValueBase(const wchar_t *text)
+{
+   return ((text[0] == L'0') && ((text[1] == L'x') || (text[1] == L'X'))) ? 16 : 10;
+}
+
+/**
+ * Parse integer value of configuration variable. Accepts decimal number with optional sign or
+ * hexadecimal number with 0x prefix, optionally surrounded by whitespace. Returns false if text is
+ * not a number or does not fit into 64 bit signed integer. Text is trimmed in place.
+ */
+static bool ParseConfigValue(wchar_t *text, int64_t *value)
+{
+   TrimW(text);
+   wchar_t *end;
+   errno = 0;
+   *value = wcstoll(text, &end, GetConfigValueBase(text));
+   return (end != text) && (*end == 0) && (errno == 0);
+}
+
+/**
+ * Parse unsigned integer value of configuration variable. Accepts decimal number or hexadecimal
+ * number with 0x prefix, optionally surrounded by whitespace. Returns false if text is not
+ * a non-negative number or does not fit into 64 bit unsigned integer. Text is trimmed in place.
+ */
+static bool ParseConfigValue(wchar_t *text, uint64_t *value)
+{
+   TrimW(text);
+   if ((text[0] == L'-') || (text[0] == L'+'))
+      return false;  // wcstoull accepts and negates negative numbers
+   wchar_t *end;
+   errno = 0;
+   *value = wcstoull(text, &end, GetConfigValueBase(text));
+   return (end != text) && (*end == 0) && (errno == 0);
+}
+
+/**
+ * Parse boolean value of configuration variable. Accepts "true" and "false" (case insensitive) and
+ * integer numbers (non-zero means true), optionally surrounded by whitespace. Text is trimmed in place.
+ */
+static bool ParseConfigValue(wchar_t *text, bool *value)
+{
+   TrimW(text);
+   if (!wcsicmp(text, L"true"))
+   {
+      *value = true;
+      return true;
+   }
+   if (!wcsicmp(text, L"false"))
+   {
+      *value = false;
+      return true;
+   }
+   int64_t n;
+   if (!ParseConfigValue(text, &n))
+      return false;
+   *value = (n != 0);
+   return true;
+}
+
+/**
+ * Log invalid value of configuration variable which is replaced with default value
+ */
+static void LogInvalidConfigValue(const wchar_t *variable, const wchar_t *value)
+{
+   nxlog_debug_tag(L"config", 4, L"Invalid value \"%s\" of configuration variable %s, using default value", value, variable);
+}
+
+/**
  * Read boolean value from configuration table
  */
 bool NXCORE_EXPORTABLE ConfigReadBoolean(const wchar_t *variable, bool defaultValue)
@@ -1248,9 +1318,11 @@ bool NXCORE_EXPORTABLE ConfigReadBoolean(const wchar_t *variable, bool defaultVa
    wchar_t buffer[64];
    if (!ConfigReadStr(variable, buffer, 64, nullptr))
       return defaultValue;
-   if (!wcsicmp(buffer, L"true"))
-      return true;
-   return wcstol(buffer, nullptr, 0) != 0;
+   bool value;
+   if (ParseConfigValue(buffer, &value))
+      return value;
+   LogInvalidConfigValue(variable, buffer);
+   return defaultValue;
 }
 
 /**
@@ -1267,8 +1339,12 @@ int32_t NXCORE_EXPORTABLE ConfigReadInt(const wchar_t *variable, int32_t default
 int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const wchar_t *variable, int32_t defaultValue)
 {
    wchar_t buffer[64];
-   if (ConfigReadStrEx(hdb, variable, buffer, 64, nullptr))
-      return wcstol(buffer, nullptr, 0);
+   if (!ConfigReadStrEx(hdb, variable, buffer, 64, nullptr))
+      return defaultValue;
+   int64_t value;
+   if (ParseConfigValue(buffer, &value) && (value >= INT32_MIN) && (value <= INT32_MAX))
+      return static_cast<int32_t>(value);
+   LogInvalidConfigValue(variable, buffer);
    return defaultValue;
 }
 
@@ -1278,8 +1354,12 @@ int32_t NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const wchar_t *variable
 uint32_t NXCORE_EXPORTABLE ConfigReadULong(const wchar_t *variable, uint32_t defaultValue)
 {
    wchar_t buffer[64];
-   if (ConfigReadStr(variable, buffer, 64, L""))
-      return wcstoul(buffer, nullptr, 0);
+   if (!ConfigReadStr(variable, buffer, 64, nullptr))
+      return defaultValue;
+   uint64_t value;
+   if (ParseConfigValue(buffer, &value) && (value <= UINT32_MAX))
+      return static_cast<uint32_t>(value);
+   LogInvalidConfigValue(variable, buffer);
    return defaultValue;
 }
 
@@ -1289,8 +1369,12 @@ uint32_t NXCORE_EXPORTABLE ConfigReadULong(const wchar_t *variable, uint32_t def
 int64_t NXCORE_EXPORTABLE ConfigReadInt64(const wchar_t *variable, int64_t defaultValue)
 {
    wchar_t buffer[64];
-   if (ConfigReadStr(variable, buffer, 64, L""))
-      return wcstoll(buffer, nullptr, 10);
+   if (!ConfigReadStr(variable, buffer, 64, nullptr))
+      return defaultValue;
+   int64_t value;
+   if (ParseConfigValue(buffer, &value))
+      return value;
+   LogInvalidConfigValue(variable, buffer);
    return defaultValue;
 }
 
@@ -1300,8 +1384,12 @@ int64_t NXCORE_EXPORTABLE ConfigReadInt64(const wchar_t *variable, int64_t defau
 uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const wchar_t *variable, uint64_t defaultValue)
 {
    wchar_t buffer[64];
-   if (ConfigReadStr(variable, buffer, 64, L""))
-      return wcstoull(buffer, nullptr, 10);
+   if (!ConfigReadStr(variable, buffer, 64, nullptr))
+      return defaultValue;
+   uint64_t value;
+   if (ParseConfigValue(buffer, &value))
+      return value;
+   LogInvalidConfigValue(variable, buffer);
    return defaultValue;
 }
 
@@ -1473,6 +1561,116 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const wchar_t *variable, const wchar_t *va
    bool success = ConfigWriteStr(hdb, variable, value, create, isVisible, needRestart);
    DBConnectionPoolReleaseConnection(hdb);
    return success;
+}
+
+/**
+ * Read values listed for configuration variable in config_values table
+ */
+static bool ReadConfigVariableValueList(DB_HANDLE hdb, const wchar_t *variable, StringList *values)
+{
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config_values WHERE var_name=?");
+   if (hStmt == nullptr)
+      return false;
+
+   bool success = false;
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         values->addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
+      DBFreeResult(hResult);
+      success = true;
+   }
+   DBFreeStatement(hStmt);
+   return success;
+}
+
+/**
+ * Validate new value of configuration variable against variable's data type. Integer variables accept
+ * values from 0 to INT32_MAX, or to the upper limit stored in config_values if present. Boolean variables
+ * accept "true", "false" and integer numbers. Choice variables accept only values listed in config_values.
+ * Values of other types and values of unknown variables are not checked. Returns RCC_SUCCESS,
+ * RCC_INVALID_ARGUMENT or RCC_DB_FAILURE.
+ */
+uint32_t NXCORE_EXPORTABLE ValidateConfigVariableValue(const wchar_t *variable, const wchar_t *value)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   uint32_t rcc = RCC_DB_FAILURE;
+   wchar_t dataType = 0;
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT data_type FROM config WHERE var_name=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            wchar_t buffer[2];
+            DBGetField(hResult, 0, 0, buffer, 2);
+            dataType = buffer[0];
+         }
+         DBFreeResult(hResult);
+         rcc = RCC_SUCCESS;
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   if ((rcc == RCC_SUCCESS) && ((dataType == L'I') || (dataType == L'B') || (dataType == L'C')))
+   {
+      StringList allowedValues;
+      if ((dataType == L'B') || ReadConfigVariableValueList(hdb, variable, &allowedValues))
+      {
+         wchar_t buffer[64];
+         if (wcslen(value) < 64)
+         {
+            wcscpy(buffer, value);
+            if (dataType == L'I')
+            {
+               // First listed value is upper limit (management console uses it as spinner maximum)
+               int64_t maxValue = INT32_MAX;
+               if (!allowedValues.isEmpty())
+               {
+                  wchar_t limit[64];
+                  wcslcpy(limit, allowedValues.get(0), 64);
+                  int64_t n;
+                  if (ParseConfigValue(limit, &n) && (n < maxValue))
+                     maxValue = n;
+               }
+               int64_t n;
+               if (!ParseConfigValue(buffer, &n) || (n < 0) || (n > maxValue))
+                  rcc = RCC_INVALID_ARGUMENT;
+            }
+            else if (dataType == L'B')
+            {
+               bool b;
+               if (!ParseConfigValue(buffer, &b))
+                  rcc = RCC_INVALID_ARGUMENT;
+            }
+            else if (!allowedValues.contains(value))
+            {
+               rcc = RCC_INVALID_ARGUMENT;
+            }
+         }
+         else
+         {
+            rcc = RCC_INVALID_ARGUMENT;
+         }
+      }
+      else
+      {
+         rcc = RCC_DB_FAILURE;
+      }
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+
+   if (rcc == RCC_INVALID_ARGUMENT)
+      nxlog_debug_tag(L"config", 4, L"ValidateConfigVariableValue: value \"%s\" rejected for variable %s", value, variable);
+   return rcc;
 }
 
 /**

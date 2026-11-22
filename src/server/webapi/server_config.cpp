@@ -387,6 +387,18 @@ int H_ServerConfigVariableUpdate(Context *context)
    utf8_to_wchar(json_string_value(jsonValue), -1, newValue, MAX_CONFIG_VALUE_LENGTH);
    newValue[MAX_CONFIG_VALUE_LENGTH - 1] = 0;
 
+   uint32_t rcc = ValidateConfigVariableValue(name, newValue);
+   if (rcc == RCC_INVALID_ARGUMENT)
+   {
+      context->setErrorResponse("Invalid value for configuration variable");
+      return 400;
+   }
+   if (rcc != RCC_SUCCESS)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+
    wchar_t oldValue[MAX_CONFIG_VALUE_LENGTH];
    ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE_LENGTH, L"");
 

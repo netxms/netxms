@@ -21,10 +21,13 @@ package org.netxms.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.server.ServerVariable;
 
 /**
@@ -70,4 +73,71 @@ public class ServerConfigTest extends AbstractSessionTest
       System.out.println("value=" + value);
 
 	}
+
+   /**
+    * Check that setting variable to given value is rejected with RCC.INVALID_ARGUMENT
+    */
+   private static void assertRejected(NXCSession session, String name, String value)
+   {
+      NXCException e = assertThrows(NXCException.class, () -> session.setServerVariable(name, value), "value \"" + value + "\" accepted for " + name);
+      assertEquals(RCC.INVALID_ARGUMENT, e.getErrorCode());
+   }
+
+   /**
+    * Check that setting variable to given value is accepted and stored as is
+    */
+   private static void assertAccepted(NXCSession session, String name, String value) throws Exception
+   {
+      session.setServerVariable(name, value);
+      assertEquals(value, session.getServerVariables().get(name).getValue());
+   }
+
+   @Test
+   public void testValueValidation() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+
+      final String integerVariable = "Objects.Nodes.DefaultDecommissionExpirationTime";
+      final String portVariable = "Syslog.ListenPort";
+      final String booleanVariable = "Topology.AdHocRequest.IncludePhysicalLinks";
+      final String shiftVariable = "Objects.StatusCalculation.Shift";
+      final String choiceVariable = "Agent.DefaultCacheMode";
+
+      Map<String, ServerVariable> variables = session.getServerVariables();
+      String[] names = { integerVariable, portVariable, booleanVariable, shiftVariable, choiceVariable };
+      String[] originalValues = new String[names.length];
+      for(int i = 0; i < names.length; i++)
+         originalValues[i] = variables.get(names[i]).getValue();
+
+      try
+      {
+         for(String v : new String[] { "60junk", "abc", "", "-1", "4294967296", "-4294967236", "4294967356" })
+            assertRejected(session, integerVariable, v);
+         assertAccepted(session, integerVariable, "45");
+
+         assertRejected(session, portVariable, "70000");
+         assertAccepted(session, portVariable, "65535");
+
+         assertRejected(session, booleanVariable, "maybe");
+         assertAccepted(session, booleanVariable, "true");
+         assertAccepted(session, booleanVariable, "0");
+
+         assertRejected(session, shiftVariable, "-5");
+         assertRejected(session, shiftVariable, "5");
+         assertRejected(session, shiftVariable, "abc");
+         assertAccepted(session, shiftVariable, "-2");
+
+         assertRejected(session, choiceVariable, "7");
+         assertAccepted(session, choiceVariable, "1");
+
+         // Variables not known to the server are created as strings and not validated
+         assertAccepted(session, "TestVariable", "60junk");
+      }
+      finally
+      {
+         for(int i = 0; i < names.length; i++)
+            session.setServerVariable(names[i], originalValues[i]);
+         session.deleteServerVariable("TestVariable");
+      }
+   }
 }

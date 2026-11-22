@@ -18,7 +18,9 @@
  */
 package org.netxms.nxmc.modules.serverconfig.dialogs;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.jface.dialogs.Dialog;
@@ -134,7 +136,7 @@ public class VariableEditDialog extends Dialog
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
             comboValue = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Value"), gd);
-            for(Entry<String, String> e : variable.getPossibleValues().entrySet())
+            for(Entry<String, String> e : getSortedPossibleValues())
             {
                comboValue.add(e.getValue());
                int index = comboValue.getItemCount() - 1;
@@ -210,6 +212,28 @@ public class VariableEditDialog extends Dialog
 	{
 		return value;
 	}
+
+   /**
+    * Get possible values of the variable. Values are sorted numerically if all of them are integer numbers, otherwise they are
+    * returned in their original order.
+    *
+    * @return possible values of the variable
+    */
+   private List<Entry<String, String>> getSortedPossibleValues()
+   {
+      List<Entry<String, String>> values = new ArrayList<Entry<String, String>>(variable.getPossibleValues().entrySet());
+      try
+      {
+         for(Entry<String, String> e : values)
+            Long.parseLong(e.getKey());
+      }
+      catch(NumberFormatException e)
+      {
+         return values;
+      }
+      values.sort((e1, e2) -> Long.compare(Long.parseLong(e1.getKey()), Long.parseLong(e2.getKey())));
+      return values;
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
