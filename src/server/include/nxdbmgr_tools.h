@@ -70,9 +70,19 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const wchar_t *query, bool showOutput = fals
 bool LIBNXDBMGR_EXPORTABLE SQLBatch(const wchar_t *batch);
 const wchar_t LIBNXDBMGR_EXPORTABLE *GetSQLTypeName(int type);
 
+/**
+ * Bulk answer ("All" / "Skip") for one kind of confirmation prompt
+ */
+struct BulkAnswer
+{
+   bool yesForAll = false;
+   bool noForAll = false;
+};
+
 // Confirmations
 bool LIBNXDBMGR_EXPORTABLE GetYesNo(const TCHAR *format, ...);
 bool LIBNXDBMGR_EXPORTABLE GetYesNoEx(const TCHAR *format, ...);
+bool LIBNXDBMGR_EXPORTABLE GetYesNoEx(BulkAnswer& bulkAnswer, const TCHAR *format, ...);
 void LIBNXDBMGR_EXPORTABLE ResetBulkYesNo();
 void LIBNXDBMGR_EXPORTABLE SetOperationInProgress(bool inProgress);
 

@@ -196,7 +196,9 @@ static void CheckBusinessServiceTicketServiceBindings()
    if (hResult != nullptr)
    {
       int numTickets = DBGetNumRows(hResult);
-      SetStageWorkTotal(numTickets);
+      SetStageWorkTotal(numTickets * 2);
+
+      // Tickets of deleted business service are deleted
       for(int i = 0; i < numTickets; i++)
       {
          uint32_t serviceId = DBGetFieldULong(hResult, i, 1);
@@ -204,26 +206,31 @@ static void CheckBusinessServiceTicketServiceBindings()
          {
             g_dbCheckErrors++;
             uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
-            if (GetYesNoEx(_T("Business service ticket %u refers to non-existing business service %u. Fix it?"), ticketId, serviceId))
+            if (GetYesNoEx(_T("Business service ticket %u refers to non-existing business service %u. Delete it?"), ticketId, serviceId))
             {
                if (DBMgrExecuteQueryOnObject(ticketId, _T("DELETE FROM business_service_tickets WHERE ticket_id=?")))
                   g_dbCheckFixes++;
             }
          }
-         else
+         UpdateStageProgress(1);
+      }
+
+      // Open tickets of existing business service with deleted original business service are closed
+      ResetBulkYesNo();
+      for(int i = 0; i < numTickets; i++)
+      {
+         uint32_t originalServiceId = DBGetFieldULong(hResult, i, 2);
+         if (businessServices.contains(DBGetFieldULong(hResult, i, 1)) && (originalServiceId != 0) &&
+             !businessServices.contains(originalServiceId) && (DBGetFieldULong(hResult, i, 3) == 0))
          {
-            uint32_t originalServiceId = DBGetFieldULong(hResult, i, 2);
-            if (originalServiceId != 0 && !businessServices.contains(originalServiceId) && (DBGetFieldULong(hResult, i, 3) == 0))
+            g_dbCheckErrors++;
+            uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
+            if (GetYesNoEx(_T("Open business service ticket %u refers to non-existing original business service %u. Close it?"), ticketId, originalServiceId))
             {
-               g_dbCheckErrors++;
-               uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
-               if (GetYesNoEx(_T("Business service ticket %u refers to non-existing business service %u. Fix it?"), ticketId, serviceId))
-               {
-                  TCHAR query[256];
-                  _sntprintf(query, 256, _T("UPDATE business_service_tickets SET close_timestamp=%u WHERE ticket_id=%u"), static_cast<uint32_t>(time(nullptr)), ticketId);
-                  if (SQLQuery(query))
-                     g_dbCheckFixes++;
-               }
+               TCHAR query[256];
+               _sntprintf(query, 256, _T("UPDATE business_service_tickets SET close_timestamp=%u WHERE ticket_id=%u"), static_cast<uint32_t>(time(nullptr)), ticketId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
             }
          }
          UpdateStageProgress(1);
@@ -274,6 +281,7 @@ static void CheckBusinessServiceTicketCheckBindings()
 static void CheckBusinessServiceTicketHierarchy()
 {
    StartStage(_T("Business service tickets - hierarchy"));
+   BulkAnswer deleteAnswer, closeAnswer;
 
    DB_RESULT hResult = SQLSelect(_T("SELECT ticket_id,original_ticket_id,close_timestamp FROM business_service_tickets"));
    if (hResult != nullptr)
@@ -298,7 +306,7 @@ static void CheckBusinessServiceTicketHierarchy()
             {
                g_dbCheckErrors++;
                uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
-               if (GetYesNoEx(_T("Business service ticket %u refers to non-existing parent business service ticket %u as original ticket. Fix it?"), ticketId, originalTicketId))
+               if (GetYesNoEx(deleteAnswer, _T("Business service ticket %u refers to non-existing parent business service ticket %u as original ticket. Fix it?"), ticketId, originalTicketId))
                {
                   if (DBMgrExecuteQueryOnObject(ticketId, _T("DELETE FROM business_service_tickets WHERE ticket_id=?")))
                      g_dbCheckFixes++;
@@ -308,7 +316,7 @@ static void CheckBusinessServiceTicketHierarchy()
             {
                g_dbCheckErrors++;
                uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
-               if (GetYesNoEx(_T("Opened business service ticket %u refers to closed parent business service ticket %u. Fix it?"), ticketId, originalTicketId))
+               if (GetYesNoEx(closeAnswer, _T("Opened business service ticket %u refers to closed parent business service ticket %u. Fix it?"), ticketId, originalTicketId))
                {
                   _sntprintf(query, 512, _T("UPDATE business_service_tickets SET close_timestamp=%d WHERE ticket_id=%d"), DBGetFieldULong(originalTicketResult, 0, 0), ticketId);
                   if (SQLQuery(query))
@@ -972,7 +980,8 @@ static void CheckDuplicateSubnets()
 }
 
 /**
- * Check node objects
+ * Check node objects. Unlinked nodes are first offered for linking to a subnet, and only nodes that remain
+ * unlinked are offered for deletion in a separate pass, so a bulk answer to one kind of prompt does not answer the other.
  */
 static void CheckNodes()
 {
@@ -980,7 +989,8 @@ static void CheckNodes()
    DB_RESULT hResult = SQLSelect(_T("SELECT n.id,p.name FROM nodes n INNER JOIN object_properties p ON p.object_id = n.id WHERE p.is_deleted=0"));
    int count = DBGetNumRows(hResult);
    SetStageWorkTotal(count);
-   for(int i = 0; i < count; i++)
+   IntegerArray<int> unlinkedNodes;  // Row numbers of nodes that remain unlinked
+   for(int i = 0; (i < count) && !IsCheckAborted(); i++)
    {
       uint32_t nodeId = DBGetFieldULong(hResult, i, 0);
 
@@ -992,31 +1002,43 @@ static void CheckNodes()
             TCHAR nodeName[MAX_OBJECT_NAME];
             DBGetField(hResult, i, 1, nodeName, MAX_OBJECT_NAME);
             if (!FindSubnetForNode(nodeId, nodeName))
-            {
-               g_dbCheckErrors++;
-               if (GetYesNoEx(_T("Unlinked node object \"%s\" [%u]. Delete it?"), nodeName, nodeId))
-               {
-                  bool success = SQLQuery(StringBuffer(_T("DELETE FROM nodes WHERE id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM acl WHERE object_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM icmp_statistics WHERE object_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM icmp_target_address_list WHERE node_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM software_inventory WHERE node_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM hardware_inventory WHERE node_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_components WHERE node_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_areas WHERE node_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_neighbors WHERE node_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_snmp_agents WHERE node_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM agent_config_cache WHERE node_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM device_configs WHERE node_id=")).append(nodeId));
-                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM radios WHERE owner_id=")).append(nodeId));
-                  if (success && SQLQuery(StringBuffer(_T("DELETE FROM object_properties WHERE object_id=")).append(nodeId)))
-                     g_dbCheckFixes++;
-               }
-            }
+               unlinkedNodes.add(i);
          }
          DBFreeResult(hResult2);
       }
       UpdateStageProgress(1);
+   }
+
+   // A failed query in the linking pass could make a linked node look unlinked
+   if (!IsCheckAborted())
+   {
+      ResetBulkYesNo();
+      for(int i = 0; i < unlinkedNodes.size(); i++)
+      {
+         int row = unlinkedNodes.get(i);
+         uint32_t nodeId = DBGetFieldULong(hResult, row, 0);
+         TCHAR nodeName[MAX_OBJECT_NAME];
+         DBGetField(hResult, row, 1, nodeName, MAX_OBJECT_NAME);
+         g_dbCheckErrors++;
+         if (GetYesNoEx(_T("Unlinked node object \"%s\" [%u]. Delete it?"), nodeName, nodeId))
+         {
+            bool success = SQLQuery(StringBuffer(_T("DELETE FROM nodes WHERE id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM acl WHERE object_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM icmp_statistics WHERE object_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM icmp_target_address_list WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM software_inventory WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM hardware_inventory WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_components WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_areas WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_neighbors WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_snmp_agents WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM agent_config_cache WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM device_configs WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(_T("DELETE FROM radios WHERE owner_id=")).append(nodeId));
+            if (success && SQLQuery(StringBuffer(_T("DELETE FROM object_properties WHERE object_id=")).append(nodeId)))
+               g_dbCheckFixes++;
+         }
+      }
    }
    DBFreeResult(hResult);
    EndStage();
@@ -1929,6 +1951,7 @@ static void CheckDataCollectionItems()
       DBFreeResult(hResult);
    }
 
+   ResetBulkYesNo();
    hResult = SQLSelect(_T("SELECT item_id,node_id FROM dc_tables WHERE node_id NOT IN (SELECT object_id FROM object_properties)"));
    if (hResult != nullptr)
    {
@@ -2053,41 +2076,39 @@ static void CheckDataTables()
       EndStage();
       return;
    }
-	SetStageWorkTotal(targets.size());
-	for(int i = 0; (i < targets.size()) && !IsCheckAborted(); i++)
+   SetStageWorkTotal(targets.size() * 2);
+   for(int i = 0; (i < targets.size()) && !IsCheckAborted(); i++)
    {
-	   uint32_t objectId = targets.get(i);
-
-      // IDATA
-      if (!IsDataTableExist(_T("idata_%u"), objectId))
+      uint32_t objectId = targets.get(i);
+      if (!IsDataTableExist(L"idata_%u", objectId))
       {
-			g_dbCheckErrors++;
-
-         TCHAR objectName[MAX_OBJECT_NAME];
+         g_dbCheckErrors++;
+         wchar_t objectName[MAX_OBJECT_NAME];
          DBMgrGetObjectName(objectId, objectName);
-			if (!IsCheckAborted() && GetYesNoEx(_T("Data collection table (IDATA) for object %s [%d] not found. Create? (Y/N) "), objectName, objectId))
-			{
-				if (CreateIDataTable(objectId))
-					g_dbCheckFixes++;
-			}
+         if (!IsCheckAborted() && GetYesNoEx(L"Data collection table (IDATA) for object %s [%u] not found. Create?", objectName, objectId))
+         {
+            if (CreateIDataTable(objectId))
+               g_dbCheckFixes++;
+         }
       }
+      UpdateStageProgress(1);
+   }
 
-      // TDATA
-      if (IsCheckAborted())
-         break;   // Object name lookup or IDATA table creation failed
-      if (!IsDataTableExist(_T("tdata_%u"), objectId))
+   ResetBulkYesNo();
+   for(int i = 0; (i < targets.size()) && !IsCheckAborted(); i++)
+   {
+      uint32_t objectId = targets.get(i);
+      if (!IsDataTableExist(L"tdata_%u", objectId))
       {
-			g_dbCheckErrors++;
-
-         TCHAR objectName[MAX_OBJECT_NAME];
+         g_dbCheckErrors++;
+         wchar_t objectName[MAX_OBJECT_NAME];
          DBMgrGetObjectName(objectId, objectName);
-			if (!IsCheckAborted() && GetYesNoEx(_T("Data collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), objectName, objectId))
-			{
-				if (CreateTDataTable(objectId))
-					g_dbCheckFixes++;
-			}
+         if (!IsCheckAborted() && GetYesNoEx(L"Data collection table (TDATA) for object %s [%u] not found. Create?", objectName, objectId))
+         {
+            if (CreateTDataTable(objectId))
+               g_dbCheckFixes++;
+         }
       }
-
       UpdateStageProgress(1);
    }
 	EndStage();
@@ -2155,6 +2176,7 @@ static void CheckTemplateToTargetMapping()
 {
    TCHAR name[256], query[256];
    StartStage(_T("Template mapping"));
+   BulkAnswer fixAnswer, deleteAnswer;
    DB_RESULT hResult = SQLSelect(_T("SELECT template_id,node_id FROM dct_node_map ORDER BY template_id"));
    if (hResult != nullptr)
    {
@@ -2182,7 +2204,7 @@ static void CheckTemplateToTargetMapping()
             if (IsDatabaseRecordExist(g_dbHandle, _T("object_containers"), _T("id"), templateId))
             {
                g_dbCheckErrors++;
-               if (GetYesNoEx(_T("Found possibly misplaced object binding %u to %u. Fix it?"), templateId, targetId))
+               if (GetYesNoEx(fixAnswer, _T("Found possibly misplaced object binding %u to %u. Fix it?"), templateId, targetId))
                {
                   _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%u AND node_id=%u"), templateId, targetId);
                   if (SQLQuery(query))
@@ -2207,7 +2229,7 @@ static void CheckTemplateToTargetMapping()
             {
                g_dbCheckErrors++;
                DBMgrGetObjectName(templateId, name);
-               if (GetYesNoEx(_T("Template %u [%s] mapped to non-existent object %u. Delete this mapping?"), templateId, name, targetId))
+               if (GetYesNoEx(deleteAnswer, _T("Template %u [%s] mapped to non-existent object %u. Delete this mapping?"), templateId, name, targetId))
                {
                   _sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%u AND node_id=%u"), templateId, targetId);
                   if (SQLQuery(query))
@@ -2271,6 +2293,7 @@ static void CheckAssetNodeLinks()
 {
    TCHAR name[256], query[512];
    StartStage(_T("Asset to node links"));
+   BulkAnswer componentAnswer, misplacedAnswer, deleteAnswer;
    DB_RESULT hResult = SQLSelect(_T("SELECT id,linked_object_id,component_serial FROM assets WHERE linked_object_id!=0"));
    if (hResult != nullptr)
    {
@@ -2294,7 +2317,7 @@ static void CheckAssetNodeLinks()
                {
                   g_dbCheckErrors++;
                   DBMgrGetObjectName(assetId, name);
-                  if (GetYesNoEx(_T("Asset %u [%s] linked to component \"%s\" of object %u which is not a node. Fix it?"), assetId, name, componentSerial, nodeId))
+                  if (GetYesNoEx(componentAnswer, _T("Asset %u [%s] linked to component \"%s\" of object %u which is not a node. Fix it?"), assetId, name, componentSerial, nodeId))
                   {
                      _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0,component_serial=NULL WHERE id=%u"), assetId);
                      if (SQLQuery(query))
@@ -2311,7 +2334,7 @@ static void CheckAssetNodeLinks()
                   if (DBGetNumRows(checkResult) == 0)
                   {
                      g_dbCheckErrors++;
-                     if (GetYesNoEx(_T("Found possibly misplaced asset linking %u to object %u. Fix it?"), assetId, nodeId))
+                     if (GetYesNoEx(misplacedAnswer, _T("Found possibly misplaced asset linking %u to object %u. Fix it?"), assetId, nodeId))
                      {
                         _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0,component_serial=NULL WHERE id=%u"), assetId);
                         if (SQLQuery(query))
@@ -2328,7 +2351,7 @@ static void CheckAssetNodeLinks()
          {
             g_dbCheckErrors++;
             DBMgrGetObjectName(assetId, name);
-            if (GetYesNoEx(_T("Asset %u [%s] linked to non-existent node %d. Delete this mapping?"), assetId, name, nodeId))
+            if (GetYesNoEx(deleteAnswer, _T("Asset %u [%s] linked to non-existent node %d. Delete this mapping?"), assetId, name, nodeId))
             {
                _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0,component_serial=NULL WHERE id=%u"), assetId);
                if (SQLQuery(query))
@@ -2342,6 +2365,7 @@ static void CheckAssetNodeLinks()
    EndStage();
 
    StartStage(_T("Node to asset links"));
+   BulkAnswer nodeMisplacedAnswer, nodeDeleteAnswer;
    hResult = SQLSelect(_T("SELECT object_id,asset_id FROM object_properties WHERE asset_id!=0"));
    if (hResult != nullptr)
    {
@@ -2362,7 +2386,7 @@ static void CheckAssetNodeLinks()
                if (DBGetNumRows(checkResult) == 0)
                {
                   g_dbCheckErrors++;
-                  if (GetYesNoEx(_T("Found possibly misplaced object linking %u to asset %u. Fix it?"), nodeId, assetId))
+                  if (GetYesNoEx(nodeMisplacedAnswer, _T("Found possibly misplaced object linking %u to asset %u. Fix it?"), nodeId, assetId))
                   {
                      _sntprintf(query, 512, _T("UPDATE object_properties SET asset_id=0 WHERE object_id=%u"), nodeId);
                      if (SQLQuery(query))
@@ -2378,7 +2402,7 @@ static void CheckAssetNodeLinks()
          {
             g_dbCheckErrors++;
             DBMgrGetObjectName(nodeId, name);
-            if (GetYesNoEx(_T("Node %u [%s] linked to non-existent asset %d. Delete this mapping?"), nodeId, name, assetId))
+            if (GetYesNoEx(nodeDeleteAnswer, _T("Node %u [%s] linked to non-existent asset %d. Delete this mapping?"), nodeId, name, assetId))
             {
                _sntprintf(query, 512, _T("UPDATE object_properties SET asset_id=0 WHERE object_id=%u"), nodeId);
                if (SQLQuery(query))

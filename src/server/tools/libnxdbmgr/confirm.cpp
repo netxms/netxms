@@ -66,11 +66,9 @@ void LIBNXDBMGR_EXPORTABLE SetDBMgrForcedConfirmationMode(bool forced)
 }
 
 /**
- * Flag for "all" answer in GetYesNo
+ * Bulk answer used by GetYesNoEx without caller-supplied bulk answer
  */
-static bool s_yesForAll = false;
-static bool s_noForAll = false;
-
+static BulkAnswer s_bulkAnswer;
 
 /**
  * Fail execution if fix required
@@ -86,9 +84,9 @@ void LIBNXDBMGR_EXPORTABLE SetDBMgrFailOnFixMode(bool fail)
 }
 
 /**
- * Get Yes or No answer from keyboard
+ * Get Yes or No answer from keyboard. Bulk answers ("All" / "Skip") are offered only when bulkAnswer is not null.
  */
-static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
+static bool GetYesNoInternal(BulkAnswer *bulkAnswer, const TCHAR *format, va_list args)
 {
    if (g_failOnFix)
    {
@@ -98,9 +96,9 @@ static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
 
    if (s_guiMode)
    {
-      if (s_forcedConfirmation || s_yesForAll)
+      if (s_forcedConfirmation || ((bulkAnswer != nullptr) && bulkAnswer->yesForAll))
          return true;
-      if (s_noForAll)
+      if ((bulkAnswer != nullptr) && bulkAnswer->noForAll)
          return false;
 
       TCHAR message[8192];
@@ -117,14 +115,14 @@ static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
       if (m_operationInProgress)
          _tprintf(_T("\n"));
       _vtprintf(format, args);
-      _tprintf(allowBulk ? _T(" (Yes/No/All/Skip) ") : _T(" (Yes/No) "));
+      _tprintf((bulkAnswer != nullptr) ? _T(" (Yes/No/All/Skip) ") : _T(" (Yes/No) "));
 
-      if (s_forcedConfirmation || s_yesForAll)
+      if (s_forcedConfirmation || ((bulkAnswer != nullptr) && bulkAnswer->yesForAll))
       {
          _tprintf(_T("Y\n"));
          return true;
       }
-      else if (s_noForAll)
+      else if ((bulkAnswer != nullptr) && bulkAnswer->noForAll)
       {
          _tprintf(_T("N\n"));
          return false;
@@ -140,10 +138,10 @@ static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
                _tprintf(_T("Y\n"));
                return true;
             }
-            if (allowBulk && ((ch == 'a') || (ch == 'A')))
+            if ((bulkAnswer != nullptr) && ((ch == 'a') || (ch == 'A')))
             {
                _tprintf(_T("A\n"));
-               s_yesForAll = true;
+               bulkAnswer->yesForAll = true;
                return true;
             }
             if ((ch == 'n') || (ch == 'N'))
@@ -151,10 +149,10 @@ static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
                _tprintf(_T("N\n"));
                return false;
             }
-            if (allowBulk && ((ch == 's') || (ch == 'S')))
+            if ((bulkAnswer != nullptr) && ((ch == 's') || (ch == 'S')))
             {
                _tprintf(_T("S\n"));
-               s_noForAll = true;
+               bulkAnswer->noForAll = true;
                return false;
             }
          }
@@ -163,22 +161,22 @@ static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
          TCHAR buffer[16];
          if (_fgetts(buffer, 16, stdin) == nullptr)
          {
-            if (allowBulk)
-               s_noForAll = true;
+            if (bulkAnswer != nullptr)
+               bulkAnswer->noForAll = true;
             return false;
          }
 
          Trim(buffer);
-         if (allowBulk)
+         if (bulkAnswer != nullptr)
          {
             if ((buffer[0] == 'a') || (buffer[0] == 'A'))
             {
-               s_yesForAll = true;
+               bulkAnswer->yesForAll = true;
                return true;
             }
             if ((buffer[0] == 's') || (buffer[0] == 'S'))
             {
-               s_noForAll = true;
+               bulkAnswer->noForAll = true;
                return false;
             }
          }
@@ -195,19 +193,33 @@ bool LIBNXDBMGR_EXPORTABLE GetYesNo(const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   bool result = GetYesNoInternal(false, format, args);
+   bool result = GetYesNoInternal(nullptr, format, args);
    va_end(args);
    return result;
 }
 
 /**
- * Get Yes or No answer from keyboard (with bulk answer options)
+ * Get Yes or No answer from keyboard (with bulk answer options). Bulk answer is shared by all such prompts
+ * until reset by ResetBulkYesNo() (StartStage() and EndStage() reset it).
  */
 bool LIBNXDBMGR_EXPORTABLE GetYesNoEx(const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   bool result = GetYesNoInternal(true, format, args);
+   bool result = GetYesNoInternal(&s_bulkAnswer, format, args);
+   va_end(args);
+   return result;
+}
+
+/**
+ * Get Yes or No answer from keyboard (with bulk answer options). Bulk answer is kept in caller-supplied object,
+ * so prompts of different kinds within one stage do not answer each other.
+ */
+bool LIBNXDBMGR_EXPORTABLE GetYesNoEx(BulkAnswer& bulkAnswer, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   bool result = GetYesNoInternal(&bulkAnswer, format, args);
    va_end(args);
    return result;
 }
@@ -217,6 +229,6 @@ bool LIBNXDBMGR_EXPORTABLE GetYesNoEx(const TCHAR *format, ...)
  */
 void LIBNXDBMGR_EXPORTABLE ResetBulkYesNo()
 {
-   s_yesForAll = false;
-   s_noForAll = false;
+   s_bulkAnswer.yesForAll = false;
+   s_bulkAnswer.noForAll = false;
 }
