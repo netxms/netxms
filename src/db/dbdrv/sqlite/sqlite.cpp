@@ -706,11 +706,13 @@ static uint32_t Commit(DBDRV_CONNECTION connection)
 }
 
 /**
- * Rollback transaction
+ * Rollback transaction. Succeeds without action if SQLite has already rolled back transaction
+ * on its own (for example after SQLITE_FULL or SQLITE_IOERR on commit).
  */
 static uint32_t Rollback(DBDRV_CONNECTION connection)
 {
-   return QueryInternal(static_cast<SQLITE_CONN*>(connection), "ROLLBACK", nullptr);
+   auto c = static_cast<SQLITE_CONN*>(connection);
+   return sqlite3_get_autocommit(c->pdb) ? DBERR_SUCCESS : QueryInternal(c, "ROLLBACK", nullptr);
 }
 
 /**

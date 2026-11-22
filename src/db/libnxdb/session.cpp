@@ -1979,25 +1979,53 @@ bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
 }
 
 /**
- * Commit transaction
+ * Drop native session after failed rollback, because native transaction may still be open on it.
+ * Database server rolls back transaction left open by terminated session. Caller must hold transaction lock.
+ */
+static void DiscardUnresolvedTransaction(DB_HANDLE hConn)
+{
+   if (hConn->m_reconnectEnabled)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_CONNECTION, _T("Transaction state on database connection %p is unknown after failed rollback, reconnecting"), hConn);
+      DBReconnect(hConn);
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_CONNECTION, _T("Transaction state on database connection %p is unknown after failed rollback (reconnect disabled)"), hConn);
+   }
+}
+
+/**
+ * Commit transaction. Failed commit of outermost transaction is followed by native rollback, so native
+ * transaction is closed before connection is used again.
  */
 bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 {
-   bool bRet = false;
+   bool success = false;
 
    hConn->m_mutexTransLock.lock();
    if (hConn->m_transactionLevel > 0)
    {
       hConn->m_transactionLevel--;
       if (hConn->m_transactionLevel == 0)
-         bRet = (hConn->m_driver->m_callTable.Commit(hConn->m_connection) == DBERR_SUCCESS);
+      {
+         success = (hConn->m_driver->m_callTable.Commit(hConn->m_connection) == DBERR_SUCCESS);
+         if (!success)
+         {
+            nxlog_debug_tag(DEBUG_TAG_QUERY, 4, _T("COMMIT TRANSACTION failed, rolling back"));
+            if (hConn->m_driver->m_callTable.Rollback(hConn->m_connection) != DBERR_SUCCESS)
+               DiscardUnresolvedTransaction(hConn);
+         }
+      }
       else
-         bRet = true;
-		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("COMMIT TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
+      {
+         success = true;
+      }
+		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("COMMIT TRANSACTION %s (level %d)"), success ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
       hConn->m_mutexTransLock.unlock();
    }
    hConn->m_mutexTransLock.unlock();
-   return bRet;
+   return success;
 }
 
 /**
@@ -2005,21 +2033,27 @@ bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
  */
 bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 {
-   bool bRet = false;
+   bool success = false;
 
    hConn->m_mutexTransLock.lock();
    if (hConn->m_transactionLevel > 0)
    {
       hConn->m_transactionLevel--;
       if (hConn->m_transactionLevel == 0)
-         bRet = (hConn->m_driver->m_callTable.Rollback(hConn->m_connection) == DBERR_SUCCESS);
+      {
+         success = (hConn->m_driver->m_callTable.Rollback(hConn->m_connection) == DBERR_SUCCESS);
+         if (!success)
+            DiscardUnresolvedTransaction(hConn);
+      }
       else
-         bRet = true;
-		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("ROLLBACK TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
+      {
+         success = true;
+      }
+		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("ROLLBACK TRANSACTION %s (level %d)"), success ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
       hConn->m_mutexTransLock.unlock();
    }
    hConn->m_mutexTransLock.unlock();
-   return bRet;
+   return success;
 }
 
 /**

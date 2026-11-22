@@ -138,6 +138,93 @@ static void CommonTests(const TCHAR *prefix, const TCHAR *driver, const TCHAR *s
 }
 
 /**
+ * Count rows in given table
+ */
+static int64_t CountRows(DB_HANDLE session, const TCHAR *table)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT count(*) FROM %s"), table);
+   DB_RESULT hResult = DBSelect(session, query);
+   if (hResult == nullptr)
+      return -1;
+   int64_t count = DBGetFieldInt64(hResult, 0, 0);
+   DBFreeResult(hResult);
+   return count;
+}
+
+/**
+ * Failed commit must not leave native transaction open (SQLite only - relies on deferred foreign key check at commit)
+ */
+static void TestSQLiteFailedCommit()
+{
+   StartTest(_T("SQLite: failed commit"));
+
+   DB_DRIVER drv = DBLoadDriver(_T("sqlite.ddr"), _T(""), nullptr, nullptr);
+   AssertNotNull(drv);
+
+   TCHAR buffer[DBDRV_MAX_ERROR_TEXT];
+   DB_HANDLE session = DBConnect(drv, nullptr, SQLITE_DB, nullptr, nullptr, nullptr, buffer);
+   AssertNotNullEx(session, buffer);
+   DB_HANDLE observer = DBConnect(drv, nullptr, SQLITE_DB, nullptr, nullptr, nullptr, buffer);
+   AssertNotNullEx(observer, buffer);
+
+   if (DBIsTableExist(session, _T("nx_test_child")) == DBIsTableExist_Found)
+      DBQuery(session, _T("DROP TABLE nx_test_child"));
+   if (DBIsTableExist(session, _T("nx_test_parent")) == DBIsTableExist_Found)
+      DBQuery(session, _T("DROP TABLE nx_test_parent"));
+   AssertTrueEx(DBQueryEx(session, _T("CREATE TABLE nx_test_parent (id integer not null, PRIMARY KEY(id))"), buffer), buffer);
+   AssertTrueEx(DBQueryEx(session, _T("CREATE TABLE nx_test_child (id integer not null, parent_id integer REFERENCES nx_test_parent(id) DEFERRABLE INITIALLY DEFERRED, PRIMARY KEY(id))"), buffer), buffer);
+
+   // Observer reads only while session has no open write transaction: SQLite driver uses shared cache,
+   // so reading table locked by another connection's transaction would block.
+
+   // Outermost commit fails on deferred constraint
+   AssertTrue(DBBegin(session));
+   AssertTrueEx(DBQueryEx(session, _T("INSERT INTO nx_test_child (id,parent_id) VALUES (1,100)"), buffer), buffer);
+   AssertFalse(DBCommit(session));
+
+   // Native transaction is closed: new transaction can be started and statement outside transaction is committed
+   AssertTrue(DBBegin(session));
+   AssertTrue(DBRollback(session));
+   AssertTrueEx(DBQueryEx(session, _T("INSERT INTO nx_test_parent (id) VALUES (1)"), buffer), buffer);
+   AssertEquals(CountRows(observer, _T("nx_test_parent")), static_cast<int64_t>(1));
+   AssertEquals(CountRows(observer, _T("nx_test_child")), static_cast<int64_t>(0));
+
+   // Inner level commit does not issue native commit
+   AssertTrue(DBBegin(session));
+   AssertTrue(DBBegin(session));
+   AssertTrueEx(DBQueryEx(session, _T("INSERT INTO nx_test_child (id,parent_id) VALUES (2,1)"), buffer), buffer);
+   AssertTrue(DBCommit(session));
+   AssertTrue(DBRollback(session));
+   AssertEquals(CountRows(observer, _T("nx_test_child")), static_cast<int64_t>(0));
+
+   // Failure of outermost commit after successful inner commit
+   AssertTrue(DBBegin(session));
+   AssertTrue(DBBegin(session));
+   AssertTrueEx(DBQueryEx(session, _T("INSERT INTO nx_test_child (id,parent_id) VALUES (3,300)"), buffer), buffer);
+   AssertTrue(DBCommit(session));
+   AssertFalse(DBCommit(session));
+
+   // Connection remains usable for successful transaction
+   AssertTrue(DBBegin(session));
+   AssertTrueEx(DBQueryEx(session, _T("INSERT INTO nx_test_child (id,parent_id) VALUES (4,1)"), buffer), buffer);
+   AssertTrue(DBCommit(session));
+   AssertEquals(CountRows(observer, _T("nx_test_child")), static_cast<int64_t>(1));
+
+   // Rollback succeeds when native transaction has already ended
+   AssertTrue(DBBegin(session));
+   AssertTrueEx(DBQueryEx(session, _T("ROLLBACK"), buffer), buffer);
+   AssertTrue(DBRollback(session));
+
+   AssertTrue(DBQuery(session, _T("DROP TABLE nx_test_child")));
+   AssertTrue(DBQuery(session, _T("DROP TABLE nx_test_parent")));
+   DBDisconnect(observer);
+   DBDisconnect(session);
+   DBUnloadDriver(drv);
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -174,6 +261,7 @@ int main(int argc, char *argv[])
    if (!skipSQLite)
    {
       CommonTests(_T("SQLite"), _T("sqlite.ddr"), SQLITE_DB, NULL, NULL, NULL, _T("SQLITE"));
+      TestSQLiteFailedCommit();
    }
    return 0;
 }
