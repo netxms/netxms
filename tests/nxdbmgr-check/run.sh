@@ -17,7 +17,10 @@
 #   3. inject-defects.sql, forced check; log must contain every line of expected-first-run.txt and
 #      none of unexpected-first-run.txt; assert-after-first-run.sql must pass
 #   4. cleanup-report-only.sql, check must be clean; assert-after-cleanup.sql must pass
-#   5. every batch or check that prints "SQL query failed" fails the run
+#   5. inject-bulk-answer.sql, check with answers fed on stdin: "All" to the first link prompt must
+#      not answer the delete prompt of the same stage; assert-after-bulk-answer.sql must pass
+#
+# Every batch or check that prints "SQL query failed" fails the run.
 #
 # Assertion files are ordinary SQL batches: a false condition inserts a duplicate key into
 # nxdbmgr_check_assert, which fails the statement (see baseline.sql).
@@ -116,6 +119,25 @@ run_check()
    fi
 }
 
+# run_interactive_check <log name> <answer>...
+# Runs a check without forced confirmation and feeds one answer line per prompt. A prompt that
+# finds no answer left reads end of file, which nxdbmgr treats as "Skip", and the final commit
+# prompt then rolls back, so a prompt sequence that differs from the expected one fails the
+# state assertions instead of hanging.
+run_interactive_check()
+{
+   local name="$1"
+   shift
+   printf '%s\n' "$@" | "$NXDBMGR" -c "$CONF" -q check > "$WORK/$name.log" 2>&1
+   local rc=$?
+   [ $rc -eq 0 ] || fail "check '$name' exited with $rc (see $WORK/$name.log)"
+   grep -q "Database check aborted" "$WORK/$name.log" && fail "check '$name' was aborted (see $WORK/$name.log)"
+   grep -q "Database check completed" "$WORK/$name.log" || fail "check '$name' did not complete (see $WORK/$name.log)"
+   if grep -q "SQL query failed" "$WORK/$name.log"; then
+      fail "check '$name' had a failed SQL query (see $WORK/$name.log)"
+   fi
+}
+
 # assert_clean <log name>
 assert_clean()
 {
@@ -164,6 +186,14 @@ run_batch "$FIXTURES/cleanup-report-only.sql" cleanup
 run_check final -E
 assert_clean final
 run_batch "$FIXTURES/assert-after-cleanup.sql" assert-final
+
+echo "Step 5: bulk answer scope"
+run_batch "$FIXTURES/inject-bulk-answer.sql" inject-bulk
+# Prompts: link node 990002 (All), delete node 999990 (No), commit (Yes)
+run_interactive_check bulk All No Yes
+grep -qF 'Unlinked node object "bulk-cannot-relink" [999990]. Delete it?' "$WORK/bulk.log" || fail "delete prompt for node 999990 not shown (see $WORK/bulk.log)"
+grep -qF 'Unlinked node object "bulk-cannot-relink" [999990]. Delete it? (Yes/No/All/Skip) Y' "$WORK/bulk.log" && fail "delete prompt for node 999990 answered by bulk answer to link prompt (see $WORK/bulk.log)"
+run_batch "$FIXTURES/assert-after-bulk-answer.sql" assert-bulk
 
 echo "PASS"
 STATUS=0
