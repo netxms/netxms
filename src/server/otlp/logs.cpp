@@ -177,6 +177,7 @@ int H_OtlpLogs(Context *context)
    nxlog_debug_tag(DEBUG_TAG_OTLP, 6, L"Received OTLP logs batch with %d resource logs", request.resource_logs_size());
 
    int matchedCount = 0;
+   int deniedCount = 0;
    int64_t rejectedRecords = 0;
 
    for (int r = 0; r < request.resource_logs_size(); r++)
@@ -191,6 +192,16 @@ int H_OtlpLogs(Context *context)
          continue;
       }
       matchedCount++;
+
+      if (!node->checkAccessRights(context->getUserId(), OBJECT_ACCESS_PUSH_DATA))
+      {
+         nxlog_debug_tag(DEBUG_TAG_OTLP, 4, L"OTLP logs for node %s [%u] rejected: user %s [%u] has no push data access",
+            node->getName(), node->getId(), context->getLoginName(), context->getUserId());
+         deniedCount++;
+         for (int s = 0; s < resourceLogs.scope_logs_size(); s++)
+            rejectedRecords += resourceLogs.scope_logs(s).log_records_size();
+         continue;
+      }
 
       std::map<std::string, std::string> attributes;
       ExtractResourceAttributes(resourceLogs.resource(), attributes);
@@ -209,11 +220,16 @@ int H_OtlpLogs(Context *context)
       }
    }
 
-   nxlog_debug_tag(DEBUG_TAG_OTLP, 5, L"OTLP logs batch processed: %d resources matched, " INT64_FMT " records rejected", matchedCount, rejectedRecords);
+   nxlog_debug_tag(DEBUG_TAG_OTLP, 5, L"OTLP logs batch processed: %d resources matched, %d access denied, " INT64_FMT " records rejected",
+      matchedCount, deniedCount, rejectedRecords);
 
    opentelemetry::proto::collector::logs::v1::ExportLogsServiceResponse response;
    if (rejectedRecords > 0)
+   {
       response.mutable_partial_success()->set_rejected_log_records(rejectedRecords);
+      if (deniedCount > 0)
+         response.mutable_partial_success()->set_error_message("Access denied to one or more matched nodes");
+   }
    SendOtlpResponse(context, response);
    return 200;
 }

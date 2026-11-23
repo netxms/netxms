@@ -435,6 +435,43 @@ static void ProcessMetricsForNode(const shared_ptr<Node>& node, const openteleme
 }
 
 /**
+ * Count data points of all metrics in given resource metrics block
+ */
+static int64_t CountDataPoints(const opentelemetry::proto::metrics::v1::ResourceMetrics& resourceMetrics)
+{
+   int64_t count = 0;
+   for (int s = 0; s < resourceMetrics.scope_metrics_size(); s++)
+   {
+      const auto& scopeMetrics = resourceMetrics.scope_metrics(s);
+      for (int m = 0; m < scopeMetrics.metrics_size(); m++)
+      {
+         const auto& metric = scopeMetrics.metrics(m);
+         switch (metric.data_case())
+         {
+            case opentelemetry::proto::metrics::v1::Metric::kGauge:
+               count += metric.gauge().data_points_size();
+               break;
+            case opentelemetry::proto::metrics::v1::Metric::kSum:
+               count += metric.sum().data_points_size();
+               break;
+            case opentelemetry::proto::metrics::v1::Metric::kHistogram:
+               count += metric.histogram().data_points_size();
+               break;
+            case opentelemetry::proto::metrics::v1::Metric::kExponentialHistogram:
+               count += metric.exponential_histogram().data_points_size();
+               break;
+            case opentelemetry::proto::metrics::v1::Metric::kSummary:
+               count += metric.summary().data_points_size();
+               break;
+            default:
+               break;
+         }
+      }
+   }
+   return count;
+}
+
+/**
  * Handler for OTLP metrics endpoint (POST /otlp-backend/metrics)
  */
 int H_OtlpMetrics(Context *context)
@@ -451,6 +488,8 @@ int H_OtlpMetrics(Context *context)
 
    int matchedCount = 0;
    int unmatchedCount = 0;
+   int deniedCount = 0;
+   int64_t rejectedDataPoints = 0;
 
    for (int r = 0; r < request.resource_metrics_size(); r++)
    {
@@ -465,6 +504,15 @@ int H_OtlpMetrics(Context *context)
       }
       matchedCount++;
 
+      if (!node->checkAccessRights(context->getUserId(), OBJECT_ACCESS_PUSH_DATA))
+      {
+         nxlog_debug_tag(DEBUG_TAG_OTLP, 4, L"OTLP metrics for node %s [%u] rejected: user %s [%u] has no push data access",
+            node->getName(), node->getId(), context->getLoginName(), context->getUserId());
+         deniedCount++;
+         rejectedDataPoints += CountDataPoints(resourceMetrics);
+         continue;
+      }
+
       // Process all scope metrics for this resource
       for (int s = 0; s < resourceMetrics.scope_metrics_size(); s++)
       {
@@ -472,9 +520,14 @@ int H_OtlpMetrics(Context *context)
       }
    }
 
-   nxlog_debug_tag(DEBUG_TAG_OTLP, 5, L"OTLP batch processed: %d matched, %d unmatched", matchedCount, unmatchedCount);
+   nxlog_debug_tag(DEBUG_TAG_OTLP, 5, L"OTLP batch processed: %d matched, %d unmatched, %d access denied", matchedCount, unmatchedCount, deniedCount);
 
    opentelemetry::proto::collector::metrics::v1::ExportMetricsServiceResponse response;
+   if (deniedCount > 0)
+   {
+      response.mutable_partial_success()->set_rejected_data_points(rejectedDataPoints);
+      response.mutable_partial_success()->set_error_message("Access denied to one or more matched nodes");
+   }
    SendOtlpResponse(context, response);
    return 200;
 }
