@@ -7628,49 +7628,28 @@ void ClientSession::deleteObject(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      // Check if it is a built-in object, like "Entire Network"
-      if (object->getId() >= 10)  // FIXME: change to 100
+      uint32_t rcc = object->checkAccessRights(m_userId, OBJECT_ACCESS_DELETE) ? ValidateObjectDeletion(*object) : RCC_ACCESS_DENIED;
+      if (rcc == RCC_SUCCESS)
       {
-         // Check access rights
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_DELETE))
+         // For templates and clusters, set the DCI removal option before deletion
+         if (object->getObjectClass() == OBJECT_TEMPLATE)
          {
-				if ((object->getObjectClass() == OBJECT_ZONE) && !object->isEmpty())
-				{
-	            response.setField(VID_RCC, RCC_ZONE_NOT_EMPTY);
-				}
-				else if ((object->getObjectClass() == OBJECT_ASSET) && !ConfigReadBoolean(_T("Objects.Assets.AllowDeleteIfLinked"), false) && (static_cast<Asset&>(*object).getLinkedObjectId() != 0))
-				{
-               response.setField(VID_RCC, RCC_ASSET_IS_LINKED);
-				}
-				else
-				{
-               // For templates and clusters, set the DCI removal option before deletion
-               if (object->getObjectClass() == OBJECT_TEMPLATE)
-               {
-                  bool removeDCI = request.isFieldExist(VID_REMOVE_DCI) ? request.getFieldAsBoolean(VID_REMOVE_DCI) : true;
-                  static_cast<Template&>(*object).setRemoveDCIOnDelete(removeDCI);
-               }
-               else if (object->getObjectClass() == OBJECT_CLUSTER)
-               {
-                  bool removeDCI = request.isFieldExist(VID_REMOVE_DCI) ? request.getFieldAsBoolean(VID_REMOVE_DCI) : true;
-                  static_cast<Cluster&>(*object).setRemoveDCIOnDelete(removeDCI);
-               }
-               ThreadPoolExecuteSerialized(g_clientThreadPool, _T("DeleteObject"), DeleteObjectWorker, object);
-               response.setField(VID_RCC, RCC_SUCCESS);
-               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_userId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
-				}
+            bool removeDCI = request.isFieldExist(VID_REMOVE_DCI) ? request.getFieldAsBoolean(VID_REMOVE_DCI) : true;
+            static_cast<Template&>(*object).setRemoveDCIOnDelete(removeDCI);
          }
-         else
+         else if (object->getObjectClass() == OBJECT_CLUSTER)
          {
-            response.setField(VID_RCC, RCC_ACCESS_DENIED);
-            WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, object->getId(), _T("Access denied on delete object %s"), object->getName());
+            bool removeDCI = request.isFieldExist(VID_REMOVE_DCI) ? request.getFieldAsBoolean(VID_REMOVE_DCI) : true;
+            static_cast<Cluster&>(*object).setRemoveDCIOnDelete(removeDCI);
          }
+         ThreadPoolExecuteSerialized(g_clientThreadPool, L"DeleteObject", DeleteObjectWorker, object);
+         WriteAuditLog(AUDIT_OBJECTS, true, m_userId, m_workstation, m_id, object->getId(), L"Object %s deleted", object->getName());
       }
-      else
+      else if (rcc == RCC_ACCESS_DENIED)
       {
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, object->getId(), _T("Access denied on delete object %s"), object->getName());
+         WriteAuditLog(AUDIT_OBJECTS, false, m_userId, m_workstation, m_id, object->getId(), L"Access denied on delete object %s", object->getName());
       }
+      response.setField(VID_RCC, rcc);
    }
    else
    {

@@ -1233,7 +1233,7 @@ static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
    NetObj *netobj = static_cast<shared_ptr<NetObj>*>(obj->getData())->get();
-   if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, netobj))
+   if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_DELETE, netobj) && (ValidateObjectDeletion(*netobj) == RCC_SUCCESS))
    {
       vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s deleted by script", netobj->getName());
       netobj->deleteObject();

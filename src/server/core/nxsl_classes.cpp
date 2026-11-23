@@ -314,12 +314,12 @@ NXSL_METHOD_DEFINITION(NetObj, createUserAgentNotification)
  */
 NXSL_METHOD_DEFINITION(NetObj, delete)
 {
-   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_DELETE, netobj) || (ValidateObjectDeletion(*netobj) != RCC_SUCCESS))
    {
       *result = vm->createValue(false);
       return 0;
    }
-   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s deleted by script", netobj->getName());
    netobj->deleteObject();
    *result = vm->createValue();
