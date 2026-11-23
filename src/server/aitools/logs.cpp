@@ -123,18 +123,29 @@ const TCHAR *GetEventSeverityName(int severity)
 }
 
 /**
- * Escape string for SQL LIKE pattern
+ * Escape clause to be placed after LIKE pattern produced by PrepareLikePattern
  */
-static StringBuffer EscapeSQLLikePattern(const TCHAR *pattern)
+#define LIKE_ESCAPE_CLAUSE L" ESCAPE '|'"
+
+/**
+ * Build quoted SQL string literal for LIKE matching of given UTF-8 text as substring (or as prefix if prefixMatch is true).
+ * LIKE wildcards in text are escaped with '|', so LIKE_ESCAPE_CLAUSE must follow the pattern in the query.
+ */
+static StringBuffer PrepareLikePattern(DB_HANDLE hdb, const char *text, bool prefixMatch)
 {
-   StringBuffer result;
-   for (const TCHAR *p = pattern; *p != 0; p++)
+   String s(text, "utf-8");
+   StringBuffer pattern;
+   if (!prefixMatch)
+      pattern.append(L'%');
+   for (const wchar_t *p = s.cstr(); *p != 0; p++)
    {
-      if ((*p == _T('%')) || (*p == _T('_')) || (*p == _T('\\')))
-         result.append(_T('\\'));
-      result.append(*p);
+      // Oracle accepts escape character only before %, _ and itself; [ is a wildcard only on MS SQL
+      if ((*p == L'%') || (*p == L'_') || (*p == L'|') || ((*p == L'[') && (g_dbSyntax == DB_SYNTAX_MSSQL)))
+         pattern.append(L'|');
+      pattern.append(*p);
    }
-   return result;
+   pattern.append(L'%');
+   return DBPrepareString(hdb, pattern);
 }
 
 /**
@@ -577,6 +588,7 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
 
    // Build query
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    StringBuffer query;
 
    query.append(_T("SELECT "));
@@ -624,15 +636,15 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
    // Text pattern filter
    if ((textPattern != nullptr) && (textPattern[0] != 0) && (textColumns.size() > 0))
    {
-      String escapedPattern = EscapeSQLLikePattern(String(textPattern, "utf-8"));
+      StringBuffer pattern = PrepareLikePattern(hdb, textPattern, false);
       query.append(_T(" AND ("));
       for (int i = 0; i < textColumns.size(); i++)
       {
          if (i > 0)
             query.append(_T(" OR "));
-         query.appendFormattedString(_T("LOWER(%s) LIKE LOWER('%%"), textColumns.get(i));
-         query.append(escapedPattern);
-         query.append(_T("%%')"));
+         query.appendFormattedString(_T("LOWER(%s) LIKE LOWER("), textColumns.get(i));
+         query.append(pattern);
+         query.append(L")" LIKE_ESCAPE_CLAUSE);
       }
       query.append(_T(")"));
    }
@@ -659,10 +671,8 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
                }
                else if (json_is_string(value))
                {
-                  String strVal(json_string_value(value), "utf-8");
-                  query.appendFormattedString(_T(" AND %s='"), log->columns[i].name);
-                  query.append(strVal);
-                  query.append(_T("'"));
+                  query.appendFormattedString(_T(" AND %s="), log->columns[i].name);
+                  query.append(DBPrepareStringUTF8(hdb, json_string_value(value)));
                }
                else if (json_is_array(value))
                {
@@ -679,11 +689,7 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
                      if (json_is_integer(elem))
                         query.appendFormattedString(_T("%lld"), (long long)json_integer_value(elem));
                      else if (json_is_string(elem))
-                     {
-                        query.append(_T("'"));
-                        query.append(String(json_string_value(elem), "utf-8"));
-                        query.append(_T("'"));
-                     }
+                        query.append(DBPrepareStringUTF8(hdb, json_string_value(elem)));
                   }
                   query.append(_T(")"));
                }
@@ -701,7 +707,6 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
    nxlog_debug_tag(DEBUG_TAG, 7, _T("F_SearchLog: executing query: %s"), query.cstr());
 
    // Execute query
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, query);
 
    json_t *output = json_object();
@@ -885,6 +890,7 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
    }
 
    // Build query
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    StringBuffer query;
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
 
@@ -935,18 +941,15 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
 
    if ((textPattern != nullptr) && (textPattern[0] != 0))
    {
-      String escapedPattern = EscapeSQLLikePattern(String(textPattern, "utf-8"));
-      query.append(_T(" AND LOWER(msg_text) LIKE LOWER('%"));
-      query.append(escapedPattern);
-      query.append(_T("%')"));
+      query.append(_T(" AND LOWER(msg_text) LIKE LOWER("));
+      query.append(PrepareLikePattern(hdb, textPattern, false));
+      query.append(L")" LIKE_ESCAPE_CLAUSE);
    }
 
    if ((tagFilter != nullptr) && (tagFilter[0] != 0))
    {
-      String tag(tagFilter, "utf-8");
-      query.append(_T(" AND msg_tag='"));
-      query.append(tag);
-      query.append(_T("'"));
+      query.append(_T(" AND msg_tag="));
+      query.append(DBPrepareStringUTF8(hdb, tagFilter));
    }
 
    query.append(_T(" ORDER BY msg_timestamp DESC"));
@@ -954,7 +957,6 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
    ApplyQueryRowLimit(query, limit);
 
    // Execute query
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, query);
 
    json_t *output = json_object();
@@ -1091,6 +1093,7 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
    }
 
    // Build query
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    StringBuffer query;
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
 
@@ -1117,18 +1120,14 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
 
    if ((logName != nullptr) && (logName[0] != 0))
    {
-      String log(logName, "utf-8");
-      query.append(_T(" AND log_name='"));
-      query.append(log);
-      query.append(_T("'"));
+      query.append(_T(" AND log_name="));
+      query.append(DBPrepareStringUTF8(hdb, logName));
    }
 
    if ((eventSource != nullptr) && (eventSource[0] != 0))
    {
-      String source(eventSource, "utf-8");
-      query.append(_T(" AND event_source='"));
-      query.append(source);
-      query.append(_T("'"));
+      query.append(_T(" AND event_source="));
+      query.append(DBPrepareStringUTF8(hdb, eventSource));
    }
 
    if (severities.size() > 0)
@@ -1157,10 +1156,9 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
 
    if ((textPattern != nullptr) && (textPattern[0] != 0))
    {
-      String escapedPattern = EscapeSQLLikePattern(String(textPattern, "utf-8"));
-      query.append(_T(" AND LOWER(message) LIKE LOWER('%"));
-      query.append(escapedPattern);
-      query.append(_T("%')"));
+      query.append(_T(" AND LOWER(message) LIKE LOWER("));
+      query.append(PrepareLikePattern(hdb, textPattern, false));
+      query.append(L")" LIKE_ESCAPE_CLAUSE);
    }
 
    query.append(_T(" ORDER BY event_timestamp DESC"));
@@ -1168,7 +1166,6 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
    ApplyQueryRowLimit(query, limit);
 
    // Execute query
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, query);
 
    json_t *output = json_object();
@@ -1262,6 +1259,7 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
    }
 
    // Build query
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    StringBuffer query;
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
 
@@ -1288,27 +1286,23 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
 
    if ((trapOid != nullptr) && (trapOid[0] != 0))
    {
-      String oid(trapOid, "utf-8");
       // Support prefix matching (e.g., "1.3.6.1.6.3.1.1.5" matches all standard traps)
-      query.append(_T(" AND trap_oid LIKE '"));
-      query.append(EscapeSQLLikePattern(oid));
-      query.append(_T("%'"));
+      query.append(_T(" AND trap_oid LIKE "));
+      query.append(PrepareLikePattern(hdb, trapOid, true));
+      query.append(LIKE_ESCAPE_CLAUSE);
    }
 
    if ((ipAddress != nullptr) && (ipAddress[0] != 0))
    {
-      String ip(ipAddress, "utf-8");
-      query.append(_T(" AND ip_addr='"));
-      query.append(ip);
-      query.append(_T("'"));
+      query.append(_T(" AND ip_addr="));
+      query.append(DBPrepareStringUTF8(hdb, ipAddress));
    }
 
    if ((varbindPattern != nullptr) && (varbindPattern[0] != 0))
    {
-      String escapedPattern = EscapeSQLLikePattern(String(varbindPattern, "utf-8"));
-      query.append(_T(" AND LOWER(trap_varlist) LIKE LOWER('%"));
-      query.append(escapedPattern);
-      query.append(_T("%')"));
+      query.append(_T(" AND LOWER(trap_varlist) LIKE LOWER("));
+      query.append(PrepareLikePattern(hdb, varbindPattern, false));
+      query.append(L")" LIKE_ESCAPE_CLAUSE);
    }
 
    query.append(_T(" ORDER BY trap_timestamp DESC"));
@@ -1316,7 +1310,6 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
    ApplyQueryRowLimit(query, limit);
 
    // Execute query
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, query);
 
    json_t *output = json_object();
@@ -1493,6 +1486,7 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
    }
 
    // Build query
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    StringBuffer query;
    bool useTsdbTimestamp = (g_dbSyntax == DB_SYNTAX_TSDB);
 
@@ -1537,18 +1531,16 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
 
    if ((tagsFilter != nullptr) && (tagsFilter[0] != 0))
    {
-      String escapedTags = EscapeSQLLikePattern(String(tagsFilter, "utf-8"));
-      query.append(_T(" AND LOWER(event_tags) LIKE LOWER('%"));
-      query.append(escapedTags);
-      query.append(_T("%')"));
+      query.append(_T(" AND LOWER(event_tags) LIKE LOWER("));
+      query.append(PrepareLikePattern(hdb, tagsFilter, false));
+      query.append(L")" LIKE_ESCAPE_CLAUSE);
    }
 
    if ((textPattern != nullptr) && (textPattern[0] != 0))
    {
-      String escapedPattern = EscapeSQLLikePattern(String(textPattern, "utf-8"));
-      query.append(_T(" AND LOWER(event_message) LIKE LOWER('%"));
-      query.append(escapedPattern);
-      query.append(_T("%')"));
+      query.append(_T(" AND LOWER(event_message) LIKE LOWER("));
+      query.append(PrepareLikePattern(hdb, textPattern, false));
+      query.append(L")" LIKE_ESCAPE_CLAUSE);
    }
 
    query.append(_T(" ORDER BY event_timestamp DESC"));
@@ -1558,7 +1550,6 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
    nxlog_debug_tag(DEBUG_TAG, 7, _T("F_SearchEvents: executing query: %s"), query.cstr());
 
    // Execute query
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, query);
 
    json_t *output = json_object();
@@ -1731,6 +1722,8 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
 
    if (objectId != 0)
       whereClause.appendFormattedString(_T(" AND %s=%u"), objectIdColumn, objectId);
+   else
+      AddObjectAccessConstraint(whereClause, userId, objectIdColumn);
 
    // Get total count
    StringBuffer countQuery;
