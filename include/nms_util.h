@@ -501,9 +501,14 @@ public:
       return Timestamp(ns / _LL(1000000));
    }
 
+   /**
+    * Create timestamp from UNIX time. Values that cannot be represented in milliseconds are clamped.
+    */
    static Timestamp fromTime(time_t t)
    {
-      return Timestamp(static_cast<int64_t>(t) * 1000);
+      static const int64_t limit = _LL(0x7FFFFFFFFFFFFFFF) / 1000;
+      int64_t s = static_cast<int64_t>(t);
+      return Timestamp(((s > limit) ? limit : ((s < -limit) ? -limit : s)) * 1000);
    }
 
    bool isNull() const

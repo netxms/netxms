@@ -1887,6 +1887,35 @@ static void TestParseTimestamp()
    AssertEquals(static_cast<int64_t>(ParseTimestamp("0", -1)), static_cast<int64_t>(0));
    AssertEquals(static_cast<int64_t>(ParseTimestamp("1970-01-01T00:00:00Z", -1)), static_cast<int64_t>(0));
 
+   // Out of range values return default value
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("1969-12-31T23:59:59Z", -2)), static_cast<int64_t>(-2));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("9223372036854775807", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("99999999999999999999", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("-9223372036854775807w", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("+9223372036854775807w", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("--9223372036854775807w", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("+9223372036854775807", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("+99999999999999999999s", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("-100000d", -1)), static_cast<int64_t>(-1));   // before epoch
+   if (sizeof(time_t) > 4)
+   {
+      AssertEquals(static_cast<int64_t>(ParseTimestamp("253402300799", -1)), _LL(253402300799));
+      AssertEquals(static_cast<int64_t>(ParseTimestamp("253402300800", -1)), static_cast<int64_t>(-1));
+      AssertEquals(static_cast<int64_t>(ParseTimestamp("9999-12-31T23:59:59Z", -1)), _LL(253402300799));
+      AssertEquals(static_cast<int64_t>(ParseTimestamp("9999-12-31T23:59:59-01:00", -1)), static_cast<int64_t>(-1));
+   }
+
+   EndTest();
+
+   StartTest(_T("Timestamp::fromTime"));
+   AssertEquals(Timestamp::fromTime(0).asMilliseconds(), static_cast<int64_t>(0));
+   AssertEquals(Timestamp::fromTime(1700000000).asMilliseconds(), _LL(1700000000000));
+   AssertEquals(Timestamp::fromTime(-1700000000).asMilliseconds(), _LL(-1700000000000));
+   if (sizeof(time_t) > 4)
+   {
+      AssertEquals(Timestamp::fromTime(static_cast<time_t>(_LL(0x7FFFFFFFFFFFFFFF))).asMilliseconds(), _LL(0x7FFFFFFFFFFFFFFF) / 1000 * 1000);
+      AssertEquals(Timestamp::fromTime(static_cast<time_t>(-_LL(0x7FFFFFFFFFFFFFFF))).asMilliseconds(), -(_LL(0x7FFFFFFFFFFFFFFF) / 1000 * 1000));
+   }
    EndTest();
 }
 

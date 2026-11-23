@@ -1206,12 +1206,26 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t)
 }
 
 /**
+ * Largest timestamp accepted by ParseTimestamp() (9999-12-31T23:59:59Z, or 2038-01-19T03:14:07Z where time_t is 32 bit)
+ */
+static const int64_t MAX_PARSED_TIMESTAMP = (sizeof(time_t) > 4) ? _LL(253402300799) : _LL(0x7FFFFFFF);
+
+/**
+ * Check that timestamp produced by ParseTimestamp() is within accepted range
+ */
+static inline time_t ValidateParsedTimestamp(int64_t t, time_t defaultValue)
+{
+   return ((t >= 0) && (t <= MAX_PARSED_TIMESTAMP)) ? static_cast<time_t>(t) : defaultValue;
+}
+
+/**
  * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
  * as well as relative timestamps in format [+|-]<number>[s|m|h|d|w] or word "now". ISO 8601 timestamps
  * are written as YYYY-MM-DDTHH:MM:SS (space is accepted instead of T, fractional seconds are ignored)
  * optionally followed by "Z" for UTC or by explicit UTC offset in form +HH:MM, -HH:MM, or +HHMM;
  * timestamp without zone designator is interpreted as local time. Returns defaultValue if string
- * cannot be parsed, including empty string and a sign without a number.
+ * cannot be parsed, including empty string and a sign without a number, and if resulting timestamp
+ * is before 1970-01-01T00:00:00Z or after 9999-12-31T23:59:59Z (2038-01-19T03:14:07Z where time_t is 32 bit).
  */
 time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue)
 {
@@ -1222,27 +1236,38 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue)
       int64_t offset = strtoll(&ts[1], &eptr, 10);
       if (eptr == &ts[1])
          return defaultValue;  // sign not followed by a number
+
+      int64_t multiplier;
       if (*eptr != 0)
       {
          // check for suffix
-         if (stricmp(eptr, "m") == 0)
-            offset *= 60;
+         if (stricmp(eptr, "s") == 0)
+            multiplier = 1;
+         else if (stricmp(eptr, "m") == 0)
+            multiplier = 60;
          else if (stricmp(eptr, "h") == 0)
-            offset *= 3600;
+            multiplier = 3600;
          else if (stricmp(eptr, "d") == 0)
-            offset *= 86400;
+            multiplier = 86400;
          else if (stricmp(eptr, "w") == 0)
-            offset *= 86400 * 7;
-         else if (stricmp(eptr, "s") != 0)
+            multiplier = 86400 * 7;
+         else
             return defaultValue;  // invalid format
       }
       else
       {
          // no suffix, assume minutes
-         offset *= 60;
+         multiplier = 60;
       }
-      time_t now = time(nullptr);
-      return (ts[0] == '+') ? now + static_cast<time_t>(offset) : now - static_cast<time_t>(offset);
+
+      // Offset that large cannot produce timestamp within accepted range; checking it here also keeps multiplication from overflowing
+      int64_t limit = MAX_PARSED_TIMESTAMP / multiplier;
+      if ((offset > limit) || (offset < -limit))
+         return defaultValue;
+      offset *= multiplier;
+
+      int64_t now = static_cast<int64_t>(time(nullptr));
+      return ValidateParsedTimestamp((ts[0] == '+') ? now + offset : now - offset, defaultValue);
    }
 
    if (!stricmp(ts, "now"))
@@ -1250,7 +1275,7 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue)
 
    int64_t n = strtoll(ts, &eptr, 10);
    if ((eptr != ts) && (*eptr == 0))
-      return static_cast<time_t>(n);   // Assume UNIX timestamp
+      return ValidateParsedTimestamp(n, defaultValue);   // Assume UNIX timestamp
 
    struct tm t;
    memset(&t, 0, sizeof(t));
@@ -1272,11 +1297,11 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue)
    {
       // No zone designator - local time
       t.tm_isdst = -1;
-      return mktime(&t);
+      return ValidateParsedTimestamp(static_cast<int64_t>(mktime(&t)), defaultValue);
    }
 
    if (((*p == 'Z') || (*p == 'z')) && (p[1] == 0))
-      return timegm(&t);
+      return ValidateParsedTimestamp(static_cast<int64_t>(timegm(&t)), defaultValue);
 
    if ((*p == '+') || (*p == '-'))
    {
@@ -1295,7 +1320,10 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue)
             return defaultValue;
          offset += ((p[0] - '0') * 10 + (p[1] - '0')) * 60;
       }
-      return timegm(&t) - sign * offset;
+      time_t utc = timegm(&t);
+      if (utc == static_cast<time_t>(-1))
+         return defaultValue;
+      return ValidateParsedTimestamp(static_cast<int64_t>(utc) - sign * offset, defaultValue);
    }
 
    return defaultValue;
