@@ -62,7 +62,7 @@ static Mutex s_componentTokensLock(MutexType::FAST);
 /**
  * Constructor
  */
-ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
+ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user) : m_pipeLock(MutexType::FAST)
 {
    _tcslcpy(m_name, name, MAX_SUBAGENT_NAME);
    _tcslcpy(m_user, user, MAX_ESA_USER_NAME);
@@ -131,7 +131,11 @@ bool ExternalSubagent::sendMessage(const NXCPMessage *msg)
 	nxlog_debug_tag(DEBUG_TAG, 6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
 
 	NXCP_MESSAGE *rawMsg = msg->serialize();
-	bool success = (m_pipe != nullptr) ? m_pipe->write(rawMsg, ntohl(rawMsg->size)) : false;
+	bool success;
+	{
+	   LockGuard lockGuard(m_pipeLock);
+	   success = (m_pipe != nullptr) ? m_pipe->write(rawMsg, ntohl(rawMsg->size)) : false;
+	}
 	MemFree(rawMsg);
 	return success;
 }
@@ -159,7 +163,9 @@ static void ForwardSessionMessage(NXCPMessage *msg)
  */
 void ExternalSubagent::connect(NamedPipe *pipe)
 {
+   m_pipeLock.lock();
    m_pipe = pipe;
+   m_pipeLock.unlock();
    m_connected = true;
    nxlog_debug_tag(DEBUG_TAG, 2, _T("ExternalSubagent(%s): connection established"), m_name);
 
@@ -215,7 +221,9 @@ void ExternalSubagent::connect(NamedPipe *pipe)
 	m_connected = false;
 	m_connectedPid = 0;
 	m_msgQueue->clear();
+	m_pipeLock.lock();
 	m_pipe = nullptr;
+	m_pipeLock.unlock();
 }
 
 /**
@@ -235,6 +243,24 @@ void ExternalSubagent::restart()
 {
    NXCPMessage msg(CMD_RESTART, InterlockedIncrement(&m_requestId));
    sendMessage(&msg);
+}
+
+/**
+ * Request local database reset on next start of external subagent loader
+ */
+uint32_t ExternalSubagent::requestLocalDatabaseReset()
+{
+   NXCPMessage msg(CMD_RESET_LOCAL_DATABASE, InterlockedIncrement(&m_requestId));
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+   if (response == nullptr)
+      return ERR_REQUEST_TIMEOUT;
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   delete response;
+   return rcc;
 }
 
 /**
@@ -1083,6 +1109,39 @@ void NotifyExtSubagentsOnComponentToken(const AgentComponentToken *token)
       {
          nxlog_debug_tag(DEBUG_TAG, 1, _T("Sending component activation token notification to external subagent %s"), s_subagents.get(i)->getName());
          s_subagents.get(i)->notifyOnComponentToken(token);
+      }
+   }
+}
+
+/**
+ * Request local database reset on next start from all external subagent loaders
+ */
+void RequestLocalDatabaseResetInExtSubagents()
+{
+   for(int i = 0; i < s_subagents.size(); i++)
+   {
+      ExternalSubagent *subagent = s_subagents.get(i);
+      if (!subagent->isConnected())
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("External subagent %s is not connected, its local database will not be reset"), subagent->getName());
+         continue;
+      }
+
+      uint32_t rcc = subagent->requestLocalDatabaseReset();
+      switch(rcc)
+      {
+         case ERR_SUCCESS:
+            nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("External subagent %s accepted local database reset request"), subagent->getName());
+            break;
+         case ERR_CONNECTION_BROKEN:
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("Cannot send local database reset request to external subagent %s (connection broken)"), subagent->getName());
+            break;
+         case ERR_REQUEST_TIMEOUT:
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("Timeout waiting for response to local database reset request from external subagent %s"), subagent->getName());
+            break;
+         default:
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("External subagent %s rejected local database reset request (error %u)"), subagent->getName(), rcc);
+            break;
       }
    }
 }

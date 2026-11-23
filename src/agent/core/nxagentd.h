@@ -279,6 +279,7 @@ private:
 	TCHAR m_user[MAX_ESA_USER_NAME];
 	NamedPipeListener *m_listener;
 	NamedPipe *m_pipe;
+	Mutex m_pipeLock;   // protects m_pipe from being cleared while a write is in progress
 	bool m_connected;
 	MsgWaitQueue *m_msgQueue;
 	VolatileCounter m_requestId;   // incremented concurrently from multiple threads
@@ -319,6 +320,7 @@ public:
 	void listActions(StringList *list);
    void shutdown(bool restart);
    void restart();
+   uint32_t requestLocalDatabaseReset();
    void syncPolicies();
    void notifyOnPolicyInstall(const uuid& guid);
    void notifyOnComponentToken(const AgentComponentToken *token);
@@ -948,6 +950,7 @@ bool SendMessageToMasterAgent(NXCPMessage *msg);
 bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg);
 void ShutdownExtSubagents(bool restart);
 void RestartExtSubagents();
+void RequestLocalDatabaseResetInExtSubagents();
 void ExecuteAction(const TCHAR *name, const StringList& args);
 void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, const shared_ptr<AbstractCommSession>& session);
 

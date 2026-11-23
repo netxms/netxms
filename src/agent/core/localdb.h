@@ -29,6 +29,22 @@
  */
 #define DB_SCHEMA_VERSION     21
 
+/**
+ * Result of local database reset request
+ */
+enum class LocalDatabaseResetRequest
+{
+   CREATED,
+   IN_PROGRESS,
+   FAILED
+};
+
+LocalDatabaseResetRequest RequestLocalDatabaseReset();
+bool IsLocalDatabaseResetPending();
+void CancelLocalDatabaseResetRequest();
+bool ProcessLocalDatabaseResetRequest();
+bool DeferLocalDatabaseResetRequest();
+
 bool OpenLocalDatabase();
 void CloseLocalDatabase();
 DB_HANDLE GetLocalDatabaseHandle();
