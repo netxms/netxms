@@ -2714,27 +2714,6 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref)
 }
 
 /**
- * Fill message with alarm stats
- */
-void GetAlarmStats(NXCPMessage *msg)
-{
-   uint32_t counters[5];
-   memset(counters, 0, sizeof(counters));
-
-   s_alarmList.lock();
-   msg->setField(VID_NUM_ALARMS, static_cast<uint32_t>(s_alarmList.size()));
-   s_alarmList.forEach(
-      [&counters] (Alarm *alarm) -> EnumerationCallbackResult
-      {
-         counters[alarm->getCurrentSeverity()]++;
-         return _CONTINUE;
-      });
-   s_alarmList.unlock();
-
-   msg->setFieldFromInt32Array(VID_ALARMS_BY_SEVERITY, 5, counters);
-}
-
-/**
  * Get number of active alarms
  */
 uint32_t GetAlarmCount()

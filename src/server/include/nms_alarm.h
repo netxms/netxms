@@ -264,7 +264,6 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(uint32_t alarmId, bool
 shared_ptr<NetObj> NXCORE_EXPORTABLE GetAlarmSourceObject(const TCHAR *hdref);
 int GetMostCriticalAlarmForObject(uint32_t objectId);
 std::array<int, 5> GetAlarmStatsForObject(uint32_t objectId);
-void GetAlarmStats(NXCPMessage *msg);
 uint32_t GetAlarmCount();
 uint64_t GetAlarmMemoryUsage();
 Alarm NXCORE_EXPORTABLE *LoadAlarmFromDatabase(uint32_t alarmId);

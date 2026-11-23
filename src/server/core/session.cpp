@@ -47,9 +47,7 @@
 #include <cloud-connector.h>
 #include <traffic-connector.h>
 
-#ifdef _WIN32
-#include <psapi.h>
-#else
+#ifndef _WIN32
 #include <dirent.h>
 #endif
 
@@ -1505,9 +1503,6 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_CHANGE_SUBSCRIPTION:
          changeSubscription(*request);
-         break;
-      case CMD_GET_SERVER_STATS:
-         sendServerStats(*request);
          break;
       case CMD_GET_SCRIPT_LIST:
          sendScriptList(*request);
@@ -10298,65 +10293,6 @@ void ClientSession::changeSubscription(const NXCPMessage& request)
    }
 
    sendMessage(response);
-}
-
-/**
- * Callback for counting DCIs in the system
- */
-static EnumerationCallbackResult DciCountCallback(NetObj *object, uint32_t *count)
-{
-	*count += static_cast<DataCollectionTarget*>(object)->getItemCount();
-	return _CONTINUE;
-}
-
-/**
- * Send server statistics
- */
-void ClientSession::sendServerStats(const NXCPMessage& request)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   msg.setField(VID_RCC, RCC_SUCCESS);
-
-   // Server version, etc.
-   msg.setField(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
-   msg.setField(VID_SERVER_UPTIME, static_cast<uint32_t>(time(nullptr) - g_serverStartTime));
-
-   // Number of objects and DCIs
-	uint32_t dciCount = 0;
-	g_idxNodeById.forEach(DciCountCallback, &dciCount);
-   msg.setField(VID_NUM_ITEMS, dciCount);
-	msg.setField(VID_NUM_OBJECTS, (UINT32)g_idxObjectById.size());
-	msg.setField(VID_NUM_NODES, (UINT32)g_idxNodeById.size());
-
-   // Client sessions
-   msg.setField(VID_NUM_SESSIONS, (UINT32)GetSessionCount(true, true, -1, nullptr));
-
-   // Alarms
-   GetAlarmStats(&msg);
-
-   // Process info
-#ifdef _WIN32
-   PROCESS_MEMORY_COUNTERS mc;
-   mc.cb = sizeof(PROCESS_MEMORY_COUNTERS);
-   if (GetProcessMemoryInfo(GetCurrentProcess(), &mc, sizeof(PROCESS_MEMORY_COUNTERS)))
-   {
-      msg.setField(VID_NETXMSD_PROCESS_WKSET, (UINT32)(mc.WorkingSetSize / 1024));
-      msg.setField(VID_NETXMSD_PROCESS_VMSIZE, (UINT32)(mc.PagefileUsage / 1024));
-   }
-#endif
-
-	// Queues
-   ThreadPoolInfo poolInfo;
-   ThreadPoolGetInfo(g_dataCollectorThreadPool, &poolInfo);
-	msg.setField(VID_QSIZE_DCI_POLLER, (poolInfo.activeRequests > poolInfo.curThreads) ? poolInfo.activeRequests - poolInfo.curThreads : 0);
-
-	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, static_cast<uint32_t>(g_dciCacheLoaderQueue.size()));
-	msg.setField(VID_QSIZE_DBWRITER, static_cast<uint32_t>(g_dbWriterQueue.size()));
-	msg.setField(VID_QSIZE_EVENT, static_cast<uint32_t>(g_eventQueue.size()));
-	msg.setField(VID_QSIZE_NODE_POLLER, static_cast<uint32_t>(GetDiscoveryPollerQueueSize()));
-
-   // Send response
-   sendMessage(msg);
 }
 
 /**

@@ -790,7 +790,6 @@ private:
    void generateObjectToolId(const NXCPMessage& request);
    void execTableTool(const NXCPMessage& request);
    void changeSubscription(const NXCPMessage& request);
-   void sendServerStats(const NXCPMessage& request);
    void sendScriptList(const NXCPMessage& request);
    void sendScript(const NXCPMessage& request);
    void updateScript(const NXCPMessage& request);
