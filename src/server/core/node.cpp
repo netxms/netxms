@@ -14075,20 +14075,28 @@ bool Node::resolveName(bool useOnlyDNS, wchar_t *name, const wchar_t **facility)
       return true;
    };
 
+   // Nodes in non-default zones are resolved through zone proxy, never with server's own resolver
+   shared_ptr<AgentConnectionEx> proxyConnection;
+   if (m_zoneUIN != 0)
+   {
+      shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+      if (zone != nullptr)
+         proxyConnection = zone->acquireConnectionToProxy();
+      if (proxyConnection == nullptr)
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"Connection to proxy for zone %u is not available, address resolution for node %s [%u] skipped", m_zoneUIN, m_name, m_id);
+   }
+
+   auto resolveAddress = [this, name, &proxyConnection, &acceptName] (const InetAddress& addr) -> bool
+   {
+      if (m_zoneUIN != 0)
+         return (proxyConnection != nullptr) && (proxyConnection->getHostByAddr(addr, name, MAX_OBJECT_NAME) != nullptr) && acceptName(L"proxy agent");
+      return (addr.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr) && acceptName(L"system resolver");
+   };
+
    bool resolved = false;
    if (isMyIP(m_ipAddress))
    {
-      if (m_zoneUIN != 0)
-      {
-         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-         shared_ptr<AgentConnectionEx> conn = (zone != nullptr) ? zone->acquireConnectionToProxy() : shared_ptr<AgentConnectionEx>();
-         if (conn != nullptr)
-            resolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr) && acceptName(L"proxy agent");
-      }
-      else
-      {
-         resolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr) && acceptName(L"system resolver");
-      }
+      resolved = resolveAddress(m_ipAddress);
    }
    else
    {
@@ -14098,26 +14106,30 @@ bool Node::resolveName(bool useOnlyDNS, wchar_t *name, const wchar_t **facility)
 
    if (!resolved)
    {
-      // Try to resolve each interface's IP address
-      readLockChildList();
-      for(int i = 0; (i < getChildList().size()) && !resolved; i++)
+      // Try to resolve each interface's IP address (collected first so that lookups are not done under child list lock)
+      if ((m_zoneUIN == 0) || (proxyConnection != nullptr))
       {
-         NetObj *curr = getChildList().get(i);
-         if ((curr->getObjectClass() == OBJECT_INTERFACE) && !static_cast<Interface*>(curr)->isLoopback())
+         InetAddressList addrList;
+         readLockChildList();
+         for(int i = 0; i < getChildList().size(); i++)
          {
-            InetAddressList addrList = static_cast<Interface*>(curr)->getIpAddressList();
-            for(int n = 0; n < addrList.size(); n++)
+            NetObj *curr = getChildList().get(i);
+            if ((curr->getObjectClass() == OBJECT_INTERFACE) && !static_cast<Interface*>(curr)->isLoopback())
             {
-               InetAddress a = addrList.get(n);
-               if (a.isValidUnicast() && (a.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr) && acceptName(L"system resolver"))
+               InetAddressList ifAddrList = static_cast<Interface*>(curr)->getIpAddressList();
+               for(int n = 0; n < ifAddrList.size(); n++)
                {
-                  resolved = true;
-                  break;
+                  const InetAddress& a = ifAddrList.get(n);
+                  if (a.isValidUnicast())
+                     addrList.add(a);
                }
             }
          }
+         unlockChildList();
+
+         for(int i = 0; (i < addrList.size()) && !resolved; i++)
+            resolved = resolveAddress(addrList.get(i));
       }
-      unlockChildList();
 
       // Try to get hostname from agent if address resolution fails
       if (!(resolved || useOnlyDNS))
