@@ -4148,7 +4148,7 @@ restart_status_poll:
          if (status != 0)
             EventBuilder(EVENT_AGENT_LOCAL_DATABASE_PROBLEM, m_id)
                .param(_T("statusCode"), status)
-               .param(_T("description"), statusDescription[status])
+               .param(_T("description"), (status < 3) ? statusDescription[status] : _T("unknown problem"))
                .post();
       }
       else
