@@ -149,6 +149,7 @@ void nmea_time_now(nmeaTIME *t);
 #define NMEA_MAXSAT         (12)
 #define NMEA_SATINPACK      (4)
 #define NMEA_NSATPACKS      (NMEA_MAXSAT / NMEA_SATINPACK)
+#define NMEA_MAXTALKERS     (8)
 
 #define NMEA_DEF_LAT        (5001.2621)
 #define NMEA_DEF_LON        (3613.0595)
@@ -183,6 +184,19 @@ typedef struct _nmeaSATELLITE
 } nmeaSATELLITE;
 
 /**
+ * Satellites in view reported by one talker (constellation) in GSV sentences
+ * @see nmeaSATINFO
+ */
+typedef struct _nmeaTALKERSATS
+{
+    char    talker[2];  /**< Talker ID (GP, GL, GA, GB, BD, ...) */
+    int     inview;     /**< Number of satellites in view reported by this talker */
+    int     reported;   /**< Reported in current GSV output cycle */
+    int     missed;     /**< Number of consecutive GSV output cycles without report */
+
+} nmeaTALKERSATS;
+
+/**
  * Information about all satellites in view
  * @see nmeaINFO
  * @see nmeaGPGSV
@@ -190,8 +204,9 @@ typedef struct _nmeaSATELLITE
 typedef struct _nmeaSATINFO
 {
     int     inuse;      /**< Number of satellites in use (not those in view) */
-    int     inview;     /**< Total number of satellites in view */
-    nmeaSATELLITE sat[NMEA_MAXSAT]; /**< Satellites information */
+    int     inview;     /**< Total number of satellites in view (sum over all talkers) */
+    int     ntalkers;   /**< Number of valid elements in talkers */
+    nmeaTALKERSATS talkers[NMEA_MAXTALKERS]; /**< Satellites in view per talker (constellation) */
 
 } nmeaSATINFO;
 
@@ -333,6 +348,7 @@ typedef struct _nmeaGPGSA
  */
 typedef struct _nmeaGPGSV
 {
+    char    talker[2];  /**< Talker ID (GP, GL, GA, GB, BD, ...) */
     int     pack_count; /**< Total number of messages of this type in this cycle */
     int     pack_index; /**< Message number */
     int     sat_count;  /**< Total number of satellites in view */
