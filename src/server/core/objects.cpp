@@ -2503,6 +2503,30 @@ uint32_t NXCORE_EXPORTABLE ValidateObjectBinding(const NetObj& child, const NetO
 }
 
 /**
+ * Validate that object can be deleted. Access rights are not checked - caller is responsible for that.
+ * Returns RCC_SUCCESS if deletion is allowed, RCC_ACCESS_DENIED for built-in objects (like "Entire Network"),
+ * RCC_ZONE_NOT_EMPTY for non-empty zone, or RCC_ASSET_IS_LINKED for linked asset when
+ * Objects.Assets.AllowDeleteIfLinked is not set.
+ */
+uint32_t NXCORE_EXPORTABLE ValidateObjectDeletion(const NetObj& object)
+{
+   uint32_t rcc;
+   if (object.getId() < 10)
+      rcc = RCC_ACCESS_DENIED;
+   else if ((object.getObjectClass() == OBJECT_ZONE) && !object.isEmpty())
+      rcc = RCC_ZONE_NOT_EMPTY;
+   else if ((object.getObjectClass() == OBJECT_ASSET) && !ConfigReadBoolean(L"Objects.Assets.AllowDeleteIfLinked", false) &&
+            (static_cast<const Asset&>(object).getLinkedObjectId() != 0))
+      rcc = RCC_ASSET_IS_LINKED;
+   else
+      return RCC_SUCCESS;
+
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 5, L"ValidateObjectDeletion: deletion of %s %s [%u] rejected (RCC=%u)",
+      object.getObjectClassName(), object.getName(), object.getId(), rcc);
+   return rcc;
+}
+
+/**
  * Check if given class is a valid taget for asset link
  */
 bool NXCORE_EXPORTABLE IsValidAssetLinkTargetClass(int objectClass)

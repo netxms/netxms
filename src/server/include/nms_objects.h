@@ -7245,6 +7245,7 @@ void ClearAllObjectsInheritedAccessCache();
 
 bool IsValidParentClass(int childClass, int parentClass);
 uint32_t NXCORE_EXPORTABLE ValidateObjectBinding(const NetObj& child, const NetObj& parent);
+uint32_t NXCORE_EXPORTABLE ValidateObjectDeletion(const NetObj& object);
 
 uint32_t NXCORE_EXPORTABLE ChangeObjectBinding(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child, bool bind,
          bool forceApply, bool removeDataCollection, GenericClientSession *session, SharedString *conflictingTemplateName);

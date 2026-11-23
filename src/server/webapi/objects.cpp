@@ -373,32 +373,28 @@ int H_ObjectDelete(Context *context)
    if ((object == nullptr) || object->isDeleted())
       return 404;
 
-   // Check if it is a built-in object, like "Entire Network"
-   if (object->getId() < 10)
-   {
-      context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on delete object %s", object->getName());
-      context->setErrorResponse("Built-in objects cannot be deleted");
-      return 403;
-   }
-
    if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_DELETE))
    {
       context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on delete object %s", object->getName());
       return 403;
    }
 
-   if ((object->getObjectClass() == OBJECT_ZONE) && !object->isEmpty())
+   switch(ValidateObjectDeletion(*object))
    {
-      context->setErrorResponse("Zone is not empty");
-      return 409;
-   }
-
-   if ((object->getObjectClass() == OBJECT_ASSET) &&
-       !ConfigReadBoolean(L"Objects.Assets.AllowDeleteIfLinked", false) &&
-       (static_cast<Asset&>(*object).getLinkedObjectId() != 0))
-   {
-      context->setErrorResponse("Asset is linked to an object");
-      return 409;
+      case RCC_SUCCESS:
+         break;
+      case RCC_ACCESS_DENIED:
+         context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on delete object %s", object->getName());
+         context->setErrorResponse("Built-in objects cannot be deleted");
+         return 403;
+      case RCC_ZONE_NOT_EMPTY:
+         context->setErrorResponse("Zone is not empty");
+         return 409;
+      case RCC_ASSET_IS_LINKED:
+         context->setErrorResponse("Asset is linked to an object");
+         return 409;
+      default:
+         return 409;
    }
 
    // For templates and clusters, set the DCI removal option before deletion
