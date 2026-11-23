@@ -178,8 +178,8 @@ static bool SetupTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, 
          }
          else
          {
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupTLSSession(%hs, %d): TLS handshake failed (ssl_err=%d socket_err=%d)"), host, port, sslErr, WSAGetLastError());
             char buffer[128];
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupTLSSession(%hs, %d): TLS handshake failed (%hs)"), host, port, ERR_error_string(sslErr, buffer));
 
             unsigned long error;
             while ((error = ERR_get_error()) != 0)

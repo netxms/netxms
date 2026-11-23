@@ -1178,8 +1178,8 @@ shared_ptr<OutboundAgentTunnel> OutboundAgentTunnel::establish(const InetAddress
       }
       else
       {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("EstablishOutboundTunnel(%s): TLS handshake failed (ssl_err=%d socket_err=%d)"), peerName, sslErr, WSAGetLastError());
          char buffer[128];
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("EstablishOutboundTunnel(%s): TLS handshake failed (%hs)"), peerName, ERR_error_string(sslErr, buffer));
          unsigned long error;
          while((error = ERR_get_error()) != 0)
          {

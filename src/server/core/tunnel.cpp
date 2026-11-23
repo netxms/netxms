@@ -959,8 +959,16 @@ retry:
       }
       else
       {
-         char buffer[128];
-         ReportError(debugPrefix, request->addr,  _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
+         unsigned long error = ERR_get_error();
+         if (error != 0)
+         {
+            char buffer[128];
+            ReportError(debugPrefix, request->addr,  _T("TLS handshake failed (ssl_err=%d: %hs)"), sslErr, ERR_error_string(error, buffer));
+         }
+         else
+         {
+            ReportError(debugPrefix, request->addr,  _T("TLS handshake failed (ssl_err=%d)"), sslErr);
+         }
       }
       goto failure;
    }
