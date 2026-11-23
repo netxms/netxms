@@ -129,7 +129,8 @@ static bool DoTlsHandshake(SSL *ssl, SOCKET s, const wchar_t *peer)
       else
       {
          char buffer[128];
-         nxlog_debug_tag(DEBUG_TAG, 4, L"TLS handshake failed on syslog connection from %s (%hs)", peer, ERR_error_string(ERR_get_error(), buffer));
+         ERR_error_string_n(ERR_get_error(), buffer, sizeof(buffer));
+         nxlog_debug_tag(DEBUG_TAG, 4, L"TLS handshake failed on syslog connection from %s (%hs)", peer, buffer);
          LogOpenSSLErrorStack(6);
       }
       return false;

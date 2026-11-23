@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
 ** Copyright (C) 2003-2025 Victor Kirhenshtein
@@ -329,9 +329,9 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(uint32_t enabledCiphers)
 
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    OPENSSL_init_crypto(
-      OPENSSL_INIT_LOAD_CRYPTO_STRINGS | 
-      OPENSSL_INIT_ADD_ALL_CIPHERS | 
-      OPENSSL_INIT_ADD_ALL_DIGESTS | 
+      OPENSSL_INIT_LOAD_CRYPTO_STRINGS |
+      OPENSSL_INIT_ADD_ALL_CIPHERS |
+      OPENSSL_INIT_ADD_ALL_DIGESTS |
       OPENSSL_INIT_NO_LOAD_CONFIG |
       OPENSSL_INIT_ASYNC |
       OPENSSL_INIT_ENGINE_DYNAMIC,
@@ -575,7 +575,7 @@ BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *msg, UINT32 dwMsgLen, const 
 				*pdwSigLen = dwLen;
 				// we have to reverse the byte-order in the result from CryptSignHash()
 				for(i = 0, j = dwLen - 1; i < dwLen; i++, j--)
-					pBuffer[i] = pTemp[j];			
+					pBuffer[i] = pTemp[j];
 			}
 			CryptDestroyHash(hHash);
 		}
@@ -806,27 +806,27 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(uint32_t ciphers)
    {
       selected = ctx->initCipher(NXCP_CIPHER_AES_256);
    }
-   
+
    if (!selected && (ciphers & NXCP_SUPPORT_BLOWFISH_256))
    {
       selected = ctx->initCipher(NXCP_CIPHER_BLOWFISH_256);
    }
-   
+
    if (!selected && (ciphers & NXCP_SUPPORT_AES_128))
    {
       selected = ctx->initCipher(NXCP_CIPHER_AES_128);
    }
-   
+
    if (!selected && (ciphers & NXCP_SUPPORT_BLOWFISH_128))
    {
       selected = ctx->initCipher(NXCP_CIPHER_BLOWFISH_128);
    }
-   
+
    if (!selected && (ciphers & NXCP_SUPPORT_IDEA))
    {
       selected = ctx->initCipher(NXCP_CIPHER_IDEA);
    }
-   
+
    if (!selected && (ciphers & NXCP_SUPPORT_3DES))
    {
       selected = ctx->initCipher(NXCP_CIPHER_3DES);
@@ -865,7 +865,7 @@ NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(NXCP_MESSAGE *msg)
    }
 
    UINT32 msgSize = ntohl(msg->size);
-   NXCP_ENCRYPTED_MESSAGE *emsg = 
+   NXCP_ENCRYPTED_MESSAGE *emsg =
       (NXCP_ENCRYPTED_MESSAGE *)MemAlloc(msgSize + NXCP_ENCRYPTION_HEADER_SIZE + EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(m_encryptor)) + 8);
    emsg->code = htons(CMD_ENCRYPTED_MESSAGE);
    emsg->reserved = 0;
@@ -1040,6 +1040,9 @@ void LIBNETXMS_EXPORTABLE LogOpenSSLErrorStack(int level)
    long err;
    char buffer[128];
    while((err = ERR_get_error()) != 0)
-      nxlog_debug_tag(DEBUG_TAG, level, _T("   %hs"), ERR_error_string(err, buffer));
+   {
+      ERR_error_string_n(err, buffer, sizeof(buffer));
+      nxlog_debug_tag(DEBUG_TAG, level, _T("   %hs"), buffer);
+   }
 #endif
 }
