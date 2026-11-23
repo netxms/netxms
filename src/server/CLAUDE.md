@@ -46,7 +46,7 @@ For formatting into a `wchar_t *` buffer, use `nx_swprintf(buffer, size, L"...",
 
 - **User ID 0 is the system account.** It is normally disabled and used by server code to mean "system / no user session" (`checkAccessRights` grants everything, background AI chats run as 0). Per-user features (AI memory, preferences, history) may legitimately skip it — do not report that as a bug.
 
-- **Object tool input fields only where they are consumed.** Only `TOOL_TYPE_ACTION`, `SERVER_COMMAND`, `SERVER_SCRIPT`, `SSH_COMMAND`, `URL` and library-script execution expand input fields (via `expandText()` or NXSL `$INPUT`). `TOOL_TYPE_SNMP_TABLE`, `AGENT_TABLE` and `AGENT_LIST` never do, so do not read, log or forward input fields on those paths.
+- **Object tool input fields.** `TOOL_TYPE_ACTION`, `SERVER_COMMAND`, `SERVER_SCRIPT`, `SSH_COMMAND`, `URL` and library-script execution expand input fields (via `expandText()` or NXSL `$INPUT`). The table tools expand them too: `TOOL_TYPE_SNMP_TABLE` into the column OIDs, `AGENT_TABLE` into the table name, `AGENT_LIST` into the list name, and all three into the table title. The title is returned to the client, so it is expanded from the masked copy (`BuildMaskedInputFields()`); the values sent to the agent or SNMP use the real ones.
 
 - **Buffers mirroring a column.** Size a C/C++ buffer that mirrors a `varchar(N)` column to exactly `N + 1`. The column is the canonical constraint; don't add speculative headroom (propose a schema change instead if the column is too narrow).
 

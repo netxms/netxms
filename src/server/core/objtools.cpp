@@ -634,22 +634,18 @@ static void GetAgentTable(TableToolStartupInfo *toolData)
 }
 
 /**
- * Agent list tool execution thread
+ * Execute agent list tool and collect result into Table object
  */
-static void GetAgentList(TableToolStartupInfo *toolData)
+static uint32_t ExecuteAgentListTool(uint32_t toolId, wchar_t *toolData, const shared_ptr<Node>& node, Table *table, const StringMap *inputFields, const StringMap *maskedInputFields, const wchar_t *userName)
 {
-   NXCPMessage msg(CMD_TABLE_DATA, toolData->requestId);
-
-   // Parse tool data. For agent table, it should have the following format:
-   // table_title<separator>enum<separator>matching_regexp
-   // where <separator> is a character with code 0x7F
-   TCHAR *listName = _tcschr(toolData->toolData, _T('\x7F'));
-   TCHAR *regex = nullptr;
+   // Tool data format: table_title<0x7F>list_name<0x7F>matching_regexp
+   wchar_t *listName = wcschr(toolData, L'\x7F');
+   wchar_t *regex = nullptr;
    if (listName != nullptr)
    {
       *listName = 0;
       listName++;
-      regex = _tcschr(listName, _T('\x7F'));
+      regex = wcschr(listName, L'\x7F');
       if (regex != nullptr)
       {
          *regex = 0;
@@ -657,123 +653,120 @@ static void GetAgentList(TableToolStartupInfo *toolData)
       }
    }
 
-   Table table;
-   const StringMap *titleFields = (toolData->maskedInputFields != nullptr) ? toolData->maskedInputFields : toolData->inputFields;
-   StringBuffer expandedTitle = toolData->node->expandText(toolData->toolData, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
-         toolData->session->getLoginName(), nullptr, nullptr, titleFields, nullptr);
-   table.setTitle(expandedTitle.cstr());
+   const StringMap *titleFields = (maskedInputFields != nullptr) ? maskedInputFields : inputFields;
+   StringBuffer expandedTitle = node->expandText(toolData, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+         userName, nullptr, nullptr, titleFields, nullptr);
+   table->setTitle(expandedTitle.cstr());
 
-   if ((listName != nullptr) && (regex != nullptr))
+   if ((listName == nullptr) || (regex == nullptr))
+      return RCC_INVALID_ARGUMENT;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number");
+   if (hStmt == nullptr)
    {
-      // Load column information
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
-      if (hStmt != nullptr)
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+   {
+      DBFreeStatement(hStmt);
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   wchar_t buffer[1024];
+   int numCols = DBGetNumRows(hResult);
+   IntegerArray<int32_t> captureGroups(numCols);
+   for(int i = 0; i < numCols; i++)
+   {
+      DBGetField(hResult, i, 0, buffer, 256);
+      table->addColumn(buffer, DBGetFieldULong(hResult, i, 1));
+      captureGroups.add(DBGetFieldLong(hResult, i, 2));
+   }
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+
+   if (numCols == 0)
+      return RCC_INTERNAL_ERROR;
+
+   const char *eptr;
+   int eoffset;
+   PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+   if (preg == nullptr)
+      return RCC_BAD_REGEXP;
+
+   uint32_t rcc;
+   shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
+   if (conn != nullptr)
+   {
+      StringBuffer expandedListName = node->expandText(listName, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
+            userName, nullptr, nullptr, inputFields, nullptr);
+      StringList *values;
+      uint32_t agentRcc = conn->getList(expandedListName.cstr(), &values);
+      if (agentRcc == ERR_SUCCESS)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolData->toolId);
-
-         DB_RESULT hResult = DBSelectPrepared(hStmt);
-         if (hResult != nullptr)
+         int captureCount = 0;
+         _pcre_fullinfo_t(preg, nullptr, PCRE_INFO_CAPTURECOUNT, &captureCount);
+         int ovecSize = (captureCount + 1) * 3;
+         Buffer<int, 256> offsets(ovecSize);
+         for(int i = 0; i < values->size(); i++)
          {
-            int numCols = DBGetNumRows(hResult);
-            if (numCols > 0)
+            const wchar_t *line = values->get(i);
+            int matchedGroups = _pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(wcslen(line)), 0, 0, offsets, ovecSize);
+            if (matchedGroups < 0)
+               continue;
+
+            table->addRow();
+            for(int j = 0; j < numCols; j++)
             {
-               TCHAR buffer[1024];
-
-               int *pnSubstrPos = MemAllocArray<int>(numCols);
-               for(int i = 0; i < numCols; i++)
+               // Capture groups that are not defined by the pattern or did not participate in the match produce empty cell
+               int32_t group = captureGroups.get(j);
+               if ((group >= 0) && (group < matchedGroups) && (offsets[group * 2] != -1))
                {
-                  DBGetField(hResult, i, 0, buffer, 256);
-                  table.addColumn(buffer, DBGetFieldULong(hResult, i, 1));
-                  pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
+                  size_t len = std::min(static_cast<size_t>(offsets[group * 2 + 1] - offsets[group * 2]), sizeof(buffer) / sizeof(wchar_t) - 1);
+                  memcpy(buffer, &line[offsets[group * 2]], len * sizeof(wchar_t));
+                  buffer[len] = 0;
                }
-
-               const char *eptr;
-               int eoffset;
-               PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
-               if (preg != nullptr)
+               else
                {
-                  shared_ptr<AgentConnectionEx> pConn = toolData->node->createAgentConnection();
-                  if (pConn != nullptr)
-                  {
-                     StringBuffer expandedListName = toolData->node->expandText(listName, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
-                           toolData->session->getLoginName(), nullptr, nullptr, toolData->inputFields, nullptr);
-                     StringList *values;
-                     uint32_t rcc = pConn->getList(expandedListName.cstr(), &values);
-                     if (rcc == ERR_SUCCESS)
-                     {
-                        Buffer<int, 64> offsets((numCols + 1) * 3);
-                        for(int i = 0; i < values->size(); i++)
-                        {
-                           const TCHAR *line = values->get(i);
-                           if (_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, offsets, (numCols + 1) * 3) >= 0)
-                           {
-                              table.addRow();
-
-                              // Write data for current row into message
-                              for(int j = 0; j < numCols; j++)
-                              {
-                                 int pos = pnSubstrPos[j];
-                                 if (offsets[pos * 2] != -1)
-                                 {
-                                    size_t len = std::min(static_cast<size_t>(offsets[pos * 2 + 1] - offsets[pos * 2]), sizeof(buffer) / sizeof(TCHAR) - 1);
-                                    memcpy(buffer, &line[offsets[pos * 2]], len * sizeof(TCHAR));
-                                    buffer[len] = 0;
-                                 }
-                                 else
-                                 {
-                                    buffer[0] = 0;
-                                 }
-                                 table.set(j, buffer);
-                              }
-                           }
-                        }
-                        delete values;
-
-                        msg.setField(VID_RCC, RCC_SUCCESS);
-                        table.fillMessage(&msg, 0, -1);
-                     }
-                     else
-                     {
-                        msg.setField(VID_RCC, AgentErrorToRCC(rcc));
-                     }
-                  }
-                  else
-                  {
-                     msg.setField(VID_RCC, RCC_COMM_FAILURE);
-                  }
-                  _pcre_free_t(preg);
+                  buffer[0] = 0;
                }
-               else     // Regexp compilation failed
-               {
-                  msg.setField(VID_RCC, RCC_BAD_REGEXP);
-               }
-               MemFree(pnSubstrPos);
+               table->set(j, buffer);
             }
-            else  // No columns defined
-            {
-               msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
-            }
-            DBFreeResult(hResult);
          }
-         else     // Cannot load column info from DB
-         {
-            msg.setField(VID_RCC, RCC_DB_FAILURE);
-         }
-         DBFreeStatement(hStmt);
+         delete values;
+         rcc = RCC_SUCCESS;
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         rcc = AgentErrorToRCC(agentRcc);
       }
-      DBConnectionPoolReleaseConnection(hdb);
-  }
+   }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      rcc = RCC_COMM_FAILURE;
    }
+   _pcre_free_t(preg);
+   return rcc;
+}
 
-   // Send response to client
+/**
+ * Agent list tool execution thread
+ */
+static void GetAgentList(TableToolStartupInfo *toolData)
+{
+   NXCPMessage msg(CMD_TABLE_DATA, toolData->requestId);
+   Table table;
+   uint32_t rcc = ExecuteAgentListTool(toolData->toolId, toolData->toolData, toolData->node, &table,
+         toolData->inputFields, toolData->maskedInputFields, toolData->session->getLoginName());
+   msg.setField(VID_RCC, rcc);
+   if (rcc == RCC_SUCCESS)
+      table.fillMessage(&msg, 0, -1);
    toolData->session->sendMessage(msg);
    delete toolData;
 }
@@ -1158,131 +1151,6 @@ static uint32_t ExecuteAgentTableTool(TCHAR *toolData, const shared_ptr<Node>& n
    agentTable->setTitle(expandedTitle.cstr());
    *result = agentTable;
    return RCC_SUCCESS;
-}
-
-/**
- * Execute agent list tool and collect result into Table object
- */
-static uint32_t ExecuteAgentListTool(uint32_t toolId, TCHAR *toolData, const shared_ptr<Node>& node, Table *table, const StringMap *inputFields, const StringMap *maskedInputFields, const wchar_t *userName)
-{
-   TCHAR *listName = _tcschr(toolData, _T('\x7F'));
-   TCHAR *regex = nullptr;
-   if (listName != nullptr)
-   {
-      *listName = 0;
-      listName++;
-      regex = _tcschr(listName, _T('\x7F'));
-      if (regex != nullptr)
-      {
-         *regex = 0;
-         regex++;
-      }
-   }
-
-   const StringMap *titleFields = (maskedInputFields != nullptr) ? maskedInputFields : inputFields;
-   StringBuffer expandedTitle = node->expandText(toolData, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
-         userName, nullptr, nullptr, titleFields, nullptr);
-   table->setTitle(expandedTitle.cstr());
-
-   if ((listName == nullptr) || (regex == nullptr))
-      return RCC_INVALID_ARGUMENT;
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_format,col_substr FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
-   if (hStmt == nullptr)
-   {
-      DBConnectionPoolReleaseConnection(hdb);
-      return RCC_DB_FAILURE;
-   }
-
-   uint32_t rcc;
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
-   DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != nullptr)
-   {
-      int numCols = DBGetNumRows(hResult);
-      if (numCols > 0)
-      {
-         TCHAR buffer[1024];
-         int *pnSubstrPos = MemAllocArray<int>(numCols);
-         for(int i = 0; i < numCols; i++)
-         {
-            DBGetField(hResult, i, 0, buffer, 256);
-            table->addColumn(buffer, DBGetFieldULong(hResult, i, 1));
-            pnSubstrPos[i] = DBGetFieldLong(hResult, i, 2);
-         }
-
-         const char *eptr;
-         int eoffset;
-         PCRE *preg = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(regex), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
-         if (preg != nullptr)
-         {
-            shared_ptr<AgentConnectionEx> pConn = node->createAgentConnection();
-            if (pConn != nullptr)
-            {
-               StringBuffer expandedListName = node->expandText(listName, nullptr, nullptr, shared_ptr<DCObjectInfo>(),
-                     userName, nullptr, nullptr, inputFields, nullptr);
-               StringList *values;
-               uint32_t agentRcc = pConn->getList(expandedListName.cstr(), &values);
-               if (agentRcc == ERR_SUCCESS)
-               {
-                  Buffer<int, 64> offsets((numCols + 1) * 3);
-                  for(int i = 0; i < values->size(); i++)
-                  {
-                     const TCHAR *line = values->get(i);
-                     if (_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, offsets, (numCols + 1) * 3) >= 0)
-                     {
-                        table->addRow();
-                        for(int j = 0; j < numCols; j++)
-                        {
-                           int pos = pnSubstrPos[j];
-                           if (offsets[pos * 2] != -1)
-                           {
-                              size_t len = std::min(static_cast<size_t>(offsets[pos * 2 + 1] - offsets[pos * 2]), sizeof(buffer) / sizeof(TCHAR) - 1);
-                              memcpy(buffer, &line[offsets[pos * 2]], len * sizeof(TCHAR));
-                              buffer[len] = 0;
-                           }
-                           else
-                           {
-                              buffer[0] = 0;
-                           }
-                           table->set(j, buffer);
-                        }
-                     }
-                  }
-                  delete values;
-                  rcc = RCC_SUCCESS;
-               }
-               else
-               {
-                  rcc = AgentErrorToRCC(agentRcc);
-               }
-            }
-            else
-            {
-               rcc = RCC_COMM_FAILURE;
-            }
-            _pcre_free_t(preg);
-         }
-         else
-         {
-            rcc = RCC_BAD_REGEXP;
-         }
-         MemFree(pnSubstrPos);
-      }
-      else
-      {
-         rcc = RCC_INTERNAL_ERROR;
-      }
-      DBFreeResult(hResult);
-   }
-   else
-   {
-      rcc = RCC_DB_FAILURE;
-   }
-   DBFreeStatement(hStmt);
-   DBConnectionPoolReleaseConnection(hdb);
-   return rcc;
 }
 
 /**

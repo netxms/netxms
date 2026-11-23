@@ -50,6 +50,7 @@ void TestScheduleFields();
 void TestScheduleDayOfWeek();
 void TestScheduleSeconds();
 void TestTimeZoneRule();
+void TestRegexCaptureGroups();
 void TestZipArchiveWriter();
 void TestWebSocketURLParsing();
 void TestWebSocketClient();
@@ -4043,6 +4044,7 @@ int main(int argc, char *argv[])
    TestScheduleDayOfWeek();
    TestScheduleSeconds();
    TestTimeZoneRule();
+   TestRegexCaptureGroups();
    TestZipArchiveWriter();
 
    if (debug)
