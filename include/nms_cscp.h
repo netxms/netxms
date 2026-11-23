@@ -298,7 +298,7 @@ __PACK_END__
 #define CMD_COPY_DCI                      0x005B
 #define CMD_WAKEUP_NODE                   0x005C
 #define CMD_DELETE_EVENT_TEMPLATE         0x005D
-#define CMD_GENERATE_EVENT_CODE           0x005E
+//#define CMD_GENERATE_EVENT_CODE           0x005E
 #define CMD_FIND_NODE_CONNECTION          0x005F
 #define CMD_FIND_MAC_LOCATION             0x0060
 #define CMD_CREATE_TRAP                   0x0061

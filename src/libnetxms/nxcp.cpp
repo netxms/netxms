@@ -137,7 +137,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_COPY_DCI"),
       _T("CMD_WAKEUP_NODE"),
       _T("CMD_DELETE_EVENT_TEMPLATE"),
-      _T("CMD_GENERATE_EVENT_CODE"),
+      _T("CMD_0x005E"),
       _T("CMD_FIND_NODE_CONNECTION"),
       _T("CMD_FIND_MAC_LOCATION"),
       _T("CMD_CREATE_TRAP"),

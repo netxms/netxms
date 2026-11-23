@@ -117,7 +117,7 @@ public class NXCPCodes
 	public static final int CMD_COPY_DCI = 0x005B;
 	public static final int CMD_WAKEUP_NODE = 0x005C;
 	public static final int CMD_DELETE_EVENT_TEMPLATE = 0x005D;
-	public static final int CMD_GENERATE_EVENT_CODE = 0x005E;
+//	public static final int CMD_GENERATE_EVENT_CODE = 0x005E;
 	public static final int CMD_FIND_NODE_CONNECTION = 0x005F;
 	public static final int CMD_FIND_MAC_LOCATION = 0x0060;
 	public static final int CMD_CREATE_TRAP = 0x0061;

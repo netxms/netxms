@@ -1172,9 +1172,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_EVENT_TEMPLATE:
          deleteEventTemplate(*request);
          break;
-      case CMD_GENERATE_EVENT_CODE:
-         generateEventCode(*request);
-         break;
       case CMD_MODIFY_OBJECT:
          modifyObject(*request);
          break;
@@ -3462,23 +3459,6 @@ void ClientSession::deleteEventTemplate(const NXCPMessage& request)
    }
 
    sendMessage(msg);
-}
-
-/**
- * Generate event code for new event template
- */
-void ClientSession::generateEventCode(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (checkSystemAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
-   {
-      response.setField(VID_EVENT_CODE, CreateUniqueId(IDG_EVENT));
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   sendMessage(response);
 }
 
 /**

@@ -11027,21 +11027,6 @@ public class NXCSession
    }
 
    /**
-    * Generate code for new event template.
-    *
-    * @return Code for new event template
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public long generateEventCode() throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GENERATE_EVENT_CODE);
-      sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getFieldAsInt64(NXCPCodes.VID_EVENT_CODE);
-   }
-
-   /**
     * Delete event template.
     *
     * @param eventCode Event code
