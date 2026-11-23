@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
@@ -778,7 +778,7 @@ void ExternalSubagent::sendCachedComponentTokens()
 
 /**
  * Add external subagent from config.
- * Each line in config should be in form 
+ * Each line in config should be in form
  * name:user
  * If user part is omited or set to *, connection from any account will be accepted
  */

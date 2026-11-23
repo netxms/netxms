@@ -74,7 +74,7 @@ bool WriteMetadata(const TCHAR *name, const TCHAR *value)
       return false;
 
    TCHAR query[1024];
-   _sntprintf(query, 1024, _T("INSERT OR REPLACE INTO metadata (attribute,value) VALUES ('%s',%s)"), 
+   _sntprintf(query, 1024, _T("INSERT OR REPLACE INTO metadata (attribute,value) VALUES ('%s',%s)"),
       name, (const TCHAR *)DBPrepareString(s_db, value, 255));
    return DBQuery(s_db, query);
 }
