@@ -138,6 +138,7 @@ AgentExtension::AgentExtension(const ExtensionConfig& cfg) :
    m_restartCount = 0;
    m_currentBackoffMs = 0;
    m_stopRequested = false;
+   m_dropReason = ConnectionDropReason::NONE;
    m_capabilitiesDirty = false;
    m_lastPingSentMs = 0;
    m_lastPingReplyMs = 0;
@@ -256,7 +257,7 @@ void AgentExtension::ioLoop()
    nxlog_debug_tag(getDebugTag(), 2, _T("Extension(%s): handshake complete, %d metrics / %d lists / %d tables / %d actions"),
             m_config.name, m_parameters.size(), m_lists.size(), m_tables.size(), m_actions.size());
 
-   while (!m_stopRequested)
+   while (keepConnection())
    {
       if (!readAndDispatch(1000))
       {
@@ -277,7 +278,12 @@ void AgentExtension::ioLoop()
       maybeSendPing(GetCurrentTimeMs());
    }
 
-   onDisconnect(_T("stop requested"));
+   if (m_stopRequested)
+      onDisconnect(_T("stop requested"));
+   else if (m_dropReason == ConnectionDropReason::PING_TIMEOUT)
+      onDisconnect(_T("ping timeout"));
+   else
+      onDisconnect(_T("extension announced shutdown"));
 }
 
 /**
@@ -419,7 +425,7 @@ json_t *AgentExtension::callSync(const char *method, json_t *params, uint32_t ti
 
    int64_t deadline = GetCurrentTimeMs() + timeoutMs;
    bool ioOk = true;
-   while (!req->completed && !m_stopRequested)
+   while (!req->completed && keepConnection())
    {
       int64_t remaining = deadline - GetCurrentTimeMs();
       if (remaining <= 0)
@@ -437,7 +443,7 @@ json_t *AgentExtension::callSync(const char *method, json_t *params, uint32_t ti
 
    if (!req->completed)
    {
-      setLastError(ioOk ? _T("callSync(%hs) timed out after %u ms") : _T("callSync(%hs) failed: connection lost"), method, timeoutMs);
+      setLastError((ioOk && keepConnection()) ? _T("callSync(%hs) timed out after %u ms") : _T("callSync(%hs) failed: connection lost"), method, timeoutMs);
       delete req;
       return nullptr;
    }
@@ -789,10 +795,11 @@ void AgentExtension::clearCapabilities()
 }
 
 /**
- * Connection lost or stop requested — clean up.  The socket stays open: the supervisor
- * loop (see extension_lifecycle.cpp) closes it in tearDownConnection() once ioLoop()
- * returns, after delivering the "shutdown" notification when stopping, and drives
- * reconnection by re-entering setupConnection() after applyBackoff().
+ * Connection lost, dropped (ping timeout or shutdown_notice) or stop requested — clean up.
+ * The socket stays open: the supervisor loop (see extension_lifecycle.cpp) closes it in
+ * tearDownConnection() once ioLoop() returns, after delivering the "shutdown" notification
+ * when stopping, and unless stopping drives reconnection by re-entering setupConnection()
+ * after applyBackoff().
  */
 void AgentExtension::onDisconnect(const TCHAR *reason)
 {
@@ -831,7 +838,8 @@ void AgentExtension::maybeSendPing(int64_t now)
                m_config.name, m_pingStrikes, PING_MAX_STRIKES);
       if (m_pingStrikes >= PING_MAX_STRIKES)
       {
-         m_stopRequested = true;
+         setLastError(_T("no reply to %u consecutive pings"), m_pingStrikes);
+         m_dropReason = ConnectionDropReason::PING_TIMEOUT;
          return;
       }
    }
@@ -1188,7 +1196,7 @@ void AgentExtension::handleNotification(const char *method, json_t *params)
    else if (!strcmp(method, "shutdown_notice"))
    {
       nxlog_debug_tag(getDebugTag(), 3, _T("Extension(%s): received shutdown_notice"), m_config.name);
-      m_stopRequested = true;
+      m_dropReason = ConnectionDropReason::SHUTDOWN_NOTICE;
    }
    else
    {

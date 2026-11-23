@@ -56,6 +56,17 @@ enum class ExtensionState
 };
 
 /**
+ * Reason for dropping the current extension connection while the extension itself stays active
+ * (the supervisor respawns or reconnects after backoff)
+ */
+enum class ConnectionDropReason
+{
+   NONE,
+   PING_TIMEOUT,      // extension stopped answering pings
+   SHUTDOWN_NOTICE    // extension announced that it is exiting
+};
+
+/**
  * Per-extension static configuration parsed from agent config
  */
 struct ExtensionConfig
@@ -166,7 +177,8 @@ private:
    MutableString m_lastError;
 
    // I/O loop control
-   volatile bool m_stopRequested;
+   volatile bool m_stopRequested;   // extension is being stopped (agent shutdown or restart)
+   ConnectionDropReason m_dropReason;  // set when current connection should be dropped; reset for each connection
    bool m_capabilitiesDirty;        // capabilities_changed received → re-fetch
    int64_t m_lastPingSentMs;
    int64_t m_lastPingReplyMs;
@@ -207,6 +219,7 @@ private:
    void handleLog(json_t *params);
    void handleActionOutput(json_t *params);
    void maybeSendPing(int64_t now);
+   bool keepConnection() const { return !m_stopRequested && (m_dropReason == ConnectionDropReason::NONE); }
    bool readAndDispatch(uint32_t timeoutMs);
 
 public:
