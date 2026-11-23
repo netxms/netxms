@@ -857,10 +857,10 @@ private:
 	void findMacAddress(const NXCPMessage& request);
 	void findIpAddress(const NXCPMessage& request);
 	void findHostname(const NXCPMessage& request);
-	void sendLibraryImage(const NXCPMessage& request);
-	void updateLibraryImage(const NXCPMessage& request);
-	void listLibraryImages(const NXCPMessage& request);
-	void deleteLibraryImage(const NXCPMessage& request);
+	void sendImage(const NXCPMessage& request);
+	void updateImage(const NXCPMessage& request);
+	void listImages(const NXCPMessage& request);
+	void deleteImage(const NXCPMessage& request);
 	void executeServerCommand(const NXCPMessage& request);
 	void stopServerCommand(const NXCPMessage& request);
 	void uploadFileToAgent(const NXCPMessage& request);

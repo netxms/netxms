@@ -444,9 +444,9 @@ __PACK_END__
 #define CMD_UPDATE_USM_CREDENTIALS        0x00ED
 #define CMD_GET_DCI_THRESHOLDS            0x00EE
 #define CMD_GET_IMAGE                     0x00EF
-#define CMD_CREATE_IMAGE                  0x00F0
+#define CMD_UPDATE_IMAGE                  0x00F0
 #define CMD_DELETE_IMAGE                  0x00F1
-#define CMD_MODIFY_IMAGE                  0x00F2
+//#define CMD_MODIFY_IMAGE                  0x00F2
 #define CMD_LIST_IMAGES                   0x00F3
 #define CMD_LIST_SERVER_FILES             0x00F4
 #define CMD_GET_TABLE                     0x00F5

@@ -1713,19 +1713,16 @@ void ClientSession::processRequest(NXCPMessage *request)
          findHostname(*request);
          break;
       case CMD_GET_IMAGE:
-         sendLibraryImage(*request);
+         sendImage(*request);
          break;
-      case CMD_CREATE_IMAGE:
-         updateLibraryImage(*request);
+      case CMD_UPDATE_IMAGE:
+         updateImage(*request);
          break;
       case CMD_DELETE_IMAGE:
-         deleteLibraryImage(*request);
-         break;
-      case CMD_MODIFY_IMAGE:
-         updateLibraryImage(*request);
+         deleteImage(*request);
          break;
       case CMD_LIST_IMAGES:
-         listLibraryImages(*request);
+         listImages(*request);
          break;
       case CMD_EXECUTE_SERVER_COMMAND:
          executeServerCommand(*request);
@@ -13958,7 +13955,7 @@ void ClientSession::findHostname(const NXCPMessage& request)
 /**
  * Send image from library to client
  */
-void ClientSession::sendLibraryImage(const NXCPMessage& request)
+void ClientSession::sendImage(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -13970,7 +13967,7 @@ void ClientSession::sendLibraryImage(const NXCPMessage& request)
    uuid_t guid;
    request.getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
    _uuid_to_string(guid, guidText);
-   debugPrintf(5, L"sendLibraryImage: guid=%s", guidText);
+   debugPrintf(5, L"sendImage: guid=%s", guidText);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT name,category,mimetype,protected,image_data FROM images WHERE guid=?");
@@ -14043,7 +14040,7 @@ void ClientSession::onLibraryImageChange(const uuid& guid, bool removed)
 /**
  * Update library image from client
  */
-void ClientSession::updateLibraryImage(const NXCPMessage& request)
+void ClientSession::updateImage(const NXCPMessage& request)
 {
 	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (!checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
@@ -14077,7 +14074,7 @@ void ClientSession::updateLibraryImage(const NXCPMessage& request)
 	if (mimetype[0] == 0)
 		_tcscpy(mimetype, _T("image/unknown"));
 
-	debugPrintf(5, _T("updateLibraryImage: guid=%s, name=%s, category=%s"), guidText, name, category);
+	debugPrintf(5, _T("updateImage: guid=%s, name=%s, category=%s"), guidText, name, category);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -14122,7 +14119,7 @@ void ClientSession::updateLibraryImage(const NXCPMessage& request)
             // Stage uploaded bytes to a temp file under {datadir}/images; on
             // completion the lambda loads it into image_data column and unlinks.
             _sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
-            debugPrintf(5, _T("updateLibraryImage: guid=%s, stagingFile=%s"), guidText, absFileName);
+            debugPrintf(5, _T("updateImage: guid=%s, stagingFile=%s"), guidText, absFileName);
 
             bool isSVG = !_tcsicmp(mimetype, _T("image/svg+xml"));
             ServerDownloadFileInfo *dInfo = new ServerDownloadFileInfo(absFileName,
@@ -14193,7 +14190,7 @@ void ClientSession::updateLibraryImage(const NXCPMessage& request)
 /**
  * Delete image from library
  */
-void ClientSession::deleteLibraryImage(const NXCPMessage& request)
+void ClientSession::deleteImage(const NXCPMessage& request)
 {
 	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -14207,7 +14204,7 @@ void ClientSession::deleteLibraryImage(const NXCPMessage& request)
 	uuid guid = request.getFieldAsGUID(VID_GUID);
    TCHAR guidText[64];
 	guid.toString(guidText);
-	debugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
+	debugPrintf(5, _T("deleteImage: guid=%s"), guidText);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -14257,7 +14254,7 @@ void ClientSession::deleteLibraryImage(const NXCPMessage& request)
 /**
  * Send list of available images (in category)
  */
-void ClientSession::listLibraryImages(const NXCPMessage& request)
+void ClientSession::listImages(const NXCPMessage& request)
 {
 	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -14272,7 +14269,7 @@ void ClientSession::listLibraryImages(const NXCPMessage& request)
 	{
 		category[0] = 0;
 	}
-	debugPrintf(5, _T("listLibraryImages: category=%s"), category[0] == 0 ? _T("*ANY*") : category);
+	debugPrintf(5, _T("listImages: category=%s"), category[0] == 0 ? _T("*ANY*") : category);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 

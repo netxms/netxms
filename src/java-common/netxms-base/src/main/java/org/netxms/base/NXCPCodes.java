@@ -263,9 +263,9 @@ public class NXCPCodes
 	public static final int CMD_UPDATE_USM_CREDENTIALS = 0x00ED;
 	public static final int CMD_GET_DCI_THRESHOLDS = 0x00EE;
 	public static final int CMD_GET_IMAGE = 0x00EF;
-	public static final int CMD_CREATE_IMAGE = 0x00F0;
+	public static final int CMD_UPDATE_IMAGE = 0x00F0;
 	public static final int CMD_DELETE_IMAGE = 0x00F1;
-	public static final int CMD_MODIFY_IMAGE = 0x00F2;
+//	public static final int CMD_MODIFY_IMAGE = 0x00F2;
 	public static final int CMD_LIST_IMAGES = 0x00F3;
 	public static final int CMD_LIST_SERVER_FILES = 0x00F4;
 	public static final int CMD_GET_TABLE = 0x00F5;

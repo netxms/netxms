@@ -12894,7 +12894,7 @@ public class NXCSession
     */
    public LibraryImage createImage(LibraryImage image, ProgressListener listener) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_IMAGE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_IMAGE);
       image.fillMessage(msg);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -12952,7 +12952,7 @@ public class NXCSession
          throw new NXCException(RCC.PROTECTED_IMAGE);
       }
 
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_IMAGE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_IMAGE);
       image.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
