@@ -16,6 +16,7 @@ SOURCES = \
 	nxcp.cpp \
 	proc.cpp \
 	queue.cpp \
+	regex.cpp \
 	schedule.cpp \
 	test-libnetxms.cpp \
 	threads.cpp \
@@ -24,8 +25,9 @@ SOURCES = \
 	websocket.cpp \
 	zip.cpp
 TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
-# RAND_bytes() is called directly by the hash map and crypto tests, so OpenSSL
-# is linked in addition to libnetxms itself.
-TOOL_LIBS = -lnetxms -lnxjansson -lz $(SSL_LIBS)
+# RAND_bytes() is called directly by the hash map and crypto tests and the regex
+# test calls PCRE directly, so OpenSSL and PCRE are linked in addition to
+# libnetxms itself.
+TOOL_LIBS = -lnetxms -lnxjansson -lz $(SSL_LIBS) $(PCRE_LIBS)
 
 include $(TOPDIR)/build/tool-common.mk

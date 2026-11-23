@@ -88,6 +88,7 @@ typedef pcre2_match_data_32 pcre32_extra;
 // Additional PCRE1 compatibility constants
 #define PCRE_CASELESS           PCRE2_CASELESS
 #define PCRE_DOTALL             PCRE2_DOTALL
+#define PCRE_INFO_CAPTURECOUNT  PCRE2_INFO_CAPTURECOUNT
 #define PCRE_INFO_NAMECOUNT     PCRE2_INFO_NAMECOUNT
 #define PCRE_INFO_NAMETABLE     PCRE2_INFO_NAMETABLE
 #define PCRE_INFO_NAMEENTRYSIZE PCRE2_INFO_NAMEENTRYSIZE
@@ -101,6 +102,8 @@ typedef pcre2_match_data_32 pcre32_extra;
 #endif
 
 // PCRE2 wrapper functions for compatibility
+// On a successful match the exec wrappers set every ovector entry past the last captured group to -1,
+// so callers can test any group index within ovecsize without consulting the return value.
 // ASCII/8-bit wrappers - force 8-bit width for these functions
 static inline pcre2_code_8* pcre_compile(const char* pattern, int options, const char** errptr, int* erroffset, const char* tableptr)
 {
@@ -125,6 +128,8 @@ static inline int pcre_exec(const pcre2_code_8* code, const pcre_extra* extra, c
       int copy_count = (result * 2 < ovecsize) ? result * 2 : ovecsize;
       for (int i = 0; i < copy_count; i++)
          ovector[i] = (int)pcre2_ovector[i];
+      for (int i = copy_count; i < ovecsize; i++)
+         ovector[i] = -1;
    }
 
    pcre2_match_data_free_8(match_data);
@@ -178,6 +183,8 @@ static inline int pcre16_exec(const pcre2_code_16* code, const pcre_extra* extra
       int copy_count = (result * 2 < ovecsize) ? result * 2 : ovecsize;
       for (int i = 0; i < copy_count; i++)
          ovector[i] = (int)pcre2_ovector[i];
+      for (int i = copy_count; i < ovecsize; i++)
+         ovector[i] = -1;
    }
 
    pcre2_match_data_free_16(match_data);
@@ -220,6 +227,8 @@ static inline int pcre32_exec(const pcre2_code_32* code, const pcre_extra* extra
       int copy_count = (result * 2 < ovecsize) ? result * 2 : ovecsize;
       for (int i = 0; i < copy_count; i++)
          ovector[i] = (int)pcre2_ovector[i];
+      for (int i = copy_count; i < ovecsize; i++)
+         ovector[i] = -1;
    }
 
    pcre2_match_data_free_32(match_data);
