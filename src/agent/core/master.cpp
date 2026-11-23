@@ -212,6 +212,12 @@ void MasterAgentListener()
                case CMD_RESTART:
                   stopInitiated = (RestartAgent() == ERR_SUCCESS);
                   break;
+               case CMD_RESET_LOCAL_DATABASE:
+                  if (g_dwFlags & AF_DISABLE_LOCAL_DATABASE)
+                     response.setField(VID_RCC, ERR_FUNCTION_NOT_SUPPORTED);
+                  else
+                     response.setField(VID_RCC, (RequestLocalDatabaseReset() == LocalDatabaseResetRequest::FAILED) ? ERR_IO_FAILURE : ERR_SUCCESS);
+                  break;
                case CMD_SYNC_AGENT_POLICIES:
                   SyncAgentPolicies(*msg);
                   break;

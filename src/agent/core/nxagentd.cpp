@@ -266,6 +266,11 @@ bool g_restartPending = false;   // Restart pending flag
 static bool s_startupCancelled = false;   // Startup stopped intentionally before initialization completed (not an error)
 #endif
 
+/**
+ * Cleared by restart helper when it cannot confirm that previous agent instance has exited
+ */
+static bool s_predecessorExitConfirmed = true;
+
 #ifndef _WIN32
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
 #endif
@@ -781,6 +786,59 @@ static uint32_t H_RestartAgent(const shared_ptr<ActionExecutionContext>& context
 }
 
 /**
+ * Set while background local database reset job owns the reset (until agent process exits if restart was initiated)
+ */
+static bool s_localDatabaseResetJobActive = false;
+static Mutex s_localDatabaseResetJobLock(MutexType::FAST);
+
+/**
+ * Restart agent to complete local database reset
+ */
+static void RestartForLocalDatabaseReset()
+{
+   if (RestartAgent() == ERR_SUCCESS)
+      return;
+
+   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Agent restart failed, local database reset is not completed by this request"));
+   CancelLocalDatabaseResetRequest();
+   LockGuard lockGuard(s_localDatabaseResetJobLock);
+   s_localDatabaseResetJobActive = false;
+}
+
+/**
+ * Request local database reset from external subagent loaders, then restart agent
+ */
+static void LocalDatabaseResetJob()
+{
+   RequestLocalDatabaseResetInExtSubagents();
+   RestartForLocalDatabaseReset();
+}
+
+/**
+ * Handler for Agent.ResetLocalDatabase action
+ */
+static uint32_t H_ResetLocalDatabase(const shared_ptr<ActionExecutionContext>& context)
+{
+   LockGuard lockGuard(s_localDatabaseResetJobLock);
+   if (s_localDatabaseResetJobActive)
+      return ERR_SUCCESS;
+
+   switch(RequestLocalDatabaseReset())
+   {
+      case LocalDatabaseResetRequest::FAILED:
+         return ERR_IO_FAILURE;
+      case LocalDatabaseResetRequest::IN_PROGRESS:
+         ThreadPoolExecute(g_executorThreadPool, RestartForLocalDatabaseReset);
+         break;
+      default:
+         ThreadPoolExecute(g_executorThreadPool, LocalDatabaseResetJob);
+         break;
+   }
+   s_localDatabaseResetJobActive = true;
+   return ERR_SUCCESS;
+}
+
+/**
  * Handler for Agent.RotateLog action
  */
 static uint32_t H_RotateLog(const shared_ptr<ActionExecutionContext>& context)
@@ -1233,10 +1291,14 @@ BOOL Initialize()
       RegisterProblem, UnregisterProblem, s_timerThreadPool, RegisterScreenshotProvider, UnregisterScreenshotProvider);
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Subagent API initialized"));
 
+   if (!s_predecessorExitConfirmed)
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Exit of previous agent instance was not confirmed during restart"));
+
    DBInit();
    if (!(g_dwFlags & AF_DISABLE_LOCAL_DATABASE))
    {
-      if (!OpenLocalDatabase())
+      bool openDatabase = s_predecessorExitConfirmed ? ProcessLocalDatabaseResetRequest() : DeferLocalDatabaseResetRequest();
+      if (!openDatabase || !OpenLocalDatabase())
       {
          nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database unavailable"));
       }
@@ -1288,6 +1350,8 @@ BOOL Initialize()
       else
       {
          g_agentId = backupAgentId;
+         if (!(g_dwFlags & AF_SUBAGENT_LOADER))
+            WriteMetadata(_T("AgentId"), g_agentId.toString(agentIdText));
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Agent ID recovered from backup file"));
       }
    }
@@ -1376,6 +1440,8 @@ BOOL Initialize()
       // Add built-in actions
       AddAction(_T("Agent.Restart"), false, nullptr, H_RestartAgent, _T("CORE"), _T("Restart agent"));
       AddAction(_T("Agent.RotateLog"), false, nullptr, H_RotateLog, _T("CORE"), _T("Rotate agent log"));
+      if (!(g_dwFlags & AF_DISABLE_LOCAL_DATABASE))
+         AddAction(_T("Agent.ResetLocalDatabase"), false, nullptr, H_ResetLocalDatabase, _T("CORE"), _T("Reset local databases of agent and connected external subagent loaders and restart agent"));
 #ifndef _WIN32
       AddAction(_T("Process.Terminate"), false, nullptr, H_TerminateProcess, _T("CORE"), _T("Terminate process"));
 #endif
@@ -1902,16 +1968,18 @@ static void DoRestartActions(uint32_t oldPID)
    }
    else
    {
-      HANDLE hProcess;
-
-      hProcess = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, oldPID);
+      HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, oldPID);
       if (hProcess != nullptr)
       {
-         if (WaitForSingleObject(hProcess, 60000) == WAIT_TIMEOUT)
-         {
-            TerminateProcess(hProcess, 0);
-         }
+         DWORD rc = WaitForSingleObject(hProcess, 60000);
+         if ((rc == WAIT_TIMEOUT) && TerminateProcess(hProcess, 0))
+            rc = WaitForSingleObject(hProcess, 10000);
+         s_predecessorExitConfirmed = (rc == WAIT_OBJECT_0);
          CloseHandle(hProcess);
+      }
+      else
+      {
+         s_predecessorExitConfirmed = (GetLastError() == ERROR_INVALID_PARAMETER);   // no process with given PID
       }
    }
 #else
@@ -1933,7 +2001,12 @@ static void DoRestartActions(uint32_t oldPID)
 
    // Kill previous instance of agent if it's still running
    if (i == 30)
+   {
       kill(oldPID, SIGKILL);
+      for(i = 0; (i < 50) && (kill(oldPID, 0) == 0); i++)
+         ThreadSleepMs(200);
+   }
+   s_predecessorExitConfirmed = (kill(oldPID, 0) == -1) && (errno == ESRCH);
 #endif
 }
 
@@ -1998,6 +2071,12 @@ static int GetGroupId(const char *name)
  */
 static int ResetIdentity()
 {
+   if (IsLocalDatabaseResetPending())
+   {
+      _tprintf(_T("Local database reset is pending or in progress, start the agent to complete it before resetting agent identity\n"));
+      return 8;
+   }
+
    int exitCode = 0;
    if (OpenLocalDatabase())
    {

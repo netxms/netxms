@@ -353,6 +353,294 @@ static bool CheckDatabaseStructure()
 static TCHAR s_dbFileName[MAX_PATH] = _T("");
 
 /**
+ * Lock for local database reset requests
+ */
+static Mutex s_resetRequestLock(MutexType::FAST);
+
+/**
+ * Maximum age of local database reset request in seconds
+ */
+#define RESET_REQUEST_TTL  900
+
+/**
+ * Build local database file name. Buffer must be at least MAX_PATH characters long.
+ */
+static bool GetLocalDatabaseFileName(TCHAR *buffer)
+{
+   StringBuffer name(g_szDataDirectory);
+   if (!name.endsWith(FS_PATH_SEPARATOR))
+      name.append(FS_PATH_SEPARATOR_CHAR);
+   name.append(_T("nxagentd.db"));
+   if (g_dwFlags & AF_SUBAGENT_LOADER)
+   {
+      name.append(_T('.'));
+      name.append(g_masterAgent);
+   }
+   if (name.length() >= MAX_PATH)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database file name \"%s\" is too long"), name.cstr());
+      return false;
+   }
+   _tcscpy(buffer, name);
+   return true;
+}
+
+/**
+ * Build name of a file located next to local database file
+ */
+static StringBuffer SidecarFileName(const TCHAR *dbFileName, const TCHAR *suffix)
+{
+   StringBuffer name(dbFileName);
+   name.append(suffix);
+   return name;
+}
+
+/**
+ * Check if file exists
+ */
+static inline bool FileExists(const TCHAR *path)
+{
+   return _taccess(path, 0) == 0;
+}
+
+/**
+ * Delete file if it exists
+ */
+static bool DeleteFileIfExists(const TCHAR *path)
+{
+   if ((_tremove(path) == 0) || (errno == ENOENT))
+      return true;
+   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot delete file \"%s\" (%s)"), path, _tcserror(errno));
+   return false;
+}
+
+/**
+ * Rename file if it exists. Existing target is never replaced.
+ */
+static bool RenameFileIfExists(const TCHAR *source, const TCHAR *target)
+{
+   if (!FileExists(source) && (errno == ENOENT))
+      return true;
+   if (FileExists(target))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot rename file \"%s\" to \"%s\" (target file already exists)"), source, target);
+      return false;
+   }
+   if (_trename(source, target) == 0)
+      return true;
+   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot rename file \"%s\" to \"%s\" (%s)"), source, target, _tcserror(errno));
+   return false;
+}
+
+/**
+ * Request local database reset on next agent start
+ */
+LocalDatabaseResetRequest RequestLocalDatabaseReset()
+{
+   TCHAR dbFileName[MAX_PATH];
+   if (!GetLocalDatabaseFileName(dbFileName))
+      return LocalDatabaseResetRequest::FAILED;
+
+   LockGuard lockGuard(s_resetRequestLock);
+
+   if (FileExists(SidecarFileName(dbFileName, _T(".reset-active"))))
+      return LocalDatabaseResetRequest::IN_PROGRESS;
+
+   StringBuffer requestMarker = SidecarFileName(dbFileName, _T(".reset"));
+   FILE *f = _tfopen(requestMarker, _T("w"));
+   if (f == nullptr)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot create local database reset request file \"%s\" (%s)"), requestMarker.cstr(), _tcserror(errno));
+      return LocalDatabaseResetRequest::FAILED;
+   }
+   bool success = (fprintf(f, "%lld\n", static_cast<long long>(time(nullptr))) > 0);
+   if (fclose(f) != 0)
+      success = false;
+   if (!success)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot write local database reset request file \"%s\" (%s)"), requestMarker.cstr(), _tcserror(errno));
+      _tremove(requestMarker);
+      return LocalDatabaseResetRequest::FAILED;
+   }
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("Local database reset requested, it will be done on next agent start"));
+   return LocalDatabaseResetRequest::CREATED;
+}
+
+/**
+ * Cancel pending local database reset request. Reset that is already in progress is not affected.
+ */
+void CancelLocalDatabaseResetRequest()
+{
+   TCHAR dbFileName[MAX_PATH];
+   if (!GetLocalDatabaseFileName(dbFileName))
+      return;
+
+   LockGuard lockGuard(s_resetRequestLock);
+   StringBuffer requestMarker = SidecarFileName(dbFileName, _T(".reset"));
+   if (_tremove(requestMarker) == 0)
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("Local database reset request cancelled"));
+   else if (errno != ENOENT)
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot delete local database reset request file \"%s\" (%s)"), requestMarker.cstr(), _tcserror(errno));
+}
+
+/**
+ * Check if local database reset is pending or in progress
+ */
+bool IsLocalDatabaseResetPending()
+{
+   TCHAR dbFileName[MAX_PATH];
+   if (!GetLocalDatabaseFileName(dbFileName))
+      return false;
+   return FileExists(SidecarFileName(dbFileName, _T(".reset"))) || FileExists(SidecarFileName(dbFileName, _T(".reset-active")));
+}
+
+/**
+ * Check if reset request file contains request time within allowed range
+ */
+static bool IsResetRequestValid(const TCHAR *requestMarker)
+{
+   FILE *f = _tfopen(requestMarker, _T("rb"));
+   if (f == nullptr)
+      return false;
+   char buffer[32];
+   size_t size = fread(buffer, 1, sizeof(buffer), f);
+   bool readError = (ferror(f) != 0);
+   fclose(f);
+   if (readError || (size == sizeof(buffer)))
+      return false;
+
+   size_t digits = 0;
+   while ((digits < size) && isdigit(static_cast<unsigned char>(buffer[digits])))
+      digits++;
+   if ((digits == 0) || (digits > 18))
+      return false;
+   size_t suffixSize = size - digits;
+   if ((suffixSize != 0) &&
+       !((suffixSize == 1) && (buffer[digits] == '\n')) &&
+       !((suffixSize == 2) && (buffer[digits] == '\r') && (buffer[digits + 1] == '\n')))
+      return false;
+   buffer[digits] = 0;
+   long long requestTime = strtoll(buffer, nullptr, 10);
+
+   // Request time slightly in the future is accepted to tolerate clock adjustment before restart
+   long long now = static_cast<long long>(time(nullptr));
+   return (requestTime >= now - RESET_REQUEST_TTL) && (requestTime <= now + RESET_REQUEST_TTL);
+}
+
+/**
+ * Mark local database as unavailable
+ */
+static void ReportLocalDatabaseOpenFailure()
+{
+   g_failFlags |= FAIL_OPEN_DATABASE;
+   RegisterProblem(SEVERITY_MAJOR, _T("localdb-open"), _T("Agent cannot open local database"));
+}
+
+/**
+ * Delete reset marker before opening local database. If marker cannot be deleted, local database is marked as unavailable.
+ */
+static bool DeleteResetMarker(const TCHAR *marker)
+{
+   if (DeleteFileIfExists(marker))
+      return true;
+   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database will not be opened while file \"%s\" exists"), marker);
+   ReportLocalDatabaseOpenFailure();
+   return false;
+}
+
+/**
+ * Process pending local database reset request. Should be called on agent startup before local database is opened.
+ * Returns false if local database should not be opened.
+ */
+bool ProcessLocalDatabaseResetRequest()
+{
+   TCHAR dbFileName[MAX_PATH];
+   if (!GetLocalDatabaseFileName(dbFileName))
+      return true;   // OpenLocalDatabase() will report the error
+
+   StringBuffer requestMarker = SidecarFileName(dbFileName, _T(".reset"));
+   StringBuffer activeMarker = SidecarFileName(dbFileName, _T(".reset-active"));
+   static const TCHAR *liveSuffixes[] = { _T(""), _T("-wal"), _T("-journal") };
+   static const TCHAR *backupSuffixes[] = { _T(".bak"), _T(".bak-wal"), _T(".bak-journal") };
+
+   bool success = true;
+   if (!FileExists(activeMarker))
+   {
+      if (!FileExists(requestMarker))
+         return true;
+
+      if (!IsResetRequestValid(requestMarker))
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("Local database reset request is expired or invalid and will be ignored"));
+         return DeleteResetMarker(requestMarker);
+      }
+
+      for(int i = 0; i < 3; i++)
+      {
+         if (!DeleteFileIfExists(SidecarFileName(dbFileName, backupSuffixes[i])))
+         {
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database reset cancelled (cannot delete previous backup)"));
+            return DeleteResetMarker(requestMarker);
+         }
+      }
+
+      if (_trename(requestMarker, activeMarker) != 0)
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database reset cancelled (cannot rename \"%s\" to \"%s\": %s)"),
+            requestMarker.cstr(), activeMarker.cstr(), _tcserror(errno));
+         return DeleteResetMarker(requestMarker);
+      }
+
+      if (!RenameFileIfExists(dbFileName, SidecarFileName(dbFileName, backupSuffixes[0])))
+      {
+         if (DeleteFileIfExists(activeMarker))
+         {
+            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database reset cancelled (cannot move database file), existing database will be used"));
+            return true;
+         }
+         success = false;
+      }
+   }
+
+   for(int i = 0; (i < 3) && success; i++)
+      success = RenameFileIfExists(SidecarFileName(dbFileName, liveSuffixes[i]), SidecarFileName(dbFileName, backupSuffixes[i]));
+   success = success && DeleteFileIfExists(SidecarFileName(dbFileName, _T("-shm"))) && DeleteFileIfExists(activeMarker);
+   if (!success)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database reset cannot be completed, local database will not be opened (file \"%s\" kept for retry on next start)"), activeMarker.cstr());
+      ReportLocalDatabaseOpenFailure();
+      return false;
+   }
+
+   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("Local database reset completed, previous database files archived as \"%s.bak\""), dbFileName);
+   return true;
+}
+
+/**
+ * Leave local database reset markers untouched on startup (used when previous agent instance may still be running).
+ * Returns false if local database should not be opened.
+ */
+bool DeferLocalDatabaseResetRequest()
+{
+   TCHAR dbFileName[MAX_PATH];
+   if (!GetLocalDatabaseFileName(dbFileName))
+      return true;   // OpenLocalDatabase() will report the error
+
+   StringBuffer activeMarker = SidecarFileName(dbFileName, _T(".reset-active"));
+   if (FileExists(activeMarker))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database reset is in progress but previous agent instance may still be running, local database will not be opened (file \"%s\" kept for retry on next start)"), activeMarker.cstr());
+      ReportLocalDatabaseOpenFailure();
+      return false;
+   }
+
+   if (FileExists(SidecarFileName(dbFileName, _T(".reset"))))
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("Previous agent instance may still be running, pending local database reset request is not processed"));
+   return true;
+}
+
+/**
  * Open local agent database
  */
 bool OpenLocalDatabase()
@@ -375,23 +663,19 @@ bool OpenLocalDatabase()
          return true;
       });
 
-	_tcslcpy(s_dbFileName, g_szDataDirectory, MAX_PATH - 12);
-	if (s_dbFileName[_tcslen(s_dbFileName) - 1] != FS_PATH_SEPARATOR_CHAR)
-		_tcscat(s_dbFileName, FS_PATH_SEPARATOR);
-	_tcslcat(s_dbFileName, _T("nxagentd.db"), MAX_PATH);
-	if (g_dwFlags & AF_SUBAGENT_LOADER)
-	{
-	   _tcslcat(s_dbFileName, _T("."), MAX_PATH);
-      _tcslcat(s_dbFileName, g_masterAgent, MAX_PATH);
-	}
+   if (!GetLocalDatabaseFileName(s_dbFileName))
+   {
+      s_dbFileName[0] = 0;
+      ReportLocalDatabaseOpenFailure();
+      return false;
+   }
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    s_db = DBConnect(s_driver, nullptr, s_dbFileName, nullptr, nullptr, nullptr, errorText);
    if (s_db == nullptr)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot open database (%s)"), errorText);
-	   g_failFlags |= FAIL_OPEN_DATABASE;
-      RegisterProblem(SEVERITY_MAJOR, _T("localdb-open"), _T("Agent cannot open local database"));
+      ReportLocalDatabaseOpenFailure();
       return false;
    }
 

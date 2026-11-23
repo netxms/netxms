@@ -42,8 +42,8 @@ public class NXCPCodes
    public static final int CMD_EXECUTE_ACTION = 0x0010;
    public static final int CMD_DELETE_CONFIG_VARIABLE = 0x0011;
    public static final int CMD_NOTIFY = 0x0012;
-	public static final int CMD_TRAP = 0x0013;
-	public static final int CMD_GET_EPP = 0x0014;
+   public static final int CMD_TRAP = 0x0013;
+   public static final int CMD_GET_EPP = 0x0014;
    public static final int CMD_SAVE_EPP = 0x0015;
    public static final int CMD_EPP_RECORD = 0x0016;
    public static final int CMD_EXPLAIN_EPP_RULE = 0x0017;
@@ -389,7 +389,7 @@ public class NXCPCodes
    public static final int CMD_CLOSE_TCP_PROXY = 0x016E;
    public static final int CMD_GET_DEPENDENT_NODES = 0x016F;
    public static final int CMD_DELETE_DCI_ENTRY = 0x0170;
-//   public static final int CMD_GET_ACTIVE_THRESHOLDS = 0x0171;
+   public static final int CMD_RESET_LOCAL_DATABASE = 0x0171;
    public static final int CMD_QUERY_INTERNAL_TOPOLOGY = 0x0172;
    public static final int CMD_GET_GRAPH = 0x0175;
    public static final int CMD_UPDATE_AGENT_POLICY = 0x0176;
