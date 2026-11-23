@@ -264,7 +264,7 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32
       {
          case DB_SYNTAX_TSDB:
             _sntprintf(query, 1024,
-               _T("SELECT timestamptz_to_ms(time_bucket('") INT64_FMT _T(" milliseconds',idata_timestamp)),")
+               _T("SELECT timestamptz_to_ms(time_bucket(") INT64_FMT _T("*interval '1 millisecond',idata_timestamp)),")
                _T("AVG(idata_value::double precision),MIN(idata_value::double precision),MAX(idata_value::double precision) ")
                _T("FROM idata_sc_%s WHERE item_id=?%s%s GROUP BY 1 ORDER BY 1 DESC"),
                bucketSizeMs, DCObject::getStorageClassName(storageClass), condition, numericFilter);
