@@ -116,7 +116,7 @@ static LONG H_IsMasterMachine(const TCHAR *param, const TCHAR *arg, TCHAR *value
    struct utsname un;
    if (uname(&un) != 0)
       return SYSINFO_RC_ERROR;
-   ret_int(value, !strcmp(pmid, un.nodename) ? 1 : 0);
+   ret_int(value, !stricmp(pmid, un.nodename) ? 1 : 0);
 #endif
    return SYSINFO_RC_SUCCESS;
 }
@@ -231,8 +231,13 @@ static bool SubAgentInit(Config *config)
 
    g_tuxedoLocalMachineFilter = config->getValueAsBoolean(_T("/Tuxedo/FilterByLocalMachineId"), true);
    nxlog_debug_tag(TUXEDO_DEBUG_TAG, 3, _T("Filter by local machine ID is %s"), g_tuxedoLocalMachineFilter ? _T("ON") : _T("OFF"));
-   s_pollerThread = ThreadCreateEx(TuxedoPollerThread, GetTuxedoClientThreadStackSize(),
-         CAST_TO_POINTER(config->getValueAsUInt(_T("/Tuxedo/PollingInterval"), 10), void*));
+   uint32_t pollingInterval = config->getValueAsUInt(_T("/Tuxedo/PollingInterval"), 10);
+   if (pollingInterval == 0)
+   {
+      nxlog_write_tag(NXLOG_WARNING, TUXEDO_DEBUG_TAG, _T("Invalid polling interval 0, using 1 second instead"));
+      pollingInterval = 1;
+   }
+   s_pollerThread = ThreadCreateEx(TuxedoPollerThread, GetTuxedoClientThreadStackSize(), CAST_TO_POINTER(pollingInterval, void*));
    return true;
 }
 
@@ -266,7 +271,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("EnduroX.Machine.Conversations(*)"), H_MachineInfo, _T("o"), DCI_DT_INT, _T("Enduro/X machine {instance}: conversations") },
    { _T("EnduroX.Machine.State(*)"), H_MachineInfo, _T("S"), DCI_DT_STRING, _T("Enduro/X machine {instance} state") },
    { _T("EnduroX.Queue.Machine(*)"), H_QueueInfo, _T("M"), DCI_DT_STRING, _T("Enduro/X queue {instance}: hosting machine") },
-   { _T("EnduroX.Queue.RequestsCurrent(*)"), H_QueueInfo, _T("r"), DCI_DT_STRING, _T("Enduro/X queue {instance}: current requests queued") },
+   { _T("EnduroX.Queue.RequestsCurrent(*)"), H_QueueInfo, _T("r"), DCI_DT_INT, _T("Enduro/X queue {instance}: current requests queued") },
    { _T("EnduroX.Queue.State(*)"), H_QueueInfo, _T("s"), DCI_DT_STRING, _T("Enduro/X queue {instance} state") },
    { _T("EnduroX.ServerInstance.CommandLine(*)"), H_ServerInstanceInfo, _T("C"), DCI_DT_STRING, _T("Enduro/X server instance {instance}: command line") },
    { _T("EnduroX.ServerInstance.Generation(*)"), H_ServerInstanceInfo, _T("G"), DCI_DT_INT, _T("Enduro/X server instance {instance}: generation") },
@@ -312,13 +317,13 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Machine.WorkloadsProcessed(*)"), H_MachineInfo, _T("w"), DCI_DT_INT, _T("Tuxedo machine {instance}: workloads processed") },
    { _T("Tuxedo.Machine.WorkstationClients(*)"), H_MachineInfo, _T("c"), DCI_DT_INT, _T("Tuxedo machine {instance}: workstation clients") },
    { _T("Tuxedo.Queue.Machine(*)"), H_QueueInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo queue {instance}: hosting machine") },
-   { _T("Tuxedo.Queue.RequestsCurrent(*)"), H_QueueInfo, _T("r"), DCI_DT_STRING, _T("Tuxedo queue {instance}: current requests queued") },
-   { _T("Tuxedo.Queue.RequestsTotal(*)"), H_QueueInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo queue {instance}: total requests queued") },
+   { _T("Tuxedo.Queue.RequestsCurrent(*)"), H_QueueInfo, _T("r"), DCI_DT_INT, _T("Tuxedo queue {instance}: current requests queued") },
+   { _T("Tuxedo.Queue.RequestsTotal(*)"), H_QueueInfo, _T("R"), DCI_DT_INT, _T("Tuxedo queue {instance}: total requests queued") },
    { _T("Tuxedo.Queue.Server(*)"), H_QueueInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo queue {instance}: server executable") },
-   { _T("Tuxedo.Queue.ServerCount(*)"), H_QueueInfo, _T("C"), DCI_DT_STRING, _T("Tuxedo queue {instance}: server count") },
+   { _T("Tuxedo.Queue.ServerCount(*)"), H_QueueInfo, _T("C"), DCI_DT_INT, _T("Tuxedo queue {instance}: server count") },
    { _T("Tuxedo.Queue.State(*)"), H_QueueInfo, _T("s"), DCI_DT_STRING, _T("Tuxedo queue {instance} state") },
-   { _T("Tuxedo.Queue.WorkloadsCurrent(*)"), H_QueueInfo, _T("w"), DCI_DT_STRING, _T("Tuxedo queue {instance}: current workloads queued") },
-   { _T("Tuxedo.Queue.WorkloadsTotal(*)"), H_QueueInfo, _T("W"), DCI_DT_STRING, _T("Tuxedo queue {instance}: total workloads queued") },
+   { _T("Tuxedo.Queue.WorkloadsCurrent(*)"), H_QueueInfo, _T("w"), DCI_DT_INT, _T("Tuxedo queue {instance}: current workloads queued") },
+   { _T("Tuxedo.Queue.WorkloadsTotal(*)"), H_QueueInfo, _T("W"), DCI_DT_INT, _T("Tuxedo queue {instance}: total workloads queued") },
    { _T("Tuxedo.Server.ActiveRequests(*)"), H_ServerInfo, _T("A"), DCI_DT_INT, _T("Tuxedo server {instance}: active requests") },
    { _T("Tuxedo.Server.CommandLine(*)"), H_ServerInfo, _T("C"), DCI_DT_STRING, _T("Tuxedo server {instance}: command line") },
    { _T("Tuxedo.Server.Group(*)"), H_ServerInfo, _T("g"), DCI_DT_STRING, _T("Tuxedo server {instance}: server group") },

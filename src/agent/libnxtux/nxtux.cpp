@@ -43,7 +43,7 @@ bool LIBNXTUX_EXPORTABLE TuxedoConnect()
       }
       else
       {
-         nxlog_debug(3, _T("tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
+         nxlog_debug_tag(_T("tuxedo"), 7, _T("TuxedoConnect: tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
          success = false;
       }
    }
