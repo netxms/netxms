@@ -186,6 +186,7 @@ void nmea_zero_GPVTG(nmeaGPVTG *pack)
  */
 
 #include <stdio.h>
+#include <ctype.h>
 
 int _nmea_parse_time(const char *buff, int buff_sz, nmeaTIME *res)
 {
@@ -215,36 +216,34 @@ int _nmea_parse_time(const char *buff, int buff_sz, nmeaTIME *res)
 }
 
 /**
+ * Offset of sentence type within sentence ("$" followed by two-character talker ID)
+ */
+#define NMEA_TYPE_OFFSET    (3)
+
+/**
  * \brief Define packet type by header (nmeaPACKTYPE).
- * @param buff a constant character pointer of packet buffer.
+ * Sentence type is matched regardless of talker ID (GP, GN, GL, GA, GB, BD, ...).
+ * @param buff a constant character pointer of packet buffer (after leading "$").
  * @param buff_sz buffer size.
  * @return The defined packet type
  * @see nmeaPACKTYPE
  */
 int nmea_pack_type(const char *buff, int buff_sz)
 {
-    static const char *pheads[] = {
-        "GPGGA",
-        "GPGSA",
-        "GPGSV",
-        "GPRMC",
-        "GPVTG",
-    };
+    static const char *pheads[] = { "GGA", "GSA", "GSV", "RMC", "VTG" };
+    static const int ptypes[] = { GPGGA, GPGSA, GPGSV, GPRMC, GPVTG };
+    int i;
 
     NMEA_ASSERT(buff);
 
-    if(buff_sz < 5)
+    if(buff_sz < 6 || !isupper((unsigned char)buff[0]) || !isupper((unsigned char)buff[1]) || buff[5] != ',')
         return GPNON;
-    else if(0 == memcmp(buff, pheads[0], 5))
-        return GPGGA;
-    else if(0 == memcmp(buff, pheads[1], 5))
-        return GPGSA;
-    else if(0 == memcmp(buff, pheads[2], 5))
-        return GPGSV;
-    else if(0 == memcmp(buff, pheads[3], 5))
-        return GPRMC;
-    else if(0 == memcmp(buff, pheads[4], 5))
-        return GPVTG;
+
+    for(i = 0; i < (int)(sizeof(ptypes) / sizeof(ptypes[0])); ++i)
+    {
+        if(0 == memcmp(buff + 2, pheads[i], 3))
+            return ptypes[i];
+    }
 
     return GPNON;
 }
@@ -317,20 +316,20 @@ int nmea_parse_GPGGA(const char *buff, int buff_sz, nmeaGPGGA *pack)
 
     nmea_trace_buff(buff, buff_sz);
 
-    if(14 != nmea_scanf(buff, buff_sz,
-        "$GPGGA,%s,%f,%C,%f,%C,%d,%d,%f,%f,%C,%f,%C,%f,%d*",
+    if(14 != nmea_scanf(buff + NMEA_TYPE_OFFSET, buff_sz - NMEA_TYPE_OFFSET,
+        "GGA,%s,%f,%C,%f,%C,%d,%d,%f,%f,%C,%f,%C,%f,%d*",
         &(time_buff[0]),
         &(pack->lat), &(pack->ns), &(pack->lon), &(pack->ew),
         &(pack->sig), &(pack->satinuse), &(pack->HDOP), &(pack->elv), &(pack->elv_units),
         &(pack->diff), &(pack->diff_units), &(pack->dgps_age), &(pack->dgps_sid)))
     {
-        nmea_error("GPGGA parse error!");
+        nmea_error("GGA parse error!");
         return 0;
     }
 
     if(0 != _nmea_parse_time(&time_buff[0], (int)strlen(&time_buff[0]), &(pack->utc)))
     {
-        nmea_error("GPGGA time parse error!");
+        nmea_error("GGA time parse error!");
         return 0;
     }
 
@@ -352,14 +351,14 @@ int nmea_parse_GPGSA(const char *buff, int buff_sz, nmeaGPGSA *pack)
 
     nmea_trace_buff(buff, buff_sz);
 
-    if(17 != nmea_scanf(buff, buff_sz,
-        "$GPGSA,%C,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f*",
+    if(17 != nmea_scanf(buff + NMEA_TYPE_OFFSET, buff_sz - NMEA_TYPE_OFFSET,
+        "GSA,%C,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f*",
         &(pack->fix_mode), &(pack->fix_type),
         &(pack->sat_prn[0]), &(pack->sat_prn[1]), &(pack->sat_prn[2]), &(pack->sat_prn[3]), &(pack->sat_prn[4]), &(pack->sat_prn[5]),
         &(pack->sat_prn[6]), &(pack->sat_prn[7]), &(pack->sat_prn[8]), &(pack->sat_prn[9]), &(pack->sat_prn[10]), &(pack->sat_prn[11]),
         &(pack->PDOP), &(pack->HDOP), &(pack->VDOP)))
     {
-        nmea_error("GPGSA parse error!");
+        nmea_error("GSA parse error!");
         return 0;
     }
 
@@ -383,8 +382,8 @@ int nmea_parse_GPGSV(const char *buff, int buff_sz, nmeaGPGSV *pack)
 
     nmea_trace_buff(buff, buff_sz);
 
-    nsen = nmea_scanf(buff, buff_sz,
-        "$GPGSV,%d,%d,%d,"
+    nsen = nmea_scanf(buff + NMEA_TYPE_OFFSET, buff_sz - NMEA_TYPE_OFFSET,
+        "GSV,%d,%d,%d,"
         "%d,%d,%d,%d,"
         "%d,%d,%d,%d,"
         "%d,%d,%d,%d,"
@@ -401,10 +400,11 @@ int nmea_parse_GPGSV(const char *buff, int buff_sz, nmeaGPGSV *pack)
 
     if(nsen < nsat || nsen > (NMEA_SATINPACK * 4 + 3))
     {
-        nmea_error("GPGSV parse error!");
+        nmea_error("GSV parse error!");
         return 0;
     }
 
+    memcpy(pack->talker, buff + 1, 2);
     return 1;
 }
 
@@ -426,8 +426,8 @@ int nmea_parse_GPRMC(const char *buff, int buff_sz, nmeaGPRMC *pack)
 
     nmea_trace_buff(buff, buff_sz);
 
-    nsen = nmea_scanf(buff, buff_sz,
-        "$GPRMC,%s,%C,%f,%C,%f,%C,%f,%f,%2d%2d%2d,%f,%C,%C*",
+    nsen = nmea_scanf(buff + NMEA_TYPE_OFFSET, buff_sz - NMEA_TYPE_OFFSET,
+        "RMC,%s,%C,%f,%C,%f,%C,%f,%f,%2d%2d%2d,%f,%C,%C*",
         &(time_buff[0]),
         &(pack->status), &(pack->lat), &(pack->ns), &(pack->lon), &(pack->ew),
         &(pack->speed), &(pack->direction),
@@ -436,13 +436,13 @@ int nmea_parse_GPRMC(const char *buff, int buff_sz, nmeaGPRMC *pack)
 
     if(nsen != 13 && nsen != 14)
     {
-        nmea_error("GPRMC parse error!");
+        nmea_error("RMC parse error!");
         return 0;
     }
 
     if(0 != _nmea_parse_time(&time_buff[0], (int)strlen(&time_buff[0]), &(pack->utc)))
     {
-        nmea_error("GPRMC time parse error!");
+        nmea_error("RMC time parse error!");
         return 0;
     }
 
@@ -468,14 +468,14 @@ int nmea_parse_GPVTG(const char *buff, int buff_sz, nmeaGPVTG *pack)
 
     nmea_trace_buff(buff, buff_sz);
 
-    if(8 != nmea_scanf(buff, buff_sz,
-        "$GPVTG,%f,%C,%f,%C,%f,%C,%f,%C*",
+    if(8 != nmea_scanf(buff + NMEA_TYPE_OFFSET, buff_sz - NMEA_TYPE_OFFSET,
+        "VTG,%f,%C,%f,%C,%f,%C,%f,%C*",
         &(pack->dir), &(pack->dir_t),
         &(pack->dec), &(pack->dec_m),
         &(pack->spn), &(pack->spn_n),
         &(pack->spk), &(pack->spk_k)))
     {
-        nmea_error("GPVTG parse error!");
+        nmea_error("VTG parse error!");
         return 0;
     }
 
@@ -484,7 +484,7 @@ int nmea_parse_GPVTG(const char *buff, int buff_sz, nmeaGPVTG *pack)
         pack->spn_n != 'N' ||
         pack->spk_k != 'K')
     {
-        nmea_error("GPVTG parse error (format error)!");
+        nmea_error("VTG parse error (format error)!");
         return 0;
     }
 
@@ -505,6 +505,7 @@ void nmea_GPGGA2info(nmeaGPGGA *pack, nmeaINFO *info)
     info->utc.sec = pack->utc.sec;
     info->utc.hsec = pack->utc.hsec;
     info->sig = pack->sig;
+    info->satinfo.inuse = pack->satinuse;
     info->HDOP = pack->HDOP;
     info->elv = pack->elv;
     info->lat = ((pack->ns == 'N')?pack->lat:-(pack->lat));
@@ -519,64 +520,100 @@ void nmea_GPGGA2info(nmeaGPGGA *pack, nmeaINFO *info)
  */
 void nmea_GPGSA2info(nmeaGPGSA *pack, nmeaINFO *info)
 {
-    int i, j, nuse = 0;
-
     NMEA_ASSERT(pack && info);
 
+    /*
+     * Multi-GNSS receivers send separate GSA sentence for each constellation, so
+     * satellite list of single sentence is incomplete - number of satellites in
+     * use is taken from GGA instead. Fix type and DOP values are the same in all of them.
+     */
     info->fix = pack->fix_type;
     info->PDOP = pack->PDOP;
     info->HDOP = pack->HDOP;
     info->VDOP = pack->VDOP;
-
-    for(i = 0; i < NMEA_MAXSAT; ++i)
-    {
-        for(j = 0; j < info->satinfo.inview; ++j)
-        {
-            if(pack->sat_prn[i] && pack->sat_prn[i] == info->satinfo.sat[j].id)
-            {
-                info->satinfo.sat[j].in_use = 1;
-                nuse++;
-            }
-        }
-    }
-
-    info->satinfo.inuse = nuse;
     info->smask |= GPGSA;
 }
 
 /**
+ * Find entry for given talker ID in per-talker satellite counts
+ * @return entry index or -1 if not found
+ */
+static int nmea_find_talker(const nmeaSATINFO *satinfo, const char *talker)
+{
+    int i;
+    for(i = 0; i < satinfo->ntalkers; ++i)
+    {
+        if(0 == memcmp(satinfo->talkers[i].talker, talker, 2))
+            return i;
+    }
+    return -1;
+}
+
+/**
+ * Start new GSV output cycle: drop talkers that were not reported in two consecutive cycles
+ * (one missed cycle is tolerated to cover lost or corrupted sentences)
+ */
+static void nmea_start_gsv_cycle(nmeaSATINFO *satinfo)
+{
+    int i, n = 0;
+    for(i = 0; i < satinfo->ntalkers; ++i)
+    {
+        nmeaTALKERSATS *t = &satinfo->talkers[i];
+        t->missed = t->reported ? 0 : t->missed + 1;
+        t->reported = 0;
+        if(t->missed < 2)
+            satinfo->talkers[n++] = *t;
+    }
+    satinfo->ntalkers = n;
+}
+
+/**
  * \brief Fill nmeaINFO structure by GSV packet data.
+ * Multi-GNSS receivers send separate GSV series for each constellation (GPGSV, GLGSV, GAGSV, GBGSV, ...),
+ * so number of satellites in view is kept per talker and the total is the sum over all talkers
+ * reported in recent GSV output cycles. Talker already reported in current cycle indicates start of next cycle.
  * @param pack a pointer of packet structure.
  * @param info a pointer of summary information structure.
  */
 void nmea_GPGSV2info(nmeaGPGSV *pack, nmeaINFO *info)
 {
-    int isat, isi, nsat;
+    nmeaSATINFO *satinfo;
+    int i, index;
 
     NMEA_ASSERT(pack && info);
 
-    if(pack->pack_index > pack->pack_count ||
-        pack->pack_index * NMEA_SATINPACK > NMEA_MAXSAT)
+    if(pack->pack_index > pack->pack_count)
         return;
 
-    if(pack->pack_index < 1)
-        pack->pack_index = 1;
+    info->smask |= GPGSV;
 
-    info->satinfo.inview = pack->sat_count;
+    /* Total satellite count is repeated in every message of the series, use only first one */
+    if(pack->pack_index != 1)
+        return;
 
-    nsat = (pack->pack_index - 1) * NMEA_SATINPACK;
-    nsat = (nsat + NMEA_SATINPACK > pack->sat_count)?pack->sat_count - nsat:NMEA_SATINPACK;
-
-    for(isat = 0; isat < nsat; ++isat)
+    satinfo = &info->satinfo;
+    index = nmea_find_talker(satinfo, pack->talker);
+    if(index >= 0 && satinfo->talkers[index].reported)
     {
-        isi = (pack->pack_index - 1) * NMEA_SATINPACK + isat;
-        info->satinfo.sat[isi].id = pack->sat_data[isat].id;
-        info->satinfo.sat[isi].elv = pack->sat_data[isat].elv;
-        info->satinfo.sat[isi].azimuth = pack->sat_data[isat].azimuth;
-        info->satinfo.sat[isi].sig = pack->sat_data[isat].sig;
+        nmea_start_gsv_cycle(satinfo);
+        index = nmea_find_talker(satinfo, pack->talker);
     }
 
-    info->smask |= GPGSV;
+    if(index < 0)
+    {
+        if(satinfo->ntalkers == NMEA_MAXTALKERS)
+            return;
+        index = satinfo->ntalkers++;
+        memcpy(satinfo->talkers[index].talker, pack->talker, 2);
+        satinfo->talkers[index].missed = 0;
+    }
+
+    satinfo->talkers[index].inview = pack->sat_count;
+    satinfo->talkers[index].reported = 1;
+
+    satinfo->inview = 0;
+    for(i = 0; i < satinfo->ntalkers; ++i)
+        satinfo->inview += satinfo->talkers[i].inview;
 }
 
 /**
@@ -779,9 +816,9 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
         }
         else if(crc >= 0)
         {
-            ptype = nmea_pack_type(
+            ptype = ('$' == parser->buffer[nparsed]) ? nmea_pack_type(
                 (const char *)parser->buffer + nparsed + 1,
-                parser->buff_use - nparsed - 1);
+                sen_sz - 1) : GPNON;
 
             if(0 == (node = malloc(sizeof(nmeaParserNODE))))
                 goto mem_fail;
@@ -798,6 +835,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPGGA *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
@@ -810,6 +848,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPGSA *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
@@ -822,6 +861,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPGSV *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
@@ -834,6 +874,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPRMC *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
@@ -846,6 +887,7 @@ int nmea_parser_real_push(nmeaPARSER *parser, const char *buff, int buff_sz)
                     (const char *)parser->buffer + nparsed,
                     sen_sz, (nmeaGPVTG *)node->pack))
                 {
+                    free(node->pack);
                     free(node);
                     node = 0;
                 }
