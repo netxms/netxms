@@ -304,8 +304,8 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
          }
          else
          {
+            nxlog_debug_tag(m_debugTag, 4, _T("TLS handshake failed (ssl_err=%d socket_err=%d)"), sslErr, WSAGetLastError());
             char buffer[128];
-            nxlog_debug_tag(m_debugTag, 4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
 
             unsigned long error;
             while ((error = ERR_get_error()) != 0)

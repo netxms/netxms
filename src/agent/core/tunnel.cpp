@@ -1071,9 +1071,9 @@ bool OutboundTunnel::verifyServerCertificateFingerprint(STACK_OF(X509) * chain)
  */
 void OutboundTunnel::processHandshakeError(int sslErr, bool certificateLoaded)
 {
-   char buffer[128];
-   debugPrintf(4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
+   debugPrintf(4, _T("TLS handshake failed (ssl_err=%d socket_err=%d)"), sslErr, WSAGetLastError());
 
+   char buffer[128];
    unsigned long error;
    while((error = ERR_get_error()) != 0)
    {
@@ -2185,8 +2185,8 @@ void SetupInboundTunnel(SOCKET s, const InetAddress& peer)
       }
       else
       {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("TLS handshake with %s failed (ssl_err=%d socket_err=%d)"), peerName, sslErr, WSAGetLastError());
          char buffer[128];
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("TLS handshake with %s failed (%hs)"), peerName, ERR_error_string(sslErr, buffer));
          unsigned long error;
          while((error = ERR_get_error()) != 0)
          {
