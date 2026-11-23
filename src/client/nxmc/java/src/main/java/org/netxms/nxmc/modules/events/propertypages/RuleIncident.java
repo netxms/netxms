@@ -82,7 +82,7 @@ public class RuleIncident extends RuleBasePropertyPage
          public void widgetSelected(SelectionEvent e)
          {
             updateControls();
-            dialogArea.layout(true, true);
+            WidgetHelper.updatePageLayout(RuleIncident.this);
          }
       });
 
@@ -94,7 +94,7 @@ public class RuleIncident extends RuleBasePropertyPage
          public void widgetSelected(SelectionEvent e)
          {
             updateControls();
-            dialogArea.layout(true, true);
+            WidgetHelper.updatePageLayout(RuleIncident.this);
          }
       });
 

@@ -164,7 +164,7 @@ public class Transformation extends AbstractDCIPropertyPage
       boolean show = (editor.getOrigin() == DataOrigin.COMPUTED);
       computedOriginNote.setVisible(show);
       ((GridData)computedOriginNote.getLayoutData()).exclude = !show;
-      computedOriginNote.getParent().layout(true, true);
+      WidgetHelper.updatePageLayout(this);
    }
 
    /**

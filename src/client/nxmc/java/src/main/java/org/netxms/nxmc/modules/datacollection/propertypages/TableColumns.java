@@ -391,7 +391,7 @@ public class TableColumns extends AbstractDCIPropertyPage
       }
       warningArea.setVisible(!hasInstanceColumn);
       ((GridData)warningArea.getLayoutData()).exclude = hasInstanceColumn;
-      warningArea.getParent().layout(true, true);
+      WidgetHelper.updatePageLayout(this);
    }
 
 	/**

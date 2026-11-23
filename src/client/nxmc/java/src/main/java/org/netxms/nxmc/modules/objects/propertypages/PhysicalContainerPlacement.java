@@ -193,7 +193,7 @@ public class PhysicalContainerPlacement extends ObjectPropertyPage
          chassisElements.dispose();
          chassisElements = null;
       }
-      dialogArea.getParent().layout(true, true);
+      WidgetHelper.updatePageLayout(this);
 	}
 	
 	/**
