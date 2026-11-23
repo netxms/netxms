@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.17 to 71.18
+ */
+static bool H_UpgradeFromV17()
+{
+   static const wchar_t *batch =
+      L"UPDATE config SET description='File system path to PEM file with trusted CA certificates for CAS server certificate verification. If empty, system trusted certificate store is used.' WHERE var_name='CAS.TrustedCACert'\n"
+      L"UPDATE config SET description='Service to validate (usually NetXMS web UI URL). Can be specified either as is or already URL-encoded.' WHERE var_name='CAS.Service'\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(18));
+   return true;
+}
+
+/**
  * Upgrade from 71.16 to 71.17
  */
 static bool H_UpgradeFromV16()
@@ -384,6 +398,7 @@ static struct
    bool (*upgradeProc)();
    bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 17, 71, 18, H_UpgradeFromV17 },
    { 16, 71, 17, H_UpgradeFromV16 },
    { 15, 71, 16, H_UpgradeFromV15 },
    { 14, 71, 15, H_UpgradeFromV14 },
