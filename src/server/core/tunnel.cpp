@@ -963,7 +963,8 @@ retry:
          if (error != 0)
          {
             char buffer[128];
-            ReportError(debugPrefix, request->addr,  _T("TLS handshake failed (ssl_err=%d: %hs)"), sslErr, ERR_error_string(error, buffer));
+            ERR_error_string_n(error, buffer, sizeof(buffer));
+            ReportError(debugPrefix, request->addr,  _T("TLS handshake failed (ssl_err=%d: %hs)"), sslErr, buffer);
          }
          else
          {
