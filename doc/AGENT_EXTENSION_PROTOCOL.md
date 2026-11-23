@@ -41,8 +41,8 @@ captured and routed into the agent's log under the extension's debug tag
 (`extension.<name>`), one line per message — so a stray `print()` is harmless
 (it goes to the log, not the protocol).
 
-On crash, the agent restarts the extension with exponential backoff. On agent
-shutdown, the agent sends a `shutdown` notification, closes its sending side of
+On crash, or when the extension stops answering pings, the agent restarts it
+with exponential backoff. On agent shutdown, the agent sends a `shutdown` notification, closes its sending side of
 the connection, and waits up to `ShutdownTimeout` seconds for the process to
 exit. If it is still running, the agent `SIGTERM`s the process group and
 `SIGKILL`s it 2 seconds later (on Windows the process is terminated instead of
@@ -197,7 +197,7 @@ JSON-RPC notifications have no `id` and expect no response.
 | `log` | `{"level":"error\|warning\|info\|debug", "message":"..."}` | Write a line to the agent log under the extension's debug tag |
 | `action_output` | `{"name":..., "request_id":<int>, "chunk":"..."}` | Stream a chunk of action output (see `execute_action`) |
 | `capabilities_changed` | — | Agent re-issues `list_capabilities` |
-| `shutdown_notice` | `{"reason":"...", optional}` | Extension is exiting cleanly; agent suppresses crash-restart for this cycle |
+| `shutdown_notice` | `{"reason":"...", optional}` | Extension is about to exit or close the connection; the agent drops the connection, gives a spawned process up to `ShutdownTimeout` to exit before `SIGTERM`, and respawns (spawn mode) or reconnects (connect mode) after the initial `RestartDelay` / `ReconnectDelay` |
 
 ## 7. Errors
 

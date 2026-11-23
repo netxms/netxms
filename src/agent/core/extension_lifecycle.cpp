@@ -198,6 +198,7 @@ void AgentExtension::supervisorLoop()
 
    while (!m_stopRequested)
    {
+      m_dropReason = ConnectionDropReason::NONE;
       if (setupConnection())
       {
          m_currentBackoffMs = 0;          // successful setup resets backoff
@@ -326,8 +327,10 @@ bool AgentExtension::connectOnly()
  *
  * When stopping with the spawned child still running and connected, the child gets the
  * "shutdown" notification and ShutdownTimeout to exit on its own; only then is it sent
- * SIGTERM, followed by SIGKILL after a short grace period. A child that is still running
- * after its connection was lost gets SIGTERM right away and ShutdownTimeout before SIGKILL.
+ * SIGTERM, followed by SIGKILL after a short grace period. A child that announced its exit
+ * with shutdown_notice gets the same ShutdownTimeout to finish before SIGTERM. A child that
+ * is still running after its connection was lost or dropped for ping timeout gets SIGTERM
+ * right away and ShutdownTimeout before SIGKILL.
  */
 void AgentExtension::tearDownConnection()
 {
@@ -335,12 +338,24 @@ void AgentExtension::tearDownConnection()
 
    if (m_process != nullptr)
    {
+      bool exitExpected = false;
       if (m_stopRequested && (m_socket != INVALID_SOCKET) && m_process->isRunning())
       {
          notify("shutdown", nullptr);
          shutdown(m_socket, SHUT_WR);  // EOF after the notification, for extensions that exit on disconnect
          nxlog_debug_tag(getDebugTag(), 5, _T("Extension(%s): shutdown notification sent, waiting up to %u ms for process exit"),
                   m_config.name, m_config.shutdownTimeoutMs);
+         exitExpected = true;
+      }
+      else if ((m_dropReason == ConnectionDropReason::SHUTDOWN_NOTICE) && m_process->isRunning())
+      {
+         nxlog_debug_tag(getDebugTag(), 5, _T("Extension(%s): waiting up to %u ms for announced process exit"),
+                  m_config.name, m_config.shutdownTimeoutMs);
+         exitExpected = true;
+      }
+
+      if (exitExpected)
+      {
          if (!m_process->waitForCompletion(m_config.shutdownTimeoutMs))
          {
             nxlog_debug_tag(getDebugTag(), 3, _T("Extension(%s): process did not exit within %u ms after shutdown notification"),
