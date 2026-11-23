@@ -57,6 +57,7 @@ import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.ImageTransfer;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -204,6 +205,33 @@ public class WidgetHelper
       Shell shell = page.getShell();
       shell.layout(true, true);
       shell.pack();
+   }
+
+   /**
+    * Redo property page layout after its content was changed (sections shown, hidden, created or disposed) and update minimum
+    * size of enclosing scrolled composite, so that dialog's scroll bars match new page size. Property dialog sets that minimum
+    * size only once, when page is shown.
+    *
+    * @param page property page to update
+    */
+   public static void updatePageLayout(PreferencePage page)
+   {
+      Control control = page.getControl();
+      if ((control == null) || control.isDisposed())
+         return;
+
+      if (control instanceof Composite)
+         ((Composite)control).layout(true, true);
+
+      Point size = control.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+      for(Composite parent = control.getParent(); parent != null; parent = parent.getParent())
+      {
+         if (parent instanceof ScrolledComposite)
+         {
+            ((ScrolledComposite)parent).setMinSize(size);
+            break;
+         }
+      }
    }
 
 	/**

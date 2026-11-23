@@ -351,7 +351,7 @@ public class RuleAlarm extends RuleBasePropertyPage
          alarmKeyTerminate.setLabel((alarmAction == ALARM_TERMINATE) ? i18n.tr("Terminate all alarms with key") : i18n.tr("Resolve all alarms with key"));
          checkTerminateWithRegexp.setText((alarmAction == ALARM_TERMINATE) ? i18n.tr("Use regular expression for alarm termination") : i18n.tr("Use regular expression for alarm resolving"));
 		}
-		dialogArea.layout(true, true);
+		WidgetHelper.updatePageLayout(this);
 	}
 
    /**

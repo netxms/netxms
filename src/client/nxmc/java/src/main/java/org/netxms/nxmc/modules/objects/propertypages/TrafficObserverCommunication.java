@@ -227,8 +227,8 @@ public class TrafficObserverCommunication extends ObjectPropertyPage
          ((GridData)connectorWarning.getLayoutData()).exclude = credentialsEditable;
          credentials.setVisible(credentialsEditable);
          ((GridData)credentials.getLayoutData()).exclude = !credentialsEditable;
-         credentials.getParent().layout(true, true);
       }
+      WidgetHelper.updatePageLayout(this);
       WidgetHelper.adjustWindowSize(this);
    }
 
