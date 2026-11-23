@@ -150,7 +150,8 @@ uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context);
 /**
  * OpenSSL APPLINK
  * Only needed for MSVC builds (bridges the C runtime across the OpenSSL DLL
- * boundary). MinGW/llvm builds share a single CRT and must not include it.
+ * boundary). MinGW/llvm builds share a single CRT; 32-bit MinGW builds still
+ * get it from applink.c because x86 OpenSSL is built with uplink enabled.
  */
 #if defined(_MSC_VER) && !defined(_M_ARM64)
 #include <openssl/applink.c>
@@ -1454,7 +1455,7 @@ BOOL Initialize()
       }
       MemFree(s_backgroundExternalMetrics);
    }
-   
+
    // Parse external parameters list
    if (s_externalMetrics != nullptr)
    {
@@ -2766,7 +2767,7 @@ int main(int argc, char *argv[])
 			exitCode = WatchdogMain(dwMainPID, _tcscmp(configSection, DEFAULT_CONFIG_SECTION) ? configSection : NULL);
 			break;
       case Command::CREATE_CONFIG:
-         exitCode = CreateConfig(forceCreateConfig, CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]), 
+         exitCode = CreateConfig(forceCreateConfig, CHECK_NULL_A(argv[optind]), CHECK_NULL_A(argv[optind + 1]),
                CHECK_NULL_A(argv[optind + 2]), CHECK_NULL_A(argv[optind + 3]), argc - optind - 4, &argv[optind + 4], extraConfigValues);
          break;
       case Command::SHUTDOWN_EXT_AGENTS:
