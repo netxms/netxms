@@ -206,7 +206,7 @@ TuxedoServer::TuxedoServer(TuxedoServerInstance *base) : m_instances(64, 64, Own
 void TuxedoServer::addInstance(TuxedoServerInstance *s)
 {
    m_instances.add(s);
-   if (!strcmp(s->m_state, "ACTIVE"))
+   if (!strncmp(s->m_state, "ACT", 3))
       m_running++;
    m_summary.m_curThreads += s->m_curThreads;
    m_summary.m_convCount += s->m_convCount;
@@ -626,7 +626,7 @@ LONG H_ServerInstanceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
       }
       else
       {
-         rc = SYSINFO_RC_UNSUPPORTED;
+         rc = SYSINFO_RC_NO_SUCH_INSTANCE;
       }
    }
    else
