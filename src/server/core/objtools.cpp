@@ -992,23 +992,28 @@ uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_
       if (DBGetNumRows(hResult) > 0)
       {
          int32_t toolType = DBGetFieldLong(hResult, 0, 0);
-         if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
+         uint32_t flags = DBGetFieldULong(hResult, 0, 2);
+         if ((toolType != TOOL_TYPE_SNMP_TABLE) && (toolType != TOOL_TYPE_AGENT_TABLE) && (toolType != TOOL_TYPE_AGENT_LIST))
+         {
+            rcc = RCC_INCOMPATIBLE_OPERATION;
+         }
+         else if (flags & TF_DISABLED)
+         {
+            rcc = RCC_OBJECT_TOOL_DISABLED;
+         }
+         else
          {
             session->incRefCount();
             auto startupInfo = new TableToolStartupInfo();
             startupInfo->toolId = toolId;
             startupInfo->requestId = requestId;
             startupInfo->toolData = DBGetField(hResult, 0, 1, nullptr, 0);
-            startupInfo->flags = DBGetFieldULong(hResult, 0, 2);
+            startupInfo->flags = flags;
             startupInfo->node = node;
             startupInfo->session = session;
             startupInfo->inputFields = ((inputFields != nullptr) && !inputFields->isEmpty()) ? new StringMap(*inputFields) : nullptr;
             startupInfo->maskedInputFields = BuildMaskedInputFields(inputFields, maskedFields);
             ThreadPoolExecute(g_mainThreadPool, (toolType == TOOL_TYPE_SNMP_TABLE) ? GetSNMPTable : ((toolType == TOOL_TYPE_AGENT_LIST) ? GetAgentList : GetAgentTable), startupInfo);
-         }
-         else
-         {
-            rcc = RCC_INCOMPATIBLE_OPERATION;
          }
       }
       else
@@ -1175,10 +1180,18 @@ uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_
       if (DBGetNumRows(hResult) > 0)
       {
          int32_t toolType = DBGetFieldLong(hResult, 0, 0);
-         if ((toolType == TOOL_TYPE_SNMP_TABLE) || (toolType == TOOL_TYPE_AGENT_TABLE) || (toolType == TOOL_TYPE_AGENT_LIST))
+         uint32_t flags = DBGetFieldULong(hResult, 0, 2);
+         if ((toolType != TOOL_TYPE_SNMP_TABLE) && (toolType != TOOL_TYPE_AGENT_TABLE) && (toolType != TOOL_TYPE_AGENT_LIST))
+         {
+            rcc = RCC_INCOMPATIBLE_OPERATION;
+         }
+         else if (flags & TF_DISABLED)
+         {
+            rcc = RCC_OBJECT_TOOL_DISABLED;
+         }
+         else
          {
             TCHAR *toolData = DBGetField(hResult, 0, 1, nullptr, 0);
-            uint32_t flags = DBGetFieldULong(hResult, 0, 2);
 
             DBFreeResult(hResult);
             DBFreeStatement(hStmt);
@@ -1210,10 +1223,6 @@ uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_
             delete maskedInputFields;
             MemFree(toolData);
             return rcc;
-         }
-         else
-         {
-            rcc = RCC_INCOMPATIBLE_OPERATION;
          }
       }
       else
