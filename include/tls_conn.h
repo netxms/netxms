@@ -50,6 +50,7 @@ private:
    TCHAR m_debugTag[20];
    bool m_enableSSLTrace;
    bool m_verifyPeer;
+   char *m_trustedCertificatesFile;
    uint32_t m_defaultTimeout;
 
    ssize_t tlsRecv(void* data, size_t size, uint32_t timeout);
@@ -64,6 +65,7 @@ public:
       _tcslcpy(m_debugTag, CHECK_NULL_EX(debugTag), sizeof(m_debugTag) / sizeof(TCHAR));
       m_enableSSLTrace = enableSSLTrace;
       m_verifyPeer = false;
+      m_trustedCertificatesFile = nullptr;
       m_defaultTimeout = defaultTimeout;
       m_socket = INVALID_SOCKET;
       m_ssl = nullptr;
@@ -78,6 +80,7 @@ public:
       stopTLS();
       shutdown(m_socket, SHUT_RDWR);
       closesocket(m_socket);
+      MemFree(m_trustedCertificatesFile);
    }
 
    bool connect(const InetAddress& addr, uint16_t port, bool tls, uint32_t timeout = TLS_CONN_DEFAULT_TIMEOUT, const char *sniServerName = nullptr);
@@ -154,9 +157,24 @@ public:
       m_defaultTimeout = timeout;
    }
 
+   /**
+    * Enable verification of peer certificate and host name. Certificate chain is validated against
+    * system trusted certificate store.
+    */
    void enablePeerVerification()
    {
       m_verifyPeer = true;
+   }
+
+   /**
+    * Enable verification of peer certificate and host name. Certificate chain is validated against
+    * certificates loaded from given PEM file.
+    */
+   void enablePeerVerification(const char *trustedCertificatesFile)
+   {
+      m_verifyPeer = true;
+      MemFree(m_trustedCertificatesFile);
+      m_trustedCertificatesFile = MemCopyStringA(trustedCertificatesFile);
    }
 
    SOCKET getSocket() const
