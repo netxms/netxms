@@ -236,10 +236,10 @@ LONG H_ServiceGroupsTable(const TCHAR *param, const TCHAR *arg, Table *value, Ab
       value->addColumn(_T("QUEUED"), DCI_DT_INT, _T("Queued requests"));
 #ifdef NDRX_VERSION
       value->addColumn(_T("SUCCESSFUL"), DCI_DT_INT, _T("Successful requests"));
-      value->addColumn(_T("FAILED"), DCI_DT_INT, _T("Failed Requests"));
+      value->addColumn(_T("FAILED"), DCI_DT_INT, _T("Failed requests"));
       value->addColumn(_T("EXECTIME_LAST"), DCI_DT_INT, _T("Last execution time"));
-      value->addColumn(_T("EXECTIME_MAX"), DCI_DT_INT, _T("Failed Requests"));
-      value->addColumn(_T("EXECTIME_MIN"), DCI_DT_INT, _T("Failed Requests"));
+      value->addColumn(_T("EXECTIME_MAX"), DCI_DT_INT, _T("Max execution time"));
+      value->addColumn(_T("EXECTIME_MIN"), DCI_DT_INT, _T("Min execution time"));
 #endif
 
       StructArray<KeyValuePair<TuxedoServiceGropup>> *serviceGroups = s_serviceGroups->toArray();

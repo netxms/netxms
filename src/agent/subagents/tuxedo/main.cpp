@@ -351,17 +351,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Service.RoutingName(*)"), H_ServiceInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo service {instance}: routing name") },
    { _T("Tuxedo.Service.State(*)"), H_ServiceInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo service {instance}: state") },
    { _T("Tuxedo.ServiceGroup.CompletedRequests(*)"), H_ServiceGroupInfo, _T("C"), DCI_DT_INT, _T("Tuxedo service group {instance}: completed requests") },
-   { _T("Tuxedo.ServiceGroup.FailedRequests(*)"), H_ServiceGroupInfo, _T("f"), DCI_DT_INT, _T("Tuxedo service group {instance}: failed requests") },
-   { _T("Tuxedo.ServiceGroup.LastExecutionTime(*)"), H_ServiceGroupInfo, _T("e"), DCI_DT_INT, _T("Tuxedo service group {instance}: last execution time") },
    { _T("Tuxedo.ServiceGroup.Load(*)"), H_ServiceGroupInfo, _T("L"), DCI_DT_INT, _T("Tuxedo service group {instance}: load") },
-   { _T("Tuxedo.ServiceGroup.MaxExecutionTime(*)"), H_ServiceGroupInfo, _T("x"), DCI_DT_INT, _T("Tuxedo service group {instance}: max execution time") },
-   { _T("Tuxedo.ServiceGroup.MinExecutionTime(*)"), H_ServiceGroupInfo, _T("m"), DCI_DT_INT, _T("Tuxedo service group {instance}: min execution time") },
    { _T("Tuxedo.ServiceGroup.Priority(*)"), H_ServiceGroupInfo, _T("P"), DCI_DT_INT, _T("Tuxedo service group {instance}: priority") },
    { _T("Tuxedo.ServiceGroup.QueuedRequests(*)"), H_ServiceGroupInfo, _T("Q"), DCI_DT_INT, _T("Tuxedo service group {instance}: queued requests") },
    { _T("Tuxedo.ServiceGroup.RequestAddress(*)"), H_ServiceGroupInfo, _T("A"), DCI_DT_STRING, _T("Tuxedo service group {instance}: request address") },
    { _T("Tuxedo.ServiceGroup.RoutingName(*)"), H_ServiceGroupInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo service group {instance}: routing name") },
    { _T("Tuxedo.ServiceGroup.State(*)"), H_ServiceGroupInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo service group {instance}: state") },
-   { _T("Tuxedo.ServiceGroup.SuccessfulRequests(*)"), H_ServiceGroupInfo, _T("s"), DCI_DT_INT, _T("Tuxedo service group {instance}: successful requests") }
 #endif
 };
 
