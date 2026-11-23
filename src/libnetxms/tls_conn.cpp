@@ -221,7 +221,19 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
 
    if (m_verifyPeer)
    {
-      SSL_CTX_set_default_verify_paths(m_context);
+      if (m_trustedCertificatesFile != nullptr)
+      {
+         if (SSL_CTX_load_verify_locations(m_context, m_trustedCertificatesFile, nullptr) != 1)
+         {
+            nxlog_debug_tag(m_debugTag, 4, _T("Cannot load trusted certificates from file \"%hs\""), m_trustedCertificatesFile);
+            LogOpenSSLErrorStack(4);
+            goto failure;
+         }
+      }
+      else
+      {
+         SSL_CTX_set_default_verify_paths(m_context);
+      }
       SSL_CTX_set_verify(m_context, SSL_VERIFY_PEER, nullptr);
    }
 

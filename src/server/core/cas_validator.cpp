@@ -44,19 +44,43 @@
  */
 
 #include "nxcore.h"
+#include <tls_conn.h>
 
-#define DEBUG_TAG _T("cas")
+#define DEBUG_TAG L"cas"
+
+/**
+ * Timeout for connection to CAS server, TLS handshake, and complete validation response (milliseconds)
+ */
+#define CAS_REQUEST_TIMEOUT   10000
+
+/**
+ * Characters that can appear in URL query parameter value without encoding (RFC 3986 unreserved set)
+ */
+#define URL_SAFE_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._~-"
 
 /**
  * Settings
  */
 static char s_hostname[MAX_DNS_NAME] = "localhost";
-static int s_port = 8443;
-static char s_service[MAX_CONFIG_VALUE_LENGTH] = "";
+static uint16_t s_port = 8443;
+static char s_service[MAX_CONFIG_VALUE_LENGTH * 3] = "";  // URL-encoded
 static char s_trustedCA[MAX_PATH] = "";
 static char s_validateURL[MAX_CONFIG_VALUE_LENGTH] = "/cas/serviceValidate";
 static StringSet s_proxies;
 static Mutex s_lock;
+
+/**
+ * Check if string can be inserted into HTTP request line or header as is (contains no whitespace or control characters)
+ */
+static bool IsValidRequestElement(const char *s)
+{
+   for(const char *p = s; *p != 0; p++)
+   {
+      if ((static_cast<unsigned char>(*p) <= ' ') || (*p == 0x7F))
+         return false;
+   }
+   return true;
+}
 
 /**
  * Read CAS settings
@@ -66,297 +90,220 @@ void CASReadSettings()
    s_lock.lock();
 
    ConfigReadStrA(L"CAS.Host", s_hostname, MAX_DNS_NAME, "localhost");
-   s_port = ConfigReadInt(L"CAS.Port", 8443);
-   ConfigReadStrA(L"CAS.Service", s_service, MAX_CONFIG_VALUE_LENGTH, "http://127.0.0.1:10080/nxmc");
+   if (!IsValidRequestElement(s_hostname))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Value of configuration parameter CAS.Host contains whitespace or control characters, CAS authentication disabled");
+      s_hostname[0] = 0;
+   }
+
+   int port = ConfigReadInt(L"CAS.Port", 8443);
+   if ((port < 1) || (port > 65535))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Invalid value %d of configuration parameter CAS.Port, using default port 8443", port);
+      port = 8443;
+   }
+   s_port = static_cast<uint16_t>(port);
+
+   // CAS protocol requires service to be URL-encoded. Value that consists only of unreserved characters
+   // and percent signs is either already encoded or does not need encoding, and is used as is.
+   char service[MAX_CONFIG_VALUE_LENGTH];
+   ConfigReadStrA(L"CAS.Service", service, MAX_CONFIG_VALUE_LENGTH, "http://127.0.0.1:10080/nxmc");
+   if (strspn(service, URL_SAFE_CHARS "%") == strlen(service))
+      strlcpy(s_service, service, sizeof(s_service));
+   else
+      URLEncode(service, s_service, sizeof(s_service));
+
    ConfigReadStrA(L"CAS.TrustedCACert", s_trustedCA, MAX_PATH, "");
+
    ConfigReadStrA(L"CAS.ValidateURL", s_validateURL, MAX_CONFIG_VALUE_LENGTH, "/cas/serviceValidate");
+   if (!IsValidRequestElement(s_validateURL))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Value of configuration parameter CAS.ValidateURL contains whitespace or control characters, CAS authentication disabled");
+      s_validateURL[0] = 0;
+   }
 
    wchar_t proxies[MAX_CONFIG_VALUE_LENGTH];
-   ConfigReadStr(_T("CAS.AllowedProxies"), proxies, MAX_CONFIG_VALUE_LENGTH, L"");
+   ConfigReadStr(L"CAS.AllowedProxies", proxies, MAX_CONFIG_VALUE_LENGTH, L"");
    s_proxies.clear();
-   TrimW(proxies);
-   if (proxies[0] != 0)
-   {
-      s_proxies.splitAndAdd(proxies, L",");
-   }
+   String::split(proxies, L",", true,
+      [] (const String& proxy) -> void
+      {
+         if (!proxy.isEmpty())
+            s_proxies.add(proxy);
+      });
 
    s_lock.unlock();
    nxlog_debug_tag(DEBUG_TAG, 4, L"CAS configuration reloaded");
 }
 
-/**
- * Main code
- */
-
-/**
- * Ticket identifiers to avoid needless validating passwords that
- * aren't tickets
- */
-#define CAS_BEGIN_PT "PT-"
-#define CAS_BEGIN_ST "ST-"
-
-
 /* Error codes (decided upon by ESUP-Portail group) */
 #define CAS_SUCCESS                 0
 #define CAS_AUTHENTICATION_FAILURE -1
-#define CAS_ERROR                  -2
 
-#define CAS_SSL_ERROR_CTX          -10
 #define CAS_SSL_ERROR_CONN         -11
-#define CAS_SSL_ERROR_CERT         -12
 #define CAS_SSL_ERROR_HTTPS        -13
 
 #define CAS_ERROR_CONN             -20
 #define CAS_PROTOCOL_FAILURE       -21
 #define CAS_BAD_PROXY              -22
-
-
-#define SET_RET_AND_GOTO_END(x) { ret = (x); goto end; }
-#define FAIL SET_RET_AND_GOTO_END(CAS_ERROR)
-#define SUCCEED SET_RET_AND_GOTO_END(CAS_SUCCESS)
+#define CAS_ERROR_TIMEOUT          -23
 
 /**
- * Read certificate from file
+ * Find body of first element with given name in XML document. Returns pointer to the beginning of element body
+ * (not null-terminated) and sets length to body length, or returns nullptr if element not found.
  */
-static X509 *ReadCertificateFromFile(const char *filename)
+static const char *FindElementBody(const char *doc, const char *tagName, size_t *length)
 {
-   FILE *f = fopen(filename, "r");
-   if (f == nullptr)
+   char startTag[64], endTag[64];
+   snprintf(startTag, sizeof(startTag), "<%s>", tagName);
+   snprintf(endTag, sizeof(endTag), "</%s>", tagName);
+
+   const char *start = strstr(doc, startTag);
+   if (start == nullptr)
+      return nullptr;
+   start += strlen(startTag);
+
+   const char *end = strstr(start, endTag);
+   if (end == nullptr)
       return nullptr;
 
-   X509 *c = PEM_read_X509(f, nullptr, nullptr, nullptr);
-   fclose(f);
-   return c;
-}
-
-/*
- * Fills buf (up to buflen characters) with all characters (including
- * those representing other elements) within the nth element in the
- * document with the name provided by tagname.
- */
-static char *element_body(const char *doc, const char *tagname, int n, char *buf, int buflen)
-{
-   const char *body_end;
-   char *ret = nullptr;
-
-   buf[0] = 0;
-
-   char start_tag_pattern[256];
-   snprintf(start_tag_pattern, 256, "<%s>", tagname);
-
-   char end_tag_pattern[256];
-   snprintf(end_tag_pattern, 256, "</%s>", tagname);
-
-   const char *body_start = doc;
-   while (n-- > 0)
-   {
-      body_start = strstr(body_start, start_tag_pattern);
-      if (!body_start)
-      {
-         SET_RET_AND_GOTO_END(nullptr);
-      }
-      body_start += strlen(start_tag_pattern);
-   }
-   body_end = strstr(body_start, end_tag_pattern);
-   if (!body_end)
-   {
-      SET_RET_AND_GOTO_END(nullptr);
-   }
-   if (body_end - body_start < buflen - 1)
-   {
-      strncpy(buf, body_start, body_end - body_start);
-      buf[body_end - body_start] = 0;
-   }
-   else
-   {
-      strlcpy(buf, body_start, buflen);
-   }
-   SET_RET_AND_GOTO_END(buf);
-
-end:
-   return ret;
+   *length = end - start;
+   return start;
 }
 
 /**
- * Returns status of certification:  0 for invalid, 1 for valid.
+ * Send validation request to CAS server and parse response. On success fills loginName with user name
+ * from CAS response and returns CAS_SUCCESS. Otherwise returns error code.
  */
-static int IsValidCertificate(X509 *cert, const char *hostname)
+static int ValidateTicket(const char *hostname, uint16_t port, const char *trustedCA, const char *request, wchar_t *loginName)
 {
-   char buf[4096];
-   X509_STORE *store = X509_STORE_new();
-   X509_STORE_CTX *ctx = X509_STORE_CTX_new();
-   X509 *cacert = ReadCertificateFromFile(s_trustedCA);
-   if (cacert != NULL)
+   InetAddress addr = InetAddress::resolveHostName(hostname);
+   if (!addr.isValid())
    {
-      X509_STORE_add_cert(store, cacert);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: cannot resolve host name %hs", hostname);
+      return CAS_ERROR_CONN;
    }
+
+   TLSConnection conn(DEBUG_TAG, false, CAS_REQUEST_TIMEOUT);
+   if (trustedCA[0] != 0)
+      conn.enablePeerVerification(trustedCA);
    else
+      conn.enablePeerVerification();
+   if (!conn.connect(addr, port, false, CAS_REQUEST_TIMEOUT))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: cannot load CA certificate from file %hs"), s_trustedCA);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: cannot connect to %hs:%u", hostname, static_cast<unsigned int>(port));
+      return CAS_ERROR_CONN;
    }
-   X509_STORE_CTX_init(ctx, store, cert, sk_X509_new_null());
-   if (X509_verify_cert(ctx) == 0)
+   if (!conn.startTLS(CAS_REQUEST_TIMEOUT, hostname))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: X509_verify_cert() failed"));
-      return 0;
-   }
-   X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, buf, sizeof(buf) - 1);
-   // anal-retentive:  make sure the hostname isn't as long as the
-   // buffer, since we don't want to match only because of truncation
-   if (strlen(hostname) >= sizeof(buf) - 1)
-   {
-      return 0;
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: TLS handshake with %hs:%u failed (TLS error or server certificate verification failure)", hostname, static_cast<unsigned int>(port));
+      return CAS_SSL_ERROR_CONN;
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("CAS: certificate CN=%hs, hostname=%hs"), buf, hostname);
-   return (!strcmp(buf, hostname));
-}
-
-/** Returns status of ticket by filling 'loginName' with a NetID if the ticket
- *  is valid and not exceeds NetXMS user name length limitation and returning 0.
- *  If not, error code is returned.
- */
-static int CASValidate(const char *ticket, char *loginName)
-{
-   InetAddress a;
-   SockAddrBuffer sa;
-   SOCKET s = INVALID_SOCKET;
-   int b, ret;
-   size_t total;
-   SSL *ssl = nullptr;
-   X509 *s_cert = nullptr;
-   char buf[4096];
-   char *full_request = nullptr, *str;
-   char parsebuf[MAX_DNS_NAME];
-
-   SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
-   if (!ctx)
+   size_t requestLength = strlen(request);
+   if (conn.send(request, requestLength) != static_cast<ssize_t>(requestLength))
    {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
-   }
-   if ((s = CreateSocket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
-   {
-      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: cannot send validation request");
+      return CAS_SSL_ERROR_HTTPS;
    }
 
-   a = InetAddress::resolveHostName(s_hostname);
-   if (!a.isValidUnicast())
+   // Server closes connection after sending response (HTTP/1.0)
+   char response[4096];
+   size_t total = 0;
+   int64_t deadline = GetMonotonicClockTime() + CAS_REQUEST_TIMEOUT;
+   while(true)
    {
-      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
+      if (total == sizeof(response) - 1)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: validation response is too large");
+         return CAS_SSL_ERROR_HTTPS;
+      }
+
+      int64_t remaining = deadline - GetMonotonicClockTime();
+      ssize_t bytes = (remaining > 0) ? conn.recv(response + total, sizeof(response) - 1 - total, static_cast<uint32_t>(remaining)) : -2;
+      if (bytes == -2)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: timeout waiting for validation response");
+         return CAS_ERROR_TIMEOUT;
+      }
+      if (bytes <= 0)
+      {
+         // 0 means TLS close notification, -1 is either read error or connection closed without close notification.
+         // Response is checked for completeness below.
+         if (bytes < 0)
+            nxlog_debug_tag(DEBUG_TAG, 6, L"CAS: connection closed without TLS close notification or read error");
+         break;
+      }
+      total += static_cast<size_t>(bytes);
    }
-   a.fillSockAddr(&sa, s_port);
-   if (connect(s, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) == -1)
+   response[total] = 0;
+
+   const char *body = strstr(response, "\r\n\r\n");  // find the end of the header
+   if (body == nullptr)
    {
-      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: invalid HTTP response from server");
+      return CAS_SSL_ERROR_HTTPS;
    }
-   if (!(ssl = SSL_new(ctx)))
+   body += 4;
+
+   // Response truncated by connection reset or read error would not have closing tag
+   if (strstr(body, "</cas:serviceResponse>") == nullptr)
    {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
-   }
-   if (!SSL_set_fd(ssl, (int)s))
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
-   }
-   if (SSL_connect(ssl) <= 0)
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CONN);
-   }
-   if (!(s_cert = SSL_get_peer_certificate(ssl)))
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CERT);
-   }
-   if (!IsValidCertificate(s_cert, s_hostname))
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CERT);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: validation response is incomplete or invalid");
+      return CAS_PROTOCOL_FAILURE;
    }
 
-   X509_free(s_cert);
-
-   full_request = MemAllocStringA(4096);
-   if (snprintf(full_request, 4096, "GET %s?ticket=%s&service=%s HTTP/1.0\r\n\r\n", s_validateURL, ticket, s_service) >= 4096)
+   size_t length;
+   if (FindElementBody(body, "cas:authenticationSuccess", &length) == nullptr)
    {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);
-   }
-   if (!SSL_write(ssl, full_request, (int)strlen(full_request)))
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);
-   }
-
-   total = 0;
-   do
-   {
-      b = SSL_read(ssl, buf + total, static_cast<int>(sizeof(buf) - 1 - total));
-      total += b;
-   } while (b > 0);
-   buf[total] = '\0';
-
-   if ((b != 0) || (total >= sizeof(buf) - 1))
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);		// unexpected read error or response too large
-   }
-
-   str = (char *)strstr(buf, "\r\n\r\n");  // find the end of the header
-
-   if (str == nullptr)
-   {
-      SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);			  // no header
-   }
-
-   /*
-    * 'str' now points to the beginning of the body, which should be an
-    * XML document
-    */
-
-   // make sure that the authentication succeeded
-
-   if (!element_body(str, "cas:authenticationSuccess", 1, parsebuf, sizeof(parsebuf)))
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: authentication failure"));
-      SET_RET_AND_GOTO_END(CAS_AUTHENTICATION_FAILURE);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: authentication failure");
+      return CAS_AUTHENTICATION_FAILURE;
    }
 
    // retrieve the NetID
-   if (!element_body(str, "cas:user", 1, loginName, MAX_USER_NAME))
+   const char *user = FindElementBody(body, "cas:user", &length);
+   if (user == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: unable to determine user name"));
-      SET_RET_AND_GOTO_END(CAS_PROTOCOL_FAILURE);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: unable to determine user name");
+      return CAS_PROTOCOL_FAILURE;
    }
+   if ((length == 0) || (utf8_wcharlen(user, length) >= MAX_USER_NAME))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: user name in validation response is empty or too long");
+      return CAS_PROTOCOL_FAILURE;
+   }
+   size_t chars = utf8_to_wchar(user, length, loginName, MAX_USER_NAME - 1);
+   loginName[chars] = 0;
 
    // check the first proxy (if present)
-   if (element_body(str, "cas:proxies", 1, parsebuf, sizeof(parsebuf)) != nullptr)
+   const char *proxies = FindElementBody(body, "cas:proxies", &length);
+   if (proxies != nullptr)
    {
-      if (element_body(str, "cas:proxy", 1, parsebuf, sizeof(parsebuf)) != nullptr)
+      const char *proxy = FindElementBody(proxies, "cas:proxy", &length);
+      if (proxy != nullptr)
       {
-         wchar_t wproxy[MAX_DNS_NAME];
-         utf8_to_wchar(parsebuf, -1, wproxy, MAX_DNS_NAME);
-         if (!s_proxies.contains(wproxy))
+         if (length >= MAX_DNS_NAME)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: proxy %hs is not in allowed proxies list"), parsebuf);
-            SET_RET_AND_GOTO_END(CAS_BAD_PROXY);
+            nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: proxy name in validation response is too long");
+            return CAS_BAD_PROXY;
+         }
+
+         wchar_t wproxy[MAX_DNS_NAME];
+         chars = utf8_to_wchar(proxy, length, wproxy, MAX_DNS_NAME - 1);
+         wproxy[chars] = 0;
+
+         s_lock.lock();
+         bool allowed = s_proxies.contains(wproxy);
+         s_lock.unlock();
+         if (!allowed)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: proxy %s is not in allowed proxies list", wproxy);
+            return CAS_BAD_PROXY;
          }
       }
    }
 
-   SUCCEED;
-
-   /* cleanup and return */
-
-end:
-   if (full_request != nullptr)
-   {
-      SecureZeroMemory(full_request, 4096);  // contains ticket
-      MemFree(full_request);
-   }
-   if (ssl != nullptr)
-   {
-      SSL_shutdown(ssl);
-      SSL_free(ssl);
-   }
-   if (s != INVALID_SOCKET)
-      closesocket(s);
-   if (ctx != nullptr)
-      SSL_CTX_free(ctx);
-   return ret;
+   return CAS_SUCCESS;
 }
 
 /**
@@ -365,25 +312,43 @@ end:
 bool CASAuthenticate(const char *ticket, wchar_t *loginName)
 {
    // Ticket is inserted into validation request URL as is, so only URL-safe characters are accepted
-   if ((*ticket == 0) || (strspn(ticket, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._~-") != strlen(ticket)))
+   if ((*ticket == 0) || (strspn(ticket, URL_SAFE_CHARS) != strlen(ticket)))
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: ticket is empty or contains invalid characters"));
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: ticket is empty or contains invalid characters");
       return false;
    }
 
-   bool success = false;
+   // Take snapshot of settings and build request under lock, and do network I/O without holding it
    s_lock.lock();
-   char mbLogin[MAX_USER_NAME];
-   int rc = CASValidate(ticket, mbLogin);
-   if (rc == CAS_SUCCESS)
+   if ((s_hostname[0] == 0) || (s_validateURL[0] == 0))
    {
-      mb_to_wchar(mbLogin, -1, loginName, MAX_USER_NAME);
-      success = true;
+      s_lock.unlock();
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: server host name or validation URL is not configured or invalid");
+      return false;
    }
-   else
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("CAS: ticket validation failed, error %d"), rc);
-   }
+   char hostname[MAX_DNS_NAME];
+   strcpy(hostname, s_hostname);
+   uint16_t port = s_port;
+   char trustedCA[MAX_PATH];
+   strcpy(trustedCA, s_trustedCA);
+   bool ipv6Literal = (strchr(s_hostname, ':') != nullptr);
+   size_t requestSize = strlen(s_validateURL) + strlen(ticket) + strlen(s_service) + strlen(s_hostname) + 64;
+   char *request = MemAllocStringA(requestSize);
+   snprintf(request, requestSize, "GET %s?ticket=%s&service=%s HTTP/1.0\r\nHost: %s%s%s:%u\r\n\r\n",
+         s_validateURL, ticket, s_service, ipv6Literal ? "[" : "", s_hostname, ipv6Literal ? "]" : "", static_cast<unsigned int>(s_port));
    s_lock.unlock();
-   return success;
+
+   wchar_t casLoginName[MAX_USER_NAME];
+   int rc = ValidateTicket(hostname, port, trustedCA, request, casLoginName);
+
+   SecureZeroMemory(request, requestSize);  // contains ticket
+   MemFree(request);
+
+   if (rc != CAS_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"CAS: ticket validation failed, error %d", rc);
+      return false;
+   }
+   wcscpy(loginName, casLoginName);
+   return true;
 }
