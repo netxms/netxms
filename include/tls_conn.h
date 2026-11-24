@@ -33,6 +33,19 @@
 #define TLS_CONN_DEFAULT_TIMEOUT 10000
 
 /**
+ * TLS handshake result
+ */
+enum class TLSHandshakeResult
+{
+   SUCCESS = 0,
+   TIMEOUT = 1,
+   FAILURE = 2
+};
+
+TLSHandshakeResult LIBNETXMS_EXPORTABLE PerformTLSHandshake(SSL *ssl, SOCKET s, uint32_t timeout, const TCHAR *debugTag, int debugLevel,
+         const TCHAR *context, TCHAR *errorText = nullptr, size_t errorTextSize = 0);
+
+/**
  * All things that are nessesary for TLS connection. Will automatically send/recieve data via TLS or without it.
  *
  * @note Destructor will close SSL connection and socket automatically.

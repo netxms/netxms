@@ -38,6 +38,7 @@
 #include "nxcore.h"
 #include <nxcore_ha.h>
 #include <socket_listener.h>
+#include <tls_conn.h>
 
 #define DEBUG_TAG L"ha.channel"
 
@@ -221,37 +222,6 @@ static bool LoadClusterSecret()
 }
 
 #ifdef _WITH_ENCRYPTION
-
-/**
- * Run TLS handshake with WANT_READ/WANT_WRITE retry on a non-blocking socket
- */
-static bool DoTlsHandshake(SSL *ssl, SOCKET s)
-{
-   SetSocketNonBlocking(s);
-   while(true)
-   {
-      int rc = SSL_do_handshake(ssl);
-      if (rc == 1)
-         return true;
-      int sslErr = SSL_get_error(ssl, rc);
-      if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
-      {
-         SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
-         poller.add(s);
-         if (poller.poll(10000) > 0)
-            continue;
-         nxlog_debug_tag(DEBUG_TAG, 4, L"TLS handshake timeout on peer channel connection");
-      }
-      else
-      {
-         char buffer[128];
-         ERR_error_string_n(ERR_get_error(), buffer, sizeof(buffer));
-         nxlog_debug_tag(DEBUG_TAG, 4, L"TLS handshake failed on peer channel connection (%hs)", buffer);
-         LogOpenSSLErrorStack(6);
-      }
-      return false;
-   }
-}
 
 /**
  * Channel session - one authenticated TLS link to the peer. At most one
@@ -768,7 +738,7 @@ ConnectionProcessingResult HAChannelListener::processConnection(SOCKET s, const 
    SSL_set_accept_state(ssl);
    SSL_set_fd(ssl, static_cast<int>(s));
 
-   if (!DoTlsHandshake(ssl, s))
+   if (PerformTLSHandshake(ssl, s, 10000, DEBUG_TAG, 4, L"Inbound peer channel connection") != TLSHandshakeResult::SUCCESS)
    {
       SSL_free(ssl);
       SSL_CTX_free(context);
@@ -841,7 +811,7 @@ static void DialerThread()
                   {
                      SSL_set_connect_state(ssl);
                      SSL_set_fd(ssl, static_cast<int>(s));
-                     if (DoTlsHandshake(ssl, s))
+                     if (PerformTLSHandshake(ssl, s, 10000, DEBUG_TAG, 4, L"Outbound peer channel connection") == TLSHandshakeResult::SUCCESS)
                      {
                         LockGuard lockGuard(s_sessionLock);
                         delete s_outboundSession;

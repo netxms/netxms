@@ -23,6 +23,7 @@
 #include <socket_listener.h>
 #include <nxcore_agent_tunnel.h>
 #include <nms_users.h>
+#include <tls_conn.h>
 
 #define REQUEST_TIMEOUT 10000
 
@@ -841,6 +842,17 @@ static long DecodeTLSVersion(int version)
 }
 
 /**
+ * Post tunnel setup error event
+ */
+static inline void PostTunnelSetupErrorEvent(const InetAddress& origin, const wchar_t *text)
+{
+   EventBuilder(EVENT_TUNNEL_SETUP_ERROR, GetServerEventSourceId())
+      .param(L"ipAddress", origin)
+      .param(L"error", text)
+      .post();
+}
+
+/**
  * Report tunnel error
  */
 static inline void ReportError(const TCHAR *debugPrefix, const InetAddress& origin, const TCHAR *format, ...)
@@ -852,10 +864,7 @@ static inline void ReportError(const TCHAR *debugPrefix, const InetAddress& orig
    va_end(args);
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): %s"), debugPrefix, text);
-   EventBuilder(EVENT_TUNNEL_SETUP_ERROR, GetServerEventSourceId())
-      .param(_T("ipAddress"), origin)
-      .param(_T("error"), text)
-      .post();
+   PostTunnelSetupErrorEvent(origin, text);
 }
 
 /**
@@ -867,7 +876,6 @@ static void SetupTunnel(ConnectionRequest *request)
    SSL *ssl = nullptr;
    BackgroundSocketPollerHandle *sp = nullptr;
    shared_ptr<InboundAgentTunnel> tunnel;
-   int rc;
    uint32_t nodeId = 0;
    int32_t zoneUIN = 0;
    X509 *cert = nullptr;
@@ -936,42 +944,15 @@ static void SetupTunnel(ConnectionRequest *request)
 
    SSL_set_accept_state(ssl);
    SSL_set_fd(ssl, (int)request->sock);
-   SetSocketNonBlocking(request->sock);
 
-retry:
-   rc = SSL_do_handshake(ssl);
-   if (rc != 1)
    {
-      int sslErr = SSL_get_error(ssl, rc);
-      if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
+      wchar_t logContext[160], errorText[512];
+      nx_swprintf(logContext, 160, L"SetupTunnel(%s)", debugPrefix);
+      if (PerformTLSHandshake(ssl, request->sock, REQUEST_TIMEOUT, DEBUG_TAG, 4, logContext, errorText, 512) != TLSHandshakeResult::SUCCESS)
       {
-         SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
-         poller.add(request->sock);
-         if (poller.poll(REQUEST_TIMEOUT) > 0)
-            goto retry;
-         ReportError(debugPrefix, request->addr, _T("TLS handshake failed (timeout)"));
+         PostTunnelSetupErrorEvent(request->addr, errorText);
+         goto failure;
       }
-      else if (sslErr == SSL_ERROR_SYSCALL)
-      {
-         TCHAR buffer[256];
-         ReportError(debugPrefix, request->addr,  _T("TLS handshake failed (SSL_ERROR_SYSCALL: %s)"),
-               GetLastSocketErrorText(buffer, 256));
-      }
-      else
-      {
-         unsigned long error = ERR_get_error();
-         if (error != 0)
-         {
-            char buffer[128];
-            ERR_error_string_n(error, buffer, sizeof(buffer));
-            ReportError(debugPrefix, request->addr,  _T("TLS handshake failed (ssl_err=%d: %hs)"), sslErr, buffer);
-         }
-         else
-         {
-            ReportError(debugPrefix, request->addr,  _T("TLS handshake failed (ssl_err=%d)"), sslErr);
-         }
-      }
-      goto failure;
    }
 
    cert = SSL_get_peer_certificate(ssl);

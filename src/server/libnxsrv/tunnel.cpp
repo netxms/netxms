@@ -24,6 +24,7 @@
 #include <agent_tunnel.h>
 
 #include <openssl/ssl.h>
+#include <tls_conn.h>
 
 #define MAX_MSG_SIZE    268435456
 #define REQUEST_TIMEOUT 10000
@@ -1159,34 +1160,11 @@ shared_ptr<OutboundAgentTunnel> OutboundAgentTunnel::establish(const InetAddress
 
    SSL_set_connect_state(ssl);
    SSL_set_fd(ssl, (int)s);
-   SetSocketNonBlocking(s);
 
-   while(true)
+   wchar_t logContext[128];
+   nx_swprintf(logContext, 128, L"EstablishOutboundTunnel(%s)", peerName);
+   if (PerformTLSHandshake(ssl, s, REQUEST_TIMEOUT, DEBUG_TAG, 5, logContext) != TLSHandshakeResult::SUCCESS)
    {
-      int rc = SSL_do_handshake(ssl);
-      if (rc == 1)
-         break;
-
-      int sslErr = SSL_get_error(ssl, rc);
-      if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
-      {
-         SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
-         poller.add(s);
-         if (poller.poll(REQUEST_TIMEOUT) > 0)
-            continue;
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("EstablishOutboundTunnel(%s): TLS handshake failed (timeout)"), peerName);
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("EstablishOutboundTunnel(%s): TLS handshake failed (ssl_err=%d socket_err=%d)"), peerName, sslErr, WSAGetLastError());
-         char buffer[128];
-         unsigned long error;
-         while((error = ERR_get_error()) != 0)
-         {
-            ERR_error_string_n(error, buffer, sizeof(buffer));
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("EstablishOutboundTunnel(%s): caused by: %hs"), peerName, buffer);
-         }
-      }
       SSL_free(ssl);
       SSL_CTX_free(context);
       closesocket(s);

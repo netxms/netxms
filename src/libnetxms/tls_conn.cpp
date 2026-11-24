@@ -278,45 +278,10 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
    SSL_set_connect_state(m_ssl);
    SSL_set_fd(m_ssl, static_cast<int>(m_socket));
 
-   while (true)
    {
-      int rc = SSL_do_handshake(m_ssl);
-      if (rc != 1)
-      {
-         int sslErr = SSL_get_error(m_ssl, rc);
-         if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
-         {
-            int64_t remaining = deadline - GetMonotonicClockTime();
-            if (remaining <= 0)
-            {
-               nxlog_debug_tag(m_debugTag, 4, _T("TLS handshake failed (deadline exceeded)"));
-               goto failure;
-            }
-            SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
-            poller.add(m_socket);
-            if (poller.poll(static_cast<uint32_t>(remaining)) > 0)
-            {
-               nxlog_debug_tag(m_debugTag, 8, _T("TLS handshake: %s wait completed"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-               continue;
-            }
-            nxlog_debug_tag(m_debugTag, 4, _T("TLS handshake failed (timeout on %s)"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-            goto failure;
-         }
-         else
-         {
-            nxlog_debug_tag(m_debugTag, 4, _T("TLS handshake failed (ssl_err=%d socket_err=%d)"), sslErr, WSAGetLastError());
-            char buffer[128];
-
-            unsigned long error;
-            while ((error = ERR_get_error()) != 0)
-            {
-               ERR_error_string_n(error, buffer, sizeof(buffer));
-               nxlog_debug_tag(m_debugTag, 5, _T("Caused by: %hs"), buffer);
-            }
-            goto failure;
-         }
-      }
-      break;
+      int64_t remaining = deadline - GetMonotonicClockTime();
+      if (PerformTLSHandshake(m_ssl, m_socket, (remaining > 0) ? static_cast<uint32_t>(remaining) : 0, m_debugTag, 4, _T("TLSConnection::startTLS")) != TLSHandshakeResult::SUCCESS)
+         goto failure;
    }
 
    nxlog_debug_tag(m_debugTag, 7, _T("TLS handshake completed"));
@@ -325,4 +290,102 @@ bool TLSConnection::startTLS(uint32_t timeout, const char *sniServerName)
 failure:
    stopTLS();
    return false;
+}
+
+/**
+ * Perform TLS handshake on given socket. SSL object should be already bound to the socket and set to connect or accept state.
+ * Socket is switched to non-blocking mode and left in that mode. Timeout is applied to the whole handshake. Failures are logged
+ * with given debug tag and level (OpenSSL error details at the next level) with given context string as prefix.
+ *
+ * @param ssl SSL object
+ * @param s socket
+ * @param timeout handshake timeout in milliseconds
+ * @param debugTag debug tag for log messages
+ * @param debugLevel debug level for failure messages
+ * @param context context string used as prefix for log messages
+ * @param errorText optional buffer for error message
+ * @param errorTextSize size of error message buffer in characters
+ * @return handshake result
+ */
+TLSHandshakeResult LIBNETXMS_EXPORTABLE PerformTLSHandshake(SSL *ssl, SOCKET s, uint32_t timeout, const TCHAR *debugTag, int debugLevel,
+         const TCHAR *context, TCHAR *errorText, size_t errorTextSize)
+{
+   SetSocketNonBlocking(s);
+
+   int64_t deadline = GetMonotonicClockTime() + timeout;
+   while(true)
+   {
+      int rc = SSL_do_handshake(ssl);
+      if (rc == 1)
+         return TLSHandshakeResult::SUCCESS;
+
+      uint32_t socketError = WSAGetLastError();
+      int sslErr = SSL_get_error(ssl, rc);
+      TCHAR text[512];
+      if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
+      {
+         int pollResult = 0;
+         int64_t remaining = deadline - GetMonotonicClockTime();
+         if (remaining > 0)
+         {
+            SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
+            poller.add(s);
+            pollResult = poller.poll(static_cast<uint32_t>(remaining));
+            if (pollResult > 0)
+               continue;
+            if ((pollResult < 0) && (WSAGetLastError() == WSAEINTR))
+               continue;   // Interrupted wait, deadline will be checked again on next iteration
+         }
+         if (pollResult == 0)
+         {
+            nxlog_debug_tag(debugTag, debugLevel, _T("%s: TLS handshake failed (timeout on %s)"), context, (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
+            if (errorText != nullptr)
+               _tcslcpy(errorText, _T("TLS handshake failed (timeout)"), errorTextSize);
+            return TLSHandshakeResult::TIMEOUT;
+         }
+
+         TCHAR buffer[256];
+         _sntprintf(text, 512, _T("TLS handshake failed (socket poll error: %s)"), GetLastSocketErrorText(buffer, 256));
+      }
+      else if (sslErr == SSL_ERROR_SYSCALL)
+      {
+         if (socketError != 0)
+         {
+            TCHAR buffer[256];
+            _sntprintf(text, 512, _T("TLS handshake failed (system error: %s)"), GetSocketErrorText(socketError, buffer, 256));
+         }
+         else
+         {
+            _tcslcpy(text, _T("TLS handshake failed (connection closed by peer)"), 512);
+         }
+      }
+      else
+      {
+         unsigned long error = ERR_get_error();
+         if (error != 0)
+         {
+            char buffer[256];
+            ERR_error_string_n(error, buffer, sizeof(buffer));
+            _sntprintf(text, 512, _T("TLS handshake failed (ssl_err=%d: %hs)"), sslErr, buffer);
+         }
+         else
+         {
+            _sntprintf(text, 512, _T("TLS handshake failed (ssl_err=%d)"), sslErr);
+         }
+      }
+      nxlog_debug_tag(debugTag, debugLevel, _T("%s: %s"), context, text);
+
+      // Always drain OpenSSL error queue so that stale errors do not affect later TLS operations in this thread
+      unsigned long error;
+      while((error = ERR_get_error()) != 0)
+      {
+         char buffer[256];
+         ERR_error_string_n(error, buffer, sizeof(buffer));
+         nxlog_debug_tag(debugTag, debugLevel + 1, _T("%s: caused by: %hs"), context, buffer);
+      }
+
+      if (errorText != nullptr)
+         _tcslcpy(errorText, text, errorTextSize);
+      return TLSHandshakeResult::FAILURE;
+   }
 }
