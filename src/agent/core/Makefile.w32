@@ -89,14 +89,7 @@ OBJDIR = $(OBJ_DIR)/$(subst $(TOPDIR)/,,$(CURDIR))
 OBJECTS = $(addprefix $(OBJDIR)/,$(SOURCES:.cpp=.o))
 RC_OBJECT = $(OBJDIR)/nxagentd.res.o
 
-# x86 OpenSSL requires OPENSSL_Applink in the executable (see applink.c)
-# TODO: remove once x86 OpenSSL is rebuilt with no-uplink (private/netxms#59)
-ifeq ($(ARCH),x86)
-C_OBJECTS = $(OBJDIR)/applink.o
-endif
-
 # Compiler flags
-CFLAGS = $(COMMON_CFLAGS)
 CXXFLAGS = $(COMMON_CXXFLAGS) \
 	-D_CONSOLE
 
@@ -124,7 +117,7 @@ endif
 
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS) $(C_OBJECTS) $(RC_OBJECT)
+$(TARGET): $(OBJECTS) $(RC_OBJECT)
 	@mkdir -p $(BIN_DIR)
 	@echo "  LD      $@"
 	$(Q)$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
@@ -134,11 +127,6 @@ $(OBJDIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "  CXX     $<"
 	$(Q)$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJDIR)/%.o: %.c
-	@mkdir -p $(dir $@)
-	@echo "  CC      $<"
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
 # messages.h drives the mc.exe run; MSG00001.bin is emitted by the same run.
 $(MSG_HEADER): $(MSG_SOURCE)
@@ -156,7 +144,7 @@ $(RC_OBJECT): $(RC_SOURCE) $(MSG_BIN) nxagentd.manifest
 	$(Q)$(WINDRES) -I. -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@
 
 clean:
-	rm -f $(OBJECTS) $(C_OBJECTS) $(RC_OBJECT) $(TARGET) $(MSG_HEADER) $(MSG_BIN) messages.rc .depend
+	rm -f $(OBJECTS) $(RC_OBJECT) $(TARGET) $(MSG_HEADER) $(MSG_BIN) messages.rc .depend
 
 install: $(TARGET)
 	@echo "  INSTALL $(TARGET)"
