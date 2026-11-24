@@ -1908,12 +1908,14 @@ void Shutdown()
 	}
 	else
 	{
+      // Stop accepting connections from external subagents first, so that loader restarted together with
+      // this agent cannot connect to instance that is shutting down
+      StopExternalSubagentConnectors();
       ShutdownLocalDataCollector();
 		ThreadJoin(s_sessionWatchdogThread);
 		ThreadJoin(s_listenerThread);
 		ThreadJoin(s_tunnelManagerThread);
 		CloseInboundTunnels();
-		StopExternalSubagentConnectors();
 		StopExtensions(false);
 	}
    if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
