@@ -44,6 +44,9 @@ NamedPipeListener *NamedPipeListener::create(const TCHAR *name, NamedPipeRequest
       return NULL;
    }
 
+   // Listening socket should not be inherited by child processes (replacement instance started on restart would keep it open)
+   fcntl(s, F_SETFD, fcntl(s, F_GETFD) | FD_CLOEXEC);
+
    struct sockaddr_un addrLocal;
    addrLocal.sun_family = AF_UNIX;
 #ifdef UNICODE
@@ -162,6 +165,8 @@ void NamedPipeListener::serverThread()
       SOCKET cs = accept(m_handle, (struct sockaddr *)&addrRemote, &size);
       if (cs > 0)
       {
+         fcntl(cs, F_SETFD, fcntl(cs, F_GETFD) | FD_CLOEXEC);
+
          TCHAR user[64];
          unsigned int uid;
          if (GetPeerUID(cs, &uid))
@@ -240,6 +245,9 @@ NamedPipe *NamedPipe::connect(const TCHAR *name, UINT32 timeout)
       nxlog_debug(2, _T("NamedPipe(%s): socket() call failed (%s)"), name, _tcserror(errno));
       return NULL;
    }
+
+   // Child process holding inherited copy of the socket would keep connection open after this process exits
+   fcntl(s, F_SETFD, fcntl(s, F_GETFD) | FD_CLOEXEC);
 
    struct sockaddr_un remote;
    remote.sun_family = AF_UNIX;
