@@ -377,11 +377,17 @@ StructArray<ForwardingDatabaseEntry> *CiscoDeviceDriver::getForwardingDatabase(D
          uint16_t vlanId = vlans->get(i)->getVlanId();
          SetVlanSecurityContext(snmp, savedSecurityContext, vlanId);
 
-         if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 4, 3, 1, 1 },
+         uint32_t rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 4, 3, 1, 1 },
             [snmp, vlanId, fdb] (SNMP_Variable *var) -> uint32_t
             {
                return FDBHandler(var, snmp, vlanId, fdb);
-            }) == SNMP_ERR_SUCCESS)
+            }, false, true);
+         if (rc == SNMP_ERR_ABORTED)
+         {
+            delete_and_null(fdb);
+            break;
+         }
+         if (rc == SNMP_ERR_SUCCESS)
          {
             nxlog_debug_tag(DEBUG_TAG_TOPO_FDB, 5, _T("CiscoDeviceDriver::getForwardingDatabase(%s [%u]): %d entries read from dot1dTpFdbTable in VLAN %u"), node->getName(), node->getId(), fdb->size() - size, vlanId);
          }

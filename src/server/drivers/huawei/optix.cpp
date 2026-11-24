@@ -301,7 +301,7 @@ shared_ptr<ArpCache> OptixDriver::getArpCache(DeviceContext *context, DriverData
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
    shared_ptr<ArpCache> arpCache = make_shared<ArpCache>();
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2011.2.25.4.50.23.1.1.1.3"), HandlerArp, arpCache.get()) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2011.2.25.4.50.23.1.1.1.3"), HandlerArp, arpCache.get(), false, true) != SNMP_ERR_SUCCESS)
       arpCache.reset();
    return arpCache;
 }

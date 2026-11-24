@@ -1457,7 +1457,7 @@ StructArray<ForwardingDatabaseEntry> *NetworkDeviceDriver::getForwardingDatabase
       [snmp, fdb] (SNMP_Variable *var) -> uint32_t
       {
          return Dot1qTpFdbHandler(var, snmp, fdb);
-      }) != SNMP_ERR_SUCCESS)
+      }, false, true) != SNMP_ERR_SUCCESS)
    {
       delete fdb;
       return nullptr;
@@ -1470,7 +1470,7 @@ StructArray<ForwardingDatabaseEntry> *NetworkDeviceDriver::getForwardingDatabase
       [snmp, fdb] (SNMP_Variable *var) -> uint32_t
       {
          return FDBHandler(var, snmp, fdb);
-      }) != SNMP_ERR_SUCCESS)
+      }, false, true) != SNMP_ERR_SUCCESS)
    {
       delete fdb;
       return nullptr;
@@ -1767,11 +1767,17 @@ shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(DeviceContext *context, Dr
    shared_ptr<ArpCache> arpCache = make_shared<ArpCache>();
 
    // Try ipNetToPhysicalTable (RFC 4293) first - supports both IPv4 and IPv6
-   SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 35, 1, 4 }, HandlerArpIpNetToPhysical, arpCache.get());
+   uint32_t rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 35, 1, 4 }, HandlerArpIpNetToPhysical, arpCache.get(), false, true);
+   if (rc == SNMP_ERR_ABORTED)
+      return shared_ptr<ArpCache>();
 
-   // Fall back to legacy ipNetToMediaTable (RFC 1213) if newer table returned no results
-   if (arpCache->size() == 0)
-      SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 22, 1, 2 }, HandlerArpIpNetToMedia, arpCache.get());
+   // Fall back to legacy ipNetToMediaTable (RFC 1213) if newer table cannot be read or returned no results
+   if ((rc != SNMP_ERR_SUCCESS) || (arpCache->size() == 0))
+   {
+      arpCache = make_shared<ArpCache>();
+      if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 4, 22, 1, 2 }, HandlerArpIpNetToMedia, arpCache.get(), false, true) != SNMP_ERR_SUCCESS)
+         return shared_ptr<ArpCache>();
+   }
 
    if (arpCache->size() == 0)
       arpCache.reset();
