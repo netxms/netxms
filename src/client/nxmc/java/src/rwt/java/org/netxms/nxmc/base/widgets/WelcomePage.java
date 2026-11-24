@@ -48,7 +48,9 @@ import org.xnap.commons.i18n.I18n;
  */
 public class WelcomePage extends Composite
 {
-   private static final String ERROR_PAGE = 
+   private static final int LOAD_TIMEOUT = 10000; // Connect and read timeout in milliseconds
+
+   private static final String ERROR_PAGE =
          "<html>"+
          "<head>" +
          "   <style>" +
@@ -181,6 +183,8 @@ public class WelcomePage extends Composite
       URL url = new URL(urlString);
       HttpURLConnection conn = (HttpURLConnection)url.openConnection();
       conn.setRequestMethod("GET");
+      conn.setConnectTimeout(LOAD_TIMEOUT);
+      conn.setReadTimeout(LOAD_TIMEOUT);
       try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream())))
       {
          String line;
