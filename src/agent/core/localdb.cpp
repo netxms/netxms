@@ -469,19 +469,25 @@ LocalDatabaseResetRequest RequestLocalDatabaseReset()
 
 /**
  * Cancel pending local database reset request. Reset that is already in progress is not affected.
+ * Returns false if pending request cannot be removed.
  */
-void CancelLocalDatabaseResetRequest()
+bool CancelLocalDatabaseResetRequest()
 {
    TCHAR dbFileName[MAX_PATH];
    if (!GetLocalDatabaseFileName(dbFileName))
-      return;
+      return false;
 
    LockGuard lockGuard(s_resetRequestLock);
    StringBuffer requestMarker = SidecarFileName(dbFileName, _T(".reset"));
    if (_tremove(requestMarker) == 0)
+   {
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("Local database reset request cancelled"));
-   else if (errno != ENOENT)
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot delete local database reset request file \"%s\" (%s)"), requestMarker.cstr(), _tcserror(errno));
+      return true;
+   }
+   if (errno == ENOENT)
+      return true;
+   nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot delete local database reset request file \"%s\" (%s)"), requestMarker.cstr(), _tcserror(errno));
+   return false;
 }
 
 /**

@@ -320,7 +320,7 @@ public:
 	void listActions(StringList *list);
    void shutdown(bool restart);
    void restart();
-   uint32_t requestLocalDatabaseReset();
+   uint32_t setLocalDatabaseResetRequest(bool enabled);
    void syncPolicies();
    void notifyOnPolicyInstall(const uuid& guid);
    void notifyOnComponentToken(const AgentComponentToken *token);
@@ -950,7 +950,7 @@ bool SendMessageToMasterAgent(NXCPMessage *msg);
 bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg);
 void ShutdownExtSubagents(bool restart);
 void RestartExtSubagents();
-void RequestLocalDatabaseResetInExtSubagents();
+void SetLocalDatabaseResetRequestInExtSubagents(bool enabled);
 void ExecuteAction(const TCHAR *name, const StringList& args);
 void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, const shared_ptr<AbstractCommSession>& session);
 

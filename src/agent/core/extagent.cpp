@@ -246,11 +246,12 @@ void ExternalSubagent::restart()
 }
 
 /**
- * Request local database reset on next start of external subagent loader
+ * Request local database reset on next start of external subagent loader or cancel pending request
  */
-uint32_t ExternalSubagent::requestLocalDatabaseReset()
+uint32_t ExternalSubagent::setLocalDatabaseResetRequest(bool enabled)
 {
    NXCPMessage msg(CMD_RESET_LOCAL_DATABASE, InterlockedIncrement(&m_requestId));
+   msg.setField(VID_ENABLED, enabled);
    if (!sendMessage(&msg))
       return ERR_CONNECTION_BROKEN;
 
@@ -1114,33 +1115,35 @@ void NotifyExtSubagentsOnComponentToken(const AgentComponentToken *token)
 }
 
 /**
- * Request local database reset on next start from all external subagent loaders
+ * Request local database reset on next start from all external subagent loaders or cancel pending requests
  */
-void RequestLocalDatabaseResetInExtSubagents()
+void SetLocalDatabaseResetRequestInExtSubagents(bool enabled)
 {
+   const TCHAR *request = enabled ? _T("local database reset request") : _T("cancellation of local database reset request");
    for(int i = 0; i < s_subagents.size(); i++)
    {
       ExternalSubagent *subagent = s_subagents.get(i);
       if (!subagent->isConnected())
       {
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("External subagent %s is not connected, its local database will not be reset"), subagent->getName());
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("External subagent %s is not connected, %s"), subagent->getName(),
+            enabled ? _T("its local database will not be reset") : _T("its pending local database reset request (if any) is not cancelled"));
          continue;
       }
 
-      uint32_t rcc = subagent->requestLocalDatabaseReset();
+      uint32_t rcc = subagent->setLocalDatabaseResetRequest(enabled);
       switch(rcc)
       {
          case ERR_SUCCESS:
-            nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("External subagent %s accepted local database reset request"), subagent->getName());
+            nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("External subagent %s accepted %s"), subagent->getName(), request);
             break;
          case ERR_CONNECTION_BROKEN:
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("Cannot send local database reset request to external subagent %s (connection broken)"), subagent->getName());
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("Cannot send %s to external subagent %s (connection broken)"), request, subagent->getName());
             break;
          case ERR_REQUEST_TIMEOUT:
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("Timeout waiting for response to local database reset request from external subagent %s"), subagent->getName());
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("Timeout waiting for response to %s from external subagent %s"), request, subagent->getName());
             break;
          default:
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("External subagent %s rejected local database reset request (error %u)"), subagent->getName(), rcc);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_LOCALDB, _T("External subagent %s rejected %s (error %u)"), subagent->getName(), request, rcc);
             break;
       }
    }

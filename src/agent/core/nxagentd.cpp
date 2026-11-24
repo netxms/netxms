@@ -606,82 +606,105 @@ void ShutdownThread()
 }
 
 /**
+ * Append argument to agent restart command line. On Windows command line is a string for CreateProcess; on other
+ * platforms it is an argument list in the form accepted by ProcessExecutor (['arg1', 'arg2', ...]), so that agent
+ * executable is started directly, without shell.
+ */
+static void AppendRestartArgument(StringBuffer& command, const TCHAR *arg)
+{
+#ifdef _WIN32
+   if (!command.isEmpty())
+      command.append(_T(' '));
+   if ((*arg == 0) || (_tcspbrk(arg, _T(" \t")) != nullptr))
+   {
+      command.append(_T('"'));
+      command.append(arg);
+      command.append(_T('"'));
+   }
+   else
+   {
+      command.append(arg);
+   }
+#else
+   command.append(command.isEmpty() ? _T("['") : _T(", '"));
+   for(const TCHAR *p = arg; *p != 0; p++)
+   {
+      if (*p == _T('\''))
+         command.append(_T('\''));   // single quote inside quoted element is doubled
+      command.append(*p);
+   }
+   command.append(_T('\''));
+#endif
+}
+
+/**
  * Build command line for agent restart
  */
 static StringBuffer BuildRestartCommandLine(bool withWaitPid)
 {
+   TCHAR buffer[32];
    StringBuffer command;
-   command.append(_T('"'));
-   command.append(s_executableName);
-   command.append(_T("\" -c \""));
-   command.append(g_szConfigFile);
+   AppendRestartArgument(command, s_executableName);
+   AppendRestartArgument(command, _T("-c"));
+   AppendRestartArgument(command, g_szConfigFile);
    if (s_debugLevelOverride != NXCONFIG_UNINITIALIZED_VALUE)
    {
-      command.append(_T("\" -D "));
-      command.append(s_debugLevelOverride);
-   }
-   else
-   {
-      command.append(_T("\""));
+      AppendRestartArgument(command, _T("-D"));
+      AppendRestartArgument(command, IntegerToString(static_cast<int32_t>(s_debugLevelOverride), buffer));
    }
 
 #if !defined(_WIN32)
-   command.append(_T(" -p \""));
-   command.append(g_szPidFile);
-   command.append(_T('"'));
+   AppendRestartArgument(command, _T("-p"));
+   AppendRestartArgument(command, g_szPidFile);
 #endif
 
    if (g_szPlatformSuffix[0] != 0)
    {
-      command.append(_T(" -P \""));
-      command.append(g_szPlatformSuffix);
-      command.append(_T('"'));
+      AppendRestartArgument(command, _T("-P"));
+      AppendRestartArgument(command, g_szPlatformSuffix);
    }
 
    shared_ptr<Config> config = g_config;
    const TCHAR *configSection = config->getAlias(_T("agent"));
-   if ((configSection != NULL) && (*configSection != 0))
+   if ((configSection != nullptr) && (*configSection != 0))
    {
-      command.append(_T(" -G "));
-      command.append(configSection);
+      AppendRestartArgument(command, _T("-G"));
+      AppendRestartArgument(command, configSection);
    }
 
 #if WITH_SYSTEMD
    if (g_dwFlags & AF_SYSTEMD_DAEMON)
-      command.append(_T(" -S"));
+      AppendRestartArgument(command, _T("-S"));
 #endif
-   if (g_dwFlags & AF_DAEMON)
-      command.append(_T(" -d"));
-   else
-      command.append(_T(" -f"));
+   AppendRestartArgument(command, (g_dwFlags & AF_DAEMON) ? _T("-d") : _T("-f"));
 
    if (g_dwFlags & AF_CENTRAL_CONFIG)
    {
-      command.append(_T(" -M "));
-      command.append(g_szConfigServer);
+      AppendRestartArgument(command, _T("-M"));
+      AppendRestartArgument(command, g_szConfigServer);
    }
 
 #ifdef _WIN32
    if (g_dwFlags & AF_HIDE_WINDOW)
-      command.append(_T(" -H"));
+      AppendRestartArgument(command, _T("-H"));
 
-   command.append(_T(" -n \""));
-   command.append(g_windowsServiceName);
-   command.append(_T("\" -e \""));
-   command.append(g_windowsEventSourceName);
-   command.append(_T('"'));
+   AppendRestartArgument(command, _T("-n"));
+   AppendRestartArgument(command, g_windowsServiceName);
+   AppendRestartArgument(command, _T("-e"));
+   AppendRestartArgument(command, g_windowsEventSourceName);
 
    if (withWaitPid)
    {
-      command.append(_T(" -X "));
-      command.append((g_dwFlags & AF_DAEMON) ? 0 : static_cast<uint32_t>(GetCurrentProcessId()));
+      AppendRestartArgument(command, _T("-X"));
+      AppendRestartArgument(command, IntegerToString((g_dwFlags & AF_DAEMON) ? static_cast<uint32_t>(0) : static_cast<uint32_t>(GetCurrentProcessId()), buffer));
    }
 #else
    if (withWaitPid)
    {
-      command.append(_T(" -X "));
-      command.append(s_pid);
+      AppendRestartArgument(command, _T("-X"));
+      AppendRestartArgument(command, IntegerToString(static_cast<uint32_t>(s_pid), buffer));
    }
+   command.append(_T(']'));
 #endif
 
    return command;
@@ -727,21 +750,26 @@ void ScheduleDelayedRestart()
 }
 
 /**
+ * Held by RestartAgent() from launch of replacement instance until external subagents are notified. Shutdown() waits
+ * on it, so that stop request sent by replacement instance cannot close connections to external subagents first.
+ */
+static Mutex s_restartLock;
+
+/**
  * Restart agent
  */
 LONG RestartAgent()
 {
-	nxlog_debug(1, _T("RestartAgent() called"));
+   nxlog_debug(1, _T("RestartAgent() called"));
 
    NotifyConnectedServers(_T("AgentRestart"));
 
-	RestartExtSubagents();
-
    StringBuffer command = BuildRestartCommandLine(true);
-#ifdef _WIN32
-	nxlog_debug(1, _T("Restarting agent with command line '%s'"), command.getBuffer());
+   nxlog_debug(1, _T("Restarting agent with command line '%s'"), command.cstr());
 
-   DWORD dwResult;
+   LockGuard lockGuard(s_restartLock);
+
+#ifdef _WIN32
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
 
@@ -756,24 +784,28 @@ LONG RestartAgent()
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
             command.getBuffer(), GetSystemErrorText(GetLastError(), buffer, 1024));
-      dwResult = ERR_EXEC_FAILED;
+      return ERR_EXEC_FAILED;
    }
-   else
-   {
-      // Close all handles
-      CloseHandle(pi.hThread);
-      CloseHandle(pi.hProcess);
-      dwResult = ERR_SUCCESS;
-   }
-   if ((dwResult == ERR_SUCCESS) && (!(g_dwFlags & AF_DAEMON)))
-   {
-      ThreadCreate(ShutdownThread);
-   }
-   return dwResult;
+
+   // Close all handles
+   CloseHandle(pi.hThread);
+   CloseHandle(pi.hProcess);
 #else
-	nxlog_debug(1, _T("Restarting agent with command line '%s'"), command.cstr());
-	return ProcessExecutor::execute(command) ? ERR_SUCCESS : ERR_EXEC_FAILED;
+   if (!ProcessExecutor::execute(command))
+   {
+      nxlog_write(NXLOG_ERROR, _T("Unable to create process %s"), command.cstr());
+      return ERR_EXEC_FAILED;
+   }
 #endif
+
+   // External subagents are restarted only after replacement instance is launched
+   RestartExtSubagents();
+
+#ifdef _WIN32
+   if (!(g_dwFlags & AF_DAEMON))
+      ThreadCreate(ShutdownThread);
+#endif
+   return ERR_SUCCESS;
 }
 
 /**
@@ -791,15 +823,18 @@ static bool s_localDatabaseResetJobActive = false;
 static Mutex s_localDatabaseResetJobLock(MutexType::FAST);
 
 /**
- * Restart agent to complete local database reset
+ * Restart agent to complete local database reset. If restart cannot be initiated, pending reset request is cancelled,
+ * including requests in external subagent loaders if they were made by current job.
  */
-static void RestartForLocalDatabaseReset()
+static void RestartForLocalDatabaseReset(bool cancelInExtSubagents)
 {
    if (RestartAgent() == ERR_SUCCESS)
       return;
 
    nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Agent restart failed, local database reset is not completed by this request"));
    CancelLocalDatabaseResetRequest();
+   if (cancelInExtSubagents)
+      SetLocalDatabaseResetRequestInExtSubagents(false);
    LockGuard lockGuard(s_localDatabaseResetJobLock);
    s_localDatabaseResetJobActive = false;
 }
@@ -809,8 +844,16 @@ static void RestartForLocalDatabaseReset()
  */
 static void LocalDatabaseResetJob()
 {
-   RequestLocalDatabaseResetInExtSubagents();
-   RestartForLocalDatabaseReset();
+   SetLocalDatabaseResetRequestInExtSubagents(true);
+   RestartForLocalDatabaseReset(true);
+}
+
+/**
+ * Restart agent to complete local database reset that is already in progress
+ */
+static void LocalDatabaseResetCompletionJob()
+{
+   RestartForLocalDatabaseReset(false);
 }
 
 /**
@@ -827,7 +870,7 @@ static uint32_t H_ResetLocalDatabase(const shared_ptr<ActionExecutionContext>& c
       case LocalDatabaseResetRequest::FAILED:
          return ERR_IO_FAILURE;
       case LocalDatabaseResetRequest::IN_PROGRESS:
-         ThreadPoolExecute(g_executorThreadPool, RestartForLocalDatabaseReset);
+         ThreadPoolExecute(g_executorThreadPool, LocalDatabaseResetCompletionJob);
          break;
       default:
          ThreadPoolExecute(g_executorThreadPool, LocalDatabaseResetJob);
@@ -1851,6 +1894,11 @@ BOOL Initialize()
 void Shutdown()
 {
 	nxlog_debug_tag(_T("shutdown"), 2, _T("Shutdown() called"));
+
+   // Wait for agent restart in progress to complete notification of external subagents
+   s_restartLock.lock();
+   s_restartLock.unlock();
+
 	if (s_startupFlags & SF_ENABLE_WATCHDOG)
 		StopWatchdog();
 

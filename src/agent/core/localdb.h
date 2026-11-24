@@ -41,7 +41,7 @@ enum class LocalDatabaseResetRequest
 
 LocalDatabaseResetRequest RequestLocalDatabaseReset();
 bool IsLocalDatabaseResetPending();
-void CancelLocalDatabaseResetRequest();
+bool CancelLocalDatabaseResetRequest();
 bool ProcessLocalDatabaseResetRequest();
 bool DeferLocalDatabaseResetRequest();
 
