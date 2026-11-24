@@ -412,7 +412,7 @@ void ArubaSwitchDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool ArubaSwitchDriver::isConfigBackupSupported()
+bool ArubaSwitchDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

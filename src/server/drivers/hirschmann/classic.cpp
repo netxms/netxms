@@ -182,7 +182,7 @@ void HirschmannClassicDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool HirschmannClassicDriver::isConfigBackupSupported()
+bool HirschmannClassicDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

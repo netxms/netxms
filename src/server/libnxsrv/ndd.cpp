@@ -23,6 +23,8 @@
 #include <nddrv.h>
 #include <netxms-version.h>
 #include <ieee8021x.h>
+#include <nxnetconf.h>
+#include <netxms-xml.h>
 
 #define DEBUG_TAG _T("ndd.common")
 
@@ -1937,18 +1939,24 @@ void NetworkDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
 }
 
 /**
- * Check if device configuration backup is supported by this driver.
- * Default implementation returns false. Drivers that support config backup should override this.
+ * Check if device configuration backup is supported by this driver for given device.
+ * Default implementation reports support when NETCONF is available, as running
+ * configuration can then be read with standard get-config operation. Drivers with
+ * device-specific backup implementation should override this.
  *
+ * @param ctx device context
  * @return true if config backup is supported
  */
-bool NetworkDeviceDriver::isConfigBackupSupported()
+bool NetworkDeviceDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
-   return false;
+   return ctx->isNETCONFAvailable();
 }
 
 /**
- * Get running configuration from device.
+ * Get running configuration from device. Default implementation reads running datastore
+ * with NETCONF get-config operation and returns content of data element as XML document.
+ * Namespace declarations inherited from rpc-reply envelope are copied onto data element,
+ * so the result is a self-contained document.
  *
  * @param ctx backup context providing connection methods
  * @param output byte stream to receive configuration data
@@ -1956,7 +1964,46 @@ bool NetworkDeviceDriver::isConfigBackupSupported()
  */
 bool NetworkDeviceDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
-   return false;
+   if (!ctx->isNETCONFAvailable())
+      return false;
+
+   char *reply = ctx->executeNETCONFRequest("<get-config><source><running/></source></get-config>");
+   if (reply == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("NetworkDeviceDriver::getRunningConfig: NETCONF RPC execution failed"));
+      return false;
+   }
+
+   NETCONF_Response response;
+   bool success = response.parse(reply, strlen(reply)) && response.isSuccess();
+   MemFree(reply);
+   if (!success)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("NetworkDeviceDriver::getRunningConfig: device returned error (%s)"), response.getErrorText().cstr());
+      return false;
+   }
+
+   pugi::xml_node data = response.getData();
+   if (!data || !data.first_child())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("NetworkDeviceDriver::getRunningConfig: no configuration data in device reply"));
+      return false;
+   }
+
+   pugi::xml_document document;
+   pugi::xml_node root = document.append_copy(data);
+   for(pugi::xml_node parent = data.parent(); parent.type() == pugi::node_element; parent = parent.parent())
+   {
+      for(pugi::xml_attribute attr = parent.first_attribute(); attr; attr = attr.next_attribute())
+      {
+         if ((!strcmp(attr.name(), "xmlns") || !strncmp(attr.name(), "xmlns:", 6)) && !root.attribute(attr.name()))
+            root.append_attribute(attr.name()) = attr.value();
+      }
+   }
+
+   xml_byte_stream_writer writer(*output);
+   document.print(writer, "    ", pugi::format_default);
+   return output->size() > 0;
 }
 
 /**

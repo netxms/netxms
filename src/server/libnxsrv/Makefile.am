@@ -11,6 +11,7 @@ libnxsrv_la_LIBADD = \
 	../../libnxsl/libnxsl.la \
 	../../agent/libnxagent/libnxagent.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
+	../../libnxnetconf/libnxnetconf.la \
 	../../libnetxms/libnetxms.la \
 	@LIBNXSRV_LIBS@
 

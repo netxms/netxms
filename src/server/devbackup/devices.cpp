@@ -34,7 +34,8 @@ bool NxDevBackupIsDeviceRegistered(const Node& node)
  */
 DeviceBackupApiStatus NxDevBackupRegisterDevice(Node *node)
 {
-   if (!node->getDriver()->isConfigBackupSupported())
+   NodeDeviceContext ctx(static_pointer_cast<Node>(node->self()));
+   if (!node->getDriver()->isConfigBackupSupported(&ctx))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"NxDevBackupRegisterDevice(%s [%u]): driver does not support config backup", node->getName(), node->getId());
       return DeviceBackupApiStatus::SUCCESS;
@@ -76,7 +77,8 @@ DeviceBackupApiStatus NxDevBackupValidateDeviceRegistration(Node *node)
    if (!node->getCustomAttributeAsBoolean(L"$devbackup.registered", false))
       return DeviceBackupApiStatus::DEVICE_NOT_REGISTERED;
 
-   if (!node->getDriver()->isConfigBackupSupported())
+   NodeDeviceContext ctx(static_pointer_cast<Node>(node->self()));
+   if (!node->getDriver()->isConfigBackupSupported(&ctx))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"NxDevBackupValidateDeviceRegistration(%s [%u]): driver no longer supports config backup", node->getName(), node->getId());
       return DeviceBackupApiStatus::DEVICE_NOT_REGISTERED;

@@ -536,7 +536,7 @@ void MikrotikDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool MikrotikDriver::isConfigBackupSupported()
+bool MikrotikDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

@@ -143,7 +143,7 @@ void DellOS10Driver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool DellOS10Driver::isConfigBackupSupported()
+bool DellOS10Driver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

@@ -106,7 +106,8 @@ static void RunBackupJob(const shared_ptr<Node>& node)
    nxlog_debug_tag(DEBUG_TAG, 5, L"ExecuteBackupJob(%s [%u]): started", node->getName(), node->getId());
 
    NetworkDeviceDriver *driver = node->getDriver();
-   if ((driver == nullptr) || !driver->isConfigBackupSupported())
+   NodeDeviceContext ctx(node);
+   if ((driver == nullptr) || !driver->isConfigBackupSupported(&ctx))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"ExecuteBackupJob(%s [%u]): driver does not support config backup", node->getName(), node->getId());
       node->setCustomAttribute(L"$devbackup.lastBackupTime", static_cast<int64_t>(time(nullptr)));
@@ -115,8 +116,6 @@ static void RunBackupJob(const shared_ptr<Node>& node)
       node->updateConfigBackupStatus();
       return;
    }
-
-   NodeDeviceContext ctx(node);
 
    // Get running config
    ByteStream runningOutput;

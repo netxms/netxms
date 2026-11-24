@@ -582,7 +582,7 @@ void CiscoDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool CiscoDeviceDriver::isConfigBackupSupported()
+bool CiscoDeviceDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

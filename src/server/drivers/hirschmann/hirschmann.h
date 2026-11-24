@@ -41,7 +41,7 @@ public:
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output) override;
 };
@@ -60,7 +60,7 @@ public:
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output) override;
 };

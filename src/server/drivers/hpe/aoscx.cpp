@@ -138,7 +138,7 @@ void ArubaCXDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool ArubaCXDriver::isConfigBackupSupported()
+bool ArubaCXDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

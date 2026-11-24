@@ -388,7 +388,7 @@ void CiscoNexusDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool CiscoNexusDriver::isConfigBackupSupported()
+bool CiscoNexusDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

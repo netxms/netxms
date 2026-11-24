@@ -306,7 +306,7 @@ void DellFTOSDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool DellFTOSDriver::isConfigBackupSupported()
+bool DellFTOSDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

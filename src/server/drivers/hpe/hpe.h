@@ -39,7 +39,7 @@ public:
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool isConfigRestoreSupported() override;
@@ -65,7 +65,7 @@ public:
    virtual AccessPointState getAccessPointState(DeviceContext *context, NObject *node, DriverData *driverData,
          uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
 };
 
@@ -76,7 +76,7 @@ class ComwareDeviceDriver : public NetworkDeviceDriver
 {
 public:
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output) override;
 };
@@ -144,7 +144,7 @@ public:
    virtual void analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool isConfigRestoreSupported() override;

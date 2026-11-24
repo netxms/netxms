@@ -146,7 +146,7 @@ void PowerConnectDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool PowerConnectDriver::isConfigBackupSupported()
+bool PowerConnectDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

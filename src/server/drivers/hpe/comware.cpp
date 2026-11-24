@@ -59,7 +59,7 @@ void ComwareDeviceDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool ComwareDeviceDriver::isConfigBackupSupported()
+bool ComwareDeviceDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

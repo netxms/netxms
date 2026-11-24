@@ -40,6 +40,23 @@ public:
    }
 };
 
+/**
+ * Write XML to byte stream (UTF-8)
+ */
+class xml_byte_stream_writer : public pugi::xml_writer
+{
+private:
+   ByteStream& m_out;
+
+public:
+   xml_byte_stream_writer(ByteStream& out) : m_out(out) { }
+
+   virtual void write(const void *data, size_t size) override
+   {
+      m_out.write(data, size);
+   }
+};
+
 
 static inline String XMLGetValueAsString(const pugi::xml_node& parent, const char* tag, const TCHAR* defaultValue = _T(""))
 {

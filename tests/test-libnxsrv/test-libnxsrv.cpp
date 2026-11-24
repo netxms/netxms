@@ -1839,6 +1839,89 @@ static void TestDriverDefaults()
 }
 
 /**
+ * Device context with NETCONF transport returning canned reply
+ */
+class MockNetconfDeviceContext : public DeviceContext
+{
+private:
+   bool m_available;
+   const char *m_reply;
+
+public:
+   StringBuffer lastRequest;
+
+   MockNetconfDeviceContext(bool available, const char *reply) : m_available(available), m_reply(reply) {}
+
+   virtual bool isSSHCommandChannelAvailable() override { return false; }
+   virtual bool isSSHInteractiveChannelAvailable() override { return false; }
+   virtual bool isSNMPAvailable() override { return false; }
+   virtual bool isNETCONFAvailable() override { return m_available; }
+
+   virtual SSHInteractiveChannel *getInteractiveSSH() override { return nullptr; }
+   virtual bool executeSSHCommand(const char *command, ByteStream *output) override { return false; }
+   virtual SNMP_Transport *getSNMPTransport() override { return nullptr; }
+   virtual int executeNETCONFRequests(int count, const char * const *requests, char **replies, uint32_t timeout) override
+   {
+      memset(replies, 0, count * sizeof(char*));
+      if (m_reply == nullptr)
+         return -1;
+      lastRequest.appendUtf8String(requests[0]);
+      replies[0] = MemCopyStringA(m_reply);
+      return 1;
+   }
+};
+
+/**
+ * Test generic NETCONF configuration backup in base driver
+ */
+static void TestDriverNetconfBackup()
+{
+   StartTest(_T("NetworkDeviceDriver - NETCONF configuration backup"));
+   NetworkDeviceDriver driver;
+
+   MockNetconfDeviceContext unavailable(false, nullptr);
+   AssertFalse(driver.isConfigBackupSupported(&unavailable));
+   ByteStream output;
+   AssertFalse(driver.getRunningConfig(&unavailable, &output));
+
+   MockNetconfDeviceContext context(true,
+      "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" xmlns:ex=\"urn:example:ext\" message-id=\"1\">"
+      "<data><system xmlns=\"urn:example:system\"><hostname>router1</hostname><ex:location>lab</ex:location></system></data>"
+      "</rpc-reply>");
+   AssertTrue(driver.isConfigBackupSupported(&context));
+   AssertTrue(driver.getRunningConfig(&context, &output));
+   AssertTrue(_tcsstr(context.lastRequest, _T("<running/>")) != nullptr);
+
+   output.write('\0');
+   pugi::xml_document document;
+   AssertTrue(document.load_string(reinterpret_cast<const char*>(output.buffer())));
+   pugi::xml_node root = document.document_element();
+   AssertTrue(!strcmp(root.name(), "data"));
+   AssertTrue(!strcmp(root.attribute("xmlns").as_string(), "urn:ietf:params:xml:ns:netconf:base:1.0"));
+   AssertTrue(!strcmp(root.attribute("xmlns:ex").as_string(), "urn:example:ext"));
+   AssertFalse(root.attribute("message-id"));
+   AssertTrue(!strcmp(root.child("system").child_value("hostname"), "router1"));
+   EndTest();
+
+   StartTest(_T("NetworkDeviceDriver - NETCONF configuration backup failures"));
+   MockNetconfDeviceContext errorContext(true,
+      "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"1\">"
+      "<rpc-error><error-type>application</error-type><error-tag>access-denied</error-tag><error-severity>error</error-severity></rpc-error>"
+      "</rpc-reply>");
+   ByteStream errorOutput;
+   AssertFalse(driver.getRunningConfig(&errorContext, &errorOutput));
+
+   MockNetconfDeviceContext emptyContext(true, "<rpc-reply xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\" message-id=\"1\"><data/></rpc-reply>");
+   ByteStream emptyOutput;
+   AssertFalse(driver.getRunningConfig(&emptyContext, &emptyOutput));
+
+   MockNetconfDeviceContext failedContext(true, nullptr);
+   ByteStream failedOutput;
+   AssertFalse(driver.getRunningConfig(&failedContext, &failedOutput));
+   EndTest();
+}
+
+/**
  * Make time_t for local midnight of given date
  */
 static time_t MakeDay(int year, int month, int day)
@@ -2172,6 +2255,7 @@ int main(int argc, char *argv[])
    TestDriverVlans();
    TestDriverArpCache();
    TestDriverDefaults();
+   TestDriverNetconfBackup();
    TestHolidayCalendar();
    TestDailyActivityForecaster();
    return 0;

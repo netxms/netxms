@@ -67,7 +67,7 @@ public:
    virtual DataCollectionError getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
    virtual ObjectArray<AgentParameterDefinition>* getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
 };
 

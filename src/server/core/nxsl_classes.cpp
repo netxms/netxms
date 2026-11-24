@@ -2967,13 +2967,13 @@ NXSL_METHOD_DEFINITION(Node, getRunningConfig)
 
    shared_ptr<Node> node = *static_cast<shared_ptr<Node>*>(object->getData());
    NetworkDeviceDriver *driver = node->getDriver();
-   if (driver == nullptr || !driver->isConfigBackupSupported())
+   NodeDeviceContext ctx(node);
+   if (driver == nullptr || !driver->isConfigBackupSupported(&ctx))
    {
       *result = vm->createValue();
       return 0;
    }
 
-   NodeDeviceContext ctx(node);
    ByteStream output;
    if (!driver->getRunningConfig(&ctx, &output))
    {
@@ -2999,13 +2999,13 @@ NXSL_METHOD_DEFINITION(Node, getStartupConfig)
 
    shared_ptr<Node> node = *static_cast<shared_ptr<Node>*>(object->getData());
    NetworkDeviceDriver *driver = node->getDriver();
-   if (driver == nullptr || !driver->isConfigBackupSupported())
+   NodeDeviceContext ctx(node);
+   if (driver == nullptr || !driver->isConfigBackupSupported(&ctx))
    {
       *result = vm->createValue();
       return 0;
    }
 
-   NodeDeviceContext ctx(node);
    ByteStream output;
    if (!driver->getStartupConfig(&ctx, &output))
    {

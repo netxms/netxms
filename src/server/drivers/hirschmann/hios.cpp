@@ -184,7 +184,7 @@ void HirschmannHiOSDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool HirschmannHiOSDriver::isConfigBackupSupported()
+bool HirschmannHiOSDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

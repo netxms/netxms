@@ -51,7 +51,7 @@ public:
    virtual void getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
    virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool isConfigRestoreSupported() override;
    virtual bool restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,

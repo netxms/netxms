@@ -70,7 +70,7 @@ public:
    virtual DataCollectionError getDhcpScopes(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpScopeInfo> *scopes) override;
    virtual DataCollectionError getDhcpLeases(DeviceContext *context, NObject *node, DriverData *driverData, ObjectArray<DhcpLeaseInfo> *leases) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool isConfigRestoreSupported() override;
@@ -200,7 +200,7 @@ public:
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual VlanList *getVlans(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
-   virtual bool isConfigBackupSupported() override;
+   virtual bool isConfigBackupSupported(DeviceContext *ctx) override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool isConfigRestoreSupported() override;

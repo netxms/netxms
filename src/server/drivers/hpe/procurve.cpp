@@ -159,7 +159,7 @@ void ProCurveDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if config backup is supported
  */
-bool ProCurveDriver::isConfigBackupSupported()
+bool ProCurveDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }

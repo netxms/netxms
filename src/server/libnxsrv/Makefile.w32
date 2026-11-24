@@ -53,7 +53,7 @@ LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
 	-Wl,--out-implib,$(IMPLIB)
 
 # In-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS
-LIBS = -lnxagent -lnxdb -lnxsl -lnxsnmp -lnetxms -lnxjansson \
+LIBS = -lnxagent -lnxdb -lnxsl -lnxsnmp -lnxnetconf -lnetxms -lnxjansson \
 	$(MODBUS_LIBS) \
 	$(PCRE_LIBS) \
 	$(SSL_LIBS) \

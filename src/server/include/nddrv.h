@@ -783,7 +783,7 @@ public:
    virtual ObjectArray<LinkLayerNeighborInfo> *getLinkLayerNeighbors(DeviceContext *context, DriverData *driverData, bool *ignoreStandardMibs);
    virtual void getSSHDriverHints(SSHDriverHints *hints) const;
 
-   virtual bool isConfigBackupSupported();
+   virtual bool isConfigBackupSupported(DeviceContext *ctx);
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output);
    virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output);
 

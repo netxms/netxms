@@ -23,6 +23,7 @@
 #include "juniper.h"
 #include <netxms-version.h>
 #include <nxnetconf.h>
+#include <netxms-xml.h>
 
 /**
  * Get driver name
@@ -498,27 +499,10 @@ void JuniperDriver::getSSHDriverHints(SSHDriverHints *hints) const
 /**
  * Check if configuration backup is supported
  */
-bool JuniperDriver::isConfigBackupSupported()
+bool JuniperDriver::isConfigBackupSupported(DeviceContext *ctx)
 {
    return true;
 }
-
-/**
- * XML writer for serializing configuration data into byte stream
- */
-class XmlByteStreamWriter : public pugi::xml_writer
-{
-private:
-   ByteStream& m_out;
-
-public:
-   XmlByteStreamWriter(ByteStream& out) : m_out(out) { }
-
-   virtual void write(const void *data, size_t size) override
-   {
-      m_out.write(data, size);
-   }
-};
 
 /**
  * Recursively remove junos: prefixed attributes from configuration tree. They carry
@@ -570,7 +554,7 @@ static bool GetRunningConfigViaNETCONF(DeviceContext *ctx, ByteStream *output)
 
    RemoveJunosMetadataAttributes(configuration);
 
-   XmlByteStreamWriter writer(*output);
+   xml_byte_stream_writer writer(*output);
    configuration.print(writer, "    ", pugi::format_default);
    return output->size() > 0;
 }
@@ -667,7 +651,7 @@ static bool BuildLoadConfigurationRequest(const ByteStream& config, ByteStream *
       MemFree(text);
    }
 
-   XmlByteStreamWriter writer(*request);
+   xml_byte_stream_writer writer(*request);
    document.print(writer, "", pugi::format_raw | pugi::format_no_declaration);
    request->write('\0');
    return true;
