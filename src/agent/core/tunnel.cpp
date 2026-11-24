@@ -22,6 +22,7 @@
 
 #include "nxagentd.h"
 #include <openssl/ssl.h>
+#include <tls_conn.h>
 #include <nxstat.h>
 #include <netxms-version.h>
 
@@ -165,6 +166,7 @@ private:
 
    bool connectToServer();
    void processHandshakeError(int sslErr, bool certificateLoaded);
+   void registerHandshakeFailure(bool certificateLoaded);
 
    void processBindRequest(NXCPMessage *request);
 
@@ -1081,6 +1083,14 @@ void OutboundTunnel::processHandshakeError(int sslErr, bool certificateLoaded)
       debugPrintf(5, _T("Caused by: %hs"), buffer);
    }
 
+   registerHandshakeFailure(certificateLoaded);
+}
+
+/**
+ * Register TLS handshake failure. After too many failures with agent certificate next connection attempt will be made without it.
+ */
+void OutboundTunnel::registerHandshakeFailure(bool certificateLoaded)
+{
    if (certificateLoaded)
    {
       m_tlsHandshakeFailures++;
@@ -1173,33 +1183,13 @@ bool OutboundTunnel::connectToServer()
    SSL_set_connect_state(m_ssl);
    SSL_set_fd(m_ssl, (int)m_socket);
 
-   while(true)
+   TLSHandshakeResult handshakeResult = PerformTLSHandshake(m_ssl, m_socket, REQUEST_TIMEOUT, DEBUG_TAG, 4, getDisplayName());
+   if (handshakeResult != TLSHandshakeResult::SUCCESS)
    {
-      int rc = SSL_do_handshake(m_ssl);
-      if (rc != 1)
-      {
-         int sslErr = SSL_get_error(m_ssl, rc);
-         if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
-         {
-            SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
-            poller.add(m_socket);
-            if (poller.poll(REQUEST_TIMEOUT) > 0)
-            {
-               debugPrintf(8, _T("TLS handshake: %s wait completed"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-               continue;
-            }
-            debugPrintf(4, _T("TLS handshake failed (timeout on %s)"), (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-            m_stateLock.unlock();
-            return false;
-         }
-         else
-         {
-            processHandshakeError(sslErr, certificateLoaded);
-            m_stateLock.unlock();
-            return false;
-         }
-      }
-      break;
+      if (handshakeResult == TLSHandshakeResult::FAILURE)
+         registerHandshakeFailure(certificateLoaded);
+      m_stateLock.unlock();
+      return false;
    }
 
    // Check if TLS connection still valid. If agent's certificate verification fails on server side,
@@ -2165,37 +2155,9 @@ void SetupInboundTunnel(SOCKET s, const InetAddress& peer)
    SSL_set_accept_state(ssl);
    SSL_set_fd(ssl, (int)s);
 
-   bool success = false;
-   while(true)
-   {
-      int rc = SSL_do_handshake(ssl);
-      if (rc == 1)
-      {
-         success = true;
-         break;
-      }
-      int sslErr = SSL_get_error(ssl, rc);
-      if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
-      {
-         SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
-         poller.add(s);
-         if (poller.poll(REQUEST_TIMEOUT) > 0)
-            continue;
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("TLS handshake with %s failed (timeout)"), peerName);
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("TLS handshake with %s failed (ssl_err=%d socket_err=%d)"), peerName, sslErr, WSAGetLastError());
-         char buffer[128];
-         unsigned long error;
-         while((error = ERR_get_error()) != 0)
-         {
-            ERR_error_string_n(error, buffer, sizeof(buffer));
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("Caused by: %hs"), buffer);
-         }
-      }
-      break;
-   }
+   TCHAR logContext[128];
+   _sntprintf(logContext, 128, _T("SetupInboundTunnel(%s)"), peerName);
+   bool success = (PerformTLSHandshake(ssl, s, REQUEST_TIMEOUT, DEBUG_TAG, 4, logContext) == TLSHandshakeResult::SUCCESS);
 
    if (success && (g_dwFlags & AF_CHECK_SERVER_CERTIFICATE))
    {

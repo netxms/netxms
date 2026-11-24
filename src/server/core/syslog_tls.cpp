@@ -29,6 +29,7 @@
 #include "nxcore.h"
 #include <nxcore_syslog.h>
 #include <socket_listener.h>
+#include <tls_conn.h>
 
 #define DEBUG_TAG L"syslog.tls"
 
@@ -104,37 +105,6 @@ static long DecodeTLSVersion(int version)
    }
 #endif
    return protoVersion;
-}
-
-/**
- * Run TLS handshake with WANT_READ/WANT_WRITE retry on a non-blocking socket
- */
-static bool DoTlsHandshake(SSL *ssl, SOCKET s, const wchar_t *peer)
-{
-   SetSocketNonBlocking(s);
-   while(true)
-   {
-      int rc = SSL_do_handshake(ssl);
-      if (rc == 1)
-         return true;
-      int sslErr = SSL_get_error(ssl, rc);
-      if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
-      {
-         SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
-         poller.add(s);
-         if (poller.poll(10000) > 0)
-            continue;
-         nxlog_debug_tag(DEBUG_TAG, 4, L"TLS handshake timeout on syslog connection from %s", peer);
-      }
-      else
-      {
-         char buffer[128];
-         ERR_error_string_n(ERR_get_error(), buffer, sizeof(buffer));
-         nxlog_debug_tag(DEBUG_TAG, 4, L"TLS handshake failed on syslog connection from %s (%hs)", peer, buffer);
-         LogOpenSSLErrorStack(6);
-      }
-      return false;
-   }
 }
 
 /**
@@ -490,7 +460,9 @@ ConnectionProcessingResult SyslogTlsListener::processConnection(SOCKET s, const 
 
    SSL_set_accept_state(ssl);
    SSL_set_fd(ssl, (int)s);
-   if (!DoTlsHandshake(ssl, s, peerText))
+   wchar_t logContext[128];
+   nx_swprintf(logContext, 128, L"Syslog TLS connection from %s", peerText);
+   if (PerformTLSHandshake(ssl, s, 10000, DEBUG_TAG, 4, logContext) != TLSHandshakeResult::SUCCESS)
    {
       SSL_free(ssl);
       SSL_CTX_free(context);

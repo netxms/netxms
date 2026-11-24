@@ -22,6 +22,7 @@
 
 #include "netsvc.h"
 #include <openssl/ssl.h>
+#include <tls_conn.h>
 
 static const TCHAR *startTlsTag = _T("netsvc.starttls");
 
@@ -120,6 +121,49 @@ static bool SetupStartTLSSession(SOCKET hSocket, uint32_t timeout, const char *h
 }
 
 /**
+ * Get time remaining until given deadline (in milliseconds)
+ */
+static inline uint32_t RemainingTime(int64_t deadline)
+{
+   int64_t remaining = deadline - GetMonotonicClockTime();
+   return (remaining > 0) ? static_cast<uint32_t>(remaining) : 0;
+}
+
+/**
+ * Resolve host name (if given) and connect to TLS service. Check timeout covers connect and everything that follows it
+ * but not name resolution, so deadline is set after host name is resolved. Timeout value of 0 selects default timeout.
+ *
+ * @param hostname host name or nullptr to use provided address
+ * @param addr address to use when host name is not provided
+ * @param port TCP port
+ * @param timeout check timeout in milliseconds
+ * @param deadline pointer to variable receiving deadline for the whole check (monotonic clock time)
+ * @return connected socket or INVALID_SOCKET on failure
+ */
+static SOCKET ConnectToTLSService(const char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout, int64_t *deadline)
+{
+   InetAddress hostAddr;
+   if (hostname != nullptr)
+   {
+      hostAddr = InetAddress::resolveHostName(hostname);
+      if (!hostAddr.isValid())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("ConnectToTLSService(%hs:%d): cannot resolve host name"), hostname, port);
+         return INVALID_SOCKET;
+      }
+   }
+   else
+   {
+      hostAddr = addr;
+   }
+
+   if (timeout == 0)
+      timeout = g_netsvcTimeout;
+   *deadline = GetMonotonicClockTime() + timeout;
+   return NetConnectTCP(nullptr, hostAddr, port, timeout);
+}
+
+/**
  * Setup TLS session and execute optional callback
  */
 static bool SetupTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, int port, std::function<bool(SSL_CTX*, SSL*)> callback)
@@ -150,49 +194,15 @@ static bool SetupTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, 
       return false;
    }
 
-   SSL_set_tlsext_host_name(ssl, host);
+   // Server name indication can carry only DNS host name, not IP address literal (RFC 6066)
+   if (!InetAddress::parse(host).isValid())
+      SSL_set_tlsext_host_name(ssl, host);
    SSL_set_connect_state(ssl);
    SSL_set_fd(ssl, (int)hSocket);
 
-   bool success = true;
-   while (true)
-   {
-      int rc = SSL_do_handshake(ssl);
-      if (rc != 1)
-      {
-         int sslErr = SSL_get_error(ssl, rc);
-         if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
-         {
-            SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
-            poller.add(hSocket);
-            if (poller.poll(timeout) > 0)
-            {
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupTLSSession(%hs, %d): TLS handshake: %s wait completed"),
-                               host, port, (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-               continue;
-            }
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupTLSSession(%hs, %d): TLS handshake failed (timeout on %s)"),
-                            host, port, (sslErr == SSL_ERROR_WANT_READ) ? _T("read") : _T("write"));
-            success = false;
-            break;
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupTLSSession(%hs, %d): TLS handshake failed (ssl_err=%d socket_err=%d)"), host, port, sslErr, WSAGetLastError());
-            char buffer[128];
-
-            unsigned long error;
-            while ((error = ERR_get_error()) != 0)
-            {
-               ERR_error_string_n(error, buffer, sizeof(buffer));
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("SetupTLSSession(%hs, %d): caused by: %hs"), host, port, buffer);
-            }
-            success = false;
-            break;
-         }
-      }
-      break;
-   }
+   TCHAR logContext[1100];
+   _sntprintf(logContext, 1100, _T("SetupTLSSession(%hs, %d)"), host, port);
+   bool success = (PerformTLSHandshake(ssl, hSocket, timeout, DEBUG_TAG, 7, logContext) == TLSHandshakeResult::SUCCESS);
 
    if (success && (callback != nullptr))
       success = callback(context, ssl);
@@ -210,10 +220,11 @@ int CheckTLS(const char *hostname, const InetAddress &addr, uint16_t port, uint3
 {
    int status;
    char buffer[64];
-   SOCKET hSocket = NetConnectTCP(hostname, addr, port, timeout);
+   int64_t deadline;
+   SOCKET hSocket = ConnectToTLSService(hostname, addr, port, timeout, &deadline);
    if (hSocket != INVALID_SOCKET)
    {
-      status = SetupTLSSession(hSocket, timeout, (hostname != nullptr) ? hostname : addr.toStringA(buffer), port, nullptr) ? PC_ERR_NONE : PC_ERR_HANDSHAKE;
+      status = SetupTLSSession(hSocket, RemainingTime(deadline), (hostname != nullptr) ? hostname : addr.toStringA(buffer), port, nullptr) ? PC_ERR_NONE : PC_ERR_HANDSHAKE;
       NetClose(hSocket);
    }
    else
@@ -329,8 +340,8 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
    const TCHAR *startTlsProto = positionalStartTlsProto ? arg4 : options.get(_T("starttls"), _T(""));
 
    uint32_t timeout = options.getAsUInt32(_T("timeout"), g_netsvcTimeout);
-
-   SOCKET hSocket = NetConnectTCP(host, InetAddress::INVALID, port, timeout);
+   int64_t deadline;
+   SOCKET hSocket = ConnectToTLSService(host, InetAddress::INVALID, port, timeout, &deadline);
    if (hSocket == INVALID_SOCKET)
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("H_TLSCertificateInfo(%hs, %d): connection error"), host, port);
@@ -343,15 +354,16 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
       TCHAR descrTag[256];
       _sntprintf(descrTag, 256, _T("%s StartTLS %hs:%u"), startTlsProto, serverName, port);
 
-      bool startTlsSuccess = SetupStartTLSSession(hSocket, timeout, serverName, startTlsProto, descrTag);
+      bool startTlsSuccess = SetupStartTLSSession(hSocket, RemainingTime(deadline), serverName, startTlsProto, descrTag);
       if (!startTlsSuccess)
       {
          nxlog_debug_tag(startTlsTag, 7, _T("%s: StartTLS error"), descrTag);
+         NetClose(hSocket);
          return SYSINFO_RC_ERROR;
       }
    }
 
-   bool success = SetupTLSSession(hSocket, timeout, (sniServerName[0] != 0) ? sniServerName : host, port,
+   bool success = SetupTLSSession(hSocket, RemainingTime(deadline), (sniServerName[0] != 0) ? sniServerName : host, port,
        [host, port, arg, value](SSL_CTX *context, SSL *ssl) -> bool
        {
           X509 *cert = SSL_get_peer_certificate(ssl);
