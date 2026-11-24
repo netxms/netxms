@@ -507,9 +507,47 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 }
 
 /**
- * Get uninstall command for product
+ * Read uninstall command string from registry value. Value of any length is accepted, and
+ * environment variable references in REG_EXPAND_SZ value are expanded.
  */
-static bool GetProductUninstallCommand(const TCHAR *uninstallKey, bool reg32, TCHAR *command)
+static bool ReadUninstallString(HKEY hKey, const TCHAR *valueName, StringBuffer *command)
+{
+   DWORD type, size = 0;
+   if ((RegQueryValueEx(hKey, valueName, nullptr, &type, nullptr, &size) != ERROR_SUCCESS) || ((type != REG_SZ) && (type != REG_EXPAND_SZ)))
+      return false;
+
+   // Extra character guarantees null termination (registry strings can be stored without terminator)
+   Buffer<TCHAR, 4096> value(size / sizeof(TCHAR) + 1);
+   if ((RegQueryValueEx(hKey, valueName, nullptr, &type, reinterpret_cast<BYTE*>(static_cast<TCHAR*>(value)), &size) != ERROR_SUCCESS) || ((type != REG_SZ) && (type != REG_EXPAND_SZ)))
+      return false;
+   value[size / sizeof(TCHAR)] = 0;
+
+   if (type == REG_EXPAND_SZ)
+   {
+      DWORD expandedSize = ExpandEnvironmentStrings(value, nullptr, 0);
+      if (expandedSize == 0)
+         return false;
+      Buffer<TCHAR, 4096> expanded(static_cast<size_t>(expandedSize) + 1);
+      DWORD rc = ExpandEnvironmentStrings(value, expanded, expandedSize + 1);
+      if ((rc == 0) || (rc > expandedSize + 1))
+         return false;
+      *command = static_cast<TCHAR*>(expanded);
+   }
+   else
+   {
+      *command = static_cast<TCHAR*>(value);
+   }
+
+   command->trim();
+   return !command->isEmpty();
+}
+
+/**
+ * Get uninstall command for product. For products installed by Windows Installer the registered uninstall
+ * string usually opens interactive maintenance UI, so silent msiexec command is built instead (as argument
+ * array, with uninstall key being the product code).
+ */
+static bool GetProductUninstallCommand(const TCHAR *uninstallKey, bool reg32, StringBuffer *command)
 {
    StringBuffer keyName(_T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"));
    keyName.append(uninstallKey);
@@ -519,19 +557,32 @@ static bool GetProductUninstallCommand(const TCHAR *uninstallKey, bool reg32, TC
       return false;
 
    bool success = false;
-   TCHAR buffer[1024];
-   DWORD type, size = sizeof(buffer);
-   if (RegQueryValueEx(hKey, _T("QuietUninstallString"), nullptr, &type, reinterpret_cast<BYTE*>(command), &size) == ERROR_SUCCESS)
+   DWORD type, windowsInstaller = 0, size = sizeof(DWORD);
+   if ((RegQueryValueEx(hKey, _T("WindowsInstaller"), nullptr, &type, reinterpret_cast<BYTE*>(&windowsInstaller), &size) == ERROR_SUCCESS) &&
+       (type == REG_DWORD) && (windowsInstaller == 1))
    {
-      success = true;
+      TCHAR systemDirectory[MAX_PATH];
+      UINT len = GetSystemDirectory(systemDirectory, MAX_PATH);
+      if ((len > 0) && (len < MAX_PATH))
+      {
+         // Single quote within single-quoted element of argument array is escaped by doubling it
+         StringBuffer path(systemDirectory);
+         path.append(_T("\\msiexec.exe"));
+         path.replace(_T("'"), _T("''"));
+         StringBuffer productCode(uninstallKey);
+         productCode.replace(_T("'"), _T("''"));
+
+         *command = _T("['");
+         command->append(path);
+         command->append(_T("','/x','"));
+         command->append(productCode);
+         command->append(_T("','/qn','/norestart']"));
+         success = true;
+      }
    }
    else
    {
-      size = MAX_PATH * sizeof(TCHAR);
-      if (RegQueryValueEx(hKey, _T("UninstallString"), nullptr, &type, reinterpret_cast<BYTE*>(command), &size) == ERROR_SUCCESS)
-      {
-         success = true;
-      }
+      success = ReadUninstallString(hKey, _T("QuietUninstallString"), command) || ReadUninstallString(hKey, _T("UninstallString"), command);
    }
    RegCloseKey(hKey);
    return success;
@@ -556,17 +607,32 @@ uint32_t H_UninstallProduct(const shared_ptr<ActionExecutionContext>& context)
       return ERR_FUNCTION_NOT_SUPPORTED;
    }
 
-   TCHAR command[MAX_PATH];
-   if (!GetProductUninstallCommand(uninstallKey, false, command) && !GetProductUninstallCommand(uninstallKey, true, command))
+   StringBuffer command;
+   if (!GetProductUninstallCommand(uninstallKey, false, &command) && !GetProductUninstallCommand(uninstallKey, true, &command))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot find uninstall command for product key \"%s\""), uninstallKey);
       return ERR_INTERNAL_ERROR;
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing uninstall command \"%s\" for product key \"%s\""), command, uninstallKey);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Executing uninstall command \"%s\" for product key \"%s\""), command.cstr(), uninstallKey);
    ProcessExecutor executor(command);
    if (!executor.execute())
       return ERR_EXEC_FAILED;
 
-   return executor.waitForCompletion(120000) ? ERR_SUCCESS : ERR_REQUEST_TIMEOUT;
+   if (!executor.waitForCompletion(120000))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Timeout waiting for uninstall command for product key \"%s\""), uninstallKey);
+      return ERR_REQUEST_TIMEOUT;
+   }
+
+   // Exit codes 1641 (ERROR_SUCCESS_REBOOT_INITIATED) and 3010 (ERROR_SUCCESS_REBOOT_REQUIRED) indicate successful uninstall with reboot needed
+   uint32_t exitCode = executor.getExitCode();
+   if ((exitCode != 0) && (exitCode != ERROR_SUCCESS_REBOOT_INITIATED) && (exitCode != ERROR_SUCCESS_REBOOT_REQUIRED))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Uninstall command for product key \"%s\" failed (exit code %u)"), uninstallKey, exitCode);
+      return ERR_EXEC_FAILED;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Uninstall command for product key \"%s\" completed (exit code %u)"), uninstallKey, exitCode);
+   return ERR_SUCCESS;
 }
