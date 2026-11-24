@@ -412,7 +412,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_CLOSE_TCP_PROXY"),
       _T("CMD_GET_DEPENDENT_NODES"),
       _T("CMD_DELETE_DCI_ENTRY"),
-      _T("CMD_0x0171"),
+      _T("CMD_RESET_LOCAL_DATABASE"),
       _T("CMD_QUERY_INTERNAL_TOPOLOGY"),
       _T("CMD_GET_ACTION_LIST"),
       _T("CMD_PROXY_MESSAGE"),
@@ -616,8 +616,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_EFFECTIVE_RESPONSIBLE_USERS"),
       _T("CMD_GET_DHCP_SCOPES"),
       _T("CMD_GET_DHCP_LEASES"),
-      _T("CMD_GET_AGENT_LOG_FILE"),
-      _T("CMD_RESET_LOCAL_DATABASE")
+      _T("CMD_GET_AGENT_LOG_FILE")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -633,7 +632,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_DEPLOY_REPORT_PACKAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_RESET_LOCAL_DATABASE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_AGENT_LOG_FILE))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

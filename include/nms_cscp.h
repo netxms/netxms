@@ -573,7 +573,7 @@ __PACK_END__
 #define CMD_CLOSE_TCP_PROXY               0x016E
 #define CMD_GET_DEPENDENT_NODES           0x016F
 #define CMD_DELETE_DCI_ENTRY              0x0170
-//#define CMD_GET_ACTIVE_THRESHOLDS         0x0171
+#define CMD_RESET_LOCAL_DATABASE          0x0171
 #define CMD_QUERY_INTERNAL_TOPOLOGY       0x0172
 #define CMD_GET_ACTION_LIST               0x0173
 #define CMD_PROXY_MESSAGE                 0x0174
@@ -778,7 +778,6 @@ __PACK_END__
 #define CMD_GET_DHCP_SCOPES               0x023B
 #define CMD_GET_DHCP_LEASES               0x023C
 #define CMD_GET_AGENT_LOG_FILE            0x023D
-#define CMD_RESET_LOCAL_DATABASE          0x023E
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
