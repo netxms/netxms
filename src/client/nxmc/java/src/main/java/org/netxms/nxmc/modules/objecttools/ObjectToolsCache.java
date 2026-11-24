@@ -33,6 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.DisposableSingleton;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
@@ -40,9 +41,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Cache for object tools
+ * Cache for object tools. Holds images created on owning display, so each display has own instance.
  */
-public class ObjectToolsCache
+public class ObjectToolsCache implements DisposableSingleton
 {
    private static Logger logger = LoggerFactory.getLogger(ObjectToolsCache.class);
 
@@ -51,6 +52,7 @@ public class ObjectToolsCache
    private Map<UUID, Image> iconImages = new HashMap<UUID, Image>();
    private Display display = null;
 	private NXCSession session = null;
+   private SessionListener sessionListener;
 
 	/**
 	 * @param session
@@ -62,7 +64,7 @@ public class ObjectToolsCache
 
 	   reload();
 
-      session.addListener(new SessionListener() {
+      sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -76,7 +78,8 @@ public class ObjectToolsCache
                   break;
             }
          }
-      });
+      };
+      session.addListener(sessionListener);
 
       ImageProvider.getInstance().addUpdateListener(new ImageUpdateListener() {
          @Override
@@ -98,6 +101,15 @@ public class ObjectToolsCache
 	}
 
    /**
+    * @see org.netxms.nxmc.DisposableSingleton#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(sessionListener);
+   }
+
+   /**
     * Attach session to cache
     * 
     * @param session
@@ -105,7 +117,7 @@ public class ObjectToolsCache
    public static void attachSession(Display display, NXCSession session)
    {
       ObjectToolsCache instance = new ObjectToolsCache(display, session);
-      Registry.setSingleton(display, ObjectToolsCache.class, instance);
+      Registry.setDisplaySingleton(display, ObjectToolsCache.class, instance);
    }
 
 	/**

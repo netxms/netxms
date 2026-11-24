@@ -187,6 +187,11 @@ public class Startup implements EntryPoint, StartupParameters
             display.dispose();
             return 0;
          }
+
+         display.addListener(SWT.Dispose, (e) -> {
+            logger.info("Pop-out display disposed");
+            Registry.dispose();
+         });
       }
       else
       {
@@ -201,6 +206,7 @@ public class Startup implements EntryPoint, StartupParameters
 
          display.addListener(SWT.Dispose, (e) -> {
             logger.info("Main display disposed");
+            PopOutViewWindow.closeAll(display);
             NXCSession session = Registry.getSession(display);
             if (session != null)
                session.disconnect();
@@ -303,21 +309,25 @@ public class Startup implements EntryPoint, StartupParameters
          MessageDialogHelper.openInformation(null, i18n.tr("Language"),
                i18n.tr("Language selected in your user preferences ({0}) differs from the current one. You have to reload the page for the change to take effect.", serverLanguage));
       }
-      MibCache.init(session, display);
       ObjectToolsCache.attachSession(display, session);
-      SummaryTablesCache.attachSession(display, session);
-      GraphTemplateCache.attachSession(display, session);
-      LogDescriptorRegistry.attachSession(display, session);
-      MappingTableCache.attachSession(display, session);
-      Registry.setSingleton(UIElementFilter.class, new UIElementFilter(session));
+      if (popoutId == null)
+      {
+         // Client session level data is shared with pop-out windows through registry and should be initialized only once.
+         // Disconnect is also handled only by the window that owns client session - it closes pop-out windows on exit.
+         MibCache.init(session, display);
+         SummaryTablesCache.attachSession(display, session);
+         GraphTemplateCache.attachSession(display, session);
+         LogDescriptorRegistry.attachSession(display, session);
+         MappingTableCache.attachSession(display, session);
+         Registry.setSingleton(UIElementFilter.class, new UIElementFilter(session));
+         session.addListener((n) -> processSessionNotification(n));
+      }
 
       if (!kioskMode)
       {
          ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
          exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));
       }
-
-      session.addListener((n) -> processSessionNotification(n));
 
       ServerPushSession pushSession = new ServerPushSession();
       pushSession.start();

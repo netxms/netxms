@@ -90,31 +90,34 @@ public final class Registry
    }
    
    /**
-    * Copy reference to registry instance from one display to another.
+    * Make registry of destination display use client session of source display. Destination registry gets reference to client
+    * session, poll manager, named properties, and singletons registered with <code>setSingleton</code>; singletons registered
+    * with <code>setDisplaySingleton</code> and everything else stay separate for each display. Intended for pop-out windows,
+    * which have own display and UI session but work within client session of the window they were opened from.
     *
     * @param src source display
     * @param dst destination display
     */
    public static void copyToDisplay(Display src, Display dst)
    {
-      RWT.getUISession(dst).setAttribute("netxms.registry", RWT.getUISession(src).getAttribute("netxms.registry"));
+      Registry s = getInstance(src);
+      Registry d = getInstance(dst);
+      d.session = s.session;
+      d.pollManager = s.pollManager;
+      d.singletonStorage = s.singletonStorage;
+      d.storage = s.storage;
+      d.sessionOwner = false;
    }
 
    /**
-    * Dispose acquired resources
+    * Dispose acquired resources. Singletons shared with pop-out windows are disposed only by registry that owns client session.
     */
    public static void dispose()
    {
       Registry r = getInstance();
-      synchronized(r.singletonStorage)
-      {
-         for(Object s : r.singletonStorage.values())
-         {
-            if (s instanceof DisposableSingleton)
-               ((DisposableSingleton)s).dispose();
-         }
-         r.singletonStorage.clear();
-      }
+      disposeSingletons(r.displaySingletonStorage);
+      if (r.sessionOwner)
+         disposeSingletons(r.singletonStorage);
 
       // give a chance to stop gracefully fo threads initiated by registered singletons
       try
@@ -123,6 +126,25 @@ public final class Registry
       }
       catch(InterruptedException e)
       {
+      }
+   }
+
+   /**
+    * Dispose all singletons in given storage. Storage is not cleared, so that widgets disposed later (including those in pop-out
+    * windows that are yet to be closed) get disposed singleton and not null or newly created instance.
+    *
+    * @param storage singleton storage
+    */
+   @SuppressWarnings("rawtypes")
+   private static void disposeSingletons(Map<Class, Object> storage)
+   {
+      synchronized(storage)
+      {
+         for(Object s : storage.values())
+         {
+            if (s instanceof DisposableSingleton)
+               ((DisposableSingleton)s).dispose();
+         }
       }
    }
 
@@ -200,8 +222,32 @@ public final class Registry
    }
 
    @SuppressWarnings("rawtypes")
-   private Map<Class, Object> singletonStorage = new HashMap<Class, Object>();
-   private Map<String, Object> storage = new HashMap<String, Object>();
+   private Map<Class, Object> singletonStorage = new HashMap<Class, Object>(); // Shared with pop-out windows
+   @SuppressWarnings("rawtypes")
+   private Map<Class, Object> displaySingletonStorage = new HashMap<Class, Object>();
+   private boolean sessionOwner = true;
+   private Map<String, Object> storage = new HashMap<String, Object>(); // Shared with pop-out windows
+
+   /**
+    * Find singleton object of given class among singletons bound to display of this registry, then among shared ones.
+    *
+    * @param singletonClass class of singleton object
+    * @return singleton object or null
+    */
+   @SuppressWarnings("unchecked")
+   private <T> T findSingleton(Class<T> singletonClass)
+   {
+      synchronized(displaySingletonStorage)
+      {
+         T singleton = (T)displaySingletonStorage.get(singletonClass);
+         if (singleton != null)
+            return singleton;
+      }
+      synchronized(singletonStorage)
+      {
+         return (T)singletonStorage.get(singletonClass);
+      }
+   }
 
    /**
     * Get singleton object of given class.
@@ -209,14 +255,9 @@ public final class Registry
     * @param singletonClass class of singleton object
     * @return singleton object or null
     */
-   @SuppressWarnings("unchecked")
    public static <T> T getSingleton(Class<T> singletonClass)
    {
-      Registry r = getInstance();      
-      synchronized(r.singletonStorage)
-      {
-         return (T)r.singletonStorage.get(singletonClass);
-      }
+      return getInstance().findSingleton(singletonClass);
    }
 
    /**
@@ -226,18 +267,15 @@ public final class Registry
     * @param display display object
     * @return singleton object or null
     */
-   @SuppressWarnings("unchecked")
    public static <T> T getSingleton(Class<T> singletonClass, Display display)
    {
-      Registry r = getInstance(display);      
-      synchronized(r.singletonStorage)
-      {
-         return (T)r.singletonStorage.get(singletonClass);
-      }
+      return getInstance(display).findSingleton(singletonClass);
    }
 
    /**
-    * Set singleton object of given class.
+    * Set singleton object of given class. In web client such singleton is shared by main window and all pop-out windows opened
+    * from it, so it can be accessed from UI threads of different windows and should not hold resources bound to display - use
+    * <code>setDisplaySingleton</code> for those.
     *
     * @param singletonClass class of singleton object
     * @param singleton singleton object
@@ -264,6 +302,23 @@ public final class Registry
       synchronized(r.singletonStorage)
       {
          r.singletonStorage.put(singletonClass, singleton);
+      }
+   }
+
+   /**
+    * Set singleton object of given class that is bound to given display (holds images or other display resources, or otherwise
+    * cannot be used from another display). Each pop-out window has own display and so own instance of such singleton.
+    *
+    * @param display display
+    * @param singletonClass class of singleton object
+    * @param singleton singleton object
+    */
+   public static void setDisplaySingleton(Display display, Class<?> singletonClass, Object singleton)
+   {
+      Registry r = getInstance(display);
+      synchronized(r.displaySingletonStorage)
+      {
+         r.displaySingletonStorage.put(singletonClass, singleton);
       }
    }
 

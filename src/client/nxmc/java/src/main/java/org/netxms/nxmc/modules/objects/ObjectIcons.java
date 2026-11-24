@@ -28,7 +28,7 @@ import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 
 /**
- * Storage for object icons
+ * Storage for object icons. Holds images created on owning display, so each display has own instance.
  */
 public final class ObjectIcons
 {
@@ -39,7 +39,7 @@ public final class ObjectIcons
     */
    public static void init(Display display)
    {
-      Registry.setSingleton(ObjectIcons.class, new ObjectIcons(display));
+      Registry.setDisplaySingleton(display, ObjectIcons.class, new ObjectIcons(display));
    }
 
    private Map<Integer, Image> images;

@@ -257,6 +257,19 @@ public final class Registry
    }
 
    /**
+    * Set singleton object of given class that is bound to given display. Desktop client has single display, so it is the same
+    * as <code>setSingleton</code>.
+    *
+    * @param display display
+    * @param singletonClass class of singleton object
+    * @param singleton singleton object
+    */
+   public static void setDisplaySingleton(Display display, Class<?> singletonClass, Object singleton)
+   {
+      setSingleton(singletonClass, singleton);
+   }
+
+   /**
     * Get named property.
     *
     * @param name property name

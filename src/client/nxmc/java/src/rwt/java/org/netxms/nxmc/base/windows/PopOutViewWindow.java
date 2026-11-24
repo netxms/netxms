@@ -19,12 +19,17 @@
 package org.netxms.nxmc.base.windows;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.ExitConfirmation;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
@@ -53,6 +58,9 @@ import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 public class PopOutViewWindow extends Window implements MessageAreaHolder
 {
    private static Map<String, Request> popOutRequests = new HashMap<>();
+
+   /** Displays of open pop-out windows, by display of the window they were opened from */
+   private static Map<Display, Set<Display>> popOutDisplays = new HashMap<>();
 
    /**
     * Open pop-out window with given view
@@ -86,14 +94,62 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
          if (r != null)
          {
             popOutRequests.remove(id);
-            Display display = Display.getCurrent();
-            Registry.copyToDisplay(r.display, display);
+            final Display display = Display.getCurrent();
+            final Display ownerDisplay = r.display;
+            Registry.copyToDisplay(ownerDisplay, display);
             ImageProvider.createInstance(display, Registry.getSession());
             w = new PopOutViewWindow(r.view);
             w.setBlockOnOpen(true);
+
+            synchronized(popOutDisplays)
+            {
+               popOutDisplays.computeIfAbsent(ownerDisplay, (d) -> new HashSet<>()).add(display);
+            }
+            display.disposeExec(() -> {
+               synchronized(popOutDisplays)
+               {
+                  Set<Display> displays = popOutDisplays.get(ownerDisplay);
+                  if (displays != null)
+                     displays.remove(display);
+               }
+            });
          }
       }
       return w;
+   }
+
+   /**
+    * Close all pop-out windows opened from window on given display. Intended to be called when that display is disposed: pop-out
+    * windows work within client session of the window they were opened from and cannot be used after it is closed.
+    *
+    * @param ownerDisplay display of the window pop-out windows were opened from
+    */
+   public static void closeAll(Display ownerDisplay)
+   {
+      Set<Display> displays;
+      synchronized(popOutDisplays)
+      {
+         displays = popOutDisplays.remove(ownerDisplay);
+      }
+      if (displays == null)
+         return;
+
+      for(final Display display : displays)
+      {
+         try
+         {
+            display.asyncExec(() -> {
+               RWT.getClient().getService(ExitConfirmation.class).setMessage(null);
+               for(Shell shell : display.getShells())
+                  shell.dispose();
+               RWT.getClient().getService(JavaScriptExecutor.class).execute("window.close();");
+            });
+         }
+         catch(SWTException e)
+         {
+            // Display of pop-out window is already disposed
+         }
+      }
    }
 
    /**

@@ -58,12 +58,12 @@ public class LinkDciValueProvider implements DisposableSingleton
 	private volatile boolean syncRunning = true;
 
    /**
-    * Create instance of map object syncer for given display and session.
+    * Get instance of link DCI value provider for current client session, creating it if necessary. Instance is shared by main
+    * window and its pop-out windows.
     *
-    * @param display owning display
-    * @param session communication session
+    * @return instance for current client session
     */
-   public static LinkDciValueProvider getInstance()
+   public static synchronized LinkDciValueProvider getInstance()
    {
       LinkDciValueProvider instance = Registry.getSingleton(LinkDciValueProvider.class);
       if (instance == null)
