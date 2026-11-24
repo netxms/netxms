@@ -46,12 +46,12 @@ public class MapObjectSyncer implements DisposableSingleton
 	private volatile boolean syncRunning = true;
 
    /**
-    * Create instance of map object syncer for given display and session.
+    * Get instance of map object syncer for current client session, creating it if necessary. Instance is shared by main window
+    * and its pop-out windows.
     *
-    * @param display owning display
-    * @param session communication session
+    * @return instance for current client session
     */
-   public static MapObjectSyncer getInstance()
+   public static synchronized MapObjectSyncer getInstance()
    {
       MapObjectSyncer instance = Registry.getSingleton(MapObjectSyncer.class);
       if (instance == null)

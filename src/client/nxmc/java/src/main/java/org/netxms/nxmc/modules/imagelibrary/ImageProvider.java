@@ -40,6 +40,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.nxmc.DisposableSingleton;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -57,8 +58,9 @@ import org.xnap.commons.i18n.I18n;
  * <li><b>Rasterized</b> - returns SWT Image at requested dimensions</li>
  * <li><b>Render to GC</b> - renders directly to a graphics context at specified position and size</li>
  * </ul>
+ * Holds images created on owning display, so each display has own instance.
  */
-public class ImageProvider
+public class ImageProvider implements DisposableSingleton
 {
    private static final Logger logger = LoggerFactory.getLogger(ImageProvider.class);
 
@@ -101,11 +103,11 @@ public class ImageProvider
    public static ImageProvider createInstance(Display display, NXCSession session)
    {
       ImageProvider instance = new ImageProvider(display, session);
-      Registry.setSingleton(display, ImageProvider.class, instance);
+      Registry.setDisplaySingleton(display, ImageProvider.class, instance);
       try
       {
          instance.syncMetaData();
-         session.addListener(new ImageLibraryListener(instance));
+         session.addListener(instance.sessionListener);
       }
       catch(Exception e)
       {
@@ -139,6 +141,7 @@ public class ImageProvider
    private final NXCSession session;
    private final Display display;
    private final Image missingImage;
+   private final SessionListener sessionListener = new ImageLibraryListener(this);
 
    /** Image metadata index (no binary data) */
    private final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
@@ -183,6 +186,15 @@ public class ImageProvider
       this.display = display;
       this.session = session;
       missingImage = ResourceManager.getImage("icons/missing.png");
+   }
+
+   /**
+    * @see org.netxms.nxmc.DisposableSingleton#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(sessionListener);
    }
 
    /**

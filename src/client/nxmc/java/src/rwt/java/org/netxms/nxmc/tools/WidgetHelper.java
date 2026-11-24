@@ -99,7 +99,6 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledControl;
@@ -1567,14 +1566,17 @@ public class WidgetHelper
       }
       proxy.setMouseTrackListener(listener);
 
-      ClientListener clientListener = (ClientListener)Registry.getProperty("MouseHoverListener");
+      // Client listener belongs to UI session it was created in, so it is kept per display and not in registry, which shares
+      // named properties between main window and pop-out windows
+      Display display = control.getDisplay();
+      ClientListener clientListener = (ClientListener)display.getData("netxms.MouseHoverListener");
       if (clientListener == null)
       {
          String script = loadResourceAsText("js/hover.js");
          if (script == null)
             return;
          clientListener = new ClientListener(script);
-         Registry.setProperty("MouseHoverListener", clientListener);
+         display.setData("netxms.MouseHoverListener", clientListener);
       }
       control.addListener(SWT.MouseEnter, clientListener);
       control.addListener(SWT.MouseMove, clientListener);

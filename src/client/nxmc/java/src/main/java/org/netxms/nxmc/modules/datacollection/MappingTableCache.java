@@ -40,7 +40,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>This cache is per-session by design: in the web client multiple users share one JVM, so a JVM-wide cache would leak
  * mapped values between users connected to different servers (or with different access rights). The instance is stored
- * via {@link Registry#setSingleton}, which is per-RAP-UI-session in the web client and per-JVM in the desktop client.
+ * via {@link Registry#setSingleton}, which is per client session in the web client (shared by main window and its
+ * pop-out windows) and per-JVM in the desktop client.
  */
 public class MappingTableCache implements DisposableSingleton
 {
@@ -53,7 +54,7 @@ public class MappingTableCache implements DisposableSingleton
    private final SessionListener sessionListener;
 
    /**
-    * Attach cache to session. Should be called once per UI session right after login, alongside the other per-session
+    * Attach cache to session. Should be called once per client session right after login, alongside the other per-session
     * caches in {@code Startup}.
     *
     * @param display display owning the UI session
