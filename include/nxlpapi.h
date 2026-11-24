@@ -377,7 +377,10 @@ private:
    LogParserCopyCallback m_cbCopy;
 	void *m_userData;
 	TCHAR *m_fileName;
-	int m_fileEncoding;
+	int m_fileEncoding;        // Configured encoding (can be LP_FCP_AUTO)
+   int m_encoding;            // Effective encoding of currently processed file
+   off_t m_dataOffset;        // Start of log data in currently processed file (after byte order mark or leading zero block)
+   bool m_encodingDetected;   // Set when effective encoding is known for currently processed file
    uint32_t m_fileCheckInterval;
    uint32_t m_incompleteRecordTimeout;
 	StringList m_exclusionSchedules;
@@ -419,6 +422,8 @@ private:
 
    void setStatus(LogParserStatus status) { m_status = status; }
 
+   bool detectFileEncoding(int fh, const TCHAR *fileName);
+   off_t alignReadOffset(off_t offset) const;
    off_t processNewRecords(int fh, const TCHAR *fileName, bool processIncompleteRecord = false);
    void processRecord(char *record, const TCHAR *fileName);
    bool monitorFile2(off_t startOffset);
@@ -455,7 +460,7 @@ public:
 
 	void setName(const TCHAR *name);
    void setFileName(const TCHAR *name);
-   void setFileEncoding(int encoding) { m_fileEncoding = encoding; }
+   void setFileEncoding(int encoding);
    void setFileCheckInterval(uint32_t interval) { m_fileCheckInterval = interval; }
    void setIncompleteRecordTimeout(uint32_t timeout) { m_incompleteRecordTimeout = timeout; }
    void setFilePreallocated(bool isPreallocated) { m_preallocatedFile = isPreallocated; }

@@ -148,6 +148,9 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True), m_stopCondition(true)
 	m_name = nullptr;
 	m_fileName = nullptr;
 	m_fileEncoding = LP_FCP_ACP;
+   m_encoding = LP_FCP_ACP;
+   m_dataOffset = 0;
+   m_encodingDetected = false;
    m_fileCheckInterval = 10000;
    m_incompleteRecordTimeout = 0;
 	m_preallocatedFile = false;
@@ -197,6 +200,9 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
 	m_name = MemCopyString(src->m_name);
 	m_fileName = MemCopyString(src->m_fileName);
 	m_fileEncoding = src->m_fileEncoding;
+   m_encoding = (m_fileEncoding == LP_FCP_AUTO) ? LP_FCP_ACP : m_fileEncoding;
+   m_dataOffset = 0;
+   m_encodingDetected = false;
    m_fileCheckInterval = src->m_fileCheckInterval;
    m_incompleteRecordTimeout = src->m_incompleteRecordTimeout;
    m_preallocatedFile = src->m_preallocatedFile;
@@ -518,6 +524,17 @@ void LogParser::setFileName(const TCHAR *name)
    BYTE hash[MD5_DIGEST_SIZE];
    CalculateMD5Hash((BYTE *)name, _tcslen(name) * sizeof(TCHAR), hash);
    BinToStr(hash, MD5_DIGEST_SIZE, m_fileNameHash);
+}
+
+/**
+ * Set file encoding. LP_FCP_AUTO means detection of encoding for each processed file.
+ */
+void LogParser::setFileEncoding(int encoding)
+{
+   m_fileEncoding = encoding;
+   m_encoding = (encoding == LP_FCP_AUTO) ? LP_FCP_ACP : encoding;
+   m_dataOffset = 0;
+   m_encodingDetected = false;
 }
 
 /**
@@ -1119,7 +1136,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, ssize_t xmlLen
 			{
 				LogParser *p = (i > 0) ? new LogParser(state.parser) : state.parser;
 				p->setFileName(state.files.get(i));
-				p->m_fileEncoding = state.encodings.get(i);
+				p->setFileEncoding(state.encodings.get(i));
 				p->m_preallocatedFile = (state.preallocFlags.get(i) != 0);
 				p->m_detectBrokenPrealloc = (state.detectBrokenPreallocFlags.get(i) != 0);
 				p->m_keepFileOpen = (state.keepOpenFlags.get(i) != 0);
@@ -1203,7 +1220,7 @@ void LogParser::restoreCounters(const LogParser *parser)
  */
 int LogParser::getCharSize() const
 {
-   switch(m_fileEncoding)
+   switch(m_encoding)
    {
       case LP_FCP_UCS4_BE:
       case LP_FCP_UCS4_LE:
