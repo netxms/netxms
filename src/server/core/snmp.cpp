@@ -221,7 +221,7 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
    // Use snapshots because some devices does not respond to GET requests to individual table entries
    // Attempt to use inetCidrRouteTable first
    bool success = false;
-   SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1 }, limit * 20); // Each table entry is about 20 OIDs
+   SNMP_Snapshot *snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 7, 1 }, limit * 20, true); // Each table entry is about 20 OIDs
    if (snapshot != nullptr)
    {
       success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 7, 1, 9 }, HandlerInetCidrRouteTable, routingTable.get()) == _CONTINUE);
@@ -233,7 +233,7 @@ shared_ptr<RoutingTable> SnmpGetRoutingTable(SNMP_Transport *snmp, const Node& n
    // If not successful, try ipCidrRouteTable
    if (!success || routingTable->isEmpty())
    {
-      snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 }, limit * 20); // Each table entry is about 20 OIDs
+      snapshot = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 2, 1, 4, 24, 4, 1 }, limit * 20, true); // Each table entry is about 20 OIDs
       if (snapshot != nullptr)
       {
          success = (snapshot->walk({ 1, 3, 6, 1, 2, 1, 4, 24, 4, 1, 7 }, HandlerIPCidrRouteTable, routingTable.get()) == _CONTINUE);

@@ -1264,18 +1264,18 @@ public:
       MemFree(m_indexData);
    }
 
-   static SNMP_Snapshot *create(SNMP_Transport *transport, const TCHAR *baseOid, size_t limit = 0);
-   static SNMP_Snapshot *create(SNMP_Transport *transport, const uint32_t *baseOid, size_t oidLen, size_t limit = 0);
-   static inline SNMP_Snapshot *create(SNMP_Transport *transport, const SNMP_ObjectId& baseOid, size_t limit = 0)
+   static SNMP_Snapshot *create(SNMP_Transport *transport, const TCHAR *baseOid, size_t limit = 0, bool failOnShutdown = false);
+   static SNMP_Snapshot *create(SNMP_Transport *transport, const uint32_t *baseOid, size_t oidLen, size_t limit = 0, bool failOnShutdown = false);
+   static inline SNMP_Snapshot *create(SNMP_Transport *transport, const SNMP_ObjectId& baseOid, size_t limit = 0, bool failOnShutdown = false)
    {
-      return create(transport, baseOid.value(), baseOid.length(), limit);
+      return create(transport, baseOid.value(), baseOid.length(), limit, failOnShutdown);
    }
-   static inline SNMP_Snapshot *create(SNMP_Transport *transport, std::initializer_list<uint32_t> baseOid, size_t limit = 0)
+   static inline SNMP_Snapshot *create(SNMP_Transport *transport, std::initializer_list<uint32_t> baseOid, size_t limit = 0, bool failOnShutdown = false)
    {
 #if __cpp_lib_nonmember_container_access
-      return create(transport, std::data(baseOid), baseOid.size(), limit);
+      return create(transport, std::data(baseOid), baseOid.size(), limit, failOnShutdown);
 #else
-      return create(transport, SNMP_ObjectId(baseOid), limit);
+      return create(transport, SNMP_ObjectId(baseOid), limit, failOnShutdown);
 #endif
    }
 

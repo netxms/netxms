@@ -93,7 +93,7 @@ SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const TCHAR *oid) const
 /**
  * Create snapshot (using text OID)
  */
-SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *baseOid, size_t limit)
+SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *baseOid, size_t limit, bool failOnShutdown)
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
 
@@ -104,7 +104,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *bas
             return SNMP_ERR_SNAPSHOT_TOO_BIG;
          s->m_values.add(new SNMP_Variable(std::move(*var)));
          return SNMP_ERR_SUCCESS;
-      });
+      }, false, failOnShutdown);
 
    if (rc == SNMP_ERR_SUCCESS)
       s->buildIndex();
@@ -116,7 +116,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *bas
 /**
  * Create snapshot (using binary OID)
  */
-SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const uint32_t *baseOid, size_t oidLen, size_t limit)
+SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const uint32_t *baseOid, size_t oidLen, size_t limit, bool failOnShutdown)
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
 
@@ -127,7 +127,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const uint32_t *
             return SNMP_ERR_SNAPSHOT_TOO_BIG;
          s->m_values.add(new SNMP_Variable(std::move(*var)));
          return SNMP_ERR_SUCCESS;
-      });
+      }, false, failOnShutdown);
 
    if (rc == SNMP_ERR_SUCCESS)
       s->buildIndex();
