@@ -200,6 +200,9 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
    m_cacheLoaded = shadowCopy ? src->m_cacheLoaded : false;
    m_anomalyDetected = shadowCopy ? src->m_anomalyDetected : false;
    m_anomalyTrainingRequestTime = 0;
+   m_anomalyTrainingFailed = false;
+   m_anomalyTuningPending = false;
+   m_anomalyStateModified = false;
    m_anomalySettings = src->m_anomalySettings;
    if (shadowCopy)
    {
@@ -288,6 +291,9 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_cacheLoaded = false;
    m_anomalyDetected = false;
    m_anomalyTrainingRequestTime = 0;
+   m_anomalyTrainingFailed = false;
+   m_anomalyTuningPending = false;
+   m_anomalyStateModified = false;
    m_flags = DBGetFieldUInt32(hResult, row, 13);
 	m_resourceId = DBGetFieldUInt32(hResult, row, 14);
 	m_sourceNode = DBGetFieldUInt32(hResult, row, 15);
@@ -393,6 +399,9 @@ DCItem::DCItem(uint32_t id, const TCHAR *name, int source, int dataType, BYTE sc
    m_cacheLoaded = false;
    m_anomalyDetected = false;
    m_anomalyTrainingRequestTime = 0;
+   m_anomalyTrainingFailed = false;
+   m_anomalyTuningPending = false;
+   m_anomalyStateModified = false;
    m_anomalyTuning = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_anomalyBaselineStart = 0;
@@ -430,6 +439,9 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_cacheLoaded = false;
    m_anomalyDetected = false;
    m_anomalyTrainingRequestTime = 0;
+   m_anomalyTrainingFailed = false;
+   m_anomalyTuningPending = false;
+   m_anomalyStateModified = false;
    m_anomalyTuning = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_anomalyBaselineStart = 0;
@@ -492,6 +504,9 @@ DCItem::DCItem(json_t *json, const shared_ptr<DataCollectionOwner>& owner, Impor
    m_cacheLoaded = false;
    m_anomalyDetected = false;
    m_anomalyTrainingRequestTime = 0;
+   m_anomalyTrainingFailed = false;
+   m_anomalyTuningPending = false;
+   m_anomalyStateModified = false;
    m_anomalyTuning = nullptr;
    m_anomalyProfileTimestamp = 0;
    m_anomalyBaselineStart = 0;
@@ -1149,10 +1164,23 @@ void DCItem::deleteFromDatabase()
 }
 
 /**
- * Update item from NXCP message
+ * Update item from NXCP message. Returns false, without changing anything, if message contains invalid anomaly detection settings.
  */
-void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId)
+bool DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId)
 {
+   json_t *anomalySettings = nullptr;
+   if (msg.isFieldExist(VID_ANOMALY_SETTINGS))
+   {
+      char *anomalySettingsText = msg.getFieldAsUtf8String(VID_ANOMALY_SETTINGS);
+      anomalySettings = json_loads(anomalySettingsText, 0, nullptr);
+      MemFree(anomalySettingsText);
+      if (!AnomalySettings::validate(anomalySettings))
+      {
+         json_decref(anomalySettings);
+         return false;
+      }
+   }
+
 	DCObject::updateFromMessage(msg);
 
    lock();
@@ -1174,14 +1202,10 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 	   m_hourlyRetention = msg.getFieldAsInt32(VID_DCI_HOURLY_RETENTION);
 	if (msg.isFieldExist(VID_DCI_DAILY_RETENTION))
 	   m_dailyRetention = msg.getFieldAsInt32(VID_DCI_DAILY_RETENTION);
-   if (msg.isFieldExist(VID_ANOMALY_SETTINGS))
+   if (anomalySettings != nullptr)
    {
-      char *anomalySettingsText = msg.getFieldAsUtf8String(VID_ANOMALY_SETTINGS);
-      json_t *anomalySettings = json_loads(anomalySettingsText, 0, nullptr);
-      if (json_is_object(anomalySettings))
-         m_anomalySettings = AnomalySettings(anomalySettings);
+      m_anomalySettings = AnomalySettings(anomalySettings);
       json_decref(anomalySettings);
-      MemFree(anomalySettingsText);
    }
    normalizeAnomalyDetectionFlags();
    updateAnomalyEffectiveSettings();
@@ -1266,6 +1290,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 
    updateCacheSizeInternal(true);
    unlock();
+   return true;
 }
 
 /**
@@ -2588,8 +2613,9 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    // Anomaly detection state is at fixed offsets after threshold information
    if (isAnomalyDetectionEnabled())
    {
+      // Value can be out of hard bounds while model is learning
       bool learning = isAnomalyModelLearning();
-      msg->setField(recordBaseId + 39, static_cast<uint16_t>(learning ? AnomalyType::NONE : m_anomalyScore.type));
+      msg->setField(recordBaseId + 39, static_cast<uint16_t>(m_anomalyScore.type));
       if (!learning && m_anomalyScore.scored)
       {
          msg->setField(recordBaseId + 40, m_anomalyScore.score);
@@ -2603,6 +2629,8 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    // Fields at fixed offsets after anomaly detection state
    msg->setField(recordBaseId + 45, m_templateId);
    msg->setField(recordBaseId + 46, m_relatedObject);
+   if (isAnomalyDetectionEnabled())
+      msg->setField(recordBaseId + 47, getAnomalyTrainingIssues());
 
 	unlock();
 }
@@ -3615,21 +3643,21 @@ uint32_t DCItem::updateFromJSON(json_t *json, bool create)
    if (json_is_object(anomalyDetection))
    {
       uint32_t setFlags = 0, mask = 0;
-      if (!json_object_update_flag(anomalyDetection, "enabled", DCF_DETECT_ANOMALIES_IFOREST, &setFlags, &mask) ||
-          !json_object_update_flag(anomalyDetection, "llmTuning", DCF_DETECT_ANOMALIES_AI, &setFlags, &mask))
+      if (!json_object_update_flag(anomalyDetection, "enabled", DCF_DETECT_ANOMALIES, &setFlags, &mask) ||
+          !json_object_update_flag(anomalyDetection, "llmTuning", DCF_ANOMALY_LLM_TUNING, &setFlags, &mask))
       {
          unlock();
          return RCC_INVALID_ARGUMENT;
       }
-      if ((mask & DCF_DETECT_ANOMALIES_IFOREST) && !(setFlags & DCF_DETECT_ANOMALIES_IFOREST))
+      if ((mask & DCF_DETECT_ANOMALIES) && !(setFlags & DCF_DETECT_ANOMALIES))
       {
          // LLM tuning cannot be on for disabled anomaly detection, so disabling detection turns it off
-         if (setFlags & DCF_DETECT_ANOMALIES_AI)
+         if (setFlags & DCF_ANOMALY_LLM_TUNING)
          {
             unlock();
             return RCC_INVALID_ARGUMENT;
          }
-         mask |= DCF_DETECT_ANOMALIES_AI;
+         mask |= DCF_ANOMALY_LLM_TUNING;
       }
 
       json_t *settings = m_anomalySettings.toJson();
@@ -3994,11 +4022,12 @@ void DCItem::clearAnomalyScore()
 
 /**
  * Update settings used for scoring. Sensitivity, direction, and hard bounds suggested by LLM take
- * precedence over configured ones while LLM tuning is enabled.
+ * precedence over configured ones while LLM tuning is enabled. Each hard bound is replaced separately,
+ * so configured bound stays in effect if LLM did not suggest one for that side.
  */
 void DCItem::updateAnomalyEffectiveSettings()
 {
-   if ((m_anomalyTuning == nullptr) || !(m_flags & DCF_DETECT_ANOMALIES_AI))
+   if ((m_anomalyTuning == nullptr) || !(m_flags & DCF_ANOMALY_LLM_TUNING))
    {
       m_anomalyEffectiveSettings = m_anomalySettings;
       return;
@@ -4009,11 +4038,24 @@ void DCItem::updateAnomalyEffectiveSettings()
    for(size_t i = 0; i < sizeof(tunableSettings) / sizeof(const char *); i++)
    {
       json_t *value = json_object_get(m_anomalyTuning, tunableSettings[i]);
-      if (value != nullptr)
+      if (value == nullptr)
+         continue;
+      json_t *current = json_object_get(settings, tunableSettings[i]);
+      if (json_is_object(current) && json_is_object(value))
+         json_object_update(current, value);
+      else
          json_object_set(settings, tunableSettings[i], value);
    }
    m_anomalyEffectiveSettings = AnomalySettings(settings);
    json_decref(settings);
+
+   // Suggested bound can contradict configured bound for the other side
+   if (!std::isnan(m_anomalyEffectiveSettings.hardMin) && !std::isnan(m_anomalyEffectiveSettings.hardMax) &&
+       (m_anomalyEffectiveSettings.hardMin > m_anomalyEffectiveSettings.hardMax))
+   {
+      m_anomalyEffectiveSettings.hardMin = m_anomalySettings.hardMin;
+      m_anomalyEffectiveSettings.hardMax = m_anomalySettings.hardMax;
+   }
 }
 
 /**
@@ -4022,7 +4064,10 @@ void DCItem::updateAnomalyEffectiveSettings()
 void DCItem::setAnomalyProfileInternal(const shared_ptr<AnomalyModel>& model, json_t *tuning, time_t timestamp)
 {
    if ((m_anomalyModel != nullptr) && (model != nullptr) && (m_anomalyModel->getMode() != model->getMode()))
+   {
       m_anomalyState.reset();
+      m_anomalyStateModified = true;
+   }
    m_anomalyModel = model;
    if (tuning != m_anomalyTuning)
    {
@@ -4051,6 +4096,62 @@ void DCItem::setAnomalyProfile(const shared_ptr<AnomalyModel>& model, json_t *tu
    lock();
    setAnomalyProfileInternal(model, tuning, time(nullptr));
    unlock();
+}
+
+/**
+ * Set LLM tuning, keeping trained model
+ */
+void DCItem::setAnomalyTuning(json_t *tuning)
+{
+   lock();
+   setAnomalyProfileInternal(m_anomalyModel, tuning, m_anomalyProfileTimestamp);
+   unlock();
+}
+
+/**
+ * Mark LLM tuning request as pending. Returns false if another request is already pending.
+ */
+bool DCItem::startAnomalyTuningRequest()
+{
+   lock();
+   bool success = !m_anomalyTuningPending;
+   m_anomalyTuningPending = true;
+   unlock();
+   return success;
+}
+
+/**
+ * Get problems with training of anomaly detection model (ANOMALY_TRAINING_* bits). Should be called with DCI locked.
+ */
+uint32_t DCItem::getAnomalyTrainingIssues() const
+{
+   if (!isDataStorageEnabled())
+      return ANOMALY_TRAINING_NO_STORAGE;
+
+   uint32_t issues = 0;
+   if (m_anomalyTrainingFailed)
+      issues |= ANOMALY_TRAINING_READ_ERROR;
+   if (m_sampleSaveInterval > 1)
+      issues |= ANOMALY_TRAINING_SPARSE_SAMPLES;
+   if (getEffectiveRetentionTime() * 86400 < ANOMALY_TRAINING_LAG + ANOMALY_RAW_TRAINING_RANGE)
+      issues |= ANOMALY_TRAINING_SHORT_RETENTION;
+   return issues;
+}
+
+/**
+ * Add names of problems with training of anomaly detection model to JSON object (element is omitted if there are none)
+ */
+static void AddAnomalyTrainingIssuesToJson(json_t *json, uint32_t issues)
+{
+   if (issues == 0)
+      return;
+
+   static const char *names[] = { "storageDisabled", "dataReadError", "sparseSamples", "shortRetention" };
+   json_t *list = json_array();
+   for(int i = 0; i < 4; i++)
+      if (issues & (1 << i))
+         json_array_append_new(list, json_string(names[i]));
+   json_object_set_new(json, "trainingIssues", list);
 }
 
 /**
@@ -4112,8 +4213,10 @@ bool DCItem::saveAnomalyProfileToDatabase()
 /**
  * Queue update of anomaly detector state in database
  */
-void DCItem::saveAnomalyDetectorState() const
+void DCItem::saveAnomalyDetectorState()
 {
+   m_anomalyStateModified = false;
+
    json_t *state = m_anomalyState.toJson();
    char *text = json_dumps(state, JSON_COMPACT);
    json_decref(state);
@@ -4164,6 +4267,7 @@ void DCItem::reloadAnomalyProfile(json_t *profile, time_t timestamp, time_t base
    setAnomalyProfileFromJson(profile, timestamp);
    m_anomalyBaselineStart = baselineStart;
    m_anomalyState.loadFromJson(detectorState);
+   m_anomalyStateModified = false;
    unlock();
 }
 
@@ -4182,13 +4286,17 @@ void DCItem::reloadAnomalyProfile(json_t *profile, time_t timestamp, time_t base
  * Request model training if there is no model, model was not updated by scheduled training (detection was
  * enabled or server was down at that time), or model was trained for different detection mode. This way
  * change of configuration takes effect on next collected value, whatever way configuration was changed.
+ * Training is not requested if collected values are not stored, as there is nothing to train on.
  * Should be called with DCI locked.
  */
 void DCItem::requestAnomalyModelTraining()
 {
+   if (!isDataStorageEnabled())
+      return;
+
    time_t now = time(nullptr);
    if ((m_anomalyModel != nullptr) && (now - m_anomalyProfileTimestamp < ANOMALY_MODEL_MAX_AGE) &&
-       (m_anomalyModel->getRequestedMode() == GetAnomalyTrainingMode(m_anomalySettings, (m_flags & DCF_DETECT_ANOMALIES_AI) ? m_anomalyTuning : nullptr)))
+       (m_anomalyModel->getRequestedMode() == GetAnomalyTrainingMode(m_anomalySettings, (m_flags & DCF_ANOMALY_LLM_TUNING) ? m_anomalyTuning : nullptr)))
       return;
 
    if (now - m_anomalyTrainingRequestTime < ANOMALY_TRAINING_REQUEST_INTERVAL)
@@ -4224,23 +4332,31 @@ void DCItem::checkForAnomaly(Timestamp timestamp, const ItemValue& value)
    requestAnomalyModelTraining();
    if (m_anomalyModel == nullptr)
    {
-      m_anomalyDetected = false;
+      // Hard bounds do not need a model
       clearAnomalyScore();
+      m_anomalyScore.learning = true;
+      if (m_anomalyEffectiveSettings.isOutOfHardBounds(value.getDouble()))
+         m_anomalyScore.type = AnomalyType::RANGE;
+      m_anomalyScoreTimestamp = timestamp.asTime();
+      m_anomalyDetected = (m_anomalyScore.type != AnomalyType::NONE);
       return;
    }
 
    time_t bucketStart = m_anomalyState.bucketStart;
+   double driftUp = m_anomalyState.driftUp, driftDown = m_anomalyState.driftDown;
    m_anomalyScore = ScoreAnomalySample(*m_anomalyModel, m_anomalyEffectiveSettings, &m_anomalyState, timestamp.asTime(), value.getDouble());
    m_anomalyScoreTimestamp = timestamp.asTime();
    m_anomalyDetected = (m_anomalyScore.type != AnomalyType::NONE);
 
-   // Drift sums are updated when hour changes
-   if ((bucketStart != 0) && (m_anomalyState.bucketStart != bucketStart))
+   // Drift sums are updated when hour changes; most of the time they stay at zero and there is nothing to save
+   if ((m_anomalyState.driftUp != driftUp) || (m_anomalyState.driftDown != driftDown))
+      m_anomalyStateModified = true;
+   if (m_anomalyStateModified && (bucketStart != 0) && (m_anomalyState.bucketStart != bucketStart))
       saveAnomalyDetectorState();
 
-   nxlog_debug_tag(DEBUG_TAG_DC_ANOMALY, m_anomalyDetected ? 6 : 8, L"DCI \"%s\" [%u]: value %f - %hs%s (score %f, expected range %f .. %f, drift %f / %f)",
-      m_name.cstr(), m_id, value.getDouble(), m_anomalyScore.learning ? "not checked" : AnomalyTypeName(m_anomalyScore.type),
-      m_anomalyScore.learning ? L" (learning)" : L"", m_anomalyScore.score, m_anomalyScore.expectedLow, m_anomalyScore.expectedHigh,
+   nxlog_debug_tag(DEBUG_TAG_DC_ANOMALY, m_anomalyDetected ? 6 : 8, L"DCI \"%s\" [%u]: value %f - %hs%hs (score %f, expected range %f .. %f, drift %f / %f)",
+      m_name.cstr(), m_id, value.getDouble(), (m_anomalyScore.learning && !m_anomalyDetected) ? "not checked" : AnomalyTypeName(m_anomalyScore.type),
+      m_anomalyScore.learning ? " (learning)" : "", m_anomalyScore.score, m_anomalyScore.expectedLow, m_anomalyScore.expectedHigh,
       m_anomalyState.driftUp, m_anomalyState.driftDown);
 }
 
@@ -4277,9 +4393,13 @@ json_t *DCItem::anomalyScoreToJson() const
    json_t *json = json_object();
    bool learning = isAnomalyModelLearning();
    json_object_set_new(json, "learning", json_boolean(learning));
+   AddAnomalyTrainingIssuesToJson(json, getAnomalyTrainingIssues());
+
+   // Value can be out of hard bounds while model is learning
+   if (!learning || (m_anomalyScore.type != AnomalyType::NONE))
+      json_object_set_new(json, "type", json_string(AnomalyTypeName(m_anomalyScore.type)));
    if (!learning)
    {
-      json_object_set_new(json, "type", json_string(AnomalyTypeName(m_anomalyScore.type)));
       json_object_set_new(json, "mode", json_string(AnomalyDetectionModeName(m_anomalyModel->getMode())));
       if (m_anomalyScore.scored)
       {
@@ -4298,12 +4418,14 @@ json_t *DCItem::anomalyScoreToJson() const
 json_t *DCItem::anomalyDetectionToJson() const
 {
    json_t *json = m_anomalySettings.toJson();
-   json_object_set_new(json, "enabled", json_boolean((m_flags & DCF_DETECT_ANOMALIES_IFOREST) != 0));
-   json_object_set_new(json, "llmTuning", json_boolean((m_flags & DCF_DETECT_ANOMALIES_AI) != 0));
+   json_object_set_new(json, "enabled", json_boolean((m_flags & DCF_DETECT_ANOMALIES) != 0));
+   json_object_set_new(json, "llmTuning", json_boolean((m_flags & DCF_ANOMALY_LLM_TUNING) != 0));
    if (m_anomalyBaselineStart != 0)
       json_object_set_new(json, "baselineStart", json_time_string(m_anomalyBaselineStart));
    if (m_anomalyTuning != nullptr)
       json_object_set_new(json, "tuning", json_deep_copy(m_anomalyTuning));
+   if (isAnomalyDetectionEnabled())
+      AddAnomalyTrainingIssuesToJson(json, getAnomalyTrainingIssues());
    if (m_anomalyModel != nullptr)
    {
       json_t *model = json_object();

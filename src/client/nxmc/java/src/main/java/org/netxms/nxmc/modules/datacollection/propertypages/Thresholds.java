@@ -41,7 +41,9 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.constants.AnomalyDetectionMode;
 import org.netxms.client.constants.AnomalyDirection;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.DateTimeSelector;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -51,6 +53,8 @@ import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.EditThresholdDialog;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdLabelProvider;
 import org.netxms.nxmc.modules.events.widgets.EventSelector;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.NumericTextFieldValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -74,6 +78,8 @@ public class Thresholds extends AbstractDCIPropertyPage
    private LabeledText anomalySensitivity;
    private LabeledCombo anomalyDirection;
    private LabeledCombo anomalyMode;
+   private Composite anomalyWarningArea;
+   private Label anomalyWarningText;
 	private Button checkAllThresholds;
    private Button disableProcessing;
    private Button disableUntil;
@@ -140,6 +146,22 @@ public class Thresholds extends AbstractDCIPropertyPage
       checkAnomalyTuning = new Button(dialogArea, SWT.CHECK);
       checkAnomalyTuning.setText(i18n.tr("Tune anomaly detection settings using AI"));
       checkAnomalyTuning.setSelection(dci.isAnomalyTuningEnabled());
+
+      anomalyWarningArea = new Composite(dialogArea, SWT.BORDER);
+      anomalyWarningArea.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
+      anomalyWarningArea.setLayout(new GridLayout(2, false));
+      anomalyWarningArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      final Label anomalyWarningImage = new Label(anomalyWarningArea, SWT.NONE);
+      anomalyWarningImage.setBackground(anomalyWarningArea.getBackground());
+      anomalyWarningImage.setImage(ResourceManager.getImage("icons/warning.png"));
+      anomalyWarningImage.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+      anomalyWarningImage.addDisposeListener((e) -> anomalyWarningImage.getImage().dispose());
+
+      anomalyWarningText = new Label(anomalyWarningArea, SWT.WRAP);
+      anomalyWarningText.setBackground(anomalyWarningArea.getBackground());
+      anomalyWarningText.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
+      anomalyWarningText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       Composite anomalySettingsArea = new Composite(dialogArea, SWT.NONE);
       GridLayout anomalySettingsLayout = new GridLayout();
@@ -487,6 +509,81 @@ public class Thresholds extends AbstractDCIPropertyPage
       anomalySensitivity.setEnabled(enabled);
       anomalyDirection.setEnabled(enabled);
       anomalyMode.setEnabled(enabled);
+      updateAnomalyWarning();
+   }
+
+   /**
+    * Show or hide warning about storage settings that do not let anomaly detection work correctly. Storage settings are
+    * taken as currently set on "General" page.
+    */
+   private void updateAnomalyWarning()
+   {
+      String message = null;
+      if (checkDetectAnomalies.getSelection())
+      {
+         if (editor.getRetentionType() == DataCollectionObject.RETENTION_NONE)
+         {
+            message = i18n.tr("Collected values are not stored, so anomaly detection will not be able to learn.");
+         }
+         else
+         {
+            StringBuilder sb = new StringBuilder();
+            int retentionTime = getRetentionTime();
+            if ((retentionTime > 0) && (retentionTime < DataCollectionItem.ANOMALY_MIN_RETENTION_TIME))
+            {
+               sb.append(i18n.tr("History retention period ({0} days) is shorter than {1} days used by anomaly detection for learning. Detection will be less accurate.",
+                     Integer.toString(retentionTime), Integer.toString(DataCollectionItem.ANOMALY_MIN_RETENTION_TIME)));
+            }
+            if (editor.getSampleSaveInterval() > 1)
+            {
+               if (sb.length() > 0)
+                  sb.append('\n');
+               sb.append(i18n.tr("Not every collected value is stored. Anomaly detection will be less accurate."));
+            }
+            if (sb.length() > 0)
+               message = sb.toString();
+         }
+      }
+
+      boolean visible = (message != null);
+      if (visible)
+         anomalyWarningText.setText(message);
+      if ((anomalyWarningArea.getVisible() != visible) || visible)
+      {
+         anomalyWarningArea.setVisible(visible);
+         ((GridData)anomalyWarningArea.getLayoutData()).exclude = !visible;
+         anomalyWarningArea.getParent().layout(true, true);
+      }
+   }
+
+   /**
+    * Get history retention time (in days) as currently set on "General" page.
+    *
+    * @return history retention time in days, or 0 if it cannot be determined (custom retention time is not a number)
+    */
+   private int getRetentionTime()
+   {
+      if (editor.getRetentionType() == DataCollectionObject.RETENTION_DEFAULT)
+         return Registry.getSession().getDefaultDciRetentionTime();
+      try
+      {
+         return Math.max(Integer.parseInt(editor.getRetentionTime().trim()), 1);
+      }
+      catch(Exception e)
+      {
+         return 0; // empty or contains macros
+      }
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.DialogPage#setVisible(boolean)
+    */
+   @Override
+   public void setVisible(boolean visible)
+   {
+      super.setVisible(visible);
+      if (visible && (anomalyWarningArea != null) && !anomalyWarningArea.isDisposed())
+         updateAnomalyWarning();
    }
 
 	/**

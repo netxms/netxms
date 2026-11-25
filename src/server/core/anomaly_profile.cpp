@@ -28,19 +28,9 @@
 #define DEBUG_TAG          DEBUG_TAG_DC_ANOMALY
 #define DEBUG_TAG_TUNING   L"ai.anomaly"
 
-/**
- * Length of history used for training: raw samples (spread of single sample and of change between samples)
- * and hourly averages (expected level), in seconds
- */
-#define RAW_TRAINING_RANGE       (30 * 86400)
-#define HOURLY_TRAINING_RANGE    (84 * 86400)
-
-/**
- * Most recent data is not used for training so that ongoing level shift is not absorbed by the
- * baseline before drift detector can report it (in seconds). Reduced while there is less history
- * than minimum number of training days.
- */
-#define TRAINING_LAG             (7 * 86400)
+#define RAW_TRAINING_RANGE       ANOMALY_RAW_TRAINING_RANGE
+#define HOURLY_TRAINING_RANGE    ANOMALY_HOURLY_TRAINING_RANGE
+#define TRAINING_LAG             ANOMALY_TRAINING_LAG
 
 /**
  * Settings suggested by LLM are reused for given time (in seconds)
@@ -53,12 +43,14 @@
 #define TRAINING_CONCURRENCY     4
 
 /**
- * Maximum number of hourly aggregates loaded for training
+ * Maximum length of period that can be replayed through anomaly detection, in seconds. Model is
+ * trained for each day of replayed period, and all values collected within it are kept in memory.
  */
-#define MAX_HOURLY_RECORDS       10000
+#define MAX_REPLAY_PERIOD        (366 * 86400)
 
 /**
- * Load collected values of given DCI (in chronological order)
+ * Load collected values of given DCI within given time range, inclusive (in chronological order).
+ * Loaded values are added to the end of the list.
  */
 static bool LoadRawSamples(const DataCollectionTarget& owner, const DCItem& dci, time_t timeFrom, time_t timeTo, std::vector<AnomalySample> *samples)
 {
@@ -104,7 +96,7 @@ static bool LoadRawSamples(const DataCollectionTarget& owner, const DCItem& dci,
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dci.getId());
       DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, static_cast<int64_t>(timeFrom) * 1000);
-      DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<int64_t>(timeTo) * 1000);
+      DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<int64_t>(timeTo) * 1000 + 999);
       if (hasV5Table)
       {
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, dci.getId());
@@ -144,7 +136,7 @@ static bool LoadHourlySamples(const DataCollectionTarget& owner, const DCItem& d
 
    bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = PrepareTieredDataSelect(hdb, owner.getId(), DCI_TIER_HOURLY, DCI_HAGG_AVG, MAX_HOURLY_RECORDS,
+   DB_STATEMENT hStmt = PrepareTieredDataSelect(hdb, owner.getId(), DCI_TIER_HOURLY, DCI_HAGG_AVG, static_cast<uint32_t>((timeTo - timeFrom) / 3600 + 2),
       (g_dbSyntax == DB_SYNTAX_TSDB) ? L" AND bucket_start BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?)" : L" AND bucket_start BETWEEN ? AND ?");
    if (hStmt != nullptr)
    {
@@ -456,32 +448,66 @@ static json_t *ParseTuningResponse(const char *response)
    return tuning;
 }
 
-/**
- * Ask LLM for anomaly detection settings matching nature of the metric (returns nullptr on failure)
- */
-static json_t *RequestTuning(const DCItem& dci, const DataCollectionTarget& owner, const AnomalyModel& model, const std::vector<AnomalySample>& hourly)
-{
-   json_t *summary = CreateTrainingSummary(model, hourly);
-   std::string prompt = BuildTuningPrompt(dci, owner, summary);
-   json_decref(summary);
+static shared_ptr<DCItem> FindDCIForTraining(uint32_t dciId, uint32_t ownerId, shared_ptr<DataCollectionTarget> *owner);
 
-   char *response = QueryAIAssistant(prompt.c_str(), nullptr, "analytical", false);
+/**
+ * Ask LLM for anomaly detection settings matching nature of the metric and store them in the DCI
+ */
+static void RequestTuning(uint32_t dciId, uint32_t ownerId, const std::string& prompt)
+{
+   shared_ptr<DataCollectionTarget> owner;
+   shared_ptr<DCItem> dci = FindDCIForTraining(dciId, ownerId, &owner);
+   if (dci == nullptr)
+      return;
+
+   char *response = dci->isAnomalyTuningEnabled() ? QueryAIAssistant(prompt.c_str(), nullptr, "analytical", false) : nullptr;
    if (response == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_TUNING, 5, L"LLM query failed for DCI \"%s\" [%u] on %s [%u]", dci.getName().cstr(), dci.getId(), owner.getName(), owner.getId());
-      return nullptr;
+      nxlog_debug_tag(DEBUG_TAG_TUNING, 5, L"LLM query failed or cancelled for DCI \"%s\" [%u] on %s [%u]", dci->getName().cstr(), dciId, owner->getName(), ownerId);
+      dci->endAnomalyTuningRequest();
+      return;
    }
 
-   nxlog_debug_tag(DEBUG_TAG_TUNING, 7, L"LLM response for DCI [%u]: %hs", dci.getId(), response);
+   nxlog_debug_tag(DEBUG_TAG_TUNING, 7, L"LLM response for DCI [%u]: %hs", dciId, response);
    json_t *tuning = ParseTuningResponse(response);
    MemFree(response);
    if (tuning != nullptr)
    {
       char *text = json_dumps(tuning, JSON_COMPACT);
-      nxlog_debug_tag(DEBUG_TAG_TUNING, 5, L"LLM tuning for DCI \"%s\" [%u] on %s [%u]: %hs", dci.getName().cstr(), dci.getId(), owner.getName(), owner.getId(), text);
+      nxlog_debug_tag(DEBUG_TAG_TUNING, 5, L"LLM tuning for DCI \"%s\" [%u] on %s [%u]: %hs", dci->getName().cstr(), dciId, owner->getName(), ownerId, text);
       MemFree(text);
+
+      dci->setAnomalyTuning(tuning);
+      dci->saveAnomalyProfileToDatabase();
+
+      // Model has to be trained again if LLM suggested other detection mode
+      shared_ptr<AnomalyModel> model = dci->getAnomalyModel();
+      if ((model != nullptr) && (model->getRequestedMode() != GetAnomalyTrainingMode(dci->getAnomalySettings(), tuning)))
+         TrainAnomalyModelAsync(dciId, ownerId);
+      json_decref(tuning);
    }
-   return tuning;
+   dci->endAnomalyTuningRequest();
+}
+
+/**
+ * Request LLM tuning for given DCI in background. LLM queries are executed one at a time and outside of
+ * training queues, so that slow LLM does not delay model training.
+ */
+static void RequestTuningAsync(const shared_ptr<DCItem>& dci, const DataCollectionTarget& owner, const AnomalyModel& model, const std::vector<AnomalySample>& hourly)
+{
+   if (!dci->startAnomalyTuningRequest())
+      return;  // previous request is still pending
+
+   json_t *summary = CreateTrainingSummary(model, hourly);
+   std::string prompt = BuildTuningPrompt(*dci, owner, summary);
+   json_decref(summary);
+
+   uint32_t dciId = dci->getId(), ownerId = owner.getId();
+   ThreadPoolExecuteSerialized(g_mainThreadPool, L"AnomalyTuning",
+      [dciId, ownerId, prompt] () -> void
+      {
+         RequestTuning(dciId, ownerId, prompt);
+      });
 }
 
 /**
@@ -502,6 +528,7 @@ AnomalyDetectionMode GetAnomalyTrainingMode(const AnomalySettings& settings, jso
 
 /**
  * Train anomaly model for given DCI and store it in the DCI and in database. Existing model is kept if new one cannot be trained.
+ * If LLM tuning is enabled and there are no recent settings from LLM, they are requested in background after training.
  *
  * @param refreshTuning true to request new settings from LLM (if LLM tuning is enabled) even if existing ones are recent
  * @return true if new model was trained
@@ -532,16 +559,25 @@ static bool TrainAnomalyModel(const shared_ptr<DCItem>& dci, const shared_ptr<Da
    time_t now = time(nullptr);
    time_t baselineStart = dci->getAnomalyBaselineStart();
 
+   std::vector<AnomalySample> aggregated;
+   if (!LoadHourlySamples(*owner, *dci, std::max(baselineStart, now - TRAINING_LAG - HOURLY_TRAINING_RANGE), now, &aggregated))
+      aggregated.clear();
+
+   // Values collected within training lag are used only while there is less history than minimum number
+   // of training days (see SelectTrainingData), so in most cases they do not have to be loaded
+   time_t rawStart = std::max(baselineStart, now - TRAINING_LAG - RAW_TRAINING_RANGE);
+   time_t lagStart = now - TRAINING_LAG;
+   time_t historyLimit = lagStart - static_cast<time_t>(settings.minTrainingDays) * 86400;
    std::vector<AnomalySample> collected;
-   if (!LoadRawSamples(*owner, *dci, std::max(baselineStart, now - TRAINING_LAG - RAW_TRAINING_RANGE), now, &collected))
+   bool loaded = (rawStart > lagStart) || LoadRawSamples(*owner, *dci, rawStart, lagStart, &collected);
+   if (loaded && (collected.empty() || (collected.front().timestamp > historyLimit) || (!aggregated.empty() && (aggregated.front().timestamp > historyLimit))))
+      loaded = LoadRawSamples(*owner, *dci, std::max(rawStart, lagStart + 1), now, &collected);
+   dci->setAnomalyTrainingFailed(!loaded);
+   if (!loaded)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"DCI \"%s\" [%u] on %s [%u]: cannot load collected values", dci->getName().cstr(), dci->getId(), owner->getName(), owner->getId());
       return false;
    }
-
-   std::vector<AnomalySample> aggregated;
-   if (!LoadHourlySamples(*owner, *dci, std::max(baselineStart, now - TRAINING_LAG - HOURLY_TRAINING_RANGE), now, &aggregated))
-      aggregated.clear();
 
    std::vector<AnomalySample> raw, hourly;
    bool hourlyTier = SelectTrainingData(collected, aggregated, baselineStart, now, settings.minTrainingDays, &raw, &hourly);
@@ -563,20 +599,8 @@ static bool TrainAnomalyModel(const shared_ptr<DCItem>& dci, const shared_ptr<Da
       return false;
    }
 
-   if (dci->isAnomalyTuningEnabled() && !model->isLearning(settings) &&
-       (refreshTuning || (tuning == nullptr) || (now - json_object_get_time(tuning, "generatedAt") > TUNING_LIFETIME)))
-   {
-      json_t *newTuning = RequestTuning(*dci, *owner, *model, hourly);
-      if (newTuning != nullptr)
-      {
-         json_decref(tuning);
-         tuning = newTuning;
-
-         trainingSettings.mode = GetAnomalyTrainingMode(settings, tuning);
-         if (trainingSettings.mode != model->getRequestedMode())
-            model = AnomalyModel::train(hourly, raw, trainingSettings);
-      }
-   }
+   bool tuningNeeded = dci->isAnomalyTuningEnabled() && !model->isLearning(settings) &&
+       (refreshTuning || (tuning == nullptr) || (now - json_object_get_time(tuning, "generatedAt") > TUNING_LIFETIME));
 
    nxlog_debug_tag(DEBUG_TAG, 5, L"DCI \"%s\" [%u] on %s [%u]: model trained (%s mode, %d days, %d hourly %s, %d collected values, %d slots at spread floor%s%s)",
       dci->getName().cstr(), dci->getId(), owner->getName(), owner->getId(), (model->getMode() == AnomalyDetectionMode::RATE) ? L"rate" : L"value",
@@ -586,6 +610,8 @@ static bool TrainAnomalyModel(const shared_ptr<DCItem>& dci, const shared_ptr<Da
    dci->setAnomalyProfile(model, tuning);
    json_decref(tuning);
    dci->saveAnomalyProfileToDatabase();
+   if (tuningNeeded)
+      RequestTuningAsync(dci, *owner, *model, hourly);
    return true;
 }
 
@@ -629,12 +655,13 @@ struct AnomalyEpisode
  * same selection of training data as for live models, and then used for checking values collected during that day.
  * Drift detector state is carried from day to day. Current anomaly detection settings of the DCI are used (LLM
  * tuning is used as it is now, and is not requested again); baseline start time of the DCI is ignored. Anomaly detection
- * does not have to be enabled for the DCI.
+ * does not have to be enabled for the DCI. Replayed period cannot be longer than 366 days.
  *
  * Result is JSON object with the following elements:
  *    timeFrom, timeTo     replayed period (UNIX timestamps)
  *    samples              number of replayed values
- *    checkedSamples       number of values checked for anomalies (the rest fall on days when model was still learning)
+ *    checkedSamples       number of values checked for anomalies (the rest fall on days when model was still learning
+ *                         and are within hard bounds)
  *    anomalousSamples     number of values reported as anomalous
  *    trainings            number of trained models
  *    days                 array with one element per replayed day: start, samples, anomalousSamples, learning
@@ -660,6 +687,11 @@ json_t *DetectAnomalies(const DataCollectionTarget& owner, uint32_t dciId, time_
    if ((dco == nullptr) || (dco->getType() != DCO_TYPE_ITEM) || (timeTo <= timeFrom))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"DetectAnomalies: invalid DCI ID [%u] on object %s [%u] or invalid time range", dciId, owner.getName(), owner.getId());
+      return nullptr;
+   }
+   if (timeTo - timeFrom > MAX_REPLAY_PERIOD)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"DetectAnomalies: requested period for DCI [%u] on object %s [%u] is longer than %d days", dciId, owner.getName(), owner.getId(), MAX_REPLAY_PERIOD / 86400);
       return nullptr;
    }
    const DCItem& dci = static_cast<const DCItem&>(*dco);
@@ -718,7 +750,7 @@ json_t *DetectAnomalies(const DataCollectionTarget& owner, uint32_t dciId, time_
             continue;
 
          AnomalyScore score = ScoreAnomalySample(*model, scoringSettings, &state, next->timestamp, next->value);
-         if (score.learning)
+         if (score.learning && (score.type == AnomalyType::NONE))
             continue;
 
          checkedSamples++;
@@ -972,6 +1004,23 @@ bool ReloadAnomalyProfiles()
       return false;
    }
 
+   // Query returns only DCIs that have profile or baseline start time in database, so those
+   // that had them removed since last object load are cleared here
+   unique_ptr<SharedObjectArray<NetObj>> targets = g_idxObjectById.getObjects(
+      [] (NetObj *object) -> bool
+      {
+         return object->isDataCollectionTarget();
+      });
+   for(int i = 0; i < targets->size(); i++)
+   {
+      unique_ptr<SharedObjectArray<DCObject>> dcObjects = static_cast<DataCollectionTarget*>(targets->get(i))->getAllDCObjects();
+      for(int j = 0; j < dcObjects->size(); j++)
+      {
+         if (dcObjects->get(j)->getType() == DCO_TYPE_ITEM)
+            static_cast<DCItem*>(dcObjects->get(j))->reloadAnomalyProfile(nullptr, 0, 0, nullptr);
+      }
+   }
+
    int count = 0;
    while(DBFetch(hResult))
    {
@@ -987,8 +1036,8 @@ bool ReloadAnomalyProfiles()
       json_t *profile = (profileText != nullptr) ? json_loads(profileText, 0, nullptr) : nullptr;
       MemFree(profileText);
 
-      char stateText[1024];
-      json_t *state = (DBGetFieldUTF8(hResult, 5, stateText, 1024) != nullptr) ? json_loads(stateText, 0, nullptr) : nullptr;
+      char stateText[256];
+      json_t *state = (DBGetFieldUTF8(hResult, 5, stateText, 256) != nullptr) ? json_loads(stateText, 0, nullptr) : nullptr;
 
       static_cast<DCItem&>(*dco).reloadAnomalyProfile(profile, static_cast<time_t>(DBGetFieldInt64(hResult, 3)), static_cast<time_t>(DBGetFieldInt64(hResult, 4)), state);
       json_decref(profile);

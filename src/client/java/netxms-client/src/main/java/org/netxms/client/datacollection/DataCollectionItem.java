@@ -35,13 +35,18 @@ import com.google.gson.JsonParser;
  */
 public class DataCollectionItem extends DataCollectionObject
 {
+   /**
+    * Minimal retention time (in days) that gives anomaly detection all the history it uses for learning
+    */
+   public static final int ANOMALY_MIN_RETENTION_TIME = 37;
+
 	// DCI specific flags
-   public static final int DCF_DETECT_ANOMALIES_IFOREST = 0x00001;  // anomaly detection enabled
+   public static final int DCF_DETECT_ANOMALIES         = 0x00001;  // anomaly detection enabled
    public static final int DCF_ALL_THRESHOLDS           = 0x00002;
    public static final int DCF_RAW_VALUE_OCTET_STRING   = 0x00004;
    public static final int DCF_SHOW_ON_OBJECT_TOOLTIP   = 0x00008;
    public static final int DCF_AGGREGATE_FUNCTION_MASK  = 0x00070;
-   public static final int DCF_DETECT_ANOMALIES_AI      = 0x00200;  // tuning of anomaly detection settings by AI assistant enabled
+   public static final int DCF_ANOMALY_LLM_TUNING       = 0x00200;  // LLM tuning of anomaly detection settings enabled
    public static final int DCF_CALCULATE_NODE_STATUS    = 0x00400;
    public static final int DCF_SHOW_IN_OBJECT_OVERVIEW  = 0x00800;
    public static final int DCF_MULTIPLIERS_MASK         = 0x30000;
@@ -518,7 +523,7 @@ public class DataCollectionItem extends DataCollectionObject
     */
    public boolean isAnomalyDetectionEnabled()
    {
-      return (flags & DCF_DETECT_ANOMALIES_IFOREST) != 0;
+      return (flags & DCF_DETECT_ANOMALIES) != 0;
    }
 
    /**
@@ -529,7 +534,7 @@ public class DataCollectionItem extends DataCollectionObject
     */
    public boolean isAnomalyTuningEnabled()
    {
-      return (flags & DCF_DETECT_ANOMALIES_AI) != 0;
+      return (flags & DCF_ANOMALY_LLM_TUNING) != 0;
    }
 
    /**
@@ -541,14 +546,14 @@ public class DataCollectionItem extends DataCollectionObject
    public void setAnomalyDetectionEnabled(boolean enable, boolean enableTuning)
    {
       if (enable)
-         flags |= DCF_DETECT_ANOMALIES_IFOREST;
+         flags |= DCF_DETECT_ANOMALIES;
       else
-         flags &= ~DCF_DETECT_ANOMALIES_IFOREST;
+         flags &= ~DCF_DETECT_ANOMALIES;
 
       if (enable && enableTuning)
-         flags |= DCF_DETECT_ANOMALIES_AI;
+         flags |= DCF_ANOMALY_LLM_TUNING;
       else
-         flags &= ~DCF_DETECT_ANOMALIES_AI;
+         flags &= ~DCF_ANOMALY_LLM_TUNING;
    }
 
    /**

@@ -131,7 +131,7 @@ CodeLookupElement g_dctColumnAggregationNames[] =
 /**
  * Default retention time for collected data
  */
-int __EXPORT DCObject::m_defaultRetentionTime = 30;
+int __EXPORT DCObject::m_defaultRetentionTime = 40;
 
 /**
  * Default data collection polling interval

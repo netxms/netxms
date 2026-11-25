@@ -12060,6 +12060,27 @@ msgstr ""
 msgid "Disabled until {0}"
 msgstr "Zakázaný"
 
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Collected values are not stored, so anomaly detection will not be able to learn."
+msgstr "Shromážděné hodnoty se neukládají, detekce anomálií se proto nebude moci učit."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+#, java-format
+msgid "History retention period ({0} days) is shorter than {1} days used by anomaly detection for learning. Detection will be less accurate."
+msgstr "Doba uchování historie ({0} dní) je kratší než {1} dní, které detekce anomálií používá k učení. Detekce bude méně přesná."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Not every collected value is stored. Anomaly detection will be less accurate."
+msgstr "Neukládá se každá shromážděná hodnota. Detekce anomálií bude méně přesná."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Cannot learn (collected values are not stored)"
+msgstr "Nelze se učit (shromážděné hodnoty se neukládají)"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Cannot learn (collected values cannot be read)"
+msgstr "Nelze se učit (shromážděné hodnoty nelze načíst)"
+
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
 msgid "Learning"
 msgstr "Učení"

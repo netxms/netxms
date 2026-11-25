@@ -411,6 +411,7 @@ public class General extends AbstractDCIPropertyPage
                retentionTime.setFocus();
 
             retentionTimeComposite.setVisible(storageFixed.getSelection());
+            editor.setRetentionType(getRetentionType());
          }
       };
 
@@ -437,6 +438,7 @@ public class General extends AbstractDCIPropertyPage
       retentionTime = new Text(retentionTimeComposite, SWT.BORDER);
       retentionTime.setText(dco.getRetentionTime() != null ? dco.getRetentionTime() : "");
       retentionTime.setEnabled(dco.getRetentionType() == DataCollectionObject.RETENTION_CUSTOM);
+      retentionTime.addModifyListener((e) -> editor.setRetentionTime(retentionTime.getText()));
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       retentionTime.setLayoutData(gd);
       Label label = new Label(retentionTimeComposite, SWT.NONE);
@@ -475,6 +477,7 @@ public class General extends AbstractDCIPropertyPage
          sampleSaveInterval.setMinimum(1);
          sampleSaveInterval.setMaximum(10000);
          sampleSaveInterval.setSelection(dci.getSampleSaveInterval());
+         sampleSaveInterval.addModifyListener((e) -> editor.setSampleSaveInterval(sampleSaveInterval.getSelection()));
 
          Label sampleSaveLabel2 = new Label(sampleSaveComposite, SWT.NONE);
          sampleSaveLabel2.setText("sample");
@@ -631,6 +634,7 @@ public class General extends AbstractDCIPropertyPage
       storageDefault.setSelection(true);
       storageFixed.setSelection(false);
       storageNoStorage.setSelection(false);
+      editor.setRetentionType(DataCollectionObject.RETENTION_DEFAULT);
 		retentionTime.setText(Integer.toString(session.getDefaultDciRetentionTime()));
       if (dco instanceof DataCollectionItem)
       {

@@ -48,6 +48,9 @@ public class DataCollectionObjectEditor
    private DataOrigin origin;
    private String metricName;
 	private long sourceNode;
+   private int retentionType;
+   private String retentionTime;
+   private int sampleSaveInterval;
 	private Runnable timer;
 	private Set<DataCollectionObjectListener> listeners = new HashSet<DataCollectionObjectListener>(); 
    private TableColumnEnumerator tableColumnEnumerator;
@@ -63,6 +66,9 @@ public class DataCollectionObjectEditor
       this.origin = object.getOrigin();
       this.metricName = object.getName();
       this.sourceNode = object.getSourceNode();
+      this.retentionType = object.getRetentionType();
+      this.retentionTime = object.getRetentionTime();
+      this.sampleSaveInterval = (object instanceof DataCollectionItem) ? ((DataCollectionItem)object).getSampleSaveInterval() : 1;
 		timer = new Runnable() {
 			@Override
 			public void run()
@@ -256,6 +262,66 @@ public class DataCollectionObjectEditor
    public long getSourceNode()
    {
       return sourceNode;
+   }
+
+   /**
+    * Get retention type as currently selected in editor.
+    *
+    * @return retention type as currently selected in editor
+    */
+   public int getRetentionType()
+   {
+      return retentionType;
+   }
+
+   /**
+    * Set retention type currently selected in editor.
+    *
+    * @param retentionType retention type currently selected in editor
+    */
+   public void setRetentionType(int retentionType)
+   {
+      this.retentionType = retentionType;
+   }
+
+   /**
+    * Get custom retention time as currently entered in editor.
+    *
+    * @return custom retention time as currently entered in editor
+    */
+   public String getRetentionTime()
+   {
+      return retentionTime;
+   }
+
+   /**
+    * Set custom retention time currently entered in editor.
+    *
+    * @param retentionTime custom retention time currently entered in editor
+    */
+   public void setRetentionTime(String retentionTime)
+   {
+      this.retentionTime = retentionTime;
+   }
+
+   /**
+    * Get sample save interval as currently selected in editor.
+    *
+    * @return sample save interval as currently selected in editor
+    */
+   public int getSampleSaveInterval()
+   {
+      return sampleSaveInterval;
+   }
+
+   /**
+    * Set sample save interval currently selected in editor.
+    *
+    * @param sampleSaveInterval sample save interval currently selected in editor
+    */
+   public void setSampleSaveInterval(int sampleSaveInterval)
+   {
+      this.sampleSaveInterval = sampleSaveInterval;
    }
 
    /**

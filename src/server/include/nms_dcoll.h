@@ -628,6 +628,9 @@ protected:
    AnomalyScore m_anomalyScore;        // Result of scoring last value
    time_t m_anomalyScoreTimestamp;     // Timestamp of last scored value
    time_t m_anomalyTrainingRequestTime;   // Time of last model training request made by the DCI itself
+   bool m_anomalyTrainingFailed;       // Last model training failed because collected values could not be read
+   bool m_anomalyTuningPending;        // Request for LLM tuning is queued or being processed
+   bool m_anomalyStateModified;        // Drift sums were changed since detector state was saved to database
    SharedString m_aiHint;              // Hint for LLM tuning of anomaly detection
 	int m_multiplier;
 	SharedString m_unitName;
@@ -659,8 +662,8 @@ protected:
    }
    void normalizeAnomalyDetectionFlags()
    {
-      if (m_flags & DCF_DETECT_ANOMALIES_AI)
-         m_flags |= DCF_DETECT_ANOMALIES_IFOREST;   // LLM tuning makes sense only for enabled anomaly detection
+      if (m_flags & DCF_ANOMALY_LLM_TUNING)
+         m_flags |= DCF_DETECT_ANOMALIES;   // LLM tuning makes sense only for enabled anomaly detection
    }
    void setAnomalyProfileInternal(const shared_ptr<AnomalyModel>& model, json_t *tuning, time_t timestamp);
    void setAnomalyProfileFromJson(json_t *profile, time_t timestamp);
@@ -668,7 +671,8 @@ protected:
    void clearAnomalyScore();
    void requestAnomalyModelTraining();
    void checkForAnomaly(Timestamp timestamp, const ItemValue& value);
-   void saveAnomalyDetectorState() const;
+   void saveAnomalyDetectorState();
+   uint32_t getAnomalyTrainingIssues() const;
    void addAnomalyEventParameters(EventBuilder *builder, const Threshold& threshold) const;
    json_t *createAnomalyProfileDocument() const;
    json_t *anomalyScoreToJson() const;
@@ -738,8 +742,8 @@ public:
 	int getUseMultiplier() const { return (m_flags & DCF_MULTIPLIERS_MASK) >> 16; }
 	SharedString getUnitName() const { return GetAttributeWithLock(m_unitName, m_mutex); }
 	uint32_t getMappingTableId() const { return m_mappingTableId; }
-	bool isAnomalyDetectionEnabled() const { return ((m_flags & DCF_DETECT_ANOMALIES_IFOREST) != 0) && isNumeric(); }
-	bool isAnomalyTuningEnabled() const { return (m_flags & DCF_DETECT_ANOMALIES_AI) != 0; }
+	bool isAnomalyDetectionEnabled() const { return ((m_flags & DCF_DETECT_ANOMALIES) != 0) && isNumeric(); }
+	bool isAnomalyTuningEnabled() const { return (m_flags & DCF_ANOMALY_LLM_TUNING) != 0; }
 	bool isAnomalyDetected() const { return m_anomalyDetected; }
 	AnomalyScore getAnomalyScore() const { return GetAttributeWithLock(m_anomalyScore, m_mutex); }
 	AnomalySettings getAnomalySettings() const { return GetAttributeWithLock(m_anomalySettings, m_mutex); }
@@ -762,6 +766,10 @@ public:
 	bool setInitialAggregationWatermark(int64_t timestampMs);
 
 	void setAnomalyProfile(const shared_ptr<AnomalyModel>& model, json_t *tuning);
+	void setAnomalyTuning(json_t *tuning);
+	void setAnomalyTrainingFailed(bool failed) { m_anomalyTrainingFailed = failed; }
+	bool startAnomalyTuningRequest();
+	void endAnomalyTuningRequest() { m_anomalyTuningPending = false; }
 	bool saveAnomalyProfileToDatabase();
 	time_t startNewAnomalyBaseline();
 	void reloadAnomalyProfile(json_t *profile, time_t timestamp, time_t baselineStart, json_t *detectorState);
@@ -790,7 +798,7 @@ public:
    TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);
 
    virtual void createMessage(NXCPMessage *msg) override;
-   void updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId);
+   bool updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId);
    void fillMessageWithThresholds(NXCPMessage *msg);
    void reloadThresholdState(DB_RESULT hResult, const std::map<uint32_t, int>& rows);
 

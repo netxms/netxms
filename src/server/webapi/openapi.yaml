@@ -22844,6 +22844,19 @@ components:
                   type: number
                 max:
                   type: number
+        trainingIssues:
+          type: array
+          readOnly: true
+          description: |
+            Problems with training of the model (omitted if there are none). With `storageDisabled`
+            (collected values are not stored) or `dataReadError` (collected values could not be read
+            from the database at last training) the model cannot be trained and the item stays in
+            learning state. With `sparseSamples` (not every collected value is stored) or
+            `shortRetention` (retention time is shorter than the training range of 37 days) the
+            model is trained on less data than intended and detection is less accurate.
+          items:
+            type: string
+            enum: [storageDisabled, dataReadError, sparseSamples, shortRetention]
         model:
           type: object
           readOnly: true
@@ -22859,7 +22872,9 @@ components:
               description: Mode used by the model
             learning:
               type: boolean
-              description: True if the model does not have enough data and anomalies are not reported
+              description: |
+                True if the model does not have enough data. Values are checked only against
+                hard bounds in that case.
             trainingDays:
               type: integer
               description: Number of days with data used for training
@@ -22880,7 +22895,22 @@ components:
       properties:
         learning:
           type: boolean
-          description: True if the model does not have enough data yet; other properties are omitted in that case
+          description: |
+            True if the model does not have enough data yet. The value is checked only against
+            hard bounds in that case: `type` is present (as `range`) only if the value is outside
+            of them, and other properties are omitted.
+        trainingIssues:
+          type: array
+          description: |
+            Problems with training of the model (omitted if there are none). With `storageDisabled`
+            (collected values are not stored) or `dataReadError` (collected values could not be read
+            from the database at last training) the model cannot be trained and the item stays in
+            learning state. With `sparseSamples` (not every collected value is stored) or
+            `shortRetention` (retention time is shorter than the training range of 37 days) the
+            model is trained on less data than intended and detection is less accurate.
+          items:
+            type: string
+            enum: [storageDisabled, dataReadError, sparseSamples, shortRetention]
         type:
           type: string
           enum: [none, range, step, drift]

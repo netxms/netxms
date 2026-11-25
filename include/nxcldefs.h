@@ -1180,14 +1180,14 @@ enum HistoricalDataType
 /**
  * DCI flags
  */
-#define DCF_DETECT_ANOMALIES_IFOREST ((uint32_t)0x000001)  // anomaly detection is enabled
+#define DCF_DETECT_ANOMALIES         ((uint32_t)0x000001)  // anomaly detection is enabled
 #define DCF_ALL_THRESHOLDS           ((uint32_t)0x000002)
 #define DCF_RAW_VALUE_OCTET_STRING   ((uint32_t)0x000004)
 #define DCF_SHOW_ON_OBJECT_TOOLTIP   ((uint32_t)0x000008)
 #define DCF_AGGREGATE_FUNCTION_MASK  ((uint32_t)0x000070)
 #define DCF_AGGREGATE_ON_CLUSTER     ((uint32_t)0x000080)
 #define DCF_TRANSFORM_AGGREGATED     ((uint32_t)0x000100)
-#define DCF_DETECT_ANOMALIES_AI      ((uint32_t)0x000200)  // LLM tuning of anomaly detection settings is enabled
+#define DCF_ANOMALY_LLM_TUNING       ((uint32_t)0x000200)  // LLM tuning of anomaly detection settings is enabled
 #define DCF_CALCULATE_NODE_STATUS    ((uint32_t)0x000400)
 #define DCF_SHOW_IN_OBJECT_OVERVIEW  ((uint32_t)0x000800)
 #define DCF_CACHE_MODE_MASK          ((uint32_t)0x003000)
@@ -1199,6 +1199,14 @@ enum HistoricalDataType
 #define DCF_USE_SNMP_MIB_ENUM        ((uint32_t)0x100000)
 #define DCF_ADD_INSTANCE_OID_COLUMN  ((uint32_t)0x200000)
 #define DCF_TEMPLATE_OVERRIDE        ((uint32_t)0x400000)
+
+/**
+ * Problems with training of DCI anomaly detection model
+ */
+#define ANOMALY_TRAINING_NO_STORAGE       ((uint32_t)0x0001)   // collected values are not stored, model cannot be trained
+#define ANOMALY_TRAINING_READ_ERROR       ((uint32_t)0x0002)   // collected values cannot be read from database, model was not trained
+#define ANOMALY_TRAINING_SPARSE_SAMPLES   ((uint32_t)0x0004)   // not every collected value is stored, detection is less accurate
+#define ANOMALY_TRAINING_SHORT_RETENTION  ((uint32_t)0x0008)   // retention time is shorter than training range, detection is less accurate
 
 /**
  * DCI state flags

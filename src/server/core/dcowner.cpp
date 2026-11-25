@@ -502,9 +502,17 @@ uint32_t DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMess
          if (object->hasAccess(userId))
          {
             if (object->getType() == DCO_TYPE_ITEM)
-               static_cast<DCItem*>(object)->updateFromMessage(msg, numMaps, mapIndex, mapId);
+            {
+               if (!static_cast<DCItem*>(object)->updateFromMessage(msg, numMaps, mapIndex, mapId))
+               {
+                  result = RCC_INVALID_ARGUMENT;
+                  break;
+               }
+            }
             else
+            {
                object->updateFromMessage(msg);
+            }
 
             if (object->getInstanceDiscoveryMethod() != IDM_NONE)
             {

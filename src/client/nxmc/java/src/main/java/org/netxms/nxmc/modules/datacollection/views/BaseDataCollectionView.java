@@ -1122,7 +1122,7 @@ public abstract class BaseDataCollectionView extends ObjectView implements Viewe
    protected boolean isAnomalyDetectionEnabled(Object dci)
    {
       DciValue value = (DciValue)dci;
-      return (value.getDcObjectType() == DataCollectionObject.DCO_TYPE_ITEM) && ((value.getFlags() & DataCollectionItem.DCF_DETECT_ANOMALIES_IFOREST) != 0);
+      return (value.getDcObjectType() == DataCollectionObject.DCO_TYPE_ITEM) && ((value.getFlags() & DataCollectionItem.DCF_DETECT_ANOMALIES) != 0);
    }
 
    /**

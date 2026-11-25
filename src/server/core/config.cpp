@@ -820,7 +820,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    }
    else if (!wcscmp(name, L"DataCollection.DefaultDCIRetentionTime"))
    {
-      DCObject::m_defaultRetentionTime = ConvertToInt32(value, 30);
+      DCObject::m_defaultRetentionTime = ConvertToInt32(value, 40);
    }
    else if (!wcscmp(name, L"DataCollection.InstancePollingInterval"))
    {

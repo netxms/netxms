@@ -426,7 +426,7 @@ AnomalyModel::AnomalyModel()
 }
 
 /**
- * Create model from JSON. Returns nullptr if JSON is not a model of current version from slot baseline provider.
+ * Create model from JSON. Returns nullptr if JSON is not a valid model of current version from slot baseline provider.
  */
 shared_ptr<AnomalyModel> AnomalyModel::createFromJson(json_t *json)
 {
@@ -469,6 +469,8 @@ shared_ptr<AnomalyModel> AnomalyModel::createFromJson(json_t *json)
       model->m_slotChangeScale = model->m_stepScale;   // also covers model saved without this element
    model->m_stepMaxGap = json_object_get_int32(json, "stepMaxGap");
    model->m_driftScale = json_number_value(json_object_get(json, "driftScale"));
+   if (!std::isfinite(model->m_driftScale) || (model->m_driftScale <= 0))
+      return shared_ptr<AnomalyModel>();  // training never produces such scale, and drift sums cannot be calculated with it
    return model;
 }
 
@@ -1081,14 +1083,15 @@ AnomalyScore ScoreAnomalySample(const AnomalyModel& model, const AnomalySettings
       state->lastValue = value;
    }
 
+   // Hard bounds do not depend on the model, so they are checked even while it is learning
+   if (settings.isOutOfHardBounds(value))
+      result.type = AnomalyType::RANGE;
+
    if (model.isLearning(settings))
    {
       result.learning = true;
       return result;
    }
-
-   if ((!std::isnan(settings.hardMin) && (value < settings.hardMin)) || (!std::isnan(settings.hardMax) && (value > settings.hardMax)))
-      result.type = AnomalyType::RANGE;
 
    // Range check and drift accumulation
    ExpectedValue ev = model.getExpectedValue(timestamp);

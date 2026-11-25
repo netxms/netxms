@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AnomalyType;
 import org.netxms.client.constants.DataCollectionError;
 import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataType;
@@ -177,8 +178,15 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
     */
    private String formatAnomalyState(DciValue value)
    {
-      if (value.isAnomalyModelLearning())
+      // Value can be out of hard bounds while model is learning
+      if (value.isAnomalyModelLearning() && (value.getAnomalyType() == AnomalyType.NONE))
+      {
+         if ((value.getAnomalyTrainingIssues() & DciValue.ANOMALY_TRAINING_NO_STORAGE) != 0)
+            return i18n.tr("Cannot learn (collected values are not stored)");
+         if ((value.getAnomalyTrainingIssues() & DciValue.ANOMALY_TRAINING_READ_ERROR) != 0)
+            return i18n.tr("Cannot learn (collected values cannot be read)");
          return i18n.tr("Learning");
+      }
 
       String type;
       switch(value.getAnomalyType())

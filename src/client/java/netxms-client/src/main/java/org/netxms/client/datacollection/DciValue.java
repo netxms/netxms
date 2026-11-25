@@ -36,6 +36,12 @@ public abstract class DciValue
    final public static int MULTIPLIERS_YES = 1;
    final public static int MULTIPLIERS_NO = 2;
 
+   // Problems with training of anomaly detection model
+   final public static int ANOMALY_TRAINING_NO_STORAGE      = 0x0001;  // collected values are not stored, model cannot be trained
+   final public static int ANOMALY_TRAINING_READ_ERROR      = 0x0002;  // collected values cannot be read, model was not trained
+   final public static int ANOMALY_TRAINING_SPARSE_SAMPLES  = 0x0004;  // not every collected value is stored, detection is less accurate
+   final public static int ANOMALY_TRAINING_SHORT_RETENTION = 0x0008;  // retention time is shorter than training range, detection is less accurate
+
 	protected long id;					// DCI id
 	protected long nodeId;				// related node object id
    protected long templateDciId; // related template DCI ID
@@ -62,6 +68,7 @@ public abstract class DciValue
    protected AnomalyType anomalyType = AnomalyType.NONE;
    protected boolean anomalyModelLearning;
    protected boolean anomalyRateMode;
+   protected int anomalyTrainingIssues;
    protected Double anomalyScore;
    protected Double anomalyExpectedLow;
    protected Double anomalyExpectedHigh;
@@ -146,6 +153,7 @@ public abstract class DciValue
 
       templateId = msg.getFieldAsInt64(base + 45);
       relatedObject = msg.getFieldAsInt64(base + 46);
+      anomalyTrainingIssues = msg.getFieldAsInt32(base + 47);
 	}
 
    /**
@@ -430,6 +438,26 @@ public abstract class DciValue
    public boolean isAnomalyModelLearning()
    {
       return anomalyModelLearning;
+   }
+
+   /**
+    * Get problems with training of anomaly detection model for this DCI.
+    *
+    * @return bit mask of ANOMALY_TRAINING_* constants (0 if there are no problems or anomaly detection is not enabled)
+    */
+   public int getAnomalyTrainingIssues()
+   {
+      return anomalyTrainingIssues;
+   }
+
+   /**
+    * Check if anomaly detection model for this DCI cannot be trained (collected values are not stored or cannot be read).
+    *
+    * @return true if anomaly detection model cannot be trained
+    */
+   public boolean isAnomalyTrainingImpossible()
+   {
+      return (anomalyTrainingIssues & (ANOMALY_TRAINING_NO_STORAGE | ANOMALY_TRAINING_READ_ERROR)) != 0;
    }
 
    /**

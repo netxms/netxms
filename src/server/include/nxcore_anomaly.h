@@ -24,6 +24,7 @@
 #define _nxcore_anomaly_h_
 
 #include <vector>
+#include <cmath>
 
 /**
  * Anomaly model format version
@@ -34,6 +35,20 @@
  * Number of slots in anomaly model (hour of day x day of week)
  */
 #define ANOMALY_SLOT_COUNT       168
+
+/**
+ * Length of history used for training: raw samples (spread of single sample and of change between samples)
+ * and hourly averages (expected level), in seconds
+ */
+#define ANOMALY_RAW_TRAINING_RANGE     (30 * 86400)
+#define ANOMALY_HOURLY_TRAINING_RANGE  (84 * 86400)
+
+/**
+ * Most recent data is not used for training so that ongoing level shift is not absorbed by the
+ * baseline before drift detector can report it (in seconds). Reduced while there is less history
+ * than minimum number of training days.
+ */
+#define ANOMALY_TRAINING_LAG           (7 * 86400)
 
 /**
  * Anomaly type
@@ -107,6 +122,10 @@ struct NXCORE_EXPORTABLE AnomalySettings
 
    json_t *toJson() const;
    bool isDefault() const;
+   bool isOutOfHardBounds(double value) const
+   {
+      return (!std::isnan(hardMin) && (value < hardMin)) || (!std::isnan(hardMax) && (value > hardMax));
+   }
 };
 
 /**
@@ -204,7 +223,7 @@ struct NXCORE_EXPORTABLE AnomalyDetectorState
 struct AnomalyScore
 {
    AnomalyType type;
-   bool learning;             // model does not have enough data, sample was not scored
+   bool learning;             // model does not have enough data, sample was checked only against hard bounds
    bool scored;               // score and expected range are set
    double score;              // robust z-score for range and step, drift sum for drift
    double expectedLow;        // lower bound of expected range (value or rate, depending on model mode)

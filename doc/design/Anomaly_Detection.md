@@ -110,8 +110,28 @@ reported in the same terms as the model works in.
 ### Learning state
 
 A model trained on fewer distinct days than `minTrainingDays` (7 by default) is *learning*: values
-are not checked and no anomalies are reported. This is the state of every DCI right after anomaly
-detection is enabled on a new DCI, and after new baseline is started.
+are checked only against hard bounds (which do not need a model), and no other anomalies are
+reported. This is the state of every DCI right after anomaly detection is enabled on a new DCI,
+and after new baseline is started.
+
+A DCI can stay in learning state because its model cannot be trained, or have a model trained on
+less data than intended. Such problems are reported as *training issues* in the last values
+(NXCP), in WebAPI (`trainingIssues` in `anomalyDetection` and in `anomaly` of the last value), and
+in the debug log:
+
+| Issue | Meaning |
+|---|---|
+| `storageDisabled` | Collected values are not stored; the model cannot be trained and training is not attempted |
+| `dataReadError` | Collected values could not be read from the database at last training |
+| `sparseSamples` | `sampleSaveInterval` is greater than 1, spread is trained from part of collected values |
+| `shortRetention` | Retention time is shorter than 37 days, less data than intended is available for spread |
+
+The console shows the first two in the anomaly column of last values instead of "Learning".
+The DCI properties dialog (also for template DCIs) shows a warning next to the *Detect anomalies*
+option when storage is disabled, retention time is shorter than 37 days, or not every value is
+stored, using storage settings as currently selected on the *General* page. Default retention time
+(`DataCollection.DefaultDCIRetentionTime`) is 40 days on new installations for this reason;
+upgrade does not change the configured value.
 
 ## Detection
 
@@ -178,8 +198,8 @@ Two DCI flags control the feature:
 
 | Flag | Value | Meaning |
 |---|---|---|
-| `DCF_DETECT_ANOMALIES_IFOREST` | 0x0001 | Anomaly detection is enabled (name is historical) |
-| `DCF_DETECT_ANOMALIES_AI` | 0x0200 | Settings are tuned by LLM; implies the first flag |
+| `DCF_DETECT_ANOMALIES` | 0x0001 | Anomaly detection is enabled |
+| `DCF_ANOMALY_LLM_TUNING` | 0x0200 | Settings are tuned by LLM; implies the first flag |
 
 With default sensitivity and normally distributed noise about one value in 2000 is reported by the
 range check alone. Sample count of the anomaly threshold (number of consecutive anomalous values
@@ -195,7 +215,11 @@ direction, mode and hard bounds. The answer is validated (sensitivity is limited
 stored with the model as `tuning`.
 
 - While the flag is set, tuned sensitivity, direction and hard bounds take precedence over
-  configured ones; tuned mode is used only if configured mode is `auto`.
+  configured ones; tuned mode is used only if configured mode is `auto`. Hard bounds are replaced
+  one by one: a configured bound stays in effect if LLM did not suggest one for that side, and
+  suggested bounds are ignored if they contradict a configured one.
+- Tuning is requested in background after a model is trained, one request at a time and outside
+  of training queues. If LLM suggests another mode, the model is trained again.
 - Tuning is reused for 30 days, and requested again on regeneration requested by user.
 - Configured settings are not modified. Turning the flag off returns to them.
 - Without a provider, or if the request fails, detection runs on configured settings.
@@ -205,6 +229,9 @@ stored with the model as `tuning`.
 - Scheduled task `System.RegenerateAnomalyProfiles` (daily, 12:00 by default) trains models of all
   DCIs with anomaly detection enabled. Targets are collected first; training runs on the main
   thread pool with at most 4 models trained in parallel.
+- Training reads collected values of the training range (30 days) and, when available, hourly
+  aggregates. Values collected within the training lag (last 7 days) are read only when there is
+  less history than `minTrainingDays`, as they are not used otherwise.
 - Scheduled training replaces the model and keeps level shift detector state, unless the mode of
   the model has changed.
 - If a new model cannot be trained (no data, database error), the existing one is kept.
@@ -242,13 +269,14 @@ If the DCI has no model yet, baseline start is not moved.
 | `items.anomaly_profile_timestamp` | Time of last training |
 | `raw_dci_values.anomaly_state` | Level shift detector sums and their onset times, as JSON |
 
-Detector state is written when an hourly bucket closes (one small update per DCI per hour) and when
-new baseline is started. Sum of the hour in progress is not saved, so a restart can delay a drift
+Detector state is written when an hourly bucket closes, only if drift sums have changed (most of
+the time they stay at zero), and when new baseline is started. Sum of the hour in progress is not saved, so a restart can delay a drift
 report by up to an hour and cannot cause a false one.
 
 In an HA cluster both nodes share the database and no replication channel is involved. A node that
 becomes active reloads models, baseline start times and detector state of all DCIs in one pass
 (`ReloadAnomalyProfiles()`, called from the activation thread after threshold states are reloaded).
+DCIs that have no profile in the database have theirs cleared in memory.
 
 ## Interfaces
 
@@ -307,6 +335,7 @@ detection, to see what would have been reported with current settings of the DCI
 - Current settings of the DCI are used, including LLM tuning as it is now. Baseline start time is
   ignored. Anomaly detection does not have to be enabled for the DCI.
 - Nothing is changed in the DCI.
+- Replayed period cannot be longer than 366 days.
 
 Result is a hash map:
 
@@ -348,7 +377,7 @@ DCIs of one object.
 ## Limitations
 
 - Slots are in server local time.
-- A DCI with fewer than 7 days of history reports nothing.
+- A DCI with fewer than 7 days of history reports only values outside of hard bounds.
 - With `sampleSaveInterval` greater than 1 only part of collected values is stored, and spread is
   trained from that part.
 - When retention time is shorter than 37 days, less data than intended is available for spread.

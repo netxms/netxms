@@ -646,7 +646,7 @@ static void LoadGlobalConfig()
    g_autobindPollingInterval = ConfigReadInt(_T("Objects.AutobindPollingInterval"), 3600);
    g_mapUpdatePollingInterval = ConfigReadInt(_T("Objects.NetworkMaps.UpdateInterval"), 60);
    DCObject::m_defaultPollingInterval = ConfigReadInt(_T("DataCollection.DefaultDCIPollingInterval"), 60);
-   DCObject::m_defaultRetentionTime = ConfigReadInt(_T("DataCollection.DefaultDCIRetentionTime"), 30);
+   DCObject::m_defaultRetentionTime = ConfigReadInt(_T("DataCollection.DefaultDCIRetentionTime"), 40);
    g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("Agent.DefaultCacheMode"), AGENT_CACHE_OFF);
    if ((g_defaultAgentCacheMode != AGENT_CACHE_ON) && (g_defaultAgentCacheMode != AGENT_CACHE_OFF))
    {

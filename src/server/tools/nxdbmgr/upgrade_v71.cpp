@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.18 to 71.19
+ */
+static bool H_UpgradeFromV18()
+{
+   // Default retention time becomes 40 days for new installations; configured value is not changed
+   CHK_EXEC(SQLQuery(L"UPDATE config SET default_value='40',description='Retention time (in days) for DCIs with history retention set to server default. Anomaly detection needs at least 37 days of history to work correctly.' WHERE var_name='DataCollection.DefaultDCIRetentionTime'"));
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 71.17 to 71.18
  */
 static bool H_UpgradeFromV17()
@@ -398,6 +409,7 @@ static struct
    bool (*upgradeProc)();
    bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 18, 71, 19, H_UpgradeFromV18 },
    { 17, 71, 18, H_UpgradeFromV17 },
    { 16, 71, 17, H_UpgradeFromV16 },
    { 15, 71, 16, H_UpgradeFromV15 },

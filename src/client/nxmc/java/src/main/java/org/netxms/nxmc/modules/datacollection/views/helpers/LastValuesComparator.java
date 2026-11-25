@@ -119,7 +119,7 @@ public class LastValuesComparator extends ViewerComparator
          return 2 + value.getAnomalyType().getValue();
       if (value.isAnomalyModelLearning())
          return 2;
-      return ((value.getFlags() & DataCollectionItem.DCF_DETECT_ANOMALIES_IFOREST) != 0) ? 1 : 0;
+      return ((value.getFlags() & DataCollectionItem.DCF_DETECT_ANOMALIES) != 0) ? 1 : 0;
    }
 
    /**

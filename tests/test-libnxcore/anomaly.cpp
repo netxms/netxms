@@ -355,6 +355,14 @@ static void TestSeasonalBaseline()
       AssertTrue(IsClose(e1.center, e2.center, 1e-9) && IsClose(e1.scale, e2.scale, 1e-9) && (e1.level == e2.level));
    }
 
+   // Model without usable drift scale is rejected
+   json_t *damaged = json_deep_copy(json);
+   json_object_set_new(damaged, "driftScale", json_real(0));
+   AssertNull(AnomalyModel::createFromJson(damaged).get());
+   json_object_del(damaged, "driftScale");
+   AssertNull(AnomalyModel::createFromJson(damaged).get());
+   json_decref(damaged);
+
    // Model of other version is rejected
    json_object_set_new(json, "version", json_integer(1));
    AssertNull(AnomalyModel::createFromJson(json).get());
@@ -424,6 +432,14 @@ static void TestSparseHistory()
    AnomalyScore score = ScoreAlone(*model, settings, TimeAt(2026, 1, 8, 12), 100000);
    AssertTrue(score.learning && !score.scored);
    AssertTrue(score.type == AnomalyType::NONE);
+
+   // Hard bounds are checked while model is learning
+   AnomalySettings bounded;
+   bounded.hardMax = 1000;
+   score = ScoreAlone(*model, bounded, TimeAt(2026, 1, 8, 12), 100000);
+   AssertTrue(score.learning && !score.scored);
+   AssertTrue(score.type == AnomalyType::RANGE);
+   AssertTrue(ScoreAlone(*model, bounded, TimeAt(2026, 1, 8, 12), 500).type == AnomalyType::NONE);
 
    // Eight days from Monday: six weekdays are enough for weekday slots, two weekend days are not
    series.clear();

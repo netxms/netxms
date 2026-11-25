@@ -12061,6 +12061,27 @@ msgstr ""
 msgid "Disabled until {0}"
 msgstr "Отключено"
 
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Collected values are not stored, so anomaly detection will not be able to learn."
+msgstr "Собранные значения не сохраняются, поэтому обнаружение аномалий не сможет обучиться."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+#, java-format
+msgid "History retention period ({0} days) is shorter than {1} days used by anomaly detection for learning. Detection will be less accurate."
+msgstr "Срок хранения истории ({0} дн.) меньше {1} дней, которые обнаружение аномалий использует для обучения. Обнаружение будет менее точным."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Thresholds.java
+msgid "Not every collected value is stored. Anomaly detection will be less accurate."
+msgstr "Сохраняется не каждое собранное значение. Обнаружение аномалий будет менее точным."
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Cannot learn (collected values are not stored)"
+msgstr "Обучение невозможно (собранные значения не сохраняются)"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
+msgid "Cannot learn (collected values cannot be read)"
+msgstr "Обучение невозможно (не удаётся прочитать собранные значения)"
+
 #: src/main/java/org/netxms/nxmc/modules/datacollection/views/helpers/LastValuesLabelProvider.java
 msgid "Learning"
 msgstr "Обучение"

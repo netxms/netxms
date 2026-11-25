@@ -882,7 +882,7 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
  * Replay recorded history of DCI through anomaly detection (see DetectAnomalies in anomaly_profile.cpp).
  * Arguments: timeFrom, [timeTo], [labels]
  *    timeFrom   start of replayed period (UNIX timestamp)
- *    timeTo     end of replayed period (default is current time)
+ *    timeTo     end of replayed period (default is current time); period cannot be longer than 366 days
  *    labels     array of time ranges when anomalies are expected (each range is an array of two UNIX timestamps);
  *               if provided, result contains evaluation of detection quality
  * Sets result to hash map with replay results, or to null on failure.

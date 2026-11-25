@@ -69,9 +69,9 @@ static bool ParseAnomalyDetectionMode(const char *mode, uint32_t *flags)
    if (!stricmp(mode, "none"))
       *flags = 0;
    else if (!stricmp(mode, "enabled"))
-      *flags = DCF_DETECT_ANOMALIES_IFOREST;
+      *flags = DCF_DETECT_ANOMALIES;
    else if (!stricmp(mode, "tuned"))
-      *flags = DCF_DETECT_ANOMALIES_IFOREST | DCF_DETECT_ANOMALIES_AI;
+      *flags = DCF_DETECT_ANOMALIES | DCF_ANOMALY_LLM_TUNING;
    else
       return false;
    return true;
@@ -745,7 +745,7 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
       uint32_t anomalyFlags;
       if (!ParseAnomalyDetectionMode(anomalyStr, &anomalyFlags))
          return std::string(s_invalidAnomalyDetectionMode);
-      dci->clearFlag(DCF_DETECT_ANOMALIES_IFOREST | DCF_DETECT_ANOMALIES_AI);
+      dci->clearFlag(DCF_DETECT_ANOMALIES | DCF_ANOMALY_LLM_TUNING);
       if (anomalyFlags != 0)
          dci->setFlag(anomalyFlags);
    }
