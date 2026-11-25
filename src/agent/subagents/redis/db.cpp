@@ -25,17 +25,6 @@
 #define POLL_INTERVAL 60000
 
 /**
- * Read attribute from config string
- */
-static String ReadAttribute(const TCHAR *config, const TCHAR *attribute)
-{
-   TCHAR buffer[256];
-   if (!ExtractNamedOptionValue(config, attribute, buffer, 256))
-      return String();
-   return String(buffer);
-}
-
-/**
  * Add Redis instance from config
  */
 bool AddRedisFromConfig(const ConfigEntry *config)
@@ -49,7 +38,7 @@ bool AddRedisFromConfig(const ConfigEntry *config)
    tchar_to_utf8(config->getSubEntryValue(_T("server"), 0, _T("127.0.0.1")), -1, info.server, MAX_STR);
    info.port = config->getSubEntryValueAsInt(_T("port"), 0, REDIS_DEFAULT_PORT);
    info.database = config->getSubEntryValueAsInt(_T("database"), 0, 0);
-   info.connectionTTL = config->getSubEntryValueAsInt(_T("connectionTTL"), 0, 3600);
+   info.connectionTTL = config->getSubEntryValueAsUInt(_T("connectionTTL"), 0, 3600);
    tchar_to_utf8(config->getSubEntryValue(_T("user"), 0, _T("")), -1, info.user, MAX_STR);
    const TCHAR *password = config->getSubEntryValue(_T("password"), 0, _T(""));
    if ((password != nullptr) && (password[0] != 0))
@@ -79,6 +68,7 @@ RedisInstance::RedisInstance(DatabaseInfo *dbInfo) : m_dataLock(MutexType::FAST)
    m_redis = nullptr;
    m_pollerThread = INVALID_THREAD_HANDLE;
    m_connected = false;
+   m_connectTime = 0;
    m_lastPollTime = 0;
 }
 
@@ -164,9 +154,10 @@ bool RedisInstance::connect()
    }
 
    m_connected = true;
+   m_connectTime = GetCurrentTimeMs();
    m_connLock.unlock();
 
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Redis %s: connected successfully"), m_info.id);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Redis %s: connected successfully (connection TTL %u)"), m_info.id, m_info.connectionTTL);
    return true;
 }
 
@@ -537,6 +528,12 @@ void RedisInstance::parseKeyspaceInfo(const char *infoData)
  */
 bool RedisInstance::poll()
 {
+   if (m_connected && (m_info.connectionTTL > 0) && (GetCurrentTimeMs() - m_connectTime >= static_cast<int64_t>(m_info.connectionTTL) * 1000))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: connection TTL expired, planned connection reset"), m_info.id);
+      disconnect();
+   }
+
    if (!m_connected)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Redis %s: attempting connection"), m_info.id);
