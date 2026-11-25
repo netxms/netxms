@@ -400,6 +400,7 @@ int H_UserVariable(Context *context);
 int H_UserVariableDelete(Context *context);
 int H_UserVariables(Context *context);
 int H_UserVariableUpdate(Context *context);
+int H_UserDirectory(Context *context);
 int H_UserGroups(Context *context);
 int H_UserGroupDetails(Context *context);
 int H_UserGroupCreate(Context *context);
@@ -1258,6 +1259,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/status")
       .GET(H_Status)
+      .build();
+   RouteBuilder("v1/user-directory")
+      .GET(H_UserDirectory)
       .build();
    RouteBuilder("v1/user-groups")
       .GET(H_UserGroups)

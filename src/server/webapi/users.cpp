@@ -47,6 +47,35 @@ int H_Users(Context *context)
 }
 
 /**
+ * Handler for GET /v1/user-directory
+ */
+int H_UserDirectory(Context *context)
+{
+   json_t *output = json_array();
+   Iterator<UserDatabaseObject> it = OpenUserDatabase();
+   while(it.hasNext())
+   {
+      UserDatabaseObject *object = it.next();
+      if (object->isDeleted())
+         continue;
+
+      json_t *entry = json_object();
+      json_object_set_new(entry, "id", json_integer(object->getId()));
+      json_object_set_new(entry, "name", json_string_t(object->getName()));
+      if (!object->isGroup())
+         json_object_set_new(entry, "fullName", json_string_t(static_cast<User*>(object)->getFullName()));
+      json_object_set_new(entry, "isGroup", json_boolean(object->isGroup()));
+      json_object_set_new(entry, "isDisabled", json_boolean(object->isDisabled()));
+      json_array_append_new(output, entry);
+   }
+   CloseUserDatabase();
+
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
  * Handler for GET /v1/users/:user-id
  */
 int H_UserDetails(Context *context)
