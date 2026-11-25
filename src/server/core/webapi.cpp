@@ -188,9 +188,10 @@ bool NXCORE_EXPORTABLE ReadWebsocketFrame(SOCKET socketHandle, ByteStream *out, 
 }
 
 /**
- * Send websocket frame
+ * Send websocket text frame. Returns false if frame was not sent completely within given timeout (in milliseconds);
+ * part of the frame could be written in that case, so connection cannot be used for sending anymore.
  */
-void NXCORE_EXPORTABLE SendWebsocketFrame(SOCKET socketHandle, const void *data, size_t dataLen)
+bool NXCORE_EXPORTABLE SendWebsocketFrame(SOCKET socketHandle, const void *data, size_t dataLen, uint32_t timeout)
 {
    size_t headerLen;
    BYTE header[16];
@@ -218,7 +219,7 @@ void NXCORE_EXPORTABLE SendWebsocketFrame(SOCKET socketHandle, const void *data,
    Buffer<BYTE, 4096> frame(dataLen + headerLen);
    memcpy(frame, header, headerLen);
    memcpy(frame + headerLen, data, dataLen);
-   SendEx(socketHandle, frame, dataLen + headerLen, 0, nullptr);
+   return SendEx(socketHandle, frame, dataLen + headerLen, 0, nullptr, timeout) == static_cast<ssize_t>(dataLen + headerLen);
 }
 
 /**

@@ -25,6 +25,12 @@
 #define DEBUG_TAG L"webapi.ws"
 
 /**
+ * Timeout for sending single frame to client (in milliseconds). Producers can send while holding locks
+ * (poll output is sent under poller lock), so client that stopped reading should be detected quickly.
+ */
+#define SEND_TIMEOUT 5000
+
+/**
  * Output sessions waiting for WebSocket connection, indexed by connection token
  */
 static SharedHashMap<uuid, WebSocketOutputSession> s_pendingSessions;
@@ -109,14 +115,29 @@ void WebSocketOutputSession::connect(MHD_UpgradeResponseHandle *responseHandle, 
 }
 
 /**
+ * Mark session as disconnected after send failure and shut down socket so that reader thread will finish.
+ * Should be called with socket lock held.
+ */
+void WebSocketOutputSession::disconnectOnSendFailure()
+{
+   nxlog_debug_tag(DEBUG_TAG, 5, L"Output session: send failed or timed out, closing connection");
+   m_disconnected = true;
+   shutdown(m_socket, SHUT_RDWR);
+}
+
+/**
  * Send JSON message to WebSocket client. Message is silently dropped if client already disconnected.
+ * Client is disconnected on first failed send, so all subsequent messages are dropped without delay.
  */
 void WebSocketOutputSession::sendMessage(json_t *msg)
 {
    char *encoded = json_dumps(msg, 0);
    m_socketLock.lock();
    if ((m_socket != INVALID_SOCKET) && !m_closeFrameSent && !m_disconnected)
-      SendWebsocketFrame(m_socket, encoded, strlen(encoded));
+   {
+      if (!SendWebsocketFrame(m_socket, encoded, strlen(encoded), SEND_TIMEOUT))
+         disconnectOnSendFailure();
+   }
    m_socketLock.unlock();
    MemFree(encoded);
 }
@@ -221,10 +242,11 @@ void WebSocketOutputSession::readFrames()
       else if (frameType == 0x09)  // Ping frame
       {
          m_socketLock.lock();
-         if (!m_closeFrameSent)
+         if (!m_closeFrameSent && !m_disconnected)
          {
             BYTE pong[2] = { 0x8A, 0x00 };  // FIN + pong opcode, no payload
-            SendEx(m_socket, pong, 2, 0, nullptr);
+            if (SendEx(m_socket, pong, 2, 0, nullptr, SEND_TIMEOUT) != 2)
+               disconnectOnSendFailure();
          }
          m_socketLock.unlock();
       }
@@ -241,7 +263,7 @@ void WebSocketOutputSession::readFrames()
    onDisconnect();
 
    m_socketLock.lock();
-   if (!m_closeFrameSent)
+   if (!m_closeFrameSent && !m_disconnected)
       SendWebsocketCloseFrame(m_socket, WS_CLOSE_NORMAL);
    m_disconnected = true;
    m_socketLock.unlock();

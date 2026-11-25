@@ -450,7 +450,7 @@ public:
  * WebSocket utility functions
  */
 bool NXCORE_EXPORTABLE ReadWebsocketFrame(SOCKET socketHandle, ByteStream *out, BYTE *frameType);
-void NXCORE_EXPORTABLE SendWebsocketFrame(SOCKET socketHandle, const void *data, size_t dataLen);
+bool NXCORE_EXPORTABLE SendWebsocketFrame(SOCKET socketHandle, const void *data, size_t dataLen, uint32_t timeout = 60000);
 void NXCORE_EXPORTABLE SendWebsocketBinaryFrame(SOCKET socketHandle, const void *data, size_t dataLen);
 void NXCORE_EXPORTABLE SendWebsocketCloseFrame(SOCKET socketHandle, uint16_t statusCode = WS_CLOSE_NORMAL);
 void NXCORE_EXPORTABLE RejectWebsocketConnection(MHD_socket socketHandle, MHD_UpgradeResponseHandle *responseHandle, uint16_t statusCode = WS_CLOSE_POLICY_VIOLATION);

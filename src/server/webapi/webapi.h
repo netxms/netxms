@@ -74,6 +74,7 @@ private:
 
    void connect(MHD_UpgradeResponseHandle *responseHandle, SOCKET s);
    void readFrames();
+   void disconnectOnSendFailure();
 
 protected:
    virtual void onTextFrame(json_t *msg);
