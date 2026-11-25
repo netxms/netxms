@@ -26,6 +26,12 @@ CXXFLAGS = $(COMMON_CXXFLAGS) -DNXCORE_EXPORTS \
 	-I$(MICROHTTPD_ROOT)/include \
 	-I$(JNI_ROOT)/include -I$(JNI_ROOT)/include/win32
 
+ifneq ($(EE_TOP),)
+CXXFLAGS += -DWITH_PRIVATE_EXTENSIONS=1 -DCUSTOM_INIT_CODE \
+	-I$(TOPDIR)/$(EE_TOP)/include \
+	-I$(TOPDIR)/$(EE_TOP)/src/server/init
+endif
+
 LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
 	-shared \
 	-Wl,--out-implib,$(IMPLIB)
