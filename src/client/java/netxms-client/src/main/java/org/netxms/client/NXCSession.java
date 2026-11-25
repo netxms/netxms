@@ -4741,61 +4741,6 @@ public class NXCSession
    }
 
    /**
-    * Query objects on server side, optionally only those located below given root object. If progress callback is not null, it will
-    * be called periodically during query with updated completion percentage.
-    *
-    * @param query query to execute
-    * @param rootObjectId root object ID or 0 to query all objects
-    * @param progressCallback optional progress callback
-    * @return list of matching objects
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public List<AbstractObject> queryObjects(String query, long rootObjectId, final Consumer<Integer> progressCallback) throws IOException, NXCException
-   {
-      NXCPMessage request = newMessage(NXCPCodes.CMD_QUERY_OBJECTS);
-      request.setField(NXCPCodes.VID_QUERY, query);
-      request.setFieldUInt32(NXCPCodes.VID_ROOT, rootObjectId);
-      if (progressCallback != null)
-      {
-         request.setField(NXCPCodes.VID_REPORT_PROGRESS, true);
-         addMessageSubscription(NXCPCodes.CMD_PROGRESS_REPORT, request.getMessageId(), new MessageHandler() {
-            @Override
-            public boolean processMessage(NXCPMessage msg)
-            {
-               progressCallback.accept(msg.getFieldAsInt32(NXCPCodes.VID_PROGRESS));
-               return true;
-            }
-         });
-      }
-      try
-      {
-         sendMessage(request);
-         NXCPMessage response = waitForRCC(request.getMessageId());
-         return findMultipleObjects(response.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST), false);
-      }
-      finally
-      {
-         removeMessageSubscription(NXCPCodes.CMD_PROGRESS_REPORT, request.getMessageId());
-      }
-   }
-
-   /**
-    * Query objects on server side. If progress callback is not null, it will be called periodically during query with updated
-    * completion percentage.
-    *
-    * @param query query to execute
-    * @param progressCallback optional progress callback
-    * @return list of matching objects
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public List<AbstractObject> queryObjects(String query, Consumer<Integer> progressCallback) throws IOException, NXCException
-   {
-      return queryObjects(query, 0L, progressCallback);
-   }
-
-   /**
     * Query objects on server side and read certain object properties. Available properties are the same as in corresponding NXSL
     * objects or computed properties set using "with" statement in query. If <code>readAllComputedProperties</code> is set to
     * <code>true</code> then all computed properties will be retrieved in addition to those explicitly listed. Set of queried

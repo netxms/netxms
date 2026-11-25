@@ -566,7 +566,7 @@ __PACK_END__
 #define CMD_GET_HOSTNAME_BY_IPADDR        0x0167
 #define CMD_CANCEL_FILE_DOWNLOAD          0x0168
 #define CMD_FILEMGR_COPY_FILE             0x0169
-#define CMD_QUERY_OBJECTS                 0x016A
+//#define CMD_QUERY_OBJECTS                 0x016A
 #define CMD_QUERY_OBJECT_DETAILS          0x016B
 #define CMD_SETUP_TCP_PROXY               0x016C
 #define CMD_TCP_PROXY_DATA                0x016D

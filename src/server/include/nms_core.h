@@ -671,7 +671,6 @@ private:
    void sendServerInfo(const NXCPMessage& request);
    void getObjects(const NXCPMessage& request);
    void getSelectedObjects(const NXCPMessage& request);
-   void queryObjects(const NXCPMessage& request);
    void queryObjectDetails(const NXCPMessage& request);
    void getObjectQueries(const NXCPMessage& request);
    void modifyObjectQuery(const NXCPMessage& request);

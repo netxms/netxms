@@ -382,7 +382,7 @@ public class NXCPCodes
    public static final int CMD_HOST_BY_IP = 0x0167;
    public static final int CMD_CANCEL_FILE_DOWNLOAD = 0x0168;
    public static final int CMD_FILEMGR_COPY_FILE = 0x0169;
-   public static final int CMD_QUERY_OBJECTS = 0x016A;
+//   public static final int CMD_QUERY_OBJECTS = 0x016A;
    public static final int CMD_QUERY_OBJECT_DETAILS = 0x016B;
    public static final int CMD_SETUP_TCP_PROXY = 0x016C;
    public static final int CMD_TCP_PROXY_DATA = 0x016D;

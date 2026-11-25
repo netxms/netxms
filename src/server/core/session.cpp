@@ -1116,9 +1116,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_SELECTED_OBJECTS:
          getSelectedObjects(*request);
          break;
-      case CMD_QUERY_OBJECTS:
-         queryObjects(*request);
-         break;
       case CMD_QUERY_OBJECT_DETAILS:
          queryObjectDetails(*request);
          break;
@@ -3604,44 +3601,6 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
 		response.setField(VID_RCC, RCC_SUCCESS);
       sendMessage(response);
 	}
-}
-
-/**
- * Query objects
- */
-void ClientSession::queryObjects(const NXCPMessage& request)
-{
-   uint32_t requestId = request.getId();
-   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
-
-   std::function<void(int)> progressCallback = request.getFieldAsBoolean(VID_REPORT_PROGRESS) ?
-      [requestId, this] (int progress) -> void
-      {
-         NXCPMessage msg(CMD_PROGRESS_REPORT, requestId);
-         msg.setField(VID_PROGRESS, progress);
-         sendMessage(msg);
-      } : std::function<void(int)>();
-
-   TCHAR *query = request.getFieldAsString(VID_QUERY);
-   TCHAR errorMessage[1024];
-   unique_ptr<ObjectArray<ObjectQueryResult>> objects = QueryObjects(query, request.getFieldAsUInt32(VID_ROOT), m_userId, errorMessage, 1024, progressCallback);
-   if (objects != nullptr)
-   {
-      Buffer<uint32_t, 1024> idList(objects->size());
-      for(int i = 0; i < objects->size(); i++)
-      {
-         idList[i] = objects->get(i)->object->getId();
-      }
-      response.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
-      response.setField(VID_ERROR_TEXT, errorMessage);
-   }
-   MemFree(query);
-
-   sendMessage(response);
 }
 
 /**
