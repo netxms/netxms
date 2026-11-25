@@ -879,7 +879,7 @@ static bool ReadUninstallString(HKEY hKey, const TCHAR *valueName, StringBuffer 
    Buffer<TCHAR, 4096> value(size / sizeof(TCHAR) + 1);
    if ((RegQueryValueEx(hKey, valueName, nullptr, &type, reinterpret_cast<BYTE*>(static_cast<TCHAR*>(value)), &size) != ERROR_SUCCESS) || ((type != REG_SZ) && (type != REG_EXPAND_SZ)))
       return false;
-   value[size / sizeof(TCHAR)] = 0;
+   value[static_cast<size_t>(size / sizeof(TCHAR))] = 0;
 
    if (type == REG_EXPAND_SZ)
    {
