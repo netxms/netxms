@@ -252,8 +252,8 @@ Source: "..\..\..\out\x64\Release\bin\nxnotify.exe"; DestDir: "{app}\bin"; Flags
 Source: "..\..\..\out\x64\Release\bin\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: tools
 Source: "..\..\client\java\netxms-client\target\netxms-client-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server\reporting
 ; License manager
-#ifexist "..\..\..\private\common\x64\Release\nxlicmgr.exe"
-Source: "..\..\..\private\common\x64\Release\nxlicmgr.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+#ifexist "..\..\..\out\x64\Release\bin\nxlicmgr.exe"
+Source: "..\..\..\out\x64\Release\bin\nxlicmgr.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 #endif
 ; Diagnostic tools
 Source: "..\..\server\tools\scripts\nx-collect-server-diag.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base

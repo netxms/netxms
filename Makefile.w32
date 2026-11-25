@@ -182,6 +182,14 @@ TESTS_DIRS += tests/test-libnxsrv tests/test-libnxcore tests/test-server
 endif
 endif
 
+# Private common components (optional) - license manager. Same model as the
+# subsystems below: built only when its dispatcher (private/common/Makefile.w32)
+# is present.
+COMMON_TOP =
+ifneq ($(wildcard $(TOPDIR)/private/common/Makefile.w32),)
+COMMON_TOP = private/common
+endif
+
 # Private ATM subsystem (optional). Private repositories live at fixed locations
 # under private/ and are absent from public/OSS builds. The subsystem is built
 # only when its dispatcher is present, so absence is a silent no-op; when
@@ -205,9 +213,11 @@ ifneq ($(wildcard $(TOPDIR)/private/netxms/Makefile.w32),)
 EE_TOP = private/netxms
 endif
 endif
+# Server core is compiled with the EE extensions when EE is part of the build
+export EE_TOP
 
 # Complete build order
-ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS) $(TESTS_DIRS) $(ATM_TOP) $(EE_TOP)
+ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS) $(TESTS_DIRS) $(COMMON_TOP) $(ATM_TOP) $(EE_TOP)
 
 # Architectures built by the all-arch target
 # Override on the command line: make -f Makefile.w32 all-arch ALL_ARCHS="x64 arm64"
@@ -302,8 +312,10 @@ tests/test-server: src/server/core src/server/tools src/db/dbdrv sql
 # built after every in-tree tier it depends on.
 $(ATM_TOP): $(LIBS) $(AGENT_DIRS) $(SERVER_DIRS)
 
-# EE subsystem links the server and core import libraries.
-$(EE_TOP): $(LIBS) $(SERVER_DIRS)
+# EE subsystem and license manager link the agent, server and core import
+# libraries.
+$(EE_TOP): $(LIBS) $(AGENT_DIRS) $(SERVER_DIRS)
+$(COMMON_TOP): $(LIBS) $(AGENT_DIRS) $(SERVER_DIRS)
 
 clean:
 	@echo "Cleaning build artifacts..."
