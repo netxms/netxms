@@ -678,7 +678,7 @@ static int CollectAnomalies(uint32_t userId, const NetObj *scope, bool includeQu
 /**
  * Composite triage view: down nodes + grouped alarms + recent critical events + DCI anomalies.
  */
-std::string F_OperationalStatus(json_t *arguments, uint32_t userId)
+AIToolResult F_OperationalStatus(json_t *arguments, uint32_t userId)
 {
    const char *detailStr = json_object_get_string_utf8(arguments, "detail", "summary");
    bool fullDetail = !stricmp(detailStr, "full");
@@ -699,7 +699,7 @@ std::string F_OperationalStatus(json_t *arguments, uint32_t userId)
    {
       since = ParseTimestamp(sinceStr);
       if (since == 0)
-         return std::string("Error: invalid \"since\" timestamp");
+         return AIToolResult::error("Error: invalid \"since\" timestamp");
    }
 
    wchar_t tagPattern[256];
@@ -714,7 +714,7 @@ std::string F_OperationalStatus(json_t *arguments, uint32_t userId)
 
    shared_ptr<NetObj> scope = FindObjectByNameOrId(arguments, "scope");
    if ((scope != nullptr) && !scope->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    int downCap = fullDetail ? FULL_CAP_DOWN_NODES : SUMMARY_CAP;
    int groupCap = fullDetail ? FULL_CAP_ALARM_GROUPS : SUMMARY_CAP;

@@ -25,28 +25,28 @@
 /**
  * Read SNMP OID from given node
  */
-std::string F_SNMPRead(json_t *arguments, uint32_t userId)
+AIToolResult F_SNMPRead(json_t *arguments, uint32_t userId)
 {
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
    if (node == nullptr)
-      return std::string("Node not found");
+      return AIToolResult::error("Node not found");
    if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!node->isSNMPSupported())
-      return std::string("SNMP is not supported on the specified node");
+      return AIToolResult::error("SNMP is not supported on the specified node");
 
    const char *oidStr = json_object_get_string_utf8(arguments, "oid", nullptr);
    if ((oidStr == nullptr) || (oidStr[0] == 0))
-      return std::string("SNMP OID must be provided");
+      return AIToolResult::error("SNMP OID must be provided");
 
    SNMP_ObjectId oid = SNMP_ObjectId::parseA(oidStr);
    if (oid.length() == 0)
-      return std::string("Invalid SNMP OID format");
+      return AIToolResult::error("Invalid SNMP OID format");
 
    SNMP_Transport *transport = node->createSnmpTransport();
    if (transport == nullptr)
-      return std::string("Failed to create SNMP transport for the specified node");
+      return AIToolResult::error("Failed to create SNMP transport for the specified node");
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(oid));
@@ -59,14 +59,14 @@ std::string F_SNMPRead(json_t *arguments, uint32_t userId)
       error.append(SnmpGetErrorText(rc));
       char buffer[256];
       wchar_to_utf8(error.cstr(), -1, buffer, 256);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    SNMP_Variable *v = response->getVariable(0);
    if ((v == nullptr) || (v->getType() == ASN_NULL))
    {
       delete response;
-      return std::string("No such object");
+      return AIToolResult::error("No such object");
    }
 
    json_t *output = json_object();
@@ -82,28 +82,28 @@ std::string F_SNMPRead(json_t *arguments, uint32_t userId)
 /**
  * Walk SNMP MIB from given node
  */
-std::string F_SNMPWalk(json_t *arguments, uint32_t userId)
+AIToolResult F_SNMPWalk(json_t *arguments, uint32_t userId)
 {
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
    if (node == nullptr)
-      return std::string("Node not found");
+      return AIToolResult::error("Node not found");
    if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!node->isSNMPSupported())
-      return std::string("SNMP is not supported on the specified node");
+      return AIToolResult::error("SNMP is not supported on the specified node");
 
    const char *oidStr = json_object_get_string_utf8(arguments, "oid", nullptr);
    if ((oidStr == nullptr) || (oidStr[0] == 0))
-      return std::string("SNMP OID must be provided");
+      return AIToolResult::error("SNMP OID must be provided");
 
    SNMP_ObjectId oid = SNMP_ObjectId::parseA(oidStr);
    if (oid.length() == 0)
-      return std::string("Invalid SNMP OID format");
+      return AIToolResult::error("Invalid SNMP OID format");
 
    SNMP_Transport *transport = node->createSnmpTransport();
    if (transport == nullptr)
-      return std::string("Failed to create SNMP transport for the specified node");
+      return AIToolResult::error("Failed to create SNMP transport for the specified node");
 
    int32_t limit = json_object_get_int32(arguments, "limit", 1000);
    int32_t count = 0;
@@ -133,7 +133,7 @@ std::string F_SNMPWalk(json_t *arguments, uint32_t userId)
       error.append(SnmpGetErrorText(rc));
       char buffer[256];
       wchar_to_utf8(error.cstr(), -1, buffer, 256);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    return JsonToString(output);

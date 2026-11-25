@@ -26,28 +26,28 @@
 /**
  * Send notification
  */
-std::string F_SendNotification(json_t *arguments, uint32_t userId)
+AIToolResult F_SendNotification(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & SYSTEM_ACCESS_SEND_NOTIFICATION) == 0)
-      return std::string("User does not have rights to send notifications");
+      return AIToolResult::error("User does not have rights to send notifications");
 
    const char *channel = json_object_get_string_utf8(arguments, "channel", nullptr);
    if ((channel == nullptr) || (channel[0] == 0))
-      return std::string("Channel must be provided");
+      return AIToolResult::error("Channel must be provided");
 
    wchar_t *recipient = json_object_get_string_w(arguments, "recipient", nullptr);
    if ((recipient == nullptr) || (recipient[0] == 0))
    {
       MemFree(recipient);
-      return std::string("Recipient must be provided");
+      return AIToolResult::error("Recipient must be provided");
    }
 
    const char *subject = json_object_get_string_utf8(arguments, "subject", nullptr);
 
    const char *message = json_object_get_string_utf8(arguments, "message", nullptr);
    if ((message == nullptr) || (message[0] == 0))
-      return std::string("Message must be provided");
+      return AIToolResult::error("Message must be provided");
 
    SendNotification(String(channel, "utf-8"), recipient, String(subject, "utf-8"), String(message, "utf-8"), 0, 0, uuid::NULL_UUID);
    MemFree(recipient);
@@ -58,7 +58,7 @@ std::string F_SendNotification(json_t *arguments, uint32_t userId)
 /**
  * Get list of configured notification channels
  */
-std::string F_GetNotificationChannels(json_t *arguments, uint32_t userId)
+AIToolResult F_GetNotificationChannels(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    return JsonToString(GetNotificationChannels((systemAccess & SYSTEM_ACCESS_SERVER_CONFIG) == 0));
@@ -67,17 +67,17 @@ std::string F_GetNotificationChannels(json_t *arguments, uint32_t userId)
 /**
  * Clear queue of notification channel
  */
-std::string F_ClearNotificationChannelQueue(json_t *arguments, uint32_t userId)
+AIToolResult F_ClearNotificationChannelQueue(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & SYSTEM_ACCESS_SERVER_CONFIG) == 0)
-      return std::string("User does not have rights to clear notification channel queues");
+      return AIToolResult::error("User does not have rights to clear notification channel queues");
 
    const char *channel = json_object_get_string_utf8(arguments, "channel", nullptr);
    if ((channel == nullptr) || (channel[0] == 0))
-      return std::string("Channel must be provided");
+      return AIToolResult::error("Channel must be provided");
 
-   return ClearNotificationChannelQueue(String(channel, "utf-8")) ?
-            std::string("Notification channel queue cleared") :
-            std::string("Invalid notification channel name");
+   if (!ClearNotificationChannelQueue(String(channel, "utf-8")))
+      return AIToolResult::error("Invalid notification channel name");
+   return "Notification channel queue cleared";
 }

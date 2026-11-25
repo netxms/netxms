@@ -151,11 +151,11 @@ enum class AlarmAction
  * Operation is recorded as performed by the system (NetXMS server), same as alarm
  * actions initiated from NXSL scripts or event processing policy.
  */
-static std::string PerformAlarmAction(json_t *arguments, uint32_t userId, AlarmAction action)
+static AIToolResult PerformAlarmAction(json_t *arguments, uint32_t userId, AlarmAction action)
 {
    IntegerArray<uint32_t> ids;
    if (!ParseAlarmIdList(arguments, "alarms", ids))
-      return std::string("Error: one or more alarm IDs must be provided in \"alarms\" argument");
+      return AIToolResult::error("Error: one or more alarm IDs must be provided in \"alarms\" argument");
 
    bool sticky = json_object_get_boolean(arguments, "sticky", false);
    uint32_t acknowledgmentActionTime = 0;
@@ -225,13 +225,13 @@ static std::string PerformAlarmAction(json_t *arguments, uint32_t userId, AlarmA
    json_object_set_new(output, "succeeded", json_integer(succeeded));
    json_object_set_new(output, "failed", json_integer(failed));
    json_object_set_new(output, "results", results);
-   return JsonToString(output);
+   return AIToolResult(JsonToString(output), succeeded == 0);   // failed only if action was not performed on any alarm
 }
 
 /**
  * Get alarm list
  */
-std::string F_AlarmList(json_t *arguments, uint32_t userId)
+AIToolResult F_AlarmList(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccessRights = GetEffectiveSystemRights(userId);
 
@@ -240,7 +240,7 @@ std::string F_AlarmList(json_t *arguments, uint32_t userId)
    if (rootObject != nullptr)
    {
       if (!rootObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Access denied");
+         return AIToolResult::error("Access denied");
       rootId = rootObject->getId();
    }
 
@@ -306,15 +306,15 @@ std::string F_AlarmList(json_t *arguments, uint32_t userId)
 /**
  * Get detailed information about a single alarm, including comment history and related events.
  */
-std::string F_GetAlarmDetails(json_t *arguments, uint32_t userId)
+AIToolResult F_GetAlarmDetails(json_t *arguments, uint32_t userId)
 {
    uint32_t alarmId = json_object_get_uint32(arguments, "alarm", 0);
    if (alarmId == 0)
-      return std::string("Error: alarm ID must be provided");
+      return AIToolResult::error("Error: alarm ID must be provided");
 
    Alarm *alarm = FindAlarmById(alarmId);
    if (alarm == nullptr)
-      return std::string("Error: invalid alarm id (alarm is not currently active; terminated alarms are not retained in the active alarm list)");
+      return AIToolResult::error("Error: invalid alarm id (alarm is not currently active; terminated alarms are not retained in the active alarm list)");
 
    shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
    if ((object == nullptr) ||
@@ -322,7 +322,7 @@ std::string F_GetAlarmDetails(json_t *arguments, uint32_t userId)
        !alarm->checkCategoryAccess(userId, GetEffectiveSystemRights(userId)))
    {
       delete alarm;
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
    }
 
    wchar_t userNameBuffer[MAX_USER_NAME];
@@ -424,7 +424,7 @@ std::string F_GetAlarmDetails(json_t *arguments, uint32_t userId)
 /**
  * Acknowledge one or more alarms
  */
-std::string F_AcknowledgeAlarm(json_t *arguments, uint32_t userId)
+AIToolResult F_AcknowledgeAlarm(json_t *arguments, uint32_t userId)
 {
    return PerformAlarmAction(arguments, userId, AlarmAction::ACKNOWLEDGE);
 }
@@ -432,7 +432,7 @@ std::string F_AcknowledgeAlarm(json_t *arguments, uint32_t userId)
 /**
  * Resolve one or more alarms (alarm stays in the active list and is re-armed on the next matching event)
  */
-std::string F_ResolveAlarm(json_t *arguments, uint32_t userId)
+AIToolResult F_ResolveAlarm(json_t *arguments, uint32_t userId)
 {
    return PerformAlarmAction(arguments, userId, AlarmAction::RESOLVE);
 }
@@ -440,7 +440,7 @@ std::string F_ResolveAlarm(json_t *arguments, uint32_t userId)
 /**
  * Terminate one or more alarms (alarm is removed from the active list)
  */
-std::string F_TerminateAlarm(json_t *arguments, uint32_t userId)
+AIToolResult F_TerminateAlarm(json_t *arguments, uint32_t userId)
 {
    return PerformAlarmAction(arguments, userId, AlarmAction::TERMINATE);
 }
@@ -448,22 +448,22 @@ std::string F_TerminateAlarm(json_t *arguments, uint32_t userId)
 /**
  * Add operator comment to an alarm
  */
-std::string F_AddAlarmComment(json_t *arguments, uint32_t userId)
+AIToolResult F_AddAlarmComment(json_t *arguments, uint32_t userId)
 {
    uint32_t alarmId = json_object_get_uint32(arguments, "alarm", 0);
    if (alarmId == 0)
-      return std::string("Error: alarm ID must be provided");
+      return AIToolResult::error("Error: alarm ID must be provided");
 
    String text(json_object_get_string_utf8(arguments, "text", ""), "utf-8");
    if (text.isEmpty())
-      return std::string("Error: comment text must be provided");
+      return AIToolResult::error("Error: comment text must be provided");
 
    switch(CheckAlarmAccess(alarmId, userId, GetEffectiveSystemRights(userId), OBJECT_ACCESS_UPDATE_ALARMS))
    {
       case AlarmAccessResult::NOT_FOUND:
-         return std::string("Error: invalid alarm id (alarm is not currently active)");
+         return AIToolResult::error("Error: invalid alarm id (alarm is not currently active)");
       case AlarmAccessResult::DENIED:
-         return std::string("Access denied");
+         return AIToolResult::error("Access denied");
       default:
          break;
    }
@@ -483,5 +483,5 @@ std::string F_AddAlarmComment(json_t *arguments, uint32_t userId)
       json_object_set_new(output, "status", json_string("error"));
       json_object_set_new(output, "reason", json_string(AlarmOperationErrorText(rcc)));
    }
-   return JsonToString(output);
+   return AIToolResult(JsonToString(output), rcc != RCC_SUCCESS);
 }

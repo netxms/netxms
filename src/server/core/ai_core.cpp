@@ -54,10 +54,10 @@ std::unordered_set<std::string> GetRegisteredSkillNames();
 void CollectSkillTools(std::vector<shared_ptr<AITool>>& tools, const std::unordered_set<std::string>& disabledSkills);
 shared_ptr<AITool> FindSkillTool(const char *name);
 
-std::string F_AITaskList(json_t *arguments, uint32_t userId);
-std::string F_DeleteAITask(json_t *arguments, uint32_t userId);
-std::string F_ExecuteAgentTool(json_t *arguments, uint32_t userId);
-std::string F_GetNodeAITools(json_t *arguments, uint32_t userId);
+AIToolResult F_AITaskList(json_t *arguments, uint32_t userId);
+AIToolResult F_DeleteAITask(json_t *arguments, uint32_t userId);
+AIToolResult F_ExecuteAgentTool(json_t *arguments, uint32_t userId);
+AIToolResult F_GetNodeAITools(json_t *arguments, uint32_t userId);
 
 /**
  * Loaded server config
@@ -781,7 +781,7 @@ void NXCORE_EXPORTABLE RegisterAITool(const char *name, const char *description,
 /**
  * Handler for AI tool provided by NXSL script
  */
-static std::string ScriptToolHandler(const wchar_t *scriptName, bool objectContext, json_t *arguments, uint32_t userId)
+static AIToolResult ScriptToolHandler(const wchar_t *scriptName, bool objectContext, json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object;
    const char *objectIdStr = json_object_get_string_utf8(arguments, "object", "");
@@ -789,14 +789,14 @@ static std::string ScriptToolHandler(const wchar_t *scriptName, bool objectConte
       object = FindObjectByNameOrId(objectIdStr);
 
    if (objectContext && (object == nullptr))
-      return std::string("Error: invalid or missing object context; valid object must be provided for this tool");
+      return AIToolResult::error("Error: invalid or missing object context; valid object must be provided for this tool");
 
    if ((object != nullptr) && !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Error: access denied");
+      return AIToolResult::error("Error: access denied");
 
    ScriptVMHandle vm = CreateServerScriptVM(scriptName, object);
    if (!vm.isValid())
-      return std::string("Error: cannot create script VM");
+      return AIToolResult::error("Error: cannot create script VM");
    vm->setSecurityContext(new NXSL_UserSecurityContext(userId));
 
    ObjectRefArray<NXSL_Value> args(0, 16);
@@ -810,14 +810,15 @@ static std::string ScriptToolHandler(const wchar_t *scriptName, bool objectConte
          if (!ParseValueList(vm, &p, args, false))
          {
             MemFree(argListWStr);
-            return std::string("Error: cannot parse argument list");
+            return AIToolResult::error("Error: cannot parse argument list");
          }
          MemFree(argListWStr);
       }
    }
 
    std::string output;
-   if (vm->run(args))
+   bool success = vm->run(args);
+   if (success)
    {
       NXSL_Value *result = vm->getResult();
       if ((result != nullptr) && !result->isNull())
@@ -835,11 +836,12 @@ static std::string ScriptToolHandler(const wchar_t *scriptName, bool objectConte
    {
       output = "Script execution failed: ";
       char text[256];
-      wchar_to_utf8(vm->getErrorText(), -1, text, 256);
+      size_t bytes = wchar_to_utf8(vm->getErrorText(), -1, text, sizeof(text) - 1);
+      text[bytes] = 0;
       output.append(text);
    }
    vm.destroy();
-   return output;
+   return AIToolResult(output, !success);
 }
 
 /**
@@ -871,7 +873,7 @@ void RegisterAIToolScriptHandler(const NXSL_LibraryScript *script, bool runtimeC
 
    String scriptName(script->getName());
    RegisterAITool(toolName, description.c_str(), args,
-      [scriptName, objectContext] (json_t *arguments, uint32_t userId) -> std::string
+      [scriptName, objectContext] (json_t *arguments, uint32_t userId) -> AIToolResult
       {
          return ScriptToolHandler(scriptName, objectContext, arguments, userId);
       });
@@ -910,13 +912,13 @@ void UnregisterAIToolScriptHandler(const NXSL_LibraryScript *script)
 /**
  * Call registered tool
  */
-static std::string CallAITool(shared_ptr<AITool> function, const char *name, json_t *arguments, uint32_t userId)
+static AIToolResult CallAITool(shared_ptr<AITool> function, const char *name, json_t *arguments, uint32_t userId)
 {
    if (json_is_string(arguments))
    {
       nxlog_debug_tag(DEBUG_TAG, 7, L"AI tool \"%hs\" called with arguments %hs", name, json_string_value(arguments));
       arguments = json_loads(json_string_value(arguments), 0, nullptr);
-      std::string response = function->handler(arguments, userId);
+      AIToolResult response = function->handler(arguments, userId);
       json_decref(arguments);
       return response;
    }
@@ -934,10 +936,10 @@ static std::string CallAITool(shared_ptr<AITool> function, const char *name, jso
 /**
  * Call globally registered tool
  */
-static std::string CallGlobalAITool(const char *name, json_t *arguments, uint32_t userId)
+static AIToolResult CallGlobalAITool(const char *name, json_t *arguments, uint32_t userId)
 {
    if (IsAIToolDisabled(name))
-      return std::string("Error: tool is disabled by administrator");
+      return AIToolResult::error("Error: tool is disabled by administrator");
 
    s_globalToolsMutex.lock();
    auto it = s_globalTools.find(name);
@@ -948,7 +950,7 @@ static std::string CallGlobalAITool(const char *name, json_t *arguments, uint32_
       return CallAITool(function, name, arguments, userId);
    }
    s_globalToolsMutex.unlock();
-   return std::string("Error: tool not found");
+   return AIToolResult::error("Error: tool not found");
 }
 
 /**
@@ -1015,7 +1017,7 @@ json_t NXCORE_EXPORTABLE *GetMCPToolsAsJson()
 /**
  * Call AI tool by name on behalf of MCP client
  */
-std::string NXCORE_EXPORTABLE CallMCPTool(const char *name, json_t *arguments, uint32_t userId, bool *found)
+AIToolResult NXCORE_EXPORTABLE CallMCPTool(const char *name, json_t *arguments, uint32_t userId, bool *found)
 {
    shared_ptr<AITool> function;
    if (!IsAIToolDisabled(name))
@@ -1034,7 +1036,7 @@ std::string NXCORE_EXPORTABLE CallMCPTool(const char *name, json_t *arguments, u
    {
       if (found != nullptr)
          *found = false;
-      return std::string("Error: tool not found");
+      return AIToolResult::error("Error: tool not found");
    }
 
    if (found != nullptr)
@@ -1514,7 +1516,7 @@ void Chat::initializeTools()
       std::vector<AITool::Parameter>{
          {"name", "Name of the skill to load"}
       },
-      [this] (json_t *arguments, uint32_t userId) -> std::string
+      [this] (json_t *arguments, uint32_t userId) -> AIToolResult
       {
          return this->loadSkill(json_object_get_string_utf8(arguments, "name", ""));
       },
@@ -1532,10 +1534,10 @@ void Chat::initializeTools()
       std::vector<AITool::Parameter>{
          {"workers", "List of workers to run; each element is an object with 'task' and optional 'skill'", "array", "object"}
       },
-      [this] (json_t *arguments, uint32_t userId) -> std::string
+      [this] (json_t *arguments, uint32_t userId) -> AIToolResult
       {
          json_t *workers = json_object_get_array_ex(arguments, "workers");
-         std::string result = this->runWorkers(workers);
+         AIToolResult result = this->runWorkers(workers);
          json_decref(workers);
          return result;
       },
@@ -1548,7 +1550,7 @@ void Chat::initializeTools()
       "Use this to determine the appropriate approval workflow: interactive sessions should use ask-user-confirmation, "
       "background sessions should use create-approval-request. The ask-user-* tools are not available in background sessions.",
       std::vector<AITool::Parameter>{},
-      [this] (json_t *arguments, uint32_t userId) -> std::string
+      [this] (json_t *arguments, uint32_t userId) -> AIToolResult
       {
          json_t *result = json_object();
          json_object_set_new(result, "session_type", json_string(m_isInteractive ? "interactive" : "background"));
@@ -1571,11 +1573,11 @@ void Chat::initializeTools()
             {"action", "Optional: The specific action to be approved (command, script code, configuration change, etc.). Do not add any additional text, just the action itself."},
             {"confirmation_type", "Type of confirmation: 'approve_reject', 'yes_no', or 'confirm_cancel'. Defaults to 'approve_reject'"}
          },
-         [this] (json_t *arguments, uint32_t userId) -> std::string
+         [this] (json_t *arguments, uint32_t userId) -> AIToolResult
          {
             const char *text = json_object_get_string_utf8(arguments, "intent", "");
             if (*text == 0)
-               return R"({"error": "Intent is required"})";
+               return AIToolResult::error(R"({"error": "Intent is required"})");
 
             const char *context = json_object_get_string_utf8(arguments, "action", "");
             const char *typeStr = json_object_get_string_utf8(arguments, "confirmation_type", "approve_reject");
@@ -1600,15 +1602,15 @@ void Chat::initializeTools()
             {"context", "Optional additional context for the question"},
             {"options", "Array of option strings for the user to choose from", "array", "string"}
          },
-         [this] (json_t *arguments, uint32_t userId) -> std::string
+         [this] (json_t *arguments, uint32_t userId) -> AIToolResult
          {
             const char *text = json_object_get_string_utf8(arguments, "question", "");
             if (*text == 0)
-               return R"({"error": "Question is required"})";
+               return AIToolResult::error(R"({"error": "Question is required"})");
 
             json_t *optionsArray = json_object_get(arguments, "options");
             if (!json_is_array(optionsArray) || json_array_size(optionsArray) == 0)
-               return R"({"error": "Options array is required and must not be empty"})";
+               return AIToolResult::error(R"({"error": "Options array is required and must not be empty"})");
 
             StringList options;
             size_t i;
@@ -1628,7 +1630,7 @@ void Chat::initializeTools()
             }
 
             if (options.isEmpty())
-               return R"({"error": "Options array must contain at least one string"})";
+               return AIToolResult::error(R"({"error": "Options array must contain at least one string"})");
 
             const char *context = json_object_get_string_utf8(arguments, "context", "");
             int result = this->askMultipleChoice(text, context, options);
@@ -1984,16 +1986,19 @@ char *Chat::sendRequest(const char *prompt, const char *context)
                   {
                      SendToolCallNotification(m_userId, m_id, name, getContextUsage());
                   }
-                  std::string functionResult = callTool(name, json_object_get(function, "arguments"));
-                  if (!functionResult.empty())
+                  AIToolResult toolResult = callTool(name, json_object_get(function, "arguments"));
+                  if (!toolResult.text.empty())
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 5, L"LLM tool \"%hs\" executed, result length=%d", name, static_cast<int>(functionResult.length()));
-                     nxlog_debug_tag(DEBUG_TAG, 7, L"Tool result: %hs", functionResult.c_str());
+                     nxlog_debug_tag(DEBUG_TAG, 5, L"LLM tool \"%hs\" %s, result length=%d", name,
+                        toolResult.failed ? L"failed" : L"executed", static_cast<int>(toolResult.text.length()));
+                     nxlog_debug_tag(DEBUG_TAG, 7, L"Tool result: %hs", toolResult.text.c_str());
 
                      json_t *functionMessage = json_object();
                      json_object_set_new(functionMessage, "role", json_string("tool"));
                      json_object_set_new(functionMessage, "name", json_string(name));
-                     json_object_set_new(functionMessage, "content", json_string(functionResult.c_str()));
+                     json_object_set_new(functionMessage, "content", json_string(toolResult.text.c_str()));
+                     if (toolResult.failed)
+                        json_object_set_new(functionMessage, "is_error", json_true());   // internal attribute, consumed or removed by provider
                      if (json_is_string(toolCallId))
                      {
                         json_object_set(functionMessage, "tool_call_id", toolCallId);
@@ -2152,10 +2157,10 @@ char *Chat::takeAsyncErrorMessage()
 /**
  * Call tool from chat context
  */
-std::string Chat::callTool(const char *name, json_t *arguments)
+AIToolResult Chat::callTool(const char *name, json_t *arguments)
 {
    if (IsAIToolDisabled(name))
-      return std::string("Error: tool is disabled by administrator");
+      return AIToolResult::error("Error: tool is disabled by administrator");
 
    auto it = m_tools.find(name);
    if (it != m_tools.end())
@@ -2164,7 +2169,7 @@ std::string Chat::callTool(const char *name, json_t *arguments)
       m_currentTool = function->name.c_str();
       return CallAITool(function, name, arguments, m_userId);
    }
-   return std::string("Error: tool not found");
+   return AIToolResult::error("Error: tool not found");
 }
 
 /**
@@ -2601,11 +2606,11 @@ void NXCORE_EXPORTABLE AddAIAssistantPromptFromFile(const wchar_t *fileName)
 /**
  * Write log message
  */
-static std::string F_WriteLogMessage(json_t *arguments, uint32_t userId)
+static AIToolResult F_WriteLogMessage(json_t *arguments, uint32_t userId)
 {
    const char *message = json_object_get_string_utf8(arguments, "message", nullptr);
    if ((message == nullptr) || (message[0] == 0))
-      return std::string("Log message must be provided");
+      return AIToolResult::error("Log message must be provided");
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"AI Assistant: %hs", message);
    return std::string("Log message written");
@@ -2738,12 +2743,12 @@ static void IncidentAIAnalysisTask(uint32_t incidentId, int depth, bool autoAssi
          // Query AI for assignee suggestion
          json_t *args = json_object();
          json_object_set_new(args, "incident_id", json_integer(incidentId));
-         std::string suggestion = CallGlobalAITool("suggest-incident-assignee", args, 0);
+         AIToolResult suggestion = CallGlobalAITool("suggest-incident-assignee", args, 0);
          json_decref(args);
 
          // Parse the suggestion response
          json_error_t error;
-         json_t *suggestionJson = json_loads(suggestion.c_str(), 0, &error);
+         json_t *suggestionJson = suggestion.failed ? nullptr : json_loads(suggestion.text.c_str(), 0, &error);
          if (suggestionJson != nullptr)
          {
             uint32_t suggestedUserId = json_object_get_uint32(suggestionJson, "user_id", 0);
@@ -2910,7 +2915,7 @@ void ShowAISlots(ServerConsole *console)
 /**
  * Handler for tool get-ai-provider-stats
  */
-static std::string F_GetAIProviderStats(json_t *arguments, uint32_t userId)
+static AIToolResult F_GetAIProviderStats(json_t *arguments, uint32_t userId)
 {
    json_t *output = json_array();
    ObjectArray<LLMProvider> seen(8, 8, Ownership::False);
@@ -3005,7 +3010,7 @@ bool InitAIAssistant()
       "get-available-skills",
       "Get list of available AI assistant skills that can be loaded to extend capabilities. Each skill provides specialized tools for specific domains like data collection, event processing, inventory management, etc.",
       {},
-      [] (json_t *arguments, uint32_t userId) -> std::string
+      [] (json_t *arguments, uint32_t userId) -> AIToolResult
       {
          return GetRegisteredSkills();
       }, AI_TOOL_READ_ONLY | AI_TOOL_NOT_FOR_MCP);
@@ -3024,14 +3029,14 @@ bool InitAIAssistant()
           { "prompt", "Initial prompt for the task" },
           { "delay", "Optional delay in seconds before first execution", "integer" }
       },
-      [] (json_t *arguments, uint32_t userId) -> std::string
+      [] (json_t *arguments, uint32_t userId) -> AIToolResult
       {
          const char *description = json_object_get_string_utf8(arguments, "description", nullptr);
          const char *prompt = json_object_get_string_utf8(arguments, "prompt", nullptr);
          if ((description == nullptr) || (description[0] == 0))
-            return std::string("Error: task description must be provided");
+            return AIToolResult::error("Error: task description must be provided");
          if ((prompt == nullptr) || (prompt[0] == 0))
-            return std::string("Error: task prompt must be provided");
+            return AIToolResult::error("Error: task prompt must be provided");
 
          uint32_t delay = json_object_get_uint32(arguments, "delay", 0);
          time_t startTime = (delay > 0) ? time(nullptr) + delay : 0;
@@ -3056,7 +3061,7 @@ bool InitAIAssistant()
       "netxms-version",
       "Get running version of NetXMS server.",
       {},
-      [] (json_t *arguments, uint32_t userId) -> std::string
+      [] (json_t *arguments, uint32_t userId) -> AIToolResult
       {
          return std::string("Running NetXMS server version is " NETXMS_VERSION_STRING_A);
       }, AI_TOOL_READ_ONLY);

@@ -150,6 +150,9 @@ protected:
    // Build base request with model and options
    json_t *buildBaseRequest();
 
+   // Build message list for OpenAI-compatible chat API: system prompt prepended, internal attributes removed
+   static json_t *buildMessageList(const char *systemPrompt, json_t *messages);
+
    // Build HTTP headers for the request (can be overridden by subclasses)
    virtual struct curl_slist *buildHttpHeaders();
 

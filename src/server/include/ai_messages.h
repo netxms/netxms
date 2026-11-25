@@ -23,6 +23,8 @@
 #ifndef _ai_messages_h_
 #define _ai_messages_h_
 
+#include <nxai.h>
+
 /**
  * AI message types
  */
@@ -207,11 +209,11 @@ void NotifyAIMessageRecipients(uint32_t messageId, bool isNew);
 /**
  * Create AI message (AI tool)
  */
-std::string F_CreateAIMessage(json_t *arguments, uint32_t userId);
+AIToolResult F_CreateAIMessage(json_t *arguments, uint32_t userId);
 
 /**
  * Create approval request AI message (AI tool)
  */
-std::string F_CreateApprovalRequest(json_t *arguments, uint32_t userId);
+AIToolResult F_CreateApprovalRequest(json_t *arguments, uint32_t userId);
 
 #endif

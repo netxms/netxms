@@ -125,12 +125,12 @@ static void AddConfigToJson(json_t *json, const char *fieldName, const BYTE *con
 /**
  * Get device backup registration status and last job info
  */
-std::string F_GetBackupStatus(json_t *arguments, uint32_t userId)
+AIToolResult F_GetBackupStatus(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ, &error);
    if (node == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    bool registered = DevBackupIsDeviceRegistered(*node);
 
@@ -164,19 +164,19 @@ std::string F_GetBackupStatus(json_t *arguments, uint32_t userId)
 /**
  * Get list of backup metadata for a node
  */
-std::string F_GetBackupList(json_t *arguments, uint32_t userId)
+AIToolResult F_GetBackupList(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ, &error);
    if (node == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    auto result = DevBackupGetBackupList(*node);
    if (result.first != DeviceBackupApiStatus::SUCCESS)
    {
       char msg[256];
       wchar_to_utf8(GetDeviceBackupApiErrorMessage(result.first), -1, msg, 256);
-      return std::string(msg);
+      return AIToolResult::error(msg);
    }
 
    json_t *output = json_array();
@@ -202,12 +202,12 @@ std::string F_GetBackupList(json_t *arguments, uint32_t userId)
 /**
  * Get backup content for a specific backup or latest
  */
-std::string F_GetBackupContent(json_t *arguments, uint32_t userId)
+AIToolResult F_GetBackupContent(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ_DEVICE_CONFIG, &error);
    if (node == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    int64_t backupId = json_object_get_int64(arguments, "backupId", 0);
 
@@ -221,7 +221,7 @@ std::string F_GetBackupContent(json_t *arguments, uint32_t userId)
    {
       char msg[256];
       wchar_to_utf8(GetDeviceBackupApiErrorMessage(result.first), -1, msg, 256);
-      return std::string(msg);
+      return AIToolResult::error(msg);
    }
 
    const BackupData& b = result.second;
@@ -238,22 +238,22 @@ std::string F_GetBackupContent(json_t *arguments, uint32_t userId)
 /**
  * Start immediate device configuration backup job
  */
-std::string F_StartBackup(json_t *arguments, uint32_t userId)
+AIToolResult F_StartBackup(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_CONTROL, &error);
    if (node == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    if (!DevBackupIsDeviceRegistered(*node))
-      return std::string("Device is not registered for configuration backup");
+      return AIToolResult::error("Device is not registered for configuration backup");
 
    DeviceBackupApiStatus status = DevBackupStartJob(*node);
    if (status != DeviceBackupApiStatus::SUCCESS)
    {
       char msg[256];
       wchar_to_utf8(GetDeviceBackupApiErrorMessage(status), -1, msg, 256);
-      return std::string(msg);
+      return AIToolResult::error(msg);
    }
 
    return std::string("Configuration backup job started successfully");
@@ -262,17 +262,17 @@ std::string F_StartBackup(json_t *arguments, uint32_t userId)
 /**
  * Compare two backup configs for diff analysis
  */
-std::string F_CompareBackups(json_t *arguments, uint32_t userId)
+AIToolResult F_CompareBackups(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ_DEVICE_CONFIG, &error);
    if (node == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    int64_t backupId1 = json_object_get_int64(arguments, "backupId1", 0);
    int64_t backupId2 = json_object_get_int64(arguments, "backupId2", 0);
    if (backupId1 <= 0 || backupId2 <= 0)
-      return std::string("Both backupId1 and backupId2 must be provided");
+      return AIToolResult::error("Both backupId1 and backupId2 must be provided");
 
    const char *configType = json_object_get_string_utf8(arguments, "configType", "running");
 
@@ -283,7 +283,7 @@ std::string F_CompareBackups(json_t *arguments, uint32_t userId)
       snprintf(msg, 256, "Failed to get backup %lld: ", static_cast<long long>(backupId1));
       char errMsg[256];
       wchar_to_utf8(GetDeviceBackupApiErrorMessage(result1.first), -1, errMsg, 256);
-      return std::string(msg) + errMsg;
+      return AIToolResult::error(std::string(msg) + errMsg);
    }
 
    auto result2 = DevBackupGetBackupById(*node, backupId2);
@@ -293,7 +293,7 @@ std::string F_CompareBackups(json_t *arguments, uint32_t userId)
       snprintf(msg, 256, "Failed to get backup %lld: ", static_cast<long long>(backupId2));
       char errMsg[256];
       wchar_to_utf8(GetDeviceBackupApiErrorMessage(result2.first), -1, errMsg, 256);
-      return std::string(msg) + errMsg;
+      return AIToolResult::error(std::string(msg) + errMsg);
    }
 
    bool useStartup = (strcmp(configType, "startup") == 0);

@@ -55,23 +55,7 @@ json_t *OllamaProvider::chat(const char *systemPrompt, json_t *messages, json_t 
    json_object_set_new(options, "num_ctx", json_integer(getContextWindow()));
    json_object_set_new(request, "options", options);
 
-   // Build messages array with system prompt prepended
-   json_t *fullMessages = json_array();
-   if (systemPrompt != nullptr && systemPrompt[0] != 0)
-   {
-      json_t *sysMsg = json_object();
-      json_object_set_new(sysMsg, "role", json_string("system"));
-      json_object_set_new(sysMsg, "content", json_string(systemPrompt));
-      json_array_append_new(fullMessages, sysMsg);
-   }
-   size_t i;
-   json_t *msg;
-   json_array_foreach(messages, i, msg)
-   {
-      json_array_append(fullMessages, msg);
-   }
-
-   json_object_set_new(request, "messages", fullMessages);
+   json_object_set_new(request, "messages", buildMessageList(systemPrompt, messages));
    if (tools != nullptr && json_array_size(tools) > 0)
    {
       json_object_set(request, "tools", tools);

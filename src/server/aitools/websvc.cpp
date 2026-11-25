@@ -289,10 +289,10 @@ static void AddDocumentToJson(json_t *output, const char *document)
 /**
  * Get list of configured web service definitions
  */
-std::string F_ListWebServices(json_t *arguments, uint32_t userId)
+AIToolResult F_ListWebServices(json_t *arguments, uint32_t userId)
 {
    if ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS) == 0)
-      return std::string("User does not have rights to read web service definitions");
+      return AIToolResult::error("User does not have rights to read web service definitions");
 
    const char *filter = json_object_get_string_utf8(arguments, "filter", nullptr);
 
@@ -321,14 +321,14 @@ std::string F_ListWebServices(json_t *arguments, uint32_t userId)
 /**
  * Get single web service definition
  */
-std::string F_GetWebService(json_t *arguments, uint32_t userId)
+AIToolResult F_GetWebService(json_t *arguments, uint32_t userId)
 {
    if ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS) == 0)
-      return std::string("User does not have rights to read web service definitions");
+      return AIToolResult::error("User does not have rights to read web service definitions");
 
    shared_ptr<WebServiceDefinition> definition = FindDefinition(arguments, "service");
    if (definition == nullptr)
-      return std::string("Web service definition not found");
+      return AIToolResult::error("Web service definition not found");
 
    json_t *output = definition->toJson();
    SanitizeDefinitionJson(output);
@@ -344,21 +344,21 @@ std::string F_GetWebService(json_t *arguments, uint32_t userId)
 /**
  * Query web service and return raw response document
  */
-std::string F_QueryWebService(json_t *arguments, uint32_t userId)
+AIToolResult F_QueryWebService(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<DataCollectionTarget> target = FindAndValidateTarget(arguments, userId, OBJECT_ACCESS_QUERY_WEBSVC, &error);
    if (target == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    shared_ptr<WebServiceDefinition> definition = FindDefinition(arguments, "service");
    if (definition == nullptr)
-      return std::string("Web service definition not found");
+      return AIToolResult::error("Web service definition not found");
 
    shared_ptr<Node> proxyNode;
    shared_ptr<AgentConnectionEx> conn = AcquireProxyConnection(target.get(), &proxyNode, &error);
    if (conn == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    StringList args;
    ReadMacroArguments(arguments, &args);
@@ -398,22 +398,22 @@ std::string F_QueryWebService(json_t *arguments, uint32_t userId)
 /**
  * Resolve data extraction path within web service response
  */
-std::string F_TestWebServicePath(json_t *arguments, uint32_t userId)
+AIToolResult F_TestWebServicePath(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<DataCollectionTarget> target = FindAndValidateTarget(arguments, userId, OBJECT_ACCESS_QUERY_WEBSVC, &error);
    if (target == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    shared_ptr<WebServiceDefinition> definition = FindDefinition(arguments, "service");
    if (definition == nullptr)
-      return std::string("Web service definition not found");
+      return AIToolResult::error("Web service definition not found");
 
    wchar_t *path = json_object_get_string_w(arguments, "path", nullptr);
    if ((path == nullptr) || (*path == 0))
    {
       MemFree(path);
-      return std::string("Data extraction path must be provided");
+      return AIToolResult::error("Data extraction path must be provided");
    }
 
    const char *type = json_object_get_string_utf8(arguments, "type", "value");
@@ -421,7 +421,7 @@ std::string F_TestWebServicePath(json_t *arguments, uint32_t userId)
    if (!listRequest && stricmp(type, "value"))
    {
       MemFree(path);
-      return std::string("Invalid request type specified. Supported: value, list");
+      return AIToolResult::error("Invalid request type specified. Supported: value, list");
    }
 
    shared_ptr<Node> proxyNode;
@@ -429,7 +429,7 @@ std::string F_TestWebServicePath(json_t *arguments, uint32_t userId)
    if (conn == nullptr)
    {
       MemFree(path);
-      return error;
+      return AIToolResult::error(error);
    }
 
    StringList args;
@@ -563,19 +563,19 @@ static std::string ReadDefinitionProperties(json_t *arguments, json_t *config)
 /**
  * Create or update web service definition. Definition ID 0 means creation of new definition.
  */
-static std::string ModifyDefinition(json_t *config, uint32_t definitionId, uint32_t userId)
+static AIToolResult ModifyDefinition(json_t *config, uint32_t definitionId, uint32_t userId)
 {
    wchar_t *name = json_object_get_string_w(config, "name", L"");
    if (*name == 0)
    {
       MemFree(name);
-      return std::string("Web service definition name must be provided and cannot be empty");
+      return AIToolResult::error("Web service definition name must be provided and cannot be empty");
    }
 
    shared_ptr<WebServiceDefinition> existing = FindWebServiceDefinition(name);
    MemFree(name);
    if ((existing != nullptr) && (existing->getId() != definitionId))
-      return std::string("Web service definition with this name already exists");
+      return AIToolResult::error("Web service definition with this name already exists");
 
    auto definition = make_shared<WebServiceDefinition>(config, definitionId);
    uint32_t rcc = ModifyWebServiceDefinition(definition);
@@ -584,7 +584,7 @@ static std::string ModifyDefinition(json_t *config, uint32_t definitionId, uint3
       WriteAuditLog(AUDIT_SYSCFG, false, userId, nullptr, 0, 0, L"AI assistant failed to modify web service definition \"%s\"", definition->getName());
       char message[256];
       snprintf(message, 256, "Cannot save web service definition (error %u)", rcc);
-      return std::string(message);
+      return AIToolResult::error(message);
    }
 
    WriteAuditLog(AUDIT_SYSCFG, true, userId, nullptr, 0, 0, L"AI assistant %s web service definition \"%s\" [%u]",
@@ -598,10 +598,10 @@ static std::string ModifyDefinition(json_t *config, uint32_t definitionId, uint3
 /**
  * Create new web service definition
  */
-std::string F_CreateWebService(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateWebService(json_t *arguments, uint32_t userId)
 {
    if ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS) == 0)
-      return std::string("User does not have rights to configure web service definitions");
+      return AIToolResult::error("User does not have rights to configure web service definitions");
 
    json_t *config = json_object();
    json_object_set_new(config, "requestTimeout", json_integer(30000));
@@ -609,16 +609,16 @@ std::string F_CreateWebService(json_t *arguments, uint32_t userId)
    if (!error.empty())
    {
       json_decref(config);
-      return error;
+      return AIToolResult::error(error);
    }
 
    if (json_object_get_string_utf8(config, "url", nullptr) == nullptr)
    {
       json_decref(config);
-      return std::string("Web service URL must be provided");
+      return AIToolResult::error("Web service URL must be provided");
    }
 
-   std::string result = ModifyDefinition(config, 0, userId);
+   AIToolResult result = ModifyDefinition(config, 0, userId);
    json_decref(config);
    return result;
 }
@@ -626,24 +626,24 @@ std::string F_CreateWebService(json_t *arguments, uint32_t userId)
 /**
  * Update existing web service definition
  */
-std::string F_UpdateWebService(json_t *arguments, uint32_t userId)
+AIToolResult F_UpdateWebService(json_t *arguments, uint32_t userId)
 {
    if ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS) == 0)
-      return std::string("User does not have rights to configure web service definitions");
+      return AIToolResult::error("User does not have rights to configure web service definitions");
 
    shared_ptr<WebServiceDefinition> definition = FindDefinition(arguments, "service");
    if (definition == nullptr)
-      return std::string("Web service definition not found");
+      return AIToolResult::error("Web service definition not found");
 
    json_t *config = definition->toJson();
    std::string error = ReadDefinitionProperties(arguments, config);
    if (!error.empty())
    {
       json_decref(config);
-      return error;
+      return AIToolResult::error(error);
    }
 
-   std::string result = ModifyDefinition(config, definition->getId(), userId);
+   AIToolResult result = ModifyDefinition(config, definition->getId(), userId);
    json_decref(config);
    return result;
 }

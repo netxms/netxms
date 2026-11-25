@@ -70,7 +70,7 @@ static json_t *BuildObjectSummary(const NetObj& object)
 /**
  * Force immediate poll on a monitored object.
  */
-std::string F_ForcePoll(json_t *arguments, uint32_t userId)
+AIToolResult F_ForcePoll(json_t *arguments, uint32_t userId)
 {
    const char *pollTypeStr = json_object_get_string_utf8(arguments, "pollType", nullptr);
    if ((pollTypeStr == nullptr) || (pollTypeStr[0] == 0))
@@ -78,7 +78,7 @@ std::string F_ForcePoll(json_t *arguments, uint32_t userId)
       json_t *response = json_object();
       json_object_set_new(response, "error", json_string("pollType is required"));
       json_object_set_new(response, "validTypes", GetPollTypeNames());
-      return JsonToString(response);
+      return AIToolResult::error(JsonToString(response));
    }
 
    int pollType = PollTypeFromName(pollTypeStr);
@@ -89,16 +89,16 @@ std::string F_ForcePoll(json_t *arguments, uint32_t userId)
       snprintf(errorMsg, sizeof(errorMsg), "Unknown poll type '%s'", pollTypeStr);
       json_object_set_new(response, "error", json_string(errorMsg));
       json_object_set_new(response, "validTypes", GetPollTypeNames());
-      return JsonToString(response);
+      return AIToolResult::error(JsonToString(response));
    }
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
 
    uint32_t rcc = ValidateForcedPoll(*object, pollType, userId);
    if (rcc == RCC_ACCESS_DENIED)
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
    if (rcc != RCC_SUCCESS)
    {
       char nameUtf8[256];
@@ -107,7 +107,7 @@ std::string F_ForcePoll(json_t *arguments, uint32_t userId)
       char errorMsg[512];
       snprintf(errorMsg, sizeof(errorMsg), "Poll type '%s' is not applicable to %s '%s'",
                pollTypeStr, object->getObjectClassNameA(), nameUtf8);
-      return std::string(errorMsg);
+      return AIToolResult::error(errorMsg);
    }
 
    bool wait = json_object_get_boolean(arguments, "wait", false);

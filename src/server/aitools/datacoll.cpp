@@ -80,25 +80,25 @@ static bool ParseAnomalyDetectionMode(const char *mode, uint32_t *flags)
 /**
  * Get detailed configuration of a single metric
  */
-std::string F_GetMetricDetails(json_t *arguments, uint32_t userId)
+AIToolResult F_GetMetricDetails(json_t *arguments, uint32_t userId)
 {
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
-      return std::string("Metric name or ID must be provided");
+      return AIToolResult::error("Metric name or ID must be provided");
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-      return std::string("Metric not found");
+      return AIToolResult::error("Metric not found");
 
    json_t *output = json_object();
    json_object_set_new(output, "id", json_integer(dco->getId()));
@@ -226,16 +226,16 @@ std::string F_GetMetricDetails(json_t *arguments, uint32_t userId)
 /**
  * Get data collection items and their current values for given object
  */
-std::string F_GetMetrics(json_t *arguments, uint32_t userId)
+AIToolResult F_GetMetrics(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    String filter(json_object_get_string_utf8(arguments, "filter", ""), "utf-8");
    std::function<bool(DCObject*)> dciFilter;
@@ -250,33 +250,33 @@ std::string F_GetMetrics(json_t *arguments, uint32_t userId)
 /**
  * Get historical data for data collection item
  */
-std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
+AIToolResult F_GetHistoricalData(json_t *arguments, uint32_t userId)
 {
    String metricName(json_object_get_string_utf8(arguments, "metric", nullptr), "utf-8");
    if (metricName.isEmpty())
-      return std::string("Metric name must be provided");
+      return AIToolResult::error("Metric name must be provided");
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
 
    // Find the DCI by name
    shared_ptr<DCObject> dci = target->getDCObjectByName(metricName, userId);
    if (dci == nullptr)
-      return std::string("Metric not found");
+      return AIToolResult::error("Metric not found");
 
    if (dci->getType() != DCO_TYPE_ITEM)
    {
       char buffer[256];
       snprintf(buffer, 256, "Metric \"%ls\" is not a data collection item", metricName.cstr());
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    // Parse time range
@@ -291,7 +291,7 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
       {
          char buffer[256];
          snprintf(buffer, 256, "Invalid time format: \"%s\"", timeToStr);
-         return std::string(buffer);
+         return AIToolResult::error(buffer);
       }
    }
    else
@@ -304,7 +304,7 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
    {
       char buffer[256];
       snprintf(buffer, 256, "Invalid time format: \"%s\"", timeFromStr);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    // Parse maxDataPoints (default 500 for AI requests)
@@ -404,7 +404,7 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
    DBConnectionPoolReleaseConnection(hdb);
 
    if (output == nullptr)
-      return std::string("Failed to retrieve historical data");
+      return AIToolResult::error("Failed to retrieve historical data");
 
    return JsonToString(output);
 }
@@ -412,21 +412,21 @@ std::string F_GetHistoricalData(json_t *arguments, uint32_t userId)
 /**
  * Create metric
  */
-std::string F_CreateMetric(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateMetric(json_t *arguments, uint32_t userId)
 {
    String metricName(json_object_get_string_utf8(arguments, "metric", nullptr), "utf-8");
    if (metricName.isEmpty())
-      return std::string("Metric name must be provided");
+      return AIToolResult::error("Metric name must be provided");
 
    String metricDescription(json_object_get_string_utf8(arguments, "description", json_object_get_string_utf8(arguments, "metric", nullptr)), "utf-8");
 
    int origin = CodeFromText(String(json_object_get_string_utf8(arguments, "origin", "agent"), "utf-8"), g_dciOriginNames, -1);
    if (origin < 0)
-      return std::string("Invalid origin specified. Supported: agent, snmp, script, ssh, push, websvc, driver, mqtt, modbus, internal, winperf, smclp, ethernetip, cloud, otlp, trafficobserver, netconf, computed");
+      return AIToolResult::error("Invalid origin specified. Supported: agent, snmp, script, ssh, push, websvc, driver, mqtt, modbus, internal, winperf, smclp, ethernetip, cloud, otlp, trafficobserver, netconf, computed");
 
    int dataType = CodeFromText(String(json_object_get_string_utf8(arguments, "dataType", "string"), "utf-8"), g_dciDataTypeNames, -1);
    if (dataType < 0)
-      return std::string("Invalid data type specified. Supported: int32, uint32, int64, uint64, counter32, counter64, float, string");
+      return AIToolResult::error("Invalid data type specified. Supported: int32, uint32, int64, uint64, counter32, counter64, float, string");
 
    // Parse new optional parameters
    json_t *pollingIntervalJson = json_object_get(arguments, "pollingInterval");
@@ -462,7 +462,7 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
 
    int deltaCalculation = CodeFromText(String(json_object_get_string_utf8(arguments, "deltaCalculation", "none"), "utf-8"), g_dciDeltaCalculationNames, -1);
    if (deltaCalculation < 0)
-      return std::string("Invalid delta calculation specified. Supported: none, simple, averagePerSecond, averagePerMinute");
+      return AIToolResult::error("Invalid delta calculation specified. Supported: none, simple, averagePerSecond, averagePerMinute");
 
    int sampleCount = json_object_get_int32(arguments, "sampleCount", 1);
    int multiplier = json_object_get_int32(arguments, "multiplier", 0);
@@ -476,23 +476,23 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
    else if (!stricmp(statusStr, "disabled"))
       status = ITEM_STATUS_DISABLED;
    else
-      return std::string("Invalid status specified");
+      return AIToolResult::error("Invalid status specified");
 
    uint32_t anomalyFlags = 0;
    if (!ParseAnomalyDetectionMode(json_object_get_string_utf8(arguments, "anomalyDetection", "none"), &anomalyFlags))
-      return std::string(s_invalidAnomalyDetectionMode);
+      return AIToolResult::error(s_invalidAnomalyDetectionMode);
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), metricName, origin, dataType,
          pollingScheduleType, (pollingInterval[0] != 0) ? pollingInterval : nullptr,
@@ -529,7 +529,7 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
    {
       shared_ptr<NetObj> sourceNode = FindObjectByNameOrId(arguments, "sourceNode");
       if (sourceNode == nullptr)
-         { delete dci; return std::string("Source node not found"); }
+         { delete dci; return AIToolResult::error("Source node not found"); }
       dci->setSourceNode(sourceNode->getId());
    }
 
@@ -548,7 +548,7 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
    if (!static_cast<DataCollectionOwner&>(*object).addDCObject(dci, false, true))
    {
       delete dci;
-      return std::string("Failed to create data collection item");
+      return AIToolResult::error("Failed to create data collection item");
    }
 
    char buffer[32];
@@ -558,31 +558,31 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
 /**
  * Edit metric
  */
-std::string F_EditMetric(json_t *arguments, uint32_t userId)
+AIToolResult F_EditMetric(json_t *arguments, uint32_t userId)
 {
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
-      return std::string("Metric name or ID must be provided");
+      return AIToolResult::error("Metric name or ID must be provided");
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-      return std::string("Metric not found");
+      return AIToolResult::error("Metric not found");
 
    if (dco->getType() != DCO_TYPE_ITEM)
-      return std::string("Object is not a data collection item");
+      return AIToolResult::error("Object is not a data collection item");
 
    DCItem *dci = static_cast<DCItem*>(dco.get());
 
@@ -602,7 +602,7 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
       }
       else
       {
-         return std::string("Invalid polling interval value");
+         return AIToolResult::error("Invalid polling interval value");
       }
       dci->setPollingIntervalType(DC_POLLING_SCHEDULE_CUSTOM);
       dci->setPollingInterval(interval);
@@ -623,7 +623,7 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
       }
       else
       {
-         return std::string("Invalid retention time value");
+         return AIToolResult::error("Invalid retention time value");
       }
       dci->setRetentionType(DC_RETENTION_CUSTOM);
       dci->setRetention(retention);
@@ -638,7 +638,7 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
       else if (!stricmp(statusStr, "disabled"))
          status = ITEM_STATUS_DISABLED;
       else
-         return std::string("Invalid status specified");
+         return AIToolResult::error("Invalid status specified");
       dci->setStatus(status, true, true);
    }
 
@@ -662,7 +662,7 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
    {
       int origin = CodeFromText(String(originStr, "utf-8"), g_dciOriginNames, -1);
       if (origin < 0)
-         return std::string("Invalid origin specified. Supported: agent, snmp, script, ssh, push, websvc, driver, mqtt, modbus, internal, winperf, smclp, ethernetip, cloud, otlp, trafficobserver, netconf, computed");
+         return AIToolResult::error("Invalid origin specified. Supported: agent, snmp, script, ssh, push, websvc, driver, mqtt, modbus, internal, winperf, smclp, ethernetip, cloud, otlp, trafficobserver, netconf, computed");
       dci->setSource(static_cast<BYTE>(origin));
    }
 
@@ -672,7 +672,7 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
    {
       int dataType = CodeFromText(String(dataTypeStr, "utf-8"), g_dciDataTypeNames, -1);
       if (dataType < 0)
-         return std::string("Invalid data type specified. Supported: int32, uint32, int64, uint64, counter32, counter64, float, string");
+         return AIToolResult::error("Invalid data type specified. Supported: int32, uint32, int64, uint64, counter32, counter64, float, string");
       dci->setDataType(static_cast<BYTE>(dataType));
    }
 
@@ -682,7 +682,7 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
    {
       int delta = CodeFromText(String(deltaStr, "utf-8"), g_dciDeltaCalculationNames, -1);
       if (delta < 0)
-         return std::string("Invalid delta calculation specified. Supported: none, simple, averagePerSecond, averagePerMinute");
+         return AIToolResult::error("Invalid delta calculation specified. Supported: none, simple, averagePerSecond, averagePerMinute");
       dci->setDeltaCalculation(static_cast<BYTE>(delta));
    }
 
@@ -728,7 +728,7 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
       {
          shared_ptr<NetObj> sourceNode = FindObjectByNameOrId(arguments, "sourceNode");
          if (sourceNode == nullptr)
-            return std::string("Source node not found");
+            return AIToolResult::error("Source node not found");
          dci->setSourceNode(sourceNode->getId());
       }
    }
@@ -744,7 +744,7 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
    {
       uint32_t anomalyFlags;
       if (!ParseAnomalyDetectionMode(anomalyStr, &anomalyFlags))
-         return std::string(s_invalidAnomalyDetectionMode);
+         return AIToolResult::error(s_invalidAnomalyDetectionMode);
       dci->clearFlag(DCF_DETECT_ANOMALIES | DCF_ANOMALY_LLM_TUNING);
       if (anomalyFlags != 0)
          dci->setFlag(anomalyFlags);
@@ -768,28 +768,28 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
 /**
  * Delete metric
  */
-std::string F_DeleteMetric(json_t *arguments, uint32_t userId)
+AIToolResult F_DeleteMetric(json_t *arguments, uint32_t userId)
 {
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
-      return std::string("Metric name or ID must be provided");
+      return AIToolResult::error("Metric name or ID must be provided");
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-      return std::string("Metric not found");
+      return AIToolResult::error("Metric not found");
 
    uint32_t dciId = dco->getId();
    uint32_t rcc = 0;
@@ -797,7 +797,7 @@ std::string F_DeleteMetric(json_t *arguments, uint32_t userId)
    {
       char buffer[256];
       snprintf(buffer, 256, "Failed to delete metric with ID %u (error code %u)", dciId, rcc);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    char buffer[128];
@@ -808,28 +808,28 @@ std::string F_DeleteMetric(json_t *arguments, uint32_t userId)
 /**
  * Get thresholds for a metric
  */
-std::string F_GetThresholds(json_t *arguments, uint32_t userId)
+AIToolResult F_GetThresholds(json_t *arguments, uint32_t userId)
 {
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
-      return std::string("Metric name or ID must be provided");
+      return AIToolResult::error("Metric name or ID must be provided");
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-      return std::string("Metric not found");
+      return AIToolResult::error("Metric not found");
 
    if (dco->getType() != DCO_TYPE_ITEM)
-      return std::string("Object is not a data collection item");
+      return AIToolResult::error("Object is not a data collection item");
 
    DCItem *dci = static_cast<DCItem*>(dco.get());
    json_t *output = json_array();
@@ -858,16 +858,16 @@ std::string F_GetThresholds(json_t *arguments, uint32_t userId)
  * Returns one row per threshold with the activation/deactivation event names, so the assistant
  * can answer questions like "which events can be generated from thresholds on node X".
  */
-std::string F_GetObjectThresholds(json_t *arguments, uint32_t userId)
+AIToolResult F_GetObjectThresholds(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    unique_ptr<SharedObjectArray<DCObject>> dcObjects = static_cast<DataCollectionTarget&>(*object).getAllDCObjects(userId);
 
@@ -930,46 +930,46 @@ std::string F_GetObjectThresholds(json_t *arguments, uint32_t userId)
 /**
  * Add threshold to a metric
  */
-std::string F_AddThreshold(json_t *arguments, uint32_t userId)
+AIToolResult F_AddThreshold(json_t *arguments, uint32_t userId)
 {
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
-      return std::string("Metric name or ID must be provided");
+      return AIToolResult::error("Metric name or ID must be provided");
 
    const char *valueStr = json_object_get_string_utf8(arguments, "value", nullptr);
    if ((valueStr == nullptr) || (valueStr[0] == 0))
-      return std::string("Threshold value must be provided");
+      return AIToolResult::error("Threshold value must be provided");
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-      return std::string("Metric not found");
+      return AIToolResult::error("Metric not found");
 
    if (dco->getType() != DCO_TYPE_ITEM)
-      return std::string("Object is not a data collection item");
+      return AIToolResult::error("Object is not a data collection item");
 
    DCItem *dci = static_cast<DCItem*>(dco.get());
 
    // Parse threshold parameters
    int function = CodeFromText(String(json_object_get_string_utf8(arguments, "function", "last"), "utf-8"), g_dciThresholdFunctionNames, -1);
    if (function < 0)
-      return std::string("Invalid threshold function specified. Supported: last, average, sum, meanDeviation, absoluteDeviation, diff, error, script, anomaly");
+      return AIToolResult::error("Invalid threshold function specified. Supported: last, average, sum, meanDeviation, absoluteDeviation, diff, error, script, anomaly");
 
    int operation = CodeFromText(String(json_object_get_string_utf8(arguments, "operation", "greaterOrEqual"), "utf-8"), g_dciThresholdOperationNames, -1);
    if (operation < 0)
-      return std::string("Invalid threshold operation specified. Supported: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike, iLike, iNotLike");
+      return AIToolResult::error("Invalid threshold operation specified. Supported: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike, iLike, iNotLike");
 
    int sampleCount = json_object_get_int32(arguments, "sampleCount", 1);
    int deactivationSampleCount = json_object_get_int32(arguments, "deactivationSampleCount", 1);
@@ -1014,35 +1014,35 @@ std::string F_AddThreshold(json_t *arguments, uint32_t userId)
  * Edit an existing threshold on a metric. Only specified properties are changed; others
  * (including runtime state) are preserved.
  */
-std::string F_EditThreshold(json_t *arguments, uint32_t userId)
+AIToolResult F_EditThreshold(json_t *arguments, uint32_t userId)
 {
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
-      return std::string("Metric name or ID must be provided");
+      return AIToolResult::error("Metric name or ID must be provided");
 
    uint32_t thresholdId = json_object_get_uint32(arguments, "thresholdId", 0);
    if (thresholdId == 0)
-      return std::string("Threshold ID must be provided");
+      return AIToolResult::error("Threshold ID must be provided");
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-      return std::string("Metric not found");
+      return AIToolResult::error("Metric not found");
 
    if (dco->getType() != DCO_TYPE_ITEM)
-      return std::string("Object is not a data collection item");
+      return AIToolResult::error("Object is not a data collection item");
 
    DCItem *dci = static_cast<DCItem*>(dco.get());
    Threshold *threshold = nullptr;
@@ -1057,7 +1057,7 @@ std::string F_EditThreshold(json_t *arguments, uint32_t userId)
       }
    }
    if (threshold == nullptr)
-      return std::string("Threshold not found");
+      return AIToolResult::error("Threshold not found");
 
    json_t *update = json_object();
 
@@ -1068,7 +1068,7 @@ std::string F_EditThreshold(json_t *arguments, uint32_t userId)
       if (code < 0)
       {
          json_decref(update);
-         return std::string("Invalid threshold function specified. Supported: last, average, sum, meanDeviation, absoluteDeviation, diff, error, script, anomaly");
+         return AIToolResult::error("Invalid threshold function specified. Supported: last, average, sum, meanDeviation, absoluteDeviation, diff, error, script, anomaly");
       }
       json_object_set_new(update, "function", json_integer(code));
    }
@@ -1080,7 +1080,7 @@ std::string F_EditThreshold(json_t *arguments, uint32_t userId)
       if (code < 0)
       {
          json_decref(update);
-         return std::string("Invalid threshold operation specified. Supported: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike, iLike, iNotLike");
+         return AIToolResult::error("Invalid threshold operation specified. Supported: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike, iLike, iNotLike");
       }
       json_object_set_new(update, "condition", json_integer(code));
    }
@@ -1120,7 +1120,7 @@ std::string F_EditThreshold(json_t *arguments, uint32_t userId)
    if (json_object_size(update) == 0)
    {
       json_decref(update);
-      return std::string("No threshold properties specified to change");
+      return AIToolResult::error("No threshold properties specified to change");
    }
 
    threshold->updateFromJson(update);
@@ -1138,39 +1138,39 @@ std::string F_EditThreshold(json_t *arguments, uint32_t userId)
 /**
  * Delete threshold from a metric
  */
-std::string F_DeleteThreshold(json_t *arguments, uint32_t userId)
+AIToolResult F_DeleteThreshold(json_t *arguments, uint32_t userId)
 {
    const char *metricNameOrId = json_object_get_string_utf8(arguments, "metric", nullptr);
    if ((metricNameOrId == nullptr) || (metricNameOrId[0] == 0))
-      return std::string("Metric name or ID must be provided");
+      return AIToolResult::error("Metric name or ID must be provided");
 
    uint32_t thresholdId = json_object_get_uint32(arguments, "thresholdId", 0);
    if (thresholdId == 0)
-      return std::string("Threshold ID must be provided");
+      return AIToolResult::error("Threshold ID must be provided");
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isDataCollectionTarget())
-      return std::string("Object is not a data collection target");
+      return AIToolResult::error("Object is not a data collection target");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    DataCollectionTarget *target = static_cast<DataCollectionTarget*>(object.get());
    shared_ptr<DCObject> dco = FindDCIByNameOrId(target, metricNameOrId, userId);
    if (dco == nullptr)
-      return std::string("Metric not found");
+      return AIToolResult::error("Metric not found");
 
    if (dco->getType() != DCO_TYPE_ITEM)
-      return std::string("Object is not a data collection item");
+      return AIToolResult::error("Object is not a data collection item");
 
    DCItem *dci = static_cast<DCItem*>(dco.get());
    if (!dci->deleteThresholdById(thresholdId))
-      return std::string("Threshold not found");
+      return AIToolResult::error("Threshold not found");
 
    dci->updateCacheSize();
    dci->getOwner()->markAsModified(MODIFY_DATA_COLLECTION);

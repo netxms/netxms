@@ -41,6 +41,6 @@ void AddObjectAccessConstraint(StringBuffer& query, uint32_t userId, const TCHAR
 /**
  * Operational status: composite triage view (down nodes + grouped alarms + recent critical events).
  */
-std::string F_OperationalStatus(json_t *arguments, uint32_t userId);
+AIToolResult F_OperationalStatus(json_t *arguments, uint32_t userId);
 
 #endif

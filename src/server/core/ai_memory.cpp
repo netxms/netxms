@@ -912,24 +912,24 @@ std::string BuildAIMemoryPromptBlock(AIMemoryScope scope, uint32_t scopeId)
 /**
  * Convert result code of memory operation to tool result text
  */
-static std::string ToolResult(uint32_t rcc, const std::string& errorText, const std::string& successText)
+static AIToolResult ToolResult(uint32_t rcc, const std::string& errorText, const std::string& successText)
 {
    switch(rcc)
    {
       case RCC_SUCCESS:
          return successText;
       case RCC_ACCESS_DENIED:
-         return errorText.empty() ? std::string("Access denied") : errorText;
+         return AIToolResult::error(errorText.empty() ? std::string("Access denied") : errorText);
       case RCC_INVALID_OBJECT_ID:
-         return std::string("Object not found");
+         return AIToolResult::error("Object not found");
       case RCC_INVALID_USER_ID:
-         return std::string("User not found");
+         return AIToolResult::error("User not found");
       case RCC_NO_SUCH_RECORD:
-         return std::string("Memory entry not found");
+         return AIToolResult::error("Memory entry not found");
       case RCC_DB_FAILURE:
-         return std::string("Database failure");
+         return AIToolResult::error("Database failure");
       default:
-         return errorText.empty() ? std::string("Operation failed") : errorText;
+         return AIToolResult::error(errorText.empty() ? std::string("Operation failed") : errorText);
    }
 }
 
@@ -974,19 +974,19 @@ static bool ResolveToolScopeId(AIMemoryScope scope, json_t *arguments, uint32_t 
 /**
  * Handler for remember-* tools
  */
-static std::string F_Remember(AIMemoryScope scope, json_t *arguments, uint32_t userId)
+static AIToolResult F_Remember(AIMemoryScope scope, json_t *arguments, uint32_t userId)
 {
    const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
    const char *content = json_object_get_string_utf8(arguments, "content", nullptr);
    if ((title == nullptr) || (title[0] == 0))
-      return std::string("Title must be provided");
+      return AIToolResult::error("Title must be provided");
    if ((content == nullptr) || (content[0] == 0))
-      return std::string("Content must be provided");
+      return AIToolResult::error("Content must be provided");
 
    uint32_t scopeId;
    std::string error;
    if (!ResolveToolScopeId(scope, arguments, userId, &scopeId, &error))
-      return error;
+      return AIToolResult::error(error);
 
    uint32_t entryId;
    uint32_t rcc = CreateAIMemoryEntry(scope, scopeId, title, content, false, true, userId, &entryId, &error);
@@ -1024,12 +1024,12 @@ static shared_ptr<AIMemoryEntry> GetToolEntry(AIMemoryScope scope, json_t *argum
 /**
  * Handler for update-* tools
  */
-static std::string F_Update(AIMemoryScope scope, json_t *arguments, uint32_t userId)
+static AIToolResult F_Update(AIMemoryScope scope, json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<AIMemoryEntry> entry = GetToolEntry(scope, arguments, userId, &error);
    if (entry == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    json_t *changes = json_object();
    const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
@@ -1041,7 +1041,7 @@ static std::string F_Update(AIMemoryScope scope, json_t *arguments, uint32_t use
    if (json_object_size(changes) == 0)
    {
       json_decref(changes);
-      return std::string("Nothing to update: provide new title and/or content");
+      return AIToolResult::error("Nothing to update: provide new title and/or content");
    }
 
    uint32_t rcc = ModifyAIMemoryEntry(entry->getId(), changes, true, userId, &error);
@@ -1052,12 +1052,12 @@ static std::string F_Update(AIMemoryScope scope, json_t *arguments, uint32_t use
 /**
  * Handler for forget-* tools
  */
-static std::string F_Forget(AIMemoryScope scope, json_t *arguments, uint32_t userId)
+static AIToolResult F_Forget(AIMemoryScope scope, json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<AIMemoryEntry> entry = GetToolEntry(scope, arguments, userId, &error);
    if (entry == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    uint32_t rcc = DeleteAIMemoryEntry(entry->getId(), true, userId);
    if ((rcc == RCC_ACCESS_DENIED) && entry->isLocked())
@@ -1083,7 +1083,7 @@ static bool ContainsIgnoreCase(const std::string& text, const std::string& patte
 /**
  * Handler for recall-memory tool
  */
-static std::string F_Recall(json_t *arguments, uint32_t userId)
+static AIToolResult F_Recall(json_t *arguments, uint32_t userId)
 {
    const char *scopeName = json_object_get_string_utf8(arguments, "scope", nullptr);
    const char *search = json_object_get_string_utf8(arguments, "search", nullptr);
@@ -1093,7 +1093,7 @@ static std::string F_Recall(json_t *arguments, uint32_t userId)
    {
       AIMemoryScope scope;
       if (!AIMemoryScopeFromName(scopeName, &scope))
-         return std::string("Invalid scope: use 'environment', 'user', or 'object'");
+         return AIToolResult::error("Invalid scope: use 'environment', 'user', or 'object'");
 
       uint32_t scopeId;
       std::string error;
@@ -1107,14 +1107,14 @@ static std::string F_Recall(json_t *arguments, uint32_t userId)
          else
          {
             if (!ResolveToolScopeId(scope, arguments, userId, &scopeId, &error))
-               return error;
+               return AIToolResult::error(error);
             entries = CollectEntries([scopeId] (const AIMemoryEntry& entry) { return (entry.getScope() == AIMemoryScope::OBJECT) && (entry.getScopeId() == scopeId); });
          }
       }
       else
       {
          if (!ResolveToolScopeId(scope, arguments, userId, &scopeId, &error))
-            return error;
+            return AIToolResult::error(error);
          entries = CollectEntries([scope, scopeId] (const AIMemoryEntry& entry) { return (entry.getScope() == scope) && (entry.getScopeId() == scopeId); });
       }
    }
@@ -1163,7 +1163,7 @@ static void RegisterScopeTools(AIMemoryScope scope, const char *rememberName, co
    rememberParams.emplace_back("title", "Short descriptive title, unique within scope (mandatory, max 127 bytes)");
    rememberParams.emplace_back("content", "Content of the note, one to three sentences (mandatory)");
    RegisterAITool(rememberName, rememberDescription, rememberParams,
-      [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Remember(scope, arguments, userId); },
+      [scope] (json_t *arguments, uint32_t userId) -> AIToolResult { return F_Remember(scope, arguments, userId); },
       AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(updateName, updateDescription,
@@ -1172,14 +1172,14 @@ static void RegisterScopeTools(AIMemoryScope scope, const char *rememberName, co
          { "title", "New title (optional)" },
          { "content", "New content (optional)" }
       },
-      [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Update(scope, arguments, userId); },
+      [scope] (json_t *arguments, uint32_t userId) -> AIToolResult { return F_Update(scope, arguments, userId); },
       AI_TOOL_NOT_FOR_MCP);
 
    RegisterAITool(forgetName, forgetDescription,
       {
          { "id", "Memory entry ID (mandatory)", "integer" }
       },
-      [scope] (json_t *arguments, uint32_t userId) -> std::string { return F_Forget(scope, arguments, userId); },
+      [scope] (json_t *arguments, uint32_t userId) -> AIToolResult { return F_Forget(scope, arguments, userId); },
       AI_TOOL_DESTRUCTIVE | AI_TOOL_NOT_FOR_MCP);
 }
 

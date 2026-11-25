@@ -79,6 +79,18 @@ Use these terms consistently in code, prompts, UI strings and documentation:
 
 "Agent" always means the NetXMS agent; never use "AI agent". Do not use "delegation" or "iteration" for AI concepts.
 
+## AI Tool Results
+
+A tool handler (`AIToolHandler`, `include/nxai.h`) returns `AIToolResult`: text plus a `failed` flag. The flag drives `isError` and the audit success flag for MCP calls, and `is_error` on tool results sent to Anthropic models.
+
+- Success: return the text (`std::string`, literal, `JsonToString(...)`) - it converts implicitly.
+- Failure: `return AIToolResult::error(text)` when the tool could not do what was asked - invalid or missing arguments, object not found, access denied, backend or agent error, refused action (including "already in requested state").
+- When one return statement serves both outcomes, use `AIToolResult(text, failed)`.
+- Not a failure: empty result or no data available, negative outcome of a check or test (connectivity probe reporting "connection refused"), failure of some elements of a bulk operation. A bulk operation is failed only when nothing succeeded.
+- Never signal failure through the text. There is no `Error:` prefix convention, and consumers do not look for `{"error": ...}` in the output. Keep the text self-explanatory anyway - OpenAI-compatible providers get only the text.
+- A helper that only builds an error string for several callers stays `std::string` (`EppFilterError`, argument validators returning an empty string for "valid"); the handler wraps it with `AIToolResult::error()`.
+- The chat loop marks failed `role: "tool"` messages with an internal `is_error` key. OpenAI-compatible APIs can reject unknown message properties, so a new OpenAI-style provider builds its message list with `LLMProvider::buildMessageList()`, which removes the key.
+
 ## Network Device Drivers
 
 Drivers live in `drivers/<vendor>/`; the interface is `include/nddrv.h`, the generic base implementation `libnxsrv/ndd.cpp`. Use `DECLARE_NDD_ENTRY_POINT(Class)` for a single driver, or `NDD_BEGIN_DRIVER_LIST` / `NDD_DRIVER(Class)` / `NDD_END_DRIVER_LIST` / `DECLARE_NDD_MODULE_ENTRY_POINT` for several drivers in one module. `isPotentialDevice()` returns a priority (0 = not supported); the highest-priority match wins.

@@ -215,7 +215,7 @@ uint32_t NXCORE_EXPORTABLE DeleteAITask(uint32_t taskId, uint32_t userId)
 /**
  * AI tool: ai-task-list
  */
-std::string F_AITaskList(json_t *arguments, uint32_t userId)
+AIToolResult F_AITaskList(json_t *arguments, uint32_t userId)
 {
    bool accessAllTasks = ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) != 0);
 
@@ -242,11 +242,11 @@ std::string F_AITaskList(json_t *arguments, uint32_t userId)
 /**
  * AI tool: delete-ai-task
  */
-std::string F_DeleteAITask(json_t *arguments, uint32_t userId)
+AIToolResult F_DeleteAITask(json_t *arguments, uint32_t userId)
 {
    uint32_t taskId = json_object_get_uint32(arguments, "task_id", 0);
    if (taskId == 0)
-      return std::string("Error: task_id parameter is required");
+      return AIToolResult::error("Error: task_id parameter is required");
 
    bool accessAllTasks = ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) != 0);
 
@@ -255,13 +255,13 @@ std::string F_DeleteAITask(json_t *arguments, uint32_t userId)
    if (task == nullptr)
    {
       s_aiTasksLock.unlock();
-      return std::string("Error: AI task not found");
+      return AIToolResult::error("Error: AI task not found");
    }
 
    if (!accessAllTasks && (task->getUserId() != userId))
    {
       s_aiTasksLock.unlock();
-      return std::string("Error: access denied");
+      return AIToolResult::error("Error: access denied");
    }
 
    s_aiTasks.remove(taskId);

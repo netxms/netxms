@@ -30,9 +30,30 @@
 #define AI_ASSISTANT_COMPONENT   L"AI-ASSISTANT"
 
 /**
+ * Result of AI tool call: text returned to the caller and failure indicator. Tool handler reports success by
+ * returning text (implicit conversion from string) and failure by returning AIToolResult::error(text).
+ * Call is failed when tool could not do what was asked (invalid arguments, object not found, access denied,
+ * backend failure, refused action). Empty result set, negative outcome of a check, or failure of some (but not
+ * all) elements within bulk operation is not a failure of the call.
+ */
+struct AIToolResult
+{
+   std::string text;
+   bool failed;
+
+   AIToolResult(std::string text, bool failed = false) : text(std::move(text)), failed(failed) { }
+   AIToolResult(const char *text) : text(text), failed(false) { }
+
+   static AIToolResult error(std::string text)
+   {
+      return AIToolResult(std::move(text), true);
+   }
+};
+
+/**
  * AI tool handler
  */
-typedef std::function<std::string(json_t*, uint32_t)> AIToolHandler;
+typedef std::function<AIToolResult(json_t*, uint32_t)> AIToolHandler;
 
 /**
  * AI tool flags
@@ -831,9 +852,9 @@ private:
    }
 
    void initializeTools();
-   std::string callTool(const char *name, json_t *arguments);
-   std::string loadSkill(const char *skillName);
-   std::string runWorkers(json_t *workers);
+   AIToolResult callTool(const char *name, json_t *arguments);
+   AIToolResult loadSkill(const char *skillName);
+   AIToolResult runWorkers(json_t *workers);
 
 public:
    Chat(NetObj *context = nullptr, json_t *eventData = nullptr, uint32_t userId = 0, const char *systemPrompt = nullptr, bool isInteractive = true, bool enableTools = true);
@@ -931,9 +952,9 @@ json_t NXCORE_EXPORTABLE *GetMCPToolsAsJson();
 /**
  * Call AI tool by name on behalf of MCP client. Tool name is resolved in global tools first,
  * then across all skills, honoring disabled lists and chat-only flags. If tool cannot be resolved, *found is
- * set to false (when provided) and error message is returned.
+ * set to false (when provided) and failed result is returned.
  */
-std::string NXCORE_EXPORTABLE CallMCPTool(const char *name, json_t *arguments, uint32_t userId, bool *found = nullptr);
+AIToolResult NXCORE_EXPORTABLE CallMCPTool(const char *name, json_t *arguments, uint32_t userId, bool *found = nullptr);
 
 /**
  * Get skill prompt list for MCP clients (excluding disabled skills) as JSON array of objects with name and description.

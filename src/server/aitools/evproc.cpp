@@ -27,11 +27,11 @@
 /**
  * Get event template
  */
-std::string F_GetEventTemplate(json_t *arguments, uint32_t userId)
+AIToolResult F_GetEventTemplate(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & SYSTEM_ACCESS_VIEW_EVENT_DB) == 0)
-      return std::string("User does not have rights to view event configuration");
+      return AIToolResult::error("User does not have rights to view event configuration");
 
    shared_ptr<EventTemplate> eventTemplate;
 
@@ -43,14 +43,14 @@ std::string F_GetEventTemplate(json_t *arguments, uint32_t userId)
       {
          char buffer[256];
          snprintf(buffer, 256, "Event template with code %u not found", eventCode);
-         return std::string(buffer);
+         return AIToolResult::error(buffer);
       }
    }
    else
    {
       const char *eventName = json_object_get_string_utf8(arguments, "name", nullptr);
       if ((eventName == nullptr) || (eventName[0] == 0))
-         return std::string("Either event template code or name must be provided");
+         return AIToolResult::error("Either event template code or name must be provided");
 
       wchar_t eventNameW[64];
       utf8_to_wchar(eventName, -1, eventNameW, 64);
@@ -59,7 +59,7 @@ std::string F_GetEventTemplate(json_t *arguments, uint32_t userId)
       {
          char buffer[256];
          snprintf(buffer, 256, "Event template with name \"%s\" not found", eventName);
-         return std::string(buffer);
+         return AIToolResult::error(buffer);
       }
    }
 
@@ -69,22 +69,22 @@ std::string F_GetEventTemplate(json_t *arguments, uint32_t userId)
 /**
  * Get event processing policy
  */
-std::string F_GetEventProcessingPolicy(json_t *arguments, uint32_t userId)
+AIToolResult F_GetEventProcessingPolicy(json_t *arguments, uint32_t userId)
 {
    // Users without the global EPP right see the chains granted by chain access lists
    if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
-      return std::string("User does not have rights to manage event processing policy");
+      return AIToolResult::error("User does not have rights to manage event processing policy");
    return JsonToString(GetEventProcessingPolicy()->toJson(userId));
 }
 
 /**
  * Get list server side actions for event processing
  */
-std::string F_GetEventProcessingActions(json_t *arguments, uint32_t userId)
+AIToolResult F_GetEventProcessingActions(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & (SYSTEM_ACCESS_MANAGE_ACTIONS | SYSTEM_ACCESS_EPP)) == 0)
-      return std::string("User does not have rights to access server actions");
+      return AIToolResult::error("User does not have rights to access server actions");
 
    return JsonToString(GetActions());
 }
@@ -92,22 +92,22 @@ std::string F_GetEventProcessingActions(json_t *arguments, uint32_t userId)
 /**
  * Get specific server side action for event processing
  */
-std::string F_GetEventProcessingAction(json_t *arguments, uint32_t userId)
+AIToolResult F_GetEventProcessingAction(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & (SYSTEM_ACCESS_MANAGE_ACTIONS | SYSTEM_ACCESS_EPP)) == 0)
-      return std::string("User does not have rights to access server actions");
+      return AIToolResult::error("User does not have rights to access server actions");
 
    uint32_t actionId = json_object_get_uint32(arguments, "id", 0);
    if (actionId == 0)
-      return std::string("Action ID not provided");
+      return AIToolResult::error("Action ID not provided");
 
    json_t *actionJson = GetActionById(actionId);
    if (actionJson == nullptr)
    {
       char buffer[256];
       snprintf(buffer, 256, "Action with ID %u not found", actionId);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    return JsonToString(actionJson);
@@ -136,27 +136,27 @@ static int ParseSeverityString(const char *severity)
 /**
  * Create event template
  */
-std::string F_CreateEventTemplate(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateEventTemplate(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & SYSTEM_ACCESS_EDIT_EVENT_DB) == 0)
-      return std::string("User does not have rights to edit event configuration");
+      return AIToolResult::error("User does not have rights to edit event configuration");
 
    const char *name = json_object_get_string_utf8(arguments, "name", nullptr);
    if ((name == nullptr) || (name[0] == 0))
-      return std::string("Event template name is required");
+      return AIToolResult::error("Event template name is required");
 
    const char *severityStr = json_object_get_string_utf8(arguments, "severity", nullptr);
    if ((severityStr == nullptr) || (severityStr[0] == 0))
-      return std::string("Event severity is required");
+      return AIToolResult::error("Event severity is required");
 
    int severity = ParseSeverityString(severityStr);
    if (severity == -1)
-      return std::string("Invalid severity value. Must be one of: normal, warning, minor, major, critical");
+      return AIToolResult::error("Invalid severity value. Must be one of: normal, warning, minor, major, critical");
 
    const char *message = json_object_get_string_utf8(arguments, "message", nullptr);
    if ((message == nullptr) || (message[0] == 0))
-      return std::string("Event message template is required");
+      return AIToolResult::error("Event message template is required");
 
    json_t *templateJson = json_object();
    json_object_set_new(templateJson, "name", json_string(name));
@@ -191,24 +191,24 @@ std::string F_CreateEventTemplate(json_t *arguments, uint32_t userId)
    switch (rcc)
    {
       case RCC_INVALID_OBJECT_NAME:
-         return std::string("Invalid event template name. Name must be alphanumeric with underscores.");
+         return AIToolResult::error("Invalid event template name. Name must be alphanumeric with underscores.");
       case RCC_NAME_ALEARDY_EXISTS:
-         return std::string("Event template with this name already exists");
+         return AIToolResult::error("Event template with this name already exists");
       case RCC_DB_FAILURE:
-         return std::string("Database error occurred while creating event template");
+         return AIToolResult::error("Database error occurred while creating event template");
       default:
-         return std::string("Failed to create event template");
+         return AIToolResult::error("Failed to create event template");
    }
 }
 
 /**
  * Modify event template
  */
-std::string F_ModifyEventTemplate(json_t *arguments, uint32_t userId)
+AIToolResult F_ModifyEventTemplate(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & SYSTEM_ACCESS_EDIT_EVENT_DB) == 0)
-      return std::string("User does not have rights to edit event configuration");
+      return AIToolResult::error("User does not have rights to edit event configuration");
 
    shared_ptr<EventTemplate> eventTemplate;
 
@@ -220,14 +220,14 @@ std::string F_ModifyEventTemplate(json_t *arguments, uint32_t userId)
       {
          char buffer[256];
          snprintf(buffer, 256, "Event template with code %u not found", eventCode);
-         return std::string(buffer);
+         return AIToolResult::error(buffer);
       }
    }
    else
    {
       const char *eventName = json_object_get_string_utf8(arguments, "name", nullptr);
       if ((eventName == nullptr) || (eventName[0] == 0))
-         return std::string("Either event template code or name must be provided");
+         return AIToolResult::error("Either event template code or name must be provided");
 
       wchar_t eventNameW[MAX_EVENT_NAME];
       utf8_to_wchar(eventName, -1, eventNameW, MAX_EVENT_NAME);
@@ -236,13 +236,13 @@ std::string F_ModifyEventTemplate(json_t *arguments, uint32_t userId)
       {
          char buffer[256];
          snprintf(buffer, 256, "Event template with name \"%s\" not found", eventName);
-         return std::string(buffer);
+         return AIToolResult::error(buffer);
       }
       eventCode = eventTemplate->getCode();
    }
 
    if (eventCode < 100000)
-      return std::string("Cannot modify system event templates. Only user-defined templates (code >= 100000) can be modified.");
+      return AIToolResult::error("Cannot modify system event templates. Only user-defined templates (code >= 100000) can be modified.");
 
    json_t *modifyJson = json_object();
 
@@ -257,7 +257,7 @@ std::string F_ModifyEventTemplate(json_t *arguments, uint32_t userId)
       if (severity == -1)
       {
          json_decref(modifyJson);
-         return std::string("Invalid severity value. Must be one of: normal, warning, minor, major, critical");
+         return AIToolResult::error("Invalid severity value. Must be one of: normal, warning, minor, major, critical");
       }
       json_object_set_new(modifyJson, "severity", json_integer(severity));
    }
@@ -277,7 +277,7 @@ std::string F_ModifyEventTemplate(json_t *arguments, uint32_t userId)
    if (json_object_size(modifyJson) == 0)
    {
       json_decref(modifyJson);
-      return std::string("No modifications specified. Provide at least one of: newName, severity, message, description, tags");
+      return AIToolResult::error("No modifications specified. Provide at least one of: newName, severity, message, description, tags");
    }
 
    json_t *oldValue = nullptr;
@@ -302,26 +302,26 @@ std::string F_ModifyEventTemplate(json_t *arguments, uint32_t userId)
    switch (rcc)
    {
       case RCC_INVALID_OBJECT_NAME:
-         return std::string("Invalid event template name. Name must be alphanumeric with underscores.");
+         return AIToolResult::error("Invalid event template name. Name must be alphanumeric with underscores.");
       case RCC_NAME_ALEARDY_EXISTS:
-         return std::string("Event template with this name already exists");
+         return AIToolResult::error("Event template with this name already exists");
       case RCC_INVALID_EVENT_CODE:
-         return std::string("Event template not found");
+         return AIToolResult::error("Event template not found");
       case RCC_DB_FAILURE:
-         return std::string("Database error occurred while modifying event template");
+         return AIToolResult::error("Database error occurred while modifying event template");
       default:
-         return std::string("Failed to modify event template");
+         return AIToolResult::error("Failed to modify event template");
    }
 }
 
 /**
  * Delete event template
  */
-std::string F_DeleteEventTemplate(json_t *arguments, uint32_t userId)
+AIToolResult F_DeleteEventTemplate(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & SYSTEM_ACCESS_EDIT_EVENT_DB) == 0)
-      return std::string("User does not have rights to edit event configuration");
+      return AIToolResult::error("User does not have rights to edit event configuration");
 
    shared_ptr<EventTemplate> eventTemplate;
 
@@ -333,14 +333,14 @@ std::string F_DeleteEventTemplate(json_t *arguments, uint32_t userId)
       {
          char buffer[256];
          snprintf(buffer, 256, "Event template with code %u not found", eventCode);
-         return std::string(buffer);
+         return AIToolResult::error(buffer);
       }
    }
    else
    {
       const char *eventName = json_object_get_string_utf8(arguments, "name", nullptr);
       if ((eventName == nullptr) || (eventName[0] == 0))
-         return std::string("Either event template code or name must be provided");
+         return AIToolResult::error("Either event template code or name must be provided");
 
       wchar_t eventNameW[MAX_EVENT_NAME];
       utf8_to_wchar(eventName, -1, eventNameW, MAX_EVENT_NAME);
@@ -349,13 +349,13 @@ std::string F_DeleteEventTemplate(json_t *arguments, uint32_t userId)
       {
          char buffer[256];
          snprintf(buffer, 256, "Event template with name \"%s\" not found", eventName);
-         return std::string(buffer);
+         return AIToolResult::error(buffer);
       }
       eventCode = eventTemplate->getCode();
    }
 
    if (eventCode < 100000)
-      return std::string("Cannot delete system event templates. Only user-defined templates (code >= 100000) can be deleted.");
+      return AIToolResult::error("Cannot delete system event templates. Only user-defined templates (code >= 100000) can be deleted.");
 
    uint32_t rcc = DeleteEventTemplate(eventCode);
 
@@ -369,11 +369,11 @@ std::string F_DeleteEventTemplate(json_t *arguments, uint32_t userId)
    switch (rcc)
    {
       case RCC_INVALID_EVENT_CODE:
-         return std::string("Event template not found");
+         return AIToolResult::error("Event template not found");
       case RCC_DB_FAILURE:
-         return std::string("Database error occurred while deleting event template");
+         return AIToolResult::error("Database error occurred while deleting event template");
       default:
-         return std::string("Failed to delete event template");
+         return AIToolResult::error("Failed to delete event template");
    }
 }
 
@@ -789,9 +789,9 @@ static std::string EppConflictError(uint32_t currentVersion)
  * `auditDetail` is written by the mutator (e.g. "rule {abc} - fields: x, y") and
  * appended to the audit log line by the wrapper.
  *
- * Returns the AI tool's response string (success JSON or error JSON).
+ * Returns the AI tool's result (success JSON or failed result with error JSON).
  */
-static std::string EppReadModifyWrite(
+static AIToolResult EppReadModifyWrite(
    uint32_t userId, const char *auditAction, const char *chainRef, const uuid *ruleGuid,
    std::function<uint32_t(json_t *snapshot, json_t *rulesArray, std::string *errorOut, wchar_t *auditDetail, size_t auditDetailSize)> mutate)
 {
@@ -801,7 +801,7 @@ static std::string EppReadModifyWrite(
    {
       snapshot = GetEventProcessingPolicy()->toJson(userId);
       if (snapshot == nullptr)
-         return std::string("Failed to read event processing policy");
+         return AIToolResult::error("Failed to read event processing policy");
 
       std::string err;
       uint32_t chainId = 0;
@@ -810,14 +810,14 @@ static std::string EppReadModifyWrite(
       if (!EppSelectChainRules(snapshot, chainRef, ruleGuid, &chainId, &version, &rulesArray, &err))
       {
          json_decref(snapshot);
-         return err;
+         return AIToolResult::error(err);
       }
 
       uint32_t mutateRcc = mutate(snapshot, rulesArray, &err, auditDetail, sizeof(auditDetail) / sizeof(auditDetail[0]));
       if (mutateRcc != RCC_SUCCESS)
       {
          json_decref(snapshot);
-         return err;
+         return AIToolResult::error(err);
       }
 
       std::string parseError;
@@ -825,7 +825,7 @@ static std::string EppReadModifyWrite(
       if (rules == nullptr)
       {
          json_decref(snapshot);
-         return parseError;
+         return AIToolResult::error(parseError);
       }
 
       // Global EPP right, or edit right on this chain and read right on every called chain
@@ -836,8 +836,9 @@ static std::string EppReadModifyWrite(
       {
          delete rules;
          json_decref(snapshot);
-         return (saveRcc == RCC_ACCESS_DENIED) ? std::string("User does not have rights to modify this event processing policy chain or to call one of the requested chains")
-                                                : std::string("One of the called chains does not exist");
+         return AIToolResult::error((saveRcc == RCC_ACCESS_DENIED) ?
+            "User does not have rights to modify this event processing policy chain or to call one of the requested chains" :
+            "One of the called chains does not exist");
       }
 
       uint32_t newVersion = 0;
@@ -869,10 +870,10 @@ static std::string EppReadModifyWrite(
 
       json_decref(snapshot);
       if (saveRcc == RCC_EPP_CONFLICT)
-         return EppConflictError(newVersion);
-      return std::string("Database error during event processing policy save");
+         return AIToolResult::error(EppConflictError(newVersion));
+      return AIToolResult::error("Database error during event processing policy save");
    }
-   return std::string("Unexpected control flow in EPP retry loop");
+   return AIToolResult::error("Unexpected control flow in EPP retry loop");
 }
 
 /**
@@ -1405,10 +1406,10 @@ static json_t *EppBuildDefaultRuleJson()
 /**
  * Create a new event processing policy rule
  */
-std::string F_CreateEppRule(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateEppRule(json_t *arguments, uint32_t userId)
 {
    if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
-      return std::string("User does not have rights to modify event processing policy");
+      return AIToolResult::error("User does not have rights to modify event processing policy");
 
    // Pre-validate by building the rule JSON eagerly against an empty policy.
    // Re-validation happens inside the mutator on each retry, but doing it once
@@ -1418,7 +1419,7 @@ std::string F_CreateEppRule(json_t *arguments, uint32_t userId)
    if (!EppApplyAiPatchToRule(prepRule, arguments, nullptr, &prepErr))
    {
       json_decref(prepRule);
-      return prepErr;
+      return AIToolResult::error(prepErr);
    }
    // Extract the generated GUID for audit logging and for the mutator's lookup.
    uuid newGuid = uuid::parseA(json_object_get_string_utf8(prepRule, "guid", ""));
@@ -1465,15 +1466,15 @@ std::string F_CreateEppRule(json_t *arguments, uint32_t userId)
 /**
  * Modify an existing event processing policy rule
  */
-std::string F_ModifyEppRule(json_t *arguments, uint32_t userId)
+AIToolResult F_ModifyEppRule(json_t *arguments, uint32_t userId)
 {
    if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
-      return std::string("User does not have rights to modify event processing policy");
+      return AIToolResult::error("User does not have rights to modify event processing policy");
 
    uuid ruleGuid;
    std::string err;
    if (!EppParseRuleGuidArg(arguments, "guid", &ruleGuid, &err))
-      return err;
+      return AIToolResult::error(err);
 
    return EppReadModifyWrite(userId, "modify-epp-rule", nullptr, &ruleGuid,
       [ruleGuid, arguments](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
@@ -1499,15 +1500,15 @@ std::string F_ModifyEppRule(json_t *arguments, uint32_t userId)
 /**
  * Delete an event processing policy rule
  */
-std::string F_DeleteEppRule(json_t *arguments, uint32_t userId)
+AIToolResult F_DeleteEppRule(json_t *arguments, uint32_t userId)
 {
    if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
-      return std::string("User does not have rights to modify event processing policy");
+      return AIToolResult::error("User does not have rights to modify event processing policy");
 
    uuid ruleGuid;
    std::string err;
    if (!EppParseRuleGuidArg(arguments, "guid", &ruleGuid, &err))
-      return err;
+      return AIToolResult::error(err);
 
    return EppReadModifyWrite(userId, "delete-epp-rule", nullptr, &ruleGuid,
       [ruleGuid](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
@@ -1531,12 +1532,12 @@ std::string F_DeleteEppRule(json_t *arguments, uint32_t userId)
 /**
  * Set or clear RF_DISABLED on a rule by GUID. Shared core of enable/disable.
  */
-static std::string EppToggleRuleDisabled(json_t *arguments, uint32_t userId, bool disable)
+static AIToolResult EppToggleRuleDisabled(json_t *arguments, uint32_t userId, bool disable)
 {
    uuid ruleGuid;
    std::string err;
    if (!EppParseRuleGuidArg(arguments, "guid", &ruleGuid, &err))
-      return err;
+      return AIToolResult::error(err);
 
    const char *opName = disable ? "disable-epp-rule" : "enable-epp-rule";
    return EppReadModifyWrite(userId, opName, nullptr, &ruleGuid,
@@ -1570,35 +1571,35 @@ static std::string EppToggleRuleDisabled(json_t *arguments, uint32_t userId, boo
 /**
  * Enable a disabled event processing policy rule
  */
-std::string F_EnableEppRule(json_t *arguments, uint32_t userId)
+AIToolResult F_EnableEppRule(json_t *arguments, uint32_t userId)
 {
    if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
-      return std::string("User does not have rights to modify event processing policy");
+      return AIToolResult::error("User does not have rights to modify event processing policy");
    return EppToggleRuleDisabled(arguments, userId, false);
 }
 
 /**
  * Disable an event processing policy rule
  */
-std::string F_DisableEppRule(json_t *arguments, uint32_t userId)
+AIToolResult F_DisableEppRule(json_t *arguments, uint32_t userId)
 {
    if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
-      return std::string("User does not have rights to modify event processing policy");
+      return AIToolResult::error("User does not have rights to modify event processing policy");
    return EppToggleRuleDisabled(arguments, userId, true);
 }
 
 /**
  * Move (reorder) an event processing policy rule
  */
-std::string F_MoveEppRule(json_t *arguments, uint32_t userId)
+AIToolResult F_MoveEppRule(json_t *arguments, uint32_t userId)
 {
    if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
-      return std::string("User does not have rights to modify event processing policy");
+      return AIToolResult::error("User does not have rights to modify event processing policy");
 
    uuid ruleGuid;
    std::string err;
    if (!EppParseRuleGuidArg(arguments, "guid", &ruleGuid, &err))
-      return err;
+      return AIToolResult::error(err);
 
    // Require an explicit position argument; "move" with no destination is a no-op
    // that almost certainly indicates the model forgot to set the destination.
@@ -1608,7 +1609,7 @@ std::string F_MoveEppRule(json_t *arguments, uint32_t userId)
    if (((afterGuid == nullptr) || afterGuid[0] == 0) &&
        ((beforeGuid == nullptr) || beforeGuid[0] == 0) &&
        ((positionStr == nullptr) || positionStr[0] == 0))
-      return EppFilterError("specify one of after_guid, before_guid, position", "position", nullptr);
+      return AIToolResult::error(EppFilterError("specify one of after_guid, before_guid, position", "position", nullptr));
 
    return EppReadModifyWrite(userId, "move-epp-rule", nullptr, &ruleGuid,
       [ruleGuid, arguments](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
@@ -1775,20 +1776,20 @@ static std::string EppActionSuccessResponse(const char *operation, uint32_t acti
 /**
  * Create a new server-side action
  */
-std::string F_CreateServerAction(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateServerAction(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS) == 0)
-      return std::string("User does not have rights to manage server actions");
+      return AIToolResult::error("User does not have rights to manage server actions");
 
    const char *nameStr = json_object_get_string_utf8(arguments, "name", nullptr);
    if ((nameStr == nullptr) || (nameStr[0] == 0))
-      return EppFilterError("name is required", "name", nullptr);
+      return AIToolResult::error(EppFilterError("name is required", "name", nullptr));
 
    std::string err;
    json_t *webApiArgs = EppBuildActionWebApiJson(arguments, &err);
    if (webApiArgs == nullptr)
-      return err;
+      return AIToolResult::error(err);
 
    wchar_t name[MAX_OBJECT_NAME];
    utf8_to_wchar(nameStr, -1, name, MAX_OBJECT_NAME);
@@ -1798,12 +1799,12 @@ std::string F_CreateServerAction(json_t *arguments, uint32_t userId)
    if (rcc == RCC_OBJECT_ALREADY_EXISTS)
    {
       json_decref(webApiArgs);
-      return EppFilterError("action with this name already exists", "name", nameStr);
+      return AIToolResult::error(EppFilterError("action with this name already exists", "name", nameStr));
    }
    if (rcc != RCC_SUCCESS)
    {
       json_decref(webApiArgs);
-      return std::string("Database failure while creating server action");
+      return AIToolResult::error("Database failure while creating server action");
    }
 
    // Action::Action defaults isDisabled=true. For AI-driven creation that's
@@ -1831,20 +1832,20 @@ std::string F_CreateServerAction(json_t *arguments, uint32_t userId)
 /**
  * Modify an existing server-side action
  */
-std::string F_ModifyServerAction(json_t *arguments, uint32_t userId)
+AIToolResult F_ModifyServerAction(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS) == 0)
-      return std::string("User does not have rights to manage server actions");
+      return AIToolResult::error("User does not have rights to manage server actions");
 
    uint32_t actionId = json_object_get_uint32(arguments, "id", 0);
    if (actionId == 0)
-      return EppFilterError("id is required", "id", nullptr);
+      return AIToolResult::error(EppFilterError("id is required", "id", nullptr));
 
    std::string err;
    json_t *webApiArgs = EppBuildActionWebApiJson(arguments, &err);
    if (webApiArgs == nullptr)
-      return err;
+      return AIToolResult::error(err);
 
    json_t *oldValue = nullptr, *newValue = nullptr;
    uint32_t rcc = ModifyActionFromJson(actionId, webApiArgs, &oldValue, &newValue);
@@ -1857,19 +1858,19 @@ std::string F_ModifyServerAction(json_t *arguments, uint32_t userId)
       json_t *errJson = json_object();
       json_object_set_new(errJson, "error", json_string("action not found"));
       json_object_set_new(errJson, "id", json_integer(actionId));
-      return JsonToString(errJson);
+      return AIToolResult::error(JsonToString(errJson));
    }
    if (rcc == RCC_OBJECT_ALREADY_EXISTS)
    {
       if (oldValue != nullptr) json_decref(oldValue);
       if (newValue != nullptr) json_decref(newValue);
-      return EppFilterError("action with this name already exists", "name", nullptr);
+      return AIToolResult::error(EppFilterError("action with this name already exists", "name", nullptr));
    }
    if (rcc != RCC_SUCCESS)
    {
       if (oldValue != nullptr) json_decref(oldValue);
       if (newValue != nullptr) json_decref(newValue);
-      return std::string("Failed to modify server action");
+      return AIToolResult::error("Failed to modify server action");
    }
 
    WriteAuditLogWithJsonValues(AUDIT_SYSCFG, true, userId, nullptr, 0, 0,
@@ -1883,15 +1884,15 @@ std::string F_ModifyServerAction(json_t *arguments, uint32_t userId)
 /**
  * Delete a server-side action
  */
-std::string F_DeleteServerAction(json_t *arguments, uint32_t userId)
+AIToolResult F_DeleteServerAction(json_t *arguments, uint32_t userId)
 {
    uint64_t systemAccess = GetEffectiveSystemRights(userId);
    if ((systemAccess & SYSTEM_ACCESS_MANAGE_ACTIONS) == 0)
-      return std::string("User does not have rights to manage server actions");
+      return AIToolResult::error("User does not have rights to manage server actions");
 
    uint32_t actionId = json_object_get_uint32(arguments, "id", 0);
    if (actionId == 0)
-      return EppFilterError("id is required", "id", nullptr);
+      return AIToolResult::error(EppFilterError("id is required", "id", nullptr));
 
    if (GetEventProcessingPolicy()->isActionInUse(actionId))
    {
@@ -1899,7 +1900,7 @@ std::string F_DeleteServerAction(json_t *arguments, uint32_t userId)
       json_object_set_new(err, "error", json_string("action is in use by event processing policy"));
       json_object_set_new(err, "id", json_integer(actionId));
       json_object_set_new(err, "hint", json_string("Remove the action from referencing rules before deleting"));
-      return JsonToString(err);
+      return AIToolResult::error(JsonToString(err));
    }
 
    uint32_t rcc = DeleteAction(actionId);
@@ -1908,10 +1909,10 @@ std::string F_DeleteServerAction(json_t *arguments, uint32_t userId)
       json_t *errJson = json_object();
       json_object_set_new(errJson, "error", json_string("action not found"));
       json_object_set_new(errJson, "id", json_integer(actionId));
-      return JsonToString(errJson);
+      return AIToolResult::error(JsonToString(errJson));
    }
    if (rcc != RCC_SUCCESS)
-      return std::string("Failed to delete server action");
+      return AIToolResult::error("Failed to delete server action");
 
    WriteAuditLog(AUDIT_SYSCFG, true, userId, nullptr, 0, 0,
       L"AI: deleted server action %u", actionId);

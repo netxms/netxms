@@ -336,13 +336,13 @@ static TestOutcome ConnectFromServer(const InetAddress& addr, uint16_t port, jso
 /**
  * Check connectivity from a node or from the server to given target
  */
-std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
+AIToolResult F_CheckConnectivity(json_t *arguments, uint32_t userId)
 {
    // Parse protocol and port first so that argument errors do not cause any network activity
    const char *protocolName = json_object_get_string_utf8(arguments, "protocol", nullptr);
    int32_t portArg = json_object_get_int32(arguments, "port", 0);
    if ((portArg < 0) || (portArg > 65535))
-      return std::string("Invalid port number");
+      return AIToolResult::error("Invalid port number");
 
    const ProtocolDefinition *protocol = nullptr;
    if ((protocolName != nullptr) && (*protocolName != 0))
@@ -356,7 +356,7 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
          }
       }
       if (protocol == nullptr)
-         return std::string("Unsupported protocol (supported protocols are tcp, ssh, telnet, http, https and tls)");
+         return AIToolResult::error("Unsupported protocol (supported protocols are tcp, ssh, telnet, http, https and tls)");
    }
    else if (portArg != 0)
    {
@@ -368,7 +368,7 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
    {
       port = protocol->defaultPort;
       if (port == 0)
-         return std::string("Port number is required for protocol tcp");
+         return AIToolResult::error("Port number is required for protocol tcp");
    }
 
    // Source
@@ -379,9 +379,9 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
    {
       sourceObject = FindObjectByNameOrId(arguments, "from", OBJECT_NODE);
       if ((sourceObject == nullptr) || (sourceObject->getObjectClass() != OBJECT_NODE))
-         return std::string("Source node not found");
+         return AIToolResult::error("Source node not found");
       if (!sourceObject->checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
-         return std::string("Access denied to source node");
+         return AIToolResult::error("Access denied to source node");
       source = static_cast<Node*>(sourceObject.get());
    }
    else
@@ -389,13 +389,13 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
       // Server is represented by management node object; probing from server requires the same right as probing from any other node
       shared_ptr<NetObj> mgmtNode = FindObjectById(g_dwMgmtNode, OBJECT_NODE);
       if ((mgmtNode == nullptr) || !mgmtNode->checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
-         return std::string("Access denied: checks from server require agent read access to management server node");
+         return AIToolResult::error("Access denied: checks from server require agent read access to management server node");
    }
 
    // Target: object ID, IP address, exact object name or host name
    json_t *targetArg = json_object_get(arguments, "target");
    if (targetArg == nullptr)
-      return std::string("Target must be specified");
+      return AIToolResult::error("Target must be specified");
 
    shared_ptr<NetObj> targetObject;
    InetAddress targetAddress;
@@ -405,7 +405,7 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
       snprintf(inputText, sizeof(inputText), INT64_FMTA, static_cast<int64_t>(json_integer_value(targetArg)));
       targetObject = FindObjectById(static_cast<uint32_t>(json_integer_value(targetArg)));
       if (targetObject == nullptr)
-         return std::string("Target object not found");
+         return AIToolResult::error("Target object not found");
    }
    else if (json_is_string(targetArg) && (*json_string_value(targetArg) != 0))
    {
@@ -431,7 +431,7 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
    }
    else
    {
-      return std::string("Target must be specified");
+      return AIToolResult::error("Target must be specified");
    }
 
    json_t *output = json_object();
@@ -460,13 +460,13 @@ std::string F_CheckConnectivity(json_t *arguments, uint32_t userId)
       if (!targetObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
       {
          json_decref(output);
-         return std::string("Access denied to target object");
+         return AIToolResult::error("Access denied to target object");
       }
       targetAddress = targetObject->getPrimaryIpAddress();
       if ((targetObject->getObjectClass() == OBJECT_SUBNET) || !targetAddress.isValidUnicast())
       {
          json_decref(output);
-         return std::string("Target object does not have usable IP address");
+         return AIToolResult::error("Target object does not have usable IP address");
       }
       json_object_set_new(target, "objectId", json_integer(targetObject->getId()));
       json_object_set_new(target, "objectName", json_string_w(targetObject->getName()));

@@ -97,7 +97,7 @@ static json_t *ConvertToolsToAnthropic(json_t *tools)
 /**
  * Convert messages from OpenAI format to Anthropic format.
  * Key differences:
- * - role "tool" messages become role "user" with tool_result content blocks
+ * - role "tool" messages become role "user" with tool_result content blocks (is_error set for failed tool calls)
  * - assistant messages with tool_calls become content blocks with tool_use entries
  * - simple user/assistant messages keep content as string
  */
@@ -120,6 +120,8 @@ static json_t *ConvertMessagesToAnthropic(json_t *messages)
          json_object_set_new(toolResult, "type", json_string("tool_result"));
          json_object_set_new(toolResult, "tool_use_id", json_string(toolCallId));
          json_object_set_new(toolResult, "content", json_string(content));
+         if (json_object_get_boolean(msg, "is_error", false))
+            json_object_set_new(toolResult, "is_error", json_true());
 
          // Check if previous message is also a user message with tool_result - merge them
          size_t lastIdx = json_array_size(anthropicMessages);

@@ -26,19 +26,19 @@
 /**
  * Get AI tools available on a node's agent
  */
-std::string F_GetNodeAITools(json_t *arguments, uint32_t userId)
+AIToolResult F_GetNodeAITools(json_t *arguments, uint32_t userId)
 {
    const char *nodeRef = json_object_get_string_utf8(arguments, "node", nullptr);
    if ((nodeRef == nullptr) || (nodeRef[0] == 0))
-      return R"({"error": "node parameter is required"})";
+      return AIToolResult::error(R"({"error": "node parameter is required"})");
 
    shared_ptr<NetObj> obj = FindObjectByNameOrId(nodeRef, OBJECT_NODE);
    if (obj == nullptr)
-      return R"({"error": "Node not found"})";
+      return AIToolResult::error(R"({"error": "Node not found"})");
 
    shared_ptr<Node> node = static_pointer_cast<Node>(obj);
    if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return R"({"error": "Access denied"})";
+      return AIToolResult::error(R"({"error": "Access denied"})");
 
    const char *schema = node->getAgentAIToolsSchema();
    if (schema == nullptr)
@@ -48,7 +48,7 @@ std::string F_GetNodeAITools(json_t *arguments, uint32_t userId)
    json_error_t error;
    json_t *schemaJson = json_loads(schema, 0, &error);
    if (schemaJson == nullptr)
-      return R"({"error": "Failed to parse tool schema from agent"})";
+      return AIToolResult::error(R"({"error": "Failed to parse tool schema from agent"})");
 
    // Create response with explicit instructions
    json_t *response = json_object();
@@ -74,32 +74,32 @@ std::string F_GetNodeAITools(json_t *arguments, uint32_t userId)
 /**
  * Execute an AI tool on a node's agent
  */
-std::string F_ExecuteAgentTool(json_t *arguments, uint32_t userId)
+AIToolResult F_ExecuteAgentTool(json_t *arguments, uint32_t userId)
 {
    const char *nodeRef = json_object_get_string_utf8(arguments, "node", nullptr);
    const char *toolName = json_object_get_string_utf8(arguments, "tool_name", nullptr);
    json_t *params = json_object_get(arguments, "parameters");
 
    if ((nodeRef == nullptr) || (nodeRef[0] == 0) || (toolName == nullptr) || (toolName[0] == 0))
-      return R"({"error": "node and tool_name are required"})";
+      return AIToolResult::error(R"({"error": "node and tool_name are required"})");
 
    // Find node
    shared_ptr<NetObj> obj = FindObjectByNameOrId(nodeRef, OBJECT_NODE);
    if (obj == nullptr)
-      return R"({"error": "Node not found"})";
+      return AIToolResult::error(R"({"error": "Node not found"})");
 
    shared_ptr<Node> node = static_pointer_cast<Node>(obj);
    if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return R"({"error": "Access denied"})";
+      return AIToolResult::error(R"({"error": "Access denied"})");
 
    // Check agent reachability
    if (node->getState() & DCSF_UNREACHABLE)
-      return R"({"error": "Agent is currently unreachable"})";
+      return AIToolResult::error(R"({"error": "Agent is currently unreachable"})");
 
    // Get agent connection
    shared_ptr<AgentConnectionEx> conn = node->createAgentConnection();
    if (conn == nullptr)
-      return R"({"error": "Cannot connect to agent"})";
+      return AIToolResult::error(R"({"error": "Cannot connect to agent"})");
 
    // Serialize parameters
    // Handle the case where LLM passes parameters as a JSON string instead of an object
@@ -127,7 +127,7 @@ std::string F_ExecuteAgentTool(json_t *arguments, uint32_t userId)
 
    if (rcc != ERR_SUCCESS)
    {
-      // "Error:" prefix marks the result as failed for MCP clients; agent output carries the tool's own error details
+      // Agent output carries the tool's own error details
       char errorText[256];
       size_t bytes = wchar_to_utf8(AgentErrorCodeToText(rcc), -1, errorText, sizeof(errorText) - 1);
       errorText[bytes] = 0;
@@ -141,7 +141,7 @@ std::string F_ExecuteAgentTool(json_t *arguments, uint32_t userId)
          response.append(result);
       }
       MemFree(result);
-      return response;
+      return AIToolResult::error(response);
    }
 
    std::string response = (result != nullptr) ? result : "{}";

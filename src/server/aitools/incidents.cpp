@@ -29,20 +29,20 @@
 /**
  * Get incident details with full context
  */
-std::string F_GetIncidentDetails(json_t *arguments, uint32_t userId)
+AIToolResult F_GetIncidentDetails(json_t *arguments, uint32_t userId)
 {
    uint32_t incidentId = json_object_get_uint32(arguments, "incident_id", 0);
    if (incidentId == 0)
-      return std::string("Incident ID must be provided");
+      return AIToolResult::error("Incident ID must be provided");
 
    shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident == nullptr)
-      return std::string("Incident not found");
+      return AIToolResult::error("Incident not found");
 
    // Check access rights on source object
    shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
    if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Access denied or source object not found");
+      return AIToolResult::error("Access denied or source object not found");
 
    // Build response JSON
    json_t *root = incident->toJson();
@@ -113,16 +113,16 @@ std::string F_GetIncidentDetails(json_t *arguments, uint32_t userId)
 /**
  * Get events related to incident (within time window)
  */
-std::string F_GetIncidentRelatedEvents(json_t *arguments, uint32_t userId)
+AIToolResult F_GetIncidentRelatedEvents(json_t *arguments, uint32_t userId)
 {
    // Check system access rights for event log
    uint64_t systemAccessRights = GetEffectiveSystemRights(userId);
    if ((systemAccessRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) == 0)
-      return std::string("User does not have rights to view event log");
+      return AIToolResult::error("User does not have rights to view event log");
 
    uint32_t incidentId = json_object_get_uint32(arguments, "incident_id", 0);
    if (incidentId == 0)
-      return std::string("Incident ID must be provided");
+      return AIToolResult::error("Incident ID must be provided");
 
    wchar_t timeWindowStr[64];
    utf8_to_wchar(json_object_get_string_utf8(arguments, "time_window", "1h"), -1, timeWindowStr, 64);
@@ -130,12 +130,12 @@ std::string F_GetIncidentRelatedEvents(json_t *arguments, uint32_t userId)
 
    shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident == nullptr)
-      return std::string("Incident not found");
+      return AIToolResult::error("Incident not found");
 
    // Check access rights on source object
    shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
    if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied or source object not found");
+      return AIToolResult::error("Access denied or source object not found");
 
    // Collect object IDs to query (source object + all alarm source objects)
    IntegerArray<uint32_t> objectIds;
@@ -282,13 +282,13 @@ static std::string QueryObjectIncidents(const shared_ptr<NetObj>& object, bool o
 /**
  * Get historical incidents for an object
  */
-std::string F_GetIncidentHistory(json_t *arguments, uint32_t userId)
+AIToolResult F_GetIncidentHistory(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    uint32_t maxCount = json_object_get_uint32(arguments, "max_count", 20);
    if (maxCount < 1)
@@ -302,19 +302,19 @@ std::string F_GetIncidentHistory(json_t *arguments, uint32_t userId)
 /**
  * Get topology context for incident (network topology: neighbors, subnets, routing)
  */
-std::string F_GetIncidentTopologyContext(json_t *arguments, uint32_t userId)
+AIToolResult F_GetIncidentTopologyContext(json_t *arguments, uint32_t userId)
 {
    uint32_t incidentId = json_object_get_uint32(arguments, "incident_id", 0);
    if (incidentId == 0)
-      return std::string("Incident ID must be provided");
+      return AIToolResult::error("Incident ID must be provided");
 
    shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident == nullptr)
-      return std::string("Incident not found");
+      return AIToolResult::error("Incident not found");
 
    shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
    if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied or source object not found");
+      return AIToolResult::error("Access denied or source object not found");
 
    json_t *root = json_object();
 
@@ -484,24 +484,24 @@ std::string F_GetIncidentTopologyContext(json_t *arguments, uint32_t userId)
 /**
  * Add comment to incident
  */
-std::string F_AddIncidentComment(json_t *arguments, uint32_t userId)
+AIToolResult F_AddIncidentComment(json_t *arguments, uint32_t userId)
 {
    uint32_t incidentId = json_object_get_uint32(arguments, "incident_id", 0);
    if (incidentId == 0)
-      return std::string("Incident ID must be provided");
+      return AIToolResult::error("Incident ID must be provided");
 
    const char *text = json_object_get_string_utf8(arguments, "text", nullptr);
    if ((text == nullptr) || (text[0] == 0))
-      return std::string("Comment text must be provided");
+      return AIToolResult::error("Comment text must be provided");
 
    shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident == nullptr)
-      return std::string("Incident not found");
+      return AIToolResult::error("Incident not found");
 
    // Check access rights on source object
    shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
    if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Access denied or source object not found");
+      return AIToolResult::error("Access denied or source object not found");
 
    uint32_t commentId = 0;
    uint32_t rcc = AddIncidentComment(incidentId, String(text, "utf-8"), userId, &commentId, true);
@@ -509,7 +509,7 @@ std::string F_AddIncidentComment(json_t *arguments, uint32_t userId)
    {
       char buffer[128];
       snprintf(buffer, 128, "Failed to add comment: error code %u", rcc);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    json_t *result = json_object();
@@ -521,33 +521,33 @@ std::string F_AddIncidentComment(json_t *arguments, uint32_t userId)
 /**
  * Link alarm to incident
  */
-std::string F_LinkAlarmToIncident(json_t *arguments, uint32_t userId)
+AIToolResult F_LinkAlarmToIncident(json_t *arguments, uint32_t userId)
 {
    uint32_t incidentId = json_object_get_uint32(arguments, "incident_id", 0);
    if (incidentId == 0)
-      return std::string("Incident ID must be provided");
+      return AIToolResult::error("Incident ID must be provided");
 
    uint32_t alarmId = json_object_get_uint32(arguments, "alarm_id", 0);
    if (alarmId == 0)
-      return std::string("Alarm ID must be provided");
+      return AIToolResult::error("Alarm ID must be provided");
 
    shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident == nullptr)
-      return std::string("Incident not found");
+      return AIToolResult::error("Incident not found");
 
    // Check access rights on source object
    shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
    if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Access denied or source object not found");
+      return AIToolResult::error("Access denied or source object not found");
 
    uint32_t rcc = LinkAlarmToIncident(incidentId, alarmId, userId);
    if (rcc == RCC_ALARM_ALREADY_IN_INCIDENT)
-      return std::string("Alarm is already linked to another incident");
+      return AIToolResult::error("Alarm is already linked to another incident");
    if (rcc != RCC_SUCCESS)
    {
       char buffer[128];
       snprintf(buffer, 128, "Failed to link alarm: error code %u", rcc);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    json_t *result = json_object();
@@ -558,24 +558,24 @@ std::string F_LinkAlarmToIncident(json_t *arguments, uint32_t userId)
 /**
  * Link multiple alarms to incident
  */
-std::string F_LinkAlarmsToIncident(json_t *arguments, uint32_t userId)
+AIToolResult F_LinkAlarmsToIncident(json_t *arguments, uint32_t userId)
 {
    uint32_t incidentId = json_object_get_uint32(arguments, "incident_id", 0);
    if (incidentId == 0)
-      return std::string("Incident ID must be provided");
+      return AIToolResult::error("Incident ID must be provided");
 
    json_t *alarmIds = json_object_get(arguments, "alarm_ids");
    if ((alarmIds == nullptr) || !json_is_array(alarmIds))
-      return std::string("Alarm IDs array must be provided");
+      return AIToolResult::error("Alarm IDs array must be provided");
 
    shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident == nullptr)
-      return std::string("Incident not found");
+      return AIToolResult::error("Incident not found");
 
    // Check access rights on source object
    shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
    if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Access denied or source object not found");
+      return AIToolResult::error("Access denied or source object not found");
 
    int linkedCount = 0;
    json_t *failures = json_array();
@@ -615,20 +615,20 @@ std::string F_LinkAlarmsToIncident(json_t *arguments, uint32_t userId)
 /**
  * Assign incident to user
  */
-std::string F_AssignIncident(json_t *arguments, uint32_t userId)
+AIToolResult F_AssignIncident(json_t *arguments, uint32_t userId)
 {
    uint32_t incidentId = json_object_get_uint32(arguments, "incident_id", 0);
    if (incidentId == 0)
-      return std::string("Incident ID must be provided");
+      return AIToolResult::error("Incident ID must be provided");
 
    shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident == nullptr)
-      return std::string("Incident not found");
+      return AIToolResult::error("Incident not found");
 
    // Check access rights on source object
    shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
    if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Access denied or source object not found");
+      return AIToolResult::error("Access denied or source object not found");
 
    // Get assignee - either by ID or name
    uint32_t assigneeId = json_object_get_uint32(arguments, "user_id", 0);
@@ -639,19 +639,19 @@ std::string F_AssignIncident(json_t *arguments, uint32_t userId)
       {
          assigneeId = ResolveUserName(String(userName, "utf-8"));
          if (assigneeId == 0)
-            return std::string("User not found");
+            return AIToolResult::error("User not found");
       }
    }
 
    if (assigneeId == 0)
-      return std::string("User ID or user name must be provided");
+      return AIToolResult::error("User ID or user name must be provided");
 
    uint32_t rcc = AssignIncident(incidentId, assigneeId, userId);
    if (rcc != RCC_SUCCESS)
    {
       char buffer[128];
       snprintf(buffer, 128, "Failed to assign incident: error code %u", rcc);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    json_t *result = json_object();
@@ -663,19 +663,19 @@ std::string F_AssignIncident(json_t *arguments, uint32_t userId)
 /**
  * Suggest incident assignee based on responsible users
  */
-std::string F_SuggestIncidentAssignee(json_t *arguments, uint32_t userId)
+AIToolResult F_SuggestIncidentAssignee(json_t *arguments, uint32_t userId)
 {
    uint32_t incidentId = json_object_get_uint32(arguments, "incident_id", 0);
    if (incidentId == 0)
-      return std::string("Incident ID must be provided");
+      return AIToolResult::error("Incident ID must be provided");
 
    shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident == nullptr)
-      return std::string("Incident not found");
+      return AIToolResult::error("Incident not found");
 
    shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());
    if ((sourceObject == nullptr) || !sourceObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied or source object not found");
+      return AIToolResult::error("Access denied or source object not found");
 
    // Get responsible users for the object (including inherited from parents)
    unique_ptr<StructArray<ResponsibleUser>> responsibleUsers = sourceObject->getAllResponsibleUsers();
@@ -710,13 +710,13 @@ std::string F_SuggestIncidentAssignee(json_t *arguments, uint32_t userId)
 /**
  * Get open (not closed) incidents for an object
  */
-std::string F_GetOpenIncidents(json_t *arguments, uint32_t userId)
+AIToolResult F_GetOpenIncidents(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    return QueryObjectIncidents(object, true, 0);
 }
@@ -724,18 +724,18 @@ std::string F_GetOpenIncidents(json_t *arguments, uint32_t userId)
 /**
  * Create a new incident
  */
-std::string F_CreateIncident(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateIncident(json_t *arguments, uint32_t userId)
 {
    const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
    if ((title == nullptr) || (title[0] == 0))
-      return std::string("Incident title must be provided");
+      return AIToolResult::error("Incident title must be provided");
 
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "source_object");
    if (object == nullptr)
-      return std::string("Source object not found");
+      return AIToolResult::error("Source object not found");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Access denied - insufficient permissions to manage incidents on this object");
+      return AIToolResult::error("Access denied - insufficient permissions to manage incidents on this object");
 
    const char *initialComment = json_object_get_string_utf8(arguments, "initial_comment", nullptr);
    uint32_t sourceAlarmId = json_object_get_uint32(arguments, "source_alarm_id", 0);
@@ -755,7 +755,7 @@ std::string F_CreateIncident(json_t *arguments, uint32_t userId)
          snprintf(buffer, 128, "Failed to create incident: alarm is already linked to another incident");
       else
          snprintf(buffer, 128, "Failed to create incident: error code %u", rcc);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    json_t *result = json_object();
@@ -769,34 +769,34 @@ std::string F_CreateIncident(json_t *arguments, uint32_t userId)
 /**
  * Create an incident from multiple alarms
  */
-std::string F_CreateIncidentFromAlarms(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateIncidentFromAlarms(json_t *arguments, uint32_t userId)
 {
    const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
    if ((title == nullptr) || (title[0] == 0))
-      return std::string("Incident title must be provided");
+      return AIToolResult::error("Incident title must be provided");
 
    json_t *alarmIds = json_object_get(arguments, "alarm_ids");
    if ((alarmIds == nullptr) || !json_is_array(alarmIds) || (json_array_size(alarmIds) == 0))
-      return std::string("Alarm IDs array must be provided and non-empty");
+      return AIToolResult::error("Alarm IDs array must be provided and non-empty");
 
    // Get first alarm to determine source object
    uint32_t firstAlarmId = static_cast<uint32_t>(json_integer_value(json_array_get(alarmIds, 0)));
    if (firstAlarmId == 0)
-      return std::string("Invalid first alarm ID");
+      return AIToolResult::error("Invalid first alarm ID");
 
    Alarm *firstAlarm = FindAlarmById(firstAlarmId);
    if (firstAlarm == nullptr)
-      return std::string("First alarm not found");
+      return AIToolResult::error("First alarm not found");
 
    uint32_t sourceObjectId = firstAlarm->getSourceObject();
    delete firstAlarm;
 
    shared_ptr<NetObj> sourceObject = FindObjectById(sourceObjectId);
    if (sourceObject == nullptr)
-      return std::string("Source object for first alarm not found");
+      return AIToolResult::error("Source object for first alarm not found");
 
    if (!sourceObject->checkAccessRights(userId, OBJECT_ACCESS_MANAGE_INCIDENTS))
-      return std::string("Access denied - insufficient permissions to manage incidents on source object");
+      return AIToolResult::error("Access denied - insufficient permissions to manage incidents on source object");
 
    const char *initialComment = json_object_get_string_utf8(arguments, "initial_comment", nullptr);
 
@@ -816,7 +816,7 @@ std::string F_CreateIncidentFromAlarms(json_t *arguments, uint32_t userId)
          snprintf(buffer, 128, "Failed to create incident: first alarm is already linked to another incident");
       else
          snprintf(buffer, 128, "Failed to create incident: error code %u", rcc);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    // Link remaining alarms

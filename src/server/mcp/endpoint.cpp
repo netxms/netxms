@@ -119,25 +119,33 @@ static int MethodToolsCall(Context *context, json_t *id, json_t *params)
       return SendError(context, id, JSON_RPC_INVALID_PARAMS, "Tool arguments must be an object");
 
    bool found;
-   std::string output = CallMCPTool(name, arguments, context->getUserId(), &found);
+   AIToolResult output = CallMCPTool(name, arguments, context->getUserId(), &found);
    if (!found)
    {
       nxlog_debug_tag(DEBUG_TAG_MCP, 5, L"Call to unknown tool \"%hs\"", name);
       return SendError(context, id, JSON_RPC_INVALID_PARAMS, "Unknown tool");
    }
 
-   bool isError = (output.compare(0, 6, "Error:") == 0);
-   context->writeAuditLog(AUDIT_AI, !isError, 0, L"AI tool \"%hs\" called via MCP", name);
-   nxlog_debug_tag(DEBUG_TAG_MCP, 5, L"Tool \"%hs\" executed (%s)", name, isError ? L"error" : L"success");
+   if (output.failed && !output.text.empty())
+   {
+      // Failure text can be long (agent or script output), only beginning of it is recorded
+      String failureText(output.text.c_str(), "utf-8");
+      context->writeAuditLog(AUDIT_AI, false, 0, L"AI tool \"%hs\" called via MCP: %.1000s", name, failureText.cstr());
+   }
+   else
+   {
+      context->writeAuditLog(AUDIT_AI, !output.failed, 0, L"AI tool \"%hs\" called via MCP", name);
+   }
+   nxlog_debug_tag(DEBUG_TAG_MCP, 5, L"Tool \"%hs\" executed (%s)", name, output.failed ? L"error" : L"success");
 
    json_t *result = json_object();
    json_t *content = json_array();
    json_t *item = json_object();
    json_object_set_new(item, "type", json_string("text"));
-   json_object_set_new(item, "text", json_string(output.c_str()));
+   json_object_set_new(item, "text", json_string(output.text.c_str()));
    json_array_append_new(content, item);
    json_object_set_new(result, "content", content);
-   json_object_set_new(result, "isError", json_boolean(isError));
+   json_object_set_new(result, "isError", json_boolean(output.failed));
    return SendResult(context, id, result);
 }
 

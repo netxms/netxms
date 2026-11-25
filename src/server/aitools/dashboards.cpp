@@ -611,7 +611,7 @@ static shared_ptr<Dashboard> ResolveDashboard(json_t *arguments, uint32_t userId
 /**
  * List supported dashboard element types
  */
-std::string F_ListDashboardElementTypes(json_t *arguments, uint32_t userId)
+AIToolResult F_ListDashboardElementTypes(json_t *arguments, uint32_t userId)
 {
    json_t *output = json_array();
    for(const ElementTypeDescriptor& d : GetElementTypeDescriptors())
@@ -622,25 +622,25 @@ std::string F_ListDashboardElementTypes(json_t *arguments, uint32_t userId)
 /**
  * Describe a single dashboard element type (full schema + example)
  */
-std::string F_DescribeDashboardElementType(json_t *arguments, uint32_t userId)
+AIToolResult F_DescribeDashboardElementType(json_t *arguments, uint32_t userId)
 {
    const char *name = json_object_get_string_utf8(arguments, "type", nullptr);
    const ElementTypeDescriptor *d = FindElementTypeDescriptor(name);
    if (d == nullptr)
-      return std::string("Unknown element type. Use list-dashboard-element-types to enumerate supported types.");
+      return AIToolResult::error("Unknown element type. Use list-dashboard-element-types to enumerate supported types.");
    return JsonToString(ElementTypeToJson(*d, true));
 }
 
 /**
  * Create a new (empty) dashboard
  */
-std::string F_CreateDashboard(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateDashboard(json_t *arguments, uint32_t userId)
 {
    wchar_t name[MAX_OBJECT_NAME];
    utf8_to_wchar(json_object_get_string_utf8(arguments, "name", ""), -1, name, MAX_OBJECT_NAME);
    name[MAX_OBJECT_NAME - 1] = 0;
    if ((name[0] == 0) || !IsValidObjectName(name, TRUE))
-      return std::string("A valid dashboard name must be provided");
+      return AIToolResult::error("A valid dashboard name must be provided");
 
    int columns = json_object_get_int32(arguments, "columns", 2);
    if (columns < 1)
@@ -654,9 +654,9 @@ std::string F_CreateDashboard(json_t *arguments, uint32_t userId)
    {
       parent = FindObjectByNameOrId(arguments, "group");
       if (parent == nullptr)
-         return std::string("Dashboard group not found");
+         return AIToolResult::error("Dashboard group not found");
       if ((parent->getObjectClass() != OBJECT_DASHBOARDGROUP) && (parent->getObjectClass() != OBJECT_DASHBOARDROOT))
-         return std::string("Specified group is not a dashboard group");
+         return AIToolResult::error("Specified group is not a dashboard group");
    }
    else
    {
@@ -664,7 +664,7 @@ std::string F_CreateDashboard(json_t *arguments, uint32_t userId)
    }
 
    if (!parent->checkAccessRights(userId, OBJECT_ACCESS_CREATE))
-      return std::string("Access denied: no create permission on parent");
+      return AIToolResult::error("Access denied: no create permission on parent");
 
    // Optional object to associate the dashboard with
    shared_ptr<NetObj> associatedObject;
@@ -672,9 +672,9 @@ std::string F_CreateDashboard(json_t *arguments, uint32_t userId)
    {
       associatedObject = FindObjectByNameOrId(arguments, "associateWith");
       if (associatedObject == nullptr)
-         return std::string("Object specified in associateWith not found");
+         return AIToolResult::error("Object specified in associateWith not found");
       if (!associatedObject->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-         return std::string("Access denied to object specified in associateWith");
+         return AIToolResult::error("Access denied to object specified in associateWith");
    }
 
    auto dashboard = make_shared<Dashboard>(name);
@@ -705,12 +705,12 @@ std::string F_CreateDashboard(json_t *arguments, uint32_t userId)
 /**
  * Read dashboard structure including ordered elements with their GUIDs
  */
-std::string F_GetDashboard(json_t *arguments, uint32_t userId)
+AIToolResult F_GetDashboard(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Dashboard> dashboard = ResolveDashboard(arguments, userId, OBJECT_ACCESS_READ, &error);
    if (dashboard == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    json_t *elements = dashboard->getElementsAsJson();
 
@@ -736,12 +736,12 @@ std::string F_GetDashboard(json_t *arguments, uint32_t userId)
 /**
  * Update dashboard-level properties (name, column count, scrollable flag)
  */
-std::string F_UpdateDashboard(json_t *arguments, uint32_t userId)
+AIToolResult F_UpdateDashboard(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Dashboard> dashboard = ResolveDashboard(arguments, userId, OBJECT_ACCESS_MODIFY, &error);
    if (dashboard == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    if (json_object_get(arguments, "name") != nullptr)
    {
@@ -749,7 +749,7 @@ std::string F_UpdateDashboard(json_t *arguments, uint32_t userId)
       utf8_to_wchar(json_object_get_string_utf8(arguments, "name", ""), -1, name, MAX_OBJECT_NAME);
       name[MAX_OBJECT_NAME - 1] = 0;
       if ((name[0] == 0) || !IsValidObjectName(name, TRUE))
-         return std::string("A valid dashboard name must be provided");
+         return AIToolResult::error("A valid dashboard name must be provided");
       dashboard->setName(name);
    }
 
@@ -785,16 +785,16 @@ std::string F_UpdateDashboard(json_t *arguments, uint32_t userId)
 /**
  * Append an element to a dashboard
  */
-std::string F_AddDashboardElement(json_t *arguments, uint32_t userId)
+AIToolResult F_AddDashboardElement(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Dashboard> dashboard = ResolveDashboard(arguments, userId, OBJECT_ACCESS_MODIFY, &error);
    if (dashboard == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    const ElementTypeDescriptor *d = FindElementTypeDescriptor(json_object_get_string_utf8(arguments, "type", nullptr));
    if (d == nullptr)
-      return std::string("Unknown element type. Use list-dashboard-element-types to enumerate supported types.");
+      return AIToolResult::error("Unknown element type. Use list-dashboard-element-types to enumerate supported types.");
 
    json_t *config = ExtractConfigObject(arguments, "config");
    if (config == nullptr)
@@ -804,14 +804,14 @@ std::string F_AddDashboardElement(json_t *arguments, uint32_t userId)
    if (!fieldError.empty())
    {
       json_decref(config);
-      return fieldError;
+      return AIToolResult::error(fieldError);
    }
 
    std::string refError = ValidateReferences(config, userId);
    if (!refError.empty())
    {
       json_decref(config);
-      return refError;
+      return AIToolResult::error(refError);
    }
 
    StringBuffer notes;
@@ -830,20 +830,20 @@ std::string F_AddDashboardElement(json_t *arguments, uint32_t userId)
 /**
  * Replace configuration of an existing element identified by GUID
  */
-std::string F_UpdateDashboardElement(json_t *arguments, uint32_t userId)
+AIToolResult F_UpdateDashboardElement(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Dashboard> dashboard = ResolveDashboard(arguments, userId, OBJECT_ACCESS_MODIFY, &error);
    if (dashboard == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    uuid guid = uuid::parseA(json_object_get_string_utf8(arguments, "guid", ""));
    if (guid.isNull())
-      return std::string("A valid element GUID must be provided");
+      return AIToolResult::error("A valid element GUID must be provided");
 
    json_t *config = ExtractConfigObject(arguments, "config");
    if (config == nullptr)
-      return std::string("A valid configuration object must be provided");
+      return AIToolResult::error("A valid configuration object must be provided");
 
    // Determine element type to validate required fields (look up current element type)
    json_t *elements = dashboard->getElementsAsJson();
@@ -864,21 +864,21 @@ std::string F_UpdateDashboardElement(json_t *arguments, uint32_t userId)
    if (d == nullptr)
    {
       json_decref(config);
-      return std::string("Element with specified GUID not found on dashboard");
+      return AIToolResult::error("Element with specified GUID not found on dashboard");
    }
 
    std::string fieldError = ValidateRequiredFields(*d, config);
    if (!fieldError.empty())
    {
       json_decref(config);
-      return fieldError;
+      return AIToolResult::error(fieldError);
    }
 
    std::string refError = ValidateReferences(config, userId);
    if (!refError.empty())
    {
       json_decref(config);
-      return refError;
+      return AIToolResult::error(refError);
    }
 
    // Optionally update layout if width/height provided
@@ -889,7 +889,7 @@ std::string F_UpdateDashboardElement(json_t *arguments, uint32_t userId)
       layout = BuildLayout(arguments, dashboard->getColumnCount(), notes);
 
    if (!dashboard->updateElement(guid, config, layout))
-      return std::string("Element with specified GUID not found on dashboard");
+      return AIToolResult::error("Element with specified GUID not found on dashboard");
 
    json_t *output = json_object();
    json_object_set_new(output, "result", json_string("element updated"));
@@ -901,19 +901,19 @@ std::string F_UpdateDashboardElement(json_t *arguments, uint32_t userId)
 /**
  * Remove an element identified by GUID
  */
-std::string F_RemoveDashboardElement(json_t *arguments, uint32_t userId)
+AIToolResult F_RemoveDashboardElement(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Dashboard> dashboard = ResolveDashboard(arguments, userId, OBJECT_ACCESS_MODIFY, &error);
    if (dashboard == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    uuid guid = uuid::parseA(json_object_get_string_utf8(arguments, "guid", ""));
    if (guid.isNull())
-      return std::string("A valid element GUID must be provided");
+      return AIToolResult::error("A valid element GUID must be provided");
 
    if (!dashboard->removeElement(guid))
-      return std::string("Element with specified GUID not found on dashboard");
+      return AIToolResult::error("Element with specified GUID not found on dashboard");
 
    return std::string("Element removed");
 }
@@ -921,23 +921,23 @@ std::string F_RemoveDashboardElement(json_t *arguments, uint32_t userId)
 /**
  * Move an element identified by GUID to a new position
  */
-std::string F_MoveDashboardElement(json_t *arguments, uint32_t userId)
+AIToolResult F_MoveDashboardElement(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Dashboard> dashboard = ResolveDashboard(arguments, userId, OBJECT_ACCESS_MODIFY, &error);
    if (dashboard == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    uuid guid = uuid::parseA(json_object_get_string_utf8(arguments, "guid", ""));
    if (guid.isNull())
-      return std::string("A valid element GUID must be provided");
+      return AIToolResult::error("A valid element GUID must be provided");
 
    if (json_object_get(arguments, "position") == nullptr)
-      return std::string("Target position must be provided");
+      return AIToolResult::error("Target position must be provided");
    int position = json_object_get_int32(arguments, "position", 0);
 
    if (!dashboard->moveElement(guid, position))
-      return std::string("Element with specified GUID not found on dashboard");
+      return AIToolResult::error("Element with specified GUID not found on dashboard");
 
    return std::string("Element moved");
 }

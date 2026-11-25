@@ -333,17 +333,17 @@ json_t NXCORE_EXPORTABLE *GetAISkillsAsJson()
 /**
  * Load AI assistant skill into chat context
  */
-std::string Chat::loadSkill(const char *skillName)
+AIToolResult Chat::loadSkill(const char *skillName)
 {
    if (IsAISkillDisabled(skillName))
-      return std::string("Error: skill is disabled by administrator");
+      return AIToolResult::error("Error: skill is disabled by administrator");
 
    s_skillsMutex.lock();
    auto it = s_skills.find(skillName);
    if (it == s_skills.end())
    {
       s_skillsMutex.unlock();
-      return std::string("Error: skill not found");
+      return AIToolResult::error("Error: skill not found");
    }
 
    const AISkill& skill = *it->second;
@@ -440,14 +440,14 @@ static void ExecuteAIWorker(const shared_ptr<AIWorkerBatch>& batch, const shared
  * and inherit origin of this chat, cannot ask user questions, and cannot start other workers. Token usage of workers is
  * added to the token usage collector of the calling thread.
  */
-std::string Chat::runWorkers(json_t *workers)
+AIToolResult Chat::runWorkers(json_t *workers)
 {
    if (!json_is_array(workers) || (json_array_size(workers) == 0))
-      return std::string("Error: list of workers must be provided");
+      return AIToolResult::error("Error: list of workers must be provided");
    if (json_array_size(workers) > static_cast<size_t>(s_maxParallelWorkers))
-      return std::string("Error: too many workers requested (maximum is ") + std::to_string(s_maxParallelWorkers) + ")";
+      return AIToolResult::error(std::string("Error: too many workers requested (maximum is ") + std::to_string(s_maxParallelWorkers) + ")");
    if (s_workerThreadPool == nullptr)
-      return std::string("Error: workers are not available");
+      return AIToolResult::error("Error: workers are not available");
 
    auto batch = make_shared<AIWorkerBatch>();
 
@@ -469,22 +469,22 @@ std::string Chat::runWorkers(json_t *workers)
       }
       else
       {
-         return std::string("Error: worker #") + std::to_string(i + 1) + " is not an object";
+         return AIToolResult::error(std::string("Error: worker #") + std::to_string(i + 1) + " is not an object");
       }
       if (task[0] == 0)
-         return std::string("Error: task is missing for worker #") + std::to_string(i + 1);
+         return AIToolResult::error(std::string("Error: task is missing for worker #") + std::to_string(i + 1));
 
       if (skillName[0] != 0)
       {
          if (IsAISkillDisabled(skillName))
-            return std::string("Error: skill \"") + skillName + "\" is disabled by administrator";
+            return AIToolResult::error(std::string("Error: skill \"") + skillName + "\" is disabled by administrator");
 
          LockGuard lockGuard(s_skillsMutex);
          auto it = s_skills.find(skillName);
          if (it == s_skills.end())
-            return std::string("Error: skill \"") + skillName + "\" not found";
+            return AIToolResult::error(std::string("Error: skill \"") + skillName + "\" not found");
          if (!it->second->supportsWorker)
-            return std::string("Error: skill \"") + skillName + "\" cannot be run in a worker, load it with load-skill instead";
+            return AIToolResult::error(std::string("Error: skill \"") + skillName + "\" cannot be run in a worker, load it with load-skill instead");
       }
 
       batch->workers.push_back(make_shared<AIWorker>(skillName, task));
@@ -505,10 +505,10 @@ std::string Chat::runWorkers(json_t *workers)
 
       if (!worker->skill.empty())
       {
-         std::string skillPrompt = chat->loadSkill(worker->skill.c_str());
-         if (skillPrompt.find("Error:") == 0)
+         AIToolResult skillPrompt = chat->loadSkill(worker->skill.c_str());
+         if (skillPrompt.failed)
             return skillPrompt;
-         chat->addMessage("system", skillPrompt.c_str());
+         chat->addMessage("system", skillPrompt.text.c_str());
       }
    }
 

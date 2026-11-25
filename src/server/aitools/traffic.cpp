@@ -344,7 +344,7 @@ static shared_ptr<ObservationPoint> ResolvePoint(json_t *arguments, uint32_t use
 /**
  * Get list of traffic observers
  */
-std::string F_GetTrafficObservers(json_t *arguments, uint32_t userId)
+AIToolResult F_GetTrafficObservers(json_t *arguments, uint32_t userId)
 {
    unique_ptr<SharedObjectArray<NetObj>> observers = g_idxTrafficObserverById.getObjects(
       [userId] (NetObj *object) -> bool
@@ -366,16 +366,16 @@ std::string F_GetTrafficObservers(json_t *arguments, uint32_t userId)
 /**
  * Get list of observation points, optionally restricted to one observer
  */
-std::string F_GetObservationPoints(json_t *arguments, uint32_t userId)
+AIToolResult F_GetObservationPoints(json_t *arguments, uint32_t userId)
 {
    uint32_t observerId = 0;
    if (json_object_get(arguments, "observer") != nullptr)
    {
       shared_ptr<NetObj> observer = FindObjectByNameOrId(arguments, "observer", OBJECT_TRAFFICOBSERVER);
       if (observer == nullptr)
-         return std::string("Traffic observer not found");
+         return AIToolResult::error("Traffic observer not found");
       if (!observer->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Access denied");
+         return AIToolResult::error("Access denied");
       observerId = observer->getId();
    }
 
@@ -420,12 +420,12 @@ static json_t *PointMetricToJson(ObservationPoint *point, const wchar_t *metric)
 /**
  * Get current statistics of an observation point
  */
-std::string F_GetObservationPointStatistics(json_t *arguments, uint32_t userId)
+AIToolResult F_GetObservationPointStatistics(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<ObservationPoint> point = ResolvePoint(arguments, userId, &error);
    if (point == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    static const struct
    {
@@ -466,25 +466,25 @@ std::string F_GetObservationPointStatistics(json_t *arguments, uint32_t userId)
 /**
  * Get point-level table (top talkers, L7, DSCP) with common error handling
  */
-static std::string GetPointTable(json_t *arguments, uint32_t userId, const wchar_t *metric, uint64_t requiredCapability, const wchar_t *hostColumn)
+static AIToolResult GetPointTable(json_t *arguments, uint32_t userId, const wchar_t *metric, uint64_t requiredCapability, const wchar_t *hostColumn)
 {
    std::string error;
    shared_ptr<ObservationPoint> point = ResolvePoint(arguments, userId, &error);
    if (point == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    shared_ptr<TrafficObserver> observer = point->getOwner();
    if (observer == nullptr)
-      return std::string("Observation point is not attached to a traffic observer");
+      return AIToolResult::error("Observation point is not attached to a traffic observer");
    if (!(observer->getCapabilities() & requiredCapability))
-      return std::string("Traffic analyzer backend does not support this query");
+      return AIToolResult::error("Traffic analyzer backend does not support this query");
 
    shared_ptr<Table> table;
    DataCollectionError rc = point->getTableFromConnector(metric, &table);
    if (rc != DCE_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"Traffic table \"%s\" query for observation point [%u] %s failed (%hs)", metric, point->getId(), point->getName(), DataCollectionErrorToText(rc));
-      return std::string("Cannot retrieve data: ") + DataCollectionErrorToText(rc);
+      return AIToolResult::error(std::string("Cannot retrieve data: ") + DataCollectionErrorToText(rc));
    }
 
    json_t *output;
@@ -507,7 +507,7 @@ static std::string GetPointTable(json_t *arguments, uint32_t userId, const wchar
 /**
  * Get top talkers of an observation point
  */
-std::string F_GetObservationPointTopTalkers(json_t *arguments, uint32_t userId)
+AIToolResult F_GetObservationPointTopTalkers(json_t *arguments, uint32_t userId)
 {
    return GetPointTable(arguments, userId, L"TopTalkers", TRAFFIC_CAPABILITY_POINT_TOP_TALKERS, L"HOST");
 }
@@ -515,7 +515,7 @@ std::string F_GetObservationPointTopTalkers(json_t *arguments, uint32_t userId)
 /**
  * Get L7 application breakdown of an observation point
  */
-std::string F_GetObservationPointL7Breakdown(json_t *arguments, uint32_t userId)
+AIToolResult F_GetObservationPointL7Breakdown(json_t *arguments, uint32_t userId)
 {
    return GetPointTable(arguments, userId, L"L7Breakdown", TRAFFIC_CAPABILITY_POINT_L7, nullptr);
 }
@@ -523,7 +523,7 @@ std::string F_GetObservationPointL7Breakdown(json_t *arguments, uint32_t userId)
 /**
  * Get DSCP breakdown of an observation point
  */
-std::string F_GetObservationPointDSCPBreakdown(json_t *arguments, uint32_t userId)
+AIToolResult F_GetObservationPointDSCPBreakdown(json_t *arguments, uint32_t userId)
 {
    return GetPointTable(arguments, userId, L"DSCPBreakdown", TRAFFIC_CAPABILITY_POINT_DSCP, nullptr);
 }
@@ -531,12 +531,12 @@ std::string F_GetObservationPointDSCPBreakdown(json_t *arguments, uint32_t userI
 /**
  * Get active hosts seen by an observation point
  */
-std::string F_GetObservationPointActiveHosts(json_t *arguments, uint32_t userId)
+AIToolResult F_GetObservationPointActiveHosts(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<ObservationPoint> point = ResolvePoint(arguments, userId, &error);
    if (point == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    // Optional filter: IP address, CIDR, or substring of host name / node name
    InetAddress ipFilter;
@@ -565,9 +565,9 @@ std::string F_GetObservationPointActiveHosts(json_t *arguments, uint32_t userId)
    shared_ptr<Table> hosts;
    uint32_t rcc = GetObservationPointActiveHosts(point.get(), userId, &hosts);
    if (rcc == RCC_INCOMPATIBLE_OPERATION)
-      return std::string("Traffic analyzer backend does not support active host listing");
+      return AIToolResult::error("Traffic analyzer backend does not support active host listing");
    if (rcc != RCC_SUCCESS)
-      return std::string("Cannot retrieve active host list from traffic analyzer backend");
+      return AIToolResult::error("Cannot retrieve active host list from traffic analyzer backend");
 
    int ipColumn = hosts->getColumnIndex(L"IP");
    int nameColumn = hosts->getColumnIndex(L"NAME");
@@ -684,12 +684,12 @@ static json_t *CreateHostRecordSummary(const ObservationPointHostRecord *r)
 /**
  * Get traffic context for a node: which observation points see it, and current host-level counters
  */
-std::string F_GetNodeTrafficContext(json_t *arguments, uint32_t userId)
+AIToolResult F_GetNodeTrafficContext(json_t *arguments, uint32_t userId)
 {
    std::string error;
    shared_ptr<Node> node = ResolveNode(arguments, userId, &error);
    if (node == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    json_t *output = json_object();
    json_object_set_new(output, "node_id", json_integer(node->getId()));
@@ -755,16 +755,16 @@ std::string F_GetNodeTrafficContext(json_t *arguments, uint32_t userId)
 /**
  * Get host-level table (peers or L7) for a node from every observation point that sees it
  */
-static std::string GetNodeHostTable(json_t *arguments, uint32_t userId, const wchar_t *metric, uint64_t requiredCapability, bool annotatePeers)
+static AIToolResult GetNodeHostTable(json_t *arguments, uint32_t userId, const wchar_t *metric, uint64_t requiredCapability, bool annotatePeers)
 {
    std::string error;
    shared_ptr<Node> node = ResolveNode(arguments, userId, &error);
    if (node == nullptr)
-      return error;
+      return AIToolResult::error(error);
 
    unique_ptr<ObjectArray<ObservationPointHostRecord>> records = GetNodeHostRecords(node.get(), arguments, userId, &error);
    if (!error.empty())
-      return error;
+      return AIToolResult::error(error);
    if (records->size() == 0)
       return std::string("Node is not seen by any observation point (or not by the requested one). Traffic data is not available for this node.");
 
@@ -824,7 +824,7 @@ static std::string GetNodeHostTable(json_t *arguments, uint32_t userId, const wc
 /**
  * Get communication peers of a node
  */
-std::string F_GetNodeTrafficPeers(json_t *arguments, uint32_t userId)
+AIToolResult F_GetNodeTrafficPeers(json_t *arguments, uint32_t userId)
 {
    return GetNodeHostTable(arguments, userId, L"Host.Peers", TRAFFIC_CAPABILITY_HOST_PEERS, true);
 }
@@ -832,7 +832,7 @@ std::string F_GetNodeTrafficPeers(json_t *arguments, uint32_t userId)
 /**
  * Get L7 application breakdown of a node's traffic
  */
-std::string F_GetNodeTrafficL7Breakdown(json_t *arguments, uint32_t userId)
+AIToolResult F_GetNodeTrafficL7Breakdown(json_t *arguments, uint32_t userId)
 {
    return GetNodeHostTable(arguments, userId, L"Host.L7Breakdown", TRAFFIC_CAPABILITY_HOST_L7, false);
 }

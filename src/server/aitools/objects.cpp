@@ -67,13 +67,13 @@ static const char *InterfaceOperStateToText(uint16_t state)
 /**
  * Get object details
  */
-std::string F_GetObject(json_t *arguments, uint32_t userId)
+AIToolResult F_GetObject(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    return JsonToString(object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES));
 }
@@ -143,7 +143,7 @@ static inline json_t *CreateObjectSummary(const NetObj& object)
 /**
  * Find objects using various criteria
  */
-std::string F_FindObjects(json_t *arguments, uint32_t userId)
+AIToolResult F_FindObjects(json_t *arguments, uint32_t userId)
 {
    uint32_t parentId = json_object_get_uint32(arguments, "parentId");
    int32_t zoneUIN = json_object_get_int32(arguments, "zoneUIN");
@@ -158,7 +158,7 @@ std::string F_FindObjects(json_t *arguments, uint32_t userId)
       ipAddressFilter = InetAddress::parse(ipAddressText);
       if (!ipAddressFilter.isValid())
       {
-         return std::string("Invalid IP address");
+         return AIToolResult::error("Invalid IP address");
       }
    }
 
@@ -173,7 +173,7 @@ std::string F_FindObjects(json_t *arguments, uint32_t userId)
          int n = NetObj::getObjectClassByNameA(json_string_value(c));
          if (n == OBJECT_GENERIC)
          {
-            return std::string("Invalid object class ") + json_string_value(c);
+            return AIToolResult::error(std::string("Invalid object class ") + json_string_value(c));
          }
          classFilter.insert(n);
       }
@@ -183,13 +183,13 @@ std::string F_FindObjects(json_t *arguments, uint32_t userId)
       int n = NetObj::getObjectClassByNameA(json_string_value(classes));
       if (n == OBJECT_GENERIC)
       {
-         return std::string("Invalid object class ") + json_string_value(classes);
+         return AIToolResult::error(std::string("Invalid object class ") + json_string_value(classes));
       }
       classFilter.insert(n);
    }
 
    if ((parentId == 0) && (zoneUIN == 0) && (name[0] == 0) && classFilter.empty() && !ipAddressFilter.isValid())
-      return std::string("At least one search criteria should be set");
+      return AIToolResult::error("At least one search criteria should be set");
 
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
       [userId, parentId, zoneUIN, name, &classFilter, ipAddressFilter] (NetObj *object) -> bool
@@ -220,22 +220,22 @@ std::string F_FindObjects(json_t *arguments, uint32_t userId)
 /**
  * Start maintenance period for object
  */
-std::string F_StartMaintenance(json_t *arguments, uint32_t userId)
+AIToolResult F_StartMaintenance(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MAINTENANCE))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isMaintenanceApplicable())
-      return std::string("Maintenance mode is not applicable for this object");
+      return AIToolResult::error("Maintenance mode is not applicable for this object");
 
    if (object->isInMaintenanceMode())
-      return std::string("Object is already in maintenance mode");
+      return AIToolResult::error("Object is already in maintenance mode");
 
    String message(json_object_get_string_utf8(arguments, "message", "Maintenance period started via AI assistant"), "utf-8");
    object->enterMaintenanceMode(userId, message);
@@ -245,22 +245,22 @@ std::string F_StartMaintenance(json_t *arguments, uint32_t userId)
 /**
  * End maintenance period for object
  */
-std::string F_EndMaintenance(json_t *arguments, uint32_t userId)
+AIToolResult F_EndMaintenance(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MAINTENANCE))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    if (!object->isMaintenanceApplicable())
-      return std::string("Maintenance mode is not applicable for this object");
+      return AIToolResult::error("Maintenance mode is not applicable for this object");
 
    if (object->isDataCollectionTarget() && !object->isInMaintenanceMode())
-      return std::string("Object is not in maintenance mode");
+      return AIToolResult::error("Object is not in maintenance mode");
 
    object->leaveMaintenanceMode(userId);
    return std::string("Maintenance period ended for object");
@@ -338,7 +338,7 @@ static shared_ptr<Interface> ResolveInterface(json_t *arguments, std::string *er
 /**
  * Set expected state for interface
  */
-std::string F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId)
+AIToolResult F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId)
 {
    static const char *stateNames[] = { "up", "down", "ignore", "auto" };
    static const wchar_t *stateNamesW[] = { L"UP", L"DOWN", L"IGNORE", L"AUTO" };
@@ -346,11 +346,11 @@ std::string F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId)
    std::string error;
    shared_ptr<Interface> iface = ResolveInterface(arguments, &error);
    if (iface == nullptr)
-      return error;
+      return AIToolResult::error(error);
    if (!iface->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Interface not found");
+      return AIToolResult::error("Interface not found");
    if (!iface->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    const char *stateName = json_object_get_string_utf8(arguments, "state", "");
    int state;
@@ -358,11 +358,11 @@ std::string F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId)
       if (!stricmp(stateName, stateNames[state]))
          break;
    if (state == 4)
-      return std::string("Invalid state - expected one of: up, down, ignore, auto");
+      return AIToolResult::error("Invalid state - expected one of: up, down, ignore, auto");
 
    int oldState = iface->getExpectedState();
    if (oldState == state)
-      return std::string("Expected state of interface is already ") + stateNames[state];
+      return AIToolResult::error(std::string("Expected state of interface is already ") + stateNames[state]);
 
    iface->setExpectedState(state);
    WriteAuditLogWithValues(AUDIT_OBJECTS, true, userId, nullptr, 0, iface->getId(),
@@ -378,23 +378,23 @@ std::string F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId)
 /**
  * Change management status of an object
  */
-static std::string SetManagementStatus(json_t *arguments, uint32_t userId, bool managed)
+static AIToolResult SetManagementStatus(json_t *arguments, uint32_t userId, bool managed)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    int objectClass = object->getObjectClass();
    if ((objectClass == OBJECT_TEMPLATE) || (objectClass == OBJECT_TEMPLATEGROUP) || (objectClass == OBJECT_TEMPLATEROOT))
-      return std::string("Management status is not applicable to templates");
+      return AIToolResult::error("Management status is not applicable to templates");
 
    if (managed == (object->getStatus() != STATUS_UNMANAGED))
-      return std::string(managed ? "Object is already managed" : "Object is already unmanaged");
+      return AIToolResult::error(managed ? "Object is already managed" : "Object is already unmanaged");
 
    if (!object->isManagementStatusChangeAllowed(managed))
-      return std::string("Management status change is not allowed for this object (decommissioned nodes cannot be set to managed)");
+      return AIToolResult::error("Management status change is not allowed for this object (decommissioned nodes cannot be set to managed)");
 
    object->setMgmtStatus(managed);
    WriteAuditLog(AUDIT_OBJECTS, true, userId, nullptr, 0, object->getId(),
@@ -405,7 +405,7 @@ static std::string SetManagementStatus(json_t *arguments, uint32_t userId, bool 
 /**
  * Set object to managed state
  */
-std::string F_ManageObject(json_t *arguments, uint32_t userId)
+AIToolResult F_ManageObject(json_t *arguments, uint32_t userId)
 {
    return SetManagementStatus(arguments, userId, true);
 }
@@ -413,7 +413,7 @@ std::string F_ManageObject(json_t *arguments, uint32_t userId)
 /**
  * Set object to unmanaged state
  */
-std::string F_UnmanageObject(json_t *arguments, uint32_t userId)
+AIToolResult F_UnmanageObject(json_t *arguments, uint32_t userId)
 {
    return SetManagementStatus(arguments, userId, false);
 }
@@ -421,13 +421,13 @@ std::string F_UnmanageObject(json_t *arguments, uint32_t userId)
 /**
  * Get list of hardware components for given node
  */
-std::string F_GetNodeHardwareComponents(json_t *arguments, uint32_t userId)
+AIToolResult F_GetNodeHardwareComponents(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object", OBJECT_NODE);
    if (object == nullptr)
-      return std::string("Node not found");
+      return AIToolResult::error("Node not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    Node *node = static_cast<Node*>(object.get());
    json_t *components = node->getHardwareComponentsAsJSON();
@@ -442,13 +442,13 @@ std::string F_GetNodeHardwareComponents(json_t *arguments, uint32_t userId)
 /**
  * Get list of interfaces for given node
  */
-std::string F_GetNodeInterfaces(json_t *arguments, uint32_t userId)
+AIToolResult F_GetNodeInterfaces(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object", OBJECT_NODE);
    if (object == nullptr)
-      return std::string("Node not found");
+      return AIToolResult::error("Node not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    Node *node = static_cast<Node*>(object.get());
    unique_ptr<SharedObjectArray<NetObj>> interfaces = node->getChildren(OBJECT_INTERFACE);
@@ -464,13 +464,13 @@ std::string F_GetNodeInterfaces(json_t *arguments, uint32_t userId)
 /**
  * Get list of software packaged for given node
  */
-std::string F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId)
+AIToolResult F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object", OBJECT_NODE);
    if (object == nullptr)
-      return std::string("Node not found");
+      return AIToolResult::error("Node not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    String filter(json_object_get_string_utf8(arguments, "filter", ""), "utf-8");
 
@@ -487,13 +487,13 @@ std::string F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId)
 /**
  * Explain object status
  */
-std::string F_ExplainObjectStatus(json_t *arguments, uint32_t userId)
+AIToolResult F_ExplainObjectStatus(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    return JsonToString(object->buildStatusExplanation());
 }
@@ -501,13 +501,13 @@ std::string F_ExplainObjectStatus(json_t *arguments, uint32_t userId)
 /**
  * Get chronological timeline of everything that happened to an object
  */
-std::string F_GetObjectTimeline(json_t *arguments, uint32_t userId)
+AIToolResult F_GetObjectTimeline(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    time_t timeTo = time(nullptr);
    const char *s = json_object_get_string_utf8(arguments, "time_to", nullptr);
@@ -515,7 +515,7 @@ std::string F_GetObjectTimeline(json_t *arguments, uint32_t userId)
    {
       timeTo = ParseTimestamp(s);
       if (timeTo == 0)
-         return std::string("Invalid time_to value");
+         return AIToolResult::error("Invalid time_to value");
    }
 
    time_t timeFrom = timeTo - 86400;
@@ -524,10 +524,10 @@ std::string F_GetObjectTimeline(json_t *arguments, uint32_t userId)
    {
       timeFrom = ParseTimestamp(s);
       if (timeFrom == 0)
-         return std::string("Invalid time_from value");
+         return AIToolResult::error("Invalid time_from value");
    }
    if (timeFrom > timeTo)
-      return std::string("time_from must not be later than time_to");
+      return AIToolResult::error("time_from must not be later than time_to");
 
    std::vector<const char*> knownCategories = GetObjectTimelineCategories();
    StringSet categories;
@@ -561,7 +561,7 @@ std::string F_GetObjectTimeline(json_t *arguments, uint32_t userId)
                error.append(" ");
                error.append(c);
             }
-            return error;
+            return AIToolResult::error(error);
          }
          categories.add(String(category, "utf-8"));
       }
@@ -581,7 +581,7 @@ std::string F_GetObjectTimeline(json_t *arguments, uint32_t userId)
       else if (!stricmp(severity, "critical"))
          minSeverity = SEVERITY_CRITICAL;
       else if (stricmp(severity, "normal"))
-         return std::string("Invalid min_severity value (expected normal, warning, minor, major, or critical)");
+         return AIToolResult::error("Invalid min_severity value (expected normal, warning, minor, major, or critical)");
    }
 
    int limit = json_object_get_int32(arguments, "limit_per_category", 50);

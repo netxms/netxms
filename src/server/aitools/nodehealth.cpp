@@ -1211,13 +1211,13 @@ static void AddHealthDCIValues(Node *node, uint32_t userId, json_t *output)
 /**
  * Get one-call OS health snapshot of a node with pre-evaluated findings
  */
-std::string F_GetNodeHealth(json_t *arguments, uint32_t userId)
+AIToolResult F_GetNodeHealth(json_t *arguments, uint32_t userId)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object", OBJECT_NODE);
    if ((object == nullptr) || (object->getObjectClass() != OBJECT_NODE))
-      return std::string("Node not found");
+      return AIToolResult::error("Node not found");
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    Node *node = static_cast<Node*>(object.get());
 

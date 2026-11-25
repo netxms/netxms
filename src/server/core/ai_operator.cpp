@@ -2386,7 +2386,7 @@ static bool BuildCheckConfigFromArguments(json_t *arguments, json_t *config, uin
 /**
  * Convert RCC from standing check management to AI tool result message
  */
-static std::string CheckRccToMessage(uint32_t rcc, const String& errorText)
+static AIToolResult CheckRccToMessage(uint32_t rcc, const String& errorText)
 {
    std::string message;
    switch(rcc)
@@ -2394,11 +2394,11 @@ static std::string CheckRccToMessage(uint32_t rcc, const String& errorText)
       case RCC_SUCCESS:
          return std::string("OK");
       case RCC_NO_SUCH_RECORD:
-         return std::string("Error: check with given ID does not exist in this instance");
+         return AIToolResult::error("Error: check with given ID does not exist in this instance");
       case RCC_ACCESS_DENIED:
-         return std::string("Error: check is locked by administrator and cannot be modified or deleted");
+         return AIToolResult::error("Error: check is locked by administrator and cannot be modified or deleted");
       case RCC_DB_FAILURE:
-         return std::string("Error: cannot save check to database");
+         return AIToolResult::error("Error: cannot save check to database");
       case RCC_RESOURCE_NOT_AVAILABLE:
          message = "Error: ";
          break;
@@ -2412,24 +2412,24 @@ static std::string CheckRccToMessage(uint32_t rcc, const String& errorText)
    char *text = UTF8StringFromWideString(errorText);
    message.append(text);
    MemFree(text);
-   return message;
+   return AIToolResult::error(message);
 }
 
 /**
  * AI tool: create-check
  */
-static std::string F_CreateCheck(json_t *arguments, uint32_t userId)
+static AIToolResult F_CreateCheck(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this tool can only be used during AI operator execution");
+      return AIToolResult::error("Error: this tool can only be used during AI operator execution");
 
    json_t *config = json_object();
    std::string error;
    if (!BuildCheckConfigFromArguments(arguments, config, userId, &error))
    {
       json_decref(config);
-      return error;
+      return AIToolResult::error(error);
    }
 
    uint32_t checkId;
@@ -2446,22 +2446,22 @@ static std::string F_CreateCheck(json_t *arguments, uint32_t userId)
 /**
  * AI tool: update-check
  */
-static std::string F_UpdateCheck(json_t *arguments, uint32_t userId)
+static AIToolResult F_UpdateCheck(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this tool can only be used during AI operator execution");
+      return AIToolResult::error("Error: this tool can only be used during AI operator execution");
 
    uint32_t checkId = json_object_get_uint32(arguments, "id", 0);
    if (checkId == 0)
-      return std::string("Error: id parameter is required");
+      return AIToolResult::error("Error: id parameter is required");
 
    json_t *config = json_object();
    std::string error;
    if (!BuildCheckConfigFromArguments(arguments, config, userId, &error))
    {
       json_decref(config);
-      return error;
+      return AIToolResult::error(error);
    }
 
    MutableString errorText;
@@ -2477,15 +2477,15 @@ static std::string F_UpdateCheck(json_t *arguments, uint32_t userId)
 /**
  * AI tool: delete-check
  */
-static std::string F_DeleteCheck(json_t *arguments, uint32_t userId)
+static AIToolResult F_DeleteCheck(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this tool can only be used during AI operator execution");
+      return AIToolResult::error("Error: this tool can only be used during AI operator execution");
 
    uint32_t checkId = json_object_get_uint32(arguments, "id", 0);
    if (checkId == 0)
-      return std::string("Error: id parameter is required");
+      return AIToolResult::error("Error: id parameter is required");
 
    uint32_t rcc = instance->deleteCheck(checkId, true);
    if (rcc != RCC_SUCCESS)
@@ -2498,24 +2498,24 @@ static std::string F_DeleteCheck(json_t *arguments, uint32_t userId)
 /**
  * AI tool: test-check
  */
-static std::string F_TestCheck(json_t *arguments, uint32_t userId)
+static AIToolResult F_TestCheck(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this tool can only be used during AI operator execution");
+      return AIToolResult::error("Error: this tool can only be used during AI operator execution");
 
    const char *source = json_object_get_string_utf8(arguments, "source", nullptr);
    if ((source == nullptr) || (*source == 0))
-      return std::string("Error: source parameter is required");
+      return AIToolResult::error("Error: source parameter is required");
 
    uint32_t objectId = 0;
    if (json_object_get(arguments, "object") != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
       if (object == nullptr)
-         return std::string("Error: object not found");
+         return AIToolResult::error("Error: object not found");
       if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Error: access to object denied");
+         return AIToolResult::error("Error: access to object denied");
       objectId = object->getId();
    }
 
@@ -2567,15 +2567,15 @@ static bool IsValidObservationReference(const char *ref)
 /**
  * AI tool: record-observation
  */
-static std::string F_RecordObservation(json_t *arguments, uint32_t userId)
+static AIToolResult F_RecordObservation(json_t *arguments, uint32_t userId)
 {
    AIOperatorInstance *instance = s_currentInstance;
    if (instance == nullptr)
-      return std::string("Error: this tool can only be used during AI operator execution");
+      return AIToolResult::error("Error: this tool can only be used during AI operator execution");
 
    const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
    if ((title == nullptr) || (*title == 0))
-      return std::string("Error: title parameter is required");
+      return AIToolResult::error("Error: title parameter is required");
 
    int severity;
    json_t *severityElement = json_object_get(arguments, "severity");
@@ -2593,13 +2593,13 @@ static std::string F_RecordObservation(json_t *arguments, uint32_t userId)
       else if (!stricmp(text, "critical"))
          severity = SEVERITY_CRITICAL;
       else
-         return std::string("Error: invalid severity value");
+         return AIToolResult::error("Error: invalid severity value");
    }
    else
    {
       severity = json_object_get_int32(arguments, "severity", SEVERITY_NORMAL);
       if ((severity < SEVERITY_NORMAL) || (severity > SEVERITY_CRITICAL))
-         return std::string("Error: invalid severity value");
+         return AIToolResult::error("Error: invalid severity value");
    }
 
    uint32_t objectId = 0;
@@ -2607,9 +2607,9 @@ static std::string F_RecordObservation(json_t *arguments, uint32_t userId)
    {
       shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
       if (object == nullptr)
-         return std::string("Error: object not found");
+         return AIToolResult::error("Error: object not found");
       if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Error: access to object denied");
+         return AIToolResult::error("Error: access to object denied");
       objectId = object->getId();
    }
 
@@ -2626,8 +2626,8 @@ static std::string F_RecordObservation(json_t *arguments, uint32_t userId)
          if (!json_is_string(e) || !IsValidObservationReference(json_string_value(e)))
          {
             json_decref(refsElement);
-            return std::string("Error: invalid reference at position ").append(std::to_string(i)).append(
-               " (expected \"alarm:<id>\", \"event:<id>\", \"dci:<id>\", \"object:<id>\", \"incident:<id>\", or \"text:<free-form text>\")");
+            return AIToolResult::error(std::string("Error: invalid reference at position ").append(std::to_string(i)).append(
+               " (expected \"alarm:<id>\", \"event:<id>\", \"dci:<id>\", \"object:<id>\", \"incident:<id>\", or \"text:<free-form text>\")"));
          }
       }
       refs = JsonToString(refsElement);
@@ -2635,7 +2635,7 @@ static std::string F_RecordObservation(json_t *arguments, uint32_t userId)
 
    int64_t observationId = RecordObservation(instance, severity, title, body, objectId, refs.empty() ? nullptr : refs.c_str());
    if (observationId < 0)
-      return std::string("Error: cannot record observation");
+      return AIToolResult::error("Error: cannot record observation");
 
    char buffer[64];
    return std::string("Observation recorded with ID ").append(IntegerToString(observationId, buffer));

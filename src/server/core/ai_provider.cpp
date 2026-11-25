@@ -129,6 +129,39 @@ json_t *LLMProvider::buildBaseRequest()
 }
 
 /**
+ * Build message list for OpenAI-compatible chat API from internal message list. System prompt is prepended
+ * if provided. Internal "is_error" attribute of tool result messages is removed: OpenAI-compatible APIs have
+ * no such attribute and can reject messages with unknown properties.
+ */
+json_t *LLMProvider::buildMessageList(const char *systemPrompt, json_t *messages)
+{
+   json_t *fullMessages = json_array();
+   if ((systemPrompt != nullptr) && (systemPrompt[0] != 0))
+   {
+      json_t *sysMsg = json_object();
+      json_object_set_new(sysMsg, "role", json_string("system"));
+      json_object_set_new(sysMsg, "content", json_string(systemPrompt));
+      json_array_append_new(fullMessages, sysMsg);
+   }
+   size_t i;
+   json_t *msg;
+   json_array_foreach(messages, i, msg)
+   {
+      if (json_object_get(msg, "is_error") != nullptr)
+      {
+         json_t *copy = json_copy(msg);
+         json_object_del(copy, "is_error");
+         json_array_append_new(fullMessages, copy);
+      }
+      else
+      {
+         json_array_append(fullMessages, msg);
+      }
+   }
+   return fullMessages;
+}
+
+/**
  * Build HTTP headers for the request. Default implementation adds Content-Type and Bearer auth.
  */
 struct curl_slist *LLMProvider::buildHttpHeaders()

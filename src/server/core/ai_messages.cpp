@@ -741,16 +741,16 @@ void NotifyAIMessageRecipients(uint32_t messageId, bool isNew)
 /**
  * Create AI message (AI tool)
  */
-std::string F_CreateAIMessage(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateAIMessage(json_t *arguments, uint32_t userId)
 {
    const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
    const char *text = json_object_get_string_utf8(arguments, "text", nullptr);
    const char *typeStr = json_object_get_string_utf8(arguments, "type", "informational");
 
    if ((title == nullptr) || (title[0] == 0))
-      return std::string("Error: message title must be provided");
+      return AIToolResult::error("Error: message title must be provided");
    if ((text == nullptr) || (text[0] == 0))
-      return std::string("Error: message text must be provided");
+      return AIToolResult::error("Error: message text must be provided");
 
    AIMessageType type = AI_MESSAGE_INFORMATIONAL;
    if (!stricmp(typeStr, "alert"))
@@ -763,7 +763,7 @@ std::string F_CreateAIMessage(json_t *arguments, uint32_t userId)
       userId, relatedObjectId, nullptr, expirationMinutes, false);
 
    if (messageId == 0)
-      return std::string("Error: failed to create message");
+      return AIToolResult::error("Error: failed to create message");
 
    json_t *result = json_object();
    json_object_set_new(result, "success", json_true());
@@ -774,18 +774,18 @@ std::string F_CreateAIMessage(json_t *arguments, uint32_t userId)
 /**
  * Create approval request AI message (AI tool)
  */
-std::string F_CreateApprovalRequest(json_t *arguments, uint32_t userId)
+AIToolResult F_CreateApprovalRequest(json_t *arguments, uint32_t userId)
 {
    const char *title = json_object_get_string_utf8(arguments, "title", nullptr);
    const char *text = json_object_get_string_utf8(arguments, "text", nullptr);
    const char *taskPrompt = json_object_get_string_utf8(arguments, "taskPrompt", nullptr);
 
    if ((title == nullptr) || (title[0] == 0))
-      return std::string("Error: request title must be provided");
+      return AIToolResult::error("Error: request title must be provided");
    if ((text == nullptr) || (text[0] == 0))
-      return std::string("Error: request description must be provided");
+      return AIToolResult::error("Error: request description must be provided");
    if ((taskPrompt == nullptr) || (taskPrompt[0] == 0))
-      return std::string("Error: task prompt must be provided");
+      return AIToolResult::error("Error: task prompt must be provided");
 
    uint32_t relatedObjectId = json_object_get_uint32(arguments, "relatedObjectId", 0);
    uint32_t expirationMinutes = json_object_get_uint32(arguments, "expirationMinutes", 1440);
@@ -806,7 +806,7 @@ std::string F_CreateApprovalRequest(json_t *arguments, uint32_t userId)
    MemFree(spawnDataStr);
 
    if (messageId == 0)
-      return std::string("Error: failed to create approval request");
+      return AIToolResult::error("Error: failed to create approval request");
 
    json_t *result = json_object();
    json_object_set_new(result, "success", json_true());

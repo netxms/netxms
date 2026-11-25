@@ -374,7 +374,7 @@ static const char *GetColumnTypeName(int type)
 /**
  * List available logs
  */
-std::string F_ListLogs(json_t *arguments, uint32_t userId)
+AIToolResult F_ListLogs(json_t *arguments, uint32_t userId)
 {
    uint64_t systemRights = GetEffectiveSystemRights(userId);
 
@@ -418,11 +418,11 @@ std::string F_ListLogs(json_t *arguments, uint32_t userId)
 /**
  * Get log schema
  */
-std::string F_GetLogSchema(json_t *arguments, uint32_t userId)
+AIToolResult F_GetLogSchema(json_t *arguments, uint32_t userId)
 {
    const char *logName = json_object_get_string_utf8(arguments, "log_name", nullptr);
    if ((logName == nullptr) || (logName[0] == 0))
-      return std::string("log_name parameter is required");
+      return AIToolResult::error("log_name parameter is required");
 
    // Convert to wide string
    wchar_t logNameW[256];
@@ -433,13 +433,13 @@ std::string F_GetLogSchema(json_t *arguments, uint32_t userId)
    {
       char buffer[512];
       snprintf(buffer, 512, "Log \"%s\" not found", logName);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    // Check access
    uint64_t systemRights = GetEffectiveSystemRights(userId);
    if ((log->requiredAccess != 0) && ((systemRights & log->requiredAccess) == 0))
-      return std::string("User does not have permission to access this log");
+      return AIToolResult::error("User does not have permission to access this log");
 
    json_t *output = json_object();
 
@@ -499,11 +499,11 @@ std::string F_GetLogSchema(json_t *arguments, uint32_t userId)
 /**
  * Unified log search tool
  */
-std::string F_SearchLog(json_t *arguments, uint32_t userId)
+AIToolResult F_SearchLog(json_t *arguments, uint32_t userId)
 {
    const char *logName = json_object_get_string_utf8(arguments, "log_name", nullptr);
    if ((logName == nullptr) || (logName[0] == 0))
-      return std::string("log_name parameter is required");
+      return AIToolResult::error("log_name parameter is required");
 
    // Convert to wide string
    wchar_t logNameW[256];
@@ -514,13 +514,13 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
    {
       char buffer[512];
       snprintf(buffer, 512, "Log \"%s\" not found", logName);
-      return std::string(buffer);
+      return AIToolResult::error(buffer);
    }
 
    // Check access
    uint64_t systemRights = GetEffectiveSystemRights(userId);
    if ((log->requiredAccess != 0) && ((systemRights & log->requiredAccess) == 0))
-      return std::string("User does not have permission to access this log");
+      return AIToolResult::error("User does not have permission to access this log");
 
    // Parse common parameters
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
@@ -563,7 +563,7 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
       }
    }
    if (timestampColumn == nullptr)
-      return std::string("Log does not have a timestamp column");
+      return AIToolResult::error("Log does not have a timestamp column");
 
    // Find text columns
    ObjectArray<const TCHAR> textColumns(8, 8, Ownership::False);
@@ -581,7 +581,7 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
       if (filterObject != nullptr)
       {
          if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-            return std::string("Access denied");
+            return AIToolResult::error("Access denied");
          objectId = filterObject->getId();
       }
    }
@@ -815,12 +815,12 @@ std::string F_SearchLog(json_t *arguments, uint32_t userId)
 /**
  * Search syslog messages
  */
-std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
+AIToolResult F_SearchSyslog(json_t *arguments, uint32_t userId)
 {
    // Check system access rights
    uint64_t systemRights = GetEffectiveSystemRights(userId);
    if ((systemRights & SYSTEM_ACCESS_VIEW_SYSLOG) == 0)
-      return std::string("User does not have permission to view syslog");
+      return AIToolResult::error("User does not have permission to view syslog");
 
    // Parse parameters
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
@@ -843,7 +843,7 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
    if (filterObject != nullptr)
    {
       if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Access denied");
+         return AIToolResult::error("Access denied");
       sourceObjectId = filterObject->getId();
    }
 
@@ -1017,12 +1017,12 @@ std::string F_SearchSyslog(json_t *arguments, uint32_t userId)
 /**
  * Search Windows event log entries
  */
-std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
+AIToolResult F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
 {
    // Check system access rights
    uint64_t systemRights = GetEffectiveSystemRights(userId);
    if ((systemRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) == 0)
-      return std::string("User does not have permission to view event log");
+      return AIToolResult::error("User does not have permission to view event log");
 
    // Parse parameters
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
@@ -1046,7 +1046,7 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
    if (filterObject != nullptr)
    {
       if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Access denied");
+         return AIToolResult::error("Access denied");
       nodeId = filterObject->getId();
    }
 
@@ -1225,12 +1225,12 @@ std::string F_SearchWindowsEvents(json_t *arguments, uint32_t userId)
 /**
  * Search SNMP trap log entries
  */
-std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
+AIToolResult F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
 {
    // Check system access rights
    uint64_t systemRights = GetEffectiveSystemRights(userId);
    if ((systemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) == 0)
-      return std::string("User does not have permission to view trap log");
+      return AIToolResult::error("User does not have permission to view trap log");
 
    // Parse parameters
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
@@ -1254,7 +1254,7 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
    if (filterObject != nullptr)
    {
       if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Access denied");
+         return AIToolResult::error("Access denied");
       objectId = filterObject->getId();
    }
 
@@ -1385,12 +1385,12 @@ std::string F_SearchSnmpTraps(json_t *arguments, uint32_t userId)
 /**
  * Search NetXMS system events
  */
-std::string F_SearchEvents(json_t *arguments, uint32_t userId)
+AIToolResult F_SearchEvents(json_t *arguments, uint32_t userId)
 {
    // Check system access rights
    uint64_t systemRights = GetEffectiveSystemRights(userId);
    if ((systemRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) == 0)
-      return std::string("User does not have permission to view event log");
+      return AIToolResult::error("User does not have permission to view event log");
 
    // Parse parameters
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", "-60m");
@@ -1414,7 +1414,7 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
    if (filterObject != nullptr)
    {
       if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Access denied");
+         return AIToolResult::error("Access denied");
       sourceObjectId = filterObject->getId();
    }
 
@@ -1625,12 +1625,12 @@ std::string F_SearchEvents(json_t *arguments, uint32_t userId)
 /**
  * Get log statistics
  */
-std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
+AIToolResult F_GetLogStatistics(json_t *arguments, uint32_t userId)
 {
    // Get log_type parameter (required)
    const char *logType = json_object_get_string_utf8(arguments, "log_type", nullptr);
    if ((logType == nullptr) || (logType[0] == 0))
-      return std::string("log_type parameter is required (syslog, windows_events, snmp_traps, events)");
+      return AIToolResult::error("log_type parameter is required (syslog, windows_events, snmp_traps, events)");
 
    // Determine table and check permissions
    const TCHAR *tableName = nullptr;
@@ -1643,7 +1643,7 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
    if (!stricmp(logType, "syslog"))
    {
       if ((systemRights & SYSTEM_ACCESS_VIEW_SYSLOG) == 0)
-         return std::string("User does not have permission to view syslog");
+         return AIToolResult::error("User does not have permission to view syslog");
       tableName = _T("syslog");
       timestampColumn = _T("msg_timestamp");
       objectIdColumn = _T("source_object_id");
@@ -1652,7 +1652,7 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
    else if (!stricmp(logType, "windows_events"))
    {
       if ((systemRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) == 0)
-         return std::string("User does not have permission to view event log");
+         return AIToolResult::error("User does not have permission to view event log");
       tableName = _T("win_event_log");
       timestampColumn = _T("event_timestamp");
       objectIdColumn = _T("node_id");
@@ -1661,7 +1661,7 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
    else if (!stricmp(logType, "snmp_traps"))
    {
       if ((systemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) == 0)
-         return std::string("User does not have permission to view trap log");
+         return AIToolResult::error("User does not have permission to view trap log");
       tableName = _T("snmp_trap_log");
       timestampColumn = _T("trap_timestamp");
       objectIdColumn = _T("object_id");
@@ -1670,7 +1670,7 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
    else if (!stricmp(logType, "events"))
    {
       if ((systemRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) == 0)
-         return std::string("User does not have permission to view event log");
+         return AIToolResult::error("User does not have permission to view event log");
       tableName = _T("event_log");
       timestampColumn = _T("event_timestamp");
       objectIdColumn = _T("event_source");
@@ -1678,7 +1678,7 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
    }
    else
    {
-      return std::string("Invalid log_type. Valid values: syslog, windows_events, snmp_traps, events");
+      return AIToolResult::error("Invalid log_type. Valid values: syslog, windows_events, snmp_traps, events");
    }
 
    // Parse parameters
@@ -1696,7 +1696,7 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
    if (filterObject != nullptr)
    {
       if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Access denied");
+         return AIToolResult::error("Access denied");
       objectId = filterObject->getId();
    }
 
@@ -1907,19 +1907,19 @@ std::string F_GetLogStatistics(json_t *arguments, uint32_t userId)
 /**
  * Correlate logs across multiple sources
  */
-std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
+AIToolResult F_CorrelateLogs(json_t *arguments, uint32_t userId)
 {
    // Get required parameters
    const char *timeFromStr = json_object_get_string_utf8(arguments, "time_from", nullptr);
    const char *timeToStr = json_object_get_string_utf8(arguments, "time_to", nullptr);
    if ((timeFromStr == nullptr) || (timeToStr == nullptr))
-      return std::string("time_from and time_to parameters are required");
+      return AIToolResult::error("time_from and time_to parameters are required");
 
    // Parse time range
    time_t timeFrom = ParseTimestamp(timeFromStr);
    time_t timeTo = ParseTimestamp(timeToStr);
    if ((timeFrom == 0) || (timeTo == 0))
-      return std::string("Invalid time format");
+      return AIToolResult::error("Invalid time format");
 
    bool includeNeighbors = json_object_get_boolean(arguments, "include_neighbors", true);
    int32_t limitPerSource = json_object_get_int32(arguments, "limit_per_source", 50);
@@ -1931,9 +1931,9 @@ std::string F_CorrelateLogs(json_t *arguments, uint32_t userId)
    // Resolve primary object
    shared_ptr<NetObj> primaryObject = FindObjectByNameOrId(arguments, "object");
    if (primaryObject == nullptr)
-      return std::string("Object not found");
+      return AIToolResult::error("Object not found");
    if (!primaryObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-      return std::string("Access denied");
+      return AIToolResult::error("Access denied");
 
    // Check system access rights for all log types
    uint64_t systemRights = GetEffectiveSystemRights(userId);
@@ -2401,12 +2401,12 @@ static time_t CalculateBucketSize(time_t windowDuration)
 /**
  * Analyze log patterns
  */
-std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
+AIToolResult F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
 {
    // Get log_type parameter (required)
    const char *logType = json_object_get_string_utf8(arguments, "log_type", nullptr);
    if ((logType == nullptr) || (logType[0] == 0))
-      return std::string("log_type parameter is required (syslog, windows_events, snmp_traps, events)");
+      return AIToolResult::error("log_type parameter is required (syslog, windows_events, snmp_traps, events)");
 
    // Determine table and check permissions
    const TCHAR *tableName = nullptr;
@@ -2422,7 +2422,7 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
    if (!stricmp(logType, "syslog"))
    {
       if ((systemRights & SYSTEM_ACCESS_VIEW_SYSLOG) == 0)
-         return std::string("User does not have permission to view syslog");
+         return AIToolResult::error("User does not have permission to view syslog");
       tableName = _T("syslog");
       timestampColumn = _T("msg_timestamp");
       objectIdColumn = _T("source_object_id");
@@ -2434,7 +2434,7 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
    else if (!stricmp(logType, "windows_events"))
    {
       if ((systemRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) == 0)
-         return std::string("User does not have permission to view event log");
+         return AIToolResult::error("User does not have permission to view event log");
       tableName = _T("win_event_log");
       timestampColumn = _T("event_timestamp");
       objectIdColumn = _T("node_id");
@@ -2446,7 +2446,7 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
    else if (!stricmp(logType, "events"))
    {
       if ((systemRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) == 0)
-         return std::string("User does not have permission to view event log");
+         return AIToolResult::error("User does not have permission to view event log");
       tableName = _T("event_log");
       timestampColumn = _T("event_timestamp");
       objectIdColumn = _T("event_source");
@@ -2458,7 +2458,7 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
    else if (!stricmp(logType, "snmp_traps"))
    {
       if ((systemRights & SYSTEM_ACCESS_VIEW_TRAP_LOG) == 0)
-         return std::string("User does not have permission to view trap log");
+         return AIToolResult::error("User does not have permission to view trap log");
       tableName = _T("snmp_trap_log");
       timestampColumn = _T("trap_timestamp");
       objectIdColumn = _T("object_id");
@@ -2467,7 +2467,7 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
    }
    else
    {
-      return std::string("Invalid log_type. Valid values: syslog, windows_events, snmp_traps, events");
+      return AIToolResult::error("Invalid log_type. Valid values: syslog, windows_events, snmp_traps, events");
    }
 
    // Parse parameters
@@ -2485,7 +2485,7 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
    if (filterObject != nullptr)
    {
       if (!filterObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
-         return std::string("Access denied");
+         return AIToolResult::error("Access denied");
       objectId = filterObject->getId();
    }
 
