@@ -166,11 +166,20 @@ static void ExecuteDatabasePasswordCommand()
             len--;
          }
 
-         // Convert to wide char and store as password
-         MultiByteToWideCharSysLocale(output, s_dbPassword, len);
-         s_dbPassword[len] = 0;
+         if (len < MAX_PASSWORD)
+         {
+            // Convert to wide char and store as password
+            char password[MAX_PASSWORD];
+            memcpy(password, output, len);
+            password[len] = 0;
+            MultiByteToWideCharSysLocale(password, s_dbPassword, MAX_PASSWORD);
 
-         _tprintf(_T("Database password successfully retrieved from command\n"));
+            _tprintf(_T("Database password successfully retrieved from command\n"));
+         }
+         else
+         {
+            _tprintf(_T("ERROR: Database password command returned password that is too long (maximum length is %d bytes)\n"), MAX_PASSWORD - 1);
+         }
       }
       else
       {
