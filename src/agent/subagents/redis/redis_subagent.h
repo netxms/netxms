@@ -58,6 +58,7 @@ private:
    Mutex m_dataLock;
    Mutex m_connLock;
    Condition m_stopCondition;
+   int64_t m_connectTime;
    int64_t m_lastPollTime;
 
    void pollerThread();
