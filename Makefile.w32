@@ -234,14 +234,16 @@ all: check-config build-tag $(ALL_DIRS)
 	@echo "============================================"
 	@echo ""
 
-# Build every architecture in turn (each is a full recursive build)
+# Build every architecture in turn (each is a full recursive build).
+# PLATFORM is exported from this make, so without an explicit override every
+# sub-build would inherit this make's value and reuse its output tree.
 all-arch:
 	@for arch in $(ALL_ARCHS); do \
 		echo ""; \
 		echo "############################################"; \
 		echo "#  Building architecture: $$arch"; \
 		echo "############################################"; \
-		$(MAKE) -f Makefile.w32 ARCH=$$arch all || exit 1; \
+		$(MAKE) -f Makefile.w32 ARCH=$$arch PLATFORM=$$arch all || exit 1; \
 	done
 	@echo ""
 	@echo "============================================"
