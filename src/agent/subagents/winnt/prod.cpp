@@ -72,19 +72,8 @@ static void ReadProductInfo(HKEY hKey, const TCHAR *keyName, Table *table)
       }
    }
 
-   bool uninstallCommandAvailable = false;
-   size = sizeof(buffer);
-   if (RegQueryValueEx(hKey, _T("QuietUninstallString"), nullptr, &type, reinterpret_cast<BYTE*>(buffer), &size) == ERROR_SUCCESS)
-   {
-      uninstallCommandAvailable = true;
-   }
-   else
-   {
-      size = sizeof(buffer);
-      if (RegQueryValueEx(hKey, _T("UninstallString"), nullptr, &type, reinterpret_cast<BYTE*>(buffer), &size) == ERROR_SUCCESS)
-         uninstallCommandAvailable = true;
-   }
-   if (uninstallCommandAvailable)
+   if ((RegQueryValueEx(hKey, _T("QuietUninstallString"), nullptr, nullptr, nullptr, nullptr) == ERROR_SUCCESS) ||
+       (RegQueryValueEx(hKey, _T("UninstallString"), nullptr, nullptr, nullptr, nullptr) == ERROR_SUCCESS))
       table->set(6, keyName);
 }
 
