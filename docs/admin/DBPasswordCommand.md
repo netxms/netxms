@@ -54,6 +54,7 @@ DBPasswordCommand = /opt/netxms/scripts/get_db_password.sh
 - If the command exits with non-zero status, an error is logged
 - If the command times out (30 seconds), it is terminated and an error is logged
 - If the command returns empty output, a warning is logged
+- If the command returns more than 255 bytes (after trimming), an error is logged
 - In all error cases, NetXMS falls back to the statically configured password
 - Anything the command writes to standard error becomes part of the password when the command exits with status 0. Redirect diagnostic output away (`2>/dev/null` on UNIX, `2>NUL` on Windows) if the tool can print warnings on success
 
@@ -74,4 +75,4 @@ The server reports command execution in its log with the tag `config`: an inform
 - NetXMS version 6.0.0 or later
 - External command must be in PATH or use absolute path
 - Command must output only the password (stdout and stderr are both captured)
-- Password must not be longer than 255 characters
+- Password must not be longer than 255 bytes; longer output is rejected with an error and the statically configured password is used

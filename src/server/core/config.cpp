@@ -295,11 +295,20 @@ void ExecuteDatabasePasswordCommand()
             len--;
          }
 
-         // Convert to wide char and store as password
-         MultiByteToWideCharSysLocale(output, g_szDbPassword, len);
-         g_szDbPassword[len] = 0;
+         if (len < MAX_PASSWORD)
+         {
+            // Convert to wide char and store as password
+            char password[MAX_PASSWORD];
+            memcpy(password, output, len);
+            password[len] = 0;
+            MultiByteToWideCharSysLocale(password, g_szDbPassword, MAX_PASSWORD);
 
-         nxlog_write_tag(NXLOG_INFO, L"config", L"Database password successfully retrieved from command");
+            nxlog_write_tag(NXLOG_INFO, L"config", L"Database password successfully retrieved from command");
+         }
+         else
+         {
+            nxlog_write_tag(NXLOG_ERROR, L"config", L"Database password command returned password that is too long (maximum length is %d bytes)", MAX_PASSWORD - 1);
+         }
       }
       else
       {
