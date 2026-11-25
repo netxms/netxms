@@ -14293,6 +14293,29 @@ paths:
         - BearerAuth: []
       tags:
         - Users
+  /v1/user-directory:
+    get:
+      operationId: getUserDirectory
+      summary: Get user directory
+      description: >-
+        Retrieve identifiers and names of all users and user groups, for resolving user IDs to names and for
+        user selection lists. Available to any authenticated session; does not require MANAGE_USERS access right.
+        Deleted users and groups are not included.
+      responses:
+        '200':
+          description: User directory retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDirectoryEntry'
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
   /v1/user-groups:
     get:
       operationId: listUserGroups
@@ -17040,6 +17063,25 @@ components:
           items:
             type: integer
           description: List of group identifiers this user belongs to
+    UserDirectoryEntry:
+      type: object
+      description: User or user group entry in user directory
+      properties:
+        id:
+          type: integer
+          description: User or group identifier (group identifiers have bit 30 set)
+        name:
+          type: string
+          description: Login name of user or name of group
+        fullName:
+          type: string
+          description: Full name of user (present only for users)
+        isGroup:
+          type: boolean
+          description: True if entry is a user group
+        isDisabled:
+          type: boolean
+          description: True if user or group is disabled
     UserGroup:
       type: object
       description: User group
