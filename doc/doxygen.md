@@ -1,1 +1,0 @@
-*temporary* empty index page

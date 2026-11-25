@@ -4,6 +4,8 @@
 
 NetXMS server supports native integration with HashiCorp Vault for secure credential management. This allows storing sensitive credentials like database passwords in Vault instead of the configuration file.
 
+Database credentials are read from Vault once, when the server starts. `nxdbmgr` reads the same `[VAULT]` section from `netxmsd.conf` and retrieves the credentials on every run.
+
 ## Configuration Options
 
 Add the following section to your `netxmsd.conf`:
@@ -75,10 +77,12 @@ vault kv put secret/netxms/database \
     password=mysecretpassword
 ```
 
-For KV v1:
+The server expects a KV v2 secrets engine: for `DBCredentialPath = secret/netxms/database` it reads `secret/data/netxms/database`, taking the first path component as the mount point and inserting `data/` after it. If the mount point name has more than one component, give the full API path including `data/` (for example `team/kv/data/netxms/database`); a path that already contains `/data/` is used as is.
+
+On a KV v1 secrets engine the same request addresses the secret `data/netxms/database`, so the secret has to be stored under that name:
 
 ```bash
-vault write secret/netxms/database \
+vault write secret/data/netxms/database \
     login=netxms \
     password=mysecretpassword
 ```
@@ -92,11 +96,11 @@ The Vault path should contain a secret with the following fields:
 
 ## Security Considerations
 
-1. **AppRole Secret ID**: Can be encrypted using `nxencpassw`:
+1. **AppRole Secret ID**: Can be encrypted using `nxencpasswd` with login name `netxms`:
    ```bash
-   nxencpassw netxms
+   nxencpasswd netxms
    ```
-   Then use the encrypted value in the configuration.
+   The tool asks for the secret ID and prints the encrypted value; use that value as `AppRoleSecretId` in the configuration.
 
 2. **TLS Verification**: Always enable TLS verification in production:
    ```
@@ -104,19 +108,19 @@ The Vault path should contain a secret with the following fields:
    TLSVerify = true
    ```
 
-3. **Token Renewal**: NetXMS automatically handles token renewal based on the lease duration.
+3. **Token Lifetime**: The Vault token obtained through AppRole is used only to read the credentials during startup and is not renewed, so a short `token_ttl` is sufficient. A password changed in Vault takes effect on the next server start.
 
 4. **Least Privilege**: Grant only read access to the specific paths NetXMS needs.
 
 ## Priority Order
 
-NetXMS checks for database credentials in this order:
+All configured sources are processed in this order, and each one that succeeds replaces the value obtained from the previous one:
 
-1. DBPasswordCommand (if configured)
-2. Vault integration (if configured)
-3. DBPassword/DBEncryptedPassword from config file
+1. DBPassword/DBEncryptedPassword from config file
+2. DBPasswordCommand (if configured)
+3. Vault integration (if configured)
 
-The first successful method is used.
+Credentials from Vault therefore take precedence over the output of `DBPasswordCommand`, which takes precedence over the configuration file. If Vault is configured but authentication fails or the secret cannot be read, an error is logged and the password from the previous sources is used. Database login from Vault, when present, replaces `DBLogin`.
 
 ## Troubleshooting
 
@@ -143,6 +147,11 @@ DBServer = localhost
 DBName = netxms_db
 DBLogin = netxms
 
+# Logging
+LogFile = {syslog}
+DebugLevel = 6
+DebugTags = vault:5
+
 # Vault configuration
 [VAULT]
 URL = https://vault.example.com:8200
@@ -151,9 +160,4 @@ AppRoleSecretId = AgBQ1SLH8hKsw2pOgNBvUJTZs+H6086um2nsq0mtOix4FA==
 DBCredentialPath = secret/netxms/database
 TLSVerify = true
 Timeout = 5000
-
-# Logging
-LogFile = {syslog}
-DebugLevel = 6
-DebugTags = vault:5
 ```

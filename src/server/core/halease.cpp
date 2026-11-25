@@ -53,7 +53,7 @@ const wchar_t *HAGetDbTimeExpression(int syntax)
 }
 
 /**
- * Create lease manager. Timings are in seconds; see doc/HA_Design.md section 2.7
+ * Create lease manager. Timings are in seconds; see docs/design/HA_Design.md section 2.7
  * for constraints (validity >= 3 * refreshInterval + statement time, etc.).
  */
 HALeaseManager::HALeaseManager(const uuid& nodeGuid, const wchar_t *nodeName, std::function<DB_HANDLE()> connector,

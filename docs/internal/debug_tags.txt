@@ -42,6 +42,7 @@ calltbl		Named call handler registration and invocation
 cas		CAS
 comm.*		Communications (in agent log)
 comm.listener	All listeners
+config		Configuration file loading
 crash		Crash dump handler (Windows)
 
 crypto.*	Encryption functions
@@ -345,6 +346,8 @@ upgrade		Agent upgrade package validation (in agent log)
 ups		UPS subagent messages
 useragent	User support application (server side)
 userdb		User database (server side)
+
+vault		HashiCorp Vault client
 
 watchdog	Server watchdog
 weather	Weather subagent (Open-Meteo, MET Norway, Bright Sky)

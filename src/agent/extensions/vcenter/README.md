@@ -3,7 +3,7 @@
 NetXMS agent extension that pulls CPU / memory utilization, datastore usage and
 VM / host inventory from a VMware vCenter (or standalone ESXi) server.
 
-It speaks the [agent extension protocol](../../../../doc/AGENT_EXTENSION_PROTOCOL.md)
+It speaks the [agent extension protocol](../../../../docs/AGENT_EXTENSION_PROTOCOL.md)
 in **spawn mode**: the NetXMS agent launches and supervises it.
 
 ## Requirements

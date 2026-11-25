@@ -92,8 +92,6 @@ first test leaves the server unable to reach its own agent.
 
 ## C++ Development Guidelines
 
-Longer reference: [doc/CPP_DEVELOPER_GUIDE.md](doc/CPP_DEVELOPER_GUIDE.md).
-
 ### Language Version and Compiler Floor
 
 - **Maximum C++11** — must compile with GCC 4.8+, Clang 3.3+, Visual Studio 2015+ (`_MSC_VER >= 1900`)
@@ -161,7 +159,7 @@ Prefer NetXMS containers for object collections and ownership management. For ma
 ### Logging
 
 - Use `nxlog_debug_tag(tag, level, format, ...)` for debug output
-- Add new debug tags to `doc/internal/debug_tags.txt`
+- Add new debug tags to `docs/internal/debug_tags.txt`
 
 ### Code Style
 

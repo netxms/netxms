@@ -18,7 +18,7 @@
 **
 ** File: hasync.cpp
 **
-** Warm standby state synchronization (doc/HA_Design.md sections 3.3, 3.4).
+** Warm standby state synchronization (docs/design/HA_Design.md sections 3.3, 3.4).
 ** Applies change journal entries to the standby's in-memory object model and
 ** alarm list: an object change replaces the in-memory instance with a fresh
 ** load from the database, a tombstone detaches and drops the instance, and

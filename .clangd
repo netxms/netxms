@@ -83,7 +83,7 @@ Diagnostics:
 If:
   PathMatch:
     # Documentation example (never compiled)
-    - doc/misc/embedded_nxcp\.c
+    - docs/examples/embedded_nxcp\.c
     # Database drivers (libnxdb backends)
     - src/db/dbdrv/db2/.*
     - src/db/dbdrv/informix/.*

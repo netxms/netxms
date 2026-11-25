@@ -100,7 +100,7 @@ These are house style, argued and settled. Flag a **violation** of them; never p
   the code that reaches it. A concrete failing input, sequence or lock order beats a category name.
 - **Report** cross-surface omissions: server change without the Java/UI/NXSL/WebAPI/schema half,
   `openapi.yaml` not updated, DB upgrade not backported, debug tag not added to
-  `doc/internal/debug_tags.txt`.
+  `docs/internal/debug_tags.txt`.
 - **Do not report** style preferences, alternative-library suggestions, missing comments, or
   speculative refactors. This project treats those as noise.
 - **Scope discipline is enforced.** A finding that a change should have *also* fixed some unrelated

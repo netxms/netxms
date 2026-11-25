@@ -89,7 +89,6 @@ compile_commands.json
 /contrib/startup/suse/nxagentd
 /contrib/startup/ubuntu/netxmsd
 /contrib/startup/ubuntu/nxagentd
-/doc/doxygen
 /eclipse
 /eclipse.cpp
 /libtool

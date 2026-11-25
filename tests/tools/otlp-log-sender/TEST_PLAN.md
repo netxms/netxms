@@ -55,7 +55,7 @@ the `otel_log` table.
 |---|------|----------|
 | 1.1 | Build server with OTLP module (`./configure --with-server`; `make -j$(nproc)`) | `logs.cpp`, `otellog.cpp` compile & link; module loads |
 | 1.2 | Windows build (`otlp.vcxproj` includes `logs.cpp`; `nxcore.vcxproj` includes `otellog.cpp`) | builds; no `nx_swprintf`/`%s` portability issues |
-| 1.3 | Debug tags registered | `otlp` and `otel.log` present in `doc/internal/debug_tags.txt` |
+| 1.3 | Debug tags registered | `otlp` and `otel.log` present in `docs/internal/debug_tags.txt` |
 | 1.4 | Fresh DB has table + config + rules | `otel_log` table created; `OTLP.Logs.*` config rows present; default `otlp_matching_rules` seeded |
 | 1.5 | Upgrade DB from prior version | `H_UpgradeFromV19` (62.20) creates `otel_log` + config; `netxmsdb.h` minor=20 |
 

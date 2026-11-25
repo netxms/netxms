@@ -63,7 +63,7 @@ struct HALeaseStatus
 };
 
 /**
- * HA lease manager. Implements the database lease algorithm from doc/HA_Design.md:
+ * HA lease manager. Implements the database lease algorithm from docs/design/HA_Design.md:
  * term-based acquisition via atomic conditional update, periodic refresh, self-fencing
  * with a monotonic-clock deadline. Owns a dedicated database connection (never uses
  * the shared pool); all lease timestamps and expiry comparisons are computed by the

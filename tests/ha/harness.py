@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Adversarial test harness for the netxmsd HA lease algorithm
-# (doc/HA_Design.md section 6, issue #3364, phase 0 step 0.4).
+# (docs/design/HA_Design.md section 6, issue #3364, phase 0 step 0.4).
 #
 # Runs two ha-node-sim instances against one PostgreSQL database, with each
 # sim's database and heartbeat traffic routed through harness-controlled TCP
@@ -332,7 +332,7 @@ def wait_stable_cluster(n1, n2, timeout=15):
 
 
 # ---------------------------------------------------------------------------
-# Scenarios (numbering follows doc/HA_Design.md section 6)
+# Scenarios (numbering follows docs/design/HA_Design.md section 6)
 # ---------------------------------------------------------------------------
 
 def s01_kill_active(ctx):

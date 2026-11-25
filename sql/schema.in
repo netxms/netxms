@@ -4002,7 +4002,7 @@ CREATE TABLE ha_lease
 ) TABLE_TYPE;
 
 /**
- * High availability change journal (see doc/HA_Design.md section 3)
+ * High availability change journal (see docs/design/HA_Design.md section 3)
  */
 CREATE TABLE ha_change_journal
 (

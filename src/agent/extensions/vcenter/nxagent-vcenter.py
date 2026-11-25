@@ -28,7 +28,7 @@ Configure the agent (nxagentd.conf), e.g.:
     Environment = VC_POLL_INTERVAL=60
     DebugTag = extension.vcenter
 
-See ../../../../doc/AGENT_EXTENSION_PROTOCOL.md for the full protocol spec.
+See ../../../../docs/AGENT_EXTENSION_PROTOCOL.md for the full protocol spec.
 """
 
 import hmac

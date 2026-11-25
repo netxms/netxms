@@ -10,7 +10,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = reconf configure jemalloc.sym SECURITY.md
-SUBDIRS = . m4 build src doc tools contrib manpages
+SUBDIRS = . m4 build src docs tools contrib manpages
 SUBDIRS += @TOP_LEVEL_MODULES@
 
 upload-jars-to-central:

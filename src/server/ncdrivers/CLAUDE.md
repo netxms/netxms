@@ -43,7 +43,7 @@ A new NC driver must be registered in **all** of the following — easy to miss 
    - `AC_CONFIG_FILES` — add `src/server/ncdrivers/mydriver/Makefile`
    - `NCDRV_LTLIBRARIES` is auto-derived from `NCDRV_MODULES` via perl — **no manual edit**
 4. **`src/server/ncdrivers/Makefile.w32`** — add the driver name to the `DRIVERS` list (alphabetical) so the Windows/MinGW build recurses into it.
-5. **`doc/internal/debug_tags.txt`** — add `ncd.mydriver` if you introduce a new debug tag (root CLAUDE.md requirement).
+5. **`docs/internal/debug_tags.txt`** — add `ncd.mydriver` if you introduce a new debug tag (root CLAUDE.md requirement).
 6. **Implement** the `NCDriver` interface and add `DECLARE_NCD_ENTRY_POINT` macro with a static `NCConfigurationTemplate s_config(needSubject, needRecipient)`.
 7. Run `./init-source-tree && ./configure --with-server` and check that the driver appears in the build summary's NC driver list. `install-exec-hook` in `src/server/ncdrivers/Makefile.am` iterates `$(DRIVERS)` automatically — nothing to edit there.
 8. **(Optional) Unit tests** — extract pure logic (no libcurl) into `mydriver_helpers.{cpp,h}` and add a `tests/test-ncd-mydriver/` target (see `webhook` for the established pattern):

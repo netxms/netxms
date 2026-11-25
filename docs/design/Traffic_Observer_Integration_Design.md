@@ -156,7 +156,7 @@ Standard new-class touch points, verified against current code:
 - `src/server/core/session.cpp` — NXCP create path (`ClientSession::createObject`)
 - `src/server/include/nms_script.h` + `src/server/core/nxsl_classes.cpp` — NXSL classes
   (declaration, `getAttr`, global instance, `createNXSLObject` in each class)
-- `doc/internal/debug_tags.txt` — new tags (proposed: `traffic.poll`, `traffic.match`,
+- `docs/internal/debug_tags.txt` — new tags (proposed: `traffic.poll`, `traffic.match`,
   `traffic.sync`, `traffic.connector`)
 
 **Java client library (`src/client/java/netxms-client`):**
@@ -869,7 +869,7 @@ Carried over from the draft where still relevant, with mitigations now concrete:
    DCI editor metric picker. **Done** — verified end to end against ntopng 6.7 Community
    (point metrics + L7/TopTalkers/DSCP tables, host matching, host metrics incl.
    BytesIn/Out/PacketsIn/Out/ActiveFlows/TcpRetransmits/Present and Host.L7Breakdown,
-   internal table, metric picker). Example template: `Traffic_Observer_Example_Template.md`.
+   internal table, metric picker). Example template: `../admin/Traffic_Observer_Example_Template.md`.
    The connector serves `getMetricForClient`/`getTableForClient` too, so the DCI editor
    "test" button and `queryMetric`/`queryTable` work; note the two-tier cache TTL means the
    editor's live value reflects the last cache refresh. Observer-level metrics are limited to
@@ -932,9 +932,9 @@ Carried over from the draft where still relevant, with mitigations now concrete:
      header guards against stale-object races; node view host L7/Peers tables are
      capability-gated like the point view's (no error dialogs against backends
      lacking those capabilities).
-   - Docs: `Traffic_Observer_Admin_Guide.md` (portable draft for the official
+   - Docs: `../admin/Traffic_Observer_Admin_Guide.md` (portable draft for the official
      admin guide, incl. data dictionary tables for the three new DB tables);
-     debug tags registered in `doc/internal/debug_tags.txt`.
+     debug tags registered in `docs/internal/debug_tags.txt`.
    - The review also flagged that the interface's `Shutdown` entry point was never
      invoked; resolved by removing it — connectors are provided by modules, which
      already have a `pfShutdown` hook (the ntopng module clears its caches there).

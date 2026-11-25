@@ -29,7 +29,6 @@ autom4te.cache/
 build/netxms-build-tag.*
 
 # Non-code directories
-doc/
 docs/
 manpages/
 /packages/

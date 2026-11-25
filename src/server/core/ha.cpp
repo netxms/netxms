@@ -105,7 +105,7 @@ bool HAReadConfiguration()
       return false;
    }
 
-   // Enforce lease timing constraints (see doc/HA_Design.md section 2.7)
+   // Enforce lease timing constraints (see docs/design/HA_Design.md section 2.7)
    if ((s_leaseRefreshInterval < 1) || (s_leaseValidity < s_leaseRefreshInterval * 3) ||
        (s_fenceMargin < 1) || (s_fenceMargin > s_leaseValidity - s_leaseRefreshInterval * 2))
    {
@@ -136,7 +136,7 @@ bool NXCORE_EXPORTABLE HAIsClusterMode()
 /**
  * Get gap to be added to log record ID counters seeded from database maximum.
  * A demoted node cannot recall statements already handed to the database when
- * it fenced (residual commit window, doc/HA_Design.md 1.3), so records written
+ * it fenced (residual commit window, docs/design/HA_Design.md 1.3), so records written
  * by the predecessor can still appear after the new active has read the table
  * maximum. Starting above them prevents primary key collisions. Every writer
  * has at most one transaction in flight, and the largest one is a batched log
@@ -472,7 +472,7 @@ static void ActivationThread(int64_t term)
    LoadWellKnownPortList();
 
    // Rebase in-memory ID allocators seeded during passive bring-up - they are
-   // stale by however long this node was standing by (doc/HA_Design.md 7.2).
+   // stale by however long this node was standing by (docs/design/HA_Design.md 7.2).
    // InitIdTable() takes max(current, database maximum) for every group and
    // re-reads the last event ID, so re-running it is safe.
    if (!InitIdTable())
@@ -738,7 +738,7 @@ void HAShutdownController()
       RunDemoteHook();
 
       // Bounded wait for the peer to apply the journal up to the head
-      // (doc/HA_Design.md 5.3 step 3) so the new active starts with fully
+      // (docs/design/HA_Design.md 5.3 step 3) so the new active starts with fully
       // reconciled warm state; on timeout proceed anyway - the peer replays
       // the remainder at activation.
       int64_t head = HAJournalGetHead();

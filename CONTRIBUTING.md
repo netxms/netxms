@@ -58,7 +58,7 @@ Before contributing, ensure you have:
 
 2. **Understand the codebase**:
    - Read the [Concepts Documentation](https://www.netxms.org/documentation/adminguide/concepts.html)
-   - Review the [C++ Developer Guide](./doc/NETXMS_CPP_DEVELOPER_GUIDE.md) for core development
+   - Review the [C++ Development Guidelines](./CLAUDE.md#c-development-guidelines) for core development
    - Review existing code to understand patterns and conventions
    - Set up a development environment
 
@@ -244,7 +244,13 @@ Run the web client:
 
 ### C/C++ Code Standards
 
-Please refer to the [C++ Developer Guide](./doc/NETXMS_CPP_DEVELOPER_GUIDE.md) for detailed coding standards and best practices.
+- **Language version**: C++11 maximum; the code must compile with GCC 4.8
+- **Formatting**: 3-space indentation, opening brace on a new line
+- **Naming**: PascalCase for functions and classes, camelCase for methods and variables, `m_` prefix for class members, `g_` for global variables, `s_` for static variables
+- **Memory**: Use `MemAlloc` / `MemFree` family of functions instead of `malloc` / `free`
+- **Comments**: Describe current behavior, not change history
+
+Detailed rules are in the [C++ Development Guidelines](./CLAUDE.md#c-development-guidelines) section of `CLAUDE.md`.
 
 ### Java Code Standards
 

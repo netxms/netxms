@@ -27,7 +27,7 @@ and actions to the agent over **JSON-RPC 2.0 on a loopback TCP port** — a
 language-agnostic, less-coupled alternative to subagents (Python is the primary
 target). The agent is the client; the extension is the listener. There is no Python subagent; Python integrations use this protocol. Implementation: `core/extension*.cpp`.
 
-- **Protocol spec:** [`doc/AGENT_EXTENSION_PROTOCOL.md`](../../doc/AGENT_EXTENSION_PROTOCOL.md)
+- **Protocol spec:** [`docs/AGENT_EXTENSION_PROTOCOL.md`](../../docs/AGENT_EXTENSION_PROTOCOL.md)
 - **Reference implementation:** [`contrib/extensions/sample-python/`](../../contrib/extensions/sample-python/)
 - **Config:** see the "Agent extensions" section in `contrib/nxagentd.conf-dist`
 - **Debug tags:** `extension` (common), `extension.<name>` (per-extension)

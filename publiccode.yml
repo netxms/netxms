@@ -8,7 +8,7 @@ url: "https://github.com/netxms/netxms"
 landingURL: "https://www.netxms.org"
 softwareVersion: "6.1.0"
 releaseDate: "2026-04-09"
-logo: "doc/logo.png"
+logo: "docs/images/logo.png"
 platforms:
   - web
   - windows

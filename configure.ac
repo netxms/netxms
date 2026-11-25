@@ -4679,8 +4679,7 @@ AC_CONFIG_FILES([
 	contrib/startup/ubuntu/Makefile
 	contrib/startup/solaris/Makefile
 	contrib/templates/Makefile
-	doc/Makefile
-	doc/internal/Makefile
+	docs/Makefile
 	images/Makefile
 	include/Makefile
 	include/argon2/Makefile

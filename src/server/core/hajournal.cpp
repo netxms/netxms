@@ -18,7 +18,7 @@
 **
 ** File: hajournal.cpp
 **
-** HA change journal (doc/HA_Design.md section 3). The active node appends a
+** HA change journal (docs/design/HA_Design.md section 3). The active node appends a
 ** row for every object or alarm mutation the standby must know about; the
 ** standby persists its contiguous applied watermark and replays the journal
 ** from it at activation or after a channel reconnect. The peer channel is

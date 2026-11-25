@@ -14,7 +14,7 @@ metrics over HTTP/protobuf to an external collector.
   when `AF_PERFDATA_STORAGE_DRIVER_LOADED` is set.
 - Internal metrics surfaced as `Server.PDS.DriverStat(OTLP, <metric>)`
   (`src/server/core/server_stats.cpp:704`).
-- Debug tag: **`otlp.metrics`** (`doc/internal/debug_tags.txt:172`). Run server
+- Debug tag: **`otlp.metrics`** (`docs/internal/debug_tags.txt:172`). Run server
   with `-D6` (level 6 for batch delivery) or `-D7` (per-value decisions).
 
 ## Conventions / how to run
@@ -45,7 +45,7 @@ metrics over HTTP/protobuf to an external collector.
 |---|------|----------|
 | 1.1 | Build server with otlp module (`./configure --with-server`; `make -j$(nproc)`) | otlp module builds; `metric_export.cpp` compiles & links |
 | 1.2 | Windows build (`otlp.vcxproj` includes `metric_export.cpp`) | builds; no `nx_swprintf`/`%s` portability issues |
-| 1.3 | Debug tag registered | `otlp.metrics` present in `doc/internal/debug_tags.txt` |
+| 1.3 | Debug tag registered | `otlp.metrics` present in `docs/internal/debug_tags.txt` |
 | 1.4 | Driver count cap | `MAX_PDS_DRIVERS` (8) not exceeded when OTLP + ClickHouse + others all active |
 
 ## 2. Registration & lifecycle

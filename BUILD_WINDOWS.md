@@ -33,7 +33,7 @@ You also need GNU Make as `mingw32-make` (bundled with most MinGW distributions,
 
 ### 2. Perl
 
-Required for build tag generation (`tools/updatetag.pl`).
+Required for build tag generation (`build/updatetag.pl`).
 
 - **Strawberry Perl** (recommended): https://strawberryperl.com/
 - **ActivePerl**: https://www.activestate.com/products/perl/
@@ -59,23 +59,13 @@ External libraries must be built for (or downloaded as) llvm-mingw import librar
 - **Java JDK** – Java subagent (JNI headers)
 - **PostgreSQL / MariaDB / Oracle / Informix / DB2 client libraries** – corresponding database drivers (no MySQL driver is built on Windows; libnxdb loads `mariadb.ddr` when `mysql.ddr` is requested)
 
-The template expects SDKs under a common root (`C:/SDK-llvm-mingw/<name>`), with per-architecture libraries in `lib/<arch>`. Adjust the paths in `config.mingw` to match your layout.
+The default `config.mingw` expects SDKs under a common root (`C:/SDK-llvm-mingw/<name>`), with per-architecture libraries in `lib/<arch>`. Adjust the paths in `config.mingw` to match your layout.
 
 ## Quick Start
 
-### 1. Initial Setup
+### 1. Configure Build
 
-Run the setup script to create your configuration file:
-
-```cmd
-setup_windows_build.cmd
-```
-
-This copies `config.mingw.template` to `config.mingw` and prompts you to edit it.
-
-### 2. Configure Build
-
-Edit `config.mingw` to match your environment:
+The build configuration is in `config.mingw` in the repository root. The file is tracked in git with default values; edit it to match your environment:
 
 ```makefile
 # Target architecture (x64, x86, or arm64)
@@ -95,7 +85,7 @@ PCRE_ROOT = $(SDK_ROOT)/pcre
 
 **Important:** Use forward slashes (`/`) in paths, even on Windows.
 
-### 3. Build
+### 2. Build
 
 Build everything with the convenience wrapper:
 
@@ -109,7 +99,7 @@ Or invoke `mingw32-make` directly:
 mingw32-make -f Makefile.w32 -j8
 ```
 
-### 4. Install
+### 3. Install
 
 Install to the prefix defined in `config.mingw` (default: `C:\NetXMS`):
 
@@ -271,10 +261,10 @@ x86_64-w64-mingw32-gcc --version
 
 ### "config.mingw not found"
 
-Create it from the template:
+`config.mingw` is part of the repository. Restore it and reapply your local settings:
 
 ```cmd
-copy config.mingw.template config.mingw
+git checkout -- config.mingw
 ```
 
 ### Library not found during linking
@@ -321,10 +311,9 @@ Each buildable component has a `Makefile.w32` alongside its `Makefile.am`. Share
 
 ## Getting Help
 
-- **Design Document**: `doc/Windows_MinGW_Build_System_Design.md`
+- **Design Document**: `docs/plans/completed/20260120-windows-mingw-build-system.md`
 - **GitHub Issues**: https://github.com/netxms/netxms/issues
 
 ## License
 
 NetXMS is licensed under GNU General Public License version 2. See the LICENSE file for details.
-</content>

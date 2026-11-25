@@ -2,7 +2,7 @@
 
 > Draft for the official administration guide. Covers the traffic observer
 > subsystem as shipped after integration phases 0–4 (see
-> `Traffic_Observer_Integration_Design.md` for design rationale). Validated
+> `../design/Traffic_Observer_Integration_Design.md` for design rationale). Validated
 > against ntopng 6.7 Community; Pro/Enterprise editions are expected to work
 > but are not yet validated.
 

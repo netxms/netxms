@@ -18,7 +18,7 @@
 **
 ** File: hachannel.cpp
 **
-** HA cluster peer channel (doc/HA_Design.md sections 3.3, 5.3). Purpose-built
+** HA cluster peer channel (docs/design/HA_Design.md sections 3.3, 5.3). Purpose-built
 ** TLS link between the two cluster nodes carrying change notifications,
 ** watermark acknowledgements and the handover notification. The channel is
 ** pure acceleration: the standby's applier reads committed journal rows from

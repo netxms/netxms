@@ -14,7 +14,7 @@ Configure the agent with, e.g.:
 
     Extension = sensors: spawn /usr/bin/python3 /path/to/sensor_extension.py
 
-See ../../doc/AGENT_EXTENSION_PROTOCOL.md for the full protocol spec.
+See ../../../docs/AGENT_EXTENSION_PROTOCOL.md for the full protocol spec.
 """
 
 import json

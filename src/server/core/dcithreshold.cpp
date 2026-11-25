@@ -333,7 +333,7 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
  * The state must be durable before the corresponding activation/deactivation
  * event becomes externally observable - otherwise a server failing right after
  * posting the event produces a duplicate activation after restart or HA
- * failover (doc/HA_Design.md). State transitions are rare relative to poll
+ * failover (docs/design/HA_Design.md). State transitions are rare relative to poll
  * volume, so the synchronous write is affordable.
  */
 static void SaveThresholdStateChange(uint32_t thresholdId, bool isReached)

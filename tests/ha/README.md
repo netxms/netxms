@@ -1,7 +1,7 @@
 # HA lease algorithm test harness
 
 Validation tooling for the netxmsd high-availability design
-([doc/HA_Design.md](../../doc/HA_Design.md), issue
+([docs/design/HA_Design.md](../../docs/design/HA_Design.md), issue
 [#3364](https://github.com/netxms/netxms/issues/3364)), phase 0.
 
 ## ha-node-sim
@@ -33,7 +33,7 @@ Built only when tests are enabled (`--with-tests`).
 ## harness.py
 
 Adversarial scenario runner (phase 0 step 0.4): runs the ten scenarios from
-doc/HA_Design.md section 6 against two sims and one PostgreSQL database, with
+docs/design/HA_Design.md section 6 against two sims and one PostgreSQL database, with
 each sim's database and heartbeat traffic routed through harness-controlled
 TCP proxies (CUT = partition, STALL = hung connection). Asserts the safety
 invariants on `ha_sim_writes`: exactly one writer per term, strictly

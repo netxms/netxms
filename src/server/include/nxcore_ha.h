@@ -40,7 +40,7 @@
 #define NETXMSD_EXIT_RESTART_STANDBY   94
 
 /**
- * HA cluster controller (see doc/HA_Design.md). Phase 1: lease-based
+ * HA cluster controller (see docs/design/HA_Design.md). Phase 1: lease-based
  * active/standby roles, passive parking, activation on promotion,
  * demote-via-restart on fencing.
  */
@@ -116,7 +116,7 @@ struct HAJournalEntry
 };
 
 /**
- * HA change journal (doc/HA_Design.md section 3). Writes are no-ops outside
+ * HA change journal (docs/design/HA_Design.md section 3). Writes are no-ops outside
  * cluster mode and before HAJournalInit() runs at activation.
  */
 bool HAJournalInit();

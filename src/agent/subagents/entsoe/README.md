@@ -5,7 +5,7 @@ and exposes it as NetXMS metrics. Its primary output is **average, production-ba
 carbon intensity (gCO₂/kWh) per bidding zone** — the signal for carbon-aware
 scheduling — alongside the raw generation mix, forecasts and cross-border flows.
 
-Design document: [`doc/ENTSOE_Integration_Design.md`](../../../../doc/ENTSOE_Integration_Design.md).
+Design document: [`docs/design/ENTSOE_Integration_Design.md`](../../../../docs/design/ENTSOE_Integration_Design.md).
 Tracked by issue #3397.
 
 ## Prerequisites

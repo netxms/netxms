@@ -1,7 +1,0 @@
-LGPL incompatible files
-
-libnetxms:
-
-base64.h	- GPL
-base64.cpp	- GPL
-scandir.c   - GPL

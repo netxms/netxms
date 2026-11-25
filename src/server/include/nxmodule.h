@@ -101,7 +101,7 @@ struct TrafficConnectorInterface;
 /**
  * Module registration structure.
  *
- * Lifecycle in cluster mode (doc/HA_Design.md section 5): pfInitialize,
+ * Lifecycle in cluster mode (docs/design/HA_Design.md section 5): pfInitialize,
  * pfLoadObjects, pfLinkObjects and pfPostObjectLoad run during passive
  * bring-up on every cluster node, including a standby that may never become
  * active. They may read the database and build in-memory state, but must not

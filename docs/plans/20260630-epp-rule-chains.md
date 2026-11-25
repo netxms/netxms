@@ -171,7 +171,7 @@ Resolved (question A): **stop-processing inside a sub-chain halts the entire eve
 - [x] In `EPRule::processEvent`, after effects, iterate chain calls in `sequence` order and recurse (via `EventProcessingPolicy::enterChain`; `m_chainCalls` is already loaded in sequence order).
 - [x] Implement the loop guard: on re-entry of a GUID already in `visited`, skip + `nxlog_debug_tag` + `EventBuilder(EVENT_EPP_CHAIN_LOOP, g_dwMgmtNode)` with `callingChainName` / `targetChainName` parameters.
 - [x] Preserve stop-processing semantics: the calling rule's flag decides return vs halt; a stop inside a sub-chain halts globally (resolved decision A) — `EPRule::processEvent` returns true if any called chain stopped, else falls through to its own `RF_STOP_PROCESSING`.
-- [x] Add a debug tag entry to `doc/internal/debug_tags.txt` if a new tag is introduced — not needed, reuses existing `event.policy` tag.
+- [x] Add a debug tag entry to `docs/internal/debug_tags.txt` if a new tag is introduced — not needed, reuses existing `event.policy` tag.
 - [ ] ⚠️ Extend the Java integration suite (`EppChainTest`): build chained policies via the client and assert traversal order, return-vs-terminate, diamond-reuse-runs-twice, and exactly one `SYS_EPP_CHAIN_LOOP` on a cycle. **Blocked**: building chained policies via the client requires NXCP chain support (Task 4) and Java client support (Task 6); write this test as part of Task 6 verification.
 
 ### Task 4: NXCP protocol — chain-aware load and per-chain save/merge
@@ -260,7 +260,7 @@ Resolved (question A): **stop-processing inside a sub-chain halts the entire eve
 
 ### Task 10: Documentation + cleanup
 
-- [x] Update `doc/internal/debug_tags.txt` if a new tag was added — no new tag; execution engine reuses `event.policy`.
+- [x] Update `docs/internal/debug_tags.txt` if a new tag was added — no new tag; execution engine reuses `event.policy`.
 - [x] Note the new tables in any data-dictionary source if maintained in-repo — the data dictionary is maintained externally (netxms.org); event 173 falls within the documented 0-499 system range in `doc/internal/event_code_ranges.txt`.
 - [x] Update relevant component CLAUDE.md notes if new patterns were introduced — no new patterns; existing conventions (per-chain container, `nx_swprintf`, ACL pattern) were followed.
 - [ ] Move this plan to `docs/plans/completed/` when done — pending the live-server verification runs above.

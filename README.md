@@ -17,7 +17,7 @@ NetXMS is an open-source network and infrastructure monitoring and management so
 
 ## 🏗️ Architecture
 
-![Architecture](doc/Architecture.png)
+![Architecture](docs/images/Architecture.png)
 
 NetXMS follows a distributed architecture with a central management server, monitoring agents, and web/desktop clients. The system supports multiple deployment scenarios from single-server setups to large distributed environments.
 
