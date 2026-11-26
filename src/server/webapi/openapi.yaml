@@ -6547,6 +6547,115 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/asset-link:
+    put:
+      operationId: linkAsset
+      summary: Link asset to an object
+      description: |
+        Link the asset identified by `object-id` to another object. Without `componentSerial`
+        the asset becomes the object's asset: the asset's previous link is removed, and an
+        asset previously linked to the object is unlinked from it. With `componentSerial` the
+        asset is linked to that hardware component of a node (the node's own asset link is
+        not affected); the component must be present in the node's hardware inventory, and
+        its serial number is always written into the asset's serial number property.
+
+        Requires modify access to the asset, to the object, to the object the asset is
+        currently linked to, and (for a non-component link) to the asset currently linked to
+        the object. Denied attempts are recorded in the audit log.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the asset object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - objectId
+              properties:
+                objectId:
+                  type: integer
+                  description: ID of the object to link the asset to.
+                componentSerial:
+                  type: string
+                  maxLength: 63
+                  description: Serial number of the node's hardware component to link the asset to. Omit or leave empty to link to the object itself.
+                updateIdentification:
+                  type: boolean
+                  default: false
+                  description: |
+                    For a non-component link, update the asset's identification property (serial
+                    number, or MAC address if the object has no serial number) from the object.
+                    Ignored for a component link.
+      responses:
+        '200':
+          description: Asset linked. Returns the asset's link state.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assetId:
+                    type: integer
+                  linkedObjectId:
+                    type: integer
+                  componentSerial:
+                    type: string
+                    description: Serial number of the linked component; empty for a link to the object itself.
+        '400':
+          description: |
+            Object is not an asset, invalid request body, target object does not exist, object
+            class cannot be linked to an asset, component link to a non-node object, component
+            not found in node inventory, or asset identification property rejected by schema
+            validation.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have the required access to one of the affected objects
+        '404':
+          description: Asset object does not exist
+        '500':
+          description: Internal error
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    delete:
+      operationId: unlinkAsset
+      summary: Unlink asset
+      description: |
+        Remove the link between the asset identified by `object-id` and the object (or node
+        component) it is linked to. Succeeds without changes when the asset is not linked.
+        Requires modify access to the asset and to the linked object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the asset object.
+      responses:
+        '204':
+          description: Asset unlinked, or was not linked.
+        '400':
+          description: Object is not an asset
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the asset or to the linked object
+        '404':
+          description: Asset object does not exist
+        '500':
+          description: Internal error
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/responsible-users:
     get:
       operationId: getObjectResponsibleUsers

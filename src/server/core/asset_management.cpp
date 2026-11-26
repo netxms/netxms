@@ -1351,7 +1351,7 @@ std::pair<uint32_t, String> NXCORE_EXPORTABLE UpdateAssetIdentification(Asset *a
  * Link asset to object. If component serial is not empty, asset is linked to given component of the object
  * (object's own asset link is not affected); otherwise asset becomes object's asset.
  */
-void NXCORE_EXPORTABLE LinkAsset(Asset *asset, NetObj *object, const wchar_t *componentSerial, ClientSession *session)
+void NXCORE_EXPORTABLE LinkAsset(Asset *asset, NetObj *object, const wchar_t *componentSerial, GenericClientSession *session)
 {
    bool componentLink = (componentSerial != nullptr) && (*componentSerial != 0);
    if (componentLink ? asset->isLinkedToComponent(object->getId(), componentSerial) : ((asset->getLinkedObjectId() == object->getId()) && !asset->isComponent()))
@@ -1401,7 +1401,7 @@ void NXCORE_EXPORTABLE LinkAsset(Asset *asset, NetObj *object, const wchar_t *co
 /**
  * Unlink asset from object it is currently linked to
  */
-void NXCORE_EXPORTABLE UnlinkAsset(Asset *asset, ClientSession *session)
+void NXCORE_EXPORTABLE UnlinkAsset(Asset *asset, GenericClientSession *session)
 {
    if (asset->getLinkedObjectId() == 0)
       return;
@@ -1436,6 +1436,89 @@ void NXCORE_EXPORTABLE UnlinkAsset(Asset *asset, ClientSession *session)
    {
       asset->setLinkedObject(0, nullptr);
    }
+}
+
+/**
+ * Link asset to object on behalf of client session. The session user must have modify access to the asset, to the
+ * object, to the object the asset is currently linked to, and to the asset currently linked to the object (unless this
+ * is a component link). If component serial is not empty, the object must be a node with such component in its hardware
+ * inventory; component serial is always written into asset identification. Otherwise asset identification is updated
+ * from the object only if updateIdentification is set. Returns RCC and optional error details.
+ */
+std::pair<uint32_t, String> NXCORE_EXPORTABLE LinkAssetFromClient(Asset *asset, NetObj *target, const wchar_t *componentSerial, bool updateIdentification, GenericClientSession *session)
+{
+   bool componentLink = (componentSerial != nullptr) && (*componentSerial != 0);
+
+   shared_ptr<NetObj> oldTarget = FindObjectById(asset->getLinkedObjectId());
+   if ((asset->getLinkedObjectId() != 0) && (oldTarget == nullptr))
+      return std::pair<uint32_t, String>(RCC_INTERNAL_ERROR, String());
+
+   // Asset currently linked to new target will be unlinked unless this is a component link
+   shared_ptr<Asset> oldAsset = (!componentLink && (target->getAssetId() != 0)) ? static_pointer_cast<Asset>(FindObjectById(target->getAssetId(), OBJECT_ASSET)) : shared_ptr<Asset>();
+
+   uint32_t userId = session->getUserId();
+   if (!asset->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || !target->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) ||
+       ((oldTarget != nullptr) && !oldTarget->checkAccessRights(userId, OBJECT_ACCESS_MODIFY)) ||
+       ((oldAsset != nullptr) && !oldAsset->checkAccessRights(userId, OBJECT_ACCESS_MODIFY)))
+   {
+      session->writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), L"Access denied on linking this asset to object \"%s\" [%u]", target->getName(), target->getId());
+      session->writeAuditLog(AUDIT_OBJECTS, false, target->getId(), L"Access denied on linking this object to asset \"%s\" [%u]", asset->getName(), asset->getId());
+      if (oldTarget != nullptr)
+         session->writeAuditLog(AUDIT_OBJECTS, false, oldTarget->getId(), L"Access denied on unlinking this object from asset \"%s\" [%u]", asset->getName(), asset->getId());
+      return std::pair<uint32_t, String>(RCC_ACCESS_DENIED, String());
+   }
+
+   if (componentLink)
+   {
+      if (target->getObjectClass() != OBJECT_NODE)
+         return std::pair<uint32_t, String>(RCC_INCOMPATIBLE_OPERATION, String());
+      if (!static_cast<Node*>(target)->hasComponent(componentSerial))
+         return std::pair<uint32_t, String>(RCC_INVALID_ARGUMENT, StringBuffer(L"Component with serial number ").append(componentSerial).append(L" not found in node inventory"));
+   }
+   else if (!IsValidAssetLinkTargetClass(target->getObjectClass()))
+   {
+      return std::pair<uint32_t, String>(RCC_INCOMPATIBLE_OPERATION, String());
+   }
+
+   // Component serial number is asset's identity, so it is always written into asset properties
+   if (componentLink || updateIdentification)
+   {
+      std::pair<uint32_t, String> result = UpdateAssetIdentification(asset, target, componentSerial, userId);
+      if (result.first != RCC_SUCCESS)
+         return result;
+      LinkAsset(asset, target, componentSerial, session);
+      asset->autoFillProperties();
+   }
+   else
+   {
+      LinkAsset(asset, target, nullptr, session);
+   }
+   return std::pair<uint32_t, String>(RCC_SUCCESS, String());
+}
+
+/**
+ * Unlink asset from object it is currently linked to on behalf of client session. The session user must have modify
+ * access to both the asset and the linked object. Unlinking an asset that is not linked is a successful no-op.
+ */
+uint32_t NXCORE_EXPORTABLE UnlinkAssetFromClient(Asset *asset, GenericClientSession *session)
+{
+   if (asset->getLinkedObjectId() == 0)
+      return RCC_SUCCESS;
+
+   shared_ptr<NetObj> target = FindObjectById(asset->getLinkedObjectId());
+   if (target == nullptr)
+      return RCC_INTERNAL_ERROR;
+
+   uint32_t userId = session->getUserId();
+   if (!asset->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || !target->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+   {
+      session->writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), L"Access denied on unlinking this asset from object \"%s\" [%u]", target->getName(), target->getId());
+      session->writeAuditLog(AUDIT_OBJECTS, false, target->getId(), L"Access denied on unlinking this object from asset \"%s\" [%u]", asset->getName(), asset->getId());
+      return RCC_ACCESS_DENIED;
+   }
+
+   UnlinkAsset(asset, session);
+   return RCC_SUCCESS;
 }
 
 /**

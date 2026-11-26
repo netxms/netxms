@@ -220,6 +220,8 @@ int H_ObjectCustomAttributeDelete(Context *context);
 int H_ObjectAssetProperties(Context *context);
 int H_ObjectAssetPropertyUpdate(Context *context);
 int H_ObjectAssetPropertyDelete(Context *context);
+int H_ObjectAssetLink(Context *context);
+int H_ObjectAssetUnlink(Context *context);
 int H_ObjectAgentGet(Context *context);
 int H_ObjectAgentLog(Context *context);
 int H_ObjectAgentUpdate(Context *context);
@@ -923,6 +925,10 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/asset-properties/:name")
       .PUT(H_ObjectAssetPropertyUpdate)
       .DELETE(H_ObjectAssetPropertyDelete)
+      .build();
+   RouteBuilder("v1/objects/:object-id/asset-link")
+      .PUT(H_ObjectAssetLink)
+      .DELETE(H_ObjectAssetUnlink)
       .build();
    RouteBuilder("v1/objects/:object-id/responsible-users")
       .GET(H_ObjectResponsibleUsers)

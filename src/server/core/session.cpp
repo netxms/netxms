@@ -20717,89 +20717,15 @@ void ClientSession::linkAsset(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(request.getFieldAsUInt32(VID_ASSET_ID), OBJECT_ASSET));
-   shared_ptr<NetObj> newTarget = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if ((asset != nullptr) && (newTarget != nullptr))
+   shared_ptr<NetObj> target = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if ((asset != nullptr) && (target != nullptr))
    {
-      TCHAR componentSerial[64];
+      wchar_t componentSerial[64];
       request.getFieldAsString(VID_SERIAL_NUMBER, componentSerial, 64);
-      bool componentLink = (componentSerial[0] != 0);
-
-      shared_ptr<NetObj> oldTarget = FindObjectById(asset->getLinkedObjectId());
-      // Asset currently linked to new target will be unlinked unless this is a component link
-      shared_ptr<Asset> oldAsset = (!componentLink && (newTarget->getAssetId() != 0)) ? static_pointer_cast<Asset>(FindObjectById(newTarget->getAssetId(), OBJECT_ASSET)) : shared_ptr<Asset>();
-      if ((asset->getLinkedObjectId() == 0) || (oldTarget != nullptr))
-      {
-         if (asset->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) && newTarget->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) &&
-             ((oldTarget == nullptr) || oldTarget->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)) &&
-             ((oldAsset == nullptr) || oldAsset->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)))
-         {
-            if (componentLink)
-            {
-               if (newTarget->getObjectClass() != OBJECT_NODE)
-               {
-                  response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-               }
-               else if (!static_cast<Node&>(*newTarget).hasComponent(componentSerial))
-               {
-                  response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-                  response.setField(VID_ERROR_TEXT, StringBuffer(L"Component with serial number ").append(componentSerial).append(L" not found in node inventory"));
-               }
-               else
-               {
-                  // Component serial number is asset's identity, so it is always written into asset properties
-                  std::pair<uint32_t, String> result = UpdateAssetIdentification(asset.get(), newTarget.get(), componentSerial, m_userId);
-                  if (result.first == RCC_SUCCESS)
-                  {
-                     LinkAsset(asset.get(), newTarget.get(), componentSerial, this);
-                     asset->autoFillProperties();
-                  }
-                  else
-                  {
-                     response.setField(VID_ERROR_TEXT, result.second);
-                  }
-                  response.setField(VID_RCC, result.first);
-               }
-            }
-            else if (IsValidAssetLinkTargetClass(newTarget->getObjectClass()))
-            {
-               if (request.getFieldAsBoolean(VID_UPDATE_IDENTIFICATION))
-               {
-                  std::pair<uint32_t, String> result = UpdateAssetIdentification(asset.get(), newTarget.get(), nullptr, m_userId);
-                  if (result.first == RCC_SUCCESS)
-                  {
-                     LinkAsset(asset.get(), newTarget.get(), nullptr, this);
-                     asset->autoFillProperties();
-                  }
-                  else
-                  {
-                     response.setField(VID_ERROR_TEXT, result.second);
-                  }
-                  response.setField(VID_RCC, result.first);
-               }
-               else
-               {
-                  LinkAsset(asset.get(), newTarget.get(), nullptr, this);
-                  response.setField(VID_RCC, RCC_SUCCESS);
-               }
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-            }
-         }
-         else
-         {
-            writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), L"Access denied on linking this asset to object \"%s\" [%u]", newTarget->getName(), newTarget->getId());
-            writeAuditLog(AUDIT_OBJECTS, false, newTarget->getId(), L"Access denied on linking this object to asset \"%s\" [%u]", asset->getName(), asset->getId());
-            if (oldTarget != nullptr)
-               writeAuditLog(AUDIT_OBJECTS, false, oldTarget->getId(), L"Access denied on unlinking this object from asset \"%s\" [%u]", asset->getName(), asset->getId());
-            response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         }
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_INTERNAL_ERROR);
-      }
+      std::pair<uint32_t, String> result = LinkAssetFromClient(asset.get(), target.get(), componentSerial, request.getFieldAsBoolean(VID_UPDATE_IDENTIFICATION), this);
+      response.setField(VID_RCC, result.first);
+      if (!result.second.isEmpty())
+         response.setField(VID_ERROR_TEXT, result.second);
    }
    else
    {
@@ -20810,7 +20736,7 @@ void ClientSession::linkAsset(const NXCPMessage& request)
 }
 
 /**
- * Remove asset's with another object
+ * Remove asset's link with another object
  *
  * Called by:
  * CMD_UNLINK_ASSET
@@ -20828,32 +20754,7 @@ void ClientSession::unlinkAsset(const NXCPMessage& request)
    shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(request.getFieldAsUInt32(VID_ASSET_ID), OBJECT_ASSET));
    if (asset != nullptr)
    {
-      if (asset->getLinkedObjectId() != 0)
-      {
-         shared_ptr<NetObj> target = FindObjectById(asset->getLinkedObjectId());
-         if (target != nullptr)
-         {
-            if (asset->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) && target->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
-            {
-               UnlinkAsset(asset.get(), this);
-               response.setField(VID_RCC, RCC_SUCCESS);
-            }
-            else
-            {
-               writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), L"Access denied on unlinking this asset from object \"%s\" [%u]", target->getName(), target->getId());
-               writeAuditLog(AUDIT_OBJECTS, false, target->getId(), L"Access denied on unlinking this object from asset \"%s\" [%u]", asset->getName(), asset->getId());
-               response.setField(VID_RCC, RCC_ACCESS_DENIED);
-            }
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_INTERNAL_ERROR);
-         }
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_SUCCESS);
-      }
+      response.setField(VID_RCC, UnlinkAssetFromClient(asset.get(), this));
    }
    else
    {

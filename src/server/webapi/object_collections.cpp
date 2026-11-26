@@ -27,6 +27,7 @@
 
 #include "object_helpers.h"
 #include <nms_users.h>
+#include <asset_management.h>
 
 /**
  * Maximum length of a custom attribute name (matches attr_name varchar(127)).
@@ -307,6 +308,99 @@ int H_ObjectAssetPropertyDelete(Context *context)
       L"Asset property \"%s\" of object %s [%u] deleted", name, asset->getName(), asset->getId());
    json_decref(oldSnapshot);
    json_decref(newSnapshot);
+   return 204;
+}
+
+/**
+ * Handler for PUT /v1/objects/:object-id/asset-link
+ * Links the asset to another object. Body: { "objectId": N, "componentSerial": "...", "updateIdentification": bool }.
+ * With componentSerial the asset is linked to that hardware component of the node (the node's own asset link is not
+ * affected); otherwise the asset becomes the object's asset, replacing the asset previously linked to it. Requires
+ * modify access to the asset, the object, the asset's current link target and the asset currently linked to the object.
+ */
+int H_ObjectAssetLink(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<Asset> asset = LoadAssetForModify(context, OBJECT_ACCESS_READ, &httpCode);
+   if (asset == nullptr)
+      return httpCode;
+
+   json_t *request = context->getRequestDocument();
+   if ((request == nullptr) || !json_is_object(request))
+   {
+      context->setErrorResponse("Request body must be a JSON object");
+      return 400;
+   }
+
+   uint32_t targetId = json_object_get_uint32(request, "objectId");
+   shared_ptr<NetObj> target = (targetId != 0) ? FindObjectById(targetId) : shared_ptr<NetObj>();
+   if ((target == nullptr) || target->isUnpublished() || target->isDeleted() || !target->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+   {
+      context->setErrorResponse("Invalid object ID");
+      return 400;
+   }
+
+   json_t *componentSerialJson = json_object_get(request, "componentSerial");
+   if ((componentSerialJson != nullptr) && !json_is_string(componentSerialJson) && !json_is_null(componentSerialJson))
+   {
+      context->setErrorResponse("Component serial number must be a string");
+      return 400;
+   }
+   String componentSerial = json_object_get_string(request, "componentSerial", L"");
+   if (componentSerial.length() > 63)
+   {
+      context->setErrorResponse("Component serial number is too long");
+      return 400;
+   }
+
+   std::pair<uint32_t, String> result = LinkAssetFromClient(asset.get(), target.get(), componentSerial,
+      json_object_get_boolean(request, "updateIdentification", false), context);
+   switch(result.first)
+   {
+      case RCC_SUCCESS:
+         break;
+      case RCC_ACCESS_DENIED:
+         return 403;
+      case RCC_INCOMPATIBLE_OPERATION:
+         context->setErrorResponse(componentSerial.isEmpty() ? "Asset cannot be linked to object of this class" : "Asset can be linked only to component of a node");
+         return 400;
+      case RCC_INTERNAL_ERROR:
+      case RCC_DB_FAILURE:
+         return 500;
+      default:
+         if (result.second.isEmpty())
+            context->setErrorResponse("Asset identification update failed");
+         else
+            context->setErrorResponse(result.second);
+         return 400;
+   }
+
+   json_t *output = json_object();
+   json_object_set_new(output, "assetId", json_integer(asset->getId()));
+   json_object_set_new(output, "linkedObjectId", json_integer(asset->getLinkedObjectId()));
+   json_object_set_new(output, "componentSerial", json_string_t(asset->getComponentSerial()));
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for DELETE /v1/objects/:object-id/asset-link
+ * Removes the asset's link with the object (or node component) it is linked to. Requires modify access to the asset
+ * and to the linked object. Succeeds when the asset is not linked.
+ */
+int H_ObjectAssetUnlink(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<Asset> asset = LoadAssetForModify(context, OBJECT_ACCESS_READ, &httpCode);
+   if (asset == nullptr)
+      return httpCode;
+
+   uint32_t rcc = UnlinkAssetFromClient(asset.get(), context);
+   if (rcc == RCC_ACCESS_DENIED)
+      return 403;
+   if (rcc != RCC_SUCCESS)
+      return 500;
    return 204;
 }
 
