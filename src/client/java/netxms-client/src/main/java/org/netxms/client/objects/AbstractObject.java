@@ -187,8 +187,7 @@ public abstract class AbstractObject
    protected PollState[] pollStates = null;
    protected boolean partialObject;
 
-	@Internal private long effectiveRights = 0;
-	@Internal private boolean effectiveRightsCached = false;
+	@Internal private volatile Long effectiveRights = null;
 
 	/**
 	 * Create dummy object of GENERIC class
@@ -1353,18 +1352,29 @@ public abstract class AbstractObject
     */
    public long getEffectiveRights()
    {
-      if (effectiveRightsCached)
-         return effectiveRights;
+      Long rights = effectiveRights;
+      if (rights != null)
+         return rights;
 
       try
       {
-         effectiveRights = session.getEffectiveRights(objectId);
-         effectiveRightsCached = true;
+         rights = session.getEffectiveRights(objectId);
+         effectiveRights = rights;
+         return rights;
       }
       catch(Exception e)
       {
-         effectiveRights = 0;
+         return 0;
       }
+   }
+
+   /**
+    * Get effective rights for this object if they were already retrieved. Never contacts the server.
+    *
+    * @return effective user rights on this object or null if not retrieved yet
+    */
+   public Long getCachedEffectiveRights()
+   {
       return effectiveRights;
    }
 
