@@ -20,13 +20,26 @@ package org.netxms.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
+import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
+import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.UserAccessRights;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.UserGroup;
 
 /**
  * @author Victor
@@ -34,6 +47,72 @@ import org.netxms.client.constants.RCC;
  */
 public class UserTest extends AbstractSessionTest
 {
+   @Test
+   public void testGroupStateUpdatesInheritedRights() throws Exception
+   {
+      NXCSession admin = connectAndLogin();
+      String suffix = UUID.randomUUID().toString();
+      Deque<Integer> principals = new ArrayDeque<>();
+      long parentId = 0;
+      try
+      {
+         int userId = admin.createUser("member-" + suffix);
+         principals.push(userId);
+         int outerId = admin.createUserGroup("outer-" + suffix);
+         principals.push(outerId);
+         int innerId = admin.createUserGroup("inner-" + suffix);
+         principals.push(innerId);
+         admin.syncUserDatabase();
+         UserGroup outer = (UserGroup)admin.findUserDBObjectById(outerId, null);
+         UserGroup inner = (UserGroup)admin.findUserDBObjectById(innerId, null);
+         assertNotNull(outer);
+         assertNotNull(inner);
+         inner.setMembers(new int[] { userId });
+         admin.modifyUserDBObject(inner, AbstractUserObject.MODIFY_MEMBERS);
+         outer.setMembers(new int[] { innerId });
+         admin.modifyUserDBObject(outer, AbstractUserObject.MODIFY_MEMBERS);
+
+         parentId = admin.createObject(new NXCObjectCreationData(AbstractObject.OBJECT_CONTAINER, "group-state-" + suffix, AbstractObject.SERVICEROOT));
+         NXCObjectModificationData acl = new NXCObjectModificationData(parentId);
+         acl.setInheritAccessRights(false);
+         acl.setACL(Arrays.asList(new AccessListElement(admin.getUserId(), admin.getEffectiveRights(parentId)),
+               new AccessListElement(outerId, UserAccessRights.OBJECT_ACCESS_READ)));
+         admin.modifyObject(acl);
+         long childId = admin.createObject(new NXCObjectCreationData(AbstractObject.OBJECT_CONTAINER, "child", parentId));
+         assertInheritedRights(admin, childId, userId, UserAccessRights.OBJECT_ACCESS_READ);
+
+         inner.setFlags(inner.getFlags() | AbstractUserObject.DISABLED);
+         admin.modifyUserDBObject(inner, AbstractUserObject.MODIFY_FLAGS);
+         assertInheritedRights(admin, childId, userId, 0);
+         inner.setFlags(inner.getFlags() & ~AbstractUserObject.DISABLED);
+         admin.modifyUserDBObject(inner, AbstractUserObject.MODIFY_FLAGS);
+         assertInheritedRights(admin, childId, userId, UserAccessRights.OBJECT_ACCESS_READ);
+
+         admin.deleteUserDBObject(innerId);
+         principals.pop();
+         assertInheritedRights(admin, childId, userId, 0);
+      }
+      finally
+      {
+         if (parentId != 0)
+            admin.deleteObject(parentId);
+         for(int id : principals)
+            admin.deleteUserDBObject(id);
+      }
+   }
+
+   private static void assertInheritedRights(NXCSession admin, long objectId, int userId, long expected) throws Exception
+   {
+      long start = System.nanoTime();
+      long rights = admin.getEffectiveRights(objectId, userId);
+      while((rights != expected) && (System.nanoTime() - start < TimeUnit.SECONDS.toNanos(10)))
+      {
+         Thread.sleep(100);
+         rights = admin.getEffectiveRights(objectId, userId);
+      }
+      assertEquals(expected, rights);
+   }
+
    @Test
    public void testValidatePassword() throws Exception
    {

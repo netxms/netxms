@@ -492,7 +492,7 @@ void LDAPConnection::syncUsers()
       nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::syncUsers(): read completed, updating user database"));
       compareUserLists();
       compareGroupList();
-      ClearAllObjectsInheritedAccessCache();
+      UpdateGlobalAccessRights();
    }
    else
    {
