@@ -5154,21 +5154,6 @@ public class NXCSession
    }
 
    /**
-    * Delete alarm.
-    *
-    * @param alarmId Identifier of alarm to be deleted.
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void deleteAlarm(final long alarmId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ALARM);
-      msg.setFieldUInt32(NXCPCodes.VID_ALARM_ID, alarmId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
     * Open issue in helpdesk system from given alarm
     *
     * @param alarmId alarm identifier

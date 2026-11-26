@@ -984,7 +984,7 @@ enum SessionState
 #define SYSTEM_ACCESS_EDIT_EVENT_DB           MASK_BIT64(5)
 #define SYSTEM_ACCESS_EPP                     MASK_BIT64(6)
 #define SYSTEM_ACCESS_MANAGE_ACTIONS          MASK_BIT64(7)
-#define SYSTEM_ACCESS_DELETE_ALARMS           MASK_BIT64(8)
+//#define SYSTEM_ACCESS_DELETE_ALARMS           MASK_BIT64(8)  // no longer used, cleared from all users and groups by DB upgrade 71.21; bit can be reused
 #define SYSTEM_ACCESS_MANAGE_PACKAGES         MASK_BIT64(9)
 #define SYSTEM_ACCESS_VIEW_EVENT_LOG          MASK_BIT64(10)
 #define SYSTEM_ACCESS_MANAGE_TOOLS            MASK_BIT64(11)
@@ -1039,7 +1039,7 @@ enum SessionState
 #define SYSTEM_ACCESS_MANAGE_AI_MEMORY        MASK_BIT64(60)
 #define SYSTEM_ACCESS_NXSL_FILE_IO            MASK_BIT64(61)
 
-#define SYSTEM_ACCESS_FULL                    _ULL(0x3FFFFFFFFFFFFFFF)
+#define SYSTEM_ACCESS_FULL                    _ULL(0x3FFFFFFFFFFFFEFF)  // all defined bits; bit 8 is currently unassigned
 
 #endif	/* NETXMS_CUSTOM_USER_RIGHTS */
 

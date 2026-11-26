@@ -1300,9 +1300,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_TERMINATE_ALARM:
          resolveAlarm(*request, true);
          break;
-      case CMD_DELETE_ALARM:
-         deleteAlarm(*request);
-         break;
       case CMD_BULK_RESOLVE_ALARMS:
          bulkResolveAlarms(*request, false);
          break;
@@ -7957,42 +7954,6 @@ void ClientSession::resolveAlarm(const NXCPMessage& request, bool terminate)
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, object->getId(),
             _T("Access denied on %s alarm on object %s"), terminate ? _T("terminate") : _T("resolve"), object->getName());
-      }
-   }
-   else
-   {
-      // Normally, for existing alarms object will not be nullptr,
-      // so we assume that alarm id is invalid
-      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
-   }
-
-   sendMessage(response);
-}
-
-/**
- * Delete alarm
- */
-void ClientSession::deleteAlarm(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   // Get alarm id and it's source object
-   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
-   shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
-   if (object != nullptr)
-   {
-      // User should have "terminate alarm" right to the object
-      // and system right "delete alarms"
-      if ((object->checkAccessRights(m_userId, OBJECT_ACCESS_TERM_ALARMS)) &&
-          (m_systemAccessRights & SYSTEM_ACCESS_DELETE_ALARMS))
-      {
-         DeleteAlarm(alarmId, false);
-         response.setField(VID_RCC, RCC_SUCCESS);
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_userId, m_workstation, m_id, object->getId(), _T("Access denied on delete alarm on object %s"), object->getName());
       }
    }
    else

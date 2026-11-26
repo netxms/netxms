@@ -282,7 +282,6 @@ void NXCORE_EXPORTABLE ResolveAlarmByDCObjectId(uint32_t dciId, bool terminate);
 uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, GenericClientSession *session, bool terminate);
 uint32_t NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref);
 uint32_t NXCORE_EXPORTABLE TerminateAlarmByHDRef(const TCHAR *hdref);
-void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup);
 
 uint32_t NXCORE_EXPORTABLE AddAlarmComment(const TCHAR *hdref, const TCHAR *text, uint32_t userId);
 uint32_t NXCORE_EXPORTABLE AddAlarmSystemComment(const TCHAR *hdref, const TCHAR *text);

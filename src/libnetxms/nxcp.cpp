@@ -118,7 +118,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_ACK_ALARM"),
       _T("CMD_ALARM_UPDATE"),
       _T("CMD_ALARM_DATA"),
-      _T("CMD_DELETE_ALARM"),
+      _T("CMD_0x004B"),
       _T("CMD_ADD_CLUSTER_NODE"),
       _T("CMD_GET_POLICY_INVENTORY"),
       _T("CMD_LOAD_ACTIONS"),

@@ -116,7 +116,7 @@ static void TestNestedMembership()
    s_baselineRights = GetEffectiveSystemRights(user) & ~SYSTEM_ACCESS_MANAGE_SCRIPTS;
    AssertTrue((s_baselineRights & (SYSTEM_ACCESS_MANAGE_USERS | SYSTEM_ACCESS_SERVER_CONFIG | SYSTEM_ACCESS_CONFIGURE_TRAPS |
          SYSTEM_ACCESS_MANAGE_SESSIONS | SYSTEM_ACCESS_EDIT_EVENT_DB | SYSTEM_ACCESS_EPP | SYSTEM_ACCESS_MANAGE_ACTIONS |
-         SYSTEM_ACCESS_DELETE_ALARMS | SYSTEM_ACCESS_MANAGE_PACKAGES | SYSTEM_ACCESS_VIEW_EVENT_LOG | SYSTEM_ACCESS_MANAGE_TOOLS |
+         SYSTEM_ACCESS_MANAGE_PACKAGES | SYSTEM_ACCESS_VIEW_EVENT_LOG | SYSTEM_ACCESS_MANAGE_TOOLS |
          SYSTEM_ACCESS_MANAGE_SCRIPTS)) == 0);
    AssertRights(user, SYSTEM_ACCESS_MANAGE_SCRIPTS);
 
@@ -280,7 +280,7 @@ static void TestDeepChain()
    {
       TCHAR name[64];
       _sntprintf(name, 64, _T("ug_chain_%04d"), i);
-      uint32_t group = CreateObject(name, true, (i == chainLength - 1) ? SYSTEM_ACCESS_DELETE_ALARMS : 0);
+      uint32_t group = CreateObject(name, true, (i == chainLength - 1) ? SYSTEM_ACCESS_MANAGE_PACKAGES : 0);
       if (i == 0)
          SetMembers(group, { user });
       else
@@ -290,7 +290,7 @@ static void TestDeepChain()
    }
 
    int64_t startTime = GetCurrentTimeMs();
-   AssertRights(user, SYSTEM_ACCESS_DELETE_ALARMS);
+   AssertRights(user, SYSTEM_ACCESS_MANAGE_PACKAGES);
    int64_t elapsed = GetCurrentTimeMs() - startTime;
    AssertTrue(elapsed < 1000);
    AssertTrue(CheckUserMembership(user, last));

@@ -24,6 +24,31 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.20 to 71.21
+ */
+static bool H_UpgradeFromV20()
+{
+   // Clear no longer used access right bit 8 (former SYSTEM_ACCESS_DELETE_ALARMS = 0x100 = 256) from all users and groups
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE users SET system_access=system_access-256 WHERE BITAND(system_access, 256)<>0"));
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access-256 WHERE BITAND(system_access, 256)<>0"));
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE users SET system_access=system_access-256 WHERE (CAST(system_access AS bigint) & CAST(256 AS bigint))<>0"));
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access-256 WHERE (CAST(system_access AS bigint) & CAST(256 AS bigint))<>0"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE users SET system_access=system_access-256 WHERE (system_access & 256)<>0"));
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access-256 WHERE (system_access & 256)<>0"));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(21));
+   return true;
+}
+
+/**
  * Upgrade from 71.19 to 71.20
  */
 static bool H_UpgradeFromV19()
@@ -419,6 +444,7 @@ static struct
    bool (*upgradeProc)();
    bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 20, 71, 21, H_UpgradeFromV20 },
    { 19, 71, 20, H_UpgradeFromV19 },
    { 18, 71, 19, H_UpgradeFromV18 },
    { 17, 71, 18, H_UpgradeFromV17 },

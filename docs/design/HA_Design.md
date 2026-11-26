@@ -335,12 +335,9 @@ CREATE TABLE ha_sync_state
   go through the save path, hence explicit tombstones.
 - Alarm changes journal `entity_type='1'` on every alarm create / state
   change / terminate, alongside the alarm's own DB write (the alarm DB
-  writer wraps both in one transaction). Individual alarm deletions run
-  synchronously in one transaction with their tombstone (`DeleteAlarm`),
-  never through the lazy SQL writer, for the same reason: a tombstone whose
-  sequence number was allocated at enqueue time but inserted after a writer
-  backlog would be mistaken for a rolled back transaction and skipped.
-  Delete-alarms-of-deleted-object is covered by the object's own tombstone.
+  writer wraps both in one transaction). Alarms are deleted only together
+  with their source object, and that deletion is covered by the object's own
+  tombstone.
 - Journal append checks the fence flag like any role-sensitive write, and a
   failed append fails the enclosing save transaction — an entity change
   never commits without its journal entry.
@@ -350,8 +347,8 @@ CREATE TABLE ha_sync_state
   activation through normal polling and event processing, and the journal
   volume saved is substantial on large installs.
 - Implementation: `hajournal.cpp`; append calls in `syncer.cpp` right before
-  the commit of the object save and delete transactions, in the alarm DB
-  writer thread, and in `DeleteAlarm`.
+  the commit of the object save and delete transactions and in the alarm DB
+  writer thread.
 
 ### 3.3 Applying (standby node)
 

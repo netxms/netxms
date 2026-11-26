@@ -2417,63 +2417,6 @@ uint32_t UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, GenericClientSession *se
 }
 
 /**
- * Delete alarm with given ID
- */
-void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
-{
-   uint32_t objectId;
-   bool found = false;
-
-   // Delete alarm from in-memory list
-   if (!objectCleanup)  // otherwise already locked
-      s_alarmList.lock();
-   Alarm *alarm = s_alarmList.find(alarmId);
-   if (alarm != nullptr)
-   {
-      objectId = alarm->getSourceObject();
-      NotifyClients(NX_NOTIFY_ALARM_DELETED, alarm);
-      s_alarmList.remove(alarm);
-      found = true;
-   }
-   if (!objectCleanup)
-      s_alarmList.unlock();
-
-   // Delete from database in one transaction together with the HA journal
-   // tombstone (no-op outside cluster mode). Synchronous rather than through
-   // the lazy SQL writer: the tombstone's sequence number is allocated when
-   // the row is inserted, so it cannot lag behind a writer backlog and be
-   // mistaken for a rolled back transaction by the standby. Object-cleanup
-   // deletions are covered by the object's own tombstone.
-   if (found && !objectCleanup)
-   {
-      static const TCHAR *tables[] = { _T("alarms"), _T("alarm_events"), _T("alarm_notes"), _T("alarm_state_changes") };
-
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      bool success = DBBegin(hdb);
-      if (success)
-      {
-         TCHAR query[256];
-         for(int i = 0; success && (i < 4); i++)
-         {
-            _sntprintf(query, 256, _T("DELETE FROM %s WHERE alarm_id=%u"), tables[i], alarmId);
-            success = DBQuery(hdb, query);
-         }
-         if (success)
-            success = HAJournalAppend(hdb, HAJournalEntityType::ALARM, HAJournalChangeType::REMOVE, alarmId, 0);
-         if (success)
-            DBCommit(hdb);
-         else
-            DBRollback(hdb);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-      if (!success)
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot delete alarm [%u] from database"), alarmId);
-
-      UpdateObjectOnAlarmResolve(objectId, alarmId, true);
-   }
-}
-
-/**
  * Delete all alarms of given object. Intended to be called only
  * on final stage of object deletion.
  */
@@ -2489,10 +2432,12 @@ bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb)
 	         deleteList.add(alarm->getAlarmId());
 	      return _CONTINUE;
 	   });
-	for(int i = 0; i < deleteList.size(); i++)
+   for(int i = 0; i < deleteList.size(); i++)
    {
-      DeleteAlarm(deleteList.get(i), true);
-	}
+      Alarm *alarm = s_alarmList.find(deleteList.get(i));
+      NotifyClients(NX_NOTIFY_ALARM_DELETED, alarm);
+      s_alarmList.remove(alarm);
+   }
 	s_alarmList.unlock();
 
    // Delete all object alarms from database

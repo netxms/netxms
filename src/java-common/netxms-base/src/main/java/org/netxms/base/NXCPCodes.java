@@ -98,7 +98,7 @@ public class NXCPCodes
 	public static final int CMD_ACK_ALARM = 0x0048;
 	public static final int CMD_ALARM_UPDATE = 0x0049;
 	public static final int CMD_ALARM_DATA = 0x004A;
-	public static final int CMD_DELETE_ALARM = 0x004B;
+//	public static final int CMD_DELETE_ALARM = 0x004B;
 	public static final int CMD_ADD_CLUSTER_NODE = 0x004C;
 	public static final int CMD_GET_POLICY_INVENTORY = 0x004D;
 	public static final int CMD_LOAD_ACTIONS = 0x004E;

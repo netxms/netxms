@@ -732,7 +732,6 @@ private:
    void acknowledgeAlarm(const NXCPMessage& request);
    void resolveAlarm(const NXCPMessage& request, bool terminate);
    void bulkResolveAlarms(const NXCPMessage& request, bool terminate);
-   void deleteAlarm(const NXCPMessage& request);
    void openHelpdeskIssue(const NXCPMessage& request);
    void getHelpdeskUrl(const NXCPMessage& request);
    void unlinkHelpdeskIssue(const NXCPMessage& request);

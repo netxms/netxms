@@ -108,10 +108,6 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Delete Alarms");
-      cell.setCellStyle(headerStyle);
-
-      cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Event Templates");
       cell.setCellStyle(headerStyle);
 
@@ -339,7 +335,6 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, user);
-         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EPP, user);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, user);
@@ -429,10 +424,6 @@ public class AclReport extends AbstractAclReport
 
       cell = headerRow.createCell(columnIndex++);
       cell.setCellValue("Configure SNMP Traps");
-      cell.setCellStyle(headerStyle);
-
-      cell = headerRow.createCell(columnIndex++);
-      cell.setCellValue("Delete Alarms");
       cell.setCellStyle(headerStyle);
 
       cell = headerRow.createCell(columnIndex++);
@@ -670,7 +661,6 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, group);
-         createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EPP, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, group);

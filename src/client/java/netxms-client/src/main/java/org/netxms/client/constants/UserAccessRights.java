@@ -32,7 +32,7 @@ public final class UserAccessRights
 	public static final long SYSTEM_ACCESS_EDIT_EVENT_DB           = 0x00000000000020L;
 	public static final long SYSTEM_ACCESS_EPP                     = 0x00000000000040L;
 	public static final long SYSTEM_ACCESS_MANAGE_ACTIONS          = 0x00000000000080L;
-	public static final long SYSTEM_ACCESS_DELETE_ALARMS           = 0x00000000000100L;
+//	public static final long SYSTEM_ACCESS_DELETE_ALARMS           = 0x00000000000100L;  // no longer used; bit can be reused
 	public static final long SYSTEM_ACCESS_MANAGE_PACKAGES         = 0x00000000000200L;
 	public static final long SYSTEM_ACCESS_VIEW_EVENT_LOG          = 0x00000000000400L;
 	public static final long SYSTEM_ACCESS_MANAGE_TOOLS            = 0x00000000000800L;
