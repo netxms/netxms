@@ -311,7 +311,7 @@ public class NXCPCodes
 	public static final int CMD_FILE_MONITORING = 0x011D;
 	public static final int CMD_CANCEL_FILE_MONITORING = 0x011E;
 	public static final int CMD_CHANGE_OBJECT_TOOL_STATUS = 0x011F;
-	public static final int CMD_SET_ALARM_STATUS_FLOW = 0x0120;
+//	public static final int CMD_SET_ALARM_STATUS_FLOW = 0x0120;
 	public static final int CMD_DELETE_ALARM_COMMENT = 0x0121;
 	public static final int CMD_GET_EFFECTIVE_RIGHTS = 0x0122;
 	public static final int CMD_GET_DCI_VALUES = 0x0123;

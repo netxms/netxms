@@ -1281,9 +1281,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_ALARM_COMMENTS:
          getAlarmComments(*request);
          break;
-      case CMD_SET_ALARM_STATUS_FLOW:
-         updateAlarmStatusFlow(*request);
-         break;
       case CMD_UPDATE_ALARM_COMMENT:
          updateAlarmComment(*request);
          break;
@@ -8543,20 +8540,6 @@ void ClientSession::deleteAlarmComment(const NXCPMessage& request)
       // so we assume that alarm id is invalid
       response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
-
-   sendMessage(response);
-}
-
-/**
- * Update alarm status flow mode
- */
-void ClientSession::updateAlarmStatusFlow(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   int status = request.getFieldAsUInt32(VID_ALARM_STATUS_FLOW_STATE);
-
-   ConfigWriteInt(_T("Alarms.StrictStatusFlow"), status, false);
-   response.setField(VID_RCC, RCC_SUCCESS);
 
    sendMessage(response);
 }
