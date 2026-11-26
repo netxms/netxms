@@ -2757,6 +2757,47 @@ paths:
         - BearerAuth: []
       tags:
         - Alarms
+  /v1/alarms/{alarm-id}/ai-comment:
+    post:
+      operationId: requestAlarmAiComment
+      summary: Request AI Assistant Comment for Alarm
+      description: |
+        Ask the AI assistant to analyze an alarm and suggest a comment. The comment is returned
+        but not saved; use POST /v1/alarms/{alarm-id}/comments to attach it to the alarm.
+        The request is synchronous and may take a while, because the AI assistant can call tools
+        to collect additional data. Tool calls are checked against the access rights of the
+        requesting user. Requires the "use AI assistant" system access right.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Suggested comment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comment:
+                    type: string
+                    description: Comment text suggested by AI assistant
+        '400':
+          description: Invalid alarm ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have access to AI assistant, or read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+        '503':
+          description: AI assistant is not available or did not return a comment
+      security:
+        - BearerAuth: []
+      tags:
+        - Alarms
   /v1/alarms/{alarm-id}/comments:
     get:
       operationId: getAlarmComments

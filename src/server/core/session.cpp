@@ -6877,7 +6877,7 @@ void ClientSession::explainEventProcessingPolicyRule(const NXCPMessage& request)
          prompt.append(jsonString);
          MemFree(jsonString);
          json_decref(rule);
-         char *explanation = QueryAIAssistant(prompt.c_str(), nullptr);
+         char *explanation = QueryAIAssistant(prompt.c_str(), nullptr, nullptr, true, m_userId);
          response.setField(VID_RCC, RCC_SUCCESS);
          response.setFieldFromUtf8String(VID_MESSAGE, explanation);
          MemFree(explanation);
@@ -21098,9 +21098,10 @@ void ClientSession::requestAiAssistantComment(const NXCPMessage& request)
    if (alarm != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(alarm->getSourceObject());
-      if (object != nullptr && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_ALARMS))
+      if ((object != nullptr) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_ALARMS) &&
+          alarm->checkCategoryAccess(this))
       {
-         String text = alarm->requestAIAssistantComment(this);
+         String text = alarm->requestAIAssistantComment(m_userId);
          if (!text.isEmpty())
          {
             response.setField(VID_RCC, RCC_SUCCESS);

@@ -98,6 +98,7 @@ int H_ServerActionCreate(Context *context);
 int H_ServerActionUpdate(Context *context);
 int H_ServerActionDelete(Context *context);
 int H_AlarmAcknowledge(Context *context);
+int H_AlarmAiComment(Context *context);
 int H_AlarmCategories(Context *context);
 int H_AlarmCategoryCreate(Context *context);
 int H_AlarmCategoryDelete(Context *context);
@@ -581,6 +582,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/alarms/:alarm-id/acknowledge")
       .POST(H_AlarmAcknowledge)
+      .build();
+   RouteBuilder("v1/alarms/:alarm-id/ai-comment")
+      .POST(H_AlarmAiComment)
       .build();
    RouteBuilder("v1/alarms/:alarm-id/comments")
       .GET(H_AlarmComments)

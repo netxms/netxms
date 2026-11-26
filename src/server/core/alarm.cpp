@@ -1197,9 +1197,9 @@ json_t *Alarm::toJson() const
 }
 
 /**
- * Get AI assistant comment for alarm
+ * Get AI assistant comment for alarm. Tool calls made by AI assistant are checked against access rights of given user (0 = system).
  */
-String Alarm::requestAIAssistantComment(GenericClientSession *session) const
+String Alarm::requestAIAssistantComment(uint32_t userId) const
 {
    shared_ptr<NetObj> object = FindObjectById(m_sourceObject);
    if (object == nullptr)
@@ -1218,7 +1218,7 @@ String Alarm::requestAIAssistantComment(GenericClientSession *session) const
    prompt.append(L"Last change time: ").append(FormatTimestamp(m_lastChangeTime)).append(L"\n");
    char *promptUtf8 = UTF8StringFromWideString(prompt);
    // Use "fast" slot for quick alarm explanations (tools enabled for additional data lookups)
-   char *response = QueryAIAssistant(promptUtf8, object.get(), "fast");
+   char *response = QueryAIAssistant(promptUtf8, object.get(), "fast", true, userId);
    MemFree(promptUtf8);
    if (response == nullptr)
       return String();

@@ -2389,9 +2389,9 @@ json_t *Chat::getPendingQuestion()
 /**
  * Send single independent request to AI assistant
  */
-char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, const char *slot, bool enableTools)
+char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, const char *slot, bool enableTools, uint32_t userId)
 {
-   Chat chat(context, nullptr, 0, nullptr, false, enableTools);
+   Chat chat(context, nullptr, userId, nullptr, false, enableTools);
    if (slot != nullptr)
       chat.setSlot(slot);
    return chat.sendRequest(prompt);

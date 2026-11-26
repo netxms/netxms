@@ -379,6 +379,35 @@ int H_AlarmAcknowledge(Context *context)
 }
 
 /**
+ * Handler for POST /v1/alarms/:alarm-id/ai-comment - generate AI assistant comment for alarm (comment is returned, not saved)
+ */
+int H_AlarmAiComment(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_USE_AI_ASSISTANT))
+      return 403;
+
+   int responseCode;
+   Alarm *alarm = AlarmFromRequest(context, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_ALARMS, &responseCode);
+   if (alarm == nullptr)
+      return responseCode;
+
+   String comment = alarm->requestAIAssistantComment(context->getUserId());
+   delete alarm;
+
+   if (comment.isEmpty())
+   {
+      context->setErrorResponse("AI assistant is not available");
+      return 503;
+   }
+
+   json_t *response = json_object();
+   json_object_set_new(response, "comment", json_string_t(comment));
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
  * Handler for /v1/alarms/:alarm-id/resolve
  */
 int H_AlarmResolve(Context *context)

@@ -130,7 +130,7 @@ public:
    void fillMessage(NXCPMessage *msg) const;
    json_t *toJson() const;
 
-   String requestAIAssistantComment(GenericClientSession *session = nullptr) const;
+   String requestAIAssistantComment(uint32_t userId = 0) const;
 
    NXSL_Value *categoryListToNXSLArray(NXSL_VM *vm) const;
    NXSL_Value *relatedEventsToNXSLArray(NXSL_VM *vm) const;
