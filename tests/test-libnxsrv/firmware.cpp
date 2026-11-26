@@ -135,6 +135,29 @@ static void TestNormalizationVectors(json_t *vectors)
       wchar_t version[VERSION_BUFFER_SIZE] = L"unchanged";
       bool evolved = false;
       bool success;
+
+      // Vendor specific normalizer that finds platform and version in text reported by device
+      json_t *normalizer = json_object_get(vector, "normalizer");
+      if (normalizer != nullptr)
+      {
+         AssertTrueEx(GetVectorString(vector, "normalizer").equals(L"cisco"), L"Unknown normalizer in test vector");
+         const wchar_t *platform = L"unchanged";
+         success = NormalizeCiscoFirmwareVersion(raw, version, VERSION_BUFFER_SIZE, &platform);
+         if (json_is_null(json_object_get(vector, "version")))
+         {
+            if (success || (version[0] != 0) || (platform != nullptr))
+               FailVector(L"normalization", i, vector);
+         }
+         else
+         {
+            const FirmwarePlatform *registered = success ? FindFirmwarePlatform(platform) : nullptr;
+            if (!success || wcscmp(version, GetVectorString(vector, "version")) || wcscmp(platform, GetVectorString(vector, "platform")) ||
+                (registered == nullptr) || (registered->scheme != scheme) || !IsValidFirmwareVersion(scheme, version))
+               FailVector(L"normalization", i, vector);
+         }
+         continue;
+      }
+
       switch(scheme)
       {
          case FirmwareVersionScheme::EXACT:

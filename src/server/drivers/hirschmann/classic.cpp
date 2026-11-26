@@ -74,9 +74,10 @@ bool HirschmannClassicDriver::getHardwareInformation(DeviceContext *context, NOb
    _tcscpy(hwInfo->vendor, _T("Hirschmann"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.2.16.3.7.0")));  // Product name
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.2.16.1.6.0")));  // Firmware version
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.1.1.9.1.10.1")));  // Serial number
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.2.16.3.7.0")));  // Product name (hmEtherNetIPCatalogName)
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.1.1.9.1.4.1")));  // Hardware version (hmSysGroupHwVersion)
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.1.1.9.1.10.1")));  // Serial number (hmSysGroupSerialNum)
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.14.1.1.9.1.3.1")));  // Order code (hmSysGroupDescription)
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
@@ -92,6 +93,7 @@ bool HirschmannClassicDriver::getHardwareInformation(DeviceContext *context, NOb
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
          _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
+         TrimW(hwInfo->productVersion);
       }
 
       v = response->getVariable(2);
@@ -100,8 +102,55 @@ bool HirschmannClassicDriver::getHardwareInformation(DeviceContext *context, NOb
          wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
+      v = response->getVariable(3);
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+      {
+         wcslcpy(hwInfo->productCode, v->getValueAsString(buffer, 256), 32);
+      }
+
       delete response;
    }
+   return true;
+}
+
+/**
+ * Get firmware information from device. Software version is taken from hmSysVersion
+ * ("SW: L2E-09.0.03 CH: 1.20 BP: 208"): software level (L2E, L2P, L3E, L3P) and version separated by hyphen.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param firmware list of firmware to fill
+ * @return true if firmware information was read from device
+ */
+bool HirschmannClassicDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+
+   wchar_t sysVersion[256];
+   uint32_t rc = SnmpGetEx(snmp, { 1, 3, 6, 1, 4, 1, 248, 14, 1, 1, 2, 0 }, sysVersion, sizeof(sysVersion), SG_STRING_RESULT);
+   if (rc == SNMP_ERR_NO_OBJECT)
+      return true;   // Device does not report software version
+   if (rc != SNMP_ERR_SUCCESS)
+      return false;
+
+   const wchar_t *start = wcsstr(sysVersion, L"SW: ");
+   if (start == nullptr)
+      return true;
+   start += 4;
+   size_t length = wcscspn(start, L" \t\r\n");
+   if ((length == 0) || (length >= 64))
+      return true;
+
+   wchar_t raw[64];
+   memcpy(raw, start, length * sizeof(wchar_t));
+   raw[length] = 0;
+
+   wchar_t version[64] = L"";
+   const wchar_t *separator = wcschr(raw, L'-');
+   if (separator != nullptr)
+      NormalizeIntDotFirmwareVersion(separator + 1, version, 64);
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Hirschmann Classic", L"hirschmann-classic", version, raw);
    return true;
 }
 

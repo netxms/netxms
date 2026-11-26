@@ -9,6 +9,8 @@
     { "scheme": "intdot", "a": "10", "b": "9.99", "result": ">" },
     { "scheme": "intdot", "a": "1.0.0.1", "b": "1", "result": ">" },
     { "scheme": "intdot", "a": "1.18446744073709551616", "b": "1.18446744073709551617", "result": "<" },
+    { "scheme": "intdot", "a": "09.0.03", "b": "9.0.3", "result": "=" },
+    { "scheme": "intdot", "a": "09.0.03", "b": "09.1.07", "result": "<" },
     { "scheme": "intdot", "a": "1.2", "b": "1.2a", "result": "~" },
 
     { "scheme": "semver", "a": "1.0.0-rc.1", "b": "1.0.0", "result": "<" },
@@ -138,12 +140,24 @@
     { "scheme": "intdot", "raw": "v1.10", "version": "1.10" },
     { "scheme": "intdot", "raw": " 2.72 ", "platform": "ilo4", "version": "2.72" },
     { "scheme": "intdot", "raw": "3.20", "platform": "cip-device", "version": "3.20" },
+    { "scheme": "intdot", "raw": "09.0.03", "platform": "hirschmann-classic", "version": "09.0.03" },
     { "scheme": "intdot", "raw": "2.72 Sep 04 2019", "version": null },
     { "scheme": "intdot", "raw": "FL.", "version": null },
     { "scheme": "intdot", "raw": "", "version": null },
 
     { "scheme": "exact", "raw": " 17.9.4a ", "platform": "ios-xe", "version": "17.9.4a" },
     { "scheme": "exact", "raw": "15.2(7)E9", "platform": "ios", "version": "15.2(7)E9" },
-    { "scheme": "exact", "raw": "   ", "version": null }
+    { "scheme": "exact", "raw": "   ", "version": null },
+
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Cisco IOS Software, 3700 Software (C3725-ADVENTERPRISEK9-M), Version 12.4(15)T14, RELEASE SOFTWARE (fc2)\r\nTechnical Support: http://www.cisco.com/techsupport\r\nCopyright (c) 1986-2010 by Cisco Systems, Inc.\r\nCompiled Tue 17-Aug-10 12:08 by prod_rel_team", "platform": "ios", "version": "12.4(15)T14" },
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Cisco Internetwork Operating System Software \r\nIOS (tm) C2950 Software (C2950-I6Q4L2-M), Version 12.1(22)EA14, RELEASE SOFTWARE (fc1)", "platform": "ios", "version": "12.1(22)EA14" },
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Cisco IOS Software [Cupertino], Catalyst L3 Switch Software (CAT9K_IOSXE), Version 17.9.4a, RELEASE SOFTWARE (fc3)", "platform": "ios-xe", "version": "17.9.4a" },
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Cisco IOS Software, IOS-XE Software, Catalyst L3 Switch Software (CAT3K_CAA-UNIVERSALK9-M), Version 03.06.06E RELEASE SOFTWARE (fc1)", "platform": "ios-xe", "version": "03.06.06E" },
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Cisco IOS Software [Amsterdam], ISR Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version 17.3.4a, RELEASE SOFTWARE (fc3)", "platform": "ios-xe", "version": "17.3.4a" },
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Cisco NX-OS(tm) nxos.9.3.8.bin, Software (nxos), Version 9.3(8), RELEASE SOFTWARE Copyright (c) 2002-2021 by Cisco Systems, Inc. Compiled 8/4/2021 13:00:00", "platform": "nx-os", "version": "9.3(8)" },
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Cisco Adaptive Security Appliance Version 9.16(4)", "platform": "asa", "version": "9.16(4)" },
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Cisco IOS Software, 3700 Software (C3725-ADVENTERPRISEK9-M)", "version": null },
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Cisco FirePOWER FPR-2140 Threat Defense, Version 7.0.1", "version": null },
+    { "scheme": "exact", "normalizer": "cisco", "raw": "Juniper Networks, Inc. ex3400-48p Ethernet Switch, kernel JUNOS 20.4R3-S4.8", "version": null }
   ]
 }

@@ -112,7 +112,6 @@ bool MikrotikDriver::getHardwareInformation(DeviceContext *context, NObject *nod
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.1.0")));
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14988.1.1.7.8.0")));  // Product name
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14988.1.1.7.4.0")));  // Firmware version
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14988.1.1.7.3.0")));  // Serial number
 
    SNMP_PDU *response;
@@ -142,17 +141,92 @@ bool MikrotikDriver::getHardwareInformation(DeviceContext *context, NObject *nod
       v = response->getVariable(2);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         wcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      }
-
-      v = response->getVariable(3);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
          wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
       delete response;
    }
+   return true;
+}
+
+/**
+ * Get firmware information from device: RouterOS as main firmware and RouterBOOT as bootloader.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param firmware list of firmware to fill
+ * @return true if firmware information was read from device
+ */
+bool MikrotikDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 14988, 1, 1, 4, 4, 0 }));  // mtxrLicVersion (RouterOS version)
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 14988, 1, 1, 7, 4, 0 }));  // mtxrFirmwareVersion (RouterBOOT version)
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, 1, 0 }));               // sysDescr
+
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
+      return false;
+
+   wchar_t raw[256], version[64];
+
+   // RouterOS version: dedicated OID, or last word of sysDescr ("RouterOS RB2011UiAS-2HnD 7.22.1 (stable)")
+   // if device does not have it
+   bool found = false;
+   const SNMP_Variable *v = response->getVariable(0);
+   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+   {
+      v->getValueAsString(raw, 256);
+      TrimW(raw);
+      found = (raw[0] != 0);
+   }
+   if (!found)
+   {
+      v = response->getVariable(2);
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+      {
+         wchar_t sysDescr[256];
+         v->getValueAsString(sysDescr, 256);
+         TrimW(sysDescr);
+         wchar_t *p = wcsrchr(sysDescr, L' ');
+         if ((p != nullptr) && (p[1] == L'('))
+         {
+            // Skip release channel in parentheses, it is handled by normalizer
+            *p = 0;
+            wchar_t *start = wcsrchr(sysDescr, L' ');
+            *p = L' ';
+            p = start;
+         }
+         if (p != nullptr)
+         {
+            wcslcpy(raw, p + 1, 256);
+            found = NormalizeRouterOSFirmwareVersion(raw, version, 64);
+         }
+      }
+   }
+   if (found)
+   {
+      NormalizeRouterOSFirmwareVersion(raw, version, 64);
+      AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"RouterOS", L"routeros", version, raw);
+   }
+
+   // RouterBOOT version is available only on RouterBOARD devices
+   v = response->getVariable(1);
+   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+   {
+      v->getValueAsString(raw, 256);
+      TrimW(raw);
+      if (raw[0] != 0)
+      {
+         NormalizeRouterOSFirmwareVersion(raw, version, 64);
+         AddFirmwareInfo(firmware, FirmwareRole::BOOTLOADER, L"RouterBOOT", L"routerboot", version, raw);
+      }
+   }
+
+   delete response;
    return true;
 }
 

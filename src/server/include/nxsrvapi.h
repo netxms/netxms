@@ -1927,6 +1927,7 @@ bool LIBNXSRV_EXPORTABLE ParseFirmwareVersionSchemeName(const wchar_t *name, Fir
 bool LIBNXSRV_EXPORTABLE IsValidFirmwareVersion(FirmwareVersionScheme scheme, const wchar_t *version);
 FirmwareVersionOrder LIBNXSRV_EXPORTABLE CompareFirmwareVersions(FirmwareVersionScheme scheme, const wchar_t *a, const wchar_t *b);
 
+bool LIBNXSRV_EXPORTABLE NormalizeCiscoFirmwareVersion(const wchar_t *sysDescr, wchar_t *version, size_t size, const wchar_t **platform);
 bool LIBNXSRV_EXPORTABLE NormalizeExactFirmwareVersion(const wchar_t *raw, wchar_t *version, size_t size);
 bool LIBNXSRV_EXPORTABLE NormalizeIntDotFirmwareVersion(const wchar_t *raw, wchar_t *version, size_t size);
 bool LIBNXSRV_EXPORTABLE NormalizeJunosFirmwareVersion(const wchar_t *raw, wchar_t *version, size_t size, bool *evolved);

@@ -68,6 +68,7 @@ static const FirmwarePlatform s_platforms[] =
    { L"aoscx", L"hpe", L"AOS-CX", FirmwareVersionScheme::INTDOT },
    { L"asa", L"cisco", L"ASA", FirmwareVersionScheme::EXACT },
    { L"cip-device", L"", L"EtherNet/IP device", FirmwareVersionScheme::INTDOT },
+   { L"hirschmann-classic", L"hirschmann", L"Hirschmann Classic", FirmwareVersionScheme::INTDOT },
    { L"ilo4", L"hpe", L"iLO 4", FirmwareVersionScheme::INTDOT },
    { L"ilo5", L"hpe", L"iLO 5", FirmwareVersionScheme::INTDOT },
    { L"ilo6", L"hpe", L"iLO 6", FirmwareVersionScheme::INTDOT },
@@ -780,4 +781,47 @@ bool LIBNXSRV_EXPORTABLE NormalizeRouterOSFirmwareVersion(const wchar_t *raw, wc
       return true;
    version[0] = 0;
    return false;
+}
+
+/**
+ * Get platform and version of Cisco software from sysDescr value:
+ *    Cisco IOS Software, 3700 Software (C3725-ADVENTERPRISEK9-M), Version 12.4(15)T14, RELEASE SOFTWARE (fc2)
+ *    Cisco IOS Software [Cupertino], Catalyst L3 Switch Software (CAT9K_IOSXE), Version 17.9.4a, RELEASE SOFTWARE (fc3)
+ *    Cisco NX-OS(tm) nxos.9.3.8.bin, Software (nxos), Version 9.3(8), RELEASE SOFTWARE
+ *    Cisco Adaptive Security Appliance Version 9.16(4)
+ * Version is the word after "Version", as is (all Cisco platforms use "exact" version scheme). Returns false
+ * if software cannot be identified or version cannot be found.
+ */
+bool LIBNXSRV_EXPORTABLE NormalizeCiscoFirmwareVersion(const wchar_t *sysDescr, wchar_t *version, size_t size, const wchar_t **platform)
+{
+   version[0] = 0;
+   *platform = nullptr;
+
+   const wchar_t *id;
+   if (wcsstr(sysDescr, L"NX-OS") != nullptr)
+      id = L"nx-os";
+   else if (wcsstr(sysDescr, L"Adaptive Security Appliance") != nullptr)
+      id = L"asa";
+   else if ((wcsstr(sysDescr, L"IOS-XE") != nullptr) || (wcsstr(sysDescr, L"IOSXE") != nullptr) || (wcsstr(sysDescr, L"IOS XE") != nullptr) ||
+            (wcsstr(sysDescr, L"LINUX_IOSD") != nullptr) || (wcsstr(sysDescr, L"Cisco IOS Software [") != nullptr))
+      id = L"ios-xe";   // Release train name in square brackets is present only in IOS XE 16 and later
+   else if ((wcsstr(sysDescr, L"Cisco IOS Software") != nullptr) || (wcsstr(sysDescr, L"IOS (tm)") != nullptr))
+      id = L"ios";
+   else
+      return false;
+
+   const wchar_t *start = wcsstr(sysDescr, L"Version ");
+   if (start == nullptr)
+      return false;
+   start += 8;
+   while(IsSpace(*start))
+      start++;
+   const wchar_t *end = start;
+   while((*end != 0) && !IsSpace(*end) && (*end != L','))
+      end++;
+   if (!StoreVersion(FirmwareVersionScheme::EXACT, start, end - start, version, size))
+      return false;
+
+   *platform = id;
+   return true;
 }

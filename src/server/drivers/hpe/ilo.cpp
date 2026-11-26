@@ -75,7 +75,6 @@ bool ILODriver::getHardwareInformation(DeviceContext *context, NObject *node, Dr
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.232.9.2.2.21.0"))); // Controller model
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.232.9.2.2.2.0")));  // Version
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
@@ -115,17 +114,65 @@ bool ILODriver::getHardwareInformation(DeviceContext *context, NObject *node, Dr
             case 11:
                _tcscpy(hwInfo->productName, _T("Integrated Lights-Out 5"));
                break;
+            case 12:
+               _tcscpy(hwInfo->productName, _T("Integrated Lights-Out 6"));
+               break;
          }
-      }
-
-      v = response->getVariable(1);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
-         v->getValueAsString(hwInfo->productVersion, 16);
       }
 
       delete response;
    }
+   return true;
+}
+
+/**
+ * Get firmware information from device: iLO firmware as main firmware. Platform depends on iLO generation,
+ * which is known from controller model.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param firmware list of firmware to fill
+ * @return true if firmware information was read from device
+ */
+bool ILODriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 232, 9, 2, 2, 21, 0 })); // cpqSm2CntlrModel
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 232, 9, 2, 2, 2, 0 }));  // cpqSm2CntlrRomRevision
+
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
+      return false;
+
+   // Controller models 10, 11 and 12 are iLO 4, 5 and 6
+   int generation = 0;
+   const SNMP_Variable *v = response->getVariable(0);
+   if ((v != nullptr) && (v->getValueAsInt() >= 10) && (v->getValueAsInt() <= 12))
+      generation = v->getValueAsInt() - 6;
+
+   v = response->getVariable(1);
+   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+   {
+      wchar_t raw[256];
+      v->getValueAsString(raw, 256);
+      TrimW(raw);
+      if (raw[0] != 0)
+      {
+         wchar_t name[64] = L"iLO", platform[64] = L"", version[64] = L"";
+         if (generation != 0)
+         {
+            nx_swprintf(name, 64, L"iLO %d", generation);
+            nx_swprintf(platform, 64, L"ilo%d", generation);
+            NormalizeIntDotFirmwareVersion(raw, version, 64);
+         }
+         AddFirmwareInfo(firmware, FirmwareRole::MAIN, name, platform, version, raw);
+      }
+   }
+
+   delete response;
    return true;
 }
 

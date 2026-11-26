@@ -51,6 +51,44 @@ bool CiscoDeviceDriver::getHardwareInformation(DeviceContext *context, NObject *
 }
 
 /**
+ * Get firmware information from Cisco device: software (IOS, IOS XE, NX-OS or ASA) identified from sysDescr,
+ * or generic information from ENTITY MIB if it cannot be identified. Shared by Cisco drivers that are not
+ * derived from common base class.
+ */
+bool GetCiscoFirmwareInformation(NetworkDeviceDriver *driver, DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+      return false;
+
+   wchar_t sysDescr[1024];
+   if (SnmpGetEx(snmp, { 1, 3, 6, 1, 2, 1, 1, 1, 0 }, sysDescr, sizeof(sysDescr), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
+      return false;
+
+   wchar_t version[64];
+   const wchar_t *platform;
+   if (!NormalizeCiscoFirmwareVersion(sysDescr, version, 64, &platform))
+      return driver->NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, FindFirmwarePlatform(platform)->name, platform, version, version);
+   return true;
+}
+
+/**
+ * Get firmware information from device.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param firmware list of firmware to fill
+ * @return true if firmware information was read from device
+ */
+bool CiscoDeviceDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return GetCiscoFirmwareInformation(this, context, node, driverData, firmware);
+}
+
+/**
  * Determine maximum speed based on interface name
  */
 static uint64_t MaxSpeedFromInterfaceName(const TCHAR *ifName)

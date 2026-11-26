@@ -81,6 +81,54 @@ void ProCurveDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& 
 }
 
 /**
+ * Copy word that follows given marker in the text (up to whitespace or comma). Returns false if marker is not found.
+ */
+static bool ExtractWord(const wchar_t *text, const wchar_t *marker, wchar_t *word, size_t size)
+{
+   const wchar_t *start = wcsstr(text, marker);
+   if (start == nullptr)
+      return false;
+   start += wcslen(marker);
+   size_t length = wcscspn(start, L" ,\t\r\n");
+   if ((length == 0) || (length >= size))
+      return false;
+   memcpy(word, start, length * sizeof(wchar_t));
+   word[length] = 0;
+   return true;
+}
+
+/**
+ * Get firmware information from device. Software and boot ROM versions are taken from sysDescr
+ * ("HP J9729A 2920-48G-POE+ Switch, revision WB.16.10.0015, ROM WB.16.03 (/ws/swbuildm/...)").
+ * Generic information from ENTITY MIB is used if software version cannot be found there.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param firmware list of firmware to fill
+ * @return true if firmware information was read from device
+ */
+bool ProCurveDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+      return false;
+
+   wchar_t sysDescr[1024];
+   if (SnmpGetEx(snmp, { 1, 3, 6, 1, 2, 1, 1, 1, 0 }, sysDescr, sizeof(sysDescr), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
+      return false;
+
+   wchar_t raw[64], version[64];
+   if (!ExtractWord(sysDescr, L"revision ", raw, 64) || !NormalizeHPEImageVersion(raw, version, 64))
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"ArubaOS-Switch", L"aos-s", version, raw);
+   if (ExtractWord(sysDescr, L"ROM ", raw, 64))
+      AddFirmwareInfo(firmware, FirmwareRole::BOOTLOADER, L"Boot ROM", L"", L"", raw);
+   return true;
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param context device context

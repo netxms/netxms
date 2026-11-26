@@ -89,6 +89,38 @@ bool PowerConnectDriver::getHardwareInformation(DeviceContext *context, NObject 
 }
 
 /**
+ * Get firmware information from device: generic information from ENTITY MIB, where firmware revision is marked
+ * as bootloader if it is the boot code version reported by the device (rndBaseBootVersion).
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param firmware list of firmware to fill
+ * @return true if firmware information was read from device
+ */
+bool PowerConnectDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   if (!NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware))
+      return false;
+
+   wchar_t bootVersion[256];
+   if (SnmpGetEx(context->getSNMPTransport(), { 1, 3, 6, 1, 4, 1, 89, 2, 10, 0 }, bootVersion, sizeof(bootVersion), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
+      return true;
+   TrimW(bootVersion);
+
+   for(int i = 0; i < firmware->size(); i++)
+   {
+      FirmwareInfo *fw = firmware->get(i);
+      if ((fw->role == FirmwareRole::OTHER) && (bootVersion[0] != 0) && !wcscmp(fw->raw, bootVersion))
+      {
+         fw->role = FirmwareRole::BOOTLOADER;
+         wcscpy(fw->name, L"Boot code");
+      }
+   }
+   return true;
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param context device context

@@ -124,6 +124,57 @@ bool JuniperDriver::getHardwareInformation(DeviceContext *context, NObject *node
 }
 
 /**
+ * Get firmware information from device. Junos version is taken from sysDescr ("... kernel JUNOS 21.4R3-S5.4,
+ * Build date: ..."), or from software revision reported by ENTITY MIB if it cannot be found there.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param firmware list of firmware to fill
+ * @return true if firmware information was read from device
+ */
+bool JuniperDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+      return false;
+
+   wchar_t sysDescr[1024];
+   if (SnmpGetEx(snmp, { 1, 3, 6, 1, 2, 1, 1, 1, 0 }, sysDescr, sizeof(sysDescr), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
+      return false;
+
+   wchar_t version[64];
+   bool evolved;
+   if (!NormalizeJunosFirmwareVersion(sysDescr, version, 64, &evolved))
+   {
+      // Use generic information, with platform set if software revision is Junos version
+      StructArray<FirmwareInfo> generic;
+      if (!NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, &generic))
+         return false;
+      for(int i = 0; i < generic.size(); i++)
+      {
+         FirmwareInfo *fw = generic.get(i);
+         if ((fw->role == FirmwareRole::MAIN) && NormalizeJunosFirmwareVersion(fw->raw, version, 64, &evolved))
+         {
+            wcscpy(fw->name, evolved ? L"Junos OS Evolved" : L"Junos OS");
+            wcscpy(fw->platform, evolved ? L"junos-evo" : L"junos");
+            wcscpy(fw->version, version);
+         }
+         firmware->add(fw);
+      }
+      return true;
+   }
+
+   // Raw version is version as it appears in sysDescr
+   wchar_t raw[64];
+   wcscpy(raw, version);
+   if (evolved)
+      wcslcat(raw, L"-EVO", 64);
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, evolved ? L"Junos OS Evolved" : L"Junos OS", evolved ? L"junos-evo" : L"junos", version, raw);
+   return true;
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param context device context

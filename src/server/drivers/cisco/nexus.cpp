@@ -91,6 +91,20 @@ bool CiscoNexusDriver::getHardwareInformation(DeviceContext *context, NObject *n
 }
 
 /**
+ * Get firmware information from device.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param firmware list of firmware to fill
+ * @return true if firmware information was read from device
+ */
+bool CiscoNexusDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return GetCiscoFirmwareInformation(this, context, node, driverData, firmware);
+}
+
+/**
  * Handler for IP address enumeration
  */
 static UINT32 HandlerIPAddressList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)

@@ -63,6 +63,7 @@ class CiscoDeviceDriver : public NetworkDeviceDriver
 public:
    virtual const TCHAR *getVersion() override;
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 	virtual VlanList *getVlans(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(DeviceContext *context, NObject *node, DriverData *driverData) override;
@@ -197,6 +198,7 @@ public:
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual VlanList *getVlans(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
@@ -217,6 +219,7 @@ public:
  * Access point enumeration and state via AIRESPACE-WIRELESS-MIB (shared by AireOS and IOS-XE controller drivers)
  */
 ObjectArray<AccessPointInfo> *AirespaceGetAccessPoints(SNMP_Transport *snmp);
+bool GetCiscoFirmwareInformation(NetworkDeviceDriver *driver, DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware);
 AccessPointState AirespaceGetAccessPointState(SNMP_Transport *snmp, uint32_t apIndex, const MacAddress& macAddr,
       const StructArray<RadioInterfaceInfo>& radioInterfaces, const TCHAR *debugTag);
 
