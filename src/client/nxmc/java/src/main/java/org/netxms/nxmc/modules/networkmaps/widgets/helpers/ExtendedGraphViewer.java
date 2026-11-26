@@ -1720,15 +1720,17 @@ public class ExtendedGraphViewer extends GraphViewer
    }
 
    /**
-    * Select map element and center view on it.
+    * Select map element and center view on it. Does nothing if element is not displayed yet.
     *
-    * @param element map element displayed as graph node
+    * @param element map element
     */
    public void showElement(NetworkMapElement element)
    {
-      setSelection(new StructuredSelection(element), true);
-
       GraphNode n = (GraphNode)findGraphItem(element);
+      if (n == null)
+         return;
+
+      setSelection(new StructuredSelection(element), true);
       org.eclipse.draw2d.geometry.Point center = new org.eclipse.draw2d.geometry.Rectangle(n.getLocation(), n.getSize()).getCenter();
       center.performScale(getZoom());
       org.eclipse.draw2d.geometry.Point newViewLocation = center.getTranslated(-graph.getViewport().getClientArea().width / 2, -graph.getViewport().getClientArea().height / 2);

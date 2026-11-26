@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -792,9 +793,15 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          {
             AbstractObject object = listedObjects.get(objectList.getSelectionIndex());
             if (isGeographicalCanvas())
+            {
                geoViewer.showObject(object);
-            else
-               viewer.showElement(mapPage.findObjectElement(object.getObjectId()));
+               return;
+            }
+
+            // List follows the canvas, which is updated after map is saved on server; until then listed element can be already removed from map page
+            NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
+            if (element != null)
+               viewer.showElement(element);
          }
       });
       GridData gd = new GridData(SWT.FILL, SWT.CENTER, false, false);
@@ -1587,6 +1594,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          nextButton.setEnabled(true);
          queryEditor.setEnabled(true);
          objectList.setEnabled(true);
+         updateObjectList();
          queryEditor.setFocus();
 
          FormData fd = new FormData();
@@ -1635,15 +1643,19 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    }
 
    /**
-    * Fill object list in search bar with objects displayed on active canvas.
+    * Fill object list in search bar with objects displayed on active canvas. Does nothing while search bar is hidden.
     */
    private void updateObjectList()
    {
+      if (!searchBar.getVisible())
+         return;
+
       int selectionIndex = objectList.getSelectionIndex();
       long selectedObjectId = (selectionIndex != -1) ? listedObjects.get(selectionIndex).getObjectId() : 0;
 
+      final boolean geographicalCanvas = isGeographicalCanvas() && (geoViewer != null);
       listedObjects = new ArrayList<>();
-      if (isGeographicalCanvas() && (geoViewer != null))
+      if (geographicalCanvas)
       {
          listedObjects.addAll(geoViewer.getPlacedObjects());
       }
@@ -1658,12 +1670,15 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                listedObjects.add(object);
          }
       }
-      listedObjects.sort((o1, o2) -> o1.getNameOnMap().compareToIgnoreCase(o2.getNameOnMap()));
+
+      // Each canvas lists objects under the name it draws
+      Function<AbstractObject, String> nameOnCanvas = geographicalCanvas ? AbstractObject::getObjectName : AbstractObject::getNameOnMap;
+      listedObjects.sort((o1, o2) -> nameOnCanvas.apply(o1).compareToIgnoreCase(nameOnCanvas.apply(o2)));
 
       objectList.removeAll();
       for(int i = 0; i < listedObjects.size(); i++)
       {
-         objectList.add(listedObjects.get(i).getNameOnMap());
+         objectList.add(nameOnCanvas.apply(listedObjects.get(i)));
          if (listedObjects.get(i).getObjectId() == selectedObjectId)
             objectList.select(i);
       }
@@ -2092,13 +2107,16 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			else
 				viewer.refresh(element, true);
 
-         for(int i = 0; i < listedObjects.size(); i++)
+         if (searchBar.getVisible())
          {
-            if (listedObjects.get(i).getObjectId() == object.getObjectId())
+            for(int i = 0; i < listedObjects.size(); i++)
             {
-               if (!object.getNameOnMap().equals(objectList.getComboControl().getItem(i)))
-                  updateObjectList();
-               break;
+               if (listedObjects.get(i).getObjectId() == object.getObjectId())
+               {
+                  if (!object.getNameOnMap().equals(objectList.getComboControl().getItem(i)))
+                     updateObjectList();
+                  break;
+               }
             }
          }
 		}

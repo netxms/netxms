@@ -267,6 +267,8 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
       this.pendingBgZoom = backgroundZoom;
       this.content = null;
       this.placedObjects.clear();
+      if (placedObjectsListener != null)
+         placedObjectsListener.run();
       tryApplyInitialView();
    }
 
