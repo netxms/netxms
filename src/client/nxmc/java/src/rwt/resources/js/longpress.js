@@ -11,30 +11,57 @@
 (function() {
 	var duration = 500;
 	
+	/** Movement in px after which a touch is a drag or scroll, never a long tap. */
+	var moveThreshold = 10;
+
+	/**
+	 * The one touch currently being timed. Only one is ever kept: the touchend listener is on the touch
+	 * target, so when another handler stops that touchend (the map's gesture input does, for pinches and
+	 * pans) the listener never runs and never removes itself - and the next touch to end on the same
+	 * element would then fire it with the old start time and open a context menu nobody asked for.
+	 */
+	var pending = null;
+
 	var body = document.body;
 	body.addEventListener('touchstart', touchStartCallback);
+	body.addEventListener('touchmove', touchMoveCallback);
+
+	function cancelPending() {
+		if (pending != null) {
+			pending.target.removeEventListener('touchend', pending.callback);
+			clearTimeout(pending.timeout);
+			pending = null;
+		}
+	}
 
 	function touchStartCallback(e) {
-		var startTime = new Date().getTime();
+		cancelPending();
 
-		e.target.addEventListener('touchend', touchEndCallback);
+		// A second finger makes this a pinch, which is never a long tap; the touches that remain after it are
+		// not timed either, because they do not start again
+		if (e.touches.length > 1) {
+			return;
+		}
+
+		var startTime = new Date().getTime();
+		var touch = e.touches[0];
+		var target = e.target;
+
+		target.addEventListener('touchend', touchEndCallback);
 
 		// cancel after too long wait
-		var timeout = setTimeout(function() {
-			e.target.removeEventListener('touchend', touchEndCallback);
-		}, duration * 4);
+		var timeout = setTimeout(cancelPending, duration * 4);
+
+		pending = { target: target, callback: touchEndCallback, timeout: timeout, x: touch.clientX, y: touch.clientY };
 
 		function touchEndCallback(e) {
 			var tapDuration = new Date().getTime() - startTime;
+			cancelPending();
 
-			// if touch is released before long tap duration, clear the timeout.
-			if (tapDuration < duration) {
-				clearTimeout(timeout);
-			} else {
+			// if touch is released before long tap duration, it was an ordinary tap
+			if (tapDuration >= duration) {
 				openContextMenu(e);
 			}
-
-			e.target.removeEventListener('touchend', touchEndCallback);
 		}
 
 		function openContextMenu(originalEvent) {
@@ -53,6 +80,17 @@
 							contextMenu.show();
 						}
 					}, 50);
+		}
+	}
+
+	// A touch that moves is a drag or a scroll, and a second finger is a pinch: neither is a long tap
+	function touchMoveCallback(e) {
+		if (pending == null) {
+			return;
+		}
+		var touch = e.touches[0];
+		if (e.touches.length > 1 || Math.abs(touch.clientX - pending.x) >= moveThreshold || Math.abs(touch.clientY - pending.y) >= moveThreshold) {
+			cancelPending();
 		}
 	}
 })();

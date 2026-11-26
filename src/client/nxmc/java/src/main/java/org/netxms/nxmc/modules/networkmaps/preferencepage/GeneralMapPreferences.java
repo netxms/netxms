@@ -23,6 +23,7 @@ import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ExtendedGraphViewer;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -50,5 +51,7 @@ public class GeneralMapPreferences extends FieldEditorPreferencePage
       addField(new BooleanFieldEditor("NetMap.ShowStatusBackground", i18n.tr("Show status background under objects"), getFieldEditorParent()));
       addField(new BooleanFieldEditor("NetMap.TranslucentLabelBkgnd", i18n.tr("Translucent label background"), getFieldEditorParent()));
       addField(new IntegerFieldEditor("NetMap.DefaultLinkWidth", i18n.tr("Default link width"), getFieldEditorParent(), 3));
+      addField(new BooleanFieldEditor(ExtendedGraphViewer.PREF_PLAIN_WHEEL_ZOOM, i18n.tr("Zoom with mouse wheel without holding Ctrl/Cmd (not on dashboards)"),
+            getFieldEditorParent()));
 	}
 }

@@ -1531,6 +1531,50 @@ public class WidgetHelper
    }
 
    /**
+    * Attach map input listener to a map canvas (compatibility layer for RAP). Does nothing on the desktop client, where SWT
+    * delivers mouse move and mouse wheel events to the canvas directly.
+    *
+    * @param control map canvas
+    * @param listener listener to receive classified gestures
+    */
+   public static void attachMapInputListener(Control control, MapInputListener listener)
+   {
+   }
+
+   /**
+    * Set how the map input handler attached to a control treats the mouse wheel and one-finger touch. Web client only; on the
+    * desktop client the map handles the mouse wheel itself.
+    *
+    * @param control control the map input listener is attached to
+    * @param plainWheelZoom true if the mouse wheel zooms without Ctrl/Cmd held; otherwise it scrolls
+    * @param embedded true if the map is part of a larger scrollable page: the plain mouse wheel and one-finger touch drag then
+    *           scroll the page instead of the map
+    */
+   public static void setMapInputOptions(Control control, boolean plainWheelZoom, boolean embedded)
+   {
+   }
+
+   /**
+    * Tell the map input handler attached to a control where the view is and how far it may go. Web client only; the desktop
+    * client has no gesture preview.
+    *
+    * @param control control the map input listener is attached to
+    * @param viewX view location X
+    * @param viewY view location Y
+    * @param mapWidth map width at zoom 1, as used to clamp the view
+    * @param mapHeight map height at zoom 1, as used to clamp the view
+    * @param viewWidth visible area width
+    * @param viewHeight visible area height
+    * @param zoom current zoom
+    * @param minZoom smallest zoom accepted
+    * @param maxZoom largest zoom accepted
+    */
+   public static void updateMapInputViewState(Control control, int viewX, int viewY, int mapWidth, int mapHeight, int viewWidth,
+         int viewHeight, double zoom, double minZoom, double maxZoom)
+   {
+   }
+
+   /**
     * Attach mouse move listener to composite (compatibility layer for RAP).
     *
     * @param control control to attach listener to
