@@ -127,7 +127,7 @@ public abstract class AbstractObject
 	public static final int CALCULATE_MOST_CRITICAL = 1;
 	public static final int CALCULATE_SINGLE_THRESHOLD = 2;
 	public static final int CALCULATE_MULTIPLE_THRESHOLDS = 3;
-	
+
 	// Status propagation methods
 	public static final int PROPAGATE_DEFAULT = 0;
 	public static final int PROPAGATE_UNCHANGED = 1;
@@ -192,7 +192,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Create dummy object of GENERIC class
-	 * 
+	 *
 	 * @param id object ID to set
 	 * @param session associated session
 	 */
@@ -225,7 +225,7 @@ public abstract class AbstractObject
 		statusThresholds[3] = 75;
 		partialObject = false;
 	}
-	
+
 	/**
 	 * Create object from NXCP message
 	 * @param msg Message to create object from
@@ -290,7 +290,7 @@ public abstract class AbstractObject
 		// as unsigned, so we need to convert shift value
 		if (statusShift > 32767)
 			statusShift = statusShift - 65536;
-		
+
 		// Parents
 		count = msg.getFieldAsInt32(NXCPCodes.VID_PARENT_CNT);
 		for(i = 0, id = NXCPCodes.VID_PARENT_ID_BASE; i < count; i++, id++)
@@ -304,7 +304,7 @@ public abstract class AbstractObject
 		{
 			children.add(msg.getFieldAsInt64(id));
 		}
-		
+
       // Trusted objects
       Long[] tobjects = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_TRUSTED_OBJECTS);
       if ((tobjects != null) && (tobjects.length > 0))
@@ -378,17 +378,17 @@ public abstract class AbstractObject
 
 	/**
 	 * Check if object should be represented by class default image
-	 * 
+	 *
 	 * @return true if default image should be used
 	 */
 	public boolean isDefaultImage()
 	{
       return (mapImage == null) || mapImage.equals(NXCommon.EMPTY_GUID);
 	}
-	
+
 	/**
 	 * Get number of parent objects
-	 * 
+	 *
 	 * @return number of parent objects
 	 */
 	public int getParentCount()
@@ -419,20 +419,20 @@ public abstract class AbstractObject
 	{
 		return accessList.toArray(new AccessListElement[accessList.size()]);
 	}
-	
+
 	/**
 	 * Get associated URLs
-	 * 
+	 *
 	 * @return associated URLs
 	 */
 	public List<ObjectUrl> getUrls()
 	{
 	   return new ArrayList<ObjectUrl>(urls);
 	}
-	
+
 	/**
-	 * Check if object has associated URLs 
-	 * 
+	 * Check if object has associated URLs
+	 *
 	 * @return true if object has associated URLs
 	 */
 	public boolean hasUrls()
@@ -442,17 +442,17 @@ public abstract class AbstractObject
 
 	/**
     * Get object's commentsSource.
-    * 
+    *
     * @return object's commentsSource
     */
    public String getCommentsSource()
    {
       return commentsSource;
    }
-	
+
 	/**
 	 * Get object's comments.
-	 * 
+	 *
 	 * @return object's comments
 	 */
 	public String getComments()
@@ -462,7 +462,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Get object ID (unique within single NetXMS server).
-	 * 
+	 *
 	 * @return object ID
 	 */
 	public long getObjectId()
@@ -472,7 +472,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Get object name.
-	 * 
+	 *
 	 * @return object name
 	 */
 	public String getObjectName()
@@ -482,8 +482,8 @@ public abstract class AbstractObject
 
    /**
     * Get object name with parent path to it
-    * 
-    * @return object name with path 
+    *
+    * @return object name with path
     */
    public String getObjectNameWithPath()
    {
@@ -493,7 +493,7 @@ public abstract class AbstractObject
       for(AbstractObject parent : parents)
       {
          sb.append(parent.getObjectName());
-         sb.append("/"); 
+         sb.append("/");
       }
       sb.append(getObjectName());
       return sb.toString();
@@ -563,7 +563,7 @@ public abstract class AbstractObject
 
    /**
     * Get object status.
-    * 
+    *
     * @return object status
     */
 	public ObjectStatus getStatus()
@@ -593,7 +593,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Check setting of "inherit access rights" flag
-	 * 
+	 *
 	 * @return true if "inherit access rights" flag is set
 	 */
 	public boolean isInheritAccessRights()
@@ -611,7 +611,7 @@ public abstract class AbstractObject
 	{
 	   if (parents.contains(objectId))
 	      return true;
-	   
+
 		for(Long id : parents)
 		{
 			AbstractObject object = session.findObjectById(id);
@@ -641,7 +641,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Check if given object is direct parent of this object.
-	 * 
+	 *
 	 * @param objectId ID of object to check
 	 * @return true if this object is a direct child of given object
 	 */
@@ -652,7 +652,7 @@ public abstract class AbstractObject
 
    /**
     * Check if given object is direct or indirect child
-    * 
+    *
     * @param objectId ID of object to check
     * @return true if given object is direct or indirect child of this object
     */
@@ -660,7 +660,7 @@ public abstract class AbstractObject
    {
       if (children.contains(objectId))
          return true;
-      
+
       for(Long id : children)
       {
          AbstractObject object = session.findObjectById(id);
@@ -690,7 +690,7 @@ public abstract class AbstractObject
 
    /**
     * Check if given object is direct child
-    * 
+    *
     * @param objectId ID of object to check
     * @return true if given object is direct child of this object
     */
@@ -720,7 +720,7 @@ public abstract class AbstractObject
 
 	/**
     * Get all direct child objects as array.
-    * 
+    *
     * @return Array of child objects
     */
 	public AbstractObject[] getChildrenAsArray()
@@ -739,7 +739,7 @@ public abstract class AbstractObject
 
 	/**
     * Return identifiers of all child objects.
-    * 
+    *
     * @return array of children identifiers
     */
 	public long[] getChildIdList()
@@ -753,7 +753,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Return identifiers of all parent objects
-	 * 
+	 *
 	 * @return list of object parents
 	 */
 	public long[] getParentIdList()
@@ -764,7 +764,7 @@ public abstract class AbstractObject
 			list[i++] = id;
 		return list;
 	}
-	
+
 	/**
     * Internal worker function for getAllChilds.
     *
@@ -799,7 +799,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Match class filter
-	 * 
+	 *
 	 * @param classFilter class filter (list of class IDs)
 	 * @param objectClass class to test
 	 * @return true if matched
@@ -808,7 +808,7 @@ public abstract class AbstractObject
 	{
 		if (classFilter == null)
 			return true;
-		
+
 		for(int c : classFilter)
 		{
 			if (objectClass == c)
@@ -819,7 +819,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Get all child objects, direct and indirect
-	 * 
+	 *
 	 * @param classFilter -1 to get all childs, or NetXMS class id to retrieve objects of given class
 	 * @return set of child objects
 	 */
@@ -832,7 +832,7 @@ public abstract class AbstractObject
 
    /**
     * Get all child objects, direct and indirect
-    * 
+    *
     * @param classFilter null to get all childs, or NetXMS class id(s) to retrieve objects of given class(es)
     * @return set of child objects
     */
@@ -845,7 +845,7 @@ public abstract class AbstractObject
 
 	/**
     * Internal worker function for getAllParents
-    * 
+    *
     * @param classFilter class filter
     * @param result result set
     * @param chain set to true if parent chain is requested
@@ -874,7 +874,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Get all parent objects, direct and indirect
-	 * 
+	 *
 	 * @param classFilter -1 to get all parents, or NetXMS class id to retrieve objects of given class
 	 * @return set of parent objects
 	 */
@@ -887,7 +887,7 @@ public abstract class AbstractObject
 
    /**
     * Get all parent objects, direct and indirect
-    * 
+    *
     * @param classFilter null to get all parents, or NetXMS class id(s) to retrieve objects of given class(es)
     * @return set of parent objects
     */
@@ -900,7 +900,7 @@ public abstract class AbstractObject
 
    /**
     * Get chain of parent objects. Only one possible chain is returned.
-    * 
+    *
     * @param classFilter null to get any parent chain, or NetXMS class id(s) to retrieve objects of given class(es)
     * @return chain of parent objects, with topmost object at the end of the list
     */
@@ -913,7 +913,7 @@ public abstract class AbstractObject
 
 	/**
     * Get list of trusted objects
-    * 
+    *
     * @return List of trusted objects
     */
 	public List<AbstractObject> getTrustedObjects()
@@ -923,7 +923,7 @@ public abstract class AbstractObject
 
    /**
     * Get list of associated dashboard identifiers
-    * 
+    *
     * @return set of the dashboard object identifiers
     */
    public Set<Long> getDashboardIdentifiers()
@@ -933,7 +933,7 @@ public abstract class AbstractObject
 
    /**
     * Get list of associated dashboards
-    * 
+    *
     * @param accessibleOnly if set to true, only accessible dashboards will be returned
     * @return list of the dashboard objects
     */
@@ -944,7 +944,7 @@ public abstract class AbstractObject
 
    /**
     * Get list of associated network maps
-    * 
+    *
     * @param accessibleOnly if set to true, only accessible network maps will be returned
     * @return list of the network map objects
     */
@@ -1037,18 +1037,18 @@ public abstract class AbstractObject
 	/**
 	 * If this method returns true object is allowed to be on custom network map.
 	 * Default implementation always returns false.
-	 * 
+	 *
 	 * @return true if object is allowed to be on custom network map
 	 */
 	public boolean isAllowedOnMap()
 	{
 		return false;
 	}
-	
+
    /**
     * If this method returns true object can have visible alarms.
     * Default implementation always returns false.
-    * 
+    *
     * @return true if object can contain visible alarms
     */
 	public boolean isAlarmsVisible()
@@ -1086,7 +1086,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Get object's custom attributes.
-	 * 
+	 *
 	 * @return object's custom attributes
 	 */
 	public Map<String, CustomAttribute> getCustomAttributes()
@@ -1096,7 +1096,7 @@ public abstract class AbstractObject
 
    /**
     * Get object's custom attribute by name
-    * 
+    *
     * @param name attribute's name
     * @return custom attribute object or null
     */
@@ -1107,7 +1107,7 @@ public abstract class AbstractObject
 
    /**
     * Get object's custom attribute's value by name
-    * 
+    *
     * @param name attribute's name
     * @return custom attribute's value or null
     */
@@ -1119,7 +1119,7 @@ public abstract class AbstractObject
 
    /**
     * Get object's custom attribute's value as boolean (will interpret string value as boolean value)
-    * 
+    *
     * @param name attribute's name
     * @return custom attribute's value as boolean (false if custom attribute does not exist)
     */
@@ -1336,7 +1336,7 @@ public abstract class AbstractObject
 
 	/**
 	 * Update internal session reference during session handover. This method should not be called directly!
-	 * 
+	 *
 	 * @param session new session object
 	 */
 	public final void setSession(NXCSession session)
@@ -1348,14 +1348,14 @@ public abstract class AbstractObject
     * Get effective rights for this object. On first call this method
     * will do request to server, and on all subsequent calls
     * will return cached value obtained at first call.
-    * 
+    *
     * @return effective user rights on this object
     */
    public long getEffectiveRights()
    {
       if (effectiveRightsCached)
          return effectiveRights;
-      
+
       try
       {
          effectiveRights = session.getEffectiveRights(objectId);
@@ -1367,10 +1367,10 @@ public abstract class AbstractObject
       }
       return effectiveRights;
    }
-   
+
    /**
     * Get module-specific data
-    * 
+    *
     * @param module module name
     * @return custom data in module-specific format
     */
@@ -1417,7 +1417,7 @@ public abstract class AbstractObject
 
    /**
     * Get primary zone proxy ID
-    * 
+    *
     * @return primary zone proxy ID
     */
    public long getPrimaryZoneProxyId()
@@ -1427,7 +1427,7 @@ public abstract class AbstractObject
 
    /**
     * Get backup zone proxy ID
-    * 
+    *
     * @return backup zone proxy ID
     */
    public long getBackupZoneProxyId()
@@ -1437,7 +1437,7 @@ public abstract class AbstractObject
 
    /**
     * Add string to string set
-    * 
+    *
     * @param strings set of strings
     * @param s string to add
     */
@@ -1449,10 +1449,10 @@ public abstract class AbstractObject
       if (!ts.isEmpty())
          strings.add(ts);
    }
-   
+
    /**
     * Get all strings in object
-    * 
+    *
     * @return set of all strings in object
     */
    public Set<String> getStrings()
@@ -1472,7 +1472,7 @@ public abstract class AbstractObject
       }
       return strings;
    }
-   
+
    /**
     * Get direct responsible users
     *
@@ -1515,7 +1515,7 @@ public abstract class AbstractObject
 
    /**
     * Partial object flag
-    * 
+    *
     * @return will return true if object is partial
     */
    public boolean isPartialObject()
