@@ -355,9 +355,10 @@ webapi.console	WebAPI server console endpoints
 webapi.objtools	WebAPI object tool execution and streaming
 webapi.poll	WebAPI forced object polls
 webapi.script	WebAPI ad-hoc script execution and output streaming
+webapi.snmp	WebAPI SNMP walk
 webapi.ssh	WebAPI interactive SSH terminal sessions
 webapi.tls	WebAPI TLS reverse proxy (reproxy)
-webapi.ws	WebAPI WebSocket output streaming (tool, script, and poll output)
+webapi.ws	WebAPI WebSocket output streaming (tool, script, poll, and SNMP walk output)
 websocket	WebSocket client (default tag, callers may override)
 websvc		Web services
 wincert		Windows certificate store metrics

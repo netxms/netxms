@@ -36,3 +36,4 @@ The JSON interface is becoming the primary interface to the system; a JSON→NXC
 | 404 | Resource not found |
 | 409 | Conflict (e.g., duplicate name) |
 | 500 | Internal server error / database failure |
+| 502 | Upstream device or data source returned an error or did not answer (SNMP, agent) |

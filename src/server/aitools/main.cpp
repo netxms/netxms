@@ -310,16 +310,18 @@ static void CreateAIToolList()
       "Read SNMP variable from given node",
       {
          { "object", "name or ID of a node" },
-         { "oid", "SNMP OID of the variable to read" }
+         { "oid", "SNMP OID of the variable to read" },
+         { "snmp_agent", "optional name of additional SNMP agent configured on the node (primary SNMP agent is used if omitted)" }
       },
       F_SNMPRead, AI_TOOL_READ_ONLY);
    RegisterAITool(
       "snmp-walk",
-      "Walk SNMP MIB from given node",
+      "Walk SNMP MIB from given node. Returns walked variables and flag indicating that walk was stopped because the limit was reached.",
       {
           { "object", "name or ID of a node" },
           { "oid", "SNMP OID to start walk from" },
-          { "limit", "maximum number of variables to return (default: 1000)", "integer" }
+          { "limit", "maximum number of variables to return (default: 1000)", "integer" },
+          { "snmp_agent", "optional name of additional SNMP agent configured on the node (primary SNMP agent is used if omitted)" }
       },
       F_SNMPWalk, AI_TOOL_READ_ONLY);
 }

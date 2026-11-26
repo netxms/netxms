@@ -86,6 +86,7 @@ public:
 
    const uuid& getToken() const { return m_token; }
    bool waitForConnection();
+   bool isDisconnected() const { return m_disconnected; }
 
    void sendMessage(json_t *msg);
    void sendOutput(const wchar_t *text);

@@ -6120,6 +6120,120 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/snmp-walk:
+    post:
+      operationId: walkObjectSnmp
+      summary: Walk SNMP MIB on a node
+      description: |
+        Walk SNMP MIB subtree on the node, starting at the given OID. Requires read SNMP access to the node.
+
+        With `stream: false` (default) the walk runs within the request and the collected variables are returned
+        in the response. The number of returned variables is limited by `limit`; if the subtree contains more
+        variables, the walk stops and `truncated` is set. If the walk fails after some variables were already
+        received, these variables are returned together with an `error` message.
+
+        With `stream: true` the response carries a single-use WebSocket token, the walk starts when the client
+        connects to GET /v1/snmp-walks/output/{token}, and variables are delivered in batches as they are received.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - oid
+              properties:
+                oid:
+                  type: string
+                  description: Numeric OID of the subtree root
+                  example: 1.3.6.1.2.1.2.2
+                snmpAgentName:
+                  type: string
+                  description: Name of additional SNMP agent configured on the node. If omitted, node's primary SNMP agent is used.
+                stream:
+                  type: boolean
+                  default: false
+                  description: Stream walk results over WebSocket instead of returning them in the response
+                limit:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000
+                  description: |
+                    Maximum number of variables to return. Default is 10000 for non-streaming walk (allowed range 1-100000)
+                    and unlimited (0) for streaming walk.
+      responses:
+        '200':
+          description: Walk completed (non-streaming mode)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SnmpWalkResult'
+        '202':
+          description: Walk accepted (streaming mode)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - oid
+                  - token
+                  - expiresIn
+                  - wsUrl
+                properties:
+                  oid:
+                    type: string
+                    description: Normalized OID of the subtree root
+                  token:
+                    type: string
+                    format: uuid
+                    description: Single-use token for WebSocket connection
+                  expiresIn:
+                    type: integer
+                    description: Token validity period in seconds
+                  wsUrl:
+                    type: string
+                    description: WebSocket URL path to connect for walk results
+                    example: /v1/snmp-walks/output/0f0e7a1c-8d2b-4a52-9d0e-3b1f6c9b7a10
+        '400':
+          description: |
+            Invalid request. Possible reasons:
+            - Invalid object ID
+            - Object is not a node
+            - OID is missing or invalid
+            - SNMP is not supported on the node
+            - Unknown additional SNMP agent
+            - Invalid limit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+        '403':
+          description: User does not have read SNMP access to the node
+        '404':
+          description: Object with given ID does not exist
+        '502':
+          description: SNMP request failed before any variable was received (node unreachable, timeout, authentication failure, etc.)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reason:
+                    type: string
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/agent:
     get:
       operationId: getObjectAgentConfig
@@ -13028,6 +13142,44 @@ paths:
         - BearerAuth: []
       tags:
         - SNMP MIB
+  /v1/snmp-walks/output/{token}:
+    get:
+      operationId: connectSnmpWalkOutput
+      summary: Connect to SNMP walk output stream (WebSocket)
+      description: |
+        WebSocket endpoint for receiving results of a streaming SNMP walk started with
+        POST /v1/objects/{object-id}/snmp-walk. Token is single-use and expires after 30 seconds.
+        The walk starts when the connection is established; if client does not connect within token
+        validity period, the walk is cancelled. If client disconnects while the walk is running,
+        the walk is aborted.
+
+        Server sends JSON text frames:
+        - `{"type":"data","variables":[...]}` - batch of up to 50 variables (see `SnmpWalkVariable`)
+        - `{"type":"completed","count":N,"truncated":false}` - walk finished; `truncated` is true if walk was
+          stopped because the requested limit was reached
+        - `{"type":"error","message":"..."}` - SNMP request failed; variables received before the failure
+          were already delivered
+
+        Server closes the connection after `completed` or `error` message.
+      tags:
+        - Objects
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Single-use token from the walk response
+      responses:
+        '101':
+          description: |
+            Switching protocols to WebSocket. If the token is invalid, expired or already used,
+            the connection is closed right after the upgrade with WebSocket close code 1008
+            (Policy Violation) - no HTTP error status is returned in that case.
+        '426':
+          description: Upgrade required - request did not ask for a protocol upgrade to WebSocket.
+      security: []
   /v1/snmp-trap-mappings:
     get:
       operationId: listSnmpTrapMappings
@@ -16544,6 +16696,42 @@ components:
         value:
           type: string
           description: Entry value.
+    SnmpWalkVariable:
+      type: object
+      properties:
+        oid:
+          type: string
+          description: Variable OID
+          example: 1.3.6.1.2.1.2.2.1.2.1
+        type:
+          type: string
+          description: ASN.1 data type name
+          example: STRING
+        value:
+          type: string
+          description: Printable value; display hint from loaded MIB is applied if available, non-printable octet strings are shown as hex
+        rawValue:
+          type: string
+          description: |
+            Value bytes as received from the device, as hex string. Present only for types carried as byte
+            strings (OCTET STRING, IP ADDRESS, OPAQUE, BIT STRING etc.); omitted for numeric types and OBJECT IDENTIFIER.
+          example: "65746830"
+    SnmpWalkResult:
+      type: object
+      properties:
+        oid:
+          type: string
+          description: Normalized OID of the subtree root
+        variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/SnmpWalkVariable'
+        truncated:
+          type: boolean
+          description: True if walk was stopped because the limit was reached and more variables exist
+        error:
+          type: string
+          description: Error message if walk failed after some variables were received (omitted on success)
     SnmpTrapParameterMapping:
       type: object
       description: Mapping of trap varbind to event parameter. Either `oid` or `position` must be set.

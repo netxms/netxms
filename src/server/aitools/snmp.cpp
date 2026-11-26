@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,11 +16,38 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: nc.cpp
+** File: snmp.cpp
 **
 **/
 
 #include "aitools.h"
+
+/**
+ * Create SNMP transport for node's primary SNMP agent or for additional SNMP agent selected by "snmp_agent" argument.
+ * Returns nullptr and sets error message on failure.
+ */
+static SNMP_Transport *CreateSnmpTransportForTool(Node *node, json_t *arguments, const char **errorMessage)
+{
+   String agentName = json_object_get_string(arguments, "snmp_agent", nullptr);
+   if (agentName.isEmpty())
+   {
+      if (!node->isSNMPSupported())
+      {
+         *errorMessage = "SNMP is not supported on the specified node";
+         return nullptr;
+      }
+      SNMP_Transport *transport = node->createSnmpTransport();
+      if (transport == nullptr)
+         *errorMessage = "Failed to create SNMP transport for the specified node";
+      return transport;
+   }
+
+   bool agentNotFound;
+   SNMP_Transport *transport = node->createSnmpTransportForAgent(agentName, &agentNotFound);
+   if (transport == nullptr)
+      *errorMessage = agentNotFound ? "Additional SNMP agent with the given name is not configured on the specified node" : "Failed to create SNMP transport for the specified additional SNMP agent";
+   return transport;
+}
 
 /**
  * Read SNMP OID from given node
@@ -30,11 +57,8 @@ AIToolResult F_SNMPRead(json_t *arguments, uint32_t userId)
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
    if (node == nullptr)
       return AIToolResult::error("Node not found");
-   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
       return AIToolResult::error("Access denied");
-
-   if (!node->isSNMPSupported())
-      return AIToolResult::error("SNMP is not supported on the specified node");
 
    const char *oidStr = json_object_get_string_utf8(arguments, "oid", nullptr);
    if ((oidStr == nullptr) || (oidStr[0] == 0))
@@ -44,9 +68,10 @@ AIToolResult F_SNMPRead(json_t *arguments, uint32_t userId)
    if (oid.length() == 0)
       return AIToolResult::error("Invalid SNMP OID format");
 
-   SNMP_Transport *transport = node->createSnmpTransport();
+   const char *errorMessage;
+   SNMP_Transport *transport = CreateSnmpTransportForTool(node.get(), arguments, &errorMessage);
    if (transport == nullptr)
-      return AIToolResult::error("Failed to create SNMP transport for the specified node");
+      return AIToolResult::error(errorMessage);
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(oid));
@@ -87,11 +112,8 @@ AIToolResult F_SNMPWalk(json_t *arguments, uint32_t userId)
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
    if (node == nullptr)
       return AIToolResult::error("Node not found");
-   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
       return AIToolResult::error("Access denied");
-
-   if (!node->isSNMPSupported())
-      return AIToolResult::error("SNMP is not supported on the specified node");
 
    const char *oidStr = json_object_get_string_utf8(arguments, "oid", nullptr);
    if ((oidStr == nullptr) || (oidStr[0] == 0))
@@ -101,9 +123,10 @@ AIToolResult F_SNMPWalk(json_t *arguments, uint32_t userId)
    if (oid.length() == 0)
       return AIToolResult::error("Invalid SNMP OID format");
 
-   SNMP_Transport *transport = node->createSnmpTransport();
+   const char *errorMessage;
+   SNMP_Transport *transport = CreateSnmpTransportForTool(node.get(), arguments, &errorMessage);
    if (transport == nullptr)
-      return AIToolResult::error("Failed to create SNMP transport for the specified node");
+      return AIToolResult::error(errorMessage);
 
    int32_t limit = json_object_get_int32(arguments, "limit", 1000);
    int32_t count = 0;
@@ -126,7 +149,7 @@ AIToolResult F_SNMPWalk(json_t *arguments, uint32_t userId)
       });
    delete transport;
 
-   if (rc != SNMP_ERR_SUCCESS)
+   if ((rc != SNMP_ERR_SUCCESS) && (rc != SNMP_ERR_SNAPSHOT_TOO_BIG))
    {
       json_decref(output);
       StringBuffer error(L"SNMP request failed: ");
@@ -136,5 +159,8 @@ AIToolResult F_SNMPWalk(json_t *arguments, uint32_t userId)
       return AIToolResult::error(buffer);
    }
 
-   return JsonToString(output);
+   json_t *result = json_object();
+   json_object_set_new(result, "variables", output);
+   json_object_set_new(result, "truncated", json_boolean(rc == SNMP_ERR_SNAPSHOT_TOO_BIG));
+   return JsonToString(result);
 }

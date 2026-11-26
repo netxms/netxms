@@ -258,6 +258,7 @@ int H_ObjectResponsibleUserUpdate(Context *context);
 int H_ObjectResponsibleUserDelete(Context *context);
 int H_ObjectSNMPGet(Context *context);
 int H_ObjectSNMPUpdate(Context *context);
+int H_ObjectSnmpWalk(Context *context);
 int H_ObjectStatusCalculationUpdate(Context *context);
 int H_ObjectTrustedObjects(Context *context);
 int H_ObjectUrls(Context *context);
@@ -433,6 +434,9 @@ void WS_ScriptOutputConnect(void *cls, MHD_Connection *connection, void *con_cls
 void WS_PollOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
                           const char *extra_in, size_t extra_in_size, MHD_socket sock,
                           MHD_UpgradeResponseHandle *urh);
+void WS_SnmpWalkOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
+                              const char *extra_in, size_t extra_in_size, MHD_socket sock,
+                              MHD_UpgradeResponseHandle *urh);
 
 /**
  * Initialize module
@@ -1011,6 +1015,9 @@ static bool InitModule(Config *config)
       .GET(H_ObjectSNMPGet)
       .PATCH(H_ObjectSNMPUpdate)
       .build();
+   RouteBuilder("v1/objects/:object-id/snmp-walk")
+      .POST(H_ObjectSnmpWalk)
+      .build();
    RouteBuilder("v1/objects/:object-id/agent")
       .GET(H_ObjectAgentGet)
       .PATCH(H_ObjectAgentUpdate)
@@ -1210,6 +1217,11 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/snmp-mib/:oid")
       .GET(H_GetMibNode)
+      .build();
+   RouteBuilder("v1/snmp-walks/output/:token")
+      .GET([](Context *context) { context->setErrorResponse("WebSocket connection required"); return 426; })
+      .upgradeProtocol(WS_SnmpWalkOutputConnect)
+      .noauth()  // Token-based auth
       .build();
    RouteBuilder("v1/snmp-trap-mappings")
       .GET(H_SnmpTrapMappings)
