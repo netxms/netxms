@@ -1591,8 +1591,7 @@ bool Group::isMember(uint32_t userId, GroupSearchPath *searchPath) const
    if (m_id == GROUP_EVERYONE)
       return true;
 
-   // This is to avoid applying disabled group rights on enabled user
-   if ((m_flags & UF_DISABLED))
+   if (isDisabled() || isDeleted())
       return false;
 
    if (FindMember(m_members, userId) != nullptr)

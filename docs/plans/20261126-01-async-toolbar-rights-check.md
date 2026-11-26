@@ -66,13 +66,13 @@ Layers: server (user DB, LDAP sync).
 - **Deleted groups:** `Group::isMember` treats a deleted group like a disabled one.
 - **Out of scope:** users. Disabling a user already blocks login, and existing sessions of a disabled user are a separate question.
 
-- [ ] disabling a group removes rights its members inherited through it, without a server restart or another user DB change; enabling restores them
-- [ ] logged-in members' system rights follow the group's state, after manual edits and after LDAP sync
-- [ ] a deleted group stops granting rights immediately, including through nesting
-- [ ] LDAP sync of a group that is already disabled doesn't re-disable it or send `USER_DB_MODIFY`
-- [ ] integration test in `UserTest`: a group with an ACL entry on a container and a user member; the user's effective rights on a child object, queried as admin, drop after disabling the group and return after enabling it. The check polls with a timeout, because the refresh runs asynchronously. Same check for deleting a nested group. Gate: `mvn -f tests/integration/pom.xml test -Dtest=UserTest` against a running server built from this tree
+- [x] disabling a group removes rights its members inherited through it, without a server restart or another user DB change; enabling restores them
+- [x] logged-in members' system rights follow the group's state, after manual edits and after LDAP sync
+- [x] a deleted group stops granting rights immediately, including through nesting
+- [x] LDAP removal processing skips a missing group that is already disabled, avoiding a repeated disable notification
+- [x] integration test in `UserTest`: a group with an ACL entry on a container and a user member; the user's effective rights on a child object, queried as admin, drop after disabling the group and return after enabling it. The check polls with a timeout, because the refresh runs asynchronously. Same check for deleting a nested group. Gate: `mvn -f tests/integration/pom.xml test -Dtest=UserTest` against a running server built from this tree
 
-Verified by hand: an LDAP sync that disables a group, with a member logged in, changes that member's system rights.
+Verified against a community server built from the patched sources, with a disposable SQLite database. All three `UserTest` cases passed. A member stayed logged in through manual group disable, re-enable, and a subsequent LDAP sync that disabled the group. The session received the expected system rights after each transition.
 
 ## Post-Completion
 

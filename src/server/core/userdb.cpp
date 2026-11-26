@@ -876,7 +876,7 @@ static void UpdateGlobalAccessRightsCallback(ClientSession *session)
 /**
  * Update system-wide access rights in all user sessions
  */
-static void UpdateGlobalAccessRights()
+void UpdateGlobalAccessRights()
 {
    ClearAllObjectsInheritedAccessCache();
    EnumerateClientSessions(UpdateGlobalAccessRightsCallback);
@@ -1045,13 +1045,15 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
       if (rcc != RCC_INVALID_OBJECT_NAME)
       {
          json_t *prevData = object->toJson();
+         bool wasDisabled = object->isDisabled();
          rcc = object->modifyFromMessage(msg);
          if (rcc == RCC_SUCCESS)
          {
             *oldData = prevData;
             *newData = object->toJson();
             SendUserDBUpdate(USER_DB_MODIFY, id, object);
-            updateAccessRights = ((msg.getFieldAsUInt32(VID_FIELDS) & (USER_MODIFY_ACCESS_RIGHTS | USER_MODIFY_GROUP_MEMBERSHIP | USER_MODIFY_MEMBERS)) != 0);
+            updateAccessRights = ((fields & (USER_MODIFY_ACCESS_RIGHTS | USER_MODIFY_GROUP_MEMBERSHIP | USER_MODIFY_MEMBERS)) != 0) ||
+                                 (object->isGroup() && (wasDisabled != object->isDisabled()));
          }
          else
          {
@@ -1124,6 +1126,7 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObjectFromJson(uint32_t id, const j
       if (rcc != RCC_INVALID_OBJECT_NAME)
       {
          json_t *prevData = object->toJson();
+         bool wasDisabled = object->isDisabled();
          rcc = object->modifyFromJson(json);
          if (rcc == RCC_SUCCESS)
          {
@@ -1132,7 +1135,8 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObjectFromJson(uint32_t id, const j
             SendUserDBUpdate(USER_DB_MODIFY, id, object);
             updateAccessRights = (json_object_get(const_cast<json_t*>(json), "systemRights") != nullptr) ||
                                  (json_object_get(const_cast<json_t*>(json), "groupMembership") != nullptr) ||
-                                 (json_object_get(const_cast<json_t*>(json), "members") != nullptr);
+                                 (json_object_get(const_cast<json_t*>(json), "members") != nullptr) ||
+                                 (object->isGroup() && (wasDisabled != object->isDisabled()));
          }
          else
          {
@@ -1380,7 +1384,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringO
                nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was removed from user database"), isUser ? _T("user") : _T("group"), object->getDN());
                DeleteUserDatabaseObjectInternal(object->getId(), true);
             }
-            else if (m_action == USER_DISABLE)
+            else if ((m_action == USER_DISABLE) && (isUser || !object->isDisabled()))
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was disabled"), isUser ? _T("user") : _T("group"), object->getDN());
                object->disable();
