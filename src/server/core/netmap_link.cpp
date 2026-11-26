@@ -292,16 +292,16 @@ void NetworkMapLink::updateDciList(CountingHashSet<uint32_t>& dciSet, bool addIt
       nxlog_debug_tag(_T("netmap"), 6, _T("NetworkMapLink::getDciList(%d): Failed to load json (%hs)"), m_id, error.text);
       return;
    }
-   void *it = json_object_iter(json_object_get(json, "dciList"));
-   while(it != nullptr)
+   json_t *dciList = json_object_get(json, "dciList");
+   size_t index;
+   json_t *value;
+   json_array_foreach(dciList, index, value)
    {
-      json_t *value = json_object_iter_value(it);
       uint32_t id = json_object_get_uint32(value, "dciId", 0);
       if (addItems)
          dciSet.put(id);
       else
          dciSet.remove(id);
-      it = json_object_iter_next(json, it);
    }
    json_decref(json);
 }
