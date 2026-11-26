@@ -87,6 +87,7 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -152,6 +153,8 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    private LabeledText queryEditor;
    private Button previousButton;
    private Button nextButton;
+   private LabeledCombo objectList;
+   private List<AbstractObject> listedObjects = new ArrayList<>();
 	protected NetworkMapPage mapPage;
 	protected ExtendedGraphViewer viewer;
 	protected MapLabelProvider labelProvider;
@@ -335,6 +338,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       wireGeoViewerSelection();
       attachGeoContextMenu();
       geoViewer.setUnplacedCountListener(this::updateUnplacedCountMessage);
+      geoViewer.setPlacedObjectsListener(this::updateObjectList);
 
       requestInitialView();
 
@@ -721,7 +725,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       // top edge when hidden).
       searchBar = new Composite(parent, SWT.NONE);
       GridLayout gridLayout = new GridLayout();
-      gridLayout.numColumns = 3;
+      gridLayout.numColumns = 4;
       searchBar.setLayout(gridLayout);
 
       FormData fd = new FormData();
@@ -779,6 +783,24 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          }
       });
       nextButton.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
+
+      objectList = new LabeledCombo(searchBar, SWT.NONE);
+      objectList.setLabel(i18n.tr("Objects"));
+      objectList.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            AbstractObject object = listedObjects.get(objectList.getSelectionIndex());
+            if (isGeographicalCanvas())
+               geoViewer.showObject(object);
+            else
+               viewer.showElement(mapPage.findObjectElement(object.getObjectId()));
+         }
+      });
+      GridData gd = new GridData(SWT.FILL, SWT.CENTER, false, false);
+      gd.widthHint = 300;
+      objectList.setLayoutData(gd);
+
       searchBar.setVisible(false);
 
       // stackHolder owns the StackLayout that swaps between the Zest graph
@@ -818,6 +840,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
             AbstractNetworkMapView.this.onLinkChange(link);
          }
       });
+      viewer.setInputChangeListener(this::updateObjectList);
       labelProvider = new MapLabelProvider(viewer);
       MapContentProvider contentProvider = new MapContentProvider(viewer, labelProvider);
       contentProvider.setHiddenLayers(hiddenLayers);
@@ -1563,6 +1586,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          previousButton.setEnabled(true);
          nextButton.setEnabled(true);
          queryEditor.setEnabled(true);
+         objectList.setEnabled(true);
          queryEditor.setFocus();
 
          FormData fd = new FormData();
@@ -1577,6 +1601,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          previousButton.setEnabled(false);
          nextButton.setEnabled(false);
          queryEditor.setEnabled(false);
+         objectList.setEnabled(false);
          searchBar.setVisible(false);
 
          FormData fd = new FormData();
@@ -1606,6 +1631,41 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       else
       {
          viewer.findNodeByText(text, forward);
+      }
+   }
+
+   /**
+    * Fill object list in search bar with objects displayed on active canvas.
+    */
+   private void updateObjectList()
+   {
+      int selectionIndex = objectList.getSelectionIndex();
+      long selectedObjectId = (selectionIndex != -1) ? listedObjects.get(selectionIndex).getObjectId() : 0;
+
+      listedObjects = new ArrayList<>();
+      if (isGeographicalCanvas() && (geoViewer != null))
+      {
+         listedObjects.addAll(geoViewer.getPlacedObjects());
+      }
+      else if (mapPage != null)
+      {
+         for(NetworkMapElement e : mapPage.getObjectElements())
+         {
+            if (hiddenLayers.contains(e.getLayer()))
+               continue;
+            AbstractObject object = session.findObjectById(((NetworkMapObject)e).getObjectId(), true);
+            if (object != null)
+               listedObjects.add(object);
+         }
+      }
+      listedObjects.sort((o1, o2) -> o1.getNameOnMap().compareToIgnoreCase(o2.getNameOnMap()));
+
+      objectList.removeAll();
+      for(int i = 0; i < listedObjects.size(); i++)
+      {
+         objectList.add(listedObjects.get(i).getNameOnMap());
+         if (listedObjects.get(i).getObjectId() == selectedObjectId)
+            objectList.select(i);
       }
    }
 
@@ -2031,6 +2091,16 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 				((ObjectFigure)((GraphNode)item).getFigure()).refresh(object); // update single figure in place instead of rebuilding the whole graph
 			else
 				viewer.refresh(element, true);
+
+         for(int i = 0; i < listedObjects.size(); i++)
+         {
+            if (listedObjects.get(i).getObjectId() == object.getObjectId())
+            {
+               if (!object.getNameOnMap().equals(objectList.getComboControl().getItem(i)))
+                  updateObjectList();
+               break;
+            }
+         }
 		}
 
 		List<NetworkMapLink> links = mapPage.findLinksWithStatusObject(object.getObjectId());

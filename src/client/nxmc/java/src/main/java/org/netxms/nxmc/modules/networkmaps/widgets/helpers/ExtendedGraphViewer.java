@@ -45,6 +45,7 @@ import org.eclipse.gef4.zest.core.viewers.GraphViewer;
 import org.eclipse.gef4.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.gef4.zest.core.viewers.internal.IStylingGraphModelFactory;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.GraphNode;
 import org.eclipse.gef4.zest.core.widgets.IDecorationFigure;
 import org.eclipse.gef4.zest.core.widgets.IDecorationLayer;
 import org.eclipse.gef4.zest.core.widgets.ZestStyles;
@@ -101,6 +102,7 @@ public class ExtendedGraphViewer extends GraphViewer
    private I18n i18n = LocalizationHelper.getI18n(ExtendedGraphViewer.class);
    private View view;
    private FigureChangeCallback moveCallback;
+   private Runnable inputChangeListener;
    private ExtendedSWTEventDispatcher eventDispatcher;
 	private BackgroundFigure backgroundFigure;
 	private Image backgroundImage = null;
@@ -683,7 +685,20 @@ public class ExtendedGraphViewer extends GraphViewer
 				}
 			}
 		}
+
+      if (inputChangeListener != null)
+         inputChangeListener.run();
 	}
+
+   /**
+    * Set listener called after viewer input was changed.
+    *
+    * @param listener listener to call
+    */
+   public void setInputChangeListener(Runnable listener)
+   {
+      inputChangeListener = listener;
+   }
 
 	/**
 	 * Set selection on decoration layer. Intended to be called from decoration figure.
@@ -1705,6 +1720,22 @@ public class ExtendedGraphViewer extends GraphViewer
    }
 
    /**
+    * Select map element and center view on it.
+    *
+    * @param element map element displayed as graph node
+    */
+   public void showElement(NetworkMapElement element)
+   {
+      setSelection(new StructuredSelection(element), true);
+
+      GraphNode n = (GraphNode)findGraphItem(element);
+      org.eclipse.draw2d.geometry.Point center = new org.eclipse.draw2d.geometry.Rectangle(n.getLocation(), n.getSize()).getCenter();
+      center.performScale(getZoom());
+      org.eclipse.draw2d.geometry.Point newViewLocation = center.getTranslated(-graph.getViewport().getClientArea().width / 2, -graph.getViewport().getClientArea().height / 2);
+      graph.getViewport().setViewLocation(newViewLocation.x, newViewLocation.y);
+   }
+
+   /**
     * Find and select node by text (search forward)
     *
     * @param text text to search for
@@ -1772,12 +1803,7 @@ public class ExtendedGraphViewer extends GraphViewer
             if (label != null && label.toUpperCase().contains(text.toUpperCase()))
             {
                found = true;
-               setSelection(new StructuredSelection(((ObjectFigure)n.getFigure()).getMapElement()), true);
-
-               org.eclipse.draw2d.geometry.Point center = new org.eclipse.draw2d.geometry.Rectangle(n.getLocation(), n.getSize()).getCenter();
-               center.performScale(getZoom());
-               org.eclipse.draw2d.geometry.Point newViewLocation = center.getTranslated(-graph.getViewport().getClientArea().width / 2, -graph.getViewport().getClientArea().height / 2);
-               graph.getViewport().setViewLocation(newViewLocation.x, newViewLocation.y);
+               showElement(((ObjectFigure)n.getFigure()).getMapElement());
 
                if (wrapped)
                {

@@ -114,6 +114,7 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
    private double[] editedLinkFanOffset = NO_FAN_OFFSET;
    private java.util.function.IntConsumer unplacedCountListener;
    private int lastReportedUnplacedCount = -1;
+   private Runnable placedObjectsListener;
    private AbstractObject currentObject;
    private NetworkMapLink currentLink;
    private LinkHitInfo rightClickLinkHit;
@@ -541,6 +542,8 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
       if (content == null)
       {
          notifyUnplacedCount(0);
+         if (placedObjectsListener != null)
+            placedObjectsListener.run();
          return;
       }
       NXCSession session = Registry.getSession();
@@ -563,6 +566,18 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
          }
       }
       notifyUnplacedCount(unplacedObjectCount);
+      if (placedObjectsListener != null)
+         placedObjectsListener.run();
+   }
+
+   /**
+    * Set listener called each time the placed-object list is rebuilt.
+    *
+    * @param listener listener to call
+    */
+   public void setPlacedObjectsListener(Runnable listener)
+   {
+      placedObjectsListener = listener;
    }
 
    /**
@@ -1129,22 +1144,7 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
             haystack = haystack + "\n" + alias;
          if (haystack.toUpperCase().contains(needle))
          {
-            currentObject = candidate;
-            currentLink = null;
-            selection = new StructuredSelection(candidate);
-            fireSelectionChanged();
-            // Centre on the matched object so it's visible after the find.
-            GeoLocation loc = candidate.getGeolocation();
-            if ((loc != null) && (loc.getType() != GeoLocation.UNSET))
-            {
-               accessor.setLatitude(loc.getLatitude());
-               accessor.setLongitude(loc.getLongitude());
-               showMap(accessor);
-            }
-            else
-            {
-               redraw();
-            }
+            showObject(candidate);
             return true;
          }
          i = forward ? (i + 1) : (i - 1);
@@ -1153,6 +1153,33 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
       }
       while(i != startIndex);
       return false;
+   }
+
+   /**
+    * Select placed object and centre the map on it.
+    *
+    * @param object one of {@link #getPlacedObjects()}
+    */
+   public void showObject(AbstractObject object)
+   {
+      currentObject = object;
+      currentLink = null;
+      selection = new StructuredSelection(object);
+      fireSelectionChanged();
+      GeoLocation loc = object.getGeolocation();
+      accessor.setLatitude(loc.getLatitude());
+      accessor.setLongitude(loc.getLongitude());
+      showMap(accessor);
+   }
+
+   /**
+    * Get objects drawn on the map.
+    *
+    * @return objects drawn on the map
+    */
+   public List<AbstractObject> getPlacedObjects()
+   {
+      return placedObjects;
    }
 
    @Override
