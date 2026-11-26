@@ -9739,40 +9739,6 @@ public class NXCSession
    }
 
    /**
-    * Deploy policy on agent
-    *
-    * @param policyId Policy object ID
-    * @param nodeId Node object ID
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void deployAgentPolicy(final long policyId, final long nodeId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_DEPLOY_AGENT_POLICY);
-      msg.setFieldInt32(NXCPCodes.VID_POLICY_ID, (int)policyId);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Uninstall policy from agent
-    *
-    * @param policyId Policy object ID
-    * @param nodeId   Node object ID
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void uninstallAgentPolicy(final long policyId, final long nodeId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_UNINSTALL_AGENT_POLICY);
-      msg.setFieldInt32(NXCPCodes.VID_POLICY_ID, (int)policyId);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
     * Get event processing policy chain registry: every chain readable by the current user, without rules. Use
     * {@link #getEventProcessingPolicyChain(int)} to load the rules of a chain.
     *
