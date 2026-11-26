@@ -190,6 +190,13 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private PollStates objectPollState;
    private Comments objectComments;
    private ToolBar objectToolBar;
+   private ToolItem executeScriptItem;
+   private long toolbarObjectId = 0;
+   private boolean executeScriptAllowed = false;
+   private AbstractObject toolbarRightsWanted = null;
+   private boolean toolbarRightsJobRunning = false;
+   private long toolbarRightsSequence = 0;
+   private long toolbarRightsAppliedSequence = 0;
    private ToolBar objectMenuBar;
    private ToolBar perspectiveToolBar;
    private Label expandButton;
@@ -343,7 +350,11 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          AbstractObject context = (AbstractObject)getContext();
          if ((context != null) && (n.getSubCode() == context.getObjectId()))
          {
-            getWindow().getShell().getDisplay().asyncExec(() -> updateContext(n.getObject()));
+            getWindow().getShell().getDisplay().asyncExec(() -> {
+               AbstractObject currentContext = (AbstractObject)getContext();
+               if ((currentContext != null) && (currentContext.getObjectId() == n.getSubCode()))
+                  updateContext(n.getObject());
+            });
          }
       });
    }
@@ -605,6 +616,8 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          objectStatus.setText("");
          objectStatus.setLabelBackground(null);
          objectMessageArea.clearMessages();
+         cancelToolbarRightsRequests();
+         toolbarObjectId = 0;
       }
       headerArea.layout();
 
@@ -702,10 +715,29 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    {
       for(ToolItem item : objectToolBar.getItems())
          item.dispose();
+      executeScriptItem = null;
+
+      Long rights = object.getCachedEffectiveRights();
+      if (rights != null)
+      {
+         executeScriptAllowed = (rights & UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT) != 0;
+         cancelToolbarRightsRequests();
+      }
+      else
+      {
+         // Keep last known state while rights for updated instance of same object are being retrieved
+         if (object.getObjectId() != toolbarObjectId)
+         {
+            executeScriptAllowed = false;
+            cancelToolbarRightsRequests();
+         }
+         requestToolbarRights(object);
+      }
+      toolbarObjectId = object.getObjectId();
 
       addObjectToolBarItem(i18n.tr("Properties"), SharedIcons.IMG_PROPERTIES, () -> ObjectPropertiesManager.openObjectPropertiesDialog(object, getWindow().getShell(), getMessageArea()));
-      if ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT) != 0)
-         addObjectToolBarItem(i18n.tr("Execute script"), imageExecuteScript, () -> addMainView(new ScriptExecutorView(object.getObjectId(), object.getObjectId()), true, false));
+      if (executeScriptAllowed)
+         addExecuteScriptItem(object.getObjectId());
 
       if ((object instanceof Node) && ((Node)object).hasAgent())
       {
@@ -744,6 +776,100 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    }
 
    /**
+    * Add "Execute script" item to object toolbar right after "Properties" item.
+    *
+    * @param objectId ID of object shown in toolbar
+    */
+   private void addExecuteScriptItem(long objectId)
+   {
+      executeScriptItem = new ToolItem(objectToolBar, SWT.PUSH, 1);
+      setupObjectToolBarItem(executeScriptItem, i18n.tr("Execute script"), imageExecuteScript, () -> addMainView(new ScriptExecutorView(objectId, objectId), true, false));
+   }
+
+   /**
+    * Request effective rights for object shown in toolbar. At most one request is running at any time; while it runs, only
+    * the latest requested object is remembered.
+    *
+    * @param object object to get rights for
+    */
+   private void requestToolbarRights(AbstractObject object)
+   {
+      toolbarRightsWanted = object;
+      if (!toolbarRightsJobRunning)
+         startToolbarRightsJob();
+   }
+
+   /**
+    * Cancel pending toolbar rights request and make result of running one obsolete.
+    */
+   private void cancelToolbarRightsRequests()
+   {
+      toolbarRightsWanted = null;
+      toolbarRightsAppliedSequence = ++toolbarRightsSequence;
+   }
+
+   /**
+    * Start background job retrieving effective rights for latest requested object.
+    */
+   private void startToolbarRightsJob()
+   {
+      final AbstractObject object = toolbarRightsWanted;
+      final long sequence = ++toolbarRightsSequence;
+      toolbarRightsWanted = null;
+      toolbarRightsJobRunning = true;
+      Job job = new Job(i18n.tr("Reading effective access rights"), null, null, getWindow().getShell().getDisplay()) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final long rights = object.getEffectiveRights();
+            runInUIThread(() -> onToolbarRightsReceived(object.getObjectId(), rights, sequence));
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setSystem(true);
+      job.start();
+   }
+
+   /**
+    * Handle effective rights retrieved for toolbar.
+    *
+    * @param objectId object ID
+    * @param rights effective rights
+    * @param sequence request sequence number
+    */
+   private void onToolbarRightsReceived(long objectId, long rights, long sequence)
+   {
+      toolbarRightsJobRunning = false;
+      if (objectToolBar.isDisposed())
+         return;
+
+      if ((objectId == toolbarObjectId) && (sequence > toolbarRightsAppliedSequence))
+      {
+         toolbarRightsAppliedSequence = sequence;
+         executeScriptAllowed = (rights & UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT) != 0;
+         if (executeScriptAllowed && (executeScriptItem == null))
+         {
+            addExecuteScriptItem(objectId);
+            headerArea.layout();
+         }
+         else if (!executeScriptAllowed && (executeScriptItem != null))
+         {
+            executeScriptItem.dispose();
+            executeScriptItem = null;
+            headerArea.layout();
+         }
+      }
+
+      if (toolbarRightsWanted != null)
+         startToolbarRightsJob();
+   }
+
+   /**
     * Add object toolbar item.
     *
     * @param name tooltip text
@@ -752,7 +878,19 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
     */
    private void addObjectToolBarItem(String name, Image icon, final Runnable handler)
    {
-      ToolItem item = new ToolItem(objectToolBar, SWT.PUSH);
+      setupObjectToolBarItem(new ToolItem(objectToolBar, SWT.PUSH), name, icon, handler);
+   }
+
+   /**
+    * Set up object toolbar item.
+    *
+    * @param item toolbar item
+    * @param name tooltip text
+    * @param icon icon
+    * @param handler selection handler
+    */
+   private static void setupObjectToolBarItem(ToolItem item, String name, Image icon, final Runnable handler)
+   {
       item.setImage(icon);
       item.setToolTipText(name);
       item.addSelectionListener(new SelectionAdapter() {

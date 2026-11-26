@@ -42,11 +42,15 @@ Layers: client library, UI (nxmc, shared by desktop and web).
 
 `AbstractObject` gets one safely published read that doesn't block and reports "unknown" when nothing is cached. `updateObjectToolBar` uses it, and on a miss it starts a background fetch using the console's existing background job mechanism. There is at most one running fetch per perspective, plus the latest wanted object. Further updates replace the wanted object instead of starting new jobs. A result that arrives is applied on the UI thread under the ordering rule above. The item is inserted at its normal position, after "Properties", not appended. The `OBJECT_CHANGED` listener rechecks the current context inside the queued callback.
 
-- [ ] selection and `OBJECT_CHANGED` handling no longer reach `NXCSession.getEffectiveRights` on the UI thread
-- [ ] "Execute script" doesn't blink on updates of the shown object, and appears only when `OBJECT_ACCESS_EXECUTE_SCRIPT` is granted
-- [ ] a burst of updates still ends with the correct item state
-- [ ] a queued update for an object the user has left doesn't replace the current context
-- [ ] desktop and web consoles build (`mvn -f src/client/nxmc/java/pom.xml clean package -Pdesktop -Pstandalone` and `-Pweb`)
+- [x] selection and `OBJECT_CHANGED` handling no longer reach `NXCSession.getEffectiveRights` on the UI thread
+- [x] "Execute script" doesn't blink on updates of the shown object, and appears only when `OBJECT_ACCESS_EXECUTE_SCRIPT` is granted
+- [x] a burst of updates still ends with the correct item state
+- [x] a queued update for an object the user has left doesn't replace the current context
+- [x] desktop and web consoles build (`mvn -f src/client/nxmc/java/pom.xml clean package -Pdesktop -Pstandalone` and `-Pweb`)
+
+⚠️ The checks below are left for the user's final review: neither agent can drive the console GUI against a high-latency server inside the run. The checked boxes above follow from the code and from both console builds, not from a UI test.
+
+➕ The user ran a stable-7.0 build with this task cherry-picked against the customer's SSH-tunnelled server and reported the console "way faster for the user". That is the user's observation of toolbar responsiveness. The flicker, rapid-selection and jstack checks below still have no separate evidence.
 
 Verified by hand (no UI test harness):
 - high-latency server (the SSH-tunnelled setup from the profile, or locally added delay): clicking containers and letting updates arrive doesn't freeze the UI; re-sampling the UI thread with jstack shows no `waitForRCC` under `updateObjectToolBar`
