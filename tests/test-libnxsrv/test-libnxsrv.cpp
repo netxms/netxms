@@ -1959,27 +1959,50 @@ static void TestDriverFirmware()
    AssertEquals(firmware.size(), 0);
    EndTest();
 
+   StartTest(L"NetworkDeviceDriver - firmware with several root entities");
+   // Power supplies without parent before the chassis
+   MockSnmpTransport severalRootsTransport;
+   AddMockComponent(&severalRootsTransport, 10, COMPONENT_CLASS_POWER_SUPPLY, 0, -1, L"psu1", L"PowerSupply", L"", L"");
+   AddMockComponent(&severalRootsTransport, 20, COMPONENT_CLASS_POWER_SUPPLY, 0, -1, L"psu2", L"PowerSupply", L"", L"");
+   AddMockComponent(&severalRootsTransport, 30, COMPONENT_CLASS_CHASSIS, 0, -1, L"chassis", L"X1008", L"X1008", L"SN0001");
+   SetMockComponentRevisions(&severalRootsTransport, 10, L"", L"");
+   SetMockComponentRevisions(&severalRootsTransport, 20, L"", L"");
+   SetMockComponentRevisions(&severalRootsTransport, 30, L"3.0.1.9", L"1.0.0.25");
+   SnmpDeviceContext severalRootsContext(&severalRootsTransport);
+   firmware.clear();
+   AssertTrue(driver.getFirmwareInformation(&severalRootsContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 2);
+   AssertEquals(firmware.get(0)->version, L"3.0.1.9");
+   AssertEquals(firmware.get(1)->version, L"1.0.0.25");
+   firmware.clear();
+   EndTest();
+
    StartTest(L"NetworkDeviceDriver - firmware not available");
    // Root entity is neither chassis nor stack
    MockSnmpTransport moduleRootTransport;
    AddMockComponent(&moduleRootTransport, 1, COMPONENT_CLASS_MODULE, 0, -1, L"module", L"Module", L"", L"");
    SetMockComponentRevisions(&moduleRootTransport, 1, L"1.0", L"1.0");
    SnmpDeviceContext moduleRootContext(&moduleRootTransport);
-   AssertFalse(driver.getFirmwareInformation(&moduleRootContext, node.get(), nullptr, &firmware));
+   AssertTrue(driver.getFirmwareInformation(&moduleRootContext, node.get(), nullptr, &firmware));
    AssertEquals(firmware.size(), 0);
 
    // No entity without parent
    MockSnmpTransport noRootTransport;
    AddMockComponent(&noRootTransport, 1, COMPONENT_CLASS_CHASSIS, 2, -1, L"chassis", L"Chassis", L"", L"");
+   SetMockComponentRevisions(&noRootTransport, 1, L"1.0", L"1.0");
    SnmpDeviceContext noRootContext(&noRootTransport);
-   AssertFalse(driver.getFirmwareInformation(&noRootContext, node.get(), nullptr, &firmware));
+   AssertTrue(driver.getFirmwareInformation(&noRootContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 0);
 
    // ENTITY MIB not supported
    MockSnmpTransport noEntityMibTransport;
    noEntityMibTransport.setString(L".1.3.6.1.2.1.1.1.0", L"Test device");
    SnmpDeviceContext noEntityMibContext(&noEntityMibTransport);
-   AssertFalse(driver.getFirmwareInformation(&noEntityMibContext, node.get(), nullptr, &firmware));
+   AssertTrue(driver.getFirmwareInformation(&noEntityMibContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 0);
+   EndTest();
 
+   StartTest(L"NetworkDeviceDriver - firmware cannot be read");
    // SNMP not available
    SnmpDeviceContext noSnmpContext(nullptr);
    AssertFalse(driver.getFirmwareInformation(&noSnmpContext, node.get(), nullptr, &firmware));

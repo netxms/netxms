@@ -421,7 +421,8 @@ static bool ReadEntityStringAttribute(SNMP_Transport *snmp, uint32_t column, uin
  * @param node Node
  * @param driverData driver data
  * @param firmware list of firmware to fill
- * @return true if firmware information was read from device (list can be empty if device does not report any firmware)
+ * @return true if device was read successfully (list is empty if device does not report any firmware or does not
+ *         support ENTITY MIB), false if device cannot be read
  */
 bool NetworkDeviceDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
@@ -439,18 +440,25 @@ bool NetworkDeviceDriver::getFirmwareInformation(DeviceContext *context, NObject
          parents.add(v->getValueAsUInt());
          return SNMP_ERR_SUCCESS;
       });
-   if ((rc != SNMP_ERR_SUCCESS) || indexes.isEmpty())
+   if (rc != SNMP_ERR_SUCCESS)
       return false;
 
-   int rootPosition = parents.indexOf(0);
-   if (rootPosition == -1)
-      return false;
-   uint32_t root = indexes.get(rootPosition);
-
-   uint32_t oid[] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 5, root };  // entPhysicalClass
-   uint32_t entityClass;
-   if (SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), &entityClass, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
-      return false;
+   // Device can have several entities without parent (chassis and power supplies, for example).
+   // Take first of them that is chassis or stack.
+   uint32_t oid[] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 5, 0 };  // entPhysicalClass
+   uint32_t root = 0, entityClass = 0;
+   for(int i = 0; (i < parents.size()) && (root == 0); i++)
+   {
+      if (parents.get(i) != 0)
+         continue;
+      oid[12] = indexes.get(i);
+      if (SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), &entityClass, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
+         return false;
+      if ((entityClass == COMPONENT_CLASS_CHASSIS) || (entityClass == COMPONENT_CLASS_STACK))
+         root = indexes.get(i);
+   }
+   if (root == 0)
+      return true;   // ENTITY MIB is not supported or does not have chassis or stack without parent
 
    // Device could be reported as stack but consist from single chassis only
    if (entityClass == COMPONENT_CLASS_STACK)
@@ -476,32 +484,15 @@ bool NetworkDeviceDriver::getFirmwareInformation(DeviceContext *context, NObject
          }
       }
    }
-   if ((entityClass != COMPONENT_CLASS_CHASSIS) && (entityClass != COMPONENT_CLASS_STACK))
+   wchar_t softwareRevision[256], firmwareRevision[256];
+   if (!ReadEntityStringAttribute(snmp, 10, root, softwareRevision, 256) ||   // entPhysicalSoftwareRev
+       !ReadEntityStringAttribute(snmp, 9, root, firmwareRevision, 256))      // entPhysicalFirmwareRev
       return false;
 
-   FirmwareInfo software, bootFirmware;
-   memset(&software, 0, sizeof(FirmwareInfo));
-   memset(&bootFirmware, 0, sizeof(FirmwareInfo));
-   if (!ReadEntityStringAttribute(snmp, 10, root, software.raw, 256) ||    // entPhysicalSoftwareRev
-       !ReadEntityStringAttribute(snmp, 9, root, bootFirmware.raw, 256))   // entPhysicalFirmwareRev
-      return false;
-
-   if (software.raw[0] != 0)
-   {
-      software.role = FirmwareRole::MAIN;
-      software.componentIndex = -1;
-      wcscpy(software.name, L"Software");
-      wcslcpy(software.version, software.raw, 64);
-      firmware->add(software);
-   }
-   if (bootFirmware.raw[0] != 0)
-   {
-      bootFirmware.role = FirmwareRole::OTHER;
-      bootFirmware.componentIndex = -1;
-      wcscpy(bootFirmware.name, L"Firmware");
-      wcslcpy(bootFirmware.version, bootFirmware.raw, 64);
-      firmware->add(bootFirmware);
-   }
+   if (softwareRevision[0] != 0)
+      AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Software", L"", L"", softwareRevision);
+   if (firmwareRevision[0] != 0)
+      AddFirmwareInfo(firmware, FirmwareRole::OTHER, L"Firmware", L"", L"", firmwareRevision);
    return true;
 }
 

@@ -5175,12 +5175,15 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller)
           ((m_capabilities & (NC_IS_SNMP | NC_HAS_ENTITY_MIB)) == (NC_IS_SNMP | NC_HAS_ENTITY_MIB)))
       {
          // Try to get hardware information from ENTITY MIB
+         uint32_t rootIndex = 0;
+         bool hasRoot = false;
          lockProperties();
          if (m_components != nullptr)
          {
             const Component *root = m_components->getRoot();
             if (root != nullptr)
             {
+               hasRoot = true;
                // Device could be reported as stack but consist from single chassis only
                if ((root->getClass() == COMPONENT_CLASS_STACK) && (root->getChildren().size() == 1) && (root->getChildren().get(0)->getClass() == COMPONENT_CLASS_CHASSIS))
                {
@@ -5192,15 +5195,43 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller)
                      _tcslcpy(hwInfo.vendor, root->getVendor(), 128);
                   if (hwInfo.productName[0] == 0)
                      _tcslcpy(hwInfo.productName, (*root->getModel() != 0) ? root->getModel() : root->getDescription(), 128);
-                  if (hwInfo.productVersion[0] == 0)
-                     _tcslcpy(hwInfo.productVersion, root->getFirmware(), 16);
                   if (hwInfo.serialNumber[0] == 0)
                      _tcslcpy(hwInfo.serialNumber, root->getSerial(), 32);
+                  rootIndex = root->getIndex();
                }
-               success = (hwInfo.vendor[0] != 0) || (hwInfo.productName[0] != 0) || (hwInfo.productVersion[0] != 0) || (hwInfo.serialNumber[0] != 0);
             }
          }
          unlockProperties();
+
+         // Product version is hardware revision. Component tree does not have it, so it is read from device;
+         // current value is kept if device cannot be read.
+         if ((hwInfo.productVersion[0] == 0) && (rootIndex != 0))
+         {
+            bool revisionRead = false;
+            SNMP_Transport *snmp = createSnmpTransport();
+            if (snmp != nullptr)
+            {
+               uint32_t oid[] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 8, rootIndex };   // entPhysicalHardwareRev
+               wchar_t revision[256];
+               uint32_t rc = SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), revision, sizeof(revision), SG_STRING_RESULT);
+               if (rc == SNMP_ERR_SUCCESS)
+               {
+                  TrimW(revision);
+                  wcslcpy(hwInfo.productVersion, revision, 16);
+                  revisionRead = true;
+               }
+               else if (rc == SNMP_ERR_NO_OBJECT)
+               {
+                  revisionRead = true;   // Device does not report hardware revision
+               }
+               delete snmp;
+            }
+            if (!revisionRead)
+               wcslcpy(hwInfo.productVersion, getProductVersion(), 16);
+         }
+
+         if (hasRoot)
+            success = (hwInfo.vendor[0] != 0) || (hwInfo.productName[0] != 0) || (hwInfo.productVersion[0] != 0) || (hwInfo.serialNumber[0] != 0);
       }
    }
 
@@ -5239,27 +5270,29 @@ void Node::readFirmwareInformation(PollerInfo *poller, const StructArray<Firmwar
    poller->setStatus(L"firmware check");
    sendPollerMsg(L"Updating firmware information");
 
-   // EtherNet/IP identity is the only source for EtherNet/IP devices: if SNMP is present on such device
-   // it may describe communication module and not the device itself
-   if (m_capabilities & NC_IS_ETHERNET_IP)
-   {
-      if (!identityFirmware.isEmpty())
-         updateFirmwareInformation(identityFirmware);
-      return;
-   }
-
    StructArray<FirmwareInfo> firmware;
    NodeDeviceContext context(self());
    auto driver = getUsableDriverWithData(&context);
-   if ((driver.first != nullptr) && driver.first->getFirmwareInformation(&context, this, driver.second.get(), &firmware))
+   bool driverSuccess = (driver.first != nullptr) && driver.first->getFirmwareInformation(&context, this, driver.second.get(), &firmware);
+
+   if (driverSuccess && !firmware.isEmpty())
    {
+      // Driver knows the device better than identity protocols: revision in EtherNet/IP identity of a switch,
+      // for example, is revision of its EtherNet/IP implementation and not version of switch software
       updateFirmwareInformation(firmware);
    }
-   else if (!identityFirmware.isEmpty() && !(m_capabilities & NC_IS_SNMP))
+   else if (!identityFirmware.isEmpty() && (driverSuccess || !(m_capabilities & NC_IS_SNMP)))
    {
-      // Firmware of SNMP capable device comes only from driver, so that temporary SNMP failure
-      // does not replace it with less detailed information from another protocol
+      // Identity protocol is used when driver has nothing to report. If driver failed on SNMP capable device,
+      // stored information is kept, so that temporary SNMP failure does not replace firmware reported by driver
+      // with less detailed one.
       updateFirmwareInformation(identityFirmware);
+   }
+   else if (driverSuccess && !(m_capabilities & (NC_IS_ETHERNET_IP | NC_IS_MODBUS_TCP)))
+   {
+      // Device does not report any firmware. Not applied to devices with identity protocols, because identity
+      // could be unavailable only during this poll.
+      updateFirmwareInformation(firmware);
    }
    else
    {

@@ -43,6 +43,23 @@ const wchar_t LIBNXSRV_EXPORTABLE *FirmwareRoleName(FirmwareRole role)
 }
 
 /**
+ * Add firmware of the device itself (not of its component) to the list. Version should be in canonical form of
+ * platform's version scheme (output of matching normalizer). If it is empty (version reported by the device could
+ * not be normalized, or platform is not known), raw version is stored as version, so it is still shown to the user.
+ */
+void LIBNXSRV_EXPORTABLE AddFirmwareInfo(StructArray<FirmwareInfo> *list, FirmwareRole role, const wchar_t *name, const wchar_t *platform, const wchar_t *version, const wchar_t *raw)
+{
+   FirmwareInfo *fw = list->addPlaceholder();
+   memset(fw, 0, sizeof(FirmwareInfo));
+   fw->role = role;
+   fw->componentIndex = -1;
+   wcslcpy(fw->name, name, 64);
+   wcslcpy(fw->platform, platform, 64);
+   wcslcpy(fw->version, (version[0] != 0) ? version : raw, 64);
+   wcslcpy(fw->raw, raw, 256);
+}
+
+/**
  * Built-in firmware platform registry
  */
 static const FirmwarePlatform s_platforms[] =

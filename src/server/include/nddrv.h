@@ -198,6 +198,7 @@ struct FirmwareInfo
 };
 
 const wchar_t LIBNXSRV_EXPORTABLE *FirmwareRoleName(FirmwareRole role);
+void LIBNXSRV_EXPORTABLE AddFirmwareInfo(StructArray<FirmwareInfo> *list, FirmwareRole role, const wchar_t *name, const wchar_t *platform, const wchar_t *version, const wchar_t *raw);
 
 /**
  * Device view element flags
