@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 	<formatVersion>4</formatVersion>
+	<nxslVersionV5>true</nxslVersionV5>
 	<description></description>
 	<events>
 	</events>
