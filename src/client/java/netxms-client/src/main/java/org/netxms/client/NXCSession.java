@@ -5179,22 +5179,6 @@ public class NXCSession
    }
 
    /**
-    * Changes state of alarm status flow. Strict or not - terminate state can be set only after
-    * resolve state or after any state.
-    *
-    * @param state state of alarm status flow - strict or not (1 or 0)
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void setAlarmFlowState(int state) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ALARM_STATUS_FLOW);
-      msg.setFieldInt32(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE, state);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-
-   /**
     * Get list of incidents for an object. To get all incidents, use objectId = 0.
     *
     * @param objectId Object ID to filter by, or 0 for all incidents

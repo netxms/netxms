@@ -718,7 +718,6 @@ private:
 	void getAlarmComments(const NXCPMessage& request);
 	void updateAlarmComment(const NXCPMessage& request);
 	void deleteAlarmComment(const NXCPMessage& request);
-	void updateAlarmStatusFlow(const NXCPMessage& request);
    void getIncidents(const NXCPMessage& request);
    void getIncidentDetails(const NXCPMessage& request);
    void createIncident(const NXCPMessage& request);
