@@ -219,7 +219,9 @@ paths:
       summary: List server configuration variables
       description: >-
         Retrieve all visible server configuration variables. Requires SERVER_CONFIG access
-        right. Hidden variables (is_visible = 0) are never returned.
+        right. Hidden variables (is_visible = 0) are never returned. Values of PASSWORD
+        variables are never disclosed: the value is reported as ******** when it is set and
+        as empty string when it is not.
       responses:
         '200':
           description: Configuration variables retrieved successfully
@@ -283,7 +285,9 @@ paths:
         (0x prefix) numbers from 0 to 2147483647, or to the upper limit given in possibleValues;
         BOOLEAN variables accept true, false, or an integer number; CHOICE variables accept only
         values listed in possibleValues. Change takes effect immediately unless the variable is
-        marked as requiring server restart.
+        marked as requiring server restart. For PASSWORD variables the value ******** means
+        "keep current value", so a document returned by GET can be sent back unchanged; any
+        other value, including empty string, replaces the stored secret.
       requestBody:
         required: true
         content:

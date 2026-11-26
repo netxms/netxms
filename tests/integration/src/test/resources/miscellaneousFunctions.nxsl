@@ -75,6 +75,10 @@ assert(value == "https://tile.netxms.org/osm/");
 value = GetConfigurationVariable("Non Existing");
 assert(value == null);
 
+// Secret variables are not readable by scripts
+value = GetConfigurationVariable("RADIUS.Secret");
+assert(value == "********");
+
 //Syslog rule check
 //TODO: Make successful test
 result = GetSyslogRuleCheckCount("Non Existing Rule", node);

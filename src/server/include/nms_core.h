@@ -1551,6 +1551,13 @@ bool NXCORE_EXPORTABLE ConfigWriteInt64(const TCHAR *variable, int64_t value, bo
 bool NXCORE_EXPORTABLE ConfigWriteUInt64(DB_HANDLE hdb, const TCHAR *variable, uint64_t value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, bool create, bool isVisible = true, bool needRestart = false);
 uint32_t NXCORE_EXPORTABLE ValidateConfigVariableValue(const wchar_t *variable, const wchar_t *value);
+bool NXCORE_EXPORTABLE IsSecretConfigVariable(const wchar_t *variable);
+
+/**
+ * Value reported to clients and scripts in place of non-empty value of secret configuration variable.
+ * When received as new value of such variable it means "keep current value".
+ */
+#define CONFIG_SECRET_PLACEHOLDER   L"********"
 bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *variable, int *value, size_t size, bool create, bool isVisible = true, bool needRestart = false);
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *varariable, const TCHAR *defaultValue);
 char NXCORE_EXPORTABLE *ConfigReadCLOBUTF8(const TCHAR *variable, const char *defaultValue);

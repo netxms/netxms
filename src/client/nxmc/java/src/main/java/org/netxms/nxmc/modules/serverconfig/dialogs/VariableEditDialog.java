@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.constants.ServerVariableDataType;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -179,7 +180,8 @@ public class VariableEditDialog extends Dialog
             break;
          case PASSWORD:
          case STRING:
-            textValue = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 300, i18n.tr("Value"), 
+            textValue = WidgetHelper.createLabeledText(dialogArea,
+                  (variable.getDataType() == ServerVariableDataType.PASSWORD) ? (SWT.BORDER | SWT.PASSWORD) : SWT.BORDER, 300, i18n.tr("Value"),
                   variable.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
             textValue.setTextLimit(2000);
             gd = new GridData();

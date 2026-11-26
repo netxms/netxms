@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.19 to 71.20
+ */
+static bool H_UpgradeFromV19()
+{
+   CHK_EXEC(SQLQuery(L"UPDATE config SET data_type='P' WHERE var_name='Jira.Webhook.Secret'"));
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 71.18 to 71.19
  */
 static bool H_UpgradeFromV18()
@@ -409,6 +419,7 @@ static struct
    bool (*upgradeProc)();
    bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 19, 71, 20, H_UpgradeFromV19 },
    { 18, 71, 19, H_UpgradeFromV18 },
    { 17, 71, 18, H_UpgradeFromV17 },
    { 16, 71, 17, H_UpgradeFromV16 },

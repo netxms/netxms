@@ -2114,7 +2114,8 @@ static int F_DriverReadParameter(int argc, NXSL_Value **argv, NXSL_Value **resul
  * Get server's configuration variable
  * First argument is a variable name
  * Optional second argumet is default value
- * Returns variable's value if found, default value if not found, and null if not found and no default value given
+ * Returns variable's value if found, default value if not found, and null if not found and no default value given.
+ * Value of secret variable is not available to scripts: placeholder is returned if it is set and empty string otherwise.
  */
 static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
@@ -2133,7 +2134,10 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 	wchar_t buffer[MAX_CONFIG_VALUE_LENGTH];
 	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_CONFIG_VALUE_LENGTH, L""))
 	{
-		*result = vm->createValue(buffer);
+      if (IsSecretConfigVariable(argv[0]->getValueAsCString()))
+         *result = vm->createValue((buffer[0] != 0) ? CONFIG_SECRET_PLACEHOLDER : L"");
+      else
+         *result = vm->createValue(buffer);
 	}
 	else
 	{

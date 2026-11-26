@@ -984,6 +984,8 @@ int NXCORE_EXPORTABLE ProcessConsoleCommand(const wchar_t *command, ServerConsol
       {
          TCHAR value[MAX_CONFIG_VALUE_LENGTH];
          ConfigReadStr(szBuffer, value, MAX_CONFIG_VALUE_LENGTH, _T(""));
+         if (IsSecretConfigVariable(szBuffer) && (value[0] != 0))
+            wcscpy(value, CONFIG_SECRET_PLACEHOLDER);
          ConsolePrintf(console, _T("%s = %s\n"), szBuffer, value);
       }
       else

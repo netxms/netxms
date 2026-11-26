@@ -108,7 +108,7 @@ public final class ServerVariable
          return "";
 
       if (dataType == ServerVariableDataType.PASSWORD)
-         return "********";
+         return value.isEmpty() ? "" : "********";
 
       if (dataType == ServerVariableDataType.BOOLEAN)
       {

@@ -75,6 +75,41 @@ public class ServerConfigTest extends AbstractSessionTest
 	}
 
    /**
+    * Secret (password type) variables are write-only: server reports placeholder instead of non-empty value, and
+    * placeholder sent as new value keeps the current one.
+    */
+   @Test
+   public void testSecretVariables() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+
+      final String secretVariable = "RADIUS.SecondarySecret";
+      final String placeholder = "********";
+
+      try
+      {
+         session.setServerVariable(secretVariable, "test-secret");
+         assertEquals(placeholder, session.getServerVariables().get(secretVariable).getValue());
+
+         session.setServerVariable(secretVariable, placeholder);
+         assertEquals(placeholder, session.getServerVariables().get(secretVariable).getValue());
+
+         session.setServerVariable(secretVariable, "");
+         assertEquals("", session.getServerVariables().get(secretVariable).getValue());
+
+         // Placeholder keeps current value, so empty secret stays empty
+         session.setServerVariable(secretVariable, placeholder);
+         assertEquals("", session.getServerVariables().get(secretVariable).getValue());
+      }
+      finally
+      {
+         // Original value cannot be read back, so variable is returned to its default
+         session.setServerVariable(secretVariable, "netxms");
+         session.disconnect();
+      }
+   }
+
+   /**
     * Check that setting variable to given value is rejected with RCC.INVALID_ARGUMENT
     */
    private static void assertRejected(NXCSession session, String name, String value)

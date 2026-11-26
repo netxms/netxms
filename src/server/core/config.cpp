@@ -635,20 +635,64 @@ static RWLock s_configCacheLock;
 static bool s_configCacheLoaded = false;
 
 /**
+ * Names of configuration variables holding secrets (data type 'P'), in upper case because configuration
+ * cache lookup is case insensitive. Protected by s_configCacheLock.
+ */
+static StringSet s_secretVariables;
+
+/**
+ * Buffer size for secret variable set key (variable names accepted by ConfigReadStr are up to 127 characters)
+ */
+#define SECRET_KEY_BUFFER_SIZE   128
+
+/**
+ * Make key for secret variable set from variable name
+ */
+static inline wchar_t *SecretVariableKey(const wchar_t *variable, wchar_t *key)
+{
+   wcslcpy(key, variable, SECRET_KEY_BUFFER_SIZE);
+   return wcsupr(key);
+}
+
+/**
+ * Check if given configuration variable holds a secret. Value of such variable is never sent to
+ * clients or exposed to scripts - they get CONFIG_SECRET_PLACEHOLDER if value is set and empty
+ * string otherwise.
+ */
+bool NXCORE_EXPORTABLE IsSecretConfigVariable(const wchar_t *variable)
+{
+   wchar_t key[SECRET_KEY_BUFFER_SIZE];
+   SecretVariableKey(variable, key);
+   s_configCacheLock.readLock();
+   bool secret = s_secretVariables.contains(key);
+   s_configCacheLock.unlock();
+   return secret;
+}
+
+/**
  * Pre-load configuration
  */
 void ConfigPreLoad()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, L"SELECT var_name,var_value FROM config");
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT var_name,var_value,data_type FROM config");
    if (hResult != nullptr)
    {
       s_configCacheLock.writeLock();
       s_configCache.clear();
+      s_secretVariables.clear();
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         s_configCache.setPreallocated(DBGetField(hResult, i, 0, nullptr, 0), DBGetField(hResult, i, 1, nullptr, 0));
+         wchar_t *name = DBGetField(hResult, i, 0, nullptr, 0);
+         wchar_t dataType[2];
+         DBGetField(hResult, i, 2, dataType, 2);
+         if (dataType[0] == L'P')
+         {
+            wchar_t key[SECRET_KEY_BUFFER_SIZE];
+            s_secretVariables.add(SecretVariableKey(name, key));
+         }
+         s_configCache.setPreallocated(name, DBGetField(hResult, i, 1, nullptr, 0));
       }
       s_configCacheLoaded = true;
       s_configCacheLock.unlock();
@@ -667,7 +711,7 @@ void ConfigPreLoad()
 void ConfigReload(StringMap *changes)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, L"SELECT var_name,var_value,need_server_restart FROM config");
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT var_name,var_value,need_server_restart,data_type FROM config");
    if (hResult != nullptr)
    {
       StringBuffer restartRequired;
@@ -688,6 +732,14 @@ void ConfigReload(StringMap *changes)
                restartRequired.append(name);
             }
          }
+         wchar_t dataType[2];
+         DBGetField(hResult, i, 3, dataType, 2);
+         wchar_t key[SECRET_KEY_BUFFER_SIZE];
+         SecretVariableKey(name, key);
+         if (dataType[0] == L'P')
+            s_secretVariables.add(key);
+         else
+            s_secretVariables.remove(key);
          s_configCache.setPreallocated(name, value);
       }
       s_configCacheLock.unlock();
@@ -1777,6 +1829,8 @@ bool NXCORE_EXPORTABLE ConfigDelete(const wchar_t *variable)
    {
       s_configCacheLock.writeLock();
       s_configCache.remove(variable);
+      wchar_t key[SECRET_KEY_BUFFER_SIZE];
+      s_secretVariables.remove(SecretVariableKey(variable, key));
       s_configCacheLock.unlock();
    }
    return success;

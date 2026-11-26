@@ -72,13 +72,19 @@ static json_t *ServerConfigVariableToJson(DB_RESULT hResult, int row)
    DBGetField(hResult, row, 0, buffer, MAX_CONFIG_VAR_NAME_LEN + 1);
    json_object_set_new(variable, "name", json_string_w(buffer));
 
+   wchar_t dataType[2];
+   DBGetField(hResult, row, 3, dataType, 2);
+
+   // Value of secret variable is never disclosed, only the fact that it is set
    DBGetField(hResult, row, 1, buffer, MAX_CONFIG_VALUE_LENGTH);
-   json_object_set_new(variable, "value", json_string_w(buffer));
+   if (dataType[0] == L'P')
+      json_object_set_new(variable, "value", json_string_w((buffer[0] != 0) ? CONFIG_SECRET_PLACEHOLDER : L""));
+   else
+      json_object_set_new(variable, "value", json_string_w(buffer));
 
    json_object_set_new(variable, "needServerRestart", json_boolean(DBGetFieldLong(hResult, row, 2) != 0));
 
-   DBGetField(hResult, row, 3, buffer, MAX_CONFIG_VALUE_LENGTH);
-   json_object_set_new(variable, "dataType", json_string(DataTypeName(buffer[0])));
+   json_object_set_new(variable, "dataType", json_string(DataTypeName(dataType[0])));
 
    DBGetField(hResult, row, 4, buffer, MAX_CONFIG_VALUE_LENGTH);
    json_object_set_new(variable, "description", json_string_w(buffer));
@@ -399,6 +405,21 @@ int H_ServerConfigVariableUpdate(Context *context)
       return 500;
    }
 
+   if (IsSecretConfigVariable(name))
+   {
+      // Placeholder sent back by client means that secret was not changed
+      if (wcscmp(newValue, CONFIG_SECRET_PLACEHOLDER))
+      {
+         if (!ConfigWriteStr(name, newValue, true))
+         {
+            context->setErrorResponse("Database failure");
+            return 500;
+         }
+         context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Secret server configuration variable \"%s\" changed", name);
+      }
+      return SendServerConfigVariable(context, name);
+   }
+
    wchar_t oldValue[MAX_CONFIG_VALUE_LENGTH];
    ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE_LENGTH, L"");
 
@@ -479,8 +500,15 @@ int H_ServerConfigVariableReset(Context *context)
       return 500;
    }
 
-   context->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, defaultValue, 'T',
-      L"Server configuration variable \"%s\" reset to default value \"%s\"", name, defaultValue);
+   if (IsSecretConfigVariable(name))
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Secret server configuration variable \"%s\" reset to default value", name);
+   }
+   else
+   {
+      context->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, defaultValue, 'T',
+         L"Server configuration variable \"%s\" reset to default value \"%s\"", name, defaultValue);
+   }
 
    return SendServerConfigVariable(context, name);
 }

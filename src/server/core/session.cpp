@@ -3745,9 +3745,15 @@ void ClientSession::getConfigurationVariables(const NXCPMessage& request)
          for(int i = 0; i < count; i++, fieldId += 10)
          {
             response.setField(fieldId, DBGetField(hResult, i, 0, buffer, MAX_DB_STRING));
-            response.setField(fieldId + 1, DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE_LENGTH));
+            wchar_t dataType[2];
+            DBGetField(hResult, i, 3, dataType, 2);
+            DBGetField(hResult, i, 1, buffer, MAX_CONFIG_VALUE_LENGTH);
+            if (dataType[0] == L'P')
+               response.setField(fieldId + 1, (buffer[0] != 0) ? CONFIG_SECRET_PLACEHOLDER : L"");
+            else
+               response.setField(fieldId + 1, buffer);
             response.setField(fieldId + 2, static_cast<uint16_t>(DBGetFieldLong(hResult, i, 2)));
-            response.setField(fieldId + 3, DBGetField(hResult, i, 3, buffer, MAX_CONFIG_VALUE_LENGTH));
+            response.setField(fieldId + 3, dataType);
             response.setField(fieldId + 4, DBGetField(hResult, i, 4, buffer, MAX_CONFIG_VALUE_LENGTH));
             response.setField(fieldId + 5, DBGetField(hResult, i, 5, buffer, MAX_CONFIG_VALUE_LENGTH));
             response.setField(fieldId + 6, DBGetField(hResult, i, 6, buffer, MAX_CONFIG_VALUE_LENGTH));
@@ -3797,7 +3803,7 @@ void ClientSession::getPublicConfigurationVariable(const NXCPMessage& request)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=? AND is_public='Y'"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config WHERE var_name=? AND is_public='Y' AND data_type<>'P'");
    if (hStmt != nullptr)
    {
       wchar_t name[64];
@@ -3850,7 +3856,18 @@ void ClientSession::setConfigurationVariable(const NXCPMessage& request)
       wchar_t oldValue[MAX_CONFIG_VALUE_LENGTH], newValue[MAX_CONFIG_VALUE_LENGTH];
       request.getFieldAsString(VID_VALUE, newValue, MAX_CONFIG_VALUE_LENGTH);
       uint32_t rcc = ValidateConfigVariableValue(name, newValue);
-      if (rcc == RCC_SUCCESS)
+      if ((rcc == RCC_SUCCESS) && IsSecretConfigVariable(name))
+      {
+         // Placeholder sent back by client means that secret was not changed
+         if (wcscmp(newValue, CONFIG_SECRET_PLACEHOLDER))
+         {
+            if (ConfigWriteStr(name, newValue, true))
+               writeAuditLog(AUDIT_SYSCFG, true, 0, L"Secret server configuration variable \"%s\" changed", name);
+            else
+               rcc = RCC_DB_FAILURE;
+         }
+      }
+      else if (rcc == RCC_SUCCESS)
       {
          ConfigReadStr(name, oldValue, MAX_CONFIG_VALUE_LENGTH, L"");
          if (ConfigWriteStr(name, newValue, true))
