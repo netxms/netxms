@@ -44,7 +44,7 @@ call :RunTest test-libnxnetconf || goto failure
 call :RunTest test-libnxsnmp || goto failure
 call :RunTest test-libnxsl .\tests\test-libnxsl || goto failure
 call :RunTest test-kpidirect .\tests\test-kpidirect\kpidirect_vectors.json || goto failure
-call :RunTest test-libnxsrv || goto failure
+call :RunTest test-libnxsrv .\tests\data\vuln-schemes.json || goto failure
 call :RunTest test-libnxcore || goto failure
 call :RunTest test-ncd-webhook || goto failure
 call :RunTest test-nxshell || goto failure

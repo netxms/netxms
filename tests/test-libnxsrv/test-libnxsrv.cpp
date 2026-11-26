@@ -11,6 +11,8 @@
 
 NETXMS_EXECUTABLE_HEADER(test-libnxsrv)
 
+void TestFirmwareVersions(const char *vectorFile);
+
 /**
  * NObject subclass exposing protected members for testing
  */
@@ -2258,5 +2260,20 @@ int main(int argc, char *argv[])
    TestDriverNetconfBackup();
    TestHolidayCalendar();
    TestDailyActivityForecaster();
+
+   // Shared test vectors are installed with the tests; alternative location can be given as argument
+   char vectorFile[MAX_PATH];
+   if (argc > 1)
+   {
+      strlcpy(vectorFile, argv[1], MAX_PATH);
+   }
+   else
+   {
+      TCHAR path[MAX_PATH];
+      GetNetXMSDirectory(nxDirShare, path);
+      _tcslcat(path, FS_PATH_SEPARATOR _T("test-data") FS_PATH_SEPARATOR _T("vuln-schemes.json"), MAX_PATH);
+      wchar_to_mb(path, -1, vectorFile, MAX_PATH);
+   }
+   TestFirmwareVersions(vectorFile);
    return 0;
 }

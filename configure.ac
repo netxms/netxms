@@ -4936,6 +4936,7 @@ AC_CONFIG_FILES([
 	tests/agent/unit/weather/Makefile
 	tests/agent/unit/linux-cpu-usage-collector/Makefile
 	tests/config/Makefile
+	tests/data/Makefile
 	tests/fuzz/Makefile
 	tests/include/Makefile
 	tests/suite/Makefile

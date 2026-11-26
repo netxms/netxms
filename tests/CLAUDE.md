@@ -4,7 +4,7 @@
 
 Nothing in this tree is built by a default `make`. `tests` is added to
 `TOP_LEVEL_MODULES` (in `configure.ac` and the top-level `Makefile`) only when
-the tree is configured `--with-tests`. Within it, `include`, `config`, `suite`,
+the tree is configured `--with-tests`. Within it, `include`, `config`, `data`, `suite`,
 `test-libnetxms` and `test-libnxdb` are unconditional `SUBDIRS` in
 `tests/Makefile.am`; everything else comes in through `@TEST_MODULES@` /
 `@AGENT_UNIT_TESTS@` (in `tests/Makefile.am` and `tests/agent/unit/Makefile.am`),
@@ -17,6 +17,11 @@ this tree, and its `Makefile.am` defines programs only under the `ENABLE_FUZZER`
 tree reaches it through `TEST_MODULES` instead, so it is in the tarball. The targets are not part of
 `netxms-test-suite`, have no Windows wiring, and need upstream clang. See [fuzz/README.md](fuzz/README.md)
 for building, running, reproducing a failure and the corpus rules.
+
+`data/` holds test vector files shared by several consumers (`vuln-schemes.json`: firmware version
+schemes, read by `test-libnxsrv`). They are installed to `$(pkgdatadir)/test-data`; a test binary reads
+them from there by default and takes an alternative path as its first argument, which is how the Windows
+runner passes the file from the source tree.
 
 ## Windows build
 

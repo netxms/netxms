@@ -1888,6 +1888,51 @@ void LIBNXSRV_EXPORTABLE DisableAgentConnections();
 const wchar_t LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(uint32_t code);
 
 /**
+ * Firmware version scheme: canonical form of version string and comparison rules
+ */
+enum class FirmwareVersionScheme
+{
+   EXACT = 0,     // Vendor's version string as is; equality only, no ordering
+   INTDOT = 1,    // Dot-separated integers compared numerically
+   SEMVER = 2,    // Semantic Versioning 2.0.0
+   JUNOS = 3,     // Juniper Junos OS: <maj>.<min><T><n>[-S<s>|-D<d>][.<respin>]
+   ROUTEROS = 4   // MikroTik RouterOS and RouterBOOT: dot-separated integers with optional beta<n> / rc<n>
+};
+
+/**
+ * Result of firmware version comparison
+ */
+enum class FirmwareVersionOrder
+{
+   LESS = 0,
+   EQUAL = 1,
+   GREATER = 2,
+   INCOMPARABLE = 3
+};
+
+/**
+ * Firmware platform: firmware or operating system product line whose versions are comparable with one scheme
+ */
+struct FirmwarePlatform
+{
+   const wchar_t *id;      // Platform ID (lowercase ASCII letters, digits and hyphen)
+   const wchar_t *vendor;  // Vendor ID, empty string if platform is not bound to single vendor
+   const wchar_t *name;    // Display name
+   FirmwareVersionScheme scheme;
+};
+
+const FirmwarePlatform LIBNXSRV_EXPORTABLE *FindFirmwarePlatform(const wchar_t *id);
+bool LIBNXSRV_EXPORTABLE ParseFirmwareVersionSchemeName(const wchar_t *name, FirmwareVersionScheme *scheme);
+
+bool LIBNXSRV_EXPORTABLE IsValidFirmwareVersion(FirmwareVersionScheme scheme, const wchar_t *version);
+FirmwareVersionOrder LIBNXSRV_EXPORTABLE CompareFirmwareVersions(FirmwareVersionScheme scheme, const wchar_t *a, const wchar_t *b);
+
+bool LIBNXSRV_EXPORTABLE NormalizeExactFirmwareVersion(const wchar_t *raw, wchar_t *version, size_t size);
+bool LIBNXSRV_EXPORTABLE NormalizeIntDotFirmwareVersion(const wchar_t *raw, wchar_t *version, size_t size);
+bool LIBNXSRV_EXPORTABLE NormalizeJunosFirmwareVersion(const wchar_t *raw, wchar_t *version, size_t size, bool *evolved);
+bool LIBNXSRV_EXPORTABLE NormalizeRouterOSFirmwareVersion(const wchar_t *raw, wchar_t *version, size_t size);
+
+/**
  * Variables
  */
 extern LIBNXSRV_EXPORTABLE VolatileCounter64 g_flags;
