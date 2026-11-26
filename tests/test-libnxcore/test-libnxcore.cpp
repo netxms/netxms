@@ -40,6 +40,52 @@ void TestSplitCommandLine();
 void TestOpenSshKeyParser();
 
 /**
+ * Check that access change stamp never moves backwards when notifications for overlapping subtrees interleave
+ */
+static void TestAccessChangeStamp()
+{
+   StartTest(L"Access change stamp ordering");
+   std::atomic<uint64_t> stamp(0);
+   AtomicStoreMax(stamp, 2);
+   AssertEquals(stamp.load(), static_cast<uint64_t>(2));
+   AtomicStoreMax(stamp, 1);
+   AssertEquals(stamp.load(), static_cast<uint64_t>(2));
+   AtomicStoreMax(stamp, 3);
+   AssertEquals(stamp.load(), static_cast<uint64_t>(3));
+   EndTest();
+}
+
+/**
+ * Check publication of a completed parent walk across both kinds of invalidation.
+ */
+static void TestInheritedRightsCache()
+{
+   StartTest(L"Inherited rights cache version");
+   AccessList acl;
+   AccessList::CacheVersion first, current;
+   uint64_t rights;
+   const uint32_t userId = 42;
+   AssertFalse(acl.getUserRights(userId, &rights, &first));
+   acl.cacheUserRights(userId, OBJECT_ACCESS_READ, first);
+   AssertTrue(acl.getCachedUserRights(userId, first, &rights));
+   AssertEquals(rights, static_cast<uint64_t>(OBJECT_ACCESS_READ));
+
+   acl.clearCache();
+   AssertFalse(acl.getUserRights(userId, &rights, &current));
+   AssertFalse(acl.getCachedUserRights(userId, current, &rights));
+   acl.cacheUserRights(userId, 0, current);
+   acl.cacheUserRights(userId, OBJECT_ACCESS_READ, first);
+
+   AccessList::CacheVersion oldGeneration = current;
+   oldGeneration.generation--;
+   acl.cacheUserRights(userId, OBJECT_ACCESS_READ, oldGeneration);
+   AssertFalse(acl.getCachedUserRights(userId, oldGeneration, &rights));
+   AssertTrue(acl.getCachedUserRights(userId, current, &rights));
+   AssertEquals(rights, static_cast<uint64_t>(0));
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -55,6 +101,8 @@ int main(int argc, char *argv[])
    TestAIMemoryPromptBlock();
    TestAnomalyDetection();
    TestObjectIndex();
+   TestInheritedRightsCache();
+   TestAccessChangeStamp();
    TestPhysicalPlacement();
    TestSplitCommandLine();
    TestOpenSshKeyParser();

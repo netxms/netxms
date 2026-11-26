@@ -111,6 +111,7 @@ public class SessionNotification
    public static final int EPP_RULES_CHANGED = 1068;   // subcode: chain ID whose rules changed
    public static final int EPP_CHAIN_UPDATED = 1069;   // subcode: ID of created or modified chain
    public static final int EPP_CHAIN_DELETED = 1070;   // subcode: ID of deleted chain
+   public static final int OBJECT_RIGHTS_CHANGED = 1071;   // subcode: server rights generation
 
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;

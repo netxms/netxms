@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <nms_users.h>
 #include <nxai.h>
+#include <atomic>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -786,8 +787,9 @@ json_t *GroupMembershipInfoToJson(uint32_t userId)
 /**
  * Update group membership for user
  */
-void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups)
+bool UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups)
 {
+   bool changed = false;
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -805,9 +807,13 @@ void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups)
          }
          Group *group = static_cast<Group*>(object);
          if (found ? group->addUser(userId) : group->deleteUser(userId))
+         {
+            changed = true;
             SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);
+         }
 		}
    }
+   return changed;
 }
 
 /**
@@ -865,21 +871,35 @@ String NXCORE_EXPORTABLE GetUserFullName(uint32_t id)
    return result;
 }
 
+static std::atomic<uint64_t> s_objectRightsGeneration{1};
+
 /**
- * Update system-wide access rights in given session
+ * Current server-wide generation for object access rights.
  */
-static void UpdateGlobalAccessRightsCallback(ClientSession *session)
+uint64_t GetObjectRightsGeneration()
 {
-   session->updateSystemAccessRights();
+   return s_objectRightsGeneration.load();
 }
 
 /**
- * Update system-wide access rights in all user sessions
+ * Refresh system access rights of connected sessions outside the user database lock. If group membership changed,
+ * also invalidate inherited object rights immediately by advancing rights generation, and notify sessions about it.
  */
-void UpdateGlobalAccessRights()
+void ScheduleAccessRightsUpdate(bool membershipChanged)
 {
-   ClearAllObjectsInheritedAccessCache();
-   EnumerateClientSessions(UpdateGlobalAccessRightsCallback);
+   uint64_t generation = membershipChanged ? ++s_objectRightsGeneration : 0;
+   ThreadPoolExecuteSerialized(g_mainThreadPool, L"UPDATE-ACCESS-RIGHTS", [generation]()
+   {
+      if (generation != 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Notifying sessions of object rights generation " UINT64_FMT, generation);
+         NXCPMessage msg(CMD_NOTIFY, 0);
+         msg.setField(VID_NOTIFICATION_CODE, static_cast<uint32_t>(NX_NOTIFY_OBJECT_RIGHTS_CHANGED));
+         msg.setField(VID_NOTIFICATION_DATA, generation);
+         NotifyClientSessions(msg);
+      }
+      EnumerateClientSessions([](ClientSession *session) { session->updateSystemAccessRights(); });
+   });
 }
 
 /**
@@ -908,7 +928,7 @@ static void DeleteUserReferencesWrapper(void *uid)
  * @param alreadyLocked true if user database lock already acquired
  * @return RCC ready to be sent to client
  */
-static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked)
+static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked, bool& membershipChanged)
 {
    if (!(id & GROUP_FLAG))
       RevokeAuthenticationTokensForUser(id);
@@ -930,6 +950,7 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != nullptr)
    {
+      membershipChanged |= object->isGroup() && !object->isDeleted();
       object->setDeleted();
       if (!(id & GROUP_FLAG))
       {
@@ -939,6 +960,7 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
             UserDatabaseObject *group = it.next();
             if ((group->getId() & GROUP_FLAG) && static_cast<Group*>(group)->deleteUser(id))
             {
+               membershipChanged = true;
                SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);
             }
          }
@@ -948,13 +970,7 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
    if (!alreadyLocked)
       s_userDatabaseLock.unlock();
 
-   // Update system access rights in all connected sessions
-   // Use separate thread to avoid deadlocks
-   if (id & GROUP_FLAG)
-   {
-      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRights);
-   }
-   else
+   if (!(id & GROUP_FLAG))
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       DeleteAIMemoryForScope(hdb, AIMemoryScope::USER, id);
@@ -973,7 +989,11 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
  */
 uint32_t NXCORE_EXPORTABLE DeleteUserDatabaseObject(uint32_t id)
 {
-   return DeleteUserDatabaseObjectInternal(id, false);
+   bool membershipChanged = false;
+   uint32_t rcc = DeleteUserDatabaseObjectInternal(id, false, membershipChanged);
+   if (membershipChanged)
+      ScheduleAccessRightsUpdate(true);
+   return rcc;
 }
 
 /**
@@ -1017,7 +1037,8 @@ uint32_t NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, uint32
 uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json_t **oldData, json_t **newData)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
-   bool updateAccessRights = false;
+   bool systemRightsChanged = false;
+   bool membershipChanged = false;
 
    uint32_t id = msg.getFieldAsUInt32(VID_USER_ID);
 
@@ -1045,15 +1066,14 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
       if (rcc != RCC_INVALID_OBJECT_NAME)
       {
          json_t *prevData = object->toJson();
-         bool wasDisabled = object->isDisabled();
-         rcc = object->modifyFromMessage(msg);
+         uint64_t oldSystemRights = object->getSystemRights();
+         rcc = object->modifyFromMessage(msg, &membershipChanged);
          if (rcc == RCC_SUCCESS)
          {
             *oldData = prevData;
             *newData = object->toJson();
             SendUserDBUpdate(USER_DB_MODIFY, id, object);
-            updateAccessRights = ((fields & (USER_MODIFY_ACCESS_RIGHTS | USER_MODIFY_GROUP_MEMBERSHIP | USER_MODIFY_MEMBERS)) != 0) ||
-                                 (object->isGroup() && (wasDisabled != object->isDisabled()));
+            systemRightsChanged = oldSystemRights != object->getSystemRights();
          }
          else
          {
@@ -1085,8 +1105,8 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
    s_userDatabaseLock.unlock();
 
    // Use separate thread to avoid deadlocks
-   if (updateAccessRights)
-      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRights);
+   if (membershipChanged || systemRightsChanged)
+      ScheduleAccessRightsUpdate(membershipChanged);
 
    return rcc;
 }
@@ -1097,7 +1117,8 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
 uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObjectFromJson(uint32_t id, const json_t *json, json_t **oldData, json_t **newData)
 {
    uint32_t rcc = RCC_INVALID_USER_ID;
-   bool updateAccessRights = false;
+   bool systemRightsChanged = false;
+   bool membershipChanged = false;
 
    s_userDatabaseLock.writeLock();
 
@@ -1126,17 +1147,14 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObjectFromJson(uint32_t id, const j
       if (rcc != RCC_INVALID_OBJECT_NAME)
       {
          json_t *prevData = object->toJson();
-         bool wasDisabled = object->isDisabled();
-         rcc = object->modifyFromJson(json);
+         uint64_t oldSystemRights = object->getSystemRights();
+         rcc = object->modifyFromJson(json, &membershipChanged);
          if (rcc == RCC_SUCCESS)
          {
             *oldData = prevData;
             *newData = object->toJson();
             SendUserDBUpdate(USER_DB_MODIFY, id, object);
-            updateAccessRights = (json_object_get(const_cast<json_t*>(json), "systemRights") != nullptr) ||
-                                 (json_object_get(const_cast<json_t*>(json), "groupMembership") != nullptr) ||
-                                 (json_object_get(const_cast<json_t*>(json), "members") != nullptr) ||
-                                 (object->isGroup() && (wasDisabled != object->isDisabled()));
+            systemRightsChanged = oldSystemRights != object->getSystemRights();
          }
          else
          {
@@ -1168,8 +1186,8 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObjectFromJson(uint32_t id, const j
    s_userDatabaseLock.unlock();
 
    // Use separate thread to avoid deadlocks
-   if (updateAccessRights)
-      ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRights);
+   if (membershipChanged || systemRightsChanged)
+      ScheduleAccessRightsUpdate(membershipChanged);
 
    return rcc;
 }
@@ -1365,8 +1383,9 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
  * Goes through all existing LDAP entries and check that in newly gotten list they also exist.
  * If LDAP entries does not exists in new list - it will be disabled or removed depending on action parameter.
  */
-void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser)
+bool RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser)
 {
+   bool membershipChanged = false;
    s_userDatabaseLock.writeLock();
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
@@ -1382,11 +1401,12 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringO
             if (m_action == USER_DELETE)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was removed from user database"), isUser ? _T("user") : _T("group"), object->getDN());
-               DeleteUserDatabaseObjectInternal(object->getId(), true);
+               DeleteUserDatabaseObjectInternal(object->getId(), true, membershipChanged);
             }
             else if ((m_action == USER_DISABLE) && (isUser || !object->isDisabled()))
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was disabled"), isUser ? _T("user") : _T("group"), object->getDN());
+               membershipChanged |= object->isGroup();
                object->disable();
                object->setDescription(_T("LDAP entry was deleted."));
             }
@@ -1394,13 +1414,14 @@ void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringO
 		}
    }
    s_userDatabaseLock.unlock();
+   return membershipChanged;
 }
 
 /**
  * Synchronize new user/group list with old user/group list of given group.
  * Note: none LDAP users and groups will not be changed.
  */
-void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
+bool SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
 {
    s_userDatabaseLock.writeLock();
 
@@ -1415,14 +1436,14 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Ignore LDAP object %s"), dn);
       s_userDatabaseLock.unlock();
-      return;
+      return false;
    }
 
    if (object == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers(): Unable to find LDAP object %s"), dn);
       s_userDatabaseLock.unlock();
-      return;
+      return false;
    }
 
    Group *group = static_cast<Group*>(object);
@@ -1443,10 +1464,9 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
       if ((user == nullptr) || !user->isLDAPUser())
          continue;
 
-      if (!newMembers.contains(user->getDN()))
+      if (!newMembers.contains(user->getDN()) && group->deleteUser(user->getId()))
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: Remove LDAP user %s from LDAP group %s"), user->getDN(), group->getDN());
-         group->deleteUser(user->getId());   // oldMembers is a reference to actual member list, Group::deleteUser will update it
          changed = true;
          i--;
       }
@@ -1464,10 +1484,9 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
       if (user == nullptr)
          continue;
 
-      if (!group->isMember(user->getId()))
+      if (group->addUser(user->getId()))
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: LDAP user %s added to LDAP group %s"), user->getDN(), group->getDN());
-         group->addUser(user->getId());
          changed = true;
       }
    }
@@ -1477,6 +1496,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
       SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);
 
    s_userDatabaseLock.unlock();
+   return changed;
 }
 
 /**
@@ -1525,18 +1545,18 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
       Group *group = static_cast<Group*>(object);
       if (!group->isDeleted())
       {
-         group->removeSyncException();
+         bool changed = group->removeSyncException();
          if (GroupNameIsUnique(ldapObject->m_loginName, group))
          {
-            group->setName(ldapObject->m_loginName);
+            changed |= group->setName(ldapObject->m_loginName);
          }
          else
          {
             TCHAR groupName[MAX_USER_NAME];
             GenerateUniqueName(ldapObject->m_loginName, group->getId(), groupName);
-            if (_tcscmp(group->getName(), groupName))
+            if (group->setName(groupName))
             {
-               group->setName(groupName);
+               changed = true;
                _sntprintf(description, MAX_USER_DESCR, _T("Group with name \"%s\" already exists. Unique group name have been generated: \"%s\""), ldapObject->m_loginName, groupName);
                EventBuilder(EVENT_LDAP_SYNC_ERROR, GetServerEventSourceId())
                   .param(_T("userId"), group->getId(), EventBuilder::OBJECT_ID_FORMAT)
@@ -1549,15 +1569,16 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
             }
          }
 
-         group->setDescription(ldapObject->m_description);
+         changed |= group->setDescription(ldapObject->m_description);
          if (_tcscmp(group->getDN(), dn))
          {
             s_ldapNames.remove(group->getDN());
             group->setDN(dn);
+            changed = true;
             s_ldapNames.set(dn, group);
          }
 
-         if (group->isModified())
+         if (changed)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPGroup(): Group updated: ID: %s DN: %s, login name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, ldapObject->m_loginName, CHECK_NULL(ldapObject->m_description));
             SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);

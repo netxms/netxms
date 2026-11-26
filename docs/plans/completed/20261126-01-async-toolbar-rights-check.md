@@ -74,6 +74,8 @@ Layers: server (user DB, LDAP sync).
 
 Verified against a community server built from the patched sources, with a disposable SQLite database. All three `UserTest` cases passed. A member stayed logged in through manual group disable, re-enable, and a subsequent LDAP sync that disabled the group. The session received the expected system rights after each transition.
 
+➕ On master, plan 02 task 1 supersedes this task's refresh mechanism. `UpdateGlobalAccessRights` became `ScheduleAccessRightsUpdate(membershipChanged)`, and LDAP sync calls it only when the sync actually changed membership, not at the end of every sync. The description above still matches what a standalone cherry-pick of this task to stable-7.0 does.
+
 ## Post-Completion
 
 - cherry-pick both commits to stable-7.0 and build a console for the customer that reported #4068

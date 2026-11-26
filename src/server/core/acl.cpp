@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
@@ -70,7 +70,7 @@ void AccessList::updateFromMessage(const NXCPMessage& msg)
    {
       m_elements.clear();
    }
-   m_cache.clear();
+   clearCacheLocked();
 }
 
 /**
@@ -82,7 +82,7 @@ void AccessList::updateFromJson(json_t *json)
    LockGuard lockGuard(m_mutex);
 
    m_elements.clear();
-   m_cache.clear();
+   clearCacheLocked();
 
    if (json_is_array(json))
    {
@@ -100,11 +100,8 @@ void AccessList::updateFromJson(json_t *json)
 /**
  * Add element to list
  */
-bool AccessList::addElement(uint32_t userId, uint64_t accessRights, bool cached)
+static bool SetRights(StructArray<ACL_ELEMENT>& list, uint32_t userId, uint64_t accessRights)
 {
-   StructArray<ACL_ELEMENT>& list = cached ? m_cache : m_elements;
-
-   LockGuard lockGuard(m_mutex);
 
    for(int i = 0; i < list.size(); i++)
    {
@@ -125,6 +122,18 @@ bool AccessList::addElement(uint32_t userId, uint64_t accessRights, bool cached)
 }
 
 /**
+ * Add or update a direct assignment
+ */
+bool AccessList::addElement(uint32_t userId, uint64_t accessRights)
+{
+   LockGuard lockGuard(m_mutex);
+   if (!SetRights(m_elements, userId, accessRights))
+      return false;
+   clearCacheLocked();
+   return true;
+}
+
+/**
  * Delete element from list
  */
 bool AccessList::deleteElement(uint32_t userId)
@@ -135,7 +144,7 @@ bool AccessList::deleteElement(uint32_t userId)
       if (m_elements.get(i)->userId == userId)
       {
          m_elements.remove(i);
-         m_cache.clear();
+         clearCacheLocked();
          deleted = true;
          break;
       }
@@ -147,22 +156,24 @@ bool AccessList::deleteElement(uint32_t userId)
  * Returns true on success and stores access rights to specific location
  * If user doesn't have explicit rights or via group, returns false
  */
-bool AccessList::getUserRights(uint32_t userId, uint64_t *accessRights) const
+bool AccessList::getUserRights(uint32_t userId, uint64_t *accessRights, CacheVersion *version) const
 {
-   // We can safely read size without lock here. It is guaranteed (on architectures we support)
-   // that 32 bit integer read will be atomic. So the only potential problem would be
-   // when size is already updated, but data is not. But in that case mutex lock will cause
-   // calling thread to wait for update completion.
-   if (m_elements.isEmpty())
+   // Version and element copy are taken together; membership checks below run without the lock
+   Buffer<ACL_ELEMENT, 128> elements;
+   int size;
+   {
+      LockGuard lockGuard(m_mutex);
+      version->revision = m_revision;
+      version->generation = GetObjectRightsGeneration();
+      size = m_elements.size();
+      if (size > 0)
+         elements.set(m_elements.getBuffer(), size);
+   }
+   if (size == 0)
    {
       *accessRights = 0;
       return false;
    }
-
-   m_mutex.lock();
-   int size = m_elements.size();
-   Buffer<ACL_ELEMENT, 128> elements(m_elements.getBuffer(), m_elements.size());
-   m_mutex.unlock();
 
    bool found = false;
 
@@ -196,16 +207,11 @@ bool AccessList::getUserRights(uint32_t userId, uint64_t *accessRights) const
  * Retrieve cached access rights for specific user object
  * Returns true on success and stores access rights to specific location
  */
-bool AccessList::getCachedUserRights(uint32_t userId, uint64_t *accessRights) const
+bool AccessList::getCachedUserRights(uint32_t userId, const CacheVersion& version, uint64_t *accessRights) const
 {
-   // We can safely read size without lock here. It is guaranteed (on architectures we support)
-   // that 32 bit integer read will be atomic. So the only potential problem would be
-   // when size is already updated, but data is not. But in that case mutex lock will cause
-   // calling thread to wait for update completion.
-   if (m_cache.isEmpty())
-      return false;
-
    LockGuard lockGuard(m_mutex);
+   if ((m_cacheGeneration != version.generation) || (m_revision != version.revision))
+      return false;
 
    for(int i = 0; i < m_cache.size(); i++)
    {
@@ -218,6 +224,23 @@ bool AccessList::getCachedUserRights(uint32_t userId, uint64_t *accessRights) co
    }
 
    return false;
+}
+
+/**
+ * Publish inherited rights only if neither membership nor this ACL was invalidated during the parent walk.
+ */
+void AccessList::cacheUserRights(uint32_t userId, uint64_t rights, const CacheVersion& version) const
+{
+   LockGuard lockGuard(m_mutex);
+   if ((m_revision != version.revision) || (GetObjectRightsGeneration() != version.generation))
+      return;
+
+   if (m_cacheGeneration != version.generation)
+   {
+      m_cache.clear();
+      m_cacheGeneration = version.generation;
+   }
+   SetRights(m_cache, userId, rights);
 }
 
 /**

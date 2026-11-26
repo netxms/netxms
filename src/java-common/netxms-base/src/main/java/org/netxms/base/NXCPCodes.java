@@ -1677,6 +1677,7 @@ public class NXCPCodes
    public static final long VID_AGGREGATE_INTERFACE = 1081;
    public static final long VID_ANOMALY_SETTINGS = 1082;
    public static final long VID_NO_CACHE = 1083;
+   public static final long VID_RIGHTS_GENERATION = 1084;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

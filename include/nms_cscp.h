@@ -1874,6 +1874,7 @@ __PACK_END__
 #define VID_AGGREGATE_INTERFACE     ((uint32_t)1081)
 #define VID_ANOMALY_SETTINGS        ((uint32_t)1082)
 #define VID_NO_CACHE                ((uint32_t)1083)
+#define VID_RIGHTS_GENERATION       ((uint32_t)1084)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

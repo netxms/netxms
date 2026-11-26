@@ -23,6 +23,7 @@
 #ifndef _nms_objects_h_
 #define _nms_objects_h_
 
+#include <atomic>
 #include <nms_agent.h>
 #include <nms_topo.h>
 #include <geolocation.h>
@@ -1296,33 +1297,48 @@ class NXCORE_EXPORTABLE AccessList
 private:
    Mutex m_mutex;
    StructArray<ACL_ELEMENT> m_elements;  // Assigned to object
-   StructArray<ACL_ELEMENT> m_cache;     // Cached inherited access rights
+   mutable StructArray<ACL_ELEMENT> m_cache;  // Entries share a generation and are cleared on every local revision
+   mutable uint64_t m_cacheGeneration = 0;
+   uint64_t m_revision = 0;
+
+   void clearCacheLocked()
+   {
+      m_revision++;
+      m_cache.clear();
+   }
 
 public:
+   struct CacheVersion
+   {
+      uint64_t generation;
+      uint64_t revision;
+   };
+
    AccessList() : m_mutex(MutexType::FAST) {}
 
    void updateFromMessage(const NXCPMessage& msg);
    void updateFromJson(json_t *json);
-   bool addElement(uint32_t userId, uint64_t accessRights, bool cache);
+   bool addElement(uint32_t userId, uint64_t accessRights);
    bool deleteElement(uint32_t userId);
 
    void deleteAll()
    {
       m_mutex.lock();
       m_elements.clear();
-      m_cache.clear();
+      clearCacheLocked();
       m_mutex.unlock();
    }
 
    void clearCache()
    {
       m_mutex.lock();
-      m_cache.clear();
+      clearCacheLocked();
       m_mutex.unlock();
    }
 
-   bool getUserRights(uint32_t userId, uint64_t *accessRights) const;
-   bool getCachedUserRights(uint32_t userId, uint64_t *accessRights) const;
+   bool getUserRights(uint32_t userId, uint64_t *accessRights, CacheVersion *version) const;
+   bool getCachedUserRights(uint32_t userId, const CacheVersion& version, uint64_t *accessRights) const;
+   void cacheUserRights(uint32_t userId, uint64_t rights, const CacheVersion& version) const;
 
    void enumerateElements(void(*handler)(uint32_t, uint64_t, void*), void *context) const;
    template<typename C> void enumerateElements(void(*handler)(uint32_t, uint64_t, C*), C *context) const
@@ -1522,6 +1538,7 @@ protected:
 
    AccessList m_accessList;
    bool m_inheritAccessRights;
+   std::atomic<uint64_t> m_accessChangeSequence;
 
    IntegerArray<uint32_t> *m_trustedObjects;
 
@@ -1617,6 +1634,7 @@ public:
    uint32_t getFlags() const { return m_flags; }
    int getPropagatedStatus();
    time_t getTimeStamp() const { return m_timestamp; }
+   uint64_t getAccessChangeSequence() const { return m_accessChangeSequence.load(); }
    SharedString getAlias() const { return GetAttributeWithLock(m_alias, m_mutexProperties); }
    SharedString getComments() const { return GetAttributeWithLock(m_comments, m_mutexProperties); }
    SharedString getCommentsSource() const { return GetAttributeWithLock(m_commentsSource, m_mutexProperties); }
@@ -1716,7 +1734,14 @@ public:
    bool isMaintenanceScheduled() const { return m_maintenanceScheduled; }
    void setMaintenanceScheduled(bool scheduled);
 
-   void fillMessage(NXCPMessage *msg, uint32_t userId, bool full = true);
+   struct AccessSnapshot
+   {
+      uint64_t rights;
+      uint64_t generation;
+      bool consistent;  // true if rights generation stayed unchanged during lookup; membership edit can finish before its generation advances
+   };
+   AccessSnapshot getAccessSnapshot(uint32_t userId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t userId, bool full, const AccessSnapshot& access);
    uint32_t modifyFromMessage(const NXCPMessage& msg, ClientSession *session);
    uint32_t modifyFromJSON(json_t *json, GenericClientSession *session);
 
@@ -1737,7 +1762,6 @@ public:
    void setUserAccess(uint32_t userId, uint64_t accessRights);
    void dropUserAccess(uint32_t userId);
    void clearInheritedAccessCache();
-   void clearOwnInheritedAccessCache() { m_accessList.clearCache(); }
    void notifyClientsOnAccessChange();
 
    void addChildNodesToList(SharedObjectArray<Node> *nodeList, uint32_t userId);
@@ -7241,7 +7265,17 @@ void DumpObjectParentTree(ServerConsole *console, const TCHAR *objectSpec);
 bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass);
 
 void DeleteUserFromAllObjects(uint32_t userId);
-void ClearAllObjectsInheritedAccessCache();
+uint64_t GetAccessChangeSequence();
+
+/**
+ * Raise atomic value to given one; never lowers it
+ */
+static inline void AtomicStoreMax(std::atomic<uint64_t>& target, uint64_t value)
+{
+   uint64_t current = target.load();
+   while((current < value) && !target.compare_exchange_weak(current, value))
+      ;
+}
 
 bool IsValidParentClass(int childClass, int parentClass);
 uint32_t NXCORE_EXPORTABLE ValidateObjectBinding(const NetObj& child, const NetObj& parent);

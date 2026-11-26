@@ -250,6 +250,9 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    _tcscpy(m_language, _T("en"));
    m_tcpProxyChannelId = 0;
    m_objectNotificationScheduled = false;
+   m_objectSyncAccessSequence = 0;
+   m_objectSyncHandoffPending = false;
+   m_activeObjectSyncs = 0;
    m_objectNotificationBatchSize = 500;
    m_objectNotificationDelay = 200;
    m_lastScreenshotObject = 0;
@@ -3448,11 +3451,9 @@ void ClientSession::deleteEventTemplate(const NXCPMessage& request)
  * Mask credential fields in object message for users that may not see them.
  * Node credentials are visible only to users holding MODIFY or READ_CREDENTIALS access.
  */
-static void MaskNodeCredentials(NXCPMessage *msg, const NetObj& object, uint32_t userId)
+static void MaskNodeCredentials(NXCPMessage *msg, const NetObj& object, uint64_t rights)
 {
-   if ((object.getObjectClass() != OBJECT_NODE) ||
-       object.checkAccessRights(userId, OBJECT_ACCESS_MODIFY) ||
-       object.checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS))
+   if ((object.getObjectClass() != OBJECT_NODE) || (rights & (OBJECT_ACCESS_MODIFY | OBJECT_ACCESS_READ_CREDENTIALS)))
       return;
 
    static const wchar_t *mask = L"********";
@@ -3494,6 +3495,16 @@ void ClientSession::getObjects(const NXCPMessage& request)
    // Prepare message
    response.setCode(CMD_OBJECT);
 
+   // Overlapping synchronizations share one handoff based on earliest outstanding start
+   m_pendingObjectNotificationsLock.lock();
+   m_activeObjectSyncs++;
+   if (!m_objectSyncHandoffPending)
+   {
+      m_objectSyncAccessSequence = GetAccessChangeSequence();
+      m_objectSyncHandoffPending = true;
+   }
+   m_pendingObjectNotificationsLock.unlock();
+
    // Send objects, one per message
    time_t baseTimeStamp = request.getFieldAsTime(VID_TIMESTAMP);
 	unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(
@@ -3512,8 +3523,14 @@ void ClientSession::getObjects(const NXCPMessage& request)
          continue;
 	   }
 
-      object->fillMessage(&response, m_userId, (object->getObjectClass() != OBJECT_ZONE) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ));
-      MaskNodeCredentials(&response, *object, m_userId);
+      // Access may have been revoked after filtering
+      NetObj::AccessSnapshot access = object->getAccessSnapshot(m_userId);
+      bool readable = (access.rights & OBJECT_ACCESS_READ) != 0;
+      if (!readable && (object->getObjectClass() != OBJECT_ZONE))
+         continue;
+
+      object->fillMessage(&response, m_userId, readable, access);
+      MaskNodeCredentials(&response, *object, access.rights);
       sendMessage(response);
       response.deleteAllFields();
 	}
@@ -3523,6 +3540,10 @@ void ClientSession::getObjects(const NXCPMessage& request)
    sendMessage(&response);
 
    InterlockedOr(&m_flags, CSF_OBJECT_SYNC_FINISHED);
+   m_pendingObjectNotificationsLock.lock();
+   m_activeObjectSyncs--;
+   m_pendingObjectNotificationsLock.unlock();
+   completeObjectSyncHandoff();
 }
 
 /**
@@ -3571,16 +3592,17 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
 		shared_ptr<NetObj> object = FindObjectById(objects.get(i));
       if ((object != nullptr) && (object->getTimeStamp() >= timestamp) && !object->isUnpublished())
       {
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         NetObj::AccessSnapshot access = object->getAccessSnapshot(m_userId);
+         if (access.rights & OBJECT_ACCESS_READ)
          {
-            object->fillMessage(&response, m_userId);
-            MaskNodeCredentials(&response, *object, m_userId);
+            object->fillMessage(&response, m_userId, true, access);
+            MaskNodeCredentials(&response, *object, access.rights);
             sendMessage(response);
             response.deleteAllFields();
          }
-         else if ((delegateObject != nullptr) && delegateObject->getAsDelegate()->containsObject(object) && object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ))
+         else if ((delegateObject != nullptr) && delegateObject->getAsDelegate()->containsObject(object) && (access.rights & OBJECT_ACCESS_DELEGATED_READ))
          {
-            object->fillMessage(&response, m_userId, false);
+            object->fillMessage(&response, m_userId, false, access);
             sendMessage(response);
             response.deleteAllFields();
          }
@@ -4115,15 +4137,18 @@ void ClientSession::sendObjectUpdates()
    {
       response.deleteAllFields();
       shared_ptr<NetObj> object = FindObjectById(idList[i]);
+      NetObj::AccessSnapshot access{};
+      if (object != nullptr)
+         access = object->getAccessSnapshot(m_userId);
       // Zone objects are always visible (essential info sent even without read access).
       // Any other object the session can no longer read (e.g. after an ACL change) is
       // reported as removed so the client drops it from its cache.
       if ((object != nullptr) && !object->isDeleted() &&
-          (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE)))
+          ((access.rights & OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE)))
       {
          // Zone objects might be scheduled for update without read access - in that case send essential info only
-         object->fillMessage(&response, m_userId, (object->getObjectClass() != OBJECT_ZONE) || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ));
-         MaskNodeCredentials(&response, *object, m_userId);
+         object->fillMessage(&response, m_userId, (access.rights & OBJECT_ACCESS_READ) != 0, access);
+         MaskNodeCredentials(&response, *object, access.rights);
       }
       else
       {
@@ -4184,6 +4209,52 @@ void ClientSession::sendObjectUpdates()
 }
 
 /**
+ * Schedule sending of pending object updates. Pending notifications lock must be held by caller.
+ */
+void ClientSession::scheduleObjectUpdatesLocked()
+{
+   if (!m_objectNotificationScheduled)
+   {
+      m_objectNotificationScheduled = true;
+      incRefCount();
+      ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
+   }
+}
+
+/**
+ * After full object synchronization has finished and client has subscribed to object changes, queue objects
+ * with access changes made since synchronization start. Rights sent with synchronized copies of these objects may be
+ * outdated, and changes made before subscription or during synchronization were not delivered or could be overtaken.
+ */
+void ClientSession::completeObjectSyncHandoff()
+{
+   m_pendingObjectNotificationsLock.lock();
+   bool ready = m_objectSyncHandoffPending && (m_activeObjectSyncs == 0) && isSubscribedTo(NXC_CHANNEL_OBJECTS);
+   if (ready)
+      m_objectSyncHandoffPending = false;
+   uint64_t sequence = m_objectSyncAccessSequence;
+   m_pendingObjectNotificationsLock.unlock();
+   if (!ready || (GetAccessChangeSequence() == sequence))
+      return;
+
+   SharedObjectArray<NetObj> objects(0, 64);
+   g_idxObjectById.getObjects(&objects,
+      [sequence] (NetObj *object) -> bool
+      {
+         return object->getAccessChangeSequence() > sequence;
+      });
+   if (objects.isEmpty())
+      return;
+
+   debugPrintf(5, L"%d object(s) with access changes during object synchronization queued for update", objects.size());
+   m_pendingObjectNotificationsLock.lock();
+   for(int i = 0; i < objects.size(); i++)
+      m_pendingObjectNotifications.put(objects.get(i)->getId());
+   scheduleObjectUpdatesLocked();
+   m_pendingObjectNotificationsLock.unlock();
+}
+
+/**
  * Handler for object changes
  */
 void ClientSession::onObjectChange(const shared_ptr<NetObj>& object, bool accessChange)
@@ -4197,12 +4268,7 @@ void ClientSession::onObjectChange(const shared_ptr<NetObj>& object, bool access
    {
       m_pendingObjectNotificationsLock.lock();
       m_pendingObjectNotifications.put(object->getId());
-      if (!m_objectNotificationScheduled)
-      {
-         m_objectNotificationScheduled = true;
-         incRefCount();
-         ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
-      }
+      scheduleObjectUpdatesLocked();
       m_pendingObjectNotificationsLock.unlock();
    }
 }
@@ -10190,8 +10256,9 @@ void ClientSession::changeSubscription(const NXCPMessage& request)
    Trim(channel);
    if (channel[0] != 0)
    {
+      bool subscribe = request.getFieldAsBoolean(VID_OPERATION);
       m_subscriptionLock.lock();
-      if (request.getFieldAsBoolean(VID_OPERATION))
+      if (subscribe)
       {
          int count = m_subscriptions.add(channel);
          debugPrintf(5, _T("Subscription added: %s (%d)"), channel, count);
@@ -10202,6 +10269,8 @@ void ClientSession::changeSubscription(const NXCPMessage& request)
          debugPrintf(5, _T("Subscription removed: %s (%d)"), channel, count);
       }
       m_subscriptionLock.unlock();
+      if (subscribe && !wcscmp(channel, NXC_CHANNEL_OBJECTS))
+         completeObjectSyncHandoff();
       response.setField(VID_RCC, RCC_SUCCESS);
    }
    else

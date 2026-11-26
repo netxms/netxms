@@ -490,9 +490,10 @@ void LDAPConnection::syncUsers()
    {
       // compare new LDAP list with old users
       nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::syncUsers(): read completed, updating user database"));
-      compareUserLists();
-      compareGroupList();
-      UpdateGlobalAccessRights();
+      bool membershipChanged = compareUserLists();
+      membershipChanged |= compareGroupList();
+      if (membershipChanged)
+         ScheduleAccessRightsUpdate(true);
    }
    else
    {
@@ -963,7 +964,7 @@ void LDAPConnection::updateMembers(StringSet *memberList, const char *firstAttr,
 /**
  * Updates user list according to newly recievd user list
  */
-void LDAPConnection::compareUserLists()
+bool LDAPConnection::compareUserLists()
 {
    m_userDnEntryList->forEach(
       [] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
@@ -971,13 +972,13 @@ void LDAPConnection::compareUserLists()
          UpdateLDAPUser(key, static_cast<const LDAP_Object*>(value));
          return _CONTINUE;
       });
-   RemoveDeletedLDAPEntries(m_userDnEntryList, m_userIdEntryList, m_action, true);
+   return RemoveDeletedLDAPEntries(m_userDnEntryList, m_userIdEntryList, m_action, true);
 }
 
 /**
  * Updates group list according to newly recievd user list
  */
-void LDAPConnection::compareGroupList()
+bool LDAPConnection::compareGroupList()
 {
    m_groupDnEntryList->forEach(
       [] (const wchar_t *key, const void *value) -> EnumerationCallbackResult
@@ -985,13 +986,14 @@ void LDAPConnection::compareGroupList()
          UpdateLDAPGroup(key, static_cast<const LDAP_Object*>(value));
          return _CONTINUE;
       });
-   RemoveDeletedLDAPEntries(m_groupDnEntryList, m_groupIdEntryList, m_action, false);
+   bool membershipChanged = RemoveDeletedLDAPEntries(m_groupDnEntryList, m_groupIdEntryList, m_action, false);
    m_groupDnEntryList->forEach(
-      [] (const wchar_t *key, const void *value) -> EnumerationCallbackResult
+      [&membershipChanged] (const wchar_t *key, const void *value) -> EnumerationCallbackResult
       {
-         SyncLDAPGroupMembers(key, static_cast<const LDAP_Object*>(value));
+         membershipChanged |= SyncLDAPGroupMembers(key, static_cast<const LDAP_Object*>(value));
          return _CONTINUE;
       });
+   return membershipChanged;
 }
 
 /**

@@ -709,6 +709,7 @@ enum SessionState
 #define NX_NOTIFY_EPP_RULES_CHANGED           68
 #define NX_NOTIFY_EPP_CHAIN_UPDATED           69
 #define NX_NOTIFY_EPP_CHAIN_DELETED           70
+#define NX_NOTIFY_OBJECT_RIGHTS_CHANGED       71
 
 /**
  * Request completion codes

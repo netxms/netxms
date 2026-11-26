@@ -54,6 +54,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectRightsVersion;
 import org.netxms.client.ObjectFilter;
 import org.netxms.client.ObjectUrl;
 import org.netxms.client.SessionNotification;
@@ -345,6 +346,16 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
       // Add session listener
       session.addListener((n) -> {
+         // Notifications may have been missed while disconnected
+         if ((n.getCode() == SessionNotification.OBJECT_RIGHTS_CHANGED) || (n.getCode() == SessionNotification.RECONNECT_COMPLETED))
+         {
+            getWindow().getShell().getDisplay().asyncExec(() -> {
+               AbstractObject context = (AbstractObject)getContext();
+               if ((context != null) && !objectToolBar.isDisposed())
+                  requestToolbarRights(context);
+            });
+            return;
+         }
          if (n.getCode() != SessionNotification.OBJECT_CHANGED)
             return;
          AbstractObject context = (AbstractObject)getContext();
@@ -815,6 +826,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    {
       final AbstractObject object = toolbarRightsWanted;
       final long sequence = ++toolbarRightsSequence;
+      final ObjectRightsVersion version = Registry.getSession().getObjectRightsVersion();
       toolbarRightsWanted = null;
       toolbarRightsJobRunning = true;
       Job job = new Job(i18n.tr("Reading effective access rights"), null, null, getWindow().getShell().getDisplay()) {
@@ -822,7 +834,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final long rights = object.getEffectiveRights();
-            runInUIThread(() -> onToolbarRightsReceived(object.getObjectId(), rights, sequence));
+            runInUIThread(() -> onToolbarRightsReceived(object, rights, sequence, version));
          }
 
          @Override
@@ -838,15 +850,26 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    /**
     * Handle effective rights retrieved for toolbar.
     *
-    * @param objectId object ID
+    * @param object object rights were retrieved for
     * @param rights effective rights
     * @param sequence request sequence number
+    * @param version object rights version at request time
     */
-   private void onToolbarRightsReceived(long objectId, long rights, long sequence)
+   private void onToolbarRightsReceived(AbstractObject object, long rights, long sequence, ObjectRightsVersion version)
    {
       toolbarRightsJobRunning = false;
       if (objectToolBar.isDisposed())
          return;
+
+      long objectId = object.getObjectId();
+      if ((objectId == toolbarObjectId) && (sequence > toolbarRightsAppliedSequence) && (version != Registry.getSession().getObjectRightsVersion()))
+      {
+         // Rights changed while request was running; newer pending request takes precedence over repeating this one
+         if (toolbarRightsWanted == null)
+            toolbarRightsWanted = object;
+         startToolbarRightsJob();
+         return;
+      }
 
       if ((objectId == toolbarObjectId) && (sequence > toolbarRightsAppliedSequence))
       {

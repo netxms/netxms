@@ -610,6 +610,9 @@ private:
 	SynchronizedSharedHashMap<uint32_t, RealTimeDciFeed> m_rtDciFeeds;
 	Mutex m_rtDciFeedStartLock;   // Makes feed ID and feed limit checks atomic with feed registration
 	HashSet<uint32_t> m_pendingObjectNotifications;
+   uint64_t m_objectSyncAccessSequence;
+   bool m_objectSyncHandoffPending;
+   int m_activeObjectSyncs;
    Mutex m_pendingObjectNotificationsLock;
    bool m_objectNotificationScheduled;
    uint32_t m_objectNotificationDelay;
@@ -1076,6 +1079,8 @@ private:
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
    void sendObjectUpdates();
+   void scheduleObjectUpdatesLocked();
+   void completeObjectSyncHandoff();
 
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
 

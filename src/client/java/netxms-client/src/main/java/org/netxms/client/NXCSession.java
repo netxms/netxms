@@ -60,6 +60,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -467,6 +468,7 @@ public class NXCSession
    private Map<Integer, Zone> zoneList = new HashMap<Integer, Zone>();
    private Map<Integer, ObjectCategory> objectCategories = new HashMap<Integer, ObjectCategory>();
    private volatile boolean objectsSynchronized = false;
+   private final AtomicReference<ObjectRightsVersion> objectRightsVersion = new AtomicReference<>(new ObjectRightsVersion(0));
    private volatile boolean objectSyncPending = false;
    private volatile long objectSyncRequestId = 0; // ID of CMD_GET_OBJECTS request in progress, 0 if none
    private volatile int objectSyncGeneration = 0; // incremented on each successful full object synchronization
@@ -1090,6 +1092,9 @@ public class NXCSession
                {
                   objectCategories.remove((int)data);
                }
+               break;
+            case SessionNotification.OBJECT_RIGHTS_CHANGED:
+               acceptObjectRightsGeneration(data);
                break;
          }
 
@@ -2709,6 +2714,9 @@ public class NXCSession
 
       authenticationMethod = authType;
       userName = login;
+
+      // Notifications could be missed while disconnected, and server's rights generation restarts with server
+      objectRightsVersion.set(new ObjectRightsVersion(0));
 
       NXCPMessage request = newMessage(NXCPCodes.CMD_LOGIN);
       request.setFieldInt16(NXCPCodes.VID_AUTH_TYPE, authType.getValue());
@@ -5820,6 +5828,37 @@ public class NXCSession
             else
                serverChannelSubscriptions.remove(channel);
          }
+      }
+   }
+
+   /**
+    * Get current version of object access rights. Rights cached together with different version are outdated.
+    *
+    * @return current version of object access rights
+    */
+   public ObjectRightsVersion getObjectRightsVersion()
+   {
+      return objectRightsVersion.get();
+   }
+
+   /**
+    * Accept rights generation reported by server. Newer generation replaces current version.
+    *
+    * @param generation server rights generation
+    * @return current version if given generation is current or newer, null if given generation is outdated
+    */
+   public ObjectRightsVersion acceptObjectRightsGeneration(long generation)
+   {
+      while(true)
+      {
+         ObjectRightsVersion current = objectRightsVersion.get();
+         if (generation < current.getGeneration())
+            return null;
+         if (generation == current.getGeneration())
+            return current;
+         ObjectRightsVersion next = new ObjectRightsVersion(generation);
+         if (objectRightsVersion.compareAndSet(current, next))
+            return next;
       }
    }
 

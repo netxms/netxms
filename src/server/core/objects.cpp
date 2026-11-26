@@ -1979,19 +1979,6 @@ void DeleteUserFromAllObjects(uint32_t userId)
 }
 
 /**
- * Clear inherited access rights cache on all objects
- */
-void ClearAllObjectsInheritedAccessCache()
-{
-   g_idxObjectById.forEach(
-      [] (NetObj *object) -> EnumerationCallbackResult
-      {
-         object->clearOwnInheritedAccessCache();
-         return _CONTINUE;
-      });
-}
-
-/**
  * Print object information
  */
 static void PrintObjectInfo(ServerConsole *console, uint32_t objectId, const TCHAR *prefix)

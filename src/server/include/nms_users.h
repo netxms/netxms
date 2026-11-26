@@ -156,8 +156,8 @@ private:
    void open();
    void close();
    uint32_t login(bool isSync);
-   void compareGroupList();
-   void compareUserLists();
+   bool compareGroupList();
+   bool compareUserLists();
    wchar_t *getAttrValue(LDAPMessage *entry, const char *attr, int index = 0);
    wchar_t *getIdAttrValue(LDAPMessage *entry, const char *attr);
    void prepareStringForInit(LDAP_CHAR *connectionLine);
@@ -256,8 +256,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
    virtual void fillMessage(NXCPMessage *msg);
-   virtual uint32_t modifyFromMessage(const NXCPMessage& msg);
-   virtual uint32_t modifyFromJson(const json_t *json);
+   virtual uint32_t modifyFromMessage(const NXCPMessage& msg, bool *membershipChanged);
+   virtual uint32_t modifyFromJson(const json_t *json, bool *membershipChanged);
 
    virtual json_t *toJson() const;
 
@@ -284,7 +284,7 @@ public:
    void enable();
    void disable();
    void setFlags(uint32_t flags) { m_flags = flags; }
-   void removeSyncException();
+   bool removeSyncException();
 
    const TCHAR *getAttribute(const TCHAR *name) const { return m_attributes.get(name); }
    uint32_t getAttributeAsUInt32(const TCHAR *name) const;
@@ -298,8 +298,8 @@ public:
       m_flags |= UF_MODIFIED;
    }
 
-   void setName(const TCHAR *name);
-   void setDescription(const TCHAR *description);
+   bool setName(const TCHAR *name);
+   bool setDescription(const TCHAR *description);
 
    void setDN(const TCHAR *dn);
    void setLdapId(const TCHAR *id);
@@ -390,8 +390,8 @@ public:
 	virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
 	virtual void fillMessage(NXCPMessage *msg) override;
-	virtual uint32_t modifyFromMessage(const NXCPMessage& msg) override;
-	virtual uint32_t modifyFromJson(const json_t *json) override;
+	virtual uint32_t modifyFromMessage(const NXCPMessage& msg, bool *membershipChanged) override;
+	virtual uint32_t modifyFromJson(const json_t *json, bool *membershipChanged) override;
 
    virtual json_t *toJson() const override;
 
@@ -514,7 +514,7 @@ class NXCORE_EXPORTABLE Group : public UserDatabaseObject
 protected:
    IntegerArray<uint32_t> m_members;
 
-   void setMembers(IntegerArray<uint32_t> *members);
+   bool setMembers(IntegerArray<uint32_t> *members);
 
 public:
    Group();
@@ -524,8 +524,8 @@ public:
    virtual ~Group();
 
    virtual void fillMessage(NXCPMessage *msg) override;
-   virtual uint32_t modifyFromMessage(const NXCPMessage& msg) override;
-   virtual uint32_t modifyFromJson(const json_t *json) override;
+   virtual uint32_t modifyFromMessage(const NXCPMessage& msg, bool *membershipChanged) override;
+   virtual uint32_t modifyFromJson(const json_t *json, bool *membershipChanged) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -611,13 +611,14 @@ String NXCORE_EXPORTABLE GetUserFullName(uint32_t id);
 bool NXCORE_EXPORTABLE ValidateUserId(uint32_t id, TCHAR *loginName, uint64_t *systemAccess, uint32_t *rcc);
 bool NXCORE_EXPORTABLE IsCloseOtherSessionsRequested(uint32_t userId);
 void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject);
-void UpdateGlobalAccessRights();
-void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser);
+uint64_t GetObjectRightsGeneration();
+void ScheduleAccessRightsUpdate(bool membershipChanged);
+bool RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser);
 void UpdateLDAPGroup(const TCHAR* dn, const LDAP_Object *ldapObject);
-void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject);
+bool SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject);
 void FillGroupMembershipInfo(NXCPMessage *msg, uint32_t userId);
 json_t *GroupMembershipInfoToJson(uint32_t userId);
-void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
+bool UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
 unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(const IntegerArray<uint32_t>& ids);
 unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(const StructArray<ResponsibleUser>& ids);

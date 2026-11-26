@@ -39,6 +39,7 @@ import org.netxms.base.annotations.Internal;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ObjectRightsVersion;
 import org.netxms.client.ObjectFilter;
 import org.netxms.client.ObjectUrl;
 import org.netxms.client.PollState;
@@ -187,7 +188,7 @@ public abstract class AbstractObject
    protected PollState[] pollStates = null;
    protected boolean partialObject;
 
-	@Internal private volatile Long effectiveRights = null;
+	@Internal private volatile CachedRights effectiveRights = null;
 
 	/**
 	 * Create dummy object of GENERIC class
@@ -284,6 +285,13 @@ public abstract class AbstractObject
 		statusThresholds[2] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_3);
 		statusThresholds[3] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_4);
 		partialObject = msg.getFieldAsBoolean(NXCPCodes.VID_PARTIAL_OBJECT);
+      // Server omits rights computed across membership change
+      if (msg.isFieldPresent(NXCPCodes.VID_EFFECTIVE_RIGHTS))
+      {
+         ObjectRightsVersion version = session.acceptObjectRightsGeneration(msg.getFieldAsInt64(NXCPCodes.VID_RIGHTS_GENERATION));
+         if (version != null)
+            effectiveRights = new CachedRights(msg.getFieldAsInt64(NXCPCodes.VID_EFFECTIVE_RIGHTS), version);
+      }
 
 		// Status shift can be negative, but all int16 values read from message
 		// as unsigned, so we need to convert shift value
@@ -1344,23 +1352,35 @@ public abstract class AbstractObject
 	}
 
    /**
-    * Get effective rights for this object. On first call this method
-    * will do request to server, and on all subsequent calls
-    * will return cached value obtained at first call.
+    * Get effective rights for this object. Rights are usually sent by server together with object data. Cached rights
+    * are valid only for session's current object rights version, which changes when server reports group membership
+    * change and on every login; otherwise this method requests rights from server and may block for a network round-trip.
+    * Reply to a request overtaken by rights change is discarded and request repeated, up to three attempts in total.
     *
-    * @return effective user rights on this object
+    * @return effective user rights on this object, or 0 (not cached) if they cannot be obtained or keep changing
     */
    public long getEffectiveRights()
    {
-      Long rights = effectiveRights;
-      if (rights != null)
-         return rights;
+      ObjectRightsVersion version = session.getObjectRightsVersion();
+      CachedRights cached = effectiveRights;
+      if ((cached != null) && (cached.version == version))
+         return cached.rights;
 
       try
       {
-         rights = session.getEffectiveRights(objectId);
-         effectiveRights = rights;
-         return rights;
+         // Reply to request made before rights change is outdated; if rights keep changing, no rights are assumed
+         for(int attempt = 0; attempt < 3; attempt++)
+         {
+            long rights = session.getEffectiveRights(objectId);
+            ObjectRightsVersion currentVersion = session.getObjectRightsVersion();
+            if (currentVersion == version)
+            {
+               effectiveRights = new CachedRights(rights, version);
+               return rights;
+            }
+            version = currentVersion;
+         }
+         return 0;
       }
       catch(Exception e)
       {
@@ -1369,13 +1389,29 @@ public abstract class AbstractObject
    }
 
    /**
-    * Get effective rights for this object if they were already retrieved. Never contacts the server.
+    * Get effective rights for this object if they are known and current. Never contacts the server.
     *
-    * @return effective user rights on this object or null if not retrieved yet
+    * @return effective user rights on this object or null if not known or outdated
     */
    public Long getCachedEffectiveRights()
    {
-      return effectiveRights;
+      CachedRights cached = effectiveRights;
+      return ((cached != null) && (cached.version == session.getObjectRightsVersion())) ? cached.rights : null;
+   }
+
+   /**
+    * Effective rights together with rights version they are valid for
+    */
+   private static final class CachedRights
+   {
+      final long rights;
+      final ObjectRightsVersion version;
+
+      CachedRights(long rights, ObjectRightsVersion version)
+      {
+         this.rights = rights;
+         this.version = version;
+      }
    }
 
    /**

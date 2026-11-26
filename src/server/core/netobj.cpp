@@ -83,6 +83,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_maintenanceInitiator = 0;
    m_maintenanceScheduled = false;
    m_inheritAccessRights = true;
+   m_accessChangeSequence = 0;
    m_trustedObjects = nullptr;
    m_pollOutputWriter = nullptr;
    m_statusCalcAlg = SA_CALCULATE_DEFAULT;
@@ -1665,7 +1666,7 @@ bool NetObj::loadACLFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 
    int count = DBGetNumRows(hResult);
    for(int i = 0; i < count; i++)
-      m_accessList.addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldUInt64(hResult, i, 1), false);
+      m_accessList.addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldUInt64(hResult, i, 1));
    DBFreeResult(hResult);
 
    return true;
@@ -1876,9 +1877,22 @@ void NetObj::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
- * Fill NXCP message with object's data
+ * Get effective rights of given user together with rights generation they were calculated for
  */
-void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId, bool full)
+NetObj::AccessSnapshot NetObj::getAccessSnapshot(uint32_t userId) const
+{
+   AccessSnapshot access;
+   access.generation = GetObjectRightsGeneration();
+   access.rights = getUserRights(userId);
+   access.consistent = (GetObjectRightsGeneration() == access.generation);
+   return access;
+}
+
+/**
+ * Fill NXCP message with object's data. Access snapshot must be the one used by caller for visibility decision,
+ * so that rights sent to client match object content.
+ */
+void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId, bool full, const AccessSnapshot& access)
 {
    lockProperties();
    fillMessageLockedEssential(msg, userId);
@@ -1887,6 +1901,13 @@ void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId, bool full)
    unlockProperties();
 
    fillMessageUnlockedEssential(msg, userId);
+
+   // Rights computed across membership change are omitted so that client will not cache them as current
+   if (access.consistent)
+   {
+      msg->setField(VID_EFFECTIVE_RIGHTS, access.rights);
+      msg->setField(VID_RIGHTS_GENERATION, access.generation);
+   }
 
    if (!full)
    {
@@ -2483,17 +2504,18 @@ uint64_t NetObj::getUserRights(uint32_t userId) const
       return 0xFFFFFFFFFFFFFFFFULL;
 
    // Check if have direct right assignment
-   bool hasDirectRights = m_accessList.getUserRights(userId, &rights);
+   AccessList::CacheVersion version;
+   bool hasDirectRights = m_accessList.getUserRights(userId, &rights, &version);
 
    // If we don't and this object inherits rights from parents, get them
-   if (!hasDirectRights && m_inheritAccessRights && !m_accessList.getCachedUserRights(userId, &rights))
+   if (!hasDirectRights && m_inheritAccessRights && !m_accessList.getCachedUserRights(userId, version, &rights))
    {
       rights = 0;
       readLockParentList();
       for(int i = 0; i < getParentList().size(); i++)
          rights |= getParentList().get(i)->getUserRights(userId);
       unlockParentList();
-      const_cast<NetObj*>(this)->m_accessList.addElement(userId, rights, true);
+      m_accessList.cacheUserRights(userId, rights, version);
    }
 
    return rights;
@@ -2517,7 +2539,7 @@ bool NetObj::checkAccessRights(uint32_t userId, uint64_t requiredRights) const
  */
 void NetObj::setUserAccess(uint32_t userId, uint64_t accessRights)
 {
-   if (m_accessList.addElement(userId, accessRights, false))
+   if (m_accessList.addElement(userId, accessRights))
    {
       setModified(MODIFY_ACCESS_LIST, false);
       clearInheritedAccessCache();
@@ -2628,6 +2650,12 @@ void NetObj::collectAccessSubtree(SharedObjectArray<NetObj> *list, HashSet<uint3
 }
 
 /**
+ * Sequence number of access change notifications. Every object affected by access change
+ * remembers it, so that object synchronization can find changes it might have missed.
+ */
+static std::atomic<uint64_t> s_accessChangeSequence{0};
+
+/**
  * Notify connected clients about effective access rights change on this object
  * and all its descendants. Because ACLs are inherited down the object tree,
  * a change on one object can change effective access for the whole subtree.
@@ -2644,6 +2672,10 @@ void NetObj::notifyClientsOnAccessChange()
    HashSet<uint32_t> processed;
    collectAccessSubtree(affected.get(), &processed);
 
+   uint64_t sequence = ++s_accessChangeSequence;
+   for(int i = 0; i < affected->size(); i++)
+      AtomicStoreMax(affected->get(i)->m_accessChangeSequence, sequence);
+
    nxlog_debug_tag(_T("obj.notify"), 6, _T("Sending access change notification for %s [%u] and %d related object(s)"),
             m_name, m_id, affected->size() - 1);
 
@@ -2653,6 +2685,14 @@ void NetObj::notifyClientsOnAccessChange()
          for(int i = 0; i < affected->size(); i++)
             session->onObjectChange(affected->getShared(i), true);
       });
+}
+
+/**
+ * Get sequence number of latest access change notification
+ */
+uint64_t GetAccessChangeSequence()
+{
+   return s_accessChangeSequence.load();
 }
 
 /**

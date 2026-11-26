@@ -268,7 +268,7 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
 /**
  * Modify object from NXCP message
  */
-uint32_t UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
+uint32_t UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg, bool *membershipChanged)
 {
 	uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
 	nxlog_debug_tag(DEBUG_TAG, 5, _T("UserDatabaseObject::modifyFromMessage(): id=%d fields=%08X"), m_id, fields);
@@ -303,7 +303,8 @@ uint32_t UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 
 	if (fields & USER_MODIFY_FLAGS)
 	{
-	   uint32_t flags = msg.getFieldAsUInt16(VID_USER_FLAGS);
+      bool wasDisabled = isDisabled();
+      uint32_t flags = msg.getFieldAsUInt16(VID_USER_FLAGS);
 		// Modify only specific flags from message
 		// Ignore all but DISABLED and CHANGE_PASSWORD flags for superuser and all but CHANGE_PASSWORD and CLOSE_OTHER_SESSIONS flags for "everyone" group
 		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
@@ -313,6 +314,8 @@ uint32_t UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
          m_flags |= flags & (UF_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
 		else
 			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
+      if (isGroup() && (wasDisabled != isDisabled()))
+         *membershipChanged = true;
 	}
 
 	m_flags |= UF_MODIFIED;
@@ -322,7 +325,7 @@ uint32_t UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 /**
  * Modify object from JSON (only updates fields that are present in JSON)
  */
-uint32_t UserDatabaseObject::modifyFromJson(const json_t *json)
+uint32_t UserDatabaseObject::modifyFromJson(const json_t *json, bool *membershipChanged)
 {
    const char *name = json_object_get_string_utf8(const_cast<json_t*>(json), "name", nullptr);
    if (name != nullptr)
@@ -345,6 +348,7 @@ uint32_t UserDatabaseObject::modifyFromJson(const json_t *json)
    json_t *jsonFlags = json_object_get(const_cast<json_t*>(json), "flags");
    if (json_is_object(jsonFlags))
    {
+      bool wasDisabled = isDisabled();
       uint32_t flags = static_cast<uint32_t>(json_object_update_flags(jsonFlags, m_flags, s_userFlagMapping));
       // Apply only specific flags from JSON; ignore all but DISABLED and CHANGE_PASSWORD for superuser and all but CHANGE_PASSWORD and CLOSE_OTHER_SESSIONS for "everyone" group
       m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
@@ -354,6 +358,8 @@ uint32_t UserDatabaseObject::modifyFromJson(const json_t *json)
          m_flags |= flags & (UF_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
       else
          m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
+      if (isGroup() && (wasDisabled != isDisabled()))
+         *membershipChanged = true;
    }
 
    json_t *attributes = json_object_get(const_cast<json_t*>(json), "attributes");
@@ -454,25 +460,29 @@ uint32_t UserDatabaseObject::getAttributeAsUInt32(const TCHAR *name) const
 /**
  * Set description
  */
-void UserDatabaseObject::setDescription(const TCHAR *description)
+bool UserDatabaseObject::setDescription(const TCHAR *description)
 {
-   if (_tcscmp(m_description, CHECK_NULL_EX(description)))
+   if (wcsncmp(m_description, CHECK_NULL_EX(description), MAX_USER_DESCR - 1))
    {
       _tcslcpy(m_description, CHECK_NULL_EX(description), MAX_USER_DESCR);
       m_flags |= UF_MODIFIED;
+      return true;
    }
+   return false;
 }
 
 /**
  * Set name
  */
-void UserDatabaseObject::setName(const TCHAR *name)
+bool UserDatabaseObject::setName(const TCHAR *name)
 {
-   if (_tcscmp(m_name, CHECK_NULL_EX(name)))
+   if (wcsncmp(m_name, CHECK_NULL_EX(name), MAX_USER_NAME - 1))
    {
       _tcslcpy(m_name, CHECK_NULL_EX(name), MAX_USER_NAME);
       m_flags |= UF_MODIFIED;
+      return true;
    }
+   return false;
 }
 
 /**
@@ -502,13 +512,15 @@ void UserDatabaseObject::setLdapId(const TCHAR *id)
 /**
  * Remove LDAP synchronization exception
  */
-void UserDatabaseObject::removeSyncException()
+bool UserDatabaseObject::removeSyncException()
 {
    if ((m_flags & UF_SYNC_EXCEPTION)> 0)
    {
       m_flags &= ~UF_SYNC_EXCEPTION;
       m_flags |= UF_MODIFIED;
+      return true;
    }
+   return false;
 }
 
 /**
@@ -982,7 +994,7 @@ void User::fillMessage(NXCPMessage *msg)
 /**
  * Modify user object from NXCP message
  */
-uint32_t User::modifyFromMessage(const NXCPMessage& msg)
+uint32_t User::modifyFromMessage(const NXCPMessage& msg, bool *membershipChanged)
 {
    uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
 
@@ -1009,7 +1021,7 @@ uint32_t User::modifyFromMessage(const NXCPMessage& msg)
       }
    }
 
-   UserDatabaseObject::modifyFromMessage(msg);
+   UserDatabaseObject::modifyFromMessage(msg, membershipChanged);
 
 	if (fields & USER_MODIFY_FULL_NAME)
 		msg.getFieldAsString(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
@@ -1039,7 +1051,8 @@ uint32_t User::modifyFromMessage(const NXCPMessage& msg)
          groups = MemAllocArrayNoInit<uint32_t>(count);
          msg.getFieldAsInt32Array(VID_GROUPS, count, groups);
       }
-      UpdateGroupMembership(m_id, count, groups);
+      if (UpdateGroupMembership(m_id, count, groups))
+         *membershipChanged = true;
       MemFree(groups);
    }
 
@@ -1088,7 +1101,7 @@ uint32_t User::modifyFromMessage(const NXCPMessage& msg)
 /**
  * Modify user object from JSON (only updates fields that are present in JSON)
  */
-uint32_t User::modifyFromJson(const json_t *json)
+uint32_t User::modifyFromJson(const json_t *json, bool *membershipChanged)
 {
    // Validate certificate mapping before making any changes
    bool updateCertMapping = (json_object_get(const_cast<json_t*>(json), "certMappingMethod") != nullptr);
@@ -1115,7 +1128,7 @@ uint32_t User::modifyFromJson(const json_t *json)
       }
    }
 
-   UserDatabaseObject::modifyFromJson(json);
+   UserDatabaseObject::modifyFromJson(json, membershipChanged);
 
    const char *fullName = json_object_get_string_utf8(const_cast<json_t*>(json), "fullName", nullptr);
    if (fullName != nullptr)
@@ -1162,7 +1175,8 @@ uint32_t User::modifyFromJson(const json_t *json)
          for(size_t i = 0; i < count; i++)
             groups[i] = static_cast<uint32_t>(json_integer_value(json_array_get(groupMembership, i)));
       }
-      UpdateGroupMembership(m_id, count, groups);
+      if (UpdateGroupMembership(m_id, count, groups))
+         *membershipChanged = true;
       MemFree(groups);
    }
 
@@ -1667,9 +1681,9 @@ void Group::fillMessage(NXCPMessage *msg)
 /**
  * Modify group object from NXCP message
  */
-uint32_t Group::modifyFromMessage(const NXCPMessage& msg)
+uint32_t Group::modifyFromMessage(const NXCPMessage& msg, bool *membershipChanged)
 {
-	uint32_t rcc = UserDatabaseObject::modifyFromMessage(msg);
+	uint32_t rcc = UserDatabaseObject::modifyFromMessage(msg, membershipChanged);
 	if (rcc != RCC_SUCCESS)
 	   return rcc;
 
@@ -1681,7 +1695,8 @@ uint32_t Group::modifyFromMessage(const NXCPMessage& msg)
       uint32_t fieldId = VID_GROUP_MEMBER_BASE;
       for(int i = 0; i < count; i++, fieldId++)
          members.add(msg.getFieldAsUInt32(fieldId));
-      setMembers(&members);
+      if (setMembers(&members))
+         *membershipChanged = true;
 	}
 	return RCC_SUCCESS;
 }
@@ -1692,7 +1707,7 @@ uint32_t Group::modifyFromMessage(const NXCPMessage& msg)
  * Notifications are sent only after the new list is in place and sorted, because they carry group membership
  * of the user, which is resolved through isMember().
  */
-void Group::setMembers(IntegerArray<uint32_t> *members)
+bool Group::setMembers(IntegerArray<uint32_t> *members)
 {
    members->sort(CompareUserId);
    uint32_t *ids = members->getBuffer();
@@ -1704,6 +1719,8 @@ void Group::setMembers(IntegerArray<uint32_t> *members)
    }
    members->shrinkTo(count);
 
+   if (m_members.equals(*members))
+      return false;
    m_members.swap(*members);
 
    // Both lists are sorted, so a single merge pass finds users present in only one of them
@@ -1733,14 +1750,15 @@ void Group::setMembers(IntegerArray<uint32_t> *members)
       SendUserDBUpdate(USER_DB_MODIFY, oldMembers.get(i));
    for(; j < m_members.size(); j++)
       SendUserDBUpdate(USER_DB_MODIFY, m_members.get(j));
+   return true;
 }
 
 /**
  * Modify group object from JSON (only updates fields that are present in JSON)
  */
-uint32_t Group::modifyFromJson(const json_t *json)
+uint32_t Group::modifyFromJson(const json_t *json, bool *membershipChanged)
 {
-   uint32_t rcc = UserDatabaseObject::modifyFromJson(json);
+   uint32_t rcc = UserDatabaseObject::modifyFromJson(json, membershipChanged);
    if (rcc != RCC_SUCCESS)
       return rcc;
 
@@ -1751,7 +1769,8 @@ uint32_t Group::modifyFromJson(const json_t *json)
       size_t count = json_array_size(membersJson);
       for(size_t i = 0; i < count; i++)
          members.add(static_cast<uint32_t>(json_integer_value(json_array_get(membersJson, i))));
-      setMembers(&members);
+      if (setMembers(&members))
+         *membershipChanged = true;
    }
    return RCC_SUCCESS;
 }
