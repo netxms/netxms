@@ -2335,6 +2335,22 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) originalEventCode - Original event code' CONCAT CRLF CONCAT
 		'   5) originalEventName - Original event name'
 	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_FIRMWARE_CHANGED, 'SYS_FIRMWARE_CHANGED', 'daabaddb-6c08-46a9-a613-addb18d45503',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Firmware "%1" changed (old version "%5", new version "%6")',
+		'Generated when change of firmware running on the device is detected: different version, firmware added or firmware removed. Not generated when firmware information is collected for the first time.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) name - Firmware name' CONCAT CRLF CONCAT
+		'   2) platform - Firmware platform ID (empty if not known)' CONCAT CRLF CONCAT
+		'   3) role - Firmware role (main, patch, bootloader, management-controller, other)' CONCAT CRLF CONCAT
+		'   4) componentIndex - Component index (-1 for device itself)' CONCAT CRLF CONCAT
+		'   5) oldVersion - Old version (empty if firmware was added)' CONCAT CRLF CONCAT
+		'   6) newVersion - New version (empty if firmware was removed)' CONCAT CRLF CONCAT
+		'   7) oldRawVersion - Old version as reported by the device' CONCAT CRLF CONCAT
+		'   8) newRawVersion - New version as reported by the device'
+	);
 
 /*
 ** SNMP traps

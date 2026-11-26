@@ -1617,6 +1617,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("icmp_target_address_list"), _T("node_id,ip_addr"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,package_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, L"object_firmware", L"object_id,sequence_number", L"*", intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("cloud_domains"), _T("id"), _T("*"), intColumns) &&

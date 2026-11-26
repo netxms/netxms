@@ -20,6 +20,27 @@
 **/
 
 #include "libnxsrv.h"
+#include <nddrv.h>
+
+/**
+ * Get symbolic name of firmware role
+ */
+const wchar_t LIBNXSRV_EXPORTABLE *FirmwareRoleName(FirmwareRole role)
+{
+   switch(role)
+   {
+      case FirmwareRole::MAIN:
+         return L"main";
+      case FirmwareRole::PATCH:
+         return L"patch";
+      case FirmwareRole::BOOTLOADER:
+         return L"bootloader";
+      case FirmwareRole::MGMT_CONTROLLER:
+         return L"management-controller";
+      default:
+         return L"other";
+   }
+}
 
 /**
  * Built-in firmware platform registry

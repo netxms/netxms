@@ -1106,6 +1106,7 @@ static void CheckNodes()
             success = success && SQLQuery(StringBuffer(_T("DELETE FROM icmp_target_address_list WHERE node_id=")).append(nodeId));
             success = success && SQLQuery(StringBuffer(_T("DELETE FROM software_inventory WHERE node_id=")).append(nodeId));
             success = success && SQLQuery(StringBuffer(_T("DELETE FROM hardware_inventory WHERE node_id=")).append(nodeId));
+            success = success && SQLQuery(StringBuffer(L"DELETE FROM object_firmware WHERE object_id=").append(nodeId));
             success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_components WHERE node_id=")).append(nodeId));
             success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_areas WHERE node_id=")).append(nodeId));
             success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_neighbors WHERE node_id=")).append(nodeId));
@@ -2894,6 +2895,7 @@ static const OrphanRelation s_orphanRelations[] =
    { OrphanStage::Object, L"ICMP target addresses", L"icmp_target_address_list", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"software inventory records", L"software_inventory", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"hardware inventory records", L"hardware_inventory", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"firmware records", L"object_firmware", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"node component records", L"node_components", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"OSPF area records", L"ospf_areas", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
    { OrphanStage::Object, L"OSPF neighbor records", L"ospf_neighbors", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },

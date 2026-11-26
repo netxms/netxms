@@ -4105,6 +4105,20 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(node->getExpectedCapabilities());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("firmware"))
+   {
+      value = node->getFirmwareForNXSL(vm);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("firmwarePlatform"))
+   {
+      FirmwareInfo fw;
+      value = node->getMainFirmware(&fw) ? vm->createValue(fw.platform) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("firmwareVersion"))
+   {
+      FirmwareInfo fw;
+      value = node->getMainFirmware(&fw) ? vm->createValue(fw.version) : vm->createValue();
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("flags"))
    {
 		value = vm->createValue(node->getFlags());
@@ -10244,6 +10258,60 @@ void NXSL_NodeDependencyClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * NXSL class Firmware: constructor
+ */
+NXSL_FirmwareClass::NXSL_FirmwareClass()
+{
+   setName(L"Firmware");
+}
+
+/**
+ * NXSL class Firmware: get attribute
+ */
+NXSL_Value *NXSL_FirmwareClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto fw = static_cast<FirmwareInfo*>(object->getData());
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("componentIndex"))
+   {
+      value = vm->createValue(fw->componentIndex);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("name"))
+   {
+      value = vm->createValue(fw->name);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("platform"))
+   {
+      value = vm->createValue(fw->platform);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("rawVersion"))
+   {
+      value = vm->createValue(fw->raw);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("role"))
+   {
+      value = vm->createValue(FirmwareRoleName(fw->role));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("version"))
+   {
+      value = vm->createValue(fw->version);
+   }
+   return value;
+}
+
+/**
+ * NXSL class Firmware: object destructor
+ */
+void NXSL_FirmwareClass::onObjectDelete(NXSL_Object *object)
+{
+   MemFree(object->getData());
+}
+
+/**
  * NXSL class HardwareComponent: constructor
  */
 NXSL_HardwareComponent::NXSL_HardwareComponent()
@@ -12257,6 +12325,7 @@ NXSL_DCTargetClass g_nxslDCTargetClass;
 NXSL_DeploymentPackageClass g_nxslDeploymentPackageClass;
 NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 NXSL_EventClass g_nxslEventClass;
+NXSL_FirmwareClass g_nxslFirmwareClass;
 NXSL_HardwareComponent g_nxslHardwareComponent;
 NXSL_FacilityClass g_nxslFacilityClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;

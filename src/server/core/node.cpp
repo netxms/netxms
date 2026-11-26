@@ -1125,6 +1125,46 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
 
    if (bResult)
    {
+      // Load firmware information
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_FIRMWARE,
+         L"SELECT component_index,fw_role,name,platform,version,raw_version FROM object_firmware WHERE object_id=? ORDER BY sequence_number");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
+         {
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+            {
+               FirmwareInfo *fw = m_firmware.addPlaceholder();
+               memset(fw, 0, sizeof(FirmwareInfo));
+               fw->componentIndex = DBGetFieldLong(hResult, i, 0);
+               uint32_t role = DBGetFieldULong(hResult, i, 1);
+               fw->role = (role <= static_cast<uint32_t>(FirmwareRole::OTHER)) ? static_cast<FirmwareRole>(role) : FirmwareRole::OTHER;
+               DBGetField(hResult, i, 2, fw->name, 64);
+               DBGetField(hResult, i, 3, fw->platform, 64);
+               DBGetField(hResult, i, 4, fw->version, 64);
+               DBGetField(hResult, i, 5, fw->raw, 256);
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            bResult = false;
+         }
+      }
+      else
+      {
+         bResult = false;
+      }
+
+      if (!bResult)
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, L"Cannot load firmware information for node %s [%u]", m_name, m_id);
+   }
+
+   if (bResult)
+   {
       // Load additional SNMP agents
       hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_NODE_SNMP_AGENTS,
          L"SELECT name,ip_addr,port,snmp_version,auth_name,auth_password,priv_password,usm_methods,context_name FROM node_snmp_agents WHERE node_id=?");
@@ -1678,6 +1718,41 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       unlockProperties();
    }
 
+   if (success && (m_modified & MODIFY_FIRMWARE))
+   {
+      success = executeQueryOnObject(hdb, L"DELETE FROM object_firmware WHERE object_id=?");
+      lockProperties();
+      if (success && !m_firmware.isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb,
+                  L"INSERT INTO object_firmware (object_id,sequence_number,component_index,fw_role,name,platform,version,raw_version) VALUES (?,?,?,?,?,?,?,?)",
+                  m_firmware.size() > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; success && i < m_firmware.size(); i++)
+            {
+               const FirmwareInfo *fw = m_firmware.get(i);
+               wchar_t role[2] = { static_cast<wchar_t>(static_cast<int>(fw->role) + L'0'), 0 };
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, fw->componentIndex);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, role, DB_BIND_STATIC);
+               DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, fw->name, DB_BIND_STATIC);
+               DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, fw->platform, DB_BIND_STATIC);
+               DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, fw->version, DB_BIND_STATIC);
+               DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, fw->raw, DB_BIND_STATIC);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockProperties();
+   }
+
    if (success && (m_modified & MODIFY_SNMP_AGENT_LIST))
    {
       success = executeQueryOnObject(hdb, L"DELETE FROM node_snmp_agents WHERE node_id=?");
@@ -1905,6 +1980,8 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM software_inventory WHERE node_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM hardware_inventory WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, L"DELETE FROM object_firmware WHERE object_id=?");
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM node_components WHERE node_id=?"));
    if (success)
@@ -5154,6 +5231,188 @@ bool Node::updateSystemHardwareInformation(PollerInfo *poller)
 }
 
 /**
+ * Read firmware information from device. Firmware reported by device identity protocols during this poll is
+ * passed by the caller. Stored information is not changed if nothing could be read.
+ */
+void Node::readFirmwareInformation(PollerInfo *poller, const StructArray<FirmwareInfo>& identityFirmware)
+{
+   poller->setStatus(L"firmware check");
+   sendPollerMsg(L"Updating firmware information");
+
+   // EtherNet/IP identity is the only source for EtherNet/IP devices: if SNMP is present on such device
+   // it may describe communication module and not the device itself
+   if (m_capabilities & NC_IS_ETHERNET_IP)
+   {
+      if (!identityFirmware.isEmpty())
+         updateFirmwareInformation(identityFirmware);
+      return;
+   }
+
+   StructArray<FirmwareInfo> firmware;
+   NodeDeviceContext context(self());
+   auto driver = getUsableDriverWithData(&context);
+   if ((driver.first != nullptr) && driver.first->getFirmwareInformation(&context, this, driver.second.get(), &firmware))
+   {
+      updateFirmwareInformation(firmware);
+   }
+   else if (!identityFirmware.isEmpty() && !(m_capabilities & NC_IS_SNMP))
+   {
+      // Firmware of SNMP capable device comes only from driver, so that temporary SNMP failure
+      // does not replace it with less detailed information from another protocol
+      updateFirmwareInformation(identityFirmware);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, L"ConfPoll(%s [%u]): firmware information is not available", m_name, m_id);
+   }
+}
+
+/**
+ * Check if two firmware entries describe the same firmware (possibly in different versions)
+ */
+static inline bool IsSameFirmware(const FirmwareInfo *f1, const FirmwareInfo *f2)
+{
+   return (f1->componentIndex == f2->componentIndex) && (f1->role == f2->role) && !wcscmp(f1->platform, f2->platform) &&
+          ((f1->platform[0] != 0) || !wcscmp(f1->name, f2->name));
+}
+
+/**
+ * Update firmware information. Single entry point for all sources of firmware information (network device
+ * drivers, EtherNet/IP, Modbus). Generates firmware change events, except when information is set for
+ * the first time. Returns true if stored information was changed.
+ */
+bool Node::updateFirmwareInformation(const StructArray<FirmwareInfo>& firmware)
+{
+   lockProperties();
+
+   bool changed = (firmware.size() != m_firmware.size());
+   for(int i = 0; !changed && (i < firmware.size()); i++)
+   {
+      const FirmwareInfo *f1 = firmware.get(i), *f2 = m_firmware.get(i);
+      changed = (f1->role != f2->role) || (f1->componentIndex != f2->componentIndex) || wcscmp(f1->name, f2->name) ||
+                wcscmp(f1->platform, f2->platform) || wcscmp(f1->version, f2->version) || wcscmp(f1->raw, f2->raw);
+   }
+   if (!changed)
+   {
+      unlockProperties();
+      return false;
+   }
+
+   StructArray<FirmwareInfo> oldFirmware(firmware);
+   m_firmware.swap(oldFirmware);   // oldFirmware now holds previous content
+   setModified(MODIFY_FIRMWARE);
+   unlockProperties();
+
+   for(int i = 0; i < firmware.size(); i++)
+   {
+      const FirmwareInfo *fw = firmware.get(i);
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, L"ConfPoll(%s [%u]): firmware \"%s\" role=%s component=%d platform=\"%s\" version=\"%s\" raw=\"%s\"",
+         m_name, m_id, fw->name, FirmwareRoleName(fw->role), fw->componentIndex, fw->platform, fw->version, fw->raw);
+
+      // Version that is not in canonical form of platform's version scheme is stored and shown but cannot be compared
+      const FirmwarePlatform *platform = (fw->platform[0] != 0) ? FindFirmwarePlatform(fw->platform) : nullptr;
+      if ((platform != nullptr) && !IsValidFirmwareVersion(platform->scheme, fw->version))
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"ConfPoll(%s [%u]): version \"%s\" of firmware \"%s\" is not valid for platform %s",
+            m_name, m_id, fw->version, fw->name, fw->platform);
+         sendPollerMsg(PollOutputLevel::WARNING, L"   Version \"%s\" of firmware \"%s\" is not valid for platform %s", fw->version, fw->name, fw->platform);
+      }
+   }
+
+   // Firmware set for the first time is not a change
+   if (oldFirmware.isEmpty())
+      return true;
+
+   // Pair old and new entries: first those with same version (not changed), then remaining ones that describe same firmware
+   // (version changed). Entries left without pair are added or removed firmware.
+   int oldCount = oldFirmware.size(), newCount = firmware.size();
+   Buffer<int, 256> oldMatch(oldCount), newMatch(newCount);
+   for(int i = 0; i < oldCount; i++)
+      oldMatch[i] = -1;
+   for(int i = 0; i < newCount; i++)
+      newMatch[i] = -1;
+   for(int pass = 0; pass < 2; pass++)
+   {
+      for(int i = 0; i < newCount; i++)
+      {
+         if (newMatch[i] != -1)
+            continue;
+         const FirmwareInfo *fw = firmware.get(i);
+         for(int j = 0; j < oldCount; j++)
+         {
+            if (oldMatch[j] != -1)
+               continue;
+            const FirmwareInfo *old = oldFirmware.get(j);
+            if (IsSameFirmware(fw, old) && ((pass == 1) || !wcscmp(fw->version, old->version)))
+            {
+               newMatch[i] = j;
+               oldMatch[j] = i;
+               break;
+            }
+         }
+      }
+   }
+
+   static const FirmwareInfo none = { FirmwareRole::OTHER, -1, L"", L"", L"", L"" };
+   for(int i = 0; i < newCount + oldCount; i++)
+   {
+      const FirmwareInfo *fw, *old;
+      if (i < newCount)
+      {
+         fw = firmware.get(i);
+         old = (newMatch[i] != -1) ? oldFirmware.get(newMatch[i]) : &none;
+         if (!wcscmp(fw->version, old->version))
+            continue;   // Not changed
+      }
+      else
+      {
+         if (oldMatch[i - newCount] != -1)
+            continue;   // Already processed as pair of new entry
+         fw = &none;
+         old = oldFirmware.get(i - newCount);
+      }
+
+      const FirmwareInfo *id = (fw != &none) ? fw : old;
+      if (fw == &none)
+         sendPollerMsg(PollOutputLevel::INFO, L"   Firmware \"%s\" version %s removed", id->name, old->version);
+      else if (old == &none)
+         sendPollerMsg(PollOutputLevel::INFO, L"   Firmware \"%s\" version %s added", id->name, fw->version);
+      else
+         sendPollerMsg(PollOutputLevel::INFO, L"   Firmware \"%s\" version changed from %s to %s", id->name, old->version, fw->version);
+
+      EventBuilder(EVENT_FIRMWARE_CHANGED, m_id)
+         .param(L"name", id->name)
+         .param(L"platform", id->platform)
+         .param(L"role", FirmwareRoleName(id->role))
+         .param(L"componentIndex", id->componentIndex)
+         .param(L"oldVersion", old->version)
+         .param(L"newVersion", fw->version)
+         .param(L"oldRawVersion", old->raw)
+         .param(L"newRawVersion", fw->raw)
+         .post();
+   }
+   return true;
+}
+
+/**
+ * Get main firmware of the node itself (not of its components). Returns false if node does not have one.
+ */
+bool Node::getMainFirmware(FirmwareInfo *firmware) const
+{
+   LockGuard lockGuard(m_mutexProperties);
+   for(int i = 0; i < m_firmware.size(); i++)
+   {
+      const FirmwareInfo *fw = m_firmware.get(i);
+      if ((fw->role == FirmwareRole::MAIN) && (fw->componentIndex == -1))
+      {
+         memcpy(firmware, fw, sizeof(FirmwareInfo));
+         return true;
+      }
+   }
+   return false;
+}
+
+/**
  * Update list of hardware components for node
  */
 bool Node::updateHardwareComponents(PollerInfo *poller)
@@ -5607,7 +5866,8 @@ void Node::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   if (confPollEthernetIP())
+   StructArray<FirmwareInfo> identityFirmware;  // firmware reported by device identity protocols (EtherNet/IP, Modbus)
+   if (confPollEthernetIP(&identityFirmware))
       modified |= MODIFY_NODE_PROPERTIES;
 
    // Check if Ethernet/IP was marked as unreachable before full poll
@@ -5621,7 +5881,7 @@ void Node::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
 
    POLL_CANCELLATION_CHECKPOINT();
 
-   if (confPollModbus())
+   if (confPollModbus(&identityFirmware))
       modified |= MODIFY_NODE_PROPERTIES;
 
    // Check if MODBUS was marked as unreachable before full poll
@@ -5833,6 +6093,7 @@ void Node::configurationPoll(PollerInfo *poller, PollOutputWriter *output)
    POLL_CANCELLATION_CHECKPOINT();
 
    updateSystemHardwareInformation(poller);
+   readFirmwareInformation(poller, identityFirmware);
    updateHardwareComponents(poller);
    updateSoftwarePackages(poller);
 
@@ -6872,7 +7133,7 @@ bool Node::confPollAgent()
 /**
  * Configuration poll: check for Ethernet/IP
  */
-bool Node::confPollEthernetIP()
+bool Node::confPollEthernetIP(StructArray<FirmwareInfo> *firmware)
 {
    if (((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_ETHERNET_IP))
@@ -7005,6 +7266,15 @@ bool Node::confPollEthernetIP()
          hasChanges = true;
       }
 
+      FirmwareInfo *fw = firmware->addPlaceholder();
+      memset(fw, 0, sizeof(FirmwareInfo));
+      fw->role = FirmwareRole::MAIN;
+      fw->componentIndex = -1;
+      wcscpy(fw->name, L"Firmware");
+      wcscpy(fw->platform, L"cip-device");
+      nx_swprintf(fw->version, 64, L"%u.%u", identity->productRevisionMajor, identity->productRevisionMinor);
+      wcslcpy(fw->raw, buffer, 256);
+
       _sntprintf(buffer, 64, _T("%04X"), identity->productCode);
       if (_tcscmp(m_productCode, buffer))
       {
@@ -7056,7 +7326,7 @@ bool Node::confPollEthernetIP()
 /**
  * Configuration poll: check for MODBUS
  */
-bool Node::confPollModbus()
+bool Node::confPollModbus(StructArray<FirmwareInfo> *firmware)
 {
    if (((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE)) ||
        !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_MODBUS_TCP))
@@ -7129,6 +7399,18 @@ bool Node::confPollModbus()
             }
 
             unlockProperties();
+
+            // Revision from device identification is used only if firmware is not reported by EtherNet/IP identity
+            if (firmware->isEmpty() && (deviceIdentification.revision[0] != 0))
+            {
+               FirmwareInfo *fw = firmware->addPlaceholder();
+               memset(fw, 0, sizeof(FirmwareInfo));
+               fw->role = FirmwareRole::MAIN;
+               fw->componentIndex = -1;
+               wcscpy(fw->name, L"Firmware");
+               wcslcpy(fw->version, deviceIdentification.revision, 64);
+               wcslcpy(fw->raw, deviceIdentification.revision, 256);
+            }
          }
          else
          {
@@ -15909,6 +16191,19 @@ NXSL_Value *Node::getInterfacesForNXSL(NXSL_VM *vm)
    unlockChildList();
 
    return vm->createValue(ifaces);
+}
+
+/**
+ * Get list of firmware for NXSL script
+ */
+NXSL_Value *Node::getFirmwareForNXSL(NXSL_VM *vm)
+{
+   NXSL_Array *a = new NXSL_Array(vm);
+   lockProperties();
+   for(int i = 0; i < m_firmware.size(); i++)
+      a->append(vm->createValue(vm->createObject(&g_nxslFirmwareClass, MemCopyBlock(m_firmware.get(i), sizeof(FirmwareInfo)))));
+   unlockProperties();
+   return vm->createValue(a);
 }
 
 /**

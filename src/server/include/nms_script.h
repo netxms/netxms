@@ -690,6 +690,18 @@ public:
 };
 
 /**
+ * NXSL "Firmware" class
+ */
+class NXSL_FirmwareClass : public NXSL_Class
+{
+public:
+   NXSL_FirmwareClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
  * Hardware component information for NXSL
  */
 class NXSL_HardwareComponent : public NXSL_Class
@@ -1023,6 +1035,7 @@ extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_DeploymentPackageClass g_nxslDeploymentPackageClass;
 extern NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 extern NXSL_EventClass g_nxslEventClass;
+extern NXSL_FirmwareClass g_nxslFirmwareClass;
 extern NXSL_HardwareComponent g_nxslHardwareComponent;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;
 extern NXSL_LinkDataSourceClass g_nxslLinkDataSourceClass;

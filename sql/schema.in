@@ -607,6 +607,22 @@ CREATE TABLE hardware_inventory
 ) TABLE_TYPE;
 
 /**
+ * Firmware running on object (network device, later also access point or device component)
+ */
+CREATE TABLE object_firmware
+(
+  object_id integer not null,
+  sequence_number integer not null,
+  component_index integer not null,  // -1 = object itself
+  fw_role char(1) not null,  // 0 = main, 1 = patch, 2 = bootloader, 3 = management controller, 4 = other
+  name varchar(63) null,
+  platform varchar(63) null,
+  version varchar(63) null,
+  raw_version varchar(255) null,
+  PRIMARY KEY(object_id,sequence_number)
+) TABLE_TYPE;
+
+/**
  * Node components (Entity MIB)
  */
 CREATE TABLE node_components

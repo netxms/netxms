@@ -97,6 +97,8 @@ Drivers live in `drivers/<vendor>/`; the interface is `include/nddrv.h`, the gen
 
 Do **not** override `getHardwareInformation()` in a new driver when the device supports standard ENTITY-MIB — the generic driver already reads vendor/model/serial from it. Override only for devices that expose hardware info via a proprietary MIB or lack ENTITY-MIB support.
 
+Firmware and operating system versions are reported by `getFirmwareInformation()` as a list of `FirmwareInfo`, never through `DeviceHardwareInfo::productVersion` (hardware revision only). The generic implementation reports `entPhysicalSoftwareRev` / `entPhysicalFirmwareRev` of the root entity without a platform; a driver that knows the platform overrides the method, sets `platform` to an ID from the registry in `libnxsrv/firmware.cpp` and `version` to the output of the matching `Normalize*FirmwareVersion()` function, and keeps the device's own string in `raw`. Return `false` only when the device could not be read: `true` with an empty list replaces the stored list with nothing. A new platform or version scheme needs vectors in `tests/data/vuln-schemes.json`. All sources of firmware information end in `Node::updateFirmwareInformation()`, which detects changes and posts `SYS_FIRMWARE_CHANGED`; nothing else writes `Node::m_firmware`.
+
 ## Database Changes
 
 Schema rules are in [sql/CLAUDE.md](../../sql/CLAUDE.md); upgrade procedures and the multi-branch backport procedure are in [tools/nxdbmgr/CLAUDE.md](tools/nxdbmgr/CLAUDE.md).

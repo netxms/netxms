@@ -973,6 +973,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_OBJECT_URLS          0x04000000
 #define MODIFY_RADIO_INTERFACES     0x08000000
 #define MODIFY_AP_PROPERTIES        0x10000000
+#define MODIFY_FIRMWARE             0x20000000
 #define MODIFY_PORT_STOP_LIST       0x40000000
 #define MODIFY_CLOUD_DOMAIN_PROPERTIES 0x80000000
 #define MODIFY_RESOURCE_PROPERTIES  0x80000000
@@ -1409,6 +1410,7 @@ enum LoadStatementIndex
    LSI_ACCESS_POINT,
    LSI_PORT_STOP_LIST,
    LSI_NODE_SNMP_AGENTS,
+   LSI_FIRMWARE,
    LSI_MAX_VALUE
 };
 
@@ -4542,6 +4544,7 @@ protected:
    shared_ptr<DeviceView> m_deviceView;
    ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
    ObjectArray<HardwareComponent> *m_hardwareComponents;  // installed hardware components
+   StructArray<FirmwareInfo> m_firmware;  // firmware running on the device
    ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
    time_t m_winPerfObjectsTimestamp;
    shared_ptr<AgentConnection> m_fileUpdateConnection;
@@ -4661,13 +4664,14 @@ protected:
    bool confPollDhcpServer(NodeDeviceContext *deviceContext);
    bool confPollSmclp();
    bool confPollVnc();
-   bool confPollEthernetIP();
-   bool confPollModbus();
+   bool confPollEthernetIP(StructArray<FirmwareInfo> *firmware);
+   bool confPollModbus(StructArray<FirmwareInfo> *firmware);
    DataCollectionError getCachedDhcpScopes(shared_ptr<ObjectArray<DhcpScopeInfo>> *scopes);
    DataCollectionError getDhcpScopeTable(shared_ptr<Table> *result);
    DataCollectionError getDhcpScopeMetric(const wchar_t *name, wchar_t *buffer, size_t size);
    NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
    bool updateSystemHardwareInformation(PollerInfo *poller);
+   void readFirmwareInformation(PollerInfo *poller, const StructArray<FirmwareInfo>& identityFirmware);
    bool updateHardwareComponents(PollerInfo *poller);
    bool updateSoftwarePackages(PollerInfo *poller);
    bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, TCHAR **value);
@@ -5066,6 +5070,11 @@ public:
    virtual NXSL_Value *getParentsForNXSL(NXSL_VM *vm) override;
    NXSL_Value *getInterfacesForNXSL(NXSL_VM *vm);
    NXSL_Value *getHardwareComponentsForNXSL(NXSL_VM* vm);
+   NXSL_Value *getFirmwareForNXSL(NXSL_VM *vm);
+
+   StructArray<FirmwareInfo> getFirmwareInformation() const { return GetAttributeWithLock(m_firmware, m_mutexProperties); }
+   bool getMainFirmware(FirmwareInfo *firmware) const;
+   bool updateFirmwareInformation(const StructArray<FirmwareInfo>& firmware);
    NXSL_Value* getSoftwarePackagesForNXSL(NXSL_VM* vm);
    NXSL_Value* getInstalledPackagesForNXSL(NXSL_VM* vm, const wchar_t *filter = nullptr, bool useRegex = false);
    NXSL_Value *getOSPFAreasForNXSL(NXSL_VM *vm);

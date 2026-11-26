@@ -172,6 +172,34 @@ struct DeviceHardwareInfo
 };
 
 /**
+ * Role of firmware on the device it runs on. Roles are relative to the object: on a node that represents
+ * management controller its firmware is MAIN.
+ */
+enum class FirmwareRole
+{
+   MAIN = 0,
+   PATCH = 1,
+   BOOTLOADER = 2,
+   MGMT_CONTROLLER = 3,
+   OTHER = 4
+};
+
+/**
+ * Firmware information (single firmware or operating system image running on the device)
+ */
+struct FirmwareInfo
+{
+   FirmwareRole role;
+   int32_t componentIndex;   // -1 = the object itself, otherwise ENTITY-MIB / module index
+   wchar_t name[64];         // Display name ("Junos OS", "RouterBOOT", "iLO 5")
+   wchar_t platform[64];     // Platform ID from firmware platform registry; empty if platform is not known
+   wchar_t version[64];      // Version in canonical form of platform's version scheme; copy of raw version if platform is not known
+   wchar_t raw[256];         // Version exactly as reported by the device
+};
+
+const wchar_t LIBNXSRV_EXPORTABLE *FirmwareRoleName(FirmwareRole role);
+
+/**
  * Device view element flags
  */
 #define DVF_BACKGROUND  0x0001
@@ -746,6 +774,7 @@ public:
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid);
    virtual void analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData);
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo);
+   virtual bool getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware);
    virtual bool isEntityMibEmulationSupported(DeviceContext *context, NObject *node, DriverData *driverData);
    virtual shared_ptr<ComponentTree> buildComponentTree(DeviceContext *context, NObject *node, DriverData *driverData);
    virtual shared_ptr<DeviceView> buildDeviceView(DeviceContext *context, NObject *node, DriverData *driverData, const Component *rootComponent);

@@ -27,6 +27,7 @@ INSERT INTO icmp_statistics (object_id,poll_target,min_response_time,max_respons
 INSERT INTO icmp_target_address_list (node_id,ip_addr) VALUES (999121,'10.99.0.9');
 INSERT INTO software_inventory (node_id,package_id,name,version,user_name,vendor,install_date,url,description,uninstall_key) VALUES (999122,'x','x',NULL,NULL,NULL,0,NULL,NULL,NULL);
 INSERT INTO hardware_inventory (node_id,category,component_index,hw_type,vendor,model,location,capacity,part_number,serial_number,description) VALUES (999123,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO object_firmware (object_id,sequence_number,component_index,fw_role,name,platform,version,raw_version) VALUES (999983,0,-1,'0',NULL,NULL,NULL,NULL);
 INSERT INTO node_components (node_id,component_index,parent_index,position,component_class,if_index,name,description,model,serial_number,vendor,firmware) VALUES (999124,1,0,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL);
 INSERT INTO ospf_areas (node_id,area_id) VALUES (999125,'0.0.0.0');
 INSERT INTO ospf_neighbors (node_id,router_id,area_id,ip_address,remote_node_id,if_index,is_virtual,neighbor_state) VALUES (999126,'1.1.1.1',NULL,'10.99.0.9',0,0,'0',0);

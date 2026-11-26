@@ -1874,6 +1874,128 @@ public:
 };
 
 /**
+ * Set software and firmware revisions of mock physical entity
+ */
+static void SetMockComponentRevisions(MockSnmpTransport *transport, uint32_t index, const wchar_t *software, const wchar_t *firmware)
+{
+   wchar_t oid[128];
+   nx_swprintf(oid, 128, L".1.3.6.1.2.1.47.1.1.1.1.10.%u", index);
+   transport->setString(oid, software);
+   nx_swprintf(oid, 128, L".1.3.6.1.2.1.47.1.1.1.1.9.%u", index);
+   transport->setString(oid, firmware);
+}
+
+/**
+ * Test default implementation of NetworkDeviceDriver::getFirmwareInformation
+ */
+static void TestDriverFirmware()
+{
+   NetworkDeviceDriver driver;
+   auto node = make_shared<TestObject>(504, L"node");
+
+   StartTest(L"NetworkDeviceDriver - firmware from ENTITY MIB chassis");
+   MockSnmpTransport chassisTransport;
+   AddMockComponent(&chassisTransport, 1, COMPONENT_CLASS_CHASSIS, 0, -1, L"chassis", L"Test Chassis", L"CH-1000", L"SN12345");
+   AddMockComponent(&chassisTransport, 2, COMPONENT_CLASS_MODULE, 1, 1, L"module1", L"Module 1", L"M-100", L"SN0001");
+   SetMockComponentRevisions(&chassisTransport, 1, L"  10.4.2 (build 77)  ", L"1.0.5");
+   SetMockComponentRevisions(&chassisTransport, 2, L"9.9.9", L"8.8.8");
+   SnmpDeviceContext chassisContext(&chassisTransport);
+   StructArray<FirmwareInfo> firmware;
+   AssertTrue(driver.getFirmwareInformation(&chassisContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 2);
+   AssertTrue(firmware.get(0)->role == FirmwareRole::MAIN);
+   AssertEquals(firmware.get(0)->componentIndex, -1);
+   AssertEquals(firmware.get(0)->name, L"Software");
+   AssertEquals(firmware.get(0)->platform, L"");
+   AssertEquals(firmware.get(0)->version, L"10.4.2 (build 77)");
+   AssertEquals(firmware.get(0)->raw, L"10.4.2 (build 77)");
+   AssertTrue(firmware.get(1)->role == FirmwareRole::OTHER);
+   AssertEquals(firmware.get(1)->componentIndex, -1);
+   AssertEquals(firmware.get(1)->name, L"Firmware");
+   AssertEquals(firmware.get(1)->platform, L"");
+   AssertEquals(firmware.get(1)->version, L"1.0.5");
+   AssertEquals(firmware.get(1)->raw, L"1.0.5");
+   EndTest();
+
+   StartTest(L"NetworkDeviceDriver - firmware from single chassis stack");
+   MockSnmpTransport stackTransport;
+   AddMockComponent(&stackTransport, 1, COMPONENT_CLASS_STACK, 0, -1, L"stack", L"Stack", L"", L"");
+   AddMockComponent(&stackTransport, 2, COMPONENT_CLASS_CHASSIS, 1, 1, L"member1", L"Member 1", L"CH-1000", L"SN0001");
+   AddMockComponent(&stackTransport, 3, COMPONENT_CLASS_MODULE, 2, 1, L"module1", L"Module 1", L"M-100", L"SN0002");
+   SetMockComponentRevisions(&stackTransport, 1, L"", L"");
+   SetMockComponentRevisions(&stackTransport, 2, L"16.11.0021", L"");
+   SnmpDeviceContext stackContext(&stackTransport);
+   firmware.clear();
+   AssertTrue(driver.getFirmwareInformation(&stackContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 1);
+   AssertTrue(firmware.get(0)->role == FirmwareRole::MAIN);
+   AssertEquals(firmware.get(0)->version, L"16.11.0021");
+   EndTest();
+
+   StartTest(L"NetworkDeviceDriver - firmware from multi-chassis stack");
+   AddMockComponent(&stackTransport, 4, COMPONENT_CLASS_CHASSIS, 1, 2, L"member2", L"Member 2", L"CH-1000", L"SN0003");
+   SetMockComponentRevisions(&stackTransport, 1, L"17.1", L"");
+   SetMockComponentRevisions(&stackTransport, 4, L"16.10.0001", L"");
+   firmware.clear();
+   AssertTrue(driver.getFirmwareInformation(&stackContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 1);
+   AssertEquals(firmware.get(0)->version, L"17.1");
+   EndTest();
+
+   StartTest(L"NetworkDeviceDriver - firmware not reported by device");
+   MockSnmpTransport emptyRevisionsTransport;
+   AddMockComponent(&emptyRevisionsTransport, 65536, COMPONENT_CLASS_CHASSIS, 0, -1, L"chassis", L"Chassis", L"", L"");
+   SetMockComponentRevisions(&emptyRevisionsTransport, 65536, L"", L"");
+   SnmpDeviceContext emptyRevisionsContext(&emptyRevisionsTransport);
+   firmware.clear();
+   AssertTrue(driver.getFirmwareInformation(&emptyRevisionsContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 0);
+
+   // Revision columns not implemented by device
+   MockSnmpTransport noRevisionsTransport;
+   AddMockComponent(&noRevisionsTransport, 1, COMPONENT_CLASS_CHASSIS, 0, -1, L"chassis", L"Chassis", L"", L"");
+   SnmpDeviceContext noRevisionsContext(&noRevisionsTransport);
+   AssertTrue(driver.getFirmwareInformation(&noRevisionsContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 0);
+   EndTest();
+
+   StartTest(L"NetworkDeviceDriver - firmware not available");
+   // Root entity is neither chassis nor stack
+   MockSnmpTransport moduleRootTransport;
+   AddMockComponent(&moduleRootTransport, 1, COMPONENT_CLASS_MODULE, 0, -1, L"module", L"Module", L"", L"");
+   SetMockComponentRevisions(&moduleRootTransport, 1, L"1.0", L"1.0");
+   SnmpDeviceContext moduleRootContext(&moduleRootTransport);
+   AssertFalse(driver.getFirmwareInformation(&moduleRootContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 0);
+
+   // No entity without parent
+   MockSnmpTransport noRootTransport;
+   AddMockComponent(&noRootTransport, 1, COMPONENT_CLASS_CHASSIS, 2, -1, L"chassis", L"Chassis", L"", L"");
+   SnmpDeviceContext noRootContext(&noRootTransport);
+   AssertFalse(driver.getFirmwareInformation(&noRootContext, node.get(), nullptr, &firmware));
+
+   // ENTITY MIB not supported
+   MockSnmpTransport noEntityMibTransport;
+   noEntityMibTransport.setString(L".1.3.6.1.2.1.1.1.0", L"Test device");
+   SnmpDeviceContext noEntityMibContext(&noEntityMibTransport);
+   AssertFalse(driver.getFirmwareInformation(&noEntityMibContext, node.get(), nullptr, &firmware));
+
+   // SNMP not available
+   SnmpDeviceContext noSnmpContext(nullptr);
+   AssertFalse(driver.getFirmwareInformation(&noSnmpContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 0);
+   EndTest();
+
+   StartTest(L"Firmware role names");
+   AssertEquals(FirmwareRoleName(FirmwareRole::MAIN), L"main");
+   AssertEquals(FirmwareRoleName(FirmwareRole::PATCH), L"patch");
+   AssertEquals(FirmwareRoleName(FirmwareRole::BOOTLOADER), L"bootloader");
+   AssertEquals(FirmwareRoleName(FirmwareRole::MGMT_CONTROLLER), L"management-controller");
+   AssertEquals(FirmwareRoleName(FirmwareRole::OTHER), L"other");
+   EndTest();
+}
+
+/**
  * Test generic NETCONF configuration backup in base driver
  */
 static void TestDriverNetconfBackup()
@@ -2257,6 +2379,7 @@ int main(int argc, char *argv[])
    TestDriverVlans();
    TestDriverArpCache();
    TestDriverDefaults();
+   TestDriverFirmware();
    TestDriverNetconfBackup();
    TestHolidayCalendar();
    TestDailyActivityForecaster();

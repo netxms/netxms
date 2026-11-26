@@ -27,6 +27,7 @@ INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM icm
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM icmp_target_address_list WHERE node_id=999121)=0 THEN 120 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM software_inventory WHERE node_id=999122)=0 THEN 121 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM hardware_inventory WHERE node_id=999123)=0 THEN 122 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
+INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM object_firmware WHERE object_id=999983)=0 THEN 186 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM node_components WHERE node_id=999124)=0 THEN 123 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM ospf_areas WHERE node_id=999125)=0 THEN 124 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;
 INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (SELECT count(*) FROM ospf_neighbors WHERE node_id=999126)=0 THEN 125 ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0;

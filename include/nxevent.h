@@ -240,6 +240,7 @@
 #define EVENT_EPP_CHAIN_LOOP                        186
 #define EVENT_ALARM_FLAPPING_STARTED                187
 #define EVENT_ALARM_FLAPPING_ENDED                  188
+#define EVENT_FIRMWARE_CHANGED                      189
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

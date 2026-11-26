@@ -42,6 +42,7 @@
 
 void TestAuthenticationTokens();
 void TestNetworkLossCorrelation();
+void TestNodeFirmware();
 void TestCustomAttributes();
 void TestDelegateObjects();
 void TestNXSLAudit();
@@ -266,6 +267,7 @@ int main(int argc, char *argv[])
    TestNetworkLossCorrelation();
    TestCustomAttributes();
    TestDelegateObjects();
+   TestNodeFirmware();
    TestNXSLAudit();
    TestNXSLHttp();
    TestNodeIPChange();

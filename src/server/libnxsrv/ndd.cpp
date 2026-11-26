@@ -21,6 +21,7 @@
 
 #include "libnxsrv.h"
 #include <nddrv.h>
+#include <entity_mib.h>
 #include <netxms-version.h>
 #include <ieee8021x.h>
 #include <nxnetconf.h>
@@ -389,6 +390,119 @@ void NetworkDeviceDriver::analyzeDevice(DeviceContext *context, const SNMP_Objec
 bool NetworkDeviceDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
    return false;
+}
+
+/**
+ * Read string column of entPhysicalTable for given entity. Value is returned without surrounding whitespace.
+ */
+static bool ReadEntityStringAttribute(SNMP_Transport *snmp, uint32_t column, uint32_t index, wchar_t *buffer, size_t size)
+{
+   uint32_t oid[] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, column, index };
+   buffer[0] = 0;
+   uint32_t rc = SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), buffer, size * sizeof(wchar_t), SG_STRING_RESULT);
+   if (rc == SNMP_ERR_NO_OBJECT)
+   {
+      buffer[0] = 0;
+      return true;   // Device does not have this column
+   }
+   if (rc != SNMP_ERR_SUCCESS)
+      return false;
+   TrimW(buffer);
+   return true;
+}
+
+/**
+ * Get firmware information from device. Default implementation reads software and firmware revisions of root
+ * physical entity (chassis or stack) from ENTITY MIB. Software revision is reported as main firmware and
+ * firmware revision as "other" (it is boot ROM on some devices and actual firmware on others), both without
+ * platform because it cannot be determined in a generic way.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param firmware list of firmware to fill
+ * @return true if firmware information was read from device (list can be empty if device does not report any firmware)
+ */
+bool NetworkDeviceDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   if (snmp == nullptr)
+      return false;
+
+   // Read entPhysicalContainedIn to find root entity and entities directly under it
+   IntegerArray<uint32_t> indexes(64, 64);
+   IntegerArray<uint32_t> parents(64, 64);
+   uint32_t rc = SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 4 },
+      [&indexes, &parents] (SNMP_Variable *v) -> uint32_t
+      {
+         indexes.add(v->getName().getLastElement());
+         parents.add(v->getValueAsUInt());
+         return SNMP_ERR_SUCCESS;
+      });
+   if ((rc != SNMP_ERR_SUCCESS) || indexes.isEmpty())
+      return false;
+
+   int rootPosition = parents.indexOf(0);
+   if (rootPosition == -1)
+      return false;
+   uint32_t root = indexes.get(rootPosition);
+
+   uint32_t oid[] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 5, root };  // entPhysicalClass
+   uint32_t entityClass;
+   if (SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), &entityClass, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
+      return false;
+
+   // Device could be reported as stack but consist from single chassis only
+   if (entityClass == COMPONENT_CLASS_STACK)
+   {
+      uint32_t child = 0;
+      int childCount = 0;
+      for(int i = 0; i < parents.size(); i++)
+      {
+         if (parents.get(i) == root)
+         {
+            child = indexes.get(i);
+            childCount++;
+         }
+      }
+      if (childCount == 1)
+      {
+         oid[12] = child;
+         uint32_t childClass;
+         if ((SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), &childClass, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS) && (childClass == COMPONENT_CLASS_CHASSIS))
+         {
+            root = child;
+            entityClass = childClass;
+         }
+      }
+   }
+   if ((entityClass != COMPONENT_CLASS_CHASSIS) && (entityClass != COMPONENT_CLASS_STACK))
+      return false;
+
+   FirmwareInfo software, bootFirmware;
+   memset(&software, 0, sizeof(FirmwareInfo));
+   memset(&bootFirmware, 0, sizeof(FirmwareInfo));
+   if (!ReadEntityStringAttribute(snmp, 10, root, software.raw, 256) ||    // entPhysicalSoftwareRev
+       !ReadEntityStringAttribute(snmp, 9, root, bootFirmware.raw, 256))   // entPhysicalFirmwareRev
+      return false;
+
+   if (software.raw[0] != 0)
+   {
+      software.role = FirmwareRole::MAIN;
+      software.componentIndex = -1;
+      wcscpy(software.name, L"Software");
+      wcslcpy(software.version, software.raw, 64);
+      firmware->add(software);
+   }
+   if (bootFirmware.raw[0] != 0)
+   {
+      bootFirmware.role = FirmwareRole::OTHER;
+      bootFirmware.componentIndex = -1;
+      wcscpy(bootFirmware.name, L"Firmware");
+      wcslcpy(bootFirmware.version, bootFirmware.raw, 64);
+      firmware->add(bootFirmware);
+   }
+   return true;
 }
 
 /**

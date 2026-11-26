@@ -24,6 +24,41 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.21 to 71.22
+ */
+static bool H_UpgradeFromV21()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE object_firmware ("
+      L"   object_id integer not null,"
+      L"   sequence_number integer not null,"
+      L"   component_index integer not null,"
+      L"   fw_role char(1) not null,"
+      L"   name varchar(63) null,"
+      L"   platform varchar(63) null,"
+      L"   version varchar(63) null,"
+      L"   raw_version varchar(255) null,"
+      L"   PRIMARY KEY(object_id,sequence_number))"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_FIRMWARE_CHANGED, L"SYS_FIRMWARE_CHANGED",
+            EVENT_SEVERITY_NORMAL, EF_LOG, L"daabaddb-6c08-46a9-a613-addb18d45503",
+            L"Firmware \"%1\" changed (old version \"%5\", new version \"%6\")",
+            L"Generated when change of firmware running on the device is detected: different version, firmware added or firmware removed. Not generated when firmware information is collected for the first time.\r\n"
+            L"Parameters:\r\n"
+            L"   1) name - Firmware name\r\n"
+            L"   2) platform - Firmware platform ID (empty if not known)\r\n"
+            L"   3) role - Firmware role (main, patch, bootloader, management-controller, other)\r\n"
+            L"   4) componentIndex - Component index (-1 for device itself)\r\n"
+            L"   5) oldVersion - Old version (empty if firmware was added)\r\n"
+            L"   6) newVersion - New version (empty if firmware was removed)\r\n"
+            L"   7) oldRawVersion - Old version as reported by the device\r\n"
+            L"   8) newRawVersion - New version as reported by the device"));
+
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
  * Upgrade from 71.20 to 71.21
  */
 static bool H_UpgradeFromV20()
@@ -444,6 +479,7 @@ static struct
    bool (*upgradeProc)();
    bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 21, 71, 22, H_UpgradeFromV21 },
    { 20, 71, 21, H_UpgradeFromV20 },
    { 19, 71, 20, H_UpgradeFromV19 },
    { 18, 71, 19, H_UpgradeFromV18 },

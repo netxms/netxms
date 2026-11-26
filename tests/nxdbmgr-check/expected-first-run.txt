@@ -24,6 +24,7 @@ Found threshold configuration for non-existing DCI [999002]. Delete?
 1 ICMP target addresses refer to non-existing node [999121] (icmp_target_address_list.node_id). Delete them?
 1 software inventory records refer to non-existing node [999122] (software_inventory.node_id). Delete them?
 1 hardware inventory records refer to non-existing node [999123] (hardware_inventory.node_id). Delete them?
+1 firmware records refer to non-existing object [999983] (object_firmware.object_id). Delete them?
 1 node component records refer to non-existing node [999124] (node_components.node_id). Delete them?
 1 OSPF area records refer to non-existing node [999125] (ospf_areas.node_id). Delete them?
 1 OSPF neighbor records refer to non-existing node [999126] (ospf_neighbors.node_id). Delete them?
