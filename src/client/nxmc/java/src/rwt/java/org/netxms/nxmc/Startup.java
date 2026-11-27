@@ -76,8 +76,6 @@ import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.MappingTableCache;
-import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
-import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
 import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
@@ -309,18 +307,20 @@ public class Startup implements EntryPoint, StartupParameters
          MessageDialogHelper.openInformation(null, i18n.tr("Language"),
                i18n.tr("Language selected in your user preferences ({0}) differs from the current one. You have to reload the page for the change to take effect.", serverLanguage));
       }
-      ObjectToolsCache.attachSession(display, session);
       if (popoutId == null)
       {
          // Client session level data is shared with pop-out windows through registry and should be initialized only once.
          // Disconnect is also handled only by the window that owns client session - it closes pop-out windows on exit.
          MibCache.init(session, display);
-         SummaryTablesCache.attachSession(display, session);
-         GraphTemplateCache.attachSession(display, session);
          LogDescriptorRegistry.attachSession(display, session);
          MappingTableCache.attachSession(display, session);
          Registry.setSingleton(UIElementFilter.class, new UIElementFilter(session));
          session.addListener((n) -> processSessionNotification(n));
+      }
+      else
+      {
+         // Tool icons are tied to the pop-out display.
+         ObjectToolsCache.attachSession(display, session);
       }
 
       if (!kioskMode)

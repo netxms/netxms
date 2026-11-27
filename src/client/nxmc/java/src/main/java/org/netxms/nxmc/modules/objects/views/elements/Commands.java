@@ -37,6 +37,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.CommandBox;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objecttools.ObjectToolExecutor;
@@ -149,6 +150,16 @@ public class Commands extends OverviewPageElement
 	protected Control createClientArea(Composite parent)
 	{
 		commandBox = new CommandBox(parent, SWT.NONE);
+
+      final CommandBox box = commandBox;
+      final ObjectToolsCache toolsCache = ObjectToolsCache.getInstance();
+      final ImageUpdateListener iconChangeListener = (guid) -> {
+         if (!box.isDisposed() && (getObject() != null))
+            onObjectChange();
+      };
+      toolsCache.addIconChangeListener(iconChangeListener);
+      box.addDisposeListener((e) -> toolsCache.removeIconChangeListener(iconChangeListener));
+
 		return commandBox;
 	}
 

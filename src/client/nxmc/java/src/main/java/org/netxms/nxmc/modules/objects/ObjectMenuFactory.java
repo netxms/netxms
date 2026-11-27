@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +37,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.netxms.client.NXCSession;
@@ -85,6 +88,7 @@ import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
 import org.netxms.nxmc.modules.objects.views.ObjectPollerView;
 import org.netxms.nxmc.modules.objecttools.ObjectToolExecutor;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ImageCache;
 import org.xnap.commons.i18n.I18n;
 
@@ -301,6 +305,7 @@ public final class ObjectMenuFactory
       menu.addDisposeListener((e) -> imageCache.dispose());
 
       Map<String, Menu> menus = new HashMap<String, Menu>();
+      Map<MenuItem, Long> pendingIcons = new HashMap<MenuItem, Long>();
       for(final ObjectTool tool : tools)
       {
          String[] path = tool.getName().split("\\-\\>");
@@ -325,7 +330,11 @@ public final class ObjectMenuFactory
          item.setText(path[path.length - 1]);
          ImageDescriptor icon = ObjectToolsCache.getInstance().findIcon(tool.getId());
          if (icon != null)
+         {
             item.setImage(imageCache.create(icon));
+            if (SharedIcons.EMPTY.equals(icon))
+               pendingIcons.put(item, tool.getId());
+         }
          item.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
@@ -334,6 +343,57 @@ public final class ObjectMenuFactory
             }
          });
       }
+
+      if (!pendingIcons.isEmpty())
+         refreshPendingIconsOnShow(pendingIcons, imageCache);
+   }
+
+   /**
+    * Replace placeholders of object tool icons not yet loaded when menu was built. Pending icons are checked each time any menu
+    * containing them is shown; listener is removed once all of them are resolved.
+    *
+    * @param pendingIcons menu items with placeholder icon, mapped to object tool ID
+    * @param imageCache image cache owned by menu
+    */
+   private static void refreshPendingIconsOnShow(final Map<MenuItem, Long> pendingIcons, final ImageCache imageCache)
+   {
+      final Set<Menu> menus = new HashSet<Menu>();
+      for(MenuItem item : pendingIcons.keySet())
+         menus.add(item.getParent());
+
+      Listener listener = new Listener() {
+         @Override
+         public void handleEvent(Event event)
+         {
+            Iterator<Map.Entry<MenuItem, Long>> it = pendingIcons.entrySet().iterator();
+            while(it.hasNext())
+            {
+               Map.Entry<MenuItem, Long> entry = it.next();
+               MenuItem item = entry.getKey();
+               if (item.isDisposed())
+               {
+                  it.remove();
+                  continue;
+               }
+               ImageDescriptor icon = ObjectToolsCache.getInstance().findIcon(entry.getValue());
+               if (SharedIcons.EMPTY.equals(icon))
+                  continue;
+               item.setImage((icon != null) ? imageCache.create(icon) : null);
+               it.remove();
+            }
+
+            if (pendingIcons.isEmpty())
+            {
+               for(Menu m : menus)
+               {
+                  if (!m.isDisposed())
+                     m.removeListener(SWT.Show, this);
+               }
+            }
+         }
+      };
+      for(Menu m : menus)
+         m.addListener(SWT.Show, listener);
    }
 
    /**
