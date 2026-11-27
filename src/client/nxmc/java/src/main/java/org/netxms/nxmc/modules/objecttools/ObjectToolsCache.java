@@ -92,7 +92,7 @@ public class ObjectToolsCache implements DisposableSingleton
 
 	/**
 	 * Get cache instance
-	 * 
+	 *
 	 * @return
 	 */
 	public static ObjectToolsCache getInstance()
@@ -111,7 +111,7 @@ public class ObjectToolsCache implements DisposableSingleton
 
    /**
     * Attach session to cache
-    * 
+    *
     * @param session
     */
    public static void attachSession(Display display, NXCSession session)
@@ -134,7 +134,7 @@ public class ObjectToolsCache implements DisposableSingleton
 				objectTools.clear();
 				for(ObjectTool tool : list)
 				{
-				   if (!Registry.IS_WEB_CLIENT || (tool.getToolType() != ObjectTool.TYPE_LOCAL_COMMAND)) 
+				   if (!Registry.IS_WEB_CLIENT || (tool.getToolType() != ObjectTool.TYPE_LOCAL_COMMAND))
 				      objectTools.put(tool.getId(), tool);
 				}
 			}
@@ -270,11 +270,11 @@ public class ObjectToolsCache implements DisposableSingleton
 		   icons.clear();
       }
 	}
-	
+
 	/**
 	 * Get current set of object tools. Returned array is a copy of
-	 * cache content. 
-	 * 
+	 * cache content.
+	 *
 	 * @return current set of object tools
 	 */
 	public ObjectTool[] getTools()
@@ -286,10 +286,10 @@ public class ObjectToolsCache implements DisposableSingleton
 		}
 		return tools;
 	}
-	
+
 	/**
 	 * Find object tool in cache by ID
-	 * 
+	 *
 	 * @param toolId tool id
 	 * @return tool object or null if not found
 	 */
@@ -300,7 +300,7 @@ public class ObjectToolsCache implements DisposableSingleton
 			return objectTools.get(toolId);
 		}
 	}
-	
+
 	/**
 	 * @param toolId
 	 * @return
@@ -312,5 +312,5 @@ public class ObjectToolsCache implements DisposableSingleton
          return icons.get(toolId);
       }
 	}
-	
+
 }

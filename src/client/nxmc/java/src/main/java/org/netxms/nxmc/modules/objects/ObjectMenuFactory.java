@@ -99,7 +99,7 @@ public final class ObjectMenuFactory
          LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Configuration (with reset)"),
          LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Interface"),
          LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Topology"),
-         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Configuration"), 
+         LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Configuration"),
          LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Instance discovery"),
          LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Routing table"),
          LocalizationHelper.getI18n(ObjectMenuFactory.class).tr("Network discovery"),
@@ -404,7 +404,7 @@ public final class ObjectMenuFactory
           !(object instanceof DataCollectionTarget) &&
           !(object instanceof EntireNetwork) &&
           !(object instanceof Rack) &&
-          !(object instanceof ServiceRoot) && 
+          !(object instanceof ServiceRoot) &&
           !(object instanceof Subnet) &&
           !(object instanceof WirelessDomain) &&
           !(object instanceof Zone))
@@ -458,11 +458,11 @@ public final class ObjectMenuFactory
       if (selection.size() != 1)
          return null;
 
-      final AbstractNode node = getNode(selection);      
+      final AbstractNode node = getNode(selection);
       if (node == null)
          return null;
 
-      final Menu graphMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);      
+      final Menu graphMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
       GraphDefinition[] templates = GraphTemplateCache.getInstance().getGraphTemplates(); //array should be already sorted
 
       Map<String, Menu> menus = new HashMap<String, Menu>();
@@ -472,7 +472,7 @@ public final class ObjectMenuFactory
          if (templates[i].isApplicableForObject(node))
          {
             String[] path = templates[i].getName().split("\\-\\>"); //$NON-NLS-1$
-            
+
             Menu rootMenu = graphMenu;
             for(int j = 0; j < path.length - 1; j++)
             {
@@ -488,7 +488,7 @@ public final class ObjectMenuFactory
                }
                rootMenu = currMenu;
             }
-            
+
             NXCSession session = Registry.getSession();
             final MenuItem item = new MenuItem(rootMenu, SWT.PUSH);
             item.setText(path[path.length - 1]);
@@ -546,16 +546,16 @@ public final class ObjectMenuFactory
       final Object selectedElement = selection.getFirstElement();
       final AbstractObject baseObject = (selectedElement instanceof ObjectQueryResult) ? ((ObjectQueryResult)selectedElement).getObject() : (AbstractObject)selectedElement;
       if (!(baseObject instanceof Cluster) &&
-          !(baseObject instanceof DataCollectionContainer) && 
-          !(baseObject instanceof Container) && 
-          !(baseObject instanceof EntireNetwork) && 
-          !(baseObject instanceof ServiceRoot) && 
+          !(baseObject instanceof DataCollectionContainer) &&
+          !(baseObject instanceof Container) &&
+          !(baseObject instanceof EntireNetwork) &&
+          !(baseObject instanceof ServiceRoot) &&
           !(baseObject instanceof Subnet) &&
           !(baseObject instanceof WirelessDomain) &&
           !(baseObject instanceof Zone))
          return null;
 
-      final Menu tablesMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);  
+      final Menu tablesMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
 
       DciSummaryTableDescriptor[] tables = SummaryTablesCache.getInstance().getTables();
       Arrays.sort(tables, new Comparator<DciSummaryTableDescriptor>() {
@@ -565,16 +565,16 @@ public final class ObjectMenuFactory
             return d1.getMenuPath().replace("&", "").compareToIgnoreCase(d2.getMenuPath().replace("&", ""));
          }
       });
-      
+
       Map<String, Menu> menus = new HashMap<String, Menu>();
       int added = 0;
       for(int i = 0; i < tables.length; i++)
       {
          if (tables[i].getMenuPath().isEmpty())
             continue;
-         
+
          String[] path = tables[i].getMenuPath().split("\\-\\>");
-      
+
          Menu rootMenu = tablesMenu;
          for(int j = 0; j < path.length - 1; j++)
          {
@@ -616,7 +616,7 @@ public final class ObjectMenuFactory
 
    /**
     * Build node set from selection
-    * 
+    *
     * @param selection
     * @return
     */
@@ -659,7 +659,7 @@ public final class ObjectMenuFactory
 
    /**
     * Build node set from selection
-    * 
+    *
     * @param selection
     * @return
     */
