@@ -699,6 +699,17 @@ void TestSendFileOverEncryptedChannel()
    AssertNull(NXCPMessage::deserialize(&shortMsg));
    EndTest();
 
+   StartTest(_T("NXCP encryption - session key with invalid cipher"));
+   static const int16_t invalidCiphers[] = { -1, -32768, NETXMS_MAX_CIPHERS, 32767 };
+   for(int i = 0; i < 4; i++)
+   {
+      NXCPMessage keyMsg(CMD_SESSION_KEY, 1);
+      keyMsg.setField(VID_CIPHER, invalidCiphers[i]);
+      keyMsg.setField(VID_KEY_LENGTH, static_cast<uint16_t>(32));
+      AssertNull(NXCPEncryptionContext::create(&keyMsg, nullptr));
+   }
+   EndTest();
+
    delete ectx;
 }
 
