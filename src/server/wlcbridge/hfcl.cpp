@@ -93,7 +93,7 @@ static bool Login(const char *baseUrl, const char *login, const char *password, 
 
    if (success)
    {
-      nxlog_debug_tag(DEBUG_TAG, 9, _T("Sending login request '%hs' to %hs"), data, url);
+      nxlog_debug_tag(DEBUG_TAG, 9, _T("Sending login request to %hs"), url);
       memset(token, 0, MAX_AUTH_TOKEN_SIZE);
       CURLcode rc = curl_easy_perform(curl);
       if (rc != CURLE_OK)
