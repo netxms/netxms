@@ -21,6 +21,7 @@ void TestSharedObjectQueue();
 void TestSQueue();
 void TestMsgWaitQueue();
 void TestMessageClass();
+void TestSessionKeyInvalidCipher();
 void TestMutex();
 void TestUniqueLock();
 void TestCondition();
@@ -3870,6 +3871,7 @@ int main(int argc, char *argv[])
    TestShortenFilePathForDisplay();
    TestMessageClass();
    TestMsgWaitQueue();
+   TestSessionKeyInvalidCipher();
    TestGenericId();
    TestMacAddress();
    TestInetAddress();

@@ -744,7 +744,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA_KEY p
 bool NXCPEncryptionContext::initCipher(int cipher)
 {
 #ifdef _WITH_ENCRYPTION
-   if (s_ciphers[cipher] == nullptr)
+   if ((cipher < 0) || (cipher >= NETXMS_MAX_CIPHERS) || (s_ciphers[cipher] == nullptr))
       return false;   // Unsupported cipher
 
    if (!EVP_EncryptInit_ex(m_encryptor, s_ciphers[cipher](), nullptr, nullptr, nullptr))
