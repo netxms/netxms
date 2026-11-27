@@ -1,361 +1,131 @@
 # Contributing to NetXMS
 
-Thank you for your interest in contributing to NetXMS! This document provides guidelines and information about how to contribute to the project effectively.
-
-## 📋 Table of Contents
-
-- [Project Vision & Values](#project-vision--values)
-- [Getting Started](#getting-started)
-- [Development Priorities](#development-priorities)
-- [Contribution Workflow](#contribution-workflow)
-- [Development Setup](#development-setup)
-- [Code Guidelines](#code-guidelines)
-- [Testing Requirements](#testing-requirements)
-- [Documentation](#documentation)
-- [Community Guidelines](#community-guidelines)
-
-## 🎯 Project Vision & Values
-
-NetXMS is committed to providing a powerful, scalable, and privacy-respecting network monitoring solution. Our core values guide all development decisions:
-
-### Privacy First
-- **No user data transmission**: NetXMS does not transmit user data to external parties or developers
-- **Local data control**: All monitoring data remains under user control within their infrastructure
-- **Transparent operations**: No hidden telemetry or analytics collection
-
-### Performance Excellence
-- **Efficiency focus**: Every feature should be optimized for minimal resource usage
-- **Scalability**: Solutions must work efficiently from small setups to enterprise environments
-- **Real-time processing**: Prioritize low-latency data collection and processing
-
-### Modular Architecture
-- **Modular approach**: Extend functionality through database drivers, modules and device drivers
-- **Subagent system**: Use modular subagents for specific monitoring capabilities
-- **Plugin ecosystem**: Support extensibility without modifying core components
+## Principles
 
-### Distributed Scalability
-- **Proxy architecture**: Enable horizontal scaling through intelligent proxy deployment
-- **Zone-based monitoring**: Support logical network segmentation and distributed data collection
-- **Autonomous operation**: Maintain functionality even when central components are unavailable
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-Before contributing, ensure you have:
-- Experience with C/C++ for server and agent development
-- Java and SWT/RWT knowledge for client applications and APIs
-- Understanding of network protocols (SNMP, SSH, HTTP/HTTPS) for some tasks
-- Basic understanding of SQL
-- Git version control experience
-
-### Initial Steps
-
-1. **Join the community**:
-   - [Forum](https://www.netxms.org/forum/index.php) - Introduce yourself and discuss ideas
-   - [Telegram](https://telegram.me/netxms) - Real-time discussions
-   - [Issue Tracker](https://github.com/netxms/netxms/issues) - Review existing issues
-
-2. **Understand the codebase**:
-   - Read the [Concepts Documentation](https://www.netxms.org/documentation/adminguide/concepts.html)
-   - Review the [C++ Development Guidelines](./CLAUDE.md#c-development-guidelines) for core development
-   - Review existing code to understand patterns and conventions
-   - Set up a development environment
-
-3. **Start small**:
-   - Look for issues labeled "good first issue" or "help wanted"
-   - Fix documentation typos or improve examples
-   - Add unit tests for existing functionality
-
-## 🎯 Development Priorities
-
-NetXMS development follows these priorities to maintain project coherence and quality:
-
-### 1. Security & Privacy (Highest Priority)
-- Vulnerability fixes
-- Data leakage prevention
-
-
-### 2. Core Stability & Performance (High Priority)
-- Critical bug fixes in core monitoring engine
-- Memory leak fixes and performance optimizations
-- Database query optimization
-
-### 3. Monitoring Capabilities (Medium Priority)
-- New protocol support
-- New network device drivers 
-- Improvements to network device support
-- New subagent development
-- Data collection method improvements
-
-### 4. User Interface & Experience (Medium Priority)
-- Web client improvements
-- Desktop client enhancements
-- Visualization capabilities
-
-### 5. Integration & Automation (Lower Priority)
-- Third-party system integrations
-- Automation script improvements
-- API extensions
-- Notification system enhancements
-- Improvement of AI tools
-
-### Guidelines for Priority Assessment
-- **Performance impact**: Changes affecting system performance get higher priority
-- **User base impact**: Features benefiting many users are prioritized
-- **Maintenance burden**: Prefer solutions that don't increase long-term maintenance
-- **Architectural alignment**: Features that fit the modular, scalable architecture are preferred
+These shape what gets accepted:
 
-## 🔄 Contribution Workflow
+* **No data leaves the user's installation.** NetXMS does not send telemetry, usage statistics or monitoring data to
+  the developers or any third party.
+* **Resource usage matters.** The same code runs on a small office installation and on servers monitoring tens of
+  thousands of nodes. Consider the cost of a change at that scale.
+* **Extend through existing plugin points.** Server modules, agent subagents, network device drivers, notification
+  channel drivers and database drivers are the preferred way to add functionality without touching the core.
+* **Distributed operation.** Proxy agents and zones must keep working when the central server is unreachable.
 
-NetXMS follows an **issue-first** approach to ensure all contributions align with project goals and avoid duplicate work.
+Rough order of priority when we decide what to work on and review: security fixes, stability and performance of the
+core, monitoring capabilities (protocols, device drivers, subagents), user interface, integrations.
 
-### 1. Issue Creation (Required)
+## Workflow
 
-**Before starting any work**, create an issue that describes:
-- **Problem description**: What problem does this solve?
-- **Proposed solution**: How do you plan to solve it?
-- **Impact assessment**: Who benefits and how?
-- **Implementation approach**: Technical details of your approach
+Open an [issue](https://github.com/netxms/netxms/issues) before starting non-trivial work, and wait for a
+maintainer's response. Describe the problem, the proposed solution and the approach you plan to take. This avoids
+duplicated work and pull requests for changes that don't fit the project. Typo fixes and other obvious corrections can
+go straight to a pull request.
 
-**Issue types**:
-- 🐛 **Bug Report**: Use the bug report template
-- ✨ **Feature Request**: Use the feature request template
-- 📖 **Documentation**: For documentation improvements create issues in dedicated documentation repositories: [NXSL Documentation](https://github.com/netxms/nxsl-doc) or [NetXMS Documentation](https://github.com/netxms/netxms-doc)
+Issues labeled [good first issue](https://github.com/netxms/netxms/labels/good%20first%20issue) and
+[help wanted](https://github.com/netxms/netxms/labels/help%20wanted) are a reasonable starting point.
 
-### 2. Discussion & Approval
+Pull requests:
 
-- Community discussion on the issue
-- Maintainer review and feedback
-- Approval before implementation begins
-- Scope clarification if needed
+* Reference the issue (`Fixes #123`)
+* Keep unrelated changes out; one logical change per pull request
+* Describe how the change was tested
+* By submitting a pull request you agree to license your contribution under the MIT License
 
-### 3. Implementation
+Documentation lives in separate repositories:
+[Administration Guide](https://github.com/netxms/netxms-doc), [NXSL](https://github.com/netxms/nxsl-doc),
+[data dictionary](https://github.com/netxms/netxms-db-doc). Changes to them follow the same process in the
+respective repository.
 
-Only after issue approval:
-- Fork the repository
-- Create a feature branch: `git checkout -b feature/issue-number-description`
-- Implement your changes following our guidelines
-- Test your changes thoroughly (see Testing Requirements below)
-- Update documentation as needed
+Questions go to the [forum](https://www.netxms.org/forum/index.php) or [Telegram](https://telegram.me/netxms).
+Communication in the issue tracker and pull requests is in English.
 
-### 4. Pull Request Submission
+## Building from source
 
-- Reference the issue: "Fixes #123" or "Addresses #123"
-- Provide clear description of changes
-- Include test results and performance impact
-- **License Agreement**: By submitting a pull request, you agree to license your contributions under the MIT License
-- Request review from maintainers
+Dependencies on Debian/Ubuntu:
 
-### 5. Review Process
+```bash
+sudo apt-get install build-essential automake autoconf libtool flex bison git \
+   libssl-dev libjansson-dev libcurl4-openssl-dev libpcre2-dev libexpat1-dev libmicrohttpd-dev \
+   libmosquitto-dev libpq-dev libmariadb-dev \
+   default-jdk maven gdb valgrind
+```
 
-- Code review by maintainers
-- Manual testing on multiple platforms if applicable
-- Documentation review
-- Final approval and merge
+Build server and agent into `/opt/netxms`:
 
-## 🛠️ Development Setup
+```bash
+./init-source-tree   # once after clone: generates build tag files and runs autoreconf
+./configure --prefix=/opt/netxms --with-sqlite --with-server --with-agent --with-tests --enable-debug
+make -j$(nproc)
+make install
+```
 
-### Building from Source
+Database drivers are selected with `--with-pgsql`, `--with-mysql`, `--with-oracle`, `--with-mssql`.
+`--enable-sanitizer` builds with AddressSanitizer (requires `libasan`); it can't be combined with valgrind.
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/netxms/netxms.git
-   cd netxms
-   ```
+Run the test suite, then the server and agent in foreground with debug output:
 
-2. **Install dependencies (Ubuntu/Debian)**:
-   ```bash
-   sudo apt-get update
-   sudo apt-get install build-essential g++ automake git gitk libtool flex bison libssl-dev libjansson-dev autoconf valgrind gdb libcurl4-openssl-dev postgresql-client maven mariadb-client libpcre2-dev libmosquitto-dev libmariadb-dev libpq-dev default-jdk libasan8 libexpat1-dev libmicrohttpd-dev
-   ```
+```bash
+./tests/suite/netxms-test-suite
+/opt/netxms/bin/netxmsd -D6
+/opt/netxms/bin/nxagentd -D6
+```
 
-3. **Configure and build**:
-Configure NetXMS to be built in `/opt/netxms` with desired options:
+See the [Administration Guide](https://www.netxms.org/documentation/adminguide/installation.html) for database
+setup.
 
-   ```bash
-   mkdir /opt/netxms
-   ./init-source-tree # run once after clone: generates build tag files and runs autoreconf
-   ./configure --prefix=/opt/netxms --with-sqlite --with-server --with-agent --with-tests --enable-debug --enable-sanitizer # choose --with-mysql --with-pgsql --with-oracle --with-mssql as needed
-   make -j$(nproc)
-   make install
-   ```
+Java client libraries and the management console:
 
-> note: --enable-sanitizer is optional, it enables address sanitizer for memory issue detection, sanitizer and valgrind usage is mutually exclusive
+```bash
+mvn -f src/java-common/netxms-base/pom.xml install -DskipTests
+mvn -f src/client/java/netxms-client/pom.xml install -DskipTests
 
-4. **Database setup**:
-Create and configure your database (PostgreSQL, MySQL, etc.) as per [Installation Guide](https://www.netxms.org/documentation/adminguide/installation.html).
+# desktop console
+mvn -f src/client/nxmc/java/pom.xml clean package -Pdesktop -Pstandalone
+java -jar src/client/nxmc/java/target/netxms-nxmc-standalone-*.jar
 
-5. **Run tests**:
-   ```bash
-   chmod +x ./tests/suite/netxms-test-suite
-   ./tests/suite/netxms-test-suite
+# web console, run in Jetty
+mvn -f src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatformProfile=true
+```
 
-   ```
+Eclipse formatter profiles for C++ and Java, and Notepad++ NXSL syntax files, are in [docs/ide](docs/ide).
 
-6. **Run the server and agent**:
-   ```bash
-   /opt/netxms/bin/netxmsd -D6 # Run the server with debug level 6 in foreground mode (not as a daemon)
-   /opt/netxms/bin/nxagentd -D6 # Run the agent with debug level 6 in foreground mode (not as a daemon)
-   ```
+## Code conventions
 
-7. **Build and run the Java clients**:
+C/C++:
 
-Build base and client libraries:
-
-   ```bash
-   mvn -f  ./src/java-common/netxms-base/pom.xml install -DskipTests -Dmaven.javadoc.skip=true 
-   mvn -f ./src/client/java/netxms-client/pom.xml install -DskipTests -Dmaven.javadoc.skip=true
-   ```
-
-Build desktop standalone client:
-
-   ```bash
-   mvn -f ./src/client/nxmc/java/pom.xml clean package -Pdesktop -Pstandalone
-   ```
-
-Build web client:
-
-   ```bash
-   mvn -f ./src/client/nxmc/java/pom.xml clean package -Pweb
-   ```
-
-Run the client:
-
-   ```bash
-   java -jar ./src/client/nxmc/java/target/netxms-nxmc-standalone-<version>.jar
-   ```
-
-Run the web client:
-
-   ```bash
-   mvn -f ./src/client/nxmc/java/pom.xml clean package -Pweb -Dnetxms.build.disablePlatformProfile=true
-   mvn -f ./src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatformProfile=true
-   ```
-
-### Development Environment
-
-- **IDE recommendations**: Eclipse for C/C++ and Java development, repository includes project files
-- **Debugging**: Use gdb for core components, standard Java debugging for client
-- **Static analysis**: Use tools like sanitizer or valgrind for memory analysis (sanitizer and valgrind usage is mutually exclusive)
-- **Testing**: Unit tests
-
-## 📝 Code Guidelines
-
-### C/C++ Code Standards
-
-- **Language version**: C++11 maximum; the code must compile with GCC 4.8
-- **Formatting**: 3-space indentation, opening brace on a new line
-- **Naming**: PascalCase for functions and classes, camelCase for methods and variables, `m_` prefix for class members, `g_` for global variables, `s_` for static variables
-- **Memory**: Use `MemAlloc` / `MemFree` family of functions instead of `malloc` / `free`
-- **Comments**: Describe current behavior, not change history
-
-Detailed rules are in the [C++ Development Guidelines](./CLAUDE.md#c-development-guidelines) section of `CLAUDE.md`.
-
-### Java Code Standards
-
-- **Style**: Follow standard Java conventions
-- **Dependencies**: Minimize external dependencies, prefer standard library
-- **Exception handling**: Proper exception handling with meaningful messages
-- **Documentation**: Javadoc for public APIs
-
-### General Principles
-
-- **Modularity**: Keep components loosely coupled.
-- **Performance**: Consider performance impact of all changes
-- **Compatibility**: Maintain backward compatibility when possible
-- **Logging**: Use appropriate logging levels and meaningful messages
-- **Configuration**: Make new features configurable when appropriate
-
-## 🧪 Testing Requirements
-
-### Current Testing Infrastructure
-
-NetXMS currently has limited automated testing infrastructure:
-
-- **Unit tests**: Available for some server base classes (String, StringBuilder, etc.)
-- **Manual testing**: Primary testing method for most functionality
-- **Platform testing**: Manual verification across Windows, Linux, macOS
-- **Integration tests**: Limited coverage, primarily manual
-
-### Testing Guidelines
-
-- **Test your changes**: Always test your changes manually before submitting
-- **Cross-platform verification**: Test on multiple platforms when possible
-- **Regression testing**: Ensure existing functionality still works
-- **Performance impact**: Verify that changes don't negatively affect performance
-- **Edge cases**: Test error conditions and boundary cases
-- **Documentation testing**: Verify that examples in documentation work correctly
-
-### Manual Testing Process
-
-Since we don't have comprehensive automated tests, contributors should:
-
-1. **Build and test locally**: Ensure your changes compile and work as expected
-2. **Test core functionality**: Verify that basic monitoring operations still work
-3. **Test your specific changes**: Thoroughly exercise the new functionality
-4. **Test error conditions**: Ensure proper error handling and reporting
-5. **Performance testing**: Monitor resource usage for performance-sensitive changes
-
-### Future Testing Goals
-
-We welcome contributions to improve our testing infrastructure:
-- Expanding unit test coverage for core classes
-- Integration tests for key workflows
-- Automated regression testing
-
-## 📚 Documentation
-
-Documentation should be updated in separate repositories:
-
-* [NetXMS Documentation](https://github.com/netxms/netxms-doc)
-* [NXSL Documentation](https://github.com/netxms/nxsl-doc) 
-* [Data dictionary](https://github.com/netxms/netxms-db-doc) 
-
-### Documentation Requirements
-
-- **Code documentation**: Comment complex algorithms and public APIs
-- **User documentation**: Update the [NetXMS Administration Guide](https://github.com/netxms/netxms-doc/tree/master/admin) or the [NXSL Guide](https://github.com/netxms/nxsl-doc) for new features
-- **API documentation**: Maintain API documentation for changes using javadoc or OpenAPI specs
-- **Change documentation**: Update [changelog](https://github.com/netxms/changelog/blob/master/ChangeLog.md) for all user-visible changes
-
-### Documentation Standards
-
-- Clear, concise language
-- Examples for complex features
-- Screenshots for UI changes
-- Version compatibility information
-
-## 🤝 Community Guidelines
-
-### Code of Conduct
-
-- Be respectful and professional in all interactions
-- Focus on constructive feedback and collaboration
-- Welcome newcomers and help them get started
-- Respect different perspectives and experience levels
-
-### Communication
-
-- **English language**: All communication should be in English
-- **Clear communication**: Be specific and provide context
-- **Patience**: Allow time for review and feedback
-- **Constructive criticism**: Focus on the code, not the person
-
-### Getting Help
-
-- **Forum**: For general discussions and questions
-- **Telegram**: For real-time help and community chat
-- **Issue tracker**: For bug reports and feature discussions
-- **Documentation**: Check existing docs before asking questions
-
-## 📞 Contact
-
-- **Forum**: [https://www.netxms.org/forum/index.php](https://www.netxms.org/forum/index.php)
-- **Telegram**: [https://telegram.me/netxms](https://telegram.me/netxms)
-- **Issue Tracker**: [https://github.com/netxms/netxms/issues](https://github.com/netxms/netxms/issues)
-- **Website**: [https://www.netxms.org](https://www.netxms.org)
-
----
-
-Thank you for contributing to NetXMS! Your efforts help make network monitoring better for everyone while respecting privacy and maintaining high performance standards.
+* C++11 at most; code must compile with GCC 4.8, Clang 3.3 and Visual Studio 2015
+* 3-space indentation, opening brace on a new line
+* PascalCase for functions and classes, camelCase for methods and variables, `m_` prefix for class members, `g_` for
+  globals, `s_` for statics
+* `MemAlloc` / `MemFree` family instead of `malloc` / `free`; NetXMS string and container classes instead of raw
+  buffers
+* `nullptr` instead of `NULL`
+* String and character literals contain only ASCII; write other characters as escapes
+* Debug output goes through `nxlog_debug_tag`; new tags are registered in `docs/internal/debug_tags.txt`
+* Comments describe current behavior, not change history
+
+Java: 3-space indentation, opening brace on a new line, no new external dependencies without discussion. The desktop
+console uses SWT and the web console RWT; UI changes must work in both.
+
+Server-client protocol changes must stay compatible with released clients. Database schema changes go through
+`nxdbmgr` upgrade procedures.
+
+## Testing
+
+* `tests/suite/netxms-test-suite` runs unit tests for the C++ libraries and server components; it runs in CI on every
+  push and pull request
+* `tests/integration` contains Java integration tests that run against a live server. They need the Java libraries
+  above plus `src/mobile-agent/java` installed, and a server with a node representing the management server itself.
+  The server defaults to `127.0.0.1` with `admin`/`netxms`; override with `-DConfigFile=<file>` containing
+  `server.address`, `server.login` and `server.password`. The tests set that node's agent port to `agent.port`
+  (default 5019), so pass `-Dagent.port=4700` when testing against an agent on the standard port:
+
+  ```bash
+  mvn -f src/mobile-agent/java/pom.xml install
+  mvn -f tests/integration/pom.xml test -Dtest=ScriptTest -Dagent.port=4700
+  ```
+* Add tests for new library code where practical
+
+Large parts of the server and the UI have no automated coverage, so describe in the pull request what you tested by
+hand and on which platforms.
