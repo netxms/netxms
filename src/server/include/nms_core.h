@@ -1098,7 +1098,7 @@ public:
    void postMessage(const NXCPMessage& msg)
    {
       if (!isTerminated())
-         postRawMessageAndDelete(msg.serialize((m_flags & CSF_COMPRESSION_ENABLED) != 0));
+         postRawMessageAndDelete(msg.serialize(isCompressionEnabled()));
    }
    void postMessage(const NXCPMessage *msg)
    {
@@ -1124,11 +1124,11 @@ public:
    const wchar_t *getWebServerAddress() const { return m_webServerAddress; }
    const wchar_t *getLanguage() const { return m_language; }
    uint32_t getFlags() const { return static_cast<uint32_t>(m_flags); }
-   bool isAuthenticated() const { return (m_flags & CSF_AUTHENTICATED) != 0; }
-   bool isTerminated() const { return (m_flags & (CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) != 0; }
-   bool isConsoleOpen() const { return (m_flags & CSF_CONSOLE_OPEN) != 0; }
-   bool isCompressionEnabled() const { return (m_flags & CSF_COMPRESSION_ENABLED) != 0; }
-   bool keepsOtherSessions() const { return (m_flags & CSF_KEEP_OTHER_SESSIONS) != 0; }
+   bool isAuthenticated() const { return (getFlags() & CSF_AUTHENTICATED) != 0; }
+   bool isTerminated() const { return (getFlags() & (CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) != 0; }
+   bool isConsoleOpen() const { return (getFlags() & CSF_CONSOLE_OPEN) != 0; }
+   bool isCompressionEnabled() const { return (getFlags() & CSF_COMPRESSION_ENABLED) != 0; }
+   bool keepsOtherSessions() const { return (getFlags() & CSF_KEEP_OTHER_SESSIONS) != 0; }
    int getCipher() const { return (m_encryptionContext == nullptr) ? -1 : m_encryptionContext->getCipher(); }
 	int getClientType() const { return m_clientType; }
    time_t getLoginTime() const { return m_loginTime; }
@@ -1217,7 +1217,7 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t base) const;
 
    SNMP_ObjectId *getOid() const { return m_objectId; }
-   int getPosition() const { return m_position; }
+   int getPosition() const { return static_cast<int>(m_position); }
    bool isPositional() const { return m_objectId == nullptr; }
 
    uint32_t getFlags() const { return m_flags; }
