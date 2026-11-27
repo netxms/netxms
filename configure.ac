@@ -7,7 +7,7 @@
 AC_INIT([NetXMS], [7.1.0], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
-AM_INIT_AUTOMAKE([tar-ustar subdir-objects])
+AM_INIT_AUTOMAKE([foreign -Wportability tar-ustar subdir-objects])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_CONFIG_MACRO_DIR([m4])
