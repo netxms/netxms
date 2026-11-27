@@ -21,6 +21,7 @@ package org.netxms.nxmc.base.preferencepages;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -190,19 +191,25 @@ public class RegionalSettingsPage extends PropertyPage
 	private void updateExample(Control updatedControl)
 	{
 		DateFormat df;
+		String datePattern, timePattern;
 		switch(format)
 		{
 			case DateFormatFactory.DATETIME_FORMAT_SERVER:
 				NXCSession session = Registry.getSession();
-				df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat());
+				datePattern = session.getDateFormat();
+				timePattern = session.getTimeFormat();
+				df = new SimpleDateFormat(datePattern + " " + timePattern);
 				break;
 			case DateFormatFactory.DATETIME_FORMAT_CUSTOM:
+				datePattern = dateFormatString.getText();
+				timePattern = timeFormatString.getText();
 				try
 				{
-					df = new SimpleDateFormat(dateFormatString.getText() + " " + timeFormatString.getText());
+					df = new SimpleDateFormat(datePattern + " " + timePattern);
 				}
 				catch(IllegalArgumentException e)
 				{
+					setMessage(null);
 					setErrorMessage(e.getLocalizedMessage());
 					if (updatedControl != null)
                   updatedControl.setBackground(ThemeEngine.getBackgroundColor("TextInput.Error"));
@@ -210,6 +217,8 @@ public class RegionalSettingsPage extends PropertyPage
 				}
 				break;
 			default:
+				datePattern = "";
+				timePattern = "";
 				df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
 				break;
 		}
@@ -218,6 +227,18 @@ public class RegionalSettingsPage extends PropertyPage
 		setErrorMessage(null);
 		dateFormatString.getTextControl().setBackground(null);
 		timeFormatString.getTextControl().setBackground(null);
+
+		boolean serverFormat = (format == DateFormatFactory.DATETIME_FORMAT_SERVER);
+		if ((datePattern.indexOf('m') >= 0) && (datePattern.indexOf('M') < 0))
+			setMessage(serverFormat ?
+					i18n.tr("Server date format \"{0}\" (Client.DefaultConsoleDateFormat) uses \"m\" (minutes) - month is \"M\"", datePattern) :
+					i18n.tr("Date format uses \"m\" (minutes) - month is \"M\""), IMessageProvider.WARNING);
+		else if ((timePattern.indexOf('M') >= 0) && (timePattern.indexOf('m') < 0))
+			setMessage(serverFormat ?
+					i18n.tr("Server time format \"{0}\" (Client.DefaultConsoleTimeFormat) uses \"M\" (month) - minutes are \"m\"", timePattern) :
+					i18n.tr("Time format uses \"M\" (month) - minutes are \"m\""), IMessageProvider.WARNING);
+		else
+			setMessage(null);
 	}
 
    /**
