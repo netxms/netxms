@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = reconf configure jemalloc.sym SECURITY.md
+EXTRA_DIST = reconf configure jemalloc.sym SECURITY.md CONTRIBUTORS.md
 SUBDIRS = . m4 build src docs tools contrib manpages
 SUBDIRS += @TOP_LEVEL_MODULES@
 
