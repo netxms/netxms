@@ -74,14 +74,11 @@ import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.MappingTableCache;
-import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
-import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
 import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
 import org.netxms.nxmc.modules.objects.MaintenanceTimePeriods;
 import org.netxms.nxmc.modules.objects.ObjectIcons;
-import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -208,9 +205,6 @@ public class Startup
          DataCollectionDisplayInfo.init();
          MaintenanceTimePeriods.init(session);
          MibCache.init(session, display);
-            ObjectToolsCache.attachSession(display, session);
-         SummaryTablesCache.attachSession(display, session);
-         GraphTemplateCache.attachSession(display, session);
          LogDescriptorRegistry.attachSession(display, session);
          MappingTableCache.attachSession(display, session);
          session.addListener((n) -> {

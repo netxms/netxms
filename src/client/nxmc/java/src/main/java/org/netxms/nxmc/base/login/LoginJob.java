@@ -47,7 +47,10 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
+import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
+import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.services.LoginListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +105,7 @@ public class LoginJob implements IRunnableWithProgress
    @Override
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
-      monitor.beginTask(i18n.tr("Connecting..."), 9);
+      monitor.beginTask(i18n.tr("Connecting..."), 10);
       final InetSocketAddress serverAddress;
       try
       {
@@ -266,6 +269,13 @@ public class LoginJob implements IRunnableWithProgress
 
          setupSessionListener(session, display);
 
+         monitor.setTaskName(i18n.tr("Loading tools, summary tables, and graph templates..."));
+         SummaryTablesCache.attachSession(display, session);
+         GraphTemplateCache.attachSession(display, session);
+         // Attach object tools last because installing them starts background icon requests.
+         ObjectToolsCache.attachSession(display, session);
+         monitor.worked(1);
+
          if (backgroundSync)
             startBackgroundObjectSync(session, display, fullySync);
 
@@ -363,7 +373,7 @@ public class LoginJob implements IRunnableWithProgress
 
    /**
     * Inform all registered login listeners about successful login
-    * 
+    *
     * @param session new client session
     */
    private void callLoginListeners(NXCSession session)

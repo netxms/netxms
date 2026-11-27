@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objecttools;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.UUID;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.NXCommon;
@@ -37,11 +39,14 @@ import org.netxms.nxmc.DisposableSingleton;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Cache for object tools. Holds images created on owning display, so each display has own instance.
+ * Cache for object tools. Holds images created on owning display, so each display has own instance. Tool list is fetched on
+ * caller's thread and installed on owning display's thread; icons not yet loaded from server are shown as transparent
+ * placeholder and replaced when image provider completes loading.
  */
 public class ObjectToolsCache implements DisposableSingleton
 {
@@ -53,6 +58,9 @@ public class ObjectToolsCache implements DisposableSingleton
    private Display display = null;
 	private NXCSession session = null;
    private SessionListener sessionListener;
+   private ImageProvider imageProvider = null;
+   private ImageUpdateListener imageUpdateListener = null;
+   private List<ImageUpdateListener> iconChangeListeners = new ArrayList<ImageUpdateListener>();
 
 	/**
 	 * @param session
@@ -61,8 +69,6 @@ public class ObjectToolsCache implements DisposableSingleton
 	{
       this.display = display;
 	   this.session = session;
-
-	   reload();
 
       sessionListener = new SessionListener() {
          @Override
@@ -80,14 +86,6 @@ public class ObjectToolsCache implements DisposableSingleton
          }
       };
       session.addListener(sessionListener);
-
-      ImageProvider.getInstance().addUpdateListener(new ImageUpdateListener() {
-         @Override
-         public void imageUpdated(UUID guid)
-         {
-            onLibraryImageChange(guid);
-         }
-      });
 	}
 
 	/**
@@ -107,43 +105,75 @@ public class ObjectToolsCache implements DisposableSingleton
    public void dispose()
    {
       session.removeListener(sessionListener);
+      if (imageUpdateListener != null)
+         imageProvider.removeUpdateListener(imageUpdateListener);
    }
 
    /**
-    * Attach session to cache
+    * Attach session to cache. Can be called from any thread - tool list is fetched on calling thread and installed on given
+    * display's thread.
     *
-    * @param session
+    * @param display owning display
+    * @param session communication session
     */
    public static void attachSession(Display display, NXCSession session)
    {
       ObjectToolsCache instance = new ObjectToolsCache(display, session);
+      List<ObjectTool> tools = instance.fetchTools();
+      display.syncExec(() -> instance.install((tools != null) ? tools : Collections.emptyList()));
       Registry.setDisplaySingleton(display, ObjectToolsCache.class, instance);
    }
 
-	/**
-	 * Reload object tools from server
-	 */
-   @SuppressWarnings("unused")
-   private void reload()
-	{
-		try
-		{
-			List<ObjectTool> list = session.getObjectTools();
-			synchronized(objectTools)
-			{
-				objectTools.clear();
-				for(ObjectTool tool : list)
-				{
-				   if (!Registry.IS_WEB_CLIENT || (tool.getToolType() != ObjectTool.TYPE_LOCAL_COMMAND))
-				      objectTools.put(tool.getId(), tool);
-				}
-			}
-			synchronized(icons)
-         {
-			   icons.clear();
+   /**
+    * Fetch object tools from server.
+    *
+    * @return list of object tools or null on failure
+    */
+   private List<ObjectTool> fetchTools()
+   {
+      try
+      {
+         return session.getObjectTools();
+      }
+      catch(Exception e)
+      {
+         logger.error("Cannot load object tools from server", e);
+         return null;
+      }
+   }
 
-            ImageProvider imageProvider = ImageProvider.getInstance(display);
-            for(ObjectTool tool : list)
+   /**
+    * Install given object tools into cache. Must be called on owning display's thread. Icons not yet loaded by image provider get
+    * transparent placeholder, and image provider is requested to load them in background.
+    *
+    * @param tools object tools to install
+    */
+   private void install(List<ObjectTool> tools)
+   {
+      try
+      {
+         if (imageUpdateListener == null)
+         {
+            // Listener is registered before any image load is requested, so completion of the load cannot be missed
+            imageProvider = ImageProvider.getInstance(display);
+            imageUpdateListener = (guid) -> onLibraryImageChange(guid);
+            imageProvider.addUpdateListener(imageUpdateListener);
+         }
+
+         synchronized(objectTools)
+         {
+            objectTools.clear();
+            for(ObjectTool tool : tools)
+            {
+               if (!Registry.IS_WEB_CLIENT || (tool.getToolType() != ObjectTool.TYPE_LOCAL_COMMAND))
+                  objectTools.put(tool.getId(), tool);
+            }
+         }
+
+         synchronized(icons)
+         {
+            icons.clear();
+            for(ObjectTool tool : tools)
             {
                final UUID iconGuid = tool.getIcon();
                if ((iconGuid == null) || iconGuid.equals(NXCommon.EMPTY_GUID))
@@ -151,34 +181,37 @@ public class ObjectToolsCache implements DisposableSingleton
 
                try
                {
-                  imageProvider.preloadImageFromServer(iconGuid);
-                  Image image = getIconImage(imageProvider, iconGuid);
+                  if (imageProvider.getNativeImage(iconGuid) == null)
+                  {
+                     icons.put(tool.getId(), SharedIcons.EMPTY);
+                     continue;
+                  }
+                  Image image = getIconImage(iconGuid);
                   if (image != null)
                      icons.put(tool.getId(), WidgetHelper.createImageDescriptor(image));
                }
                catch(Exception e)
                {
-                  logger.error(String.format("Exception in ObjectToolsCache.reload(): toolId=%d, toolName=%s", tool.getId(), tool.getName()), e);
+                  logger.error(String.format("Cannot create icon for object tool %d (%s)", tool.getId(), tool.getName()), e);
                }
             }
          }
-		}
-		catch(Exception e)
-		{
-         logger.error("Exception in ObjectToolsCache.reload()", e);
-		}
-	}
+      }
+      catch(Exception e)
+      {
+         logger.error("Cannot install object tools", e);
+      }
+   }
 
    /**
     * Get cache owned copy of object tool icon, creating it if necessary. Cache cannot use images provided by image provider
     * directly - they are held in LRU cache and can be disposed on eviction, while image descriptor created from image reads image
     * data from it lazily on every repaint at previously unseen zoom level. Must be called while holding lock on icons map.
     *
-    * @param imageProvider image provider
     * @param guid library image GUID
     * @return cache owned copy of icon image or null if image is not available
     */
-   private Image getIconImage(ImageProvider imageProvider, UUID guid)
+   private Image getIconImage(UUID guid)
    {
       Image image = iconImages.get(guid);
       if (image != null)
@@ -200,13 +233,19 @@ public class ObjectToolsCache implements DisposableSingleton
 	 */
 	private void onObjectToolChange(final long toolId)
 	{
-		new Thread() {
-			@Override
-			public void run()
-			{
-				reload();
-			}
-		}.start();
+      new Thread(() -> {
+         List<ObjectTool> tools = fetchTools();
+         if (tools == null)
+            return;
+         try
+         {
+            display.asyncExec(() -> install(tools));
+         }
+         catch(SWTException e)
+         {
+            logger.debug("Object tool reload dropped because display is disposed");
+         }
+      }).start();
 	}
 
    /**
@@ -228,7 +267,6 @@ public class ObjectToolsCache implements DisposableSingleton
       if (affectedTools.isEmpty())
          return;
 
-      ImageProvider imageProvider = ImageProvider.getInstance();
       synchronized(icons)
       {
          // Image content has changed, so cached copy has to be re-created. Old copy is intentionally not disposed here - image
@@ -239,7 +277,7 @@ public class ObjectToolsCache implements DisposableSingleton
          ImageDescriptor icon = null;
          if (imageProvider.getLibraryImageObject(guid) != null)
          {
-            Image image = getIconImage(imageProvider, guid);
+            Image image = getIconImage(guid);
             if (image != null)
                icon = WidgetHelper.createImageDescriptor(image);
          }
@@ -252,6 +290,30 @@ public class ObjectToolsCache implements DisposableSingleton
                icons.remove(toolId);
          }
       }
+
+      for(ImageUpdateListener l : new ArrayList<ImageUpdateListener>(iconChangeListeners))
+         l.imageUpdated(guid);
+   }
+
+   /**
+    * Add listener to be notified when icon of one or more object tools changes. Listeners are called on owning display's thread.
+    * Must be called on owning display's thread.
+    *
+    * @param listener listener to add
+    */
+   public void addIconChangeListener(ImageUpdateListener listener)
+   {
+      iconChangeListeners.add(listener);
+   }
+
+   /**
+    * Remove icon change listener. Must be called on owning display's thread.
+    *
+    * @param listener listener to remove
+    */
+   public void removeIconChangeListener(ImageUpdateListener listener)
+   {
+      iconChangeListeners.remove(listener);
    }
 
 	/**
@@ -261,13 +323,23 @@ public class ObjectToolsCache implements DisposableSingleton
 	 */
 	private void onObjectToolDelete(final long toolId)
 	{
-		synchronized(objectTools)
-		{
-			objectTools.remove(toolId);
-		}
-		synchronized(icons)
+      // Applied through display queue so that tool list install already queued by reload cannot bring deleted tool back
+      try
       {
-		   icons.clear();
+         display.asyncExec(() -> {
+            synchronized(objectTools)
+            {
+               objectTools.remove(toolId);
+            }
+            synchronized(icons)
+            {
+               icons.remove(toolId);
+            }
+         });
+      }
+      catch(SWTException e)
+      {
+         logger.debug("Object tool deletion dropped because display is disposed");
       }
 	}
 
