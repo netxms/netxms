@@ -136,7 +136,6 @@ bool BdcomDriver::getHardwareInformation(DeviceContext *context, NObject *node, 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.3320.9.225.1.7.0")));  // Product code
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.1.0")));             // Product name (sysDescr)
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.3320.9.225.1.8.0")));  // Firmware version
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.3320.9.225.1.2.0")));  // Serial number
 
    SNMP_PDU *response;
@@ -159,18 +158,20 @@ bool BdcomDriver::getHardwareInformation(DeviceContext *context, NObject *node, 
       v = response->getVariable(2);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      }
-
-      v = response->getVariable(3);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
          _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 32);
       }
 
       delete response;
    }
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool BdcomDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 3320, 9, 225, 1, 8, 0 }, L"Firmware", firmware);   // Firmware version
 }
 
 /**

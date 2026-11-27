@@ -10503,6 +10503,31 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
       }
       unlockProperties();
    }
+   else if (!wcsicmp(name, L"System.Firmware"))
+   {
+      auto table = make_shared<Table>();
+      table->addColumn(L"COMPONENT_INDEX", DCI_DT_INT, L"Component index", true);
+      table->addColumn(L"ROLE", DCI_DT_STRING, L"Role", true);
+      table->addColumn(L"NAME", DCI_DT_STRING, L"Name", true);
+      table->addColumn(L"PLATFORM", DCI_DT_STRING, L"Platform");
+      table->addColumn(L"VERSION", DCI_DT_STRING, L"Version");
+      table->addColumn(L"RAW_VERSION", DCI_DT_STRING, L"Raw version");
+
+      lockProperties();
+      for(int i = 0; i < m_firmware.size(); i++)
+      {
+         const FirmwareInfo *fw = m_firmware.get(i);
+         table->addRow();
+         table->set(0, fw->componentIndex);
+         table->set(1, FirmwareRoleName(fw->role));
+         table->set(2, fw->name);
+         table->set(3, fw->platform);
+         table->set(4, fw->version);
+         table->set(5, fw->raw);
+      }
+      unlockProperties();
+      *result = table;
+   }
    else if (!_tcsicmp(name, _T("Network.Interfaces")))
    {
       auto table = make_shared<Table>();

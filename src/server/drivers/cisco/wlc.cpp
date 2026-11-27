@@ -86,7 +86,6 @@ bool CiscoWirelessControllerDriver::getHardwareInformation(DeviceContext *contex
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.3.0")));  // agentInventoryMachineModel (product code)
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.13.0"))); // agentInventoryProductName (product name)
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.14.0"))); // agentInventoryProductVersion (firmware version)
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.4.0")));  // agentInventorySerialNumber (serial number)
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.12.0"))); // agentInventoryManufacturerName (vendor)
 
@@ -115,16 +114,10 @@ bool CiscoWirelessControllerDriver::getHardwareInformation(DeviceContext *contex
       v = response->getVariable(2);
       if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      }
-
-      v = response->getVariable(3);
-      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
-      {
          _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
-      v = response->getVariable(4);
+      v = response->getVariable(3);
       if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
       {
          _tcslcpy(hwInfo->vendor, v->getValueAsString(buffer, 256), 128);
@@ -137,6 +130,14 @@ bool CiscoWirelessControllerDriver::getHardwareInformation(DeviceContext *contex
       delete response;
    }
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool CiscoWirelessControllerDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 14179, 1, 1, 1, 14, 0 }, L"Software", firmware);   // agentInventoryProductVersion
 }
 
 /**

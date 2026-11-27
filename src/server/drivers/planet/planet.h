@@ -61,6 +61,7 @@ public:
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
    virtual void analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual bool hasMetrics() override;
    virtual DataCollectionError getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size) override;
@@ -79,6 +80,7 @@ public:
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 

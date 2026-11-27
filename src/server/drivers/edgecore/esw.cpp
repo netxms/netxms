@@ -109,8 +109,6 @@ bool EdgecoreEnterpriseSwitchDriver::getHardwareInformation(DeviceContext *conte
    request.bindVariable(new SNMP_Variable(oid, sizeof(oid) / sizeof(uint32_t) - 1));  // Product name
    oid[13] = 1;
    request.bindVariable(new SNMP_Variable(oid, sizeof(oid) / sizeof(uint32_t) - 1));  // Product code
-   oid[13] = 4;
-   request.bindVariable(new SNMP_Variable(oid, sizeof(oid) / sizeof(uint32_t) - 1));  // Firmware version
    oid[12] = 3;
    oid[13] = 1;
    oid[14] = 10;
@@ -136,18 +134,23 @@ bool EdgecoreEnterpriseSwitchDriver::getHardwareInformation(DeviceContext *conte
       v = response->getVariable(2);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      }
-
-      v = response->getVariable(3);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
          wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
       delete response;
    }
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool EdgecoreEnterpriseSwitchDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   if (driverData == nullptr)
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+   return getFirmwareInformationFromSnmpObject(context, node, driverData,
+         { 1, 3, 6, 1, 4, 1, 259, 10, 1, static_cast<ESWDriverData*>(driverData)->getSubtree(), 1, 1, 5, 4, 0 }, L"Firmware", firmware);
 }
 
 /**

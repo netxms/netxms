@@ -74,7 +74,6 @@ bool CambiumCnPilotDriver::getHardwareInformation(DeviceContext *context, NObjec
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 8, 0 }));  // cambiumAPSWVersion
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 4, 0 }));  // cambiumAPSerialNum
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 5, 0 }));  // cambiumAPModel
 
@@ -90,12 +89,19 @@ bool CambiumCnPilotDriver::getHardwareInformation(DeviceContext *context, NObjec
    }
 
    wcscpy(hwInfo->vendor, L"Cambium");
-   response->getVariable(0)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(wchar_t));
-   response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
-   response->getVariable(2)->getValueAsString(hwInfo->productName, sizeof(hwInfo->productName) / sizeof(wchar_t));
+   response->getVariable(0)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
+   response->getVariable(1)->getValueAsString(hwInfo->productName, sizeof(hwInfo->productName) / sizeof(wchar_t));
 
    delete response;
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool CambiumCnPilotDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 8, 0 }, L"Firmware", firmware);   // cambiumAPSWVersion
 }
 
 /**

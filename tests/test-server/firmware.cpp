@@ -240,7 +240,7 @@ void TestNodeFirmware()
 
    StartTest(L"Node firmware: NXCP message");
    NXCPMessage msg(CMD_OBJECT, 1);
-   node->fillMessage(&msg, 0);
+   node->fillMessage(&msg, 0, true, node->getAccessSnapshot(0));
    AssertEquals(msg.getFieldAsInt32(VID_FIRMWARE_COUNT), 2);
    wchar_t buffer[256];
    AssertEquals(msg.getFieldAsInt16(VID_FIRMWARE_LIST_BASE), static_cast<int>(FirmwareRole::BOOTLOADER));
@@ -253,7 +253,7 @@ void TestNodeFirmware()
    AssertEquals(msg.getFieldAsString(VID_FIRMWARE_LIST_BASE + 15, buffer, 256), L"7.22.1 (long-term)");
 
    NXCPMessage emptyMsg(CMD_OBJECT, 2);
-   node2->fillMessage(&emptyMsg, 0);
+   node2->fillMessage(&emptyMsg, 0, true, node2->getAccessSnapshot(0));
    AssertTrue(emptyMsg.isFieldExist(VID_FIRMWARE_COUNT));
    AssertEquals(emptyMsg.getFieldAsInt32(VID_FIRMWARE_COUNT), 0);
    EndTest();
@@ -278,6 +278,27 @@ void TestNodeFirmware()
    AssertTrue(json_is_array(list));
    AssertEquals(static_cast<int>(json_array_size(list)), 0);
    json_decref(json);
+   EndTest();
+
+   StartTest(L"Node firmware: internal table");
+   shared_ptr<Table> table;
+   AssertEquals(static_cast<int>(node->getInternalTable(L"System.Firmware", &table)), static_cast<int>(DCE_SUCCESS));
+   AssertNotNull(table.get());
+   AssertEquals(table->getNumColumns(), 6);
+   AssertEquals(table->getNumRows(), 2);
+   AssertEquals(table->getColumnIndex(L"RAW_VERSION"), 5);
+   AssertEquals(table->getAsInt(1, 0), -1);
+   AssertEquals(table->getAsString(1, 1), L"main");
+   AssertEquals(table->getAsString(1, 2), L"RouterOS");
+   AssertEquals(table->getAsString(1, 3), L"routeros");
+   AssertEquals(table->getAsString(1, 4), L"7.22.1");
+   AssertEquals(table->getAsString(1, 5), L"7.22.1 (long-term)");
+   AssertEquals(table->getAsString(0, 1), L"bootloader");
+
+   table.reset();
+   AssertEquals(static_cast<int>(node2->getInternalTable(L"System.Firmware", &table)), static_cast<int>(DCE_SUCCESS));
+   AssertNotNull(table.get());
+   AssertEquals(table->getNumRows(), 0);
    EndTest();
 
    StartTest(L"Node firmware: database persistence");

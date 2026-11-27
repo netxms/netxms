@@ -75,7 +75,6 @@ bool FortiGateDriver::getHardwareInformation(DeviceContext *context, NObject *no
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.47.1.1.1.1.13.1")));  // first entry in entPhysicalModelName
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.12356.100.1.1.1.0")));  // fnSysSerial
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.12356.101.4.1.1.0")));  // fgSysVersion
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
@@ -92,7 +91,6 @@ bool FortiGateDriver::getHardwareInformation(DeviceContext *context, NObject *no
 
    response->getVariable(0)->getValueAsString(hwInfo->productName, sizeof(hwInfo->productName) / sizeof(TCHAR));
    response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(TCHAR));
-   response->getVariable(2)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(TCHAR));
 
    for(int i = 0; hwInfo->productName[i] != 0; i++)
    {
@@ -102,6 +100,14 @@ bool FortiGateDriver::getHardwareInformation(DeviceContext *context, NObject *no
 
    delete response;
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool FortiGateDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 12356, 101, 4, 1, 1, 0 }, L"FortiOS", firmware);   // fgSysVersion
 }
 
 /**

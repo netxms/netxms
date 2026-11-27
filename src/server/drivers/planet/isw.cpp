@@ -79,7 +79,6 @@ bool PlanetIndustrialSwDriver::getHardwareInformation(DeviceContext *context, NO
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 6603, 1, 28, 1, 3, 3, 1, 5, 1 }));  // vtssFirmwareStatusSwitchProduct
-   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 6603, 1, 28, 1, 3, 3, 1, 6, 1 }));  // vtssFirmwareStatusSwitchVersion
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 6603, 1, 24, 1, 3, 5, 3, 0 }));  // vtssSysutilStatusBoardInfoBoardSerial
 
    SNMP_PDU *response;
@@ -108,13 +107,6 @@ bool PlanetIndustrialSwDriver::getHardwareInformation(DeviceContext *context, NO
       v = response->getVariable(1);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         wcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-         TrimW(hwInfo->productVersion);
-      }
-
-      v = response->getVariable(2);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
          wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
          TrimW(hwInfo->serialNumber);
       }
@@ -122,6 +114,14 @@ bool PlanetIndustrialSwDriver::getHardwareInformation(DeviceContext *context, NO
       delete response;
    }
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool PlanetIndustrialSwDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 6603, 1, 28, 1, 3, 3, 1, 6, 1 }, L"Firmware", firmware);   // vtssFirmwareStatusSwitchVersion
 }
 
 /**

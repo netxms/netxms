@@ -117,8 +117,6 @@ bool DellFTOSDriver::getHardwareInformation(DeviceContext *context, NObject *nod
       request.bindVariable(new SNMP_Variable(oid));
       _sntprintf(oid, 128, _T(".1.3.6.1.4.1.6027.3.26.1.3.4.1.9.%u"), unitIndex);   // dellNetStackUnitDescription
       request.bindVariable(new SNMP_Variable(oid));
-      _sntprintf(oid, 128, _T(".1.3.6.1.4.1.6027.3.26.1.3.4.1.10.%u"), unitIndex);  // dellNetStackUnitCodeVersion
-      request.bindVariable(new SNMP_Variable(oid));
       _sntprintf(oid, 128, _T(".1.3.6.1.4.1.6027.3.26.1.3.4.1.11.%u"), unitIndex);  // dellNetStackUnitSerialNumber
       request.bindVariable(new SNMP_Variable(oid));
       _sntprintf(oid, 128, _T(".1.3.6.1.4.1.6027.3.26.1.3.4.1.17.%u"), unitIndex);  // dellNetStackUnitPartNum
@@ -148,17 +146,13 @@ bool DellFTOSDriver::getHardwareInformation(DeviceContext *context, NObject *nod
 
       v = response->getVariable(2);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
+         _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 128);
 
       v = response->getVariable(3);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-         _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 128);
-
-      v = response->getVariable(4);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
          _tcslcpy(hwInfo->productCode, v->getValueAsString(buffer, 256), 32);
 
-      v = response->getVariable(5);
+      v = response->getVariable(4);
       if ((hwInfo->serialNumber[0] == 0) && (v != nullptr) && (v->getType() == ASN_OCTET_STRING))
          _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 128);
 
@@ -173,8 +167,6 @@ bool DellFTOSDriver::getHardwareInformation(DeviceContext *context, NObject *nod
       SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
       TCHAR oid[128];
       _sntprintf(oid, 128, _T(".1.3.6.1.4.1.6027.3.10.1.2.2.1.7.%u"), unitIndex);   // chStackUnitModelID
-      request.bindVariable(new SNMP_Variable(oid));
-      _sntprintf(oid, 128, _T(".1.3.6.1.4.1.6027.3.10.1.2.2.1.10.%u"), unitIndex);  // chStackUnitCodeVersion
       request.bindVariable(new SNMP_Variable(oid));
       _sntprintf(oid, 128, _T(".1.3.6.1.4.1.6027.3.10.1.2.2.1.12.%u"), unitIndex);  // chStackUnitSerialNumber
       request.bindVariable(new SNMP_Variable(oid));
@@ -195,13 +187,9 @@ bool DellFTOSDriver::getHardwareInformation(DeviceContext *context, NObject *nod
 
       v = response->getVariable(1);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-
-      v = response->getVariable(2);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
          _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 128);
 
-      v = response->getVariable(3);
+      v = response->getVariable(2);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
          _tcslcpy(hwInfo->productCode, v->getValueAsString(buffer, 256), 32);
 
@@ -211,6 +199,26 @@ bool DellFTOSDriver::getHardwareInformation(DeviceContext *context, NObject *nod
 
    nxlog_debug_tag(DEBUG_TAG_FTOS, 5, _T("DellFTOSDriver::getHardwareInformation(%s): stack unit table not available"), node->getName());
    return true;
+}
+
+/**
+ * Get firmware information from device (software version of management unit)
+ */
+bool DellFTOSDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+
+   // DELL-NETWORKING-CHASSIS-MIB::dellNetStackUnitTable
+   uint32_t unitIndex = FindManagementUnit(snmp, _T(".1.3.6.1.4.1.6027.3.26.1.3.4.1.4"));
+   if (unitIndex != 0)
+      return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 6027, 3, 26, 1, 3, 4, 1, 10, unitIndex }, L"Dell Networking OS", firmware);   // dellNetStackUnitCodeVersion
+
+   // F10-S-SERIES-CHASSIS-MIB::chStackUnitTable (legacy FTOS releases)
+   unitIndex = FindManagementUnit(snmp, _T(".1.3.6.1.4.1.6027.3.10.1.2.2.1.4"));
+   if (unitIndex != 0)
+      return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 6027, 3, 10, 1, 2, 2, 1, 10, unitIndex }, L"FTOS", firmware);   // chStackUnitCodeVersion
+
+   return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
 }
 
 /**

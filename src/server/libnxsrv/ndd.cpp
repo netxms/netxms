@@ -393,21 +393,50 @@ bool NetworkDeviceDriver::getHardwareInformation(DeviceContext *context, NObject
 }
 
 /**
- * Read string column of entPhysicalTable for given entity. Value is returned without surrounding whitespace.
+ * Read firmware version from SNMP object. Version is returned without surrounding whitespace and is empty
+ * if device does not have this object. Returns false if device cannot be read.
  */
-static bool ReadEntityStringAttribute(SNMP_Transport *snmp, uint32_t column, uint32_t index, wchar_t *buffer, size_t size)
+bool LIBNXSRV_EXPORTABLE ReadFirmwareVersion(SNMP_Transport *snmp, const SNMP_ObjectId& oid, wchar_t *version, size_t size)
 {
-   uint32_t oid[] = { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, column, index };
-   buffer[0] = 0;
-   uint32_t rc = SnmpGetEx(snmp, nullptr, oid, sizeof(oid) / sizeof(uint32_t), buffer, size * sizeof(wchar_t), SG_STRING_RESULT);
+   version[0] = 0;
+   if (snmp == nullptr)
+      return false;
+   uint32_t rc = SnmpGetEx(snmp, nullptr, oid.value(), oid.length(), version, size * sizeof(wchar_t), SG_STRING_RESULT);
    if (rc == SNMP_ERR_NO_OBJECT)
    {
-      buffer[0] = 0;
-      return true;   // Device does not have this column
+      version[0] = 0;
+      return true;   // Device does not have this object
    }
    if (rc != SNMP_ERR_SUCCESS)
+   {
+      version[0] = 0;
       return false;
-   TrimW(buffer);
+   }
+   TrimW(version);
+   return true;
+}
+
+/**
+ * Get firmware information for device that reports version of its only firmware in single SNMP object.
+ * Version is reported as main firmware without platform. If device does not have this object or it is empty,
+ * generic implementation is used.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param oid SNMP object with firmware version
+ * @param name display name of the firmware
+ * @param firmware list of firmware to fill
+ * @return true if device was read successfully, false if device cannot be read
+ */
+bool NetworkDeviceDriver::getFirmwareInformationFromSnmpObject(DeviceContext *context, NObject *node, DriverData *driverData, const SNMP_ObjectId& oid, const wchar_t *name, StructArray<FirmwareInfo> *firmware)
+{
+   wchar_t version[256];
+   if (!ReadFirmwareVersion(context->getSNMPTransport(), oid, version, 256))
+      return false;
+   if (version[0] == 0)
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, name, L"", L"", version);
    return true;
 }
 
@@ -485,8 +514,8 @@ bool NetworkDeviceDriver::getFirmwareInformation(DeviceContext *context, NObject
       }
    }
    wchar_t softwareRevision[256], firmwareRevision[256];
-   if (!ReadEntityStringAttribute(snmp, 10, root, softwareRevision, 256) ||   // entPhysicalSoftwareRev
-       !ReadEntityStringAttribute(snmp, 9, root, firmwareRevision, 256))      // entPhysicalFirmwareRev
+   if (!ReadFirmwareVersion(snmp, { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 10, root }, softwareRevision, 256) ||   // entPhysicalSoftwareRev
+       !ReadFirmwareVersion(snmp, { 1, 3, 6, 1, 2, 1, 47, 1, 1, 1, 1, 9, root }, firmwareRevision, 256))      // entPhysicalFirmwareRev
       return false;
 
    if (softwareRevision[0] != 0)

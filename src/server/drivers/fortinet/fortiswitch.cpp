@@ -77,7 +77,6 @@ bool FortiSwitchDriver::getHardwareInformation(DeviceContext *context, NObject *
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.47.1.1.1.1.13.1")));  // first entry in entPhysicalModelName
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.12356.106.1.1.1.0")));  // fsSysSerial
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.12356.106.4.1.1.0")));  // fsSysVersion
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
@@ -101,15 +100,17 @@ bool FortiSwitchDriver::getHardwareInformation(DeviceContext *context, NObject *
          _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 128);
       }
 
-      v = response->getVariable(2);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      }
-
       delete response;
    }
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool FortiSwitchDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 12356, 106, 4, 1, 1, 0 }, L"FortiSwitchOS", firmware);   // fsSysVersion
 }
 
 /**

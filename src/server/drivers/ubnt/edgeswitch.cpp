@@ -78,7 +78,6 @@ bool UbiquitiEdgeSwitchDriver::getHardwareInformation(DeviceContext *context, NO
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.4413.1.1.1.1.1.3.0")));  // Product code
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.4413.1.1.1.1.1.2.0")));  // Product name
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.4413.1.1.1.1.1.13.0"))); // Firmware version
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.4413.1.1.1.1.1.4.0")));  // Serial number
 
    SNMP_PDU *response;
@@ -101,18 +100,20 @@ bool UbiquitiEdgeSwitchDriver::getHardwareInformation(DeviceContext *context, NO
       v = response->getVariable(2);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      }
-
-      v = response->getVariable(3);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
          wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
       delete response;
    }
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool UbiquitiEdgeSwitchDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 4413, 1, 1, 1, 1, 1, 13, 0 }, L"Firmware", firmware);   // Firmware version
 }
 
 /**

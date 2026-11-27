@@ -101,7 +101,6 @@ bool PlanetLanSwDriver::getHardwareInformation(DeviceContext *context, NObject *
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 10456, 3, 6, 21, 0 }));  // nmsSwitchName
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 10456, 3, 6, 3, 0 }));  // nmschassisId (serial number)
-   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 10456, 3, 6, 10, 1, 6, 0 }));  // nmscardSwVersion (only for non-modular switches)
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
@@ -120,15 +119,17 @@ bool PlanetLanSwDriver::getHardwareInformation(DeviceContext *context, NObject *
          wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
-      v = response->getVariable(2);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
-         wcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      }
-
       delete response;
    }
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool PlanetLanSwDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 10456, 3, 6, 10, 1, 6, 0 }, L"Firmware", firmware);   // nmscardSwVersion (only for non-modular switches)
 }
 
 /**

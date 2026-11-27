@@ -76,7 +76,6 @@ bool SafIntegraBDriver::getHardwareInformation(DeviceContext *context, NObject *
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.7571.100.1.1.7.1.4.13.0")));  // integraBsysDeviceProductModel
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.7571.100.1.1.7.1.4.12.0")));  // integraBsysDeviceSerial
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.7571.100.1.1.7.1.4.11.0")));  // integraBsysDeviceType
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.1.0")));                    // sysDescr
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
@@ -95,19 +94,31 @@ bool SafIntegraBDriver::getHardwareInformation(DeviceContext *context, NObject *
    response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(TCHAR));
    response->getVariable(2)->getValueAsString(hwInfo->productName, sizeof(hwInfo->productName) / sizeof(TCHAR));
 
-   TCHAR sysDescription[1024];
-   response->getVariable(3)->getValueAsString(sysDescription, 1024);
-   TCHAR *version = _tcsstr(sysDescription, _T(";Vers:"));
+   delete response;
+   return true;
+}
+
+/**
+ * Get firmware information from device (version is in "Vers" field of sysDescr)
+ */
+bool SafIntegraBDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   wchar_t sysDescription[1024];
+   if (!ReadFirmwareVersion(context->getSNMPTransport(), { 1, 3, 6, 1, 2, 1, 1, 1, 0 }, sysDescription, 1024))
+      return false;
+
+   wchar_t *version = wcsstr(sysDescription, L";Vers:");
    if (version != nullptr)
    {
       version += 6;
-      TCHAR *eptr = _tcschr(version, _T(';'));
+      wchar_t *eptr = wcschr(version, L';');
       if (eptr != nullptr)
          *eptr = 0;
-      Trim(version);
-      _tcslcpy(hwInfo->productVersion, version, sizeof(hwInfo->productVersion) / sizeof(TCHAR));
+      TrimW(version);
    }
+   if ((version == nullptr) || (*version == 0))
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
 
-   delete response;
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Firmware", L"", L"", version);
    return true;
 }

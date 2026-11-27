@@ -94,20 +94,6 @@ bool CiscoFirepowerDriver::getHardwareInformation(DeviceContext *context, NObjec
       {
          *versionStart = 0;
          wcslcpy(hwInfo->productName, sysDescr, 128);
-
-         // Extract version string
-         const wchar_t *version = versionStart + 10; // skip ", Version "
-         const wchar_t *versionEnd = wcschr(version, L',');
-         if (versionEnd != nullptr)
-         {
-            size_t len = std::min(static_cast<size_t>(versionEnd - version), static_cast<size_t>(15));
-            wcsncpy(hwInfo->productVersion, version, len);
-            hwInfo->productVersion[len] = 0;
-         }
-         else
-         {
-            wcslcpy(hwInfo->productVersion, version, 16);
-         }
       }
       else
       {
@@ -117,5 +103,33 @@ bool CiscoFirepowerDriver::getHardwareInformation(DeviceContext *context, NObjec
 
    // Try ENTITY-MIB entPhysicalSerialNum.1 for serial number
    SnmpGetEx(snmp, L".1.3.6.1.2.1.47.1.1.1.1.11.1", nullptr, 0, hwInfo->serialNumber, sizeof(hwInfo->serialNumber), SG_STRING_RESULT, nullptr);
+   return true;
+}
+
+/**
+ * Get firmware information from device (software version is in sysDescr)
+ */
+bool CiscoFirepowerDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   // Typical sysDescr values:
+   // "Cisco Firepower Threat Defense, Version 7.2.5, Build 208"
+   // "Cisco FirePOWER FPR-2140 Threat Defense, Version 7.0.1"
+   wchar_t sysDescr[1024];
+   if (!ReadFirmwareVersion(context->getSNMPTransport(), { 1, 3, 6, 1, 2, 1, 1, 1, 0 }, sysDescr, 1024))
+      return false;
+
+   wchar_t *version = wcsistr(sysDescr, L", Version ");
+   if (version != nullptr)
+   {
+      version += 10;
+      wchar_t *end = wcschr(version, L',');
+      if (end != nullptr)
+         *end = 0;
+      TrimW(version);
+   }
+   if ((version == nullptr) || (*version == 0))
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Firepower Threat Defense", L"", L"", version);
    return true;
 }

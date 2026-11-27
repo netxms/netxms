@@ -79,9 +79,6 @@ bool MdsOrbitDriver::getHardwareInformation(DeviceContext *context, NObject *nod
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.4130.10.1.1.1.2.2.0")));  // Serial number
    request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.4130.10.1.1.1.2.3.0")));  // mSysProductConfiguration
-   request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.4130.10.1.1.1.2.7.1.3.1")));  // mSysActive.1
-   request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.4130.10.1.1.1.2.7.1.2.1")));  // mSysVersion.1
-   request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.4130.10.1.1.1.2.7.1.2.2")));  // mSysVersion.2
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
@@ -99,26 +96,48 @@ bool MdsOrbitDriver::getHardwareInformation(DeviceContext *context, NObject *nod
          _tcslcpy(hwInfo->productCode, v->getValueAsString(buffer, 256), 32);
       }
 
-      int activeSw = 0;
-      v = response->getVariable(2);
-      if (v != nullptr)
-      {
-         activeSw = (v->getValueAsInt() == 1) ? 3 : ((v->getValueAsInt() == 2) ? 4 : 0);
-      }
-
-      if (activeSw != 0)
-      {
-         v = response->getVariable(activeSw);
-         if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-         {
-            TCHAR buffer[256];
-            _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-         }
-      }
-
       delete response;
    }
 
+   return true;
+}
+
+/**
+ * Get firmware information from device (version of active firmware image)
+ */
+bool MdsOrbitDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 4130, 10, 1, 1, 1, 2, 7, 1, 3, 1 }));  // mSysActive.1
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 4130, 10, 1, 1, 1, 2, 7, 1, 2, 1 }));  // mSysVersion.1
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 4130, 10, 1, 1, 1, 2, 7, 1, 2, 2 }));  // mSysVersion.2
+
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
+      return false;
+
+   wchar_t version[256] = L"";
+   int activeImage = 0;
+   const SNMP_Variable *v = response->getVariable(0);
+   if (v != nullptr)
+      activeImage = (v->getValueAsInt() == 1) ? 1 : ((v->getValueAsInt() == 2) ? 2 : 0);
+   if (activeImage != 0)
+   {
+      v = response->getVariable(activeImage);
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+      {
+         v->getValueAsString(version, 256);
+         TrimW(version);
+      }
+   }
+   delete response;
+
+   if (version[0] == 0)
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Firmware", L"", L"", version);
    return true;
 }
 

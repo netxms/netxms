@@ -80,7 +80,6 @@ bool EtherWanDriver::getHardwareInformation(DeviceContext *context, NObject *nod
    request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.2736.1.1.1.6.0")));  // ewnSystemProductModel
    request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.2736.1.1.1.14.0")));  // ewnSystemProductSeries
    request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.2736.1.1.1.9.0")));  // ewnSystemMacAddr
-   request.bindVariable(new SNMP_Variable(_T("1.3.6.1.4.1.2736.1.1.1.1.0")));  // ewnSystemFirmwareRev
 
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
@@ -104,17 +103,30 @@ bool EtherWanDriver::getHardwareInformation(DeviceContext *context, NObject *nod
          wcslcpy(hwInfo->serialNumber, v->getValueAsMACAddr().toString(MacAddressNotation::FLAT_STRING), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
-      v = response->getVariable(3);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-         TCHAR *sp = _tcschr(hwInfo->productVersion, _T(' '));
-         if (sp != nullptr)
-            *sp = 0;
-      }
-
       delete response;
    }
+   return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool EtherWanDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   wchar_t raw[256];
+   if (!ReadFirmwareVersion(context->getSNMPTransport(), { 1, 3, 6, 1, 4, 1, 2736, 1, 1, 1, 1, 0 }, raw, 256))  // ewnSystemFirmwareRev
+      return false;
+   if (raw[0] == 0)
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+
+   // Version number is the first word
+   wchar_t version[64];
+   wcslcpy(version, raw, 64);
+   wchar_t *sp = wcschr(version, L' ');
+   if (sp != nullptr)
+      *sp = 0;
+
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Firmware", L"", version, raw);
    return true;
 }
 

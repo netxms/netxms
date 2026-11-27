@@ -93,22 +93,24 @@ bool MoxaEDRDriver::getHardwareInformation(DeviceContext *context, NObject *node
          _tcscpy(hwInfo->productName, _T("EDR-G903"));
    }
 
-   // Firmware version
-   _sntprintf(requestOID, 128, _T("%s.1.22.4.0"), objectId);
-   TCHAR version[128];
-   SnmpGetEx(snmp, requestOID, nullptr, 0, version, sizeof(version), 0, nullptr);
-   if (_tcslen(version) < sizeof(hwInfo->productVersion) / sizeof(TCHAR))
-   {
-      _tcscpy(hwInfo->productVersion, version);
-   }
-   else
-   {
-      TCHAR *p = _tcschr(version, _T(' '));
-      if (p != nullptr)
-         *p = 0;
-      _tcslcpy(hwInfo->productVersion, version, sizeof(hwInfo->productVersion) / sizeof(TCHAR));
-   }
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool MoxaEDRDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+
+   // Firmware version is in device specific subtree under its sysObjectID
+   SNMP_ObjectId oid;
+   if (SnmpGetEx(snmp, { 1, 3, 6, 1, 2, 1, 1, 2, 0 }, &oid, 0, SG_OBJECT_ID_RESULT) != SNMP_ERR_SUCCESS)
+      return false;
+   static const uint32_t suffix[] = { 1, 22, 4, 0 };
+   oid.extend(suffix, 4);
+
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, oid, L"Firmware", firmware);
 }
 
 /**

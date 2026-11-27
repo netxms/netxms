@@ -1888,6 +1888,18 @@ static void SetMockComponentRevisions(MockSnmpTransport *transport, uint32_t ind
 /**
  * Test default implementation of NetworkDeviceDriver::getFirmwareInformation
  */
+/**
+ * Driver for device that reports version of its firmware in single SNMP object
+ */
+class SingleObjectFirmwareDriver : public NetworkDeviceDriver
+{
+public:
+   virtual bool getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware) override
+   {
+      return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 99999, 1, 2, 0 }, L"TestOS", firmware);
+   }
+};
+
 static void TestDriverFirmware()
 {
    NetworkDeviceDriver driver;
@@ -2006,6 +2018,41 @@ static void TestDriverFirmware()
    // SNMP not available
    SnmpDeviceContext noSnmpContext(nullptr);
    AssertFalse(driver.getFirmwareInformation(&noSnmpContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 0);
+   EndTest();
+
+   StartTest(L"NetworkDeviceDriver - firmware version in single SNMP object");
+   SingleObjectFirmwareDriver singleObjectDriver;
+   MockSnmpTransport singleObjectTransport;
+   singleObjectTransport.setString(L".1.3.6.1.4.1.99999.1.2.0", L" V5.7 build 20100316 ");
+   AddMockComponent(&singleObjectTransport, 1, COMPONENT_CLASS_CHASSIS, 0, -1, L"chassis", L"Test Chassis", L"CH-1000", L"SN12345");
+   SetMockComponentRevisions(&singleObjectTransport, 1, L"1.2.3", L"0.9");
+   SnmpDeviceContext singleObjectContext(&singleObjectTransport);
+   firmware.clear();
+   AssertTrue(singleObjectDriver.getFirmwareInformation(&singleObjectContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 1);
+   AssertTrue(firmware.get(0)->role == FirmwareRole::MAIN);
+   AssertEquals(firmware.get(0)->componentIndex, -1);
+   AssertEquals(firmware.get(0)->name, L"TestOS");
+   AssertEquals(firmware.get(0)->platform, L"");
+   AssertEquals(firmware.get(0)->version, L"V5.7 build 20100316");
+   AssertEquals(firmware.get(0)->raw, L"V5.7 build 20100316");
+
+   // Generic implementation is used if device does not have the object or it is empty
+   firmware.clear();
+   AssertTrue(singleObjectDriver.getFirmwareInformation(&chassisContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 2);
+   AssertEquals(firmware.get(0)->name, L"Software");
+   AssertEquals(firmware.get(0)->version, L"10.4.2 (build 77)");
+
+   singleObjectTransport.setString(L".1.3.6.1.4.1.99999.1.2.0", L"  ");
+   firmware.clear();
+   AssertTrue(singleObjectDriver.getFirmwareInformation(&singleObjectContext, node.get(), nullptr, &firmware));
+   AssertEquals(firmware.size(), 2);
+   AssertEquals(firmware.get(0)->version, L"1.2.3");
+
+   firmware.clear();
+   AssertFalse(singleObjectDriver.getFirmwareInformation(&noSnmpContext, node.get(), nullptr, &firmware));
    AssertEquals(firmware.size(), 0);
    EndTest();
 

@@ -74,7 +74,6 @@ bool RuggedComDriver::getHardwareInformation(DeviceContext *context, NObject *no
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 15004, 4, 2, 3, 3, 0 }));  // rcDeviceInfoMainSwVersion
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 15004, 4, 2, 3, 1, 0 }));  // rcDeviceInfoSerialNumber
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, 1, 0 }));           // sysDescr
 
@@ -91,19 +90,12 @@ bool RuggedComDriver::getHardwareInformation(DeviceContext *context, NObject *no
 
    wcscpy(hwInfo->vendor, L"Siemens AG");
 
-   response->getVariable(0)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(wchar_t));
-   response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
-
-   wchar_t *sp = wcschr(hwInfo->productVersion, L' ');
-   if (sp != nullptr)
-      *sp = 0;
-   if (hwInfo->productVersion[0] == 'v')
-      memmove(hwInfo->productVersion, &hwInfo->productVersion[1], wcslen(hwInfo->productVersion) * sizeof(wchar_t));
+   response->getVariable(0)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
 
    // Sample sysDescription:
    // Siemens, RUGGEDCOM, RS900G, RS900G-HI-D-2SC25, HW: Version RS900G, FW: Version Main v4.3.7 Boot v4.3.0, S900G-1109-06613
    wchar_t sysDescription[1024];
-   response->getVariable(2)->getValueAsString(sysDescription, 1024);
+   response->getVariable(1)->getValueAsString(sysDescription, 1024);
    StringList fields = String::split(sysDescription, L",", true);
    if ((fields.size() > 2) && !wcsicmp(fields.get(0), L"Siemens") && !wcsicmp(fields.get(1), L"RUGGEDCOM"))
    {
@@ -115,6 +107,28 @@ bool RuggedComDriver::getHardwareInformation(DeviceContext *context, NObject *no
    }
 
    delete response;
+   return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool RuggedComDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   wchar_t raw[256];
+   if (!ReadFirmwareVersion(context->getSNMPTransport(), { 1, 3, 6, 1, 4, 1, 15004, 4, 2, 3, 3, 0 }, raw, 256))  // rcDeviceInfoMainSwVersion
+      return false;
+   if (raw[0] == 0)
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+
+   // Version number is the first word, with "v" prefix
+   wchar_t version[64];
+   wcslcpy(version, (raw[0] == L'v') ? &raw[1] : raw, 64);
+   wchar_t *sp = wcschr(version, L' ');
+   if (sp != nullptr)
+      *sp = 0;
+
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Firmware", L"", version, raw);
    return true;
 }
 

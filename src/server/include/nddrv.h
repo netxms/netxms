@@ -193,13 +193,14 @@ struct LIBNXSRV_EXPORTABLE FirmwareInfo
    int32_t componentIndex;   // -1 = the object itself, otherwise ENTITY-MIB / module index
    wchar_t name[64];         // Display name ("Junos OS", "RouterBOOT", "iLO 5")
    wchar_t platform[64];     // Platform ID from firmware platform registry; empty if platform is not known
-   wchar_t version[64];      // Version in canonical form of platform's version scheme; copy of raw version if platform is not known
+   wchar_t version[64];      // Version in canonical form of platform's version scheme; if platform is not known, version as shown to the user (raw version or version number extracted from it)
    wchar_t raw[256];         // Version exactly as reported by the device
 
    json_t *toJson() const;
 };
 
 const wchar_t LIBNXSRV_EXPORTABLE *FirmwareRoleName(FirmwareRole role);
+bool LIBNXSRV_EXPORTABLE ReadFirmwareVersion(SNMP_Transport *snmp, const SNMP_ObjectId& oid, wchar_t *version, size_t size);
 void LIBNXSRV_EXPORTABLE AddFirmwareInfo(StructArray<FirmwareInfo> *list, FirmwareRole role, const wchar_t *name, const wchar_t *platform, const wchar_t *version, const wchar_t *raw);
 
 /**
@@ -761,6 +762,7 @@ protected:
    bool getInterfaceSpeed(SNMP_Transport *snmp, uint32_t ifIndex, int ifTableSuffixLen, const uint32_t *ifTableSuffix, uint64_t *speed);
    void registerHostMibMetrics(ObjectArray<AgentParameterDefinition> *metrics);
    DataCollectionError getHostMibMetric(SNMP_Transport *snmp, HostMibDriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
+   bool getFirmwareInformationFromSnmpObject(DeviceContext *context, NObject *node, DriverData *driverData, const SNMP_ObjectId& oid, const wchar_t *name, StructArray<FirmwareInfo> *firmware);
 
 public:
    NetworkDeviceDriver();

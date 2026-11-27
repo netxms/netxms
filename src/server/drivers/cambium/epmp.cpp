@@ -198,7 +198,6 @@ bool CambiumEPMPDriver::getHardwareInformation(DeviceContext *context, NObject *
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.1.1.1.0")));   // cambiumCurrentSWInfo
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.1.1.31.0")));  // cambiumEPMPMSN
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.1.1.2.0")));   // cambiumHWInfo
 
@@ -215,10 +214,9 @@ bool CambiumEPMPDriver::getHardwareInformation(DeviceContext *context, NObject *
 
    _tcscpy(hwInfo->vendor, _T("Cambium"));
 
-   response->getVariable(0)->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(wchar_t));
-   response->getVariable(1)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
+   response->getVariable(0)->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
 
-   SNMP_Variable *v = response->getVariable(2);
+   SNMP_Variable *v = response->getVariable(1);
    if (v->getType() == ASN_INTEGER)
    {
       const TCHAR *modelName = CodeToText(v->getValueAsInt(), s_deviceNames, nullptr);
@@ -228,6 +226,14 @@ bool CambiumEPMPDriver::getHardwareInformation(DeviceContext *context, NObject *
 
    delete response;
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool CambiumEPMPDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 17713, 21, 1, 1, 1, 0 }, L"Firmware", firmware);   // cambiumCurrentSWInfo
 }
 
 /**

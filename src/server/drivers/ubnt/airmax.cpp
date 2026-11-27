@@ -271,9 +271,6 @@ bool UbiquitiAirMaxDriver::getHardwareInformation(DeviceContext *context, NObjec
    // Product name / model
    request.bindVariable(new SNMP_Variable({ 1, 2, 840, 10036, 3, 1, 2, 1, 3, 5 }));
 
-   // Firmware version  
-   request.bindVariable(new SNMP_Variable({ 1, 2, 840, 10036, 3, 1, 2, 1, 4, 5 }));
-
    // Vendor
    request.bindVariable(new SNMP_Variable({ 1, 2, 840, 10036, 3, 1, 2, 1, 2, 5 }));
 
@@ -302,18 +299,14 @@ bool UbiquitiAirMaxDriver::getHardwareInformation(DeviceContext *context, NObjec
       }
    }
 
-   // Firmware version
-   var = response->getVariable(1);
-   var->getValueAsString(hwInfo->productVersion, 16);
-
    // Vendor
-   var = response->getVariable(2);
+   var = response->getVariable(1);
    var->getValueAsString(hwInfo->vendor, 128);
    if (hwInfo->vendor[0] == 0)
       _tcscpy(hwInfo->vendor, _T("Ubiquiti, Inc."));
 
    // Serial number (base MAC without colons)
-   var = response->getVariable(3);
+   var = response->getVariable(2);
    if (var->getType() == ASN_OCTET_STRING && var->getValueLength() >= MAC_ADDR_LENGTH)
    {
       BYTE mac[MAC_ADDR_LENGTH];
@@ -327,4 +320,12 @@ bool UbiquitiAirMaxDriver::getHardwareInformation(DeviceContext *context, NObjec
 
    delete response;
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool UbiquitiAirMaxDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 2, 840, 10036, 3, 1, 2, 1, 4, 5 }, L"airOS", firmware);   // dot11manufacturerProductVersion
 }

@@ -81,7 +81,6 @@ bool TeltonikaDriver::getHardwareInformation(DeviceContext *context, NObject *no
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.48690.1.2.0")));  // Product name
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.48690.1.3.0")));  // Product code
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.48690.1.6.0")));  // Firmware version
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.48690.1.1.0")));  // Serial number
 
    SNMP_PDU *response;
@@ -111,17 +110,18 @@ bool TeltonikaDriver::getHardwareInformation(DeviceContext *context, NObject *no
    v = response->getVariable(2);
    if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
    {
-      _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("TeltonikaDriver::getHardwareInformation(%s): retrieved product version \"%s\""), node->getName(), buffer);
-   }
-
-   v = response->getVariable(3);
-   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-   {
       wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       nxlog_debug_tag(DEBUG_TAG, 5, _T("TeltonikaDriver::getHardwareInformation(%s): retrieved product serial number \"%s\""), node->getName(), buffer);
    }
 
    delete response;
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool TeltonikaDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 48690, 1, 6, 0 }, L"Firmware", firmware);   // Firmware version
 }

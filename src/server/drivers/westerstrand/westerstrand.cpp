@@ -78,9 +78,7 @@ bool WesterstrandDriver::getHardwareInformation(DeviceContext *context, NObject 
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.100.1.1.0")));  // Product name
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.100.1.2.0")));  // Firmware version
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.130.10.1.0")));  // Product name (ANOC MIB)
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.130.10.2.0")));  // Firmware version (ANOC MIB)
 
    SNMP_PDU *response;
    uint32_t rc;
@@ -100,7 +98,7 @@ bool WesterstrandDriver::getHardwareInformation(DeviceContext *context, NObject 
    }
    else
    {
-      v = response->getVariable(2);
+      v = response->getVariable(1);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
          _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
@@ -108,23 +106,25 @@ bool WesterstrandDriver::getHardwareInformation(DeviceContext *context, NObject 
       }
    }
 
-   v = response->getVariable(1);
-   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-   {
-      _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): retrieved product version \"%s\""), node->getName(), buffer);
-   }
-   else
-   {
-      v = response->getVariable(3);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): retrieved product version \"%s\""), node->getName(), buffer);
-      }
-   }
-
    delete response;
+   return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool WesterstrandDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   wchar_t version[256];
+   if (!ReadFirmwareVersion(snmp, { 1, 3, 6, 1, 4, 1, 25281, 100, 1, 2, 0 }, version, 256))
+      return false;
+   if ((version[0] == 0) && !ReadFirmwareVersion(snmp, { 1, 3, 6, 1, 4, 1, 25281, 130, 10, 2, 0 }, version, 256))  // ANOC MIB
+      return false;
+   if (version[0] == 0)
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Firmware", L"", L"", version);
    return true;
 }
 

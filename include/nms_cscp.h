@@ -1878,7 +1878,6 @@ __PACK_END__
 
 // Base value for firmware list (10 fields per entry)
 #define VID_FIRMWARE_LIST_BASE      ((uint32_t)0x36000000)
->>>>>>> 1c0f9cce05 (firmware information of node is sent to clients as part of object data (new fields VID_FIRMWARE_COUNT and VID_FIRMWARE_LIST_BASE); firmware information in Java client library (new classes FirmwareInfo and FirmwareRole, new methods AbstractNode.getFirmware() and AbstractNode.getMainFirmware()); firmware versions shown in "Inventory" section of object overview in management console; node's JSON representation (and so WebAPI object details) includes firmware list (issue #4067))
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

@@ -40,6 +40,7 @@ public:
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware) override;
    virtual GeoLocation getGeoLocation(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual bool isWirelessAccessPoint(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(DeviceContext *context, NObject *node, DriverData *driverData) override;

@@ -41,6 +41,7 @@ public:
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware) override;
    virtual bool getVirtualizationType(DeviceContext *context, NObject *node, DriverData *driverData, VirtualizationType *vtype) override;
    virtual void getInterfaceState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
             uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed) override;
@@ -58,6 +59,7 @@ public:
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData) override;
    virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData) override;

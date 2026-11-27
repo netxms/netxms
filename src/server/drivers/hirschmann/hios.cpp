@@ -75,7 +75,6 @@ bool HirschmannHiOSDriver::getHardwareInformation(DeviceContext *context, NObjec
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.11.101.1.3.1.7.0")));  // Product name
-   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.11.101.1.2.1.6.0")));  // Firmware version
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.248.11.10.1.1.3.0")));  // Serial number
 
    SNMP_PDU *response;
@@ -91,18 +90,20 @@ bool HirschmannHiOSDriver::getHardwareInformation(DeviceContext *context, NObjec
       v = response->getVariable(1);
       if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
-         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
-      }
-
-      v = response->getVariable(2);
-      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
-      {
          wcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
       }
 
       delete response;
    }
    return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool HirschmannHiOSDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 248, 11, 101, 1, 2, 1, 6, 0 }, L"HiOS", firmware);   // Firmware version
 }
 
 /**
