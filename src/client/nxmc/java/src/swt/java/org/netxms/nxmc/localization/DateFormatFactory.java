@@ -100,25 +100,25 @@ public class DateFormatFactory
    public static DateFormat getDateTimeFormat()
    {
       DateFormat df;
-      switch(dateTimeFormat)
+      try
       {
-         case DATETIME_FORMAT_SERVER:
-            NXCSession session = Registry.getSession();
-            df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat());
-            break;
-         case DATETIME_FORMAT_CUSTOM:
-            try
-            {
+         switch(dateTimeFormat)
+         {
+            case DATETIME_FORMAT_SERVER:
+               NXCSession session = Registry.getSession();
+               df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat());
+               break;
+            case DATETIME_FORMAT_CUSTOM:
                df = new SimpleDateFormat(dateFormatString + " " + timeFormatString);
-            }
-            catch(IllegalArgumentException e)
-            {
+               break;
+            default:
                df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
-            }
-            break;
-         default:
-            df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
-            break;
+               break;
+         }
+      }
+      catch(IllegalArgumentException e)
+      {
+         df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
       }
       TimeZone tz = Registry.getTimeZone();
       if (tz != null)
@@ -134,25 +134,25 @@ public class DateFormatFactory
    public static DateFormat getDateFormat()
    {
       DateFormat df;
-      switch(dateTimeFormat)
+      try
       {
-         case DATETIME_FORMAT_SERVER:
-            NXCSession session = Registry.getSession();
-            df = new SimpleDateFormat(session.getDateFormat());
-            break;
-         case DATETIME_FORMAT_CUSTOM:
-            try
-            {
+         switch(dateTimeFormat)
+         {
+            case DATETIME_FORMAT_SERVER:
+               NXCSession session = Registry.getSession();
+               df = new SimpleDateFormat(session.getDateFormat());
+               break;
+            case DATETIME_FORMAT_CUSTOM:
                df = new SimpleDateFormat(dateFormatString);
-            }
-            catch(IllegalArgumentException e)
-            {
+               break;
+            default:
                df = DateFormat.getDateInstance(DateFormat.SHORT);
-            }
-            break;
-         default:
-            df = DateFormat.getDateInstance(DateFormat.SHORT);
-            break;
+               break;
+         }
+      }
+      catch(IllegalArgumentException e)
+      {
+         df = DateFormat.getDateInstance(DateFormat.SHORT);
       }
       TimeZone tz = Registry.getTimeZone();
       if (tz != null)
@@ -168,25 +168,25 @@ public class DateFormatFactory
    public static DateFormat getTimeFormat()
    {
       DateFormat df;
-      switch(dateTimeFormat)
+      try
       {
-         case DATETIME_FORMAT_SERVER:
-            NXCSession session = Registry.getSession();
-            df = new SimpleDateFormat(session.getTimeFormat());
-            break;
-         case DATETIME_FORMAT_CUSTOM:
-            try
-            {
+         switch(dateTimeFormat)
+         {
+            case DATETIME_FORMAT_SERVER:
+               NXCSession session = Registry.getSession();
+               df = new SimpleDateFormat(session.getTimeFormat());
+               break;
+            case DATETIME_FORMAT_CUSTOM:
                df = new SimpleDateFormat(timeFormatString);
-            }
-            catch(IllegalArgumentException e)
-            {
+               break;
+            default:
                df = DateFormat.getTimeInstance(DateFormat.MEDIUM);
-            }
-            break;
-         default:
-            df = DateFormat.getTimeInstance(DateFormat.MEDIUM);
-            break;
+               break;
+         }
+      }
+      catch(IllegalArgumentException e)
+      {
+         df = DateFormat.getTimeInstance(DateFormat.MEDIUM);
       }
       TimeZone tz = Registry.getTimeZone();
       if (tz != null)
@@ -202,25 +202,25 @@ public class DateFormatFactory
    public static DateFormat getShortTimeFormat()
    {
       DateFormat df;
-      switch(dateTimeFormat)
+      try
       {
-         case DATETIME_FORMAT_SERVER:
-            NXCSession session = Registry.getSession();
-            df = new SimpleDateFormat(session.getShortTimeFormat());
-            break;
-         case DATETIME_FORMAT_CUSTOM:
-            try
-            {
+         switch(dateTimeFormat)
+         {
+            case DATETIME_FORMAT_SERVER:
+               NXCSession session = Registry.getSession();
+               df = new SimpleDateFormat(session.getShortTimeFormat());
+               break;
+            case DATETIME_FORMAT_CUSTOM:
                df = new SimpleDateFormat(shortTimeFormatString);
-            }
-            catch(IllegalArgumentException e)
-            {
+               break;
+            default:
                df = DateFormat.getTimeInstance(DateFormat.SHORT);
-            }
-            break;
-         default:
-            df = DateFormat.getTimeInstance(DateFormat.SHORT);
-            break;
+               break;
+         }
+      }
+      catch(IllegalArgumentException e)
+      {
+         df = DateFormat.getTimeInstance(DateFormat.SHORT);
       }
       TimeZone tz = Registry.getTimeZone();
       if (tz != null)
