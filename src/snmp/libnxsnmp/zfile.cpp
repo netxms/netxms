@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** SNMP support library
 ** Copyright (C) 2003-2023 Victor Kirhenshtein
@@ -72,9 +72,9 @@ ZFile::~ZFile()
 /**
  * Write block to compressed file
  */
-int ZFile::zwrite(const void *buffer, size_t size)
+size_t ZFile::zwrite(const void *buffer, size_t size)
 {
-   int result = 0;
+   bool success = true;
    size_t bytes;
    for(size_t srcPos = 0; srcPos < size; srcPos += bytes)
    {
@@ -92,14 +92,12 @@ int ZFile::zwrite(const void *buffer, size_t size)
             m_stream.avail_out = DATA_BUFFER_SIZE;
             deflate(&m_stream, Z_NO_FLUSH);
             if (fwrite(m_pCompBuffer, 1, DATA_BUFFER_SIZE - m_stream.avail_out, m_pFile) != DATA_BUFFER_SIZE - m_stream.avail_out)
-               result = -1;
+               success = false;
          } while(m_stream.avail_in > 0);
          m_nBufferSize = 0;
       }
-      if (result != -1)
-         result += static_cast<int>(bytes);
    }
-   return result;
+   return success ? size : 0;
 }
 
 /**
@@ -116,26 +114,24 @@ int ZFile::zputc(int ch)
  */
 BOOL ZFile::fillDataBuffer()
 {
-   int nBytes, nRet;
-
    if (m_nBufferSize > 0)
       return TRUE;
 
    if (m_stream.avail_in == 0)
    {
       // Read more data from disk
-      nBytes = (int)fread(m_pCompBuffer, 1, DATA_BUFFER_SIZE, m_pFile);
-      if (nBytes <= 0)
+      size_t bytes = fread(m_pCompBuffer, 1, DATA_BUFFER_SIZE, m_pFile);
+      if (bytes == 0)
          return FALSE;  // EOF or error
 
       m_stream.next_in = m_pCompBuffer;
-      m_stream.avail_in = nBytes;
+      m_stream.avail_in = static_cast<uInt>(bytes);
    }
 
    m_stream.next_out = m_pDataBuffer;
    m_stream.avail_out = DATA_BUFFER_SIZE;
-   nRet = inflate(&m_stream, Z_NO_FLUSH);
-   if ((nRet == Z_OK) || (nRet == Z_STREAM_END))
+   int rc = inflate(&m_stream, Z_NO_FLUSH);
+   if ((rc == Z_OK) || (rc == Z_STREAM_END))
    {
       m_nBufferSize = DATA_BUFFER_SIZE - m_stream.avail_out;
       m_pBufferPos = m_pDataBuffer;
@@ -148,7 +144,7 @@ BOOL ZFile::fillDataBuffer()
 /**
  * Read block from compressed file
  */
-int ZFile::zread(void *buffer, size_t size)
+size_t ZFile::zread(void *buffer, size_t size)
 {
    size_t bytes;
    for(size_t nDstPos = 0; nDstPos < size; nDstPos += bytes)
@@ -160,7 +156,7 @@ int ZFile::zread(void *buffer, size_t size)
       m_pBufferPos += bytes;
       m_nBufferSize -= bytes;
    }
-   return static_cast<int>(size);
+   return size;
 }
 
 /**

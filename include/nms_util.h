@@ -4314,7 +4314,7 @@ public:
    int getStatus() const { return m_status; }
    void setStatus(int status) { m_status = status; }
 
-   int getObjectId() const { return m_objectId; }
+   uint32_t getObjectId() const { return m_objectId; }
    void setObjectId(uint32_t id) { m_objectId = id; }
 };
 

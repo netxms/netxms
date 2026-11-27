@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** SNMP support library
 ** Copyright (C) 2003-2025 Victor Kirhenshtein
@@ -114,9 +114,9 @@ private:
    BYTE *m_pCompBuffer;
    BYTE *m_pBufferPos;
 
-   int zwrite(const void *buffer, size_t size);
+   size_t zwrite(const void *buffer, size_t size);
    int zputc(int ch);
-   int zread(void *buffer, size_t size);
+   size_t zread(void *buffer, size_t size);
    int zgetc();
    int zclose();
 

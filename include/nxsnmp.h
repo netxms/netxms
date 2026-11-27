@@ -844,7 +844,7 @@ public:
 	   m_engineTime = 0;
 	   m_engineTimeDiff = 0;
 	}
-	SNMP_Engine(const BYTE *id, size_t idLen, int engineBoots = 0, int engineTime = 0)
+	SNMP_Engine(const BYTE *id, size_t idLen, uint32_t engineBoots = 0, uint32_t engineTime = 0)
 	{
 	   m_idLen = std::min(idLen, SNMP_MAX_ENGINEID_LEN);
 	   memcpy(m_id, id, m_idLen);
