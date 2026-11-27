@@ -126,7 +126,7 @@ first test leaves the server unable to reach its own agent.
 ### Threading
 
 - Thread pools (`ThreadPoolExecute()`, `ThreadPoolScheduleRelative()`) and `ThreadCreateEx()` for threads; `Mutex`, `Condition`, `RWLock` with `LockGuard` for RAII locking.
-- Do not use `std::atomic<bool>` — it is a known problem on AIX. Use a plain `bool` for advisory flags where a stale read is harmless; when atomicity is really needed, use an int-based atomic (`std::atomic<int32_t>`).
+- Do not use `std::atomic<bool>` or other byte-sized atomics — byte-sized atomic read-modify-write (`exchange`, `compare_exchange`, `fetch_*`) does not build with AIX XL C++ on all POWER targets (issue #3364). Use a plain `bool` for advisory flags where a stale read is harmless; when atomicity is really needed, use a 32- or 64-bit atomic (`std::atomic<int32_t>`, `std::atomic<uint64_t>`).
 - For trivial accessors to mutex-guarded members, use the `GetAttributeWithLock(attr, mutex)` / `SetAttributeWithLock` templates (`nms_util.h`) as header one-liners instead of hand-written LockGuard getter bodies in the .cpp (pattern: `DCObject` getters in `nms_dcoll.h`). Give the explicit template argument to convert derived types (`MutableString`/`StringBuffer` → `String`). Raw array members (`wchar_t[]`, `char[]`) can't go through the template — argument binding would copy outside the lock; use `{ LockGuard g(m_mutex); return String(m_arr); }` for those.
 
 ### Container Classes
