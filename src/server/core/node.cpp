@@ -11108,6 +11108,20 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_PRODUCT_CODE, m_productCode);
    msg->setField(VID_PRODUCT_VERSION, m_productVersion);
    msg->setField(VID_SERIAL_NUMBER, m_serialNumber);
+
+   msg->setField(VID_FIRMWARE_COUNT, static_cast<uint32_t>(m_firmware.size()));
+   uint32_t firmwareFieldId = VID_FIRMWARE_LIST_BASE;
+   for(int i = 0; i < m_firmware.size(); i++, firmwareFieldId += 10)
+   {
+      const FirmwareInfo *fw = m_firmware.get(i);
+      msg->setField(firmwareFieldId, static_cast<int16_t>(fw->role));
+      msg->setField(firmwareFieldId + 1, fw->componentIndex);
+      msg->setField(firmwareFieldId + 2, fw->name);
+      msg->setField(firmwareFieldId + 3, fw->platform);
+      msg->setField(firmwareFieldId + 4, fw->version);
+      msg->setField(firmwareFieldId + 5, fw->raw);
+   }
+
    msg->setField(VID_AGENT_PORT, m_agentPort);
    msg->setField(VID_AGENT_CACHE_MODE, m_agentCacheMode);
    msg->setField(VID_SHARED_SECRET, m_agentSecret);
@@ -18109,6 +18123,7 @@ json_t *Node::toJson(uint32_t flags)
    json_object_set_new(root, "cipStatus", json_integer(m_cipStatus));
    json_object_set_new(root, "cipState", json_integer(m_cipState));
    json_object_set_new(root, "radioInterfaces", json_struct_array(m_radioInterfaces));
+   json_object_set_new(root, "firmware", json_struct_array(m_firmware));
    unlockProperties();
 
    json_object_set_new(root, "polling", pollingConfigToJson());

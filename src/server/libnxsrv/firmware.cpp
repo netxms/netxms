@@ -43,6 +43,21 @@ const wchar_t LIBNXSRV_EXPORTABLE *FirmwareRoleName(FirmwareRole role)
 }
 
 /**
+ * Serialize firmware information to JSON
+ */
+json_t *FirmwareInfo::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "role", json_string_t(FirmwareRoleName(role)));
+   json_object_set_new(root, "componentIndex", json_integer(componentIndex));
+   json_object_set_new(root, "name", json_string_t(name));
+   json_object_set_new(root, "platform", json_string_t(platform));
+   json_object_set_new(root, "version", json_string_t(version));
+   json_object_set_new(root, "rawVersion", json_string_t(raw));
+   return root;
+}
+
+/**
  * Add firmware of the device itself (not of its component) to the list. Version should be in canonical form of
  * platform's version scheme (output of matching normalizer). If it is empty (version reported by the device could
  * not be normalized, or platform is not known), raw version is stored as version, so it is still shown to the user.

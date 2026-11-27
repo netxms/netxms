@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objects.views.elements;
 
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.FirmwareInfo;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -106,6 +107,8 @@ public class Inventory extends TableElement
             addPair(i18n.tr("Product code"), node.getHardwareProductCode(), false);
             addPair(i18n.tr("Product version"), node.getHardwareProductVersion(), false);
             addPair(i18n.tr("Serial number"), node.getHardwareSerialNumber(), false);
+            for(FirmwareInfo fw : node.getFirmware())
+               addPair(fw.getName().isEmpty() ? i18n.tr("Firmware") : fw.getName(), fw.getVersion(), false);
 				if (node.hasAgent())
 				{
                addPair(i18n.tr("Hardware ID"), node.getHardwareIdAsText(), false);

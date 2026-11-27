@@ -1093,7 +1093,7 @@ public class NXCPCodes
    public static final long VID_POSTCODE = 489;
    public static final long VID_FUNCTION = 490;
    public static final long VID_RESPONSE_TIME = 491;
-//   public static final long VID_QSIZE_DCI_CACHE_LOADER = 492;
+   public static final long VID_FIRMWARE_COUNT = 492;
    public static final long VID_MTU = 493;
    public static final long VID_ALIAS = 494;
    public static final long VID_AP_INDEX = 495;
@@ -1684,6 +1684,7 @@ public class NXCPCodes
    public static final long VID_CHAIN_CALL_LIST_BASE = 0x79000000L;
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_SNMP_AGENT_LIST_BASE = 0x79000000L;
+   public static final long VID_FIRMWARE_LIST_BASE = 0x36000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;
    public static final long VID_DISABLED_EXTRAS_BASE = 0x58000000L;
    public static final long VID_RESOURCE_TAG_LIST_BASE = 0x7D000000L;

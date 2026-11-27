@@ -1283,7 +1283,7 @@ __PACK_END__
 #define VID_POSTCODE                ((uint32_t)489)
 #define VID_FUNCTION                ((uint32_t)490)
 #define VID_RESPONSE_TIME           ((uint32_t)491)
-//#define VID_QSIZE_DCI_CACHE_LOADER  ((uint32_t)492)
+#define VID_FIRMWARE_COUNT          ((uint32_t)492)
 #define VID_MTU                     ((uint32_t)493)
 #define VID_ALIAS                   ((uint32_t)494)
 #define VID_AP_INDEX                ((uint32_t)495)
@@ -1875,6 +1875,10 @@ __PACK_END__
 #define VID_ANOMALY_SETTINGS        ((uint32_t)1082)
 #define VID_NO_CACHE                ((uint32_t)1083)
 #define VID_RIGHTS_GENERATION       ((uint32_t)1084)
+
+// Base value for firmware list (10 fields per entry)
+#define VID_FIRMWARE_LIST_BASE      ((uint32_t)0x36000000)
+>>>>>>> 1c0f9cce05 (firmware information of node is sent to clients as part of object data (new fields VID_FIRMWARE_COUNT and VID_FIRMWARE_LIST_BASE); firmware information in Java client library (new classes FirmwareInfo and FirmwareRole, new methods AbstractNode.getFirmware() and AbstractNode.getMainFirmware()); firmware versions shown in "Inventory" section of object overview in management console; node's JSON representation (and so WebAPI object details) includes firmware list (issue #4067))
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

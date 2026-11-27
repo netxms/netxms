@@ -187,7 +187,7 @@ enum class FirmwareRole
 /**
  * Firmware information (single firmware or operating system image running on the device)
  */
-struct FirmwareInfo
+struct LIBNXSRV_EXPORTABLE FirmwareInfo
 {
    FirmwareRole role;
    int32_t componentIndex;   // -1 = the object itself, otherwise ENTITY-MIB / module index
@@ -195,6 +195,8 @@ struct FirmwareInfo
    wchar_t platform[64];     // Platform ID from firmware platform registry; empty if platform is not known
    wchar_t version[64];      // Version in canonical form of platform's version scheme; copy of raw version if platform is not known
    wchar_t raw[256];         // Version exactly as reported by the device
+
+   json_t *toJson() const;
 };
 
 const wchar_t LIBNXSRV_EXPORTABLE *FirmwareRoleName(FirmwareRole role);

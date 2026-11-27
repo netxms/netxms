@@ -238,6 +238,48 @@ void TestNodeFirmware()
    AssertEquals(RunScript(L"return ($node.firmwareVersion == null) and ($node.firmwarePlatform == null) and ($node.firmware.size == 0);", node2), L"true");
    EndTest();
 
+   StartTest(L"Node firmware: NXCP message");
+   NXCPMessage msg(CMD_OBJECT, 1);
+   node->fillMessage(&msg, 0);
+   AssertEquals(msg.getFieldAsInt32(VID_FIRMWARE_COUNT), 2);
+   wchar_t buffer[256];
+   AssertEquals(msg.getFieldAsInt16(VID_FIRMWARE_LIST_BASE), static_cast<int>(FirmwareRole::BOOTLOADER));
+   AssertEquals(msg.getFieldAsInt32(VID_FIRMWARE_LIST_BASE + 1), -1);
+   AssertEquals(msg.getFieldAsString(VID_FIRMWARE_LIST_BASE + 2, buffer, 256), L"RouterBOOT");
+   AssertEquals(msg.getFieldAsInt16(VID_FIRMWARE_LIST_BASE + 10), static_cast<int>(FirmwareRole::MAIN));
+   AssertEquals(msg.getFieldAsString(VID_FIRMWARE_LIST_BASE + 12, buffer, 256), L"RouterOS");
+   AssertEquals(msg.getFieldAsString(VID_FIRMWARE_LIST_BASE + 13, buffer, 256), L"routeros");
+   AssertEquals(msg.getFieldAsString(VID_FIRMWARE_LIST_BASE + 14, buffer, 256), L"7.22.1");
+   AssertEquals(msg.getFieldAsString(VID_FIRMWARE_LIST_BASE + 15, buffer, 256), L"7.22.1 (long-term)");
+
+   NXCPMessage emptyMsg(CMD_OBJECT, 2);
+   node2->fillMessage(&emptyMsg, 0);
+   AssertTrue(emptyMsg.isFieldExist(VID_FIRMWARE_COUNT));
+   AssertEquals(emptyMsg.getFieldAsInt32(VID_FIRMWARE_COUNT), 0);
+   EndTest();
+
+   StartTest(L"Node firmware: JSON");
+   json_t *json = node->toJson(0);
+   json_t *list = json_object_get(json, "firmware");
+   AssertTrue(json_is_array(list));
+   AssertEquals(static_cast<int>(json_array_size(list)), 2);
+   json_t *entry = json_array_get(list, 1);
+   AssertEquals(json_object_get_string_utf8(entry, "role", ""), "main");
+   AssertEquals(json_object_get_int32(entry, "componentIndex", 0), -1);
+   AssertEquals(json_object_get_string_utf8(entry, "name", ""), "RouterOS");
+   AssertEquals(json_object_get_string_utf8(entry, "platform", ""), "routeros");
+   AssertEquals(json_object_get_string_utf8(entry, "version", ""), "7.22.1");
+   AssertEquals(json_object_get_string_utf8(entry, "rawVersion", ""), "7.22.1 (long-term)");
+   AssertEquals(json_object_get_string_utf8(json_array_get(list, 0), "role", ""), "bootloader");
+   json_decref(json);
+
+   json = node2->toJson(0);
+   list = json_object_get(json, "firmware");
+   AssertTrue(json_is_array(list));
+   AssertEquals(static_cast<int>(json_array_size(list)), 0);
+   json_decref(json);
+   EndTest();
+
    StartTest(L"Node firmware: database persistence");
    SaveObject(node);
    AssertEquals(GetStoredFirmwareCount(node->getId()), 2);

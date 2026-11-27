@@ -20,6 +20,7 @@ package org.netxms.client.objects;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,7 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.FirmwareInfo;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
@@ -249,6 +251,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected int networkServiceCount;
    protected int vpnConnectorCount;
    protected RadioInterface[] radios;
+   protected List<FirmwareInfo> firmware = new ArrayList<>(0);
    protected NetworkPathCheckResult networkPathCheckResult;
    protected DeviceBackupJobStatus lastConfigBackupJobStatus;
    protected Date lastConfigBackupJobTime;
@@ -443,6 +446,15 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       for(int i = 0; i < count; i++)
       {
          radios[i] = new RadioInterface(this, msg, fieldId);
+         fieldId += 10;
+      }
+
+      count = msg.getFieldAsInt32(NXCPCodes.VID_FIRMWARE_COUNT);
+      firmware = new ArrayList<>(count);
+      fieldId = NXCPCodes.VID_FIRMWARE_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         firmware.add(new FirmwareInfo(msg, fieldId));
          fieldId += 10;
       }
 	}
@@ -1406,6 +1418,29 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public String getHardwareProductVersion()
    {
       return hardwareProductVersion;
+   }
+
+   /**
+    * Get firmware (operating system and other software images) running on this node.
+    *
+    * @return list of firmware (empty if firmware information is not available)
+    */
+   public List<FirmwareInfo> getFirmware()
+   {
+      return Collections.unmodifiableList(firmware);
+   }
+
+   /**
+    * Get main firmware of this node itself (usually device's operating system).
+    *
+    * @return main firmware or null if node does not have one
+    */
+   public FirmwareInfo getMainFirmware()
+   {
+      for(FirmwareInfo fw : firmware)
+         if (fw.isMainDeviceFirmware())
+            return fw;
+      return null;
    }
 
    /**

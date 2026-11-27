@@ -21726,6 +21726,11 @@ components:
           description: (Node) Radio interfaces of a wireless access point or controller node. `ownerId` and `ownerName` are not included here.
           items:
             $ref: '#/components/schemas/WirelessRadioInterface'
+        firmware:
+          type: array
+          description: (Node) Firmware and operating system images running on the device, as collected by the last configuration poll. Empty if firmware information is not available.
+          items:
+            $ref: '#/components/schemas/FirmwareInfo'
         # --- Interface ---
         index:
           type: integer
@@ -22567,6 +22572,29 @@ components:
         typeText:
           type: string
           description: Textual representation of the entry type
+    FirmwareInfo:
+      type: object
+      description: Firmware or operating system image running on a device
+      properties:
+        role:
+          type: string
+          enum: [main, patch, bootloader, management-controller, other]
+          description: Role of this firmware on the device
+        componentIndex:
+          type: integer
+          description: Index of the device component this firmware belongs to, or -1 for firmware of the device itself
+        name:
+          type: string
+          description: Display name (for example "Junos OS" or "RouterBOOT")
+        platform:
+          type: string
+          description: Firmware platform ID (for example "junos" or "routeros"); versions of the same platform are comparable. Empty if the platform is not known.
+        version:
+          type: string
+          description: Version in the canonical form of the platform's version scheme; same as `rawVersion` if the platform is not known
+        rawVersion:
+          type: string
+          description: Version exactly as reported by the device
     WirelessRadioInterface:
       type: object
       description: Radio interface of a wireless access point or controller
