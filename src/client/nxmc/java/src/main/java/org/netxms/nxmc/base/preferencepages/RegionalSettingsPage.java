@@ -60,6 +60,9 @@ public class RegionalSettingsPage extends PropertyPage
 	private LabeledText shortTimeExample;
 	private Button checkServerTimeZone;
 	private int format;
+   private String dateTimeError = null;
+   private String shortTimeError = null;
+   private String formatWarning = null;
 
    public RegionalSettingsPage()
    {
@@ -192,27 +195,36 @@ public class RegionalSettingsPage extends PropertyPage
 	{
 		DateFormat df;
 		String datePattern, timePattern;
+		boolean serverFormat = (format == DateFormatFactory.DATETIME_FORMAT_SERVER);
 		switch(format)
 		{
 			case DateFormatFactory.DATETIME_FORMAT_SERVER:
-				NXCSession session = Registry.getSession();
-				datePattern = session.getDateFormat();
-				timePattern = session.getTimeFormat();
-				df = new SimpleDateFormat(datePattern + " " + timePattern);
-				break;
 			case DateFormatFactory.DATETIME_FORMAT_CUSTOM:
-				datePattern = dateFormatString.getText();
-				timePattern = timeFormatString.getText();
+				if (serverFormat)
+				{
+					NXCSession session = Registry.getSession();
+					datePattern = session.getDateFormat();
+					timePattern = session.getTimeFormat();
+				}
+				else
+				{
+					datePattern = dateFormatString.getText();
+					timePattern = timeFormatString.getText();
+				}
 				try
 				{
 					df = new SimpleDateFormat(datePattern + " " + timePattern);
 				}
 				catch(IllegalArgumentException e)
 				{
-					setMessage(null);
-					setErrorMessage(e.getLocalizedMessage());
+					dateTimeError = serverFormat ?
+							i18n.tr("Invalid server date or time format (Client.DefaultConsoleDateFormat / Client.DefaultConsoleTimeFormat): {0}", e.getLocalizedMessage()) :
+							e.getLocalizedMessage();
+					formatWarning = null;
+					dateTimeExample.setText("");
 					if (updatedControl != null)
                   updatedControl.setBackground(ThemeEngine.getBackgroundColor("TextInput.Error"));
+					updateMessages();
 					return;
 				}
 				break;
@@ -224,21 +236,21 @@ public class RegionalSettingsPage extends PropertyPage
 		}
 		dateTimeExample.setText(df.format(new Date(System.currentTimeMillis())));
 
-		setErrorMessage(null);
+		dateTimeError = null;
 		dateFormatString.getTextControl().setBackground(null);
 		timeFormatString.getTextControl().setBackground(null);
 
-		boolean serverFormat = (format == DateFormatFactory.DATETIME_FORMAT_SERVER);
 		if ((datePattern.indexOf('m') >= 0) && (datePattern.indexOf('M') < 0))
-			setMessage(serverFormat ?
+			formatWarning = serverFormat ?
 					i18n.tr("Server date format \"{0}\" (Client.DefaultConsoleDateFormat) uses \"m\" (minutes) - month is \"M\"", datePattern) :
-					i18n.tr("Date format uses \"m\" (minutes) - month is \"M\""), IMessageProvider.WARNING);
+					i18n.tr("Date format uses \"m\" (minutes) - month is \"M\"");
 		else if ((timePattern.indexOf('M') >= 0) && (timePattern.indexOf('m') < 0))
-			setMessage(serverFormat ?
+			formatWarning = serverFormat ?
 					i18n.tr("Server time format \"{0}\" (Client.DefaultConsoleTimeFormat) uses \"M\" (month) - minutes are \"m\"", timePattern) :
-					i18n.tr("Time format uses \"M\" (month) - minutes are \"m\""), IMessageProvider.WARNING);
+					i18n.tr("Time format uses \"M\" (month) - minutes are \"m\"");
 		else
-			setMessage(null);
+			formatWarning = null;
+		updateMessages();
 	}
 
    /**
@@ -250,8 +262,17 @@ public class RegionalSettingsPage extends PropertyPage
       switch(format)
       {
          case DateFormatFactory.DATETIME_FORMAT_SERVER:
-            NXCSession session = Registry.getSession();
-            df = new SimpleDateFormat(session.getShortTimeFormat());
+            try
+            {
+               df = new SimpleDateFormat(Registry.getSession().getShortTimeFormat());
+            }
+            catch(IllegalArgumentException e)
+            {
+               shortTimeError = i18n.tr("Invalid server short time format (Client.DefaultConsoleShortTimeFormat): {0}", e.getLocalizedMessage());
+               shortTimeExample.setText("");
+               updateMessages();
+               return;
+            }
             break;
          case DateFormatFactory.DATETIME_FORMAT_CUSTOM:
             try
@@ -260,9 +281,11 @@ public class RegionalSettingsPage extends PropertyPage
             }
             catch(IllegalArgumentException e)
             {
-               setErrorMessage(e.getLocalizedMessage());
+               shortTimeError = e.getLocalizedMessage();
+               shortTimeExample.setText("");
                if (updatedControl != null)
                   updatedControl.setBackground(ThemeEngine.getBackgroundColor("TextInput.Error"));
+               updateMessages();
                return;
             }
             break;
@@ -272,8 +295,18 @@ public class RegionalSettingsPage extends PropertyPage
       }
       shortTimeExample.setText(df.format(new Date(System.currentTimeMillis())));
 
-      setErrorMessage(null);
+      shortTimeError = null;
       shortTimeFormatString.getTextControl().setBackground(null);
+      updateMessages();
+   }
+
+   /**
+    * Show errors and format warning of both examples
+    */
+   private void updateMessages()
+   {
+      setErrorMessage((dateTimeError != null) ? dateTimeError : shortTimeError);
+      setMessage(formatWarning, (formatWarning != null) ? IMessageProvider.WARNING : IMessageProvider.NONE);
    }
 
    /**
@@ -293,6 +326,7 @@ public class RegionalSettingsPage extends PropertyPage
       shortTimeFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
       checkServerTimeZone.setSelection(false);
 		updateExample(null);
+      updateShortTimeExample(null);
 	}
 
    /**
