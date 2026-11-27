@@ -53,7 +53,7 @@ public class Commands extends OverviewPageElement
 
 	private CommandBox commandBox;
 	private Action actionWakeup;
-	
+
 	/**
     * @param parent
     * @param anchor
@@ -64,14 +64,14 @@ public class Commands extends OverviewPageElement
       super(parent, anchor, objectView);
 		createActions();
 	}
-	
+
 	/**
 	 * Create actions
 	 */
 	private void createActions()
 	{
       final NXCSession session = Registry.getSession();
-		
+
       actionWakeup = new Action(i18n.tr("Wakeup node using Wake-on-LAN")) {
 			@Override
 			public void run()
@@ -150,7 +150,7 @@ public class Commands extends OverviewPageElement
 	{
 		commandBox = new CommandBox(parent, SWT.NONE);
 		return commandBox;
-	} 
+	}
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
