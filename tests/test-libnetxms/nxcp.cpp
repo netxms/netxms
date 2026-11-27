@@ -768,7 +768,7 @@ static void AssertNextMessage(TestMessageReceiver *receiver, const NXCP_MESSAGE 
    NXCPMessage *msg = receiver->readMessage(0, &result, allowReadBytes);
    AssertNotNull(msg);
    AssertEquals(static_cast<int>(result), static_cast<int>(MSGRECV_SUCCESS));
-   AssertEquals(msg->getId(), ntohl(expected->id));
+   AssertEquals(msg->getId(), static_cast<uint32_t>(ntohl(expected->id)));
    AssertTrue(receiver->isRawMessage(expected));
    delete msg;
 }
