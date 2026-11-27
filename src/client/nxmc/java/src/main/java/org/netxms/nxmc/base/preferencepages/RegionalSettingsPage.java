@@ -316,11 +316,11 @@ public class RegionalSettingsPage extends PropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		format = getPreferenceStore().getInt("DateFormatFactory.Format.DateTime");
+		format = getPreferenceStore().getDefaultInt("DateFormatFactory.Format.DateTime");
 		dateTimeFormat.select(format);
-		dateFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Date"));
-		timeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Time"));
-      shortTimeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.ShortTime"));
+		dateFormatString.setText(getPreferenceStore().getDefaultString("DateFormatFactory.Format.Date"));
+		timeFormatString.setText(getPreferenceStore().getDefaultString("DateFormatFactory.Format.Time"));
+      shortTimeFormatString.setText(getPreferenceStore().getDefaultString("DateFormatFactory.Format.ShortTime"));
 		dateFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
 		timeFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
       shortTimeFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
