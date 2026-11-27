@@ -187,11 +187,11 @@ static void ImageLibraryDeleteCallback(ClientSession *pSession, void *context)
  */
 void ClientSession::socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session)
 {
-   if (!(session->m_flags & CSF_TERMINATE_REQUESTED))
+   if (!(session->getFlags() & CSF_TERMINATE_REQUESTED))
    {
       if (pollResult == BackgroundSocketPollResult::SUCCESS)
       {
-         if (session->readSocket() && !(session->m_flags & CSF_TERMINATE_REQUESTED))
+         if (session->readSocket() && !(session->getFlags() & CSF_TERMINATE_REQUESTED))
          {
             session->m_socketPoller->poller.poll(hSocket, 900000, socketPollerCallback, session);
             return;
@@ -652,7 +652,7 @@ void ClientSession::finalize()
 
    CloseAllLogsForSession(m_id);
 
-   if (m_flags & CSF_AUTHENTICATED)
+   if (isAuthenticated())
    {
       CALL_ALL_MODULES(pfClientSessionClose, (this));
       WriteAuditLog(AUDIT_SECURITY, TRUE, m_userId, m_workstation, m_id, 0, _T("User logged out (client: %s)"), m_clientInfo);
@@ -1043,7 +1043,7 @@ void ClientSession::processRequest(NXCPMessage *request)
 
    TCHAR buffer[128];
    debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(code, buffer));
-   if (!(m_flags & CSF_AUTHENTICATED) &&
+   if (!isAuthenticated() &&
        (code != CMD_LOGIN) &&
        (code != CMD_GET_SERVER_INFO) &&
        (code != CMD_REQUEST_ENCRYPTION) &&
@@ -2389,7 +2389,7 @@ bool ClientSession::sendMessage(const NXCPMessage& msg)
    if (isTerminated())
       return false;
 
-	NXCP_MESSAGE *rawMsg = msg.serialize((m_flags & CSF_COMPRESSION_ENABLED) != 0);
+	NXCP_MESSAGE *rawMsg = msg.serialize(isCompressionEnabled());
 
    if ((nxlog_get_debug_level_tag_object(DEBUG_TAG, m_id) >= 6) && (msg.getCode() != CMD_ADM_MESSAGE))
    {
@@ -2770,7 +2770,7 @@ void ClientSession::login(const NXCPMessage& request)
       request.getFieldAsString(VID_LANGUAGE, m_language, 8);
    }
 
-   if (!(m_flags & CSF_AUTHENTICATED))
+   if (!isAuthenticated())
    {
       uint32_t rcc;
       delete m_loginInfo;
@@ -3292,7 +3292,7 @@ void ClientSession::getAuthTokens(const NXCPMessage& request)
  */
 void ClientSession::updateSystemAccessRights()
 {
-   if (!(m_flags & CSF_AUTHENTICATED))
+   if (!isAuthenticated())
       return;
 
    uint64_t systemAccessRights = GetEffectiveSystemRights(m_userId);
@@ -4130,7 +4130,7 @@ void ClientSession::onNewEvent(Event *pEvent)
  */
 void ClientSession::sendObjectUpdates()
 {
-   if ((m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED)) != 0)
+   if (isTerminated())
    {
       decRefCount();
       return;
@@ -4193,7 +4193,7 @@ void ClientSession::sendObjectUpdates()
 
    if (count == m_objectNotificationBatchSize)
    {
-      if ((m_flags & CSF_OBJECTS_OUT_OF_SYNC) == 0)
+      if ((getFlags() & CSF_OBJECTS_OUT_OF_SYNC) == 0)
       {
          InterlockedOr(&m_flags, CSF_OBJECTS_OUT_OF_SYNC);
          notify(NX_NOTIFY_OBJECTS_OUT_OF_SYNC);
@@ -4202,7 +4202,7 @@ void ClientSession::sendObjectUpdates()
    }
    else
    {
-      if ((m_flags & CSF_OBJECTS_OUT_OF_SYNC) != 0)
+      if ((getFlags() & CSF_OBJECTS_OUT_OF_SYNC) != 0)
       {
          InterlockedAnd(&m_flags, ~CSF_OBJECTS_OUT_OF_SYNC);
          notify(NX_NOTIFY_OBJECTS_IN_SYNC);
@@ -4211,7 +4211,7 @@ void ClientSession::sendObjectUpdates()
    }
 
    m_pendingObjectNotificationsLock.lock();
-   if ((m_pendingObjectNotifications.size() > 0) && ((m_flags & (CSF_TERMINATE_REQUESTED | CSF_TERMINATED)) == 0))
+   if ((m_pendingObjectNotifications.size() > 0) && !isTerminated())
    {
       ThreadPoolScheduleRelative(g_clientThreadPool, m_objectNotificationDelay, this, &ClientSession::sendObjectUpdates);
    }
@@ -4231,7 +4231,7 @@ void ClientSession::onObjectChange(const shared_ptr<NetObj>& object, bool access
    // For access rights changes the object is queued unconditionally so that a session
    // losing read access can be notified to remove the object from its cache. The actual
    // full-object-vs-removal decision is made at send time in sendObjectUpdates().
-   if (((m_flags & (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED | CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) == (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED)) &&
+   if (((getFlags() & (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED | CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) == (CSF_AUTHENTICATED | CSF_OBJECT_SYNC_FINISHED)) &&
        isSubscribedTo(NXC_CHANNEL_OBJECTS) &&
        (accessChange || object->isDeleted() || object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) || (object->getObjectClass() == OBJECT_ZONE)))
    {
@@ -6603,7 +6603,7 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
  */
 void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& request)
 {
-   if ((m_flags & CSF_EPP_UPLOAD) && (request.getId() == m_eppRequestId))
+   if ((getFlags() & CSF_EPP_UPLOAD) && (request.getId() == m_eppRequestId))
    {
       if (m_eppRuleList.size() < m_eppExpectedRuleCount)
       {
@@ -6617,7 +6617,7 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
    }
    else
    {
-      if (m_flags & CSF_EPP_UPLOAD)
+      if (getFlags() & CSF_EPP_UPLOAD)
          debugPrintf(4, L"processEventProcessingPolicyRecord: record with request ID %u does not belong to current upload (request ID %u)", request.getId(), m_eppRequestId);
       NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
       response.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
@@ -8637,7 +8637,7 @@ void ClientSession::onActionDBUpdate(UINT32 dwCode, const Action *action)
       msg.setField(VID_ACTION_ID, action->id);
       if (dwCode != NX_NOTIFY_ACTION_DELETED)
          action->fillMessage(&msg);
-      ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::sendActionDBUpdateMessage, msg.serialize((m_flags & CSF_COMPRESSION_ENABLED) != 0));
+      ThreadPoolExecute(g_clientThreadPool, this, &ClientSession::sendActionDBUpdateMessage, msg.serialize(isCompressionEnabled()));
    }
 }
 
@@ -14518,7 +14518,7 @@ void ClientSession::openConsole(const NXCPMessage& request)
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
-      if (!(m_flags & CSF_CONSOLE_OPEN))
+      if (!isConsoleOpen())
       {
          InterlockedOr(&m_flags, CSF_CONSOLE_OPEN);
          m_console = new ClientSessionConsole(this);
@@ -14542,7 +14542,7 @@ void ClientSession::closeConsole(const NXCPMessage& request)
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE)
 	{
-		if (m_flags & CSF_CONSOLE_OPEN)
+		if (isConsoleOpen())
 		{
 		   InterlockedAnd(&m_flags, ~CSF_CONSOLE_OPEN);
 			delete_and_null(m_console);
@@ -14568,7 +14568,7 @@ void ClientSession::processConsoleCommand(const NXCPMessage& request)
 {
 	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
 
-	if ((m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE) && (m_flags & CSF_CONSOLE_OPEN))
+	if ((m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONSOLE) && isConsoleOpen())
 	{
 		TCHAR command[256];
 		request.getFieldAsString(VID_COMMAND, command, 256);
