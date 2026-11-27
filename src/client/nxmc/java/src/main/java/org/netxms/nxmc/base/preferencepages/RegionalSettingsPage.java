@@ -73,7 +73,7 @@ public class RegionalSettingsPage extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
@@ -85,11 +85,11 @@ public class RegionalSettingsPage extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 3;
-		dateTimeFormat = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Date and time format"), gd); 
-		dateTimeFormat.add(i18n.tr("Defined by server")); 
-		dateTimeFormat.add(i18n.tr("JVM default locale")); 
-		dateTimeFormat.add(i18n.tr("Custom")); 
-		format = getPreferenceStore().getInt("DateFormatFactory.Format.DateTime"); 
+		dateTimeFormat = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Date and time format"), gd);
+		dateTimeFormat.add(i18n.tr("Defined by server"));
+		dateTimeFormat.add(i18n.tr("JVM default locale"));
+		dateTimeFormat.add(i18n.tr("Custom"));
+		format = getPreferenceStore().getInt("DateFormatFactory.Format.DateTime");
 		dateTimeFormat.select(format);
 		dateTimeFormat.addSelectionListener(new SelectionListener() {
 			@Override
@@ -102,14 +102,14 @@ public class RegionalSettingsPage extends PropertyPage
 				updateExample(null);
 				updateShortTimeExample(null);
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
 			{
 				widgetSelected(e);
 			}
 		});
-		
+
 		ModifyListener listener = new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)
@@ -117,24 +117,24 @@ public class RegionalSettingsPage extends PropertyPage
 				updateExample((Control)e.widget);
 			}
 		};
-		
+
 		dateFormatString = new LabeledText(dialogArea, SWT.NONE);
-		dateFormatString.setLabel(i18n.tr("Date format string")); 
+		dateFormatString.setLabel(i18n.tr("Date format string"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		dateFormatString.setLayoutData(gd);
-		dateFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Date")); 
+		dateFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Date"));
 		dateFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
 		dateFormatString.getTextControl().addModifyListener(listener);
-		
+
 		timeFormatString = new LabeledText(dialogArea, SWT.NONE);
-		timeFormatString.setLabel(i18n.tr("Time format string")); 
+		timeFormatString.setLabel(i18n.tr("Time format string"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		timeFormatString.setLayoutData(gd);
-		timeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Time")); 
+		timeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Time"));
 		timeFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
 		timeFormatString.getTextControl().addModifyListener(listener);
 
@@ -144,7 +144,7 @@ public class RegionalSettingsPage extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       shortTimeFormatString.setLayoutData(gd);
-      shortTimeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.ShortTime")); 
+      shortTimeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.ShortTime"));
       shortTimeFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
       shortTimeFormatString.getTextControl().addModifyListener(new ModifyListener() {
          @Override
@@ -153,9 +153,9 @@ public class RegionalSettingsPage extends PropertyPage
             updateShortTimeExample((Control)e.widget);
          }
       });
-		
+
 		dateTimeExample = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
-		dateTimeExample.setLabel(i18n.tr("Date and time formatting example")); 
+		dateTimeExample.setLabel(i18n.tr("Date and time formatting example"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -168,7 +168,7 @@ public class RegionalSettingsPage extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       shortTimeExample.setLayoutData(gd);
-      
+
       checkServerTimeZone = new Button(dialogArea, SWT.CHECK);
       checkServerTimeZone.setText(i18n.tr("Use server time &zone"));
       gd = new GridData();
@@ -176,11 +176,11 @@ public class RegionalSettingsPage extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = layout.numColumns;
       checkServerTimeZone.setLayoutData(gd);
-      checkServerTimeZone.setSelection(getPreferenceStore().getBoolean("DateFormatFactory.UseServerTimeZone")); 
-		
+      checkServerTimeZone.setSelection(getPreferenceStore().getBoolean("DateFormatFactory.UseServerTimeZone"));
+
 		updateExample(null);
       updateShortTimeExample(null);
-		
+
 		return dialogArea;
 	}
 
@@ -194,12 +194,12 @@ public class RegionalSettingsPage extends PropertyPage
 		{
 			case DateFormatFactory.DATETIME_FORMAT_SERVER:
 				NXCSession session = Registry.getSession();
-				df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat()); 
+				df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat());
 				break;
 			case DateFormatFactory.DATETIME_FORMAT_CUSTOM:
 				try
 				{
-					df = new SimpleDateFormat(dateFormatString.getText() + " " + timeFormatString.getText()); 
+					df = new SimpleDateFormat(dateFormatString.getText() + " " + timeFormatString.getText());
 				}
 				catch(IllegalArgumentException e)
 				{
@@ -214,7 +214,7 @@ public class RegionalSettingsPage extends PropertyPage
 				break;
 		}
 		dateTimeExample.setText(df.format(new Date(System.currentTimeMillis())));
-		
+
 		setErrorMessage(null);
 		dateFormatString.getTextControl().setBackground(null);
 		timeFormatString.getTextControl().setBackground(null);
@@ -250,7 +250,7 @@ public class RegionalSettingsPage extends PropertyPage
             break;
       }
       shortTimeExample.setText(df.format(new Date(System.currentTimeMillis())));
-      
+
       setErrorMessage(null);
       shortTimeFormatString.getTextControl().setBackground(null);
    }
@@ -262,11 +262,11 @@ public class RegionalSettingsPage extends PropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		format = getPreferenceStore().getInt("DateFormatFactory.Format.DateTime"); 
+		format = getPreferenceStore().getInt("DateFormatFactory.Format.DateTime");
 		dateTimeFormat.select(format);
-		dateFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Date")); 
-		timeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Time")); 
-      shortTimeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.ShortTime")); 
+		dateFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Date"));
+		timeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.Time"));
+      shortTimeFormatString.setText(getPreferenceStore().getString("DateFormatFactory.Format.ShortTime"));
 		dateFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
 		timeFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
       shortTimeFormatString.setEnabled(format == DateFormatFactory.DATETIME_FORMAT_CUSTOM);
@@ -282,11 +282,11 @@ public class RegionalSettingsPage extends PropertyPage
 	{
 		final IPreferenceStore ps = getPreferenceStore();
 
-		ps.setValue("DateFormatFactory.Format.DateTime", format); 
-		ps.setValue("DateFormatFactory.Format.Date", dateFormatString.getText()); 
-		ps.setValue("DateFormatFactory.Format.Time", timeFormatString.getText()); 
-      ps.setValue("DateFormatFactory.Format.ShortTime", shortTimeFormatString.getText()); 
-      ps.setValue("DateFormatFactory.UseServerTimeZone", checkServerTimeZone.getSelection()); 
+		ps.setValue("DateFormatFactory.Format.DateTime", format);
+		ps.setValue("DateFormatFactory.Format.Date", dateFormatString.getText());
+		ps.setValue("DateFormatFactory.Format.Time", timeFormatString.getText());
+      ps.setValue("DateFormatFactory.Format.ShortTime", shortTimeFormatString.getText());
+      ps.setValue("DateFormatFactory.UseServerTimeZone", checkServerTimeZone.getSelection());
 
 		DateFormatFactory.updateFromPreferences();
       DateFormatFactory.updateTimeZone();
