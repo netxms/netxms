@@ -80,9 +80,9 @@ public class FirmwareInfo
    }
 
    /**
-    * Get display name of this firmware (like "Junos OS" or "RouterBOOT").
+    * Get product name of this firmware (like "Junos OS" or "RouterBOOT").
     *
-    * @return display name
+    * @return product name or empty string if firmware has no product name
     */
    public String getName()
    {

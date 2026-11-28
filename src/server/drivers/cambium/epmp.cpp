@@ -233,7 +233,7 @@ bool CambiumEPMPDriver::getHardwareInformation(DeviceContext *context, NObject *
  */
 bool CambiumEPMPDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 17713, 21, 1, 1, 1, 0 }, L"Firmware", firmware);   // cambiumCurrentSWInfo
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 17713, 21, 1, 1, 1, 0 }, L"", firmware);   // cambiumCurrentSWInfo
 }
 
 /**

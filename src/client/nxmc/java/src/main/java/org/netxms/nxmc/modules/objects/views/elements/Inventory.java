@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.views.elements;
 
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.FirmwareInfo;
+import org.netxms.client.constants.FirmwareRole;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -108,7 +109,7 @@ public class Inventory extends TableElement
             addPair(i18n.tr("Product version"), node.getHardwareProductVersion(), false);
             addPair(i18n.tr("Serial number"), node.getHardwareSerialNumber(), false);
             for(FirmwareInfo fw : node.getFirmware())
-               addPair(fw.getName().isEmpty() ? i18n.tr("Firmware") : fw.getName(), fw.getVersion(), false);
+               addPair(getFirmwareRoleName(fw.getRole()), fw.getName().isEmpty() ? fw.getVersion() : fw.getName() + " " + fw.getVersion(), false);
 				if (node.hasAgent())
 				{
                addPair(i18n.tr("Hardware ID"), node.getHardwareIdAsText(), false);
@@ -171,6 +172,29 @@ public class Inventory extends TableElement
          addPair(i18n.tr("Number of DCIs"), Integer.toString(((DataCollectionTarget)object).getNumDataCollectionItems()));
       }
 	}
+
+   /**
+    * Get display name for firmware role.
+    *
+    * @param role firmware role
+    * @return display name for firmware role
+    */
+   private String getFirmwareRoleName(FirmwareRole role)
+   {
+      switch(role)
+      {
+         case MAIN:
+            return i18n.tr("Firmware");
+         case PATCH:
+            return i18n.tr("Firmware patch");
+         case BOOTLOADER:
+            return i18n.tr("Boot loader");
+         case MANAGEMENT_CONTROLLER:
+            return i18n.tr("Management controller firmware");
+         default:
+            return i18n.tr("Other firmware");
+      }
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement#getTitle()

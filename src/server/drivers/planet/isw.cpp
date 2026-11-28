@@ -121,7 +121,7 @@ bool PlanetIndustrialSwDriver::getHardwareInformation(DeviceContext *context, NO
  */
 bool PlanetIndustrialSwDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 6603, 1, 28, 1, 3, 3, 1, 6, 1 }, L"Firmware", firmware);   // vtssFirmwareStatusSwitchVersion
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 6603, 1, 28, 1, 3, 3, 1, 6, 1 }, L"", firmware);   // vtssFirmwareStatusSwitchVersion
 }
 
 /**

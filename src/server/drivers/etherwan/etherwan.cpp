@@ -126,7 +126,7 @@ bool EtherWanDriver::getFirmwareInformation(DeviceContext *context, NObject *nod
    if (sp != nullptr)
       *sp = 0;
 
-   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Firmware", L"", version, raw);
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"", L"", version, raw);
    return true;
 }
 

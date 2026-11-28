@@ -150,7 +150,7 @@ bool EdgecoreEnterpriseSwitchDriver::getFirmwareInformation(DeviceContext *conte
    if (driverData == nullptr)
       return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
    return getFirmwareInformationFromSnmpObject(context, node, driverData,
-         { 1, 3, 6, 1, 4, 1, 259, 10, 1, static_cast<ESWDriverData*>(driverData)->getSubtree(), 1, 1, 5, 4, 0 }, L"Firmware", firmware);
+         { 1, 3, 6, 1, 4, 1, 259, 10, 1, static_cast<ESWDriverData*>(driverData)->getSubtree(), 1, 1, 5, 4, 0 }, L"", firmware);
 }
 
 /**

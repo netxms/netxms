@@ -192,7 +192,7 @@ bool EltexDriver::getHardwareInformation(DeviceContext *context, NObject *node, 
  */
 bool EltexDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 89, 53, 14, 1, 2, 1 }, L"Firmware", firmware);   // Firmware version
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 89, 53, 14, 1, 2, 1 }, L"", firmware);   // Firmware version
 }
 
 /**

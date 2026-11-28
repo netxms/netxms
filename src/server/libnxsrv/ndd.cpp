@@ -425,7 +425,7 @@ bool LIBNXSRV_EXPORTABLE ReadFirmwareVersion(SNMP_Transport *snmp, const SNMP_Ob
  * @param node Node
  * @param driverData driver data
  * @param oid SNMP object with firmware version
- * @param name display name of the firmware
+ * @param name product name of the firmware (empty string if firmware has no product name)
  * @param firmware list of firmware to fill
  * @return true if device was read successfully, false if device cannot be read
  */
@@ -519,9 +519,9 @@ bool NetworkDeviceDriver::getFirmwareInformation(DeviceContext *context, NObject
       return false;
 
    if (softwareRevision[0] != 0)
-      AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Software", L"", L"", softwareRevision);
+      AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"", L"", L"", softwareRevision);
    if (firmwareRevision[0] != 0)
-      AddFirmwareInfo(firmware, FirmwareRole::OTHER, L"Firmware", L"", L"", firmwareRevision);
+      AddFirmwareInfo(firmware, FirmwareRole::OTHER, L"", L"", L"", firmwareRevision);
    return true;
 }
 

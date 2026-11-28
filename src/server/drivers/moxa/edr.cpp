@@ -110,7 +110,7 @@ bool MoxaEDRDriver::getFirmwareInformation(DeviceContext *context, NObject *node
    static const uint32_t suffix[] = { 1, 22, 4, 0 };
    oid.extend(suffix, 4);
 
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, oid, L"Firmware", firmware);
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, oid, L"", firmware);
 }
 
 /**

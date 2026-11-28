@@ -113,7 +113,7 @@ bool UbiquitiEdgeSwitchDriver::getHardwareInformation(DeviceContext *context, NO
  */
 bool UbiquitiEdgeSwitchDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 4413, 1, 1, 1, 1, 1, 13, 0 }, L"Firmware", firmware);   // Firmware version
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 4413, 1, 1, 1, 1, 1, 13, 0 }, L"", firmware);   // Firmware version
 }
 
 /**

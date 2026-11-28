@@ -124,7 +124,7 @@ bool ProCurveDriver::getFirmwareInformation(DeviceContext *context, NObject *nod
 
    AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"ArubaOS-Switch", L"aos-s", version, raw);
    if (ExtractWord(sysDescr, L"ROM ", raw, 64))
-      AddFirmwareInfo(firmware, FirmwareRole::BOOTLOADER, L"Boot ROM", L"", L"", raw);
+      AddFirmwareInfo(firmware, FirmwareRole::BOOTLOADER, L"", L"", L"", raw);
    return true;
 }
 

@@ -165,7 +165,7 @@ bool TPLinkDriver::getHardwareInformation(DeviceContext *context, NObject *node,
  */
 bool TPLinkDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 11863, 6, 1, 1, 5, 0 }, L"Firmware", firmware);   // Firmware version
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 11863, 6, 1, 1, 5, 0 }, L"", firmware);   // Firmware version
 }
 
 /**

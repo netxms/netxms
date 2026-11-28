@@ -123,5 +123,5 @@ bool TeltonikaDriver::getHardwareInformation(DeviceContext *context, NObject *no
  */
 bool TeltonikaDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 48690, 1, 6, 0 }, L"Firmware", firmware);   // Firmware version
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 48690, 1, 6, 0 }, L"", firmware);   // Firmware version
 }

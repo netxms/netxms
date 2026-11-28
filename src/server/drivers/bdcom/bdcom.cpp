@@ -171,7 +171,7 @@ bool BdcomDriver::getHardwareInformation(DeviceContext *context, NObject *node, 
  */
 bool BdcomDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 3320, 9, 225, 1, 8, 0 }, L"Firmware", firmware);   // Firmware version
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 3320, 9, 225, 1, 8, 0 }, L"", firmware);   // Firmware version
 }
 
 /**

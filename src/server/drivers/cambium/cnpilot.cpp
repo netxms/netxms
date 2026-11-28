@@ -101,7 +101,7 @@ bool CambiumCnPilotDriver::getHardwareInformation(DeviceContext *context, NObjec
  */
 bool CambiumCnPilotDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 8, 0 }, L"Firmware", firmware);   // cambiumAPSWVersion
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 17713, 22, 1, 1, 1, 8, 0 }, L"", firmware);   // cambiumAPSWVersion
 }
 
 /**

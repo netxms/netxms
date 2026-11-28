@@ -191,7 +191,7 @@ struct LIBNXSRV_EXPORTABLE FirmwareInfo
 {
    FirmwareRole role;
    int32_t componentIndex;   // -1 = the object itself, otherwise ENTITY-MIB / module index
-   wchar_t name[64];         // Display name ("Junos OS", "RouterBOOT", "iLO 5")
+   wchar_t name[64];         // Product name of the firmware ("Junos OS", "RouterBOOT", "iLO 5"); empty if firmware has no product name
    wchar_t platform[64];     // Platform ID from firmware platform registry; empty if platform is not known
    wchar_t version[64];      // Version in canonical form of platform's version scheme; if platform is not known, version as shown to the user (raw version or version number extracted from it)
    wchar_t raw[256];         // Version exactly as reported by the device

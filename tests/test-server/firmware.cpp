@@ -169,7 +169,7 @@ void TestNodeFirmware()
    AddFirmware(&upgraded, FirmwareRole::MAIN, L"RouterOS", L"routeros", L"7.22.1", L"7.22.1 (stable)");
    AssertTrue(node->updateFirmwareInformation(upgraded));
    WaitForFirmwareEvents(node->getId(), 1, &messages);
-   AssertEquals(messages.get(0), L"Firmware \"RouterOS\" changed (old version \"7.16.2\", new version \"7.22.1\")");
+   AssertEquals(messages.get(0), L"Firmware with role \"main\" changed (old version \"7.16.2\", new version \"7.22.1\")");
    AssertTrue(node->getMainFirmware(&mainFirmware));
    AssertEquals(mainFirmware.version, L"7.22.1");
    EndTest();
@@ -188,15 +188,15 @@ void TestNodeFirmware()
    // Order of entries is changed as well, which must not generate events
    StructArray<FirmwareInfo> patched;
    AddFirmware(&patched, FirmwareRole::MAIN, L"RouterOS", L"routeros", L"7.22.1", L"7.22.1 (long-term)");
-   AddFirmware(&patched, FirmwareRole::PATCH, L"Patch", L"", L"P01", L"P01");
+   AddFirmware(&patched, FirmwareRole::PATCH, L"", L"", L"P01", L"P01");   // Firmware without product name and platform
    AddFirmware(&patched, FirmwareRole::BOOTLOADER, L"RouterBOOT", L"routerboot", L"7.12.1", L"7.12.1");
    AssertTrue(node->updateFirmwareInformation(patched));
    WaitForFirmwareEvents(node->getId(), 2, &messages);
-   AssertEquals(messages.get(1), L"Firmware \"Patch\" changed (old version \"\", new version \"P01\")");
+   AssertEquals(messages.get(1), L"Firmware with role \"patch\" changed (old version \"\", new version \"P01\")");
 
    AssertTrue(node->updateFirmwareInformation(otherChannel));
    WaitForFirmwareEvents(node->getId(), 3, &messages);
-   AssertEquals(messages.get(2), L"Firmware \"Patch\" changed (old version \"P01\", new version \"\")");
+   AssertEquals(messages.get(2), L"Firmware with role \"patch\" changed (old version \"P01\", new version \"\")");
    EndTest();
 
    StartTest(L"Node firmware: several entries of the same kind");
@@ -218,7 +218,7 @@ void TestNodeFirmware()
    AddFirmware(&replacedPatch, FirmwareRole::PATCH, L"Patch", L"comware-patch", L"P03", L"P03");
    AssertTrue(node2->updateFirmwareInformation(replacedPatch));
    WaitForFirmwareEvents(node2->getId(), 1, &messages);
-   AssertEquals(messages.get(0), L"Firmware \"Patch\" changed (old version \"P01\", new version \"P03\")");
+   AssertEquals(messages.get(0), L"Firmware with role \"patch\" changed (old version \"P01\", new version \"P03\")");
 
    // Empty list removes everything
    AssertTrue(node2->updateFirmwareInformation(StructArray<FirmwareInfo>()));

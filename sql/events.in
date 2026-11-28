@@ -2339,10 +2339,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	(
 		EVENT_FIRMWARE_CHANGED, 'SYS_FIRMWARE_CHANGED', 'daabaddb-6c08-46a9-a613-addb18d45503',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Firmware "%1" changed (old version "%5", new version "%6")',
+		'Firmware with role "%<role>" changed (old version "%<oldVersion>", new version "%<newVersion>")',
 		'Generated when change of firmware running on the device is detected: different version, firmware added or firmware removed. Not generated when firmware information is collected for the first time.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) name - Firmware name' CONCAT CRLF CONCAT
+		'   1) name - Firmware product name (empty if firmware has no product name)' CONCAT CRLF CONCAT
 		'   2) platform - Firmware platform ID (empty if not known)' CONCAT CRLF CONCAT
 		'   3) role - Firmware role (main, patch, bootloader, management-controller, other)' CONCAT CRLF CONCAT
 		'   4) componentIndex - Component index (-1 for device itself)' CONCAT CRLF CONCAT

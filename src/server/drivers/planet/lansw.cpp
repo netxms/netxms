@@ -129,7 +129,7 @@ bool PlanetLanSwDriver::getHardwareInformation(DeviceContext *context, NObject *
  */
 bool PlanetLanSwDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 10456, 3, 6, 10, 1, 6, 0 }, L"Firmware", firmware);   // nmscardSwVersion (only for non-modular switches)
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 10456, 3, 6, 10, 1, 6, 0 }, L"", firmware);   // nmscardSwVersion (only for non-modular switches)
 }
 
 /**

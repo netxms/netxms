@@ -5346,9 +5346,9 @@ bool Node::updateFirmwareInformation(const StructArray<FirmwareInfo>& firmware)
       const FirmwarePlatform *platform = (fw->platform[0] != 0) ? FindFirmwarePlatform(fw->platform) : nullptr;
       if ((platform != nullptr) && !IsValidFirmwareVersion(platform->scheme, fw->version))
       {
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"ConfPoll(%s [%u]): version \"%s\" of firmware \"%s\" is not valid for platform %s",
-            m_name, m_id, fw->version, fw->name, fw->platform);
-         sendPollerMsg(PollOutputLevel::WARNING, L"   Version \"%s\" of firmware \"%s\" is not valid for platform %s", fw->version, fw->name, fw->platform);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"ConfPoll(%s [%u]): version \"%s\" of firmware with role \"%s\" is not valid for platform %s",
+            m_name, m_id, fw->version, FirmwareRoleName(fw->role), fw->platform);
+         sendPollerMsg(PollOutputLevel::WARNING, L"   Version \"%s\" of firmware with role \"%s\" is not valid for platform %s", fw->version, FirmwareRoleName(fw->role), fw->platform);
       }
    }
 
@@ -5407,11 +5407,11 @@ bool Node::updateFirmwareInformation(const StructArray<FirmwareInfo>& firmware)
 
       const FirmwareInfo *id = (fw != &none) ? fw : old;
       if (fw == &none)
-         sendPollerMsg(PollOutputLevel::INFO, L"   Firmware \"%s\" version %s removed", id->name, old->version);
+         sendPollerMsg(PollOutputLevel::INFO, L"   Firmware with role \"%s\" removed (version %s)", FirmwareRoleName(id->role), old->version);
       else if (old == &none)
-         sendPollerMsg(PollOutputLevel::INFO, L"   Firmware \"%s\" version %s added", id->name, fw->version);
+         sendPollerMsg(PollOutputLevel::INFO, L"   Firmware with role \"%s\" added (version %s)", FirmwareRoleName(id->role), fw->version);
       else
-         sendPollerMsg(PollOutputLevel::INFO, L"   Firmware \"%s\" version changed from %s to %s", id->name, old->version, fw->version);
+         sendPollerMsg(PollOutputLevel::INFO, L"   Firmware with role \"%s\" changed from version %s to %s", FirmwareRoleName(id->role), old->version, fw->version);
 
       EventBuilder(EVENT_FIRMWARE_CHANGED, m_id)
          .param(L"name", id->name)
@@ -7303,7 +7303,6 @@ bool Node::confPollEthernetIP(StructArray<FirmwareInfo> *firmware)
       memset(fw, 0, sizeof(FirmwareInfo));
       fw->role = FirmwareRole::MAIN;
       fw->componentIndex = -1;
-      wcscpy(fw->name, L"Firmware");
       wcscpy(fw->platform, L"cip-device");
       nx_swprintf(fw->version, 64, L"%u.%u", identity->productRevisionMajor, identity->productRevisionMinor);
       wcslcpy(fw->raw, buffer, 256);
@@ -7440,7 +7439,6 @@ bool Node::confPollModbus(StructArray<FirmwareInfo> *firmware)
                memset(fw, 0, sizeof(FirmwareInfo));
                fw->role = FirmwareRole::MAIN;
                fw->componentIndex = -1;
-               wcscpy(fw->name, L"Firmware");
                wcslcpy(fw->version, deviceIdentification.revision, 64);
                wcslcpy(fw->raw, deviceIdentification.revision, 256);
             }

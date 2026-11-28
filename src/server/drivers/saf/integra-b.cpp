@@ -119,6 +119,6 @@ bool SafIntegraBDriver::getFirmwareInformation(DeviceContext *context, NObject *
    if ((version == nullptr) || (*version == 0))
       return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
 
-   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Firmware", L"", L"", version);
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"", L"", L"", version);
    return true;
 }

@@ -124,7 +124,7 @@ bool WesterstrandDriver::getFirmwareInformation(DeviceContext *context, NObject 
    if (version[0] == 0)
       return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
 
-   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"Firmware", L"", L"", version);
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"", L"", L"", version);
    return true;
 }
 

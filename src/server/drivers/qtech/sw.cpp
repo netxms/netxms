@@ -209,5 +209,5 @@ bool QtechSWDriver::getHardwareInformation(DeviceContext *context, NObject *node
  */
 bool QtechSWDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 27514, 100, 1, 3, 0 }, L"Firmware", firmware);   // Firmware version
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 27514, 100, 1, 3, 0 }, L"", firmware);   // Firmware version
 }

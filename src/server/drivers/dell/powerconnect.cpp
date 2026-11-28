@@ -114,7 +114,6 @@ bool PowerConnectDriver::getFirmwareInformation(DeviceContext *context, NObject 
       if ((fw->role == FirmwareRole::OTHER) && (bootVersion[0] != 0) && !wcscmp(fw->raw, bootVersion))
       {
          fw->role = FirmwareRole::BOOTLOADER;
-         wcscpy(fw->name, L"Boot code");
       }
    }
    return true;
@@ -128,24 +127,24 @@ bool PowerConnectDriver::getFirmwareInformation(DeviceContext *context, NObject 
  */
 InterfaceList *PowerConnectDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
-	if (ifList == nullptr)
-		return nullptr;
+   // Get interface list from standard MIB
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
+   if (ifList == nullptr)
+      return nullptr;
 
-	uint32_t slotSize = node->getCustomAttributeAsUInt32(_T(".powerConnect.slotSize"), 52);
+   uint32_t slotSize = node->getCustomAttributeAsUInt32(_T(".powerConnect.slotSize"), 52);
 
-	// Find physical ports
-	for(int i = 0; i < ifList->size(); i++)
-	{
-		InterfaceInfo *iface = ifList->get(i);
-		if (iface->type == IFTYPE_ETHERNET_CSMACD)
-		{
-			iface->setPhysicalLocation(0, (iface->index / slotSize) + 1, 0, iface->index % slotSize);
-		}
-	}
+   // Find physical ports
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      InterfaceInfo *iface = ifList->get(i);
+      if (iface->type == IFTYPE_ETHERNET_CSMACD)
+      {
+         iface->setPhysicalLocation(0, (iface->index / slotSize) + 1, 0, iface->index % slotSize);
+      }
+   }
 
-	return ifList;
+   return ifList;
 }
 
 /**

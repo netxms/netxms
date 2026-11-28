@@ -24,6 +24,32 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 71.22 to 71.23
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(SQLQuery(
+            L"UPDATE event_cfg SET message='Firmware with role \"%<role>\" changed (old version \"%<oldVersion>\", new version \"%<newVersion>\")',"
+            L"description='Generated when change of firmware running on the device is detected: different version, firmware added or firmware removed. Not generated when firmware information is collected for the first time.\r\n"
+            L"Parameters:\r\n"
+            L"   1) name - Firmware product name (empty if firmware has no product name)\r\n"
+            L"   2) platform - Firmware platform ID (empty if not known)\r\n"
+            L"   3) role - Firmware role (main, patch, bootloader, management-controller, other)\r\n"
+            L"   4) componentIndex - Component index (-1 for device itself)\r\n"
+            L"   5) oldVersion - Old version (empty if firmware was added)\r\n"
+            L"   6) newVersion - New version (empty if firmware was removed)\r\n"
+            L"   7) oldRawVersion - Old version as reported by the device\r\n"
+            L"   8) newRawVersion - New version as reported by the device'"
+            L" WHERE guid='daabaddb-6c08-46a9-a613-addb18d45503'"));
+
+   // Firmware without product name has empty name
+   CHK_EXEC(SQLQuery(L"UPDATE object_firmware SET name=NULL WHERE name IN ('Firmware','Software','Boot ROM')"));
+
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 71.21 to 71.22
  */
 static bool H_UpgradeFromV21()
@@ -479,6 +505,7 @@ static struct
    bool (*upgradeProc)();
    bool ownTransactions;   // true if upgrade procedure manages transactions itself
 } s_dbUpgradeMap[] = {
+   { 22, 71, 23, H_UpgradeFromV22 },
    { 21, 71, 22, H_UpgradeFromV21 },
    { 20, 71, 21, H_UpgradeFromV20 },
    { 19, 71, 20, H_UpgradeFromV19 },

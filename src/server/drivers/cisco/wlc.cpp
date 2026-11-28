@@ -137,7 +137,7 @@ bool CiscoWirelessControllerDriver::getHardwareInformation(DeviceContext *contex
  */
 bool CiscoWirelessControllerDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
 {
-   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 14179, 1, 1, 1, 14, 0 }, L"Software", firmware);   // agentInventoryProductVersion
+   return getFirmwareInformationFromSnmpObject(context, node, driverData, { 1, 3, 6, 1, 4, 1, 14179, 1, 1, 1, 14, 0 }, L"", firmware);   // agentInventoryProductVersion
 }
 
 /**

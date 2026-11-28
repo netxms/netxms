@@ -1917,13 +1917,13 @@ static void TestDriverFirmware()
    AssertEquals(firmware.size(), 2);
    AssertTrue(firmware.get(0)->role == FirmwareRole::MAIN);
    AssertEquals(firmware.get(0)->componentIndex, -1);
-   AssertEquals(firmware.get(0)->name, L"Software");
+   AssertEquals(firmware.get(0)->name, L"");
    AssertEquals(firmware.get(0)->platform, L"");
    AssertEquals(firmware.get(0)->version, L"10.4.2 (build 77)");
    AssertEquals(firmware.get(0)->raw, L"10.4.2 (build 77)");
    AssertTrue(firmware.get(1)->role == FirmwareRole::OTHER);
    AssertEquals(firmware.get(1)->componentIndex, -1);
-   AssertEquals(firmware.get(1)->name, L"Firmware");
+   AssertEquals(firmware.get(1)->name, L"");
    AssertEquals(firmware.get(1)->platform, L"");
    AssertEquals(firmware.get(1)->version, L"1.0.5");
    AssertEquals(firmware.get(1)->raw, L"1.0.5");
@@ -2042,7 +2042,7 @@ static void TestDriverFirmware()
    firmware.clear();
    AssertTrue(singleObjectDriver.getFirmwareInformation(&chassisContext, node.get(), nullptr, &firmware));
    AssertEquals(firmware.size(), 2);
-   AssertEquals(firmware.get(0)->name, L"Software");
+   AssertEquals(firmware.get(0)->name, L"");
    AssertEquals(firmware.get(0)->version, L"10.4.2 (build 77)");
 
    singleObjectTransport.setString(L".1.3.6.1.4.1.99999.1.2.0", L"  ");
