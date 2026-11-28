@@ -30,7 +30,7 @@ std::string F_SNMPRead(json_t *arguments, uint32_t userId)
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
    if (node == nullptr)
       return std::string("Node not found");
-   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
       return std::string("Access denied");
 
    if (!node->isSNMPSupported())
@@ -87,7 +87,7 @@ std::string F_SNMPWalk(json_t *arguments, uint32_t userId)
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
    if (node == nullptr)
       return std::string("Node not found");
-   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   if (!node->checkAccessRights(userId, OBJECT_ACCESS_READ_SNMP))
       return std::string("Access denied");
 
    if (!node->isSNMPSupported())
