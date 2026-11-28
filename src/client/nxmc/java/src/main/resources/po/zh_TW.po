@@ -9393,7 +9393,7 @@ msgid "Transformation"
 msgstr "轉換"
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Transformation.java:87
-msgid "Transformation script is not applied to DCIs with origin \"Computed\""
+msgid "Delta calculation and transformation script are not applied to DCIs with origin \"Computed\""
 msgstr ""
 
 #: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/Transformation.java:94

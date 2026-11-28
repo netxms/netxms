@@ -1858,10 +1858,11 @@ static inline void ConvertValue(ItemValue& value, int destinationDataType, int s
  */
 DataCollectionError DCItem::transform(ItemValue &value, int64_t elapsedTime)
 {
-   // Values of computed DCIs are written by server-side engines in final form, transformation script is not applied
-   bool applyScript = (m_source != DS_COMPUTED);
+   // Values of computed DCIs are written by server-side engines in final form, neither delta calculation nor transformation script is applied
+   if (m_source == DS_COMPUTED)
+      return DCE_SUCCESS;
 
-   if (applyScript && (m_transformationScript == nullptr) && !m_transformationScriptSource.isNull() && !IsBlankString(m_transformationScriptSource))
+   if ((m_transformationScript == nullptr) && !m_transformationScriptSource.isNull() && !IsBlankString(m_transformationScriptSource))
       return DCE_COLLECTION_ERROR;  // Transformation script present but cannot be compiled
 
    bool success = true;
@@ -2045,7 +2046,7 @@ DataCollectionError DCItem::transform(ItemValue &value, int64_t elapsedTime)
       return DCE_COLLECTION_ERROR;
 
    DataCollectionError error = DCE_SUCCESS;
-   if (applyScript && (m_transformationScript != nullptr))
+   if (m_transformationScript != nullptr)
    {
       ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript.get(), m_owner.lock(), createDescriptorInternal());
       if (vm.isValid())

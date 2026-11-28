@@ -189,5 +189,15 @@ void TestSampleAttributes()
    AssertEquals(GetAttributeRecordCount(dci->getId()), 0);
    EndTest();
 
+   StartTest(L"Sample attributes - delta calculation is not applied to computed DCI");
+   shared_ptr<DCItem> deltaItem = CreateItem(owner, L"Test.ComputedDelta", DS_COMPUTED);
+   deltaItem->setDeltaCalculation(DCM_SIMPLE);
+   AssertTrue(deltaItem->processNewValue(t1, 100.0, SampleAttributes()));
+   AssertTrue(deltaItem->processNewValue(t2, 130.0, SampleAttributes()));
+   ReadSamples(*deltaItem, t1, t2, 2, samples);
+   AssertTrue(samples[0].value == 130.0);
+   AssertTrue(samples[1].value == 100.0);
+   EndTest();
+
    owner->deleteObject();
 }

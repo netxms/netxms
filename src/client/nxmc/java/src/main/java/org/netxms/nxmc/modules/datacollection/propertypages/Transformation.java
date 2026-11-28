@@ -84,7 +84,7 @@ public class Transformation extends AbstractDCIPropertyPage
 
       computedOriginNote = new CLabel(dialogArea, SWT.LEFT);
       computedOriginNote.setImage(SharedIcons.IMG_INFORMATION);
-      computedOriginNote.setText(i18n.tr("Transformation script is not applied to DCIs with origin \"Computed\""));
+      computedOriginNote.setText(i18n.tr("Delta calculation and transformation script are not applied to DCIs with origin \"Computed\""));
       computedOriginNote.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       updateComputedOriginNote();
 
