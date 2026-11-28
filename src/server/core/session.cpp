@@ -6314,15 +6314,26 @@ void ClientSession::getDataCollectionSummary(const NXCPMessage& request)
 }
 
 /**
+ * Maximum number of DCIs in a single last values request
+ */
+#define MAX_DCI_LIST_REQUEST_SIZE   65536
+
+/**
  * Send latest collected values for all DCIs from given list.
- * Error message will never be returned. Will be returned only
- * possible DCI values.
+ * Inaccessible or missing DCIs are skipped; error is returned only for invalid list size.
  */
 void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    int size = request.getFieldAsInt32(VID_NUM_ITEMS);
+   if ((size < 0) || (size > MAX_DCI_LIST_REQUEST_SIZE))
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      sendMessage(response);
+      return;
+   }
+
    uint32_t incomingIndex = VID_DCI_VALUES_BASE;
    uint32_t outgoingIndex = VID_DCI_VALUES_BASE;
    for(int i = 0; i < size; i++, incomingIndex += 10)
