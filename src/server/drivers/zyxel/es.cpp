@@ -61,6 +61,77 @@ bool ZyxelESSwitchDriver::isDeviceSupported(DeviceContext *context, const SNMP_O
 }
 
 /**
+ * Get hardware information from device.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param hwInfo pointer to hardware information structure to fill
+ * @return true if hardware information is available
+ */
+bool ZyxelESSwitchDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   SNMP_Transport *snmp = context->getSNMPTransport();
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 890, 1, 15, 3, 1, 11, 0 }));  // sysProductModel
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 890, 1, 15, 3, 1, 12, 0 }));  // sysProductSerialNumber
+   request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 890, 1, 15, 3, 1, 15, 0 }));  // sysHwVersionString
+
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
+      return false;
+
+   wcscpy(hwInfo->vendor, L"Zyxel");
+
+   const SNMP_Variable *v = response->getVariable(0);
+   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+   {
+      v->getValueAsString(hwInfo->productName, sizeof(hwInfo->productName) / sizeof(wchar_t));
+      TrimW(hwInfo->productName);
+   }
+
+   v = response->getVariable(1);
+   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+   {
+      v->getValueAsString(hwInfo->serialNumber, sizeof(hwInfo->serialNumber) / sizeof(wchar_t));
+      TrimW(hwInfo->serialNumber);
+   }
+
+   v = response->getVariable(2);
+   if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+   {
+      v->getValueAsString(hwInfo->productVersion, sizeof(hwInfo->productVersion) / sizeof(wchar_t));
+      TrimW(hwInfo->productVersion);
+   }
+
+   delete response;
+   return true;
+}
+
+/**
+ * Get firmware information from device
+ */
+bool ZyxelESSwitchDriver::getFirmwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, StructArray<FirmwareInfo> *firmware)
+{
+   wchar_t raw[256];
+   if (!ReadFirmwareVersion(context->getSNMPTransport(), { 1, 3, 6, 1, 4, 1, 890, 1, 15, 3, 1, 6, 0 }, raw, 256))  // sysSwVersionString
+      return false;
+   if (raw[0] == 0)
+      return NetworkDeviceDriver::getFirmwareInformation(context, node, driverData, firmware);
+
+   // Version is the first word, followed by build date ("V2.70(ABTO.0) | 10/22/2021")
+   wchar_t version[64];
+   wcslcpy(version, raw, 64);
+   wchar_t *sp = wcschr(version, L' ');
+   if (sp != nullptr)
+      *sp = 0;
+
+   AddFirmwareInfo(firmware, FirmwareRole::MAIN, L"", L"", version, raw);
+   return true;
+}
+
+/**
  * Get port layout of given module. Default implementation always set NDD_PN_UNKNOWN as layout.
  *
  * @param context device context
