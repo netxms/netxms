@@ -1055,8 +1055,9 @@ uint32_t NXCORE_EXPORTABLE DeleteAIAssistantChat(uint32_t chatId, uint32_t userI
  * @param context Optional object context
  * @param slot Provider slot to use (e.g., "fast", "analytical"); falls back to "default" slot if requested slot is not configured
  * @param enableTools If true, register functions and skills; if false, no tools and single iteration
+ * @param userId User the query is made on behalf of; tool calls are checked against this user's access rights (0 = system)
  */
-char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context = nullptr, const char *slot = nullptr, bool enableTools = true);
+char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context = nullptr, const char *slot = nullptr, bool enableTools = true, uint32_t userId = 0);
 
 /**
  * Register AI task
