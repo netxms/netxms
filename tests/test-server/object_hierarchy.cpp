@@ -63,6 +63,41 @@ static void TestRackCoolingZoneRule()
 }
 
 /**
+ * Maintenance mode entered on rack or on container above it covers equipment installed in the rack
+ */
+static void TestRackMaintenancePropagation()
+{
+   StartTest(_T("Rack maintenance mode propagates to installed equipment"));
+
+   shared_ptr<Container> container = CreateObject<Container>(_T("maint-container"));
+   shared_ptr<Rack> rack = make_shared<Rack>(_T("maint-rack"), 42);
+   NetObjInsert(rack, true, false);
+   shared_ptr<Chassis> chassis = CreateObject<Chassis>(_T("maint-chassis"));
+   NetObj::linkObjects(container, rack);
+   NetObj::linkObjects(rack, chassis);
+
+   rack->enterMaintenanceMode(0, _T("test"));
+   AssertTrue(rack->isInMaintenanceMode());
+   AssertTrue(chassis->isInMaintenanceMode());
+   rack->leaveMaintenanceMode(0);
+   AssertFalse(rack->isInMaintenanceMode());
+   AssertFalse(chassis->isInMaintenanceMode());
+
+   container->enterMaintenanceMode(0, _T("test"));
+   AssertTrue(rack->isInMaintenanceMode());
+   AssertTrue(chassis->isInMaintenanceMode());
+   container->leaveMaintenanceMode(0);
+   AssertFalse(rack->isInMaintenanceMode());
+   AssertFalse(chassis->isInMaintenanceMode());
+
+   chassis->deleteObject();
+   rack->deleteObject();
+   container->deleteObject();
+
+   EndTest();
+}
+
+/**
  * Power domain may not have facility parent and power domain parent from a different facility
  */
 static void TestPowerDomainFacilityRule()
@@ -348,6 +383,7 @@ static void TestRoomNXSL()
 void TestObjectHierarchy()
 {
    TestRackCoolingZoneRule();
+   TestRackMaintenancePropagation();
    TestPowerDomainFacilityRule();
    TestPowerDomainTwoFacilitiesAllowed();
    TestPowerDomainChainAndDescendants();

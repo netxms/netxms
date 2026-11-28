@@ -211,6 +211,40 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
+ * Enter maintenance mode. Equipment installed in the rack enters maintenance mode together with the rack.
+ */
+void Rack::enterMaintenanceMode(uint32_t userId, const TCHAR *comments)
+{
+   super::enterMaintenanceMode(userId, comments);
+
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if (object->getStatus() != STATUS_UNMANAGED)
+         object->enterMaintenanceMode(userId, comments);
+   }
+   unlockChildList();
+}
+
+/**
+ * Leave maintenance mode
+ */
+void Rack::leaveMaintenanceMode(uint32_t userId)
+{
+   super::leaveMaintenanceMode(userId);
+
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if (object->getStatus() != STATUS_UNMANAGED)
+         object->leaveMaintenanceMode(userId);
+   }
+   unlockChildList();
+}
+
+/**
  * Validate binding to given parent. Rack may have at most one cooling zone parent and at most one room parent.
  */
 uint32_t Rack::validateParent(const NetObj& parent) const

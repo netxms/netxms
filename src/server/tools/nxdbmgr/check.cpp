@@ -103,28 +103,6 @@ static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32
 }
 
 /**
- * Check if container object exists
- */
-static bool IsContainerObjectExists(DB_HANDLE hdb, uint32_t id, int32_t objectClass)
-{
-   bool exists = false;
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM object_containers WHERE id=? AND object_class=?"));
-   if (hStmt != nullptr)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, objectClass);
-      DB_RESULT hResult = DBSelectPrepared(hStmt);
-      if (hResult != nullptr)
-      {
-         exists = (DBGetNumRows(hResult) > 0);
-         DBFreeResult(hResult);
-      }
-      DBFreeStatement(hStmt);
-   }
-   return exists;
-}
-
-/**
  * Get all data collection targets
  */
 IntegerArray<uint32_t> GetDataCollectionTargets()
@@ -2259,6 +2237,11 @@ static void CheckTemplateToTargetMapping()
    DB_RESULT hResult = SQLSelect(_T("SELECT template_id,node_id FROM dct_node_map ORDER BY template_id"));
    if (hResult != nullptr)
    {
+      HashSet<uint32_t> targets;
+      IntegerArray<uint32_t> targetList = GetDataCollectionTargets();
+      for(int i = 0; i < targetList.size(); i++)
+         targets.put(targetList.get(i));
+
       int numRows = DBGetNumRows(hResult);
       SetStageWorkTotal(numRows);
       for(int i = 0; i < numRows; i++)
@@ -2266,19 +2249,7 @@ static void CheckTemplateToTargetMapping()
          uint32_t templateId = DBGetFieldULong(hResult, i, 0);
          uint32_t targetId = DBGetFieldULong(hResult, i, 1);
 
-         // Check node existence
-         if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("clusters"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("mobile_devices"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("sensors"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("access_points"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("traffic_observers"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("observation_points"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("facilities"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("power_domains"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("cooling_zones"), _T("id"), targetId) &&
-             !IsDatabaseRecordExist(g_dbHandle, _T("rooms"), _T("id"), targetId) &&
-             !IsContainerObjectExists(g_dbHandle, targetId, OBJECT_COLLECTOR))
+         if (!targets.contains(targetId))
          {
             if (IsDatabaseRecordExist(g_dbHandle, _T("object_containers"), _T("id"), templateId))
             {

@@ -5552,6 +5552,9 @@ public:
 
    virtual bool showThresholdSummary() const override;
 
+   virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
+   virtual void leaveMaintenanceMode(uint32_t userId) override;
+
    int getHeight() const { return m_height; }
    bool isTopBottomNumbering() const { return m_topBottomNumbering; }
    int32_t getWidth() const { return m_width; }
